@@ -162,6 +162,10 @@ interface TaskRowFull {
   is_archived: boolean;
   created_at: string;
   updated_at: string;
+  metric_type: 'reps' | 'minutes' | 'pages' | 'km' | 'ml' | 'custom' | null;
+  metric_label: string | null;
+  base_value: number | string | null;
+  increment_per_star: number | string | null;
   task_dimension: { dimension_id: DimensionId }[];
 }
 
@@ -263,23 +267,34 @@ export function useDayDetail(date: Date) {
           const doneCount = completionCountThisDay.get(raw.id) ?? 0;
           return doneCount < (raw.target_count ?? 1);
         })
-        .map(({ raw, recurrence }) => ({
-          task: {
-            id: raw.id,
-            character_id: raw.character_id,
-            title: raw.title,
-            description: raw.description,
-            difficulty: raw.difficulty,
-            task_type: raw.task_type,
-            recurrence,
-            target_count: raw.target_count ?? 1,
-            is_archived: raw.is_archived,
-            created_at: raw.created_at,
-            updated_at: raw.updated_at,
-            dimensions: (raw.task_dimension ?? []).map((td) => td.dimension_id),
-          },
-          completedThisDay: completionCountThisDay.get(raw.id) ?? 0,
-        }));
+        .map(({ raw, recurrence }) => {
+          const numOrNull = (v: number | string | null): number | null => {
+            if (v === null) return null;
+            const n = typeof v === 'string' ? parseFloat(v) : v;
+            return Number.isFinite(n) ? n : null;
+          };
+          return {
+            task: {
+              id: raw.id,
+              character_id: raw.character_id,
+              title: raw.title,
+              description: raw.description,
+              difficulty: raw.difficulty,
+              task_type: raw.task_type,
+              recurrence,
+              target_count: raw.target_count ?? 1,
+              is_archived: raw.is_archived,
+              created_at: raw.created_at,
+              updated_at: raw.updated_at,
+              metric_type: raw.metric_type,
+              metric_label: raw.metric_label,
+              base_value: numOrNull(raw.base_value),
+              increment_per_star: numOrNull(raw.increment_per_star),
+              dimensions: (raw.task_dimension ?? []).map((td) => td.dimension_id),
+            },
+            completedThisDay: completionCountThisDay.get(raw.id) ?? 0,
+          };
+        });
 
       const totalXp = completions.reduce((s, c) => s + c.xpGranted, 0);
       const totalCoins = completions.reduce((s, c) => s + c.coinsGranted, 0);

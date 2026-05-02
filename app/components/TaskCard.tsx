@@ -1,7 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+  interpolate,
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSequence,
@@ -11,7 +14,13 @@ import Animated, {
 
 import type { TaskWithDimensions } from '@/lib/db/types';
 import { describeRecurrence } from '@/lib/recurrence';
-import { rewardForDifficulty } from '@/lib/xp';
+import {
+  applyStreakMultiplier,
+  formatScaledValue,
+  rewardForDifficulty,
+  scaledTargetValue,
+  type Difficulty,
+} from '@/lib/xp';
 import { tokens } from '@/theme';
 
 import { DifficultyStars } from './DifficultyStars';
@@ -19,80 +28,185 @@ import { DimensionChip } from './DimensionChip';
 
 interface Props {
   task: TaskWithDimensions;
+  /** Star difficulty selected by the user via swipe; falls back to task.difficulty. */
+  selectedDifficulty?: Difficulty;
+  onSelectDifficulty?: (next: Difficulty) => void;
+  /** Streak the user is on, for displaying the multiplied reward. */
+  streakDays?: number;
   onComplete: () => void;
   onEdit?: () => void;
   isCompleting?: boolean;
 }
 
-export function TaskCard({ task, onComplete, onEdit, isCompleting }: Props) {
-  const reward = rewardForDifficulty(task.difficulty);
-  const scale = useSharedValue(1);
+const SWIPE_THRESHOLD = 60; // px past which a swipe ticks the star count
 
-  // Only show the recurrence note when it deviates from the default
-  // ("daily, target=1") — otherwise it'd add clutter to every card.
-  const showRecurrenceNote =
-    task.recurrence.type !== 'daily' || task.target_count > 1;
+const clampDifficulty = (n: number): Difficulty => {
+  'worklet';
+  return Math.max(1, Math.min(5, Math.round(n))) as Difficulty;
+};
 
-  // Brief celebration pulse if the parent flips isCompleting briefly.
+export function TaskCard({
+  task,
+  selectedDifficulty,
+  onSelectDifficulty,
+  streakDays = 0,
+  onComplete,
+  onEdit,
+  isCompleting,
+}: Props) {
+  const scalingEnabled =
+    task.metric_type !== null &&
+    task.base_value !== null &&
+    task.increment_per_star !== null;
+
+  const effectiveDifficulty: Difficulty = selectedDifficulty ?? task.difficulty;
+
+  const baseReward = rewardForDifficulty(effectiveDifficulty);
+  const reward = applyStreakMultiplier(baseReward, streakDays);
+
+  const scaledTarget =
+    scalingEnabled && task.base_value !== null && task.increment_per_star !== null
+      ? scaledTargetValue(task.base_value, task.increment_per_star, effectiveDifficulty)
+      : null;
+
+  const completeScale = useSharedValue(1);
+  const dragX = useSharedValue(0);
+  const [hintDirection, setHintDirection] = useState<'up' | 'down' | null>(null);
+
   useEffect(() => {
     if (isCompleting) {
-      scale.value = withSequence(
+      completeScale.value = withSequence(
         withTiming(0.92, { duration: 80 }),
         withSpring(1.06, tokens.motion.springBouncy),
         withSpring(1, tokens.motion.springSnappy),
       );
     }
-  }, [isCompleting, scale]);
+  }, [isCompleting, completeScale]);
+
+  const showRecurrenceNote =
+    task.recurrence.type !== 'daily' || task.target_count > 1;
+
+  const tickDifficulty = (delta: 1 | -1) => {
+    if (!scalingEnabled || !onSelectDifficulty) return;
+    const next = clampDifficulty(effectiveDifficulty + delta);
+    if (next === effectiveDifficulty) return;
+    onSelectDifficulty(next);
+    setHintDirection(delta > 0 ? 'up' : 'down');
+    setTimeout(() => setHintDirection(null), 600);
+  };
+
+  // Horizontal pan gesture: drag past SWIPE_THRESHOLD in either direction
+  // to tick the star count. Snap back to center on release.
+  const panGesture = Gesture.Pan()
+    .activeOffsetX([-12, 12])
+    .failOffsetY([-12, 12])
+    .enabled(scalingEnabled && !!onSelectDifficulty)
+    .onUpdate((e) => {
+      dragX.value = e.translationX;
+    })
+    .onEnd((e) => {
+      const t = e.translationX;
+      if (t > SWIPE_THRESHOLD) {
+        runOnJS(tickDifficulty)(1);
+      } else if (t < -SWIPE_THRESHOLD) {
+        runOnJS(tickDifficulty)(-1);
+      }
+      dragX.value = withSpring(0, tokens.motion.springSnappy);
+    });
 
   const buttonAnimStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    transform: [{ scale: completeScale.value }],
+  }));
+
+  const bodyAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: dragX.value * 0.4 }],
+  }));
+
+  const hintRightStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(dragX.value, [0, SWIPE_THRESHOLD], [0, 1], 'clamp'),
+  }));
+  const hintLeftStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(dragX.value, [-SWIPE_THRESHOLD, 0], [1, 0], 'clamp'),
   }));
 
   const handlePressIn = () => {
-    scale.value = withSpring(0.9, tokens.motion.springSnappy);
+    completeScale.value = withSpring(0.9, tokens.motion.springSnappy);
   };
   const handlePressOut = () => {
-    scale.value = withSpring(1, tokens.motion.springBouncy);
+    completeScale.value = withSpring(1, tokens.motion.springBouncy);
   };
+
+  const titleText = scaledTarget !== null
+    ? `${task.title} — ${formatScaledValue(scaledTarget, task.metric_label)}`
+    : task.title;
 
   return (
     <View style={styles.container}>
-      <Pressable
-        style={({ pressed }) => [styles.body, pressed && onEdit && { opacity: 0.7 }]}
-        onPress={onEdit}
-        disabled={!onEdit}
-      >
-        <Text style={styles.title} numberOfLines={2}>
-          {task.title}
-        </Text>
-        <View style={styles.metaRow}>
-          <DifficultyStars difficulty={task.difficulty} />
-          {task.dimensions.length > 0 && (
-            <View style={styles.chipsRow}>
-              {task.dimensions.slice(0, 2).map((d) => (
-                <DimensionChip key={d} id={d} size="sm" />
-              ))}
-            </View>
-          )}
-        </View>
-        {showRecurrenceNote && (
-          <Text style={styles.recurrenceNote} numberOfLines={1}>
-            {describeRecurrence(task.recurrence, task.target_count)}
-          </Text>
-        )}
-        <View style={styles.rewardRow}>
-          <View style={styles.rewardItem}>
-            <Ionicons name="flash" size={12} color={tokens.semantic.xp} />
-            <Text style={[styles.rewardText, { color: tokens.semantic.xp }]}>+{reward.xp} XP</Text>
-          </View>
-          <View style={styles.rewardItem}>
-            <Ionicons name="ellipse" size={10} color={tokens.semantic.coin} />
-            <Text style={[styles.rewardText, { color: tokens.semantic.coin }]}>
-              +{reward.coins}
+      <GestureDetector gesture={panGesture}>
+        <Animated.View style={[{ flex: 1, minWidth: 0 }, bodyAnimStyle]}>
+          <Pressable
+            style={({ pressed }) => [styles.body, pressed && onEdit && { opacity: 0.7 }]}
+            onPress={onEdit}
+            disabled={!onEdit}
+          >
+            <Text style={styles.title} numberOfLines={2}>
+              {titleText}
             </Text>
-          </View>
-        </View>
-      </Pressable>
+            <View style={styles.metaRow}>
+              <DifficultyStars difficulty={effectiveDifficulty} />
+              {task.dimensions.length > 0 && (
+                <View style={styles.chipsRow}>
+                  {task.dimensions.slice(0, 2).map((d) => (
+                    <DimensionChip key={d} id={d} size="sm" />
+                  ))}
+                </View>
+              )}
+            </View>
+            {showRecurrenceNote && (
+              <Text style={styles.recurrenceNote} numberOfLines={1}>
+                {describeRecurrence(task.recurrence, task.target_count)}
+              </Text>
+            )}
+            <View style={styles.rewardRow}>
+              <View style={styles.rewardItem}>
+                <Ionicons name="flash" size={12} color={tokens.semantic.xp} />
+                <Text style={[styles.rewardText, { color: tokens.semantic.xp }]}>
+                  +{reward.xp} XP
+                </Text>
+              </View>
+              <View style={styles.rewardItem}>
+                <Ionicons name="ellipse" size={10} color={tokens.semantic.coin} />
+                <Text style={[styles.rewardText, { color: tokens.semantic.coin }]}>
+                  +{reward.coins}
+                </Text>
+              </View>
+              {hintDirection && (
+                <Text
+                  style={[
+                    styles.tickHint,
+                    { color: hintDirection === 'up' ? tokens.semantic.xp : tokens.text.dim },
+                  ]}
+                >
+                  {hintDirection === 'up' ? '+1★' : '−1★'}
+                </Text>
+              )}
+            </View>
+          </Pressable>
+
+          {scalingEnabled && (
+            <>
+              <Animated.View style={[styles.swipeHintLeft, hintLeftStyle]}>
+                <Ionicons name="arrow-back" size={14} color={tokens.text.dim} />
+                <Text style={styles.swipeHintText}>−1★</Text>
+              </Animated.View>
+              <Animated.View style={[styles.swipeHintRight, hintRightStyle]}>
+                <Text style={styles.swipeHintText}>+1★</Text>
+                <Ionicons name="arrow-forward" size={14} color={tokens.semantic.xp} />
+              </Animated.View>
+            </>
+          )}
+        </Animated.View>
+      </GestureDetector>
 
       <Animated.View style={buttonAnimStyle}>
         <Pressable
@@ -123,10 +237,9 @@ const styles = StyleSheet.create({
     borderRadius: tokens.radius.lg,
     borderWidth: 1,
     borderColor: tokens.border.base,
+    overflow: 'hidden',
   },
   body: {
-    flex: 1,
-    minWidth: 0,
     gap: tokens.space[2],
   },
   title: {
@@ -148,6 +261,7 @@ const styles = StyleSheet.create({
   rewardRow: {
     flexDirection: 'row',
     gap: tokens.space[3],
+    alignItems: 'center',
   },
   rewardItem: {
     flexDirection: 'row',
@@ -157,6 +271,11 @@ const styles = StyleSheet.create({
   rewardText: {
     ...tokens.type.caption,
     fontFamily: 'Manrope_700Bold',
+  },
+  tickHint: {
+    ...tokens.type.caption,
+    fontFamily: 'Manrope_800ExtraBold',
+    marginLeft: tokens.space[2],
   },
   recurrenceNote: {
     ...tokens.type.caption,
@@ -173,5 +292,28 @@ const styles = StyleSheet.create({
   },
   completeButtonPressed: {
     opacity: 0.7,
+  },
+  swipeHintLeft: {
+    position: 'absolute',
+    left: 0,
+    top: '50%',
+    transform: [{ translateY: -10 }],
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  swipeHintRight: {
+    position: 'absolute',
+    right: 0,
+    top: '50%',
+    transform: [{ translateY: -10 }],
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  swipeHintText: {
+    ...tokens.type.caption,
+    color: tokens.text.dim,
+    fontFamily: 'Manrope_700Bold',
   },
 });

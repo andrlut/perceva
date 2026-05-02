@@ -49,6 +49,28 @@ export function applyStreakMultiplier(
   };
 }
 
+// ──────────────────────────────────────────────────────────────────────────
+// Star scaling: target value at a given difficulty
+// (mirrors the formula in supabase/migrations/..._star_difficulty_scaling.sql)
+// ──────────────────────────────────────────────────────────────────────────
+
+export function scaledTargetValue(
+  baseValue: number,
+  incrementPerStar: number,
+  difficulty: Difficulty,
+): number {
+  return baseValue + incrementPerStar * (difficulty - 1);
+}
+
+/**
+ * Format a scaled value with its metric label, e.g. (40, 'minutes') → '40 minutes'.
+ * Trims trailing zeros from the number; keeps integer-valued metrics integer.
+ */
+export function formatScaledValue(value: number, label: string | null): string {
+  const stripped = Number.isInteger(value) ? value.toString() : value.toString().replace(/\.?0+$/, '');
+  return label ? `${stripped} ${label}` : stripped;
+}
+
 /**
  * Quadratic curve: each level requires more XP than the last.
  * level 1 = 0, level 2 = 100, level 3 = 400, level 4 = 900, level 5 = 1600...
