@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { RewardCard } from '@/components/RewardCard';
+import { SegmentedControl } from '@/components/SegmentedControl';
 import { TemplateCard } from '@/components/TemplateCard';
 import { useCharacter } from '@/lib/api/character';
 import {
@@ -24,8 +25,8 @@ import {
   useRewardTemplates,
   useRewards,
 } from '@/lib/api/rewards';
-import { timeAgo } from '@/lib/time';
 import type { Reward, RewardCategory, RewardTemplate } from '@/lib/db/types';
+import { timeAgo } from '@/lib/time';
 import { confirmAction, showInfo } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 import { REWARD_CATEGORY_META, REWARD_CATEGORY_ORDER } from '@/theme/rewards';
@@ -38,11 +39,12 @@ export default function RewardsScreen() {
   const redeem = useRedeemReward();
   const addTemplate = useAddTemplateToShop();
   const archiveReward = useArchiveReward();
-  const redemptions = useRedemptionHistory(15);
+  const redemptions = useRedemptionHistory(50);
 
   const [redeemingId, setRedeemingId] = useState<string | null>(null);
   const [addingTemplateId, setAddingTemplateId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<RewardCategory>('indulgence');
+  const [view, setView] = useState<'shop' | 'history'>('shop');
 
   const coins = character.data?.character.coins ?? 0;
 
@@ -87,18 +89,13 @@ export default function RewardsScreen() {
   const tmplList = templatesByCategory[activeCategory];
 
   const handleRewardActions = async (reward: Reward) => {
-    // 3-way action sheet: web doesn't have one out of the box, so split
-    // into a simpler "remove or cancel?" path. Edit is handled by the
-    // tap on the body (not long-press) so the split is fine.
     const ok = await confirmAction(
       `Remove "${reward.title}"?`,
       'It stops appearing on Rewards. Past redemptions stay in your history.',
       { okText: 'Remove', cancelText: 'Cancel', destructive: true },
     );
     if (!ok) return;
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(
-      () => {},
-    );
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
     try {
       await archiveReward.mutateAsync(reward.id);
     } catch (e) {
@@ -115,9 +112,7 @@ export default function RewardsScreen() {
     );
     if (!ok) return;
     setRedeemingId(reward.id);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(
-      () => {},
-    );
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     try {
       await redeem.mutateAsync({ rewardId: reward.id, cost: reward.cost });
     } catch (e) {
@@ -149,12 +144,16 @@ export default function RewardsScreen() {
         refreshControl={
           <RefreshControl
             refreshing={
-              rewards.isRefetching || character.isRefetching || templates.isRefetching
+              rewards.isRefetching ||
+              character.isRefetching ||
+              templates.isRefetching ||
+              redemptions.isRefetching
             }
             onRefresh={() => {
               rewards.refetch();
               character.refetch();
               templates.refetch();
+              redemptions.refetch();
             }}
             tintColor={tokens.brand.violet2}
           />
@@ -166,156 +165,183 @@ export default function RewardsScreen() {
           <Text style={styles.balanceLabel}>coins available</Text>
         </View>
 
-        <View style={styles.tabs}>
-          {REWARD_CATEGORY_ORDER.map((cat) => {
-            const m = REWARD_CATEGORY_META[cat];
-            const active = cat === activeCategory;
-            return (
-              <Pressable
-                key={cat}
-                onPress={() => setActiveCategory(cat)}
-                style={[
-                  styles.tab,
-                  active && {
-                    backgroundColor: m.bg,
-                    borderColor: m.color,
-                  },
-                ]}
-              >
-                <Ionicons
-                  name={m.icon as never}
-                  size={16}
-                  color={active ? m.color : tokens.text.mid}
-                />
-                <Text
-                  style={[
-                    styles.tabText,
-                    { color: active ? m.color : tokens.text.mid },
-                  ]}
-                >
-                  {m.short}
-                </Text>
-              </Pressable>
-            );
-          })}
+        <View style={styles.viewToggle}>
+          <SegmentedControl
+            options={[
+              { value: 'shop', label: 'Shop' },
+              { value: 'history', label: 'Collected' },
+            ]}
+            value={view}
+            onChange={setView}
+          />
         </View>
 
-        <Text style={styles.tagline}>{meta.tagline}</Text>
-
-        {/* YOUR SHOP */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Your shop</Text>
-          {myList.length > 0 && (
-            <Text style={styles.sectionMeta}>{myList.length}</Text>
-          )}
-        </View>
-
-        {rewards.isLoading ? (
-          <View style={styles.loadingBox}>
-            <ActivityIndicator color={tokens.brand.violet2} />
-          </View>
-        ) : myList.length === 0 ? (
-          <View style={styles.emptyBox}>
-            <Ionicons name={meta.icon as never} size={40} color={meta.color} />
-            <Text style={styles.emptyTitle}>Nothing here yet</Text>
-            <Text style={styles.emptySub}>
-              Tap a suggestion below to add it, or use + to make your own.
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.list}>
-            {myList.map((reward) => (
-              <RewardCard
-                key={reward.id}
-                reward={reward}
-                affordable={coins >= reward.cost}
-                onRedeem={() => handleRedeem(reward)}
-                onEdit={() => handleRewardActions(reward)}
-                onLongPress={() => handleRewardActions(reward)}
-                isRedeeming={redeemingId === reward.id}
-              />
-            ))}
-          </View>
-        )}
-
-        {/* RECENT REDEMPTIONS */}
-        {(redemptions.data?.length ?? 0) > 0 && (
+        {view === 'shop' ? (
           <>
-            <View style={[styles.sectionHeader, { marginTop: tokens.space[6] }]}>
-              <View style={styles.inspirationLabel}>
-                <Ionicons name="receipt-outline" size={14} color={tokens.text.mid} />
-                <Text style={styles.sectionTitle}>Recently redeemed</Text>
-              </View>
-              <Text style={styles.sectionMeta}>
-                {redemptions.data!.length} {redemptions.data!.length === 1 ? 'item' : 'items'}
-              </Text>
-            </View>
-
-            <View style={styles.historyList}>
-              {redemptions.data!.map((r) => (
-                <View key={r.id} style={styles.historyRow}>
-                  <View style={styles.historyIconWrap}>
+            <View style={styles.tabs}>
+              {REWARD_CATEGORY_ORDER.map((cat) => {
+                const m = REWARD_CATEGORY_META[cat];
+                const active = cat === activeCategory;
+                return (
+                  <Pressable
+                    key={cat}
+                    onPress={() => setActiveCategory(cat)}
+                    style={[
+                      styles.tab,
+                      active && {
+                        backgroundColor: m.bg,
+                        borderColor: m.color,
+                      },
+                    ]}
+                  >
                     <Ionicons
-                      name={r.reward_icon as never}
+                      name={m.icon as never}
                       size={16}
-                      color={tokens.semantic.coin}
+                      color={active ? m.color : tokens.text.mid}
                     />
-                  </View>
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <Text style={styles.historyTitle} numberOfLines={1}>
-                      {r.reward_title}
+                    <Text
+                      style={[
+                        styles.tabText,
+                        { color: active ? m.color : tokens.text.mid },
+                      ]}
+                    >
+                      {m.short}
                     </Text>
-                    <Text style={styles.historyMeta}>{timeAgo(r.redeemed_at)}</Text>
-                  </View>
-                  <View style={styles.historyCost}>
-                    <Ionicons name="ellipse" size={9} color={tokens.semantic.coin} />
-                    <Text style={styles.historyCostText}>
-                      −{r.cost_paid.toLocaleString()}
-                    </Text>
-                  </View>
-                </View>
-              ))}
+                  </Pressable>
+                );
+              })}
             </View>
-          </>
-        )}
 
-        {/* INSPIRATION */}
-        {tmplList.length > 0 && (
-          <>
-            <View style={[styles.sectionHeader, { marginTop: tokens.space[6] }]}>
-              <View style={styles.inspirationLabel}>
-                <Ionicons name="bulb" size={14} color={tokens.text.mid} />
-                <Text style={styles.sectionTitle}>Inspiration</Text>
+            <Text style={styles.tagline}>{meta.tagline}</Text>
+
+            {/* YOUR SHOP */}
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Your shop</Text>
+              {myList.length > 0 && (
+                <Text style={styles.sectionMeta}>{myList.length}</Text>
+              )}
+            </View>
+
+            {rewards.isLoading ? (
+              <View style={styles.loadingBox}>
+                <ActivityIndicator color={tokens.brand.violet2} />
               </View>
-              <Text style={styles.sectionMeta}>tap to add</Text>
-            </View>
+            ) : myList.length === 0 ? (
+              <View style={styles.emptyBox}>
+                <Ionicons name={meta.icon as never} size={40} color={meta.color} />
+                <Text style={styles.emptyTitle}>Nothing here yet</Text>
+                <Text style={styles.emptySub}>
+                  Tap a suggestion below to add it, or use + to make your own.
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.list}>
+                {myList.map((reward) => (
+                  <RewardCard
+                    key={reward.id}
+                    reward={reward}
+                    affordable={coins >= reward.cost}
+                    onRedeem={() => handleRedeem(reward)}
+                    onEdit={() => handleRewardActions(reward)}
+                    onLongPress={() => handleRewardActions(reward)}
+                    isRedeeming={redeemingId === reward.id}
+                  />
+                ))}
+              </View>
+            )}
 
-            <View style={styles.list}>
-              {tmplList.map((t) => (
-                <TemplateCard
-                  key={t.id}
-                  template={t}
-                  onAdd={() => handleAddTemplate(t)}
-                  isAdding={addingTemplateId === t.id}
-                />
-              ))}
-            </View>
+            {/* INSPIRATION */}
+            {tmplList.length > 0 && (
+              <>
+                <View style={[styles.sectionHeader, { marginTop: tokens.space[6] }]}>
+                  <View style={styles.inspirationLabel}>
+                    <Ionicons name="bulb" size={14} color={tokens.text.mid} />
+                    <Text style={styles.sectionTitle}>Inspiration</Text>
+                  </View>
+                  <Text style={styles.sectionMeta}>tap to add</Text>
+                </View>
+
+                <View style={styles.list}>
+                  {tmplList.map((t) => (
+                    <TemplateCard
+                      key={t.id}
+                      template={t}
+                      onAdd={() => handleAddTemplate(t)}
+                      isAdding={addingTemplateId === t.id}
+                    />
+                  ))}
+                </View>
+              </>
+            )}
+          </>
+        ) : (
+          <>
+            {redemptions.isLoading ? (
+              <View style={styles.loadingBox}>
+                <ActivityIndicator color={tokens.brand.violet2} />
+              </View>
+            ) : (redemptions.data?.length ?? 0) === 0 ? (
+              <View style={styles.emptyBox}>
+                <Ionicons name="receipt-outline" size={40} color={tokens.text.dim} />
+                <Text style={styles.emptyTitle}>Nothing redeemed yet</Text>
+                <Text style={styles.emptySub}>
+                  When you spend coins on a reward, it shows up here.
+                </Text>
+              </View>
+            ) : (
+              <>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>Collected</Text>
+                  <Text style={styles.sectionMeta}>
+                    {redemptions.data!.length}{' '}
+                    {redemptions.data!.length === 1 ? 'item' : 'items'}
+                  </Text>
+                </View>
+                <View style={styles.historyList}>
+                  {redemptions.data!.map((r) => (
+                    <View key={r.id} style={styles.historyRow}>
+                      <View style={styles.historyIconWrap}>
+                        <Ionicons
+                          name={r.reward_icon as never}
+                          size={16}
+                          color={tokens.semantic.coin}
+                        />
+                      </View>
+                      <View style={{ flex: 1, minWidth: 0 }}>
+                        <Text style={styles.historyTitle} numberOfLines={1}>
+                          {r.reward_title}
+                        </Text>
+                        <Text style={styles.historyMeta}>{timeAgo(r.redeemed_at)}</Text>
+                      </View>
+                      <View style={styles.historyCost}>
+                        <Ionicons name="ellipse" size={9} color={tokens.semantic.coin} />
+                        <Text style={styles.historyCostText}>
+                          −{r.cost_paid.toLocaleString()}
+                        </Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              </>
+            )}
           </>
         )}
       </ScrollView>
 
-      <Pressable
-        onPress={() =>
-          router.push({
-            pathname: '/reward-form',
-            params: { category: activeCategory },
-          })
-        }
-        style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
-        hitSlop={8}
-      >
-        <Ionicons name="add" size={28} color={tokens.text.hi} />
-      </Pressable>
+      {view === 'shop' && (
+        <Pressable
+          onPress={() =>
+            router.push({
+              pathname: '/reward-form',
+              params: { category: activeCategory },
+            })
+          }
+          style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
+          hitSlop={8}
+        >
+          <Ionicons name="add" size={28} color={tokens.text.hi} />
+        </Pressable>
+      )}
     </SafeAreaView>
   );
 }
@@ -335,7 +361,7 @@ const styles = StyleSheet.create({
     paddingVertical: tokens.space[6],
     gap: tokens.space[2],
     marginTop: tokens.space[3],
-    marginBottom: tokens.space[5],
+    marginBottom: tokens.space[4],
   },
   balanceValue: {
     ...tokens.type.numXl,
@@ -346,6 +372,9 @@ const styles = StyleSheet.create({
     color: tokens.text.mid,
     textTransform: 'uppercase',
     letterSpacing: 1,
+  },
+  viewToggle: {
+    marginBottom: tokens.space[5],
   },
   tabs: {
     flexDirection: 'row',
