@@ -131,11 +131,21 @@ export interface DayCompletion {
   completedAt: string;
 }
 
+/**
+ * An open task for a given day, paired with how many of its target
+ * completions are already logged for that day. Used by the "Forgot
+ * something?" / "Still open today" list.
+ */
+export interface OpenTaskOnDay {
+  task: TaskWithDimensions;
+  completedThisDay: number;
+}
+
 export interface DayDetail {
   dateKey: string;
   completions: DayCompletion[];
   /** Active tasks not yet completed on this day — candidates for retro logging. */
-  openTasks: TaskWithDimensions[];
+  openTasks: OpenTaskOnDay[];
   totalXp: number;
   totalCoins: number;
 }
@@ -240,13 +250,13 @@ export function useDayDetail(date: Date) {
         oneShotCompletedAnytime = new Set((anyComp ?? []).map((r) => r.task_id));
       }
 
-      const openTasks: TaskWithDimensions[] = taskRows
+      const openTasks: OpenTaskOnDay[] = taskRows
         .map((t) => ({ raw: t, recurrence: parseRecurrence(t.recurrence) }))
         .filter(({ raw, recurrence }) => {
           if (recurrence.type === 'one_shot') {
             // For a past day: still candidate if ever-completed is false.
-            // (Edge case: if completed-on-this-day, the completion is already
-            // shown above; we want to hide here so list isn't empty.)
+            // (If completed on this day, the completion is already shown
+            // in the Completed list above; hide here so list isn't empty.)
             return !oneShotCompletedAnytime.has(raw.id);
           }
           if (!isDueOn(recurrence, date)) return false;
@@ -254,18 +264,21 @@ export function useDayDetail(date: Date) {
           return doneCount < (raw.target_count ?? 1);
         })
         .map(({ raw, recurrence }) => ({
-          id: raw.id,
-          character_id: raw.character_id,
-          title: raw.title,
-          description: raw.description,
-          difficulty: raw.difficulty,
-          task_type: raw.task_type,
-          recurrence,
-          target_count: raw.target_count ?? 1,
-          is_archived: raw.is_archived,
-          created_at: raw.created_at,
-          updated_at: raw.updated_at,
-          dimensions: (raw.task_dimension ?? []).map((td) => td.dimension_id),
+          task: {
+            id: raw.id,
+            character_id: raw.character_id,
+            title: raw.title,
+            description: raw.description,
+            difficulty: raw.difficulty,
+            task_type: raw.task_type,
+            recurrence,
+            target_count: raw.target_count ?? 1,
+            is_archived: raw.is_archived,
+            created_at: raw.created_at,
+            updated_at: raw.updated_at,
+            dimensions: (raw.task_dimension ?? []).map((td) => td.dimension_id),
+          },
+          completedThisDay: completionCountThisDay.get(raw.id) ?? 0,
         }));
 
       const totalXp = completions.reduce((s, c) => s + c.xpGranted, 0);

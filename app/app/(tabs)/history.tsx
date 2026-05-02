@@ -19,6 +19,7 @@ import { XpHeatmap } from '@/components/XpHeatmap';
 import { useDailySummary, useDayDetail } from '@/lib/api/history';
 import { useCompleteTask } from '@/lib/api/tasks';
 import type { TaskWithDimensions } from '@/lib/db/types';
+import { describeRecurrence } from '@/lib/recurrence';
 import { rewardForDifficulty } from '@/lib/xp';
 import { tokens } from '@/theme';
 
@@ -276,12 +277,16 @@ export default function HistoryScreen() {
                   <Text style={styles.sectionMeta}>tap to log</Text>
                 </View>
                 <View style={styles.list}>
-                  {day.data.openTasks.map((t) => {
-                    const r = rewardForDifficulty(t.difficulty);
+                  {day.data.openTasks.map(({ task, completedThisDay }) => {
+                    const r = rewardForDifficulty(task.difficulty);
+                    const isPartial =
+                      task.target_count > 1 && completedThisDay > 0;
+                    const showRecurrenceNote =
+                      task.recurrence.type !== 'daily' || task.target_count > 1;
                     return (
                       <Pressable
-                        key={t.id}
-                        onPress={() => handleRetroComplete(t)}
+                        key={task.id}
+                        onPress={() => handleRetroComplete(task)}
                         style={({ pressed }) => [
                           styles.openCard,
                           pressed && styles.openCardPressed,
@@ -292,14 +297,24 @@ export default function HistoryScreen() {
                         </View>
                         <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
                           <Text style={styles.openTitle} numberOfLines={1}>
-                            {t.title}
+                            {task.title}
                           </Text>
                           <View style={styles.completionMetaRow}>
-                            <DifficultyStars difficulty={t.difficulty} />
+                            <DifficultyStars difficulty={task.difficulty} />
+                            {isPartial && (
+                              <Text style={styles.partialBadge}>
+                                {completedThisDay} / {task.target_count} done
+                              </Text>
+                            )}
                           </View>
-                          {t.dimensions.length > 0 && (
+                          {showRecurrenceNote && (
+                            <Text style={styles.recurrenceNote} numberOfLines={1}>
+                              {describeRecurrence(task.recurrence, task.target_count)}
+                            </Text>
+                          )}
+                          {task.dimensions.length > 0 && (
                             <View style={styles.chipsRow}>
-                              {t.dimensions.map((d) => (
+                              {task.dimensions.map((d) => (
                                 <DimensionChip
                                   key={d}
                                   id={d}
@@ -548,5 +563,19 @@ const styles = StyleSheet.create({
     ...tokens.type.body,
     color: tokens.text.base,
     fontFamily: 'Manrope_700Bold',
+  },
+  partialBadge: {
+    ...tokens.type.caption,
+    color: tokens.brand.violet2,
+    fontFamily: 'Manrope_700Bold',
+    backgroundColor: 'rgba(123, 92, 255, 0.16)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: tokens.radius.pill,
+  },
+  recurrenceNote: {
+    ...tokens.type.caption,
+    color: tokens.text.dim,
+    fontStyle: 'italic',
   },
 });
