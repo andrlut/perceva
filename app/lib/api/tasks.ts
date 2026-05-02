@@ -4,6 +4,7 @@ import type { DimensionId, TaskWithDimensions } from '@/lib/db/types';
 import { supabase } from '@/lib/supabase';
 
 import { characterKeys, type CharacterWithProfile } from './character';
+import { streakKeys } from './streak';
 
 export const taskKeys = {
   all: ['tasks'] as const,
@@ -152,6 +153,7 @@ export function useCompleteTask() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.pending() });
       queryClient.invalidateQueries({ queryKey: characterKeys.me() });
+      queryClient.invalidateQueries({ queryKey: streakKeys.me() });
     },
   });
 }

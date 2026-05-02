@@ -6,9 +6,11 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { HeroCard } from '@/components/HeroCard';
+import { StreakChip } from '@/components/StreakChip';
 import { TaskCard } from '@/components/TaskCard';
 import { XPCoinFloat } from '@/components/XPCoinFloat';
 import { useCharacter } from '@/lib/api/character';
+import { useStreak } from '@/lib/api/streak';
 import { useCompleteTask, useTasks } from '@/lib/api/tasks';
 import type { TaskWithDimensions } from '@/lib/db/types';
 import { rewardForDifficulty } from '@/lib/xp';
@@ -24,6 +26,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const character = useCharacter();
   const tasks = useTasks();
+  const streak = useStreak();
   const completeTask = useCompleteTask();
   const [floats, setFloats] = useState<FloatItem[]>([]);
 
@@ -79,6 +82,15 @@ export default function HomeScreen() {
                 totalXp={character.data.character.total_xp}
                 coins={character.data.character.coins}
               />
+            )}
+
+            {streak.data && (
+              <View style={{ marginTop: tokens.space[3] }}>
+                <StreakChip
+                  days={streak.data.currentStreak}
+                  doneToday={streak.data.hasCompletionToday}
+                />
+              </View>
             )}
 
             <View style={styles.sectionHeader}>
