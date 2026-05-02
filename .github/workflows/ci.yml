@@ -40,3 +40,39 @@ jobs:
 
       - name: Lint (app)
         run: pnpm --filter app lint
+
+  publish-ota:
+    name: Publish OTA Update (preview)
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Setup EAS CLI
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Publish update to preview channel
+        working-directory: app
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: https://uneqnpyzevosznwkmvvo.supabase.co
+          EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_sWLt4U0F5J4S-Se-6V7SXw_1LyQqysV
+        run: eas update --branch preview --auto --non-interactive
