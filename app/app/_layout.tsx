@@ -33,7 +33,10 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     const onOnboarding = top === 'onboarding';
 
     if (isAuthenticated) {
-      if (onLogin || onOnboarding) router.replace('/');
+      if (onLogin) router.replace('/');
+      // Allow deliberate replay: if onboardingStatus was reset to 'unseen',
+      // an authenticated user can sit on /onboarding until they finish it.
+      if (onOnboarding && onboardingStatus === 'seen') router.replace('/');
       return;
     }
 
