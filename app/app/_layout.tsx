@@ -87,6 +87,10 @@ export default function RootLayout() {
               name="dimension/[id]"
               options={{ presentation: 'modal', headerShown: false }}
             />
+            <Stack.Screen
+              name="quests"
+              options={{ presentation: 'modal', headerShown: false }}
+            />
             <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
           </Stack>
         </AuthGate>

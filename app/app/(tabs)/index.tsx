@@ -15,10 +15,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { HeroCard } from '@/components/HeroCard';
+import { QuestChip } from '@/components/QuestChip';
 import { StreakChip } from '@/components/StreakChip';
 import { TaskCard } from '@/components/TaskCard';
 import { XPCoinFloat } from '@/components/XPCoinFloat';
 import { useCharacter } from '@/lib/api/character';
+import { useQuests } from '@/lib/api/quests';
 import { useStreak } from '@/lib/api/streak';
 import { useCompleteTask, useTasks } from '@/lib/api/tasks';
 import type { TaskWithDimensions } from '@/lib/db/types';
@@ -37,6 +39,7 @@ export default function HomeScreen() {
   const character = useCharacter();
   const tasks = useTasks();
   const streak = useStreak();
+  const quests = useQuests();
   const completeTask = useCompleteTask();
   const [floats, setFloats] = useState<FloatItem[]>([]);
 
@@ -126,14 +129,15 @@ export default function HomeScreen() {
               />
             )}
 
-            {streak.data && (
-              <View style={{ marginTop: tokens.space[3] }}>
+            <View style={styles.chipsRow}>
+              {streak.data && (
                 <StreakChip
                   days={streak.data.currentStreak}
                   doneToday={streak.data.hasCompletionToday}
                 />
-              </View>
-            )}
+              )}
+              <QuestChip quests={quests.data} />
+            </View>
 
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Today</Text>
@@ -232,6 +236,12 @@ const styles = StyleSheet.create({
     color: tokens.text.mid,
     textAlign: 'center',
     paddingHorizontal: tokens.space[5],
+  },
+  chipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: tokens.space[2],
+    marginTop: tokens.space[3],
   },
   sectionHeader: {
     flexDirection: 'row',
