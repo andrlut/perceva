@@ -12,22 +12,21 @@ interface Props {
 
 /**
  * Compact "🏆 X active · Y ready to claim" chip for the Home screen.
- * Tapping opens the Quest Board modal. Hides itself when there are
- * no active quests AND nothing to claim.
+ * Tapping opens the Quest Board modal. When the user has no active
+ * quests, shows "Take a quest →" so the board is still discoverable.
  */
 export function QuestChip({ quests }: Props) {
   const router = useRouter();
-  if (!quests) return null;
 
-  const active = quests.filter((q) => q.quest.status === 'active');
-  if (active.length === 0) return null;
-
+  const active = (quests ?? []).filter((q) => q.quest.status === 'active');
   const ready = active.filter((q) => q.isComplete).length;
 
   const summary =
     ready > 0
       ? `${ready} ready to claim`
-      : `${active.length} active quest${active.length === 1 ? '' : 's'}`;
+      : active.length > 0
+        ? `${active.length} active quest${active.length === 1 ? '' : 's'}`
+        : 'Take a quest';
 
   return (
     <Pressable
