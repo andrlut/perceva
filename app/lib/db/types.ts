@@ -159,3 +159,82 @@ export interface SkillState {
   currentTier: SkillTier;
   nextTier: SkillTier | null;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Quests
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type QuestStatus =
+  | 'active'
+  | 'completed'
+  | 'failed'
+  | 'expired'
+  | 'abandoned';
+
+export type QuestRequirementKind =
+  | 'complete_task_n_times'
+  | 'complete_any_in_dim'
+  | 'reach_skill_value';
+
+export interface Quest {
+  id: string;
+  character_id: string;
+  template_id: string | null;
+  title: string;
+  description: string | null;
+  started_at: string;
+  deadline: string;
+  reward_xp: number;
+  reward_coins: number;
+  allow_partial: boolean;
+  status: QuestStatus;
+  completed_at: string | null;
+  created_at: string;
+}
+
+export interface QuestRequirement {
+  id: string;
+  quest_id: string;
+  kind: QuestRequirementKind;
+  task_id: string | null;
+  dimension_id: DimensionId | null;
+  skill_id: string | null;
+  target_count: number | null;
+  min_value: number | null;
+  sort_order: number;
+}
+
+export interface QuestTemplate {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string;
+  suggested_duration_days: number;
+  reward_xp: number;
+  reward_coins: number;
+  allow_partial: boolean;
+  requirements: QuestTemplateRequirement[];
+  sort_order: number;
+}
+
+export interface QuestTemplateRequirement {
+  kind: QuestRequirementKind;
+  task_title?: string;
+  dimension_id?: DimensionId;
+  skill_id?: string;
+  target_count?: number;
+  min_value?: number;
+}
+
+/** A quest enriched with its requirements + their current progress. */
+export interface QuestWithProgress {
+  quest: Quest;
+  requirements: QuestRequirementWithProgress[];
+  isComplete: boolean;
+}
+
+export interface QuestRequirementWithProgress {
+  requirement: QuestRequirement;
+  currentCount: number;
+  isMet: boolean;
+}

@@ -69,7 +69,7 @@ This applies to **velocity and ceremony only** — security, RLS, secret hygiene
 
 ---
 
-## Database schema (8 migrations applied to cloud)
+## Database schema (9 migrations applied to cloud)
 
 Tables in `public`:
 
@@ -88,12 +88,18 @@ Tables in `public`:
 | `skill` | catalog: pushups, running, meditate, reading (display_name, unit, dimension_id, icon) |
 | `skill_tier` | catalog ladder: 5 tiers per skill (beginner / bronze / silver / gold / master + threshold) |
 | `skill_log` | per-user PR entries, immutable |
+| `quest` | character-owned. title, deadline, status (active/completed/failed/expired/abandoned), reward_xp/coins, allow_partial, optional template_id |
+| `quest_requirement` | per-quest goal rows (kind: complete_task_n_times / complete_any_in_dim / reach_skill_value); progress is computed on read by joining `task_completion` / `skill_log` against the quest's window |
+| `quest_template` | catalog: public-read suggestions users can clone into their own quest list (title, description, category, suggested_duration_days, reward_xp/coins, requirements jsonb) |
 
 RLS on every table; "self-only" except catalog tables (dimension/skill/skill_tier are public-read for authenticated users).
 
 RPCs:
 - `complete_task(p_task_id uuid, p_completed_at timestamptz default null) → json` — atomic: validates ownership, computes XP/coins from difficulty, writes `task_completion`, bumps `character.total_xp` + `coins`, bumps `character_dimension.xp` for linked dims. Optional `p_completed_at` (≤ now) supports retroactive logging from the History tab; defaults to `now()` for live taps.
 - `redeem_reward(p_reward_id uuid) → json` — atomic balance debit with insufficient-funds error.
+- `start_quest_from_template(p_template_id) → uuid` / `start_custom_quest(p_payload jsonb) → uuid` — clone a template (resolving `task_title` to the user's task by case-insensitive title match) or create a fully custom quest with explicit requirements. Both return the new quest id.
+- `complete_quest(p_quest_id) → json` — credits the quest's `reward_xp` + `reward_coins` and flips status to `completed`. Defense-in-depth ownership/active-status check; client computes "all requirements met?" before calling.
+- `expire_overdue_quests() → integer` — bulk-marks the user's overdue active quests as `expired`. Called from the client on each quest list fetch (idempotent and cheap).
 
 Trigger `handle_new_user()` on `auth.users` insert:
 - creates profile + character + 6 character_dimension rows
