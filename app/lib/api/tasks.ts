@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase';
 
 import { characterKeys, type CharacterWithProfile } from './character';
 import { historyKeys } from './history';
+import { questKeys } from './quests';
 import { streakKeys } from './streak';
 
 export const taskKeys = {
@@ -207,6 +208,7 @@ export function useCompleteTask() {
       queryClient.invalidateQueries({ queryKey: characterKeys.me() });
       queryClient.invalidateQueries({ queryKey: streakKeys.me() });
       queryClient.invalidateQueries({ queryKey: historyKeys.all });
+      queryClient.invalidateQueries({ queryKey: questKeys.active() });
     },
   });
 }
