@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -47,12 +48,25 @@ export default function HomeScreen() {
     const fid = Date.now();
     setFloats((prev) => [...prev, { id: fid, xp: reward.xp, coins: reward.coins }]);
 
-    completeTask.mutate({
-      taskId: task.id,
-      expectedXp: reward.xp,
-      expectedCoins: reward.coins,
-      dimensions: task.dimensions,
-    });
+    completeTask.mutate(
+      {
+        taskId: task.id,
+        expectedXp: reward.xp,
+        expectedCoins: reward.coins,
+        dimensions: task.dimensions,
+      },
+      {
+        onError: (err) => {
+          const e = err as { message?: string; code?: string; details?: string };
+          console.error('[complete_task] failed', e);
+          Alert.alert(
+            'Could not complete task',
+            [e.message, e.code, e.details].filter(Boolean).join('\n') ||
+              'Unknown error.',
+          );
+        },
+      },
+    );
   };
 
   const isLoading = character.isLoading || tasks.isLoading;
