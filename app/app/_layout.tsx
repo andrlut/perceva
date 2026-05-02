@@ -14,7 +14,12 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { useAuthDeepLink, useSession } from '@/lib/auth';
+import {
+  useAuthDeepLink,
+  useRecoveryStore,
+  useRegisterRecoveryListener,
+  useSession,
+} from '@/lib/auth';
 import { useLoadOnboarding } from '@/lib/onboarding';
 
 export const unstable_settings = {
@@ -23,19 +28,31 @@ export const unstable_settings = {
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useSession();
+  const isRecovering = useRecoveryStore((s) => s.isRecovering);
   const segments = useSegments();
   const router = useRouter();
   const onboardingStatus = useLoadOnboarding();
   useAuthDeepLink();
+  useRegisterRecoveryListener();
 
   useEffect(() => {
     if (isLoading || onboardingStatus === 'unknown') return;
     const top = segments[0];
     const onLogin = top === 'login';
     const onOnboarding = top === 'onboarding';
+    const onForgot = top === 'forgot-password';
+    const onReset = top === 'reset-password';
+
+    // Password recovery overrides everything else: the user has a session
+    // (set by the email link) but they need to choose a new password before
+    // we let them anywhere else.
+    if (isAuthenticated && isRecovering) {
+      if (!onReset) router.replace('/reset-password');
+      return;
+    }
 
     if (isAuthenticated) {
-      if (onLogin) router.replace('/');
+      if (onLogin || onForgot || onReset) router.replace('/');
       // Allow deliberate replay: if onboardingStatus was reset to 'unseen',
       // an authenticated user can sit on /onboarding until they finish it.
       if (onOnboarding && onboardingStatus === 'seen') router.replace('/');
@@ -44,11 +61,11 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
     // not authenticated
     if (onboardingStatus === 'unseen') {
-      if (!onOnboarding) router.replace('/onboarding');
+      if (!onOnboarding && !onForgot) router.replace('/onboarding');
     } else {
-      if (!onLogin) router.replace('/login');
+      if (!onLogin && !onForgot) router.replace('/login');
     }
-  }, [isAuthenticated, isLoading, onboardingStatus, segments, router]);
+  }, [isAuthenticated, isRecovering, isLoading, onboardingStatus, segments, router]);
 
   return <>{children}</>;
 }
@@ -75,6 +92,8 @@ export default function RootLayout() {
             <Stack>
             <Stack.Screen name="onboarding" options={{ headerShown: false }} />
             <Stack.Screen name="login" options={{ headerShown: false }} />
+            <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
+            <Stack.Screen name="reset-password" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen
               name="task-form"

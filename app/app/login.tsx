@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -18,6 +19,7 @@ import { tokens } from '@/theme';
 type Mode = 'login' | 'signup';
 
 export default function LoginScreen() {
+  const router = useRouter();
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -112,6 +114,17 @@ export default function LoginScreen() {
             )}
           </Pressable>
 
+          {mode === 'login' && (
+            <Pressable
+              onPress={() => router.push('/forgot-password')}
+              disabled={isSubmitting}
+              style={styles.forgotLink}
+              hitSlop={8}
+            >
+              <Text style={styles.forgotText}>Forgot password?</Text>
+            </Pressable>
+          )}
+
           <Pressable
             onPress={() => setMode((m) => (m === 'login' ? 'signup' : 'login'))}
             disabled={isSubmitting}
@@ -194,6 +207,15 @@ const styles = StyleSheet.create({
     color: tokens.text.mid,
   },
   toggleAction: {
+    color: tokens.brand.violet2,
+    fontFamily: 'Manrope_700Bold',
+  },
+  forgotLink: {
+    marginTop: tokens.space[4],
+    alignItems: 'center',
+  },
+  forgotText: {
+    ...tokens.type.caption,
     color: tokens.brand.violet2,
     fontFamily: 'Manrope_700Bold',
   },
