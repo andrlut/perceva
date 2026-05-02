@@ -96,6 +96,11 @@ export function TaskCard({ task, onComplete, onEdit, isCompleting }: Props) {
       </Pressable>
 
       <Animated.View style={[styles.completeButtonWrap, buttonAnimStyle]}>
+        {/* Painted halo — rendered as a translucent disc behind the button.
+            Replaces Android elevation, which got clipped by the sibling
+            body Pressable. Two layers create a soft falloff. */}
+        <View style={[styles.completeButtonHaloOuter, styles.passthrough]} />
+        <View style={[styles.completeButtonHaloInner, styles.passthrough]} />
         <Pressable
           onPress={onComplete}
           onPressIn={handlePressIn}
@@ -170,12 +175,29 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   completeButtonWrap: {
-    ...tokens.shadow.violetGlow,
+    width: 48,
+    height: 48,
     borderRadius: 24,
-    // Make the elevation glow paint *above* the sibling body Pressable on Android.
-    // Without this, the body's background (and the card's surface) clip the
-    // left half of the violet halo, leaving a visibly cut shadow.
+    alignItems: 'center',
+    justifyContent: 'center',
+    // Sit above the body Pressable so the halo discs render fully.
     zIndex: 1,
+  },
+  completeButtonHaloOuter: {
+    position: 'absolute',
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: tokens.brand.violet,
+    opacity: 0.18,
+  },
+  completeButtonHaloInner: {
+    position: 'absolute',
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: tokens.brand.violet,
+    opacity: 0.32,
   },
   completeButton: {
     width: 48,
