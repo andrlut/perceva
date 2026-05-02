@@ -14,6 +14,7 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useSession } from '@/lib/auth';
+import { getOnboardingSeen } from '@/lib/onboarding';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -23,16 +24,36 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useSession();
   const segments = useSegments();
   const router = useRouter();
+  const [onboardingState, setOnboardingState] = useState<'unknown' | 'seen' | 'unseen'>('unknown');
 
   useEffect(() => {
-    if (isLoading) return;
-    const onLogin = segments[0] === 'login';
-    if (!isAuthenticated && !onLogin) {
-      router.replace('/login');
-    } else if (isAuthenticated && onLogin) {
-      router.replace('/');
+    let cancelled = false;
+    getOnboardingSeen().then((seen) => {
+      if (!cancelled) setOnboardingState(seen ? 'seen' : 'unseen');
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isLoading || onboardingState === 'unknown') return;
+    const top = segments[0];
+    const onLogin = top === 'login';
+    const onOnboarding = top === 'onboarding';
+
+    if (isAuthenticated) {
+      if (onLogin || onOnboarding) router.replace('/');
+      return;
     }
-  }, [isAuthenticated, isLoading, segments, router]);
+
+    // not authenticated
+    if (onboardingState === 'unseen') {
+      if (!onOnboarding) router.replace('/onboarding');
+    } else {
+      if (!onLogin) router.replace('/login');
+    }
+  }, [isAuthenticated, isLoading, onboardingState, segments, router]);
 
   return <>{children}</>;
 }
@@ -56,6 +77,7 @@ export default function RootLayout() {
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <AuthGate>
           <Stack>
+            <Stack.Screen name="onboarding" options={{ headerShown: false }} />
             <Stack.Screen name="login" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen
