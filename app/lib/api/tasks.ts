@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type {
   DimensionId,
+  MetricType,
   Recurrence,
   TaskWithDimensions,
 } from '@/lib/db/types';
@@ -27,6 +28,15 @@ export interface TaskFormInput {
   recurrence: Recurrence;
   target_count: number;
   dimensions: DimensionId[];
+  /**
+   * Optional metric scaling. When metric_type is set, base_value and
+   * increment_per_star must also be set. When null, the task has no
+   * scaling — completed at the default difficulty, no swipe affordance.
+   */
+  metric_type: MetricType | null;
+  metric_label: string | null;
+  base_value: number | null;
+  increment_per_star: number | null;
 }
 
 interface TaskRow {
@@ -41,7 +51,18 @@ interface TaskRow {
   is_archived: boolean;
   created_at: string;
   updated_at: string;
+  metric_type: MetricType | null;
+  metric_label: string | null;
+  base_value: number | string | null;
+  increment_per_star: number | string | null;
   task_dimension: { dimension_id: DimensionId }[];
+}
+
+// Postgres numeric columns can come back as strings via PostgREST.
+function numericOrNull(v: number | string | null | undefined): number | null {
+  if (v === null || v === undefined) return null;
+  const n = typeof v === 'string' ? parseFloat(v) : v;
+  return Number.isFinite(n) ? n : null;
 }
 
 function mapTaskRow(t: TaskRow): TaskWithDimensions {
@@ -57,6 +78,10 @@ function mapTaskRow(t: TaskRow): TaskWithDimensions {
     is_archived: t.is_archived,
     created_at: t.created_at,
     updated_at: t.updated_at,
+    metric_type: t.metric_type,
+    metric_label: t.metric_label,
+    base_value: numericOrNull(t.base_value),
+    increment_per_star: numericOrNull(t.increment_per_star),
     dimensions: (t.task_dimension ?? []).map((td) => td.dimension_id),
   };
 }
@@ -147,10 +172,16 @@ export function useCompleteTask() {
       dimensions: DimensionId[];
       // Optional ISO timestamp for retroactive logging. Omit for "now".
       completedAt?: string;
+      // Optional star difficulty override. When omitted, server uses
+      // the task's default difficulty.
+      selectedDifficulty?: 1 | 2 | 3 | 4 | 5;
     }): Promise<CompleteTaskResult> => {
       const { data, error } = await supabase.rpc('complete_task', {
         p_task_id: params.taskId,
         ...(params.completedAt ? { p_completed_at: params.completedAt } : {}),
+        ...(params.selectedDifficulty
+          ? { p_selected_difficulty: params.selectedDifficulty }
+          : {}),
       });
       if (error) throw error;
       return data as CompleteTaskResult;
@@ -268,6 +299,10 @@ export function useCreateTask() {
           task_type: input.task_type,
           recurrence: input.recurrence,
           target_count: input.target_count,
+          metric_type: input.metric_type,
+          metric_label: input.metric_label,
+          base_value: input.base_value,
+          increment_per_star: input.increment_per_star,
         })
         .select('id')
         .single();
@@ -296,6 +331,10 @@ export function useUpdateTask(taskId: string) {
           task_type: input.task_type,
           recurrence: input.recurrence,
           target_count: input.target_count,
+          metric_type: input.metric_type,
+          metric_label: input.metric_label,
+          base_value: input.base_value,
+          increment_per_star: input.increment_per_star,
         })
         .eq('id', taskId);
       if (error) throw error;

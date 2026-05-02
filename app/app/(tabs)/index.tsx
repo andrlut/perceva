@@ -25,7 +25,7 @@ import { useStreak } from '@/lib/api/streak';
 import { useCompleteTask, useTasks } from '@/lib/api/tasks';
 import type { TaskWithDimensions } from '@/lib/db/types';
 import { formatLongDate, timeOfDayGreeting } from '@/lib/time';
-import { applyStreakMultiplier, rewardForDifficulty } from '@/lib/xp';
+import { applyStreakMultiplier, rewardForDifficulty, type Difficulty } from '@/lib/xp';
 import { tokens } from '@/theme';
 
 interface FloatItem {
@@ -42,12 +42,16 @@ export default function HomeScreen() {
   const quests = useQuests();
   const completeTask = useCompleteTask();
   const [floats, setFloats] = useState<FloatItem[]>([]);
+  // Per-task overrides for star difficulty, applied via swipe on the card.
+  // Cleared when the day rolls over (handled implicitly: tasks list refetches).
+  const [diffOverrides, setDiffOverrides] = useState<Record<string, Difficulty>>({});
 
   const handleComplete = (task: TaskWithDimensions) => {
     if (completeTask.isPending) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
 
-    const baseReward = rewardForDifficulty(task.difficulty);
+    const selected: Difficulty = diffOverrides[task.id] ?? task.difficulty;
+    const baseReward = rewardForDifficulty(selected);
     const reward = applyStreakMultiplier(baseReward, streak.data?.currentStreak ?? 0);
     const fid = Date.now();
     setFloats((prev) => [...prev, { id: fid, xp: reward.xp, coins: reward.coins }]);
@@ -58,6 +62,7 @@ export default function HomeScreen() {
         expectedXp: reward.xp,
         expectedCoins: reward.coins,
         dimensions: task.dimensions,
+        selectedDifficulty: selected,
       },
       {
         onError: (err) => {
@@ -160,6 +165,11 @@ export default function HomeScreen() {
                   <TaskCard
                     key={task.id}
                     task={task}
+                    selectedDifficulty={diffOverrides[task.id]}
+                    onSelectDifficulty={(d) =>
+                      setDiffOverrides((prev) => ({ ...prev, [task.id]: d }))
+                    }
+                    streakDays={streak.data?.currentStreak ?? 0}
                     onComplete={() => handleComplete(task)}
                     onEdit={() =>
                       router.push({ pathname: '/task-form', params: { id: task.id } })

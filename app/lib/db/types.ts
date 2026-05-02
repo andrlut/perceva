@@ -63,6 +63,8 @@ export interface CharacterDimension {
   xp: number;
 }
 
+export type MetricType = 'reps' | 'minutes' | 'pages' | 'km' | 'ml' | 'custom';
+
 export interface Task {
   id: string;
   character_id: string;
@@ -75,6 +77,15 @@ export interface Task {
   is_archived: boolean;
   created_at: string;
   updated_at: string;
+  /**
+   * Optional metric scaling — when set, the task's target value scales
+   * with difficulty: base_value + increment_per_star * (difficulty - 1).
+   * All four scaling fields are set together or all null.
+   */
+  metric_type: MetricType | null;
+  metric_label: string | null;
+  base_value: number | null;
+  increment_per_star: number | null;
 }
 
 /** Task with its linked dimensions (joined via task_dimension). */
@@ -89,6 +100,8 @@ export interface TaskCompletion {
   completed_at: string;
   xp_granted: number;
   coins_granted: number;
+  /** Star difficulty actually used for this completion. */
+  selected_difficulty: 1 | 2 | 3 | 4 | 5;
 }
 
 export type RewardCategory = 'indulgence' | 'good' | 'experience';
