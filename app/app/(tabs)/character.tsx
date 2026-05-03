@@ -75,14 +75,16 @@ export default function CharacterScreen() {
   );
 
   // ── KPIs surfaced on each tab ───────────────────────────────────────
+  // Same calc as HexChart's center "overall" — sum of 12 sub scores divided
+  // by 6 dims, range 0-10. Keeps the tab KPI and the hex center identical.
   const avaliacaoKpi = useMemo(() => {
     if (!character.data) return { kpi: '—' };
     const scores = pickSubScores(character.data.subScores, 'self');
     if (scores.size === 0) return { kpi: '—' };
     let sum = 0;
     for (const s of scores.values()) sum += s;
-    const avg = sum / scores.size;
-    return { kpi: avg.toFixed(1), unit: '/5' };
+    const overall = sum / 6;
+    return { kpi: overall.toFixed(1), unit: '/10' };
   }, [character.data]);
 
   const dedicacaoKpi = useMemo(() => {

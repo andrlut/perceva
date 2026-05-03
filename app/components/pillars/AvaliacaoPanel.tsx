@@ -1,7 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 
 import { HexChart } from '@/components/HexChart';
 import type { CharacterSubScore, SubId } from '@/lib/db/types';
@@ -16,14 +22,22 @@ interface Props {
 /**
  * Pillar 1 — Avaliação. Contemplative tone.
  *
- * The visual splash: hex chart of the user's self-assessment scores. A
- * gentle nudge surfaces the weakest sub as a prompt to act, closing the
- * loop Avaliação → Dedicação. CTA opens the editable self-assessment.
+ * No outer card frame: the hex chart is the visual splash and any extra
+ * border around it competes with its own geometry. Tone signal lives in
+ * the active PillarTab halo above. Layout is simply:
+ *   - Hex (full bleed, sized to the screen)
+ *   - Optional violet-bordered nudge surfacing the weakest sub
+ *   - CTA to update self-assessment
  *
- * Deliberately quiet: no XP, no streak, no confetti.
+ * Quiet by design: no XP, no streak, no confetti.
  */
 export function AvaliacaoPanel({ subScores }: Props) {
   const router = useRouter();
+  const { width: screenWidth } = useWindowDimensions();
+  // Match the old (pre-pillars) sizing: bleed slightly beyond page padding
+  // for visual presence, capped so it doesn't blow up on tablets.
+  const chartSize = Math.max(240, Math.min((screenWidth || 360) - 16, 360));
+
   const scores = useMemo(() => pickSubScores(subScores, 'self'), [subScores]);
 
   const weakest = useMemo<{ subId: SubId; score: number } | null>(() => {
@@ -36,9 +50,9 @@ export function AvaliacaoPanel({ subScores }: Props) {
   }, [scores]);
 
   return (
-    <View style={styles.card}>
+    <View style={styles.wrap}>
       <View style={styles.hexWrap}>
-        <HexChart scores={scores} size={300} />
+        <HexChart scores={scores} size={chartSize} />
       </View>
 
       {weakest && weakest.score < 5 && (
@@ -65,12 +79,7 @@ export function AvaliacaoPanel({ subScores }: Props) {
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: tokens.bg.surface,
-    borderRadius: tokens.radius.lg,
-    borderWidth: 1.5,
-    borderColor: 'rgba(155, 130, 255, 0.22)',
-    padding: tokens.space[4],
+  wrap: {
     gap: tokens.space[3],
   },
   hexWrap: {
