@@ -152,10 +152,11 @@ export function HexChart({ scores, size = 340 }: HexChartProps) {
           );
         })}
         {/*
-          Note: SvgText `fontFamily` is intentionally not set. On Android,
-          react-native-svg looks up native typefaces; expo-font-loaded
-          fonts like "Manrope_800ExtraBold" aren't always resolvable from
-          the SVG renderer and can crash. fontWeight gets us close enough.
+          fontFamily here is the same Manrope_800ExtraBold the rest of
+          the app uses. On Android we don't even reach this code path —
+          Hero detects Platform.OS === 'android' and renders the pure-RN
+          HexChartFallback instead, since react-native-svg 15.12.1 has
+          known native crashes on that platform.
         */}
         {verts.map((v, j) => (
           <SvgText
@@ -163,6 +164,7 @@ export function HexChart({ scores, size = 340 }: HexChartProps) {
             x={v.x}
             y={v.y + 4}
             textAnchor="middle"
+            fontFamily="Manrope_800ExtraBold"
             fontWeight="800"
             fontSize={13}
             fill="#0E1230"
@@ -178,6 +180,7 @@ export function HexChart({ scores, size = 340 }: HexChartProps) {
             x={v.lx}
             y={v.ly + 4}
             textAnchor="middle"
+            fontFamily="Manrope_800ExtraBold"
             fontWeight="800"
             fontSize={10}
             fill={DIMENSION_META[v.dim].color}
@@ -191,6 +194,7 @@ export function HexChart({ scores, size = 340 }: HexChartProps) {
           x={CX}
           y={CY + 9}
           textAnchor="middle"
+          fontFamily="Manrope_800ExtraBold"
           fontWeight="800"
           fontSize={26}
           fill="#F2F3FF"
