@@ -343,6 +343,11 @@ export function HexChart({
                     const score = i === 0 ? m.sa : m.sb;
                     return (
                       <View key={subId} style={styles.subRow}>
+                        <Ionicons
+                          name={subMeta.iconName as never}
+                          size={10}
+                          color={meta.color}
+                        />
                         <Text style={styles.subLabel} numberOfLines={1}>
                           {subMeta.label}
                         </Text>
@@ -468,7 +473,7 @@ const styles = StyleSheet.create({
   subRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
     marginTop: 5,
   },
   subLabel: {
