@@ -157,10 +157,6 @@ export function AvaliacaoPanel({ subScores }: Props) {
 
   return (
     <View style={styles.wrap}>
-      {hasQuestionnaire && (
-        <SourceToggle value={hexSource} onChange={setHexSource} />
-      )}
-
       <View style={styles.hexWrap}>
         <HexChart
           scores={primary}
@@ -171,17 +167,38 @@ export function AvaliacaoPanel({ subScores }: Props) {
             router.push({ pathname: '/dimension/[id]', params: { id: dim } })
           }
         />
+        {hasQuestionnaire && (
+          <View style={styles.toggleOverlay} pointerEvents="box-none">
+            <SourceToggle value={hexSource} onChange={setHexSource} />
+          </View>
+        )}
       </View>
 
       {weakest && weakest.score < 5 && (
-        <View style={styles.nudge}>
-          <Text style={styles.nudgeText}>
-            <Text style={styles.nudgeStrong}>
-              {SUB_META[weakest.subId].label}
-            </Text>{' '}
-            está em {weakest.score}/5 — vale criar uma quest pra mexer aí?
-          </Text>
-        </View>
+        <Pressable
+          onPress={() =>
+            router.push({
+              pathname: '/dimension/[id]',
+              params: { id: SUB_META[weakest.subId].dimensionId },
+            })
+          }
+          style={({ pressed }) => [styles.nudge, pressed && { opacity: 0.7 }]}
+          hitSlop={4}
+        >
+          <View style={styles.nudgeInner}>
+            <Text style={styles.nudgeText}>
+              <Text style={styles.nudgeStrong}>
+                {SUB_META[weakest.subId].label}
+              </Text>{' '}
+              está em {weakest.score}/5 — toque pra ver tasks recomendadas
+            </Text>
+            <Ionicons
+              name="chevron-forward"
+              size={14}
+              color={tokens.brand.violet2}
+            />
+          </View>
+        </Pressable>
       )}
 
       <Pressable
@@ -214,6 +231,12 @@ const styles = StyleSheet.create({
   },
   hexWrap: {
     alignItems: 'center',
+    position: 'relative',
+  },
+  toggleOverlay: {
+    position: 'absolute',
+    top: 0,
+    right: 4,
   },
   nudge: {
     backgroundColor: 'rgba(155, 130, 255, 0.08)',
@@ -223,7 +246,13 @@ const styles = StyleSheet.create({
     paddingVertical: tokens.space[2],
     borderRadius: tokens.radius.sm,
   },
+  nudgeInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[2],
+  },
   nudgeText: {
+    flex: 1,
     fontFamily: 'Manrope_500Medium',
     fontSize: 12,
     lineHeight: 17,
