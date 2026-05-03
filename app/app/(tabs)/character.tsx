@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import {
   ActivityIndicator,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -357,30 +358,41 @@ export default function CharacterScreen() {
             ]}
             hitSlop={4}
           >
-            <ErrorBoundary
-              label="Hex chart"
-              fallback={(err, info) => (
-                <View style={{ gap: tokens.space[3] }}>
-                  <View style={styles.errorCard}>
-                    <Text style={styles.errorTitle}>HEX CHART CRASHED</Text>
-                    <Text style={styles.errorMessage}>{err.message || String(err)}</Text>
-                    {info ? (
-                      <Text style={styles.errorStack} numberOfLines={20}>
-                        {info.trim()}
-                      </Text>
-                    ) : null}
-                  </View>
-                  <HexChartFallback
-                    scores={pickSubScores(character.data.subScores, 'self')}
-                  />
-                </View>
-              )}
-            >
-              <HexChart
+            {Platform.OS === 'android' ? (
+              // react-native-svg 15.12.1 has known native crashes on
+              // Android (Brush.getVal NPE, font lookup). Use the pure-RN
+              // representation until upstream is patched.
+              <HexChartFallback
                 scores={pickSubScores(character.data.subScores, 'self')}
-                size={chartSize}
               />
-            </ErrorBoundary>
+            ) : (
+              <ErrorBoundary
+                label="Hex chart"
+                fallback={(err, info) => (
+                  <View style={{ gap: tokens.space[3] }}>
+                    <View style={styles.errorCard}>
+                      <Text style={styles.errorTitle}>HEX CHART CRASHED</Text>
+                      <Text style={styles.errorMessage}>
+                        {err.message || String(err)}
+                      </Text>
+                      {info ? (
+                        <Text style={styles.errorStack} numberOfLines={20}>
+                          {info.trim()}
+                        </Text>
+                      ) : null}
+                    </View>
+                    <HexChartFallback
+                      scores={pickSubScores(character.data.subScores, 'self')}
+                    />
+                  </View>
+                )}
+              >
+                <HexChart
+                  scores={pickSubScores(character.data.subScores, 'self')}
+                  size={chartSize}
+                />
+              </ErrorBoundary>
+            )}
           </Pressable>
 
           {/* ── 3. CATEGORIES (RPG stat block, XP per dim) ────── */}
