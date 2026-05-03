@@ -114,12 +114,11 @@ export default function HomeScreen() {
           />
         }
       >
+        {/* Date + greeting only — name lives in HeroCard below, no need to
+          * repeat it here (and the QuestChip card was crowding it visually). */}
         <View style={styles.header}>
           <Text style={styles.dateText}>{formatLongDate()}</Text>
           <Text style={styles.greeting}>{timeOfDayGreeting()}</Text>
-          <Text style={styles.name}>
-            {character.data?.profile.display_name ?? 'Adventurer'}
-          </Text>
         </View>
 
         {isLoading ? (
@@ -228,7 +227,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingTop: tokens.space[2],
-    paddingBottom: tokens.space[5],
+    paddingBottom: tokens.space[3],
   },
   dateText: {
     ...tokens.type.caption,
@@ -240,11 +239,6 @@ const styles = StyleSheet.create({
   greeting: {
     ...tokens.type.body,
     color: tokens.text.mid,
-  },
-  name: {
-    ...tokens.type.h1,
-    color: tokens.text.hi,
-    marginTop: 2,
   },
   loadingBox: {
     paddingVertical: tokens.space[10],
