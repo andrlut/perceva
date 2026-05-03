@@ -8,6 +8,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,7 +23,7 @@ import {
   useHeroSkillsExpand,
   useHydrateHeroSkillsExpand,
 } from '@/lib/heroSkillsExpand';
-import { useCharacter } from '@/lib/api/character';
+import { pickSubScores, useCharacter } from '@/lib/api/character';
 import { useRewards } from '@/lib/api/rewards';
 import { useSkillStates } from '@/lib/api/skills';
 import { useStreak } from '@/lib/api/streak';
@@ -157,6 +158,9 @@ export default function CharacterScreen() {
   const skillStates = useSkillStates();
   const streak = useStreak();
   const rewards = useRewards();
+  const { width: screenWidth } = useWindowDimensions();
+  // Chart bleeds outside the content padding to use the full screen width.
+  const chartSize = Math.min(screenWidth - tokens.space[2] * 2, 480);
 
   useHydrateHeroSkillsExpand();
   const expanded = useHeroSkillsExpand((s) => s.expanded);
@@ -336,23 +340,21 @@ export default function CharacterScreen() {
 
           {/* ── 2. HEX OF LIFE — subjective scores per sub ──── */}
           <View style={styles.hexHeader}>
-            <Text style={styles.sectionTitle}>Self-assessment</Text>
-            <Text style={styles.hexHint}>Tap to edit</Text>
+            <Text style={styles.hexEyebrow}>SELF-ASSESSMENT</Text>
+            <Text style={styles.hexEdit}>TAP TO EDIT</Text>
           </View>
           <Pressable
             onPress={() => router.push('/self-assessment')}
             style={({ pressed }) => [
-              styles.hexCard,
+              styles.hexBleed,
               pressed && { opacity: 0.85 },
             ]}
             hitSlop={4}
           >
-            <HexChart subs={character.data.subs} size={300} />
-            <View style={styles.hexEditRow}>
-              <Ionicons name="create" size={14} color={tokens.brand.violet2} />
-              <Text style={styles.hexEditText}>Update your levels</Text>
-              <Ionicons name="chevron-forward" size={14} color={tokens.brand.violet2} />
-            </View>
+            <HexChart
+              scores={pickSubScores(character.data.subScores, 'self')}
+              size={chartSize}
+            />
           </Pressable>
 
           {/* ── 3. CATEGORIES (RPG stat block, XP per dim) ────── */}
@@ -740,46 +742,31 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_600SemiBold',
   },
 
-  // Hex card wrapping the wheel-of-life-style chart
+  // Hex header sits in the normal padded content; chart below bleeds wider.
   hexHeader: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    alignItems: 'center',
     justifyContent: 'space-between',
     marginTop: tokens.space[5],
     marginBottom: tokens.space[3],
   },
-  hexHint: {
-    ...tokens.type.caption,
-    color: tokens.brand.violet2,
+  hexEyebrow: {
     fontFamily: 'Manrope_700Bold',
-    letterSpacing: 0.4,
+    fontSize: 11,
+    color: tokens.text.mid,
+    letterSpacing: 1.6,
     textTransform: 'uppercase',
-    fontSize: 10,
   },
-  hexCard: {
-    backgroundColor: tokens.bg.surface,
-    borderRadius: tokens.radius.lg,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-    paddingHorizontal: tokens.space[3],
-    paddingTop: tokens.space[4],
-    paddingBottom: tokens.space[3],
-  },
-  hexEditRow: {
-    marginTop: tokens.space[3],
-    paddingTop: tokens.space[3],
-    borderTopWidth: 1,
-    borderTopColor: tokens.border.divider,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-  },
-  hexEditText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 12,
+  hexEdit: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 11,
     color: tokens.brand.violet2,
-    letterSpacing: 0.3,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+  },
+  hexBleed: {
+    marginHorizontal: -tokens.space[4],
+    paddingHorizontal: tokens.space[2],
   },
 
   // Categories — compact stat block, 6 cols across, BG3-inspired

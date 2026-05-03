@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type {
+  AssessmentSource,
   Character,
   CharacterDimension,
-  CharacterSub,
+  CharacterSubScore,
   Profile,
   SubId,
 } from '@/lib/db/types';
@@ -13,7 +14,8 @@ export interface CharacterWithProfile {
   profile: Profile;
   character: Character;
   dimensions: CharacterDimension[];
-  subs: CharacterSub[];
+  /** All character_sub_score rows across both sources. */
+  subScores: CharacterSubScore[];
 }
 
 export const characterKeys = {
@@ -39,8 +41,8 @@ async function fetchCharacter(): Promise<CharacterWithProfile> {
     .select('*');
   if (dimErr) throw dimErr;
 
-  const { data: subs, error: subErr } = await supabase
-    .from('character_sub')
+  const { data: subScores, error: subErr } = await supabase
+    .from('character_sub_score')
     .select('*');
   if (subErr) throw subErr;
 
@@ -48,7 +50,7 @@ async function fetchCharacter(): Promise<CharacterWithProfile> {
     profile: profile as Profile,
     character: character as Character,
     dimensions: (dimensions ?? []) as CharacterDimension[],
-    subs: (subs ?? []) as CharacterSub[],
+    subScores: (subScores ?? []) as CharacterSubScore[],
   };
 }
 
@@ -59,23 +61,34 @@ export function useCharacter() {
   });
 }
 
+/** Pick out scores for a given source, returning a Map<SubId, score>. */
+export function pickSubScores(
+  rows: CharacterSubScore[],
+  source: AssessmentSource,
+): Map<SubId, number> {
+  const map = new Map<SubId, number>();
+  for (const r of rows) {
+    if (r.source === source) map.set(r.sub_id, r.score);
+  }
+  return map;
+}
+
 /**
- * Upsert a single character_sub.subjective_score (0-5). Optimistically
- * updates the cached character so the hex chart reacts immediately.
+ * Atomically upsert a sub score AND append to the assessment_log via the
+ * set_sub_score RPC. Optimistic update keeps the hex chart reactive.
  */
-export function useUpdateCharacterSub() {
+export function useSetSubScore() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (params: { subId: SubId; score: number }) => {
-      const { data: u, error: uErr } = await supabase.auth.getUser();
-      if (uErr) throw uErr;
-      const userId = u.user?.id;
-      if (!userId) throw new Error('Not authenticated');
-
-      const { error } = await supabase.from('character_sub').upsert({
-        character_id: userId,
-        sub_id: params.subId,
-        subjective_score: params.score,
+    mutationFn: async (params: {
+      source: AssessmentSource;
+      subId: SubId;
+      score: number;
+    }) => {
+      const { error } = await supabase.rpc('set_sub_score', {
+        p_source: params.source,
+        p_sub_id: params.subId,
+        p_score: params.score,
       });
       if (error) throw error;
     },
@@ -83,24 +96,28 @@ export function useUpdateCharacterSub() {
       await qc.cancelQueries({ queryKey: characterKeys.me() });
       const prev = qc.getQueryData<CharacterWithProfile>(characterKeys.me());
       if (prev) {
-        const has = prev.subs.some((s) => s.sub_id === params.subId);
-        const nextSubs: CharacterSub[] = has
-          ? prev.subs.map((s) =>
-              s.sub_id === params.subId
-                ? { ...s, subjective_score: params.score }
-                : s,
-            )
-          : [
-              ...prev.subs,
-              {
-                character_id: prev.character.id,
-                sub_id: params.subId,
-                subjective_score: params.score,
-              },
-            ];
+        const idx = prev.subScores.findIndex(
+          (r) => r.source === params.source && r.sub_id === params.subId,
+        );
+        const nowIso = new Date().toISOString();
+        const nextSubScores: CharacterSubScore[] =
+          idx >= 0
+            ? prev.subScores.map((r, i) =>
+                i === idx ? { ...r, score: params.score, updated_at: nowIso } : r,
+              )
+            : [
+                ...prev.subScores,
+                {
+                  character_id: prev.character.id,
+                  source: params.source,
+                  sub_id: params.subId,
+                  score: params.score,
+                  updated_at: nowIso,
+                },
+              ];
         qc.setQueryData<CharacterWithProfile>(characterKeys.me(), {
           ...prev,
-          subs: nextSubs,
+          subScores: nextSubScores,
         });
       }
       return { prev };

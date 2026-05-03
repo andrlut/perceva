@@ -61,11 +61,28 @@ export interface DimensionSub {
   sort_order: number;
 }
 
-export interface CharacterSub {
+/**
+ * Where a sub score came from. 'self' is the user's own gut rating,
+ * 'questionnaire' is a derived score from the (future) onboarding quiz.
+ */
+export type AssessmentSource = 'self' | 'questionnaire';
+
+export interface CharacterSubScore {
   character_id: string;
+  source: AssessmentSource;
   sub_id: SubId;
-  /** 0-5, set by the user via questionnaire or direct self-assessment. */
-  subjective_score: number;
+  /** 0-5. */
+  score: number;
+  updated_at: string;
+}
+
+export interface AssessmentLogEntry {
+  id: string;
+  character_id: string;
+  source: AssessmentSource;
+  sub_id: SubId;
+  score: number;
+  recorded_at: string;
 }
 
 export interface Profile {

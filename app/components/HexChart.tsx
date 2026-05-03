@@ -1,247 +1,249 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Line, Polygon, Text as SvgText } from 'react-native-svg';
+import Svg, {
+  Circle,
+  Defs,
+  Line,
+  Polygon,
+  RadialGradient,
+  Stop,
+  Text as SvgText,
+} from 'react-native-svg';
 
-import type { CharacterSub, SubId } from '@/lib/db/types';
+import type { SubId } from '@/lib/db/types';
 import { tokens } from '@/theme';
 import { DIMENSION_META, DIMENSION_ORDER, SUB_META, SUBS_BY_DIM } from '@/theme/dimensions';
 
 interface HexChartProps {
-  /** All 12 character_sub rows. Missing subs default to score 0. */
-  subs: CharacterSub[];
+  /** Map of sub_id → score (0-5). Missing keys render as 0. */
+  scores: Map<SubId, number>;
   size?: number;
 }
 
+const VIEWBOX = 340;
+const CX = 170;
+const CY = 170;
+const R = 118; // outer ring radius
+const SUB_MAX = 5; // 5 pips per sub
+const DIM_MAX = SUB_MAX * 2; // sum of two subs
+
+// Vertex angle (j in 0..5, top is 0).
+function angleAt(j: number) {
+  return (j / 6) * Math.PI * 2 - Math.PI / 2;
+}
+
+/** Hex polygon ring at a given fraction of R. */
+function hexPoints(fraction: number) {
+  const r = R * fraction;
+  return Array.from({ length: 6 }, (_, j) => {
+    const a = angleAt(j);
+    return `${(CX + Math.cos(a) * r).toFixed(2)},${(CY + Math.sin(a) * r).toFixed(2)}`;
+  }).join(' ');
+}
+
 /**
- * Wheel-of-life chart with 12 axes (one per sub) plus a 6-ball overlay
- * showing the per-dim average.
+ * Self-assessment chart — Option A from the design handoff.
  *
- *   - 12 corners = 12 subs, value 0-5 each. Adjacent pairs share their
- *     parent dim's color.
- *   - User shape: filled polygon connecting the 12 sub scores.
- *   - 6 dim "balls" sit at the midpoint angle between each dim's two
- *     subs, radius = avg of the pair, color = dim color, value inside.
- *   - Bottom legend: 6 columns (one per dim), each with the dim avg
- *     and the 2 sub scores.
+ *   - 6-vertex hexagon polygon (one vertex per dim, clockwise from top:
+ *     health, strength, mind, wealth, bonds, craft)
+ *   - Each vertex carries a colored disc with the main score (sum of the
+ *     dim's two subs, 0-10)
+ *   - Outer dim labels at R + 22 in dim color
+ *   - Center stamp: "OVERALL" + average of all 6 mains (rounded to 0.1)
+ *   - Legend below: 3 × 2 grid of cards, one per dim, each with a square
+ *     score badge and 2 sub rows of 5 pips
  */
-export function HexChart({ subs, size = 300 }: HexChartProps) {
-  const subScores = useMemo(() => {
-    const map = new Map<SubId, number>();
-    for (const s of subs) map.set(s.sub_id as SubId, s.subjective_score);
-    return map;
-  }, [subs]);
-
-  // Flat list of 12 subs in display order (dim-paired).
-  const subOrder = useMemo<SubId[]>(
-    () => DIMENSION_ORDER.flatMap((d) => SUBS_BY_DIM[d]),
-    [],
-  );
-
-  const padding = 56;
-  const cx = size / 2;
-  const cy = size / 2;
-  const radius = size / 2 - padding;
-  const SUB_MAX = 5;
-
-  // Sub corners — 12 axes, 30° steps starting at top.
-  const corners = useMemo(() => {
-    return subOrder.map((subId, i) => {
-      const angle = (Math.PI / 6) * i - Math.PI / 2;
-      const meta = SUB_META[subId];
-      return {
-        subId,
-        dimensionId: meta.dimensionId,
-        angle,
-        x: cx + radius * Math.cos(angle),
-        y: cy + radius * Math.sin(angle),
-      };
-    });
-  }, [subOrder, cx, cy, radius]);
-
-  // Dim midpoints — angle bisects the two sub axes of a dim.
-  const dimMids = useMemo(() => {
-    return DIMENSION_ORDER.map((dim, d) => {
-      const angle = (Math.PI / 6) * (2 * d + 0.5) - Math.PI / 2;
+export function HexChart({ scores, size = 340 }: HexChartProps) {
+  // Per-dim main scores in vertex order (clockwise from top).
+  const mains = useMemo(() => {
+    return DIMENSION_ORDER.map((dim) => {
       const [a, b] = SUBS_BY_DIM[dim];
-      const sa = subScores.get(a) ?? 0;
-      const sb = subScores.get(b) ?? 0;
-      const avg = (sa + sb) / 2;
-      const r = (avg / SUB_MAX) * radius;
-      return {
-        dim,
-        angle,
-        avg,
-        x: cx + r * Math.cos(angle),
-        y: cy + r * Math.sin(angle),
-        labelX: cx + (radius + 26) * Math.cos(angle),
-        labelY: cy + (radius + 26) * Math.sin(angle),
-      };
+      const sa = scores.get(a) ?? 0;
+      const sb = scores.get(b) ?? 0;
+      return { dim, score: sa + sb, sa, sb };
     });
-  }, [subScores, cx, cy, radius]);
+  }, [scores]);
 
-  // Concentric grid (every full point on the 0-5 scale).
-  const gridRings = [1 / 5, 2 / 5, 3 / 5, 4 / 5, 1.0];
+  const overall = useMemo(() => {
+    const sum = mains.reduce((s, m) => s + m.score, 0);
+    return Math.round((sum / mains.length) * 10) / 10;
+  }, [mains]);
 
-  const framePoints = corners
-    .map((c) => `${c.x.toFixed(2)},${c.y.toFixed(2)}`)
-    .join(' ');
+  // Concentric ring polygons.
+  const rings = [1 / 4, 2 / 4, 3 / 4, 4 / 4];
 
-  const valuePoints = corners
-    .map((c) => {
-      const v = subScores.get(c.subId) ?? 0;
-      const r = (v / SUB_MAX) * radius;
-      const x = cx + r * Math.cos(c.angle);
-      const y = cy + r * Math.sin(c.angle);
-      return `${x.toFixed(2)},${y.toFixed(2)}`;
+  // Score polygon points.
+  const scorePts = mains
+    .map((m, j) => {
+      const a = angleAt(j);
+      const r = (m.score / DIM_MAX) * R;
+      return `${(CX + Math.cos(a) * r).toFixed(2)},${(CY + Math.sin(a) * r).toFixed(2)}`;
     })
     .join(' ');
 
+  // Vertex positions for badges + outer labels.
+  const verts = mains.map((m, j) => {
+    const a = angleAt(j);
+    const r = (m.score / DIM_MAX) * R;
+    const x = CX + Math.cos(a) * r;
+    const y = CY + Math.sin(a) * r;
+    const lx = CX + Math.cos(a) * (R + 22);
+    const ly = CY + Math.sin(a) * (R + 22);
+    return { ...m, x, y, lx, ly };
+  });
+
   return (
     <View>
-      <View style={{ width: size, height: size, alignSelf: 'center' }}>
-        <Svg width={size} height={size}>
-          {gridRings.map((g, i) => {
-            const pts = corners
-              .map((c) => {
-                const r = g * radius;
-                const x = cx + r * Math.cos(c.angle);
-                const y = cy + r * Math.sin(c.angle);
-                return `${x.toFixed(2)},${y.toFixed(2)}`;
-              })
-              .join(' ');
-            return (
-              <Polygon
-                key={`ring-${i}`}
-                points={pts}
-                fill="none"
-                stroke={tokens.border.divider}
-                strokeWidth={1}
-              />
-            );
-          })}
+      <Svg width={size} height={size} viewBox={`0 0 ${VIEWBOX} ${VIEWBOX}`}>
+        <Defs>
+          <RadialGradient id="hexGradA" cx="50%" cy="50%" r="50%">
+            <Stop offset="0%" stopColor="#9B82FF" stopOpacity={0.5} />
+            <Stop offset="100%" stopColor="#7B5CFF" stopOpacity={0.18} />
+          </RadialGradient>
+        </Defs>
 
-          {corners.map((c, i) => (
+        {/* Concentric hex rings */}
+        {rings.map((g, i) => {
+          const idx = i + 1;
+          const dashed = idx === 2 || idx === 3;
+          const isOuter = idx === 4;
+          return (
+            <Polygon
+              key={`ring-${i}`}
+              points={hexPoints(g)}
+              fill={isOuter ? 'rgba(255,255,255,0.025)' : 'none'}
+              stroke="rgba(255,255,255,0.08)"
+              strokeWidth={1}
+              strokeDasharray={dashed ? '2 4' : undefined}
+            />
+          );
+        })}
+
+        {/* Spokes from center to each outer vertex */}
+        {mains.map((_, j) => {
+          const a = angleAt(j);
+          const x = CX + Math.cos(a) * R;
+          const y = CY + Math.sin(a) * R;
+          return (
             <Line
-              key={`spoke-${i}`}
-              x1={cx}
-              y1={cy}
-              x2={c.x}
-              y2={c.y}
-              stroke={`${DIMENSION_META[c.dimensionId].color}40`}
+              key={`spoke-${j}`}
+              x1={CX}
+              y1={CY}
+              x2={x}
+              y2={y}
+              stroke="rgba(255,255,255,0.06)"
               strokeWidth={1}
             />
-          ))}
+          );
+        })}
 
-          <Polygon
-            points={framePoints}
-            fill="none"
-            stroke={tokens.border.strong}
-            strokeWidth={1.5}
-          />
+        {/* Score polygon */}
+        <Polygon
+          points={scorePts}
+          fill="url(#hexGradA)"
+          stroke="#9B82FF"
+          strokeWidth={2}
+          strokeLinejoin="round"
+        />
 
-          <Polygon
-            points={valuePoints}
-            fill={tokens.brand.violetGlow}
-            stroke={tokens.brand.violet2}
-            strokeWidth={2}
-          />
-
-          {corners.map((c, i) => {
-            const v = subScores.get(c.subId) ?? 0;
-            const r = (v / SUB_MAX) * radius;
-            const x = cx + r * Math.cos(c.angle);
-            const y = cy + r * Math.sin(c.angle);
-            return (
-              <Circle
-                key={`sub-dot-${i}`}
-                cx={x}
-                cy={y}
-                r={3.5}
-                fill={DIMENSION_META[c.dimensionId].color}
-                stroke={tokens.bg.deep}
-                strokeWidth={1}
-              />
-            );
-          })}
-
-          {dimMids.map((m, i) => (
+        {/* Vertex score discs */}
+        {verts.map((v, j) => {
+          const meta = DIMENSION_META[v.dim];
+          return (
             <Circle
-              key={`dim-ball-${i}`}
-              cx={m.x}
-              cy={m.y}
-              r={13}
-              fill={DIMENSION_META[m.dim].color}
-              stroke={tokens.bg.deep}
-              strokeWidth={2}
-              opacity={0.95}
+              key={`disc-${j}`}
+              cx={v.x}
+              cy={v.y}
+              r={15}
+              fill={meta.color}
             />
-          ))}
-          {dimMids.map((m, i) => (
-            <SvgText
-              key={`dim-ball-text-${i}`}
-              x={m.x}
-              y={m.y + 4}
-              textAnchor="middle"
-              fontSize={11}
-              fontWeight="800"
-              fill={tokens.text.hi}
-            >
-              {m.avg.toFixed(1)}
-            </SvgText>
-          ))}
+          );
+        })}
+        {verts.map((v, j) => (
+          <SvgText
+            key={`disc-text-${j}`}
+            x={v.x}
+            y={v.y + 4}
+            textAnchor="middle"
+            fontFamily="Manrope_800ExtraBold"
+            fontSize={13}
+            fill="#0E1230"
+          >
+            {v.score}
+          </SvgText>
+        ))}
 
-          {dimMids.map((m, i) => (
-            <SvgText
-              key={`dim-label-${i}`}
-              x={m.labelX}
-              y={m.labelY + 4}
-              textAnchor="middle"
-              fontSize={10}
-              fontWeight="800"
-              fill={DIMENSION_META[m.dim].color}
-            >
-              {DIMENSION_META[m.dim].label.toUpperCase()}
-            </SvgText>
-          ))}
-        </Svg>
-      </View>
+        {/* Outer dim labels */}
+        {verts.map((v, j) => (
+          <SvgText
+            key={`outer-${j}`}
+            x={v.lx}
+            y={v.ly + 4}
+            textAnchor="middle"
+            fontFamily="Manrope_800ExtraBold"
+            fontSize={10}
+            fill={DIMENSION_META[v.dim].color}
+          >
+            {DIMENSION_META[v.dim].label.toUpperCase()}
+          </SvgText>
+        ))}
 
-      <View style={styles.legend}>
-        {DIMENSION_ORDER.map((dim) => {
-          const meta = DIMENSION_META[dim];
-          const subIds = SUBS_BY_DIM[dim];
-          const sa = subScores.get(subIds[0]) ?? 0;
-          const sb = subScores.get(subIds[1]) ?? 0;
-          const avg = (sa + sb) / 2;
+        {/* Center stamp — overall avg, no label */}
+        <SvgText
+          x={CX}
+          y={CY + 9}
+          textAnchor="middle"
+          fontFamily="Manrope_800ExtraBold"
+          fontSize={26}
+          fill="#F2F3FF"
+        >
+          {overall.toFixed(1)}
+        </SvgText>
+      </Svg>
+
+      {/* Legend grid: 2 rows × 3 cols */}
+      <View style={styles.legendGrid}>
+        {mains.map((m) => {
+          const meta = DIMENSION_META[m.dim];
+          const subIds = SUBS_BY_DIM[m.dim];
           return (
             <View
-              key={dim}
-              style={[styles.legendCol, { borderColor: `${meta.color}33` }]}
+              key={m.dim}
+              style={[styles.card, { borderColor: `${meta.color}40` }]}
             >
-              <View style={[styles.legendBadge, { backgroundColor: meta.color }]}>
-                <Text style={styles.legendBadgeText}>{avg.toFixed(1)}</Text>
+              <View style={styles.cardHeader}>
+                <Text
+                  style={[styles.cardLabel, { color: meta.color }]}
+                  numberOfLines={1}
+                >
+                  {meta.label.toUpperCase()}
+                </Text>
+                <View style={[styles.cardBadge, { backgroundColor: meta.color }]}>
+                  <Text style={styles.cardBadgeText}>{m.score}</Text>
+                </View>
               </View>
-              <Text
-                style={[styles.legendDim, { color: meta.color }]}
-                numberOfLines={1}
-              >
-                {meta.label}
-              </Text>
               {subIds.map((subId, i) => {
                 const subMeta = SUB_META[subId];
-                const score = i === 0 ? sa : sb;
+                const score = i === 0 ? m.sa : m.sb;
                 return (
-                  <View key={subId} style={styles.legendSubRow}>
-                    <Ionicons
-                      name={subMeta.iconName as never}
-                      size={9}
-                      color={tokens.text.dim}
-                    />
-                    <Text style={styles.legendSubLabel} numberOfLines={1}>
+                  <View key={subId} style={styles.subRow}>
+                    <Text style={styles.subLabel} numberOfLines={1}>
                       {subMeta.label}
                     </Text>
-                    <Text style={styles.legendSubScore}>{score}</Text>
+                    <View style={styles.pips}>
+                      {[1, 2, 3, 4, 5].map((p) => (
+                        <View
+                          key={p}
+                          style={[
+                            styles.pip,
+                            {
+                              backgroundColor:
+                                p <= score ? meta.color : 'rgba(255,255,255,0.10)',
+                            },
+                          ]}
+                        />
+                      ))}
+                    </View>
                   </View>
                 );
               })}
@@ -254,59 +256,65 @@ export function HexChart({ subs, size = 300 }: HexChartProps) {
 }
 
 const styles = StyleSheet.create({
-  legend: {
+  legendGrid: {
+    marginTop: tokens.space[3],
     flexDirection: 'row',
-    marginTop: tokens.space[4],
-    gap: tokens.space[1],
+    flexWrap: 'wrap',
+    gap: tokens.space[2],
   },
-  legendCol: {
-    flex: 1,
-    gap: 3,
-    paddingHorizontal: 3,
-    paddingTop: tokens.space[3],
-    paddingBottom: tokens.space[2],
-    backgroundColor: tokens.bg.surface,
-    borderRadius: tokens.radius.sm,
+  card: {
+    width: '31.5%',
+    flexGrow: 1,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 12,
     borderWidth: 1,
-    alignItems: 'stretch',
+    padding: 10,
   },
-  legendBadge: {
-    alignSelf: 'center',
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+  cardHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 2,
+    justifyContent: 'space-between',
+    marginBottom: 8,
   },
-  legendBadgeText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 12,
-    color: tokens.text.hi,
-  },
-  legendDim: {
+  cardLabel: {
+    flex: 1,
+    minWidth: 0,
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 9,
-    letterSpacing: 0.4,
-    textAlign: 'center',
-    marginBottom: 4,
-    textTransform: 'uppercase',
+    letterSpacing: 1.2,
   },
-  legendSubRow: {
+  cardBadge: {
+    width: 22,
+    height: 22,
+    borderRadius: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardBadgeText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 11,
+    color: '#0E1230',
+  },
+  subRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    paddingHorizontal: 2,
+    gap: 6,
+    marginTop: 5,
   },
-  legendSubLabel: {
+  subLabel: {
     flex: 1,
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 8,
+    minWidth: 0,
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 10,
     color: tokens.text.mid,
   },
-  legendSubScore: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 10,
-    color: tokens.text.hi,
+  pips: {
+    flexDirection: 'row',
+    gap: 2,
+  },
+  pip: {
+    width: 6,
+    height: 6,
+    borderRadius: 2,
   },
 });
