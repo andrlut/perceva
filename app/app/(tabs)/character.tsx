@@ -364,6 +364,7 @@ export default function CharacterScreen() {
               // representation until upstream is patched.
               <HexChartFallback
                 scores={pickSubScores(character.data.subScores, 'self')}
+                size={chartSize}
               />
             ) : (
               <ErrorBoundary
