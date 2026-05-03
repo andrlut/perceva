@@ -11,6 +11,8 @@ interface HexChartProps {
   /** Map of sub_id → score (0-5). Missing keys render as 0. */
   scores: Map<SubId, number>;
   size?: number;
+  /** Hide the bottom legend (e.g. when caller renders its own). */
+  hideLegend?: boolean;
 }
 
 /**
@@ -19,24 +21,28 @@ interface HexChartProps {
  *
  *   - Background: 6 dim-tinted wedges (subtle wash, dim color)
  *   - Axes: 12, 30° apart, sub corner dots colored by dim
+ *   - Sub labels sit just inside the perimeter on each axis, painted over
+ *     their parent dim's wedge so they don't push the bounding box out
  *   - User shape: violet polygon connecting the 12 sub scores (0-5 each)
  *   - Dim balls: 6 circles at each wedge midpoint, radius scales to the
  *     dim's *summed* score (0-10 integer), value labeled inside
- *   - Bottom legend: 6 columns with dim sum + 2 sub scores
+ *   - Bottom legend (optional): 6 columns with dim sum + 2 sub scores
  */
-export function HexChart({ scores, size = 300 }: HexChartProps) {
+export function HexChart({ scores, size = 300, hideLegend = false }: HexChartProps) {
   // Flat list of 12 subs in display order (dim-paired).
   const subOrder = useMemo<SubId[]>(
     () => DIMENSION_ORDER.flatMap((d) => SUBS_BY_DIM[d]),
     [],
   );
 
-  const padding = 56;
+  // Tight padding — sub labels live INSIDE the perimeter (over the wedge
+  // backgrounds), so the SVG bounding box doesn't need much breathing room.
+  const padding = 14;
   const cx = size / 2;
   const cy = size / 2;
   const radius = size / 2 - padding;
   const SUB_MAX = 5;
-  const DIM_MAX = 10; // sum of two subs
+  const DIM_MAX = 10;
 
   // Sub corners — 12 axes, 30° steps starting at top.
   const corners = useMemo(() => {
@@ -54,7 +60,6 @@ export function HexChart({ scores, size = 300 }: HexChartProps) {
   }, [subOrder, cx, cy, radius]);
 
   // Dim wedges — each 60° centered on the dim's midpoint angle.
-  // Boundary between dim d-1 and dim d sits at angle (60d - 105) deg.
   const wedges = useMemo(() => {
     return DIMENSION_ORDER.map((dim, d) => {
       const startDeg = -105 + 60 * d;
@@ -65,7 +70,6 @@ export function HexChart({ scores, size = 300 }: HexChartProps) {
       const y1 = cy + radius * Math.sin(startRad);
       const x2 = cx + radius * Math.cos(endRad);
       const y2 = cy + radius * Math.sin(endRad);
-      // 60° < 180°, so large-arc-flag = 0; sweep clockwise = 1
       const path = `M ${cx},${cy} L ${x1.toFixed(2)},${y1.toFixed(2)} A ${radius},${radius} 0 0 1 ${x2.toFixed(2)},${y2.toFixed(2)} Z`;
       return { dim, path };
     });
@@ -80,9 +84,7 @@ export function HexChart({ scores, size = 300 }: HexChartProps) {
       const sa = scores.get(a) ?? 0;
       const sb = scores.get(b) ?? 0;
       const sum = sa + sb;
-      // Pull ball slightly toward edge for visibility; minimum radius so a
-      // 0/0 dim still has a small ball at the center, not literally at (cx,cy).
-      const minR = 14;
+      const minR = 16;
       const targetR = (sum / DIM_MAX) * radius;
       const r = Math.max(minR, targetR);
       return {
@@ -90,13 +92,37 @@ export function HexChart({ scores, size = 300 }: HexChartProps) {
         sum,
         x: cx + r * Math.cos(angle),
         y: cy + r * Math.sin(angle),
-        labelX: cx + (radius + 26) * Math.cos(angle),
-        labelY: cy + (radius + 26) * Math.sin(angle),
       };
     });
   }, [scores, cx, cy, radius]);
 
-  // Concentric grid (every full point on the 0-5 sub scale).
+  // Sub label positions — INSIDE the perimeter, just inside the outer ring.
+  // Position uses smart textAnchor based on horizontal direction so labels
+  // hug the perimeter without crossing the spoke they belong to.
+  const subLabels = useMemo(() => {
+    const r = radius * 0.93;
+    return corners.map((c) => {
+      const cosA = Math.cos(c.angle);
+      const sinA = Math.sin(c.angle);
+      const x = cx + r * cosA;
+      const y = cy + r * sinA;
+      // Vertical drift so labels at top sit visibly above their dot,
+      // labels at bottom sit visibly below.
+      const dy = sinA > 0.3 ? 8 : sinA < -0.3 ? -2 : 4;
+      let anchor: 'start' | 'middle' | 'end';
+      if (cosA > 0.35) anchor = 'end'; // right side: text grows leftward (toward center)
+      else if (cosA < -0.35) anchor = 'start'; // left side: text grows rightward (toward center)
+      else anchor = 'middle';
+      return {
+        subId: c.subId,
+        dimensionId: c.dimensionId,
+        x,
+        y: y + dy,
+        anchor,
+      };
+    });
+  }, [corners, cx, cy, radius]);
+
   const gridRings = [1 / 5, 2 / 5, 3 / 5, 4 / 5, 1.0];
 
   const framePoints = corners
@@ -123,9 +149,9 @@ export function HexChart({ scores, size = 300 }: HexChartProps) {
               key={`wedge-${i}`}
               d={w.path}
               fill={DIMENSION_META[w.dim].color}
-              fillOpacity={0.08}
+              fillOpacity={0.10}
               stroke={DIMENSION_META[w.dim].color}
-              strokeOpacity={0.18}
+              strokeOpacity={0.22}
               strokeWidth={1}
             />
           ))}
@@ -151,7 +177,7 @@ export function HexChart({ scores, size = 300 }: HexChartProps) {
             );
           })}
 
-          {/* Spokes — subtle, just for axis reference */}
+          {/* Spokes — subtle */}
           {corners.map((c, i) => (
             <Line
               key={`spoke-${i}`}
@@ -180,7 +206,7 @@ export function HexChart({ scores, size = 300 }: HexChartProps) {
             strokeWidth={2}
           />
 
-          {/* Sub corner dots — small, dim-colored, on top of polygon */}
+          {/* Sub corner dots */}
           {corners.map((c, i) => {
             const v = scores.get(c.subId) ?? 0;
             const r = (v / SUB_MAX) * radius;
@@ -199,13 +225,29 @@ export function HexChart({ scores, size = 300 }: HexChartProps) {
             );
           })}
 
+          {/* Sub labels — inside perimeter, on the dim's wedge */}
+          {subLabels.map((l, i) => (
+            <SvgText
+              key={`sub-label-${i}`}
+              x={l.x}
+              y={l.y}
+              textAnchor={l.anchor}
+              fontSize={9}
+              fontWeight="800"
+              fill={DIMENSION_META[l.dimensionId].color}
+              opacity={0.95}
+            >
+              {SUB_META[l.subId].label.toUpperCase()}
+            </SvgText>
+          ))}
+
           {/* Dim midpoint balls — bigger, with sum 0-10 integer */}
           {dimMids.map((m, i) => (
             <Circle
               key={`dim-ball-${i}`}
               cx={m.x}
               cy={m.y}
-              r={14}
+              r={15}
               fill={DIMENSION_META[m.dim].color}
               stroke={tokens.bg.deep}
               strokeWidth={2}
@@ -217,74 +259,62 @@ export function HexChart({ scores, size = 300 }: HexChartProps) {
               x={m.x}
               y={m.y + 4}
               textAnchor="middle"
-              fontSize={12}
+              fontSize={13}
               fontWeight="800"
               fill={tokens.text.hi}
             >
               {m.sum}
             </SvgText>
           ))}
-
-          {/* Dim labels around the perimeter */}
-          {dimMids.map((m, i) => (
-            <SvgText
-              key={`dim-label-${i}`}
-              x={m.labelX}
-              y={m.labelY + 4}
-              textAnchor="middle"
-              fontSize={10}
-              fontWeight="800"
-              fill={DIMENSION_META[m.dim].color}
-            >
-              {DIMENSION_META[m.dim].label.toUpperCase()}
-            </SvgText>
-          ))}
         </Svg>
       </View>
 
-      {/* Legend: 6 columns, dim sum + 2 sub scores */}
-      <View style={styles.legend}>
-        {DIMENSION_ORDER.map((dim) => {
-          const meta = DIMENSION_META[dim];
-          const subIds = SUBS_BY_DIM[dim];
-          const sa = scores.get(subIds[0]) ?? 0;
-          const sb = scores.get(subIds[1]) ?? 0;
-          const sum = sa + sb;
-          return (
-            <View
-              key={dim}
-              style={[styles.legendCol, { borderColor: `${meta.color}33` }]}
-            >
-              <View style={[styles.legendBadge, { backgroundColor: meta.color }]}>
-                <Text style={styles.legendBadgeText}>{sum}</Text>
-              </View>
-              <Text
-                style={[styles.legendDim, { color: meta.color }]}
-                numberOfLines={1}
+      {!hideLegend && (
+        <View style={styles.legend}>
+          {DIMENSION_ORDER.map((dim) => {
+            const meta = DIMENSION_META[dim];
+            const subIds = SUBS_BY_DIM[dim];
+            const sa = scores.get(subIds[0]) ?? 0;
+            const sb = scores.get(subIds[1]) ?? 0;
+            const sum = sa + sb;
+            return (
+              <View
+                key={dim}
+                style={[styles.legendCol, { borderColor: `${meta.color}33` }]}
               >
-                {meta.label}
-              </Text>
-              {subIds.map((subId, i) => {
-                const subMeta = SUB_META[subId];
-                const score = i === 0 ? sa : sb;
-                return (
-                  <View key={subId} style={styles.legendSubRow}>
-                    <Ionicons
-                      name={subMeta.iconName as never}
-                      size={9}
-                      color={tokens.text.dim}
-                    />
-                    <Text style={styles.legendSubLabel} numberOfLines={1}>
-                      {subMeta.label}
-                    </Text>
-                    <Text style={styles.legendSubScore}>{score}</Text>
-                  </View>
-                );
-              })}
-            </View>
-          );
-        })}
-      </View>
+                <View
+                  style={[styles.legendBadge, { backgroundColor: meta.color }]}
+                >
+                  <Text style={styles.legendBadgeText}>{sum}</Text>
+                </View>
+                <Text
+                  style={[styles.legendDim, { color: meta.color }]}
+                  numberOfLines={1}
+                >
+                  {meta.label}
+                </Text>
+                {subIds.map((subId, i) => {
+                  const subMeta = SUB_META[subId];
+                  const score = i === 0 ? sa : sb;
+                  return (
+                    <View key={subId} style={styles.legendSubRow}>
+                      <Ionicons
+                        name={subMeta.iconName as never}
+                        size={9}
+                        color={tokens.text.dim}
+                      />
+                      <Text style={styles.legendSubLabel} numberOfLines={1}>
+                        {subMeta.label}
+                      </Text>
+                      <Text style={styles.legendSubScore}>{score}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            );
+          })}
+        </View>
+      )}
     </View>
   );
 }
@@ -292,7 +322,7 @@ export function HexChart({ scores, size = 300 }: HexChartProps) {
 const styles = StyleSheet.create({
   legend: {
     flexDirection: 'row',
-    marginTop: tokens.space[4],
+    marginTop: tokens.space[3],
     gap: tokens.space[1],
   },
   legendCol: {

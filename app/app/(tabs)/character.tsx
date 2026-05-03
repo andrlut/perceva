@@ -8,6 +8,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -157,6 +158,9 @@ export default function CharacterScreen() {
   const skillStates = useSkillStates();
   const streak = useStreak();
   const rewards = useRewards();
+  const { width: screenWidth } = useWindowDimensions();
+  // Hex breaks out of the content padding to consume the full screen width.
+  const chartSize = Math.min(screenWidth - tokens.space[2] * 2, 480);
 
   useHydrateHeroSkillsExpand();
   const expanded = useHeroSkillsExpand((s) => s.expanded);
@@ -342,14 +346,14 @@ export default function CharacterScreen() {
           <Pressable
             onPress={() => router.push('/self-assessment')}
             style={({ pressed }) => [
-              styles.hexCard,
+              styles.hexBleed,
               pressed && { opacity: 0.85 },
             ]}
             hitSlop={4}
           >
             <HexChart
               scores={pickSubScores(character.data.subScores, 'self')}
-              size={300}
+              size={chartSize}
             />
             <View style={styles.hexEditRow}>
               <Ionicons name="create" size={14} color={tokens.brand.violet2} />
@@ -759,14 +763,13 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     fontSize: 10,
   },
-  hexCard: {
-    backgroundColor: tokens.bg.surface,
-    borderRadius: tokens.radius.lg,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-    paddingHorizontal: tokens.space[3],
-    paddingTop: tokens.space[4],
-    paddingBottom: tokens.space[3],
+  hexBleed: {
+    // Cancel the parent ScrollView's content padding so the chart can use
+    // the full screen width. Inner padding is intentionally tiny so axis
+    // labels (which now live on the wedge perimeter) hug the screen edges.
+    marginHorizontal: -tokens.space[4],
+    paddingHorizontal: tokens.space[2],
+    paddingTop: tokens.space[2],
   },
   hexEditRow: {
     marginTop: tokens.space[3],
