@@ -157,30 +157,10 @@ export default function CharacterScreen() {
             />
           }
         >
-          {/* ── PILLAR 1 · AVALIAÇÃO (top — hex is the splash) ───
-            * "Como estou?" — contemplative.
-            * The hex chart is the most striking visual on the screen, so
-            * it leads. Identity block sits below as supporting context.
-            */}
-          <PillarCard
-            eyebrow="AVALIAÇÃO"
-            question="Como estou?"
-            tone="contemplative"
-            iconName="pulse"
-            cta={{
-              label: 'Atualizar self-assessment',
-              onPress: () => router.push('/self-assessment'),
-            }}
-          >
-            <HexChart
-              scores={pickSubScores(character.data.subScores, 'self')}
-              size={300}
-            />
-          </PillarCard>
-
-          {/* ── HERO IDENTITY ────────────────────────────────────
+          {/* ── HERO IDENTITY (top) ──────────────────────────────
             * "Quem estou me tornando?" — aspirational.
             * Avatar/level ring + name + title + 3 stat tiles + badges strip.
+            * Comes first so the screen opens with the user as character.
             */}
           <View style={styles.heroBlock}>
             <View style={styles.heroBody}>
@@ -302,6 +282,27 @@ export default function CharacterScreen() {
               </Pressable>
             )}
           </View>
+
+          {/* ── PILLAR 1 · AVALIAÇÃO ────────────────────────────
+            * "Como estou?" — contemplative.
+            * Hex chart is the visual splash of the pillar set; first card
+            * after the identity block.
+            */}
+          <PillarCard
+            eyebrow="AVALIAÇÃO"
+            question="Como estou?"
+            tone="contemplative"
+            iconName="pulse"
+            cta={{
+              label: 'Atualizar self-assessment',
+              onPress: () => router.push('/self-assessment'),
+            }}
+          >
+            <HexChart
+              scores={pickSubScores(character.data.subScores, 'self')}
+              size={300}
+            />
+          </PillarCard>
 
           {/* ── PILLAR 2 · DEDICAÇÃO ────────────────────────────
             * "O que estou fazendo?" — dopaminergic.
