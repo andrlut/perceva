@@ -22,7 +22,7 @@ import {
   useHeroSkillsExpand,
   useHydrateHeroSkillsExpand,
 } from '@/lib/heroSkillsExpand';
-import { useCharacter } from '@/lib/api/character';
+import { pickSubScores, useCharacter } from '@/lib/api/character';
 import { useRewards } from '@/lib/api/rewards';
 import { useSkillStates } from '@/lib/api/skills';
 import { useStreak } from '@/lib/api/streak';
@@ -347,7 +347,10 @@ export default function CharacterScreen() {
             ]}
             hitSlop={4}
           >
-            <HexChart subs={character.data.subs} size={300} />
+            <HexChart
+              scores={pickSubScores(character.data.subScores, 'self')}
+              size={300}
+            />
             <View style={styles.hexEditRow}>
               <Ionicons name="create" size={14} color={tokens.brand.violet2} />
               <Text style={styles.hexEditText}>Update your levels</Text>

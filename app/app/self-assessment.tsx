@@ -13,8 +13,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScreenBackground } from '@/components/ScreenBackground';
 import {
+  pickSubScores,
   useCharacter,
-  useUpdateCharacterSub,
+  useSetSubScore,
 } from '@/lib/api/character';
 import type { SubId } from '@/lib/db/types';
 import { tokens } from '@/theme';
@@ -31,20 +32,22 @@ const SCORE_VALUES = [0, 1, 2, 3, 4, 5];
 export default function SelfAssessmentScreen() {
   const router = useRouter();
   const character = useCharacter();
-  const updateSub = useUpdateCharacterSub();
+  const setSubScore = useSetSubScore();
 
-  const subScores = useMemo(() => {
-    const map = new Map<SubId, number>();
-    (character.data?.subs ?? []).forEach((s) =>
-      map.set(s.sub_id as SubId, s.subjective_score),
-    );
-    return map;
-  }, [character.data?.subs]);
+  const selfScores = useMemo(
+    () => pickSubScores(character.data?.subScores ?? [], 'self'),
+    [character.data?.subScores],
+  );
+  const questionnaireScores = useMemo(
+    () => pickSubScores(character.data?.subScores ?? [], 'questionnaire'),
+    [character.data?.subScores],
+  );
+  const hasQuestionnaire = questionnaireScores.size > 0;
 
   const handleSetScore = (subId: SubId, score: number) => {
-    if (subScores.get(subId) === score) return;
+    if (selfScores.get(subId) === score) return;
     Haptics.selectionAsync().catch(() => {});
-    updateSub.mutate({ subId, score });
+    setSubScore.mutate({ source: 'self', subId, score });
   };
 
   return (
@@ -74,16 +77,47 @@ export default function SelfAssessmentScreen() {
             saves automatically. Come back any time and re-rate yourself.
           </Text>
 
-          <View style={styles.scaleHint}>
-            <Text style={styles.scaleHintText}>0 missing · 5 mastery</Text>
+          <View style={styles.metaRow}>
+            <View style={styles.scaleHint}>
+              <Text style={styles.scaleHintText}>0 missing · 5 mastery</Text>
+            </View>
+            <View style={styles.sourceChip}>
+              <Ionicons name="person" size={11} color={tokens.brand.violet2} />
+              <Text style={styles.sourceChipText}>Self</Text>
+            </View>
+            {hasQuestionnaire && (
+              <View
+                style={[
+                  styles.sourceChip,
+                  { backgroundColor: 'rgba(77,208,255,0.12)' },
+                ]}
+              >
+                <Ionicons name="clipboard" size={11} color={tokens.dimension.bonds} />
+                <Text
+                  style={[styles.sourceChipText, { color: tokens.dimension.bonds }]}
+                >
+                  Questionnaire saved
+                </Text>
+              </View>
+            )}
           </View>
+
+          {!hasQuestionnaire && (
+            <View style={styles.qHintCard}>
+              <Ionicons name="clipboard-outline" size={14} color={tokens.text.mid} />
+              <Text style={styles.qHintText}>
+                Questionnaire coming soon — it&apos;ll set a parallel score so you
+                can compare your self-rating against an objective baseline.
+              </Text>
+            </View>
+          )}
 
           {DIMENSION_ORDER.map((dim) => {
             const meta = DIMENSION_META[dim];
             const subIds = SUBS_BY_DIM[dim];
-            const sa = subScores.get(subIds[0]) ?? 0;
-            const sb = subScores.get(subIds[1]) ?? 0;
-            const avg = (sa + sb) / 2;
+            const sa = selfScores.get(subIds[0]) ?? 0;
+            const sb = selfScores.get(subIds[1]) ?? 0;
+            const sum = sa + sb;
 
             return (
               <View key={dim} style={styles.dimSection}>
@@ -114,8 +148,9 @@ export default function SelfAssessmentScreen() {
                     </Text>
                     <Text style={styles.dimTagline}>{meta.tagline}</Text>
                   </View>
-                  <View style={[styles.dimAvgPill, { backgroundColor: meta.color }]}>
-                    <Text style={styles.dimAvgText}>{avg.toFixed(1)}</Text>
+                  <View style={[styles.dimSumPill, { backgroundColor: meta.color }]}>
+                    <Text style={styles.dimSumText}>{sum}</Text>
+                    <Text style={styles.dimSumScale}>/10</Text>
                   </View>
                 </View>
 
@@ -123,7 +158,8 @@ export default function SelfAssessmentScreen() {
 
                 {subIds.map((subId) => {
                   const subMeta = SUB_META[subId];
-                  const score = subScores.get(subId) ?? 0;
+                  const score = selfScores.get(subId) ?? 0;
+                  const qScore = questionnaireScores.get(subId);
                   return (
                     <View key={subId} style={styles.subBlock}>
                       <View style={styles.subHeader}>
@@ -142,6 +178,18 @@ export default function SelfAssessmentScreen() {
                       <Text style={styles.subDescription}>
                         {subMeta.description}
                       </Text>
+                      {qScore !== undefined && (
+                        <View style={styles.qScoreRow}>
+                          <Ionicons
+                            name="clipboard"
+                            size={10}
+                            color={tokens.dimension.bonds}
+                          />
+                          <Text style={styles.qScoreText}>
+                            Questionnaire: {qScore}
+                          </Text>
+                        </View>
+                      )}
                       <View style={styles.scaleRow}>
                         {SCORE_VALUES.map((v) => {
                           const active = v === score;
@@ -274,18 +322,74 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginTop: 2,
   },
-  dimAvgPill: {
-    minWidth: 44,
+  dimSumPill: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    minWidth: 50,
     height: 32,
     paddingHorizontal: tokens.space[3],
     borderRadius: 16,
-    alignItems: 'center',
     justifyContent: 'center',
+    gap: 1,
   },
-  dimAvgText: {
+  dimSumText: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 14,
+    fontSize: 16,
     color: tokens.text.hi,
+  },
+  dimSumScale: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.7)',
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[2],
+    flexWrap: 'wrap',
+  },
+  sourceChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: tokens.space[2],
+    paddingVertical: 5,
+    borderRadius: tokens.radius.pill,
+    backgroundColor: 'rgba(123,92,255,0.14)',
+  },
+  sourceChipText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 10,
+    color: tokens.brand.violet2,
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+  },
+  qHintCard: {
+    flexDirection: 'row',
+    gap: tokens.space[2],
+    paddingHorizontal: tokens.space[3],
+    paddingVertical: tokens.space[3],
+    borderRadius: tokens.radius.md,
+    backgroundColor: tokens.bg.surface,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+    borderStyle: 'dashed',
+  },
+  qHintText: {
+    flex: 1,
+    ...tokens.type.caption,
+    color: tokens.text.mid,
+  },
+  qScoreRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  qScoreText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 10,
+    color: tokens.dimension.bonds,
+    letterSpacing: 0.3,
   },
   dimDescription: {
     ...tokens.type.body,

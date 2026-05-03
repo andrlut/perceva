@@ -1,37 +1,30 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Line, Polygon, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Line, Path, Polygon, Text as SvgText } from 'react-native-svg';
 
-import type { CharacterSub, SubId } from '@/lib/db/types';
+import type { SubId } from '@/lib/db/types';
 import { tokens } from '@/theme';
 import { DIMENSION_META, DIMENSION_ORDER, SUB_META, SUBS_BY_DIM } from '@/theme/dimensions';
 
 interface HexChartProps {
-  /** All 12 character_sub rows. Missing subs default to score 0. */
-  subs: CharacterSub[];
+  /** Map of sub_id → score (0-5). Missing keys render as 0. */
+  scores: Map<SubId, number>;
   size?: number;
 }
 
 /**
- * Wheel-of-life chart with 12 axes (one per sub) plus a 6-ball overlay
- * showing the per-dim average.
+ * Wheel-of-life chart with 12 axes (one per sub) and 6 dim wedges painted
+ * underneath. Each dim spans 60° of the circle and contains its 2 sub axes.
  *
- *   - 12 corners = 12 subs, value 0-5 each. Adjacent pairs share their
- *     parent dim's color.
- *   - User shape: filled polygon connecting the 12 sub scores.
- *   - 6 dim "balls" sit at the midpoint angle between each dim's two
- *     subs, radius = avg of the pair, color = dim color, value inside.
- *   - Bottom legend: 6 columns (one per dim), each with the dim avg
- *     and the 2 sub scores.
+ *   - Background: 6 dim-tinted wedges (subtle wash, dim color)
+ *   - Axes: 12, 30° apart, sub corner dots colored by dim
+ *   - User shape: violet polygon connecting the 12 sub scores (0-5 each)
+ *   - Dim balls: 6 circles at each wedge midpoint, radius scales to the
+ *     dim's *summed* score (0-10 integer), value labeled inside
+ *   - Bottom legend: 6 columns with dim sum + 2 sub scores
  */
-export function HexChart({ subs, size = 300 }: HexChartProps) {
-  const subScores = useMemo(() => {
-    const map = new Map<SubId, number>();
-    for (const s of subs) map.set(s.sub_id as SubId, s.subjective_score);
-    return map;
-  }, [subs]);
-
+export function HexChart({ scores, size = 300 }: HexChartProps) {
   // Flat list of 12 subs in display order (dim-paired).
   const subOrder = useMemo<SubId[]>(
     () => DIMENSION_ORDER.flatMap((d) => SUBS_BY_DIM[d]),
@@ -43,6 +36,7 @@ export function HexChart({ subs, size = 300 }: HexChartProps) {
   const cy = size / 2;
   const radius = size / 2 - padding;
   const SUB_MAX = 5;
+  const DIM_MAX = 10; // sum of two subs
 
   // Sub corners — 12 axes, 30° steps starting at top.
   const corners = useMemo(() => {
@@ -59,28 +53,50 @@ export function HexChart({ subs, size = 300 }: HexChartProps) {
     });
   }, [subOrder, cx, cy, radius]);
 
-  // Dim midpoints — angle bisects the two sub axes of a dim.
+  // Dim wedges — each 60° centered on the dim's midpoint angle.
+  // Boundary between dim d-1 and dim d sits at angle (60d - 105) deg.
+  const wedges = useMemo(() => {
+    return DIMENSION_ORDER.map((dim, d) => {
+      const startDeg = -105 + 60 * d;
+      const endDeg = -45 + 60 * d;
+      const startRad = (startDeg * Math.PI) / 180;
+      const endRad = (endDeg * Math.PI) / 180;
+      const x1 = cx + radius * Math.cos(startRad);
+      const y1 = cy + radius * Math.sin(startRad);
+      const x2 = cx + radius * Math.cos(endRad);
+      const y2 = cy + radius * Math.sin(endRad);
+      // 60° < 180°, so large-arc-flag = 0; sweep clockwise = 1
+      const path = `M ${cx},${cy} L ${x1.toFixed(2)},${y1.toFixed(2)} A ${radius},${radius} 0 0 1 ${x2.toFixed(2)},${y2.toFixed(2)} Z`;
+      return { dim, path };
+    });
+  }, [cx, cy, radius]);
+
+  // Dim midpoints — angle bisects the two sub axes; ball radius reflects
+  // the *summed* dim score (0-10 integer when both subs are integers).
   const dimMids = useMemo(() => {
     return DIMENSION_ORDER.map((dim, d) => {
       const angle = (Math.PI / 6) * (2 * d + 0.5) - Math.PI / 2;
       const [a, b] = SUBS_BY_DIM[dim];
-      const sa = subScores.get(a) ?? 0;
-      const sb = subScores.get(b) ?? 0;
-      const avg = (sa + sb) / 2;
-      const r = (avg / SUB_MAX) * radius;
+      const sa = scores.get(a) ?? 0;
+      const sb = scores.get(b) ?? 0;
+      const sum = sa + sb;
+      // Pull ball slightly toward edge for visibility; minimum radius so a
+      // 0/0 dim still has a small ball at the center, not literally at (cx,cy).
+      const minR = 14;
+      const targetR = (sum / DIM_MAX) * radius;
+      const r = Math.max(minR, targetR);
       return {
         dim,
-        angle,
-        avg,
+        sum,
         x: cx + r * Math.cos(angle),
         y: cy + r * Math.sin(angle),
         labelX: cx + (radius + 26) * Math.cos(angle),
         labelY: cy + (radius + 26) * Math.sin(angle),
       };
     });
-  }, [subScores, cx, cy, radius]);
+  }, [scores, cx, cy, radius]);
 
-  // Concentric grid (every full point on the 0-5 scale).
+  // Concentric grid (every full point on the 0-5 sub scale).
   const gridRings = [1 / 5, 2 / 5, 3 / 5, 4 / 5, 1.0];
 
   const framePoints = corners
@@ -89,7 +105,7 @@ export function HexChart({ subs, size = 300 }: HexChartProps) {
 
   const valuePoints = corners
     .map((c) => {
-      const v = subScores.get(c.subId) ?? 0;
+      const v = scores.get(c.subId) ?? 0;
       const r = (v / SUB_MAX) * radius;
       const x = cx + r * Math.cos(c.angle);
       const y = cy + r * Math.sin(c.angle);
@@ -101,6 +117,20 @@ export function HexChart({ subs, size = 300 }: HexChartProps) {
     <View>
       <View style={{ width: size, height: size, alignSelf: 'center' }}>
         <Svg width={size} height={size}>
+          {/* Dim-tinted wedge backgrounds */}
+          {wedges.map((w, i) => (
+            <Path
+              key={`wedge-${i}`}
+              d={w.path}
+              fill={DIMENSION_META[w.dim].color}
+              fillOpacity={0.08}
+              stroke={DIMENSION_META[w.dim].color}
+              strokeOpacity={0.18}
+              strokeWidth={1}
+            />
+          ))}
+
+          {/* Concentric grid rings (12-sided) */}
           {gridRings.map((g, i) => {
             const pts = corners
               .map((c) => {
@@ -121,6 +151,7 @@ export function HexChart({ subs, size = 300 }: HexChartProps) {
             );
           })}
 
+          {/* Spokes — subtle, just for axis reference */}
           {corners.map((c, i) => (
             <Line
               key={`spoke-${i}`}
@@ -128,11 +159,12 @@ export function HexChart({ subs, size = 300 }: HexChartProps) {
               y1={cy}
               x2={c.x}
               y2={c.y}
-              stroke={`${DIMENSION_META[c.dimensionId].color}40`}
+              stroke={tokens.border.divider}
               strokeWidth={1}
             />
           ))}
 
+          {/* Outer 12-sided frame */}
           <Polygon
             points={framePoints}
             fill="none"
@@ -140,6 +172,7 @@ export function HexChart({ subs, size = 300 }: HexChartProps) {
             strokeWidth={1.5}
           />
 
+          {/* User value polygon (12 sub points) */}
           <Polygon
             points={valuePoints}
             fill={tokens.brand.violetGlow}
@@ -147,8 +180,9 @@ export function HexChart({ subs, size = 300 }: HexChartProps) {
             strokeWidth={2}
           />
 
+          {/* Sub corner dots — small, dim-colored, on top of polygon */}
           {corners.map((c, i) => {
-            const v = subScores.get(c.subId) ?? 0;
+            const v = scores.get(c.subId) ?? 0;
             const r = (v / SUB_MAX) * radius;
             const x = cx + r * Math.cos(c.angle);
             const y = cy + r * Math.sin(c.angle);
@@ -165,16 +199,16 @@ export function HexChart({ subs, size = 300 }: HexChartProps) {
             );
           })}
 
+          {/* Dim midpoint balls — bigger, with sum 0-10 integer */}
           {dimMids.map((m, i) => (
             <Circle
               key={`dim-ball-${i}`}
               cx={m.x}
               cy={m.y}
-              r={13}
+              r={14}
               fill={DIMENSION_META[m.dim].color}
               stroke={tokens.bg.deep}
               strokeWidth={2}
-              opacity={0.95}
             />
           ))}
           {dimMids.map((m, i) => (
@@ -183,14 +217,15 @@ export function HexChart({ subs, size = 300 }: HexChartProps) {
               x={m.x}
               y={m.y + 4}
               textAnchor="middle"
-              fontSize={11}
+              fontSize={12}
               fontWeight="800"
               fill={tokens.text.hi}
             >
-              {m.avg.toFixed(1)}
+              {m.sum}
             </SvgText>
           ))}
 
+          {/* Dim labels around the perimeter */}
           {dimMids.map((m, i) => (
             <SvgText
               key={`dim-label-${i}`}
@@ -207,20 +242,21 @@ export function HexChart({ subs, size = 300 }: HexChartProps) {
         </Svg>
       </View>
 
+      {/* Legend: 6 columns, dim sum + 2 sub scores */}
       <View style={styles.legend}>
         {DIMENSION_ORDER.map((dim) => {
           const meta = DIMENSION_META[dim];
           const subIds = SUBS_BY_DIM[dim];
-          const sa = subScores.get(subIds[0]) ?? 0;
-          const sb = subScores.get(subIds[1]) ?? 0;
-          const avg = (sa + sb) / 2;
+          const sa = scores.get(subIds[0]) ?? 0;
+          const sb = scores.get(subIds[1]) ?? 0;
+          const sum = sa + sb;
           return (
             <View
               key={dim}
               style={[styles.legendCol, { borderColor: `${meta.color}33` }]}
             >
               <View style={[styles.legendBadge, { backgroundColor: meta.color }]}>
-                <Text style={styles.legendBadgeText}>{avg.toFixed(1)}</Text>
+                <Text style={styles.legendBadgeText}>{sum}</Text>
               </View>
               <Text
                 style={[styles.legendDim, { color: meta.color }]}
@@ -281,7 +317,7 @@ const styles = StyleSheet.create({
   },
   legendBadgeText: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 12,
+    fontSize: 13,
     color: tokens.text.hi,
   },
   legendDim: {
