@@ -347,9 +347,13 @@ export default function RewardsScreen() {
                       reward={reward}
                       affordable={coins >= reward.cost}
                       deficit={Math.max(0, reward.cost - coins)}
+                      coins={coins}
+                      tracked={trackedId.data === reward.id}
                       onRedeem={() => handleBuy(reward)}
                       onEdit={() => handleRewardActions(reward)}
                       onLongPress={() => handleRewardActions(reward)}
+                      onTrack={() => handleTrack(reward.id)}
+                      onUntrack={handleUntrack}
                       isRedeeming={redeemingId === reward.id}
                     />
                   </View>
