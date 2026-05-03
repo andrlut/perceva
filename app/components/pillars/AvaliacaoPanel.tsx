@@ -157,10 +157,6 @@ export function AvaliacaoPanel({ subScores }: Props) {
 
   return (
     <View style={styles.wrap}>
-      {hasQuestionnaire && (
-        <SourceToggle value={hexSource} onChange={setHexSource} />
-      )}
-
       <View style={styles.hexWrap}>
         <HexChart
           scores={primary}
@@ -171,6 +167,11 @@ export function AvaliacaoPanel({ subScores }: Props) {
             router.push({ pathname: '/dimension/[id]', params: { id: dim } })
           }
         />
+        {hasQuestionnaire && (
+          <View style={styles.toggleOverlay} pointerEvents="box-none">
+            <SourceToggle value={hexSource} onChange={setHexSource} />
+          </View>
+        )}
       </View>
 
       {weakest && weakest.score < 5 && (
@@ -214,6 +215,12 @@ const styles = StyleSheet.create({
   },
   hexWrap: {
     alignItems: 'center',
+    position: 'relative',
+  },
+  toggleOverlay: {
+    position: 'absolute',
+    top: 0,
+    right: 4,
   },
   nudge: {
     backgroundColor: 'rgba(155, 130, 255, 0.08)',
