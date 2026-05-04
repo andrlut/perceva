@@ -163,6 +163,7 @@ interface TaskRowFull {
   base_value: number | string | null;
   increment_per_star: number | string | null;
   sub_id: SubId;
+  template_id: string | null;
 }
 
 /**
@@ -285,6 +286,7 @@ export function useDayDetail(date: Date) {
               base_value: numOrNull(raw.base_value),
               increment_per_star: numOrNull(raw.increment_per_star),
               sub_id: raw.sub_id,
+              template_id: raw.template_id,
               dimension_id: dimensionForSub(raw.sub_id),
             },
             completedThisDay: completionCountThisDay.get(raw.id) ?? 0,

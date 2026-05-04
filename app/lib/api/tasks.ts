@@ -20,6 +20,8 @@ import { streakKeys } from './streak';
 export const taskKeys = {
   all: ['tasks'] as const,
   pending: () => [...taskKeys.all, 'pending'] as const,
+  /** All non-archived tasks the user owns — full list for the Manage hub. */
+  active: () => [...taskKeys.all, 'active'] as const,
   detail: (id: string) => [...taskKeys.all, 'detail', id] as const,
   templates: () => [...taskKeys.all, 'templates'] as const,
   templatesBySub: (subId: SubId) =>
@@ -63,6 +65,7 @@ interface TaskRow {
   base_value: number | string | null;
   increment_per_star: number | string | null;
   sub_id: SubId;
+  template_id: string | null;
 }
 
 // Postgres numeric columns can come back as strings via PostgREST.
@@ -99,6 +102,7 @@ function mapTaskRow(t: TaskRow): TaskWithDimension {
     base_value: numericOrNull(t.base_value),
     increment_per_star: numericOrNull(t.increment_per_star),
     sub_id: t.sub_id,
+    template_id: t.template_id,
     dimension_id: dimensionForSub(t.sub_id),
   };
 }
@@ -164,6 +168,26 @@ export function useTasks() {
   return useQuery({
     queryKey: taskKeys.pending(),
     queryFn: fetchPendingTasks,
+  });
+}
+
+/**
+ * All non-archived tasks for the current user, ordered by creation. Powers
+ * the Manage hub — separate from useTasks (which is "due today only") so
+ * the two never share cache state and can refetch independently.
+ */
+export function useActiveTasks() {
+  return useQuery({
+    queryKey: taskKeys.active(),
+    queryFn: async (): Promise<TaskWithDimension[]> => {
+      const { data, error } = await supabase
+        .from('task')
+        .select('*')
+        .eq('is_archived', false)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return ((data ?? []) as TaskRow[]).map(mapTaskRow);
+    },
   });
 }
 
@@ -316,6 +340,7 @@ export function useCreateTask() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.pending() });
+      queryClient.invalidateQueries({ queryKey: taskKeys.active() });
     },
   });
 }
@@ -344,6 +369,7 @@ export function useUpdateTask(taskId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.pending() });
+      queryClient.invalidateQueries({ queryKey: taskKeys.active() });
       queryClient.invalidateQueries({ queryKey: taskKeys.detail(taskId) });
     },
   });
@@ -392,6 +418,7 @@ export function useArchiveTask() {
     },
     onSuccess: (_data, taskId) => {
       queryClient.invalidateQueries({ queryKey: taskKeys.pending() });
+      queryClient.invalidateQueries({ queryKey: taskKeys.active() });
       queryClient.invalidateQueries({ queryKey: taskKeys.detail(taskId) });
     },
   });

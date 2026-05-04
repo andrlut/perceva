@@ -5,6 +5,7 @@ import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -149,9 +150,27 @@ export default function HomeScreen() {
 
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Today</Text>
-              <Text style={styles.sectionMeta}>
-                {tasks.data?.length ?? 0} due
-              </Text>
+              <View style={styles.sectionRight}>
+                <Text style={styles.sectionMeta}>
+                  {tasks.data?.length ?? 0} due
+                </Text>
+                <Pressable
+                  onPress={() => router.push('/tasks')}
+                  style={({ pressed }) => [
+                    styles.manageBtn,
+                    pressed && { opacity: 0.6 },
+                  ]}
+                  hitSlop={6}
+                  accessibilityLabel="Manage tasks"
+                >
+                  <Ionicons
+                    name="list"
+                    size={14}
+                    color={tokens.brand.violet2}
+                  />
+                  <Text style={styles.manageBtnText}>Manage</Text>
+                </Pressable>
+              </View>
             </View>
 
             {tasks.data?.length === 0 ? (
@@ -266,9 +285,31 @@ const styles = StyleSheet.create({
     ...tokens.type.h2,
     color: tokens.text.hi,
   },
+  sectionRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[3],
+  },
   sectionMeta: {
     ...tokens.type.caption,
     color: tokens.text.mid,
+  },
+  manageBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: tokens.space[3],
+    paddingVertical: 6,
+    borderRadius: tokens.radius.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(123,92,255,0.4)',
+    backgroundColor: 'rgba(123,92,255,0.12)',
+  },
+  manageBtnText: {
+    ...tokens.type.caption,
+    color: tokens.brand.violet2,
+    fontFamily: 'Manrope_700Bold',
+    letterSpacing: 0.4,
   },
   taskList: {
     gap: tokens.space[3],

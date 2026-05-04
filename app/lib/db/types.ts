@@ -150,6 +150,8 @@ export interface Task {
   increment_per_star: number | null;
   /** NOT NULL after migration 0007 — every task lives under a sub. */
   sub_id: SubId;
+  /** Set when the task was adopted from a task_template. NULL = custom-made. */
+  template_id: string | null;
 }
 
 export interface TaskTemplate {
