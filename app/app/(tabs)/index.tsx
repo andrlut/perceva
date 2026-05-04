@@ -178,7 +178,7 @@ export default function HomeScreen() {
               )}
 
               <View style={styles.questsBlock}>
-                <QuestChip quests={quests.data} />
+                <QuestChip quests={quests.data} emptyAsPill />
               </View>
 
               {/* Section bar — title + Manage shortcut */}
