@@ -10,6 +10,10 @@ import { ProgressBar } from './ProgressBar';
 
 interface Props {
   quests: QuestWithProgress[] | undefined;
+  /** When true, the empty state collapses into a small "Quest Board" pill
+   *  instead of the full empty card. Use on Home where the surface is
+   *  crowded; full empty card stays elsewhere for discoverability. */
+  emptyAsPill?: boolean;
 }
 
 const MAX_QUESTS_SHOWN = 2;
@@ -54,7 +58,7 @@ function sortQuests(quests: QuestWithProgress[]): QuestWithProgress[] {
   });
 }
 
-export function QuestChip({ quests }: Props) {
+export function QuestChip({ quests, emptyAsPill = false }: Props) {
   const router = useRouter();
 
   const active = (quests ?? []).filter((q) => q.quest.status === 'active');
@@ -65,6 +69,28 @@ export function QuestChip({ quests }: Props) {
 
   const isEmpty = active.length === 0;
   const hasReady = ready > 0;
+
+  // Compact pill variant for Home's empty state — keeps the surface
+  // tidy when the user has no quests but the entry to /quests still
+  // needs to be discoverable.
+  if (isEmpty && emptyAsPill) {
+    return (
+      <Pressable
+        onPress={() => router.push('/quests')}
+        style={({ pressed }) => [
+          styles.pill,
+          pressed && { opacity: 0.7 },
+        ]}
+        accessibilityLabel="Browse the quest board"
+      >
+        <View style={styles.pillIcon}>
+          <Ionicons name="trophy" size={14} color={tokens.brand.violet2} />
+        </View>
+        <Text style={styles.pillText}>Browse the Quest Board</Text>
+        <Ionicons name="chevron-forward" size={14} color={tokens.text.dim} />
+      </Pressable>
+    );
+  }
 
   return (
     <Pressable
@@ -245,5 +271,30 @@ const styles = StyleSheet.create({
     ...tokens.type.caption,
     color: tokens.text.dim,
     marginTop: 2,
+  },
+  pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[2],
+    paddingHorizontal: tokens.space[3],
+    paddingVertical: tokens.space[2],
+    borderRadius: tokens.radius.pill,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+    backgroundColor: tokens.bg.surface,
+    alignSelf: 'flex-start',
+  },
+  pillIcon: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(124, 92, 255, 0.18)',
+  },
+  pillText: {
+    ...tokens.type.caption,
+    color: tokens.text.hi,
+    fontFamily: 'Manrope_700Bold',
   },
 });

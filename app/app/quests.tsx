@@ -22,8 +22,13 @@ import {
   useQuests,
   useStartQuestFromTemplate,
 } from '@/lib/api/quests';
+import type { QuestTemplate } from '@/lib/db/types';
 import { confirmAction, showInfo } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
+import { getQuestCategoryMeta } from '@/theme/quests';
+
+/** Display order for category groupings — keeps the board scannable. */
+const CATEGORY_ORDER = ['fitness', 'health', 'mind', 'wealth', 'bonds', 'craft'];
 
 export default function QuestBoardScreen() {
   const router = useRouter();
@@ -53,6 +58,27 @@ export default function QuestBoardScreen() {
     });
     return set;
   }, [quests.data]);
+
+  // Group templates by category so the board reads as a curated catalog
+  // instead of a flat dump. Categories rendered in CATEGORY_ORDER first,
+  // then any unknown ones at the end (defensive — catalog can grow).
+  const templatesByCategory = useMemo(() => {
+    const map = new Map<string, QuestTemplate[]>();
+    for (const t of templates.data ?? []) {
+      const arr = map.get(t.category) ?? [];
+      arr.push(t);
+      map.set(t.category, arr);
+    }
+    return map;
+  }, [templates.data]);
+
+  const orderedCategories = useMemo(() => {
+    const known = CATEGORY_ORDER.filter((c) => templatesByCategory.has(c));
+    const unknown = Array.from(templatesByCategory.keys()).filter(
+      (c) => !CATEGORY_ORDER.includes(c),
+    );
+    return [...known, ...unknown];
+  }, [templatesByCategory]);
 
   const handleStart = async (templateId: string) => {
     setBusyId(templateId);
@@ -175,10 +201,10 @@ export default function QuestBoardScreen() {
           </View>
         )}
 
-        {/* Templates */}
+        {/* Templates — grouped by category */}
         <View style={[styles.sectionHeader, { marginTop: tokens.space[6] }]}>
           <Text style={styles.sectionTitle}>Quest Board</Text>
-          <Text style={styles.sectionMeta}>tap to take on</Text>
+          <Text style={styles.sectionMeta}>system catalog</Text>
         </View>
 
         {templates.isLoading ? (
@@ -186,26 +212,65 @@ export default function QuestBoardScreen() {
             <ActivityIndicator color={tokens.brand.violet2} />
           </View>
         ) : (
-          <View style={styles.list}>
-            {(templates.data ?? []).map((t) => (
-              <View
-                key={t.id}
-                style={
-                  activeTemplateIds.has(t.id) ? styles.templateAlreadyActive : undefined
-                }
-              >
-                <QuestTemplateCard
-                  template={t}
-                  onStart={() => handleStart(t.id)}
-                  isStarting={busyId === t.id}
-                />
-                {activeTemplateIds.has(t.id) && (
-                  <Text style={styles.alreadyActiveLabel}>Already active</Text>
-                )}
-              </View>
-            ))}
+          <View style={styles.categoryList}>
+            {orderedCategories.map((cat) => {
+              const meta = getQuestCategoryMeta(cat);
+              const items = templatesByCategory.get(cat) ?? [];
+              return (
+                <View key={cat} style={styles.categoryBlock}>
+                  <View style={styles.categoryHeader}>
+                    <View style={[styles.categoryIcon, { backgroundColor: meta.bg }]}>
+                      <Ionicons
+                        name={meta.icon as never}
+                        size={12}
+                        color={meta.color}
+                      />
+                    </View>
+                    <Text
+                      style={[
+                        styles.categoryLabel,
+                        { color: meta.color },
+                      ]}
+                    >
+                      {meta.label.toUpperCase()}
+                    </Text>
+                    <Text style={styles.categoryCount}>{items.length}</Text>
+                  </View>
+                  <View style={styles.list}>
+                    {items.map((t) => (
+                      <View
+                        key={t.id}
+                        style={
+                          activeTemplateIds.has(t.id)
+                            ? styles.templateAlreadyActive
+                            : undefined
+                        }
+                      >
+                        <QuestTemplateCard
+                          template={t}
+                          onStart={() => handleStart(t.id)}
+                          isStarting={busyId === t.id}
+                        />
+                        {activeTemplateIds.has(t.id) && (
+                          <Text style={styles.alreadyActiveLabel}>Already active</Text>
+                        )}
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              );
+            })}
           </View>
         )}
+
+        {/* Custom quests deferred — once start_custom_quest gets a UI, a
+            "Custom" block will sit above the system catalog (mirrors the
+            tasks "Mine vs Suggested" pattern). For now: doc the gap so
+            the user knows where the surface will live. */}
+        <Text style={styles.customDeferredNote}>
+          Custom quest creation is coming soon. For now, the system catalog
+          above covers the highest-yield arcs.
+        </Text>
 
         {/* Recent history */}
         {others.length > 0 && (
@@ -314,5 +379,42 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 4,
     fontStyle: 'italic',
+  },
+  categoryList: {
+    gap: tokens.space[5],
+  },
+  categoryBlock: {
+    gap: tokens.space[3],
+  },
+  categoryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[2],
+  },
+  categoryIcon: {
+    width: 22,
+    height: 22,
+    borderRadius: tokens.radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  categoryLabel: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 11,
+    letterSpacing: 0.8,
+    flex: 1,
+  },
+  categoryCount: {
+    ...tokens.type.caption,
+    color: tokens.text.dim,
+    fontFamily: 'Manrope_700Bold',
+  },
+  customDeferredNote: {
+    ...tokens.type.caption,
+    color: tokens.text.dim,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginTop: tokens.space[5],
+    paddingHorizontal: tokens.space[6],
   },
 });
