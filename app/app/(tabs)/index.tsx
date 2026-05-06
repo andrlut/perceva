@@ -15,26 +15,21 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CompactHeader } from '@/components/CompactHeader';
+import { CompleteTaskSheet } from '@/components/CompleteTaskSheet';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { TaskCard } from '@/components/TaskCard';
 import { XPCoinFloat } from '@/components/XPCoinFloat';
 import { useCharacter } from '@/lib/api/character';
 import { useStreak } from '@/lib/api/streak';
 import { useCompleteTask, useHomeBuckets } from '@/lib/api/tasks';
-import type { TaskWithDimension } from '@/lib/db/types';
+import type { TaskSub, TaskWithSubs } from '@/lib/db/types';
 import {
   useHomeBucketsStore,
   useLoadHomeBuckets,
   type HomeBucket,
 } from '@/lib/homeBuckets';
 import { formatCompactDate } from '@/lib/time';
-import { maybeConfirmHardCompletion } from '@/lib/util/confirmCompletion';
-import {
-  applyStreakMultiplier,
-  levelProgress,
-  rewardForDifficulty,
-  type Difficulty,
-} from '@/lib/xp';
+import { levelProgress, rewardForTaskSubs } from '@/lib/xp';
 import { tokens } from '@/theme';
 
 interface FloatItem {
@@ -67,31 +62,26 @@ export default function HomeScreen() {
   const collapsed = useHomeBucketsStore((s) => s.collapsed);
   const toggleBucket = useHomeBucketsStore((s) => s.toggle);
   const [floats, setFloats] = useState<FloatItem[]>([]);
-  // Per-task overrides for star difficulty, applied via swipe on the card.
-  const [diffOverrides, setDiffOverrides] = useState<Record<string, Difficulty>>({});
+  /** Long-press opens the per-sub adjust popup against this task. */
+  const [sheetTask, setSheetTask] = useState<TaskWithSubs | null>(null);
 
-  const handleComplete = async (task: TaskWithDimension) => {
+  const fireCompletion = (task: TaskWithSubs, subs: TaskSub[]) => {
     if (completeTask.isPending) return;
-
-    const selected: Difficulty = diffOverrides[task.id] ?? task.difficulty;
-
-    // Optional confirm guard for hard tasks (Settings → Tasks & Progress).
-    if (!(await maybeConfirmHardCompletion(selected, task.title))) return;
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
 
-    const baseReward = rewardForDifficulty(selected);
-    const reward = applyStreakMultiplier(baseReward, streak.data?.currentStreak ?? 0);
+    const reward = rewardForTaskSubs(subs, streak.data?.currentStreak ?? 0);
     const fid = Date.now();
-    setFloats((prev) => [...prev, { id: fid, xp: reward.xp, coins: reward.coins }]);
+    setFloats((prev) => [
+      ...prev,
+      { id: fid, xp: reward.total.xp, coins: reward.total.coins },
+    ]);
 
     completeTask.mutate(
       {
-        taskId: task.id,
-        expectedXp: reward.xp,
-        expectedCoins: reward.coins,
-        dimensionId: task.dimension_id,
-        selectedDifficulty: selected,
+        task,
+        subs,
+        streakDays: streak.data?.currentStreak ?? 0,
       },
       {
         onError: (err) => {
@@ -105,6 +95,22 @@ export default function HomeScreen() {
         },
       },
     );
+  };
+
+  const handleQuickComplete = (task: TaskWithSubs) => {
+    fireCompletion(task, task.subs);
+  };
+
+  const handleLongPress = (task: TaskWithSubs) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    setSheetTask(task);
+  };
+
+  const handleSheetConfirm = (subs: TaskSub[]) => {
+    if (!sheetTask) return;
+    const t = sheetTask;
+    setSheetTask(null);
+    fireCompletion(t, subs);
   };
 
   const isLoading = character.isLoading || buckets.isLoading;
@@ -127,7 +133,7 @@ export default function HomeScreen() {
     (data?.thisMonth.length ?? 0) +
     (data?.oneTime.length ?? 0);
 
-  const tasksFor = (b: HomeBucket): TaskWithDimension[] => {
+  const tasksFor = (b: HomeBucket): TaskWithSubs[] => {
     if (!data) return [];
     if (b === 'today') return data.today;
     if (b === 'this_week') return data.thisWeek;
@@ -219,12 +225,9 @@ export default function HomeScreen() {
                         <TaskCard
                           key={task.id}
                           task={task}
-                          selectedDifficulty={diffOverrides[task.id]}
-                          onSelectDifficulty={(d) =>
-                            setDiffOverrides((prev) => ({ ...prev, [task.id]: d }))
-                          }
                           streakDays={streak.data?.currentStreak ?? 0}
-                          onComplete={() => handleComplete(task)}
+                          onComplete={() => handleQuickComplete(task)}
+                          onLongPress={() => handleLongPress(task)}
                           onEdit={() =>
                             router.push({ pathname: '/task-form', params: { id: task.id } })
                           }
@@ -261,6 +264,14 @@ export default function HomeScreen() {
           onDone={() => setFloats((prev) => prev.filter((x) => x.id !== f.id))}
         />
       ))}
+
+      <CompleteTaskSheet
+        visible={sheetTask !== null}
+        task={sheetTask}
+        streakDays={streak.data?.currentStreak ?? 0}
+        onCancel={() => setSheetTask(null)}
+        onConfirm={handleSheetConfirm}
+      />
     </SafeAreaView>
   );
 }

@@ -18,7 +18,7 @@ import { SubPanel } from '@/components/SubPanel';
 import { pickSubScores, useCharacter } from '@/lib/api/character';
 import { useAssessmentHistoryAll } from '@/lib/api/questionnaire';
 import { useTaskTemplates } from '@/lib/api/tasks';
-import type { DimensionId, SubId, TaskTemplate } from '@/lib/db/types';
+import type { DimensionId, SubId, TaskTemplateWithSubs } from '@/lib/db/types';
 import { levelProgress } from '@/lib/xp';
 import { tokens } from '@/theme';
 import { DIMENSION_META, DIMENSION_ORDER, SUBS_BY_DIM } from '@/theme/dimensions';
@@ -61,11 +61,11 @@ export default function DimensionInfoScreen() {
   );
 
   const templatesBySub = useMemo(() => {
-    const map = new Map<SubId, TaskTemplate[]>();
+    const map = new Map<SubId, TaskTemplateWithSubs[]>();
     for (const t of templates.data ?? []) {
-      const arr = map.get(t.sub_id) ?? [];
+      const arr = map.get(t.primary_sub_id) ?? [];
       arr.push(t);
-      map.set(t.sub_id, arr);
+      map.set(t.primary_sub_id, arr);
     }
     return map;
   }, [templates.data]);

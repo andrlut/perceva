@@ -125,31 +125,24 @@ export interface CharacterDimension {
   xp: number;
 }
 
-export type MetricType = 'reps' | 'minutes' | 'pages' | 'km' | 'ml' | 'custom';
+/** A single (sub_id, stars) allocation on a task or task_template. Sum of
+ *  stars across all allocations on one task is capped at 5 (DB-enforced). */
+export interface TaskSub {
+  sub_id: SubId;
+  stars: 1 | 2 | 3 | 4 | 5;
+}
 
 export interface Task {
   id: string;
   character_id: string;
   title: string;
   description: string | null;
-  difficulty: 1 | 2 | 3 | 4 | 5;
   task_type: TaskType;
   recurrence: Recurrence;
   target_count: number;
   is_archived: boolean;
   created_at: string;
   updated_at: string;
-  /**
-   * Optional metric scaling — when set, the task's target value scales
-   * with difficulty: base_value + increment_per_star * (difficulty - 1).
-   * All four scaling fields are set together or all null.
-   */
-  metric_type: MetricType | null;
-  metric_label: string | null;
-  base_value: number | null;
-  increment_per_star: number | null;
-  /** NOT NULL after migration 0007 — every task lives under a sub. */
-  sub_id: SubId;
   /** Set when the task was adopted from a task_template. NULL = custom-made. */
   template_id: string | null;
 }
@@ -158,23 +151,33 @@ export interface TaskTemplate {
   id: string;
   title: string;
   description: string | null;
-  sub_id: SubId;
-  difficulty: 1 | 2 | 3 | 4 | 5;
   task_type: TaskType;
   recurrence: Recurrence;
   target_count: number;
-  metric_type: MetricType | null;
-  metric_label: string | null;
-  base_value: number | null;
-  increment_per_star: number | null;
   sort_order: number;
 }
 
-/** Task with its derived parent dimension (resolved via sub_id). After
- *  the sub-first migration, every task has exactly one dim, so this is a
- *  single id rather than an array. */
-export interface TaskWithDimension extends Task {
-  dimension_id: DimensionId;
+/**
+ * A Task hydrated with its sub allocations, plus a couple of derived
+ * conveniences for UI:
+ *   - `subs`: the [(sub, stars)] list (in order of stars desc, then sub label)
+ *   - `primary_sub_id`: the sub with the most stars (visual accent driver)
+ *   - `primary_dimension_id`: the parent dim of the primary sub
+ *   - `total_stars`: sum across `subs` (1..5)
+ */
+export interface TaskWithSubs extends Task {
+  subs: TaskSub[];
+  primary_sub_id: SubId;
+  primary_dimension_id: DimensionId;
+  total_stars: number;
+}
+
+/** A TaskTemplate hydrated with its sub allocations + derived conveniences. */
+export interface TaskTemplateWithSubs extends TaskTemplate {
+  subs: TaskSub[];
+  primary_sub_id: SubId;
+  primary_dimension_id: DimensionId;
+  total_stars: number;
 }
 
 export interface TaskCompletion {
@@ -184,8 +187,16 @@ export interface TaskCompletion {
   completed_at: string;
   xp_granted: number;
   coins_granted: number;
-  /** Star difficulty actually used for this completion. */
-  selected_difficulty: 1 | 2 | 3 | 4 | 5;
+  /** Sum of per-sub stars actually used for this completion (cached on row). */
+  total_stars: number;
+}
+
+export interface TaskCompletionSub {
+  completion_id: string;
+  sub_id: SubId;
+  stars: 1 | 2 | 3 | 4 | 5;
+  xp_granted: number;
+  coins_granted: number;
 }
 
 export type RewardCategory = 'indulgence' | 'good' | 'experience';

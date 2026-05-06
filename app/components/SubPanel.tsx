@@ -6,7 +6,7 @@ import { Sparkline } from '@/components/Sparkline';
 import type {
   AssessmentLogEntry,
   SubId,
-  TaskTemplate,
+  TaskTemplateWithSubs,
 } from '@/lib/db/types';
 import { useStartTaskFromTemplate } from '@/lib/api/tasks';
 import { tokens } from '@/theme';
@@ -16,7 +16,7 @@ interface Props {
   subId: SubId;
   selfScore: number;
   history: Pick<AssessmentLogEntry, 'score' | 'recorded_at'>[];
-  templates: TaskTemplate[];
+  templates: TaskTemplateWithSubs[];
   /** Which side of the crest this panel sits on. Drives the tonal accent
    *  (subtle gradient direction + corner ornament position). */
   side?: 'left' | 'right';
@@ -205,7 +205,7 @@ export function SubPanel({
                     </Text>
                   )}
                   <Text style={styles.templateMeta}>
-                    {recurrenceLabel(t.task_type)} · {'★'.repeat(t.difficulty)}
+                    {recurrenceLabel(t.task_type)} · {'★'.repeat(t.total_stars)}
                   </Text>
                 </View>
                 <View

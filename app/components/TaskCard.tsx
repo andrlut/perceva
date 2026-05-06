@@ -1,10 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
-  interpolate,
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSequence,
@@ -12,90 +9,57 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import type { TaskWithDimension } from '@/lib/db/types';
+import type { TaskSub, TaskWithSubs } from '@/lib/db/types';
 import { describeRecurrence } from '@/lib/recurrence';
-import {
-  applyStreakMultiplier,
-  formatScaledValue,
-  rewardForDifficulty,
-  scaledTargetValue,
-  type Difficulty,
-} from '@/lib/xp';
+import { rewardForTaskSubs } from '@/lib/xp';
 import { tokens } from '@/theme';
 import { DIMENSION_META, SUB_META } from '@/theme/dimensions';
 
 import { CoinIcon } from './CoinIcon';
-import { DiffPips } from './DiffPips';
 import { SubStack } from './SubStack';
 
 interface Props {
-  task: TaskWithDimension;
-  /** Star difficulty selected by the user via swipe; falls back to task.difficulty. */
-  selectedDifficulty?: Difficulty;
-  onSelectDifficulty?: (next: Difficulty) => void;
-  /** Streak the user is on, for displaying the multiplied reward. */
+  task: TaskWithSubs;
+  /** Streak days, drives the multiplier on the displayed reward total. */
   streakDays?: number;
+  /** Quick-tap completion (uses the task's default subs). */
   onComplete: () => void;
+  /** Long-press the check button to open the per-sub adjust popup. */
+  onLongPress?: () => void;
+  /** Tap the body to navigate to edit. */
   onEdit?: () => void;
   isCompleting?: boolean;
 }
 
-const SWIPE_THRESHOLD = 60; // px past which a swipe ticks the star count
-
-const clampDifficulty = (n: number): Difficulty => {
-  'worklet';
-  return Math.max(1, Math.min(5, Math.round(n))) as Difficulty;
-};
-
 /**
- * Compact task card following the Tasks v2 visual:
+ * Compact task card following the Tasks v3 visual:
  *
  *   ┌────────────────────────────────────────────────┐
  *   │ ▎ Title                              ┌─────┐  │
- *   │   [sub] [pips] +XP +coins            │ ✓   │  │
+ *   │   [sub stack]  [colored pips]        │ ✓   │  │
+ *   │                +XP  +coins           │     │  │
  *   │                                       └─────┘  │
  *   └────────────────────────────────────────────────┘
  *
- * The vertical accent bar on the left picks up the primary sub's dim
- * color so each card reads as belonging to a particular pillar at a
- * glance. The big violet button on the right is the single primary
- * action — tap it to log a completion.
+ * Vertical accent bar on the left tinted by the primary sub's dim color.
+ * Pips below the sub stack are colored by which sub each one belongs to,
+ * so a 2★+1★+1★ task reads as two orange pips, one cyan, one violet.
  *
- * Swipe-to-change-difficulty is preserved for scaling tasks (the metric
- * scaling feature on the task) so users can bump a daily run from 5km
- * to 7km without leaving the card.
+ * Single primary action: violet rounded check on the right. Tap = quick
+ * complete with defaults, long-press = open the per-sub adjust popup.
  */
 export function TaskCard({
   task,
-  selectedDifficulty,
-  onSelectDifficulty,
   streakDays = 0,
   onComplete,
+  onLongPress,
   onEdit,
   isCompleting,
 }: Props) {
-  const scalingEnabled =
-    task.metric_type !== null &&
-    task.base_value !== null &&
-    task.increment_per_star !== null;
-
-  const effectiveDifficulty: Difficulty = selectedDifficulty ?? task.difficulty;
-
-  const baseReward = rewardForDifficulty(effectiveDifficulty);
-  const reward = applyStreakMultiplier(baseReward, streakDays);
-
-  const subMeta = SUB_META[task.sub_id];
-  const dimMeta = DIMENSION_META[task.dimension_id];
-  const accent = dimMeta.color;
-
-  const scaledTarget =
-    scalingEnabled && task.base_value !== null && task.increment_per_star !== null
-      ? scaledTargetValue(task.base_value, task.increment_per_star, effectiveDifficulty)
-      : null;
+  const accent = DIMENSION_META[task.primary_dimension_id].color;
+  const reward = rewardForTaskSubs(task.subs, streakDays);
 
   const completeScale = useSharedValue(1);
-  const dragX = useSharedValue(0);
-  const [hintDirection, setHintDirection] = useState<'up' | 'down' | null>(null);
 
   useEffect(() => {
     if (isCompleting) {
@@ -110,47 +74,8 @@ export function TaskCard({
   const showRecurrenceNote =
     task.recurrence.type !== 'daily' || task.target_count > 1;
 
-  const tickDifficulty = (delta: 1 | -1) => {
-    if (!scalingEnabled || !onSelectDifficulty) return;
-    const next = clampDifficulty(effectiveDifficulty + delta);
-    if (next === effectiveDifficulty) return;
-    onSelectDifficulty(next);
-    setHintDirection(delta > 0 ? 'up' : 'down');
-    setTimeout(() => setHintDirection(null), 600);
-  };
-
-  // Horizontal pan gesture: drag past SWIPE_THRESHOLD in either direction
-  // to tick the star count. Snap back to center on release.
-  const panGesture = Gesture.Pan()
-    .activeOffsetX([-12, 12])
-    .failOffsetY([-12, 12])
-    .enabled(scalingEnabled && !!onSelectDifficulty)
-    .onUpdate((e) => {
-      dragX.value = e.translationX;
-    })
-    .onEnd((e) => {
-      const t = e.translationX;
-      if (t > SWIPE_THRESHOLD) {
-        runOnJS(tickDifficulty)(1);
-      } else if (t < -SWIPE_THRESHOLD) {
-        runOnJS(tickDifficulty)(-1);
-      }
-      dragX.value = withSpring(0, tokens.motion.springSnappy);
-    });
-
   const buttonAnimStyle = useAnimatedStyle(() => ({
     transform: [{ scale: completeScale.value }],
-  }));
-
-  const bodyAnimStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: dragX.value * 0.4 }],
-  }));
-
-  const hintRightStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(dragX.value, [0, SWIPE_THRESHOLD], [0, 1], 'clamp'),
-  }));
-  const hintLeftStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(dragX.value, [-SWIPE_THRESHOLD, 0], [1, 0], 'clamp'),
   }));
 
   const handlePressIn = () => {
@@ -160,13 +85,11 @@ export function TaskCard({
     completeScale.value = withSpring(1, tokens.motion.springBouncy);
   };
 
-  const titleText = scaledTarget !== null
-    ? `${task.title} — ${formatScaledValue(scaledTarget, task.metric_label)}`
-    : task.title;
+  const subIds = task.subs.map((s) => s.sub_id);
 
   return (
     <View style={styles.container}>
-      {/* Vertical accent bar on the left, tinted by the task's parent dim */}
+      {/* Vertical accent bar on the left, tinted by primary sub's dim */}
       <View
         style={[
           styles.accentBar,
@@ -174,77 +97,49 @@ export function TaskCard({
         ]}
       />
 
-      <GestureDetector gesture={panGesture}>
-        <Animated.View style={[styles.bodyWrap, bodyAnimStyle]}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.body,
-              pressed && onEdit && { opacity: 0.85 },
-            ]}
-            onPress={onEdit}
-            disabled={!onEdit}
-          >
-            <Text style={styles.title} numberOfLines={2}>
-              {titleText}
+      <Pressable
+        style={({ pressed }) => [
+          styles.bodyWrap,
+          pressed && onEdit && { opacity: 0.85 },
+        ]}
+        onPress={onEdit}
+        disabled={!onEdit}
+      >
+        <Text style={styles.title} numberOfLines={2}>
+          {task.title}
+        </Text>
+
+        <View style={styles.metaRow}>
+          {subIds.length > 0 && <SubStack subIds={subIds} max={3} size={28} />}
+          <SubColoredPips subs={task.subs} />
+        </View>
+
+        <View style={styles.rewardRow}>
+          <View style={styles.rewardItem}>
+            <Ionicons name="flag" size={11} color={tokens.semantic.xp} />
+            <Text style={[styles.rewardText, { color: tokens.semantic.xp }]}>
+              +{reward.total.xp}
             </Text>
-
-            <View style={styles.metaRow}>
-              {subMeta && <SubStack subIds={[task.sub_id]} max={1} size={28} />}
-              <DiffPips value={effectiveDifficulty} color={accent} />
-              <View style={styles.rewardItem}>
-                <Ionicons name="flag" size={11} color={tokens.semantic.xp} />
-                <Text style={[styles.rewardText, { color: tokens.semantic.xp }]}>
-                  +{reward.xp}
-                </Text>
-              </View>
-              <View style={styles.rewardItem}>
-                <CoinIcon size={11} />
-                <Text style={[styles.rewardText, { color: tokens.semantic.coin }]}>
-                  +{reward.coins}
-                </Text>
-              </View>
-              {hintDirection && (
-                <Text
-                  style={[
-                    styles.tickHint,
-                    {
-                      color:
-                        hintDirection === 'up'
-                          ? tokens.semantic.xp
-                          : tokens.text.dim,
-                    },
-                  ]}
-                >
-                  {hintDirection === 'up' ? '+1★' : '−1★'}
-                </Text>
-              )}
-            </View>
-
-            {showRecurrenceNote && (
-              <Text style={styles.recurrenceNote} numberOfLines={1}>
-                {describeRecurrence(task.recurrence, task.target_count)}
-              </Text>
-            )}
-          </Pressable>
-
-          {scalingEnabled && (
-            <>
-              <Animated.View style={[styles.swipeHintLeft, hintLeftStyle]}>
-                <Ionicons name="arrow-back" size={14} color={tokens.text.dim} />
-                <Text style={styles.swipeHintText}>−1★</Text>
-              </Animated.View>
-              <Animated.View style={[styles.swipeHintRight, hintRightStyle]}>
-                <Text style={styles.swipeHintText}>+1★</Text>
-                <Ionicons name="arrow-forward" size={14} color={tokens.semantic.xp} />
-              </Animated.View>
-            </>
+          </View>
+          <View style={styles.rewardItem}>
+            <CoinIcon size={11} />
+            <Text style={[styles.rewardText, { color: tokens.semantic.coin }]}>
+              +{reward.total.coins}
+            </Text>
+          </View>
+          {showRecurrenceNote && (
+            <Text style={styles.recurrenceNote} numberOfLines={1}>
+              {describeRecurrence(task.recurrence, task.target_count)}
+            </Text>
           )}
-        </Animated.View>
-      </GestureDetector>
+        </View>
+      </Pressable>
 
       <Animated.View style={[styles.completeShadow, buttonAnimStyle]}>
         <Pressable
           onPress={onComplete}
+          onLongPress={onLongPress}
+          delayLongPress={350}
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
           disabled={isCompleting}
@@ -253,10 +148,40 @@ export function TaskCard({
             styles.completeButton,
             pressed && styles.completeButtonPressed,
           ]}
+          accessibilityHint={
+            onLongPress ? 'Long-press to adjust per-sub stars' : undefined
+          }
         >
           <Ionicons name="checkmark" size={22} color="#fff" />
         </Pressable>
       </Animated.View>
+    </View>
+  );
+}
+
+/** Pips colored per-sub: a 2★+1★+1★ task draws 2 of sub-1's color,
+ *  1 of sub-2's, 1 of sub-3's. Total pips = sum of stars (≤ 5). */
+function SubColoredPips({ subs }: { subs: TaskSub[] }) {
+  const pips: string[] = [];
+  for (const s of subs) {
+    const sub = SUB_META[s.sub_id];
+    const color = sub ? DIMENSION_META[sub.dimensionId].color : tokens.brand.violet2;
+    for (let i = 0; i < s.stars; i++) {
+      pips.push(color);
+    }
+  }
+  // Fill remaining slots up to 5 with surface dots so the row width stays stable.
+  while (pips.length < 5) {
+    pips.push(tokens.bg.surface2);
+  }
+  return (
+    <View style={styles.pipsRow}>
+      {pips.slice(0, 5).map((color, i) => (
+        <View
+          key={i}
+          style={[styles.pip, { backgroundColor: color }]}
+        />
+      ))}
     </View>
   );
 }
@@ -287,8 +212,6 @@ const styles = StyleSheet.create({
   bodyWrap: {
     flex: 1,
     minWidth: 0,
-  },
-  body: {
     gap: tokens.space[2],
   },
   title: {
@@ -303,6 +226,21 @@ const styles = StyleSheet.create({
     gap: 8,
     flexWrap: 'wrap',
   },
+  pipsRow: {
+    flexDirection: 'row',
+    gap: 2,
+  },
+  pip: {
+    width: 6,
+    height: 6,
+    borderRadius: 1,
+  },
+  rewardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flexWrap: 'wrap',
+  },
   rewardItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -312,15 +250,11 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_700Bold',
     fontSize: 11,
   },
-  tickHint: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 11,
-    marginLeft: 4,
-  },
   recurrenceNote: {
     ...tokens.type.caption,
     color: tokens.text.dim,
     fontStyle: 'italic',
+    flexShrink: 1,
   },
   completeShadow: {
     borderRadius: 12,
@@ -341,28 +275,5 @@ const styles = StyleSheet.create({
   completeButtonPressed: {
     opacity: 0.85,
     transform: [{ scale: 0.96 }],
-  },
-  swipeHintLeft: {
-    position: 'absolute',
-    left: 0,
-    top: '50%',
-    transform: [{ translateY: -10 }],
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  swipeHintRight: {
-    position: 'absolute',
-    right: 0,
-    top: '50%',
-    transform: [{ translateY: -10 }],
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  swipeHintText: {
-    ...tokens.type.caption,
-    color: tokens.text.dim,
-    fontFamily: 'Manrope_700Bold',
   },
 });

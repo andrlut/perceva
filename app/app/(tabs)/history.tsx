@@ -14,16 +14,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CalendarMonthModal } from '@/components/CalendarMonthModal';
 import { CoinIcon } from '@/components/CoinIcon';
-import { DifficultyStars } from '@/components/DifficultyStars';
 import { DimensionChip } from '@/components/DimensionChip';
 import { ScreenBackground } from '@/components/ScreenBackground';
+import { SubStack } from '@/components/SubStack';
 import { XpHeatmap } from '@/components/XpHeatmap';
 import { useDailySummary, useDayDetail } from '@/lib/api/history';
 import { useCompleteTask, useUndoCompletion } from '@/lib/api/tasks';
 import { confirmAction, showInfo } from '@/lib/util/confirm';
-import type { TaskWithDimension } from '@/lib/db/types';
+import type { TaskWithSubs } from '@/lib/db/types';
 import { describeRecurrence } from '@/lib/recurrence';
-import { rewardForDifficulty } from '@/lib/xp';
+import { rewardForTaskSubs } from '@/lib/xp';
 import { tokens } from '@/theme';
 
 const HEATMAP_WEEKS = 3;
@@ -107,11 +107,11 @@ export default function HistoryScreen() {
     });
   };
 
-  const handleRetroComplete = async (task: TaskWithDimension) => {
-    const reward = rewardForDifficulty(task.difficulty);
+  const handleRetroComplete = async (task: TaskWithSubs) => {
+    const reward = rewardForTaskSubs(task.subs, 0);
     const ok = await confirmAction(
       'Log retroactively?',
-      `Mark "${task.title}" as done on ${formatDay(selected)}? You'll earn +${reward.xp} XP and +${reward.coins} coins.`,
+      `Mark "${task.title}" as done on ${formatDay(selected)}? You'll earn +${reward.total.xp} XP and +${reward.total.coins} coins.`,
       { okText: 'Log it', cancelText: 'Cancel' },
     );
     if (!ok) return;
@@ -122,10 +122,8 @@ export default function HistoryScreen() {
     stamp.setHours(12, 0, 0, 0);
     completeTask.mutate(
       {
-        taskId: task.id,
-        expectedXp: reward.xp,
-        expectedCoins: reward.coins,
-        dimensionId: task.dimension_id,
+        task,
+        subs: task.subs,
         completedAt: stamp.toISOString(),
       },
       {
@@ -275,7 +273,9 @@ export default function HistoryScreen() {
                         {c.taskTitle}
                       </Text>
                       <View style={styles.completionMetaRow}>
-                        <DifficultyStars difficulty={c.difficulty} />
+                        <Text style={styles.completionStars}>
+                          {c.totalStars}★
+                        </Text>
                         <Text style={styles.completionTime}>
                           {new Date(c.completedAt).toLocaleTimeString(undefined, {
                             hour: 'numeric',
@@ -283,12 +283,12 @@ export default function HistoryScreen() {
                           })}
                         </Text>
                       </View>
-                      {c.dimensionId && (
+                      {c.subs.length > 0 && (
                         <View style={styles.chipsRow}>
-                          <DimensionChip
-                            id={c.dimensionId}
-                            size="sm"
-                            pressable={false}
+                          <SubStack
+                            subIds={c.subs.map((s) => s.sub_id)}
+                            max={3}
+                            size={20}
                           />
                         </View>
                       )}
@@ -328,7 +328,7 @@ export default function HistoryScreen() {
                 </View>
                 <View style={styles.list}>
                   {day.data.openTasks.map(({ task, completedThisDay }) => {
-                    const r = rewardForDifficulty(task.difficulty);
+                    const r = rewardForTaskSubs(task.subs, 0);
                     const isPartial =
                       task.target_count > 1 && completedThisDay > 0;
                     const showRecurrenceNote =
@@ -350,7 +350,9 @@ export default function HistoryScreen() {
                             {task.title}
                           </Text>
                           <View style={styles.completionMetaRow}>
-                            <DifficultyStars difficulty={task.difficulty} />
+                            <Text style={styles.completionStars}>
+                              {task.total_stars}★
+                            </Text>
                             {isPartial && (
                               <Text style={styles.partialBadge}>
                                 {completedThisDay} / {task.target_count} done
@@ -364,7 +366,7 @@ export default function HistoryScreen() {
                           )}
                           <View style={styles.chipsRow}>
                             <DimensionChip
-                              id={task.dimension_id}
+                              id={task.primary_dimension_id}
                               size="sm"
                               pressable={false}
                             />
@@ -376,7 +378,7 @@ export default function HistoryScreen() {
                             <Text
                               style={[styles.rewardText, { color: tokens.semantic.xp }]}
                             >
-                              +{r.xp}
+                              +{r.total.xp}
                             </Text>
                           </View>
                         </View>
@@ -577,6 +579,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[3],
+  },
+  completionStars: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 12,
+    color: tokens.semantic.coin,
   },
   completionTime: {
     ...tokens.type.caption,

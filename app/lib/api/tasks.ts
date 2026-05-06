@@ -2,15 +2,16 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type {
   DimensionId,
-  MetricType,
   Recurrence,
   SubId,
-  TaskTemplate,
-  TaskWithDimension,
+  TaskSub,
+  TaskTemplateWithSubs,
+  TaskWithSubs,
 } from '@/lib/db/types';
 import { isDueOn, parseRecurrence } from '@/lib/recurrence';
 import { supabase } from '@/lib/supabase';
 import { SUB_META } from '@/theme/dimensions';
+import { rewardForTaskSubs } from '@/lib/xp';
 
 import { characterKeys, type CharacterWithProfile } from './character';
 import { historyKeys } from './history';
@@ -31,21 +32,18 @@ export const taskKeys = {
 export interface TaskFormInput {
   title: string;
   description: string | null;
-  difficulty: 1 | 2 | 3 | 4 | 5;
   task_type: 'one_shot' | 'daily' | 'weekly';
   recurrence: Recurrence;
   target_count: number;
-  /** Required: every task lives under exactly one sub. Parent dim is derived. */
-  sub_id: SubId;
-  /**
-   * Optional metric scaling. When metric_type is set, base_value and
-   * increment_per_star must also be set. When null, the task has no
-   * scaling — completed at the default difficulty, no swipe affordance.
-   */
-  metric_type: MetricType | null;
-  metric_label: string | null;
-  base_value: number | null;
-  increment_per_star: number | null;
+  /** N sub allocations, sum of stars 1..5 (DB-enforced via set_task_subs). */
+  subs: TaskSub[];
+}
+
+// ─── Row shapes coming from PostgREST ────────────────────────────────────
+
+interface TaskSubRow {
+  sub_id: string;
+  stars: number;
 }
 
 interface TaskRow {
@@ -53,85 +51,121 @@ interface TaskRow {
   character_id: string;
   title: string;
   description: string | null;
-  difficulty: 1 | 2 | 3 | 4 | 5;
   task_type: 'one_shot' | 'daily' | 'weekly';
   recurrence: unknown;
   target_count: number;
   is_archived: boolean;
   created_at: string;
   updated_at: string;
-  metric_type: MetricType | null;
-  metric_label: string | null;
-  base_value: number | string | null;
-  increment_per_star: number | string | null;
-  sub_id: SubId;
   template_id: string | null;
+  task_sub: TaskSubRow[] | null;
 }
 
-// Postgres numeric columns can come back as strings via PostgREST.
-function numericOrNull(v: number | string | null | undefined): number | null {
-  if (v === null || v === undefined) return null;
-  const n = typeof v === 'string' ? parseFloat(v) : v;
-  return Number.isFinite(n) ? n : null;
+interface TaskTemplateRow {
+  id: string;
+  title: string;
+  description: string | null;
+  task_type: 'one_shot' | 'daily' | 'weekly';
+  recurrence: unknown;
+  target_count: number;
+  sort_order: number;
+  task_template_sub: TaskSubRow[] | null;
 }
 
 /** Resolve a sub's parent dim. Throws on unknown sub — should be impossible
- *  given the DB FK + NOT NULL constraint, but we want a loud failure mode
- *  rather than a silent miscategorization. */
+ *  given the DB FK + NOT NULL constraint, but loud failure beats silent
+ *  miscategorization. */
 export function dimensionForSub(subId: SubId): DimensionId {
   const meta = SUB_META[subId];
   if (!meta) throw new Error(`Unknown sub_id: ${subId}`);
   return meta.dimensionId;
 }
 
-function mapTaskRow(t: TaskRow): TaskWithDimension {
+/** Sort sub allocations by stars desc, then by sub label asc — gives
+ *  consistent visual order across the app. */
+function sortSubs(subs: TaskSub[]): TaskSub[] {
+  return [...subs].sort((a, b) => {
+    if (a.stars !== b.stars) return b.stars - a.stars;
+    const la = SUB_META[a.sub_id]?.label ?? a.sub_id;
+    const lb = SUB_META[b.sub_id]?.label ?? b.sub_id;
+    return la.localeCompare(lb);
+  });
+}
+
+function pickPrimary(subs: TaskSub[]): SubId {
+  // Caller should ensure at least one sub. Fallback to first SubId in catalog
+  // would mask a bug, so throw instead.
+  if (subs.length === 0) throw new Error('Task has no subs');
+  return subs[0]!.sub_id;
+}
+
+function mapTaskRow(t: TaskRow): TaskWithSubs {
+  const rawSubs: TaskSub[] = (t.task_sub ?? []).map((r) => ({
+    sub_id: r.sub_id as SubId,
+    stars: Math.max(1, Math.min(5, r.stars)) as TaskSub['stars'],
+  }));
+  const subs = sortSubs(rawSubs);
+  const primarySub = subs.length > 0 ? pickPrimary(subs) : ('sleep' as SubId);
+  const totalStars = subs.reduce((s, x) => s + x.stars, 0);
   return {
     id: t.id,
     character_id: t.character_id,
     title: t.title,
     description: t.description,
-    difficulty: t.difficulty,
     task_type: t.task_type,
     recurrence: parseRecurrence(t.recurrence),
     target_count: t.target_count ?? 1,
     is_archived: t.is_archived,
     created_at: t.created_at,
     updated_at: t.updated_at,
-    metric_type: t.metric_type,
-    metric_label: t.metric_label,
-    base_value: numericOrNull(t.base_value),
-    increment_per_star: numericOrNull(t.increment_per_star),
-    sub_id: t.sub_id,
     template_id: t.template_id,
-    dimension_id: dimensionForSub(t.sub_id),
+    subs,
+    primary_sub_id: primarySub,
+    primary_dimension_id: dimensionForSub(primarySub),
+    total_stars: totalStars,
   };
 }
 
-export interface HomeBuckets {
-  /** Daily-cadence work pending today: dailies + weeklies-due-today +
-   *  monthlies-due-today, where today's target_count isn't yet met. */
-  today: TaskWithDimension[];
-  /** Weekly tasks that aren't in Today but still have pending occurrences
-   *  this week. Daily tasks that are met for today don't appear — they
-   *  roll back to Today tomorrow. */
-  thisWeek: TaskWithDimension[];
-  /** Monthly tasks that aren't in Today but are due later this month. */
-  thisMonth: TaskWithDimension[];
-  /** One-shot tasks that have never been completed. */
-  oneTime: TaskWithDimension[];
+function mapTaskTemplateRow(t: TaskTemplateRow): TaskTemplateWithSubs {
+  const rawSubs: TaskSub[] = (t.task_template_sub ?? []).map((r) => ({
+    sub_id: r.sub_id as SubId,
+    stars: Math.max(1, Math.min(5, r.stars)) as TaskSub['stars'],
+  }));
+  const subs = sortSubs(rawSubs);
+  const primarySub = subs.length > 0 ? pickPrimary(subs) : ('sleep' as SubId);
+  const totalStars = subs.reduce((s, x) => s + x.stars, 0);
+  return {
+    id: t.id,
+    title: t.title,
+    description: t.description,
+    task_type: t.task_type,
+    recurrence: parseRecurrence(t.recurrence),
+    target_count: t.target_count ?? 1,
+    sort_order: t.sort_order,
+    subs,
+    primary_sub_id: primarySub,
+    primary_dimension_id: dimensionForSub(primarySub),
+    total_stars: totalStars,
+  };
 }
 
-/** Monday-anchored start of the current week, in local time. */
+// ─── Home buckets ────────────────────────────────────────────────────────
+
+export interface HomeBuckets {
+  today: TaskWithSubs[];
+  thisWeek: TaskWithSubs[];
+  thisMonth: TaskWithSubs[];
+  oneTime: TaskWithSubs[];
+}
+
 function startOfThisWeek(): Date {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
-  // JS getDay: 0=Sun..6=Sat. Convert to Monday=0..Sunday=6.
   const offset = (d.getDay() + 6) % 7;
   d.setDate(d.getDate() - offset);
   return d;
 }
 
-/** First-of-month at 00:00 local. */
 function startOfThisMonth(): Date {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
@@ -139,18 +173,14 @@ function startOfThisMonth(): Date {
   return d;
 }
 
-/** Last day of the current month at 23:59:59.999 local. */
 function endOfThisMonth(): Date {
   const d = new Date();
   d.setHours(23, 59, 59, 999);
-  // setDate(0) of next month = last day of current month
   d.setMonth(d.getMonth() + 1, 0);
   return d;
 }
 
-/** Number of times this task is scheduled across the 7 days starting at
- *  weekStart. Reuses isDueOn so weekly/monthly semantics stay consistent. */
-function countScheduledThisWeek(rec: TaskWithDimension['recurrence'], weekStart: Date): number {
+function countScheduledThisWeek(rec: TaskWithSubs['recurrence'], weekStart: Date): number {
   let count = 0;
   for (let i = 0; i < 7; i++) {
     const d = new Date(weekStart);
@@ -160,21 +190,6 @@ function countScheduledThisWeek(rec: TaskWithDimension['recurrence'], weekStart:
   return count;
 }
 
-/**
- * The four Home sections in one shot. Single batch of fetches keeps the
- * payload small and the loading state simple — Home renders all four or
- * none. The bucketing logic:
- *
- *   - One-time: any one_shot task that has never been completed.
- *   - Today: non-one_shot tasks due today AND today's target_count not met.
- *   - This Week: WEEKLY tasks not in Today but with pending occurrences
- *                this week (scheduled × target_count > completions).
- *   - This Month: MONTHLY tasks not in Today but with pending occurrences
- *                this month (target_count > completions this month).
- *
- * Daily tasks completed for today don't appear in any below-Today bucket;
- * they roll back to Today tomorrow.
- */
 async function fetchHomeBuckets(): Promise<HomeBuckets> {
   const today = new Date();
   const startOfToday = new Date();
@@ -185,14 +200,13 @@ async function fetchHomeBuckets(): Promise<HomeBuckets> {
 
   const { data: tasks, error: taskErr } = await supabase
     .from('task')
-    .select('*')
+    .select('*, task_sub(sub_id, stars)')
     .eq('is_archived', false)
     .order('created_at', { ascending: true });
   if (taskErr) throw taskErr;
 
   const allTasks = ((tasks ?? []) as TaskRow[]).map(mapTaskRow);
 
-  // Today completions (per task)
   const { data: completionsToday, error: compErr } = await supabase
     .from('task_completion')
     .select('task_id')
@@ -203,7 +217,6 @@ async function fetchHomeBuckets(): Promise<HomeBuckets> {
     doneToday.set(c.task_id, (doneToday.get(c.task_id) ?? 0) + 1);
   });
 
-  // Week completions (per task) — used by the This Week bucket.
   const { data: completionsWeek, error: weekErr } = await supabase
     .from('task_completion')
     .select('task_id')
@@ -214,7 +227,6 @@ async function fetchHomeBuckets(): Promise<HomeBuckets> {
     doneWeek.set(c.task_id, (doneWeek.get(c.task_id) ?? 0) + 1);
   });
 
-  // Month completions (per task) — used by the This Month bucket.
   const { data: completionsMonth, error: monthErr } = await supabase
     .from('task_completion')
     .select('task_id')
@@ -226,7 +238,6 @@ async function fetchHomeBuckets(): Promise<HomeBuckets> {
     doneMonth.set(c.task_id, (doneMonth.get(c.task_id) ?? 0) + 1);
   });
 
-  // One-shots: ever completed?
   const oneShotIds = allTasks
     .filter((t) => t.recurrence.type === 'one_shot')
     .map((t) => t.id);
@@ -260,9 +271,6 @@ async function fetchHomeBuckets(): Promise<HomeBuckets> {
       continue;
     }
 
-    // Not in Today. Weekly tasks → This Week if pending scheduled
-    // occurrences this week. Monthly tasks → This Month if pending
-    // this month.
     if (t.recurrence.type === 'weekly') {
       const scheduled = countScheduledThisWeek(t.recurrence, weekStart);
       const expected = scheduled * t.target_count;
@@ -284,18 +292,14 @@ export function useHomeBuckets() {
   });
 }
 
-/**
- * All non-archived tasks for the current user, ordered by creation. Powers
- * the Manage hub — separate from useTasks (which is "due today only") so
- * the two never share cache state and can refetch independently.
- */
+/** All non-archived tasks for the current user, ordered by creation. */
 export function useActiveTasks() {
   return useQuery({
     queryKey: taskKeys.active(),
-    queryFn: async (): Promise<TaskWithDimension[]> => {
+    queryFn: async (): Promise<TaskWithSubs[]> => {
       const { data, error } = await supabase
         .from('task')
-        .select('*')
+        .select('*, task_sub(sub_id, stars)')
         .eq('is_archived', false)
         .order('created_at', { ascending: true });
       if (error) throw error;
@@ -304,40 +308,44 @@ export function useActiveTasks() {
   });
 }
 
+// ─── Completion ──────────────────────────────────────────────────────────
+
 export interface CompleteTaskResult {
+  completion_id: string;
   xp_granted: number;
   coins_granted: number;
+  total_stars: number;
+  streak_days: number;
+  multiplier: number;
 }
 
 /**
- * Calls the complete_task() RPC on Supabase. Optimistically:
- *   - removes the task from the pending list (live tap, single-target only)
- *   - bumps total_xp + coins on the character
- * On error, rolls back. On success, invalidates so the truth wins.
+ * complete_task RPC — fans out per sub. Optional sub_overrides lets the
+ * user adjust per-sub stars at completion time (long-press popup). When
+ * omitted, the task's default subs apply.
+ *
+ * Optimistic update: we drop the task from the buckets cache (single-target
+ * only — multi-target tasks need a refetch) and bump character XP by the
+ * computed total. Per-dim XP is bumped per sub.
  */
 export function useCompleteTask() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (params: {
-      taskId: string;
-      expectedXp: number;
-      expectedCoins: number;
-      /** Parent dim of the task (derived from sub_id) — used to bump the
-       *  matching character_dimension row optimistically. */
-      dimensionId: DimensionId;
-      // Optional ISO timestamp for retroactive logging. Omit for "now".
+      task: TaskWithSubs;
+      /** Snapshot of the subs used for this completion (defaults to task.subs). */
+      subs: TaskSub[];
+      streakDays?: number;
       completedAt?: string;
-      // Optional star difficulty override. When omitted, server uses
-      // the task's default difficulty.
-      selectedDifficulty?: 1 | 2 | 3 | 4 | 5;
     }): Promise<CompleteTaskResult> => {
       const { data, error } = await supabase.rpc('complete_task', {
-        p_task_id: params.taskId,
+        p_task_id: params.task.id,
         ...(params.completedAt ? { p_completed_at: params.completedAt } : {}),
-        ...(params.selectedDifficulty
-          ? { p_selected_difficulty: params.selectedDifficulty }
-          : {}),
+        p_sub_overrides: params.subs.map((s) => ({
+          sub_id: s.sub_id,
+          stars: s.stars,
+        })),
       });
       if (error) throw error;
       return data as CompleteTaskResult;
@@ -352,43 +360,43 @@ export function useCompleteTask() {
       const prevBuckets = queryClient.getQueryData<HomeBuckets>(taskKeys.pending());
       const prevChar = queryClient.getQueryData<CharacterWithProfile>(characterKeys.me());
 
-      // Optimistic removal from the buckets cache, only when:
+      const reward = rewardForTaskSubs(params.subs, params.streakDays ?? 0);
+
+      // Optimistic removal from "pending today" only when:
       //   - it's a live tap (no completedAt), AND
-      //   - the task's target is 1 (multi-target tasks need a refetch to know
-      //     whether THIS tap was the one that closed out the day).
+      //   - the task's target is 1 (multi-target tasks need a refetch
+      //     to know whether THIS tap closed out the day).
       const isLive = !params.completedAt;
-      const allTasks = prevBuckets
-        ? [
-            ...prevBuckets.today,
-            ...prevBuckets.thisWeek,
-            ...prevBuckets.thisMonth,
-            ...prevBuckets.oneTime,
-          ]
-        : [];
-      const t = allTasks.find((x) => x.id === params.taskId);
-      const singleTarget = !t || (t.target_count ?? 1) === 1;
+      const t = params.task;
+      const singleTarget = (t.target_count ?? 1) === 1;
       if (prevBuckets && isLive && singleTarget) {
+        const removeFrom = (arr: TaskWithSubs[]) => arr.filter((x) => x.id !== t.id);
         queryClient.setQueryData<HomeBuckets>(taskKeys.pending(), {
-          today: prevBuckets.today.filter((x) => x.id !== params.taskId),
-          thisWeek: prevBuckets.thisWeek.filter((x) => x.id !== params.taskId),
-          thisMonth: prevBuckets.thisMonth.filter((x) => x.id !== params.taskId),
-          oneTime: prevBuckets.oneTime.filter((x) => x.id !== params.taskId),
+          today: removeFrom(prevBuckets.today),
+          thisWeek: removeFrom(prevBuckets.thisWeek),
+          thisMonth: removeFrom(prevBuckets.thisMonth),
+          oneTime: removeFrom(prevBuckets.oneTime),
         });
       }
 
       if (prevChar) {
+        // Bump per-dim XP by summing the subs that map to each dim.
+        const dimDelta = new Map<DimensionId, number>();
+        for (const ps of reward.perSub) {
+          const dim = dimensionForSub(ps.sub_id);
+          dimDelta.set(dim, (dimDelta.get(dim) ?? 0) + ps.xp);
+        }
         queryClient.setQueryData<CharacterWithProfile>(characterKeys.me(), {
           ...prevChar,
           character: {
             ...prevChar.character,
-            total_xp: prevChar.character.total_xp + params.expectedXp,
-            coins: prevChar.character.coins + params.expectedCoins,
+            total_xp: prevChar.character.total_xp + reward.total.xp,
+            coins: prevChar.character.coins + reward.total.coins,
           },
-          dimensions: prevChar.dimensions.map((d) =>
-            d.dimension_id === params.dimensionId
-              ? { ...d, xp: d.xp + params.expectedXp }
-              : d,
-          ),
+          dimensions: prevChar.dimensions.map((d) => {
+            const delta = dimDelta.get(d.dimension_id) ?? 0;
+            return delta === 0 ? d : { ...d, xp: d.xp + delta };
+          }),
         });
       }
 
@@ -410,19 +418,17 @@ export function useCompleteTask() {
   });
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// CRUD: useTask, useCreateTask, useUpdateTask, useArchiveTask
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── CRUD ────────────────────────────────────────────────────────────────
 
 export function useTask(id: string | null | undefined) {
   return useQuery({
     queryKey: id ? taskKeys.detail(id) : ['tasks', 'detail', 'none'],
     enabled: !!id,
-    queryFn: async (): Promise<TaskWithDimension | null> => {
+    queryFn: async (): Promise<TaskWithSubs | null> => {
       if (!id) return null;
       const { data, error } = await supabase
         .from('task')
-        .select('*')
+        .select('*, task_sub(sub_id, stars)')
         .eq('id', id)
         .single();
       if (error) throw error;
@@ -446,20 +452,22 @@ export function useCreateTask() {
           character_id: userId,
           title: input.title,
           description: input.description,
-          difficulty: input.difficulty,
           task_type: input.task_type,
           recurrence: input.recurrence,
           target_count: input.target_count,
-          sub_id: input.sub_id,
-          metric_type: input.metric_type,
-          metric_label: input.metric_label,
-          base_value: input.base_value,
-          increment_per_star: input.increment_per_star,
         })
         .select('id')
         .single();
       if (error) throw error;
-      return (data as { id: string }).id;
+      const taskId = (data as { id: string }).id;
+
+      const { error: subsErr } = await supabase.rpc('set_task_subs', {
+        p_task_id: taskId,
+        p_subs: input.subs.map((s) => ({ sub_id: s.sub_id, stars: s.stars })),
+      });
+      if (subsErr) throw subsErr;
+
+      return taskId;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.pending() });
@@ -477,18 +485,18 @@ export function useUpdateTask(taskId: string) {
         .update({
           title: input.title,
           description: input.description,
-          difficulty: input.difficulty,
           task_type: input.task_type,
           recurrence: input.recurrence,
           target_count: input.target_count,
-          sub_id: input.sub_id,
-          metric_type: input.metric_type,
-          metric_label: input.metric_label,
-          base_value: input.base_value,
-          increment_per_star: input.increment_per_star,
         })
         .eq('id', taskId);
       if (error) throw error;
+
+      const { error: subsErr } = await supabase.rpc('set_task_subs', {
+        p_task_id: taskId,
+        p_subs: input.subs.map((s) => ({ sub_id: s.sub_id, stars: s.stars })),
+      });
+      if (subsErr) throw subsErr;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.pending() });
@@ -503,12 +511,6 @@ export interface UndoCompletionResult {
   coins_returned: number;
 }
 
-/**
- * Reverses a task_completion row: subtracts its XP/coins from the
- * character + dimensions, then deletes the row. Use sparingly — only
- * for fixing mis-taps on the History tab. Active completions on
- * "today" can also be undone (the UI exposes it on long-press).
- */
 export function useUndoCompletion() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -547,20 +549,18 @@ export function useArchiveTask() {
   });
 }
 
-/**
- * Public catalog of system-curated task suggestions, anchored by sub_id.
- * Public-read; user adopts via start_task_from_template.
- */
+// ─── Templates ───────────────────────────────────────────────────────────
+
 export function useTaskTemplates() {
   return useQuery({
     queryKey: taskKeys.templates(),
-    queryFn: async (): Promise<TaskTemplate[]> => {
+    queryFn: async (): Promise<TaskTemplateWithSubs[]> => {
       const { data, error } = await supabase
         .from('task_template')
-        .select('*')
+        .select('*, task_template_sub(sub_id, stars)')
         .order('sort_order', { ascending: true });
       if (error) throw error;
-      return (data ?? []) as TaskTemplate[];
+      return ((data ?? []) as TaskTemplateRow[]).map(mapTaskTemplateRow);
     },
   });
 }
