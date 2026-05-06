@@ -19,6 +19,7 @@ import { CompleteTaskSheet } from '@/components/CompleteTaskSheet';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { TaskActionSheet } from '@/components/TaskActionSheet';
 import { TaskCard } from '@/components/TaskCard';
+import { TodayActivityDrawer } from '@/components/TodayActivityDrawer';
 import { XPCoinFloat } from '@/components/XPCoinFloat';
 import { useCharacter } from '@/lib/api/character';
 import { useStreak } from '@/lib/api/streak';
@@ -26,6 +27,8 @@ import {
   useCompleteTask,
   useHomeBuckets,
   useSkipTaskToday,
+  useUndoCompletion,
+  useUnskipTaskToday,
 } from '@/lib/api/tasks';
 import type { TaskSub, TaskWithSubs } from '@/lib/db/types';
 import {
@@ -64,6 +67,8 @@ export default function HomeScreen() {
   const streak = useStreak();
   const completeTask = useCompleteTask();
   const skipTask = useSkipTaskToday();
+  const unskipTask = useUnskipTaskToday();
+  const undoCompletion = useUndoCompletion();
   useLoadHomeBuckets();
   const collapsed = useHomeBucketsStore((s) => s.collapsed);
   const toggleBucket = useHomeBucketsStore((s) => s.toggle);
@@ -153,6 +158,33 @@ export default function HomeScreen() {
     router.push({ pathname: '/task-form', params: { id: t.id } });
   };
 
+  const handleDrawerExtra = (task: TaskWithSubs) => {
+    fireCompletion(task, task.subs);
+  };
+
+  const handleDrawerUndo = (completionId: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    undoCompletion.mutate(completionId, {
+      onError: (err) => {
+        const e = err as { message?: string };
+        Alert.alert('Could not undo', e.message ?? 'Unknown error.');
+      },
+    });
+  };
+
+  const handleDrawerUnskip = (task: TaskWithSubs) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    unskipTask.mutate(
+      { taskId: task.id },
+      {
+        onError: (err) => {
+          const e = err as { message?: string };
+          Alert.alert('Could not unskip', e.message ?? 'Unknown error.');
+        },
+      },
+    );
+  };
+
   const isLoading = character.isLoading || buckets.isLoading;
   const hasError = character.error || buckets.error;
 
@@ -225,22 +257,36 @@ export default function HomeScreen() {
               </Text>
             </View>
           ) : totalPending === 0 ? (
-            <View style={styles.emptyBox}>
-              <Ionicons name="checkmark-circle" size={42} color={tokens.semantic.xp} />
-              <Text style={styles.emptyTitle}>All clear.</Text>
-              <Text style={styles.emptySub}>
-                Nothing pending right now. Add a task to get started.
-              </Text>
-              <Pressable
-                onPress={() => router.push('/tasks')}
-                style={({ pressed }) => [
-                  styles.emptyCta,
-                  pressed && { opacity: 0.7 },
-                ]}
-              >
-                <Ionicons name="add" size={18} color={tokens.text.hi} />
-                <Text style={styles.emptyCtaText}>Manage tasks</Text>
-              </Pressable>
+            <View style={styles.bucketsList}>
+              <View style={styles.emptyBox}>
+                <Ionicons
+                  name="checkmark-circle"
+                  size={42}
+                  color={tokens.semantic.xp}
+                />
+                <Text style={styles.emptyTitle}>All clear.</Text>
+                <Text style={styles.emptySub}>
+                  Nothing pending right now. Add a task to get started.
+                </Text>
+                <Pressable
+                  onPress={() => router.push('/tasks')}
+                  style={({ pressed }) => [
+                    styles.emptyCta,
+                    pressed && { opacity: 0.7 },
+                  ]}
+                >
+                  <Ionicons name="add" size={18} color={tokens.text.hi} />
+                  <Text style={styles.emptyCtaText}>Manage tasks</Text>
+                </Pressable>
+              </View>
+              {data && (
+                <TodayActivityDrawer
+                  activity={data.todayActivity}
+                  onExtraComplete={handleDrawerExtra}
+                  onUndoCompletion={handleDrawerUndo}
+                  onUnskip={handleDrawerUnskip}
+                />
+              )}
             </View>
           ) : (
             <View style={styles.bucketsList}>
@@ -277,6 +323,15 @@ export default function HomeScreen() {
                   </BucketSection>
                 );
               })}
+
+              {data && (
+                <TodayActivityDrawer
+                  activity={data.todayActivity}
+                  onExtraComplete={handleDrawerExtra}
+                  onUndoCompletion={handleDrawerUndo}
+                  onUnskip={handleDrawerUnskip}
+                />
+              )}
 
               {/* Manage shortcut at the bottom — replaces the old "+ New task"
                   card since adoption from the catalog lives on /tasks. */}
