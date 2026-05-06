@@ -151,11 +151,31 @@ function mapTaskTemplateRow(t: TaskTemplateRow): TaskTemplateWithSubs {
 
 // ─── Home buckets ────────────────────────────────────────────────────────
 
+export interface TodayCompletedEntry {
+  task: TaskWithSubs;
+  /** Total completions logged today (≥ 1). */
+  count: number;
+  /** Most recent completion id — used by undo. */
+  latestCompletionId: string;
+  /** Sum of XP/coins across today's completions of this task. */
+  totalXp: number;
+  totalCoins: number;
+}
+
+export interface TodayActivity {
+  /** Tasks the user logged at least one completion for today. */
+  completed: TodayCompletedEntry[];
+  /** Tasks explicitly skipped today. */
+  skipped: TaskWithSubs[];
+}
+
 export interface HomeBuckets {
   today: TaskWithSubs[];
   thisWeek: TaskWithSubs[];
   thisMonth: TaskWithSubs[];
   oneTime: TaskWithSubs[];
+  /** Roll-up of "what happened today" — feeds the drawer at the bottom. */
+  todayActivity: TodayActivity;
 }
 
 function startOfThisWeek(): Date {
@@ -211,12 +231,30 @@ async function fetchHomeBuckets(): Promise<HomeBuckets> {
 
   const { data: completionsToday, error: compErr } = await supabase
     .from('task_completion')
-    .select('task_id')
-    .gte('completed_at', startOfToday.toISOString());
+    .select('id, task_id, xp_granted, coins_granted')
+    .gte('completed_at', startOfToday.toISOString())
+    .order('completed_at', { ascending: false });
   if (compErr) throw compErr;
   const doneToday = new Map<string, number>();
+  // Drawer-data: latest completion id (first row, since desc order),
+  // count, and per-task XP/coin sums for the day.
+  const todayCompletionData = new Map<
+    string,
+    { latestId: string; xp: number; coins: number }
+  >();
   (completionsToday ?? []).forEach((c) => {
     doneToday.set(c.task_id, (doneToday.get(c.task_id) ?? 0) + 1);
+    const cur = todayCompletionData.get(c.task_id);
+    if (cur) {
+      cur.xp += c.xp_granted;
+      cur.coins += c.coins_granted;
+    } else {
+      todayCompletionData.set(c.task_id, {
+        latestId: c.id,
+        xp: c.xp_granted,
+        coins: c.coins_granted,
+      });
+    }
   });
 
   const { data: completionsWeek, error: weekErr } = await supabase
@@ -292,7 +330,26 @@ async function fetchHomeBuckets(): Promise<HomeBuckets> {
     thisWeek: [],
     thisMonth: [],
     oneTime: [],
+    todayActivity: { completed: [], skipped: [] },
   };
+
+  // Build today activity drawer data first — relies on allTasks for hydration.
+  const tasksById = new Map(allTasks.map((t) => [t.id, t]));
+  for (const [taskId, data] of todayCompletionData.entries()) {
+    const task = tasksById.get(taskId);
+    if (!task) continue;
+    buckets.todayActivity.completed.push({
+      task,
+      count: doneToday.get(taskId) ?? 1,
+      latestCompletionId: data.latestId,
+      totalXp: data.xp,
+      totalCoins: data.coins,
+    });
+  }
+  for (const skippedId of skippedToday) {
+    const task = tasksById.get(skippedId);
+    if (task) buckets.todayActivity.skipped.push(task);
+  }
 
   for (const t of allTasks) {
     const todayCount = doneToday.get(t.id) ?? 0;
@@ -433,11 +490,15 @@ export function useCompleteTask() {
       const singleTarget = (t.target_count ?? 1) === 1;
       if (prevBuckets && isLive && singleTarget) {
         const removeFrom = (arr: TaskWithSubs[]) => arr.filter((x) => x.id !== t.id);
+        // Preserve todayActivity as-is — onSettled refetch will rebuild
+        // it with the new completion. Optimistic only handles "card
+        // disappeared" feedback, drawer doesn't need to react instantly.
         queryClient.setQueryData<HomeBuckets>(taskKeys.pending(), {
           today: removeFrom(prevBuckets.today),
           thisWeek: removeFrom(prevBuckets.thisWeek),
           thisMonth: removeFrom(prevBuckets.thisMonth),
           oneTime: removeFrom(prevBuckets.oneTime),
+          todayActivity: prevBuckets.todayActivity,
         });
       }
 
