@@ -349,21 +349,31 @@ export function useCompleteTask() {
         queryClient.cancelQueries({ queryKey: characterKeys.me() }),
       ]);
 
-      const prevTasks = queryClient.getQueryData<TaskWithDimension[]>(taskKeys.pending());
+      const prevBuckets = queryClient.getQueryData<HomeBuckets>(taskKeys.pending());
       const prevChar = queryClient.getQueryData<CharacterWithProfile>(characterKeys.me());
 
-      // Optimistic removal from "pending today" only when:
+      // Optimistic removal from the buckets cache, only when:
       //   - it's a live tap (no completedAt), AND
       //   - the task's target is 1 (multi-target tasks need a refetch to know
       //     whether THIS tap was the one that closed out the day).
       const isLive = !params.completedAt;
-      const t = prevTasks?.find((x) => x.id === params.taskId);
+      const allTasks = prevBuckets
+        ? [
+            ...prevBuckets.today,
+            ...prevBuckets.thisWeek,
+            ...prevBuckets.thisMonth,
+            ...prevBuckets.oneTime,
+          ]
+        : [];
+      const t = allTasks.find((x) => x.id === params.taskId);
       const singleTarget = !t || (t.target_count ?? 1) === 1;
-      if (prevTasks && isLive && singleTarget) {
-        queryClient.setQueryData<TaskWithDimension[]>(
-          taskKeys.pending(),
-          prevTasks.filter((x) => x.id !== params.taskId),
-        );
+      if (prevBuckets && isLive && singleTarget) {
+        queryClient.setQueryData<HomeBuckets>(taskKeys.pending(), {
+          today: prevBuckets.today.filter((x) => x.id !== params.taskId),
+          thisWeek: prevBuckets.thisWeek.filter((x) => x.id !== params.taskId),
+          thisMonth: prevBuckets.thisMonth.filter((x) => x.id !== params.taskId),
+          oneTime: prevBuckets.oneTime.filter((x) => x.id !== params.taskId),
+        });
       }
 
       if (prevChar) {
@@ -382,11 +392,11 @@ export function useCompleteTask() {
         });
       }
 
-      return { prevTasks, prevChar };
+      return { prevBuckets, prevChar };
     },
 
     onError: (_err, _params, ctx) => {
-      if (ctx?.prevTasks) queryClient.setQueryData(taskKeys.pending(), ctx.prevTasks);
+      if (ctx?.prevBuckets) queryClient.setQueryData(taskKeys.pending(), ctx.prevBuckets);
       if (ctx?.prevChar) queryClient.setQueryData(characterKeys.me(), ctx.prevChar);
     },
 
