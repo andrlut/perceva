@@ -50,25 +50,47 @@ export function applyStreakMultiplier(
 }
 
 // ──────────────────────────────────────────────────────────────────────────
-// Star scaling: target value at a given difficulty
-// (mirrors the formula in supabase/migrations/..._star_difficulty_scaling.sql)
+// Multi-sub task rewards
+//
+// Mirrors the per-sub fanout in complete_task (migration 0505000002):
+// each sub's stars run through the exponential curve independently;
+// total XP = sum across subs. Streak multiplier applied per sub.
 // ──────────────────────────────────────────────────────────────────────────
 
-export function scaledTargetValue(
-  baseValue: number,
-  incrementPerStar: number,
-  difficulty: Difficulty,
-): number {
-  return baseValue + incrementPerStar * (difficulty - 1);
+import type { TaskSub } from '@/lib/db/types';
+
+export interface TaskRewardBreakdown {
+  /** Per-sub rewards in the same order as the input list. */
+  perSub: { sub_id: TaskSub['sub_id']; stars: Difficulty; xp: number; coins: number }[];
+  /** Sum across subs, post-streak. */
+  total: { xp: number; coins: number };
+  /** Sum of stars across subs (1..5). */
+  totalStars: number;
 }
 
-/**
- * Format a scaled value with its metric label, e.g. (40, 'minutes') → '40 minutes'.
- * Trims trailing zeros from the number; keeps integer-valued metrics integer.
- */
-export function formatScaledValue(value: number, label: string | null): string {
-  const stripped = Number.isInteger(value) ? value.toString() : value.toString().replace(/\.?0+$/, '');
-  return label ? `${stripped} ${label}` : stripped;
+export function rewardForTaskSubs(
+  subs: TaskSub[],
+  streakDays = 0,
+): TaskRewardBreakdown {
+  const m = streakMultiplier(streakDays);
+  let totalXp = 0;
+  let totalCoins = 0;
+  let totalStars = 0;
+  const perSub: TaskRewardBreakdown['perSub'] = [];
+  for (const s of subs) {
+    const base = REWARD_BY_DIFFICULTY[s.stars];
+    const xp = Math.round(base.xp * m);
+    const coins = Math.round(base.coins * m);
+    perSub.push({ sub_id: s.sub_id, stars: s.stars, xp, coins });
+    totalXp += xp;
+    totalCoins += coins;
+    totalStars += s.stars;
+  }
+  return {
+    perSub,
+    total: { xp: totalXp, coins: totalCoins },
+    totalStars,
+  };
 }
 
 /**

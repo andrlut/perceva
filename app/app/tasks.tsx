@@ -15,7 +15,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { DifficultyStars } from '@/components/DifficultyStars';
 import { DimensionChip } from '@/components/DimensionChip';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { SegmentedControl } from '@/components/SegmentedControl';
@@ -28,8 +27,8 @@ import type {
   DimensionId,
   Recurrence,
   SubId,
-  TaskTemplate,
-  TaskWithDimension,
+  TaskTemplateWithSubs,
+  TaskWithSubs,
 } from '@/lib/db/types';
 import { describeRecurrence } from '@/lib/recurrence';
 import { tokens } from '@/theme';
@@ -94,7 +93,7 @@ export default function TasksHubScreen() {
   }, [tasks.data, query]);
 
   const tasksByBucket = useMemo(() => {
-    const map: Record<Bucket, TaskWithDimension[]> = {
+    const map: Record<Bucket, TaskWithSubs[]> = {
       daily: [],
       weekly: [],
       one_time: [],
@@ -129,11 +128,11 @@ export default function TasksHubScreen() {
   }, [templates.data, query]);
 
   const templatesBySub = useMemo(() => {
-    const map = new Map<SubId, TaskTemplate[]>();
+    const map = new Map<SubId, TaskTemplateWithSubs[]>();
     for (const t of filteredTemplates) {
-      const arr = map.get(t.sub_id) ?? [];
+      const arr = map.get(t.primary_sub_id) ?? [];
       arr.push(t);
-      map.set(t.sub_id, arr);
+      map.set(t.primary_sub_id, arr);
     }
     return map;
   }, [filteredTemplates]);
@@ -291,7 +290,7 @@ export default function TasksHubScreen() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface MineBodyProps {
-  tasks: Record<Bucket, TaskWithDimension[]>;
+  tasks: Record<Bucket, TaskWithSubs[]>;
   loading: boolean;
   query: string;
   collapsed: Record<Bucket, boolean>;
@@ -368,7 +367,7 @@ function MineBody({
 
 interface BucketSectionProps {
   meta: BucketMeta;
-  tasks: TaskWithDimension[];
+  tasks: TaskWithSubs[];
   collapsed: boolean;
   onToggle: () => void;
   onTaskPress: (id: string) => void;
@@ -428,15 +427,15 @@ function BucketSection({
 }
 
 interface TaskRowProps {
-  task: TaskWithDimension;
+  task: TaskWithSubs;
   divider: boolean;
   onPress: () => void;
 }
 
 function TaskRow({ task, divider, onPress }: TaskRowProps) {
   const isCustom = !task.template_id;
-  const subMeta = SUB_META[task.sub_id];
-  const dimMeta = DIMENSION_META[task.dimension_id];
+  const primarySubMeta = SUB_META[task.primary_sub_id];
+  const dimMeta = DIMENSION_META[task.primary_dimension_id];
   return (
     <Pressable
       onPress={onPress}
@@ -447,11 +446,13 @@ function TaskRow({ task, divider, onPress }: TaskRowProps) {
       ]}
     >
       <View style={[styles.subDot, { backgroundColor: dimMeta.bg }]}>
-        <Ionicons
-          name={subMeta.iconName as never}
-          size={14}
-          color={dimMeta.color}
-        />
+        {primarySubMeta && (
+          <Ionicons
+            name={primarySubMeta.iconName as never}
+            size={14}
+            color={dimMeta.color}
+          />
+        )}
       </View>
       <View style={styles.taskBody}>
         <View style={styles.taskTitleRow}>
@@ -465,7 +466,7 @@ function TaskRow({ task, divider, onPress }: TaskRowProps) {
           )}
         </View>
         <View style={styles.taskMetaRow}>
-          <DifficultyStars difficulty={task.difficulty} />
+          <Text style={styles.starsLabel}>{task.total_stars}★</Text>
           <Text style={styles.taskRecurrence} numberOfLines={1}>
             {describeRecurrence(task.recurrence, task.target_count)}
           </Text>
@@ -481,7 +482,7 @@ function TaskRow({ task, divider, onPress }: TaskRowProps) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface SuggestedBodyProps {
-  templatesBySub: Map<SubId, TaskTemplate[]>;
+  templatesBySub: Map<SubId, TaskTemplateWithSubs[]>;
   loading: boolean;
   query: string;
   adoptedTemplateIds: Set<string>;
@@ -592,7 +593,7 @@ function SuggestedBody({
 }
 
 interface TemplateRowProps {
-  template: TaskTemplate;
+  template: TaskTemplateWithSubs;
   divider: boolean;
   dimColor: string;
   dimId: DimensionId;
@@ -624,7 +625,7 @@ function TemplateRow({
           </Text>
         )}
         <View style={styles.taskMetaRow}>
-          <DifficultyStars difficulty={template.difficulty} />
+          <Text style={styles.starsLabel}>{template.total_stars}★</Text>
           <Text style={styles.taskRecurrence} numberOfLines={1}>
             {describeRecurrence(template.recurrence, template.target_count)}
           </Text>
@@ -893,6 +894,11 @@ const styles = StyleSheet.create({
     color: tokens.text.dim,
     fontStyle: 'italic',
     flexShrink: 1,
+  },
+  starsLabel: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 11,
+    color: tokens.semantic.coin,
   },
   templateRow: {
     flexDirection: 'row',

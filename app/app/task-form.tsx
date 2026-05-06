@@ -15,7 +15,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { DifficultyPicker } from '@/components/DifficultyPicker';
 import { RecurrencePicker } from '@/components/RecurrencePicker';
 import { SubPicker } from '@/components/SubPicker';
 import {
@@ -25,9 +24,9 @@ import {
   useUpdateTask,
   type TaskFormInput,
 } from '@/lib/api/tasks';
-import type { MetricType, Recurrence, SubId } from '@/lib/db/types';
+import type { Recurrence, TaskSub } from '@/lib/db/types';
 import { confirmAction } from '@/lib/util/confirm';
-import { formatScaledValue, scaledTargetValue, type Difficulty } from '@/lib/xp';
+import { rewardForTaskSubs } from '@/lib/xp';
 import { tokens } from '@/theme';
 
 /** Map a Recurrence to the legacy task_type column (kept for compat). */
@@ -38,15 +37,6 @@ function legacyTypeFor(r: Recurrence): 'one_shot' | 'daily' | 'weekly' {
   return 'daily';
 }
 
-const METRIC_PRESETS: { id: MetricType; label: string; defaultUnit: string }[] = [
-  { id: 'minutes', label: 'Minutes', defaultUnit: 'min' },
-  { id: 'reps', label: 'Reps', defaultUnit: 'reps' },
-  { id: 'km', label: 'Distance (km)', defaultUnit: 'km' },
-  { id: 'pages', label: 'Pages', defaultUnit: 'pages' },
-  { id: 'ml', label: 'Volume (ml)', defaultUnit: 'ml' },
-  { id: 'custom', label: 'Custom', defaultUnit: '' },
-];
-
 export default function TaskFormScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
@@ -56,34 +46,18 @@ export default function TaskFormScreen() {
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [difficulty, setDifficulty] = useState<Difficulty>(2);
   const [recurrence, setRecurrence] = useState<Recurrence>({ type: 'daily' });
   const [targetCount, setTargetCount] = useState<number>(1);
-  const [subId, setSubId] = useState<SubId | null>(null);
-
-  // Optional metric scaling fields
-  const [scalingEnabled, setScalingEnabled] = useState(false);
-  const [metricType, setMetricType] = useState<MetricType>('minutes');
-  const [metricLabel, setMetricLabel] = useState<string>('min');
-  const [baseValueText, setBaseValueText] = useState<string>('');
-  const [incrementText, setIncrementText] = useState<string>('');
+  const [subs, setSubs] = useState<TaskSub[]>([]);
 
   // Hydrate from server when editing
   useEffect(() => {
     if (existing.data) {
       setTitle(existing.data.title);
       setDescription(existing.data.description ?? '');
-      setDifficulty(existing.data.difficulty);
       setRecurrence(existing.data.recurrence);
       setTargetCount(existing.data.target_count ?? 1);
-      setSubId(existing.data.sub_id);
-      if (existing.data.metric_type) {
-        setScalingEnabled(true);
-        setMetricType(existing.data.metric_type);
-        setMetricLabel(existing.data.metric_label ?? '');
-        setBaseValueText(String(existing.data.base_value ?? ''));
-        setIncrementText(String(existing.data.increment_per_star ?? ''));
-      }
+      setSubs(existing.data.subs);
     }
   }, [existing.data]);
 
@@ -94,50 +68,30 @@ export default function TaskFormScreen() {
   const isSubmitting =
     createTask.isPending || updateTask.isPending || archiveTask.isPending;
 
-  const baseValue = parseFloat(baseValueText);
-  const incrementPerStar = parseFloat(incrementText);
-  const baseValid = scalingEnabled && Number.isFinite(baseValue) && baseValue > 0;
-  const incrementValid = scalingEnabled && Number.isFinite(incrementPerStar) && incrementPerStar >= 0;
-  const scalingValid = !scalingEnabled || (baseValid && incrementValid);
+  const totalStars = subs.reduce((s, x) => s + x.stars, 0);
+  const reward = useMemo(() => rewardForTaskSubs(subs, 0), [subs]);
 
-  // Build the input only when sub_id is set — TaskFormInput requires it.
-  const formInput = useMemo<TaskFormInput | null>(
-    () => {
-      if (!subId) return null;
-      return {
-        title: title.trim(),
-        description: description.trim() === '' ? null : description.trim(),
-        difficulty,
-        task_type: legacyTypeFor(recurrence),
-        recurrence,
-        target_count: recurrence.type === 'one_shot' ? 1 : targetCount,
-        sub_id: subId,
-        metric_type: scalingEnabled ? metricType : null,
-        metric_label: scalingEnabled ? (metricLabel.trim() || null) : null,
-        base_value: scalingEnabled && baseValid ? baseValue : null,
-        increment_per_star: scalingEnabled && incrementValid ? incrementPerStar : null,
-      };
-    },
-    [
-      title, description, difficulty, recurrence, targetCount, subId,
-      scalingEnabled, metricType, metricLabel, baseValid, baseValue,
-      incrementValid, incrementPerStar,
-    ],
-  );
+  const formInput = useMemo<TaskFormInput | null>(() => {
+    if (subs.length === 0 || totalStars === 0) return null;
+    return {
+      title: title.trim(),
+      description: description.trim() === '' ? null : description.trim(),
+      task_type: legacyTypeFor(recurrence),
+      recurrence,
+      target_count: recurrence.type === 'one_shot' ? 1 : targetCount,
+      subs,
+    };
+  }, [title, description, recurrence, targetCount, subs, totalStars]);
 
   const handleSave = async () => {
     if (!title.trim()) {
-      Alert.alert('Title required', 'Give your quest a title.');
+      Alert.alert('Title required', 'Give your task a title.');
       return;
     }
-    if (!subId || !formInput) {
-      Alert.alert('Pick a sub-dimension', 'Choose where this quest contributes.');
-      return;
-    }
-    if (!scalingValid) {
+    if (subs.length === 0 || !formInput) {
       Alert.alert(
-        'Scaling needs values',
-        'Set a positive base value and a non-negative increment, or turn scaling off.',
+        'Pick at least one sub',
+        'Tasks contribute to one or more sub-dimensions. Pick the ones this task touches and how many stars each gets.',
       );
       return;
     }
@@ -157,8 +111,8 @@ export default function TaskFormScreen() {
   const handleArchive = async () => {
     if (!params.id) return;
     const ok = await confirmAction(
-      'Archive quest?',
-      'Archived quests stop appearing on Home.',
+      'Archive task?',
+      'Archived tasks stop appearing on Home.',
       { okText: 'Archive', cancelText: 'Cancel', destructive: true },
     );
     if (!ok) return;
@@ -183,9 +137,7 @@ export default function TaskFormScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <Stack.Screen
-        options={{ headerShown: false, presentation: 'modal' }}
-      />
+      <Stack.Screen options={{ headerShown: false, presentation: 'modal' }} />
 
       <View style={styles.header}>
         <Pressable
@@ -195,7 +147,7 @@ export default function TaskFormScreen() {
         >
           <Ionicons name="close" size={24} color={tokens.text.hi} />
         </Pressable>
-        <Text style={styles.headerTitle}>{isEdit ? 'Edit quest' : 'New quest'}</Text>
+        <Text style={styles.headerTitle}>{isEdit ? 'Edit task' : 'New task'}</Text>
         <Pressable
           onPress={handleSave}
           disabled={isSubmitting}
@@ -227,7 +179,7 @@ export default function TaskFormScreen() {
               value={title}
               onChangeText={setTitle}
               style={styles.input}
-              placeholder="20 push-ups"
+              placeholder="Morning routine, 20 push-ups, ..."
               placeholderTextColor={tokens.text.faint}
               autoFocus={!isEdit}
               returnKeyType="next"
@@ -249,131 +201,35 @@ export default function TaskFormScreen() {
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Default difficulty</Text>
-            <DifficultyPicker value={difficulty} onChange={setDifficulty} />
-            {scalingEnabled && (
-              <Text style={styles.hint}>
-                Stars can be changed per day with a swipe on the card.
-              </Text>
-            )}
-          </View>
-
-          <View style={styles.field}>
-            <Pressable
-              onPress={() => {
-                const next = !scalingEnabled;
-                setScalingEnabled(next);
-                if (next && !baseValueText) {
-                  // Sensible defaults to avoid an empty preview
-                  const preset = METRIC_PRESETS.find((p) => p.id === metricType);
-                  if (preset && !metricLabel) setMetricLabel(preset.defaultUnit);
-                }
-              }}
-              style={({ pressed }) => [
-                styles.scalingToggle,
-                scalingEnabled && styles.scalingToggleOn,
-                pressed && { opacity: 0.7 },
-              ]}
-            >
-              <View style={[styles.checkbox, scalingEnabled && styles.checkboxOn]}>
-                {scalingEnabled && (
-                  <Ionicons name="checkmark" size={14} color={tokens.text.hi} />
-                )}
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.scalingTitle}>Scale target with stars</Text>
-                <Text style={styles.hint}>
-                  Each extra star raises the target (e.g. ★ = 20 min, ★★ = 40 min…).
+            <Text style={styles.label}>Sub-dimensions + stars</Text>
+            <Text style={styles.hint}>
+              Pick which subs this task contributes to and how heavy each
+              effort is. Total stars cap at 5 per task — anything heavier
+              should live as a quest.
+            </Text>
+            <SubPicker value={subs} onChange={setSubs} />
+            {subs.length > 0 && (
+              <View style={styles.rewardPreview}>
+                <Ionicons name="flag" size={13} color={tokens.semantic.xp} />
+                <Text style={[styles.rewardText, { color: tokens.semantic.xp }]}>
+                  +{reward.total.xp} XP
                 </Text>
-              </View>
-            </Pressable>
-
-            {scalingEnabled && (
-              <View style={styles.scalingPanel}>
-                <Text style={styles.label}>Metric</Text>
-                <View style={styles.metricRow}>
-                  {METRIC_PRESETS.map((p) => (
-                    <Pressable
-                      key={p.id}
-                      onPress={() => {
-                        setMetricType(p.id);
-                        if (p.id !== 'custom') setMetricLabel(p.defaultUnit);
-                      }}
-                      style={({ pressed }) => [
-                        styles.metricChip,
-                        metricType === p.id && styles.metricChipOn,
-                        pressed && { opacity: 0.7 },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.metricChipText,
-                          metricType === p.id && styles.metricChipTextOn,
-                        ]}
-                      >
-                        {p.label}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
-
-                {metricType === 'custom' && (
-                  <View style={{ marginTop: tokens.space[3] }}>
-                    <Text style={styles.label}>Unit label</Text>
-                    <TextInput
-                      value={metricLabel}
-                      onChangeText={setMetricLabel}
-                      style={styles.input}
-                      placeholder="e.g. sets, hours, glasses"
-                      placeholderTextColor={tokens.text.faint}
-                    />
-                  </View>
-                )}
-
-                <View style={styles.numericRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.label}>Base value (1★)</Text>
-                    <TextInput
-                      value={baseValueText}
-                      onChangeText={setBaseValueText}
-                      keyboardType="numeric"
-                      style={styles.input}
-                      placeholder="20"
-                      placeholderTextColor={tokens.text.faint}
-                    />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.label}>+ per star</Text>
-                    <TextInput
-                      value={incrementText}
-                      onChangeText={setIncrementText}
-                      keyboardType="numeric"
-                      style={styles.input}
-                      placeholder="20"
-                      placeholderTextColor={tokens.text.faint}
-                    />
-                  </View>
-                </View>
-
-                {baseValid && incrementValid && (
-                  <View style={styles.previewBox}>
-                    <Text style={styles.previewTitle}>Preview</Text>
-                    {([1, 2, 3, 4, 5] as Difficulty[]).map((d) => {
-                      const v = scaledTargetValue(baseValue, incrementPerStar, d);
-                      return (
-                        <View key={d} style={styles.previewRow}>
-                          <Text style={styles.previewStars}>
-                            {'★'.repeat(d)}
-                            <Text style={styles.previewStarsDim}>{'★'.repeat(5 - d)}</Text>
-                          </Text>
-                          <Text style={styles.previewValue}>
-                            {formatScaledValue(v, metricLabel || null)}
-                          </Text>
-                        </View>
-                      );
-                    })}
-                  </View>
-                )}
+                <Ionicons
+                  name="cash"
+                  size={13}
+                  color={tokens.semantic.coin}
+                />
+                <Text
+                  style={[styles.rewardText, { color: tokens.semantic.coin }]}
+                >
+                  +{reward.total.coins}
+                </Text>
+                <Text style={styles.rewardSplit}>
+                  {reward.perSub
+                    .map((p) => `${p.stars}★`)
+                    .join(' + ')}{' '}
+                  = {reward.totalStars}★
+                </Text>
               </View>
             )}
           </View>
@@ -388,14 +244,6 @@ export default function TaskFormScreen() {
             />
           </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Sub-dimension</Text>
-            <Text style={styles.hint}>
-              Pick the sub this quest contributes to. The parent dimension gets the XP automatically.
-            </Text>
-            <SubPicker value={subId} onChange={setSubId} />
-          </View>
-
           {isEdit && (
             <Pressable
               onPress={handleArchive}
@@ -405,8 +253,12 @@ export default function TaskFormScreen() {
                 pressed && { opacity: 0.6 },
               ]}
             >
-              <Ionicons name="archive-outline" size={18} color={tokens.semantic.danger} />
-              <Text style={styles.archiveText}>Archive quest</Text>
+              <Ionicons
+                name="archive-outline"
+                size={18}
+                color={tokens.semantic.danger}
+              />
+              <Text style={styles.archiveText}>Archive task</Text>
             </Pressable>
           )}
         </ScrollView>
@@ -485,6 +337,31 @@ const styles = StyleSheet.create({
     minHeight: 80,
     paddingTop: tokens.space[3],
   },
+  rewardPreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexWrap: 'wrap',
+    marginTop: tokens.space[2],
+    paddingHorizontal: tokens.space[3],
+    paddingVertical: tokens.space[2],
+    backgroundColor: tokens.bg.surface,
+    borderRadius: tokens.radius.md,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+  },
+  rewardText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 13,
+  },
+  rewardSplit: {
+    flex: 1,
+    textAlign: 'right',
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 11,
+    color: tokens.text.dim,
+    letterSpacing: 0.4,
+  },
   archiveButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -500,111 +377,6 @@ const styles = StyleSheet.create({
   archiveText: {
     ...tokens.type.body,
     color: tokens.semantic.danger,
-    fontFamily: 'Manrope_700Bold',
-  },
-  scalingToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[3],
-    padding: tokens.space[3],
-    borderRadius: tokens.radius.md,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-    backgroundColor: tokens.bg.surface,
-  },
-  scalingToggleOn: {
-    borderColor: tokens.brand.violet,
-    backgroundColor: 'rgba(124, 92, 255, 0.08)',
-  },
-  scalingTitle: {
-    ...tokens.type.body,
-    color: tokens.text.hi,
-    fontFamily: 'Manrope_700Bold',
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: tokens.border.base,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxOn: {
-    backgroundColor: tokens.brand.violet,
-    borderColor: tokens.brand.violet,
-  },
-  scalingPanel: {
-    marginTop: tokens.space[3],
-    padding: tokens.space[3],
-    borderRadius: tokens.radius.md,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-    backgroundColor: tokens.bg.surface,
-    gap: tokens.space[2],
-  },
-  metricRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  metricChip: {
-    paddingVertical: 6,
-    paddingHorizontal: tokens.space[3],
-    borderRadius: tokens.radius.pill,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-    backgroundColor: tokens.bg.base,
-  },
-  metricChipOn: {
-    borderColor: tokens.brand.violet,
-    backgroundColor: 'rgba(124, 92, 255, 0.18)',
-  },
-  metricChipText: {
-    ...tokens.type.caption,
-    color: tokens.text.mid,
-  },
-  metricChipTextOn: {
-    color: tokens.text.hi,
-    fontFamily: 'Manrope_700Bold',
-  },
-  numericRow: {
-    flexDirection: 'row',
-    gap: tokens.space[3],
-    marginTop: tokens.space[2],
-  },
-  previewBox: {
-    marginTop: tokens.space[3],
-    padding: tokens.space[3],
-    borderRadius: tokens.radius.md,
-    backgroundColor: tokens.bg.base,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-    gap: 6,
-  },
-  previewTitle: {
-    ...tokens.type.eyebrow,
-    color: tokens.text.mid,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 4,
-  },
-  previewRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  previewStars: {
-    ...tokens.type.body,
-    color: tokens.semantic.coin,
-    letterSpacing: 1,
-  },
-  previewStarsDim: {
-    color: tokens.text.faint,
-  },
-  previewValue: {
-    ...tokens.type.body,
-    color: tokens.text.hi,
     fontFamily: 'Manrope_700Bold',
   },
 });
