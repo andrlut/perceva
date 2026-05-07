@@ -24,16 +24,17 @@ import { useSkillStates } from '@/lib/api/skills';
 import { useStreak } from '@/lib/api/streak';
 import type { CharacterDimension, DimensionId } from '@/lib/db/types';
 import { levelProgress } from '@/lib/xp';
+import { useT } from '@/lib/i18n';
+import { useMetaLookup } from '@/lib/i18n/meta';
 import { tokens } from '@/theme';
-import { DIMENSION_META } from '@/theme/dimensions';
 
 /**
- * Title derived from the user's strongest dimension. Cosmetic flavor —
- * gives the avatar a personality without a separate titles table.
+ * Pick the user's strongest dimension. Caller composes the visible label —
+ * keeping i18n out of this pure helper so it stays trivially testable.
  */
-function deriveTitle(
+function pickStrongestDim(
   dimensions: CharacterDimension[],
-): { label: string; dim: DimensionId } | null {
+): { dim: DimensionId; rankKey: 'master' | 'adept' | 'builder' | 'apprentice' } | null {
   if (dimensions.length === 0) return null;
   let best: CharacterDimension | undefined;
   for (const d of dimensions) {
@@ -41,10 +42,8 @@ function deriveTitle(
   }
   if (!best || best.xp === 0) return null;
   const lvl = levelProgress(best.xp).level;
-  const dimLabel = DIMENSION_META[best.dimension_id].label;
-  const rank =
-    lvl >= 10 ? 'Master' : lvl >= 6 ? 'Adept' : lvl >= 3 ? 'Builder' : 'Apprentice';
-  return { label: `${dimLabel} ${rank}`, dim: best.dimension_id };
+  const rankKey = lvl >= 10 ? 'master' : lvl >= 6 ? 'adept' : lvl >= 3 ? 'builder' : 'apprentice';
+  return { dim: best.dimension_id, rankKey };
 }
 
 /** Compact 1.2k / 12.3k formatter for the Dedicação tab KPI. */
@@ -80,16 +79,24 @@ const TITLE_INFO_BODY =
  *   - Skills     → ceremonious (coin gold)
  */
 export default function CharacterScreen() {
+  const { t } = useT();
+  const metaLookup = useMetaLookup();
   const character = useCharacter();
   const skillStates = useSkillStates();
   const streak = useStreak();
   const [activePillar, setActivePillar] = useState<PillarKey>('avaliacao');
   const [infoOpen, setInfoOpen] = useState<null | 'streak' | 'title'>(null);
 
-  const title = useMemo(
-    () => deriveTitle(character.data?.dimensions ?? []),
+  const strongest = useMemo(
+    () => pickStrongestDim(character.data?.dimensions ?? []),
     [character.data?.dimensions],
   );
+  const title = strongest
+    ? {
+        label: `${metaLookup.dim(strongest.dim).label} ${t(`character.ranks.${strongest.rankKey}`)}`,
+        dim: strongest.dim,
+      }
+    : null;
 
   // ── KPIs surfaced on each tab ───────────────────────────────────────
   // Same calc as HexChart's center "overall" — sum of 12 sub scores divided
@@ -131,7 +138,7 @@ export default function CharacterScreen() {
     return (
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.loadingBox}>
-          <Text style={styles.errorText}>Failed to load character.</Text>
+          <Text style={styles.errorText}>{t('character.failedToLoad')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -139,7 +146,7 @@ export default function CharacterScreen() {
 
   const { profile, character: char, dimensions } = character.data;
   const totalProgress = levelProgress(char.total_xp);
-  const titleDim = title ? DIMENSION_META[title.dim] : null;
+  const titleDim = title ? metaLookup.dim(title.dim) : null;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>

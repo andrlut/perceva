@@ -2,8 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { SubId } from '@/lib/db/types';
+import { useMetaLookup } from '@/lib/i18n/meta';
 import { tokens } from '@/theme';
-import { DIMENSION_META, SUB_META } from '@/theme/dimensions';
 
 interface Props {
   subIds: SubId[];
@@ -24,6 +24,7 @@ interface Props {
  * the model expands later.
  */
 export function SubStack({ subIds, max = 3, size = 22 }: Props) {
+  const meta = useMetaLookup();
   if (subIds.length === 0) return null;
   const shown = subIds.slice(0, max);
   const extra = subIds.length - shown.length;
@@ -31,9 +32,9 @@ export function SubStack({ subIds, max = 3, size = 22 }: Props) {
   return (
     <View style={styles.row}>
       {shown.map((sid, i) => {
-        const sub = SUB_META[sid];
+        const sub = meta.sub(sid);
         if (!sub) return null;
-        const dim = DIMENSION_META[sub.dimensionId];
+        const dim = meta.dim(sub.dimensionId);
         return (
           <View
             key={sid}

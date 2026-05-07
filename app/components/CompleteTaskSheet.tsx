@@ -9,9 +9,10 @@ import {
 } from 'react-native';
 
 import type { TaskSub, TaskWithSubs } from '@/lib/db/types';
+import { useT } from '@/lib/i18n';
+import { useMetaLookup } from '@/lib/i18n/meta';
 import { rewardForTaskSubs } from '@/lib/xp';
 import { tokens } from '@/theme';
-import { DIMENSION_META, SUB_META } from '@/theme/dimensions';
 
 import { CoinIcon } from './CoinIcon';
 
@@ -41,6 +42,8 @@ export function CompleteTaskSheet({
   onCancel,
   onConfirm,
 }: Props) {
+  const { t } = useT();
+  const meta = useMetaLookup();
   const [draft, setDraft] = useState<TaskSub[]>([]);
 
   // Reset draft each time we open with a new task.
@@ -95,16 +98,18 @@ export function CompleteTaskSheet({
       <Pressable style={styles.scrim} onPress={onCancel}>
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
           <View style={styles.handle} />
-          <Text style={styles.eyebrow}>ADJUST STARS · {task.title.toUpperCase()}</Text>
+          <Text style={styles.eyebrow}>
+            {t('tasks.actionSheet.adjustStars').toUpperCase()} · {task.title.toUpperCase()}
+          </Text>
 
           <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Total stars</Text>
+            <Text style={styles.totalLabel}>{t('tasks.completeSheet.totalStars')}</Text>
             <Text style={styles.totalValue}>{totalStars}★</Text>
           </View>
 
           {draft.map((s) => {
-            const subMeta = SUB_META[s.sub_id];
-            const dim = subMeta ? DIMENSION_META[subMeta.dimensionId] : null;
+            const subMeta = meta.sub(s.sub_id);
+            const dim = subMeta ? meta.dim(subMeta.dimensionId) : null;
             const color = dim?.color ?? tokens.brand.violet2;
             const canDec = s.stars > 1;
             const canInc = s.stars < 5;
@@ -207,7 +212,7 @@ export function CompleteTaskSheet({
                 ]}
               >
                 <Ionicons name="refresh" size={12} color={tokens.text.dim} />
-                <Text style={styles.resetText}>Reset</Text>
+                <Text style={styles.resetText}>{t('tasks.completeSheet.reset')}</Text>
               </Pressable>
             )}
           </View>
@@ -220,7 +225,7 @@ export function CompleteTaskSheet({
                 pressed && { opacity: 0.6 },
               ]}
             >
-              <Text style={styles.cancelText}>Cancel</Text>
+              <Text style={styles.cancelText}>{t('common.cancel')}</Text>
             </Pressable>
             <Pressable
               onPress={confirm}
@@ -230,7 +235,7 @@ export function CompleteTaskSheet({
               ]}
             >
               <Ionicons name="checkmark" size={18} color="#fff" />
-              <Text style={styles.confirmText}>Log</Text>
+              <Text style={styles.confirmText}>{t('tasks.completeSheet.log')}</Text>
             </Pressable>
           </View>
         </Pressable>

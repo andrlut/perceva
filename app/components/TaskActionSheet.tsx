@@ -7,6 +7,7 @@ import {
   View,
 } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { tokens } from '@/theme';
 
 interface Props {
@@ -36,6 +37,7 @@ export function TaskActionSheet({
   onSkipToday,
   onEdit,
 }: Props) {
+  const { t } = useT();
   return (
     <Modal
       visible={visible}
@@ -61,10 +63,8 @@ export function TaskActionSheet({
               <Ionicons name="star" size={18} color={tokens.semantic.coin} />
             </View>
             <View style={styles.actionBody}>
-              <Text style={styles.actionTitle}>Adjust stars</Text>
-              <Text style={styles.actionSub}>
-                Change how heavy this completion was per sub
-              </Text>
+              <Text style={styles.actionTitle}>{t('tasks.actionSheet.adjustStars')}</Text>
+              <Text style={styles.actionSub}>{t('tasks.actionSheet.adjustStarsSub')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={16} color={tokens.text.dim} />
           </Pressable>
@@ -84,10 +84,8 @@ export function TaskActionSheet({
               />
             </View>
             <View style={styles.actionBody}>
-              <Text style={styles.actionTitle}>Skip today</Text>
-              <Text style={styles.actionSub}>
-                Hide from today without completing — no XP, doesn&apos;t break streak
-              </Text>
+              <Text style={styles.actionTitle}>{t('tasks.actionSheet.skipToday')}</Text>
+              <Text style={styles.actionSub}>{t('tasks.actionSheet.skipTodaySub')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={16} color={tokens.text.dim} />
           </Pressable>
@@ -103,10 +101,8 @@ export function TaskActionSheet({
               <Ionicons name="create-outline" size={18} color={tokens.text.hi} />
             </View>
             <View style={styles.actionBody}>
-              <Text style={styles.actionTitle}>Edit task</Text>
-              <Text style={styles.actionSub}>
-                Change title, subs, recurrence, etc
-              </Text>
+              <Text style={styles.actionTitle}>{t('tasks.actionSheet.editTask')}</Text>
+              <Text style={styles.actionSub}>{t('tasks.actionSheet.editTaskSub')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={16} color={tokens.text.dim} />
           </Pressable>
@@ -118,7 +114,7 @@ export function TaskActionSheet({
               pressed && { opacity: 0.6 },
             ]}
           >
-            <Text style={styles.cancelText}>Cancel</Text>
+            <Text style={styles.cancelText}>{t('common.cancel')}</Text>
           </Pressable>
         </Pressable>
       </Pressable>

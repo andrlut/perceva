@@ -16,6 +16,7 @@ import {
   daysSince,
   useLastQuestionnaireSession,
 } from '@/lib/api/questionnaire';
+import { useMetaLookup } from '@/lib/i18n/meta';
 import { tokens } from '@/theme';
 import { SUB_META } from '@/theme/dimensions';
 
@@ -108,6 +109,7 @@ interface Props {
  */
 export function AvaliacaoPanel({ subScores }: Props) {
   const router = useRouter();
+  const metaLookup = useMetaLookup();
   const { width: screenWidth } = useWindowDimensions();
   const lastSession = useLastQuestionnaireSession();
   const [hexSource, setHexSource] = useState<HexSource>('self');
@@ -188,7 +190,7 @@ export function AvaliacaoPanel({ subScores }: Props) {
           <View style={styles.nudgeInner}>
             <Text style={styles.nudgeText}>
               <Text style={styles.nudgeStrong}>
-                {SUB_META[weakest.subId].label}
+                {metaLookup.sub(weakest.subId).label}
               </Text>{' '}
               está em {weakest.score}/5 — toque pra ver tasks recomendadas
             </Text>

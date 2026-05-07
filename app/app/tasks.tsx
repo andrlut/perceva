@@ -30,13 +30,12 @@ import type {
   TaskTemplateWithSubs,
   TaskWithSubs,
 } from '@/lib/db/types';
+import { useMetaLookup } from '@/lib/i18n/meta';
 import { describeRecurrence } from '@/lib/recurrence';
 import { tokens } from '@/theme';
 import {
-  DIMENSION_META,
   DIMENSION_ORDER,
   SUBS_BY_DIM,
-  SUB_META,
 } from '@/theme/dimensions';
 
 type Tab = 'mine' | 'suggested';
@@ -433,9 +432,10 @@ interface TaskRowProps {
 }
 
 function TaskRow({ task, divider, onPress }: TaskRowProps) {
+  const meta = useMetaLookup();
   const isCustom = !task.template_id;
-  const primarySubMeta = SUB_META[task.primary_sub_id];
-  const dimMeta = DIMENSION_META[task.primary_dimension_id];
+  const primarySubMeta = meta.sub(task.primary_sub_id);
+  const dimMeta = meta.dim(task.primary_dimension_id);
   return (
     <Pressable
       onPress={onPress}
@@ -507,6 +507,7 @@ function SuggestedBody({
   onAdopt,
   adoptingId,
 }: SuggestedBodyProps) {
+  const meta = useMetaLookup();
   if (loading) {
     return (
       <View style={styles.loadingBox}>
@@ -532,8 +533,8 @@ function SuggestedBody({
   return (
     <View style={{ gap: tokens.space[3] }}>
       {subsWithTemplates.map((subId) => {
-        const subMeta = SUB_META[subId];
-        const dimMeta = DIMENSION_META[subMeta.dimensionId];
+        const subMeta = meta.sub(subId);
+        const dimMeta = meta.dim(subMeta.dimensionId);
         const templates = templatesBySub.get(subId) ?? [];
         const isCollapsed = !!collapsedSubs[subId];
         return (

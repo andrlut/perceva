@@ -22,7 +22,8 @@ import {
 } from '@/lib/api/skills';
 import type { TierName } from '@/lib/db/types';
 import { tokens } from '@/theme';
-import { DIMENSION_META, DIMENSION_ORDER } from '@/theme/dimensions';
+import { useMetaLookup } from '@/lib/i18n/meta';
+import { DIMENSION_ORDER } from '@/theme/dimensions';
 
 const ICON_CHOICES = [
   'flash',
@@ -63,6 +64,7 @@ const DEFAULT_TIERS: TierFormState[] = [
 
 export default function SkillFormScreen() {
   const router = useRouter();
+  const metaLookup = useMetaLookup();
   const createSkill = useCreateCustomSkill();
 
   const [name, setName] = useState('');
@@ -210,7 +212,7 @@ export default function SkillFormScreen() {
             <Text style={styles.label}>Category</Text>
             <View style={styles.chipRow}>
               {DIMENSION_ORDER.map((id) => {
-                const meta = DIMENSION_META[id];
+                const meta = metaLookup.dim(id);
                 const active = id === dimensionId;
                 return (
                   <Pressable

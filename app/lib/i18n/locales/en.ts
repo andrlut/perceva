@@ -151,15 +151,29 @@ const en = {
       morning: 'Good morning',
       afternoon: 'Good afternoon',
       evening: 'Good evening',
-      night: 'Good night',
+      night: 'Late night',
     },
-    sections: {
+    defaultName: 'adventurer',
+    buckets: {
       today: 'Today',
-      upcoming: 'Upcoming',
-      anytime: 'Anytime',
-      completed: 'Completed today',
-      empty: 'Nothing here yet',
-      addTask: 'Add a task',
+      thisWeek: 'This Week',
+      thisMonth: 'This Month',
+      oneTime: 'One-time',
+      emptyToday: 'All clear for today.',
+    },
+    empty: {
+      title: 'All clear.',
+      body: 'Nothing pending right now. Add a task to get started.',
+      cta: 'Manage tasks',
+    },
+    error: 'Something went wrong loading your data. Pull to retry.',
+    manageCta: 'Manage tasks',
+    actionErrors: {
+      complete: 'Could not complete task',
+      skip: 'Could not skip',
+      undo: 'Could not undo',
+      unskip: 'Could not unskip',
+      unknown: 'Unknown error.',
     },
     streak: {
       label: 'Streak',
@@ -170,6 +184,12 @@ const en = {
     completedDrawer: {
       title: 'Completed today',
       empty: 'Complete your first task to see it here.',
+      completedSummary: '{count} completed',
+      skippedSummary: '{count} skipped',
+      tapToToggle: ' · tap to ',
+      tapHide: 'hide',
+      tapView: 'view',
+      skippedToday: 'Skipped today',
       undo: 'Undo',
       addExtra: '+ Extra',
       unskip: 'Unskip',
@@ -210,6 +230,24 @@ const en = {
       delete: 'Delete',
       confirmDelete: 'Delete this task? This cannot be undone.',
       confirmHighDifficulty: 'This is a {stars}-star task. Mark complete?',
+    },
+    actionSheet: {
+      adjustStars: 'Adjust stars',
+      adjustStarsSub: 'Change how heavy this completion was per sub',
+      skipToday: 'Skip today',
+      skipTodaySub: "Hide from today without completing — no XP, doesn't break streak",
+      editTask: 'Edit task',
+      editTaskSub: 'Change title, subs, recurrence, etc',
+    },
+    completeSheet: {
+      totalStars: 'Total stars',
+      reset: 'Reset',
+      log: 'Log',
+    },
+    subPicker: {
+      pickAtLeastOne: 'Pick at least one sub',
+      countSubs: { one: '{count} sub', other: '{count} subs' },
+      total: 'total',
     },
     difficultyLabel: {
       1: 'Trivial',
@@ -269,6 +307,13 @@ const en = {
     level: 'Level',
     xp: 'XP',
     coins: 'Coins',
+    ranks: {
+      master: 'Master',
+      adept: 'Adept',
+      builder: 'Builder',
+      apprentice: 'Apprentice',
+    },
+    failedToLoad: 'Failed to load character.',
     sections: {
       stats: 'Stats',
       pillars: 'Pillars',
@@ -295,27 +340,139 @@ const en = {
   },
 
   dimensions: {
-    health: 'Health',
-    strength: 'Strength',
-    mind: 'Mind',
-    wealth: 'Wealth',
-    bonds: 'Bonds',
-    craft: 'Craft',
+    health: {
+      label: 'Health',
+      tagline: 'Your body is the vessel.',
+      description:
+        'The base layer: sleep + nutrition. Recovery and fuel are what every other dimension stands on. Without these, the rest crumbles.',
+      examples: [
+        'Sleep 7+ hours',
+        'Drink 2L of water',
+        'Eat a real meal (no junk)',
+        'No screens 1h before bed',
+      ],
+    },
+    body: {
+      label: 'Body',
+      tagline: 'Earned, not given.',
+      description:
+        'Strength + dexterity. Cardio, lifting, sport, mobility. The visible proof of consistency over time.',
+      examples: [
+        '20 push-ups',
+        'Run 5km',
+        'Climb / sport / martial art',
+        'Mobility 10 min',
+      ],
+    },
+    mind: {
+      label: 'Mind',
+      tagline: 'Sharpen the blade.',
+      description:
+        'Learn + contemplate. Reading, deep work, study, meditation, journaling. What you compound here multiplies what you can do everywhere else.',
+      examples: [
+        'Read for 20 minutes',
+        'Meditate 10 min',
+        'Study or take a course',
+        '90 min of deep work',
+      ],
+    },
+    wealth: {
+      label: 'Wealth',
+      tagline: 'Future-you needs this.',
+      description:
+        'Money + career. Earning, saving, investing, shipping. Small reps here are worth far more than big sporadic moves.',
+      examples: [
+        "Log today's expenses",
+        'Review the budget',
+        'Save / invest a fixed amount',
+        '90 min on a side project',
+      ],
+    },
+    bonds: {
+      label: 'Bonds',
+      tagline: "Don't solo this game.",
+      description:
+        'Friends, family + romance. Highest-yield long-term investment. Easy to skip; expensive to skip for years.',
+      examples: [
+        'Call / message family',
+        'Have lunch with a friend',
+        'Quality time with partner',
+        'Show up to a gathering',
+      ],
+    },
+    craft: {
+      label: 'Craft',
+      tagline: 'Make something.',
+      description:
+        'Play + build. Hobbies, creative work, side-projects. The dimension that makes life worth the grind everywhere else.',
+      examples: [
+        'Hobby session 30 min',
+        'Ship something on a side project',
+        'Practice an instrument',
+        'Finish a creative piece',
+      ],
+    },
   },
 
   subs: {
-    sleep: 'Sleep',
-    nutrition: 'Nutrition',
-    movement: 'Movement',
-    dexterity: 'Dexterity',
-    learn: 'Learn',
-    contemplate: 'Contemplate',
-    money: 'Money',
-    career: 'Career',
-    circle: 'Circle',
-    romance: 'Romance',
-    play: 'Play',
-    build: 'Build',
+    sleep: {
+      label: 'Sleep',
+      description: 'How well-rested you feel. Hours, consistency, recovery.',
+    },
+    nutrition: {
+      label: 'Nutrition',
+      description: 'Quality of what you eat and drink. Real food, hydration, restraint.',
+    },
+    strength: {
+      label: 'Strength',
+      description: 'Cardio, lifting, walking — the raw amount you move your body.',
+    },
+    dexterity: {
+      label: 'Dexterity',
+      description: 'Coordination, mobility, sport skill — how well your body moves.',
+    },
+    learn: {
+      label: 'Learn',
+      description: 'Reading, study, deep work — what you absorb and get better at.',
+    },
+    contemplate: {
+      label: 'Contemplate',
+      description: 'Meditation, journaling, prayer — practices that quiet and ground you.',
+    },
+    money: {
+      label: 'Money',
+      description: 'Saving, budgeting, investing — your relationship with money.',
+    },
+    career: {
+      label: 'Career',
+      description: 'Building skills, shipping, advancing your craft of work.',
+    },
+    circle: {
+      label: 'Friends & Family',
+      description: 'Family and friends — the relationships that show up over years.',
+    },
+    romance: {
+      label: 'Romance',
+      description: 'Your romantic partnership — depth, presence, affection.',
+    },
+    play: {
+      label: 'Play',
+      description: 'Hobbies and creative time done for joy, no goal attached.',
+    },
+    build: {
+      label: 'Build',
+      description: 'Side-projects and creative work made to ship or share.',
+    },
+  },
+
+  /** Generic anchor labels for the 0-5 self-assessment scale. */
+  subScoreLabels: {
+    0: 'Missing',
+    1: 'Struggling',
+    2: 'Below',
+    3: 'OK',
+    4: 'Strong',
+    5: 'Mastery',
   },
 
   profile: {
@@ -467,6 +624,8 @@ const en = {
     title: 'Self-assessment',
     subtitle: 'Where do you feel each pillar is right now?',
     pillarPrompt: 'How is your {pillar}?',
+    subAttribute: 'sub-attribute',
+    recommendedTasks: 'Recommended tasks',
     scale: {
       0: 'Not at all',
       1: 'Barely',
@@ -474,6 +633,14 @@ const en = {
       3: 'Decent',
       4: 'Solid',
       5: 'Great',
+    },
+    insights: {
+      0: 'Not tracked yet. Start with one small task.',
+      1: 'Watch out. A daily task here changes the game.',
+      2: 'Below baseline. Worth more focus.',
+      3: 'Solid. Keep the consistency.',
+      4: 'Strong. Next step: an advanced skill.',
+      5: 'Mastery. Push the limits with longer quests.',
     },
     save: 'Save self-assessment',
     saved: 'Self-assessment updated',
@@ -499,6 +666,13 @@ const en = {
         aligned: 'Aligned',
         slight_underestimate: 'Slightly underestimating',
         attention_underestimating: 'Attention — possibly underestimating',
+      },
+      feedback: {
+        attention_overestimating: 'You see yourself better at {label} than the anchor suggests. Worth an honest look.',
+        slight_overestimate: 'Reasonable at {label}, but maybe a slight downward adjustment in your self-view.',
+        aligned: 'Calibrated on {label} — your perception matches the anchor.',
+        slight_underestimate: "Solid at {label} — you might be a little hard on yourself.",
+        attention_underestimating: 'You underestimate yourself on {label}. Acknowledge what is working.',
       },
     },
   },

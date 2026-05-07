@@ -2,8 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { DimensionId, SubId } from '@/lib/db/types';
+import { useMetaLookup } from '@/lib/i18n/meta';
 import { tokens } from '@/theme';
-import { DIMENSION_META, SUB_META, SUBS_BY_DIM } from '@/theme/dimensions';
+import { SUBS_BY_DIM } from '@/theme/dimensions';
 
 interface Props {
   dimensionId: DimensionId;
@@ -28,10 +29,11 @@ interface Props {
  * react-native-svg (which has native crashes on 15.12.1).
  */
 export function DimensionCrest({ dimensionId, size = 220, scores }: Props) {
-  const dimMeta = DIMENSION_META[dimensionId];
+  const meta = useMetaLookup();
+  const dimMeta = meta.dim(dimensionId);
   const [subA, subB] = SUBS_BY_DIM[dimensionId];
-  const subAMeta = SUB_META[subA];
-  const subBMeta = SUB_META[subB];
+  const subAMeta = meta.sub(subA);
+  const subBMeta = meta.sub(subB);
 
   const radius = size / 2;
   const subIconSize = Math.round(size * 0.22);

@@ -23,6 +23,7 @@ import { TodayActivityDrawer } from '@/components/TodayActivityDrawer';
 import { XPCoinFloat } from '@/components/XPCoinFloat';
 import { useCharacter } from '@/lib/api/character';
 import { useStreak } from '@/lib/api/streak';
+import { useT } from '@/lib/i18n';
 import {
   useCompleteTask,
   useHomeBuckets,
@@ -48,20 +49,21 @@ interface FloatItem {
 
 interface BucketMeta {
   id: HomeBucket;
-  label: string;
+  labelKey: string;
   iconName: keyof typeof Ionicons.glyphMap;
   color: string;
 }
 
 const BUCKET_META: BucketMeta[] = [
-  { id: 'today',      label: 'Today',     iconName: 'time',     color: tokens.brand.violet2 },
-  { id: 'this_week',  label: 'This Week', iconName: 'calendar', color: '#4DD0FF' },
-  { id: 'this_month', label: 'This Month',iconName: 'calendar-outline', color: tokens.semantic.coin },
-  { id: 'one_time',   label: 'One-time',  iconName: 'flag',     color: '#FF8A3D' },
+  { id: 'today',      labelKey: 'home.buckets.today',     iconName: 'time',     color: tokens.brand.violet2 },
+  { id: 'this_week',  labelKey: 'home.buckets.thisWeek',  iconName: 'calendar', color: '#4DD0FF' },
+  { id: 'this_month', labelKey: 'home.buckets.thisMonth', iconName: 'calendar-outline', color: tokens.semantic.coin },
+  { id: 'one_time',   labelKey: 'home.buckets.oneTime',   iconName: 'flag',     color: '#FF8A3D' },
 ];
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { t } = useT();
   const character = useCharacter();
   const buckets = useHomeBuckets();
   const streak = useStreak();
@@ -103,9 +105,9 @@ export default function HomeScreen() {
           const e = err as { message?: string; code?: string; details?: string };
           console.error('[complete_task] failed', e);
           Alert.alert(
-            'Could not complete task',
+            t('home.actionErrors.complete'),
             [e.message, e.code, e.details].filter(Boolean).join('\n') ||
-              'Unknown error.',
+              t('home.actionErrors.unknown'),
           );
         },
       },
@@ -123,29 +125,32 @@ export default function HomeScreen() {
 
   const handleSheetConfirm = (subs: TaskSub[]) => {
     if (!sheetTask) return;
-    const t = sheetTask;
+    const task = sheetTask;
     setSheetTask(null);
-    fireCompletion(t, subs);
+    fireCompletion(task, subs);
   };
 
   const handleActionAdjust = () => {
     if (!actionTask) return;
-    const t = actionTask;
+    const task = actionTask;
     setActionTask(null);
-    setSheetTask(t);
+    setSheetTask(task);
   };
 
   const handleActionSkip = () => {
     if (!actionTask) return;
-    const t = actionTask;
+    const task = actionTask;
     setActionTask(null);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     skipTask.mutate(
-      { taskId: t.id },
+      { taskId: task.id },
       {
         onError: (err) => {
           const e = err as { message?: string };
-          Alert.alert('Could not skip', e.message ?? 'Unknown error.');
+          Alert.alert(
+            t('home.actionErrors.skip'),
+            e.message ?? t('home.actionErrors.unknown'),
+          );
         },
       },
     );
@@ -153,9 +158,9 @@ export default function HomeScreen() {
 
   const handleActionEdit = () => {
     if (!actionTask) return;
-    const t = actionTask;
+    const task = actionTask;
     setActionTask(null);
-    router.push({ pathname: '/task-form', params: { id: t.id } });
+    router.push({ pathname: '/task-form', params: { id: task.id } });
   };
 
   const handleDrawerExtra = (task: TaskWithSubs) => {
@@ -167,7 +172,10 @@ export default function HomeScreen() {
     undoCompletion.mutate(completionId, {
       onError: (err) => {
         const e = err as { message?: string };
-        Alert.alert('Could not undo', e.message ?? 'Unknown error.');
+        Alert.alert(
+          t('home.actionErrors.undo'),
+          e.message ?? t('home.actionErrors.unknown'),
+        );
       },
     });
   };
@@ -179,7 +187,10 @@ export default function HomeScreen() {
       {
         onError: (err) => {
           const e = err as { message?: string };
-          Alert.alert('Could not unskip', e.message ?? 'Unknown error.');
+          Alert.alert(
+            t('home.actionErrors.unskip'),
+            e.message ?? t('home.actionErrors.unknown'),
+          );
         },
       },
     );
@@ -235,7 +246,7 @@ export default function HomeScreen() {
           }
         >
           <CompactHeader
-            displayName={character.data?.profile.display_name ?? 'adventurer'}
+            displayName={character.data?.profile.display_name ?? t('home.defaultName')}
             totalXp={charXp}
             level={lp.level}
             xpInLevel={lp.xpInLevel}
@@ -252,9 +263,7 @@ export default function HomeScreen() {
           ) : hasError ? (
             <View style={styles.errorBox}>
               <Ionicons name="alert-circle" size={32} color={tokens.semantic.danger} />
-              <Text style={styles.errorText}>
-                Something went wrong loading your data. Pull to retry.
-              </Text>
+              <Text style={styles.errorText}>{t('home.error')}</Text>
             </View>
           ) : totalPending === 0 ? (
             <View style={styles.bucketsList}>
@@ -264,10 +273,8 @@ export default function HomeScreen() {
                   size={42}
                   color={tokens.semantic.xp}
                 />
-                <Text style={styles.emptyTitle}>All clear.</Text>
-                <Text style={styles.emptySub}>
-                  Nothing pending right now. Add a task to get started.
-                </Text>
+                <Text style={styles.emptyTitle}>{t('home.empty.title')}</Text>
+                <Text style={styles.emptySub}>{t('home.empty.body')}</Text>
                 <Pressable
                   onPress={() => router.push('/tasks')}
                   style={({ pressed }) => [
@@ -276,7 +283,7 @@ export default function HomeScreen() {
                   ]}
                 >
                   <Ionicons name="add" size={18} color={tokens.text.hi} />
-                  <Text style={styles.emptyCtaText}>Manage tasks</Text>
+                  <Text style={styles.emptyCtaText}>{t('home.empty.cta')}</Text>
                 </Pressable>
               </View>
               {data && (
@@ -300,12 +307,13 @@ export default function HomeScreen() {
                   <BucketSection
                     key={meta.id}
                     meta={meta}
+                    label={t(meta.labelKey)}
                     count={items.length}
                     collapsed={isCollapsed}
                     onToggle={() => toggleBucket(meta.id)}
                   >
                     {items.length === 0 ? (
-                      <Text style={styles.bucketEmpty}>All clear for today.</Text>
+                      <Text style={styles.bucketEmpty}>{t('home.buckets.emptyToday')}</Text>
                     ) : (
                       items.map((task) => (
                         <TaskCard
@@ -344,7 +352,7 @@ export default function HomeScreen() {
                 hitSlop={4}
               >
                 <Ionicons name="list" size={16} color={tokens.brand.violet2} />
-                <Text style={styles.manageCtaText}>Manage tasks</Text>
+                <Text style={styles.manageCtaText}>{t('home.manageCta')}</Text>
               </Pressable>
             </View>
           )}
@@ -382,6 +390,7 @@ export default function HomeScreen() {
 
 interface BucketSectionProps {
   meta: BucketMeta;
+  label: string;
   count: number;
   collapsed: boolean;
   onToggle: () => void;
@@ -390,6 +399,7 @@ interface BucketSectionProps {
 
 function BucketSection({
   meta,
+  label,
   count,
   collapsed,
   onToggle,
@@ -407,7 +417,7 @@ function BucketSection({
         <View style={bucketStyles.iconWrap}>
           <Ionicons name={meta.iconName} size={14} color={meta.color} />
         </View>
-        <Text style={bucketStyles.label}>{meta.label}</Text>
+        <Text style={bucketStyles.label}>{label}</Text>
         <View style={bucketStyles.countChip}>
           <Text style={bucketStyles.countText}>{count}</Text>
         </View>

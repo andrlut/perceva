@@ -143,13 +143,27 @@ const pt: Translations = {
       evening: 'Boa noite',
       night: 'Boa madrugada',
     },
-    sections: {
+    defaultName: 'aventureiro',
+    buckets: {
       today: 'Hoje',
-      upcoming: 'Em breve',
-      anytime: 'Quando der',
-      completed: 'Concluído hoje',
-      empty: 'Nada por aqui ainda',
-      addTask: 'Adicionar tarefa',
+      thisWeek: 'Esta Semana',
+      thisMonth: 'Este Mês',
+      oneTime: 'Único',
+      emptyToday: 'Nada pra hoje.',
+    },
+    empty: {
+      title: 'Tudo em dia.',
+      body: 'Nada pendente agora. Adicione uma tarefa pra começar.',
+      cta: 'Gerenciar tarefas',
+    },
+    error: 'Algo deu errado ao carregar seus dados. Puxe pra tentar de novo.',
+    manageCta: 'Gerenciar tarefas',
+    actionErrors: {
+      complete: 'Não foi possível concluir a tarefa',
+      skip: 'Não foi possível pular',
+      undo: 'Não foi possível desfazer',
+      unskip: 'Não foi possível despular',
+      unknown: 'Erro desconhecido.',
     },
     streak: {
       label: 'Sequência',
@@ -160,6 +174,12 @@ const pt: Translations = {
     completedDrawer: {
       title: 'Concluído hoje',
       empty: 'Conclua sua primeira tarefa pra ver aqui.',
+      completedSummary: '{count} concluídas',
+      skippedSummary: '{count} puladas',
+      tapToToggle: ' · toque pra ',
+      tapHide: 'esconder',
+      tapView: 'ver',
+      skippedToday: 'Pulada hoje',
       undo: 'Desfazer',
       addExtra: '+ Extra',
       unskip: 'Despular',
@@ -200,6 +220,24 @@ const pt: Translations = {
       delete: 'Excluir',
       confirmDelete: 'Excluir esta tarefa? Não dá pra desfazer.',
       confirmHighDifficulty: 'Esta é uma tarefa de {stars} estrelas. Marcar como concluída?',
+    },
+    actionSheet: {
+      adjustStars: 'Ajustar estrelas',
+      adjustStarsSub: 'Mude o peso dessa conclusão por sub',
+      skipToday: 'Pular hoje',
+      skipTodaySub: 'Esconde do dia sem concluir — sem XP, não quebra a sequência',
+      editTask: 'Editar tarefa',
+      editTaskSub: 'Mudar título, subs, recorrência, etc',
+    },
+    completeSheet: {
+      totalStars: 'Estrelas totais',
+      reset: 'Resetar',
+      log: 'Registrar',
+    },
+    subPicker: {
+      pickAtLeastOne: 'Escolha ao menos um sub',
+      countSubs: { one: '{count} sub', other: '{count} subs' },
+      total: 'total',
     },
     difficultyLabel: {
       1: 'Trivial',
@@ -259,6 +297,13 @@ const pt: Translations = {
     level: 'Nível',
     xp: 'XP',
     coins: 'Moedas',
+    ranks: {
+      master: 'Mestre',
+      adept: 'Adepto',
+      builder: 'Construtor',
+      apprentice: 'Aprendiz',
+    },
+    failedToLoad: 'Falha ao carregar personagem.',
     sections: {
       stats: 'Stats',
       pillars: 'Pilares',
@@ -285,27 +330,138 @@ const pt: Translations = {
   },
 
   dimensions: {
-    health: 'Saúde',
-    strength: 'Força',
-    mind: 'Mente',
-    wealth: 'Riqueza',
-    bonds: 'Vínculos',
-    craft: 'Criação',
+    health: {
+      label: 'Saúde',
+      tagline: 'Seu corpo é o veículo.',
+      description:
+        'A base: sono + nutrição. Recuperação e combustível sustentam todas as outras dimensões. Sem isso, o resto desmorona.',
+      examples: [
+        'Dormir 7+ horas',
+        'Beber 2L de água',
+        'Refeição de verdade (sem porcaria)',
+        'Sem telas 1h antes de dormir',
+      ],
+    },
+    body: {
+      label: 'Corpo',
+      tagline: 'Conquistado, não dado.',
+      description:
+        'Força + destreza. Cardio, treino, esporte, mobilidade. A prova visível de consistência ao longo do tempo.',
+      examples: [
+        '20 flexões',
+        'Correr 5km',
+        'Escalar / esporte / arte marcial',
+        'Mobilidade 10 min',
+      ],
+    },
+    mind: {
+      label: 'Mente',
+      tagline: 'Afie a lâmina.',
+      description:
+        'Aprender + contemplar. Leitura, foco profundo, estudo, meditação, journaling. O que você acumula aqui multiplica tudo que você consegue fazer no resto.',
+      examples: [
+        'Ler por 20 minutos',
+        'Meditar 10 min',
+        'Estudar ou fazer um curso',
+        '90 min de foco profundo',
+      ],
+    },
+    wealth: {
+      label: 'Riqueza',
+      tagline: 'O você do futuro precisa disso.',
+      description:
+        'Dinheiro + carreira. Ganhar, poupar, investir, entregar. Pequenas repetições aqui valem muito mais que grandes movimentos esporádicos.',
+      examples: [
+        'Anotar gastos do dia',
+        'Revisar o orçamento',
+        'Poupar / investir um valor fixo',
+        '90 min num projeto pessoal',
+      ],
+    },
+    bonds: {
+      label: 'Vínculos',
+      tagline: 'Não jogue sozinho.',
+      description:
+        'Amigos, família + romance. Investimento de longo prazo de maior retorno. Fácil de pular; caro de pular por anos.',
+      examples: [
+        'Ligar / mandar mensagem pra família',
+        'Almoçar com um amigo',
+        'Tempo de qualidade com o(a) parceiro(a)',
+        'Aparecer num encontro',
+      ],
+    },
+    craft: {
+      label: 'Criação',
+      tagline: 'Faça algo.',
+      description:
+        'Lazer + construir. Hobbies, trabalho criativo, projetos pessoais. A dimensão que faz o resto da grind valer a pena.',
+      examples: [
+        'Hobby por 30 min',
+        'Entregar algo num projeto pessoal',
+        'Praticar um instrumento',
+        'Terminar uma peça criativa',
+      ],
+    },
   },
 
   subs: {
-    sleep: 'Sono',
-    nutrition: 'Nutrição',
-    movement: 'Movimento',
-    dexterity: 'Destreza',
-    learn: 'Aprender',
-    contemplate: 'Contemplar',
-    money: 'Dinheiro',
-    career: 'Carreira',
-    circle: 'Círculo',
-    romance: 'Romance',
-    play: 'Lazer',
-    build: 'Construir',
+    sleep: {
+      label: 'Sono',
+      description: 'O quanto você está descansado. Horas, consistência, recuperação.',
+    },
+    nutrition: {
+      label: 'Nutrição',
+      description: 'Qualidade do que você come e bebe. Comida de verdade, hidratação, moderação.',
+    },
+    strength: {
+      label: 'Força',
+      description: 'Cardio, treino, caminhar — quanto você movimenta o corpo.',
+    },
+    dexterity: {
+      label: 'Destreza',
+      description: 'Coordenação, mobilidade, habilidade esportiva — como seu corpo se move.',
+    },
+    learn: {
+      label: 'Aprender',
+      description: 'Leitura, estudo, foco profundo — o que você absorve e aprimora.',
+    },
+    contemplate: {
+      label: 'Contemplar',
+      description: 'Meditação, journaling, oração — práticas que silenciam e aterram.',
+    },
+    money: {
+      label: 'Dinheiro',
+      description: 'Poupar, orçar, investir — sua relação com dinheiro.',
+    },
+    career: {
+      label: 'Carreira',
+      description: 'Construir habilidades, entregar, avançar no seu ofício de trabalho.',
+    },
+    circle: {
+      label: 'Amigos e Família',
+      description: 'Família e amigos — as relações que aparecem ao longo dos anos.',
+    },
+    romance: {
+      label: 'Romance',
+      description: 'Sua parceria romântica — profundidade, presença, afeto.',
+    },
+    play: {
+      label: 'Lazer',
+      description: 'Hobbies e tempo criativo por prazer, sem objetivo atrelado.',
+    },
+    build: {
+      label: 'Construir',
+      description: 'Projetos pessoais e trabalho criativo feitos pra entregar ou compartilhar.',
+    },
+  },
+
+  subScoreLabels: {
+    0: 'Ausente',
+    1: 'Difícil',
+    2: 'Abaixo',
+    3: 'OK',
+    4: 'Forte',
+    5: 'Domínio',
   },
 
   profile: {
@@ -457,6 +613,8 @@ const pt: Translations = {
     title: 'Auto-avaliação',
     subtitle: 'Como você sente cada pilar agora?',
     pillarPrompt: 'Como está {pillar}?',
+    subAttribute: 'sub-atributo',
+    recommendedTasks: 'Tasks recomendadas',
     scale: {
       0: 'Nada',
       1: 'Mal',
@@ -464,6 +622,14 @@ const pt: Translations = {
       3: 'Razoável',
       4: 'Bom',
       5: 'Ótimo',
+    },
+    insights: {
+      0: 'Não rastreado ainda. Começa com 1 task pequena.',
+      1: 'Atenção. Uma task diária aqui muda o jogo.',
+      2: 'Abaixo da linha de base. Vale aumentar foco.',
+      3: 'Sólido. Mantém a consistência.',
+      4: 'Forte. Próximo passo: uma skill avançada.',
+      5: 'Mastery. Expanda os limites com quests longas.',
     },
     save: 'Salvar auto-avaliação',
     saved: 'Auto-avaliação atualizada',
@@ -489,6 +655,13 @@ const pt: Translations = {
         aligned: 'Alinhado',
         slight_underestimate: 'Levemente subestimando',
         attention_underestimating: 'Atenção — possivelmente subestimando',
+      },
+      feedback: {
+        attention_overestimating: 'Você se vê melhor em {label} do que a âncora sugere. Vale uma olhada honesta.',
+        slight_overestimate: 'Razoável em {label}, mas talvez um leve ajuste pra baixo na sua percepção.',
+        aligned: 'Calibrado em {label} — sua percepção bate com a âncora.',
+        slight_underestimate: 'Bom em {label} — talvez você esteja sendo um pouco duro consigo mesmo.',
+        attention_underestimating: 'Você se subestima em {label}. Reconhece o que tá funcionando.',
       },
     },
   },

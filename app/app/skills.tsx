@@ -16,11 +16,10 @@ import { ScreenBackground } from '@/components/ScreenBackground';
 import { SkillMedallionOrbital } from '@/components/SkillMedallionOrbital';
 import { useSkillStates } from '@/lib/api/skills';
 import type { DimensionId, SkillState, SubId, TierName } from '@/lib/db/types';
+import { useMetaLookup } from '@/lib/i18n/meta';
 import { tokens } from '@/theme';
 import {
-  DIMENSION_META,
   DIMENSION_ORDER,
-  SUB_META,
   SUBS_BY_DIM,
 } from '@/theme/dimensions';
 
@@ -64,6 +63,7 @@ function totals(states: SkillState[]): MedalTotals {
  */
 export default function SkillsHubScreen() {
   const router = useRouter();
+  const metaLookup = useMetaLookup();
   const skillStates = useSkillStates();
   const [query, setQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -118,7 +118,7 @@ export default function SkillsHubScreen() {
     return result;
   }, [dimSkills, activeDim]);
 
-  const activeMeta = DIMENSION_META[activeDim];
+  const activeMeta = metaLookup.dim(activeDim);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -182,7 +182,7 @@ export default function SkillsHubScreen() {
               count badge. Search icon at the end toggles the input below. */}
           <View style={styles.chipsRow}>
             {DIMENSION_ORDER.map((id) => {
-              const meta = DIMENSION_META[id];
+              const meta = metaLookup.dim(id);
               const active = id === activeDim;
               const medals = medalsByDim.get(id) ?? 0;
               return (
@@ -294,11 +294,11 @@ export default function SkillsHubScreen() {
                 const subLabel =
                   key === 'outros'
                     ? 'Outros'
-                    : SUB_META[key as SubId].label;
+                    : metaLookup.sub(key as SubId).label;
                 const subIconName =
                   key === 'outros'
                     ? 'apps'
-                    : (SUB_META[key as SubId].iconName as never);
+                    : (metaLookup.sub(key as SubId).iconName as never);
                 return (
                   <View key={key} style={styles.subGroup}>
                     <View style={styles.subHeader}>

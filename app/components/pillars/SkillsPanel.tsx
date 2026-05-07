@@ -4,8 +4,8 @@ import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { SkillState, SubId } from '@/lib/db/types';
+import { useMetaLookup } from '@/lib/i18n/meta';
 import { tokens } from '@/theme';
-import { DIMENSION_META, SUB_META } from '@/theme/dimensions';
 
 interface Props {
   skills: SkillState[];
@@ -24,6 +24,7 @@ interface Props {
  */
 export function SkillsPanel({ skills }: Props) {
   const router = useRouter();
+  const meta = useMetaLookup();
 
   const subRows = useMemo(() => {
     const counts = new Map<SubId, number>();
@@ -55,8 +56,8 @@ export function SkillsPanel({ skills }: Props) {
       ) : (
         <View style={styles.list}>
           {subRows.map(({ subId, count }, i) => {
-            const subMeta = SUB_META[subId];
-            const dimMeta = DIMENSION_META[subMeta.dimensionId];
+            const subMeta = meta.sub(subId);
+            const dimMeta = meta.dim(subMeta.dimensionId);
             return (
               <Pressable
                 key={subId}
