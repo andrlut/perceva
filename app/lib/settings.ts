@@ -2,6 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect } from 'react';
 import { create } from 'zustand';
 
+import { detectDeviceLanguage } from '@/lib/i18n/detect';
+
 const KEY = 'rpgtasks.settings.v1';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
@@ -52,9 +54,18 @@ export const useSettingsStore = create<Store>((set, get) => ({
     try {
       const raw = await AsyncStorage.getItem(KEY);
       const parsed = raw ? (JSON.parse(raw) as Partial<AppSettings>) : {};
-      set({ status: 'ready', settings: { ...DEFAULTS, ...parsed } });
+      // Auto-detect language from device on first launch (no stored value).
+      // Once the user has saved a preference, never override it.
+      const language = parsed.language ?? detectDeviceLanguage();
+      set({
+        status: 'ready',
+        settings: { ...DEFAULTS, ...parsed, language },
+      });
     } catch {
-      set({ status: 'ready', settings: DEFAULTS });
+      set({
+        status: 'ready',
+        settings: { ...DEFAULTS, language: detectDeviceLanguage() },
+      });
     }
   },
   set: async (key, value) => {
