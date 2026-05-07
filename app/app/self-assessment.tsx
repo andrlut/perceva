@@ -15,6 +15,7 @@ import { ScreenBackground } from '@/components/ScreenBackground';
 import { Sparkline } from '@/components/Sparkline';
 import {
   pickSubScores,
+  pickSubScoresDecimal,
   useCharacter,
   useSetSubScore,
 } from '@/lib/api/character';
@@ -22,6 +23,7 @@ import { useAssessmentHistoryAll } from '@/lib/api/questionnaire';
 import type { SubId } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
+import { formatScore } from '@/lib/util/formatScore';
 import { tokens } from '@/theme';
 import {
   DIMENSION_ORDER,
@@ -41,8 +43,11 @@ export default function SelfAssessmentScreen() {
     () => pickSubScores(character.data?.subScores ?? [], 'self'),
     [character.data?.subScores],
   );
+  // Decimal precision for the questionnaire reference shown next to each
+  // sub — keeps the cross-source comparison honest (self stays integer
+  // gut-rating; quiz shows the v2 decimal).
   const questionnaireScores = useMemo(
-    () => pickSubScores(character.data?.subScores ?? [], 'questionnaire'),
+    () => pickSubScoresDecimal(character.data?.subScores ?? [], 'questionnaire'),
     [character.data?.subScores],
   );
   const hasQuestionnaire = questionnaireScores.size > 0;
@@ -205,7 +210,7 @@ export default function SelfAssessmentScreen() {
                             color={tokens.dimension.bonds}
                           />
                           <Text style={styles.qScoreText}>
-                            Questionnaire: {qScore}
+                            Questionnaire: {formatScore(qScore)}
                           </Text>
                         </View>
                       )}
