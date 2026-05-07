@@ -13,10 +13,24 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { pickSubScoresDecimal, useCharacter } from '@/lib/api/character';
-import { useLastWellbeingSession } from '@/lib/api/psych';
+import {
+  useLastPsychSession,
+  useLastWellbeingSession,
+  useSessionScores,
+} from '@/lib/api/psych';
 import { daysSince } from '@/lib/api/questionnaire';
 import type { DimensionId, SubId } from '@/lib/db/types';
+import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
+import {
+  BIG_FIVE_TRAIT_ORDER,
+  bucketForTraitScore,
+  getTraitContent,
+  traitFromFacetId,
+  type BigFiveBucket,
+  type BigFiveLocale,
+  type BigFiveTrait,
+} from '@/lib/psych/big-five-content';
 import { formatScore } from '@/lib/util/formatScore';
 import { tokens } from '@/theme';
 import {
@@ -148,13 +162,8 @@ export default function ProfileMirrorScreen() {
               )}
             </View>
 
-            {/* ─── Big Five (placeholder) ──────────────────────────────── */}
-            <PendingCard
-              icon="cube"
-              title="Big Five"
-              subtitle="Quem eu sou · traço · anos"
-              note="Em construção — precisa do IPIP-NEO 120 traduzido (Hutz et al.)."
-            />
+            {/* ─── Big Five ────────────────────────────────────────────── */}
+            <BigFiveCard onOpen={() => router.push('/big-five')} />
 
             {/* ─── Schwartz (placeholder) ──────────────────────────────── */}
             <PendingCard
@@ -222,6 +231,133 @@ function DimRow({
       <Text style={[dimRowStyles.dimScore, { color: meta.color }]}>
         {formatScore(dimScore)}
       </Text>
+    </View>
+  );
+}
+
+function BigFiveCard({ onOpen }: { onOpen: () => void }) {
+  const { locale } = useT();
+  const bfLocale: BigFiveLocale = locale === 'en' ? 'en' : 'pt';
+  const isPt = bfLocale === 'pt';
+
+  const lastSession = useLastPsychSession('big_five_120');
+  const scoresQ = useSessionScores(lastSession.data?.id);
+
+  const traitScores = useMemo(() => {
+    const map = new Map<BigFiveTrait, number>();
+    for (const s of scoresQ.data ?? []) {
+      const trait = traitFromFacetId(s.facet_id);
+      if (trait) map.set(trait, Number(s.score_decimal));
+    }
+    return map;
+  }, [scoresQ.data]);
+
+  const hasScores = traitScores.size > 0;
+  const sinceDays = daysSince(lastSession.data?.taken_at);
+
+  return (
+    <Pressable
+      onPress={onOpen}
+      style={({ pressed }) => [
+        styles.card,
+        styles.cardActive,
+        pressed && { opacity: 0.92 },
+      ]}
+      hitSlop={4}
+    >
+      <View style={styles.cardHeader}>
+        <View style={styles.cardHeaderLeft}>
+          <Ionicons name="cube" size={18} color={tokens.brand.violet2} />
+          <Text style={styles.cardTitle}>Big Five</Text>
+        </View>
+        <Text style={styles.cardSub}>
+          {isPt
+            ? 'Quem eu sou · traço · anos'
+            : 'Who I am · trait · years'}
+        </Text>
+      </View>
+
+      {hasScores ? (
+        <>
+          <View style={styles.bfTraitGrid}>
+            {BIG_FIVE_TRAIT_ORDER.map((trait) => {
+              const raw = traitScores.get(trait);
+              if (raw === undefined) return null;
+              return (
+                <BigFiveTraitRow
+                  key={trait}
+                  trait={trait}
+                  rawScore={raw}
+                  locale={bfLocale}
+                />
+              );
+            })}
+          </View>
+          <View style={styles.refazerBtn}>
+            <Ionicons
+              name="refresh"
+              size={14}
+              color={tokens.brand.violet2}
+            />
+            <Text style={styles.refazerText}>
+              {sinceDays === null
+                ? isPt
+                  ? 'Ver detalhes'
+                  : 'See details'
+                : sinceDays === 0
+                  ? isPt
+                    ? 'Refeito hoje · ver detalhes'
+                    : 'Done today · see details'
+                  : isPt
+                    ? `Ver detalhes · ${sinceDays}d atrás`
+                    : `See details · ${sinceDays}d ago`}
+            </Text>
+          </View>
+        </>
+      ) : (
+        <View style={styles.cta}>
+          <Text style={styles.ctaText}>
+            {isPt ? 'Fazer Big Five (~25 min)' : 'Take Big Five (~25 min)'}
+          </Text>
+          <Ionicons
+            name="arrow-forward"
+            size={14}
+            color={tokens.brand.violet2}
+          />
+        </View>
+      )}
+    </Pressable>
+  );
+}
+
+function BigFiveTraitRow({
+  trait,
+  rawScore,
+  locale,
+}: {
+  trait: BigFiveTrait;
+  rawScore: number;
+  locale: BigFiveLocale;
+}) {
+  const content = getTraitContent(trait, locale);
+  const bucket = bucketForTraitScore(rawScore);
+  const normalized = Math.max(0, Math.min(1, (rawScore - 24) / 96));
+  const isPt = locale === 'pt';
+  const bucketLabel = (
+    isPt
+      ? { low: 'baixo', mid: 'médio', high: 'alto' }
+      : { low: 'low', mid: 'mid', high: 'high' }
+  )[bucket as BigFiveBucket];
+
+  return (
+    <View style={bfRowStyles.row}>
+      <Text style={bfRowStyles.label}>{content.label.toUpperCase()}</Text>
+      <View style={bfRowStyles.bar}>
+        <View
+          style={[bfRowStyles.barFill, { width: `${normalized * 100}%` }]}
+        />
+      </View>
+      <Text style={bfRowStyles.bucket}>{bucketLabel}</Text>
     </View>
   );
 }
@@ -332,6 +468,9 @@ const styles = StyleSheet.create({
   dimGrid: {
     gap: tokens.space[2],
   },
+  bfTraitGrid: {
+    gap: tokens.space[2],
+  },
   refazerBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -374,6 +513,42 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
     fontStyle: 'italic',
+  },
+});
+
+const bfRowStyles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[2],
+  },
+  label: {
+    width: 110,
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 10,
+    letterSpacing: 0.8,
+    color: tokens.text.hi,
+  },
+  bar: {
+    flex: 1,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    overflow: 'hidden',
+  },
+  barFill: {
+    height: '100%',
+    backgroundColor: tokens.brand.violet2,
+    borderRadius: 2.5,
+  },
+  bucket: {
+    width: 48,
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 10,
+    letterSpacing: 0.4,
+    color: tokens.text.mid,
+    textAlign: 'right',
+    textTransform: 'uppercase',
   },
 });
 
