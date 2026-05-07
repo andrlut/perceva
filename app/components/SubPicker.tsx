@@ -2,12 +2,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { SubId, TaskSub } from '@/lib/db/types';
+import { useT } from '@/lib/i18n';
+import { useMetaLookup } from '@/lib/i18n/meta';
 import { tokens } from '@/theme';
 import {
-  DIMENSION_META,
   DIMENSION_ORDER,
   SUBS_BY_DIM,
-  SUB_META,
 } from '@/theme/dimensions';
 
 interface Props {
@@ -29,6 +29,8 @@ interface Props {
  * group header and the active chip tint.
  */
 export function SubPicker({ value, onChange }: Props) {
+  const { t } = useT();
+  const meta = useMetaLookup();
   const totalStars = value.reduce((s, x) => s + x.stars, 0);
 
   const findIdx = (subId: SubId) => value.findIndex((v) => v.sub_id === subId);
@@ -60,14 +62,14 @@ export function SubPicker({ value, onChange }: Props) {
       <View style={styles.header}>
         <Text style={styles.headerText}>
           {value.length === 0
-            ? 'Pick at least one sub'
-            : `${value.length} sub${value.length === 1 ? '' : 's'} · ${totalStars}★ total`}
+            ? t('tasks.subPicker.pickAtLeastOne')
+            : `${t('tasks.subPicker.countSubs', { count: value.length })} · ${totalStars}★ ${t('tasks.subPicker.total')}`}
         </Text>
       </View>
 
       <View style={styles.groups}>
         {DIMENSION_ORDER.map((dimId) => {
-          const dimMeta = DIMENSION_META[dimId];
+          const dimMeta = meta.dim(dimId);
           const subs = SUBS_BY_DIM[dimId];
           return (
             <View key={dimId} style={styles.group}>
@@ -83,7 +85,7 @@ export function SubPicker({ value, onChange }: Props) {
               </View>
               <View style={styles.row}>
                 {subs.map((subId) => {
-                  const subMeta = SUB_META[subId];
+                  const subMeta = meta.sub(subId);
                   const idx = findIdx(subId);
                   const selected = idx >= 0;
                   const stars = selected ? value[idx]!.stars : 0;

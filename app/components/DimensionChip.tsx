@@ -2,8 +2,8 @@ import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { DimensionId } from '@/lib/db/types';
+import { useDimMeta } from '@/lib/i18n/meta';
 import { tokens } from '@/theme';
-import { DIMENSION_META } from '@/theme/dimensions';
 
 interface Props {
   id: DimensionId;
@@ -14,7 +14,7 @@ interface Props {
 
 export function DimensionChip({ id, size = 'md', pressable = true }: Props) {
   const router = useRouter();
-  const meta = DIMENSION_META[id];
+  const meta = useDimMeta(id);
   const small = size === 'sm';
 
   const chipStyle = [

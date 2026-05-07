@@ -1,5 +1,7 @@
 import type { DimensionId, SubId } from '@/lib/db/types';
-import { DIMENSION_META, SUBS_BY_DIM } from '@/theme/dimensions';
+import { translate } from '@/lib/i18n';
+import { getDimMeta } from '@/lib/i18n/meta';
+import { SUBS_BY_DIM } from '@/theme/dimensions';
 
 /**
  * 5-bucket comparison between the user's self-assessment and the questionnaire
@@ -39,17 +41,16 @@ export function bucketForDelta(delta: number): FeedbackBucket {
   return 'attention_underestimating';
 }
 
-const TEMPLATES: Record<FeedbackBucket, (label: string) => string> = {
-  attention_overestimating: (l) =>
-    `Você se vê melhor em ${l} do que a âncora sugere. Vale uma olhada honesta.`,
-  slight_overestimate: (l) =>
-    `Razoável em ${l}, mas talvez um leve ajuste pra baixo na sua percepção.`,
-  aligned: (l) => `Calibrado em ${l} — sua percepção bate com a âncora.`,
-  slight_underestimate: (l) =>
-    `Bom em ${l} — talvez você esteja sendo um pouco duro consigo mesmo.`,
-  attention_underestimating: (l) =>
-    `Você se subestima em ${l}. Reconhece o que tá funcionando.`,
-};
+/**
+ * Render the per-bucket feedback line. Reads the message template from the
+ * i18n catalog and the dim label from the same source so the whole sentence
+ * agrees on the locale at render time.
+ */
+function renderFeedbackLine(bucket: FeedbackBucket, dim: DimensionId): string {
+  return translate(`questionnaire.result.feedback.${bucket}`, {
+    label: getDimMeta(dim).label,
+  });
+}
 
 /**
  * Sum a sub-score map up to a single dim score (sa + sb). Missing subs count
@@ -74,7 +75,7 @@ export function feedbackForDim(
     dim,
     delta,
     bucket,
-    message: TEMPLATES[bucket](DIMENSION_META[dim].label),
+    message: renderFeedbackLine(bucket, dim),
     needsAttention:
       bucket === 'attention_overestimating' ||
       bucket === 'attention_underestimating',

@@ -9,8 +9,9 @@ import type {
   TaskTemplateWithSubs,
 } from '@/lib/db/types';
 import { useStartTaskFromTemplate } from '@/lib/api/tasks';
+import { useT } from '@/lib/i18n';
+import { useMetaLookup } from '@/lib/i18n/meta';
 import { tokens } from '@/theme';
-import { DIMENSION_META, SUB_META, SUB_SCORE_LABELS } from '@/theme/dimensions';
 
 interface Props {
   subId: SubId;
@@ -22,14 +23,8 @@ interface Props {
   side?: 'left' | 'right';
 }
 
-const SCORE_INSIGHT: Record<number, string> = {
-  0: 'Não rastreado ainda. Começa com 1 task pequena.',
-  1: 'Atenção. Uma task diária aqui muda o jogo.',
-  2: 'Abaixo da linha de base. Vale aumentar foco.',
-  3: 'Sólido. Mantém a consistência.',
-  4: 'Forte. Próximo passo: uma skill avançada.',
-  5: 'Mastery. Expanda os limites com quests longas.',
-};
+const SCORE_INSIGHT_KEY = (score: number) =>
+  `selfAssessment.insights.${Math.max(0, Math.min(5, score))}`;
 
 /**
  * Detailed panel for ONE sub-attribute.
@@ -52,14 +47,16 @@ export function SubPanel({
   templates,
   side = 'left',
 }: Props) {
+  const { t } = useT();
+  const metaLookup = useMetaLookup();
   const startFromTemplate = useStartTaskFromTemplate();
   const [adopted, setAdopted] = useState<Set<string>>(new Set());
 
-  const subMeta = SUB_META[subId];
-  const dimMeta = DIMENSION_META[subMeta.dimensionId];
+  const subMeta = metaLookup.sub(subId);
+  const dimMeta = metaLookup.dim(subMeta.dimensionId);
   const trendValues = history.slice(-20).map((h) => h.score);
-  const insight = SCORE_INSIGHT[Math.max(0, Math.min(5, selfScore))];
-  const tierLabel = SUB_SCORE_LABELS[Math.max(0, Math.min(5, selfScore))];
+  const insight = t(SCORE_INSIGHT_KEY(selfScore));
+  const tierLabel = metaLookup.score(Math.max(0, Math.min(5, selfScore)));
 
   const handleAdopt = (templateId: string) => {
     if (adopted.has(templateId) || startFromTemplate.isPending) return;
@@ -107,7 +104,7 @@ export function SubPanel({
         </View>
         <View style={styles.headerText}>
           <Text style={[styles.eyebrow, { color: dimMeta.color }]}>
-            SUB-ATRIBUTO
+            {t('selfAssessment.subAttribute').toUpperCase()}
           </Text>
           <Text style={styles.subTitle}>{subMeta.label}</Text>
         </View>
@@ -172,7 +169,7 @@ export function SubPanel({
               style={{ marginRight: 6 }}
             />
             <Text style={[styles.templatesEyebrow, { color: dimMeta.color }]}>
-              TASKS RECOMENDADAS
+              {t('selfAssessment.recommendedTasks').toUpperCase()}
             </Text>
           </View>
           {templates.map((t) => {

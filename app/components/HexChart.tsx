@@ -4,7 +4,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { DimensionId, SubId } from '@/lib/db/types';
 import { tokens } from '@/theme';
-import { DIMENSION_META, DIMENSION_ORDER, SUB_META, SUBS_BY_DIM } from '@/theme/dimensions';
+import { useMetaLookup } from '@/lib/i18n/meta';
+import { DIMENSION_ORDER, SUBS_BY_DIM } from '@/theme/dimensions';
 
 interface HexChartProps {
   /** Map of sub_id → score (0-5). Missing keys render as 0. */
@@ -79,6 +80,7 @@ export function HexChart({
   secondaryColor = '#4DD0FF',
   onDimPress,
 }: HexChartProps) {
+  const metaLookup = useMetaLookup();
   const cx = size / 2;
   const cy = size / 2;
   const R = size / 2 - PADDING;
@@ -237,7 +239,7 @@ export function HexChart({
 
         {/* Outer dim labels with smart text alignment */}
         {mains.map((m) => {
-          const meta = DIMENSION_META[m.dim];
+          const meta = metaLookup.dim(m.dim);
           const dx = m.lx - cx;
           const align: 'left' | 'right' | 'center' =
             dx > 5 ? 'left' : dx < -5 ? 'right' : 'center';
@@ -271,7 +273,7 @@ export function HexChart({
 
         {/* Vertex score discs */}
         {mains.map((m) => {
-          const meta = DIMENSION_META[m.dim];
+          const meta = metaLookup.dim(m.dim);
           const DISC = 30;
           return (
             <View
@@ -316,7 +318,7 @@ export function HexChart({
         {[0, 3].map((rowStart) => (
           <View key={`row-${rowStart}`} style={styles.legendRow}>
             {mains.slice(rowStart, rowStart + 3).map((m) => {
-              const meta = DIMENSION_META[m.dim];
+              const meta = metaLookup.dim(m.dim);
               const subIds = SUBS_BY_DIM[m.dim];
               const cardContent = (
                 <>
@@ -339,7 +341,7 @@ export function HexChart({
                     </View>
                   </View>
                   {subIds.map((subId, i) => {
-                    const subMeta = SUB_META[subId];
+                    const subMeta = metaLookup.sub(subId);
                     const score = i === 0 ? m.sa : m.sb;
                     return (
                       <View key={subId} style={styles.subRow}>

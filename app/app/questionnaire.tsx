@@ -25,8 +25,8 @@ import {
   type DimFeedback,
 } from '@/lib/assessment/feedback';
 import { QUESTIONS, type QuestionId } from '@/lib/assessment/questions';
+import { useMetaLookup } from '@/lib/i18n/meta';
 import { tokens } from '@/theme';
-import { DIMENSION_META, SUB_META } from '@/theme/dimensions';
 
 type Phase = 'intro' | 'answering' | 'submitting' | 'result';
 
@@ -282,8 +282,9 @@ function AnsweringBody({
   currentAnswer: number | undefined;
   onPick: (raw: number) => void;
 }) {
-  const subMeta = SUB_META[current.sub_id];
-  const dimMeta = DIMENSION_META[subMeta.dimensionId];
+  const meta = useMetaLookup();
+  const subMeta = meta.sub(current.sub_id);
+  const dimMeta = meta.dim(subMeta.dimensionId);
 
   return (
     <ScrollView
@@ -344,6 +345,7 @@ function ResultBody({
   feedback: DimFeedback[];
   onDone: () => void;
 }) {
+  const metaLookup = useMetaLookup();
   const aligned = feedback.filter((f) => f.bucket === 'aligned').length;
   const attention = feedback.filter((f) => f.needsAttention).length;
 
@@ -365,7 +367,7 @@ function ResultBody({
 
       <View style={styles.feedbackList}>
         {feedback.map((f) => {
-          const meta = DIMENSION_META[f.dim];
+          const meta = metaLookup.dim(f.dim);
           const sign = f.delta > 0 ? '+' : '';
           return (
             <View

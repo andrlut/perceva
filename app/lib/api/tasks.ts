@@ -81,14 +81,13 @@ export function dimensionForSub(subId: SubId): DimensionId {
   return meta.dimensionId;
 }
 
-/** Sort sub allocations by stars desc, then by sub label asc — gives
- *  consistent visual order across the app. */
+/** Sort sub allocations by stars desc, then by sub_id asc as a stable
+ *  tiebreaker. (Alphabetic label sort would have to bind to a locale; we
+ *  don't need locale-correct ordering for what is a UI-level disambiguation.) */
 function sortSubs(subs: TaskSub[]): TaskSub[] {
   return [...subs].sort((a, b) => {
     if (a.stars !== b.stars) return b.stars - a.stars;
-    const la = SUB_META[a.sub_id]?.label ?? a.sub_id;
-    const lb = SUB_META[b.sub_id]?.label ?? b.sub_id;
-    return la.localeCompare(lb);
+    return a.sub_id.localeCompare(b.sub_id);
   });
 }
 

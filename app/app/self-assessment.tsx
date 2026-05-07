@@ -20,19 +20,20 @@ import {
 } from '@/lib/api/character';
 import { useAssessmentHistoryAll } from '@/lib/api/questionnaire';
 import type { SubId } from '@/lib/db/types';
+import { useT } from '@/lib/i18n';
+import { useMetaLookup } from '@/lib/i18n/meta';
 import { tokens } from '@/theme';
 import {
-  DIMENSION_META,
   DIMENSION_ORDER,
-  SUB_META,
   SUBS_BY_DIM,
-  SUB_SCORE_LABELS,
 } from '@/theme/dimensions';
 
 const SCORE_VALUES = [0, 1, 2, 3, 4, 5];
 
 export default function SelfAssessmentScreen() {
   const router = useRouter();
+  const { t } = useT();
+  const metaLookup = useMetaLookup();
   const character = useCharacter();
   const setSubScore = useSetSubScore();
 
@@ -67,7 +68,7 @@ export default function SelfAssessmentScreen() {
           >
             <Ionicons name="close" size={22} color={tokens.text.hi} />
           </Pressable>
-          <Text style={styles.headerTitle}>Self-assessment</Text>
+          <Text style={styles.headerTitle}>{t('selfAssessment.title')}</Text>
           <View style={styles.closeBtn} />
         </View>
 
@@ -116,7 +117,7 @@ export default function SelfAssessmentScreen() {
           )}
 
           {DIMENSION_ORDER.map((dim) => {
-            const meta = DIMENSION_META[dim];
+            const meta = metaLookup.dim(dim);
             const subIds = SUBS_BY_DIM[dim];
             const sa = selfScores.get(subIds[0]) ?? 0;
             const sb = selfScores.get(subIds[1]) ?? 0;
@@ -160,7 +161,7 @@ export default function SelfAssessmentScreen() {
                 <Text style={styles.dimDescription}>{meta.description}</Text>
 
                 {subIds.map((subId) => {
-                  const subMeta = SUB_META[subId];
+                  const subMeta = metaLookup.sub(subId);
                   const score = selfScores.get(subId) ?? 0;
                   const qScore = questionnaireScores.get(subId);
                   const subHistory = history.data?.get(subId) ?? [];
@@ -190,7 +191,7 @@ export default function SelfAssessmentScreen() {
                         <Text
                           style={[styles.subScoreLabel, { color: meta.color }]}
                         >
-                          {SUB_SCORE_LABELS[score]}
+                          {metaLookup.score(score)}
                         </Text>
                       </View>
                       <Text style={styles.subDescription}>

@@ -21,7 +21,9 @@ import { useTaskTemplates } from '@/lib/api/tasks';
 import type { DimensionId, SubId, TaskTemplateWithSubs } from '@/lib/db/types';
 import { levelProgress } from '@/lib/xp';
 import { tokens } from '@/theme';
-import { DIMENSION_META, DIMENSION_ORDER, SUBS_BY_DIM } from '@/theme/dimensions';
+import { useT } from '@/lib/i18n';
+import { useMetaLookup } from '@/lib/i18n/meta';
+import { DIMENSION_ORDER, SUBS_BY_DIM } from '@/theme/dimensions';
 
 const DIMENSION_IDS = new Set<DimensionId>(DIMENSION_ORDER);
 
@@ -50,6 +52,8 @@ function isDimensionId(v: string | undefined): v is DimensionId {
  */
 export default function DimensionInfoScreen() {
   const router = useRouter();
+  const { t } = useT();
+  const metaLookup = useMetaLookup();
   const params = useLocalSearchParams<{ id: string }>();
   const character = useCharacter();
   const history = useAssessmentHistoryAll('self');
@@ -87,7 +91,7 @@ export default function DimensionInfoScreen() {
   }
 
   const dimId = params.id;
-  const meta = DIMENSION_META[dimId];
+  const meta = metaLookup.dim(dimId);
   const [subA, subB] = SUBS_BY_DIM[dimId];
 
   const xp =

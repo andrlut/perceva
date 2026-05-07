@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { TodayActivity } from '@/lib/api/tasks';
 import type { TaskWithSubs } from '@/lib/db/types';
+import { useT } from '@/lib/i18n';
 import { tokens } from '@/theme';
 import { DIMENSION_META, SUB_META } from '@/theme/dimensions';
 
@@ -33,6 +34,7 @@ export function TodayActivityDrawer({
   onUndoCompletion,
   onUnskip,
 }: Props) {
+  const { t } = useT();
   const [open, setOpen] = useState(false);
   const completedCount = activity.completed.length;
   const skippedCount = activity.skipped.length;
@@ -55,11 +57,13 @@ export function TodayActivityDrawer({
           color={tokens.text.dim}
         />
         <Text style={styles.headerText}>
-          {completedCount > 0 && `${completedCount} completed`}
+          {completedCount > 0 &&
+            t('home.completedDrawer.completedSummary', { count: completedCount })}
           {completedCount > 0 && skippedCount > 0 && ' · '}
-          {skippedCount > 0 && `${skippedCount} skipped`}
-          {' · tap to '}
-          {open ? 'hide' : 'view'}
+          {skippedCount > 0 &&
+            t('home.completedDrawer.skippedSummary', { count: skippedCount })}
+          {t('home.completedDrawer.tapToToggle')}
+          {open ? t('home.completedDrawer.tapHide') : t('home.completedDrawer.tapView')}
         </Text>
         <View style={{ flex: 1 }} />
         <Ionicons
@@ -158,6 +162,7 @@ interface SkippedRowProps {
 }
 
 function SkippedRow({ task, onUnskip }: SkippedRowProps) {
+  const { t } = useT();
   const subMeta = SUB_META[task.primary_sub_id];
   const dimMeta = DIMENSION_META[task.primary_dimension_id];
   const warn = tokens.semantic.warn ?? '#FF9F43';
@@ -187,7 +192,7 @@ function SkippedRow({ task, onUnskip }: SkippedRowProps) {
         </Text>
         <View style={styles.skipBadgeRow}>
           <Ionicons name="remove-circle" size={11} color={warn} />
-          <Text style={[styles.meta, { color: warn }]}>Skipped today</Text>
+          <Text style={[styles.meta, { color: warn }]}>{t('home.completedDrawer.skippedToday')}</Text>
         </View>
       </View>
       <Pressable
