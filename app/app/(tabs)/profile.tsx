@@ -208,10 +208,10 @@ export default function SettingsScreen() {
           />
           <Divider />
           <ToggleRow
-            label={t('profile.notifications.streak')}
-            description={t('profile.notifications.streakDescription')}
-            value={settings.streakReminder}
-            onChange={(v) => setSetting('streakReminder', v)}
+            label={t('profile.notifications.momentum')}
+            description={t('profile.notifications.momentumDescription')}
+            value={settings.momentumReminder}
+            onChange={(v) => setSetting('momentumReminder', v)}
             disabled={!settings.notificationsEnabled}
           />
           <NoteText>{t('profile.notifications.footnote')}</NoteText>

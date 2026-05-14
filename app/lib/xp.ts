@@ -1,7 +1,10 @@
 /**
- * XP curve and level math.
- * Mirrors the difficulty → reward mapping in supabase/migrations/0003_complete_task_rpc.sql.
+ * XP curve, Momentum, and level math.
+ * Mirrors the difficulty -> reward mapping used by the complete_task RPC.
  */
+
+import type { DimensionId, SubId, TaskSub } from '@/lib/db/types';
+import { DIMENSION_ORDER, SUBS_BY_DIM } from '@/theme/dimensions';
 
 export type Difficulty = 1 | 2 | 3 | 4 | 5;
 
@@ -21,66 +24,111 @@ const REWARD_BY_DIFFICULTY: Record<Difficulty, { xp: number; coins: number }> = 
   5: { xp: 250, coins: 250 },
 };
 
+export const MOMENTUM_WINDOW_DAYS = 30;
+export const MOMENTUM_DECAY = 0.9;
+
+export interface DailyMomentumInput {
+  /** Local-date key in YYYY-MM-DD form. */
+  dateKey: string;
+  subId: SubId;
+  /** Base XP for this subattribute completion. */
+  baseXp: number;
+}
+
+export interface SubattributeMomentum {
+  subId: SubId;
+  momentum: number;
+}
+
+export interface AttributeMomentum {
+  dimensionId: DimensionId;
+  momentum: number;
+  subattributes: SubattributeMomentum[];
+}
+
 export function rewardForDifficulty(difficulty: Difficulty) {
   return REWARD_BY_DIFFICULTY[difficulty];
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-// Streak multiplier (mirrors supabase/migrations/..._streak_multiplier.sql)
-//
-// +0.01 per consecutive day, capped at 2.0x (100 days). Apply to base
-// XP/coins and round to the nearest integer.
-// ──────────────────────────────────────────────────────────────────────────
-
-export const STREAK_MULTIPLIER_CAP = 2.0;
-
-export function streakMultiplier(streakDays: number): number {
-  return Math.min(STREAK_MULTIPLIER_CAP, 1 + 0.01 * Math.max(0, streakDays));
+export function baseXpForDifficulty(difficulty: Difficulty): number {
+  return REWARD_BY_DIFFICULTY[difficulty].xp;
 }
 
-export function applyStreakMultiplier(
-  baseReward: { xp: number; coins: number },
-  streakDays: number,
-): { xp: number; coins: number } {
-  const m = streakMultiplier(streakDays);
-  return {
-    xp: Math.round(baseReward.xp * m),
-    coins: Math.round(baseReward.coins * m),
-  };
+function dateKeyAtAge(todayKey: string, age: number): string {
+  const d = new Date(`${todayKey}T00:00:00`);
+  d.setDate(d.getDate() - age);
+  return [
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, '0'),
+    String(d.getDate()).padStart(2, '0'),
+  ].join('-');
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-// Multi-sub task rewards
-//
-// Mirrors the per-sub fanout in complete_task (migration 0505000002):
-// each sub's stars run through the exponential curve independently;
-// total XP = sum across subs. Streak multiplier applied per sub.
-// ──────────────────────────────────────────────────────────────────────────
+export function momentumBySubattribute(
+  dailyEffort: DailyMomentumInput[],
+  todayKey: string,
+): Record<SubId, number> {
+  const momentum = Object.fromEntries(
+    DIMENSION_ORDER.flatMap((dimId) => SUBS_BY_DIM[dimId]).map((subId) => [
+      subId,
+      0,
+    ]),
+  ) as Record<SubId, number>;
 
-import type { TaskSub } from '@/lib/db/types';
+  for (let age = 0; age < MOMENTUM_WINDOW_DAYS; age++) {
+    const dayKey = dateKeyAtAge(todayKey, age);
+    const weight = MOMENTUM_DECAY ** age;
+    for (const item of dailyEffort) {
+      if (item.dateKey !== dayKey) continue;
+      momentum[item.subId] += item.baseXp * weight;
+    }
+  }
+
+  for (const subId of Object.keys(momentum) as SubId[]) {
+    momentum[subId] = Math.round(momentum[subId]);
+  }
+  return momentum;
+}
+
+export function attributeMomentum(
+  dailyEffort: DailyMomentumInput[],
+  todayKey: string,
+): AttributeMomentum[] {
+  const bySub = momentumBySubattribute(dailyEffort, todayKey);
+  return DIMENSION_ORDER.map((dimensionId) => {
+    const subattributes = SUBS_BY_DIM[dimensionId].map((subId) => ({
+      subId,
+      momentum: bySub[subId] ?? 0,
+    }));
+    const sum = subattributes.reduce((acc, sub) => acc + sub.momentum, 0);
+    return {
+      dimensionId,
+      momentum: Math.round(sum / subattributes.length),
+      subattributes,
+    };
+  });
+}
 
 export interface TaskRewardBreakdown {
   /** Per-sub rewards in the same order as the input list. */
   perSub: { sub_id: TaskSub['sub_id']; stars: Difficulty; xp: number; coins: number }[];
-  /** Sum across subs, post-streak. */
+  /** Sum across subs. */
   total: { xp: number; coins: number };
-  /** Sum of stars across subs (1..5). */
+  /** Sum of stars across subs. */
   totalStars: number;
 }
 
 export function rewardForTaskSubs(
   subs: TaskSub[],
-  streakDays = 0,
 ): TaskRewardBreakdown {
-  const m = streakMultiplier(streakDays);
   let totalXp = 0;
   let totalCoins = 0;
   let totalStars = 0;
   const perSub: TaskRewardBreakdown['perSub'] = [];
   for (const s of subs) {
     const base = REWARD_BY_DIFFICULTY[s.stars];
-    const xp = Math.round(base.xp * m);
-    const coins = Math.round(base.coins * m);
+    const xp = base.xp;
+    const coins = base.coins;
     perSub.push({ sub_id: s.sub_id, stars: s.stars, xp, coins });
     totalXp += xp;
     totalCoins += coins;

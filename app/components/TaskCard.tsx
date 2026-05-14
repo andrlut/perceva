@@ -20,8 +20,6 @@ import { SubStack } from './SubStack';
 
 interface Props {
   task: TaskWithSubs;
-  /** Streak days, drives the multiplier on the displayed reward total. */
-  streakDays?: number;
   /** Quick-tap completion (uses the task's default subs). */
   onComplete: () => void;
   /** Long-press the check button to open the per-sub adjust popup. */
@@ -50,14 +48,13 @@ interface Props {
  */
 export function TaskCard({
   task,
-  streakDays = 0,
   onComplete,
   onLongPress,
   onEdit,
   isCompleting,
 }: Props) {
   const accent = DIMENSION_META[task.primary_dimension_id].color;
-  const reward = rewardForTaskSubs(task.subs, streakDays);
+  const reward = rewardForTaskSubs(task.subs);
 
   const completeScale = useSharedValue(1);
 

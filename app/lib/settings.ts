@@ -22,8 +22,8 @@ export interface AppSettings {
   dailyReminder: boolean;
   /** Quest deadline reminder enabled (placeholder). */
   questReminder: boolean;
-  /** Streak-at-risk reminder enabled (placeholder). */
-  streakReminder: boolean;
+  /** Momentum reminder enabled (placeholder). */
+  momentumReminder: boolean;
 }
 
 const DEFAULTS: AppSettings = {
@@ -34,7 +34,7 @@ const DEFAULTS: AppSettings = {
   notificationsEnabled: false,
   dailyReminder: false,
   questReminder: false,
-  streakReminder: false,
+  momentumReminder: false,
 };
 
 type Status = 'unknown' | 'ready';
@@ -53,13 +53,20 @@ export const useSettingsStore = create<Store>((set, get) => ({
     if (get().status !== 'unknown') return;
     try {
       const raw = await AsyncStorage.getItem(KEY);
-      const parsed = raw ? (JSON.parse(raw) as Partial<AppSettings>) : {};
+      const parsed = raw
+        ? (JSON.parse(raw) as Partial<AppSettings> & { streakReminder?: boolean })
+        : {};
       // Auto-detect language from device on first launch (no stored value).
       // Once the user has saved a preference, never override it.
       const language = parsed.language ?? detectDeviceLanguage();
       set({
         status: 'ready',
-        settings: { ...DEFAULTS, ...parsed, language },
+        settings: {
+          ...DEFAULTS,
+          ...parsed,
+          momentumReminder: parsed.momentumReminder ?? parsed.streakReminder ?? false,
+          language,
+        },
       });
     } catch {
       set({

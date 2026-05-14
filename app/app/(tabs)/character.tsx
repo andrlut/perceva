@@ -20,8 +20,8 @@ import { AvaliacaoPanel } from '@/components/pillars/AvaliacaoPanel';
 import { DedicacaoPanel } from '@/components/pillars/DedicacaoPanel';
 import { SkillsPanel } from '@/components/pillars/SkillsPanel';
 import { pickSubScores, useCharacter } from '@/lib/api/character';
+import { useMomentum } from '@/lib/api/momentum';
 import { useSkillStates } from '@/lib/api/skills';
-import { useStreak } from '@/lib/api/streak';
 import type { CharacterDimension, DimensionId } from '@/lib/db/types';
 import { levelProgress } from '@/lib/xp';
 import { useT } from '@/lib/i18n';
@@ -53,12 +53,6 @@ function formatXp(xp: number): string {
   return Math.floor(xp / 1000) + 'k';
 }
 
-const STREAK_INFO_BODY =
-  'Conta os dias seguidos em que você completou pelo menos 1 task diária (recorrente daily).\n\n' +
-  '• Tasks one-shot e weekly não contam.\n' +
-  '• Grace day: se ainda não fez nada hoje, o streak conta a partir de ontem — você não perde só por abrir o app cedo.\n' +
-  '• Bônus: +1% XP e coins por dia, com cap em 2× aos 100 dias de streak.';
-
 const TITLE_INFO_BODY =
   'Derivado em runtime da sua dimensão mais forte (a com mais XP).\n\n' +
   'O nível dessa dimensão define o rank:\n' +
@@ -83,9 +77,9 @@ export default function CharacterScreen() {
   const metaLookup = useMetaLookup();
   const character = useCharacter();
   const skillStates = useSkillStates();
-  const streak = useStreak();
+  const momentum = useMomentum();
   const [activePillar, setActivePillar] = useState<PillarKey>('avaliacao');
-  const [infoOpen, setInfoOpen] = useState<null | 'streak' | 'title'>(null);
+  const [infoOpen, setInfoOpen] = useState<null | 'title'>(null);
 
   const strongest = useMemo(
     () => pickStrongestDim(character.data?.dimensions ?? []),
@@ -157,11 +151,14 @@ export default function CharacterScreen() {
           refreshControl={
             <RefreshControl
               refreshing={
-                character.isRefetching || skillStates.isRefetching
+                character.isRefetching ||
+                skillStates.isRefetching ||
+                momentum.isRefetching
               }
               onRefresh={() => {
                 character.refetch();
                 skillStates.refetch();
+                momentum.refetch();
               }}
               tintColor={tokens.brand.violet2}
             />
@@ -228,31 +225,6 @@ export default function CharacterScreen() {
                       />
                     </Pressable>
                   )}
-                  {(streak.data?.currentStreak ?? 0) > 0 && (
-                    <Pressable
-                      onPress={() => setInfoOpen('streak')}
-                      style={({ pressed }) => [
-                        styles.streakChip,
-                        pressed && { opacity: 0.7 },
-                      ]}
-                      hitSlop={6}
-                    >
-                      <Ionicons
-                        name="flame"
-                        size={11}
-                        color={tokens.semantic.warn}
-                      />
-                      <Text style={styles.streakChipText}>
-                        {streak.data?.currentStreak}d
-                      </Text>
-                      <Ionicons
-                        name="information-circle-outline"
-                        size={11}
-                        color={tokens.semantic.warn}
-                        style={{ opacity: 0.55 }}
-                      />
-                    </Pressable>
-                  )}
                 </View>
                 <View style={styles.totalBar}>
                   <ProgressBar
@@ -290,7 +262,10 @@ export default function CharacterScreen() {
               <AvaliacaoPanel subScores={character.data.subScores} />
             )}
             {activePillar === 'dedicacao' && (
-              <DedicacaoPanel dimensions={dimensions} />
+              <DedicacaoPanel
+                dimensions={dimensions}
+                momentum={momentum.data?.attributes}
+              />
             )}
             {activePillar === 'skills' && (
               <SkillsPanel skills={skillStates.data ?? []} />
@@ -305,13 +280,6 @@ export default function CharacterScreen() {
         title="Título"
         body={TITLE_INFO_BODY}
         accent={titleDim?.color ?? tokens.brand.violet2}
-      />
-      <InfoSheet
-        visible={infoOpen === 'streak'}
-        onClose={() => setInfoOpen(null)}
-        title="Day streak"
-        body={STREAK_INFO_BODY}
-        accent={tokens.semantic.warn}
       />
     </SafeAreaView>
   );
@@ -371,23 +339,6 @@ const styles = StyleSheet.create({
   titleText: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 11,
-    letterSpacing: 0.3,
-  },
-  streakChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: tokens.space[3],
-    paddingVertical: 4,
-    borderRadius: tokens.radius.pill,
-    borderWidth: 1,
-    backgroundColor: 'rgba(255, 159, 67, 0.12)',
-    borderColor: 'rgba(255, 159, 67, 0.35)',
-  },
-  streakChipText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 11,
-    color: tokens.semantic.warn,
     letterSpacing: 0.3,
   },
   totalBar: {

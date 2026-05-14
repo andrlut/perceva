@@ -308,3 +308,15 @@ How many recovery days should be allowed?
 How does the user earn rest protection?
 Should weekly tasks count toward consistency, or only daily tasks?
 Should categories have their own rhythm in the first version or a later version?
+
+## Implementation v1 decisions
+
+- Momentum is calculated per subattribute, not globally.
+- Attribute Momentum is the average of its child subattributes, including subattributes at 0.
+- Momentum uses the last 30 local days.
+- Newer days count more with a 0.9 daily decay.
+- Momentum is based on base XP from completed subtasks.
+- Momentum does not affect XP or coins in this version.
+- XP labels, XP fields, and XP reward math stay as-is.
+- Task completions now store `completed_local_date` so Momentum can follow the user's local day instead of UTC.
+- Rest shields and richer recovery rules are left for a later pass.

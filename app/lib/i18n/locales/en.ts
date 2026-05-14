@@ -264,8 +264,8 @@ const en = {
       unskip: 'Could not unskip',
       unknown: 'Unknown error.',
     },
-    streak: {
-      label: 'Streak',
+    momentum: {
+      label: 'Momentum',
       days: { one: '{{count}} day', other: '{{count}} days' },
       best: 'Best: {{count}}',
       atRisk: 'At risk',
@@ -324,7 +324,7 @@ const en = {
       adjustStars: 'Adjust stars',
       adjustStarsSub: 'Change how heavy this completion was per sub',
       skipToday: 'Skip today',
-      skipTodaySub: "Hide from today without completing — no XP, doesn't break streak",
+      skipTodaySub: 'Hide from today without completing — no XP, no Momentum penalty',
       editTask: 'Edit task',
       editTaskSub: 'Change title, subs, recurrence, etc',
     },
@@ -671,8 +671,8 @@ const en = {
       dailyDescription: 'A nudge if you have unfinished daily quests.',
       quest: 'Quest reminder',
       questDescription: 'Heads-up before a quest deadline.',
-      streak: 'Streak reminder',
-      streakDescription: "Late-evening ping if today's streak is at risk.",
+      momentum: 'Momentum reminder',
+      momentumDescription: "Late-evening ping when today's Momentum could use a small task.",
       footnote: 'Notifications need a small native setup pass — the toggles save your choice now and will start firing once that ships.',
     },
     actions: {

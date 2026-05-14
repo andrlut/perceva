@@ -103,7 +103,7 @@ interface Props {
  *   - Optional violet-bordered nudge surfacing the weakest sub
  *   - CTA to update self-assessment
  *
- * Quiet by design: no XP, no streak, no confetti.
+ * Quiet by design: no XP, no Momentum, no confetti.
  */
 export function AvaliacaoPanel({ subScores }: Props) {
   const router = useRouter();

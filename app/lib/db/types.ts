@@ -313,6 +313,8 @@ export interface TaskCompletion {
   task_id: string;
   character_id: string;
   completed_at: string;
+  /** Local YYYY-MM-DD used for Momentum calculations. */
+  completed_local_date: string;
   xp_granted: number;
   coins_granted: number;
   /** Sum of per-sub stars actually used for this completion (cached on row). */
@@ -327,7 +329,7 @@ export interface TaskCompletionSub {
   coins_granted: number;
 }
 
-/** A "not today" decision for a single date. No XP, doesn't break streak. */
+/** A "not today" decision for a single date. No XP, no Momentum penalty. */
 export interface TaskSkip {
   task_id: string;
   character_id: string;

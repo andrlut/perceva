@@ -69,7 +69,7 @@ export default function TaskFormScreen() {
     createTask.isPending || updateTask.isPending || archiveTask.isPending;
 
   const totalStars = subs.reduce((s, x) => s + x.stars, 0);
-  const reward = useMemo(() => rewardForTaskSubs(subs, 0), [subs]);
+  const reward = useMemo(() => rewardForTaskSubs(subs), [subs]);
 
   const formInput = useMemo<TaskFormInput | null>(() => {
     if (subs.length === 0 || totalStars === 0) return null;
