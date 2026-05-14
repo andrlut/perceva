@@ -14,18 +14,21 @@ import { tokens } from '@/theme';
 
 const TAB_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   index: 'list',
-  history: 'calendar',
-  character: 'person',
   rewards: 'gift',
+  character: 'person',
+  learning: 'book',
   profile: 'settings',
+  // history kept for legacy navigation; hidden from the tab bar (href: null)
+  history: 'calendar',
 };
 
 const TAB_LABEL_KEYS: Record<string, string> = {
   index: 'tabs.tasks',
-  history: 'tabs.history',
-  character: 'tabs.hero',
   rewards: 'tabs.rewards',
+  character: 'tabs.hero',
+  learning: 'tabs.learning',
   profile: 'tabs.settings',
+  history: 'tabs.history',
 };
 
 const BAR_HORIZONTAL_MARGIN = 12;

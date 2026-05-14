@@ -133,7 +133,15 @@ const pt: Translations = {
     history: 'Histórico',
     hero: 'Herói',
     rewards: 'Recompensas',
+    learning: 'Aprender',
     settings: 'Ajustes',
+  },
+
+  learning: {
+    title: 'Aprender',
+    subtitle: 'Conteúdos de bem-estar em breve',
+    body: 'Em breve: materiais semanais sobre sono, foco, hábitos e mais — curtos, visuais e ligados às áreas que você está cultivando.',
+    badge: 'Em desenvolvimento',
   },
 
   home: {

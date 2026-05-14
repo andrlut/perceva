@@ -143,7 +143,15 @@ const en = {
     history: 'History',
     hero: 'Hero',
     rewards: 'Rewards',
+    learning: 'Learn',
     settings: 'Settings',
+  },
+
+  learning: {
+    title: 'Learn',
+    subtitle: 'Wellness content coming soon',
+    body: 'Coming soon: weekly content on sleep, focus, habits and more — short, visual, tied to the areas you’re cultivating.',
+    badge: 'Coming soon',
   },
 
   home: {
