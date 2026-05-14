@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { CoinIcon } from '@/components/CoinIcon';
 import { tokens } from '@/theme';
@@ -15,6 +15,8 @@ interface Props {
   streakDays: number;
   /** Pre-formatted date label, e.g. "SUN, MAY 3". Already uppercase. */
   dateLabel: string;
+  /** Tapping the calendar glyph in the eyebrow row opens history. */
+  onHistoryPress?: () => void;
 }
 
 /**
@@ -35,13 +37,27 @@ export function CompactHeader({
   coins,
   streakDays,
   dateLabel,
+  onHistoryPress,
 }: Props) {
   const xpPct = xpNeededForLevel === 0 ? 0 : (xpInLevel / xpNeededForLevel) * 100;
   return (
     <View style={styles.wrap}>
-      <Text style={styles.eyebrow}>
-        {dateLabel} · {displayName.toUpperCase()}
-      </Text>
+      <View style={styles.eyebrowRow}>
+        <Text style={styles.eyebrow}>
+          {dateLabel} · {displayName.toUpperCase()}
+        </Text>
+        {onHistoryPress && (
+          <Pressable
+            onPress={onHistoryPress}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="History"
+            style={({ pressed }) => [styles.historyBtn, pressed && styles.historyBtnPressed]}
+          >
+            <Ionicons name="calendar-outline" size={14} color={tokens.text.mid} />
+          </Pressable>
+        )}
+      </View>
       <View style={styles.row}>
         {/* LV pill */}
         <View style={styles.lvPill}>
@@ -88,11 +104,31 @@ const styles = StyleSheet.create({
     paddingBottom: tokens.space[3],
     gap: 8,
   },
+  eyebrowRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
   eyebrow: {
     fontFamily: 'Manrope_700Bold',
     fontSize: 10,
     letterSpacing: 1.6,
     color: tokens.text.dim,
+    flex: 1,
+  },
+  historyBtn: {
+    width: 26,
+    height: 22,
+    borderRadius: 6,
+    backgroundColor: tokens.bg.glass,
+    borderWidth: 1,
+    borderColor: tokens.border.strong,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  historyBtnPressed: {
+    opacity: 0.7,
   },
   row: {
     flexDirection: 'row',
