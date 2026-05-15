@@ -19,7 +19,6 @@ import { CoinIcon } from './CoinIcon';
 interface Props {
   visible: boolean;
   task: TaskWithSubs | null;
-  streakDays?: number;
   onCancel: () => void;
   onConfirm: (subs: TaskSub[]) => void;
 }
@@ -38,7 +37,6 @@ interface Props {
 export function CompleteTaskSheet({
   visible,
   task,
-  streakDays = 0,
   onCancel,
   onConfirm,
 }: Props) {
@@ -59,8 +57,8 @@ export function CompleteTaskSheet({
   );
 
   const reward = useMemo(
-    () => rewardForTaskSubs(draft, streakDays),
-    [draft, streakDays],
+    () => rewardForTaskSubs(draft),
+    [draft],
   );
 
   if (!task) return null;

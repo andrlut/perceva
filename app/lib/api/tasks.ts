@@ -16,7 +16,7 @@ import { rewardForTaskSubs } from '@/lib/xp';
 import { characterKeys, type CharacterWithProfile } from './character';
 import { historyKeys } from './history';
 import { questKeys } from './quests';
-import { streakKeys } from './streak';
+import { momentumKeys } from './momentum';
 
 export const taskKeys = {
   all: ['tasks'] as const,
@@ -433,8 +433,6 @@ export interface CompleteTaskResult {
   xp_granted: number;
   coins_granted: number;
   total_stars: number;
-  streak_days: number;
-  multiplier: number;
 }
 
 /**
@@ -454,12 +452,13 @@ export function useCompleteTask() {
       task: TaskWithSubs;
       /** Snapshot of the subs used for this completion (defaults to task.subs). */
       subs: TaskSub[];
-      streakDays?: number;
       completedAt?: string;
+      completedLocalDate?: string;
     }): Promise<CompleteTaskResult> => {
       const { data, error } = await supabase.rpc('complete_task', {
         p_task_id: params.task.id,
         ...(params.completedAt ? { p_completed_at: params.completedAt } : {}),
+        p_local_date: params.completedLocalDate ?? todayLocalDateKey(),
         p_sub_overrides: params.subs.map((s) => ({
           sub_id: s.sub_id,
           stars: s.stars,
@@ -478,7 +477,7 @@ export function useCompleteTask() {
       const prevBuckets = queryClient.getQueryData<HomeBuckets>(taskKeys.pending());
       const prevChar = queryClient.getQueryData<CharacterWithProfile>(characterKeys.me());
 
-      const reward = rewardForTaskSubs(params.subs, params.streakDays ?? 0);
+      const reward = rewardForTaskSubs(params.subs);
 
       // Optimistic removal from "pending today" only when:
       //   - it's a live tap (no completedAt), AND
@@ -533,7 +532,7 @@ export function useCompleteTask() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.pending() });
       queryClient.invalidateQueries({ queryKey: characterKeys.me() });
-      queryClient.invalidateQueries({ queryKey: streakKeys.me() });
+      queryClient.invalidateQueries({ queryKey: momentumKeys.me() });
       queryClient.invalidateQueries({ queryKey: historyKeys.all });
       queryClient.invalidateQueries({ queryKey: questKeys.active() });
     },
@@ -544,7 +543,7 @@ export function useCompleteTask() {
 
 /** Skip a task for today (or a given local date). Hides it from Today /
  *  This Week / This Month bucket logic without logging a completion. No
- *  XP, no streak break, doesn't count as a miss either. */
+ *  XP, no Momentum penalty. */
 export function useSkipTaskToday() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -693,7 +692,7 @@ export function useUndoCompletion() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.pending() });
       queryClient.invalidateQueries({ queryKey: characterKeys.me() });
-      queryClient.invalidateQueries({ queryKey: streakKeys.me() });
+      queryClient.invalidateQueries({ queryKey: momentumKeys.me() });
       queryClient.invalidateQueries({ queryKey: historyKeys.all });
       queryClient.invalidateQueries({ queryKey: questKeys.active() });
     },

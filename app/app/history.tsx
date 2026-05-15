@@ -18,7 +18,7 @@ import { DimensionChip } from '@/components/DimensionChip';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { SubStack } from '@/components/SubStack';
 import { XpHeatmap } from '@/components/XpHeatmap';
-import { useDailySummary, useDayDetail } from '@/lib/api/history';
+import { dateKeyFromLocal, useDailySummary, useDayDetail } from '@/lib/api/history';
 import { useCompleteTask, useUndoCompletion } from '@/lib/api/tasks';
 import { confirmAction, showInfo } from '@/lib/util/confirm';
 import type { TaskWithSubs } from '@/lib/db/types';
@@ -108,7 +108,7 @@ export default function HistoryScreen() {
   };
 
   const handleRetroComplete = async (task: TaskWithSubs) => {
-    const reward = rewardForTaskSubs(task.subs, 0);
+    const reward = rewardForTaskSubs(task.subs);
     const ok = await confirmAction(
       'Log retroactively?',
       `Mark "${task.title}" as done on ${formatDay(selected)}? You'll earn +${reward.total.xp} XP and +${reward.total.coins} coins.`,
@@ -125,6 +125,7 @@ export default function HistoryScreen() {
         task,
         subs: task.subs,
         completedAt: stamp.toISOString(),
+        completedLocalDate: dateKeyFromLocal(selected),
       },
       {
         onError: (err) => {
@@ -328,7 +329,7 @@ export default function HistoryScreen() {
                 </View>
                 <View style={styles.list}>
                   {day.data.openTasks.map(({ task, completedThisDay }) => {
-                    const r = rewardForTaskSubs(task.subs, 0);
+                    const r = rewardForTaskSubs(task.subs);
                     const isPartial =
                       task.target_count > 1 && completedThisDay > 0;
                     const showRecurrenceNote =

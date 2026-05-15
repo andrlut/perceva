@@ -12,10 +12,9 @@ interface Props {
   displayName: string;
   totalXp: number;
   coins: number;
-  streakDays?: number;
 }
 
-export function HeroCard({ displayName, totalXp, coins, streakDays = 0 }: Props) {
+export function HeroCard({ displayName, totalXp, coins }: Props) {
   const { level, xpInLevel, xpNeededForLevel } = levelProgress(totalXp);
   const progress = xpNeededForLevel === 0 ? 0 : xpInLevel / xpNeededForLevel;
 
@@ -60,14 +59,7 @@ export function HeroCard({ displayName, totalXp, coins, streakDays = 0 }: Props)
               <Ionicons name="ellipse" size={11} color="#3D2A00" />
               <Text style={styles.coinText}>{coins.toLocaleString()}</Text>
             </LinearGradient>
-            {streakDays > 0 ? (
-              <View style={styles.streakChip}>
-                <Ionicons name="flame" size={13} color={tokens.semantic.warn} />
-                <Text style={styles.streakText}>{streakDays}d</Text>
-              </View>
-            ) : (
-              <Text style={styles.xpTotal}>{totalXp.toLocaleString()} XP total</Text>
-            )}
+            <Text style={styles.xpTotal}>{totalXp.toLocaleString()} XP total</Text>
           </View>
         </View>
       </LinearGradient>
@@ -135,21 +127,5 @@ const styles = StyleSheet.create({
   xpTotal: {
     ...tokens.type.caption,
     color: tokens.text.mid,
-  },
-  streakChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: tokens.space[3],
-    paddingVertical: 3,
-    borderRadius: tokens.radius.pill,
-    backgroundColor: 'rgba(255, 159, 67, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 159, 67, 0.35)',
-  },
-  streakText: {
-    ...tokens.type.caption,
-    color: tokens.semantic.warn,
-    fontFamily: 'Manrope_800ExtraBold',
   },
 });

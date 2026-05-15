@@ -12,7 +12,6 @@ interface Props {
   xpInLevel: number;
   xpNeededForLevel: number;
   coins: number;
-  streakDays: number;
   /** Pre-formatted date label, e.g. "SUN, MAY 3". Already uppercase. */
   dateLabel: string;
   /** Tapping the calendar glyph in the eyebrow row opens history. */
@@ -22,7 +21,7 @@ interface Props {
 /**
  * Single-row, dense header for the Tasks screen — replaces the big
  * HeroCard on Home. Date + name on top line; LV pill + XP bar + coins
- * + streak chip on the bottom line.
+ * + coins on the bottom line.
  *
  * Built around the V2 Spotlight design's CompactHeader (compressed to
  * fit one row so there's room for the bucket sections below). The
@@ -35,7 +34,6 @@ export function CompactHeader({
   xpInLevel,
   xpNeededForLevel,
   coins,
-  streakDays,
   dateLabel,
   onHistoryPress,
 }: Props) {
@@ -87,11 +85,6 @@ export function CompactHeader({
           <Text style={styles.chipText}>{coins}</Text>
         </View>
 
-        {/* Streak chip */}
-        <View style={styles.chip}>
-          <Ionicons name="flame" size={12} color={tokens.semantic.warn ?? '#FF9F43'} />
-          <Text style={styles.chipText}>{streakDays}d</Text>
-        </View>
       </View>
     </View>
   );

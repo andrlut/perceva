@@ -270,8 +270,18 @@ const pt: Translations = {
       unskip: 'Não foi possível despular',
       unknown: 'Erro desconhecido.',
     },
-    streak: {
-      label: 'Sequência',
+    momentum: {
+      label: 'Momentum',
+      recentEffort: 'Esforço recente por atributo',
+      tier: {
+        calm: 'calmo',
+        building: 'subindo',
+        strong: 'forte',
+        peak: 'pleno',
+      },
+      bonusActive: '+{{percent}}% bônus',
+      // Legacy streak-style keys (deprecated; kept while any leftover
+      // V2 streak surface still references them).
       days: { one: '{{count}} dia', other: '{{count}} dias' },
       best: 'Recorde: {{count}}',
       atRisk: 'Em risco',
@@ -330,7 +340,7 @@ const pt: Translations = {
       adjustStars: 'Ajustar estrelas',
       adjustStarsSub: 'Mude o peso dessa conclusão por sub',
       skipToday: 'Pular hoje',
-      skipTodaySub: 'Esconde do dia sem concluir — sem XP, não quebra a sequência',
+      skipTodaySub: 'Esconde do dia sem concluir — sem XP, sem penalidade no Momentum',
       editTask: 'Editar tarefa',
       editTaskSub: 'Mudar título, subs, recorrência, etc',
     },
@@ -681,8 +691,8 @@ const pt: Translations = {
       dailyDescription: 'Um cutucão se ainda tem tarefas diárias pendentes.',
       quest: 'Lembrete de missão',
       questDescription: 'Aviso antes do prazo de uma missão.',
-      streak: 'Lembrete de sequência',
-      streakDescription: 'Cutucão noturno quando sua sequência está em risco.',
+      momentum: 'Lembrete de Momentum',
+      momentumDescription: 'Cutucão noturno quando seu Momentum precisa de uma tarefa pequena.',
       footnote: 'As notificações precisam de uma pequena configuração nativa — os toggles já salvam sua escolha e começam a disparar quando rolar.',
     },
     actions: {

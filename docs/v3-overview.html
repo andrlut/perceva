@@ -1,0 +1,879 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RPG Tasks — V3 Overview (filosofia, premissas, roadmap)</title>
+<style>
+  :root {
+    --bg: #fafafb;
+    --fg: #181820;
+    --muted: #555567;
+    --faint: #8a8a9e;
+    --accent: #5b3cd6;
+    --accent-soft: #f0eaff;
+    --accent-strong: #4628a8;
+    --border: #e2e2ea;
+    --code-bg: #f1f1f6;
+    --done-bg: #e8f5ec;
+    --done-fg: #14642a;
+    --done-border: #b9dfc4;
+    --doing-bg: #fff3e0;
+    --doing-fg: #8a4500;
+    --doing-border: #f0c98a;
+    --todo-bg: #f4f4f9;
+    --todo-fg: #555567;
+    --todo-border: #d5d5dd;
+    --later-bg: #fbecec;
+    --later-fg: #8a2424;
+    --later-border: #f0c5c5;
+    --pillar-1: #7b5cff;
+    --pillar-2: #3dd68c;
+    --pillar-3: #ffc83d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.6;
+    margin: 0;
+    padding: 32px 16px 72px;
+    -webkit-font-smoothing: antialiased;
+  }
+  main {
+    max-width: 820px;
+    margin: 0 auto;
+  }
+  header.title-block {
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 18px;
+    margin-bottom: 28px;
+  }
+  h1 {
+    font-size: 28px;
+    margin: 0 0 6px;
+    letter-spacing: -0.02em;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .tagline {
+    font-style: italic;
+    color: var(--accent-strong);
+    background: var(--accent-soft);
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin: 16px 0;
+    border-left: 3px solid var(--accent);
+    font-size: 14px;
+  }
+  h2 {
+    font-size: 22px;
+    margin: 40px 0 12px;
+    letter-spacing: -0.01em;
+    color: var(--accent);
+    border-bottom: 1px solid var(--accent-soft);
+    padding-bottom: 4px;
+  }
+  h3 {
+    font-size: 17px;
+    margin: 24px 0 6px;
+  }
+  h4 {
+    font-size: 14px;
+    margin: 16px 0 4px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  p, li { font-size: 14px; }
+  ul, ol { padding-left: 22px; margin: 6px 0; }
+  li { margin: 4px 0; }
+  code, .mono {
+    font-family: "SF Mono", Monaco, Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0 18px;
+    font-size: 13.5px;
+  }
+  th, td {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: var(--accent-soft);
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+  }
+  .pill {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 3px 8px;
+    border-radius: 10px;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+  .pill-done { background: var(--done-bg); color: var(--done-fg); border: 1px solid var(--done-border); }
+  .pill-doing { background: var(--doing-bg); color: var(--doing-fg); border: 1px solid var(--doing-border); }
+  .pill-todo { background: var(--todo-bg); color: var(--todo-fg); border: 1px solid var(--todo-border); }
+  .pill-later { background: var(--later-bg); color: var(--later-fg); border: 1px solid var(--later-border); }
+  .pillar-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin: 12px 0;
+    background: white;
+  }
+  .pillar-card.p1 { border-left: 4px solid var(--pillar-1); }
+  .pillar-card.p2 { border-left: 4px solid var(--pillar-2); }
+  .pillar-card.p3 { border-left: 4px solid var(--pillar-3); }
+  .pillar-card h3 { margin-top: 0; }
+  .pillar-card .essence {
+    color: var(--muted);
+    font-size: 13px;
+    margin: 0 0 12px;
+    font-style: italic;
+  }
+  .sub-block {
+    background: var(--bg);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin: 8px 0;
+    border: 1px solid var(--border);
+  }
+  .sub-block h4 {
+    margin: 0 0 4px;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--fg);
+    font-size: 13.5px;
+    font-weight: 700;
+  }
+  .sub-block .essence {
+    color: var(--muted);
+    font-size: 13px;
+    font-style: italic;
+    margin: 2px 0 6px;
+  }
+  .sub-block p {
+    margin: 4px 0;
+    font-size: 13px;
+  }
+  .toc {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 20px;
+    margin: 20px 0 32px;
+  }
+  .toc h3 {
+    margin: 0 0 8px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+  }
+  .toc ol {
+    margin: 0;
+    padding-left: 22px;
+    columns: 2;
+    column-gap: 20px;
+  }
+  .toc li { margin: 3px 0; font-size: 13px; }
+  .toc a { color: var(--fg); text-decoration: none; }
+  .toc a:hover { color: var(--accent); }
+  .frente-detail {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin: 12px 0;
+  }
+  .frente-detail header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    gap: 12px;
+  }
+  .frente-detail h3 {
+    margin: 0;
+    font-size: 15px;
+  }
+  .frente-detail .essence {
+    color: var(--muted);
+    font-size: 13px;
+    font-style: italic;
+    margin: 4px 0 8px;
+  }
+  .frente-detail ul {
+    columns: 2;
+    column-gap: 20px;
+  }
+  .frente-detail ul li {
+    font-size: 12.5px;
+    margin: 2px 0;
+    color: var(--muted);
+  }
+  .principle {
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    padding: 10px 14px;
+    border-radius: 4px;
+    margin: 12px 0;
+    font-size: 13.5px;
+  }
+  .principle strong { color: var(--accent-strong); }
+  .footer-meta {
+    color: var(--faint);
+    font-size: 12px;
+    margin-top: 48px;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+  }
+  hr { border: 0; border-top: 1px solid var(--border); margin: 32px 0; }
+  @media print {
+    body { background: white; padding: 16px; }
+    .pillar-card, .frente-detail, .sub-block { break-inside: avoid; }
+    .toc ol, .frente-detail ul { columns: 1; }
+  }
+</style>
+</head>
+<body>
+<main>
+
+<header class="title-block">
+  <h1>RPG Tasks — V3 Overview</h1>
+  <div class="subtitle">
+    Documento de visão consolidado: filosofia, premissas, frentes de trabalho
+    e estado atual. Snapshot de Maio/2026, antes da Fase 2 começar.
+  </div>
+</header>
+
+<div class="tagline">
+  RPG Tasks transforma sua vida em uma jornada de evolução: <strong>autoconhecimento</strong>
+  para entender seu momento, <strong>dedicação</strong> para treinar sua direção e
+  <strong>objetivos</strong> para se aproximar de quem você quer se tornar.
+</div>
+
+<div class="toc">
+  <h3>Sumário</h3>
+  <ol>
+    <li><a href="#filosofia">A filosofia central</a></li>
+    <li><a href="#pilar-1">Pilar 1 — Identidade Percebida</a></li>
+    <li><a href="#pilar-2">Pilar 2 — Identidade Praticada</a></li>
+    <li><a href="#pilar-3">Pilar 3 — Identidade Desejada</a></li>
+    <li><a href="#tabela-frentes">Tabela de frentes</a></li>
+    <li><a href="#detalhamento">Detalhamento das frentes</a></li>
+    <li><a href="#transversal">Pontos transversais</a></li>
+    <li><a href="#nav">Navegação proposta</a></li>
+    <li><a href="#system-personal">System vs Personal</a></li>
+    <li><a href="#ordem">Ordem proposta de trabalho</a></li>
+    <li><a href="#fase-1">O que ficou pronto na Fase 1</a></li>
+  </ol>
+</div>
+
+<h2 id="filosofia">1. A filosofia central</h2>
+
+<p>
+  RPG Tasks conecta <strong>identidade percebida</strong>, <strong>identidade praticada</strong>
+  e <strong>identidade desejada</strong>. O app ajuda a pessoa a entender como
+  se enxerga hoje, perceber o que suas ações estão treinando nela e avançar com
+  clareza em direção a quem quer se tornar.
+</p>
+
+<p>
+  São três perguntas diferentes sobre a mesma vida — e nenhuma substitui as outras:
+</p>
+
+<table>
+  <thead>
+    <tr><th>Pilar</th><th>Mede</th><th>Frequência</th><th>Tipo de verdade</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Percebida</strong> (Avaliação)</td>
+      <td>Estado subjetivo / sentimento de vida</td>
+      <td>Lenta (semanal/trimestral)</td>
+      <td>Auto-narrativa</td>
+    </tr>
+    <tr>
+      <td><strong>Praticada</strong> (Dedicação)</td>
+      <td>Esforço aplicado</td>
+      <td>Rápida (diária)</td>
+      <td>Comportamental</td>
+    </tr>
+    <tr>
+      <td><strong>Desejada</strong> (Goals + Skills)</td>
+      <td>Direção + capacidade real verificável</td>
+      <td>Episódica</td>
+      <td>Objetiva</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="principle">
+  <strong>Princípio de design transversal:</strong> cada pilar tem sua própria
+  estética de feedback. Percebida é contemplativa (gráfico amplo, edição cuidadosa).
+  Praticada é dopaminérgica (ding, +XP, level up). Desejada é cerimoniosa (medalha,
+  "top X%", PR novo). Confundir os três tons é o que torna habit trackers cansativos.
+</div>
+
+<h2 id="pilar-1">2. Pilar 1 — Identidade Percebida</h2>
+
+<div class="pillar-card p1">
+  <h3>Como eu me vejo hoje e o que minhas respostas revelam sobre mim.</h3>
+  <p class="essence">
+    É o pilar de autoconhecimento. Ajuda o usuário a entender seu momento,
+    sua autopercepção e seus padrões, sem transformar uma fase da vida em rótulo.
+  </p>
+
+  <div class="sub-block">
+    <h4>1.1 Autoavaliação — como eu me enxergo agora</h4>
+    <p class="essence">
+      Um olhar subjetivo do usuário sobre suas áreas da vida, seu estado atual
+      e sua percepção de si mesmo.
+    </p>
+    <p>Hex tocável, sliders por sub. Pulso emocional rápido — tipo um diário de uma régua só.</p>
+  </div>
+
+  <div class="sub-block">
+    <h4>1.2 Avaliação — o que meus padrões indicam</h4>
+    <p class="essence">
+      Um questionário estruturado que ajuda a identificar tendências, forças e
+      pontos de atenção com mais profundidade.
+    </p>
+    <p>
+      Já implementado: Avaliação v1 (24 itens, wellbeing) + Big Five 120 + Schwartz
+      Values 57 + ECR-R Attachment 36. Inventários psicométricos com framing
+      cuidadoso.
+    </p>
+  </div>
+</div>
+
+<h2 id="pilar-2">3. Pilar 2 — Identidade Praticada</h2>
+
+<div class="pillar-card p2">
+  <h3>O que minhas ações estão treinando em mim.</h3>
+  <p class="essence">
+    É o pilar da prática. Mostra onde o usuário está colocando energia e qual
+    versão de si mesmo está sendo fortalecida pelas ações repetidas.
+  </p>
+
+  <div class="sub-block">
+    <h4>2.1 Dedicação — o esforço que eu aplico</h4>
+    <p class="essence">
+      Reúne tasks, quests, XP e ações concluídas para mostrar o volume e a
+      direção da energia investida pelo usuário.
+    </p>
+    <p>
+      Tasks já maduras (multi-sub, recurrence unificada, skip-today, undo).
+      Quests em parcial. XP em janelas (7d/30d/90d) ainda precisa de estudo
+      de calibragem.
+    </p>
+  </div>
+
+  <div class="sub-block">
+    <h4>2.2 Momentum — o ritmo que eu construo</h4>
+    <p class="essence">
+      Representa streaks, consistência e continuidade, mostrando o embalo que
+      o usuário está criando sem transformar pausas em culpa.
+    </p>
+    <p>
+      Spec sendo finalizada em <code>docs/xp-momentum-spec.html</code> (proposta
+      pro Artur). Decisão central: <em>sem streak</em>. Só Momentum per-sub
+      com decay diário.
+    </p>
+  </div>
+</div>
+
+<h2 id="pilar-3">4. Pilar 3 — Identidade Desejada</h2>
+
+<div class="pillar-card p3">
+  <h3>Quem eu quero me tornar e o quanto estou me aproximando disso.</h3>
+  <p class="essence">
+    É o pilar de direção. Ajuda o usuário a definir objetivos, acompanhar
+    conquistas e enxergar progresso em relação à própria versão desejada.
+  </p>
+
+  <div class="sub-block">
+    <h4>3.1 Goals — onde eu quero chegar</h4>
+    <p class="essence">
+      Transformam a identidade desejada em objetivos claros, metas e direções
+      de vida que orientam a jornada.
+    </p>
+    <p>
+      <strong>Não é "lista de quests pra completar"</strong> — é uma direção
+      identitária. Ex: <em>"quero virar alguém que dorme bem"</em>, trackado
+      por sleep sub subindo + skill de sleep avançando de tier. Frente ainda
+      a fazer do zero.
+    </p>
+  </div>
+
+  <div class="sub-block">
+    <h4>3.2 Skills — como eu comprovo minha evolução</h4>
+    <p class="essence">
+      Usam métricas do mundo real para tornar o progresso visível e mostrar
+      capacidades desenvolvidas ao longo da jornada.
+    </p>
+    <p>
+      Já implementado: catálogo + skills custom (sub-first), tiers, PR logging,
+      delete, i18n completo. Edit ainda deferido.
+    </p>
+  </div>
+</div>
+
+<h2 id="tabela-frentes">5. Tabela de frentes</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Frente</th>
+      <th>Pilar / Camada</th>
+      <th>Tipo</th>
+      <th>Status</th>
+      <th>Próximo trabalho</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1.1</td><td>Autoavaliação</td><td>1 Percebida</td><td>Quanti</td>
+      <td><span class="pill pill-done">OK</span></td>
+      <td>Manter lógica atual</td>
+    </tr>
+    <tr>
+      <td>1.2</td><td>Avaliação</td><td>1 Percebida</td><td>Quanti</td>
+      <td><span class="pill pill-done">OK</span></td>
+      <td>Manter lógica atual</td>
+    </tr>
+    <tr>
+      <td>1.3</td><td>Questionários</td><td>1 Percebida</td><td>Quali</td>
+      <td><span class="pill pill-done">OK</span></td>
+      <td>Manter como suporte de autoconhecimento</td>
+    </tr>
+    <tr>
+      <td>2.1</td><td>Tasks</td><td>2 Praticada</td><td>Quanti</td>
+      <td><span class="pill pill-done">OK</span></td>
+      <td>Ajustes finos e histórico</td>
+    </tr>
+    <tr>
+      <td>2.2</td><td>Quests</td><td>2 Praticada</td><td>Quanti</td>
+      <td><span class="pill pill-doing">Fazer completo</span></td>
+      <td>Lógica, XP, tela, padrões e customização</td>
+    </tr>
+    <tr>
+      <td>2.3</td><td>Dedicação / XP</td><td>2 Praticada</td><td>Quanti</td>
+      <td><span class="pill pill-doing">Parcial</span></td>
+      <td>XP por janelas, calibragem, impacto no Momentum</td>
+    </tr>
+    <tr>
+      <td>2.4</td><td>Momentum</td><td>2 Praticada</td><td>Quanti</td>
+      <td><span class="pill pill-doing">Fazer completo</span></td>
+      <td>Spec sendo fechada com o Artur</td>
+    </tr>
+    <tr>
+      <td>3.1</td><td>Goals</td><td>3 Desejada</td><td>Quanti</td>
+      <td><span class="pill pill-todo">Fazer do zero</span></td>
+      <td>Lógica, tela, relação com Skills e Avaliação</td>
+    </tr>
+    <tr>
+      <td>3.2</td><td>Skills</td><td>3 Desejada</td><td>Quanti</td>
+      <td><span class="pill pill-done">Quase OK</span></td>
+      <td>Edit CRUD (delete já feito)</td>
+    </tr>
+    <tr>
+      <td>4</td><td>Learning</td><td>Complementar</td><td>Quali</td>
+      <td><span class="pill pill-todo">Fazer do zero</span></td>
+      <td>Materiais semanais, filtros por sub/tópico</td>
+    </tr>
+    <tr>
+      <td>5</td><td>Insights</td><td>Complementar</td><td>Quali</td>
+      <td><span class="pill pill-later">Depois</span></td>
+      <td>Frente complexa, depende dos dados maduros</td>
+    </tr>
+    <tr>
+      <td>6</td><td>Rewards</td><td>Complementar</td><td>Quali</td>
+      <td><span class="pill pill-done">Quase OK</span></td>
+      <td>Ajustes visuais (i18n já feito)</td>
+    </tr>
+    <tr>
+      <td>7</td><td>Social</td><td>Complementar</td><td>Quali</td>
+      <td><span class="pill pill-later">Depois</span></td>
+      <td>Risco de comparação / privacidade</td>
+    </tr>
+    <tr>
+      <td>8</td><td>Hero / Avatar</td><td>Complementar</td><td>Quali</td>
+      <td><span class="pill pill-doing">Explorar</span></td>
+      <td>Cosméticos sem autosabotagem</td>
+    </tr>
+    <tr>
+      <td>9</td><td>Onboarding</td><td>Complementar</td><td>Quali</td>
+      <td><span class="pill pill-doing">Fazer completo</span></td>
+      <td>Fluxo completo e refechável pelos Settings</td>
+    </tr>
+    <tr>
+      <td>10</td><td>Settings</td><td>Complementar</td><td>Quali</td>
+      <td><span class="pill pill-done">OK</span></td>
+      <td>Estrutura renomeada (era Profile)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="detalhamento">6. Detalhamento das frentes (a fazer)</h2>
+
+<div class="frente-detail">
+  <header>
+    <h3>2.2 Quests — fazer completo</h3>
+    <span class="pill pill-doing">Doing</span>
+  </header>
+  <p class="essence">Quests precisam funcionar tanto como conteúdo padrão do app quanto como ferramenta customizável pelo usuário.</p>
+  <h4>Escopo</h4>
+  <ul>
+    <li>Lógica das quests</li>
+    <li>Como quests são criadas</li>
+    <li>Quests padrão do sistema</li>
+    <li>Quests customizáveis pelo usuário</li>
+    <li>Relação com tasks</li>
+    <li>Relação com goals</li>
+    <li>Relação com XP</li>
+    <li>Progresso da quest</li>
+    <li>Conclusão parcial ou total</li>
+    <li>Recompensas</li>
+    <li>Visualização na tela</li>
+    <li>Filtros</li>
+    <li>Estados: ativa, pausada, concluída, abandonada, arquivada</li>
+  </ul>
+</div>
+
+<div class="frente-detail">
+  <header>
+    <h3>2.3 Dedicação / XP — estudar XP por janelas</h3>
+    <span class="pill pill-doing">Parcial</span>
+  </header>
+  <p class="essence">Em um mês, quanto XP representa baixa, média ou alta dedicação em cada sub?</p>
+  <h4>Escopo pendente</h4>
+  <ul>
+    <li>Quanto XP uma quest deve valer</li>
+    <li>Como XP de quest se soma ao XP de tasks</li>
+    <li>Quanto XP afeta Momentum</li>
+    <li>XP por janelas de tempo (7d, 30d, 90d)</li>
+    <li>Calibragem por categoria/sub</li>
+    <li>O que é pouco, médio ou muito XP em cada sub</li>
+    <li>Evitar inflação de XP</li>
+    <li>Evitar que tasks pequenas sejam exploradas pra farmar XP</li>
+  </ul>
+</div>
+
+<div class="frente-detail">
+  <header>
+    <h3>2.4 Momentum / Ritmo — fazer completo</h3>
+    <span class="pill pill-doing">Spec fechando</span>
+  </header>
+  <p class="essence">Momentum deve representar ritmo e tração, não punição por quebrar sequência.</p>
+  <h4>Já decidido (ver <code>docs/xp-momentum-spec.html</code>)</h4>
+  <ul>
+    <li>Sem streak — só Momentum</li>
+    <li>Per-sub desde o v1</li>
+    <li>Decay diário (proposta: 0.9^d)</li>
+    <li>Cap em +25% bônus sobre XP e coins</li>
+    <li>Mostra número + label</li>
+    <li>Nome: Momentum</li>
+  </ul>
+  <h4>5 pontas abertas com o Artur</h4>
+  <ul>
+    <li>Curva de decay exata</li>
+    <li>Mapping cap → bônus %</li>
+    <li>Anti-farm dentro do dia</li>
+    <li>Backfill de usuários existentes</li>
+    <li>Visualização per-sub na UI</li>
+  </ul>
+</div>
+
+<div class="frente-detail">
+  <header>
+    <h3>3.1 Goals — fazer do zero</h3>
+    <span class="pill pill-todo">A fazer</span>
+  </header>
+  <p class="essence">A avaliação pode ajudar o usuário a entender quem ele quer ser, não apenas quem ele percebe ser hoje.</p>
+  <h4>Escopo</h4>
+  <ul>
+    <li>Definir o que é um goal</li>
+    <li>Criar goals padrão</li>
+    <li>Permitir goals customizados</li>
+    <li>Conectar goals com identidade desejada</li>
+    <li>Conectar goals com quests</li>
+    <li>Conectar goals com skills</li>
+    <li>Usar avaliação/questionário para sugerir objetivos</li>
+    <li>Talvez gerar o HEX desejado</li>
+    <li>Permitir definir "quem quer se tornar"</li>
+    <li>Mostrar distância/progresso até o objetivo</li>
+    <li>Evitar objetivo tóxico, distante ou desmotivador</li>
+  </ul>
+</div>
+
+<div class="frente-detail">
+  <header>
+    <h3>3.2 Skills — ajustes finais</h3>
+    <span class="pill pill-done">Quase OK</span>
+  </header>
+  <p class="essence">Skills são meios de comprovar evolução, não a filosofia central do terceiro pilar.</p>
+  <h4>Escopo pendente</h4>
+  <ul>
+    <li>Edit flow (delete já existe)</li>
+    <li>Conectar skills com goals (depende do Goals existir)</li>
+    <li>Conectar skills com métricas reais</li>
+    <li>Revisar visualização de progresso</li>
+  </ul>
+</div>
+
+<div class="frente-detail">
+  <header>
+    <h3>4 Learning — fazer do zero</h3>
+    <span class="pill pill-todo">A fazer</span>
+  </header>
+  <p class="essence">Uma área de conteúdos leves, visuais e fáceis de consumir sobre bem-estar, hábitos, evolução pessoal e temas ligados às subs.</p>
+  <h4>Escopo</h4>
+  <ul>
+    <li>Materiais semanais</li>
+    <li>Textos curtos</li>
+    <li>Desenhos / gráficos</li>
+    <li>Explicações simples</li>
+    <li>Filtros por sub</li>
+    <li>Filtros por tópico</li>
+    <li>Destaque da semana</li>
+    <li>Conteúdos recomendados com base no perfil</li>
+    <li>Temas: sono, foco, social, saúde, produtividade, disciplina</li>
+  </ul>
+  <h4>Estrutura por item</h4>
+  <ul>
+    <li>Título, tema, sub relacionada</li>
+    <li>Tempo de leitura, imagem/ilustração</li>
+    <li>Resumo + conteúdo + gráfico/exemplo visual</li>
+    <li>Ação sugerida + quests/tasks relacionadas</li>
+  </ul>
+</div>
+
+<div class="frente-detail">
+  <header>
+    <h3>6 Rewards — ajustes visuais</h3>
+    <span class="pill pill-done">Quase OK</span>
+  </header>
+  <h4>Escopo pendente</h4>
+  <ul>
+    <li>Ajustes visuais</li>
+    <li>Revisar experiência da loja</li>
+    <li>Revisar recompensas pessoais</li>
+    <li>Revisar recompensas cosméticas</li>
+    <li>Revisar clareza de coins</li>
+    <li>Revisar feedback de compra/resgate (i18n já feito)</li>
+  </ul>
+</div>
+
+<div class="frente-detail">
+  <header>
+    <h3>8 Hero / Avatar — explorar melhor</h3>
+    <span class="pill pill-doing">Explorar</span>
+  </header>
+  <p class="essence">Como manter o avatar/cosmético como algo motivador sem autosabotar o usuário?</p>
+  <h4>Risco</h4>
+  <ul>
+    <li>Se o avatar piora quando o usuário vai mal, pode gerar culpa</li>
+    <li>Se o usuário define o próprio progresso, o avatar não pode virar punição visual</li>
+    <li>Se o cosmético for muito ligado à performance, pode ser tóxico</li>
+  </ul>
+  <h4>Caminho possível</h4>
+  <ul>
+    <li>Cosméticos como celebração, não punição</li>
+    <li>Desbloqueios por conquistas</li>
+    <li>Personalização por identidade desejada</li>
+    <li>Avatar como expressão da jornada</li>
+    <li>Não degradar visualmente o personagem por baixa performance</li>
+    <li>Talvez usar "estado de energia" temporário, sem julgamento</li>
+  </ul>
+</div>
+
+<div class="frente-detail">
+  <header>
+    <h3>9 Onboarding — fazer completo</h3>
+    <span class="pill pill-doing">Refazer</span>
+  </header>
+  <p class="essence">Onboarding não deve ser uma etapa única. Deve virar uma central de recalibração da jornada.</p>
+  <h4>Escopo</h4>
+  <ul>
+    <li>Autoavaliação inicial</li>
+    <li>Avaliação/questionário inicial</li>
+    <li>Definição de identidade desejada</li>
+    <li>Goals iniciais</li>
+    <li>Questionário "quem eu gostaria de ser"</li>
+    <li>Geração de HEX atual + HEX desejado</li>
+    <li>Sugestão de quests, tasks, skills</li>
+    <li>Configuração de preferências</li>
+    <li>Acessível depois nos Settings</li>
+    <li>Separado por categorias pra refazer quando quiser</li>
+  </ul>
+</div>
+
+<h2 id="transversal">7. Pontos transversais</h2>
+
+<table>
+  <thead>
+    <tr><th>Tema</th><th>Status</th><th>Observação</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>PT-BR / EN</td>
+      <td><span class="pill pill-doing">Parcial</span></td>
+      <td>Glossário dos pilares + Skills + Rewards prontos. Outras telas ainda têm strings hardcoded</td>
+    </tr>
+    <tr>
+      <td>Scroll máximo</td>
+      <td><span class="pill pill-done">Fix self-assessment</span></td>
+      <td>Footer overlap corrigido. Outras telas: auditar sob demanda</td>
+    </tr>
+    <tr>
+      <td>Relatórios personalizados</td>
+      <td><span class="pill pill-later">Depois</span></td>
+      <td>Super avaliação de identidade quando tiver todos os questionários</td>
+    </tr>
+    <tr>
+      <td>Histórico em Tasks</td>
+      <td><span class="pill pill-done">Feito</span></td>
+      <td>Acessível via ícone calendário no header da tab Tasks</td>
+    </tr>
+    <tr>
+      <td>Navegação principal</td>
+      <td><span class="pill pill-done">Feito</span></td>
+      <td>Tasks → Rewards → Hero → Learn → Settings</td>
+    </tr>
+    <tr>
+      <td>System vs Personal</td>
+      <td><span class="pill pill-done">OK</span></td>
+      <td>Padrão estabelecido. Estratégia CRUD: opção B (via BD, sem admin UI)</td>
+    </tr>
+    <tr>
+      <td>Banco / escala</td>
+      <td><span class="pill pill-done">OK</span></td>
+      <td>Templates não duplicam por usuário. <code>released_at</code> nos templates pra drops periódicos</td>
+    </tr>
+    <tr>
+      <td>RLS / userId</td>
+      <td><span class="pill pill-done">OK</span></td>
+      <td>Self-only em todas as tabelas pessoais; catalog tables são public-read</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="nav">8. Navegação proposta (já implementada)</h2>
+
+<table>
+  <thead>
+    <tr><th>Aba</th><th>Conteúdo</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>Tasks</strong></td><td>Tasks, quests (futuro), histórico via calendário, Dedicação, Momentum</td></tr>
+    <tr><td><strong>Rewards</strong></td><td>Coins, loja, recompensas pessoais</td></tr>
+    <tr><td><strong>Hero</strong></td><td>Avatar, progresso visual, identidade — agrupado pelos 3 pilares</td></tr>
+    <tr><td><strong>Learn</strong></td><td>Placeholder hoje. Conteúdos semanais e materiais guiados (Fase 2)</td></tr>
+    <tr><td><strong>Settings</strong></td><td>Perfil, onboarding refazível, idioma, privacidade, configurações</td></tr>
+  </tbody>
+</table>
+
+<h2 id="system-personal">9. System vs Personal (load-bearing)</h2>
+
+<div class="principle">
+  <strong>Regra base:</strong> tudo que é padrão do app é <strong>system</strong>.
+  Tudo que o usuário cria, altera ou personaliza é <strong>personal</strong>.
+  Catálogos system não são duplicados por usuário — economiza espaço, mantém
+  consistência, permite drops periódicos.
+</div>
+
+<table>
+  <thead>
+    <tr><th>Entidade</th><th>System catalog</th><th>Personal</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Tasks</td><td><code>task_template</code> (36)</td><td><code>task</code></td></tr>
+    <tr><td>Rewards</td><td><code>reward_template</code> (23)</td><td><code>reward</code></td></tr>
+    <tr><td>Skills</td><td><code>skill</code> com <code>character_id=null</code></td><td><code>skill</code> com <code>character_id=uuid</code></td></tr>
+    <tr><td>Quests</td><td><code>quest_template</code></td><td><code>quest</code></td></tr>
+    <tr><td>Dimensions/Subs</td><td>fixo (6 dim, 12 sub)</td><td>—</td></tr>
+    <tr><td>Psych instruments</td><td><code>psych_instrument/facet/item</code></td><td><code>psych_session/answer/score</code></td></tr>
+  </tbody>
+</table>
+
+<h4>Estratégia de CRUD escolhida: opção B (DB-only)</h4>
+<p>
+  Decisão: <strong>não construir admin UI in-app</strong>. Mudanças no catálogo
+  vão via migration SQL (audit trail no git) ou via Supabase Studio (ad-hoc).
+  <code>released_at</code> nos templates suporta drops periódicos. Promover
+  criação de usuário pra system é uma operação manual rara.
+</p>
+<p>
+  <strong>Reabrir essa decisão quando</strong>: (1) houver curador não-dev,
+  (2) 2+ drops por semana virarem rotina, ou (3) feature de "users votam, top
+  vira system".
+</p>
+
+<h2 id="ordem">10. Ordem proposta de trabalho — Fase 2</h2>
+
+<ol>
+  <li><strong>XP / Momentum</strong> (em curso — spec fechando com Artur)</li>
+  <li><strong>Quests completo</strong> (segue XP — design herda regras de Momentum)</li>
+  <li><strong>Goals</strong> (vem após Quests pra ter o vehicle pronto)</li>
+  <li><strong>Onboarding completo</strong> recalibrável (puxa do que existe nas frentes anteriores)</li>
+  <li><strong>Learning</strong> (conteúdo + UI)</li>
+  <li><strong>Hero / Avatar</strong> (visual + destaque dos questionários)</li>
+  <li><strong>Insights</strong> (depois — depende dos dados maduros)</li>
+  <li><strong>Social</strong> (depois — risco alto, mais cuidado)</li>
+</ol>
+
+<div class="principle">
+  <strong>Por que XP primeiro:</strong> Dedicação e Momentum tocam tudo
+  (cada XP gain, cada streak display, cada bonus). Define o vocabulário/UX
+  que Quests vai herdar. Fechar com Artur constrói a colab.
+</div>
+
+<h2 id="fase-1">11. O que ficou pronto na Fase 1</h2>
+
+<ul>
+  <li>PR #133 — CLAUDE.md rescrito pra refletir o estado V2 + V3 roadmap</li>
+  <li>PR #134 — <code>released_at</code> em <code>task_template</code>, <code>reward_template</code>, <code>quest_template</code></li>
+  <li>PR #135 — Nav refactor: Learn tab + History via ícone</li>
+  <li>PR #136 — i18n: glossário canônico dos 3 pilares (pillar.*)</li>
+  <li>PR #137 — Skills: delete custom + i18n form errors</li>
+  <li>PR #138 — Rewards: shop + form bilíngue completo</li>
+  <li>PR #139 — Fix: footer overlap em self-assessment</li>
+  <li>PR #141 — History fora da bar de vez (movido pra fora de <code>(tabs)</code>)</li>
+  <li>PR #142 — Skill form sub-first + i18n completo (12 sub chips agrupados por dim)</li>
+</ul>
+
+<hr />
+
+<div class="footer-meta">
+  Documento gerado em conjunto entre <strong>André</strong> e <strong>Claude</strong>
+  (Anthropic) na sessão de planejamento da Fase 2 V3.
+  Fontes: CLAUDE.md (estado atual do repo), doc V3 do André, doc xp-redesign do Artur,
+  decisões da sessão atual.<br />
+  Próximo passo concreto: fechar as 5 pontas do <code>docs/xp-momentum-spec.html</code>
+  com o Artur, daí toca implementação de Momentum.
+</div>
+
+</main>
+</body>
+</html>

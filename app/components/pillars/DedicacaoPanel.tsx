@@ -5,15 +5,22 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ProgressBar } from '@/components/ProgressBar';
 import type { CharacterDimension, DimensionId } from '@/lib/db/types';
-import { levelProgress } from '@/lib/xp';
+import { useT } from '@/lib/i18n';
+import { useMetaLookup } from '@/lib/i18n/meta';
+import {
+  levelProgress,
+  momentumBonus,
+  momentumTier,
+  type AttributeMomentum,
+} from '@/lib/xp';
 import { tokens } from '@/theme';
-import { DIMENSION_META, DIMENSION_ORDER } from '@/theme/dimensions';
+import { DIMENSION_META, DIMENSION_ORDER, SUBS_BY_DIM } from '@/theme/dimensions';
 
 interface Props {
   dimensions: CharacterDimension[];
+  momentum?: AttributeMomentum[];
 }
 
-/** 3-letter abbreviation per dim — keeps the grid airy at small widths. */
 const DIM_ABBREV: Record<DimensionId, string> = {
   health: 'HEA',
   body: 'BOD',
@@ -23,30 +30,38 @@ const DIM_ABBREV: Record<DimensionId, string> = {
   craft: 'CRA',
 };
 
-/**
- * Pillar 2 — Dedicação. Dopaminergic tone.
- *
- * 2×3 grid of dim cells (level + mini XP bar). Each cell drills into the
- * dim detail. CTA opens quests — the mid-term ambition layer.
- *
- * Punchy on purpose: bigger numbers, brighter accents than the other
- * pillars. This is the "agora vamos lá" panel.
- */
-export function DedicacaoPanel({ dimensions }: Props) {
+export function DedicacaoPanel({ dimensions, momentum = [] }: Props) {
   const router = useRouter();
+  const { t } = useT();
+  const metaLookup = useMetaLookup();
   const dimMap = useMemo(() => {
     const m = new Map<DimensionId, CharacterDimension>();
     for (const d of dimensions) m.set(d.dimension_id, d);
     return m;
   }, [dimensions]);
+  const momentumMap = useMemo(() => {
+    const m = new Map<DimensionId, AttributeMomentum>();
+    for (const attr of momentum) m.set(attr.dimensionId, attr);
+    return m;
+  }, [momentum]);
 
   return (
     <View style={styles.card}>
-      <View style={styles.grid}>
+      <View>
+        <Text style={styles.title}>{t('home.momentum.label')}</Text>
+        <Text style={styles.subtitle}>{t('home.momentum.recentEffort')}</Text>
+      </View>
+
+      <View style={styles.list}>
         {DIMENSION_ORDER.map((id) => {
           const meta = DIMENSION_META[id];
           const xp = dimMap.get(id)?.xp ?? 0;
           const lp = levelProgress(xp);
+          const attrMomentum = momentumMap.get(id);
+          const subMomentum = new Map(
+            attrMomentum?.subattributes.map((s) => [s.subId, s.momentum]) ?? [],
+          );
+
           return (
             <Pressable
               key={id}
@@ -54,32 +69,67 @@ export function DedicacaoPanel({ dimensions }: Props) {
                 router.push({ pathname: '/dimension/[id]', params: { id } })
               }
               style={({ pressed }) => [
-                styles.cell,
+                styles.attribute,
                 pressed && { opacity: 0.7 },
               ]}
             >
-              <View style={[styles.iconHalo, { backgroundColor: meta.bg }]}>
-                <Ionicons
-                  name={meta.iconName as never}
-                  size={18}
-                  color={meta.color}
-                />
+              <View style={styles.attributeTop}>
+                <View style={styles.attributeNameRow}>
+                  <View style={[styles.iconHalo, { backgroundColor: meta.bg }]}>
+                    <Ionicons
+                      name={meta.iconName as never}
+                      size={18}
+                      color={meta.color}
+                    />
+                  </View>
+                  <View style={styles.attributeCopy}>
+                    <Text style={styles.attributeName} numberOfLines={1}>
+                      {metaLookup.dim(id).label}
+                    </Text>
+                    <Text style={styles.xpHint}>
+                      {DIM_ABBREV[id]} - LV {lp.level} - {xp.toLocaleString()} XP
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.momentumPill}>
+                  <Text style={styles.momentumLabel}>
+                    {t(
+                      `home.momentum.tier.${momentumTier(attrMomentum?.momentum ?? 0)}`,
+                    ).toUpperCase()}
+                  </Text>
+                  <Text style={[styles.momentumValue, { color: meta.color }]}>
+                    {attrMomentum?.momentum ?? 0}
+                  </Text>
+                </View>
               </View>
-              <Text style={[styles.abbrev, { color: meta.color }]}>
-                {DIM_ABBREV[id]}
-              </Text>
-              <Text style={styles.level}>{lp.level}</Text>
-              <View style={styles.barWrap}>
-                <ProgressBar
-                  value={lp.xpInLevel}
-                  max={lp.xpNeededForLevel}
-                  color={meta.color}
-                  height={3}
-                />
+
+              <ProgressBar
+                value={lp.xpInLevel}
+                max={lp.xpNeededForLevel}
+                color={meta.color}
+                height={3}
+              />
+
+              <View style={styles.subList}>
+                {SUBS_BY_DIM[id].map((subId) => {
+                  const subMeta = metaLookup.sub(subId);
+                  const value = subMomentum.get(subId) ?? 0;
+                  const bonusPct = Math.round(momentumBonus(value) * 100);
+                  return (
+                    <View key={subId} style={styles.subRow}>
+                      <Text style={styles.subName}>{subMeta?.label ?? subId}</Text>
+                      <View style={styles.subValueRow}>
+                        {bonusPct > 0 && (
+                          <Text style={[styles.subBonus, { color: meta.color }]}>
+                            {t('home.momentum.bonusActive', { percent: bonusPct })}
+                          </Text>
+                        )}
+                        <Text style={styles.subMomentum}>{value}</Text>
+                      </View>
+                    </View>
+                  );
+                })}
               </View>
-              <Text style={styles.xpHint}>
-                {lp.xpInLevel}/{lp.xpNeededForLevel}
-              </Text>
             </Pressable>
           );
         })}
@@ -106,19 +156,43 @@ const styles = StyleSheet.create({
     padding: tokens.space[4],
     gap: tokens.space[3],
   },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  title: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 16,
+    color: tokens.text.hi,
+  },
+  subtitle: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 11,
+    color: tokens.text.dim,
+    marginTop: 2,
+  },
+  list: {
     gap: tokens.space[2],
   },
-  cell: {
-    width: '31.5%',
-    alignItems: 'center',
+  attribute: {
     paddingVertical: tokens.space[3],
-    paddingHorizontal: tokens.space[2],
+    paddingHorizontal: tokens.space[3],
     backgroundColor: 'rgba(255,255,255,0.025)',
     borderRadius: tokens.radius.md,
-    gap: 4,
+    gap: tokens.space[2],
+  },
+  attributeTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: tokens.space[3],
+  },
+  attributeNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[2],
+    flex: 1,
+    minWidth: 0,
+  },
+  attributeCopy: {
+    flex: 1,
+    minWidth: 0,
   },
   iconHalo: {
     width: 32,
@@ -127,28 +201,59 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  abbrev: {
+  attributeName: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 9,
-    letterSpacing: 1,
-    marginTop: 4,
-  },
-  level: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 26,
-    lineHeight: 28,
+    fontSize: 14,
     color: tokens.text.hi,
-    marginTop: 2,
-  },
-  barWrap: {
-    width: '90%',
-    marginTop: 4,
   },
   xpHint: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 9,
     color: tokens.text.dim,
     marginTop: 2,
+  },
+  momentumPill: {
+    alignItems: 'flex-end',
+  },
+  momentumLabel: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 9,
+    color: tokens.text.dim,
+    textTransform: 'uppercase',
+    letterSpacing: 0.7,
+  },
+  momentumValue: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 22,
+    lineHeight: 24,
+  },
+  subList: {
+    gap: 6,
+  },
+  subRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  subName: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 12,
+    color: tokens.text.mid,
+  },
+  subMomentum: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 13,
+    color: tokens.text.hi,
+  },
+  subValueRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 6,
+  },
+  subBonus: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 11,
+    letterSpacing: 0.2,
   },
   cta: {
     flexDirection: 'row',

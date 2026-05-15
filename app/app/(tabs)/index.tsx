@@ -22,7 +22,6 @@ import { TaskCard } from '@/components/TaskCard';
 import { TodayActivityDrawer } from '@/components/TodayActivityDrawer';
 import { XPCoinFloat } from '@/components/XPCoinFloat';
 import { useCharacter } from '@/lib/api/character';
-import { useStreak } from '@/lib/api/streak';
 import { useT } from '@/lib/i18n';
 import {
   useCompleteTask,
@@ -66,7 +65,6 @@ export default function HomeScreen() {
   const { t } = useT();
   const character = useCharacter();
   const buckets = useHomeBuckets();
-  const streak = useStreak();
   const completeTask = useCompleteTask();
   const skipTask = useSkipTaskToday();
   const unskipTask = useUnskipTaskToday();
@@ -87,7 +85,7 @@ export default function HomeScreen() {
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
 
-    const reward = rewardForTaskSubs(subs, streak.data?.currentStreak ?? 0);
+    const reward = rewardForTaskSubs(subs);
     const fid = Date.now();
     setFloats((prev) => [
       ...prev,
@@ -98,7 +96,6 @@ export default function HomeScreen() {
       {
         task,
         subs,
-        streakDays: streak.data?.currentStreak ?? 0,
       },
       {
         onError: (err) => {
@@ -203,11 +200,10 @@ export default function HomeScreen() {
     await Promise.all([
       character.refetch(),
       buckets.refetch(),
-      streak.refetch(),
     ]);
   };
   const isRefreshing =
-    character.isRefetching || buckets.isRefetching || streak.isRefetching;
+    character.isRefetching || buckets.isRefetching;
 
   const data = buckets.data;
   const totalPending =
@@ -252,7 +248,6 @@ export default function HomeScreen() {
             xpInLevel={lp.xpInLevel}
             xpNeededForLevel={lp.xpNeededForLevel}
             coins={character.data?.character.coins ?? 0}
-            streakDays={streak.data?.currentStreak ?? 0}
             dateLabel={formatCompactDate()}
             onHistoryPress={() => router.push('/history')}
           />
@@ -320,7 +315,6 @@ export default function HomeScreen() {
                         <TaskCard
                           key={task.id}
                           task={task}
-                          streakDays={streak.data?.currentStreak ?? 0}
                           onComplete={() => handleQuickComplete(task)}
                           onLongPress={() => handleLongPress(task)}
                           onEdit={() =>
@@ -372,7 +366,6 @@ export default function HomeScreen() {
       <CompleteTaskSheet
         visible={sheetTask !== null}
         task={sheetTask}
-        streakDays={streak.data?.currentStreak ?? 0}
         onCancel={() => setSheetTask(null)}
         onConfirm={handleSheetConfirm}
       />

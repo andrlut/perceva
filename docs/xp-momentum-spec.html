@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>XP &amp; Momentum — V3 Spec (proposta pro Artur)</title>
+<style>
+  :root {
+    --bg: #fafafb;
+    --fg: #181820;
+    --muted: #555567;
+    --faint: #8a8a9e;
+    --accent: #5b3cd6;
+    --accent-soft: #f0eaff;
+    --border: #e2e2ea;
+    --code-bg: #f1f1f6;
+    --closed-bg: #e8f5ec;
+    --closed-fg: #14642a;
+    --closed-border: #b9dfc4;
+    --open-bg: #fff3e0;
+    --open-fg: #8a4500;
+    --open-border: #f0c98a;
+    --shift-bg: #fef6ec;
+    --shift-border: #f0d99c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.55;
+    margin: 0;
+    padding: 32px 16px 72px;
+    -webkit-font-smoothing: antialiased;
+  }
+  main {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+  header.title-block {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 18px;
+    margin-bottom: 24px;
+  }
+  h1 {
+    font-size: 26px;
+    margin: 0 0 6px;
+    letter-spacing: -0.02em;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 14px;
+  }
+  h2 {
+    font-size: 19px;
+    margin: 36px 0 12px;
+    letter-spacing: -0.01em;
+    color: var(--accent);
+  }
+  h3 {
+    font-size: 15px;
+    margin: 22px 0 4px;
+  }
+  p, li { font-size: 14px; }
+  ul, ol { padding-left: 22px; margin: 6px 0; }
+  li { margin: 4px 0; }
+  code, .mono {
+    font-family: "SF Mono", Monaco, Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0 18px;
+    font-size: 13.5px;
+  }
+  th, td {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: var(--accent-soft);
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+  }
+  .shift {
+    background: var(--shift-bg);
+    border: 1px solid var(--shift-border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin: 12px 0;
+  }
+  .shift h3 { margin-top: 0; color: var(--open-fg); }
+  .shift p { margin: 4px 0; }
+  .decision {
+    background: var(--closed-bg);
+    border: 1px solid var(--closed-border);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .decision .label {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--closed-fg);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .decision strong { color: var(--closed-fg); }
+  .open-block {
+    background: #fffaef;
+    border: 1px solid var(--open-border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin: 14px 0;
+  }
+  .open-block .label {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--open-fg);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .open-block h3 { margin: 0 0 8px; color: var(--fg); }
+  .open-block .suggestion {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-top: 8px;
+    font-size: 13px;
+  }
+  .open-block .response {
+    border-left: 3px solid var(--open-fg);
+    padding-left: 12px;
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--muted);
+    font-style: italic;
+  }
+  .formula {
+    background: var(--code-bg);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin: 10px 0;
+    font-family: "SF Mono", Monaco, Menlo, Consolas, monospace;
+    font-size: 13px;
+    overflow-x: auto;
+  }
+  .footer-meta {
+    color: var(--faint);
+    font-size: 12px;
+    margin-top: 40px;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+  }
+  hr { border: 0; border-top: 1px solid var(--border); margin: 28px 0; }
+  @media print {
+    body { background: white; padding: 16px; }
+    .open-block, .decision, .shift { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<main>
+
+<header class="title-block">
+  <h1>XP &amp; Momentum — V3 Spec</h1>
+  <div class="subtitle">
+    Proposta de consolidação em cima da sua branch <code>feat/xp-redesign</code>.
+    O André leu seu doc e bateu 5 decisões; sobraram <strong>5 pontas abertas</strong>
+    (seção <em>"Decisões em aberto"</em>) pra você opinar antes de a gente
+    implementar. Doc autônomo — pode abrir em qualquer browser, printar, etc.
+  </div>
+</header>
+
+<h2>1. Resumo do modelo proposto</h2>
+
+<p>
+  O XP original do app cresce sempre e o streak é frágil. A reescrita V3 separa
+  três coisas que estavam misturadas:
+</p>
+
+<table>
+  <thead>
+    <tr><th>Conceito</th><th>O que é</th><th>Comporta&shy;mento</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Lifetime progress</strong><br /><span class="mono">total_xp</span></td>
+      <td>Progresso permanente acumulado</td>
+      <td>Nunca cai. Dirige nível e marcos.</td>
+    </tr>
+    <tr>
+      <td><strong>Momentum</strong></td>
+      <td>Ritmo recente <em>por sub</em></td>
+      <td>Soma móvel com decay diário. Cap em 25% de bônus sobre XP+coins.</td>
+    </tr>
+    <tr>
+      <td><strike>Consistency / Streak</strike></td>
+      <td>—</td>
+      <td><strong>Removido.</strong> Momentum cobre o papel de "ritmo".</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>2. Duas mudanças filosóficas do seu draft</h2>
+
+<div class="shift">
+  <h3>Shift 1 — Sem streak / consistency, ponto.</h3>
+  <p>
+    Seu doc tinha <em>Consistency</em> como streak suave (com rest protection,
+    recovery window, badges de "comeback"). O André foi mais radical: <strong>cortar
+    o conceito de streak inteiramente</strong>. Só Momentum.
+  </p>
+  <p>
+    <strong>Por quê:</strong> Streak (mesmo suave) ainda cria a sensação de
+    "se eu pular um dia eu perco alguma coisa". Momentum + decay cobre o mesmo
+    incentivo emocional sem o gatilho de culpa. Um conceito único é mais limpo
+    pro user entender.
+  </p>
+</div>
+
+<div class="shift">
+  <h3>Shift 2 — Momentum é <em>por sub</em>, desde o v1.</h3>
+  <p>
+    Seu doc sugeria começar com 1 Momentum global e dividir por categoria
+    depois. O André quer <strong>per-sub desde o lançamento</strong>.
+  </p>
+  <p>
+    <strong>Por quê:</strong> o app já é multi-sub no modelo de tasks. Faz
+    mais sentido a pessoa ver "meu momentum em <em>sleep</em> tá alto, em
+    <em>build</em> tá baixo" do que um número global vazio. Reflete a vida
+    real: a gente raramente está "em ritmo" em tudo ao mesmo tempo.
+  </p>
+</div>
+
+<h2>3. Decisões fechadas (já batidas pelo André)</h2>
+
+<div class="decision">
+  <div class="label">Decisão 1 — visualização</div>
+  <strong>Mostra número + label.</strong> Tanto o valor cru (ex: 73%) quanto
+  uma etiqueta semântica (ex: "ritmo forte", "voltando", "calmo"). Acessível
+  pra quem gosta de dado e pra quem prefere palavra.
+</div>
+
+<div class="decision">
+  <div class="label">Decisão 2 — efeito do bônus</div>
+  <strong>Bônus afeta XP e coins.</strong> Reforço positivo direto pra manter
+  o momentum. Não punição: você nunca <em>perde</em> XP nem coins, só ganha
+  menos quando o momentum está baixo.
+</div>
+
+<div class="decision">
+  <div class="label">Decisão 3 — sem streak</div>
+  <strong>Sem streak, sem rest protection, sem "comeback shields".</strong>
+  Quem pulou um dia simplesmente decaiu um pouco. Quem vem rodando há semanas
+  pode pular 2-3 dias sem cair do cap.
+</div>
+
+<div class="decision">
+  <div class="label">Decisão 4 — base do cálculo</div>
+  <strong>Momentum por sub, baseado em XP ganho na sub, não em count de
+  tasks.</strong> Uma task pesada (3 estrelas em sleep) move mais o momentum
+  de sleep do que uma task leve (1 estrela em sleep). Anti-farming embutido.
+</div>
+
+<div class="decision">
+  <div class="label">Decisão 5 — naming</div>
+  <strong>Nome do conceito: "Momentum".</strong> "Recent effort"/"Rhythm" do
+  seu draft viram sinônimos internos. UI usa <em>Momentum</em>.
+</div>
+
+<h2>4. O modelo, em pseudocódigo</h2>
+
+<p>Pra cada sub, todo dia:</p>
+
+<div class="formula">
+momentum[sub] = Σ (xp_ganho_no_sub[d] × decay(d))<br />
+&nbsp;&nbsp;onde d = dias atrás, do hoje até ~30 dias<br />
+&nbsp;&nbsp;decay(0) = 1.0&nbsp;&nbsp; (hoje)<br />
+&nbsp;&nbsp;decay(1) = 0.9&nbsp;&nbsp; (ontem)<br />
+&nbsp;&nbsp;decay(d) = 0.9 ^ d&nbsp;(geral)<br /><br />
+bonus_pct[sub] = min(0.25, momentum[sub] / CAP_VALUE)<br /><br />
+ao completar task:<br />
+&nbsp;&nbsp;pra cada sub que a task toca:<br />
+&nbsp;&nbsp;&nbsp;&nbsp;xp_granted_sub = base_xp_sub × (1 + bonus_pct[sub])<br />
+&nbsp;&nbsp;&nbsp;&nbsp;coins_granted_sub = base_coins_sub × (1 + bonus_pct[sub])
+</div>
+
+<p>
+  <strong>Observação importante:</strong> como uma task pode tocar várias subs
+  (modelo multi-sub atual), cada sub aplica <em>seu próprio</em> bônus. Uma
+  task que toca sleep (alto momentum) + build (baixo momentum) gera XP/coins
+  com bônus diferentes por sub. Aditivo, não médio.
+</p>
+
+<h2>5. Decisões em aberto — <span style="color: var(--open-fg)">precisam do Artur</span></h2>
+
+<p>
+  5 pontas. O André já tem uma sugestão pra cada uma; teu papel aqui é
+  <strong>confirmar ou propor alternativa</strong> em cada um dos blocos abaixo.
+</p>
+
+<div class="open-block">
+  <div class="label">A — curva de decay</div>
+  <h3>A função de decay é 0.9^d (sua proposta original) ou outra?</h3>
+  <p>
+    0.9^d significa: ontem vale 90%, anteontem 81%, 1 semana 48%, 2 semanas
+    23%, 3 semanas 11%, 1 mês 4%. Janela efetiva ~30 dias.
+  </p>
+  <div class="suggestion">
+    <strong>Sugestão (André):</strong> manter <code>0.9^d</code>. É o que você
+    propôs e a curva é equilibrada — 1 semana ainda contribui significativamente,
+    1 mês está praticamente zerado.
+  </div>
+  <div class="response">
+    Resposta do Artur: ___________
+  </div>
+</div>
+
+<div class="open-block">
+  <div class="label">B — cap → bônus</div>
+  <h3>Como traduzir a soma do momentum em % de bônus?</h3>
+  <p>
+    A soma ponderada do XP recente é um número absoluto (ex: 487). Precisa
+    virar uma porcentagem entre 0% e 25%.
+  </p>
+  <div class="suggestion">
+    <strong>Sugestão (André):</strong> mapeamento <em>linear até saturar</em>.
+    Definir um <code>CAP_VALUE</code> (ex: 300 XP de soma ponderada na sub) que
+    corresponde a 25% de bônus. Acima do cap, o bônus para de subir mas a soma
+    continua acumulando — vira "estoque" que protege contra pausas. <em>O valor
+    exato do CAP_VALUE é calibração depois de observar dados reais — vai com
+    150-300 e ajusta.</em>
+  </div>
+  <div class="response">
+    Resposta do Artur: ___________
+  </div>
+</div>
+
+<div class="open-block">
+  <div class="label">C — anti-farm dentro do dia</div>
+  <h3>Se eu completo 5 tasks de sleep no mesmo dia, todas contam 100% pro momentum?</h3>
+  <p>
+    Risco: usuário "farma" tasks pequenas pra inflar o momentum de uma sub
+    artificialmente.
+  </p>
+  <div class="suggestion">
+    <strong>Sugestão (André):</strong> <em>nenhuma penalidade dentro do dia</em>
+    — todas contam 100%. Se virar problema, fica mais simples colocar um
+    <em>daily cap absoluto de XP por sub</em> (ex: máximo de 100 XP/sub/dia
+    contam pro momentum) do que diminishing returns dentro do dia.
+  </div>
+  <div class="response">
+    Resposta do Artur: ___________
+  </div>
+</div>
+
+<div class="open-block">
+  <div class="label">D — usuários existentes</div>
+  <h3>Backfill do momentum lendo task_completion histórica, ou começa todo mundo do zero?</h3>
+  <p>
+    Hoje tem usuários ativos (André, irmão, futuros) com histórico de tasks.
+    Quando a feature subir, o momentum deles começa zerado ou já reflete o
+    que fizeram?
+  </p>
+  <div class="suggestion">
+    <strong>Sugestão (André):</strong> <em>backfill</em>. Calcular o momentum
+    lendo <code>task_completion_sub</code> dos últimos 30 dias é uma query
+    barata (índice em <code>character_id + completed_at</code>). Respeita
+    quem já tá engajado em vez de "punir" com reset. Implementação: o cálculo
+    é on-the-fly, então backfill é automático.
+  </div>
+  <div class="response">
+    Resposta do Artur: ___________
+  </div>
+</div>
+
+<div class="open-block">
+  <div class="label">E — visualização</div>
+  <h3>Onde aparece o momentum per-sub? 12 subs é muito pra mostrar tudo de uma vez.</h3>
+  <p>
+    Decisão de UX: precisamos achar um lugar pro per-sub momentum sem
+    sobrecarregar Home.
+  </p>
+  <div class="suggestion">
+    <strong>Sugestão (André):</strong>
+    <ul>
+      <li><strong>Hero tab</strong>, painel <em>Dedicação</em>: lista
+        completa per-sub com barrinha de momentum + número + label.</li>
+      <li><strong>Home (Tasks)</strong>: chip discreto agregado, tipo
+        <em>"3 subs em ritmo forte"</em>. Toque expande detalhes.</li>
+      <li>Talvez um <strong>glow sutil</strong> nas dim/sub chips quando a
+        sub está em alto momentum, pra reforço visual passivo.</li>
+    </ul>
+  </div>
+  <div class="response">
+    Resposta do Artur: ___________
+  </div>
+</div>
+
+<h2>6. Notas de implementação (não-bloqueantes)</h2>
+
+<p>Lista do que vai mudar no código quando a gente fechar as 5 pontas:</p>
+
+<ul>
+  <li>
+    <strong>Migration:</strong> novo cálculo em <code>complete_task</code>.
+    Substitui o uso de <code>streak_multiplier(streak_days)</code> por um
+    cálculo de momentum on-the-fly por sub. <code>task_completion.xp_granted</code>
+    continua imutável (cache no momento da conclusão).
+  </li>
+  <li>
+    <strong>Retiro:</strong> a função <code>streak_multiplier</code> e a função
+    <code>compute_streak_days</code> ficam deprecadas. Removeríamos do
+    <code>complete_task</code> mas mantemos a função no schema por compatibilidade
+    histórica.
+  </li>
+  <li>
+    <strong>Nova RPC (opcional):</strong> <code>compute_momentum(p_sub_id)</code>
+    pra a UI ler o momentum atual sem refazer o cálculo no client.
+  </li>
+  <li>
+    <strong>Tela <code>character.tsx</code> (Hero):</strong> painel Dedicação
+    ganha visualização per-sub.
+  </li>
+  <li>
+    <strong>Tela <code>index.tsx</code> (Tasks):</strong> streak chip atual
+    desaparece, vira chip agregado de momentum.
+  </li>
+  <li>
+    <strong>i18n:</strong> novas keys <code>momentum.label.low/mid/high/peak</code>,
+    <code>momentum.bonusActive</code>, etc.
+  </li>
+</ul>
+
+<h2>7. Como o doc encaixa no roadmap V3</h2>
+
+<p>
+  O modelo dos 3 pilares fica assim com o que a gente decidiu:
+</p>
+
+<table>
+  <thead>
+    <tr><th>Pilar</th><th>Sub-pilar</th><th>Relação com Momentum</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>2. Identidade Praticada</strong></td><td>2.1 Dedicação</td><td>Tasks/quests/XP — alimenta o Momentum dia a dia</td></tr>
+    <tr><td></td><td>2.2 Momentum</td><td>Esse aqui. Métrica de ritmo per-sub com cap em +25% de bônus.</td></tr>
+  </tbody>
+</table>
+
+<hr />
+
+<div class="footer-meta">
+  Doc gerado em conjunto entre <strong>André</strong> e <strong>Claude</strong>
+  (Anthropic) na sessão de planejamento da Fase 2 V3.
+  Branch original do Artur: <code>feat/xp-redesign</code>.
+  Doc atual: <code>docs/xp-momentum-spec.html</code>.<br />
+  Quando você fechar as 5 pontas, manda de volta pro André que ele toca a
+  implementação na mesma branch, pra preservar autoria.
+</div>
+
+</main>
+</body>
+</html>
