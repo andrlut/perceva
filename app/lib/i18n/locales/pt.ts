@@ -272,6 +272,16 @@ const pt: Translations = {
     },
     momentum: {
       label: 'Momentum',
+      recentEffort: 'Esforço recente por atributo',
+      tier: {
+        calm: 'calmo',
+        building: 'subindo',
+        strong: 'forte',
+        peak: 'pleno',
+      },
+      bonusActive: '+{{percent}}% bônus',
+      // Legacy streak-style keys (deprecated; kept while any leftover
+      // V2 streak surface still references them).
       days: { one: '{{count}} dia', other: '{{count}} dias' },
       best: 'Recorde: {{count}}',
       atRisk: 'Em risco',

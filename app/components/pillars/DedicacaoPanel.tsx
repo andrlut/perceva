@@ -5,8 +5,14 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ProgressBar } from '@/components/ProgressBar';
 import type { CharacterDimension, DimensionId } from '@/lib/db/types';
+import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
-import { levelProgress, type AttributeMomentum } from '@/lib/xp';
+import {
+  levelProgress,
+  momentumBonus,
+  momentumTier,
+  type AttributeMomentum,
+} from '@/lib/xp';
 import { tokens } from '@/theme';
 import { DIMENSION_META, DIMENSION_ORDER, SUBS_BY_DIM } from '@/theme/dimensions';
 
@@ -26,6 +32,7 @@ const DIM_ABBREV: Record<DimensionId, string> = {
 
 export function DedicacaoPanel({ dimensions, momentum = [] }: Props) {
   const router = useRouter();
+  const { t } = useT();
   const metaLookup = useMetaLookup();
   const dimMap = useMemo(() => {
     const m = new Map<DimensionId, CharacterDimension>();
@@ -41,8 +48,8 @@ export function DedicacaoPanel({ dimensions, momentum = [] }: Props) {
   return (
     <View style={styles.card}>
       <View>
-        <Text style={styles.title}>Momentum</Text>
-        <Text style={styles.subtitle}>Recent effort by attribute</Text>
+        <Text style={styles.title}>{t('home.momentum.label')}</Text>
+        <Text style={styles.subtitle}>{t('home.momentum.recentEffort')}</Text>
       </View>
 
       <View style={styles.list}>
@@ -85,7 +92,11 @@ export function DedicacaoPanel({ dimensions, momentum = [] }: Props) {
                   </View>
                 </View>
                 <View style={styles.momentumPill}>
-                  <Text style={styles.momentumLabel}>Momentum</Text>
+                  <Text style={styles.momentumLabel}>
+                    {t(
+                      `home.momentum.tier.${momentumTier(attrMomentum?.momentum ?? 0)}`,
+                    ).toUpperCase()}
+                  </Text>
                   <Text style={[styles.momentumValue, { color: meta.color }]}>
                     {attrMomentum?.momentum ?? 0}
                   </Text>
@@ -102,12 +113,19 @@ export function DedicacaoPanel({ dimensions, momentum = [] }: Props) {
               <View style={styles.subList}>
                 {SUBS_BY_DIM[id].map((subId) => {
                   const subMeta = metaLookup.sub(subId);
+                  const value = subMomentum.get(subId) ?? 0;
+                  const bonusPct = Math.round(momentumBonus(value) * 100);
                   return (
                     <View key={subId} style={styles.subRow}>
                       <Text style={styles.subName}>{subMeta?.label ?? subId}</Text>
-                      <Text style={styles.subMomentum}>
-                        {subMomentum.get(subId) ?? 0}
-                      </Text>
+                      <View style={styles.subValueRow}>
+                        {bonusPct > 0 && (
+                          <Text style={[styles.subBonus, { color: meta.color }]}>
+                            {t('home.momentum.bonusActive', { percent: bonusPct })}
+                          </Text>
+                        )}
+                        <Text style={styles.subMomentum}>{value}</Text>
+                      </View>
                     </View>
                   );
                 })}
@@ -226,6 +244,16 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 13,
     color: tokens.text.hi,
+  },
+  subValueRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 6,
+  },
+  subBonus: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 11,
+    letterSpacing: 0.2,
   },
   cta: {
     flexDirection: 'row',

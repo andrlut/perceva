@@ -27,6 +27,32 @@ const REWARD_BY_DIFFICULTY: Record<Difficulty, { xp: number; coins: number }> = 
 export const MOMENTUM_WINDOW_DAYS = 30;
 export const MOMENTUM_DECAY = 0.9;
 
+/**
+ * Momentum bonus calibration — mirrors the constants in
+ * supabase migration 20260514000002_complete_task_momentum_bonus.
+ * If you tweak these, tweak both sides in lockstep so optimistic UI
+ * matches what the RPC actually grants.
+ */
+export const MOMENTUM_BONUS_CAP = 0.25;
+export const MOMENTUM_CAP_VALUE = 300;
+
+export type MomentumTier = 'calm' | 'building' | 'strong' | 'peak';
+
+/** Bucket a momentum value into a 4-tier qualitative label. */
+export function momentumTier(value: number): MomentumTier {
+  if (value >= MOMENTUM_CAP_VALUE) return 'peak';
+  if (value >= 150) return 'strong';
+  if (value >= 50) return 'building';
+  return 'calm';
+}
+
+/** Bonus % (0..MOMENTUM_BONUS_CAP) derived from a per-sub momentum value. */
+export function momentumBonus(value: number): number {
+  const ramp =
+    (Math.max(0, value) / MOMENTUM_CAP_VALUE) * MOMENTUM_BONUS_CAP;
+  return Math.min(MOMENTUM_BONUS_CAP, ramp);
+}
+
 export interface DailyMomentumInput {
   /** Local-date key in YYYY-MM-DD form. */
   dateKey: string;

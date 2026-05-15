@@ -282,6 +282,16 @@ const en = {
     },
     momentum: {
       label: 'Momentum',
+      recentEffort: 'Recent effort by attribute',
+      tier: {
+        calm: 'calm',
+        building: 'building',
+        strong: 'strong',
+        peak: 'peak',
+      },
+      bonusActive: '+{{percent}}% bonus',
+      // Legacy streak-style keys (deprecated; kept while any leftover
+      // V2 streak surface still references them).
       days: { one: '{{count}} day', other: '{{count}} days' },
       best: 'Best: {{count}}',
       atRisk: 'At risk',
