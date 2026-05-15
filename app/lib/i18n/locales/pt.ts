@@ -149,8 +149,20 @@ const pt: Translations = {
       summary: 'Resumo',
       news: 'Notícia',
     },
+    readFilter: {
+      all: 'Todos',
+      unread: 'Não lidos',
+      read: 'Lidos',
+    },
+    stats: {
+      summary: '{{read}} de {{total}} lidos',
+      byDim: 'Por dimensão',
+      byType: 'Por tipo',
+      bySub: 'Por sub',
+    },
     detail: {
       source: 'Fonte',
+      takeaways: 'O que levar daqui',
       markRead: 'Marcar como lido',
       markedRead: 'Lido',
       alreadyRead: 'Você já leu esse material. XP já foi creditado.',

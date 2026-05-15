@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
@@ -14,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LearningBody } from '@/components/LearningBody';
+import { MaterialCover } from '@/components/MaterialCover';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import {
   useLearningMaterial,
@@ -85,6 +85,7 @@ export default function MaterialDetailScreen() {
   const summary = locale === 'pt' ? m.summary_pt : m.summary_en;
   const body = locale === 'pt' ? m.body_pt : m.body_en;
   const sourceLabel = locale === 'pt' ? m.source_label_pt : m.source_label_en;
+  const takeaways = locale === 'pt' ? m.takeaways_pt : m.takeaways_en;
   const dim = meta.dim(m.dimension_id);
 
   // 5 base + 5 per related sub (mirrors the RPC). Displayed as the reward
@@ -110,36 +111,32 @@ export default function MaterialDetailScreen() {
       <ScreenBackground>
         <Stack.Screen options={{ headerShown: false }} />
 
-        <View style={styles.topBar}>
-          <Pressable
-            onPress={() => router.back()}
-            style={({ pressed }) => [styles.backBtn, pressed && styles.backBtnPressed]}
-            hitSlop={10}
-          >
-            <Ionicons name="chevron-back" size={22} color={tokens.text.hi} />
-          </Pressable>
-          <Text style={styles.topBarTitle}>{typeLabel(m.type, t)}</Text>
-          <View style={styles.backBtn} />
-        </View>
-
         <ScrollView contentContainerStyle={styles.scroll}>
-          {/* Hero — gradient backdrop colored by the material's dim */}
-          <LinearGradient
-            colors={[dim.bg, 'rgba(36, 42, 88, 0.0)'] as [string, string]}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 1 }}
-            style={styles.hero}
-          >
-            <View style={[styles.heroIcon, { backgroundColor: dim.bg, borderColor: dim.color }]}>
-              <Ionicons
-                name={dim.iconName as keyof typeof Ionicons.glyphMap}
-                size={32}
-                color={dim.color}
-              />
+          {/* Visual hero — full-bleed cover */}
+          <View style={styles.heroWrap}>
+            <MaterialCover
+              dimensionId={m.dimension_id}
+              subId={m.subs[0] ?? null}
+              imageUrl={m.hero_image_url}
+              variant="hero"
+            />
+            <Pressable
+              onPress={() => router.back()}
+              style={({ pressed }) => [styles.backBtn, pressed && styles.backBtnPressed]}
+              hitSlop={10}
+            >
+              <Ionicons name="chevron-back" size={22} color={tokens.text.hi} />
+            </Pressable>
+            <View style={styles.heroTypePill}>
+              <Text style={styles.heroTypeText}>{typeLabel(m.type, t)}</Text>
             </View>
-            <Text style={styles.heroTitle}>{title}</Text>
-            <Text style={styles.heroSummary}>{summary}</Text>
-          </LinearGradient>
+          </View>
+
+          {/* Title + summary, right under the hero */}
+          <View style={styles.titleBlock}>
+            <Text style={styles.title}>{title}</Text>
+            <Text style={styles.summary}>{summary}</Text>
+          </View>
 
           {/* Meta row */}
           <View style={styles.metaRow}>
@@ -171,6 +168,26 @@ export default function MaterialDetailScreen() {
               );
             })}
           </View>
+
+          {/* Takeaways — only render if seeded */}
+          {takeaways && takeaways.length > 0 && (
+            <View style={styles.takeawaysBox}>
+              <View style={styles.takeawaysHeader}>
+                <Ionicons name="bulb-outline" size={16} color={tokens.brand.violet2} />
+                <Text style={styles.takeawaysTitle}>{t('learning.detail.takeaways')}</Text>
+              </View>
+              <View style={styles.takeawaysList}>
+                {takeaways.map((line, idx) => (
+                  <View key={idx} style={styles.takeawayItem}>
+                    <View style={styles.takeawayNumWrap}>
+                      <Text style={styles.takeawayNum}>{idx + 1}</Text>
+                    </View>
+                    <Text style={styles.takeawayText}>{line}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
 
           {/* Body */}
           <View style={styles.bodyWrap}>
@@ -241,69 +258,73 @@ export default function MaterialDetailScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: tokens.bg.deep },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: tokens.space[3],
-    paddingTop: tokens.space[2],
-    paddingBottom: tokens.space[2],
+  scroll: {
+    paddingBottom: 120, // clearance for sticky CTA
   },
-  topBarTitle: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
-    letterSpacing: 1.4,
-    color: tokens.text.mid,
-    textTransform: 'uppercase',
+
+  // Hero
+  heroWrap: {
+    position: 'relative',
   },
   backBtn: {
+    position: 'absolute',
+    top: 14,
+    left: 14,
     width: 36,
     height: 36,
     borderRadius: 999,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: tokens.bg.glass,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
     borderWidth: 1,
-    borderColor: tokens.border.strong,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
   },
   backBtnPressed: { opacity: 0.7 },
-  scroll: {
-    paddingBottom: 120, // clearance for sticky CTA
-  },
-  hero: {
-    paddingTop: tokens.space[5],
-    paddingBottom: tokens.space[6],
-    paddingHorizontal: tokens.space[4],
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  heroIcon: {
-    width: 56,
-    height: 56,
+  heroTypePill: {
+    position: 'absolute',
+    top: 18,
+    right: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
     borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
   },
-  heroTitle: {
+  heroTypeText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 10,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    color: '#FFFFFF',
+  },
+
+  // Title block (below hero)
+  titleBlock: {
+    paddingHorizontal: tokens.space[4],
+    paddingTop: tokens.space[5],
+    paddingBottom: tokens.space[3],
+    gap: 8,
+  },
+  title: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 30,
     lineHeight: 36,
     color: tokens.text.hi,
   },
-  heroSummary: {
+  summary: {
     fontFamily: 'Manrope_500Medium',
     fontStyle: 'italic',
     fontSize: 15,
     lineHeight: 22,
     color: tokens.text.mid,
   },
+
   metaRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
     paddingHorizontal: tokens.space[4],
-    marginTop: -8,
     marginBottom: tokens.space[4],
   },
   metaPill: {
@@ -322,6 +343,62 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: tokens.text.mid,
   },
+
+  // Takeaways block
+  takeawaysBox: {
+    marginHorizontal: tokens.space[4],
+    marginBottom: tokens.space[5],
+    padding: tokens.space[4],
+    borderRadius: tokens.radius.lg,
+    backgroundColor: 'rgba(123, 92, 255, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(123, 92, 255, 0.28)',
+    gap: 10,
+  },
+  takeawaysHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  takeawaysTitle: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 12,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    color: tokens.brand.violet2,
+  },
+  takeawaysList: {
+    gap: 8,
+  },
+  takeawayItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  takeawayNumWrap: {
+    width: 22,
+    height: 22,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(123, 92, 255, 0.22)',
+    borderWidth: 1,
+    borderColor: 'rgba(123, 92, 255, 0.42)',
+    marginTop: 1,
+  },
+  takeawayNum: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 11,
+    color: tokens.brand.violet2,
+  },
+  takeawayText: {
+    flex: 1,
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 14,
+    lineHeight: 20,
+    color: tokens.text.base,
+  },
+
   bodyWrap: {
     paddingHorizontal: tokens.space[4],
   },

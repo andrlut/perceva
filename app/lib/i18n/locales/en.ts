@@ -159,8 +159,20 @@ const en = {
       summary: 'Summary',
       news: 'News',
     },
+    readFilter: {
+      all: 'All',
+      unread: 'Unread',
+      read: 'Read',
+    },
+    stats: {
+      summary: '{{read}} of {{total}} read',
+      byDim: 'By dimension',
+      byType: 'By type',
+      bySub: 'By sub',
+    },
     detail: {
       source: 'Source',
+      takeaways: 'Walk away with this',
       markRead: 'Mark as read',
       markedRead: 'Read',
       alreadyRead: 'You already read this one. XP was claimed.',

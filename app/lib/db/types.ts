@@ -543,6 +543,9 @@ export interface LearningMaterial {
   summary_en: string;
   body_pt: string;
   body_en: string;
+  /** 0..5 short bullets surfaced at the top of the detail screen. */
+  takeaways_pt: string[];
+  takeaways_en: string[];
   hero_image_url: string | null;
   source_url: string | null;
   source_label_pt: string | null;
@@ -555,8 +558,11 @@ export interface LearningMaterial {
   updated_at: string;
 }
 
-/** Shape returned from feed queries — body fields stripped to keep payload light. */
-export type LearningMaterialCard = Omit<LearningMaterial, 'body_pt' | 'body_en'>;
+/** Shape returned from feed queries — body and takeaways stripped to keep payload light. */
+export type LearningMaterialCard = Omit<
+  LearningMaterial,
+  'body_pt' | 'body_en' | 'takeaways_pt' | 'takeaways_en'
+>;
 
 export interface LearningMaterialSub {
   material_id: string;
