@@ -1,10 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 
+import { HexChart } from '@/components/HexChart';
 import { ProgressBar } from '@/components/ProgressBar';
-import type { CharacterDimension, DimensionId } from '@/lib/db/types';
+import { useTotalXpBySub } from '@/lib/api/dedicacao';
+import type { CharacterDimension, DimensionId, SubId } from '@/lib/db/types';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { levelProgress } from '@/lib/xp';
 import { tokens } from '@/theme';
@@ -34,14 +42,54 @@ const DIM_ABBREV: Record<DimensionId, string> = {
 export function DedicacaoPanel({ dimensions }: Props) {
   const router = useRouter();
   const metaLookup = useMetaLookup();
+  const { width: screenWidth } = useWindowDimensions();
+  const totalXp = useTotalXpBySub();
+
   const dimMap = useMemo(() => {
     const m = new Map<DimensionId, CharacterDimension>();
     for (const d of dimensions) m.set(d.dimension_id, d);
     return m;
   }, [dimensions]);
 
+  // Normalize per-sub XP to a 0..5 score for the hex. Anchor to the user's
+  // top sub: the heaviest-invested sub renders at full 5, the others scale
+  // proportionally — so the SHAPE reflects investment distribution, not
+  // absolute volume.
+  const xpHexScores = useMemo(() => {
+    const out = new Map<SubId, number>();
+    if (!totalXp.data || totalXp.data.length === 0) return out;
+    let max = 0;
+    for (const row of totalXp.data) if (row.totalXp > max) max = row.totalXp;
+    if (max === 0) {
+      for (const row of totalXp.data) out.set(row.subId, 0);
+      return out;
+    }
+    for (const row of totalXp.data) {
+      out.set(row.subId, (row.totalXp / max) * 5);
+    }
+    return out;
+  }, [totalXp.data]);
+
+  const chartSize = Math.max(220, Math.min((screenWidth || 360) - 32, 340));
+  const showHex = totalXp.data && totalXp.data.some((r) => r.totalXp > 0);
+
   return (
     <View style={styles.wrap}>
+      {showHex && (
+        <View style={styles.hexWrap}>
+          <HexChart
+            scores={xpHexScores}
+            size={chartSize}
+            onDimPress={(dim) =>
+              router.push({ pathname: '/dimension/[id]', params: { id: dim } })
+            }
+          />
+          <Text style={styles.hexCaption}>
+            distribuição do seu XP por sub — toque pra ver detalhes
+          </Text>
+        </View>
+      )}
+
       <View style={styles.list}>
         {DIMENSION_ORDER.map((id) => {
           const meta = DIMENSION_META[id];
@@ -112,6 +160,17 @@ export function DedicacaoPanel({ dimensions }: Props) {
 const styles = StyleSheet.create({
   wrap: {
     gap: tokens.space[3],
+  },
+  hexWrap: {
+    alignItems: 'center',
+    gap: tokens.space[2],
+  },
+  hexCaption: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 11,
+    color: tokens.text.dim,
+    fontStyle: 'italic',
+    textAlign: 'center',
   },
   list: {
     gap: tokens.space[2],
