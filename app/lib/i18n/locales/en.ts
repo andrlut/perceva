@@ -196,6 +196,28 @@ const en = {
    * Desired Identity" from the V3 product doc.
    */
   pillar: {
+    // ── Top-level pilares (V3 official names) ─────────────────────
+    top: {
+      percebida: { label: 'Perceived', long: 'Perceived Identity' },
+      praticada: { label: 'Practiced', long: 'Practiced Identity' },
+      desejada: { label: 'Desired', long: 'Desired Identity' },
+    },
+    // ── Sub-pilares within each top pillar ──────────────────────
+    sub: {
+      percebida: {
+        avaliacao: 'Assessment',
+        autoconhecimento: 'Self-knowledge',
+      },
+      praticada: {
+        dedicacao: 'Dedication',
+        momentum: 'Momentum',
+      },
+      desejada: {
+        goals: 'Goals',
+        skills: 'Skills',
+      },
+    },
+    // ── Legacy keys (PR #136 — generic sub-pillar reference) ────
     avaliacao: {
       short: 'Assessment',
       long: 'Assessment · how I see myself',
@@ -210,6 +232,17 @@ const en = {
       short: 'Skills',
       long: 'Skills · where I level up',
       identity: 'Desired Identity',
+    },
+  },
+
+  pillarPlaceholder: {
+    autoconhecimento: {
+      title: 'Coming soon',
+      body: 'Big Five, Schwartz and ECR-R with visual cards.',
+    },
+    goals: {
+      title: 'Coming soon',
+      body: 'Direction: who you want to become and how close you’re getting.',
     },
   },
 
