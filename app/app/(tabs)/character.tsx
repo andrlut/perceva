@@ -13,13 +13,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { InfoSheet } from '@/components/InfoSheet';
 import { LevelRing } from '@/components/LevelRing';
-import { PillarTabs, type PillarKey } from '@/components/PillarTabs';
+import { PillarSwitcher, type PillarKey } from '@/components/PillarSwitcher';
 import { ProgressBar } from '@/components/ProgressBar';
 import { ScreenBackground } from '@/components/ScreenBackground';
+import { SubSelector } from '@/components/SubSelector';
 import { AvaliacaoPanel } from '@/components/pillars/AvaliacaoPanel';
 import { DedicacaoPanel } from '@/components/pillars/DedicacaoPanel';
+import { MomentumView } from '@/components/pillars/MomentumView';
+import { PillarPlaceholder } from '@/components/pillars/PillarPlaceholder';
 import { SkillsPanel } from '@/components/pillars/SkillsPanel';
-import { pickSubScores, useCharacter } from '@/lib/api/character';
+import { useCharacter } from '@/lib/api/character';
 import { useMomentum } from '@/lib/api/momentum';
 import { useSkillStates } from '@/lib/api/skills';
 import type { CharacterDimension, DimensionId } from '@/lib/db/types';
@@ -46,13 +49,6 @@ function pickStrongestDim(
   return { dim: best.dimension_id, rankKey };
 }
 
-/** Compact 1.2k / 12.3k formatter for the Dedicação tab KPI. */
-function formatXp(xp: number): string {
-  if (xp < 1000) return String(xp);
-  if (xp < 10000) return (xp / 1000).toFixed(1) + 'k';
-  return Math.floor(xp / 1000) + 'k';
-}
-
 const TITLE_INFO_BODY =
   'Derivado em runtime da sua dimensão mais forte (a com mais XP).\n\n' +
   'O nível dessa dimensão define o rank:\n' +
@@ -62,15 +58,47 @@ const TITLE_INFO_BODY =
   '• Master — nível 10+\n\n' +
   'Muda sozinho conforme você ganha XP em outras dimensões.';
 
+// Sub-pillar key types per pilar — kept narrow so TS catches mis-typings.
+type PercebidaSub = 'avaliacao' | 'autoconhecimento';
+type PraticadaSub = 'dedicacao' | 'momentum';
+type DesejadaSub = 'goals' | 'skills';
+
+interface ActiveSubState {
+  percebida: PercebidaSub;
+  praticada: PraticadaSub;
+  desejada: DesejadaSub;
+}
+
+// Visual tones per pilar — match PillarSwitcher; reused by SubSelector
+// so the sub-chip tint stays coherent with the pillar above.
+const PILLAR_TONE: Record<PillarKey, { accent: string; halo: string; border: string }> = {
+  percebida: {
+    accent: tokens.brand.violet2,
+    halo: 'rgba(155, 130, 255, 0.18)',
+    border: 'rgba(155, 130, 255, 0.35)',
+  },
+  praticada: {
+    accent: tokens.semantic.xp2,
+    halo: 'rgba(111, 232, 170, 0.18)',
+    border: 'rgba(61, 214, 140, 0.35)',
+  },
+  desejada: {
+    accent: tokens.semantic.coin,
+    halo: 'rgba(255, 200, 61, 0.18)',
+    border: 'rgba(255, 200, 61, 0.35)',
+  },
+};
+
 /**
- * Hero tab — identity on top, then a 3-segment switcher between the pilares
- * (Avaliação · Dedicação · Skills). Body changes based on the active tab;
- * default is Avaliação so the hex chart greets the user on open.
+ * Eu (formerly Hero) tab — identity header on top, then a 3-icon pillar
+ * switcher followed by a 2-segment sub-selector for the active pilar's
+ * sub-pilares. Content renders directly into the page scroll (no card
+ * wrapper) so the hex / list / placeholder dominate the screen.
  *
- * The pilares get tone-distinct chassis (see PillarTabs for the tone map):
- *   - Avaliação  → contemplative (violet)
- *   - Dedicação  → dopaminergic (xp green)
- *   - Skills     → ceremonious (coin gold)
+ * Default sub per pilar:
+ *   - Percebida → Avaliação (hex chamariz)
+ *   - Praticada → Dedicação (XP view)
+ *   - Desejada → Skills (real content; Goals lands later)
  */
 export default function CharacterScreen() {
   const { t } = useT();
@@ -78,7 +106,13 @@ export default function CharacterScreen() {
   const character = useCharacter();
   const skillStates = useSkillStates();
   const momentum = useMomentum();
-  const [activePillar, setActivePillar] = useState<PillarKey>('avaliacao');
+
+  const [activePillar, setActivePillar] = useState<PillarKey>('percebida');
+  const [activeSub, setActiveSub] = useState<ActiveSubState>({
+    percebida: 'avaliacao',
+    praticada: 'dedicacao',
+    desejada: 'skills',
+  });
   const [infoOpen, setInfoOpen] = useState<null | 'title'>(null);
 
   const strongest = useMemo(
@@ -91,32 +125,6 @@ export default function CharacterScreen() {
         dim: strongest.dim,
       }
     : null;
-
-  // ── KPIs surfaced on each tab ───────────────────────────────────────
-  // Same calc as HexChart's center "overall" — sum of 12 sub scores divided
-  // by 6 dims, range 0-10. Keeps the tab KPI and the hex center identical.
-  const avaliacaoKpi = useMemo(() => {
-    if (!character.data) return { kpi: '—' };
-    const scores = pickSubScores(character.data.subScores, 'self');
-    if (scores.size === 0) return { kpi: '—' };
-    let sum = 0;
-    for (const s of scores.values()) sum += s;
-    const overall = sum / 6;
-    return { kpi: overall.toFixed(1), unit: '/10' };
-  }, [character.data]);
-
-  const dedicacaoKpi = useMemo(() => {
-    const xp = character.data?.character.total_xp ?? 0;
-    return { kpi: formatXp(xp), unit: ' XP' };
-  }, [character.data]);
-
-  const skillsKpi = useMemo(() => {
-    const states = skillStates.data ?? [];
-    const earned = states.filter(
-      (s) => s.currentTier.tier_name !== 'beginner',
-    ).length;
-    return { kpi: String(earned) };
-  }, [skillStates.data]);
 
   if (character.isLoading) {
     return (
@@ -141,6 +149,30 @@ export default function CharacterScreen() {
   const { profile, character: char, dimensions } = character.data;
   const totalProgress = levelProgress(char.total_xp);
   const titleDim = title ? metaLookup.dim(title.dim) : null;
+
+  const tone = PILLAR_TONE[activePillar];
+
+  // Build the sub-selector options for the active pillar.
+  const subOptions: [{ key: string; label: string }, { key: string; label: string }] =
+    activePillar === 'percebida'
+      ? [
+          { key: 'avaliacao', label: t('pillar.sub.percebida.avaliacao') },
+          { key: 'autoconhecimento', label: t('pillar.sub.percebida.autoconhecimento') },
+        ]
+      : activePillar === 'praticada'
+        ? [
+            { key: 'dedicacao', label: t('pillar.sub.praticada.dedicacao') },
+            { key: 'momentum', label: t('pillar.sub.praticada.momentum') },
+          ]
+        : [
+            { key: 'goals', label: t('pillar.sub.desejada.goals') },
+            { key: 'skills', label: t('pillar.sub.desejada.skills') },
+          ];
+  const currentSub = activeSub[activePillar];
+
+  const handleSubChange = (key: string) => {
+    setActiveSub((prev) => ({ ...prev, [activePillar]: key } as ActiveSubState));
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -176,8 +208,7 @@ export default function CharacterScreen() {
                 progress={
                   totalProgress.xpNeededForLevel === 0
                     ? 0
-                    : totalProgress.xpInLevel /
-                      totalProgress.xpNeededForLevel
+                    : totalProgress.xpInLevel / totalProgress.xpNeededForLevel
                 }
               >
                 <Ionicons
@@ -190,9 +221,7 @@ export default function CharacterScreen() {
                 <Text style={styles.name} numberOfLines={1}>
                   {profile.display_name}
                 </Text>
-                <Text style={styles.levelLine}>
-                  Level {totalProgress.level}
-                </Text>
+                <Text style={styles.levelLine}>Level {totalProgress.level}</Text>
                 <View style={styles.chipRow}>
                   {title && titleDim && (
                     <Pressable
@@ -212,9 +241,7 @@ export default function CharacterScreen() {
                         size={11}
                         color={titleDim.color}
                       />
-                      <Text
-                        style={[styles.titleText, { color: titleDim.color }]}
-                      >
+                      <Text style={[styles.titleText, { color: titleDim.color }]}>
                         {title.label}
                       </Text>
                       <Ionicons
@@ -237,37 +264,55 @@ export default function CharacterScreen() {
                 <Text style={styles.toNext}>
                   {Math.max(
                     0,
-                    totalProgress.xpNeededForLevel -
-                      totalProgress.xpInLevel,
+                    totalProgress.xpNeededForLevel - totalProgress.xpInLevel,
                   )}{' '}
                   XP to LV {totalProgress.level + 1}
                 </Text>
               </View>
             </View>
-
           </View>
 
-          {/* ── PILLAR TABS ──────────────────────────────────── */}
-          <PillarTabs
-            active={activePillar}
-            onChange={setActivePillar}
-            avaliacao={avaliacaoKpi}
-            dedicacao={dedicacaoKpi}
-            skills={skillsKpi}
+          {/* ── 3-icon pillar switcher ───────────────────────── */}
+          <PillarSwitcher active={activePillar} onChange={setActivePillar} />
+
+          {/* ── 2-segment sub-selector (current pillar's pair) ── */}
+          <SubSelector
+            options={subOptions}
+            active={currentSub}
+            onChange={handleSubChange}
+            accent={tone.accent}
+            halo={tone.halo}
+            border={tone.border}
           />
 
-          {/* ── ACTIVE PANEL ─────────────────────────────────── */}
-          <View style={styles.panelWrap}>
-            {activePillar === 'avaliacao' && (
+          {/* ── SUB-VIEW (no card wrapper — content breathes) ── */}
+          <View style={styles.subViewWrap}>
+            {activePillar === 'percebida' && currentSub === 'avaliacao' && (
               <AvaliacaoPanel subScores={character.data.subScores} />
             )}
-            {activePillar === 'dedicacao' && (
-              <DedicacaoPanel
-                dimensions={dimensions}
-                momentum={momentum.data?.attributes}
+            {activePillar === 'percebida' && currentSub === 'autoconhecimento' && (
+              <PillarPlaceholder
+                iconName="library-outline"
+                accent={tone.accent}
+                title={t('pillarPlaceholder.autoconhecimento.title')}
+                body={t('pillarPlaceholder.autoconhecimento.body')}
               />
             )}
-            {activePillar === 'skills' && (
+            {activePillar === 'praticada' && currentSub === 'dedicacao' && (
+              <DedicacaoPanel dimensions={dimensions} />
+            )}
+            {activePillar === 'praticada' && currentSub === 'momentum' && (
+              <MomentumView momentum={momentum.data?.attributes} />
+            )}
+            {activePillar === 'desejada' && currentSub === 'goals' && (
+              <PillarPlaceholder
+                iconName="flag-outline"
+                accent={tone.accent}
+                title={t('pillarPlaceholder.goals.title')}
+                body={t('pillarPlaceholder.goals.body')}
+              />
+            )}
+            {activePillar === 'desejada' && currentSub === 'skills' && (
               <SkillsPanel skills={skillStates.data ?? []} />
             )}
           </View>
@@ -351,7 +396,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
-  panelWrap: {
+  subViewWrap: {
     marginTop: 0,
   },
 });

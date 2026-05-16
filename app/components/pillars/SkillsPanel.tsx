@@ -129,10 +129,6 @@ const styles = StyleSheet.create({
     gap: tokens.space[3],
   },
   list: {
-    backgroundColor: tokens.bg.surface,
-    borderRadius: tokens.radius.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 200, 61, 0.18)',
     paddingHorizontal: tokens.space[3],
   },
   row: {
