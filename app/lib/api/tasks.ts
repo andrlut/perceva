@@ -734,6 +734,50 @@ export function useTaskTemplates() {
 }
 
 /**
+ * Complete a system task_template **directly**, without first adopting it
+ * into the user's personal task list. XP/coins/Momentum still accrue;
+ * the resulting task_completion row has task_id=null and template_id set.
+ *
+ * Used by the "Geral" tab so users can mark a one-off thing they did
+ * (e.g. "read 20 min today, but I don't read every day") without
+ * cluttering their daily list with an adoption.
+ */
+export function useCompleteTemplate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: {
+      templateId: string;
+      subOverrides?: { sub_id: string; stars: number }[];
+    }): Promise<{
+      completion_id: string;
+      xp_granted: number;
+      coins_granted: number;
+      total_stars: number;
+    }> => {
+      const { data, error } = await supabase.rpc('complete_template', {
+        p_template_id: params.templateId,
+        p_sub_overrides: params.subOverrides ?? null,
+      });
+      if (error) throw error;
+      return data as {
+        completion_id: string;
+        xp_granted: number;
+        coins_granted: number;
+        total_stars: number;
+      };
+    },
+    onSuccess: () => {
+      // Same invalidations as complete_task — XP/coins/momentum surfaces
+      // depend on these refreshing.
+      queryClient.invalidateQueries({ queryKey: taskKeys.pending() });
+      queryClient.invalidateQueries({ queryKey: characterKeys.me() });
+      queryClient.invalidateQueries({ queryKey: ['momentum'] });
+      queryClient.invalidateQueries({ queryKey: ['dedicacao'] });
+    },
+  });
+}
+
+/**
  * Atomically clone a task_template into the user's task list. Returns the
  * new task id. Invalidates task lists + character (so any quest progress
  * counters that depend on task list refresh).

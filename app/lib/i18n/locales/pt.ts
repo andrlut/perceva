@@ -342,9 +342,12 @@ const pt: Translations = {
       daily: 'Daily',
       weekly: 'Recorrente',
       oneShot: 'Pontual',
+      general: 'Geral',
       emptyDaily: 'Nada de daily pendente.',
       emptyWeekly: 'Nada de recorrente pendente.',
       emptyOneShot: 'Nada de pontual pendente.',
+      emptyGeneral: 'Nenhum template disponível.',
+      generalLead: 'Marque qualquer template aqui sem precisar adotar ele na sua rotina.',
     },
     empty: {
       title: 'Tudo em dia.',
