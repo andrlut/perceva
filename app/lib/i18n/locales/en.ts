@@ -352,9 +352,12 @@ const en = {
       daily: 'Daily',
       weekly: 'Recurring',
       oneShot: 'One-shot',
+      general: 'All',
       emptyDaily: 'Nothing daily pending.',
       emptyWeekly: 'Nothing recurring pending.',
       emptyOneShot: 'Nothing one-shot pending.',
+      emptyGeneral: 'No templates available.',
+      generalLead: 'Mark any template here without adopting it into your routine.',
     },
     empty: {
       title: 'All clear.',

@@ -19,18 +19,21 @@ import { CompleteTaskSheet } from '@/components/CompleteTaskSheet';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { TaskActionSheet } from '@/components/TaskActionSheet';
 import { TaskCard } from '@/components/TaskCard';
+import { TemplateCompletionCard } from '@/components/TemplateCompletionCard';
 import { TodayActivityDrawer } from '@/components/TodayActivityDrawer';
 import { XPCoinFloat } from '@/components/XPCoinFloat';
 import { useCharacter } from '@/lib/api/character';
 import { useT } from '@/lib/i18n';
 import {
   useCompleteTask,
+  useCompleteTemplate,
   useHomeBuckets,
   useSkipTaskToday,
+  useTaskTemplates,
   useUndoCompletion,
   useUnskipTaskToday,
 } from '@/lib/api/tasks';
-import type { TaskSub, TaskWithSubs } from '@/lib/db/types';
+import type { TaskSub, TaskTemplateWithSubs, TaskWithSubs } from '@/lib/db/types';
 import { formatCompactDate } from '@/lib/time';
 import { levelProgress, rewardForTaskSubs } from '@/lib/xp';
 import { tokens } from '@/theme';
@@ -41,7 +44,7 @@ interface FloatItem {
   coins: number;
 }
 
-type TypeTab = 'daily' | 'weekly' | 'one_shot';
+type TypeTab = 'daily' | 'weekly' | 'one_shot' | 'general';
 
 interface TabMeta {
   id: TypeTab;
@@ -73,6 +76,13 @@ const TAB_META: TabMeta[] = [
     iconName: 'flag-outline',
     accent: tokens.semantic.coin,
   },
+  {
+    id: 'general',
+    labelKey: 'home.typeTabs.general',
+    emptyKey: 'home.typeTabs.emptyGeneral',
+    iconName: 'apps',
+    accent: tokens.text.mid,
+  },
 ];
 
 /**
@@ -92,7 +102,9 @@ export default function HomeScreen() {
   const { t } = useT();
   const character = useCharacter();
   const buckets = useHomeBuckets();
+  const templates = useTaskTemplates();
   const completeTask = useCompleteTask();
+  const completeTemplate = useCompleteTemplate();
   const skipTask = useSkipTaskToday();
   const unskipTask = useUnskipTaskToday();
   const undoCompletion = useUndoCompletion();
@@ -135,6 +147,45 @@ export default function HomeScreen() {
 
   const handleQuickComplete = (task: TaskWithSubs) => {
     fireCompletion(task, task.subs);
+  };
+
+  /** Tap on a template card in the General tab → complete via complete_template
+   *  (no adoption). Optimistic XP/coin float pulled from the template's own
+   *  sub allocations (RPC may grant slightly more once Momentum bonus applies,
+   *  but the optimistic value is fine for the float animation). */
+  const fireTemplateCompletion = (template: TaskTemplateWithSubs) => {
+    if (completeTemplate.isPending) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+
+    const reward = rewardForTaskSubs(
+      template.subs.map((s) => ({ sub_id: s.sub_id, stars: s.stars })),
+    );
+    const fid = Date.now();
+    setFloats((prev) => [
+      ...prev,
+      { id: fid, xp: reward.total.xp, coins: reward.total.coins },
+    ]);
+
+    completeTemplate.mutate(
+      {
+        templateId: template.id,
+        subOverrides: template.subs.map((s) => ({
+          sub_id: s.sub_id,
+          stars: s.stars,
+        })),
+      },
+      {
+        onError: (err) => {
+          const e = err as { message?: string; code?: string; details?: string };
+          console.error('[complete_template] failed', e);
+          Alert.alert(
+            t('home.actionErrors.complete'),
+            [e.message, e.code, e.details].filter(Boolean).join('\n') ||
+              t('home.actionErrors.unknown'),
+          );
+        },
+      },
+    );
   };
 
   const handleLongPress = (task: TaskWithSubs) => {
@@ -229,7 +280,8 @@ export default function HomeScreen() {
   // - daily: today bucket items whose recurrence is daily
   // - weekly: today's weekly/monthly + thisWeek + thisMonth, deduped
   // - one_shot: oneTime bucket as-is (already type-filtered upstream)
-  const tasksByTab = useMemo<Record<TypeTab, TaskWithSubs[]>>(() => {
+  // - general: templates, not user tasks — handled separately below
+  const tasksByTab = useMemo<Record<Exclude<TypeTab, 'general'>, TaskWithSubs[]>>(() => {
     if (!data) {
       return { daily: [], weekly: [], one_shot: [] };
     }
@@ -253,10 +305,16 @@ export default function HomeScreen() {
     tasksByTab.weekly.length +
     tasksByTab.one_shot.length;
 
+  // General tab = all system templates, browseable + one-tap completable
+  // without adoption. We render it as a parallel surface; counts don't
+  // feed totalPending (those are user-routine tasks).
+  const generalTemplates = templates.data ?? [];
+
   const charXp = character.data?.character.total_xp ?? 0;
   const lp = levelProgress(charXp);
   const activeMeta = TAB_META.find((m) => m.id === activeTab) ?? TAB_META[0];
-  const activeList = tasksByTab[activeTab];
+  const activeList =
+    activeTab === 'general' ? [] : tasksByTab[activeTab];
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -294,36 +352,6 @@ export default function HomeScreen() {
               <Ionicons name="alert-circle" size={32} color={tokens.semantic.danger} />
               <Text style={styles.errorText}>{t('home.error')}</Text>
             </View>
-          ) : totalPending === 0 ? (
-            <View style={styles.body}>
-              <View style={styles.emptyBox}>
-                <Ionicons
-                  name="checkmark-circle"
-                  size={42}
-                  color={tokens.semantic.xp}
-                />
-                <Text style={styles.emptyTitle}>{t('home.empty.title')}</Text>
-                <Text style={styles.emptySub}>{t('home.empty.body')}</Text>
-                <Pressable
-                  onPress={() => router.push('/tasks')}
-                  style={({ pressed }) => [
-                    styles.emptyCta,
-                    pressed && { opacity: 0.7 },
-                  ]}
-                >
-                  <Ionicons name="add" size={18} color={tokens.text.hi} />
-                  <Text style={styles.emptyCtaText}>{t('home.empty.cta')}</Text>
-                </Pressable>
-              </View>
-              {data && (
-                <TodayActivityDrawer
-                  activity={data.todayActivity}
-                  onExtraComplete={handleDrawerExtra}
-                  onUndoCompletion={handleDrawerUndo}
-                  onUnskip={handleDrawerUnskip}
-                />
-              )}
-            </View>
           ) : (
             <View style={styles.body}>
               <TaskTypeTabs
@@ -332,30 +360,73 @@ export default function HomeScreen() {
                   daily: tasksByTab.daily.length,
                   weekly: tasksByTab.weekly.length,
                   one_shot: tasksByTab.one_shot.length,
+                  general: generalTemplates.length,
                 }}
                 onChange={setActiveTab}
                 t={t}
               />
 
-              <View style={styles.tabBody}>
-                {activeList.length === 0 ? (
-                  <Text style={styles.tabEmpty}>{t(activeMeta.emptyKey)}</Text>
-                ) : (
-                  activeList.map((task) => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      onComplete={() => handleQuickComplete(task)}
-                      onLongPress={() => handleLongPress(task)}
-                      onEdit={() =>
-                        router.push({ pathname: '/task-form', params: { id: task.id } })
-                      }
-                    />
-                  ))
-                )}
-              </View>
+              {activeTab === 'general' ? (
+                <View style={styles.tabBody}>
+                  <Text style={styles.generalLead}>
+                    {t('home.typeTabs.generalLead')}
+                  </Text>
+                  {generalTemplates.length === 0 ? (
+                    <Text style={styles.tabEmpty}>
+                      {t(activeMeta.emptyKey)}
+                    </Text>
+                  ) : (
+                    generalTemplates.map((tmpl) => (
+                      <TemplateCompletionCard
+                        key={tmpl.id}
+                        template={tmpl}
+                        onComplete={() => fireTemplateCompletion(tmpl)}
+                        isCompleting={completeTemplate.isPending}
+                      />
+                    ))
+                  )}
+                </View>
+              ) : totalPending === 0 ? (
+                <View style={styles.emptyBox}>
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={42}
+                    color={tokens.semantic.xp}
+                  />
+                  <Text style={styles.emptyTitle}>{t('home.empty.title')}</Text>
+                  <Text style={styles.emptySub}>{t('home.empty.body')}</Text>
+                  <Pressable
+                    onPress={() => router.push('/tasks')}
+                    style={({ pressed }) => [
+                      styles.emptyCta,
+                      pressed && { opacity: 0.7 },
+                    ]}
+                  >
+                    <Ionicons name="add" size={18} color={tokens.text.hi} />
+                    <Text style={styles.emptyCtaText}>{t('home.empty.cta')}</Text>
+                  </Pressable>
+                </View>
+              ) : (
+                <View style={styles.tabBody}>
+                  {activeList.length === 0 ? (
+                    <Text style={styles.tabEmpty}>{t(activeMeta.emptyKey)}</Text>
+                  ) : (
+                    activeList.map((task) => (
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        onComplete={() => handleQuickComplete(task)}
+                        onLongPress={() => handleLongPress(task)}
+                        onEdit={() =>
+                          router.push({ pathname: '/task-form', params: { id: task.id } })
+                        }
+                      />
+                    ))
+                  )}
+                </View>
+              )}
 
-              {data && (
+              {data && activeTab !== 'general' && (
                 <TodayActivityDrawer
                   activity={data.todayActivity}
                   onExtraComplete={handleDrawerExtra}
@@ -364,17 +435,19 @@ export default function HomeScreen() {
                 />
               )}
 
-              <Pressable
-                onPress={() => router.push('/tasks')}
-                style={({ pressed }) => [
-                  styles.manageCta,
-                  pressed && { opacity: 0.7 },
-                ]}
-                hitSlop={4}
-              >
-                <Ionicons name="list" size={16} color={tokens.brand.violet2} />
-                <Text style={styles.manageCtaText}>{t('home.manageCta')}</Text>
-              </Pressable>
+              {activeTab !== 'general' && (
+                <Pressable
+                  onPress={() => router.push('/tasks')}
+                  style={({ pressed }) => [
+                    styles.manageCta,
+                    pressed && { opacity: 0.7 },
+                  ]}
+                  hitSlop={4}
+                >
+                  <Ionicons name="list" size={16} color={tokens.brand.violet2} />
+                  <Text style={styles.manageCtaText}>{t('home.manageCta')}</Text>
+                </Pressable>
+              )}
             </View>
           )}
         </ScrollView>
@@ -532,6 +605,14 @@ const styles = StyleSheet.create({
   },
   tabBody: {
     gap: tokens.space[2],
+  },
+  generalLead: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 12,
+    color: tokens.text.dim,
+    fontStyle: 'italic',
+    paddingHorizontal: 4,
+    marginBottom: 4,
   },
   tabEmpty: {
     ...tokens.type.caption,
