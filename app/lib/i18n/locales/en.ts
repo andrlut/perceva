@@ -915,23 +915,44 @@ const en = {
   questionnaire: {
     title: 'Questionnaire',
     intro: {
-      title: 'Periodic check-in',
-      body: 'A deeper read on each pillar. Plan for {{minutes}} minutes.',
-      cta: 'Begin',
+      heading: 'Assessment',
+      body:
+        '48 questions, 5-10 min. 4 angles per dimension (behavior, ' +
+        'quality, outcome, friction) — to see where you stand honestly, ' +
+        "without being hostage to a single lens.",
+      bullets: {
+        fast: 'Quick to answer — 5 options per question. Tap to advance.',
+        private: 'Private. The result only lives on your hero.',
+        retake: 'You can retake every 30-90 days to see how you evolve.',
+      },
+      start: 'Begin',
+      skip: 'Not now',
     },
-    progress: '{{current}} of {{total}}',
-    submit: 'Submit',
-    submitting: 'Saving…',
+    loading: {
+      preparing: 'Preparing…',
+      calculating: 'Calculating…',
+    },
+    exit: {
+      title: 'Exit the questionnaire?',
+      body: "Your answers so far won't be saved.",
+      stay: 'Stay',
+      leave: 'Leave',
+    },
+    errors: {
+      openTitle: "Couldn't open the questionnaire",
+      saveTitle: "Couldn't save",
+      tryAgain: 'Try again.',
+    },
     result: {
-      title: 'Your results',
-      subtitle: 'How the questionnaire compares to your self-assessment.',
-      delta: 'Δ {{delta}}',
-      bucketLabel: {
-        attention_overestimating: 'Attention — possible blind spot',
-        slight_overestimate: 'Slightly overestimating',
-        aligned: 'Aligned',
-        slight_underestimate: 'Slightly underestimating',
-        attention_underestimating: 'Attention — possibly underestimating',
+      done: 'Done.',
+      cta: 'Finish',
+      aligned: {
+        one: '{{count}} dimension calibrated',
+        other: '{{count}} dimensions calibrated',
+      },
+      needsAttention: {
+        one: '{{count}} needs attention',
+        other: '{{count}} need attention',
       },
       feedback: {
         attention_overestimating: 'You see yourself better at {{label}} than the anchor suggests. Worth an honest look.',

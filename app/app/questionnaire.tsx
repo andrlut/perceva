@@ -25,7 +25,9 @@ import {
   type DimFeedback,
 } from '@/lib/assessment/feedback';
 import type { PsychSessionItem, SubId } from '@/lib/db/types';
+import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
+import type { LanguageCode } from '@/lib/settings';
 import { tokens } from '@/theme';
 
 type Phase = 'intro' | 'starting' | 'answering' | 'submitting' | 'result';
@@ -49,6 +51,7 @@ const INSTRUMENT_ID = 'avaliacao_v2';
  */
 export default function QuestionnaireScreen() {
   const router = useRouter();
+  const { t, locale } = useT();
   const character = useCharacter();
   const startSession = useStartPsychSession();
   const submitSession = useSubmitPsychSession();
@@ -84,8 +87,8 @@ export default function QuestionnaireScreen() {
       onError: (err) => {
         const e = err as { message?: string };
         Alert.alert(
-          'Não foi possível abrir o questionário',
-          e?.message ?? 'Tente novamente.',
+          t('questionnaire.errors.openTitle'),
+          e?.message ?? t('questionnaire.errors.tryAgain'),
         );
         setPhase('intro');
       },
@@ -143,8 +146,8 @@ export default function QuestionnaireScreen() {
         onError: (err) => {
           const e = err as { message?: string };
           Alert.alert(
-            'Não foi possível salvar',
-            e?.message ?? 'Tente novamente.',
+            t('questionnaire.errors.saveTitle'),
+            e?.message ?? t('questionnaire.errors.tryAgain'),
           );
           setPhase('answering');
         },
@@ -163,11 +166,15 @@ export default function QuestionnaireScreen() {
     }
     if (phase === 'answering') {
       Alert.alert(
-        'Sair do questionário?',
-        'Suas respostas até aqui não serão salvas.',
+        t('questionnaire.exit.title'),
+        t('questionnaire.exit.body'),
         [
-          { text: 'Continuar', style: 'cancel' },
-          { text: 'Sair', style: 'destructive', onPress: () => router.back() },
+          { text: t('questionnaire.exit.stay'), style: 'cancel' },
+          {
+            text: t('questionnaire.exit.leave'),
+            style: 'destructive',
+            onPress: () => router.back(),
+          },
         ],
       );
       return;
@@ -215,7 +222,9 @@ export default function QuestionnaireScreen() {
         {(phase === 'starting' || phase === 'submitting') && (
           <View style={styles.center}>
             <Text style={styles.submittingText}>
-              {phase === 'starting' ? 'Preparando…' : 'Calculando…'}
+              {phase === 'starting'
+                ? t('questionnaire.loading.preparing')
+                : t('questionnaire.loading.calculating')}
             </Text>
           </View>
         )}
@@ -223,6 +232,7 @@ export default function QuestionnaireScreen() {
         {phase === 'answering' && current && (
           <AnsweringBody
             current={current}
+            locale={locale}
             currentAnswer={answers.get(current.item_id)}
             onPick={handlePick}
           />
@@ -244,6 +254,7 @@ function IntroBody({
   onStart: () => void;
   onCancel: () => void;
 }) {
+  const { t } = useT();
   return (
     <ScrollView
       contentContainerStyle={styles.introContent}
@@ -252,25 +263,21 @@ function IntroBody({
       <View style={styles.introIconHalo}>
         <Ionicons name="pulse" size={36} color={tokens.brand.violet2} />
       </View>
-      <Text style={styles.introTitle}>Avaliação</Text>
-      <Text style={styles.introSub}>
-        48 perguntas, 5-10 min. 4 ângulos por dimensão (comportamento,
-        qualidade, resultado, atrito) — pra ver onde você tá honestamente,
-        sem ficar refém de uma única lente.
-      </Text>
+      <Text style={styles.introTitle}>{t('questionnaire.intro.heading')}</Text>
+      <Text style={styles.introSub}>{t('questionnaire.intro.body')}</Text>
 
       <View style={styles.introBullets}>
         <BulletRow
           icon="time-outline"
-          text="Resposta rápida — 5 opções por pergunta. Toque pra avançar."
+          text={t('questionnaire.intro.bullets.fast')}
         />
         <BulletRow
           icon="lock-closed-outline"
-          text="Privado. Resultado só fica no seu hero."
+          text={t('questionnaire.intro.bullets.private')}
         />
         <BulletRow
           icon="refresh-outline"
-          text="Pode refazer a cada 30-90 dias pra ver evolução."
+          text={t('questionnaire.intro.bullets.retake')}
         />
       </View>
 
@@ -279,7 +286,7 @@ function IntroBody({
         style={({ pressed }) => [styles.primaryBtn, pressed && { opacity: 0.85 }]}
         hitSlop={4}
       >
-        <Text style={styles.primaryBtnText}>Começar</Text>
+        <Text style={styles.primaryBtnText}>{t('questionnaire.intro.start')}</Text>
         <Ionicons name="arrow-forward" size={16} color={tokens.text.hi} />
       </Pressable>
       <Pressable
@@ -287,7 +294,7 @@ function IntroBody({
         style={({ pressed }) => [styles.linkBtn, pressed && { opacity: 0.7 }]}
         hitSlop={4}
       >
-        <Text style={styles.linkBtnText}>Agora não</Text>
+        <Text style={styles.linkBtnText}>{t('questionnaire.intro.skip')}</Text>
       </Pressable>
     </ScrollView>
   );
@@ -311,10 +318,12 @@ function BulletRow({
 // ─── Answering ────────────────────────────────────────────────────────────
 function AnsweringBody({
   current,
+  locale,
   currentAnswer,
   onPick,
 }: {
   current: PsychSessionItem;
+  locale: LanguageCode;
   currentAnswer: number | undefined;
   onPick: (raw: number) => void;
 }) {
@@ -322,6 +331,8 @@ function AnsweringBody({
   const subId = parseSubFromFacetId(current.facet_id);
   const subMeta = subId ? meta.sub(subId) : null;
   const dimMeta = subMeta ? meta.dim(subMeta.dimensionId) : null;
+  const prompt =
+    locale === 'en' && current.text_en ? current.text_en : current.text_pt;
 
   return (
     <ScrollView
@@ -340,11 +351,13 @@ function AnsweringBody({
           </Text>
         </View>
       )}
-      <Text style={styles.prompt}>{current.text_pt}</Text>
+      <Text style={styles.prompt}>{prompt}</Text>
 
       <View style={styles.options}>
         {(current.options ?? []).map((opt) => {
           const selected = currentAnswer === opt.value;
+          const label =
+            locale === 'en' && opt.label_en ? opt.label_en : opt.label;
           return (
             <Pressable
               key={opt.value}
@@ -364,7 +377,7 @@ function AnsweringBody({
               >
                 {selected && <View style={styles.optionRadioDot} />}
               </View>
-              <Text style={styles.optionText}>{opt.label}</Text>
+              <Text style={styles.optionText}>{label}</Text>
             </Pressable>
           );
         })}
@@ -394,9 +407,15 @@ function ResultBody({
   feedback: DimFeedback[];
   onDone: () => void;
 }) {
+  const { t } = useT();
   const metaLookup = useMetaLookup();
   const aligned = feedback.filter((f) => f.bucket === 'aligned').length;
   const attention = feedback.filter((f) => f.needsAttention).length;
+  const alignedText = t('questionnaire.result.aligned', { count: aligned });
+  const attentionText =
+    attention > 0
+      ? ` · ${t('questionnaire.result.needsAttention', { count: attention })}`
+      : '';
 
   return (
     <ScrollView
@@ -405,12 +424,10 @@ function ResultBody({
     >
       <View style={styles.resultHeader}>
         <Ionicons name="checkmark-circle" size={32} color={tokens.semantic.xp} />
-        <Text style={styles.resultTitle}>Pronto.</Text>
+        <Text style={styles.resultTitle}>{t('questionnaire.result.done')}</Text>
         <Text style={styles.resultSub}>
-          {aligned} {aligned === 1 ? 'dimensão calibrada' : 'dimensões calibradas'}
-          {attention > 0
-            ? ` · ${attention} ${attention === 1 ? 'precisa' : 'precisam'} de atenção`
-            : ''}
+          {alignedText}
+          {attentionText}
         </Text>
       </View>
 
@@ -455,7 +472,7 @@ function ResultBody({
         style={({ pressed }) => [styles.primaryBtn, pressed && { opacity: 0.85 }]}
         hitSlop={4}
       >
-        <Text style={styles.primaryBtnText}>Concluir</Text>
+        <Text style={styles.primaryBtnText}>{t('questionnaire.result.cta')}</Text>
         <Ionicons name="checkmark" size={16} color={tokens.text.hi} />
       </Pressable>
     </ScrollView>

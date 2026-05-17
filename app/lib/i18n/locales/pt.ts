@@ -909,23 +909,44 @@ const pt: Translations = {
   questionnaire: {
     title: 'Questionário',
     intro: {
-      title: 'Avaliação periódica',
-      body: 'Uma leitura mais profunda de cada pilar. Reserve {{minutes}} minutos.',
-      cta: 'Começar',
+      heading: 'Avaliação',
+      body:
+        '48 perguntas, 5-10 min. 4 ângulos por dimensão (comportamento, ' +
+        'qualidade, resultado, atrito) — pra ver onde você tá honestamente, ' +
+        'sem ficar refém de uma única lente.',
+      bullets: {
+        fast: 'Resposta rápida — 5 opções por pergunta. Toque pra avançar.',
+        private: 'Privado. Resultado só fica no seu hero.',
+        retake: 'Pode refazer a cada 30-90 dias pra ver evolução.',
+      },
+      start: 'Começar',
+      skip: 'Agora não',
     },
-    progress: '{{current}} de {{total}}',
-    submit: 'Enviar',
-    submitting: 'Salvando…',
+    loading: {
+      preparing: 'Preparando…',
+      calculating: 'Calculando…',
+    },
+    exit: {
+      title: 'Sair do questionário?',
+      body: 'Suas respostas até aqui não serão salvas.',
+      stay: 'Continuar',
+      leave: 'Sair',
+    },
+    errors: {
+      openTitle: 'Não foi possível abrir o questionário',
+      saveTitle: 'Não foi possível salvar',
+      tryAgain: 'Tente novamente.',
+    },
     result: {
-      title: 'Seus resultados',
-      subtitle: 'Como o questionário compara com sua auto-avaliação.',
-      delta: 'Δ {{delta}}',
-      bucketLabel: {
-        attention_overestimating: 'Atenção — possível ponto cego',
-        slight_overestimate: 'Levemente superestimando',
-        aligned: 'Alinhado',
-        slight_underestimate: 'Levemente subestimando',
-        attention_underestimating: 'Atenção — possivelmente subestimando',
+      done: 'Pronto.',
+      cta: 'Concluir',
+      aligned: {
+        one: '{{count}} dimensão calibrada',
+        other: '{{count}} dimensões calibradas',
+      },
+      needsAttention: {
+        one: '{{count}} precisa de atenção',
+        other: '{{count}} precisam de atenção',
       },
       feedback: {
         attention_overestimating: 'Você se vê melhor em {{label}} do que a âncora sugere. Vale uma olhada honesta.',

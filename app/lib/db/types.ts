@@ -166,7 +166,10 @@ export interface PsychFacet {
 }
 
 export interface PsychItemOption {
+  /** Portuguese label — default. */
   label: string;
+  /** English label — optional fallback to `label` when missing. */
+  label_en?: string | null;
   value: number;
 }
 
