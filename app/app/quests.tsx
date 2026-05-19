@@ -86,7 +86,11 @@ export default function QuestBoardScreen() {
     try {
       await startTemplate.mutateAsync(templateId);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Unknown error';
+      const err = e as { message?: string; code?: string; details?: string; hint?: string };
+      console.error('[start_quest_from_template] failed', err);
+      const msg =
+        [err.message, err.code, err.details, err.hint].filter(Boolean).join('\n') ||
+        'Unknown error';
       showInfo('Could not start quest', msg);
     } finally {
       setBusyId(null);
@@ -105,7 +109,11 @@ export default function QuestBoardScreen() {
         `+${result.reward_xp} XP and +${result.reward_coins} coins.`,
       );
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Unknown error';
+      const err = e as { message?: string; code?: string; details?: string; hint?: string };
+      console.error('[complete_quest] failed', err);
+      const msg =
+        [err.message, err.code, err.details, err.hint].filter(Boolean).join('\n') ||
+        'Unknown error';
       showInfo('Could not claim', msg);
     } finally {
       setBusyId(null);
