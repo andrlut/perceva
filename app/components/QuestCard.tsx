@@ -67,11 +67,15 @@ function InactiveCard({
   isStarting,
   showLongPressHint,
 }: Extract<Props, { variant: 'inactive' }>) {
-  const { pick, pickNullable } = useLocalizedPick();
+  const { pickCascade, pickCascadeNullable } = useLocalizedPick();
   const { t } = useT();
   const cat = getQuestCategoryMeta(template.category);
-  const title = pick(template.title, template.title_pt);
-  const description = pickNullable(template.description, template.description_pt);
+  const title = pickCascade(template.title_en, template.title_pt, template.title);
+  const description = pickCascadeNullable(
+    template.description_en,
+    template.description_pt,
+    template.description,
+  );
   const chips = chipLabelsFromRequirements(template.requirements);
 
   return (

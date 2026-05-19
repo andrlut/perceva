@@ -45,7 +45,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 export default function QuestDetailScreen() {
   const router = useRouter();
   const { t } = useT();
-  const { pick, pickNullable } = useLocalizedPick();
+  const { pickCascade, pickCascadeNullable } = useLocalizedPick();
   const params = useLocalSearchParams<{ id: string; kind?: string }>();
   const id = params.id;
   const inferredKind: DetailKind =
@@ -88,12 +88,16 @@ export default function QuestDetailScreen() {
   const title = quest
     ? quest.quest.title
     : template
-      ? pick(template.title, template.title_pt)
+      ? pickCascade(template.title_en, template.title_pt, template.title)
       : '';
   const description = quest
     ? quest.quest.description
     : template
-      ? pickNullable(template.description, template.description_pt)
+      ? pickCascadeNullable(
+          template.description_en,
+          template.description_pt,
+          template.description,
+        )
       : null;
   const durationDays = template?.suggested_duration_days ?? totalDurationDays(quest);
   const allowPartial = quest?.quest.allow_partial ?? template?.allow_partial ?? false;

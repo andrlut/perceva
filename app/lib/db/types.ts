@@ -486,10 +486,14 @@ export interface QuestRequirement {
 
 export interface QuestTemplate {
   id: string;
-  title: string;
-  title_pt: string;
+  /** Legacy mono-locale title. NULL on v3-seeded rows; use title_pt/title_en. */
+  title: string | null;
+  title_pt: string | null;
+  title_en: string | null;
+  /** Legacy mono-locale description. NULL on v3-seeded rows. */
   description: string | null;
   description_pt: string | null;
+  description_en: string | null;
   category: string;
   suggested_duration_days: number;
   reward_xp: number;
