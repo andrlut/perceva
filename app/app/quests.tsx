@@ -18,7 +18,6 @@ import { useBottomNavClearance } from '@/components/BottomNavBar';
 import { CategoryHeader } from '@/components/CategoryHeader';
 import { QuestCard } from '@/components/QuestCard';
 import {
-  useAbandonQuest,
   useCompleteQuest,
   useQuestTemplates,
   useQuests,
@@ -26,7 +25,7 @@ import {
 } from '@/lib/api/quests';
 import { useT } from '@/lib/i18n';
 import type { QuestTemplate, QuestWithProgress } from '@/lib/db/types';
-import { confirmAction, showInfo } from '@/lib/util/confirm';
+import { showInfo } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 import { QUEST_CATEGORY_ORDER, getQuestCategoryMeta } from '@/theme/quests';
 
@@ -47,7 +46,6 @@ export default function QuestBoardScreen() {
   const templates = useQuestTemplates();
   const startTemplate = useStartQuestFromTemplate();
   const completeQuest = useCompleteQuest();
-  const abandonQuest = useAbandonQuest();
   const bottomClearance = useBottomNavClearance();
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -146,33 +144,20 @@ export default function QuestBoardScreen() {
     }
   };
 
-  const handleAbandon = async (questId: string, title: string) => {
-    const ok = await confirmAction(
-      'Abandon quest?',
-      `"${title}" will be marked as abandoned. No reward.`,
-      { okText: 'Abandon', cancelText: 'Keep it', destructive: true },
-    );
-    if (!ok) return;
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(
-      () => {},
-    );
-    try {
-      await abandonQuest.mutateAsync(questId);
-    } catch (e) {
-      const err = e as { message?: string };
-      showInfo('Could not abandon', err.message ?? 'Unknown error');
-    }
-  };
-
-  // Phase 2 will replace these with router.push(`/quest-detail/${id}`).
-  const handleInactiveLongPress = () => {
+  const handleInactiveLongPress = (templateId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    Alert.alert(t('quests.board.title'), t('quests.board.comingSoon'));
+    router.push({
+      pathname: '/quest-detail/[id]',
+      params: { id: templateId, kind: 'template' },
+    });
   };
 
   const handleActiveLongPress = (q: QuestWithProgress) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    handleAbandon(q.quest.id, q.quest.title);
+    router.push({
+      pathname: '/quest-detail/[id]',
+      params: { id: q.quest.id, kind: 'quest' },
+    });
   };
 
   const handleCreateCustom = () => {
@@ -263,7 +248,7 @@ export default function QuestBoardScreen() {
                       variant="inactive"
                       template={tmpl}
                       onStart={() => handleStart(tmpl.id)}
-                      onLongPress={handleInactiveLongPress}
+                      onLongPress={() => handleInactiveLongPress(tmpl.id)}
                       isStarting={busyId === tmpl.id}
                       showLongPressHint={false}
                     />
