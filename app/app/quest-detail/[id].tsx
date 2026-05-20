@@ -1,13 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,6 +17,7 @@ import { CoinIcon } from '@/components/CoinIcon';
 import {
   useAbandonQuest,
   useCompleteQuest,
+  useLogChallengeProgress,
   useQuestTemplates,
   useQuests,
   useStartQuestFromTemplate,
@@ -57,6 +59,8 @@ export default function QuestDetailScreen() {
   const startTemplate = useStartQuestFromTemplate();
   const abandonQuest = useAbandonQuest();
   const completeQuest = useCompleteQuest();
+  const logChallenge = useLogChallengeProgress();
+  const [logValue, setLogValue] = useState('');
 
   const quest: QuestWithProgress | null = useMemo(() => {
     if (inferredKind !== 'quest') return null;
@@ -104,8 +108,28 @@ export default function QuestDetailScreen() {
   const rewardXp = quest?.quest.reward_xp ?? template?.reward_xp ?? 0;
   const rewardCoins = quest?.quest.reward_coins ?? template?.reward_coins ?? 0;
 
-  // Progress numbers (only meaningful for active quests).
-  const progress = quest ? aggregateProgress(quest.requirements) : 0;
+  // Quest-type-aware progress. For `challenge`-type, progress is
+  // currentChallengeValue / challenge_target_value; for `skill`-type
+  // it's the aggregate across requirements.
+  const isChallenge =
+    (quest?.quest.quest_type ?? template?.quest_type ?? 'skill') === 'challenge';
+  const challengeTarget = Number(
+    quest?.quest.challenge_target_value ?? template?.challenge_target_value ?? 0,
+  );
+  const challengeUnit = pickCascadeNullable(
+    quest?.quest.challenge_unit_en ?? template?.challenge_unit_en ?? null,
+    quest?.quest.challenge_unit_pt ?? template?.challenge_unit_pt ?? null,
+    null,
+  );
+  const currentChallengeValue = quest?.currentChallengeValue ?? 0;
+
+  const progress = quest
+    ? isChallenge
+      ? challengeTarget > 0
+        ? Math.min(1, currentChallengeValue / challengeTarget)
+        : 0
+      : aggregateProgress(quest.requirements)
+    : 0;
   const totalReqs = quest?.requirements.length ?? 0;
   const metReqs = quest?.requirements.filter((r) => r.isMet).length ?? 0;
   const daysLeft = quest ? daysRemaining(quest.quest.deadline) : null;
@@ -174,6 +198,31 @@ export default function QuestDetailScreen() {
     } catch (e) {
       const err = e as { message?: string };
       showInfo('Could not abandon', err.message ?? 'Unknown error');
+    }
+  };
+
+  const handleLogChallenge = async () => {
+    if (!quest) return;
+    const v = Number(logValue.replace(',', '.'));
+    if (!Number.isFinite(v) || v < 0) {
+      showInfo(t('quests.detail.invalidValue'), t('quests.detail.invalidValueBody'));
+      return;
+    }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    try {
+      await logChallenge.mutateAsync({ questId: quest.quest.id, value: v });
+      setLogValue('');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(
+        () => {},
+      );
+    } catch (e) {
+      const err = e as { message?: string; code?: string; details?: string; hint?: string };
+      console.error('[log_quest_challenge_progress] failed', err);
+      showInfo(
+        t('quests.detail.logFail'),
+        [err.message, err.code, err.details, err.hint].filter(Boolean).join('\n') ||
+          'Unknown error',
+      );
     }
   };
 
@@ -271,7 +320,9 @@ export default function QuestDetailScreen() {
               <View style={styles.progHeader}>
                 <Text style={styles.progTitle}>{t('quests.detail.yourProgress')}</Text>
                 <Text style={styles.progNum}>
-                  {metReqs} / {totalReqs}
+                  {isChallenge
+                    ? `${currentChallengeValue} / ${challengeTarget}${challengeUnit ? ` ${challengeUnit}` : ''}`
+                    : `${metReqs} / ${totalReqs}`}
                 </Text>
               </View>
               <View style={styles.progTrack}>
@@ -301,6 +352,50 @@ export default function QuestDetailScreen() {
             </View>
           )}
         </View>
+
+        {/* Challenge log input — only for active challenge quests */}
+        {quest && isChallenge && !quest.isComplete && (
+          <View style={styles.section}>
+            <Text style={styles.secTitle}>{t('quests.detail.logProgress')}</Text>
+            <View style={styles.logRow}>
+              <View style={styles.logInputWrap}>
+                <TextInput
+                  value={logValue}
+                  onChangeText={setLogValue}
+                  placeholder={t('quests.detail.logPlaceholder', {
+                    unit: challengeUnit ?? '',
+                  })}
+                  placeholderTextColor={tokens.text.faint}
+                  keyboardType="numeric"
+                  style={styles.logInput}
+                />
+                {challengeUnit && (
+                  <Text style={styles.logUnit}>{challengeUnit}</Text>
+                )}
+              </View>
+              <Pressable
+                onPress={handleLogChallenge}
+                disabled={logChallenge.isPending || logValue.trim() === ''}
+                style={({ pressed }) => [
+                  styles.logBtn,
+                  (logChallenge.isPending || logValue.trim() === '') &&
+                    styles.logBtnDisabled,
+                  pressed && { opacity: 0.85 },
+                ]}
+              >
+                {logChallenge.isPending ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <Ionicons name="add" size={14} color="#fff" />
+                    <Text style={styles.logBtnText}>{t('quests.detail.logCta')}</Text>
+                  </>
+                )}
+              </Pressable>
+            </View>
+            <Text style={styles.logHint}>{t('quests.detail.logHint')}</Text>
+          </View>
+        )}
 
         {/* Tasks / skills / dims linked */}
         {linkedTaskRows.length > 0 && (
@@ -696,6 +791,62 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     borderWidth: 1,
     borderColor: tokens.border.strong,
+  },
+
+  // Challenge log
+  logRow: {
+    flexDirection: 'row',
+    gap: 6,
+    alignItems: 'stretch',
+  },
+  logInputWrap: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    backgroundColor: tokens.bg.surface,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+    borderRadius: 9,
+  },
+  logInput: {
+    flex: 1,
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 13,
+    color: tokens.text.hi,
+    paddingVertical: 9,
+  },
+  logUnit: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 11,
+    color: tokens.text.mid,
+    marginLeft: 4,
+  },
+  logBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 9,
+    backgroundColor: tokens.brand.violet,
+    minWidth: 80,
+  },
+  logBtnDisabled: {
+    opacity: 0.45,
+  },
+  logBtnText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 11,
+    color: '#fff',
+  },
+  logHint: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 9,
+    color: tokens.text.faint,
+    fontStyle: 'italic',
+    marginTop: 4,
   },
 
   ruleRow: {

@@ -456,6 +456,14 @@ export type QuestRequirementKind =
   | 'complete_any_in_dim'
   | 'reach_skill_value';
 
+/**
+ * `skill` quests track progress via `quest_requirement` rows (auto-derived
+ * from task completions / skill logs). `challenge` quests use a single
+ * numeric target written to `quest_challenge_log`; the user manually logs
+ * progress, and the RPC auto-completes when value ≥ target.
+ */
+export type QuestType = 'skill' | 'challenge';
+
 export interface Quest {
   id: string;
   character_id: string;
@@ -470,6 +478,11 @@ export interface Quest {
   status: QuestStatus;
   completed_at: string | null;
   created_at: string;
+  quest_type: QuestType;
+  /** Goal value for `challenge`-type quests; null for `skill`-type. */
+  challenge_target_value: number | null;
+  challenge_unit_pt: string | null;
+  challenge_unit_en: string | null;
 }
 
 export interface QuestRequirement {
@@ -501,6 +514,10 @@ export interface QuestTemplate {
   allow_partial: boolean;
   requirements: QuestTemplateRequirement[];
   sort_order: number;
+  quest_type: QuestType;
+  challenge_target_value: number | null;
+  challenge_unit_pt: string | null;
+  challenge_unit_en: string | null;
 }
 
 export interface QuestTemplateRequirement {
@@ -516,6 +533,8 @@ export interface QuestTemplateRequirement {
 export interface QuestWithProgress {
   quest: Quest;
   requirements: QuestRequirementWithProgress[];
+  /** For `challenge`-type quests: max value seen in quest_challenge_log. */
+  currentChallengeValue: number;
   isComplete: boolean;
 }
 

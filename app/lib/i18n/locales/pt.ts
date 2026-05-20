@@ -955,6 +955,13 @@ const pt: Translations = {
       start: 'Iniciar quest',
       keep: 'Manter',
       openSkill: 'Abrir skill {{name}}',
+      logProgress: 'Registrar progresso',
+      logPlaceholder: 'Quantos {{unit}}?',
+      logCta: 'Logar',
+      logHint: 'Registre seu melhor valor — auto-completa ao atingir o target.',
+      logFail: 'Não foi possível registrar',
+      invalidValue: 'Valor inválido',
+      invalidValueBody: 'Digite um número válido.',
     },
     templates: {
       title: 'Modelos de missão',

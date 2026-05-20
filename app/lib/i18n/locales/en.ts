@@ -961,6 +961,13 @@ const en = {
       start: 'Start quest',
       keep: 'Keep it',
       openSkill: 'Open skill {{name}}',
+      logProgress: 'Log progress',
+      logPlaceholder: 'How many {{unit}}?',
+      logCta: 'Log',
+      logHint: 'Log your best value — auto-completes when target is reached.',
+      logFail: 'Could not log',
+      invalidValue: 'Invalid value',
+      invalidValueBody: 'Enter a valid number.',
     },
     templates: {
       title: 'Quest templates',

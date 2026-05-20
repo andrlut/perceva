@@ -182,7 +182,13 @@ function ActiveCard({
   // fall back to brand-violet via the unknown-category default. The
   // long-term fix is to copy category onto the quest at adoption.
   const cat = getQuestCategoryMeta('');
-  const progress = aggregateProgress(data.requirements);
+  const isChallenge = data.quest.quest_type === 'challenge';
+  const challengeTarget = Number(data.quest.challenge_target_value ?? 0);
+  const progress = isChallenge
+    ? challengeTarget > 0
+      ? Math.min(1, data.currentChallengeValue / challengeTarget)
+      : 0
+    : aggregateProgress(data.requirements);
   const days = daysRemaining(data.quest.deadline);
   const totalReqs = data.requirements.length;
   const metReqs = data.requirements.filter((r) => r.isMet).length;
@@ -243,7 +249,9 @@ function ActiveCard({
         <View style={styles.progressLabelRow}>
           <Text style={styles.progressLabel}>{t('quests.progressLabel')}</Text>
           <Text style={styles.progressValue}>
-            {metReqs} / {totalReqs}
+            {isChallenge
+              ? `${data.currentChallengeValue} / ${challengeTarget}`
+              : `${metReqs} / ${totalReqs}`}
           </Text>
         </View>
         <View style={styles.progressTrack}>
