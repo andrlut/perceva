@@ -954,6 +954,7 @@ const pt: Translations = {
       coinsOnComplete: 'Moedas ao completar',
       start: 'Iniciar quest',
       keep: 'Manter',
+      openSkill: 'Abrir skill {{name}}',
     },
     templates: {
       title: 'Modelos de missão',

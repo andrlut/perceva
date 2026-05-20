@@ -124,6 +124,8 @@ export default function QuestDetailScreen() {
           key: rr.requirement.id,
           label: requirementLabel(rr.requirement, taskTitle),
           isMet: rr.isMet,
+          skillId: rr.requirement.skill_id ?? null,
+          kind: rr.requirement.kind,
         };
       });
     }
@@ -132,6 +134,8 @@ export default function QuestDetailScreen() {
         key: `tpl-${i}`,
         label: templateRequirementLabel(req),
         isMet: false,
+        skillId: req.skill_id ?? null,
+        kind: req.kind,
       }));
     }
     return [];
@@ -298,25 +302,63 @@ export default function QuestDetailScreen() {
           )}
         </View>
 
-        {/* Tasks linked */}
+        {/* Tasks / skills / dims linked */}
         {linkedTaskRows.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.secTitle}>{t('quests.detail.linkedTasks')}</Text>
-            {linkedTaskRows.map((row) => (
-              <View key={row.key} style={styles.taskRow}>
-                <View style={[styles.taskIco, { backgroundColor: cat.bg }]}>
-                  <Ionicons name="checkmark-done" size={11} color={cat.color} />
-                </View>
-                <Text style={styles.taskName} numberOfLines={2}>
-                  {row.label}
-                </Text>
-                {row.isMet ? (
-                  <Ionicons name="checkmark" size={14} color={tokens.semantic.xp} />
-                ) : (
-                  <View style={styles.taskPending} />
-                )}
-              </View>
-            ))}
+            {linkedTaskRows.map((row) => {
+              const iconName =
+                row.kind === 'reach_skill_value'
+                  ? 'trending-up'
+                  : row.kind === 'complete_any_in_dim'
+                    ? 'grid'
+                    : 'checkmark-done';
+              const tappable = !!row.skillId;
+              return (
+                <Pressable
+                  key={row.key}
+                  disabled={!tappable}
+                  onPress={
+                    tappable
+                      ? () =>
+                          router.push({
+                            pathname: '/skill/[id]',
+                            params: { id: row.skillId! },
+                          })
+                      : undefined
+                  }
+                  style={({ pressed }) => [
+                    styles.taskRow,
+                    tappable && pressed && {
+                      opacity: 0.85,
+                      backgroundColor: tokens.bg.surface2,
+                    },
+                  ]}
+                  accessibilityRole={tappable ? 'button' : 'text'}
+                  accessibilityLabel={
+                    tappable ? t('quests.detail.openSkill', { name: row.label }) : row.label
+                  }
+                >
+                  <View style={[styles.taskIco, { backgroundColor: cat.bg }]}>
+                    <Ionicons name={iconName} size={11} color={cat.color} />
+                  </View>
+                  <Text style={styles.taskName} numberOfLines={2}>
+                    {row.label}
+                  </Text>
+                  {row.isMet ? (
+                    <Ionicons name="checkmark" size={14} color={tokens.semantic.xp} />
+                  ) : tappable ? (
+                    <Ionicons
+                      name="chevron-forward"
+                      size={14}
+                      color={tokens.text.mid}
+                    />
+                  ) : (
+                    <View style={styles.taskPending} />
+                  )}
+                </Pressable>
+              );
+            })}
           </View>
         )}
 

@@ -960,6 +960,7 @@ const en = {
       coinsOnComplete: 'Coins on complete',
       start: 'Start quest',
       keep: 'Keep it',
+      openSkill: 'Open skill {{name}}',
     },
     templates: {
       title: 'Quest templates',
