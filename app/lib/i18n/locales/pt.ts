@@ -371,6 +371,9 @@ const pt: Translations = {
       recurring: 'Cadências em dia',
       oneshot: 'Concluídas',
     },
+    skippedBucket: {
+      today: 'Puladas hoje',
+    },
     ring: {
       toDo: { one: '{{count}} a fazer', other: '{{count}} a fazer' },
       allDone: 'Tudo feito! 🎉',

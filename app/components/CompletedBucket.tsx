@@ -12,24 +12,39 @@ export interface CompletedItem {
   completionId?: string;
 }
 
+type Variant = 'completed' | 'skipped';
+
 interface Props {
   items: CompletedItem[];
   title: string;
+  /** Visual + behavior mode. Defaults to 'completed' (strikethrough + undo). */
+  variant?: Variant;
   /** Tap a row → undo that completion. Receives the row's `completionId`. */
   onUndo?: (completionId: string) => void;
+  /** Tap a row → unskip that task. Receives the row's `task.id`. */
+  onUnskip?: (taskId: string) => void;
 }
 
 /**
- * Collapsible "completed in this bucket" group rendered at the end of each
- * Home tab. Header is always visible (title + count chip); body is hidden
- * by default and expands on tap with a layout animation.
+ * Collapsible "today's activity" group rendered inside each Home tab.
+ * Header is always visible (title + count chip); body is hidden by default
+ * and expands on tap with a layout animation.
  *
- * When `onUndo` is provided and a row has a `completionId`, tapping the row
- * triggers an undo. Otherwise rows are non-interactive.
+ * Two variants:
+ *   - 'completed' (default): rows show strikethrough; tapping calls
+ *     onUndo(completionId) when both are present.
+ *   - 'skipped': no strikethrough; tapping calls onUnskip(task.id) when
+ *     onUnskip is provided.
  *
  * Renders nothing when `items` is empty — callers don't need to guard.
  */
-export function CompletedBucket({ items, title, onUndo }: Props) {
+export function CompletedBucket({
+  items,
+  title,
+  variant = 'completed',
+  onUndo,
+  onUnskip,
+}: Props) {
   const [open, setOpen] = useState(false);
   const meta = useMetaLookup();
 
@@ -69,22 +84,40 @@ export function CompletedBucket({ items, title, onUndo }: Props) {
         <View style={styles.body}>
           {items.map((item, idx) => {
             const dim = meta.dim(item.task.primary_dimension_id);
-            const canUndo = !!(onUndo && item.completionId);
+            const isSkipped = variant === 'skipped';
+            const canTap = isSkipped
+              ? !!onUnskip
+              : !!(onUndo && item.completionId);
+            const defaultIcon = isSkipped
+              ? 'play-skip-forward-outline'
+              : 'checkmark';
+            const defaultIconColor = isSkipped
+              ? tokens.text.dim
+              : tokens.brand.violet2;
             return (
               <Pressable
                 key={item.task.id}
-                disabled={!canUndo}
+                disabled={!canTap}
                 onPress={() => {
-                  if (canUndo && item.completionId) onUndo!(item.completionId);
+                  if (!canTap) return;
+                  if (isSkipped) {
+                    onUnskip!(item.task.id);
+                  } else if (item.completionId) {
+                    onUndo!(item.completionId);
+                  }
                 }}
                 style={({ pressed }) => [
                   styles.row,
                   idx === items.length - 1 && styles.rowLast,
-                  pressed && canUndo && { opacity: 0.85, backgroundColor: tokens.bg.surface2 },
+                  pressed && canTap && { opacity: 0.85, backgroundColor: tokens.bg.surface2 },
                 ]}
-                accessibilityRole={canUndo ? 'button' : 'text'}
+                accessibilityRole={canTap ? 'button' : 'text'}
                 accessibilityLabel={
-                  canUndo ? `Undo completion of ${item.task.title}` : item.task.title
+                  canTap
+                    ? isSkipped
+                      ? `Unskip ${item.task.title}`
+                      : `Undo completion of ${item.task.title}`
+                    : item.task.title
                 }
               >
                 <View
@@ -99,13 +132,16 @@ export function CompletedBucket({ items, title, onUndo }: Props) {
                     color={dim.color}
                   />
                 </View>
-                <Text style={styles.taskTitle} numberOfLines={1}>
+                <Text
+                  style={[styles.taskTitle, isSkipped && styles.taskTitleSkipped]}
+                  numberOfLines={1}
+                >
                   {item.task.title}
                 </Text>
                 <Ionicons
-                  name={canUndo ? 'arrow-undo' : 'checkmark'}
+                  name={canTap ? 'arrow-undo' : defaultIcon}
                   size={14}
-                  color={canUndo ? tokens.text.mid : tokens.brand.violet2}
+                  color={canTap ? tokens.text.mid : defaultIconColor}
                 />
               </Pressable>
             );
@@ -196,5 +232,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: tokens.text.hi,
     textDecorationLine: 'line-through',
+  },
+  taskTitleSkipped: {
+    textDecorationLine: 'none',
+    color: tokens.text.mid,
   },
 });

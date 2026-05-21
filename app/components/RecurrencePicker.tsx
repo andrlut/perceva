@@ -92,10 +92,15 @@ export function RecurrencePicker({
     else onChange({ type: 'monthly', day: Math.max(1, Math.min(31, day)) });
   };
 
+  // Cycle 1↔31 instead of clamping — long-press friendly when picking the
+  // top or bottom of the range.
   const adjustMonthDay = (delta: number) => {
     if (recurrence.type !== 'monthly') return;
     const cur = recurrence.day ?? 1;
-    setMonthlyDay(Math.max(1, Math.min(31, cur + delta)));
+    let next = cur + delta;
+    if (next > 31) next = 1;
+    if (next < 1) next = 31;
+    setMonthlyDay(next);
   };
 
   const adjustTarget = (delta: number) => {
@@ -239,8 +244,23 @@ export function RecurrencePicker({
                 >
                   <Ionicons name="remove" size={20} color={tokens.text.hi} />
                 </Pressable>
-                <View style={styles.stepperValueWrap}>
-                  <Text style={styles.stepperValue}>Day {monthlyDay}</Text>
+                <View style={styles.monthDayInputWrap}>
+                  <Text style={styles.monthDayPrefix}>Day</Text>
+                  <TextInput
+                    value={String(monthlyDay)}
+                    onChangeText={(v) => {
+                      const cleaned = v.replace(/[^0-9]/g, '');
+                      if (cleaned === '') return;
+                      const n = parseInt(cleaned, 10);
+                      if (Number.isFinite(n) && n >= 1 && n <= 31) {
+                        setMonthlyDay(n);
+                      }
+                    }}
+                    keyboardType="number-pad"
+                    selectTextOnFocus
+                    maxLength={2}
+                    style={styles.monthDayInput}
+                  />
                 </View>
                 <Pressable
                   onPress={() => adjustMonthDay(1)}
@@ -252,7 +272,8 @@ export function RecurrencePicker({
               </View>
               {monthlyDay >= 29 && (
                 <Text style={styles.helperText}>
-                  Months without day {monthlyDay} will skip silently.
+                  Months without day {monthlyDay} run on the last day of
+                  the month instead.
                 </Text>
               )}
             </>
@@ -379,6 +400,29 @@ const styles = StyleSheet.create({
   stepperValue: {
     ...tokens.type.h3,
     color: tokens.text.hi,
+  },
+  monthDayInputWrap: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: tokens.bg.surface,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+    borderRadius: tokens.radius.md,
+    paddingVertical: tokens.space[3],
+  },
+  monthDayPrefix: {
+    ...tokens.type.h3,
+    color: tokens.text.dim,
+  },
+  monthDayInput: {
+    ...tokens.type.h3,
+    color: tokens.text.hi,
+    textAlign: 'center',
+    minWidth: 36,
+    padding: 0,
   },
   stepperInput: {
     flex: 1,

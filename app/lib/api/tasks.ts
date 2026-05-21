@@ -9,6 +9,7 @@ import type {
   TaskWithSubs,
 } from '@/lib/db/types';
 import { isDueOn, parseRecurrence } from '@/lib/recurrence';
+import type { WeekStart } from '@/lib/settings';
 import { supabase } from '@/lib/supabase';
 import { SUB_META } from '@/theme/dimensions';
 import { rewardForTaskSubs } from '@/lib/xp';
@@ -177,12 +178,74 @@ export interface HomeBuckets {
   todayActivity: TodayActivity;
 }
 
-function startOfThisWeek(): Date {
+function startOfThisWeek(weekStart: WeekStart): Date {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
-  const offset = (d.getDay() + 6) % 7;
+  const dow = d.getDay(); // 0=Sun..6=Sat
+  const offset = weekStart === 'sunday' ? dow : (dow + 6) % 7;
   d.setDate(d.getDate() - offset);
   return d;
+}
+
+/** Last day of the user's configured week: Saturday if week starts Sunday,
+ *  Sunday if week starts Monday. */
+function isLastDayOfWeek(date: Date, weekStart: WeekStart): boolean {
+  const dow = date.getDay();
+  return weekStart === 'sunday' ? dow === 6 : dow === 0;
+}
+
+/** True when `date` is the final calendar day of its month. */
+function isLastDayOfMonth(date: Date): boolean {
+  const next = new Date(date);
+  next.setDate(date.getDate() + 1);
+  return next.getMonth() !== date.getMonth();
+}
+
+/** True when the week containing `date` (under the configured week start)
+ *  is the last calendar week of `date`'s month — i.e. the end-of-month
+ *  falls within [startOfWeek, startOfWeek + 6 days]. */
+function isLastWeekOfMonth(date: Date, weekStart: WeekStart): boolean {
+  const dow = date.getDay();
+  const offset = weekStart === 'sunday' ? dow : (dow + 6) % 7;
+  const startWeek = new Date(date);
+  startWeek.setHours(0, 0, 0, 0);
+  startWeek.setDate(date.getDate() - offset);
+  const endWeek = new Date(startWeek);
+  endWeek.setDate(startWeek.getDate() + 6);
+  endWeek.setHours(23, 59, 59, 999);
+  const lastDayOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  lastDayOfMonth.setHours(12, 0, 0, 0);
+  return lastDayOfMonth >= startWeek && lastDayOfMonth <= endWeek;
+}
+
+/** True when a monthly task's scheduled day-of-month falls within the
+ *  current calendar week (under the user's configured week start). Used
+ *  to escalate monthly tasks scheduled on a day in this week into the
+ *  This Week bucket — even if the scheduled day already passed. Honors
+ *  the day>28 fallback: for short months we treat the last day as the
+ *  effective scheduled day. */
+function scheduledMonthlyInThisWeek(
+  day: number,
+  today: Date,
+  weekStart: WeekStart,
+): boolean {
+  const dow = today.getDay();
+  const offset = weekStart === 'sunday' ? dow : (dow + 6) % 7;
+  const startWeek = new Date(today);
+  startWeek.setHours(0, 0, 0, 0);
+  startWeek.setDate(today.getDate() - offset);
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(startWeek);
+    d.setDate(startWeek.getDate() + i);
+    const lastDayThatMonth = new Date(
+      d.getFullYear(),
+      d.getMonth() + 1,
+      0,
+    ).getDate();
+    const effectiveDay = Math.min(day, lastDayThatMonth);
+    if (d.getDate() === effectiveDay) return true;
+  }
+  return false;
 }
 
 function startOfThisMonth(): Date {
@@ -210,11 +273,11 @@ function todayLocalDateKey(): string {
   return `${y}-${m}-${day}`;
 }
 
-async function fetchHomeBuckets(): Promise<HomeBuckets> {
+async function fetchHomeBuckets(weekStartPref: WeekStart): Promise<HomeBuckets> {
   const today = new Date();
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
-  const weekStart = startOfThisWeek();
+  const weekStart = startOfThisWeek(weekStartPref);
   const monthStart = startOfThisMonth();
   const monthEnd = endOfThisMonth();
   const todayKey = todayLocalDateKey();
@@ -373,9 +436,8 @@ async function fetchHomeBuckets(): Promise<HomeBuckets> {
     // period target decides This Week / This Month presence.
     // Effective need = target - skips this period.
     const scheduledToday = isDueOn(t.recurrence, today);
-    if (scheduledToday && todayCount === 0 && !skippedTodayHere) {
-      buckets.today.push(t);
-    }
+    const scheduledPromote =
+      scheduledToday && todayCount === 0 && !skippedTodayHere;
 
     if (t.recurrence.type === 'weekly') {
       const weekCount = doneWeek.get(t.id) ?? 0;
@@ -383,30 +445,70 @@ async function fetchHomeBuckets(): Promise<HomeBuckets> {
       // Effective target shrinks by skips: a 3×/week task with 1 skip
       // needs 2 more this week.
       const effectiveTarget = Math.max(0, t.target_count - weekSkips);
-      if (weekCount < effectiveTarget) buckets.thisWeek.push(t);
+      const stillNeeded = weekCount < effectiveTarget;
+
+      // Last-day promotion: when today is the final day of the user's
+      // configured week and the task still owes completions, surface it
+      // on Today instead of letting it sit in This Week until rollover.
+      const lastDayPromote =
+        stillNeeded &&
+        isLastDayOfWeek(today, weekStartPref) &&
+        todayCount === 0 &&
+        !skippedTodayHere;
+
+      if (scheduledPromote || lastDayPromote) {
+        buckets.today.push(t);
+      } else if (stillNeeded) {
+        buckets.thisWeek.push(t);
+      }
     } else {
       // monthly
       const monthCount = doneMonth.get(t.id) ?? 0;
       const monthSkips = skippedMonth.get(t.id) ?? 0;
       const effectiveTarget = Math.max(0, t.target_count - monthSkips);
-      if (monthCount < effectiveTarget) buckets.thisMonth.push(t);
+      const stillNeeded = monthCount < effectiveTarget;
+
+      // Escalation: tasks surface earlier as the deadline approaches.
+      //   - last day of month (or scheduled day match) → Today
+      //   - specific day scheduled within this week     → This Week
+      //   - last calendar week of month                 → This Week
+      //   - otherwise → falls to Recurring (no push here)
+      const lastDayPromote =
+        stillNeeded &&
+        isLastDayOfMonth(today) &&
+        todayCount === 0 &&
+        !skippedTodayHere;
+      const scheduledDayInWeek =
+        stillNeeded &&
+        t.recurrence.type === 'monthly' &&
+        typeof t.recurrence.day === 'number' &&
+        scheduledMonthlyInThisWeek(t.recurrence.day, today, weekStartPref);
+      const lastWeekPromote =
+        stillNeeded && isLastWeekOfMonth(today, weekStartPref);
+
+      if (scheduledPromote || lastDayPromote) {
+        buckets.today.push(t);
+      } else if (scheduledDayInWeek || lastWeekPromote) {
+        buckets.thisWeek.push(t);
+      }
+      // else: monthly task stays off the today/week buckets — the Home
+      // screen will surface it under Recurring.
     }
   }
 
   // Tasks promoted to Today (scheduled day) shouldn't appear ALSO in
-  // This Week / This Month — would be double-listing. Filter out any
-  // task already in Today from the period buckets.
+  // This Week — would be double-listing. Filter out any task already in
+  // Today from the period bucket.
   const todayIds = new Set(buckets.today.map((t) => t.id));
   buckets.thisWeek = buckets.thisWeek.filter((t) => !todayIds.has(t.id));
-  buckets.thisMonth = buckets.thisMonth.filter((t) => !todayIds.has(t.id));
 
   return buckets;
 }
 
-export function useHomeBuckets() {
+export function useHomeBuckets(weekStart: WeekStart = 'monday') {
   return useQuery({
-    queryKey: taskKeys.pending(),
-    queryFn: fetchHomeBuckets,
+    queryKey: [...taskKeys.pending(), weekStart],
+    queryFn: () => fetchHomeBuckets(weekStart),
   });
 }
 

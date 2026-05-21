@@ -18,8 +18,22 @@ export function isScheduledOn(rec: Recurrence, date: Date): boolean {
       return true;
     case 'weekly':
       return Array.isArray(rec.days) && rec.days.includes(date.getDay());
-    case 'monthly':
-      return typeof rec.day === 'number' && date.getDate() === rec.day;
+    case 'monthly': {
+      if (typeof rec.day !== 'number') return false;
+      const dayInMonth = date.getDate();
+      if (dayInMonth === rec.day) return true;
+      // Day > last-day-of-month fallback: a task scheduled for day 31
+      // in February runs on day 28/29 instead of silently skipping.
+      if (rec.day > 28) {
+        const lastDay = new Date(
+          date.getFullYear(),
+          date.getMonth() + 1,
+          0,
+        ).getDate();
+        if (rec.day > lastDay && dayInMonth === lastDay) return true;
+      }
+      return false;
+    }
   }
 }
 

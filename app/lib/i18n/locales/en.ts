@@ -381,6 +381,9 @@ const en = {
       recurring: 'Cadences on track',
       oneshot: 'Completed',
     },
+    skippedBucket: {
+      today: 'Skipped today',
+    },
     ring: {
       toDo: { one: '{{count}} to do', other: '{{count}} to do' },
       allDone: 'All done! 🎉',

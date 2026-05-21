@@ -22,6 +22,7 @@ import {
 } from '@/lib/api/skills';
 import type { SubId, TierName } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
+import { useKeyboardHeight } from '@/lib/use-keyboard-height';
 import { tokens } from '@/theme';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { DIMENSION_ORDER, SUBS_BY_DIM, SUB_META } from '@/theme/dimensions';
@@ -77,6 +78,7 @@ export default function SkillFormScreen() {
   const [subId, setSubId] = useState<SubId>(SUBS_BY_DIM[DIMENSION_ORDER[0]][0]);
   const [icon, setIcon] = useState<string>('flash');
   const [tiers, setTiers] = useState<TierFormState[]>(DEFAULT_TIERS);
+  const keyboardHeight = useKeyboardHeight();
 
   const updateTier = (index: number, patch: Partial<TierFormState>) => {
     setTiers((prev) => prev.map((t, i) => (i === index ? { ...t, ...patch } : t)));
@@ -186,8 +188,12 @@ export default function SkillFormScreen() {
           style={{ flex: 1 }}
         >
           <ScrollView
-            contentContainerStyle={styles.content}
+            contentContainerStyle={[
+              styles.content,
+              keyboardHeight > 0 && { paddingBottom: keyboardHeight + tokens.space[10] },
+            ]}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
           >
             {/* Name */}
             <Text style={styles.label}>{t('skill.form.nameLabel')}</Text>

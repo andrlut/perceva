@@ -28,12 +28,14 @@ import { XPCoinFloat } from '@/components/XPCoinFloat';
 import { useCharacter } from '@/lib/api/character';
 import { useT } from '@/lib/i18n';
 import { useTrackedReward } from '@/lib/api/rewards';
+import { useLoadedSettings } from '@/lib/settings';
 import {
   useActiveTasks,
   useCompleteTask,
   useHomeBuckets,
   useSkipTaskToday,
   useUndoCompletion,
+  useUnskipTaskToday,
 } from '@/lib/api/tasks';
 import type { TaskSub, TaskWithSubs } from '@/lib/db/types';
 import { formatCompactDate } from '@/lib/time';
@@ -102,12 +104,14 @@ const TAB_META: TabMeta[] = [
 export default function HomeScreen() {
   const router = useRouter();
   const { t } = useT();
+  const settings = useLoadedSettings();
   const character = useCharacter();
-  const buckets = useHomeBuckets();
+  const buckets = useHomeBuckets(settings.weekStart);
   const allActiveTasks = useActiveTasks();
   const trackedReward = useTrackedReward();
   const completeTask = useCompleteTask();
   const skipTask = useSkipTaskToday();
+  const unskipTask = useUnskipTaskToday();
   const undoCompletion = useUndoCompletion();
 
   const [activeTab, setActiveTab] = useState<BucketTab>('today');
@@ -206,6 +210,22 @@ export default function HomeScreen() {
     });
   };
 
+  const handleUnskip = (taskId: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    unskipTask.mutate(
+      { taskId },
+      {
+        onError: (err) => {
+          const e = err as { message?: string };
+          Alert.alert(
+            t('home.actionErrors.unskip'),
+            e.message ?? t('home.actionErrors.unknown'),
+          );
+        },
+      },
+    );
+  };
+
   const isLoading = character.isLoading || buckets.isLoading;
   const hasError = character.error || buckets.error;
 
@@ -226,13 +246,14 @@ export default function HomeScreen() {
   // one bucket — the one closest to "act on this now".
   //
   // - today:     `useHomeBuckets.today` (pending daily + scheduled-today
-  //              weekly/monthly that aren't done yet)
-  // - week:      thisWeek + thisMonth, MINUS today's items AND minus
-  //              anything already completed today (so a 3x/week task
-  //              I did once today doesn't pop into "this week" as if
-  //              still pending — it counts as "covered for today")
-  // - recurring: all non-one_shot active tasks NOT in today or week
-  //              (cadences that are caught up — the user's habit list)
+  //              weekly/monthly that aren't done yet + last-day escalations)
+  // - week:      `useHomeBuckets.thisWeek` MINUS today's items AND minus
+  //              anything completed OR skipped today (covered-for-today
+  //              shouldn't pop back into this-week as if still pending).
+  //              Monthly tasks land here only when they hit the last week
+  //              of the month — otherwise they stay in Recurring.
+  // - recurring: non-one_shot active tasks NOT in today or week, and
+  //              NOT completed/skipped today (caught-up cadences)
   // - oneshot:   pending one-shots
   const lists = useMemo<Record<BucketTab, TaskWithSubs[]>>(() => {
     if (!data) {
@@ -243,28 +264,33 @@ export default function HomeScreen() {
     const completedTodayIds = new Set(
       data.todayActivity.completed.map((c) => c.task.id),
     );
+    const skippedTodayIds = new Set(
+      data.todayActivity.skipped.map((t) => t.id),
+    );
 
-    // Week = thisWeek + thisMonth, deduped, excluding today's items and
-    // tasks the user already completed at least once today.
+    // Week list: hide today's items and any task already acted on today.
     const week: TaskWithSubs[] = [];
     const seen = new Set<string>();
     const pushWeek = (t: TaskWithSubs) => {
       if (seen.has(t.id)) return;
       if (todayIds.has(t.id)) return;
       if (completedTodayIds.has(t.id)) return;
+      if (skippedTodayIds.has(t.id)) return;
       seen.add(t.id);
       week.push(t);
     };
     data.thisWeek.forEach(pushWeek);
-    data.thisMonth.forEach(pushWeek);
     const weekIds = new Set(week.map((t) => t.id));
 
-    // Recurring = non-one_shot active tasks not surfaced above.
+    // Recurring = non-one_shot active tasks not surfaced above and not
+    // acted-on today.
     const recurring = (allActiveTasks.data ?? []).filter(
       (t) =>
         t.recurrence.type !== 'one_shot' &&
         !todayIds.has(t.id) &&
-        !weekIds.has(t.id),
+        !weekIds.has(t.id) &&
+        !completedTodayIds.has(t.id) &&
+        !skippedTodayIds.has(t.id),
     );
 
     return {
@@ -276,8 +302,8 @@ export default function HomeScreen() {
   }, [data, allActiveTasks.data]);
 
   // Tasks completed today (regardless of bucket). Used by the "Done today"
-  // collapsible at the bottom of the today bucket — rows are tappable to
-  // undo, so we keep the latestCompletionId here.
+  // collapsible — rendered in every tab. Rows are tappable to undo, so we
+  // keep the latestCompletionId here.
   const completedTodayItems = useMemo<CompletedItem[]>(
     () =>
       (data?.todayActivity.completed ?? []).map((c) => ({
@@ -285,6 +311,14 @@ export default function HomeScreen() {
         completionId: c.latestCompletionId,
       })),
     [data?.todayActivity.completed],
+  );
+
+  // Tasks skipped today (regardless of bucket). Feeds the "Skipped today"
+  // collapsible rendered in every tab. Rows are tappable to unskip.
+  const skippedTodayItems = useMemo<CompletedItem[]>(
+    () =>
+      (data?.todayActivity.skipped ?? []).map((task) => ({ task })),
+    [data?.todayActivity.skipped],
   );
 
   // Counts shown in the tab chips. For today/week/oneshot it's pending; for
@@ -395,13 +429,17 @@ export default function HomeScreen() {
                   </>
                 )}
 
-                {activeTab === 'today' && (
-                  <CompletedBucket
-                    items={completedTodayItems}
-                    title={completedBucketTitle}
-                    onUndo={handleUndo}
-                  />
-                )}
+                <CompletedBucket
+                  items={completedTodayItems}
+                  title={completedBucketTitle}
+                  onUndo={handleUndo}
+                />
+                <CompletedBucket
+                  items={skippedTodayItems}
+                  title={t('home.skippedBucket.today')}
+                  variant="skipped"
+                  onUnskip={handleUnskip}
+                />
               </View>
 
               <View style={styles.manageWrap}>

@@ -21,6 +21,7 @@ import { useStartCustomQuest } from '@/lib/api/quests';
 import { useActiveTasks } from '@/lib/api/tasks';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
+import { useKeyboardHeight } from '@/lib/use-keyboard-height';
 import { showInfo } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 
@@ -71,6 +72,7 @@ export default function QuestCreateScreen() {
   const [durationDays, setDurationDays] = useState<number>(21);
   const [linkedTaskIds, setLinkedTaskIds] = useState<Set<string>>(new Set());
   const [partial, setPartial] = useState(true);
+  const keyboardHeight = useKeyboardHeight();
 
   const rewardXp = useMemo(() => deriveRewardXp(durationDays), [durationDays]);
   const rewardCoins = useMemo(() => deriveRewardCoins(rewardXp), [rewardXp]);
@@ -156,9 +158,13 @@ export default function QuestCreateScreen() {
         style={{ flex: 1 }}
       >
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={[
+            styles.scroll,
+            keyboardHeight > 0 && { paddingBottom: keyboardHeight + tokens.space[10] },
+          ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
         >
           {/* Title */}
           <View style={styles.field}>
