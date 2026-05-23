@@ -57,12 +57,26 @@ jobs:
 
       - name: Trigger EAS build
         working-directory: app
+        env:
+          # Pass through env vars rather than inlining `${{ ... }}` into the
+          # `run:` script. Squash-merge commit bodies routinely contain
+          # newlines, commas and other shell metacharacters that get
+          # tokenised as extra arguments when expanded inline, breaking
+          # `eas build --message "<expansion>"` with:
+          #   "Unexpected arguments: ·, X, Y, Z"
+          PROFILE: ${{ github.event.inputs.profile || 'preview' }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          ACTOR: ${{ github.actor }}
         run: |
-          PROFILE="${{ github.event.inputs.profile || 'preview' }}"
+          MSG="${COMMIT_MSG:-manual dispatch by $ACTOR}"
+          # eas build's --message is a single line in the build dashboard,
+          # so collapse newlines and trim to a sane length.
+          MSG=$(printf '%s' "$MSG" | tr '\n' ' ' | head -c 200)
           echo "Building Android APK with profile: $PROFILE"
+          echo "Build message: $MSG"
           eas build \
             --platform android \
             --profile "$PROFILE" \
             --non-interactive \
             --no-wait \
-            --message "${{ github.event.head_commit.message || format('manual dispatch by {0}', github.actor) }}"
+            --message "$MSG"
