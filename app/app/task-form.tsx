@@ -25,6 +25,7 @@ import {
   type TaskFormInput,
 } from '@/lib/api/tasks';
 import type { Recurrence, TaskSub } from '@/lib/db/types';
+import { useKeyboardHeight } from '@/lib/use-keyboard-height';
 import { confirmAction } from '@/lib/util/confirm';
 import { rewardForTaskSubs } from '@/lib/xp';
 import { tokens } from '@/theme';
@@ -49,6 +50,10 @@ export default function TaskFormScreen() {
   const [recurrence, setRecurrence] = useState<Recurrence>({ type: 'daily' });
   const [targetCount, setTargetCount] = useState<number>(1);
   const [subs, setSubs] = useState<TaskSub[]>([]);
+  // Keep scroll content reachable while the keyboard is up. `endCoordinates`
+  // doesn't always include the keyboard's tool/suggestion bar, so we add a
+  // generous buffer below.
+  const keyboardHeight = useKeyboardHeight();
 
   // Hydrate from server when editing
   useEffect(() => {
@@ -170,8 +175,12 @@ export default function TaskFormScreen() {
         style={{ flex: 1 }}
       >
         <ScrollView
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[
+            styles.content,
+            keyboardHeight > 0 && { paddingBottom: keyboardHeight + tokens.space[10] },
+          ]}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
         >
           <View style={styles.field}>
             <Text style={styles.label}>Title</Text>

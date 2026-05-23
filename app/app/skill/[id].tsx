@@ -29,6 +29,7 @@ import {
 import type { SkillLog, SkillTier, TierName } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useLocalizedPick } from '@/lib/i18n/catalog';
+import { useKeyboardHeight } from '@/lib/use-keyboard-height';
 import { tokens } from '@/theme';
 import {
   alpha,
@@ -116,6 +117,7 @@ export default function SkillDetailScreen() {
 
   const [valueStr, setValueStr] = useState('');
   const insets = useSafeAreaInsets();
+  const keyboardHeight = useKeyboardHeight();
   // CTA bar sits above the system gesture bar via insets.bottom + a small
   // visual gap. Content padding must reserve room for the CTA bar height
   // (56) + its bottom offset so the scroll's last items aren't hidden.
@@ -263,8 +265,17 @@ export default function SkillDetailScreen() {
           style={{ flex: 1 }}
         >
           <ScrollView
-            contentContainerStyle={[styles.content, { paddingBottom: ctaClearance }]}
+            contentContainerStyle={[
+              styles.content,
+              {
+                paddingBottom:
+                  keyboardHeight > 0
+                    ? keyboardHeight + tokens.space[10]
+                    : ctaClearance,
+              },
+            ]}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
           >
             {/* Hero — orbital medallion + tier eyebrow + skill name + PR row */}
             <View style={styles.hero}>

@@ -24,6 +24,7 @@ import {
 } from '@/lib/api/rewards';
 import type { RewardCategory } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
+import { useKeyboardHeight } from '@/lib/use-keyboard-height';
 import { confirmAction } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 import { REWARD_CATEGORY_META, REWARD_CATEGORY_ORDER } from '@/theme/rewards';
@@ -60,6 +61,7 @@ export default function RewardFormScreen() {
   const [costStr, setCostStr] = useState('50');
   const [icon, setIcon] = useState<string>('gift');
   const [category, setCategory] = useState<RewardCategory>(initialCategory);
+  const keyboardHeight = useKeyboardHeight();
 
   useEffect(() => {
     if (existing.data) {
@@ -177,8 +179,12 @@ export default function RewardFormScreen() {
         style={{ flex: 1 }}
       >
         <ScrollView
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[
+            styles.content,
+            keyboardHeight > 0 && { paddingBottom: keyboardHeight + tokens.space[10] },
+          ]}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
         >
           <View style={styles.field}>
             <Text style={styles.label}>Category</Text>

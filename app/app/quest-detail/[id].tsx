@@ -25,6 +25,7 @@ import {
 import { useActiveTasks } from '@/lib/api/tasks';
 import { useT } from '@/lib/i18n';
 import { useLocalizedPick } from '@/lib/i18n/catalog';
+import { useKeyboardHeight } from '@/lib/use-keyboard-height';
 import type {
   QuestTemplate,
   QuestTemplateRequirement,
@@ -61,6 +62,7 @@ export default function QuestDetailScreen() {
   const completeQuest = useCompleteQuest();
   const logChallenge = useLogChallengeProgress();
   const [logValue, setLogValue] = useState('');
+  const keyboardHeight = useKeyboardHeight();
 
   const quest: QuestWithProgress | null = useMemo(() => {
     if (inferredKind !== 'quest') return null;
@@ -295,7 +297,15 @@ export default function QuestDetailScreen() {
         </View>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[
+          styles.scroll,
+          keyboardHeight > 0 && { paddingBottom: keyboardHeight + tokens.space[10] },
+        ]}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+      >
         {/* Hero card */}
         <View style={styles.hero}>
           <View style={[styles.heroAccent, { backgroundColor: cat.color }]} />
