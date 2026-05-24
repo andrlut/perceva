@@ -465,6 +465,11 @@ const en = {
       unskip: 'Unskip',
     },
     pullToRefresh: 'Pull to refresh',
+    swipe: {
+      complete: 'Complete',
+      skip: 'Skip today',
+      hint: 'Swipe right to complete · left to skip',
+    },
   },
 
   tasks: {

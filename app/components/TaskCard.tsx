@@ -1,14 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+  interpolate,
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSequence,
   withSpring,
   withTiming,
+  Extrapolation,
 } from 'react-native-reanimated';
 
+import { useT } from '@/lib/i18n';
 import type { TaskSub, TaskWithSubs } from '@/lib/db/types';
 import { describeRecurrence } from '@/lib/recurrence';
 import { rewardForTaskSubs } from '@/lib/xp';
@@ -25,11 +31,16 @@ interface Props {
   onLongPress?: () => void;
   /** Tap the body to navigate to edit. */
   onEdit?: () => void;
+  /** Swipe-left handler (skip-today). When omitted, swipe-left does nothing. */
+  onSkip?: () => void;
   isCompleting?: boolean;
 }
 
+const SWIPE_COMMIT = 96;
+const SWIPE_MAX = 160;
+
 /**
- * Compact task card.
+ * Compact task card with swipe gestures.
  *
  *   ┌────────────────────────────────────────────────┐
  *   │ ▎ Title                              ┌─────┐  │
@@ -37,26 +48,33 @@ interface Props {
  *   │                                       └─────┘  │
  *   └────────────────────────────────────────────────┘
  *
+ * Swipe right past ~100px → fires `onComplete` with haptic feedback,
+ * the card slides out and the green "complete" action zone fills in
+ * behind it. Swipe left past ~100px → fires `onSkip`. Below threshold
+ * the card springs back home.
+ *
  * Vertical accent bar on the left tinted by the primary sub's dim color.
  * Pips below the title are colored by sub — a 2★+1★+1★ task draws 2 of
- * sub-1's color, 1 of sub-2's, 1 of sub-3's (no cap; user liked the
- * visual). The number next to them is the task's total reward in XP
- * (coins == xp by current convention, so we collapse to one value).
+ * sub-1's color, 1 of sub-2's, 1 of sub-3's. The number next to them is
+ * the task's total reward in XP.
  *
- * Single primary action: violet rounded check on the right. Tap = quick
- * complete with defaults, long-press = open the per-sub adjust popup.
+ * Tap on the body opens edit. Tap on the violet check button (or swipe
+ * right) completes. Long-press opens the per-sub adjust popup.
  */
 export function TaskCard({
   task,
   onComplete,
   onLongPress,
   onEdit,
+  onSkip,
   isCompleting,
 }: Props) {
+  const { t } = useT();
   const accent = DIMENSION_META[task.primary_dimension_id].color;
   const reward = rewardForTaskSubs(task.subs);
 
   const completeScale = useSharedValue(1);
+  const tx = useSharedValue(0);
 
   useEffect(() => {
     if (isCompleting) {
@@ -84,62 +102,174 @@ export function TaskCard({
 
   const subIds = task.subs.map((s) => s.sub_id);
 
+  // ── Swipe gesture ───────────────────────────────────────────────────
+  // Activates only after the user has pulled ≥15px horizontally, so taps
+  // on the card body / check button still work.
+  const fireComplete = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(
+      () => {},
+    );
+    onComplete();
+  };
+  const fireSkip = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    onSkip?.();
+  };
+
+  const pan = Gesture.Pan()
+    .activeOffsetX([-15, 15])
+    .failOffsetY([-12, 12])
+    .onUpdate((e) => {
+      // Right swipe is always allowed (complete). Left swipe only when
+      // a skip handler is wired up — otherwise resist past 0.
+      const next = e.translationX;
+      if (next < 0 && !onSkip) {
+        tx.value = next * 0.25; // soft resistance
+      } else {
+        // Clamp so the card never flies completely off-screen.
+        tx.value = Math.max(-SWIPE_MAX, Math.min(SWIPE_MAX, next));
+      }
+    })
+    .onEnd((e) => {
+      const x = e.translationX;
+      if (x > SWIPE_COMMIT) {
+        // Throw the card off to the right, then fire.
+        tx.value = withTiming(SWIPE_MAX, { duration: 140 }, () => {
+          tx.value = withSpring(0, tokens.motion.springSnappy);
+          runOnJS(fireComplete)();
+        });
+      } else if (x < -SWIPE_COMMIT && onSkip) {
+        tx.value = withTiming(-SWIPE_MAX, { duration: 140 }, () => {
+          tx.value = withSpring(0, tokens.motion.springSnappy);
+          runOnJS(fireSkip)();
+        });
+      } else {
+        tx.value = withSpring(0, tokens.motion.springSnappy);
+      }
+    });
+
+  const cardAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: tx.value }],
+  }));
+
+  // Action backgrounds — slot revealed grows as the card moves.
+  // Right swipe (complete) reveals the LEFT bg; left swipe (skip)
+  // reveals the RIGHT bg.
+  const completeBgStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      tx.value,
+      [0, SWIPE_COMMIT],
+      [0, 1],
+      Extrapolation.CLAMP,
+    ),
+    transform: [
+      {
+        scale: interpolate(
+          tx.value,
+          [0, SWIPE_COMMIT, SWIPE_MAX],
+          [0.7, 1, 1.05],
+          Extrapolation.CLAMP,
+        ),
+      },
+    ],
+  }));
+  const skipBgStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      tx.value,
+      [-SWIPE_COMMIT, 0],
+      [1, 0],
+      Extrapolation.CLAMP,
+    ),
+    transform: [
+      {
+        scale: interpolate(
+          tx.value,
+          [-SWIPE_MAX, -SWIPE_COMMIT, 0],
+          [1.05, 1, 0.7],
+          Extrapolation.CLAMP,
+        ),
+      },
+    ],
+  }));
+
   return (
-    <View style={styles.container}>
-      {/* Vertical accent bar on the left, tinted by primary sub's dim */}
-      <View
-        style={[
-          styles.accentBar,
-          { backgroundColor: accent, opacity: 0.6 },
-        ]}
-      />
-
-      <Pressable
-        style={({ pressed }) => [
-          styles.bodyWrap,
-          pressed && (onEdit || onLongPress) && { opacity: 0.85 },
-        ]}
-        onPress={onEdit}
-        onLongPress={onLongPress}
-        delayLongPress={350}
-        disabled={!onEdit && !onLongPress}
-      >
-        <Text style={styles.title} numberOfLines={2}>
-          {task.title}
-        </Text>
-
-        <View style={styles.metaRow}>
-          {subIds.length > 0 && <SubStack subIds={subIds} max={3} size={28} />}
-          <SubColoredPips subs={task.subs} />
-          <Text style={styles.rewardValue}>+{reward.total.xp}</Text>
-          {showRecurrenceNote && (
-            <Text style={styles.recurrenceNote} numberOfLines={1}>
-              {describeRecurrence(task.recurrence, task.target_count)}
-            </Text>
-          )}
+    <View style={styles.outerWrap}>
+      {/* Left action zone — revealed when swiping RIGHT (complete) */}
+      <Animated.View style={[styles.actionZone, styles.actionLeft, completeBgStyle]}>
+        <View style={[styles.actionPill, styles.actionPillComplete]}>
+          <Ionicons name="checkmark-circle" size={22} color="#fff" />
+          <Text style={styles.actionLabel}>{t('home.swipe.complete')}</Text>
         </View>
-      </Pressable>
-
-      <Animated.View style={[styles.completeShadow, buttonAnimStyle]}>
-        <Pressable
-          onPress={onComplete}
-          onLongPress={onLongPress}
-          delayLongPress={350}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-          disabled={isCompleting}
-          hitSlop={8}
-          style={({ pressed }) => [
-            styles.completeButton,
-            pressed && styles.completeButtonPressed,
-          ]}
-          accessibilityHint={
-            onLongPress ? 'Long-press to adjust per-sub stars' : undefined
-          }
-        >
-          <Ionicons name="checkmark" size={22} color="#fff" />
-        </Pressable>
       </Animated.View>
+
+      {/* Right action zone — revealed when swiping LEFT (skip) */}
+      {onSkip && (
+        <Animated.View style={[styles.actionZone, styles.actionRight, skipBgStyle]}>
+          <View style={[styles.actionPill, styles.actionPillSkip]}>
+            <Ionicons name="play-skip-forward" size={20} color="#fff" />
+            <Text style={styles.actionLabel}>{t('home.swipe.skip')}</Text>
+          </View>
+        </Animated.View>
+      )}
+
+      <GestureDetector gesture={pan}>
+        <Animated.View style={[styles.container, cardAnimStyle]}>
+          {/* Vertical accent bar on the left, tinted by primary sub's dim */}
+          <View
+            style={[
+              styles.accentBar,
+              { backgroundColor: accent, opacity: 0.6 },
+            ]}
+          />
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.bodyWrap,
+              pressed && (onEdit || onLongPress) && { opacity: 0.85 },
+            ]}
+            onPress={onEdit}
+            onLongPress={onLongPress}
+            delayLongPress={350}
+            disabled={!onEdit && !onLongPress}
+          >
+            <Text style={styles.title} numberOfLines={2}>
+              {task.title}
+            </Text>
+
+            <View style={styles.metaRow}>
+              {subIds.length > 0 && <SubStack subIds={subIds} max={3} size={28} />}
+              <SubColoredPips subs={task.subs} />
+              <Text style={styles.rewardValue}>+{reward.total.xp}</Text>
+              {showRecurrenceNote && (
+                <Text style={styles.recurrenceNote} numberOfLines={1}>
+                  {describeRecurrence(task.recurrence, task.target_count)}
+                </Text>
+              )}
+            </View>
+          </Pressable>
+
+          <Animated.View style={[styles.completeShadow, buttonAnimStyle]}>
+            <Pressable
+              onPress={onComplete}
+              onLongPress={onLongPress}
+              delayLongPress={350}
+              onPressIn={handlePressIn}
+              onPressOut={handlePressOut}
+              disabled={isCompleting}
+              hitSlop={8}
+              style={({ pressed }) => [
+                styles.completeButton,
+                pressed && styles.completeButtonPressed,
+              ]}
+              accessibilityHint={
+                onLongPress ? 'Long-press to adjust per-sub stars' : undefined
+              }
+            >
+              <Ionicons name="checkmark" size={22} color="#fff" />
+            </Pressable>
+          </Animated.View>
+        </Animated.View>
+      </GestureDetector>
     </View>
   );
 }
@@ -166,6 +296,47 @@ function SubColoredPips({ subs }: { subs: TaskSub[] }) {
 }
 
 const styles = StyleSheet.create({
+  outerWrap: {
+    position: 'relative',
+  },
+  actionZone: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: 140,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: tokens.space[3],
+  },
+  actionLeft: {
+    left: 0,
+    alignItems: 'flex-start',
+  },
+  actionRight: {
+    right: 0,
+    alignItems: 'flex-end',
+  },
+  actionPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 14,
+  },
+  actionPillComplete: {
+    backgroundColor: tokens.semantic.xp,
+  },
+  actionPillSkip: {
+    backgroundColor: tokens.semantic.coin,
+  },
+  actionLabel: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 12,
+    color: '#fff',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+  },
   container: {
     flexDirection: 'row',
     alignItems: 'center',
