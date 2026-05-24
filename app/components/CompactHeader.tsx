@@ -23,6 +23,8 @@ interface Props {
   dateLabel: string;
   /** Tapping the calendar glyph in the eyebrow row opens history. */
   onHistoryPress?: () => void;
+  /** Tapping the list glyph in the eyebrow row opens the manage screen. */
+  onManagePress?: () => void;
   /** When set, renders a second row with the pinned reward's progress. */
   trackedReward?: TrackedReward | null;
   /** Tap on the reward row (opens the rewards screen). */
@@ -44,6 +46,7 @@ export function CompactHeader({
   coins,
   dateLabel,
   onHistoryPress,
+  onManagePress,
   trackedReward,
   onTrackedRewardPress,
 }: Props) {
@@ -59,17 +62,30 @@ export function CompactHeader({
         <Text style={styles.eyebrow}>
           {dateLabel} · {displayName.toUpperCase()}
         </Text>
-        {onHistoryPress && (
-          <Pressable
-            onPress={onHistoryPress}
-            hitSlop={10}
-            accessibilityRole="button"
-            accessibilityLabel="History"
-            style={({ pressed }) => [styles.historyBtn, pressed && styles.historyBtnPressed]}
-          >
-            <Ionicons name="calendar-outline" size={14} color={tokens.text.mid} />
-          </Pressable>
-        )}
+        <View style={styles.eyebrowActions}>
+          {onManagePress && (
+            <Pressable
+              onPress={onManagePress}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel="Manage tasks"
+              style={({ pressed }) => [styles.iconBtn, pressed && styles.iconBtnPressed]}
+            >
+              <Ionicons name="list-outline" size={14} color={tokens.text.mid} />
+            </Pressable>
+          )}
+          {onHistoryPress && (
+            <Pressable
+              onPress={onHistoryPress}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel="History"
+              style={({ pressed }) => [styles.iconBtn, pressed && styles.iconBtnPressed]}
+            >
+              <Ionicons name="calendar-outline" size={14} color={tokens.text.mid} />
+            </Pressable>
+          )}
+        </View>
       </View>
 
       {/* Row 1: coins · LV · XP bar */}
@@ -161,7 +177,12 @@ const styles = StyleSheet.create({
     color: tokens.text.dim,
     flex: 1,
   },
-  historyBtn: {
+  eyebrowActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  iconBtn: {
     width: 26,
     height: 22,
     borderRadius: 6,
@@ -171,7 +192,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  historyBtnPressed: {
+  iconBtnPressed: {
     opacity: 0.7,
   },
   row: {
