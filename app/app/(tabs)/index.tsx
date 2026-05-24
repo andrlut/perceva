@@ -372,6 +372,7 @@ export default function HomeScreen() {
             coins={character.data?.character.coins ?? 0}
             dateLabel={formatCompactDate()}
             onHistoryPress={() => router.push('/history')}
+            onManagePress={() => router.push('/tasks')}
             trackedReward={trackedReward}
             onTrackedRewardPress={() => router.push('/(tabs)/rewards')}
           />
