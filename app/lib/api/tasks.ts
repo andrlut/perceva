@@ -746,19 +746,32 @@ export function useCreateTask() {
   });
 }
 
+/** Extended update input. When `dropTemplateLink` is true, the underlying
+ *  UPDATE also nulls out `task.template_id` — used when the user has edited
+ *  title/description/subs of a template-adopted task, which by product
+ *  convention converts the task into a truly custom one (and, when free-tier
+ *  limits land, counts the custom slot toward the limit). */
+export interface TaskUpdateInput extends TaskFormInput {
+  dropTemplateLink?: boolean;
+}
+
 export function useUpdateTask(taskId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: TaskFormInput) => {
+    mutationFn: async (input: TaskUpdateInput) => {
+      const patch: Record<string, unknown> = {
+        title: input.title,
+        description: input.description,
+        task_type: input.task_type,
+        recurrence: input.recurrence,
+        target_count: input.target_count,
+      };
+      if (input.dropTemplateLink) {
+        patch.template_id = null;
+      }
       const { error } = await supabase
         .from('task')
-        .update({
-          title: input.title,
-          description: input.description,
-          task_type: input.task_type,
-          recurrence: input.recurrence,
-          target_count: input.target_count,
-        })
+        .update(patch)
         .eq('id', taskId);
       if (error) throw error;
 

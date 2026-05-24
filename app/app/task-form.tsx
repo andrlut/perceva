@@ -120,6 +120,30 @@ export default function TaskFormScreen() {
     };
   }, [title, description, recurrence, targetCount, subs, totalStars]);
 
+  /** True when editing a template-adopted task AND the user has changed
+   *  any field that triggers the template-link drop (title, description,
+   *  or subs). Periodicity changes alone DON'T trigger this — the user
+   *  is allowed to retune cadence without losing the link.
+   *
+   *  Used to render the inline warning and to set `dropTemplateLink` on
+   *  the update payload at save time. */
+  const breaksTemplateLink = useMemo(() => {
+    if (!isEdit) return false;
+    const orig = existing.data;
+    if (!orig || !orig.template_id) return false;
+    if (title.trim() !== orig.title) return true;
+    const origDesc = (orig.description ?? '').trim();
+    const curDesc = description.trim();
+    if (origDesc !== curDesc) return true;
+    // Subs: compare order-independently by (sub_id, stars).
+    if (orig.subs.length !== subs.length) return true;
+    const sortKey = (s: { sub_id: string; stars: number }) =>
+      `${s.sub_id}:${s.stars}`;
+    const origKey = orig.subs.map(sortKey).sort().join('|');
+    const curKey = subs.map(sortKey).sort().join('|');
+    return origKey !== curKey;
+  }, [isEdit, existing.data, title, description, subs]);
+
   const handleSave = async () => {
     if (!title.trim()) {
       Alert.alert('Title required', 'Give your task a title.');
@@ -134,7 +158,13 @@ export default function TaskFormScreen() {
     }
     try {
       if (isEdit && params.id) {
-        await updateTask.mutateAsync(formInput);
+        await updateTask.mutateAsync({
+          ...formInput,
+          // If the user edited title/description/subs on a template-adopted
+          // task, drop the template link so the task is treated as custom
+          // going forward.
+          dropTemplateLink: breaksTemplateLink,
+        });
       } else {
         await createTask.mutateAsync(formInput);
       }
@@ -214,6 +244,17 @@ export default function TaskFormScreen() {
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="interactive"
         >
+          {breaksTemplateLink && (
+            <View style={styles.breakWarning}>
+              <Ionicons name="information-circle" size={18} color={tokens.semantic.warn} />
+              <Text style={styles.breakWarningText}>
+                Editar título, descrição ou subs vai desvincular esta task do
+                template — ela vira uma criação sua. Só mudar periodicidade
+                preserva o vínculo.
+              </Text>
+            </View>
+          )}
+
           <View style={styles.field}>
             <Text style={styles.label}>Title</Text>
             <TextInput
@@ -348,6 +389,25 @@ const styles = StyleSheet.create({
     padding: tokens.space[4],
     gap: tokens.space[5],
     paddingBottom: tokens.space[10],
+  },
+  breakWarning: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    paddingVertical: tokens.space[3],
+    paddingHorizontal: tokens.space[3],
+    borderRadius: tokens.radius.md,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 159, 67, 0.4)',
+    backgroundColor: 'rgba(255, 159, 67, 0.10)',
+    marginBottom: tokens.space[3],
+  },
+  breakWarningText: {
+    flex: 1,
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 12,
+    lineHeight: 17,
+    color: tokens.text.base,
   },
   field: {
     gap: tokens.space[2],
