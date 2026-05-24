@@ -455,6 +455,11 @@ const pt: Translations = {
       unskip: 'Despular',
     },
     pullToRefresh: 'Puxe pra atualizar',
+    swipe: {
+      complete: 'Concluir',
+      skip: 'Pular hoje',
+      hint: 'Arraste direita pra concluir · esquerda pra pular',
+    },
   },
 
   tasks: {

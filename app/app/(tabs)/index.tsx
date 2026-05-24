@@ -183,6 +183,24 @@ export default function HomeScreen() {
     );
   };
 
+  // Swipe-left on the card → direct skip without confirmation. Errors
+  // still surface as an alert; user can unskip from the "Skipped today"
+  // drawer if they swipe by mistake.
+  const handleSwipeSkip = (task: TaskWithSubs) => {
+    skipTask.mutate(
+      { taskId: task.id },
+      {
+        onError: (err) => {
+          const e = err as { message?: string };
+          Alert.alert(
+            t('home.actionErrors.skip'),
+            e.message ?? t('home.actionErrors.unknown'),
+          );
+        },
+      },
+    );
+  };
+
   const handleActionEdit = () => {
     if (!actionTask) return;
     const task = actionTask;
@@ -418,6 +436,7 @@ export default function HomeScreen() {
                         task={task}
                         onComplete={() => handleQuickComplete(task)}
                         onLongPress={() => handleLongPress(task)}
+                        onSkip={() => handleSwipeSkip(task)}
                         onEdit={() =>
                           router.push({ pathname: '/task-form', params: { id: task.id } })
                         }

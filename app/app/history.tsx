@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -11,6 +12,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { useT } from '@/lib/i18n';
 
 import { CalendarMonthModal } from '@/components/CalendarMonthModal';
 import { CoinIcon } from '@/components/CoinIcon';
@@ -62,6 +65,8 @@ function formatDay(d: Date): string {
 }
 
 export default function HistoryScreen() {
+  const router = useRouter();
+  const { t } = useT();
   const [selected, setSelected] = useState<Date>(() => startOfDay(new Date()));
   const [calendarOpen, setCalendarOpen] = useState(false);
 
@@ -154,6 +159,18 @@ export default function HistoryScreen() {
         }
       >
         <View style={styles.header}>
+          <Pressable
+            onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+            style={({ pressed }) => [
+              styles.backBtn,
+              pressed && { opacity: 0.7 },
+            ]}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.back')}
+          >
+            <Ionicons name="chevron-back" size={22} color={tokens.text.hi} />
+          </Pressable>
           <View style={{ flex: 1 }}>
             <Text style={styles.eyebrow}>HISTORY</Text>
             <Text style={styles.title}>Your trail</Text>
@@ -413,8 +430,19 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'flex-end',
+    gap: tokens.space[3],
     paddingTop: tokens.space[2],
     paddingBottom: tokens.space[4],
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: tokens.bg.surface,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   calendarBtn: {
     width: 40,
