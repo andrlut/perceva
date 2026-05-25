@@ -47,8 +47,17 @@ import { REWARD_CATEGORY_META, REWARD_CATEGORY_ORDER } from '@/theme/rewards';
 
 type RewardView = 'shop' | 'bank' | 'used';
 
-/** Rewards with a deficit ≤ this go to "Almost there"; the rest, to "Big goals". */
-const ALMOST_THRESHOLD = 800;
+/**
+ * Bucket threshold for "Almost there". A reward lands in Almost when the
+ * user already has ≥(1 - ALMOST_RATIO) of its cost — i.e. the remaining
+ * deficit is at most ALMOST_RATIO of the price.
+ *
+ * Proportional (vs. a fixed coin amount) so the bucketing scales with the
+ * user's stage: a 50-coin reward needs 35 to be "almost", a 5000-coin
+ * reward needs ~3500. Fixed thresholds either trivialize small rewards
+ * for rich users or make everything "big" for poor users.
+ */
+const ALMOST_RATIO = 0.3;
 
 export default function RewardsScreen() {
   const router = useRouter();
@@ -117,7 +126,8 @@ export default function RewardsScreen() {
       const deficit = r.cost - coins;
       if (deficit <= 0) {
         available.push(r);
-      } else if (deficit <= ALMOST_THRESHOLD) {
+      } else if (deficit / r.cost <= ALMOST_RATIO) {
+        // ≥70% of the way there: a stretch but visible.
         almost.push(r);
       } else {
         bigGoals.push(r);
@@ -267,10 +277,19 @@ export default function RewardsScreen() {
     }
   };
 
-  const renderRewardGrid = (list: Reward[]) => (
+  /**
+   * `wide` flips the grid from 2-col to 1-col. Used by the "Big goals"
+   * section so big-ticket items get more breathing room — they're
+   * aspirational, longer-horizon, and reading them at full width signals
+   * that visually.
+   */
+  const renderRewardGrid = (list: Reward[], { wide = false } = {}) => (
     <View style={styles.grid}>
       {list.map((reward) => (
-        <View key={reward.id} style={styles.gridItem}>
+        <View
+          key={reward.id}
+          style={wide ? styles.gridItemWide : styles.gridItem}
+        >
           <RewardCard
             reward={reward}
             affordable={coins >= reward.cost}
@@ -569,7 +588,7 @@ export default function RewardsScreen() {
                         })}
                       </Text>
                     </View>
-                    {renderRewardGrid(sections.bigGoals)}
+                    {renderRewardGrid(sections.bigGoals, { wide: true })}
                   </View>
                 )}
               </>
@@ -895,6 +914,11 @@ const styles = StyleSheet.create({
   gridItem: {
     width: '48%',
     flexGrow: 1,
+  },
+  gridItemWide: {
+    // Full row. Used by the "Big goals" section so aspirational
+    // rewards read at full attention instead of crammed two-up.
+    width: '100%',
   },
 
   // BANK — list spacing only; the row is VaultBankCard
