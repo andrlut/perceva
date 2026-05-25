@@ -17,6 +17,7 @@ import { AddCard } from '@/components/AddCard';
 import { BankFab } from '@/components/BankFab';
 import { useBottomNavClearance } from '@/components/BottomNavBar';
 import { BuyCelebrationModal } from '@/components/BuyCelebrationModal';
+import { BuyConfirmModal } from '@/components/BuyConfirmModal';
 import { CoinIcon } from '@/components/CoinIcon';
 import { EmptyHero } from '@/components/EmptyHero';
 import { RewardActionSheet } from '@/components/RewardActionSheet';
@@ -32,7 +33,7 @@ import {
   useAddTemplateToShop,
   useArchiveReward,
   useBankedRewards,
-  useRedeemReward,
+  useRedeemRewardN,
   useRewardTemplates,
   useRewards,
   useSetTrackedReward,
@@ -67,7 +68,7 @@ export default function RewardsScreen() {
   const character = useCharacter();
   const rewards = useRewards();
   const templates = useRewardTemplates();
-  const redeem = useRedeemReward();
+  const redeem = useRedeemRewardN();
   const useReward = useUseReward();
   const addTemplate = useAddTemplateToShop();
   const archiveReward = useArchiveReward();
@@ -94,11 +95,15 @@ export default function RewardsScreen() {
   // Long-press → open this reward's action sheet. Single source of truth
   // for the sheet so it stays bound to one reward across re-renders.
   const [actionSheetReward, setActionSheetReward] = useState<Reward | null>(null);
+  // Custom in-aesthetic confirm modal — replaces the system Alert that
+  // used to pop on BUY. Single state holds the reward; null = closed.
+  const [confirmingPurchase, setConfirmingPurchase] = useState<Reward | null>(null);
   // Celebration modal payload — set after a successful purchase. Captures
   // the bank count BEFORE the redeem so the modal can show the before→after
   // transition even though the live query has invalidated already.
   const [celebration, setCelebration] = useState<{
     reward: Reward;
+    qty: number;
     costPaid: number;
     bankBefore: number;
     bankAfter: number;
@@ -224,20 +229,16 @@ export default function RewardsScreen() {
     }
   };
 
-  const handleBuy = async (reward: Reward) => {
-    if (coins < reward.cost) {
-      showInfo(
-        t('reward.shop.notEnoughTitle'),
-        t('reward.shop.notEnoughBody', { deficit: reward.cost - coins }),
-      );
-      return;
-    }
-    const ok = await confirmAction(
-      t('reward.shop.buyTitle', { title: reward.title }),
-      t('reward.shop.buyBody', { cost: reward.cost }),
-      { okText: t('reward.shop.buyOk'), cancelText: t('reward.common.cancel') },
-    );
-    if (!ok) return;
+  // Open the custom in-aesthetic confirm modal. The actual purchase
+  // call lives in handleConfirmedPurchase, fired by the modal's onConfirm.
+  // This split lets the modal own quantity state without the parent
+  // having to thread it through.
+  const handleBuy = (reward: Reward) => {
+    setConfirmingPurchase(reward);
+  };
+
+  const handleConfirmedPurchase = async (reward: Reward, qty: number) => {
+    setConfirmingPurchase(null);
     setRedeemingId(reward.id);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     // Snapshot before mutation — the bank query gets invalidated on
@@ -248,12 +249,14 @@ export default function RewardsScreen() {
       const result = await redeem.mutateAsync({
         rewardId: reward.id,
         cost: reward.cost,
+        qty,
       });
       setCelebration({
         reward,
-        costPaid: result?.cost_paid ?? reward.cost,
+        qty: result?.qty ?? qty,
+        costPaid: result?.total_paid ?? reward.cost * qty,
         bankBefore,
-        bankAfter: bankBefore + 1,
+        bankAfter: bankBefore + (result?.qty ?? qty),
       });
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Unknown error';
@@ -770,6 +773,9 @@ export default function RewardsScreen() {
       <RewardActionSheet
         visible={!!actionSheetReward}
         rewardTitle={actionSheetReward?.title ?? ''}
+        affordable={
+          actionSheetReward ? coins >= actionSheetReward.cost : false
+        }
         onCancel={() => setActionSheetReward(null)}
         onEdit={() => {
           const r = actionSheetReward;
@@ -781,11 +787,28 @@ export default function RewardsScreen() {
           setActionSheetReward(null);
           if (r) handleArchiveReward(r);
         }}
+        onBuyQuantity={() => {
+          const r = actionSheetReward;
+          setActionSheetReward(null);
+          if (r) handleBuy(r);
+        }}
+      />
+
+      <BuyConfirmModal
+        visible={!!confirmingPurchase}
+        reward={confirmingPurchase}
+        coins={coins}
+        onCancel={() => setConfirmingPurchase(null)}
+        onConfirm={(qty) => {
+          const r = confirmingPurchase;
+          if (r) handleConfirmedPurchase(r, qty);
+        }}
       />
 
       <BuyCelebrationModal
         visible={!!celebration}
         reward={celebration?.reward ?? null}
+        qty={celebration?.qty ?? 1}
         costPaid={celebration?.costPaid ?? 0}
         bankBefore={celebration?.bankBefore ?? 0}
         bankAfter={celebration?.bankAfter ?? 0}

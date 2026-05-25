@@ -22,11 +22,14 @@ import { PercevaGlyph } from './PercevaGlyph';
 interface Props {
   visible: boolean;
   reward: Reward | null;
-  /** Coins actually debited (RPC-returned value, not the card's cost). */
+  /** How many units were bought in this batch. Drives the "Comprou Nx X"
+   *  copy and the bankAfter delta. Defaults to 1 for the solo-buy path. */
+  qty?: number;
+  /** Total coins debited (sum across the qty units). */
   costPaid: number;
   /** Number of items in the bank BEFORE this purchase landed. */
   bankBefore: number;
-  /** Number of items in the bank AFTER this purchase (always bankBefore + 1). */
+  /** Number of items in the bank AFTER this purchase (bankBefore + qty). */
   bankAfter: number;
   onClose: () => void;
   onGoToBank: () => void;
@@ -49,6 +52,7 @@ interface Props {
 export function BuyCelebrationModal({
   visible,
   reward,
+  qty = 1,
   costPaid,
   bankBefore,
   bankAfter,
@@ -170,7 +174,9 @@ export function BuyCelebrationModal({
 
               {/* Title */}
               <Text style={styles.title} numberOfLines={2}>
-                {t('rewards.celebration.title', { title: reward.title })}
+                {qty > 1
+                  ? t('rewards.celebration.titleN', { qty, title: reward.title })
+                  : t('rewards.celebration.title', { title: reward.title })}
               </Text>
 
               {/* Cost line */}
