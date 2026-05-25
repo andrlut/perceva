@@ -646,15 +646,25 @@ const pt: Translations = {
     celebration: {
       eyebrow: 'NA SACOLA',
       title: 'Comprou "{{title}}"',
+      titleN: 'Comprou {{qty}}x "{{title}}"',
       bankLine: 'Banco: {{before}} → {{after}}',
       goToBank: 'Ir pro banco',
       dismiss: 'Fechar',
+    },
+    buyConfirm: {
+      qtyLabel: 'Quantidade',
+      total: 'Total',
+      confirm: 'Comprar',
+      cancel: 'Cancelar',
+      deficit: 'Faltam {{deficit}} moedas',
     },
     actionSheet: {
       edit: 'Editar recompensa',
       editSub: 'Mudar título, custo, ícone ou categoria',
       archive: 'Arquivar',
       archiveSub: 'Some da Loja. Dá pra restaurar em Gerenciar',
+      buyQuantity: 'Comprar quantidade',
+      buyQuantitySub: 'Escolha quantas pra comprar de uma vez',
     },
     manage: {
       title: 'Gerenciar recompensas',

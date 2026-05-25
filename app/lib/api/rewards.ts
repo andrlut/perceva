@@ -369,7 +369,8 @@ export interface RedeemResult {
 
 /**
  * Calls redeem_reward() RPC. Optimistically deducts coins from the cached
- * character; rolls back on error.
+ * character; rolls back on error. Single-unit only — for multi-buy use
+ * useRedeemRewardN.
  */
 export function useRedeemReward() {
   const queryClient = useQueryClient();
@@ -392,6 +393,57 @@ export function useRedeemReward() {
             // Allow optimistic balance to go negative — mirrors server behaviour
             // since migration 0011 removed the >= 0 clamp on coins.
             coins: prevChar.character.coins - params.cost,
+          },
+        });
+      }
+      return { prevChar };
+    },
+    onError: (_err, _params, ctx) => {
+      if (ctx?.prevChar) queryClient.setQueryData(characterKeys.me(), ctx.prevChar);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: characterKeys.me() });
+      queryClient.invalidateQueries({ queryKey: rewardKeys.bank() });
+    },
+  });
+}
+
+export interface RedeemBatchResult {
+  qty: number;
+  unit_cost: number;
+  total_paid: number;
+}
+
+/**
+ * Multi-buy via the redeem_reward_n() RPC. Atomic — either all qty
+ * units land in the bank or nothing does. Optimistic coin debit
+ * mirrors the single-buy hook: drops balance by qty * cost up-front,
+ * rolls back on error.
+ */
+export function useRedeemRewardN() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: {
+      rewardId: string;
+      cost: number;
+      qty: number;
+    }): Promise<RedeemBatchResult> => {
+      const { data, error } = await supabase.rpc('redeem_reward_n', {
+        p_reward_id: params.rewardId,
+        p_qty: params.qty,
+      });
+      if (error) throw error;
+      return data as RedeemBatchResult;
+    },
+    onMutate: async (params) => {
+      await queryClient.cancelQueries({ queryKey: characterKeys.me() });
+      const prevChar = queryClient.getQueryData<CharacterWithProfile>(characterKeys.me());
+      if (prevChar) {
+        queryClient.setQueryData<CharacterWithProfile>(characterKeys.me(), {
+          ...prevChar,
+          character: {
+            ...prevChar.character,
+            coins: prevChar.character.coins - params.cost * params.qty,
           },
         });
       }

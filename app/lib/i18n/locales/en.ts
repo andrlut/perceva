@@ -656,15 +656,25 @@ const en = {
     celebration: {
       eyebrow: 'IN THE BAG',
       title: 'Bought "{{title}}"',
+      titleN: 'Bought {{qty}}× "{{title}}"',
       bankLine: 'Bank: {{before}} → {{after}}',
       goToBank: 'Go to bank',
       dismiss: 'Close',
+    },
+    buyConfirm: {
+      qtyLabel: 'Quantity',
+      total: 'Total',
+      confirm: 'Buy',
+      cancel: 'Cancel',
+      deficit: 'Short by {{deficit}} coins',
     },
     actionSheet: {
       edit: 'Edit reward',
       editSub: 'Change title, cost, icon or category',
       archive: 'Archive',
       archiveSub: 'Stops showing in the Shop. Restore anytime from Manage',
+      buyQuantity: 'Buy multiple',
+      buyQuantitySub: 'Pick how many to grab at once',
     },
     manage: {
       title: 'Manage rewards',

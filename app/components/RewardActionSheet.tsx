@@ -13,9 +13,17 @@ import { tokens } from '@/theme';
 interface Props {
   visible: boolean;
   rewardTitle: string;
+  /** Whether the user can afford at least one unit of this reward.
+   *  Drives the "Buy multiple" item — we hide it on unaffordable
+   *  rewards because the qty selector would be inert anyway. */
+  affordable?: boolean;
   onCancel: () => void;
   onEdit: () => void;
   onArchive: () => void;
+  /** Optional — when present and affordable, surfaces a "Buy quantity"
+   *  item that opens the BuyConfirmModal. Long-press shortcut for the
+   *  same flow you'd get tapping the gold BUY pill. */
+  onBuyQuantity?: () => void;
 }
 
 /**
@@ -26,9 +34,11 @@ interface Props {
 export function RewardActionSheet({
   visible,
   rewardTitle,
+  affordable = false,
   onCancel,
   onEdit,
   onArchive,
+  onBuyQuantity,
 }: Props) {
   const { t } = useT();
   return (
@@ -44,6 +54,29 @@ export function RewardActionSheet({
           <Text style={styles.title} numberOfLines={1}>
             {rewardTitle}
           </Text>
+
+          {affordable && onBuyQuantity && (
+            <Pressable
+              onPress={onBuyQuantity}
+              style={({ pressed }) => [
+                styles.action,
+                pressed && { opacity: 0.7 },
+              ]}
+            >
+              <View style={styles.actionIcon}>
+                <Ionicons name="cart" size={18} color={tokens.semantic.coin} />
+              </View>
+              <View style={styles.actionBody}>
+                <Text style={styles.actionTitle}>
+                  {t('rewards.actionSheet.buyQuantity')}
+                </Text>
+                <Text style={styles.actionSub}>
+                  {t('rewards.actionSheet.buyQuantitySub')}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={tokens.text.dim} />
+            </Pressable>
+          )}
 
           <Pressable
             onPress={onEdit}
