@@ -22,6 +22,9 @@ interface Props {
    *  migrated. */
   tracked?: boolean;
   onRedeem: () => void;
+  /** @deprecated tap on card body is now inert (too many missclicks).
+   *  Kept here only so existing callers still typecheck; nothing fires
+   *  it. Use onLongPress + an action sheet for Edit/Archive. */
   onEdit?: () => void;
   onLongPress?: () => void;
   /** Tap MIRAR to pin this reward. */
@@ -57,7 +60,6 @@ export function RewardCard({
   deficit = 0,
   coins,
   onRedeem,
-  onEdit,
   onLongPress,
   onTrack,
   isRedeeming,
@@ -122,17 +124,20 @@ export function RewardCard({
       <Pressable
         style={({ pressed }) => [
           styles.content,
-          pressed && onEdit && { opacity: 0.92 },
+          pressed && onLongPress && { opacity: 0.96 },
         ]}
-        onPress={onEdit}
+        // No onPress — tap on the card body is intentionally inert to
+        // avoid mis-clicks while the user is reading. BUY (footer pill)
+        // is the only tap target; long-press opens the action sheet
+        // (Edit / Archive). This mirrors the Tasks long-press pattern.
         onLongPress={onLongPress}
-        disabled={!onEdit && !onLongPress}
+        disabled={!onLongPress}
         accessibilityRole="button"
         accessibilityLabel={`${reward.title}, ${reward.cost} coins`}
         accessibilityHint={
           onLongPress
-            ? 'Tap to edit. Long press to archive or delete.'
-            : 'Tap to edit.'
+            ? 'Long press to edit or archive.'
+            : undefined
         }
       >
         <View style={styles.top}>

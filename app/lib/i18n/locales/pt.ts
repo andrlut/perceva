@@ -613,7 +613,6 @@ const pt: Translations = {
       heroTitle: 'Sua colheita',
       heroEyebrow: 'SUA COLHEITA',
       heroStatusIdle: 'Continue treinando pra abrir cofres maiores',
-      heroStatusTrackable: 'Almejando {{title}}',
       heroStatusReady: '{{title}} é seu!',
       tabs: {
         shop: 'Loja',
@@ -643,13 +642,6 @@ const pt: Translations = {
       },
       remaining: 'faltam {{deficit}}',
       earnedTime: 'conquistado {{when}}',
-    },
-    bankCta: {
-      title: {
-        one: 'Você tem {{count}} prêmio prontinho no banco',
-        other: 'Você tem {{count}} prêmios prontinhos no banco',
-      },
-      sub: 'Toque pra usar',
     },
     celebration: {
       eyebrow: 'NA SACOLA',

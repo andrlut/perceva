@@ -163,14 +163,17 @@ export default function RewardsScreen() {
     );
   }, [templates.data, rewards.data, selectedCategories, filterActive]);
 
-  // Headline for the hero. The deficit number deliberately lives ONLY in
-  // the TrackedRewardCard below — repeating it here read as duplication.
-  // The hero phrase stays short and identity-focused.
+  // Hero status — only renders meaningful copy when there's NO tracked
+  // reward (idle motivator) or when the tracked reward becomes
+  // affordable (celebratory beat). When the user has a tracked reward
+  // they're saving for, the tracked card sits right below the balance
+  // and carries the message in full; surfacing "Almejando X" up here
+  // too just duplicated the title.
   const headline = useMemo(() => {
     if (trackedReward) {
       const deficit = Math.max(0, trackedReward.cost - coins);
       return deficit > 0
-        ? t('rewards.vault.heroStatusTrackable', { title: trackedReward.title })
+        ? ''
         : t('rewards.vault.heroStatusReady', { title: trackedReward.title });
     }
     return t('rewards.vault.heroStatusIdle');
@@ -372,33 +375,28 @@ export default function RewardsScreen() {
           }
         />
 
-        {/* Bank CTA — only when there's actually stuff to retrieve and
-            the user isn't already on the bank tab. A second route to
-            the Bank that's contextual and dismisses itself. */}
-        {bankCount > 0 && view !== 'bank' && (
-          <Pressable
-            onPress={() => {
-              Haptics.selectionAsync().catch(() => {});
-              setView('bank');
-            }}
-            style={({ pressed }) => [
-              styles.bankCta,
-              pressed && { opacity: 0.85 },
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={t('rewards.bankCta.title', { count: bankCount })}
-          >
-            <View style={styles.bankCtaIcon}>
-              <Ionicons name="wallet" size={18} color="#FFC83D" />
-            </View>
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <Text style={styles.bankCtaTitle} numberOfLines={1}>
-                {t('rewards.bankCta.title', { count: bankCount })}
-              </Text>
-              <Text style={styles.bankCtaSub}>{t('rewards.bankCta.sub')}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color="#FFE3A6" />
-          </Pressable>
+        {/* BankCTA pill removed — being reworked as a floating action
+            button anchored at the bottom-right corner where the thumb
+            naturally lands (a pill at the top of the screen, right next
+            to the Bank tab, didn't add anything beyond what the tab
+            already gave). See follow-up PR. */}
+
+        {/* Tracked reward lives right under the coin balance so the
+            user sees what they're saving for without scanning past the
+            tabs first. Only renders when both a reward is tracked AND
+            the user is on Shop — switching to Bank/Used hides it. */}
+        {view === 'shop' && trackedReward && (
+          <View style={styles.trackedWrap}>
+            <TrackedRewardCard
+              reward={trackedReward}
+              coins={coins}
+              onChange={() => setPickerOpen(true)}
+              onUntrack={handleUntrack}
+              onBuy={() => handleBuy(trackedReward)}
+              onLongPress={() => openActionSheet(trackedReward)}
+              isBuying={redeemingId === trackedReward.id}
+            />
+          </View>
         )}
 
         <View style={styles.tabRow}>
@@ -457,19 +455,11 @@ export default function RewardsScreen() {
 
         {view === 'shop' && (
           <>
-            {trackedReward ? (
-              <View style={styles.trackedWrap}>
-                <TrackedRewardCard
-                  reward={trackedReward}
-                  coins={coins}
-                  onChange={() => setPickerOpen(true)}
-                  onUntrack={handleUntrack}
-                  onBuy={() => handleBuy(trackedReward)}
-                  onLongPress={() => openActionSheet(trackedReward)}
-                  isBuying={redeemingId === trackedReward.id}
-                />
-              </View>
-            ) : (
+            {/* "Track a reward" CTA appears only when nothing is tracked
+                yet. The tracked card itself lives above the tab row (see
+                hoisted block) so the user always sees their current goal
+                immediately under the balance. */}
+            {!trackedReward && (
               <Pressable
                 onPress={() => setPickerOpen(true)}
                 style={({ pressed }) => [
@@ -1008,42 +998,6 @@ const styles = StyleSheet.create({
     marginTop: tokens.space[2],
   },
 
-  // Bank CTA — gold-tinted pill sitting between the hero and the tab
-  // row, only when bankCount > 0 and the user isn't already on the
-  // Bank tab. Communicates "you have stuff to enjoy" without making
-  // the user hunt for it.
-  bankCta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[3],
-    marginTop: tokens.space[3],
-    marginBottom: tokens.space[1],
-    paddingHorizontal: tokens.space[4],
-    paddingVertical: tokens.space[3],
-    borderRadius: tokens.radius.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 200, 61, 0.35)',
-    backgroundColor: 'rgba(255, 200, 61, 0.08)',
-  },
-  bankCtaIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: tokens.radius.md,
-    backgroundColor: 'rgba(255, 200, 61, 0.18)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bankCtaTitle: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 14,
-    color: '#FFE3A6',
-  },
-  bankCtaSub: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 11,
-    color: tokens.text.mid,
-    marginTop: 2,
-  },
 
   // Tracked reward block
   trackedWrap: {
