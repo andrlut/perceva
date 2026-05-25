@@ -1,3 +1,4 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { tokens } from '@/theme';
@@ -26,26 +27,37 @@ export function SegmentedControl<T extends string>({ options, value, onChange }:
             key={opt.value}
             onPress={() => onChange(opt.value)}
             style={({ pressed }) => [
-              styles.segment,
-              selected && styles.segmentSelected,
-              pressed && { opacity: 0.7 },
+              styles.segmentWrap,
+              selected && styles.segmentWrapSelected,
+              pressed && { opacity: 0.85 },
             ]}
           >
-            <Text style={[styles.label, { color: labelColor }]}>{opt.label}</Text>
-            {opt.count != null && (
-              <View
-                style={[
-                  styles.countChip,
-                  selected
-                    ? { backgroundColor: 'rgba(255,255,255,0.18)' }
-                    : { backgroundColor: tokens.bg.glass },
-                ]}
-              >
-                <Text style={[styles.countText, { color: labelColor }]}>
-                  {opt.count}
-                </Text>
-              </View>
+            {selected && (
+              <LinearGradient
+                colors={tokens.gradient.taskCheckBtn}
+                locations={tokens.gradient.taskCheckBtnLocations}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
+                style={[StyleSheet.absoluteFillObject, styles.selectedFill]}
+              />
             )}
+            <View style={styles.segmentInner}>
+              <Text style={[styles.label, { color: labelColor }]}>{opt.label}</Text>
+              {opt.count != null && (
+                <View
+                  style={[
+                    styles.countChip,
+                    selected
+                      ? { backgroundColor: 'rgba(255,255,255,0.22)' }
+                      : { backgroundColor: tokens.bg.glass },
+                  ]}
+                >
+                  <Text style={[styles.countText, { color: labelColor }]}>
+                    {opt.count}
+                  </Text>
+                </View>
+              )}
+            </View>
           </Pressable>
         );
       })}
@@ -62,8 +74,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: tokens.border.base,
   },
-  segment: {
+  segmentWrap: {
     flex: 1,
+    borderRadius: tokens.radius.sm,
+    overflow: 'visible',
+    position: 'relative',
+  },
+  segmentWrapSelected: {
+    // Violet halo around the selected pill — picks up the same vibe
+    // as the home XP/check button gradient. Drives the "glow" the
+    // user asked for on the filter tabs.
+    shadowColor: tokens.brand.violet,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.55,
+    shadowRadius: 12,
+    elevation: 8,
+    boxShadow: '0px 4px 14px rgba(123, 92, 255, 0.55)',
+  },
+  segmentInner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -71,8 +99,10 @@ const styles = StyleSheet.create({
     paddingVertical: tokens.space[3],
     borderRadius: tokens.radius.sm,
   },
-  segmentSelected: {
-    backgroundColor: tokens.brand.violet,
+  selectedFill: {
+    borderRadius: tokens.radius.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(155, 130, 255, 0.55)',
   },
   label: {
     ...tokens.type.caption,
