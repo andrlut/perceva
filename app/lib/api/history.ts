@@ -304,14 +304,21 @@ export function useDayDetail(date: Date, weekStart: WeekStart = 'monday') {
       const oneShotIds = taskRows
         .filter((t) => parseRecurrence(t.recurrence).type === 'one_shot')
         .map((t) => t.id);
-      let oneShotCompletedAnytime = new Set<string>();
+      /** Latest completion per one-shot — used for the trophy dim
+       *  behavior (matches useHomeBuckets). */
+      const oneShotLatest = new Map<string, string>();
       if (oneShotIds.length > 0) {
         const { data: anyComp, error: anyErr } = await supabase
           .from('task_completion')
-          .select('task_id')
-          .in('task_id', oneShotIds);
+          .select('task_id, completed_at')
+          .in('task_id', oneShotIds)
+          .order('completed_at', { ascending: false });
         if (anyErr) throw anyErr;
-        oneShotCompletedAnytime = new Set((anyComp ?? []).map((r) => r.task_id));
+        (anyComp ?? []).forEach((c) => {
+          if (!oneShotLatest.has(c.task_id)) {
+            oneShotLatest.set(c.task_id, c.completed_at);
+          }
+        });
       }
 
       // For retro-logging UX we treat weekly/monthly tasks as "open"
@@ -372,7 +379,10 @@ export function useDayDetail(date: Date, weekStart: WeekStart = 'monday') {
           if (skippedThisDayIds.has(raw.id)) return false;
           const target = raw.target_count ?? 1;
           if (recurrence.type === 'one_shot') {
-            return !oneShotCompletedAnytime.has(raw.id);
+            // Trophy retention: one-shots stay visible unless completed
+            // ON this specific day (then they're in `completions`).
+            const doneToday = completionCountThisDay.get(raw.id) ?? 0;
+            return doneToday === 0;
           }
           if (recurrence.type === 'daily') {
             const doneToday = completionCountThisDay.get(raw.id) ?? 0;
@@ -386,10 +396,16 @@ export function useDayDetail(date: Date, weekStart: WeekStart = 'monday') {
           const doneMonth = completionCountThisMonth.get(raw.id) ?? 0;
           return doneMonth < target;
         })
-        .map(({ raw, recurrence }) => ({
-          task: hydrateTask(raw, recurrence),
-          completedThisDay: completionCountThisDay.get(raw.id) ?? 0,
-        }));
+        .map(({ raw, recurrence }) => {
+          const task = hydrateTask(raw, recurrence);
+          if (recurrence.type === 'one_shot') {
+            task.lastCompletedAt = oneShotLatest.get(raw.id) ?? null;
+          }
+          return {
+            task,
+            completedThisDay: completionCountThisDay.get(raw.id) ?? 0,
+          };
+        });
 
       // Hydrate skip rows for the Skipped drawer — reuses the same
       // skippedThisDayIds set already fetched for the openTasks filter.

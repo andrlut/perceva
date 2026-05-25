@@ -368,10 +368,13 @@ async function fetchHomeBuckets(weekStartPref: WeekStart): Promise<HomeBuckets> 
   const oneShotIds = allTasks
     .filter((t) => t.recurrence.type === 'one_shot')
     .map((t) => t.id);
-  let everCompletedOneShots = new Set<string>();
-  /** Latest completion id per one-shot task — feeds the "Completed"
-   *  drawer on the One-shot tab so the user can undo a one-off. */
-  const oneShotCompletionData = new Map<string, { latestId: string }>();
+  /** Latest completion per one-shot task — drives the trophy dim
+   *  behavior in the Pontual bucket (one-shots stay visible after
+   *  completion, dimmed for ~7 days, then back to normal weight). */
+  const oneShotCompletionData = new Map<
+    string,
+    { latestId: string; latestAt: string }
+  >();
   if (oneShotIds.length > 0) {
     const { data: anyComp, error: anyErr } = await supabase
       .from('task_completion')
@@ -380,9 +383,11 @@ async function fetchHomeBuckets(weekStartPref: WeekStart): Promise<HomeBuckets> 
       .order('completed_at', { ascending: false });
     if (anyErr) throw anyErr;
     (anyComp ?? []).forEach((c) => {
-      everCompletedOneShots.add(c.task_id);
       if (!oneShotCompletionData.has(c.task_id)) {
-        oneShotCompletionData.set(c.task_id, { latestId: c.id });
+        oneShotCompletionData.set(c.task_id, {
+          latestId: c.id,
+          latestAt: c.completed_at,
+        });
       }
     });
   }
@@ -483,9 +488,18 @@ async function fetchHomeBuckets(weekStartPref: WeekStart): Promise<HomeBuckets> 
     const skippedTodayHere = skippedToday.has(t.id);
 
     if (t.recurrence.type === 'one_shot') {
-      if (!everCompletedOneShots.has(t.id) && !skippedTodayHere) {
-        buckets.oneTime.push(t);
-      }
+      // Trophy retention: one-shots STAY in the Pontual bucket after
+      // completion. They only leave when:
+      //   - completed today (then they live in todayActivity.completed)
+      //   - explicitly skipped today
+      // Everything else (never completed OR completed yesterday or
+      // before) keeps them visible; the UI dims recently-done ones.
+      if (todayCount > 0 || skippedTodayHere) continue;
+      const info = oneShotCompletionData.get(t.id);
+      buckets.oneTime.push({
+        ...t,
+        lastCompletedAt: info?.latestAt ?? null,
+      });
       continue;
     }
 

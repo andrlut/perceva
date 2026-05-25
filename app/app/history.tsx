@@ -34,6 +34,7 @@ import {
   useUnskipTaskToday,
 } from '@/lib/api/tasks';
 import { useLoadedSettings } from '@/lib/settings';
+import { compareOneShotsByFreshness, isInTrophyWindow } from '@/lib/trophy';
 import { confirmAction, showInfo } from '@/lib/util/confirm';
 import type { TaskSub, TaskWithSubs } from '@/lib/db/types';
 import { rewardForTaskSubs } from '@/lib/xp';
@@ -424,6 +425,12 @@ export default function HistoryScreen() {
                   openByBucket.weekly.push(task);
                 }
               }
+              // Trophy sort — recently-completed one-shots sink to the
+              // bottom. `now` is the selected day so the window logic
+              // is relative to what the user is browsing, not today.
+              openByBucket.oneshot.sort((a, b) =>
+                compareOneShotsByFreshness(a, b, selected),
+              );
               const tabSpecs: BucketTabSpec<BucketTab>[] = [
                 { value: 'daily', label: t('home.bucketTabs.daily'), count: openByBucket.daily.length },
                 { value: 'weekly', label: t('home.bucketTabs.weekly'), count: openByBucket.weekly.length },
@@ -480,6 +487,7 @@ export default function HistoryScreen() {
                         <TaskCard
                           key={task.id}
                           task={task}
+                          dimmed={isInTrophyWindow(task, selected)}
                           onComplete={() => handleRetroQuickComplete(task)}
                           onSwipeComplete={() => setSheetTask(task)}
                           onSkip={() => handleSwipeSkip(task)}
