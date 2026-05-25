@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { RewardTemplate } from '@/lib/db/types';
+import { useT } from '@/lib/i18n';
 import { useLocalizedPick } from '@/lib/i18n/catalog';
 import { tokens } from '@/theme';
 import { REWARD_CATEGORY_META } from '@/theme/rewards';
@@ -28,6 +29,7 @@ interface Props {
 }
 
 export function TemplateCard({ template, onAdd, isAdding }: Props) {
+  const { t } = useT();
   const { pick, pickNullable } = useLocalizedPick();
   const cat = REWARD_CATEGORY_META[template.category];
   const title = pick(template.title, template.title_pt);
@@ -75,7 +77,7 @@ export function TemplateCard({ template, onAdd, isAdding }: Props) {
       {/* Body */}
       <View style={styles.body}>
         <Text style={[styles.eyebrow, { color: cat.color }]} numberOfLines={1}>
-          {cat.label.toUpperCase()}
+          {t(`rewards.categories.${template.category}` as const).toUpperCase()}
         </Text>
         <Text style={styles.title} numberOfLines={2}>
           {title}

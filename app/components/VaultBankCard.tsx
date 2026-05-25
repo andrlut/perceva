@@ -11,6 +11,7 @@ import {
 import { CoinIcon } from './CoinIcon';
 import { PercevaGlyph } from './PercevaGlyph';
 import type { RedemptionEntry } from '@/lib/api/rewards';
+import { useT } from '@/lib/i18n';
 import { tokens } from '@/theme';
 import { REWARD_CATEGORY_META } from '@/theme/rewards';
 
@@ -38,6 +39,7 @@ interface Props {
 }
 
 export function VaultBankCard({ entry, cta, earnedTime, busy, onUse }: Props) {
+  const { t } = useT();
   const cat = entry.reward_category
     ? REWARD_CATEGORY_META[entry.reward_category]
     : null;
@@ -81,9 +83,9 @@ export function VaultBankCard({ entry, cta, earnedTime, busy, onUse }: Props) {
 
       {/* Body */}
       <View style={styles.body}>
-        {cat && (
+        {cat && entry.reward_category && (
           <Text style={[styles.eyebrow, { color: accent }]} numberOfLines={1}>
-            {cat.label.toUpperCase()}
+            {t(`rewards.categories.${entry.reward_category}` as const).toUpperCase()}
           </Text>
         )}
         <Text style={styles.title}>{entry.reward_title}</Text>

@@ -135,15 +135,14 @@ export default function RewardsScreen() {
     );
   }, [templates.data, rewards.data, enabledCategories]);
 
-  // Headline for the hero. Mirrors the mock's narrative copy.
+  // Headline for the hero. The deficit number deliberately lives ONLY in
+  // the TrackedRewardCard below — repeating it here read as duplication.
+  // The hero phrase stays short and identity-focused.
   const headline = useMemo(() => {
     if (trackedReward) {
       const deficit = Math.max(0, trackedReward.cost - coins);
       return deficit > 0
-        ? t('rewards.vault.heroStatusTrackable', {
-            deficit: deficit.toLocaleString(),
-            title: trackedReward.title,
-          })
+        ? t('rewards.vault.heroStatusTrackable', { title: trackedReward.title })
         : t('rewards.vault.heroStatusReady', { title: trackedReward.title });
     }
     return t('rewards.vault.heroStatusIdle');
@@ -311,8 +310,6 @@ export default function RewardsScreen() {
         }
       >
         <VaultHero
-          topEyebrow={t('rewards.vault.eyebrow')}
-          title={t('rewards.vault.heroTitle')}
           balanceLabel={coins.toLocaleString()}
           status={
             view === 'shop'
@@ -448,7 +445,7 @@ export default function RewardsScreen() {
                         { color: active ? m.color : tokens.text.dim },
                       ]}
                     >
-                      {m.short}
+                      {t(`rewards.categories.${cat}` as const)}
                     </Text>
                   </Pressable>
                 );

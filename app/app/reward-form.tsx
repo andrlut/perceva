@@ -29,19 +29,55 @@ import { confirmAction } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 import { REWARD_CATEGORY_META, REWARD_CATEGORY_ORDER } from '@/theme/rewards';
 
+// Curated Ionicons covering the main reward archetypes a single user
+// is likely to set up. Grouped here by domain for ease of editing; on
+// screen they render in a single flex grid so the user just scans for
+// the closest match. Add more sparingly — past ~40 the grid starts
+// scrolling and discovery drops.
 const ICON_CHOICES = [
-  'gift',
-  'cafe',
-  'tv',
-  'game-controller',
-  'film',
-  'bed',
+  // Food & drink
   'pizza',
-  'beer',
-  'headset',
+  'fast-food',
+  'restaurant',
   'ice-cream',
-  'walk',
+  'cafe',
+  'beer',
+  'wine',
+  // Entertainment
+  'game-controller',
+  'tv',
+  'film',
   'musical-notes',
+  'headset',
+  'book',
+  'library',
+  // Active & sports
+  'walk',
+  'bicycle',
+  'barbell',
+  'basketball',
+  'football',
+  'fitness',
+  // Travel & out
+  'airplane',
+  'car',
+  'train',
+  'balloon',
+  // Creative
+  'camera',
+  'image',
+  'color-palette',
+  'brush',
+  // Self-care & life
+  'bed',
+  'leaf',
+  'flower',
+  'shirt',
+  'watch',
+  // Generic / fallback
+  'gift',
+  'gift-outline',
+  'cart',
 ] as const;
 
 export default function RewardFormScreen() {
@@ -215,7 +251,7 @@ export default function RewardFormScreen() {
                         { color: selected ? meta.color : tokens.text.mid },
                       ]}
                     >
-                      {meta.short}
+                      {t(`rewards.categories.${cat}` as const)}
                     </Text>
                   </Pressable>
                 );

@@ -1,64 +1,34 @@
-import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 
 import { CoinIcon } from './CoinIcon';
 import { tokens } from '@/theme';
 
 /**
- * Rewards screen header + hero (Vault variant — compact).
+ * Rewards screen hero (Vault variant — compact, headerless).
  *
- * Renders:
- *   - Top row: eyebrow "REWARDS" + title (eg "Sua colheita") + optional
- *     right-side stats button.
- *   - Hero strip: ambient violet halo + a horizontal `coin · balance`
- *     line (no duplicate eyebrow), then a one-line status caption.
+ * Renders an ambient violet halo behind a horizontal `coin · balance`
+ * line, then a one-line status caption.
  *
  * Stacking coin + value horizontally cuts the hero height roughly in
  * half — important on small phones where the original vertical stack
  * with a 140-pt coin pushed the actual reward grid below the fold.
+ *
+ * The page title ("Rewards" / "Sua colheita") used to live above this
+ * hero; it's been removed since the bottom tab bar already labels the
+ * screen and the duplicate ate vertical space without adding info.
  */
 
 interface Props {
-  title: string;
-  /** Small uppercase eyebrow above the title (shown next to top action). */
-  topEyebrow: string;
   /** The numeric balance. Pre-formatted (the caller decides locale). */
   balanceLabel: string;
   /** One-line status caption below the balance. */
   status: string;
-  /** Optional handler for the top-right stats button. Hidden if absent. */
-  onStatsPress?: () => void;
 }
 
-export function VaultHero({
-  title,
-  topEyebrow,
-  balanceLabel,
-  status,
-  onStatsPress,
-}: Props) {
+export function VaultHero({ balanceLabel, status }: Props) {
   return (
     <View style={styles.root}>
-      {/* Top row */}
-      <View style={styles.topRow}>
-        <View style={styles.topTextBlock}>
-          <Text style={styles.topEyebrow}>{topEyebrow}</Text>
-          <Text style={styles.topTitle}>{title}</Text>
-        </View>
-        {onStatsPress && (
-          <Pressable
-            onPress={onStatsPress}
-            style={({ pressed }) => [styles.statsBtn, pressed && { opacity: 0.7 }]}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="View rewards stats"
-          >
-            <Ionicons name="stats-chart" size={15} color={tokens.text.mid} />
-          </Pressable>
-        )}
-      </View>
-
       {/* Hero strip */}
       <View style={styles.heroWrap}>
         {/* Ambient violet halo — sized large enough that the radial fade
@@ -97,43 +67,6 @@ const styles = StyleSheet.create({
     // overflow: visible so the halo radial gradient can bleed beyond the
     // hero strip's content box without being clipped at the top/sides.
     overflow: 'visible',
-  },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    paddingHorizontal: tokens.space[4],
-    paddingTop: tokens.space[3],
-    paddingBottom: 0,
-    gap: tokens.space[3],
-  },
-  topTextBlock: {
-    flex: 1,
-    minWidth: 0,
-    gap: 2,
-  },
-  topEyebrow: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
-    letterSpacing: 1.6,
-    textTransform: 'uppercase',
-    color: '#FFE3A6',
-  },
-  topTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 26,
-    letterSpacing: -0.3,
-    color: tokens.text.hi,
-  },
-  statsBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: tokens.bg.glass,
-    borderWidth: 1,
-    borderColor: tokens.border.strong,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   heroWrap: {
     position: 'relative',

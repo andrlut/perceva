@@ -2,10 +2,14 @@ import type { RewardCategory } from '@/lib/db/types';
 
 import { tokens } from './tokens';
 
+/**
+ * Visual identity per reward category. Display strings (label) are NOT
+ * in this struct — they live in `rewards.categories.*` in the i18n
+ * catalog. Consumers do `t('rewards.categories.' + reward.category)` to
+ * render the localized name. This keeps the meta constant pure
+ * presentation (icon + color tokens) and avoids drift between locales.
+ */
 interface CategoryMeta {
-  label: string;
-  short: string;
-  tagline: string;
   icon: string;
   color: string;
   bg: string;
@@ -13,25 +17,16 @@ interface CategoryMeta {
 
 export const REWARD_CATEGORY_META: Record<RewardCategory, CategoryMeta> = {
   indulgence: {
-    label: 'Indulgences',
-    short: 'Indulge',
-    tagline: 'Quick treats. Earn it, enjoy it.',
     icon: 'flash',
     color: tokens.semantic.coin,
     bg: 'rgba(255, 200, 61, 0.16)',
   },
   good: {
-    label: 'Goods',
-    short: 'Goods',
-    tagline: 'Save up. Buy the thing.',
     icon: 'bag-handle',
     color: tokens.brand.violet2,
     bg: 'rgba(155, 130, 255, 0.16)',
   },
   experience: {
-    label: 'Experiences',
-    short: 'Experiences',
-    tagline: 'Memories, not stuff.',
     icon: 'sparkles',
     color: tokens.dimension.bonds,
     bg: 'rgba(77, 208, 255, 0.16)',
