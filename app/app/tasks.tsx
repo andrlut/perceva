@@ -349,16 +349,19 @@ export default function TasksHubScreen() {
           </View>
         )}
 
-        {/* Body — DraggableFlatList for Mine (drag-reorder), ScrollView
-            for everything else. Nesting a draggable inside a ScrollView
-            breaks the long-press → drag gesture (RN responder collision),
-            so we pick the right container per tab. */}
-        {tab === 'mine' ? (
-          <MineDraggableBody
-            tasks={filteredTasks}
+        {/* Body — DraggableFlatList for Allocated (per-bucket reorder),
+            ScrollView for Mine + Suggested. Nesting a draggable inside
+            a parent ScrollView breaks the long-press → drag gesture, so
+            we pick the right container per tab. */}
+        {tab === 'allocated' ? (
+          <AllocatedDraggableBody
+            allActive={tasks.data ?? []}
+            tasksByBucket={tasksByBucket}
             loading={tasks.isLoading}
             query={query}
             isRefreshing={isRefreshing}
+            collapsed={collapsed}
+            onToggle={toggleBucket}
             onRefresh={handleRefresh}
             onTaskPress={(id) =>
               router.push({ pathname: '/task-form', params: { id } })
@@ -425,15 +428,30 @@ export default function TasksHubScreen() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MineDraggableBody — flat list of the user's custom (or all-active) tasks
-// with drag-to-reorder. Mirrors the /rewards-manage pattern.
+// AllocatedDraggableBody — single DraggableFlatList that mixes bucket
+// headers and draggable task rows. Drag is constrained to within a
+// bucket section: any drag that crosses a header rolls back to the
+// pre-drag order.
+//
+// Why one big list instead of three separate ones: react-native-
+// draggable-flatlist v4 doesn't support nesting inside a parent
+// ScrollView, so we can't render 3 stacked draggables. Mixing item
+// types in a single list is the supported pattern.
 // ─────────────────────────────────────────────────────────────────────────────
 
-interface MineDraggableBodyProps {
-  tasks: TaskWithSubs[];
+type AllocatedItem =
+  | { kind: 'header'; bucket: Bucket; count: number }
+  | { kind: 'task'; bucket: Bucket; task: TaskWithSubs }
+  | { kind: 'empty'; bucket: Bucket };
+
+interface AllocatedDraggableBodyProps {
+  allActive: TaskWithSubs[];
+  tasksByBucket: Record<Bucket, TaskWithSubs[]>;
   loading: boolean;
   query: string;
   isRefreshing: boolean;
+  collapsed: Record<Bucket, boolean>;
+  onToggle: (b: Bucket) => void;
   onRefresh: () => void;
   onTaskPress: (id: string) => void;
   onCreate: () => void;
@@ -441,50 +459,173 @@ interface MineDraggableBodyProps {
   t: (key: string, opts?: Record<string, string | number | undefined>) => string;
 }
 
-function MineDraggableBody({
-  tasks,
+function AllocatedDraggableBody({
+  allActive,
+  tasksByBucket,
   loading,
   query,
   isRefreshing,
+  collapsed,
+  onToggle,
   onRefresh,
   onTaskPress,
   onCreate,
   onReorder,
   t,
-}: MineDraggableBodyProps) {
-  // Local mirror of the list — drag updates this immediately for the
-  // weightless feel, the mutation reconciles on commit. We sync from
-  // the parent whenever the id sequence changes (refetch, new task,
-  // archive); user-initiated drags don't trigger this because our
-  // optimistic update keeps the parent cache aligned with localOrder.
-  const [localOrder, setLocalOrder] = useState<TaskWithSubs[]>(tasks);
-  const tasksKey = tasks.map((t) => t.id).join('|');
-  useEffect(() => {
-    setLocalOrder(tasks);
-    // tasksKey is the dependency cue — when the id sequence changes,
-    // resync. Pulling tasks directly would re-fire on object-identity
-    // shifts (TanStack returns fresh arrays each refetch).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tasksKey]);
+}: AllocatedDraggableBodyProps) {
+  // Build the flat item list every time the inputs shift. Headers
+  // act as section dividers (non-draggable); tasks are draggable
+  // rows. Empty placeholders render only inside open empty buckets.
+  const items = useMemo<AllocatedItem[]>(() => {
+    const out: AllocatedItem[] = [];
+    for (const meta of BUCKETS) {
+      const bucketTasks = tasksByBucket[meta.id];
+      out.push({ kind: 'header', bucket: meta.id, count: bucketTasks.length });
+      if (collapsed[meta.id]) continue;
+      if (bucketTasks.length === 0) {
+        out.push({ kind: 'empty', bucket: meta.id });
+        continue;
+      }
+      for (const task of bucketTasks) {
+        out.push({ kind: 'task', bucket: meta.id, task });
+      }
+    }
+    return out;
+  }, [tasksByBucket, collapsed]);
 
-  const renderRow = ({ item, drag, isActive }: RenderItemParams<TaskWithSubs>) => {
-    return (
-      <ScaleDecorator>
-        <Pressable
-          onPress={() => onTaskPress(item.id)}
-          onLongPress={drag}
-          delayLongPress={400}
-          disabled={isActive}
-          style={({ pressed }) => [
-            styles.dragRow,
-            isActive && styles.dragRowActive,
-            pressed && { opacity: 0.85 },
+  // Local mirror for optimistic drag — synced back to `items` whenever
+  // the upstream shape changes (refetch, archive, new task, collapse).
+  const [localItems, setLocalItems] = useState<AllocatedItem[]>(items);
+  const itemsKey = items
+    .map((it) => (it.kind === 'task' ? `t:${it.task.id}` : `${it.kind}:${it.bucket}`))
+    .join('|');
+  useEffect(() => {
+    setLocalItems(items);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemsKey]);
+
+  const keyExtractor = (item: AllocatedItem, idx: number) => {
+    if (item.kind === 'task') return `t-${item.task.id}`;
+    return `${item.kind}-${item.bucket}-${idx}`;
+  };
+
+  /**
+   * Convert the flat localItems (after drag) into a global task-id
+   * ordering and push to the RPC. Tasks not in any bucket section
+   * (shouldn't happen — bucketFor covers all recurrence types) are
+   * appended at the tail to preserve them.
+   */
+  const commitReorder = (next: AllocatedItem[]) => {
+    const orderedTaskIds: string[] = [];
+    const seen = new Set<string>();
+    for (const it of next) {
+      if (it.kind !== 'task') continue;
+      orderedTaskIds.push(it.task.id);
+      seen.add(it.task.id);
+    }
+    // Anything not in the visible buckets (filtered by search, hidden
+    // by collapse) keeps its existing relative order — append at the
+    // tail of the new ordering so its sort_order stays larger but
+    // monotonic.
+    for (const t of allActive) {
+      if (!seen.has(t.id)) orderedTaskIds.push(t.id);
+    }
+    onReorder(orderedTaskIds);
+  };
+
+  /** Bucket of an item at index `i` based on the nearest preceding header. */
+  const sectionOf = (data: AllocatedItem[], i: number): Bucket | null => {
+    for (let j = i; j >= 0; j--) {
+      if (data[j].kind === 'header') return data[j].bucket;
+    }
+    return null;
+  };
+
+  const renderItem = ({ item, drag, isActive }: RenderItemParams<AllocatedItem>) => {
+    if (item.kind === 'header') {
+      const meta = BUCKETS.find((b) => b.id === item.bucket)!;
+      const isCollapsed = collapsed[item.bucket];
+      return (
+        <View
+          style={[
+            styles.groupCard,
+            { borderColor: `${meta.accent}33`, marginTop: tokens.space[3] },
           ]}
         >
-          <Ionicons name="reorder-three" size={22} color={tokens.text.dim} />
-          <DragRowInner task={item} />
-          <Ionicons name="chevron-forward" size={16} color={tokens.text.dim} />
-        </Pressable>
+          <View style={[styles.bucketAccentBar, { backgroundColor: meta.accent }]} />
+          <Pressable
+            onPress={() => onToggle(meta.id)}
+            style={({ pressed }) => [
+              styles.groupHeader,
+              styles.bucketHeader,
+              pressed && { opacity: 0.7 },
+            ]}
+          >
+            <View
+              style={[
+                styles.bucketIcon,
+                { backgroundColor: meta.accentBg, borderColor: `${meta.accent}55` },
+              ]}
+            >
+              <Ionicons name={meta.iconName} size={20} color={meta.accent} />
+            </View>
+            <View style={styles.bucketTitleCol}>
+              <Text style={[styles.bucketEyebrow, { color: meta.accent }]}>
+                {t(meta.labelKey).toUpperCase()}
+              </Text>
+              <Text style={styles.bucketDesc} numberOfLines={1}>
+                {t(meta.descKey)}
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.bucketCountChip,
+                { backgroundColor: meta.accentBg, borderColor: `${meta.accent}55` },
+              ]}
+            >
+              <Text style={[styles.bucketCountText, { color: meta.accent }]}>
+                {item.count}
+              </Text>
+            </View>
+            <Ionicons
+              name={isCollapsed ? 'chevron-down' : 'chevron-up'}
+              size={16}
+              color={tokens.text.dim}
+            />
+          </Pressable>
+        </View>
+      );
+    }
+    if (item.kind === 'empty') {
+      return (
+        <View style={styles.allocatedBucketBody}>
+          <Text style={styles.bucketEmpty}>{t('tasksHub.bucketEmpty')}</Text>
+        </View>
+      );
+    }
+    // Task row
+    return (
+      <ScaleDecorator>
+        <View style={styles.allocatedRowWrap}>
+          <Pressable
+            onPress={() => onTaskPress(item.task.id)}
+            onLongPress={drag}
+            delayLongPress={400}
+            disabled={isActive}
+            style={({ pressed }) => [
+              styles.dragRow,
+              isActive && styles.dragRowActive,
+              pressed && { opacity: 0.85 },
+            ]}
+            // Surface the bucket via accessibility hint so screen readers
+            // can announce context during the drag.
+            accessibilityHint={`In ${item.bucket} bucket. Long-press to reorder.`}
+          >
+            <Ionicons name="reorder-three" size={20} color={tokens.text.dim} />
+            <DragRowInner task={item.task} />
+            <Ionicons name="chevron-forward" size={16} color={tokens.text.dim} />
+          </Pressable>
+        </View>
       </ScaleDecorator>
     );
   };
@@ -497,7 +638,8 @@ function MineDraggableBody({
     );
   }
 
-  if (localOrder.length === 0) {
+  // Empty entire allocated bucket — show the same hero empty state as Mine.
+  if (allActive.length === 0) {
     return (
       <View style={styles.emptyBox}>
         <Ionicons
@@ -531,16 +673,31 @@ function MineDraggableBody({
 
   return (
     <DraggableFlatList
-      data={localOrder}
-      keyExtractor={(item) => item.id}
-      renderItem={renderRow}
-      onDragEnd={({ data }) => {
-        setLocalOrder(data);
-        onReorder(data.map((d) => d.id));
+      data={localItems}
+      keyExtractor={keyExtractor}
+      renderItem={renderItem}
+      onDragEnd={({ data, to }) => {
+        // Constrain drag to within a single bucket section. Compute the
+        // bucket the moved task started in vs ended in; if they differ,
+        // reject the drop and snap back.
+        const moved = data[to];
+        if (moved.kind !== 'task') {
+          // Dragged a non-task item (shouldn't happen since headers
+          // don't expose drag) — bail.
+          setLocalItems(localItems);
+          return;
+        }
+        const originalSection = moved.bucket;
+        const newSection = sectionOf(data, to);
+        if (newSection !== originalSection) {
+          // Reject — restore previous order. Slight haptic in onDragBegin
+          // already fired, no further bell needed.
+          setLocalItems(localItems);
+          return;
+        }
+        setLocalItems(data);
+        commitReorder(data);
       }}
-      // How much the finger can drift during the long-press before
-      // it cancels. 20px matches rewards-manage — small enough that
-      // scrolling micro-jitters don't promote to drag.
       activationDistance={20}
       contentContainerStyle={styles.dragListContent}
       refreshControl={
@@ -1148,9 +1305,18 @@ const styles = StyleSheet.create({
   },
   dragListContent: {
     paddingHorizontal: tokens.space[4],
-    paddingTop: tokens.space[4],
     paddingBottom: tokens.space[10],
-    gap: tokens.space[2],
+    gap: 4,
+  },
+  // Wrap the draggable row in a small left-indent so it sits visually
+  // INSIDE the bucket section above. Without this the row is flush
+  // with the bucket header which makes them look detached.
+  allocatedRowWrap: {
+    paddingLeft: 4,
+  },
+  allocatedBucketBody: {
+    paddingHorizontal: tokens.space[3],
+    paddingVertical: tokens.space[2],
   },
   dragRow: {
     flexDirection: 'row',
