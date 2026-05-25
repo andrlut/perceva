@@ -623,7 +623,7 @@ const en = {
       heroTitle: 'Your harvest',
       heroEyebrow: 'YOUR HARVEST',
       heroStatusIdle: 'Keep training to unlock bigger vaults',
-      heroStatusTrackable: '{{deficit}} to go for {{title}}',
+      heroStatusTrackable: 'Aiming at {{title}}',
       heroStatusReady: '{{title}} is yours!',
       tabs: {
         shop: 'Shop',

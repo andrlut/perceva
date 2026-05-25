@@ -13,7 +13,7 @@ import { PercevaGlyph } from './PercevaGlyph';
 interface Props {
   reward: Reward;
   affordable: boolean;
-  /** Coins still needed to afford this reward. Drives status badge + progress. */
+  /** Coins still needed to afford this reward. Drives progress bar copy. */
   deficit?: number;
   /** Current player coin balance — drives the inline progress bar fill. */
   coins: number;
@@ -31,22 +31,25 @@ interface Props {
   isRedeeming?: boolean;
 }
 
-/** Deficit threshold that flips the card from "Quase" to "Meta". */
-const ALMOST_THRESHOLD = 800;
-
 /**
  * Vault-style reward card. Two halves stacked:
  *
- *   Top half — icon tile (left) + status badge (right), then category
- *   eyebrow + title + description. When unaffordable, a thin gradient
+ *   Top half — icon tile (left) + a small category glyph (right), then
+ *   title + optional description. When unaffordable, a thin gradient
  *   progress bar follows.
  *
  *   Bottom half — cost (mini coin + value) on the left, COMPRAR (gold
  *   gradient) or MIRAR (violet pill) on the right.
  *
- * The whole card surface is decorated based on whether it's affordable —
- * gold rim + warm gradient + engraved Topo Iris glyph in the corner when
- * yes, cool gradient + subtle border otherwise.
+ * The whole card surface is decorated by affordability:
+ *   - affordable → gold rim + warm gradient + CATEGORY-COLOR halo wash
+ *     at the top edge + engraved Topo Iris glyph in the corner
+ *   - unaffordable → cool gradient + subtle white border
+ *
+ * The two signals stack:
+ *   gold = "ready to buy" (status)
+ *   category color = "indulge / goods / experience" (identity, carried by
+ *     the icon tile + top-right glyph + halo wash + progress bar)
  */
 export function RewardCard({
   reward,
@@ -63,40 +66,6 @@ export function RewardCard({
   const cat = REWARD_CATEGORY_META[reward.category];
   const accent = affordable ? '#FFC83D' : cat.color;
   const pct = Math.max(0, Math.min(100, Math.round((coins / reward.cost) * 100)));
-
-  const status: 'ready' | 'almost' | 'goal' = affordable
-    ? 'ready'
-    : deficit <= ALMOST_THRESHOLD
-      ? 'almost'
-      : 'goal';
-
-  const badge = (() => {
-    if (status === 'ready') {
-      return {
-        label: t('rewards.vault.status.ready'),
-        color: '#FFE3A6',
-        bgColors: ['rgba(255,224,138,0.25)', 'rgba(255,200,61,0.1)'] as const,
-        borderColor: 'rgba(255,200,61,0.45)',
-        icon: 'flash' as const,
-      };
-    }
-    if (status === 'almost') {
-      return {
-        label: t('rewards.vault.status.almost'),
-        color: '#FFB377',
-        bgColors: ['rgba(255,159,67,0.18)', 'rgba(255,159,67,0.18)'] as const,
-        borderColor: 'rgba(255,159,67,0.4)',
-        icon: 'flame' as const,
-      };
-    }
-    return {
-      label: t('rewards.vault.status.goal'),
-      color: cat.color,
-      bgColors: [`${cat.color}1c`, `${cat.color}1c`] as const,
-      borderColor: `${cat.color}40`,
-      icon: 'star' as const,
-    };
-  })();
 
   return (
     <View
@@ -121,6 +90,22 @@ export function RewardCard({
         style={StyleSheet.absoluteFill}
         pointerEvents="none"
       />
+
+      {/* Category-tinted halo wash at the top edge. Stacks over the
+          surface gradient and fades to transparent within ~40% of the
+          card height. Subtle by design — ~10% opacity at the strongest
+          point — so it reads as identity, not noise. Only on affordable
+          cards (the gold treatment is already a lot to look at). */}
+      {affordable && (
+        <LinearGradient
+          colors={[`${cat.color}1F`, 'transparent']}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          locations={[0, 0.45]}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
+      )}
 
       {/* Engraved glyph — affordable cards only, bottom-right corner. */}
       {affordable && (
@@ -151,7 +136,8 @@ export function RewardCard({
         }
       >
         <View style={styles.top}>
-          {/* Top row: icon tile + status badge */}
+          {/* Top row: icon tile + small category glyph (the lightning /
+              bag / sparkles ionicon, mirroring the filter chip icon) */}
           <View style={styles.topRow}>
             <View
               style={[
@@ -168,37 +154,16 @@ export function RewardCard({
                 color={cat.color}
               />
             </View>
-            <View
-              style={[
-                styles.badge,
-                {
-                  borderColor: badge.borderColor,
-                },
-              ]}
-            >
-              <LinearGradient
-                colors={[badge.bgColors[0], badge.bgColors[1]]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={StyleSheet.absoluteFill}
-              />
-              <Ionicons name={badge.icon} size={9} color={badge.color} />
-              <Text
-                style={[styles.badgeText, { color: badge.color }]}
-                numberOfLines={1}
-              >
-                {badge.label.toUpperCase()}
-              </Text>
-            </View>
+            {/* Discrete category glyph — same iconography as the filter
+                chips so the link is obvious. ~70% opacity keeps it as a
+                hint, not a competing element. */}
+            <Ionicons
+              name={cat.icon as never}
+              size={16}
+              color={cat.color}
+              style={styles.categoryGlyph}
+            />
           </View>
-
-          {/* Category eyebrow */}
-          <Text
-            style={[styles.eyebrow, { color: cat.color }]}
-            numberOfLines={1}
-          >
-            {cat.label.toUpperCase()}
-          </Text>
 
           {/* Title + optional description */}
           <Text style={styles.title} numberOfLines={2}>
@@ -304,16 +269,12 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     // No elevation on Android: it ignores shadowColor and falls back to
     // a flat grey shadow that reads as an ugly halo around the card.
-    // The gold rim border + inner gradient sell the embossed feel on
-    // their own. iOS may pick up a subtle drop-shadow via shadowOffset
-    // below but won't be noticeable without a darker shadowColor.
+    // The gold rim border + inner gradient + category-tinted top wash
+    // sell the embossed feel on their own.
   },
   glyphWrap: {
     // Positioned so the glyph's center horizontally aligns roughly with
     // the COMPRAR button's center, and vertically with the footer row.
-    // Center of a 120-px glyph sits at (right + 60, bottom + 60).
-    // Card padding is 14; the gold pill sits ~14 + button-h/2 from
-    // bottom, ~14 + ~35 from right edge.
     position: 'absolute',
     right: -25,
     bottom: -32,
@@ -331,7 +292,7 @@ const styles = StyleSheet.create({
   },
   topRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 8,
     gap: 8,
@@ -345,27 +306,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexShrink: 0,
   },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: 999,
-    borderWidth: 1,
-    flexShrink: 0,
-    overflow: 'hidden',
-  },
-  badgeText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 9,
-    letterSpacing: 0.5,
-  },
-  eyebrow: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 9,
-    letterSpacing: 1.4,
-    marginBottom: 4,
+  categoryGlyph: {
+    opacity: 0.75,
+    marginRight: 2,
   },
   title: {
     fontFamily: 'Manrope_800ExtraBold',

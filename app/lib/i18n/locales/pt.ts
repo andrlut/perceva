@@ -613,7 +613,7 @@ const pt: Translations = {
       heroTitle: 'Sua colheita',
       heroEyebrow: 'SUA COLHEITA',
       heroStatusIdle: 'Continue treinando pra abrir cofres maiores',
-      heroStatusTrackable: 'Faltam {{deficit}} para {{title}}',
+      heroStatusTrackable: 'Almejando {{title}}',
       heroStatusReady: '{{title}} é seu!',
       tabs: {
         shop: 'Loja',

@@ -169,7 +169,7 @@ export default function RewardsManageScreen() {
                 {item.cost.toLocaleString()}
               </Text>
               <Text style={[styles.rowMetaText, { color: cat.color }]}>
-                · {cat.short}
+                · {t(`rewards.categories.${item.category}` as const)}
               </Text>
             </View>
           </View>
@@ -227,7 +227,7 @@ export default function RewardsManageScreen() {
               {reward.cost.toLocaleString()}
             </Text>
             <Text style={[styles.rowMetaText, { color: cat.color, opacity: 0.7 }]}>
-              · {cat.short}
+              · {t(`rewards.categories.${reward.category}` as const)}
             </Text>
           </View>
         </View>
