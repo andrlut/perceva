@@ -301,6 +301,14 @@ export interface TaskWithSubs extends Task {
   primary_sub_id: SubId;
   primary_dimension_id: DimensionId;
   total_stars: number;
+  /**
+   * Most recent completion timestamp for this task — only populated for
+   * one-shots (where it drives the "trophy" dimming after completion).
+   * Null when the one-shot has never been completed, or when the row
+   * comes from a query that doesn't track this. Daily/weekly tasks
+   * leave it as `undefined`.
+   */
+  lastCompletedAt?: string | null;
 }
 
 /** A TaskTemplate hydrated with its sub allocations + derived conveniences. */

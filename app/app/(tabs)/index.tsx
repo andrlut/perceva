@@ -40,6 +40,7 @@ import {
 import { useQuests } from '@/lib/api/quests';
 import type { TaskSub, TaskWithSubs } from '@/lib/db/types';
 import { formatHeroDate } from '@/lib/time';
+import { compareOneShotsByFreshness, isInTrophyWindow } from '@/lib/trophy';
 import { levelProgress, rewardForTaskSubs } from '@/lib/xp';
 import { tokens } from '@/theme';
 
@@ -266,7 +267,12 @@ export default function HomeScreen() {
     data.today.forEach(pushWeekly);
     data.thisWeek.forEach(pushWeekly);
 
-    const oneshot = data.oneTime.filter(filterActedToday);
+    // One-shots are pre-filtered by useHomeBuckets to skip
+    // completed-today / skipped-today. Sort trophies (recently-
+    // completed one-shots that linger as "marcos") to the bottom.
+    const oneshot = [...data.oneTime].sort((a, b) =>
+      compareOneShotsByFreshness(a, b),
+    );
 
     return { daily, weekly, oneshot };
   }, [data]);
@@ -426,6 +432,7 @@ export default function HomeScreen() {
                   <TaskCard
                     key={task.id}
                     task={task}
+                    dimmed={isInTrophyWindow(task)}
                     onComplete={() => handleQuickComplete(task)}
                     onLongPress={() => handleLongPress(task)}
                     onSkip={() => handleSwipeSkip(task)}
