@@ -661,6 +661,13 @@ const en = {
       },
       sub: 'Tap to use',
     },
+    celebration: {
+      eyebrow: 'IN THE BAG',
+      title: 'Bought "{{title}}"',
+      bankLine: 'Bank: {{before}} → {{after}}',
+      goToBank: 'Go to bank',
+      dismiss: 'Close',
+    },
     actionSheet: {
       edit: 'Edit reward',
       editSub: 'Change title, cost, icon or category',

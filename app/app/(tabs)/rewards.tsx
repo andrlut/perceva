@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AddCard } from '@/components/AddCard';
 import { useBottomNavClearance } from '@/components/BottomNavBar';
+import { BuyCelebrationModal } from '@/components/BuyCelebrationModal';
 import { CoinIcon } from '@/components/CoinIcon';
 import { EmptyHero } from '@/components/EmptyHero';
 import { RewardActionSheet } from '@/components/RewardActionSheet';
@@ -92,6 +93,15 @@ export default function RewardsScreen() {
   // Long-press → open this reward's action sheet. Single source of truth
   // for the sheet so it stays bound to one reward across re-renders.
   const [actionSheetReward, setActionSheetReward] = useState<Reward | null>(null);
+  // Celebration modal payload — set after a successful purchase. Captures
+  // the bank count BEFORE the redeem so the modal can show the before→after
+  // transition even though the live query has invalidated already.
+  const [celebration, setCelebration] = useState<{
+    reward: Reward;
+    costPaid: number;
+    bankBefore: number;
+    bankAfter: number;
+  } | null>(null);
   const bottomClearance = useBottomNavClearance();
 
   const coins = character.data?.character.coins ?? 0;
@@ -226,8 +236,21 @@ export default function RewardsScreen() {
     if (!ok) return;
     setRedeemingId(reward.id);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    // Snapshot before mutation — the bank query gets invalidated on
+    // settle, so reading from the cache after mutateAsync resolves is a
+    // race. Capturing here is exact.
+    const bankBefore = bankCount;
     try {
-      await redeem.mutateAsync({ rewardId: reward.id, cost: reward.cost });
+      const result = await redeem.mutateAsync({
+        rewardId: reward.id,
+        cost: reward.cost,
+      });
+      setCelebration({
+        reward,
+        costPaid: result?.cost_paid ?? reward.cost,
+        bankBefore,
+        bankAfter: bankBefore + 1,
+      });
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Unknown error';
       showInfo(t('reward.shop.buyFail'), msg);
@@ -766,6 +789,19 @@ export default function RewardsScreen() {
           const r = actionSheetReward;
           setActionSheetReward(null);
           if (r) handleArchiveReward(r);
+        }}
+      />
+
+      <BuyCelebrationModal
+        visible={!!celebration}
+        reward={celebration?.reward ?? null}
+        costPaid={celebration?.costPaid ?? 0}
+        bankBefore={celebration?.bankBefore ?? 0}
+        bankAfter={celebration?.bankAfter ?? 0}
+        onClose={() => setCelebration(null)}
+        onGoToBank={() => {
+          setCelebration(null);
+          setView('bank');
         }}
       />
     </SafeAreaView>

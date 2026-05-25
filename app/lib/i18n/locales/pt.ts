@@ -651,6 +651,13 @@ const pt: Translations = {
       },
       sub: 'Toque pra usar',
     },
+    celebration: {
+      eyebrow: 'NA SACOLA',
+      title: 'Comprou "{{title}}"',
+      bankLine: 'Banco: {{before}} → {{after}}',
+      goToBank: 'Ir pro banco',
+      dismiss: 'Fechar',
+    },
     actionSheet: {
       edit: 'Editar recompensa',
       editSub: 'Mudar título, custo, ícone ou categoria',
