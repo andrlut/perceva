@@ -623,7 +623,6 @@ const en = {
       heroTitle: 'Your harvest',
       heroEyebrow: 'YOUR HARVEST',
       heroStatusIdle: 'Keep training to unlock bigger vaults',
-      heroStatusTrackable: 'Aiming at {{title}}',
       heroStatusReady: '{{title}} is yours!',
       tabs: {
         shop: 'Shop',
@@ -653,13 +652,6 @@ const en = {
       },
       remaining: '{{deficit}} to go',
       earnedTime: 'earned {{when}}',
-    },
-    bankCta: {
-      title: {
-        one: 'You have {{count}} reward waiting in your bank',
-        other: 'You have {{count}} rewards waiting in your bank',
-      },
-      sub: 'Tap to use',
     },
     celebration: {
       eyebrow: 'IN THE BAG',

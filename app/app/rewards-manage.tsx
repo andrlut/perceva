@@ -143,7 +143,11 @@ export default function RewardsManageScreen() {
       <ScaleDecorator>
         <Pressable
           onLongPress={drag}
-          delayLongPress={120}
+          // 400ms is snappier than RN's 500ms default but distinct
+          // enough from a tap that scrolling doesn't accidentally trip
+          // the drag handler. With 120ms the previous version made the
+          // entire list un-scrollable — every touch became a long-press.
+          delayLongPress={400}
           disabled={isActive}
           style={[
             styles.row,
@@ -344,7 +348,10 @@ export default function RewardsManageScreen() {
             </View>
           }
           contentContainerStyle={styles.listContent}
-          activationDistance={8}
+          // How much the finger can drift during the long-press before
+          // it cancels. Default 0/low values made scrolling impossible
+          // because any micro-movement registered as "drag start".
+          activationDistance={20}
         />
       )}
     </SafeAreaView>
