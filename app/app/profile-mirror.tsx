@@ -19,6 +19,7 @@ import {
   useSessionScores,
 } from '@/lib/api/psych';
 import { daysSince } from '@/lib/api/questionnaire';
+import { bucketForDelta, dimScoreFromSubs } from '@/lib/assessment/feedback';
 import type { DimensionId, SubId } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
@@ -61,6 +62,8 @@ import {
  */
 export default function ProfileMirrorScreen() {
   const router = useRouter();
+  const { locale } = useT();
+  const isPt = locale !== 'en';
   const character = useCharacter();
   const lastSession = useLastWellbeingSession();
   const meta = useMetaLookup();
@@ -69,7 +72,16 @@ export default function ProfileMirrorScreen() {
     () => pickSubScoresDecimal(character.data?.subScores ?? [], 'questionnaire'),
     [character.data?.subScores],
   );
+  // Self scores power the Δ pip next to each dim's total. When the user
+  // hasn't completed a self-assessment yet, the map is empty and DimRow
+  // skips the pip entirely (rather than rendering "+X" against an
+  // implicit zero).
+  const selfScores = useMemo(
+    () => pickSubScoresDecimal(character.data?.subScores ?? [], 'self'),
+    [character.data?.subScores],
+  );
   const hasData = qScores.size > 0;
+  const hasSelf = selfScores.size > 0;
   const sinceDays = daysSince(lastSession.data?.taken_at);
 
   return (
@@ -86,7 +98,7 @@ export default function ProfileMirrorScreen() {
           >
             <Ionicons name="chevron-back" size={22} color={tokens.text.hi} />
           </Pressable>
-          <Text style={styles.title}>Perfil</Text>
+          <Text style={styles.title}>{isPt ? 'Perfil' : 'Profile'}</Text>
           <View style={{ width: 44 }} />
         </View>
 
@@ -100,8 +112,9 @@ export default function ProfileMirrorScreen() {
             showsVerticalScrollIndicator={false}
           >
             <Text style={styles.lede}>
-              O espelho — quem você é, em diferentes lentes. Cada teste responde
-              uma pergunta diferente. Eles não competem.
+              {isPt
+                ? 'O espelho — quem você é, em diferentes lentes. Cada teste responde uma pergunta diferente. Eles não competem.'
+                : "The mirror — who you are, through different lenses. Each test answers a different question. They don't compete."}
             </Text>
 
             {/* ─── Avaliação card ──────────────────────────────────────── */}
@@ -113,10 +126,14 @@ export default function ProfileMirrorScreen() {
                     size={18}
                     color={tokens.brand.violet2}
                   />
-                  <Text style={styles.cardTitle}>Avaliação</Text>
+                  <Text style={styles.cardTitle}>
+                    {isPt ? 'Avaliação' : 'Assessment'}
+                  </Text>
                 </View>
                 <Text style={styles.cardSub}>
-                  Como eu tô agora · estado · 30-90 dias
+                  {isPt
+                    ? 'Como eu tô agora · estado · nos últimos 30-90 dias'
+                    : "How I'm doing · state · over the past 30-90 days"}
                 </Text>
               </View>
 
@@ -129,6 +146,9 @@ export default function ProfileMirrorScreen() {
                         dim={dim}
                         scores={qScores}
                         label={meta.dim(dim).label}
+                        selfDimScore={
+                          hasSelf ? dimScoreFromSubs(selfScores, dim) : undefined
+                        }
                       />
                     ))}
                   </View>
@@ -147,10 +167,16 @@ export default function ProfileMirrorScreen() {
                     />
                     <Text style={styles.refazerText}>
                       {sinceDays === null
-                        ? 'Refazer agora'
+                        ? isPt
+                          ? 'Refazer agora'
+                          : 'Retake now'
                         : sinceDays === 0
-                          ? 'Refeito hoje'
-                          : `Refazer · ${sinceDays}d atrás`}
+                          ? isPt
+                            ? 'Refeito hoje'
+                            : 'Done today'
+                          : isPt
+                            ? `Refazer · ${sinceDays}d atrás`
+                            : `Retake · ${sinceDays}d ago`}
                     </Text>
                   </Pressable>
                 </>
@@ -163,7 +189,11 @@ export default function ProfileMirrorScreen() {
                   ]}
                   hitSlop={4}
                 >
-                  <Text style={styles.ctaText}>Fazer Avaliação (5-10 min)</Text>
+                  <Text style={styles.ctaText}>
+                    {isPt
+                      ? 'Fazer Avaliação (5-10 min)'
+                      : 'Take Assessment (5-10 min)'}
+                  </Text>
                   <Ionicons
                     name="arrow-forward"
                     size={14}
@@ -194,14 +224,41 @@ function DimRow({
   dim,
   scores,
   label,
+  selfDimScore,
 }: {
   dim: DimensionId;
   scores: Map<SubId, number>;
   label: string;
+  /**
+   * The user's self-assessed total for this dim. When provided, the row
+   * shows a `Δ +1.3` / `Δ -0.8` pip next to the questionnaire total. When
+   * undefined (user hasn't done self yet), the pip is suppressed — we don't
+   * render "+5.9" against an implicit 0.
+   */
+  selfDimScore?: number;
 }) {
   const meta = DIMENSION_META[dim];
   const subs = SUBS_BY_DIM[dim];
   const dimScore = (scores.get(subs[0]) ?? 0) + (scores.get(subs[1]) ?? 0);
+
+  // Δ = questionnaire - self. Color follows the same 5-bucket system as
+  // the questionnaire result feedback: aligned = dim, slight = mid,
+  // attention = the dim's own accent color so it pops.
+  let deltaText: string | null = null;
+  let deltaColor: string = tokens.text.dim;
+  if (selfDimScore !== undefined) {
+    const delta = dimScore - selfDimScore;
+    const sign = delta >= 0 ? '+' : '-';
+    deltaText = `Δ ${sign}${Math.abs(delta).toFixed(1)}`;
+    const bucket = bucketForDelta(delta);
+    if (bucket === 'aligned') deltaColor = tokens.text.dim;
+    else if (
+      bucket === 'slight_overestimate' ||
+      bucket === 'slight_underestimate'
+    )
+      deltaColor = tokens.text.mid;
+    else deltaColor = meta.color;
+  }
 
   return (
     <View style={dimRowStyles.row}>
@@ -229,9 +286,16 @@ function DimRow({
           </View>
         ))}
       </View>
-      <Text style={[dimRowStyles.dimScore, { color: meta.color }]}>
-        {formatScore(dimScore)}
-      </Text>
+      <View style={dimRowStyles.totals}>
+        <Text style={[dimRowStyles.dimScore, { color: meta.color }]}>
+          {formatScore(dimScore)}
+        </Text>
+        {deltaText !== null && (
+          <Text style={[dimRowStyles.deltaPip, { color: deltaColor }]}>
+            {deltaText}
+          </Text>
+        )}
+      </View>
     </View>
   );
 }
@@ -273,8 +337,8 @@ export function BigFiveCard({ onOpen }: { onOpen: () => void }) {
         </View>
         <Text style={styles.cardSub}>
           {isPt
-            ? 'Quem eu sou · traço · anos'
-            : 'Who I am · trait · years'}
+            ? 'Quem eu sou · traço · ao longo dos anos'
+            : 'Who I am · trait · over the years'}
         </Text>
       </View>
 
@@ -398,8 +462,8 @@ export function SchwartzCard({ onOpen }: { onOpen: () => void }) {
         </View>
         <Text style={styles.cardSub}>
           {isPt
-            ? 'O que importa · prioridade · anos'
-            : 'What matters · priority · years'}
+            ? 'O que importa · prioridade · ao longo dos anos'
+            : 'What matters · priority · over the years'}
         </Text>
       </View>
 
@@ -506,8 +570,8 @@ export function EcrRCard({ onOpen }: { onOpen: () => void }) {
         </View>
         <Text style={styles.cardSub}>
           {isPt
-            ? 'Como eu me ligo · padrão · anos'
-            : 'How I bond · pattern · years'}
+            ? 'Como eu me ligo · padrão · ao longo dos anos'
+            : 'How I bond · pattern · over the years'}
         </Text>
       </View>
 
@@ -777,5 +841,17 @@ const dimRowStyles = StyleSheet.create({
     fontSize: 14,
     minWidth: 36,
     textAlign: 'right',
+  },
+  // Wrap the dim total + Δ pip so they stack vertically without disturbing
+  // the existing per-row alignment.
+  totals: {
+    alignItems: 'flex-end',
+    minWidth: 36,
+  },
+  deltaPip: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 10,
+    letterSpacing: 0.2,
+    marginTop: 1,
   },
 });
