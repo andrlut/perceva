@@ -148,12 +148,15 @@ const en = {
   },
 
   learning: {
-    eyebrow: 'LEARN',
+    eyebrow: 'Library · Your path',
     title: 'Reading nook',
     subtitle: 'Short, visual, tied to what you’re cultivating.',
     empty: 'No materials yet for this filter.',
     read: 'Read',
     readMin: { one: '{{count}} min read', other: '{{count}} min read' },
+    continueReading: 'Continue reading',
+    continueProgress: '{{percent}}% read',
+    continueMinLeft: { one: '~{{count}} min left', other: '~{{count}} min left' },
     type: {
       explainer: 'Explainer',
       summary: 'Summary',

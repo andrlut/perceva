@@ -138,12 +138,15 @@ const pt: Translations = {
   },
 
   learning: {
-    eyebrow: 'APRENDER',
+    eyebrow: 'Biblioteca · Sua via',
     title: 'Cantinho de leitura',
     subtitle: 'Curtos, visuais e ligados ao que você está cultivando.',
     empty: 'Nenhum material por aqui ainda.',
     read: 'Lido',
     readMin: { one: '{{count}} min de leitura', other: '{{count}} min de leitura' },
+    continueReading: 'Continue lendo',
+    continueProgress: '{{percent}}% lido',
+    continueMinLeft: { one: '~{{count}} min restante', other: '~{{count}} min restantes' },
     type: {
       explainer: 'Explicação',
       summary: 'Resumo',
