@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -15,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LearningBody } from '@/components/LearningBody';
 import { MaterialCover } from '@/components/MaterialCover';
 import { ScreenBackground } from '@/components/ScreenBackground';
+import { useReadingProgressStore } from '@/lib/readingProgress';
 import {
   useLearningMaterial,
   useMarkMaterialRead,
@@ -49,6 +52,25 @@ export default function MaterialDetailScreen() {
   const meta = useMetaLookup();
 
   const [busy, setBusy] = useState(false);
+
+  // ── Scroll-position tracking for the Continue Reading hero ─────────────
+  // Throttle scroll → store writes by hand. RN's `scrollEventThrottle` only
+  // controls native→JS event rate; we still want a JS-side debounce so we
+  // don't churn AsyncStorage during every flick.
+  const updateProgress = useReadingProgressStore((s) => s.update);
+  const lastWriteRef = useRef<number>(0);
+  const onContentScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (!material.data) return;
+    const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+    const scrollable = contentSize.height - layoutMeasurement.height;
+    if (scrollable <= 0) return; // content shorter than the viewport
+    const percent = (contentOffset.y / scrollable) * 100;
+    const now = Date.now();
+    // 500ms debounce — enough to feel responsive without thrashing storage.
+    if (now - lastWriteRef.current < 500) return;
+    lastWriteRef.current = now;
+    updateProgress(material.data.slug, material.data.id, percent);
+  };
 
   const isRead = useMemo(() => {
     if (!material.data) return false;
@@ -104,6 +126,8 @@ export default function MaterialDetailScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     try {
       await markRead.mutateAsync({ slug: m.slug, materialId: m.id });
+      // Drop the in-progress entry — the server read log is canonical now.
+      useReadingProgressStore.getState().clear(m.slug);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Unknown error';
       showInfo(t('learning.detail.markFail'), msg);
@@ -117,7 +141,11 @@ export default function MaterialDetailScreen() {
       <ScreenBackground>
         <Stack.Screen options={{ headerShown: false }} />
 
-        <ScrollView contentContainerStyle={styles.scroll}>
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          onScroll={onContentScroll}
+          scrollEventThrottle={50}
+        >
           {/* Visual hero — full-bleed cover */}
           <View style={styles.heroWrap}>
             <MaterialCover

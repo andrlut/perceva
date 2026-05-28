@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -15,12 +16,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useBottomNavClearance } from '@/components/BottomNavBar';
 import { CarouselRow } from '@/components/learning/CarouselRow';
+import { ContinueLendoCard } from '@/components/learning/ContinueLendoCard';
 import { LearningStatsPanel, type PillFilter } from '@/components/LearningStatsPanel';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { useLearningFeed, useReadMaterialIds, type LearningFeedCard } from '@/lib/api/learning';
 import type { DimensionId, LearningMaterialType, SubId } from '@/lib/db/types';
 import { useT, type TranslateOptions } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
+import {
+  useContinueReading,
+  useReadingProgressReady,
+} from '@/lib/readingProgress';
 import { tokens } from '@/theme';
 import { DIMENSION_ORDER, SUB_META } from '@/theme/dimensions';
 
@@ -40,6 +46,18 @@ export default function LearningScreen() {
   const [pillFilter, setPillFilter] = useState<PillFilter>(null);
   const [statsOpen, setStatsOpen] = useState(false);
   const bottomClearance = useBottomNavClearance();
+
+  // Hydrate the persisted scroll-progress store on first paint so the
+  // ContinueLendoCard hero can pick the right material without flashing
+  // an empty state on cold start.
+  useReadingProgressReady();
+  const continueEntry = useContinueReading();
+  // Match the in-progress entry to a card from the feed (the entry
+  // alone has slug + materialId; we need the title/dim/etc).
+  const continueCard = useMemo<LearningFeedCard | null>(() => {
+    if (!continueEntry) return null;
+    return (feed.data ?? []).find((c) => c.slug === continueEntry.slug) ?? null;
+  }, [continueEntry, feed.data]);
 
   // Chronological: newest released material first. Sorting once at the
   // source means every derived bucket (filtered, byDim, novidades)
@@ -101,7 +119,7 @@ export default function LearningScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScreenBackground>
+      <ScreenBackground withGoldHalo>
         <ScrollView
           contentContainerStyle={{ paddingBottom: bottomClearance }}
           refreshControl={
@@ -152,6 +170,17 @@ export default function LearningScreen() {
             <ReadFilterRow value={readFilter} onChange={setReadFilter} t={t} />
           </View>
 
+          {/* Continue Lendo hero — appears once the user has at least
+             5% scroll progress on any article. Picks the most recently
+             touched one. */}
+          {continueCard && continueEntry && (
+            <ContinueLendoCard
+              card={continueCard}
+              percent={continueEntry.percent}
+              onPress={() => router.push(`/material/${continueCard.slug}`)}
+            />
+          )}
+
           {/* Loading */}
           {feed.isLoading && (
             <View style={styles.loading}>
@@ -167,12 +196,14 @@ export default function LearningScreen() {
             </View>
           )}
 
-          {/* Novidades */}
+          {/* Novidades — accent in pale-gold to match the Perceva
+             vocabulary; the per-dim sections below keep their own
+             dim color so dimension recognition still pops. */}
           {buckets.novidades.length > 0 && (
             <CarouselRow
               title={t('learning.section.new')}
               iconName="sparkles"
-              accentColor={tokens.brand.violet2}
+              accentColor={tokens.semantic.coinLight}
               cards={buckets.novidades}
               readSet={readSet}
               onCardPress={onCardPress}
@@ -334,10 +365,25 @@ function ReadFilterRow({ value, onChange, t }: ReadFilterRowProps) {
             }}
             style={({ pressed }) => [
               readFilterStyles.seg,
-              active && readFilterStyles.segActive,
               pressed && { opacity: 0.8 },
             ]}
           >
+            {/* Active pill: gradient fill + gold rim, clipped to its
+               own rounded box. Sits inside the seg without overflow on
+               the seg itself, so inactive Text is never clipped. */}
+            {active && (
+              <View style={readFilterStyles.activeBg} pointerEvents="none">
+                <LinearGradient
+                  colors={
+                    ['#FFE890', '#FFC83D', '#C8881C'] as [string, string, string]
+                  }
+                  locations={[0, 0.6, 1]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 0, y: 1 }}
+                  style={StyleSheet.absoluteFillObject}
+                />
+              </View>
+            )}
             <Text
               style={[
                 readFilterStyles.segText,
@@ -356,30 +402,42 @@ function ReadFilterRow({ value, onChange, t }: ReadFilterRowProps) {
 const readFilterStyles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    backgroundColor: tokens.bg.glass,
+    backgroundColor: 'rgba(36, 42, 88, 0.55)',
     borderRadius: 999,
     padding: 3,
     borderWidth: 1,
-    borderColor: tokens.border.base,
+    // Pale-gold rim — mirrors the Vault chip vocabulary.
+    borderColor: 'rgba(255, 200, 61, 0.22)',
   },
   seg: {
     flex: 1,
     paddingVertical: 7,
     alignItems: 'center',
-    borderRadius: 999,
+    justifyContent: 'center',
+    // No overflow:hidden here — that was clipping inactive Text in some
+    // Android RN builds. The active pill's gradient is clipped via its
+    // own wrapper (activeBg) instead.
   },
-  segActive: {
-    backgroundColor: tokens.brand.violet,
+  /** Absolutely-positioned gradient pill underlay for the active segment. */
+  activeBg: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 224, 138, 0.55)',
+    overflow: 'hidden',
   },
   segText: {
     fontFamily: 'Manrope_700Bold',
     fontSize: 11,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
-    color: tokens.text.mid,
+    // Bump from text.mid → text.base for higher contrast over the dark
+    // glass background.
+    color: tokens.text.base,
   },
   segTextActive: {
-    color: tokens.text.hi,
+    color: '#3D2A00',
+    fontFamily: 'Manrope_800ExtraBold',
   },
 });
 
@@ -395,10 +453,11 @@ const styles = StyleSheet.create({
     paddingBottom: tokens.space[2],
   },
   eyebrow: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Manrope_800ExtraBold',
     fontSize: 11,
-    letterSpacing: 1.6,
-    color: tokens.brand.violet2,
+    letterSpacing: 1.8,
+    // Perceva pale-gold — sibling of the Rewards "Sua via" vocabulary.
+    color: tokens.semantic.coinLight,
     textTransform: 'uppercase',
   },
   title: {

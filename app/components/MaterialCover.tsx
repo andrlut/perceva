@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Image as RNImage, StyleSheet, View } from 'react-native';
 import Svg, {
   Defs,
+  G,
   Line,
   Pattern,
   RadialGradient,
@@ -10,6 +11,7 @@ import Svg, {
   Stop,
 } from 'react-native-svg';
 
+import { PercevaGlyphContent } from '@/components/PercevaGlyph';
 import type { DimensionId, SubId } from '@/lib/db/types';
 import { SUB_META } from '@/theme/dimensions';
 
@@ -63,7 +65,10 @@ export function MaterialCover({
       ? (SUB_META[subId].iconName as keyof typeof Ionicons.glyphMap)
       : ((dimIconName ?? 'sparkles') as keyof typeof Ionicons.glyphMap);
 
-  const size = variant === 'hero' ? 88 : 80;
+  // Slightly smaller icon than the original 80/88 so the engraved Topo
+  // Iris glyph sitting behind it has room to read as a watermark, not a
+  // background pattern.
+  const size = variant === 'hero' ? 78 : 70;
   const containerStyle = variant === 'hero' ? styles.hero : styles.card;
 
   if (imageUrl) {
@@ -140,6 +145,24 @@ export function MaterialCover({
           </RadialGradient>
         </Defs>
         <Rect width="100%" height="100%" fill="url(#cover-glow)" />
+      </Svg>
+      {/* Engraved Topo Iris glyph — sits BEHIND the Ionicon as a quiet
+         brand watermark on every generated cover. Skipped when imageUrl
+         is present (real photos get the dark gradient only). */}
+      <Svg
+        width="100%"
+        height="100%"
+        style={StyleSheet.absoluteFill}
+        viewBox="0 0 1024 1024"
+        preserveAspectRatio="xMidYMid meet"
+        pointerEvents="none"
+      >
+        <G opacity={0.18}>
+          <PercevaGlyphContent
+            palette="primary"
+            idSuffix={`cover-${dimensionId}-${subId ?? 'none'}-${variant}`}
+          />
+        </G>
       </Svg>
       <View style={styles.iconWrap}>
         <Ionicons name={iconName} size={size} color="rgba(255,255,255,0.92)" />

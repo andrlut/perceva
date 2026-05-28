@@ -102,9 +102,21 @@ export function LearningStatsPanel({
         onPress={onToggle}
         style={({ pressed }) => [styles.pill, pressed && styles.pillPressed]}
       >
-        <Ionicons name="stats-chart" size={14} color={tokens.brand.violet2} />
+        {/* Pale-gold accent on the icon + read count — same vocabulary
+           as Rewards "Sua via" without using the coin glyph (rejected:
+           confuses with economy balance). */}
+        <Ionicons
+          name="stats-chart"
+          size={14}
+          color={tokens.semantic.coinLight}
+        />
         <Text style={styles.pillText}>
-          {t('learning.stats.summary', { read: stats.read, total: stats.total })}
+          <Text style={{ color: tokens.semantic.coinLight }}>{stats.read}</Text>
+          <Text style={{ color: tokens.text.dim }}>/{stats.total}</Text>
+          <Text style={{ color: tokens.text.mid }}>
+            {'  '}
+            {t('learning.read', { count: stats.read })}
+          </Text>
         </Text>
         <Ionicons
           name={open ? 'chevron-up' : 'chevron-down'}
@@ -251,9 +263,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 999,
-    backgroundColor: tokens.bg.glass,
+    backgroundColor: 'rgba(36, 42, 88, 0.55)',
     borderWidth: 1,
-    borderColor: tokens.border.strong,
+    // Soft pale-gold rim — Perceva brand alignment without competing
+    // with the Vault chip glow.
+    borderColor: 'rgba(255, 200, 61, 0.25)',
   },
   pillPressed: { opacity: 0.85 },
   pillText: {

@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { LearningFeedCard } from '@/lib/api/learning';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
+import { useMaterialProgress } from '@/lib/readingProgress';
 import { tokens } from '@/theme';
 import { SUB_META } from '@/theme/dimensions';
 
@@ -38,6 +39,12 @@ export function CoverCard({ card, read, onPress }: Props) {
   const primarySub = card.subs[0];
   const subMeta = primarySub ? meta.sub(primarySub) : null;
 
+  // Scroll-progress watermark: 0 when the user hasn't started, 0..100
+  // otherwise. Cards transition into the "in-progress" treatment between
+  // 1% and 99% — the read-state badge takes over at 100%.
+  const scrollPercent = useMaterialProgress(card.slug);
+  const inProgress = !read && scrollPercent > 0 && scrollPercent < 100;
+
   return (
     <Pressable
       onPress={() => {
@@ -46,8 +53,9 @@ export function CoverCard({ card, read, onPress }: Props) {
       }}
       style={({ pressed }) => [styles.root, pressed && styles.pressed]}
     >
-      {/* The 2:3 cover */}
-      <View style={styles.cover}>
+      {/* The 2:3 cover — picks up a gold rim + glow when the user has
+         started but not finished. */}
+      <View style={[styles.cover, inProgress && styles.coverInProgress]}>
         <MaterialCover
           dimensionId={card.dimension_id}
           subId={primarySub ?? null}
@@ -80,6 +88,24 @@ export function CoverCard({ card, read, onPress }: Props) {
         {read && (
           <View style={styles.readBadge}>
             <Ionicons name="checkmark" size={12} color="#FFFFFF" />
+          </View>
+        )}
+
+        {/* Bottom progress bar — gold gradient, only on in-progress cards.
+           Lives inside the cover so it tracks the rounded clip. */}
+        {inProgress && (
+          <View style={styles.progressTrack}>
+            <View
+              style={[styles.progressFillWrap, { width: `${scrollPercent}%` }]}
+            >
+              <LinearGradient
+                colors={tokens.gradient.rewardBarFill}
+                locations={tokens.gradient.rewardBarFillLocations}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={StyleSheet.absoluteFillObject}
+              />
+            </View>
           </View>
         )}
       </View>
@@ -117,6 +143,8 @@ const styles = StyleSheet.create({
     width: COVER_WIDTH,
     height: COVER_HEIGHT,
     borderRadius: tokens.radius.md,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
     overflow: 'hidden',
     position: 'relative',
     // Subtle elevation — matches the design's `0 8px 18px rgba(0,0,0,0.35)`.
@@ -125,6 +153,29 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.35,
     shadowRadius: 18,
     elevation: 8,
+  },
+  /** Gold rim + glow when the user has scrolled but not finished. Mirrors
+   *  the affordable Vault card treatment so the brand vocabulary stays
+   *  consistent across the app. */
+  coverInProgress: {
+    borderColor: 'rgba(255, 200, 61, 0.45)',
+    shadowColor: '#FFC83D',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.18,
+    shadowRadius: 22,
+    elevation: 10,
+  },
+  progressTrack: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 3,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+  },
+  progressFillWrap: {
+    height: '100%',
+    overflow: 'hidden',
   },
   bottomFade: {
     position: 'absolute',
