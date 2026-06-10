@@ -137,6 +137,69 @@ const pt: Translations = {
     settings: 'Ajustes',
   },
 
+  // Post-login product tour (M0 → Wrap-up). Pre-login slides live above
+  // under `onboarding`. Keep the namespaces separate — same shape, two
+  // different gating concerns.
+  tour: {
+    common: {
+      next: 'Próximo',
+      skipModule: 'Pular este módulo',
+      skipStep: 'Pular este passo',
+      tryIt: 'Faça isso pra continuar',
+    },
+    m1: {
+      step1: {
+        title: 'Suas tarefas do dia',
+        body: 'Essas são as 3 tarefas que você escolheu. Toque numa delas pra explorar — depois volte aqui.',
+      },
+      step2: {
+        title: 'Por que vale',
+        body: 'No detalhe você vê quais áreas a tarefa treina e quanta Dedicação ela rende.',
+      },
+      step3: {
+        title: 'Pressione e segure',
+        body: 'Mantenha o dedo numa tarefa pra abrir o menu: ajustar estrelas, pular o dia ou editar.',
+      },
+      step4: {
+        title: 'Marcar como feita',
+        body: 'Toque no check pra registrar a prática. É o gesto que move tudo aqui.',
+      },
+      step5: {
+        title: 'Sua identidade praticada',
+        body: 'Cada ação fortalece áreas específicas. Você vai vendo isso crescer com o tempo.',
+      },
+      step6: {
+        title: 'Concluídas hoje',
+        body: 'Role até o fim da lista. Tem um painel das tarefas feitas hoje — caso queira desfazer alguma.',
+      },
+    },
+    m0: {
+      eyebrow: 'TOUR',
+      title: 'Bem-vindo, {{name}}.',
+      body: 'Vamos fazer um tour rápido pelas partes principais do app. Se quiser pular algo, pode revisitar depois em Ajustes.',
+      primary: 'Começar',
+      secondary: 'Pular',
+    },
+    m0_5: {
+      eyebrow: 'POR ONDE COMEÇAR',
+      title: 'Escolha 3 tarefas pra começar',
+      body: 'Pegue 3 práticas pra cultivar nas próximas semanas. Você pode trocar e adicionar mais quando quiser.',
+      counter: '{{count}} de {{target}} selecionadas',
+      primary: 'Continuar',
+      secondary: 'Pular esta etapa',
+      skipFallbackHint: 'Vamos adicionar 3 tarefas padrão pra você começar.',
+    },
+    wrap: {
+      eyebrow: 'PRONTO',
+      title: 'Tudo certo.',
+      body: 'O tour é só o começo. O que faz diferença é o que você pratica. Cada tarefa marcada é um voto em quem você quer se tornar. Pode revisitar qualquer módulo em Ajustes.',
+      primary: 'Começar a praticar',
+    },
+    errors: {
+      adopt: 'Não foi possível adicionar as tarefas. Tente de novo.',
+    },
+  },
+
   learning: {
     eyebrow: 'Biblioteca · Sua via',
     title: 'Cantinho de leitura',

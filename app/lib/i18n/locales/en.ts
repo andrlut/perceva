@@ -147,6 +147,66 @@ const en = {
     settings: 'Settings',
   },
 
+  tour: {
+    common: {
+      next: 'Next',
+      skipModule: 'Skip this module',
+      skipStep: 'Skip this step',
+      tryIt: 'Try it to continue',
+    },
+    m1: {
+      step1: {
+        title: 'Your tasks for today',
+        body: 'These are the 3 tasks you picked. Tap one to explore — then come back here.',
+      },
+      step2: {
+        title: 'Why it counts',
+        body: 'On the detail screen you can see which areas the task trains and how much Dedication it pays.',
+      },
+      step3: {
+        title: 'Press and hold',
+        body: 'Long-press a task to open the menu: adjust stars, skip today, or edit.',
+      },
+      step4: {
+        title: 'Mark as done',
+        body: 'Tap the check to log a completion. This is the gesture that drives everything here.',
+      },
+      step5: {
+        title: 'Identity in practice',
+        body: 'Each action strengthens specific areas. You can watch this grow over time.',
+      },
+      step6: {
+        title: 'Done today',
+        body: "Scroll to the end of the list. There's a panel of what you finished today — in case you want to undo something.",
+      },
+    },
+    m0: {
+      eyebrow: 'TOUR',
+      title: 'Welcome, {{name}}.',
+      body: "Let's run a quick tour through the main parts of the app. You can skip anything and revisit it later from Settings.",
+      primary: 'Start',
+      secondary: 'Skip',
+    },
+    m0_5: {
+      eyebrow: 'WHERE TO START',
+      title: 'Pick 3 tasks to begin',
+      body: 'Choose 3 practices to cultivate over the next few weeks. You can swap or add more whenever you want.',
+      counter: '{{count}} of {{target}} selected',
+      primary: 'Continue',
+      secondary: 'Skip this step',
+      skipFallbackHint: "We'll add 3 default tasks so you have something to start with.",
+    },
+    wrap: {
+      eyebrow: 'READY',
+      title: 'All set.',
+      body: 'The tour is just the start. What makes a difference is what you practice. Every task you check off is a vote for who you want to become. You can revisit any module from Settings.',
+      primary: 'Start practicing',
+    },
+    errors: {
+      adopt: "Couldn't add the tasks. Try again.",
+    },
+  },
+
   learning: {
     eyebrow: 'Library · Your path',
     title: 'Reading nook',

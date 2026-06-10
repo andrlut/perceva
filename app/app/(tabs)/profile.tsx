@@ -27,6 +27,7 @@ import {
   type WeekStart,
 } from '@/lib/settings';
 import { supabase } from '@/lib/supabase';
+import { useTourStore } from '@/lib/tour/store';
 import { confirmAction, showInfo } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 
@@ -37,6 +38,7 @@ export default function SettingsScreen() {
   const character = useCharacter();
   const session = useSession();
   const resetOnboarding = useOnboardingStore((s) => s.reset);
+  const resetTour = useTourStore((s) => s.resetAll);
   const settings = useLoadedSettings();
   const setSetting = useSettingsStore((s) => s.set);
   const { t } = useT();
@@ -79,7 +81,11 @@ export default function SettingsScreen() {
   };
 
   const handleReplayOnboarding = async () => {
-    await resetOnboarding();
+    // Temporary catch-all: also resets every post-login tour module so
+    // the user is dropped back at M0 right after the pre-login slides.
+    // When we add a per-module "Refazer X" Settings list, this should
+    // narrow to the slides-only reset.
+    await Promise.all([resetOnboarding(), resetTour()]);
     router.push('/onboarding');
   };
 

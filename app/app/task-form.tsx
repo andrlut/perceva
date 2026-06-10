@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -17,6 +17,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { RecurrencePicker } from '@/components/RecurrencePicker';
 import { SubPicker } from '@/components/SubPicker';
+import { TourModule } from '@/components/tour/TourModule';
+import { buildM1Steps } from '@/lib/tour/m1Steps';
+import { useTourStore } from '@/lib/tour/store';
+import { useT } from '@/lib/i18n';
 import { SUB_META } from '@/theme/dimensions';
 import {
   useArchiveTask,
@@ -100,7 +104,28 @@ const TASK_ICON_CHOICES = [
 
 export default function TaskFormScreen() {
   const router = useRouter();
+  const { t } = useT();
   const params = useLocalSearchParams<{ id?: string; from_template?: string }>();
+
+  // Auto-advance M1 when the user leaves this screen without acting on
+  // the tooltip. Covers the screen's own X, save, archive, hardware
+  // back — any path that closes the form while M1 step 2 (which lives
+  // on this screen) is still the current step. Without this the tour
+  // gets stranded: state stays at "step 2 on detail" but no detail is
+  // mounted, so nothing renders and the user reads it as "tour ended".
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        const state = useTourStore.getState();
+        const stepIdx = state.stepIndices.M1 ?? 0;
+        const m1Status = state.modules.M1?.status;
+        // step index 1 == M1 step 2 (the only detail-screen step)
+        if (m1Status === 'in_progress' && stepIdx === 1) {
+          state.setStepIndex('M1', stepIdx + 1);
+        }
+      };
+    }, []),
+  );
   const isEdit = !!params.id;
   const fromTemplateId = params.from_template;
 
@@ -466,6 +491,19 @@ export default function TaskFormScreen() {
           )}
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Post-login tour — M1 step 2 lives here (detail screen). The
+         module is also mounted on Home for steps 1, 3, 4, 5; the
+         shared step index in the tour store routes each step to the
+         right surface. Tapping Próximo OR X closes the detail screen
+         so the next step (which lives on Home) is reachable without
+         the user manually backing out. */}
+      <TourModule
+        module="M1"
+        screen="detail"
+        steps={buildM1Steps(t)}
+        onExitScreen={() => router.back()}
+      />
     </SafeAreaView>
   );
 }

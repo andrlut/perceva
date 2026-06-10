@@ -29,6 +29,10 @@ import { useCharacter } from '@/lib/api/character';
 import { useT } from '@/lib/i18n';
 import { useTrackedReward } from '@/lib/api/rewards';
 import { useLoadedSettings } from '@/lib/settings';
+import { TourModule } from '@/components/tour/TourModule';
+import { emitTourEvent } from '@/lib/tour/eventBus';
+import { buildM1Steps, M1_EVENTS } from '@/lib/tour/m1Steps';
+import { useActiveTourStep } from '@/lib/tour/store';
 import {
   useActiveTasks,
   useCompleteTask,
@@ -98,7 +102,17 @@ export default function HomeScreen() {
   const [floats, setFloats] = useState<FloatItem[]>([]);
   const [actionTask, setActionTask] = useState<TaskWithSubs | null>(null);
   const [sheetTask, setSheetTask] = useState<TaskWithSubs | null>(null);
-  const bottomClearance = useBottomNavClearance();
+  const navClearance = useBottomNavClearance();
+  // While a bottom-positioned tour tooltip is visible, the Home scroll
+  // needs extra room so the user can scroll content above the overlay
+  // — but only just enough that the relevant section (e.g. M1 step 5
+  // "Concluídas hoje" drawer) settles in the open space JUST above
+  // the tooltip card. 160px ≈ card height minus the navbar already
+  // baked into navClearance; matches the visible gap users expected
+  // when testing M1 step 5.
+  const activeTourStep = useActiveTourStep();
+  const tourBottomBump = activeTourStep?.position === 'bottom' ? 160 : 0;
+  const bottomClearance = navClearance + tourBottomBump;
 
   // ── Mutation handlers ─────────────────────────────────────────────────
   const fireCompletion = (task: TaskWithSubs, subs: TaskSub[]) => {
@@ -116,6 +130,9 @@ export default function HomeScreen() {
     completeTask.mutate(
       { task, subs },
       {
+        onSuccess: () => {
+          emitTourEvent(M1_EVENTS.TASK_COMPLETED);
+        },
         onError: (err) => {
           const e = err as { message?: string; code?: string; details?: string };
           console.error('[complete_task] failed', e);
@@ -136,6 +153,7 @@ export default function HomeScreen() {
   const handleLongPress = (task: TaskWithSubs) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     setActionTask(task);
+    emitTourEvent(M1_EVENTS.TASK_LONG_PRESSED);
   };
 
   const handleSheetConfirm = (subs: TaskSub[]) => {
@@ -437,9 +455,10 @@ export default function HomeScreen() {
                     onLongPress={() => handleLongPress(task)}
                     onSkip={() => handleSwipeSkip(task)}
                     onSwipeComplete={() => setSheetTask(task)}
-                    onEdit={() =>
-                      router.push({ pathname: '/task-form', params: { id: task.id } })
-                    }
+                    onEdit={() => {
+                      emitTourEvent(M1_EVENTS.TASK_TAPPED);
+                      router.push({ pathname: '/task-form', params: { id: task.id } });
+                    }}
                   />
                 ))
               )}
@@ -455,6 +474,9 @@ export default function HomeScreen() {
                 title={completedBucketTitle}
                 onUndo={handleUndo}
                 onExtra={(task) => handleQuickComplete(task)}
+                onToggle={(open) => {
+                  if (open) emitTourEvent(M1_EVENTS.DRAWER_EXPANDED);
+                }}
               />
               <CompletedBucket
                 items={skippedTodayItems}
@@ -527,6 +549,16 @@ export default function HomeScreen() {
         onAdjustStars={handleActionAdjust}
         onSkipToday={handleActionSkip}
         onEdit={handleActionEdit}
+      />
+
+      {/* Post-login tour — M1 (Tasks). Only renders when the user has
+         tasks visible behind the spotlight; gated on M0 already being
+         past so a fresh user goes M0 → M0.5 → Home (with M1 firing).
+         Status flows to `completed` after the 6th step. */}
+      <TourModule
+        module="M1"
+        steps={buildM1Steps(t)}
+        enabled={(allActiveTasks.data?.length ?? 0) > 0}
       />
     </SafeAreaView>
   );
