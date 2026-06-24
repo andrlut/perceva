@@ -34,6 +34,7 @@ import { emitTourEvent } from '@/lib/tour/eventBus';
 import { buildM1Steps, M1_EVENTS } from '@/lib/tour/m1Steps';
 import { buildM2Steps, M2_EVENTS } from '@/lib/tour/m2Steps';
 import { buildM3Steps } from '@/lib/tour/m3Steps';
+import { buildM4Steps } from '@/lib/tour/m4Steps';
 import { useActiveTourStep, useIsCurrentTourModule } from '@/lib/tour/store';
 import {
   useActiveTasks,
@@ -127,6 +128,7 @@ export default function HomeScreen() {
   const isM1Current = useIsCurrentTourModule('M1');
   const isM2Current = useIsCurrentTourModule('M2');
   const isM3Current = useIsCurrentTourModule('M3');
+  const isM4Current = useIsCurrentTourModule('M4');
 
   // Tour auto-scroll on Home:
   //   - M2 step 1 targets the bottom-most "Gerenciar tarefas" button →
@@ -622,6 +624,16 @@ export default function HomeScreen() {
         steps={buildM3Steps(t)}
         enabled={isM3Current}
         onAdvanceToNextScreen={() => router.push('/quests')}
+      />
+
+      {/* M4 step 1 lives here (Rewards bottom-nav tab). Switching to the
+         Rewards tab fires REWARDS_NAVIGATED from that screen; Próximo /
+         skip switches there ourselves so steps 2-3 have their surface. */}
+      <TourModule
+        module="M4"
+        steps={buildM4Steps(t)}
+        enabled={isM4Current}
+        onAdvanceToNextScreen={() => router.navigate('/(tabs)/rewards')}
       />
     </SafeAreaView>
   );

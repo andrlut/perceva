@@ -216,6 +216,20 @@ const en = {
         body: "See what it asks — completing tasks, keeping a streak, or hitting a value. Accept whenever you're ready; after that the progress moves on its own with your tasks. For now, you can head back without accepting.",
       },
     },
+    m4: {
+      step1: {
+        title: 'Rewards',
+        body: 'Real rewards you define to celebrate your practice. Tap the Rewards tab to see them.',
+      },
+      step2: {
+        title: 'Your coins',
+        body: 'This is your balance, earned by completing tasks. Your rewards live here — for now, scroll down to the ready-made suggestions below.',
+      },
+      step3: {
+        title: 'Redeem and bank',
+        body: 'Suggestions like a movie, a dinner, or some rest. Each costs coins: you redeem it to your bank and use it whenever you like — or refund it, and the coins come back.',
+      },
+    },
     m0: {
       eyebrow: 'TOUR',
       title: 'Welcome, {{name}}.',

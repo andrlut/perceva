@@ -209,6 +209,20 @@ const pt: Translations = {
         body: 'Veja o que ela pede — completar tarefas, manter dias ou atingir um valor. Aceite quando quiser; depois o progresso anda sozinho com suas tarefas. Por ora, pode voltar sem aceitar.',
       },
     },
+    m4: {
+      step1: {
+        title: 'Recompensas',
+        body: 'Recompensas reais que você define pra celebrar suas práticas. Toque na aba Recompensas pra ver.',
+      },
+      step2: {
+        title: 'Suas moedas',
+        body: 'Esse é seu saldo, ganho completando tarefas. Suas recompensas ficam aqui — por enquanto, role até as sugestões prontas logo abaixo.',
+      },
+      step3: {
+        title: 'Resgate e banco',
+        body: 'Sugestões como um filme, um jantar ou um descanso. Cada uma custa moedas: você resgata pro seu banco e usa quando quiser — ou refunda, e as moedas voltam.',
+      },
+    },
     m0: {
       eyebrow: 'TOUR',
       title: 'Bem-vindo, {{name}}.',
