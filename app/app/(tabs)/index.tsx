@@ -33,6 +33,7 @@ import { TourModule } from '@/components/tour/TourModule';
 import { emitTourEvent } from '@/lib/tour/eventBus';
 import { buildM1Steps, M1_EVENTS } from '@/lib/tour/m1Steps';
 import { buildM2Steps, M2_EVENTS } from '@/lib/tour/m2Steps';
+import { buildM3Steps } from '@/lib/tour/m3Steps';
 import { useActiveTourStep, useIsCurrentTourModule } from '@/lib/tour/store';
 import {
   useActiveTasks,
@@ -125,15 +126,26 @@ export default function HomeScreen() {
   const bottomClearance = navClearance + tourBottomBump;
   const isM1Current = useIsCurrentTourModule('M1');
   const isM2Current = useIsCurrentTourModule('M2');
+  const isM3Current = useIsCurrentTourModule('M3');
 
-  // When M2 step 1 appears, auto-scroll to the end so its target (the
-  // bottom-most "Gerenciar tarefas" button) settles into the gap above
-  // the tooltip instead of hiding behind it.
+  // Tour auto-scroll on Home:
+  //   - M2 step 1 targets the bottom-most "Gerenciar tarefas" button →
+  //     scroll to the END so it settles in the gap above the tooltip.
+  //   - M3 step 1 targets the quest chips strip near the TOP → scroll to
+  //     the top so the strip is in view (the user may be scrolled down
+  //     after finishing M2 on the create form).
   const scrollRef = useRef<ScrollView>(null);
   useEffect(() => {
     if (activeTourStep?.module === 'M2') {
       const id = setTimeout(
         () => scrollRef.current?.scrollToEnd({ animated: true }),
+        120,
+      );
+      return () => clearTimeout(id);
+    }
+    if (activeTourStep?.module === 'M3') {
+      const id = setTimeout(
+        () => scrollRef.current?.scrollTo({ y: 0, animated: true }),
         120,
       );
       return () => clearTimeout(id);
@@ -600,6 +612,16 @@ export default function HomeScreen() {
         steps={buildM2Steps(t)}
         enabled={isM2Current}
         onAdvanceToNextScreen={() => router.push('/tasks')}
+      />
+
+      {/* M3 step 1 lives here (quest chips strip). Tapping "+ Missões"
+         fires QUESTS_NAVIGATED + navigates; Próximo / skip walks the
+         user to /quests so step 2 has its surface. */}
+      <TourModule
+        module="M3"
+        steps={buildM3Steps(t)}
+        enabled={isM3Current}
+        onAdvanceToNextScreen={() => router.push('/quests')}
       />
     </SafeAreaView>
   );

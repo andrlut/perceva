@@ -195,6 +195,20 @@ const pt: Translations = {
         body: 'Pode fechar sem criar — você já tem suas tarefas iniciais pra praticar. Volta quando quiser criar de verdade.',
       },
     },
+    m3: {
+      step1: {
+        title: 'Missões e Metas',
+        body: 'Aqui em cima ficam atalhos pras suas jornadas. Toque em + Missões pra ver as disponíveis.',
+      },
+      step2: {
+        title: 'Jornadas maiores',
+        body: 'Objetivos que duram dias ou semanas e rendem Dedicação e moedas no fim. Segure uma das disponíveis pra abrir os detalhes.',
+      },
+      step3: {
+        title: 'Os critérios',
+        body: 'Veja o que ela pede — completar tarefas, manter dias ou atingir um valor. Aceite quando quiser; depois o progresso anda sozinho com suas tarefas. Por ora, pode voltar sem aceitar.',
+      },
+    },
     m0: {
       eyebrow: 'TOUR',
       title: 'Bem-vindo, {{name}}.',

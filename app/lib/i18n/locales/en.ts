@@ -202,6 +202,20 @@ const en = {
         body: "Close without creating — you already have your starter tasks to practice. Come back when you actually want to build one.",
       },
     },
+    m3: {
+      step1: {
+        title: 'Quests and Goals',
+        body: 'Up here are shortcuts to your journeys. Tap + Quests to see the ones available.',
+      },
+      step2: {
+        title: 'Bigger journeys',
+        body: 'Objectives that span days or weeks and pay Dedication and coins at the end. Long-press one of the available ones to open its details.',
+      },
+      step3: {
+        title: 'The criteria',
+        body: "See what it asks — completing tasks, keeping a streak, or hitting a value. Accept whenever you're ready; after that the progress moves on its own with your tasks. For now, you can head back without accepting.",
+      },
+    },
     m0: {
       eyebrow: 'TOUR',
       title: 'Welcome, {{name}}.',

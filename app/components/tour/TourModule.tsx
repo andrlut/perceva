@@ -19,6 +19,8 @@ export type TourScreen =
   | 'detail'
   | 'tasks'
   | 'create'
+  | 'quests'
+  | 'quest-detail'
   | 'rewards'
   | 'me'
   | 'learn';
