@@ -75,6 +75,28 @@ const en = {
     archiveFailed: 'Archive failed',
   },
 
+  recurrencePicker: {
+    types: {
+      one_shot: 'One-shot',
+      daily: 'Daily',
+      weekly: 'Weekly',
+      monthly: 'Monthly',
+    },
+    weekdays: 'S,M,T,W,T,F,S',
+    timesPerDay: 'Times per day',
+    timesPerWeek: 'Times per week',
+    timesPerMonth: 'Times per month',
+    times: 'Times',
+    specificDays: 'Specific days (optional)',
+    specificDay: 'Specific day (optional)',
+    weeklyHelper:
+      'Picked days surface in Today as a reminder. Leave empty for pure {{count}}×/week with no day preference.',
+    pickDay: 'Pick a day',
+    dayPrefix: 'Day',
+    monthlyOverflowHelper:
+      'Months without day {{day}} run on the last day of the month instead.',
+  },
+
   auth: {
     brand: {
       title: 'Perceva',

@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import type { Recurrence, RecurrenceType } from '@/lib/db/types';
+import { useT, type TranslateOptions } from '@/lib/i18n';
 import { tokens } from '@/theme';
 
 interface Props {
@@ -13,24 +14,15 @@ interface Props {
 
 const TYPE_OPTIONS: {
   type: RecurrenceType;
-  label: string;
   icon: keyof typeof import('@expo/vector-icons').Ionicons.glyphMap;
 }[] = [
-  { type: 'one_shot', label: 'One-shot', icon: 'flag' },
-  { type: 'daily', label: 'Daily', icon: 'sunny' },
-  { type: 'weekly', label: 'Weekly', icon: 'calendar' },
-  { type: 'monthly', label: 'Monthly', icon: 'calendar-outline' },
+  { type: 'one_shot', icon: 'flag' },
+  { type: 'daily', icon: 'sunny' },
+  { type: 'weekly', icon: 'calendar' },
+  { type: 'monthly', icon: 'calendar-outline' },
 ];
 
-const WEEKDAYS = [
-  { idx: 0, label: 'S' },
-  { idx: 1, label: 'M' },
-  { idx: 2, label: 'T' },
-  { idx: 3, label: 'W' },
-  { idx: 4, label: 'T' },
-  { idx: 5, label: 'F' },
-  { idx: 6, label: 'S' },
-];
+const WEEKDAY_IDX = [0, 1, 2, 3, 4, 5, 6];
 
 function defaultFor(type: RecurrenceType): Recurrence {
   switch (type) {
@@ -45,16 +37,18 @@ function defaultFor(type: RecurrenceType): Recurrence {
   }
 }
 
-function targetLabelFor(type: RecurrenceType): string {
+type Translator = (key: string, options?: TranslateOptions) => string;
+
+function targetLabelFor(type: RecurrenceType, t: Translator): string {
   switch (type) {
     case 'daily':
-      return 'Times per day';
+      return t('recurrencePicker.timesPerDay');
     case 'weekly':
-      return 'Times per week';
+      return t('recurrencePicker.timesPerWeek');
     case 'monthly':
-      return 'Times per month';
+      return t('recurrencePicker.timesPerMonth');
     default:
-      return 'Times';
+      return t('recurrencePicker.times');
   }
 }
 
@@ -72,6 +66,8 @@ export function RecurrencePicker({
   targetCount,
   onChangeTargetCount,
 }: Props) {
+  const { t } = useT();
+  const weekdayLabels = t('recurrencePicker.weekdays').split(',');
   const handleTypeChange = (type: RecurrenceType) => {
     onChange(defaultFor(type));
     if (type === 'one_shot') onChangeTargetCount(1);
@@ -134,7 +130,7 @@ export function RecurrencePicker({
                   { color: selected ? tokens.brand.violet2 : tokens.text.mid },
                 ]}
               >
-                {opt.label}
+                {t(`recurrencePicker.types.${opt.type}` as const)}
               </Text>
             </Pressable>
           );
@@ -144,7 +140,7 @@ export function RecurrencePicker({
       {/* target count — for any non-one_shot */}
       {recurrence.type !== 'one_shot' && (
         <View style={styles.subBlock}>
-          <Text style={styles.subLabel}>{targetLabelFor(recurrence.type)}</Text>
+          <Text style={styles.subLabel}>{targetLabelFor(recurrence.type, t)}</Text>
           <View style={styles.stepperRow}>
             <Pressable
               onPress={() => adjustTarget(-1)}
@@ -177,27 +173,26 @@ export function RecurrencePicker({
       {recurrence.type === 'weekly' && (
         <View style={styles.subBlock}>
           <View style={styles.scheduleHeader}>
-            <Text style={styles.subLabel}>Specific days (optional)</Text>
+            <Text style={styles.subLabel}>{t('recurrencePicker.specificDays')}</Text>
             {weeklyDays.length > 0 && (
               <Pressable
                 onPress={() => onChange({ type: 'weekly' })}
                 hitSlop={6}
               >
-                <Text style={styles.clearBtn}>Clear</Text>
+                <Text style={styles.clearBtn}>{t('common.clear')}</Text>
               </Pressable>
             )}
           </View>
           <Text style={styles.helperText}>
-            Picked days surface in Today as a reminder. Leave empty for
-            pure {targetCount}×/week with no day preference.
+            {t('recurrencePicker.weeklyHelper', { count: targetCount })}
           </Text>
           <View style={styles.dowRow}>
-            {WEEKDAYS.map((d) => {
-              const selected = weeklyDays.includes(d.idx);
+            {WEEKDAY_IDX.map((idx) => {
+              const selected = weeklyDays.includes(idx);
               return (
                 <Pressable
-                  key={d.idx}
-                  onPress={() => toggleDay(d.idx)}
+                  key={idx}
+                  onPress={() => toggleDay(idx)}
                   style={[styles.dowCell, selected && styles.dowCellSelected]}
                 >
                   <Text
@@ -206,7 +201,7 @@ export function RecurrencePicker({
                       { color: selected ? tokens.text.hi : tokens.text.mid },
                     ]}
                   >
-                    {d.label}
+                    {weekdayLabels[idx]}
                   </Text>
                 </Pressable>
               );
@@ -219,10 +214,10 @@ export function RecurrencePicker({
       {recurrence.type === 'monthly' && (
         <View style={styles.subBlock}>
           <View style={styles.scheduleHeader}>
-            <Text style={styles.subLabel}>Specific day (optional)</Text>
+            <Text style={styles.subLabel}>{t('recurrencePicker.specificDay')}</Text>
             {monthlyDay !== undefined && (
               <Pressable onPress={() => setMonthlyDay(null)} hitSlop={6}>
-                <Text style={styles.clearBtn}>Clear</Text>
+                <Text style={styles.clearBtn}>{t('common.clear')}</Text>
               </Pressable>
             )}
           </View>
@@ -232,7 +227,7 @@ export function RecurrencePicker({
               style={styles.setDayBtn}
             >
               <Ionicons name="add" size={16} color={tokens.brand.violet2} />
-              <Text style={styles.setDayText}>Pick a day</Text>
+              <Text style={styles.setDayText}>{t('recurrencePicker.pickDay')}</Text>
             </Pressable>
           ) : (
             <>
@@ -245,7 +240,7 @@ export function RecurrencePicker({
                   <Ionicons name="remove" size={20} color={tokens.text.hi} />
                 </Pressable>
                 <View style={styles.monthDayInputWrap}>
-                  <Text style={styles.monthDayPrefix}>Day</Text>
+                  <Text style={styles.monthDayPrefix}>{t('recurrencePicker.dayPrefix')}</Text>
                   <TextInput
                     value={String(monthlyDay)}
                     onChangeText={(v) => {
@@ -272,8 +267,7 @@ export function RecurrencePicker({
               </View>
               {monthlyDay >= 29 && (
                 <Text style={styles.helperText}>
-                  Months without day {monthlyDay} run on the last day of
-                  the month instead.
+                  {t('recurrencePicker.monthlyOverflowHelper', { day: monthlyDay })}
                 </Text>
               )}
             </>

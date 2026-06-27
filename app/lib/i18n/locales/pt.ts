@@ -65,6 +65,28 @@ const pt: Translations = {
     archiveFailed: 'Falha ao arquivar',
   },
 
+  recurrencePicker: {
+    types: {
+      one_shot: 'Única',
+      daily: 'Diária',
+      weekly: 'Semanal',
+      monthly: 'Mensal',
+    },
+    weekdays: 'D,S,T,Q,Q,S,S',
+    timesPerDay: 'Vezes por dia',
+    timesPerWeek: 'Vezes por semana',
+    timesPerMonth: 'Vezes por mês',
+    times: 'Vezes',
+    specificDays: 'Dias específicos (opcional)',
+    specificDay: 'Dia específico (opcional)',
+    weeklyHelper:
+      'Os dias escolhidos aparecem em Hoje como lembrete. Deixe vazio pra {{count}}×/semana sem preferência de dia.',
+    pickDay: 'Escolher um dia',
+    dayPrefix: 'Dia',
+    monthlyOverflowHelper:
+      'Meses sem o dia {{day}} rodam no último dia do mês.',
+  },
+
   auth: {
     brand: {
       title: 'Perceva',
