@@ -41,6 +41,9 @@ const en = {
     create: 'Create',
     update: 'Update',
     unknownError: 'Unknown error',
+    clear: 'Clear',
+    search: 'Search',
+    gotIt: 'Got it',
   },
 
   taskForm: {
@@ -460,6 +463,8 @@ const en = {
       short: 'Skills',
       long: 'Skills · where I level up',
       identity: 'Desired Identity',
+      viewAll: 'See all skills',
+      count: { one: 'skill', other: 'skills' },
     },
   },
 

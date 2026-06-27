@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { SkillState, SubId } from '@/lib/db/types';
+import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { tokens } from '@/theme';
 
@@ -24,6 +25,7 @@ interface Props {
  */
 export function SkillsPanel({ skills }: Props) {
   const router = useRouter();
+  const { t } = useT();
   const meta = useMetaLookup();
 
   const subRows = useMemo(() => {
@@ -108,7 +110,7 @@ export function SkillsPanel({ skills }: Props) {
         </Text>
         <Text style={styles.footerText}>
           <Text style={styles.footerNum}>{totalSkills}</Text>{' '}
-          {totalSkills === 1 ? 'skill' : 'skills'}
+          {t('pillar.skills.count', { count: totalSkills })}
         </Text>
       </View>
 
@@ -117,7 +119,7 @@ export function SkillsPanel({ skills }: Props) {
         style={({ pressed }) => [styles.cta, pressed && { opacity: 0.85 }]}
         hitSlop={4}
       >
-        <Text style={styles.ctaText}>Ver todas as skills</Text>
+        <Text style={styles.ctaText}>{t('pillar.skills.viewAll')}</Text>
         <Ionicons name="arrow-forward" size={14} color={tokens.semantic.coin} />
       </Pressable>
     </View>

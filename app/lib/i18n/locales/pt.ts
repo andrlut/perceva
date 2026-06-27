@@ -31,6 +31,9 @@ const pt: Translations = {
     create: 'Criar',
     update: 'Atualizar',
     unknownError: 'Erro desconhecido',
+    clear: 'Limpar',
+    search: 'Buscar',
+    gotIt: 'Entendi',
   },
 
   taskForm: {
@@ -453,6 +456,8 @@ const pt: Translations = {
       short: 'Skills',
       long: 'Skills · onde eu evoluo',
       identity: 'Identidade Desejada',
+      viewAll: 'Ver todas as skills',
+      count: { one: 'skill', other: 'skills' },
     },
   },
 
