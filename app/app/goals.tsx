@@ -124,8 +124,8 @@ export default function GoalsBoardScreen() {
       console.error('[start_quest_from_template] failed', err);
       const msg =
         [err.message, err.code, err.details, err.hint].filter(Boolean).join('\n') ||
-        'Unknown error';
-      showInfo('Could not start goal', msg);
+        t('common.unknownError');
+      showInfo(t('goals.errStart'), msg);
     } finally {
       setBusyId(null);
     }
@@ -139,8 +139,11 @@ export default function GoalsBoardScreen() {
         () => {},
       );
       showInfo(
-        'Goal complete!',
-        `+${result.reward_xp} XP and +${result.reward_coins} coins.`,
+        t('goals.completeTitle'),
+        t('goals.completeBody', {
+          xp: result.reward_xp,
+          coins: result.reward_coins,
+        }),
       );
     } catch (e) {
       const err = e as {
@@ -152,8 +155,8 @@ export default function GoalsBoardScreen() {
       console.error('[complete_quest] failed', err);
       const msg =
         [err.message, err.code, err.details, err.hint].filter(Boolean).join('\n') ||
-        'Unknown error';
-      showInfo('Could not claim', msg);
+        t('common.unknownError');
+      showInfo(t('goals.errClaim'), msg);
     } finally {
       setBusyId(null);
     }
@@ -194,7 +197,7 @@ export default function GoalsBoardScreen() {
           style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.6 }]}
           hitSlop={10}
           accessibilityRole="button"
-          accessibilityLabel="Close"
+          accessibilityLabel={t('common.close')}
         >
           <Ionicons name="close" size={16} color={tokens.text.mid} />
         </Pressable>

@@ -999,6 +999,25 @@ const en = {
     },
   },
 
+  dimensionScreen: {
+    topTitle: 'Dimension',
+    eyebrow: 'DIMENSION',
+    yourLevel: 'Your level',
+    xpTotal: '{{xp}} XP total',
+    twoFaces: 'TWO FACES',
+    unknown: 'Unknown dimension.',
+    unknownSub: 'Unknown sub.',
+  },
+
+  historyScreen: {
+    eyebrow: 'HISTORY',
+    title: 'Your trail',
+    errUndo: 'Could not undo',
+    errLog: 'Could not log',
+    errSkip: 'Could not skip',
+    errUnskip: 'Could not unskip',
+  },
+
   character: {
     title: 'Character',
     level: 'Level',
@@ -1345,6 +1364,11 @@ const en = {
   quests: {
     title: 'Quests',
     new: 'New quest',
+    errStart: 'Could not start quest',
+    errClaim: 'Could not claim',
+    errAbandon: 'Could not abandon',
+    completeTitle: 'Quest complete!',
+    completeBody: '+{{xp}} XP and +{{coins}} coins.',
     sections: {
       active: 'Active',
       completed: 'Completed',
@@ -1447,6 +1471,10 @@ const en = {
       createCta: 'Create goal',
     },
     empty: 'No goals yet. Pick one from the categories above.',
+    errStart: 'Could not start goal',
+    errClaim: 'Could not claim',
+    completeTitle: 'Goal complete!',
+    completeBody: '+{{xp}} XP and +{{coins}} coins.',
   },
 
   selfAssessment: {

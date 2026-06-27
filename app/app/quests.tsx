@@ -131,7 +131,7 @@ export default function QuestBoardScreen() {
       const msg =
         [err.message, err.code, err.details, err.hint].filter(Boolean).join('\n') ||
         'Unknown error';
-      showInfo('Could not start quest', msg);
+      showInfo(t('quests.errStart'), msg);
     } finally {
       setBusyId(null);
     }
@@ -145,8 +145,11 @@ export default function QuestBoardScreen() {
         () => {},
       );
       showInfo(
-        'Quest complete!',
-        `+${result.reward_xp} XP and +${result.reward_coins} coins.`,
+        t('quests.completeTitle'),
+        t('quests.completeBody', {
+          xp: result.reward_xp,
+          coins: result.reward_coins,
+        }),
       );
     } catch (e) {
       const err = e as {
@@ -159,7 +162,7 @@ export default function QuestBoardScreen() {
       const msg =
         [err.message, err.code, err.details, err.hint].filter(Boolean).join('\n') ||
         'Unknown error';
-      showInfo('Could not claim', msg);
+      showInfo(t('quests.errClaim'), msg);
     } finally {
       setBusyId(null);
     }
@@ -202,7 +205,7 @@ export default function QuestBoardScreen() {
           style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.6 }]}
           hitSlop={10}
           accessibilityRole="button"
-          accessibilityLabel="Close"
+          accessibilityLabel={t('common.close')}
         >
           <Ionicons name="close" size={16} color={tokens.text.mid} />
         </Pressable>

@@ -992,6 +992,25 @@ const pt: Translations = {
     },
   },
 
+  dimensionScreen: {
+    topTitle: 'Dimensão',
+    eyebrow: 'DIMENSÃO',
+    yourLevel: 'Seu nível',
+    xpTotal: '{{xp}} XP no total',
+    twoFaces: 'DUAS FACES',
+    unknown: 'Dimensão desconhecida.',
+    unknownSub: 'Sub desconhecido.',
+  },
+
+  historyScreen: {
+    eyebrow: 'HISTÓRICO',
+    title: 'Sua trilha',
+    errUndo: 'Não foi possível desfazer',
+    errLog: 'Não foi possível registrar',
+    errSkip: 'Não foi possível pular',
+    errUnskip: 'Não foi possível retomar',
+  },
+
   character: {
     title: 'Personagem',
     level: 'Nível',
@@ -1342,6 +1361,11 @@ const pt: Translations = {
   quests: {
     title: 'Missões',
     new: 'Nova missão',
+    errStart: 'Não foi possível começar a missão',
+    errClaim: 'Não foi possível resgatar',
+    errAbandon: 'Não foi possível abandonar',
+    completeTitle: 'Missão concluída!',
+    completeBody: '+{{xp}} XP e +{{coins}} moedas.',
     sections: {
       active: 'Ativas',
       completed: 'Concluídas',
@@ -1444,6 +1468,10 @@ const pt: Translations = {
       createCta: 'Criar meta',
     },
     empty: 'Sem metas ainda. Escolha uma das categorias acima.',
+    errStart: 'Não foi possível começar a meta',
+    errClaim: 'Não foi possível resgatar',
+    completeTitle: 'Meta concluída!',
+    completeBody: '+{{xp}} XP e +{{coins}} moedas.',
   },
 
   selfAssessment: {

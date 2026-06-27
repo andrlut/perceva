@@ -207,7 +207,7 @@ export default function QuestDetailScreen() {
       showInfo(
         'Could not start quest',
         [err.message, err.code, err.details, err.hint].filter(Boolean).join('\n') ||
-          'Unknown error',
+          t('common.unknownError'),
       );
     }
   };
@@ -226,7 +226,7 @@ export default function QuestDetailScreen() {
       router.back();
     } catch (e) {
       const err = e as { message?: string };
-      showInfo('Could not abandon', err.message ?? 'Unknown error');
+      showInfo(t('quests.errAbandon'), err.message ?? t('common.unknownError'));
     }
   };
 
@@ -250,7 +250,7 @@ export default function QuestDetailScreen() {
       showInfo(
         t('quests.detail.logFail'),
         [err.message, err.code, err.details, err.hint].filter(Boolean).join('\n') ||
-          'Unknown error',
+          t('common.unknownError'),
       );
     }
   };
@@ -260,11 +260,14 @@ export default function QuestDetailScreen() {
     try {
       const r = await completeQuest.mutateAsync(quest.quest.id);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-      showInfo('Quest complete!', `+${r.reward_xp} XP and +${r.reward_coins} coins.`);
+      showInfo(
+        t('quests.completeTitle'),
+        t('quests.completeBody', { xp: r.reward_xp, coins: r.reward_coins }),
+      );
       router.back();
     } catch (e) {
       const err = e as { message?: string };
-      showInfo('Could not claim', err.message ?? 'Unknown error');
+      showInfo(t('quests.errClaim'), err.message ?? t('common.unknownError'));
     }
   };
 
