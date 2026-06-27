@@ -81,9 +81,9 @@ export default function DimensionInfoScreen() {
       <SafeAreaView style={styles.safe}>
         <Stack.Screen options={{ headerShown: false }} />
         <View style={styles.errorBox}>
-          <Text style={styles.errorText}>Unknown dimension.</Text>
+          <Text style={styles.errorText}>{t('dimensionScreen.unknown')}</Text>
           <Pressable style={styles.closeBtn} onPress={() => router.back()}>
-            <Text style={styles.closeText}>Close</Text>
+            <Text style={styles.closeText}>{t('common.close')}</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -109,7 +109,7 @@ export default function DimensionInfoScreen() {
         {/* ── Top bar ─────────────────────────────────────── */}
         <View style={styles.topBar}>
           <View style={{ width: 40 }} />
-          <Text style={styles.topTitle}>Dimension</Text>
+          <Text style={styles.topTitle}>{t('dimensionScreen.topTitle')}</Text>
           <Pressable
             hitSlop={12}
             onPress={() => router.back()}
@@ -125,7 +125,7 @@ export default function DimensionInfoScreen() {
         >
           {/* ── Eyebrow ─────────────────────────────────────── */}
           <Text style={[styles.dimEyebrow, { color: meta.color }]}>
-            DIMENSION · {meta.label.toUpperCase()}
+            {t('dimensionScreen.eyebrow')} · {meta.label.toUpperCase()}
           </Text>
 
           {/* ── Heraldic crest ──────────────────────────────── */}
@@ -153,7 +153,7 @@ export default function DimensionInfoScreen() {
           >
             <View style={styles.statRow}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.statLabel}>Your level</Text>
+                <Text style={styles.statLabel}>{t('dimensionScreen.yourLevel')}</Text>
                 <Text style={styles.statSub}>
                   {lp.xpInLevel} / {lp.xpNeededForLevel} XP to LV{' '}
                   {lp.level + 1}
@@ -170,7 +170,9 @@ export default function DimensionInfoScreen() {
               color={meta.color}
               height={8}
             />
-            <Text style={styles.statTotal}>{xp.toLocaleString()} XP total</Text>
+            <Text style={styles.statTotal}>
+              {t('dimensionScreen.xpTotal', { xp: xp.toLocaleString() })}
+            </Text>
           </View>
 
           {/* ── Spine header ───────────────────────────────── */}
@@ -179,7 +181,7 @@ export default function DimensionInfoScreen() {
               style={[styles.spineRule, { backgroundColor: `${meta.color}66` }]}
             />
             <Text style={[styles.spineLabel, { color: meta.color }]}>
-              ⟢ DUAS FACES ⟣
+              ⟢ {t('dimensionScreen.twoFaces')} ⟣
             </Text>
             <View
               style={[styles.spineRule, { backgroundColor: `${meta.color}66` }]}

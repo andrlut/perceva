@@ -186,7 +186,7 @@ export default function HistoryScreen() {
     undoCompletion.mutate(completionId, {
       onError: (err) => {
         const e = err as { message?: string };
-        showInfo('Could not undo', e.message ?? 'Unknown error.');
+        showInfo(t('historyScreen.errUndo'), e.message ?? t('common.unknownError'));
       },
     });
   };
@@ -223,7 +223,7 @@ export default function HistoryScreen() {
       {
         onError: (err) => {
           const e = err as { message?: string };
-          showInfo('Could not log', e.message ?? 'Unknown error.');
+          showInfo(t('historyScreen.errLog'), e.message ?? t('common.unknownError'));
         },
       },
     );
@@ -266,7 +266,7 @@ export default function HistoryScreen() {
         onSuccess: () => day.refetch(),
         onError: (err) => {
           const e = err as { message?: string };
-          showInfo('Could not skip', e.message ?? 'Unknown error.');
+          showInfo(t('historyScreen.errSkip'), e.message ?? t('common.unknownError'));
         },
       },
     );
@@ -279,7 +279,7 @@ export default function HistoryScreen() {
         onSuccess: () => day.refetch(),
         onError: (err) => {
           const e = err as { message?: string };
-          showInfo('Could not unskip', e.message ?? 'Unknown error.');
+          showInfo(t('historyScreen.errUnskip'), e.message ?? t('common.unknownError'));
         },
       },
     );
@@ -327,8 +327,8 @@ export default function HistoryScreen() {
             <Ionicons name="chevron-back" size={22} color={tokens.text.hi} />
           </Pressable>
           <View style={{ flex: 1 }}>
-            <Text style={styles.eyebrow}>HISTORY</Text>
-            <Text style={styles.title}>Your trail</Text>
+            <Text style={styles.eyebrow}>{t('historyScreen.eyebrow')}</Text>
+            <Text style={styles.title}>{t('historyScreen.title')}</Text>
           </View>
           <Pressable
             onPress={() => setCalendarOpen(true)}
@@ -378,7 +378,7 @@ export default function HistoryScreen() {
             <Text style={styles.dayLabel}>{formatDay(selected)}</Text>
             {!isToday && (
               <Pressable onPress={() => setSelected(startOfDay(new Date()))}>
-                <Text style={styles.todayLink}>Today</Text>
+                <Text style={styles.todayLink}>{t('common.today')}</Text>
               </Pressable>
             )}
           </View>

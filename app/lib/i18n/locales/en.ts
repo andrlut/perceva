@@ -40,6 +40,84 @@ const en = {
     unarchive: 'Unarchive',
     create: 'Create',
     update: 'Update',
+    unknownError: 'Unknown error',
+    clear: 'Clear',
+    search: 'Search',
+    gotIt: 'Got it',
+    trend: 'TREND',
+  },
+
+  taskForm: {
+    newTitle: 'New task',
+    editTitle: 'Edit task',
+    titleLabel: 'Title',
+    titlePlaceholder: 'Morning routine, 20 push-ups, …',
+    descLabel: 'Description (optional)',
+    descPlaceholder: 'Notes, reminders…',
+    iconLabel: 'Icon',
+    iconHint:
+      'Pick the glyph the card shows. Leave on default to inherit from the primary sub.',
+    iconAutoA11y: 'Use primary sub icon',
+    subsLabel: 'Sub-dimensions + stars',
+    subsHint:
+      'Pick which subs this task contributes to and how heavy each effort is. Per-sub stars cap at 5 — distribute honestly.',
+    recurrenceLabel: 'How often',
+    archiveBtn: 'Archive task',
+    breakWarning:
+      'Editing the title, description or subs unlinks this task from the template — it becomes your own creation. Changing only the periodicity keeps the link.',
+    titleRequired: 'Title required',
+    titleRequiredBody: 'Give your task a title.',
+    subRequired: 'Pick at least one sub',
+    subRequiredBody:
+      'Tasks contribute to one or more sub-dimensions. Pick the ones this task touches and how many stars each gets.',
+    saveFailed: 'Save failed',
+    archiveConfirmTitle: 'Archive task?',
+    archiveConfirmBody: 'Archived tasks stop appearing on Home.',
+    archiveFailed: 'Archive failed',
+  },
+
+  recurrencePicker: {
+    types: {
+      one_shot: 'One-shot',
+      daily: 'Daily',
+      weekly: 'Weekly',
+      monthly: 'Monthly',
+    },
+    weekdays: 'S,M,T,W,T,F,S',
+    timesPerDay: 'Times per day',
+    timesPerWeek: 'Times per week',
+    timesPerMonth: 'Times per month',
+    times: 'Times',
+    specificDays: 'Specific days (optional)',
+    specificDay: 'Specific day (optional)',
+    weeklyHelper:
+      'Picked days surface in Today as a reminder. Leave empty for pure {{count}}×/week with no day preference.',
+    pickDay: 'Pick a day',
+    dayPrefix: 'Day',
+    monthlyOverflowHelper:
+      'Months without day {{day}} run on the last day of the month instead.',
+  },
+
+  usernameModal: {
+    title: 'Username',
+    label: 'What should we call you?',
+    placeholder: 'Adventurer',
+    hint: 'This is the name shown on your character header and greetings. {{count}} characters left.',
+    saveError: 'Could not save',
+  },
+
+  calendarModal: {
+    title: 'Calendar',
+    legendSelected: 'Selected',
+    legendActivity: 'Activity',
+  },
+
+  trackPicker: {
+    title: 'Pick one to track',
+    subtitle:
+      "Tap a reward to keep it close. We'll show progress at the top of your shop.",
+    emptyTitle: 'No rewards yet',
+    emptyBody: 'Add a reward to your shop first, then come back to track it.',
   },
 
   auth: {
@@ -430,6 +508,8 @@ const en = {
       short: 'Skills',
       long: 'Skills · where I level up',
       identity: 'Desired Identity',
+      viewAll: 'See all skills',
+      count: { one: 'skill', other: 'skills' },
     },
   },
 
@@ -503,6 +583,16 @@ const en = {
       archiveConfirmTitle: 'Archive reward?',
       archiveConfirmBody: 'It will no longer appear on Rewards.',
       archiveOk: 'Archive',
+      newTitle: 'New reward',
+      editTitle: 'Edit reward',
+      categoryLabel: 'Category',
+      titleLabel: 'Title',
+      titlePlaceholder: '1 hour of gaming',
+      descLabel: 'Description (optional)',
+      descPlaceholder: 'What it really means…',
+      costLabel: 'Cost (coins)',
+      iconLabel: 'Icon',
+      archiveBtn: 'Archive reward',
     },
   },
 
@@ -541,6 +631,21 @@ const en = {
       tiersAscendBody: '{{tier}} threshold ({{value}}) must be greater than {{prevTier}} ({{prevValue}}).',
       badPercentileTitle: 'Bad percentile',
       badPercentileBody: 'Tier {{tier}}: percentile must be 0–100 or empty.',
+      createFail: 'Could not create skill',
+    },
+    detail: {
+      invalidValue: 'Invalid value',
+      invalidValueBody: 'Enter a number of {{unit}}.',
+      tierUp: 'Tier up!',
+      tierUpBody: 'You reached {{tier}} in {{name}}.',
+      newPr: 'New PR',
+      newPrBody: '{{value}} {{unit}} — your best yet.',
+      errLog: 'Could not log',
+      errDelete: 'Could not delete',
+      statCurrentPr: 'CURRENT PR',
+      statSinceLastPr: 'SINCE LAST PR',
+      statTotalLogs: 'TOTAL LOGS',
+      logBtn: 'Log',
     },
   },
 
@@ -851,6 +956,15 @@ const en = {
       },
       remaining: '{{deficit}} to go',
       earnedTime: 'earned {{when}}',
+      trackCtaTitle: 'Track a reward',
+      trackCtaSub: 'Pin one to keep its progress close.',
+      emptyTitle: 'Your shop is empty',
+      emptyBody: 'Tap a suggestion below to add it, or create your own.',
+      inspiration: 'Inspiration',
+      inspirationHint: 'tap to add',
+      addReward: 'New reward',
+      addRewardSub: 'Add a custom one',
+      couldNotAdd: 'Could not add',
     },
     celebration: {
       eyebrow: 'IN THE BAG',
@@ -921,6 +1035,27 @@ const en = {
       deleteFail: 'Could not delete',
       deleteBlockedRedemptions: 'You have bought this reward before — only archive is allowed.',
     },
+  },
+
+  dimensionScreen: {
+    topTitle: 'Dimension',
+    eyebrow: 'DIMENSION',
+    yourLevel: 'Your level',
+    xpTotal: '{{xp}} XP total',
+    twoFaces: 'TWO FACES',
+    unknown: 'Unknown dimension.',
+    unknownSub: 'Unknown sub.',
+  },
+
+  historyScreen: {
+    eyebrow: 'HISTORY',
+    title: 'Your trail',
+    statDone: 'Done',
+    statSkipped: 'Skipped',
+    errUndo: 'Could not undo',
+    errLog: 'Could not log',
+    errSkip: 'Could not skip',
+    errUnskip: 'Could not unskip',
   },
 
   character: {
@@ -1239,6 +1374,10 @@ const en = {
 
   skills: {
     title: 'Skills',
+    allTitle: 'All Skills',
+    statTracked: 'Skills tracked',
+    statMedals: 'Medals earned',
+    statBestTier: 'Best tier',
     new: 'New skill',
     edit: 'Edit skill',
     fields: {
@@ -1269,6 +1408,11 @@ const en = {
   quests: {
     title: 'Quests',
     new: 'New quest',
+    errStart: 'Could not start quest',
+    errClaim: 'Could not claim',
+    errAbandon: 'Could not abandon',
+    completeTitle: 'Quest complete!',
+    completeBody: '+{{xp}} XP and +{{coins}} coins.',
     sections: {
       active: 'Active',
       completed: 'Completed',
@@ -1371,6 +1515,10 @@ const en = {
       createCta: 'Create goal',
     },
     empty: 'No goals yet. Pick one from the categories above.',
+    errStart: 'Could not start goal',
+    errClaim: 'Could not claim',
+    completeTitle: 'Goal complete!',
+    completeBody: '+{{xp}} XP and +{{coins}} coins.',
   },
 
   selfAssessment: {

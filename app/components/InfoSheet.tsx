@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { tokens } from '@/theme';
 
 interface Props {
@@ -27,6 +28,7 @@ export function InfoSheet({
   body,
   accent = tokens.brand.violet2,
 }: Props) {
+  const { t } = useT();
   return (
     <Modal
       visible={visible}
@@ -64,7 +66,7 @@ export function InfoSheet({
             ]}
             hitSlop={4}
           >
-            <Text style={styles.okBtnText}>Entendi</Text>
+            <Text style={styles.okBtnText}>{t('common.gotIt')}</Text>
           </Pressable>
         </Pressable>
       </Pressable>

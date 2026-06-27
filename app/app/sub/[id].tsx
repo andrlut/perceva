@@ -70,9 +70,9 @@ export default function SubDetailScreen() {
       <SafeAreaView style={styles.safe}>
         <Stack.Screen options={{ headerShown: false }} />
         <View style={styles.errorBox}>
-          <Text style={styles.errorText}>Unknown sub.</Text>
+          <Text style={styles.errorText}>{t('dimensionScreen.unknownSub')}</Text>
           <Pressable style={styles.errorBtn} onPress={() => router.back()}>
-            <Text style={styles.errorBtnText}>Close</Text>
+            <Text style={styles.errorBtnText}>{t('common.close')}</Text>
           </Pressable>
         </View>
       </SafeAreaView>

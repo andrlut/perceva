@@ -30,6 +30,84 @@ const pt: Translations = {
     unarchive: 'Desarquivar',
     create: 'Criar',
     update: 'Atualizar',
+    unknownError: 'Erro desconhecido',
+    clear: 'Limpar',
+    search: 'Buscar',
+    gotIt: 'Entendi',
+    trend: 'TENDÊNCIA',
+  },
+
+  taskForm: {
+    newTitle: 'Nova tarefa',
+    editTitle: 'Editar tarefa',
+    titleLabel: 'Título',
+    titlePlaceholder: 'Rotina matinal, 20 flexões, …',
+    descLabel: 'Descrição (opcional)',
+    descPlaceholder: 'Notas, lembretes…',
+    iconLabel: 'Ícone',
+    iconHint:
+      'Escolha o ícone que o card mostra. Deixe no padrão pra herdar do sub principal.',
+    iconAutoA11y: 'Usar ícone do sub principal',
+    subsLabel: 'Subatributos + estrelas',
+    subsHint:
+      'Escolha quais subs esta tarefa fortalece e o peso de cada esforço. As estrelas por sub vão até 5 — distribua com sinceridade.',
+    recurrenceLabel: 'Com que frequência',
+    archiveBtn: 'Arquivar tarefa',
+    breakWarning:
+      'Editar título, descrição ou subs vai desvincular esta tarefa do template — ela vira uma criação sua. Só mudar a periodicidade preserva o vínculo.',
+    titleRequired: 'Título obrigatório',
+    titleRequiredBody: 'Dê um título à sua tarefa.',
+    subRequired: 'Escolha ao menos um sub',
+    subRequiredBody:
+      'Tarefas fortalecem um ou mais subatributos. Escolha os que esta tarefa toca e quantas estrelas cada um recebe.',
+    saveFailed: 'Falha ao salvar',
+    archiveConfirmTitle: 'Arquivar tarefa?',
+    archiveConfirmBody: 'Tarefas arquivadas deixam de aparecer na Home.',
+    archiveFailed: 'Falha ao arquivar',
+  },
+
+  recurrencePicker: {
+    types: {
+      one_shot: 'Única',
+      daily: 'Diária',
+      weekly: 'Semanal',
+      monthly: 'Mensal',
+    },
+    weekdays: 'D,S,T,Q,Q,S,S',
+    timesPerDay: 'Vezes por dia',
+    timesPerWeek: 'Vezes por semana',
+    timesPerMonth: 'Vezes por mês',
+    times: 'Vezes',
+    specificDays: 'Dias específicos (opcional)',
+    specificDay: 'Dia específico (opcional)',
+    weeklyHelper:
+      'Os dias escolhidos aparecem em Hoje como lembrete. Deixe vazio pra {{count}}×/semana sem preferência de dia.',
+    pickDay: 'Escolher um dia',
+    dayPrefix: 'Dia',
+    monthlyOverflowHelper:
+      'Meses sem o dia {{day}} rodam no último dia do mês.',
+  },
+
+  usernameModal: {
+    title: 'Nome de usuário',
+    label: 'Como podemos te chamar?',
+    placeholder: 'Aventureiro(a)',
+    hint: 'Esse é o nome mostrado no cabeçalho do seu personagem e nas saudações. {{count}} caracteres restantes.',
+    saveError: 'Não foi possível salvar',
+  },
+
+  calendarModal: {
+    title: 'Calendário',
+    legendSelected: 'Selecionado',
+    legendActivity: 'Atividade',
+  },
+
+  trackPicker: {
+    title: 'Escolha uma pra mirar',
+    subtitle:
+      'Toque numa recompensa pra mantê-la por perto. Mostramos o progresso no topo da loja.',
+    emptyTitle: 'Nenhuma recompensa ainda',
+    emptyBody: 'Adicione uma recompensa à loja primeiro, depois volte pra mirar nela.',
   },
 
   auth: {
@@ -404,7 +482,7 @@ const pt: Translations = {
         momentum: 'Momentum',
       },
       desejada: {
-        goals: 'Goals',
+        goals: 'Metas',
         skills: 'Skills',
       },
     },
@@ -423,6 +501,8 @@ const pt: Translations = {
       short: 'Skills',
       long: 'Skills · onde eu evoluo',
       identity: 'Identidade Desejada',
+      viewAll: 'Ver todas as skills',
+      count: { one: 'skill', other: 'skills' },
     },
   },
 
@@ -496,6 +576,16 @@ const pt: Translations = {
       archiveConfirmTitle: 'Arquivar recompensa?',
       archiveConfirmBody: 'Ela some da tela de Recompensas.',
       archiveOk: 'Arquivar',
+      newTitle: 'Nova recompensa',
+      editTitle: 'Editar recompensa',
+      categoryLabel: 'Categoria',
+      titleLabel: 'Título',
+      titlePlaceholder: '1 hora de videogame',
+      descLabel: 'Descrição (opcional)',
+      descPlaceholder: 'O que ela significa de verdade…',
+      costLabel: 'Custo (moedas)',
+      iconLabel: 'Ícone',
+      archiveBtn: 'Arquivar recompensa',
     },
   },
 
@@ -534,6 +624,21 @@ const pt: Translations = {
       tiersAscendBody: 'Tier {{tier}} ({{value}}) tem que ser maior que {{prevTier}} ({{prevValue}}).',
       badPercentileTitle: 'Percentil inválido',
       badPercentileBody: 'Tier {{tier}}: percentil tem que estar entre 0 e 100, ou vazio.',
+      createFail: 'Não foi possível criar a skill',
+    },
+    detail: {
+      invalidValue: 'Valor inválido',
+      invalidValueBody: 'Digite um número de {{unit}}.',
+      tierUp: 'Subiu de tier!',
+      tierUpBody: 'Você alcançou {{tier}} em {{name}}.',
+      newPr: 'Novo recorde',
+      newPrBody: '{{value}} {{unit}} — seu melhor até agora.',
+      errLog: 'Não foi possível registrar',
+      errDelete: 'Não foi possível excluir',
+      statCurrentPr: 'RECORDE ATUAL',
+      statSinceLastPr: 'DESDE O ÚLTIMO',
+      statTotalLogs: 'TOTAL DE REGISTROS',
+      logBtn: 'Registrar',
     },
   },
 
@@ -553,7 +658,7 @@ const pt: Translations = {
       emptyToday: 'Nada pra hoje.',
     },
     typeTabs: {
-      daily: 'Daily',
+      daily: 'Diárias',
       weekly: 'Recorrente',
       oneShot: 'Pontual',
       general: 'Geral',
@@ -747,14 +852,14 @@ const pt: Translations = {
       placeholderCatalog: 'Buscar no catálogo…',
     },
     buckets: {
-      daily: 'Daily',
+      daily: 'Diárias',
       dailyDesc: 'Rotinas que você faz todo dia',
-      weekly: 'Weekly',
+      weekly: 'Semanais',
       weeklyDesc: 'Dias específicos ou cadência mensal',
       oneTime: 'Pontual',
       oneTimeDesc: 'Pra fazer uma vez só',
     },
-    customChip: 'CUSTOM',
+    customChip: 'PRÓPRIA',
     adopt: {
       adopt: 'Adotar',
       added: 'Adicionada',
@@ -811,7 +916,7 @@ const pt: Translations = {
       emptySub: 'Compre uma reward na Loja. Ela cai aqui pra quando você quiser usar.',
     },
     vault: {
-      eyebrow: 'REWARDS',
+      eyebrow: 'RECOMPENSAS',
       heroTitle: 'Sua colheita',
       heroEyebrow: 'SUA COLHEITA',
       heroStatusIdle: 'Continue treinando pra abrir cofres maiores',
@@ -844,6 +949,15 @@ const pt: Translations = {
       },
       remaining: 'faltam {{deficit}}',
       earnedTime: 'conquistado {{when}}',
+      trackCtaTitle: 'Mirar uma recompensa',
+      trackCtaSub: 'Fixe uma pra acompanhar o progresso de perto.',
+      emptyTitle: 'Sua loja está vazia',
+      emptyBody: 'Toque numa sugestão abaixo pra adicionar, ou crie a sua.',
+      inspiration: 'Inspiração',
+      inspirationHint: 'toque pra adicionar',
+      addReward: 'Nova recompensa',
+      addRewardSub: 'Adicionar uma sua',
+      couldNotAdd: 'Não foi possível adicionar',
     },
     celebration: {
       eyebrow: 'NA SACOLA',
@@ -916,6 +1030,27 @@ const pt: Translations = {
     },
   },
 
+  dimensionScreen: {
+    topTitle: 'Dimensão',
+    eyebrow: 'DIMENSÃO',
+    yourLevel: 'Seu nível',
+    xpTotal: '{{xp}} XP no total',
+    twoFaces: 'DUAS FACES',
+    unknown: 'Dimensão desconhecida.',
+    unknownSub: 'Sub desconhecido.',
+  },
+
+  historyScreen: {
+    eyebrow: 'HISTÓRICO',
+    title: 'Sua trilha',
+    statDone: 'Feitas',
+    statSkipped: 'Puladas',
+    errUndo: 'Não foi possível desfazer',
+    errLog: 'Não foi possível registrar',
+    errSkip: 'Não foi possível pular',
+    errUnskip: 'Não foi possível retomar',
+  },
+
   character: {
     title: 'Personagem',
     level: 'Nível',
@@ -929,7 +1064,7 @@ const pt: Translations = {
     },
     failedToLoad: 'Falha ao carregar personagem.',
     sections: {
-      stats: 'Stats',
+      stats: 'Estatísticas',
       pillars: 'Pilares',
       weights: 'Pesos',
       skills: 'Habilidades',
@@ -1230,12 +1365,16 @@ const pt: Translations = {
       unknownError: 'Erro desconhecido',
     },
     footer: 'Perceva · v{{version}}',
-    footerUpdate: 'update {{id}}',
+    footerUpdate: 'atualização {{id}}',
     version: 'Versão {{version}}',
   },
 
   skills: {
     title: 'Habilidades',
+    allTitle: 'Todas as Skills',
+    statTracked: 'Skills acompanhadas',
+    statMedals: 'Medalhas ganhas',
+    statBestTier: 'Melhor tier',
     new: 'Nova habilidade',
     edit: 'Editar habilidade',
     fields: {
@@ -1266,6 +1405,11 @@ const pt: Translations = {
   quests: {
     title: 'Missões',
     new: 'Nova missão',
+    errStart: 'Não foi possível começar a missão',
+    errClaim: 'Não foi possível resgatar',
+    errAbandon: 'Não foi possível abandonar',
+    completeTitle: 'Missão concluída!',
+    completeBody: '+{{xp}} XP e +{{coins}} moedas.',
     sections: {
       active: 'Ativas',
       completed: 'Concluídas',
@@ -1298,7 +1442,7 @@ const pt: Translations = {
     dueToday: 'Termina hoje',
     overdue: 'Atrasada',
     empty: 'Nenhuma missão ainda. Escolha um modelo pra começar.',
-    partialOk: 'partial OK',
+    partialOk: 'parcial OK',
     longPressHint: 'Segure para ver mais',
     board: {
       title: 'Missões',
@@ -1318,7 +1462,7 @@ const pt: Translations = {
       durationLabel: 'Duração',
       tasksLabel: 'Tasks vinculadas',
       tasksEmpty: 'Você não tem tarefas ativas pra vincular.',
-      partialTitle: 'Partial OK',
+      partialTitle: 'Aceita parcial',
       partialSub: 'Dias incompletos não resetam o progresso',
       rewardLabel: 'Recompensa',
       rewardNote: 'Calculada a partir da duração',
@@ -1368,6 +1512,10 @@ const pt: Translations = {
       createCta: 'Criar meta',
     },
     empty: 'Sem metas ainda. Escolha uma das categorias acima.',
+    errStart: 'Não foi possível começar a meta',
+    errClaim: 'Não foi possível resgatar',
+    completeTitle: 'Meta concluída!',
+    completeBody: '+{{xp}} XP e +{{coins}} moedas.',
   },
 
   selfAssessment: {
