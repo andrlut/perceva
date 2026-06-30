@@ -1,107 +1,171 @@
-# Varredura Rápida — Perceva V3 (2026-06-30)
+# Perceva V3 — Auditoria + Handoff de Ação (2026-06-30)
 
-> Passada 1 (rápida/barata): greps + leituras pontuais. Só fixes triviais de
-> arquivo único, sem migration. Tudo que exige aprofundamento fica 🔵 pro
-> André. Base: `perceva-v3-audit-scan.md`.
+> **Para o Claude Code do André.** Este doc é auto-contido: traz o contexto
+> necessário (specs/decisões que vivem fora do repo) + os achados da passada
+> rápida do Artur + ações concretas. Onde marcado **✅ Pode atuar**, prossiga
+> com a varredura completa e a correção/implementação se **não for mudança
+> crítica que possa quebrar algo já em produção**. Onde marcado **⛔ Requer
+> Artur**, só investigue/proponha — não aplique sem o sinal verde dele.
+
+## Como usar este doc
+1. Leia "Contexto embutido" — são fatos/decisões que não estão no `CLAUDE.md`.
+2. Vá por área (1–5). Cada item tem: **status**, **evidência**, **ação** e
+   (quando aplicável) **critério de aceite** + **guardrails**.
+3. Respeite a "Linha de corte ✅/⛔" abaixo — é a regra que o Artur definiu.
+
+## Linha de corte — o que pode atuar vs. o que espera o Artur
+**✅ Pode atuar (não-crítico, baixo risco de quebrar produção):**
+- Mudanças JS/TS de front-end (telas, hooks, componentes, copy/i18n).
+- Correções de bug claras e isoladas, sem migration.
+- Investigação/varredura profunda de qualquer área (ler à vontade).
+- Documentar/versionar processos (ex: pipeline do Learn) sem rodar em massa.
+- Disparar `eas build` (rebuild nativo) — não altera dado.
+
+**⛔ Requer sinal do Artur antes de aplicar:**
+- Qualquer **migration nova** (push no Supabase compartilhado) — especialmente
+  RLS/RPC que mexem em insert/enforcement (podem trancar usuário fora).
+- Mudança de **balance**: curva de nível, multiplicadores de Momentum/streak.
+- Scripts de **correção de dado vivo** (XP/coins já creditados).
+- Alterar qualquer uma das **5 decisões fechadas de subscription tiers**.
 
 ## Legenda
-- 🔴 Bug confirmado · 🟡 Risco a verificar · ⚪ Não implementado · 🟢 OK · 🔵 Precisa aprofundar
+🔴 Bug confirmado · 🟡 Risco a verificar · ⚪ Não implementado · 🟢 OK · 🔵 Precisa aprofundar
 
-## Resumo executivo
-| Área | Status |
-|---|---|
-| 1. XP/Dedicação | 🟢 curva por estrela (cliente+servidor) correta · 🟡 **threshold de nível não recalibrado** (causa provável do "nível geral errado") · 🔴 1 valor antigo hardcoded em dead code (corrigido) |
-| 2. Learn automation | ⚪/🔵 conteúdo versionado via migrations; **pipeline de automação NÃO está no repo** |
-| 3. Notificações | 🟢 código presente e com API correta · 🔵 "não dispara" → provável rebuild nativo / runtime (precisa device) |
-| 4. Subscription tiers | ⚪ **nada implementado** (coluna não existe) |
-| 5. Phase 1 polish | majoritariamente 🟢 (saiu) · alguns 🔵 |
-
----
-
-## 1. Cálculo de XP/Dedicação
-
-**🟢 Curva por estrela está correta e consistente nos dois lados.**
-- Cliente: `app/lib/xp.ts` → `REWARD_BY_DIFFICULTY` = `10/20/35/55/80` (1★→5★), XP = coins.
-- Servidor: `public.base_xp_for_stars` rebalanceada na migration `supabase/migrations/20260528000001_xp_curve_rebalance.sql` → mesmos `10/20/35/55/80`. As RPCs (`complete_task`, momentum bonus, template completion) consomem o helper, então não há tabela duplicada pra escapar.
-- Grep por `250`/curva antiga no código ativo: só sobra um comentário em `xp.ts` (intencional) — ver o 🔴 abaixo.
-
-**🔴 (corrigido nesta passada) `app/lib/util/confirmCompletion.ts`** tinha a **curva antiga hardcoded** numa mensagem de confirmação: `5★ → "250 XP / 250 coins"`, `4★ → "100 XP / 100 coins"`. Corrigido pra `80` e `55`.
-- ⚠️ Contexto importante: **essa função (`maybeConfirmHardCompletion`) não tem nenhum caller** — é dead code, então a mensagem errada nunca aparecia pro usuário. O fix é só pra não deixar valor errado caso seja religada.
-- ⚠️ Também é uma **string hardcoded em inglês** (não passa pelo i18n). Fica anotado como gap (ver "Gaps de contexto").
-
-**🟡 Threshold de nível NÃO foi recalibrado junto com a curva — causa mais provável do sintoma "nível geral errado".**
-- Fonte única: `app/lib/xp.ts`, `levelProgress` / `xpForLevel`. Fórmula: `xpForLevel(level) = (level-1)² × 100`; inverso `level = floor(sqrt(xp/100)) + 1` (nível 1=0, 2=100, 3=400, 4=900, 5=1600 XP).
-- A migration de rebalance só trocou `base_xp_for_stars` — **a curva de nível ficou intacta**, calibrada pra recompensas ~3× maiores (curva antiga, 5★=250). Com a curva nova (5★=80), o XP total acumula certo e o nível é computado certo **matematicamente**, mas o personagem sobe de nível **bem mais devagar** do que na época da curva antiga. Isso bate com "XP por sub OK, mas nível geral parece errado/travado".
-- **Não corrigido de propósito**: é decisão de balance + mexe no nível exibido de todo usuário existente (dado vivo). Não é fix trivial.
-- 🔵 Pro André/Artur decidirem: recalibrar o `100` base da curva de nível (e/ou o expoente) pra casar com a curva 10–80, OU confirmar que o leveling lento é intencional.
-
-**🔵 Aprofundar (pro doc do André):** ler `complete_task` linha a linha (agregação XP total a partir dos subs + consistência do `streak_multiplier` entre total e subs); cruzar `character_dimension` vs `character_sub_score`/`assessment_log` nas telas (`profile-mirror`, `dimension/[id]`, `sub/[id]`); a pendência "window-based reads" da Dedicação.
+## Backlog priorizado (visão rápida)
+| # | Item | Status | Ação | Risco |
+|---|---|---|---|---|
+| 1a | Threshold de nível não recalibrado vs curva nova | 🟡 | ⛔ propor recalibração (balance + dado vivo) | alto |
+| 1b | `complete_task`: agregação XP + streak consistente | 🔵 | ✅ investigar; aplicar fix só se não-breaking | médio |
+| 1c | `confirmCompletion.ts` curva antiga | ✅feito | — (corrigido nesta passada) | — |
+| 2 | Pipeline de automação do Learn não versionado | ⚪/🔵 | ✅ versionar/documentar o processo | baixo |
+| 3 | Notificações não disparam | 🔵 | ✅ investigar runtime + rebuild nativo | baixo |
+| 4 | Subscription tiers (spec inteira) | ⚪ | front-end ✅ · migration/RLS/RPC ⛔ | alto |
+| 5a | Skills CRUD polishing | 🔵 | ✅ varrer + polir | baixo |
+| 5b | Bugs transversais de scroll/botão fixo | 🔵 | ✅ varrer call sites + corrigir | baixo |
+| 5c | CLAUDE.md desatualizado | 🟡 | ✅ atualizar no PR de fechamento da Phase 1 | baixo |
 
 ---
 
-## 2. Automação dos artigos da aba Learn
+# Contexto embutido (não está no repo)
 
-**⚪/🔵 Conteúdo versionado, automação NÃO.**
-- O conteúdo da Learn vive em **migrations SQL versionadas** (≥10 arquivos `*_learning_*` em `supabase/migrations/`, incl. `learning_foundation`, `learning_seed_glossary`, `learning_takeaways`, `learning_publisher_infra`, `learning_validation_content`, `learning_strength_prose_rewrite`…). Há inclusive `learning_publisher_infra` (estrutura de publicação no DB).
-- **Não existe `supabase/functions/`** (nenhuma Edge Function) e **nenhum script de extração/ingestão** versionado (`app/scripts/` só tem `export-perceva-icons.mjs` e `reset-project.js`).
-- **Conclusão:** o destino (tabelas + seeds) está no git, mas o **pipeline que gera esses seeds** (extração/upload que o André roda via Claude) **não é repetível pelo time hoje** — só pela pessoa que rodou. Esse é o achado principal da seção.
-- 🔵 Conversa a ter com o André pra formalizar/versionar o processo. **Nada recriado nesta passada** (conforme instrução).
-
----
-
-## 3. Notificações (Daily Brief / Checkpoint)
-
-**🟢 Implementação está presente e o código parece correto** — a hipótese do scan ("nunca commitado") está **incorreta**.
-- `app/lib/notifications/` existe com `constants.ts`, `index.ts`, `permissions.ts`, `scheduler.ts`, `session.ts` **+ `useNotificationsSetup.ts`** (6 arquivos; o hook de boot está incluso e é chamado no `RootLayout`).
-- `scheduler.ts` usa a **sintaxe nova (SDK 51+)**: `Notifications.SchedulableTriggerInputTypes.DAILY` (Daily Brief, hour/minute) e `.DATE` (Checkpoint). **Não** usa a sintaxe antiga sem `type`.
-- `package.json`: `expo-notifications ~0.32.17` e `expo-device ~8.0.10` presentes. `app.json`: plugin `expo-notifications` configurado.
-
-**🔵 Como o código está correto, o "não dispara" provavelmente é fora do código JS:**
-- Causa estatística #1: **módulo nativo precisa de `eas build`** — se o APK em uso recebeu só `eas update` (OTA), o `expo-notifications` nativo pode não estar ativo. OTA não ativa módulo nativo novo.
-- Outras: permissão negada em runtime; Doze mode / otimização de bateria do Android; agendamento não confirmado em runtime (`getAllScheduledNotificationsAsync`). Tudo precisa **teste em device real** — fora do escopo desta passada.
-- Verificar também a ordem em `session.ts`/boot (registra open do dia → agenda Checkpoint → cancela Checkpoint) pra garantir que o Checkpoint não é cancelado antes de agendar.
-
----
-
-## 4. Monetização — Subscription Tiers
-
-**⚪ Nada implementado.**
-- `grep subscription_tier` em `supabase/migrations/` → **0 ocorrências**. Em `app/` + `supabase/` inteiro (incl. `subscriptionTier`) → **0 ocorrências**.
-- A coluna `profile.subscription_tier` não existe; nenhuma RLS/RPC/front-end referencia tiers. **Toda a spec da seção 4 está por implementar** — vira projeto inteiro pro doc do André (auditoria de RLS, 4 checks inline nas RPCs, hooks/modal/badge, limites 10/5/3/3).
-- As 5 decisões fechadas da spec **não foram tocadas** (conforme instrução).
-
----
-
-## 5. Varredura geral de polish (Phase 1)
-
-| # | Item | Status |
+### C1 — Curva de XP/coins (rebalance já aplicado)
+| Estrelas | XP/Coins (NOVA, atual) | XP/Coins (antiga) |
 |---|---|---|
-| 2 | `released_at`/`version` em template tables | 🟢 saiu — `supabase/migrations/20260513000001_template_released_at.sql` (+ usado no `learning_foundation`) |
-| 3 | Nav: Profile→Settings, tab Learning, History em Tasks | 🟢 Settings (tab title `Settings`, i18n `tabs.settings`), Learning ativo, History acessível pela Home/Tasks |
-| 4 | Auditoria PT/EN + glossário | 🟢 **feito recentemente** — varredura i18n completa (PRs #251/#252): paridade 969 chaves, 0 faltando, hardcodeds traduzidos. Glossário Dedicação/Momentum/3 pilares presente nas locales |
-| 5 | Skills CRUD polishing | 🔵 status não aprofundado (telas existem: `skills.tsx`, `skill-form.tsx`, `skill/[id]`) |
-| 6 | Rewards visual polish | 🟢 Vault redesign saiu (hero, cards, chips) |
-| 7 | Bugs transversais de scroll/botão fixo | 🔵 aprofundar — confirmar todos os call sites de `useBottomNavClearance()` é trabalho de várias leituras |
+| 1★ | 10 | 5 |
+| 2★ | 20 | 15 |
+| 3★ | 35 | 40 |
+| 4★ | 55 | 100 |
+| 5★ | 80 | 250 |
 
-Rebrand visual Perceva: 🟢 saiu (app.json name=Perceva, login/onboarding com identidade Perceva, ícones exportados, `PercevaGlyph`).
+`XP = Coins`. Fonte de verdade dupla, **já consistente**: cliente
+`app/lib/xp.ts` (`REWARD_BY_DIFFICULTY`) + servidor `public.base_xp_for_stars`
+(migration `20260528000001_xp_curve_rebalance.sql`). **Não mexer na curva por
+estrela** — está certa nos dois lados.
+
+### C2 — Notificações (spec de implementação)
+| Notificação | Horário | Condição |
+|---|---|---|
+| Daily Brief | configurável, padrão 8h | sempre dispara |
+| Checkpoint | 12h30 fixo | só se o usuário NÃO abriu o app hoje |
+
+Estrutura: `app/lib/notifications/` (`index/permissions/scheduler/session/constants` + `useNotificationsSetup`). Boot via `AppState` no `_layout.tsx`. Deps `expo-notifications` + `expo-device`.
+
+### C3 — Subscription Tiers (spec FECHADA — não alterar as decisões)
+| Decisão | Resolução |
+|---|---|
+| Onde mora o tier | coluna `profile.subscription_tier text not null default 'free'` + CHECK. Tabela `subscription` separada só quando entrar gateway real. |
+| Limites free | 10 tasks ativas · 5 rewards ativas · 3 skills · 3 quests ativas (arquivado não conta) |
+| Enforcement | híbrido: RLS de insert + checks inline nas RPCs `start_task_from_template`, `start_quest_from_template`, `start_custom_quest`, `create_custom_skill` |
+| UX do bloqueio | tap-to-modal; badge contador a partir de ≥80%; sem bloqueio preemptivo |
+| Como vira premium | manual via Supabase Studio durante o beta |
+
+### C4 — V3 em uma frase
+App repositionado em 3 pilares de identidade: **Percebida** (como se vê hoje),
+**Praticada** (o que as ações treinam — Dedicação/XP + Momentum), **Desejada**
+(quem quer se tornar — Skills + Metas). Tour pós-login (M0–M6 + wrap) já em
+produção. Rename de UI: Quests→**Missões**, Goals→**Metas**.
 
 ---
 
-## Gaps de contexto (que o scan de origem pode não ter pego)
+# 1. XP / Dedicação
 
-1. **O scan trata várias frentes como "talvez não feitas" — a maioria ESTÁ feita** e merece atualizar o status antes do doc do André:
-   - Notificações: implementadas + wired (não "nunca commitadas").
-   - Curva de XP: rebalanceada cliente **e** servidor.
-   - Quests→Missões / Goals→Metas: rename **feito** na UI/i18n (`home.quests.browseChip='Missões'`, board de Missões, `pillar.sub.desejada` = Metas/Skills).
-   - Tour pós-login completo (M0–M6 + wrap + replay) — **não mencionado no scan**, mas é uma frente grande já em produção.
-   - Rebrand Perceva: feito (parcial — `CLAUDE.md` ainda diz "stays RPG Tasks", ver abaixo).
-2. **CLAUDE.md desatualizado (confirmado)** — o roadmap V3 lista só os 7 itens da Phase 1 original e **não menciona**: rebrand Perceva, sistema de notificações, curva de XP nova, rename Quests→Missões/Goals→Metas, tour pós-login, nem subscription tiers. Diz "App name: stays RPG Tasks" enquanto `app.json` já é Perceva. **Atualização fica pro PR de fechamento da Phase 1** (não agora).
-3. **Bug do tour em cold boot — JÁ CORRIGIDO hoje** (PR #253, OTA preview publicado): o tour disparava todo boot por uma corrida de hidratação em `useTourReady`. Mencionado aqui pro André não re-investigar.
-4. **Dívida de i18n residual**: `confirmCompletion.ts` (dead code) e os componentes dead-code `QuestChip.tsx` / `modal.tsx` têm strings hardcoded em inglês. Baixa prioridade.
+## 1a — 🟡 Threshold de nível não recalibrado *(causa provável do "nível geral errado")* — ⛔ Requer Artur
+**Evidência:** `app/lib/xp.ts` — fonte única do nível. `xpForLevel(level) = (level-1)² × 100`; inverso `level = floor(sqrt(xp/100)) + 1` (nível 1=0, 2=100, 3=400, 4=900, 5=1600 XP). A migration de rebalance só trocou `base_xp_for_stars` — **a curva de nível ficou intacta**, calibrada pras recompensas ~3× maiores da curva antiga.
+
+**Diagnóstico:** XP por sub e XP total acumulam certo; o nível é computado certo *matematicamente*. Mas com a curva nova (5★=80 em vez de 250) o usuário sobe de nível **~3× mais devagar**. O sintoma "nível geral errado" é calibração, não bug de cálculo.
+
+**Ação (⛔ propor, não aplicar):** decidir com o Artur entre (a) reduzir o `100` base e/ou suavizar o expoente da curva de nível pra casar com a curva 10–80, ou (b) confirmar que o leveling lento é intencional. Mudar a curva **altera o nível exibido de todo usuário existente** → mudança sensível.
+- Se for atuar: a fórmula é puramente client-side (deriva de `character.total_xp`), então **não precisa migration** — é editar `xp.ts`. Mas é **balance** → só com aprovação.
+- Sugestão de ponto de partida pra discussão (não aplicar ainda): base `40` em vez de `100` aproxima o ritmo de leveling do que era com a curva antiga. Validar com simulação antes.
+
+## 1b — 🔵 `complete_task`: agregação de XP total + consistência do streak — ✅ Pode investigar
+**Ação:** ler `complete_task` (migrations `20260514000002_complete_task_momentum_bonus.sql` e `20260517000002_task_completion_template.sql`) linha a linha e confirmar: (1) como agrega XP total a partir dos `base_xp_for_stars` por sub; (2) se `streak_multiplier` é aplicado de forma consistente entre o total e os subs; (3) cruzar `character_dimension` vs `character_sub_score`/`assessment_log` nas telas `profile-mirror.tsx`, `dimension/[id]`, `sub/[id]` (não misturar XP de prática com score percebido).
+- Investigação é ✅. **Aplicar correção na RPC = migration ⛔** (revisar com Artor antes do push). Correção só em tela (front) = ✅.
+- Item de feature relacionado, fora de fix pontual: "window-based reads" da Dedicação (pendência citada no `CLAUDE.md`).
+
+## 1c — ✅ FEITO nesta passada — `confirmCompletion.ts`
+`app/lib/util/confirmCompletion.ts` tinha a curva antiga hardcoded (`5★→250`, `4★→100`). Corrigido pra `80`/`55`. **Obs:** `maybeConfirmHardCompletion` é **dead code** (sem callers) e a string é **hardcoded em inglês** (gap de i18n). Se for mexer, considerar i18n-ificar ou remover a função.
 
 ---
 
-## Fixes triviais aplicados nesta passada
-- `app/lib/util/confirmCompletion.ts`: curva antiga `250/100` → `80/55` (valores da curva atual). Dead code, mas evita valor errado se religado.
+# 2. Automação dos artigos da aba Learn — ⚪/🔵 — ✅ Pode atuar (versionar/documentar)
+**Evidência:** o **conteúdo** está versionado em ≥10 migrations `supabase/migrations/*_learning_*` (`learning_foundation`, `learning_seed_glossary`, `learning_takeaways`, `learning_publisher_infra`, `learning_validation_content`, `learning_strength_prose_rewrite`…). **Não existe** `supabase/functions/` nem script de extração/ingestão versionado (`app/scripts/` só tem `export-perceva-icons.mjs` e `reset-project.js`).
 
-Nada de migration, nada de balance, nada das decisões fechadas — tudo conforme a seção 6 do scan.
+**Conclusão:** o destino (tabelas + seeds) está no git, mas o **pipeline que gera os seeds** (a extração/upload que o André roda via Claude) **não é repetível pelo time** — só por quem rodou.
+
+**Ação (✅):** como esse pipeline é seu (André), versionar/documentar o processo é o trabalho mais valioso aqui — um script em `scripts/` ou Edge Function em `supabase/functions/` + um `docs/learning-pipeline.md` explicando como gerar a próxima leva. **Não rodar ingestão em massa nem recriar conteúdo** sem alinhar com o Artur — só tornar o processo repetível.
+
+---
+
+# 3. Notificações (Daily Brief / Checkpoint) não disparando — 🔵 — ✅ Pode atuar
+**🟢 O código está presente e correto** (a hipótese de "nunca commitado" é falsa):
+- `app/lib/notifications/` completo (6 arquivos, incl. `useNotificationsSetup.ts`, chamado no `RootLayout`).
+- `scheduler.ts` usa a **sintaxe nova SDK 51+**: `Notifications.SchedulableTriggerInputTypes.DAILY` (Daily Brief) e `.DATE` (Checkpoint). Não usa a antiga sem `type`.
+- `package.json`: `expo-notifications ~0.32.17` + `expo-device ~8.0.10`. `app.json`: plugin `expo-notifications` presente.
+
+**Ação (✅ investigar + corrigir não-breaking):**
+1. **Causa #1 (provável): módulo nativo precisa de `eas build`.** Se o APK atual recebeu só OTA (`eas update`), o módulo nativo de notificações pode não estar ativo. Confirmar a data do último `eas build --profile preview` vs. quando as notificações entraram. Se for o caso, **disparar um rebuild** (✅, não altera dado).
+2. Confirmar agendamento em runtime: `getAllScheduledNotificationsAsync()` num device, logar. Permissão concedida? (`permissions.ts`).
+3. Auditar a ordem no boot (`session.ts`/`useNotificationsSetup.ts`): registra "open de hoje" → agenda Checkpoint → cancela Checkpoint. Garantir que o Checkpoint não é cancelado **antes** de ser agendado (corrida de ordem). Fix aqui = JS, ✅.
+4. Android Doze / otimização de bateria — teste manual em device, não é código.
+
+**Critério de aceite:** Daily Brief dispara no horário configurado; Checkpoint dispara 12h30 **só** quando o app não foi aberto no dia.
+
+---
+
+# 4. Subscription Tiers — ⚪ nada implementado — front-end ✅ / backend ⛔
+**Evidência:** `grep subscription_tier` em todo o repo (`app/` + `supabase/`, incl. `subscriptionTier`) → **0 ocorrências**. Coluna não existe; nenhuma RLS/RPC/tela referencia tier. **A spec inteira (C3) está por implementar.**
+
+**Ação — dividir por risco:**
+- **⛔ Requer Artor (migration + enforcement):** migration adicionando `profile.subscription_tier text not null default 'free'` + CHECK; RLS de insert e os 4 checks inline nas RPCs (`start_task_from_template`, `start_quest_from_template`, `start_custom_quest`, `create_custom_skill`). RLS de insert mal calibrada **tranca o usuário fora** → revisar com Artur antes de qualquer push. Pode **escrever a migration e abrir PR pra revisão**, mas não dar push direto.
+- **✅ Pode atuar (front-end, não-breaking):** hook que lê o tier + conta ativos por entidade; modal de bloqueio (tap-to-modal); badge contador a partir de ≥80% nas 4 telas (tasks, rewards, skills, quests). Pode construir contra um tier mock/local enquanto a coluna não existe, atrás de um flag, sem quebrar nada.
+- **Antes de implementar:** reconferir tamanho atual de `task_template`/`reward_template` — se mudaram desde a spec, os limites (10/5/3/3) podem precisar revisão (decisão do Artur).
+- **Não alterar as 5 decisões da C3.**
+
+---
+
+# 5. Polish geral (Phase 1)
+
+| # | Item | Status | Ação |
+|---|---|---|---|
+| 2 | `released_at`/`version` em template tables | 🟢 saiu (`20260513000001_template_released_at.sql`) | — |
+| 3 | Nav Profile→Settings, tab Learning, History em Tasks | 🟢 saiu | — |
+| 4 | Auditoria PT/EN + glossário | 🟢 feito (PRs #251/#252; paridade 969 chaves) | — |
+| 5 | Skills CRUD polishing | 🔵 | ✅ varrer `skills.tsx`/`skill-form.tsx`/`skill/[id]` e polir o que faltar (UI, não-breaking) |
+| 6 | Rewards visual polish | 🟢 Vault redesign saiu | — |
+| 7 | Bugs transversais scroll/botão fixo | 🔵 | ✅ varrer todos os call sites de `useBottomNavClearance()`/`useBottomSafeClearance()` e corrigir sobreposições (UI, não-breaking) |
+
+Rebrand Perceva: 🟢 saiu (app.json name, login/onboarding, `PercevaGlyph`, ícones).
+
+---
+
+# Gaps de contexto / notas pro André
+1. **Muita coisa que parecia pendente JÁ ESTÁ feita:** notificações (implementadas+wired), curva de XP (cliente+servidor), Quests→Missões/Goals→Metas (UI/i18n), tour pós-login completo (M0–M6 + wrap + replay), rebrand Perceva. Não re-investigar do zero.
+2. **CLAUDE.md desatualizado (✅ atualizar):** o roadmap V3 ainda lista só os 7 itens originais e diz "App name: stays RPG Tasks" (já é Perceva no `app.json`). Não cita notificações, curva nova, rename, tour, nem subscription tiers. Atualizar no PR de fechamento da Phase 1 — é doc, não-breaking, pode atuar.
+3. **Bug do tour em cold boot — JÁ CORRIGIDO** (PR #253 + OTA preview): `useTourReady` reportava "ready" com estado defasado durante a hidratação no boot → o AuthGate jogava no tour todo cold start. Resolvido derivando o ready direto do store. Não re-investigar.
+4. **Dívida de i18n residual (baixa prioridade):** `confirmCompletion.ts` (dead code) + componentes dead-code `QuestChip.tsx` e `modal.tsx` têm strings hardcoded em inglês.
+
+# Fixes aplicados nesta passada (passada rápida do Artur)
+- `app/lib/util/confirmCompletion.ts`: curva antiga `250/100` → `80/55`.
+
+Sem migration, sem balance, sem tocar nas decisões fechadas.
