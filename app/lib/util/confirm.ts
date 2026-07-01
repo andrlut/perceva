@@ -1,63 +1,108 @@
-import { Alert, Platform } from 'react-native';
+/**
+ * Cross-platform confirm + info dialogs.
+ *
+ * Old impl called `window.confirm`/`window.alert` on web and `Alert.alert`
+ * on native — both look like generic OS dialogs and break the gold/violet
+ * aesthetic of the app. New impl is a singleton event queue: `confirmAction`
+ * and `showInfo` enqueue a request and wait for resolution; a `<ConfirmHost />`
+ * mounted once at the root subscribes to the queue and renders a styled
+ * `<Modal>` matching the rest of the app.
+ *
+ * Public API is unchanged — callers keep importing `confirmAction` /
+ * `showInfo` from this module and don't notice the swap.
+ */
 
 interface ConfirmOptions {
   /** Action label (the "go ahead" button). */
   okText: string;
   /** Cancel label. */
   cancelText: string;
-  /** Renders the OK button as red on native; ignored on web. */
+  /** Renders the OK button in danger color. */
   destructive?: boolean;
+}
+
+export type DialogKind = 'confirm' | 'info';
+
+export interface DialogRequest {
+  id: number;
+  kind: DialogKind;
+  title: string;
+  message?: string;
+  okText: string;
+  cancelText?: string;
+  destructive?: boolean;
+  resolve: (ok: boolean) => void;
+}
+
+type Listener = (req: DialogRequest) => void;
+
+let counter = 0;
+const listeners = new Set<Listener>();
+const pending: DialogRequest[] = [];
+
+function emit(req: DialogRequest): void {
+  if (listeners.size === 0) {
+    // No host mounted yet — buffer the request and replay on subscribe.
+    pending.push(req);
+    return;
+  }
+  listeners.forEach((l) => l(req));
+}
+
+/**
+ * Subscribe to dialog requests. Replays any pending requests that were
+ * enqueued before the host mounted. Returns an unsubscribe function.
+ */
+export function subscribeDialog(cb: Listener): () => void {
+  listeners.add(cb);
+  // Replay any buffered requests now that we have a listener.
+  while (pending.length > 0) {
+    const req = pending.shift();
+    if (req) cb(req);
+  }
+  return () => {
+    listeners.delete(cb);
+  };
 }
 
 /**
  * Cross-platform confirm. Resolves true when the user picks the action,
- * false when they cancel (or close the dialog).
- *
- * Native uses Alert.alert with Cancel/Destructive buttons.
- *
- * Web bypasses Alert entirely. RN-Web's Alert maps multi-button alerts to
- * `window.confirm`, but in v0.21 the per-button `onPress` handler doesn't
- * fire reliably (the cancel/destructive style routing has known bugs).
- * Calling `window.confirm` directly is the only path that consistently
- * round-trips the user's choice.
+ * false when they cancel (or dismiss).
  */
 export function confirmAction(
   title: string,
   message: string,
   options: ConfirmOptions,
 ): Promise<boolean> {
-  if (Platform.OS === 'web') {
-    const ok =
-      typeof window !== 'undefined' &&
-      window.confirm([title, message].filter(Boolean).join('\n\n'));
-    return Promise.resolve(!!ok);
-  }
-  return new Promise((resolve) => {
-    Alert.alert(title, message, [
-      {
-        text: options.cancelText,
-        style: 'cancel',
-        onPress: () => resolve(false),
-      },
-      {
-        text: options.okText,
-        style: options.destructive ? 'destructive' : 'default',
-        onPress: () => resolve(true),
-      },
-    ]);
+  return new Promise<boolean>((resolve) => {
+    const id = ++counter;
+    emit({
+      id,
+      kind: 'confirm',
+      title,
+      message,
+      okText: options.okText,
+      cancelText: options.cancelText,
+      destructive: options.destructive,
+      resolve,
+    });
   });
 }
 
 /**
  * Cross-platform info-only alert ("Saved!", "Could not redeem", etc).
- * Single button so it round-trips fine on every platform.
+ * Single OK button. Resolves when dismissed.
  */
-export function showInfo(title: string, message?: string): void {
-  if (Platform.OS === 'web') {
-    if (typeof window !== 'undefined') {
-      window.alert([title, message].filter(Boolean).join('\n\n'));
-    }
-    return;
-  }
-  Alert.alert(title, message);
+export function showInfo(title: string, message?: string): Promise<void> {
+  return new Promise<void>((resolve) => {
+    const id = ++counter;
+    emit({
+      id,
+      kind: 'info',
+      title,
+      message,
+      okText: 'OK',
+      resolve: () => resolve(),
+    });
+  });
 }
