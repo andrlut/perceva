@@ -43,6 +43,14 @@ import {
   type EcrLocale,
   type EcrScale,
 } from '@/lib/psych/ecr-r-content';
+import {
+  blendFromScores,
+  DISC_FACTOR_ORDER,
+  factorFromFacetId,
+  getBlendContent,
+  type DiscFactor,
+  type DiscLocale,
+} from '@/lib/psych/disc-content';
 import { formatScore } from '@/lib/util/formatScore';
 import { tokens } from '@/theme';
 import {
@@ -211,6 +219,9 @@ export default function ProfileMirrorScreen() {
 
             {/* ─── Apego (ECR-R) ───────────────────────────────────────── */}
             <EcrRCard onOpen={() => router.replace('/ecr-r')} />
+
+            {/* ─── DISC ────────────────────────────────────────────────── */}
+            <DiscCard onOpen={() => router.replace('/disc')} />
 
             <View style={{ height: tokens.space[6] }} />
           </ScrollView>
@@ -622,6 +633,88 @@ const ecrCardStyles = StyleSheet.create({
     fontStyle: 'italic',
   },
 });
+
+export function DiscCard({ onOpen }: { onOpen: () => void }) {
+  const { locale } = useT();
+  const discLocale: DiscLocale = locale === 'en' ? 'en' : 'pt';
+  const isPt = discLocale === 'pt';
+
+  const lastSession = useLastPsychSession('disc');
+  const scoresQ = useSessionScores(lastSession.data?.id);
+
+  const blend = useMemo(() => {
+    const map = new Map<DiscFactor, number>();
+    for (const s of scoresQ.data ?? []) {
+      const f = factorFromFacetId(s.facet_id);
+      if (f) map.set(f, Number(s.score_decimal));
+    }
+    if (!DISC_FACTOR_ORDER.every((f) => map.has(f))) return null;
+    const scores = {
+      d: map.get('d')!,
+      i: map.get('i')!,
+      s: map.get('s')!,
+      c: map.get('c')!,
+    };
+    const code = blendFromScores(scores);
+    return { code, content: getBlendContent(code, discLocale) };
+  }, [scoresQ.data, discLocale]);
+
+  const hasScores = blend !== null;
+  const sinceDays = daysSince(lastSession.data?.taken_at);
+
+  return (
+    <Pressable
+      onPress={onOpen}
+      style={({ pressed }) => [
+        styles.card,
+        styles.cardActive,
+        pressed && { opacity: 0.92 },
+      ]}
+      hitSlop={4}
+    >
+      <View style={styles.cardHeader}>
+        <View style={styles.cardHeaderLeft}>
+          <Ionicons name="shapes" size={18} color={tokens.brand.violet2} />
+          <Text style={styles.cardTitle}>DISC</Text>
+        </View>
+        <Text style={styles.cardSub}>
+          {isPt
+            ? 'Como eu ajo · estilo · ao longo dos anos'
+            : 'How I act · style · over the years'}
+        </Text>
+      </View>
+
+      {hasScores && blend ? (
+        <>
+          <Text style={styles.cardLede}>
+            {isPt ? 'Perfil:' : 'Profile:'}
+          </Text>
+          <Text style={ecrCardStyles.styleName}>
+            {blend.content.name} · {blend.code}
+          </Text>
+          <Text style={ecrCardStyles.styleHeadline}>{blend.content.headline}</Text>
+          <View style={styles.refazerBtn}>
+            <Ionicons name="refresh" size={14} color={tokens.brand.violet2} />
+            <Text style={styles.refazerText}>
+              {sinceDays === null
+                ? isPt ? 'Ver detalhes' : 'See details'
+                : sinceDays === 0
+                  ? isPt ? 'Refeito hoje · ver detalhes' : 'Done today · see details'
+                  : isPt ? `Ver detalhes · ${sinceDays}d atrás` : `See details · ${sinceDays}d ago`}
+            </Text>
+          </View>
+        </>
+      ) : (
+        <View style={styles.cta}>
+          <Text style={styles.ctaText}>
+            {isPt ? 'Fazer DISC (7-14 min)' : 'Take DISC (7-14 min)'}
+          </Text>
+          <Ionicons name="arrow-forward" size={14} color={tokens.brand.violet2} />
+        </View>
+      )}
+    </Pressable>
+  );
+}
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: tokens.bg.deep },

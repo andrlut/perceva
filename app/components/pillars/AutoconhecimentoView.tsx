@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import {
   BigFiveCard,
+  DiscCard,
   EcrRCard,
   SchwartzCard,
 } from '@/app/profile-mirror';
@@ -32,6 +33,7 @@ export function AutoconhecimentoView() {
         <BigFiveCard onOpen={() => router.push('/big-five')} />
         <SchwartzCard onOpen={() => router.push('/schwartz')} />
         <EcrRCard onOpen={() => router.push('/ecr-r')} />
+        <DiscCard onOpen={() => router.push('/disc')} />
       </View>
     </View>
   );

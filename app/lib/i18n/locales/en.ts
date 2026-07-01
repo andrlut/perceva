@@ -552,7 +552,7 @@ const en = {
   },
 
   autoconhecimento: {
-    lead: 'Deeper inventories measuring personality, values and attachment style. Do not affect the Assessment hex.',
+    lead: 'Deeper inventories measuring personality, values, attachment style and behavior. Do not affect the Assessment hex.',
   },
 
   adoptSheet: {
