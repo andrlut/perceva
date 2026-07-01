@@ -17,6 +17,7 @@ import { useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
+import { ConfirmHost } from '@/components/ConfirmHost';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import {
   useAuthDeepLink,
@@ -228,6 +229,7 @@ export default function RootLayout() {
             <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
           </Stack>
         </AuthGate>
+        <ConfirmHost />
         <StatusBar style="light" />
       </ThemeProvider>
     </QueryClientProvider>
