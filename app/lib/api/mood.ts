@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import type { MoodLog } from '@/lib/db/types';
+import type { MoodLog, MoodTag } from '@/lib/db/types';
 import { supabase } from '@/lib/supabase';
 
 import { dateKeyFromLocal } from './history';
@@ -8,7 +8,10 @@ import { dateKeyFromLocal } from './history';
 export const moodKeys = {
   all: ['mood'] as const,
   today: (dateKey: string) => [...moodKeys.all, 'today', dateKey] as const,
+  day: (dateKey: string) => [...moodKeys.all, 'day', dateKey] as const,
+  month: (monthKey: string) => [...moodKeys.all, 'month', monthKey] as const,
   recent: (days: number) => [...moodKeys.all, 'recent', days] as const,
+  tags: ['mood', 'tags'] as const,
 };
 
 /** Device-local YYYY-MM-DD for "today" — the day a mood entry belongs to. */
@@ -17,10 +20,25 @@ export function todayDateKey(): string {
 }
 
 /**
- * Today's mood entry, or null if not logged yet. RLS scopes the row to the
- * current character, so no explicit character filter is needed (mirrors the
- * psych/session hooks).
+ * The mood entry for a specific local day, or null. Powers both today's
+ * check-in and any retroactive day (history day view). RLS scopes the row.
  */
+export function useMoodForDay(dateKey: string) {
+  return useQuery({
+    queryKey: moodKeys.day(dateKey),
+    queryFn: async (): Promise<MoodLog | null> => {
+      const { data, error } = await supabase
+        .from('mood_log')
+        .select('*')
+        .eq('logged_for', dateKey)
+        .limit(1);
+      if (error) throw error;
+      return (data?.[0] as MoodLog) ?? null;
+    },
+  });
+}
+
+/** Today's mood entry, or null if not logged yet. */
 export function useTodayMood() {
   const dateKey = todayDateKey();
   return useQuery({
@@ -33,6 +51,34 @@ export function useTodayMood() {
         .limit(1);
       if (error) throw error;
       return (data?.[0] as MoodLog) ?? null;
+    },
+  });
+}
+
+/**
+ * Every mood entry inside the calendar month containing `monthDate`, keyed by
+ * local `YYYY-MM-DD`. Drives the mood month heatmap.
+ */
+export function useMoodMonth(monthDate: Date) {
+  const from = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+  const to = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
+  const fromKey = dateKeyFromLocal(from);
+  const toKey = dateKeyFromLocal(to);
+  return useQuery({
+    queryKey: moodKeys.month(fromKey),
+    queryFn: async (): Promise<Map<string, MoodLog>> => {
+      const { data, error } = await supabase
+        .from('mood_log')
+        .select('*')
+        .gte('logged_for', fromKey)
+        .lte('logged_for', toKey)
+        .order('logged_for', { ascending: true });
+      if (error) throw error;
+      const map = new Map<string, MoodLog>();
+      for (const row of (data ?? []) as MoodLog[]) {
+        map.set(row.logged_for, row);
+      }
+      return map;
     },
   });
 }
@@ -58,10 +104,28 @@ export function useRecentMoods(days = 30) {
   });
 }
 
+/** System catalog of mood tags (active only, catalog order). Cached long. */
+export function useMoodTags() {
+  return useQuery({
+    queryKey: moodKeys.tags,
+    staleTime: 1000 * 60 * 60,
+    queryFn: async (): Promise<MoodTag[]> => {
+      const { data, error } = await supabase
+        .from('mood_tag')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as MoodTag[];
+    },
+  });
+}
+
 /**
- * Log (or revise) today's mood via the log_mood RPC. Upserts server-side, so
- * calling it again the same day overwrites the day's entry. Invalidates every
- * mood query so the card + prompt + screen all refresh.
+ * Log (or revise) a day's mood via the log_mood RPC. Upserts server-side, so
+ * calling it again for the same day overwrites the entry. `loggedFor` defaults
+ * to today; pass a past day for retroactive logging. Invalidates every mood
+ * query so the card + prompt + screen + history all refresh.
  */
 export function useLogMood() {
   const qc = useQueryClient();
@@ -70,11 +134,13 @@ export function useLogMood() {
       mood: number;
       note?: string | null;
       loggedFor?: string;
+      tags?: string[] | null;
     }): Promise<MoodLog> => {
       const { data, error } = await supabase.rpc('log_mood', {
         p_mood: params.mood,
         p_note: params.note ?? null,
         p_logged_for: params.loggedFor ?? todayDateKey(),
+        p_tags: params.tags ?? null,
       });
       if (error) throw error;
       return data as MoodLog;

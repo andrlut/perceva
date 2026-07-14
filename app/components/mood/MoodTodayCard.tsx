@@ -24,12 +24,13 @@ export function MoodTodayCard() {
   const values = (recent.data ?? []).map((m) => m.mood);
 
   return (
-    <Pressable
-      onPress={() => router.push('/mood-checkin')}
-      style={({ pressed }) => [styles.card, pressed && { opacity: 0.85 }]}
-      hitSlop={4}
-      accessibilityRole="button"
-    >
+    <View style={styles.wrap}>
+      <Pressable
+        onPress={() => router.push('/mood-checkin')}
+        style={({ pressed }) => [styles.card, pressed && { opacity: 0.85 }]}
+        hitSlop={4}
+        accessibilityRole="button"
+      >
       <View
         style={[
           styles.faceWrap,
@@ -67,11 +68,24 @@ export function MoodTodayCard() {
       ) : (
         <Ionicons name="chevron-forward" size={16} color={tokens.brand.violet2} />
       )}
-    </Pressable>
+      </Pressable>
+
+      <Pressable
+        onPress={() => router.push('/mood-history')}
+        style={({ pressed }) => [styles.historyLink, pressed && { opacity: 0.6 }]}
+        hitSlop={6}
+      >
+        <Text style={styles.historyText}>{t('mood.history.seeHistory')}</Text>
+        <Ionicons name="chevron-forward" size={12} color={tokens.brand.violet2} />
+      </Pressable>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  wrap: {
+    gap: 6,
+  },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -117,5 +131,18 @@ const styles = StyleSheet.create({
   },
   valueStrong: {
     fontFamily: 'Manrope_800ExtraBold',
+  },
+  historyLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 6,
+  },
+  historyText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 12,
+    color: tokens.brand.violet2,
+    letterSpacing: 0.2,
   },
 });

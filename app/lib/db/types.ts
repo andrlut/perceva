@@ -414,8 +414,21 @@ export interface MoodLog {
   /** 1 (worst) .. 5 (best) subjective valence. */
   mood: 1 | 2 | 3 | 4 | 5;
   note: string | null;
+  /** Optional mood_tag slugs picked after the rating. NULL when none. */
+  tags: string[] | null;
   created_at: string;
   updated_at: string;
+}
+
+/** System catalog of tappable mood words (bilingual, public-read). */
+export interface MoodTag {
+  slug: string;
+  label_pt: string;
+  label_en: string;
+  emoji: string | null;
+  tag_group: 'emotion' | 'context';
+  sort_order: number;
+  is_active: boolean;
 }
 
 export type TierName = 'beginner' | 'bronze' | 'silver' | 'gold' | 'master';

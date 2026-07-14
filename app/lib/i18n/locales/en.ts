@@ -1748,6 +1748,19 @@ const en = {
       promptTitle: 'How did you feel today?',
       loggedPrefix: 'You felt',
     },
+    questionPast: 'How did you feel that day?',
+    tagsPrompt: 'Want to name it?',
+    tagsOptional: 'optional',
+    history: {
+      title: 'How I felt',
+      seeHistory: 'See history',
+    },
+    day: {
+      eyebrow: 'Mood',
+      empty: "You didn't log a mood for this day.",
+      register: 'Log mood',
+      edit: 'Edit',
+    },
     prompt: {
       title: 'How was your day?',
       writeMore: 'Write more',
