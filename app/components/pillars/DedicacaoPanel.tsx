@@ -13,6 +13,7 @@ import {
   type View as ViewType,
 } from 'react-native';
 
+import { InsightCard } from '@/components/InsightCard';
 import { PeriodSelector } from '@/components/dedicacao/PeriodSelector';
 import { Sparkline } from '@/components/dedicacao/Sparkline';
 import { XpDonut } from '@/components/dedicacao/XpDonut';
@@ -256,6 +257,8 @@ export function DedicacaoPanel({ dimensions, scrollViewRef }: Props) {
 
   return (
     <View style={styles.wrap}>
+      <InsightCard />
+
       <PeriodSelector
         spec={spec}
         onChange={setSpec}
