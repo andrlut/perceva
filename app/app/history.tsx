@@ -20,6 +20,7 @@ import { CalendarMonthModal } from '@/components/CalendarMonthModal';
 import { CompletedBucket, type CompletedItem } from '@/components/CompletedBucket';
 import { CompleteTaskSheet } from '@/components/CompleteTaskSheet';
 import { DayStatsCard } from '@/components/DayStatsCard';
+import { MoodDayDetail } from '@/components/mood/MoodDayDetail';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { MonthGrid } from '@/components/MonthGrid';
 import { TaskActionSheet } from '@/components/TaskActionSheet';
@@ -412,6 +413,8 @@ export default function HistoryScreen() {
               completed={day.data?.completions.length ?? 0}
               skipped={day.data?.skipped.length ?? 0}
             />
+
+            <MoodDayDetail dateKey={dayKey} />
 
             {/* Bucket tabs — same vocabulary as home. Lets the user
                 see weekly/one-shot candidates without leaving the day. */}

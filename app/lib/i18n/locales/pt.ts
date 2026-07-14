@@ -1747,6 +1747,19 @@ const pt: Translations = {
       promptTitle: 'Como você se sentiu hoje?',
       loggedPrefix: 'Você se sentiu',
     },
+    questionPast: 'Como você se sentiu nesse dia?',
+    tagsPrompt: 'Quer dar um nome a isso?',
+    tagsOptional: 'opcional',
+    history: {
+      title: 'Como me senti',
+      seeHistory: 'Ver histórico',
+    },
+    day: {
+      eyebrow: 'Humor do dia',
+      empty: 'Você não registrou humor nesse dia.',
+      register: 'Registrar humor',
+      edit: 'Editar',
+    },
     prompt: {
       title: 'Como foi seu dia?',
       writeMore: 'Escrever mais',

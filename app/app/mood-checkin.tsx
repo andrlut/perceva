@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useMemo, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -16,43 +16,75 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { MoodFaceRow } from '@/components/mood/MoodFaceRow';
+import { MoodTagRow } from '@/components/mood/MoodTagRow';
 import { ScreenBackground } from '@/components/ScreenBackground';
-import { useLogMood, useTodayMood } from '@/lib/api/mood';
+import { todayDateKey, useLogMood, useMoodForDay } from '@/lib/api/mood';
 import { useT } from '@/lib/i18n';
 import type { MoodValue } from '@/lib/mood';
 import { tokens } from '@/theme';
 
 /**
- * Daily mood check-in. The mandatory core is a single tap on the 5-face scale;
- * the note is always optional and never gates save. Cloned structurally from
- * self-assessment.tsx (modal header, ScreenBackground, sticky save footer,
- * discard-confirm on close). Zero XP / coins / Momentum — reflection has no
- * score attached.
+ * Daily mood check-in. Mandatory core is one tap on the 5-face scale; the tags
+ * and note are always optional and never gate save. Accepts an optional
+ * `?date=YYYY-MM-DD` param for retroactive logging from the history views;
+ * defaults to today. Zero XP/coins/Momentum — reflection has no score.
  */
 export default function MoodCheckinScreen() {
   const router = useRouter();
-  const { t } = useT();
-  const today = useTodayMood();
+  const { t, locale } = useT();
+  const params = useLocalSearchParams<{ date?: string }>();
+  const targetDate =
+    typeof params.date === 'string' && params.date.length > 0
+      ? params.date
+      : todayDateKey();
+  const isToday = targetDate === todayDateKey();
+
+  const day = useMoodForDay(targetDate);
   const logMood = useLogMood();
 
-  const savedMood = (today.data?.mood ?? null) as MoodValue | null;
-  const savedNote = today.data?.note ?? '';
+  const savedMood = (day.data?.mood ?? null) as MoodValue | null;
+  const savedNote = day.data?.note ?? '';
+  const savedTags = useMemo(() => day.data?.tags ?? [], [day.data?.tags]);
 
-  // `null` = untouched → fall back to the saved value (revising today's entry).
   const [moodDraft, setMoodDraft] = useState<MoodValue | null>(null);
   const [noteDraft, setNoteDraft] = useState<string | null>(null);
+  const [tagsDraft, setTagsDraft] = useState<string[] | null>(null);
 
   const mood = moodDraft ?? savedMood;
   const note = noteDraft ?? savedNote;
+  const tags = tagsDraft ?? savedTags;
 
+  const sameTags =
+    tags.length === savedTags.length && tags.every((s) => savedTags.includes(s));
   const dirty =
-    mood !== null && (mood !== savedMood || note.trim() !== savedNote.trim());
+    mood !== null &&
+    (mood !== savedMood || note.trim() !== savedNote.trim() || !sameTags);
   const canSave = mood !== null && !logMood.isPending;
+
+  const dateLabel = useMemo(() => {
+    const localeTag = locale === 'en' ? 'en-US' : 'pt-BR';
+    const [y, m, d] = targetDate.split('-').map(Number);
+    const dt = new Date(y, (m ?? 1) - 1, d ?? 1);
+    const raw = dt.toLocaleDateString(localeTag, {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    });
+    return raw.charAt(0).toUpperCase() + raw.slice(1);
+  }, [targetDate, locale]);
+
+  const toggleTag = (slug: string) =>
+    setTagsDraft((prev) => {
+      const base = prev ?? savedTags;
+      return base.includes(slug)
+        ? base.filter((s) => s !== slug)
+        : [...base, slug];
+    });
 
   const handleSave = () => {
     if (mood === null || logMood.isPending) return;
     logMood.mutate(
-      { mood, note: note.trim() || null },
+      { mood, note: note.trim() || null, loggedFor: targetDate, tags },
       {
         onSuccess: () => {
           Haptics.notificationAsync(
@@ -97,7 +129,14 @@ export default function MoodCheckinScreen() {
             <Ionicons name="close" size={22} color={tokens.text.hi} />
           </Pressable>
           <Text style={styles.headerTitle}>{t('mood.title')}</Text>
-          <View style={styles.closeBtn} />
+          <Pressable
+            onPress={() => router.push('/mood-history')}
+            style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.6 }]}
+            hitSlop={10}
+            accessibilityLabel={t('mood.history.title')}
+          >
+            <Ionicons name="calendar-outline" size={20} color={tokens.text.hi} />
+          </Pressable>
         </View>
 
         <KeyboardAvoidingView
@@ -109,11 +148,23 @@ export default function MoodCheckinScreen() {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            <Text style={styles.question}>{t('mood.question')}</Text>
-            <Text style={styles.subtitle}>{t('mood.subtitle')}</Text>
+            <Text style={styles.question}>
+              {isToday ? t('mood.question') : t('mood.questionPast')}
+            </Text>
+            <Text style={styles.subtitle}>
+              {isToday ? t('mood.subtitle') : dateLabel}
+            </Text>
 
             <View style={styles.faces}>
               <MoodFaceRow value={mood} onSelect={setMoodDraft} size="lg" />
+            </View>
+
+            <View style={styles.tagsSection}>
+              <Text style={styles.tagsLabel}>
+                {t('mood.tagsPrompt')}{' '}
+                <Text style={styles.tagsOptional}>{t('mood.tagsOptional')}</Text>
+              </Text>
+              <MoodTagRow selected={tags} onToggle={toggleTag} />
             </View>
 
             <View style={styles.noteCard}>
@@ -209,6 +260,19 @@ const styles = StyleSheet.create({
   faces: {
     marginTop: tokens.space[3],
     marginBottom: tokens.space[2],
+  },
+  tagsSection: {
+    gap: tokens.space[2],
+  },
+  tagsLabel: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 13,
+    color: tokens.text.mid,
+  },
+  tagsOptional: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 12,
+    color: tokens.text.dim,
   },
   noteCard: {
     borderRadius: tokens.radius.md,
