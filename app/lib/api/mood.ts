@@ -84,6 +84,31 @@ export function useMoodMonth(monthDate: Date) {
 }
 
 /**
+ * Every mood entry in [from, to] keyed by local `YYYY-MM-DD`. Spans any range
+ * (unlike useMoodMonth's single calendar month) — used by the correlation
+ * explorer, which needs a wide window joined against activity.
+ */
+export function useMoodRange(from: Date, to: Date) {
+  const fromKey = dateKeyFromLocal(from);
+  const toKey = dateKeyFromLocal(to);
+  return useQuery({
+    queryKey: [...moodKeys.all, 'range', fromKey, toKey] as const,
+    queryFn: async (): Promise<Map<string, MoodLog>> => {
+      const { data, error } = await supabase
+        .from('mood_log')
+        .select('*')
+        .gte('logged_for', fromKey)
+        .lte('logged_for', toKey)
+        .order('logged_for', { ascending: true });
+      if (error) throw error;
+      const map = new Map<string, MoodLog>();
+      for (const row of (data ?? []) as MoodLog[]) map.set(row.logged_for, row);
+      return map;
+    },
+  });
+}
+
+/**
  * The last `days` of mood entries, oldest → newest — used for the Eu-tab
  * sparkline. Sparse by nature (missed days are simply absent).
  */
