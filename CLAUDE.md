@@ -43,7 +43,7 @@ The app is being repositioned around **3 pillars of identity** (filosofia v3):
 
 **Phase 2+** — Missões completo, **Metas** CRUD (do preview → full), Onboarding recalibrável por categoria via Settings, Learning content contínuo, Hero/Avatar exploration, Insights, Social.
 
-**Brand**: the product brand is now **Perceva** (PercevaGlyph, Vault rewards, Iris identity). The technical identifiers stay internal for now — slug `rpgtasks`, package `com.andrlut.rpgtasks`, deep-link `rpgtasks://`, EAS project `rpgtasks`. Renaming those is a final-polish task that doesn't gate anything.
+**Brand**: the product brand is now **Perceva** (PercevaGlyph, Vault rewards, Iris identity). Identifiers are mid-migration: Android `package` is **`perceva.app`** (renamed in #275 to match Play Console), but slug `rpgtasks`, iOS `bundleIdentifier` `com.andrlut.rpgtasks`, deep-link `rpgtasks://`, and EAS project `rpgtasks` are still internal. The Android package is load-bearing (must match Play Console); the rest is final-polish that doesn't gate anything. **The deep-link scheme is independent of the package** — changing `rpgtasks://` would require re-pointing Supabase Auth → URL Configuration.
 
 ### V3 status snapshot (updated 2026-07-01)
 
@@ -102,7 +102,7 @@ Much of what earlier docs list as "pending" has **shipped to production** — do
 │   │   └── ...
 │   ├── theme/          # tokens.ts, dimensions.ts
 │   ├── eas.json        # Build profiles: development | preview | production
-│   ├── app.json        # name=RPG Tasks, slug=rpgtasks, package=com.andrlut.rpgtasks
+│   ├── app.json        # name=RPG Tasks, slug=rpgtasks, android package=perceva.app
 │   └── package.json
 ├── supabase/
 │   ├── migrations/     # 38+ SQL migrations applied via `supabase db push --linked`
@@ -270,7 +270,7 @@ Auto-loaded from `.claude/skills/`. Invoke via `/<name>` in chat.
 | **`/pr-cycle`** | Closing out a branch — precommit check + push + open PR + admin merge + cleanup in one shot (aggressive, mergeia sozinho) |
 | **`/precommit-check`** | Just running typecheck + lint to know if you're CI-green before pushing |
 | **`/sync-all`** | Start-of-day status — pull main + audit worktrees + verify cloud↔git migration alignment |
-| **`/ota-update`** | Publishing a JS-only hotfix to the live APK via `eas update --channel preview` (no rebuild) |
+| **`/ota-update`** | Publishing a JS-only hotfix via `eas update` (no rebuild) — channel `production` for the Play Store app, `preview` for the internal APK |
 | **`/worktree-cleanup`** | Removing stale/abandoned/prunable worktrees with confirmation — execute the cleanup `/sync-all` only suggests |
 
 ### Auto-invoke rules (use these without being asked)
@@ -340,7 +340,8 @@ The publishable key is safe in client (RLS protects). The service_role key has b
 | Add a new UI component | File under `app/components/`; use design tokens from `app/theme` |
 | Tweak colors / spacing / radii | `app/theme/tokens.ts` (single source of truth — also reflected in `design/tokens.css`) |
 | Build an APK | `cd app && eas build --platform android --profile preview --non-interactive --no-wait` |
-| Ship JS-only hotfix to live APK | `cd app && eas update --channel preview` — prefer this over rebuild whenever no native code changed |
+| Ship JS-only hotfix to the Play Store app | `cd app && eas update --channel production` — prefer this over rebuild whenever no native code changed |
+| Ship JS-only hotfix to the internal test APK | `cd app && eas update --channel preview` |
 | Apply migration to cloud | `cd "C:\Users\André Luthold\RPG"` then `supabase db push --linked` |
 
 ---
@@ -351,7 +352,9 @@ The publishable key is safe in client (RLS protects). The service_role key has b
 - **Service_role key flagging**: Supabase blocks calls from "browser-like" User-Agents. Use `User-Agent: supabase-cli/2.95.4` if you ever need to fall back to direct admin REST.
 - **Auth redirect URL** is the deep link `rpgtasks://auth/callback` (computed via `expo-linking`'s `createURL`). The app handles incoming auth URLs in `lib/auth/deep-link.ts` and exchanges them for a session. **Manual dashboard config required** in Supabase → Auth → URL Configuration: set **Site URL** = `rpgtasks://auth/callback` and add it under **Redirect URLs**. Without this step, email-confirmation links still go to `localhost:3000`. Magic links / OTP / PKCE / fragment-based flows are all handled.
 - **Custom schemes need a dev/production build** — Expo Go strips them, so test the email-confirm flow in `eas build --profile development` (or `preview`/`production`), not in Expo Go.
-- **expo-updates is installed and working** — OTA hot-fixes via `eas update --channel preview` push JS/TS changes to the existing APK without a rebuild. The Settings tab has a "check for updates" button users can tap to pull manually. Native code changes (new packages, native modules, version bumps) still require a fresh `eas build`. **Prefer `eas update` over `eas build`** whenever the change is JS/TS-only — saves ~15 min per change.
+- **Emailed auth links do NOT work on Android — use OTP codes.** Supabase answers `/auth/v1/verify` with a `303` into `rpgtasks://…`, and Chrome refuses to follow a *server-initiated* redirect into a custom scheme (no user gesture in the chain) → `ERR_UNKNOWN_URL_SCHEME`, with the token already burned. **Password reset therefore uses a 6-digit OTP** (`verifyOtp({ type: 'recovery' })`) with the recovery email template sending `{{ .Token }}`, not `{{ .ConfirmationURL }}` — see `app/app/forgot-password.tsx`. Two traps if you touch this: (1) `setSession()` emits `SIGNED_IN`, **never** `PASSWORD_RECOVERY`, so the fragment path silently skips `/reset-password` — only `verifyOtp` and PKCE `exchangeCodeForSession` emit it; (2) signup email confirmation still rides the same broken link path and likely needs the same OTP treatment. The real long-term fix is Android App Links (https + `assetlinks.json`), which needs a domain and a native rebuild.
+- **expo-updates is installed and working** — OTA hot-fixes via `eas update` push JS/TS changes to an existing build without a rebuild. The Settings tab has a "check for updates" button users can tap to pull manually. Native code changes (new packages, native modules, version bumps) still require a fresh `eas build`. **Prefer `eas update` over `eas build`** whenever the change is JS/TS-only — saves ~15 min per change.
+- **Two OTA channels, and the wrong one fails silently.** `production` is the Play Store app (profile `production`, live since 2026-07-15); `preview` is the internal APK. `eas update --channel preview` exits 0 even when the app you meant to fix is on `production` — no error, no warning, the update just never arrives. Always name the channel deliberately. Typical loop: validate on `preview`, then republish the same commit to `production`.
 - **Bilingual catalogs**: every new user-facing catalog column should ship as `*_pt` (and optionally `*_en`). Client picks by `character.locale`.
 - **Migrations are write-once**: never edit a merged migration; add a new one. Existing migrations use `IF EXISTS` / idempotent guards where possible.
 
