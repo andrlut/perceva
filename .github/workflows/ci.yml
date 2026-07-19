@@ -41,8 +41,12 @@ jobs:
       - name: Lint (app)
         run: pnpm --filter app lint
 
+  # Staging only. This reaches the internal test APK, NOT the Play Store app —
+  # that one listens on the `production` channel. Merging to main does not ship
+  # to real users; promote deliberately via the "Promote to Production"
+  # workflow (.github/workflows/promote-production.yml).
   publish-ota:
-    name: Publish OTA Update (preview)
+    name: Publish OTA Update (preview / internal APK)
     needs: verify
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -76,3 +80,12 @@ jobs:
           EXPO_PUBLIC_SUPABASE_URL: https://uneqnpyzevosznwkmvvo.supabase.co
           EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_sWLt4U0F5J4S-Se-6V7SXw_1LyQqysV
         run: eas update --branch preview --auto --non-interactive
+
+      - name: Summary
+        run: |
+          {
+            echo "### Published to \`preview\` (internal APK)"
+            echo ""
+            echo "This does **not** reach the Play Store app. To ship to real"
+            echo "users, run the **Promote to Production** workflow."
+          } >> "$GITHUB_STEP_SUMMARY"

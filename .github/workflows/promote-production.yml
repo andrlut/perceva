@@ -1,0 +1,106 @@
+name: Promote to Production
+
+# Ships the current main to the Play Store app over-the-air.
+#
+# CI already auto-publishes every merge to the `preview` channel (internal
+# APK). Nothing ever reached `production` — the channel the Play Store build
+# actually listens on — so shipped fixes sat invisible to real users. This is
+# the manual promote step: Actions → Promote to Production → Run workflow.
+#
+# JS/TS only. Native changes (new deps, app.json, SDK bumps) still need a
+# fresh `eas build` + a Play Store release.
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: 'Update message shown in the EAS dashboard'
+        required: false
+        default: ''
+      confirm:
+        description: 'Type "production" to confirm this reaches Play Store users'
+        required: true
+
+concurrency:
+  group: promote-production
+  cancel-in-progress: false
+
+jobs:
+  guard:
+    name: Confirm intent
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check confirmation
+        if: inputs.confirm != 'production'
+        run: |
+          echo "::error::Confirmation did not match. Type exactly: production"
+          exit 1
+
+  promote:
+    name: Publish OTA Update (production)
+    needs: guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Setup EAS CLI
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # A native-affecting change published as an OTA is a silent no-op at
+      # best: the running binary ignores an update whose runtimeVersion does
+      # not match. Fail loudly instead of pretending the fix shipped.
+      - name: Reject native changes since the last production build
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -qE '^(app/app\.json|app/app\.config\.[jt]s|app/eas\.json|package\.json|pnpm-lock\.yaml|app/package\.json)$'; then
+            echo "::error::Native/config change detected in the last commit. OTA cannot ship this — run 'eas build --profile production' and release through the Play Console."
+            git diff --name-only HEAD~1 HEAD
+            exit 1
+          fi
+
+      - name: Publish to production channel
+        working-directory: app
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: https://uneqnpyzevosznwkmvvo.supabase.co
+          EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_sWLt4U0F5J4S-Se-6V7SXw_1LyQqysV
+        run: |
+          MSG="${{ inputs.message }}"
+          if [ -z "$MSG" ]; then
+            MSG="$(git log -1 --pretty=%s)"
+          fi
+          eas update --channel production --message "$MSG" --non-interactive
+
+      - name: Summary
+        run: |
+          {
+            echo "### Promoted to production"
+            echo ""
+            echo "- Commit: \`$(git rev-parse --short HEAD)\` $(git log -1 --pretty=%s)"
+            echo "- Channel: \`production\` (Play Store app)"
+            echo ""
+            echo "Reaches users on next app open — the bundle downloads in the"
+            echo "background and applies on the following launch, so it can take"
+            echo "two opens to appear."
+            echo ""
+            echo "Rollback: \`eas update --channel production --republish --group <previous-group-id>\`"
+          } >> "$GITHUB_STEP_SUMMARY"
