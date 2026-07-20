@@ -45,32 +45,14 @@ const LEADER_RATIO = 0.85;
 const MIN_RATIO = 0.07;
 
 /**
- * The center of the hex fits about five glyphs before the number starts
- * running over the inner ring and the near-zero vertices underneath it.
- * Six-figure totals are real once a period is wide enough, so anything at
- * or above 10k collapses to `k`/`M` rather than being allowed to sprawl.
- * The full figure still reads exactly in the per-dim cards below.
- */
-function formatCenterXp(xp: number): string {
-  const round = (n: number, digits: number) =>
-    n.toLocaleString(undefined, { maximumFractionDigits: digits });
-  if (xp < 10_000) return xp.toLocaleString();
-  const k = xp / 1000;
-  if (k < 100) return `${round(k, 1)}k`;
-  // 999_500 rather than 1_000_000, so the last bucket can't print "1.000k".
-  if (xp < 999_500) return `${round(k, 0)}k`;
-  return `${round(xp / 1_000_000, 1)}M`;
-}
-
-/**
  * Six-axis XP radar — one axis per dimension, in DIMENSION_ORDER, normalized
  * against the largest dimension in the current window. It answers "where did
  * my effort concentrate", and reads shape-first: a balanced window fills the
  * hexagon evenly, a lopsided one spikes.
  *
  * The scale is deliberately relative. Nothing here says how much XP is "a
- * lot" — only which dims led. Absolute magnitude lives in the total at the
- * center and in the per-dim cards.
+ * lot" — only which dims led. Absolute magnitude lives in the total under
+ * the hex and in the per-dim cards.
  *
  * Empty window: grid only, no shape, and a caption saying so.
  * Single-dominant window: a spike from the center — degenerate but truthful,
@@ -136,14 +118,16 @@ export function XpHexChart({
 
   return (
     <View style={styles.wrap}>
-      {/* The total sits in the middle, matching Avaliação. It is set well
-          below that screen's score because an XP figure runs several times
-          longer — see formatCenterXp for where the ceiling comes from. */}
+      {/* No centerValue, unlike Avaliação. The shared canvas offers a
+          centered readout and this screen deliberately declines it: the XP
+          scale is relative to the window's leader, so any dim under roughly
+          a third of that leader lands inside a centered number's footprint
+          and gets painted over. On a lopsided week — the normal case, and
+          the one the chart exists to show — that is several real dims
+          hidden behind the total. Everything else about the canvas (rings,
+          spokes, badges, fill ramp, dots) stays shared. */}
       <HexRadar
         axes={axes}
-        centerValue={formatCenterXp(totalXp)}
-        centerUnit="XP"
-        centerFontSize={20}
         fillFrom={tokens.semantic.xp2}
         fillTo={tokens.semantic.xp}
         strokeColor={tokens.semantic.xp2}
@@ -154,6 +138,13 @@ export function XpHexChart({
       />
 
       <View style={styles.caption}>
+        {/* Full figure, no k/M abbreviation: below the hex the row is free
+            to grow, and font scaling stays on for the same reason. Both
+            were only ever constrained by the fixed-size center block. */}
+        <View style={styles.totalRow}>
+          <Text style={styles.totalXp}>{totalXp.toLocaleString()}</Text>
+          <Text style={styles.xpLabel}>XP</Text>
+        </View>
         {/* The delta wins whenever it exists, including the empty window
             that follows a non-empty one: "▼ -100%" says strictly more than
             "no XP this period". The caption is the fallback, and it stays
@@ -185,6 +176,20 @@ export function XpHexChart({
 const styles = StyleSheet.create({
   wrap: { alignItems: 'center', gap: tokens.space[2] },
   caption: { alignItems: 'center', gap: 2 },
+  totalRow: { flexDirection: 'row', alignItems: 'baseline', gap: 5 },
+  totalXp: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 34,
+    color: tokens.text.hi,
+    lineHeight: 36,
+    letterSpacing: -0.5,
+  },
+  xpLabel: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 11,
+    color: tokens.text.dim,
+    letterSpacing: 1.4,
+  },
   deltaText: {
     fontFamily: 'Manrope_700Bold',
     fontSize: 12,

@@ -29,11 +29,15 @@ export interface HexAxis {
 interface Props {
   /** Six axes in DIMENSION_ORDER. */
   axes: HexAxis[];
-  /** Optional comparison series, ratios in DIMENSION_ORDER. Outline only —
-   *  no fill, no dots — so it never competes with the primary shape. */
+  /** Optional comparison series, ratios in DIMENSION_ORDER. Unfilled and
+   *  lighter-weight than the primary, with smaller vertex dots, so it reads
+   *  as the reference rather than the subject. */
   secondary?: number[];
   secondaryColor?: string;
-  centerValue: string;
+  /** Pre-formatted headline for the middle of the hex. Omit it entirely
+   *  when the caller's data lives near the center — see the note on the
+   *  center block below. */
+  centerValue?: string;
   /** Small caps under the value (e.g. "XP"). Omit for a bare number. */
   centerUnit?: string;
   centerFontSize?: number;
@@ -50,11 +54,20 @@ interface Props {
   a11yLabel: string;
 }
 
-// 32 + hitSlop 8 = a 48×48 tap target, clearing the 44×44 iOS HIG /
-// WCAG 2.5.5 floor. Don't shrink either number without checking that sum.
+// 32 + hitSlop 8 per side = a 48×48 tap target, clearing the 44×44 iOS HIG
+// / WCAG 2.5.5 floor. Don't shrink either number without checking that sum.
+//
+// HIT_SLOP is inside PADDING on purpose. hitSlop only enlarges the target
+// within the parent's own bounds — Android does not dispatch touches that
+// land outside a ViewGroup's rect, so slop hanging off the container edge
+// is silently dead. Reserving it here puts the badge's outer edge exactly
+// HIT_SLOP inside the size×size box, which makes the 48×48 real on every
+// axis instead of only on the four non-extreme ones. Cost is 7px of plot
+// radius versus stopping at +1; that is the price of the claim above.
 const BADGE = 32;
 const LABEL_GAP = 17;
-const PADDING = BADGE / 2 + LABEL_GAP + 1;
+const HIT_SLOP = 8;
+const PADDING = BADGE / 2 + LABEL_GAP + HIT_SLOP;
 
 /** Evenly spaced thirds. The grid is a ruler, not a scoring band — equal
  *  steps keep the two charts readable as the same instrument even though
@@ -89,6 +102,13 @@ function ringPoints(cx: number, cy: number, r: number): string {
  * Empty state: when no axis is active the polygon is skipped entirely, so
  * an all-zero series renders as bare grid instead of a degenerate spike
  * collapsed onto the center point.
+ *
+ * The centered readout is opt-in (`centerValue`) rather than structural,
+ * because it occludes the middle of the plot and that is where small values
+ * sit. Avaliação can afford it — its scale is absolute, so a dim low enough
+ * to disappear under the number is one the legend cards below already
+ * spell out. Dedicação cannot: its scale is relative, so an ordinary
+ * lopsided window pushes real, non-zero dims under the text.
  */
 export function HexRadar({
   axes,
@@ -133,13 +153,11 @@ export function HexRadar({
 
   const secondaryPoints = useMemo(() => {
     if (!secondary || !secondary.some((r) => r > 0)) return null;
-    return secondary
-      .map((ratio, j) => {
-        const angle = angleAt(j);
-        const r = Math.max(0, Math.min(1, ratio)) * R;
-        return `${cx + Math.cos(angle) * r},${cy + Math.sin(angle) * r}`;
-      })
-      .join(' ');
+    return DIMENSION_ORDER.map((_, j) => {
+      const angle = angleAt(j);
+      const r = Math.max(0, Math.min(1, secondary[j] ?? 0)) * R;
+      return { x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r };
+    });
   }, [secondary, cx, cy, R]);
 
   const gradId = `hexradar-${idSuffix}`;
@@ -183,19 +201,6 @@ export function HexRadar({
           );
         })}
 
-        {/* Comparison series sits under the primary so the shape the screen
-            is actually about stays on top. */}
-        {secondaryPoints && (
-          <Polygon
-            points={secondaryPoints}
-            fill="none"
-            stroke={secondaryColor}
-            strokeWidth={1.5}
-            strokeOpacity={0.85}
-            strokeLinejoin="round"
-          />
-        )}
-
         {hasShape && (
           <Polygon
             points={shapePoints}
@@ -206,6 +211,39 @@ export function HexRadar({
           />
         )}
 
+        {/* Comparison series draws OVER the primary, not under it. The
+            primary is a filled region (opacity ramps 0.34 → 0.08), so an
+            outline underneath gets tinted by up to a third wherever the two
+            shapes overlap — which on a comparison view is most of the
+            interesting area. Keeping it lighter in weight (1.5 vs 1.75) and
+            leaving it unfilled is what stops it competing; z-order is not
+            the lever that does that.
+
+            The vertex marks matter for the same reason: the comparison this
+            view exists for is read per axis, and an untagged outline makes
+            the reader interpolate crossings. Smaller (3 vs 4) so the primary
+            still leads. */}
+        {secondaryPoints && (
+          <Polygon
+            points={secondaryPoints.map((p) => `${p.x},${p.y}`).join(' ')}
+            fill="none"
+            stroke={secondaryColor}
+            strokeWidth={1.5}
+            strokeOpacity={0.9}
+            strokeLinejoin="round"
+          />
+        )}
+
+        {secondaryPoints?.map((p, j) => (
+          <Circle
+            key={`sec-${DIMENSION_ORDER[j]}`}
+            cx={p.x}
+            cy={p.y}
+            r={3}
+            fill={secondaryColor}
+          />
+        ))}
+
         {hasShape &&
           axes.map((axis, j) =>
             axis.active ? (
@@ -215,28 +253,39 @@ export function HexRadar({
                 cy={points[j].y}
                 r={4}
                 fill={DIMENSION_META[axis.dimId].color}
+                stroke={tokens.bg.deep}
+                strokeWidth={1}
               />
             ) : null,
           )}
       </Svg>
 
-      <View style={styles.center} pointerEvents="none">
-        <Text
-          style={[
-            styles.centerValue,
-            { fontSize: centerFontSize, lineHeight: centerFontSize * 1.1 },
-          ]}
-          allowFontScaling={false}
-          numberOfLines={1}
-        >
-          {centerValue}
-        </Text>
-        {centerUnit ? (
-          <Text style={styles.centerUnit} allowFontScaling={false}>
-            {centerUnit}
+      {/* The center block paints over the SVG, so it hides whatever sits
+          under it. On a radar that region is not empty — it is where the
+          LOW values live. A vertex only clears a `centerFontSize` 20 / five
+          glyph readout past roughly 0.3R along the shallow axes, so any
+          caller whose series routinely puts dims down there must pass no
+          centerValue and put the figure outside the hex instead. Fits-the-
+          inner-ring is the wrong test; clears-the-vertices is the test. */}
+      {centerValue !== undefined ? (
+        <View style={styles.center} pointerEvents="none">
+          <Text
+            style={[
+              styles.centerValue,
+              { fontSize: centerFontSize, lineHeight: centerFontSize * 1.1 },
+            ]}
+            allowFontScaling={false}
+            numberOfLines={1}
+          >
+            {centerValue}
           </Text>
-        ) : null}
-      </View>
+          {centerUnit ? (
+            <Text style={styles.centerUnit} allowFontScaling={false}>
+              {centerUnit}
+            </Text>
+          ) : null}
+        </View>
+      ) : null}
 
       {axes.map((axis, j) => {
         const meta = DIMENSION_META[axis.dimId];
@@ -245,7 +294,7 @@ export function HexRadar({
             key={axis.dimId}
             disabled={!onAxisPress}
             onPress={() => onAxisPress?.(axis.dimId)}
-            hitSlop={8}
+            hitSlop={HIT_SLOP}
             style={({ pressed }) => [
               styles.badge,
               {
