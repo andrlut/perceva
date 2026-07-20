@@ -46,6 +46,7 @@ const pt: Translations = {
     increaseQty: 'Aumentar quantidade',
     xpByDimension: 'Distribuição de XP por dimensão',
     stopTracking: 'Parar de acompanhar esta recompensa',
+    dayCellEmpty: 'sem registro',
   },
 
   taskForm: {
@@ -105,12 +106,6 @@ const pt: Translations = {
     placeholder: 'Aventureiro(a)',
     hint: 'Esse é o nome mostrado no cabeçalho do seu personagem e nas saudações. {{count}} caracteres restantes.',
     saveError: 'Não foi possível salvar',
-  },
-
-  calendarModal: {
-    title: 'Calendário',
-    legendSelected: 'Selecionado',
-    legendActivity: 'Atividade',
   },
 
   trackPicker: {
@@ -1750,7 +1745,7 @@ const pt: Translations = {
   },
 
   historyHub: {
-    dias: 'Dias',
+    rotina: 'Rotina',
     dedicacao: 'Dedicação',
     insights: 'Insights',
   },
@@ -1817,8 +1812,6 @@ const pt: Translations = {
     history: {
       title: 'Como me senti',
       seeHistory: 'Ver histórico',
-      filterActivity: 'Atividade',
-      filterMood: 'Humor',
     },
     day: {
       eyebrow: 'Humor do dia',
