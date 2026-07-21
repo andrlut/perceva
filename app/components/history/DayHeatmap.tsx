@@ -14,13 +14,18 @@ import { DIMENSION_META } from '@/theme/dimensions';
 export interface DayCellData {
   /** Cell fill — the day's mood color. Omit for an empty (bordered) cell. */
   bg?: string | null;
-  /** True when `bg` is saturated → day number + XP flip to dark ink. */
-  onColor?: boolean;
-  /** The day's XP total. Rendered as a number; 0 renders nothing. */
+  /**
+   * Ink for the day number, XP figure, note pip and rings when `bg` is set.
+   * Must be the fill's own high-contrast ink (`MoodLevel.ink`) — a single
+   * polarity cannot serve a ramp that spans light and dark fills. Omit to keep
+   * the default light ink used on unfilled cells.
+   */
+  ink?: string | null;
+  /** The day's XP total. The cell's headline figure; 0 renders nothing. */
   xp?: number;
   /** Dimensions the day touched, already deduped and ordered. */
   dims?: DimensionId[];
-  /** Corner pip — e.g. the mood entry carries a note or tags. */
+  /** Top-right pip — e.g. the mood entry carries a note or tags. */
   mark?: boolean;
   /** Appended to the composed accessibilityLabel, e.g. the mood name. */
   a11yNote?: string;
@@ -40,15 +45,36 @@ interface Props {
 
 /**
  * Cell height instead of `aspectRatio: 1`. A square cell (~37dp on a 360dp
- * phone) cannot stack a day number, an XP figure and a dot row legibly;
- * dropping the Atividade|Humor segmented control from the History card
- * freed roughly the 9dp per row this costs.
+ * phone) cannot carry a day number, a headline XP figure and a dot row
+ * legibly; dropping the Atividade|Humor segmented control from the History
+ * card freed roughly the 9dp per row this costs.
  *
- * The stack has to fit, because the cell clips: dayNum 13 + gap 1 + xpNum
- * 11 + gap 1 + dotTrack 8 = 34, plus 3dp padding per side = 40, plus the
- * 2dp selection border per side = 44. Two dp of headroom — which is why
- * both figures set `allowFontScaling={false}` and dayNum pins an explicit
- * lineHeight. Adding a row here means raising this number.
+ * The layout is no longer a centered stack — the day number is pinned to the
+ * top-left corner, the XP owns the optical center as the cell's headline, and
+ * the dot track is pinned to the bottom. So the budget is now about the
+ * *clearances* around the centered figure, not a sum of rows.
+ *
+ * **The border is part of the budget.** RN `height` is border-box, and the
+ * absolute children offset from the padding edge while `justifyContent`
+ * centers the in-flow XP in the *content* box — so every figure below shifts
+ * with the border width B. Content box = 46 − 2B: 44 unselected (B=1), 43
+ * today (B=1.5), 42 selected (B=2). Coordinates are relative to that box:
+ *
+ *                              B=1        B=1.5       B=2
+ *   dayNum   top 2, lh 11      2 … 13     2 … 13      2 … 13
+ *   xpNum    centered, lh 16   14 … 30    13.5 … 29.5 13 … 29
+ *   dotTrack bottom 2, h 8     34 … 42    32 … 40     30 … 38
+ *
+ * Clearance above the headline is therefore 1 / 0.5 / **0**dp — the selected
+ * cell is exactly flush, not 2dp clear. That clearance at B=2 is the binding
+ * constraint: (H − 4 − 16)/2 ≥ 13 gives **H ≥ 46**. So 46 is the floor
+ * with zero slack, not "a little air" above a floor of 42 — at H=42 the
+ * selected cell overlaps the corner number by 2dp. Raise H before adding
+ * anything vertical, and re-derive if a border width changes.
+ *
+ * Nothing clips today: these are lineHeight boxes and the glyph ink is inset
+ * within them. The cell clips (`overflow: 'hidden'`), which is why both
+ * figures set `allowFontScaling={false}` and pin explicit lineHeights.
  */
 const CELL_HEIGHT = 46;
 
@@ -58,6 +84,7 @@ const CELL_HEIGHT = 46;
  * cell): 320 − 32 (screen padding) − 2 (card border) − 32 (card padding)
  * = 254dp of grid; minus the 6 inter-cell gaps of 6dp = 218/7 = 31.1dp
  * per cell; minus the 2dp selection border per side = **27.1dp** inside.
+ * The default (unselected, 1dp border) cell on a 360dp phone is 34.9dp.
  *
  * The track costs `n×5 + (n−1)×1 + 2×1.5` (see `dot`/`dotTrack`), so
  * four dots = 26dp and five = 32dp. Four is the real ceiling; a fifth
@@ -65,14 +92,28 @@ const CELL_HEIGHT = 46;
  * small screens. Days touching more than four pillars are rare, and the
  * accessibility label below still enumerates *every* dimension, so the
  * clipped ones are not lost to screen readers.
+ *
+ * **Why dots and not `DIMENSION_META[dim].iconName` glyphs.** Icons would be
+ * a genuine second channel and therefore strictly better here, but they do
+ * not fit. Same budget with a glyph of side S: `4S + 3×1 + 2×1.5 ≤ 27.1`
+ * gives S ≤ 5.3dp on the worst cell and S ≤ 7.2dp on the common one. Ionicons
+ * need roughly 12dp before `heart` / `fitness` / `sparkles` / `cash` /
+ * `people` / `color-palette` are told apart — at 6dp they are all the same
+ * smudge, and a smudge is worse than a clean dot because it *looks* like it
+ * should be readable. Cutting to three icons only buys 7.4dp, still far
+ * short. Cost is not the issue (Ionicons are font glyphs; ~250 per month view
+ * is free) — legibility is. Revisit if the calendar ever gets a full-width
+ * or two-column-per-cell layout.
  */
 const MAX_DOTS = 4;
 
 /**
  * The single month-grid heatmap for the whole app. A cell is one unified
  * read of the day rather than a single-channel swatch: background = mood,
- * number = XP, dots = which dimensions were practiced. Everything is
- * delegated to `dataFor`, so callers stay in charge of the semantics.
+ * centered headline figure = XP, bottom dots = which dimensions were
+ * practiced, top-left corner = the date, top-right pip = "this day has a
+ * note". Everything is delegated to `dataFor`, so callers stay in charge of
+ * the semantics.
  */
 export function DayHeatmap({
   monthDate,
@@ -158,6 +199,9 @@ export function DayHeatmap({
             const isToday = key === todayKey;
             const isSelected = key === selectedKey;
             const isFuture = cell.getTime() > now;
+            // Unfilled cells are the near-black page background, so they take
+            // the light default. Filled cells must use the fill's own ink.
+            const ink = (data?.bg && data.ink) || tokens.text.hi;
 
             const parts = [dayFmt.format(cell)];
             if (data?.a11yNote) parts.push(data.a11yNote);
@@ -165,6 +209,11 @@ export function DayHeatmap({
             if (dims.length > 0) {
               parts.push(dims.map((d) => meta.dim(d).label).join(t('format.listSeparator')));
             }
+            // The corner pip is 5dp of pure visual shorthand. Announce it in
+            // the cell's own label rather than as a nested a11y node: the
+            // Pressable is the accessibility element, so a label on the pip
+            // View alone would never be read out.
+            if (data?.mark) parts.push(t('a11y.dayCellNote'));
             if (parts.length === 1) parts.push(t('a11y.dayCellEmpty'));
 
             return (
@@ -180,8 +229,8 @@ export function DayHeatmap({
                   data?.bg
                     ? { backgroundColor: data.bg, borderColor: 'transparent' }
                     : { backgroundColor: 'rgba(255,255,255,0.03)', borderColor: tokens.border.base },
-                  isToday && styles.cellToday,
-                  isSelected && styles.cellSelected,
+                  isToday && [styles.cellToday, { borderColor: ink }],
+                  isSelected && [styles.cellSelected, { borderColor: ink }],
                   isFuture && styles.cellFuture,
                 ]}
               >
@@ -194,7 +243,7 @@ export function DayHeatmap({
                   allowFontScaling={false}
                   style={[
                     styles.dayNum,
-                    data?.onColor ? styles.inkOnColor : null,
+                    data?.bg ? [styles.onColor, { color: ink }] : null,
                     isFuture && { opacity: 0.4 },
                   ]}
                 >
@@ -203,22 +252,27 @@ export function DayHeatmap({
                 {xp > 0 && (
                   <Text
                     allowFontScaling={false}
-                    style={[styles.xpNum, data?.onColor ? styles.inkOnColor : null]}
+                    numberOfLines={1}
+                    style={[styles.xpNum, data?.bg ? { color: ink } : null]}
                   >
                     {formatXp(xp)}
                   </Text>
                 )}
                 {dims.length > 0 && (
-                  <View style={styles.dotTrack}>
-                    {dims.slice(0, MAX_DOTS).map((d) => (
-                      <View
-                        key={d}
-                        style={[styles.dot, { backgroundColor: DIMENSION_META[d].color }]}
-                      />
-                    ))}
+                  <View style={styles.dotRow}>
+                    <View style={styles.dotTrack}>
+                      {dims.slice(0, MAX_DOTS).map((d) => (
+                        <View
+                          key={d}
+                          style={[styles.dot, { backgroundColor: DIMENSION_META[d].color }]}
+                        />
+                      ))}
+                    </View>
                   </View>
                 )}
-                {data?.mark && <View style={styles.mark} />}
+                {data?.mark && (
+                  <View style={[styles.mark, data.bg ? { backgroundColor: ink } : null]} />
+                )}
               </Pressable>
             );
           })}
@@ -230,11 +284,31 @@ export function DayHeatmap({
 
 const LOCALE_MAP: Record<string, string> = { en: 'en-US', pt: 'pt-BR' };
 
-/** Compact XP for a ~37dp-wide cell: 940, 1.2k, 12k. */
+/**
+ * Compact XP: 940, 1k, 12k. **Three glyphs, hard ceiling.**
+ *
+ * Manrope ExtraBold digits are proportional, not tabular, so the ceiling has
+ * to be derived from the *widest* digit, not an average. Advances measured
+ * from the shipped `hmtx` (upem 2000): `1` = 0.454em, `9` = 0.622em, and the
+ * worst, `0` = **0.674em**. So the widest 3-glyph total is "000"-shaped at
+ * 3 × 0.674 = 2.022em, and the fit constraint against the 27.14dp inner width
+ * of the worst cell we ship (320dp phone, selected, B=2) is
+ *
+ *   fontSize ≤ 27.14 / 2.022 = 13.42  →  **13dp**
+ *
+ * which is why `xpNum` is 13 and not 14. At 14 the average digit is 8.71dp
+ * and "999" does fit at 26.1dp, but exact hundreds do not — "900" is 27.59dp
+ * and 200/300/400/600/800 likewise overflow. With `numberOfLines={1}` those
+ * ellipsize to a *wrong figure* ("90…"), which is worse than clipping. At 13
+ * every 3-digit total fits with 0.85dp to spare.
+ *
+ * The old four-glyph "1.2k" would be 4 glyphs ≈ 28dp even at 13 and would get
+ * clipped on both edges by `overflow: 'hidden'`. A coarser headline beats a
+ * clipped one, and the exact total is one tap away in the day detail.
+ */
 function formatXp(xp: number): string {
   if (xp < 1000) return String(xp);
-  const k = xp / 1000;
-  return k < 10 ? `${k.toFixed(1).replace(/\.0$/, '')}k` : `${Math.round(k)}k`;
+  return `${Math.round(xp / 1000)}k`;
 }
 
 function buildMonthRows(anyDay: Date, weekStart: WeekStart): (Date | null)[][] {
@@ -294,36 +368,63 @@ const styles = StyleSheet.create({
     height: CELL_HEIGHT,
     borderRadius: 8,
     borderWidth: 1,
+    // Centers the XP headline — the only in-flow child. The day number, the
+    // dot track and the note pip are all absolutely positioned, so the
+    // headline stays optically centered whether or not they are present.
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 3,
-    gap: 1,
     // Clips the dot track rather than letting it bleed past the rounded
     // corners on narrow screens.
     overflow: 'hidden',
   },
   cellEmpty: { flex: 1, height: CELL_HEIGHT },
-  // Explicit lineHeight, not the font's default box: it is what makes the
-  // CELL_HEIGHT budget above arithmetic rather than a guess.
+  // Pinned to the top-left corner, opposite the note pip. Near-black via
+  // `inkOnColor` on any day that carries a mood fill; light here, because on
+  // a day with no mood the cell IS the near-black background and black-on-
+  // black is nothing. Explicit lineHeight, not the font's default box: it is
+  // what makes the CELL_HEIGHT clearances above arithmetic, not a guess.
   dayNum: {
+    position: 'absolute',
+    top: 2,
+    left: 3,
     fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
-    lineHeight: 13,
+    fontSize: 10,
+    lineHeight: 11,
     color: tokens.text.hi,
   },
+  // The headline. 13dp vs the old 9dp, and it owns the optical center of the
+  // cell now that the day number moved to the corner. 13, not 14: see formatXp
+  // for the width arithmetic — 14 overflows the worst cell on "900"-shaped
+  // totals. lineHeight stays 16 either way, so the vertical budget on
+  // CELL_HEIGHT is unaffected by the size.
   xpNum: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 9,
-    lineHeight: 11,
-    letterSpacing: 0.2,
-    // This is the *no mood fill* branch only — whenever a day has a mood
-    // color, `onColor` is set and `inkOnColor` overrides to dark ink. Keep
-    // it a neutral: tokens.semantic.xp is byte-identical to the "great"
-    // mood fill (#3DD68C), so picking it here would make XP vanish on the
-    // best days the moment that override is ever relaxed.
+    fontSize: 13,
+    lineHeight: 16,
+    // Zero, not 0.2: the tracking is what pushes a 3-glyph figure past the
+    // 27.14dp worst-case inner width. See formatXp.
+    letterSpacing: 0,
+    // Deliberately NOT a fixed color across the whole grid. A single hue
+    // cannot survive five different mood fills — tokens.semantic.xp green on
+    // the gold "good"/"great" fills, or any blue on the blue "terrible"/"bad"
+    // ones, disappears. Nor can a single *neutral*: the ramp has monotonic
+    // lightness, so near-black is right on steps 2–5 (6.07–14.91) and wrong on
+    // step 1 (3.87). The fill supplies its own ink via `DayCellData.ink`; this
+    // neutral is only for days with no mood, where the cell is the plain dark
+    // background. Size and weight are what make the figure the headline.
     color: tokens.text.base,
   },
-  inkOnColor: { color: tokens.bg.deep, fontFamily: 'Manrope_800ExtraBold' },
+  onColor: { fontFamily: 'Manrope_800ExtraBold' },
+  // Full-width row so the pill self-centers regardless of how many dots it
+  // holds, while staying pinned to the bottom of the cell.
+  dotRow: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 2,
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
   dotTrack: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -333,17 +434,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 1.5,
     paddingVertical: 1.5,
     borderRadius: tokens.radius.pill,
-    // Dark backing rather than a per-dot ring: three dimension colors sit
-    // within a hair of a mood fill (wealth IS mood-"ok" #FFC83D, health vs
-    // "terrible", body vs "bad"), and a 1px ring on a 5dp dot eats most of
-    // the color. The track separates the whole row from any background.
+    // Dark backing rather than a per-dot ring: a 1px ring on a 5dp dot eats
+    // most of the color, and the six dimension hues span the same warm range
+    // as the top of the mood ramp (wealth #FFC83D vs mood-"great" #FAE563,
+    // body #FF8A3D vs mood-"good" #F2B86C). The track separates the whole
+    // row from any fill behind it in one move.
     backgroundColor: tokens.bg.deep,
   },
   dot: { width: 5, height: 5, borderRadius: 2.5 },
-  cellToday: { borderColor: tokens.text.hi, borderWidth: 1.5 },
-  // Violet, not tokens.semantic.coin: that gold is the exact "ok" mood
-  // fill, so the selection ring used to vanish on those days.
-  cellSelected: { borderColor: tokens.brand.violet2, borderWidth: 2 },
+  // Both rings take the cell's own ink at render time (`borderColor` is set
+  // inline), for the same reason the figures do: no fixed color survives the
+  // whole ramp. The two colors that read as obvious ring candidates are the
+  // two worst choices — `brand.violet2` measures 1.05 on the "bad" fill
+  // (identical luminance, and violet-vs-blue is exactly the pair protan/deutan
+  // vision collapses, so both channels go at once), and `text.hi` measures
+  // 1.16 on "great". Ink instead is ≥4.92 on every step by construction.
+  //
+  // That leaves border *width* as the only channel separating today from
+  // selected, which is thin — but hue is genuinely unavailable here, and the
+  // day-detail panel below the grid names the selected date outright, so the
+  // ambiguity is cosmetic. Widths are also load-bearing geometry: 2 is the
+  // most the selected cell can spend before the 4-dot track and the 3-glyph
+  // headline stop fitting its inner width (see MAX_DOTS and formatXp).
+  cellToday: { borderWidth: 1.5 },
+  cellSelected: { borderWidth: 2 },
   cellFuture: { opacity: 0.3 },
   mark: {
     position: 'absolute',
@@ -352,6 +466,9 @@ const styles = StyleSheet.create({
     width: 5,
     height: 5,
     borderRadius: 3,
+    // Default for unfilled cells; a filled cell overrides this with its ink,
+    // because a white pip disappears on the light end of the ramp (#FAE563,
+    // #F2B86C) and a near-black one disappears on the dark end (#3874AD).
     backgroundColor: 'rgba(255,255,255,0.85)',
   },
 });
