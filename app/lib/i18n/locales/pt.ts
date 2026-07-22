@@ -529,6 +529,18 @@ const pt: Translations = {
       summary: 'Resumo',
       news: 'Notícia',
     },
+    mode: {
+      read: 'Ler',
+      listen: 'Ouvir',
+      view: 'Ver',
+    },
+    media: {
+      onlyIn: 'Disponível só em {{lang}}',
+      listenMin: { one: '{{count}} min de áudio', other: '{{count}} min de áudio' },
+      expand: 'Toque pra ampliar',
+      closeViewer: 'Fechar',
+      audioError: 'Não foi possível carregar o áudio. Tente de novo.',
+    },
     readFilter: {
       all: 'Todos',
       unread: 'Não lidos',

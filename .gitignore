@@ -53,6 +53,10 @@ Thumbs.db
 !.claude/skills/
 !.claude/agents/
 
+# Learning drops — media files stay local, only fichas (backlog/) are versioned
+learning-drops/inbox/
+learning-drops/published/
+
 # Coverage / testing
 coverage/
 .nyc_output/

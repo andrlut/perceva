@@ -534,6 +534,18 @@ const en = {
       summary: 'Summary',
       news: 'News',
     },
+    mode: {
+      read: 'Read',
+      listen: 'Listen',
+      view: 'View',
+    },
+    media: {
+      onlyIn: 'Only available in {{lang}}',
+      listenMin: { one: '{{count}} min listen', other: '{{count}} min listen' },
+      expand: 'Tap to expand',
+      closeViewer: 'Close',
+      audioError: "Couldn't load the audio. Try again.",
+    },
     readFilter: {
       all: 'All',
       unread: 'Unread',
