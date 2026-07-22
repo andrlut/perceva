@@ -628,8 +628,10 @@ export interface LearningMaterial {
   title_en: string;
   summary_pt: string;
   summary_en: string;
-  body_pt: string;
-  body_en: string;
+  /** Markdown body with `:::` directives. NULL is legal since the media
+   *  drops era — a material can be podcast/infographic-only. */
+  body_pt: string | null;
+  body_en: string | null;
   /** 0..5 short bullets surfaced at the top of the detail screen. */
   takeaways_pt: string[];
   takeaways_en: string[];
@@ -725,6 +727,38 @@ export type LearningMaterialCard = Omit<
 export interface LearningMaterialSub {
   material_id: string;
   sub_id: SubId;
+}
+
+// ── Learning media (podcast audio / infographics / decks) ───────────────────
+
+export type LearningMediaKind = 'audio' | 'infographic' | 'deck';
+export type LearningMediaLocale = 'pt' | 'en';
+export type LearningMediaSource = 'notebooklm' | 'gemini-api' | 'manual';
+
+/**
+ * One media attachment of a material, per (kind, locale). Files live in the
+ * public `learning-media` Storage bucket; `path` (and `page_paths`) are
+ * BUCKET-RELATIVE — build URLs with `learningMediaUrl()` so the storage
+ * backend can move without a data migration.
+ */
+export interface LearningMaterialMedia {
+  id: string;
+  material_id: string;
+  kind: LearningMediaKind;
+  locale: LearningMediaLocale;
+  path: string;
+  /** Deck only: ordered bucket-relative paths of every rasterized page. */
+  page_paths: string[] | null;
+  /** Audio only. */
+  duration_seconds: number | null;
+  source: LearningMediaSource;
+  meta: {
+    title?: string;
+    width?: number;
+    height?: number;
+    alt?: string;
+  } | null;
+  created_at: string;
 }
 
 export interface LearningView {

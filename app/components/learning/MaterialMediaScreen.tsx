@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Image } from 'expo-image';
+import { Stack, useRouter } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Image as RNImage,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   Pressable,
@@ -15,13 +17,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LearningBody } from '@/components/LearningBody';
+import { AudioPane } from '@/components/learning/AudioPane';
 import { FeedbackSheet } from '@/components/learning/FeedbackSheet';
-import { MaterialMediaScreen } from '@/components/learning/MaterialMediaScreen';
+import { MediaViewer } from '@/components/learning/MediaViewer';
 import { MaterialCover } from '@/components/MaterialCover';
 import { ScreenBackground } from '@/components/ScreenBackground';
-import { useReadingProgressStore } from '@/lib/readingProgress';
 import {
-  useLearningMaterial,
+  type LearningMaterialDetail,
   useMarkMaterialRead,
   useMyMaterialFeedback,
   useRateMaterial,
@@ -30,47 +32,102 @@ import {
 import type { LearningMaterialType } from '@/lib/db/types';
 import { useT, type TranslateOptions } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
+import { learningMediaUrl, pickMedia } from '@/lib/learningMedia';
+import { useReadingProgressStore } from '@/lib/readingProgress';
 import { showInfo } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 import { SUB_META } from '@/theme/dimensions';
 
+/**
+ * Detail experience for materials that carry media attachments (podcast
+ * audio / infographic / deck). Renders a book-style hero and a
+ * Read | Listen | View mode switcher; materials WITHOUT media keep the
+ * original screen in `app/material/[slug].tsx` untouched.
+ *
+ * The audio player is mounted at screen level the first time Listen is
+ * opened and then only hidden on mode switches — playback survives
+ * switching to Read/View.
+ */
+
 type Translator = (key: string, options?: TranslateOptions) => string;
+type Mode = 'read' | 'listen' | 'view';
 
 function typeLabel(type: LearningMaterialType, t: Translator): string {
   return t(`learning.type.${type}`);
 }
 
-export default function MaterialDetailScreen() {
+interface Props {
+  detail: LearningMaterialDetail;
+}
+
+export function MaterialMediaScreen({ detail: m }: Props) {
   const router = useRouter();
   const { t, locale } = useT();
-  const params = useLocalSearchParams<{ slug: string }>();
-  const slug = params.slug;
+  const meta = useMetaLookup();
 
-  const material = useLearningMaterial(slug);
   const reads = useReadMaterialIds();
   const markRead = useMarkMaterialRead();
-  const myFeedback = useMyMaterialFeedback(slug);
+  const myFeedback = useMyMaterialFeedback(m.slug);
   const rateMaterial = useRateMaterial();
-  const meta = useMetaLookup();
 
   const [busy, setBusy] = useState(false);
   const [feedbackSheetOpen, setFeedbackSheetOpen] = useState(false);
   const [sheetRating, setSheetRating] = useState<-1 | 1 | null>(null);
+  const [viewerOpen, setViewerOpen] = useState(false);
 
-  // Called when the user taps 👍 or 👎. Distinguishes 4 cases:
-  //   1. Tapping the active rating again with no follow-up state → clear it
-  //   2. Tapping a new rating (or flipping) → save rating + open the sheet
-  //      for optional tags/comment follow-up
+  // ── Content per locale (with cross-language fallback for the body) ──────
+  const preferredBody = locale === 'pt' ? m.body_pt : m.body_en;
+  const otherBody = locale === 'pt' ? m.body_en : m.body_pt;
+  const body = preferredBody ?? otherBody;
+  const bodyIsFallback = !preferredBody && !!otherBody;
+
+  const title = locale === 'pt' ? m.title_pt : m.title_en;
+  const summary = locale === 'pt' ? m.summary_pt : m.summary_en;
+  const sourceLabel = locale === 'pt' ? m.source_label_pt : m.source_label_en;
+  const takeaways = locale === 'pt' ? m.takeaways_pt : m.takeaways_en;
+  const signs = locale === 'pt' ? m.signs_pt : m.signs_en;
+  const tracking = locale === 'pt' ? m.tracking_pt : m.tracking_en;
+  const dim = meta.dim(m.dimension_id);
+
+  // ── Media picks (locale first, other language as fallback w/ badge) ─────
+  const audioPick = useMemo(
+    () => pickMedia(m.media, ['audio'], locale === 'pt' ? 'pt' : 'en'),
+    [m.media, locale],
+  );
+  const visualPick = useMemo(
+    () => pickMedia(m.media, ['infographic', 'deck'], locale === 'pt' ? 'pt' : 'en'),
+    [m.media, locale],
+  );
+
+  const modes = useMemo(() => {
+    const list: Mode[] = [];
+    if (body) list.push('read');
+    if (audioPick) list.push('listen');
+    if (visualPick) list.push('view');
+    return list;
+  }, [body, audioPick, visualPick]);
+
+  const [mode, setMode] = useState<Mode>(() => (body ? 'read' : audioPick ? 'listen' : 'view'));
+  // Player mounts on first Listen and stays mounted (hidden) afterwards.
+  const [audioActivated, setAudioActivated] = useState(false);
+
+  const switchMode = (next: Mode) => {
+    Haptics.selectionAsync().catch(() => {});
+    if (next === 'listen') setAudioActivated(true);
+    setMode(next);
+  };
+
+  const isRead = useMemo(
+    () => reads.data?.has(m.id) ?? false,
+    [reads.data, m.id],
+  );
+
   const handleRate = (rating: -1 | 1) => {
     Haptics.selectionAsync().catch(() => {});
     if (myFeedback.data?.rating === rating) {
-      // Toggle off — call without comment/tags so the RPC clears.
-      rateMaterial.mutate({ slug, rating });
+      rateMaterial.mutate({ slug: m.slug, rating });
       return;
     }
-    // New rating (or flipping). Save the rating immediately so the chip
-    // reflects the user's choice even if they dismiss the sheet, then
-    // open the follow-up sheet.
     rateMaterial.mutate({ slug: m.slug, rating });
     setSheetRating(rating);
     setFeedbackSheetOpen(true);
@@ -78,87 +135,26 @@ export default function MaterialDetailScreen() {
 
   const handleSheetSave = (tags: string[], comment: string | null) => {
     if (!sheetRating) return;
-    rateMaterial.mutate({
-      slug,
-      rating: sheetRating,
-      tags,
-      comment,
-    });
+    rateMaterial.mutate({ slug: m.slug, rating: sheetRating, tags, comment });
     setFeedbackSheetOpen(false);
   };
 
-  // ── Scroll-position tracking for the Continue Reading hero ─────────────
-  // Throttle scroll → store writes by hand. RN's `scrollEventThrottle` only
-  // controls native→JS event rate; we still want a JS-side debounce so we
-  // don't churn AsyncStorage during every flick.
+  // Reading progress only makes sense while actually reading — scrolling
+  // past the player must not fabricate a "Continue reading 90%" card.
   const updateProgress = useReadingProgressStore((s) => s.update);
   const lastWriteRef = useRef<number>(0);
   const onContentScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    if (!material.data) return;
+    if (mode !== 'read') return;
     const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
     const scrollable = contentSize.height - layoutMeasurement.height;
-    if (scrollable <= 0) return; // content shorter than the viewport
+    if (scrollable <= 0) return;
     const percent = (contentOffset.y / scrollable) * 100;
     const now = Date.now();
-    // 500ms debounce — enough to feel responsive without thrashing storage.
     if (now - lastWriteRef.current < 500) return;
     lastWriteRef.current = now;
-    updateProgress(material.data.slug, material.data.id, percent);
+    updateProgress(m.slug, m.id, percent);
   };
 
-  const isRead = useMemo(() => {
-    if (!material.data) return false;
-    return reads.data?.has(material.data.id) ?? false;
-  }, [material.data, reads.data]);
-
-  if (material.isLoading) {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <ScreenBackground>
-          <Stack.Screen options={{ headerShown: false }} />
-          <View style={styles.center}>
-            <ActivityIndicator color={tokens.brand.violet2} />
-          </View>
-        </ScreenBackground>
-      </SafeAreaView>
-    );
-  }
-
-  if (!material.data) {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <ScreenBackground>
-          <Stack.Screen options={{ headerShown: false }} />
-          <View style={styles.center}>
-            <Text style={styles.errorTitle}>{t('learning.detail.notFound')}</Text>
-            <Pressable style={styles.errorBtn} onPress={() => router.back()}>
-              <Text style={styles.errorBtnText}>{t('common.back')}</Text>
-            </Pressable>
-          </View>
-        </ScreenBackground>
-      </SafeAreaView>
-    );
-  }
-
-  const m = material.data;
-
-  // Materials with media attachments (podcast / infographic / deck) get the
-  // Read|Listen|View experience; everything else keeps this original screen.
-  if (m.media.length > 0) {
-    return <MaterialMediaScreen detail={m} />;
-  }
-
-  const title = locale === 'pt' ? m.title_pt : m.title_en;
-  const summary = locale === 'pt' ? m.summary_pt : m.summary_en;
-  const body = locale === 'pt' ? m.body_pt : m.body_en;
-  const sourceLabel = locale === 'pt' ? m.source_label_pt : m.source_label_en;
-  const takeaways = locale === 'pt' ? m.takeaways_pt : m.takeaways_en;
-  const signs = locale === 'pt' ? m.signs_pt : m.signs_en;
-  const tracking = locale === 'pt' ? m.tracking_pt : m.tracking_en;
-  const dim = meta.dim(m.dimension_id);
-
-  // 5 base + 5 per related sub (mirrors the RPC). Displayed as the reward
-  // the user is about to claim — actual value is server-authoritative.
   const xpPreview = 5 + 5 * m.subs.length;
 
   const onMarkRead = async () => {
@@ -167,7 +163,6 @@ export default function MaterialDetailScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     try {
       await markRead.mutateAsync({ slug: m.slug, materialId: m.id });
-      // Drop the in-progress entry — the server read log is canonical now.
       useReadingProgressStore.getState().clear(m.slug);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Unknown error';
@@ -175,6 +170,23 @@ export default function MaterialDetailScreen() {
     } finally {
       setBusy(false);
     }
+  };
+
+  const heroUrl = m.hero_image_url;
+  const visualUri = visualPick ? learningMediaUrl(visualPick.media.path) : null;
+  const visualMeta = visualPick?.media.meta ?? null;
+  const visualAspect =
+    visualMeta?.width && visualMeta?.height ? visualMeta.width / visualMeta.height : 1080 / 1920;
+
+  const modeIcon: Record<Mode, keyof typeof Ionicons.glyphMap> = {
+    read: 'book-outline',
+    listen: 'headset-outline',
+    view: 'images-outline',
+  };
+  const modeBadge: Record<Mode, string | null> = {
+    read: bodyIsFallback ? (locale === 'pt' ? 'EN' : 'PT') : null,
+    listen: audioPick?.isFallback ? audioPick.media.locale.toUpperCase() : null,
+    view: visualPick?.isFallback ? visualPick.media.locale.toUpperCase() : null,
   };
 
   return (
@@ -187,17 +199,36 @@ export default function MaterialDetailScreen() {
           onScroll={onContentScroll}
           scrollEventThrottle={50}
         >
-          {/* Visual hero — full-bleed cover */}
+          {/* Book-style hero — the portrait cover floating over itself,
+              blurred. Falls back to the generated cover when no art. */}
           <View style={styles.heroWrap}>
-            <MaterialCover
-              dimensionId={m.dimension_id}
-              subId={m.subs[0] ?? null}
-              imageUrl={m.hero_image_url}
-              variant="hero"
-            />
+            {heroUrl ? (
+              <View style={styles.bookHero}>
+                <RNImage
+                  source={{ uri: heroUrl }}
+                  style={StyleSheet.absoluteFill}
+                  resizeMode="cover"
+                  blurRadius={22}
+                />
+                <View style={styles.bookHeroDim} />
+                <Image
+                  source={{ uri: heroUrl }}
+                  style={styles.bookCover}
+                  contentFit="cover"
+                  accessibilityLabel={title}
+                />
+              </View>
+            ) : (
+              <MaterialCover
+                dimensionId={m.dimension_id}
+                subId={m.subs[0] ?? null}
+                imageUrl={null}
+                variant="hero"
+              />
+            )}
             <Pressable
               onPress={() => router.back()}
-              style={({ pressed }) => [styles.backBtn, pressed && styles.backBtnPressed]}
+              style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.7 }]}
               hitSlop={10}
             >
               <Ionicons name="chevron-back" size={22} color={tokens.text.hi} />
@@ -207,7 +238,7 @@ export default function MaterialDetailScreen() {
             </View>
           </View>
 
-          {/* Title + summary, right under the hero */}
+          {/* Title + summary */}
           <View style={styles.titleBlock}>
             <Text style={styles.title}>{title}</Text>
             <Text style={styles.summary}>{summary}</Text>
@@ -218,7 +249,11 @@ export default function MaterialDetailScreen() {
             <View style={[styles.metaPill, { backgroundColor: dim.bg }]}>
               <Ionicons name="time-outline" size={12} color={dim.color} />
               <Text style={[styles.metaPillText, { color: dim.color }]}>
-                {t('learning.readMin', { count: m.reading_minutes })}
+                {audioPick?.media.duration_seconds && mode === 'listen'
+                  ? t('learning.media.listenMin', {
+                      count: Math.round(audioPick.media.duration_seconds / 60),
+                    })
+                  : t('learning.readMin', { count: m.reading_minutes })}
               </Text>
             </View>
             <View style={[styles.metaPill, { backgroundColor: dim.bg }]}>
@@ -244,7 +279,39 @@ export default function MaterialDetailScreen() {
             })}
           </View>
 
-          {/* Takeaways — only render if seeded */}
+          {/* Mode switcher — only the available modes show up */}
+          {modes.length > 1 && (
+            <View style={styles.modeSwitch}>
+              {modes.map((mo) => {
+                const active = mode === mo;
+                return (
+                  <Pressable
+                    key={mo}
+                    onPress={() => switchMode(mo)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: active }}
+                    style={[styles.modeBtn, active && styles.modeBtnActive]}
+                  >
+                    <Ionicons
+                      name={modeIcon[mo]}
+                      size={15}
+                      color={active ? tokens.text.hi : tokens.text.mid}
+                    />
+                    <Text style={[styles.modeBtnText, active && styles.modeBtnTextActive]}>
+                      {t(`learning.mode.${mo}`)}
+                    </Text>
+                    {modeBadge[mo] && (
+                      <View style={styles.modeLangBadge}>
+                        <Text style={styles.modeLangBadgeText}>{modeBadge[mo]}</Text>
+                      </View>
+                    )}
+                  </Pressable>
+                );
+              })}
+            </View>
+          )}
+
+          {/* Takeaways — shared across every mode */}
           {takeaways && takeaways.length > 0 && (
             <View style={styles.takeawaysBox}>
               <View style={styles.takeawaysHeader}>
@@ -264,12 +331,53 @@ export default function MaterialDetailScreen() {
             </View>
           )}
 
-          {/* Body */}
-          <View style={styles.bodyWrap}>
-            <LearningBody body={body ?? ''} />
-          </View>
+          {/* ── Mode content ──────────────────────────────────────────── */}
 
-          {/* Signs block — visual replacement for "Signs you're on track" heading */}
+          {/* Read */}
+          {mode === 'read' && body && (
+            <View style={styles.bodyWrap}>
+              <LearningBody body={body} />
+            </View>
+          )}
+
+          {/* Listen — mounted once, then hidden so playback survives
+              mode switches. */}
+          {audioActivated && audioPick && (
+            <View style={mode === 'listen' ? null : styles.hiddenPane}>
+              <AudioPane
+                uri={learningMediaUrl(audioPick.media.path)}
+                fallbackDurationSeconds={audioPick.media.duration_seconds}
+                episodeTitle={audioPick.media.meta?.title ?? null}
+                langBadge={
+                  audioPick.isFallback ? audioPick.media.locale.toUpperCase() : null
+                }
+              />
+            </View>
+          )}
+
+          {/* View — inline full infographic; tap opens the zoom viewer. */}
+          {mode === 'view' && visualPick && visualUri && (
+            <View style={styles.visualWrap}>
+              <Pressable
+                onPress={() => setViewerOpen(true)}
+                accessibilityRole="imagebutton"
+                accessibilityLabel={visualMeta?.alt ?? t('learning.media.expand')}
+              >
+                <Image
+                  source={{ uri: visualUri }}
+                  style={[styles.visualImage, { aspectRatio: visualAspect }]}
+                  contentFit="cover"
+                  transition={150}
+                />
+                <View style={styles.expandHint}>
+                  <Ionicons name="expand-outline" size={13} color={tokens.text.hi} />
+                  <Text style={styles.expandHintText}>{t('learning.media.expand')}</Text>
+                </View>
+              </Pressable>
+            </View>
+          )}
+
+          {/* Signs — shared */}
           {signs && signs.length > 0 && (
             <View style={[styles.signsBox, { borderColor: dim.color + '55' }]}>
               <View style={styles.signsHeader}>
@@ -296,7 +404,7 @@ export default function MaterialDetailScreen() {
             </View>
           )}
 
-          {/* Tracking block — visual replacement for "How the app tracks it" heading */}
+          {/* Tracking — shared */}
           {tracking && (
             <View style={styles.trackingBox}>
               <View style={styles.trackingHeader}>
@@ -309,7 +417,7 @@ export default function MaterialDetailScreen() {
             </View>
           )}
 
-          {/* Source attribution */}
+          {/* Source */}
           {(sourceLabel || m.source_url) && (
             <View style={styles.source}>
               <Text style={styles.sourceLine}>
@@ -336,8 +444,7 @@ export default function MaterialDetailScreen() {
             )}
           </View>
 
-          {/* Feedback — 👍/👎 on the material. Stays available after read so
-              the user can change their mind. */}
+          {/* Feedback */}
           <View style={styles.feedbackBox}>
             <Text style={styles.feedbackPrompt}>{t('learning.detail.feedbackPrompt')}</Text>
             <View style={styles.feedbackRow}>
@@ -374,7 +481,9 @@ export default function MaterialDetailScreen() {
                 <Ionicons
                   name={myFeedback.data?.rating === -1 ? 'thumbs-down' : 'thumbs-down-outline'}
                   size={18}
-                  color={myFeedback.data?.rating === -1 ? tokens.semantic.danger : tokens.text.mid}
+                  color={
+                    myFeedback.data?.rating === -1 ? tokens.semantic.danger : tokens.text.mid
+                  }
                 />
                 <Text
                   style={[
@@ -392,22 +501,16 @@ export default function MaterialDetailScreen() {
                   setSheetRating(myFeedback.data!.rating);
                   setFeedbackSheetOpen(true);
                 }}
-                style={({ pressed }) => [
-                  styles.feedbackEditRow,
-                  pressed && { opacity: 0.7 },
-                ]}
+                style={({ pressed }) => [styles.feedbackEditRow, pressed && { opacity: 0.7 }]}
               >
                 <Ionicons name="create-outline" size={13} color={tokens.text.mid} />
-                <Text style={styles.feedbackEditText}>
-                  {t('learning.feedback.editExisting')}
-                </Text>
+                <Text style={styles.feedbackEditText}>{t('learning.feedback.editExisting')}</Text>
               </Pressable>
             )}
           </View>
         </ScrollView>
 
-        {/* Sticky CTA — SafeAreaView['bottom'] handles OS nav clearance, so
-            we only need a small breathing room above the button itself. */}
+        {/* Sticky CTA */}
         <View style={[styles.footer, { paddingBottom: tokens.space[3] }]}>
           <Pressable
             disabled={isRead || busy}
@@ -415,7 +518,7 @@ export default function MaterialDetailScreen() {
             style={({ pressed }) => [
               styles.cta,
               isRead && styles.ctaDone,
-              pressed && !isRead && styles.ctaPressed,
+              pressed && !isRead && { opacity: 0.85 },
             ]}
           >
             {isRead ? (
@@ -430,7 +533,9 @@ export default function MaterialDetailScreen() {
             ) : (
               <>
                 <Text style={styles.ctaText}>{t('learning.detail.markRead')}</Text>
-                <Text style={styles.ctaSubtext}>+{xpPreview} XP · +{xpPreview} 🪙</Text>
+                <Text style={styles.ctaSubtext}>
+                  +{xpPreview} XP · +{xpPreview} 🪙
+                </Text>
               </>
             )}
           </Pressable>
@@ -444,6 +549,17 @@ export default function MaterialDetailScreen() {
           onClose={() => setFeedbackSheetOpen(false)}
           onSave={handleSheetSave}
         />
+
+        {visualUri && (
+          <MediaViewer
+            open={viewerOpen}
+            uri={visualUri}
+            width={visualMeta?.width ?? null}
+            height={visualMeta?.height ?? null}
+            alt={visualMeta?.alt ?? null}
+            onClose={() => setViewerOpen(false)}
+          />
+        )}
       </ScreenBackground>
     </SafeAreaView>
   );
@@ -451,7 +567,6 @@ export default function MaterialDetailScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: tokens.bg.deep },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   scroll: {
     paddingBottom: 120, // clearance for sticky CTA
   },
@@ -459,6 +574,25 @@ const styles = StyleSheet.create({
   // Hero
   heroWrap: {
     position: 'relative',
+  },
+  bookHero: {
+    width: '100%',
+    height: 264,
+    overflow: 'hidden',
+    backgroundColor: '#1A1F44',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bookHeroDim: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(10, 14, 38, 0.45)',
+  },
+  bookCover: {
+    width: 136,
+    height: 204,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.22)',
   },
   backBtn: {
     position: 'absolute',
@@ -473,7 +607,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.18)',
   },
-  backBtnPressed: { opacity: 0.7 },
   heroTypePill: {
     position: 'absolute',
     top: 18,
@@ -493,7 +626,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
 
-  // Title block (below hero)
+  // Title block
   titleBlock: {
     paddingHorizontal: tokens.space[4],
     paddingTop: tokens.space[5],
@@ -538,7 +671,55 @@ const styles = StyleSheet.create({
     color: tokens.text.mid,
   },
 
-  // Takeaways block
+  // Mode switcher
+  modeSwitch: {
+    flexDirection: 'row',
+    gap: 6,
+    marginHorizontal: tokens.space[4],
+    marginBottom: tokens.space[5],
+    padding: 4,
+    borderRadius: 999,
+    backgroundColor: tokens.bg.glass,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+  },
+  modeBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 9,
+    borderRadius: 999,
+  },
+  modeBtnActive: {
+    backgroundColor: tokens.brand.violet,
+  },
+  modeBtnText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 13,
+    color: tokens.text.mid,
+  },
+  modeBtnTextActive: {
+    color: tokens.text.hi,
+  },
+  modeLangBadge: {
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 5,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+  },
+  modeLangBadgeText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 8,
+    letterSpacing: 0.5,
+    color: tokens.text.hi,
+  },
+  hiddenPane: {
+    display: 'none',
+  },
+
+  // Takeaways
   takeawaysBox: {
     marginHorizontal: tokens.space[4],
     marginBottom: tokens.space[5],
@@ -561,9 +742,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: tokens.brand.violet2,
   },
-  takeawaysList: {
-    gap: 8,
-  },
+  takeawaysList: { gap: 8 },
   takeawayItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -597,7 +776,38 @@ const styles = StyleSheet.create({
     paddingHorizontal: tokens.space[4],
   },
 
-  // Signs block — "you're on track when..."
+  // Visual pane
+  visualWrap: {
+    marginHorizontal: tokens.space[4],
+    borderRadius: tokens.radius.lg,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: tokens.border.strong,
+  },
+  visualImage: {
+    width: '100%',
+  },
+  expandHint: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+  },
+  expandHintText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 10,
+    color: tokens.text.hi,
+  },
+
+  // Signs
   signsBox: {
     marginTop: tokens.space[5],
     marginHorizontal: tokens.space[4],
@@ -625,9 +835,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1.2,
     textTransform: 'uppercase',
   },
-  signsList: {
-    gap: 6,
-  },
+  signsList: { gap: 6 },
   signItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -641,7 +849,7 @@ const styles = StyleSheet.create({
     color: tokens.text.base,
   },
 
-  // Tracking block — "how the app tracks this"
+  // Tracking
   trackingBox: {
     marginTop: tokens.space[4],
     marginHorizontal: tokens.space[4],
@@ -678,6 +886,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: tokens.text.base,
   },
+
   source: {
     marginTop: tokens.space[5],
     marginHorizontal: tokens.space[4],
@@ -702,6 +911,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: tokens.text.mid,
   },
+
   rewardCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -726,6 +936,7 @@ const styles = StyleSheet.create({
     color: tokens.semantic.xp,
     flex: 1,
   },
+
   feedbackBox: {
     marginTop: tokens.space[5],
     marginHorizontal: tokens.space[4],
@@ -788,22 +999,7 @@ const styles = StyleSheet.create({
     color: tokens.text.mid,
     letterSpacing: 0.3,
   },
-  errorTitle: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 16,
-    color: tokens.text.base,
-  },
-  errorBtn: {
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 999,
-    backgroundColor: tokens.brand.violet,
-  },
-  errorBtnText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 13,
-    color: tokens.text.hi,
-  },
+
   footer: {
     position: 'absolute',
     bottom: 0,
@@ -830,7 +1026,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: tokens.semantic.xp,
   },
-  ctaPressed: { opacity: 0.85 },
   ctaText: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 14,

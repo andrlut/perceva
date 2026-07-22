@@ -3,7 +3,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   LearningMaterial,
   LearningMaterialCard,
+  LearningMaterialMedia,
   LearningMaterialSub,
+  LearningMediaKind,
+  LearningMediaLocale,
   MarkMaterialReadResult,
   SubId,
 } from '@/lib/db/types';
@@ -25,13 +28,23 @@ export const learningKeys = {
  */
 export interface LearningFeedCard extends LearningMaterialCard {
   subs: SubId[];
+  /** Media formats attached to this material (kind + language only — the
+   *  feed shows format icons; full rows load with the detail). */
+  media: { kind: LearningMediaKind; locale: LearningMediaLocale }[];
 }
 
 interface FeedRow extends LearningMaterialCard {
   learning_material_sub: { sub_id: SubId }[] | null;
+  learning_material_media:
+    | { kind: LearningMediaKind; locale: LearningMediaLocale }[]
+    | null;
 }
 
-/** Newest-first feed of all non-archived materials, with their sub tags. */
+/**
+ * Newest-first feed of all non-archived, already-released materials, with
+ * their sub tags. The `released_at` gate lets the drops pipeline schedule
+ * content into the future and have it appear on its own.
+ */
 export function useLearningFeed() {
   return useQuery({
     queryKey: learningKeys.feed(),
@@ -44,16 +57,19 @@ export function useLearningFeed() {
            hero_image_url, source_url, source_label_pt, source_label_en,
            cta_action, released_at, version, is_archived,
            created_at, updated_at,
-           learning_material_sub ( sub_id )`,
+           learning_material_sub ( sub_id ),
+           learning_material_media ( kind, locale )`,
         )
         .eq('is_archived', false)
+        .lte('released_at', new Date().toISOString())
         .order('released_at', { ascending: false });
       if (error) throw error;
       return ((data ?? []) as FeedRow[]).map((row) => {
-        const { learning_material_sub, ...card } = row;
+        const { learning_material_sub, learning_material_media, ...card } = row;
         return {
           ...card,
           subs: (learning_material_sub ?? []).map((s) => s.sub_id),
+          media: learning_material_media ?? [],
         };
       });
     },
@@ -62,10 +78,12 @@ export function useLearningFeed() {
 
 interface DetailRow extends LearningMaterial {
   learning_material_sub: { sub_id: SubId }[] | null;
+  learning_material_media: LearningMaterialMedia[] | null;
 }
 
 export interface LearningMaterialDetail extends LearningMaterial {
   subs: SubId[];
+  media: LearningMaterialMedia[];
 }
 
 export function useLearningMaterial(slug: string | null | undefined) {
@@ -77,7 +95,7 @@ export function useLearningMaterial(slug: string | null | undefined) {
       const { data, error } = await supabase
         .from('learning_material')
         .select(
-          `*, learning_material_sub ( sub_id )`,
+          `*, learning_material_sub ( sub_id ), learning_material_media ( * )`,
         )
         .eq('slug', slug)
         .eq('is_archived', false)
@@ -85,10 +103,11 @@ export function useLearningMaterial(slug: string | null | undefined) {
       if (error) throw error;
       if (!data) return null;
       const row = data as DetailRow;
-      const { learning_material_sub, ...material } = row;
+      const { learning_material_sub, learning_material_media, ...material } = row;
       return {
         ...material,
         subs: (learning_material_sub ?? []).map((s) => s.sub_id),
+        media: learning_material_media ?? [],
       };
     },
   });

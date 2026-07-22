@@ -53,6 +53,13 @@ export function CoverCard({ card, read, onPress, isPremiumContent = false }: Pro
   const scrollPercent = useMaterialProgress(card.slug);
   const inProgress = !read && scrollPercent > 0 && scrollPercent < 100;
 
+  // Extra consumption formats beyond text (any language counts — the
+  // detail screen handles the cross-language fallback).
+  const hasAudio = card.media.some((m) => m.kind === 'audio');
+  const hasVisual = card.media.some(
+    (m) => m.kind === 'infographic' || m.kind === 'deck',
+  );
+
   return (
     <Pressable
       onPress={() => {
@@ -145,6 +152,22 @@ export function CoverCard({ card, read, onPress, isPremiumContent = false }: Pro
         <Text style={styles.metaText}>
           {t('learning.readMin', { count: card.reading_minutes })}
         </Text>
+        {hasAudio && (
+          <Ionicons
+            name="headset-outline"
+            size={11}
+            color={tokens.text.dim}
+            accessibilityLabel={t('learning.mode.listen')}
+          />
+        )}
+        {hasVisual && (
+          <Ionicons
+            name="images-outline"
+            size={11}
+            color={tokens.text.dim}
+            accessibilityLabel={t('learning.mode.view')}
+          />
+        )}
       </View>
     </Pressable>
   );
