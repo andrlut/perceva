@@ -131,6 +131,7 @@ const pt: Translations = {
       passwordPlaceholder: 'Mínimo 6 caracteres',
       newPassword: 'Nova senha',
       confirmPassword: 'Confirmar senha',
+      confirmPasswordPlaceholder: 'Digite de novo',
     },
     login: {
       title: 'Bem-vindo de volta',
@@ -205,6 +206,8 @@ const pt: Translations = {
       missingInfoBody: 'Email e senha são obrigatórios.',
       weakPassword: 'Senha fraca',
       weakPasswordBody: 'A senha deve ter no mínimo 6 caracteres.',
+      passwordMismatch: 'Senhas diferentes',
+      passwordMismatchBody: 'As senhas não coincidem.',
       invalidCredentials: 'Email ou senha inválidos',
       emailRequired: 'Email é obrigatório',
       passwordRequired: 'Senha é obrigatória',
@@ -355,11 +358,12 @@ const pt: Translations = {
       skipModule: 'Pular este módulo',
       skipStep: 'Pular este passo',
       tryIt: 'Faça isso pra continuar',
+      takeMe: 'Me leva lá',
     },
     m1: {
       step1: {
         title: 'Suas tarefas do dia',
-        body: 'Essas são as 3 tarefas que você escolheu. Toque numa delas pra explorar — depois volte aqui.',
+        body: 'Toque numa tarefa pra explorar — depois volte aqui.',
       },
       step2: {
         title: 'Por que vale',
@@ -367,7 +371,7 @@ const pt: Translations = {
       },
       step3: {
         title: 'Pressione e segure',
-        body: 'Mantenha o dedo numa tarefa pra abrir o menu: ajustar estrelas, pular o dia ou editar.',
+        body: 'Segure o dedo numa tarefa: abre o menu de ajustar, pular ou editar.',
       },
       step4: {
         title: 'Marcar como feita',
@@ -379,57 +383,57 @@ const pt: Translations = {
       },
       step6: {
         title: 'Concluídas hoje',
-        body: 'Role até o fim da lista. Tem um painel das tarefas feitas hoje — caso queira desfazer alguma.',
+        body: 'Aqui ficam as feitas de hoje. Toque pra abrir — dá pra desfazer qualquer uma.',
       },
     },
     m2: {
       step1: {
         title: 'Crie as suas próprias',
-        body: 'As tarefas certas pra você são as que você define. Toque em Gerenciar tarefas pra começar.',
+        body: 'As melhores tarefas são as que você define. Toque em Gerenciar tarefas.',
       },
       step2: {
         title: 'Toque no +',
-        body: 'É aqui que mora a criação. Vai abrir um formulário vazio — sem pressa pra preencher.',
+        body: 'Abre o formulário de criação — sem pressa pra preencher.',
       },
       step3: {
         title: 'O que ela treina',
-        body: 'Mais abaixo, depois do título, descrição e ícone, ficam as áreas. Distribua até 5 estrelas entre as que a tarefa toca — mais estrelas, mais Dedicação por conclusão.',
+        body: 'Distribua até 5 estrelas entre as áreas que a tarefa treina. Mais estrelas, mais Dedicação.',
       },
       step4: {
         title: 'Com qual frequência',
-        body: 'Uma vez só, todo dia, ou em dias específicos da semana. Você decide a cadência.',
+        body: 'Uma vez só, todo dia ou em dias da semana — você decide a cadência.',
       },
       step5: {
         title: 'Sem pressa pra salvar',
-        body: 'Pode fechar sem criar — você já tem suas tarefas iniciais pra praticar. Volta quando quiser criar de verdade.',
+        body: 'Pode fechar sem criar — volte quando quiser criar de verdade.',
       },
     },
     m3: {
       step1: {
         title: 'Missões e Metas',
-        body: 'Aqui em cima ficam atalhos pras suas jornadas. Toque em + Missões pra ver as disponíveis.',
+        body: 'Atalhos pras suas jornadas ficam aqui. Toque em + Missões.',
       },
       step2: {
         title: 'Jornadas maiores',
-        body: 'Objetivos que duram dias ou semanas e rendem Dedicação e moedas no fim. Segure uma das disponíveis pra abrir os detalhes.',
+        body: 'Objetivos de dias ou semanas, com prêmio no fim. Segure uma pra ver os detalhes.',
       },
       step3: {
         title: 'Os critérios',
-        body: 'Veja o que ela pede — completar tarefas, manter dias ou atingir um valor. Aceite quando quiser; depois o progresso anda sozinho com suas tarefas. Por ora, pode voltar sem aceitar.',
+        body: 'Veja o que ela pede. Aceitando, o progresso anda sozinho com suas tarefas. Por ora, pode voltar sem aceitar.',
       },
     },
     m4: {
       step1: {
         title: 'Recompensas',
-        body: 'Recompensas reais que você define pra celebrar suas práticas. Toque na aba Recompensas pra ver.',
+        body: 'Prêmios reais que você define pra celebrar a prática. Toque na aba Recompensas.',
       },
       step2: {
         title: 'Suas moedas',
-        body: 'Esse é seu saldo, ganho completando tarefas. Suas recompensas ficam aqui — por enquanto, role até as sugestões prontas logo abaixo.',
+        body: 'Seu saldo, ganho completando tarefas. Role até as sugestões logo abaixo.',
       },
       step3: {
         title: 'Resgate e banco',
-        body: 'Sugestões como um filme, um jantar ou um descanso. Cada uma custa moedas: você resgata pro seu banco e usa quando quiser — ou refunda, e as moedas voltam.',
+        body: 'Um filme, um jantar, um descanso. Resgate com moedas e use quando quiser — ou devolva e elas voltam.',
       },
     },
     m5: {
@@ -439,11 +443,11 @@ const pt: Translations = {
       },
       step2: {
         title: 'Três retratos',
-        body: 'Três retratos seus: como você se percebe, o que pratica e quem quer se tornar. Você alterna entre eles aqui em cima.',
+        body: 'Como você se percebe, o que pratica e quem quer se tornar. Alterne aqui em cima.',
       },
       step3: {
         title: 'Identidade Percebida',
-        body: 'Como você se vê hoje: seu mapa de áreas (toque numa pra ver detalhes) e questionários pra se conhecer melhor.',
+        body: 'Como você se vê hoje: mapa de áreas e questionários de autoconhecimento.',
       },
       step4: {
         title: 'Identidade Praticada',
@@ -457,7 +461,7 @@ const pt: Translations = {
     m6: {
       step1: {
         title: 'Aprender',
-        body: 'Artigos pra entender o porquê das coisas — hábitos, identidade, as 6 dimensões e práticas pra cada área. Toque na aba Aprender.',
+        body: 'Artigos curtos sobre hábitos, identidade e cada área da sua vida. Toque na aba Aprender.',
       },
       step2: {
         title: 'Sempre tem novidade',
@@ -1009,6 +1013,10 @@ const pt: Translations = {
     adopt: {
       adopt: 'Adotar',
       added: 'Adicionada',
+    },
+    suggested: {
+      hint: 'Toque numa sugestão pra ajustar do seu jeito antes de adicionar — ou toque em Adotar pra usar como está.',
+      premiumHint: '{{count}}/{{limit}} tarefas ativas no plano gratuito · Premium libera ilimitadas',
     },
     bucketEmpty: 'Nenhuma tarefa nesse grupo.',
     empty: {

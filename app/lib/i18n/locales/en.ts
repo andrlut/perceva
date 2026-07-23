@@ -141,6 +141,7 @@ const en = {
       passwordPlaceholder: 'At least 6 characters',
       newPassword: 'New password',
       confirmPassword: 'Confirm password',
+      confirmPasswordPlaceholder: 'Type it again',
     },
     login: {
       title: 'Welcome back',
@@ -215,6 +216,8 @@ const en = {
       missingInfoBody: 'Email and password are required.',
       weakPassword: 'Weak password',
       weakPasswordBody: 'Password must be at least 6 characters.',
+      passwordMismatch: 'Mismatch',
+      passwordMismatchBody: "Passwords don't match.",
       invalidCredentials: 'Invalid email or password',
       emailRequired: 'Email is required',
       passwordRequired: 'Password is required',
@@ -360,11 +363,12 @@ const en = {
       skipModule: 'Skip this module',
       skipStep: 'Skip this step',
       tryIt: 'Try it to continue',
+      takeMe: 'Take me there',
     },
     m1: {
       step1: {
         title: 'Your tasks for today',
-        body: 'These are the 3 tasks you picked. Tap one to explore — then come back here.',
+        body: 'Tap a task to explore — then come back here.',
       },
       step2: {
         title: 'Why it counts',
@@ -384,21 +388,21 @@ const en = {
       },
       step6: {
         title: 'Done today',
-        body: "Scroll to the end of the list. There's a panel of what you finished today — in case you want to undo something.",
+        body: 'What you finished today lives here. Tap to open — you can undo anything.',
       },
     },
     m2: {
       step1: {
         title: 'Make your own',
-        body: 'The right tasks for you are the ones you define. Tap Manage tasks to get started.',
+        body: 'The best tasks are the ones you define. Tap Manage tasks.',
       },
       step2: {
         title: 'Tap the +',
-        body: "This is where creation lives. It'll open an empty form — no rush to fill it in.",
+        body: 'Opens the creation form — no rush to fill it in.',
       },
       step3: {
         title: 'What it trains',
-        body: 'Further down, past the title, description and icon, are the areas. Spread up to 5 stars across the ones this task touches — more stars, more Dedication per completion.',
+        body: 'Spread up to 5 stars across the areas this task trains. More stars, more Dedication.',
       },
       step4: {
         title: 'How often',
@@ -406,35 +410,35 @@ const en = {
       },
       step5: {
         title: 'No rush to save',
-        body: "Close without creating — you already have your starter tasks to practice. Come back when you actually want to build one.",
+        body: 'Close without creating — come back when you actually want to build one.',
       },
     },
     m3: {
       step1: {
         title: 'Quests and Goals',
-        body: 'Up here are shortcuts to your journeys. Tap + Quests to see the ones available.',
+        body: 'Shortcuts to your journeys live here. Tap + Quests.',
       },
       step2: {
         title: 'Bigger journeys',
-        body: 'Objectives that span days or weeks and pay Dedication and coins at the end. Long-press one of the available ones to open its details.',
+        body: 'Objectives spanning days or weeks, with a prize at the end. Long-press one to see its details.',
       },
       step3: {
         title: 'The criteria',
-        body: "See what it asks — completing tasks, keeping a streak, or hitting a value. Accept whenever you're ready; after that the progress moves on its own with your tasks. For now, you can head back without accepting.",
+        body: 'See what it asks. Once accepted, progress moves on its own with your tasks. For now, you can head back without accepting.',
       },
     },
     m4: {
       step1: {
         title: 'Rewards',
-        body: 'Real rewards you define to celebrate your practice. Tap the Rewards tab to see them.',
+        body: 'Real prizes you define to celebrate your practice. Tap the Rewards tab.',
       },
       step2: {
         title: 'Your coins',
-        body: 'This is your balance, earned by completing tasks. Your rewards live here — for now, scroll down to the ready-made suggestions below.',
+        body: 'Your balance, earned by completing tasks. Scroll down to the suggestions below.',
       },
       step3: {
         title: 'Redeem and bank',
-        body: 'Suggestions like a movie, a dinner, or some rest. Each costs coins: you redeem it to your bank and use it whenever you like — or refund it, and the coins come back.',
+        body: 'A movie, a dinner, some rest. Redeem with coins and use whenever — or refund and they come back.',
       },
     },
     m5: {
@@ -444,11 +448,11 @@ const en = {
       },
       step2: {
         title: 'Three portraits',
-        body: 'Three portraits of you: how you perceive yourself, what you practice, and who you want to become. You switch between them up here.',
+        body: 'How you perceive yourself, what you practice, and who you want to become. Switch up here.',
       },
       step3: {
         title: 'Perceived identity',
-        body: 'How you see yourself today: your map of areas (tap one for details) plus questionnaires to know yourself better.',
+        body: 'How you see yourself today: your map of areas plus self-knowledge questionnaires.',
       },
       step4: {
         title: 'Practiced identity',
@@ -462,7 +466,7 @@ const en = {
     m6: {
       step1: {
         title: 'Learn',
-        body: 'Articles to understand the why behind it all — habits, identity, the 6 dimensions, and practices for each area. Tap the Learn tab.',
+        body: 'Short articles on habits, identity, and every area of your life. Tap the Learn tab.',
       },
       step2: {
         title: 'Always something new',
@@ -1014,6 +1018,10 @@ const en = {
     adopt: {
       adopt: 'Adopt',
       added: 'Added',
+    },
+    suggested: {
+      hint: 'Tap a suggestion to tweak it your way before adding — or tap Adopt to use it as is.',
+      premiumHint: '{{count}}/{{limit}} active tasks on the free plan · Premium unlocks unlimited',
     },
     bucketEmpty: 'No tasks in this bucket.',
     empty: {

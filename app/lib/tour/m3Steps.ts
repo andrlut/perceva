@@ -31,6 +31,8 @@ export function buildM3Steps(t: Translator): ScreenedStep[] {
       body: t('tour.m3.step1.body'),
       position: 'bottom',
       awaitEvent: M3_EVENTS.QUESTS_NAVIGATED,
+      target: 'home.quests',
+      awaitCtaLabel: t('tour.common.takeMe'),
     },
     {
       screen: 'quests',
@@ -38,6 +40,7 @@ export function buildM3Steps(t: Translator): ScreenedStep[] {
       body: t('tour.m3.step2.body'),
       position: 'bottom',
       awaitEvent: M3_EVENTS.QUEST_DETAIL_OPENED,
+      awaitCtaLabel: t('tour.common.takeMe'),
     },
     {
       screen: 'quest-detail',

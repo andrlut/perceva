@@ -33,6 +33,8 @@ export function buildM5Steps(t: Translator): ScreenedStep[] {
       body: t('tour.m5.step1.body'),
       position: 'bottom',
       awaitEvent: M5_EVENTS.ME_NAVIGATED,
+      target: 'tab.character',
+      awaitCtaLabel: t('tour.common.takeMe'),
     },
     {
       screen: 'me',

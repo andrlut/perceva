@@ -36,6 +36,7 @@ export function buildM1Steps(t: Translator): ScreenedStep[] {
       body: t('tour.m1.step1.body'),
       position: 'bottom',
       awaitEvent: M1_EVENTS.TASK_TAPPED,
+      target: 'home.task-first',
     },
     {
       // Fires on the task-form (detail) screen the user lands on after
@@ -52,6 +53,7 @@ export function buildM1Steps(t: Translator): ScreenedStep[] {
       body: t('tour.m1.step3.body'),
       position: 'bottom',
       awaitEvent: M1_EVENTS.TASK_LONG_PRESSED,
+      target: 'home.task-first',
     },
     {
       screen: 'home',
@@ -59,6 +61,7 @@ export function buildM1Steps(t: Translator): ScreenedStep[] {
       body: t('tour.m1.step4.body'),
       position: 'bottom',
       awaitEvent: M1_EVENTS.TASK_COMPLETED,
+      target: 'home.task-first',
     },
     {
       screen: 'home',
@@ -66,6 +69,7 @@ export function buildM1Steps(t: Translator): ScreenedStep[] {
       body: t('tour.m1.step6.body'),
       position: 'bottom',
       awaitEvent: M1_EVENTS.DRAWER_EXPANDED,
+      target: 'home.completed',
     },
   ];
 }

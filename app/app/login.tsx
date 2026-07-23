@@ -3,9 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -24,6 +23,7 @@ import {
 } from '@/lib/auth';
 import { useT } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
+import { useKeyboardHeight } from '@/lib/use-keyboard-height';
 import { tokens } from '@/theme';
 
 type Mode = 'login' | 'signup';
@@ -34,7 +34,10 @@ export default function LoginScreen() {
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const scrollRef = useRef<ScrollView>(null);
+  const keyboardHeight = useKeyboardHeight();
 
   // Signup confirmation runs as a typed code, not an emailed link — same
   // reason as password recovery: GoTrue's 303 into `rpgtasks://` dies in
@@ -60,6 +63,19 @@ export default function LoginScreen() {
     };
   }, [cooldown > 0]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Under edge-to-edge Android never resizes the window for the keyboard, so
+  // the container below reserves the keyboard height instead (same pattern as
+  // mood-checkin). Scroll to the end AFTER that reflow so the primary button
+  // and toggles land just above the keyboard.
+  useEffect(() => {
+    if (keyboardHeight <= 0) return;
+    const id = setTimeout(
+      () => scrollRef.current?.scrollToEnd({ animated: true }),
+      60,
+    );
+    return () => clearTimeout(id);
+  }, [keyboardHeight]);
+
   /** Park on the code screen for `address`, arming the resend cooldown. */
   const openCodeScreen = (address: string, reason: 'signup' | 'unconfirmed') => {
     setAwaitingCode(address);
@@ -75,6 +91,13 @@ export default function LoginScreen() {
     }
     if (password.length < 6) {
       Alert.alert(t('auth.errors.weakPassword'), t('auth.errors.weakPasswordBody'));
+      return;
+    }
+    if (mode === 'signup' && password !== confirmPassword) {
+      Alert.alert(
+        t('auth.errors.passwordMismatch'),
+        t('auth.errors.passwordMismatchBody'),
+      );
       return;
     }
 
@@ -136,6 +159,7 @@ export default function LoginScreen() {
         Alert.alert(t('auth.signup.maybeExists'), t('auth.signup.maybeExistsBody'));
         setMode('login');
         setPassword('');
+        setConfirmPassword('');
         return;
       }
 
@@ -200,14 +224,25 @@ export default function LoginScreen() {
     setCode('');
     setCooldown(0);
     setMode('login');
+    setConfirmPassword('');
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <View style={styles.inner}>
+    <View style={styles.container}>
+      {/* Reserve the real keyboard height on the flex container: under
+          edge-to-edge (SDK 54) Android does NOT resize the window for the
+          keyboard, and a KeyboardAvoidingView with behavior=undefined does
+          nothing there. `useKeyboardHeight` fires on both platforms, so this
+          replaces the KAV on iOS too (same pattern as mood-checkin). */}
+      <View style={[styles.flex, { paddingBottom: keyboardHeight }]}>
+        <ScrollView
+          ref={scrollRef}
+          style={styles.flex}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+        >
         <View style={styles.brand}>
           {/* Perceva mark above the wordmark — gilded glyph tile so the
               identity reads as "the app's logo" before the user even
@@ -315,6 +350,24 @@ export default function LoginScreen() {
             editable={!isSubmitting}
           />
 
+          {mode === 'signup' && (
+            <>
+              <Text style={[styles.label, { marginTop: tokens.space[4] }]}>
+                {t('auth.fields.confirmPassword')}
+              </Text>
+              <TextInput
+                style={styles.input}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry
+                autoComplete="new-password"
+                placeholder={t('auth.fields.confirmPasswordPlaceholder')}
+                placeholderTextColor={tokens.text.faint}
+                editable={!isSubmitting}
+              />
+            </>
+          )}
+
           <Pressable
             style={({ pressed }) => [
               styles.primaryButton,
@@ -344,7 +397,11 @@ export default function LoginScreen() {
           )}
 
           <Pressable
-            onPress={() => setMode((m) => (m === 'login' ? 'signup' : 'login'))}
+            onPress={() => {
+              setMode((m) => (m === 'login' ? 'signup' : 'login'));
+              // The confirmation only exists in signup — never carry it across.
+              setConfirmPassword('');
+            }}
             disabled={isSubmitting}
             style={styles.toggle}
           >
@@ -357,8 +414,9 @@ export default function LoginScreen() {
           </Pressable>
         </View>
         )}
+        </ScrollView>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -367,9 +425,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: tokens.bg.base,
   },
-  inner: {
+  flex: {
     flex: 1,
+  },
+  // flexGrow + center keeps the closed-keyboard layout visually identical to
+  // the old centered View; once the keyboard shrinks the viewport the content
+  // becomes scrollable instead of hiding behind it.
+  scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: tokens.space[6],
+    paddingVertical: tokens.space[8],
     justifyContent: 'center',
   },
   brand: {

@@ -1,24 +1,30 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import {
   useBottomNavClearance,
   useBottomSafeClearance,
 } from '@/components/BottomNavBar';
+import { SpotlightBackdrop } from '@/components/tour/SpotlightBackdrop';
 import { useT } from '@/lib/i18n';
+import { useActiveTourStepStore } from '@/lib/tour/store';
 import { tokens } from '@/theme';
 
 /**
  * In-app tour spotlight tooltip — interactive version.
  *
  * Renders as a positioned overlay (NOT a Modal) so the user can still
- * tap the UI underneath. The backdrop is purely cosmetic (`pointerEvents:
- * 'none'`); only the tooltip card catches touches. When a step declares
- * `awaitEvent`, the tour advances on a real gesture (tap a task, expand
- * the drawer, etc) and the "Próximo" button becomes a hint pill that
- * tells the user what action will continue. A "Próximo mesmo assim"
- * escape hatch stays available so the user is never trapped.
+ * tap the UI underneath. When a step declares `target`, a dim backdrop
+ * with a transparent cut-out spotlights the matching `<TourTarget>`
+ * (which also glows a pulsing ring) — both purely cosmetic
+ * (`pointerEvents: 'none'`); only the tooltip card catches touches.
+ * When a step declares `awaitEvent`, the tour advances on a real
+ * gesture (tap a task, expand the drawer, etc) and the card surfaces a
+ * hint of what action will continue; `awaitCtaLabel` optionally adds a
+ * "take me there" button that advances (and auto-navigates) for users
+ * who'd rather be driven.
  */
 
 export interface TourStepData {
@@ -31,8 +37,9 @@ export interface TourStepData {
   /**
    * When set, advance when the matching event fires on the
    * `useTourEventBus`. The card surfaces a hint ("Faça isso pra
-   * continuar") and we still expose a small "Pular este passo" link
-   * so the user can bypass if the gesture detection fails.
+   * continuar") and we still expose an escape so the user is never
+   * trapped: either `awaitCtaLabel` (a visible assisted-navigation
+   * button) or a small "Pular este passo" link.
    */
   awaitEvent?: string;
   /**
@@ -41,6 +48,23 @@ export interface TourStepData {
    * exclusive with `awaitEvent` — if both set, the event wins.
    */
   autoAdvanceMs?: number;
+  /**
+   * `<TourTarget>` id this step points at. Dims the screen with a
+   * cut-out around the target and pulses a gold ring on it.
+   */
+  target?: string;
+  /**
+   * Force a uniform dim even without a target (default: dim only when
+   * `target` is set, so content-showcase steps keep the screen bright).
+   */
+  dim?: boolean;
+  /**
+   * On `awaitEvent` steps: label for an assisted-navigation button
+   * ("Me leva lá") that advances the step — TourModule's advance path
+   * then auto-navigates to the next step's screen. Replaces the
+   * low-visibility "Pular este passo" link on navigation steps.
+   */
+  awaitCtaLabel?: string;
 }
 
 interface Props extends TourStepData {
@@ -70,6 +94,9 @@ export function TourStep({
   position = 'bottom',
   primaryLabel,
   awaitEvent,
+  target,
+  dim,
+  awaitCtaLabel,
   stepIndex,
   totalSteps,
   flatNav = false,
@@ -86,6 +113,11 @@ export function TourStep({
   const navClearance = useBottomNavClearance();
   const safeClearance = useBottomSafeClearance();
   const bottomClearance = flatNav ? safeClearance : navClearance;
+
+  // Report the real card height so screens can size scroll bumps off it
+  // instead of magic constants. Cleared when the card leaves.
+  const setCardHeight = useActiveTourStepStore((s) => s.setCardHeight);
+  useEffect(() => () => setCardHeight(null), [setCardHeight]);
 
   const handleNext = () => {
     Haptics.selectionAsync().catch(() => {});
@@ -108,10 +140,10 @@ export function TourStep({
       ]}
       pointerEvents="box-none"
     >
-      {/* No dim band — leaves every pixel above the tooltip card
-         visible AND interactive. The card itself has high opacity +
-         gold rim + drop shadow, so it stands out without darkening
-         the underlying UI. */}
+      {/* Dim + spotlight cut-out. Only renders when the step declares a
+         `target` (or forces `dim`), keeping content-showcase steps
+         bright. Visual-only — every touch passes through. */}
+      <SpotlightBackdrop targetId={target} enabled={!!target || dim === true} />
 
       {/* Tooltip card — the only interactive layer. */}
       <View
@@ -123,7 +155,10 @@ export function TourStep({
         ]}
         pointerEvents="box-none"
       >
-        <View style={styles.card}>
+        <View
+          style={styles.card}
+          onLayout={(e) => setCardHeight(e.nativeEvent.layout.height)}
+        >
           <View style={styles.cardHeader}>
             <Text style={styles.progress}>
               {stepIndex} / {totalSteps}
@@ -138,7 +173,7 @@ export function TourStep({
               accessibilityRole="button"
               accessibilityLabel={t('tour.common.skipModule')}
             >
-              <Ionicons name="close" size={16} color={tokens.text.mid} />
+              <Ionicons name="close" size={18} color={tokens.text.mid} />
             </Pressable>
           </View>
 
@@ -150,20 +185,39 @@ export function TourStep({
               <View style={styles.awaitRow}>
                 <Ionicons
                   name="hand-left"
-                  size={14}
+                  size={16}
                   color={tokens.semantic.coinLight}
                 />
                 <Text style={styles.awaitText}>{t('tour.common.tryIt')}</Text>
               </View>
-              <Pressable
-                onPress={handleSkipStep}
-                hitSlop={6}
-                style={({ pressed }) => [pressed && { opacity: 0.6 }]}
-              >
-                <Text style={styles.skipLink}>
-                  {t('tour.common.skipStep')}
-                </Text>
-              </Pressable>
+              {awaitCtaLabel ? (
+                <Pressable
+                  onPress={handleSkipStep}
+                  style={({ pressed }) => [
+                    styles.assistBtn,
+                    pressed && { opacity: 0.75 },
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={awaitCtaLabel}
+                >
+                  <Text style={styles.assistText}>{awaitCtaLabel}</Text>
+                  <Ionicons
+                    name="arrow-forward"
+                    size={15}
+                    color={tokens.semantic.coinLight}
+                  />
+                </Pressable>
+              ) : (
+                <Pressable
+                  onPress={handleSkipStep}
+                  hitSlop={6}
+                  style={({ pressed }) => [pressed && { opacity: 0.6 }]}
+                >
+                  <Text style={styles.skipLink}>
+                    {t('tour.common.skipStep')}
+                  </Text>
+                </Pressable>
+              )}
             </View>
           ) : (
             <Pressable
@@ -178,7 +232,7 @@ export function TourStep({
               <Text style={styles.primaryText}>
                 {primaryLabel ?? t('tour.common.next')}
               </Text>
-              <Ionicons name="arrow-forward" size={14} color="#3D2A00" />
+              <Ionicons name="arrow-forward" size={16} color="#3D2A00" />
             </Pressable>
           )}
 
@@ -216,15 +270,14 @@ const styles = StyleSheet.create({
     // the floating BottomNavBar clearance.
   },
   card: {
-    backgroundColor: 'rgba(26, 31, 68, 0.96)',
+    backgroundColor: 'rgba(26, 31, 68, 0.98)',
     borderRadius: tokens.radius.lg,
-    padding: tokens.space[4],
-    borderWidth: 1,
-    borderColor: 'rgba(255, 200, 61, 0.35)',
-    gap: tokens.space[2] + 2,
-    // No dim band behind us — a deep shadow lifts the card off the
-    // underlying UI so the user can tell where the tour ends and the
-    // real screen begins.
+    padding: tokens.space[5],
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 200, 61, 0.55)',
+    gap: tokens.space[3],
+    // The dim backdrop already separates tour from screen; the shadow
+    // keeps the card floating above the spotlight hole area too.
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.55,
@@ -238,75 +291,98 @@ const styles = StyleSheet.create({
   },
   progress: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 10,
-    letterSpacing: 1.4,
+    fontSize: 11,
+    letterSpacing: 1.6,
     color: tokens.semantic.coinLight,
     textTransform: 'uppercase',
   },
   closeBtn: {
-    width: 24,
-    height: 24,
+    width: 28,
+    height: 28,
     borderRadius: 999,
     backgroundColor: tokens.bg.surface2,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // Tester feedback (1.1.0): the old 17/13px card read as ignorable
+  // noise. Bigger type + brighter body so the tour actually registers.
   title: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 17,
-    lineHeight: 21,
-    color: tokens.text.hi,
+    fontSize: 21,
+    lineHeight: 26,
+    color: tokens.semantic.coinLight,
   },
   body: {
     fontFamily: 'Manrope_500Medium',
-    fontSize: 13,
-    lineHeight: 18,
-    color: tokens.text.mid,
+    fontSize: 15,
+    lineHeight: 21,
+    color: tokens.text.base,
   },
   primaryBtn: {
     alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: tokens.space[4],
-    paddingVertical: tokens.space[2] + 4,
+    gap: 8,
+    paddingHorizontal: tokens.space[5],
+    paddingVertical: tokens.space[3],
     borderRadius: 999,
     backgroundColor: tokens.semantic.coin,
     borderWidth: 1,
     borderColor: 'rgba(255, 224, 138, 0.55)',
-    marginTop: tokens.space[2],
+    marginTop: tokens.space[1],
   },
   primaryText: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 13,
+    fontSize: 15,
     color: '#3D2A00',
     letterSpacing: 0.3,
   },
   awaitGroup: {
     marginTop: tokens.space[1],
-    gap: 4,
+    gap: tokens.space[2],
   },
   awaitRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingVertical: tokens.space[2],
+    gap: 8,
+    paddingVertical: tokens.space[1],
   },
   awaitText: {
     fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
+    fontSize: 13,
+    color: tokens.semantic.coinLight,
+    letterSpacing: 0.3,
+  },
+  /** Assisted-navigation button on awaitEvent steps ("Me leva lá") —
+   *  outline gold, deliberately quieter than the solid primary so the
+   *  real gesture stays the star. */
+  assistBtn: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    paddingHorizontal: tokens.space[4],
+    paddingVertical: tokens.space[2] + 2,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 200, 61, 0.55)',
+    backgroundColor: 'rgba(255, 200, 61, 0.10)',
+  },
+  assistText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 14,
     color: tokens.semantic.coinLight,
     letterSpacing: 0.3,
   },
   skipLink: {
     fontFamily: 'Manrope_600SemiBold',
-    fontSize: 11,
+    fontSize: 12,
     color: tokens.text.dim,
     textDecorationLine: 'underline',
   },
   skipModule: {
     fontFamily: 'Manrope_600SemiBold',
-    fontSize: 11,
+    fontSize: 12,
     color: tokens.text.dim,
     textDecorationLine: 'underline',
     alignSelf: 'flex-start',

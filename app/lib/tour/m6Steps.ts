@@ -25,6 +25,8 @@ export function buildM6Steps(t: Translator): ScreenedStep[] {
       body: t('tour.m6.step1.body'),
       position: 'bottom',
       awaitEvent: M6_EVENTS.LEARN_NAVIGATED,
+      target: 'tab.learning',
+      awaitCtaLabel: t('tour.common.takeMe'),
     },
     {
       screen: 'learn',

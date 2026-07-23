@@ -31,6 +31,8 @@ export function buildM2Steps(t: Translator): ScreenedStep[] {
       body: t('tour.m2.step1.body'),
       position: 'bottom',
       awaitEvent: M2_EVENTS.TASKS_NAVIGATED,
+      target: 'home.manage',
+      awaitCtaLabel: t('tour.common.takeMe'),
     },
     {
       screen: 'tasks',
@@ -38,6 +40,8 @@ export function buildM2Steps(t: Translator): ScreenedStep[] {
       body: t('tour.m2.step2.body'),
       position: 'bottom',
       awaitEvent: M2_EVENTS.CREATE_TASK_TAPPED,
+      target: 'tasks.create',
+      awaitCtaLabel: t('tour.common.takeMe'),
     },
     {
       screen: 'create',

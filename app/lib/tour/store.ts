@@ -199,12 +199,22 @@ export interface ActiveTourStep {
 
 interface ActiveTourStepState {
   active: ActiveTourStep | null;
+  /**
+   * Measured height of the visible tooltip card (px), reported by
+   * `TourStep` on layout. Lets screens size their scroll bumps off the
+   * REAL card instead of magic constants that drift whenever the card's
+   * copy or styling changes. Null when no card is on screen.
+   */
+  cardHeight: number | null;
   set: (next: ActiveTourStep | null) => void;
+  setCardHeight: (height: number | null) => void;
 }
 
 export const useActiveTourStepStore = create<ActiveTourStepState>((set) => ({
   active: null,
+  cardHeight: null,
   set: (next) => set({ active: next }),
+  setCardHeight: (height) => set({ cardHeight: height }),
 }));
 
 /** Returns the currently-visible tour step descriptor, or null. */

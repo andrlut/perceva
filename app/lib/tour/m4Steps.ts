@@ -28,6 +28,8 @@ export function buildM4Steps(t: Translator): ScreenedStep[] {
       body: t('tour.m4.step1.body'),
       position: 'bottom',
       awaitEvent: M4_EVENTS.REWARDS_NAVIGATED,
+      target: 'tab.rewards',
+      awaitCtaLabel: t('tour.common.takeMe'),
     },
     {
       screen: 'rewards',
