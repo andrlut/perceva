@@ -1,6 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useEffect } from 'react';
+
+import { TourTarget } from '@/components/tour/TourTarget';
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -112,37 +114,46 @@ export function BottomNavBar({ state, navigation }: BottomTabBarProps) {
           };
 
           return (
-            <Pressable
+            // Tour spotlight target — inert outside the tour. The ring
+            // renders here (inside the bar) so it glows ABOVE the bar's
+            // elevation, where a screen-level overlay couldn't reach.
+            <TourTarget
               key={route.key}
-              onPress={onPress}
+              id={`tab.${route.name}`}
               style={styles.tab}
-              hitSlop={6}
-              accessibilityRole="button"
-              accessibilityState={isFocused ? { selected: true } : {}}
-              accessibilityLabel={label}
+              radius={16}
             >
-              <Ionicons
-                name={iconName}
-                size={22}
-                color={isFocused ? tokens.brand.violet2 : tokens.text.dim}
-              />
-              <Text
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.85}
-                style={[
-                  styles.label,
-                  {
-                    color: isFocused ? tokens.brand.violet2 : tokens.text.dim,
-                    fontFamily: isFocused
-                      ? 'Manrope_800ExtraBold'
-                      : 'Manrope_600SemiBold',
-                  },
-                ]}
+              <Pressable
+                onPress={onPress}
+                style={styles.tabInner}
+                hitSlop={6}
+                accessibilityRole="button"
+                accessibilityState={isFocused ? { selected: true } : {}}
+                accessibilityLabel={label}
               >
-                {label}
-              </Text>
-            </Pressable>
+                <Ionicons
+                  name={iconName}
+                  size={22}
+                  color={isFocused ? tokens.brand.violet2 : tokens.text.dim}
+                />
+                <Text
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.85}
+                  style={[
+                    styles.label,
+                    {
+                      color: isFocused ? tokens.brand.violet2 : tokens.text.dim,
+                      fontFamily: isFocused
+                        ? 'Manrope_800ExtraBold'
+                        : 'Manrope_600SemiBold',
+                    },
+                  ]}
+                >
+                  {label}
+                </Text>
+              </Pressable>
+            </TourTarget>
           );
         })}
       </View>
@@ -190,8 +201,14 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   tab: {
+    // Layout shell for the TourTarget wrapper; the Pressable inside
+    // (tabInner) fills it so the press area stays the full tab.
     flex: 1,
     height: 52,
+  },
+  tabInner: {
+    flex: 1,
+    alignSelf: 'stretch',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 3,

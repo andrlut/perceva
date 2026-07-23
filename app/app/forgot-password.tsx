@@ -4,9 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -24,6 +23,7 @@ import {
 } from '@/lib/auth';
 import { useT } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
+import { useKeyboardHeight } from '@/lib/use-keyboard-height';
 import { tokens } from '@/theme';
 
 /**
@@ -51,6 +51,8 @@ export default function ForgotPasswordScreen() {
   const [sent, setSent] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const scrollRef = useRef<ScrollView>(null);
+  const keyboardHeight = useKeyboardHeight();
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -61,6 +63,19 @@ export default function ForgotPasswordScreen() {
       if (cooldownRef.current) clearInterval(cooldownRef.current);
     };
   }, [cooldown > 0]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Under edge-to-edge Android never resizes the window for the keyboard, so
+  // the container below reserves the keyboard height instead (same pattern as
+  // mood-checkin). Scroll to the end AFTER that reflow so the primary button
+  // and toggles land just above the keyboard.
+  useEffect(() => {
+    if (keyboardHeight <= 0) return;
+    const id = setTimeout(
+      () => scrollRef.current?.scrollToEnd({ animated: true }),
+      60,
+    );
+    return () => clearTimeout(id);
+  }, [keyboardHeight]);
 
   const requestCode = async (isResend: boolean) => {
     const trimmed = email.trim();
@@ -128,20 +143,21 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <View style={styles.inner}>
-        <Pressable
-          onPress={() => router.back()}
-          style={({ pressed }) => [styles.backLink, pressed && { opacity: 0.6 }]}
-          hitSlop={8}
+    <View style={styles.container}>
+      {/* Reserve the real keyboard height on the flex container: under
+          edge-to-edge (SDK 54) Android does NOT resize the window for the
+          keyboard, and a KeyboardAvoidingView with behavior=undefined does
+          nothing there. `useKeyboardHeight` fires on both platforms, so this
+          replaces the KAV on iOS too (same pattern as mood-checkin). */}
+      <View style={[styles.flex, { paddingBottom: keyboardHeight }]}>
+        <ScrollView
+          ref={scrollRef}
+          style={styles.flex}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
         >
-          <Ionicons name="chevron-back" size={20} color={tokens.text.hi} />
-          <Text style={styles.backText}>{t('auth.forgot.back')}</Text>
-        </Pressable>
-
         <View style={styles.brand}>
           <Text style={styles.brandTitle}>{t('auth.forgot.title')}</Text>
           <Text style={styles.brandTagline}>{t('auth.forgot.subtitle')}</Text>
@@ -243,16 +259,33 @@ export default function ForgotPasswordScreen() {
             </Pressable>
           </View>
         )}
+        </ScrollView>
       </View>
-    </KeyboardAvoidingView>
+
+      {/* After the scroll container so it renders on top and stays fixed
+          while the content scrolls under it. */}
+      <Pressable
+        onPress={() => router.back()}
+        style={({ pressed }) => [styles.backLink, pressed && { opacity: 0.6 }]}
+        hitSlop={8}
+      >
+        <Ionicons name="chevron-back" size={20} color={tokens.text.hi} />
+        <Text style={styles.backText}>{t('auth.forgot.back')}</Text>
+      </Pressable>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: tokens.bg.base },
-  inner: {
-    flex: 1,
+  flex: { flex: 1 },
+  // flexGrow + center keeps the closed-keyboard layout visually identical to
+  // the old centered View; once the keyboard shrinks the viewport the content
+  // becomes scrollable instead of hiding behind it.
+  scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: tokens.space[6],
+    paddingVertical: tokens.space[8],
     justifyContent: 'center',
   },
   backLink: {

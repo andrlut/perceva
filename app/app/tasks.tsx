@@ -47,6 +47,7 @@ import type {
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { describeRecurrence } from '@/lib/recurrence';
 import { TourModule } from '@/components/tour/TourModule';
+import { TourTarget } from '@/components/tour/TourTarget';
 import { emitTourEvent } from '@/lib/tour/eventBus';
 import { buildM2Steps, M2_EVENTS } from '@/lib/tour/m2Steps';
 import { useIsCurrentTourModule } from '@/lib/tour/store';
@@ -313,17 +314,19 @@ export default function TasksHubScreen() {
               />
             </Pressable>
             <LimitCounterBadge limit={taskLimit} />
-            <Pressable
-              onPress={() => {
-                emitTourEvent(M2_EVENTS.CREATE_TASK_TAPPED);
-                handleCreateTask();
-              }}
-              style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
-              hitSlop={8}
-              accessibilityLabel={t('tasksHub.newTask')}
-            >
-              <Ionicons name="add" size={22} color={tokens.brand.violet2} />
-            </Pressable>
+            <TourTarget id="tasks.create" radius={999}>
+              <Pressable
+                onPress={() => {
+                  emitTourEvent(M2_EVENTS.CREATE_TASK_TAPPED);
+                  handleCreateTask();
+                }}
+                style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
+                hitSlop={8}
+                accessibilityLabel={t('tasksHub.newTask')}
+              >
+                <Ionicons name="add" size={22} color={tokens.brand.violet2} />
+              </Pressable>
+            </TourTarget>
           </View>
         </View>
 

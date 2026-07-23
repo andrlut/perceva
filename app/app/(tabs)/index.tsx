@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -32,7 +32,9 @@ import { useT } from '@/lib/i18n';
 import { useTrackedReward } from '@/lib/api/rewards';
 import { useLoadedSettings } from '@/lib/settings';
 import { TourModule } from '@/components/tour/TourModule';
+import { TourTarget } from '@/components/tour/TourTarget';
 import { emitTourEvent } from '@/lib/tour/eventBus';
+import { remeasureActiveTourTarget } from '@/lib/tour/targets';
 import { buildM1Steps, M1_EVENTS } from '@/lib/tour/m1Steps';
 import { buildM2Steps, M2_EVENTS } from '@/lib/tour/m2Steps';
 import { buildM3Steps } from '@/lib/tour/m3Steps';
@@ -41,6 +43,7 @@ import { buildM5Steps } from '@/lib/tour/m5Steps';
 import { buildM6Steps } from '@/lib/tour/m6Steps';
 import {
   useActiveTourStep,
+  useActiveTourStepStore,
   useIsCurrentTourModule,
   useTourStore,
 } from '@/lib/tour/store';
@@ -126,14 +129,23 @@ export default function HomeScreen() {
   // row of the scroll. It needs more bottom room than the M1 drawer
   // (which is mid-list) so the button clears the full tooltip card
   // height once we scroll to the end.
+  // Floor at the historical constants, but grow with the REAL measured
+  // card height (reported by TourStep on layout) so restyles that make
+  // the card taller can't silently eat the gap the target settles into.
+  const tourCardHeight = useActiveTourStepStore((s) => s.cardHeight);
   const tourBottomBump =
     activeTourStep?.position === 'bottom'
-      ? activeTourStep.module === 'M2'
-        ? 245
-        : 160
+      ? Math.max(
+          activeTourStep.module === 'M2' ? 245 : 160,
+          (tourCardHeight ?? 0) + 24,
+        )
       : 0;
   const bottomClearance = navClearance + tourBottomBump;
   const isM1Current = useIsCurrentTourModule('M1');
+  // M1 step 5 targets the "Concluídas hoje" drawer at the very end of
+  // the scroll — track the step index so the auto-scroll effect below
+  // can bring it into view (mirrors the M4/M5 per-step pattern).
+  const m1StepIndex = useTourStore((s) => s.stepIndices.M1 ?? 0);
   const isM2Current = useIsCurrentTourModule('M2');
   const isM3Current = useIsCurrentTourModule('M3');
   const isM4Current = useIsCurrentTourModule('M4');
@@ -158,6 +170,18 @@ export default function HomeScreen() {
   //     after finishing M2 on the create form).
   const scrollRef = useRef<ScrollView>(null);
   useEffect(() => {
+    // M1 step 5 (index 4) points at the "Concluídas hoje" drawer at the
+    // very end of the scroll. Without auto-scroll the drawer toggle sits
+    // BEHIND the bottom-anchored tooltip card and can't be tapped —
+    // scrolling to the end settles it in the tourBottomBump gap just
+    // above the card (tester-reported bug).
+    if (activeTourStep?.module === 'M1' && m1StepIndex === 4) {
+      const id = setTimeout(
+        () => scrollRef.current?.scrollToEnd({ animated: true }),
+        120,
+      );
+      return () => clearTimeout(id);
+    }
     if (activeTourStep?.module === 'M2') {
       const id = setTimeout(
         () => scrollRef.current?.scrollToEnd({ animated: true }),
@@ -172,7 +196,7 @@ export default function HomeScreen() {
       );
       return () => clearTimeout(id);
     }
-  }, [activeTourStep?.module]);
+  }, [activeTourStep?.module, m1StepIndex]);
 
   // ── Mutation handlers ─────────────────────────────────────────────────
   const fireCompletion = (task: TaskWithSubs, subs: TaskSub[]) => {
@@ -441,6 +465,10 @@ export default function HomeScreen() {
 
       <ScrollView
         ref={scrollRef}
+        // Manual scrolls move spotlighted targets — refresh the measured
+        // rect once the scroll settles (no-op outside the tour).
+        onScrollEndDrag={remeasureActiveTourTarget}
+        onMomentumScrollEnd={remeasureActiveTourTarget}
         style={styles.scroll}
         contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomClearance }]}
         showsVerticalScrollIndicator={false}
@@ -502,7 +530,9 @@ export default function HomeScreen() {
                 first, then the bucket selector, then the active list.
                 Tasks at the bottom so the selector context is always
                 visible when scanning the list. */}
-            <QuestChipsStrip />
+            <TourTarget id="home.quests" radius={18}>
+              <QuestChipsStrip />
+            </TourTarget>
 
             <BucketTabsV2<BucketTab>
               tabs={tabSpecs}
@@ -514,38 +544,50 @@ export default function HomeScreen() {
               {activeList.length === 0 ? (
                 <Text style={styles.tabEmpty}>{t(activeEmptyKey[activeTab])}</Text>
               ) : (
-                activeList.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    dimmed={isInTrophyWindow(task)}
-                    onComplete={() => handleQuickComplete(task)}
-                    onLongPress={() => handleLongPress(task)}
-                    onSkip={() => handleSwipeSkip(task)}
-                    onSwipeComplete={() => setSheetTask(task)}
-                    onEdit={() => {
-                      emitTourEvent(M1_EVENTS.TASK_TAPPED);
-                      router.push({ pathname: '/task-form', params: { id: task.id } });
-                    }}
-                  />
-                ))
+                activeList.map((task, idx) => {
+                  const card = (
+                    <TaskCard
+                      task={task}
+                      dimmed={isInTrophyWindow(task)}
+                      onComplete={() => handleQuickComplete(task)}
+                      onLongPress={() => handleLongPress(task)}
+                      onSkip={() => handleSwipeSkip(task)}
+                      onSwipeComplete={() => setSheetTask(task)}
+                      onEdit={() => {
+                        emitTourEvent(M1_EVENTS.TASK_TAPPED);
+                        router.push({ pathname: '/task-form', params: { id: task.id } });
+                      }}
+                    />
+                  );
+                  // M1 steps 1/3/4 spotlight the first card — wrapping
+                  // only idx 0 keeps the gap flow identical for the rest.
+                  return idx === 0 ? (
+                    <TourTarget key={task.id} id="home.task-first" radius={20}>
+                      {card}
+                    </TourTarget>
+                  ) : (
+                    <Fragment key={task.id}>{card}</Fragment>
+                  );
+                })
               )}
 
-              <CompletedBucket
-                items={
-                  activeTab === 'weekly'
-                    ? completedThisWeekItems
-                    : activeTab === 'oneshot'
-                      ? completedOneShotItems
-                      : completedTodayItems
-                }
-                title={completedBucketTitle}
-                onUndo={handleUndo}
-                onExtra={(task) => handleQuickComplete(task)}
-                onToggle={(open) => {
-                  if (open) emitTourEvent(M1_EVENTS.DRAWER_EXPANDED);
-                }}
-              />
+              <TourTarget id="home.completed" radius={18}>
+                <CompletedBucket
+                  items={
+                    activeTab === 'weekly'
+                      ? completedThisWeekItems
+                      : activeTab === 'oneshot'
+                        ? completedOneShotItems
+                        : completedTodayItems
+                  }
+                  title={completedBucketTitle}
+                  onUndo={handleUndo}
+                  onExtra={(task) => handleQuickComplete(task)}
+                  onToggle={(open) => {
+                    if (open) emitTourEvent(M1_EVENTS.DRAWER_EXPANDED);
+                  }}
+                />
+              </TourTarget>
               <CompletedBucket
                 items={skippedTodayItems}
                 title={t('home.skippedBucket.today')}
@@ -576,26 +618,32 @@ export default function HomeScreen() {
                   {t('tabs.history')}
                 </Text>
               </Pressable>
-              <Pressable
-                onPress={() => {
-                  emitTourEvent(M2_EVENTS.TASKS_NAVIGATED);
-                  router.push('/tasks');
-                }}
-                style={({ pressed }) => [
-                  styles.bottomBtn,
-                  pressed && styles.bottomBtnPressed,
-                ]}
-                accessibilityRole="button"
-              >
-                <Ionicons
-                  name="settings-outline"
-                  size={16}
-                  color={tokens.text.mid}
-                />
-                <Text style={styles.bottomBtnLabel}>
-                  {t('home.manageCta')}
-                </Text>
-              </Pressable>
+              <TourTarget id="home.manage" style={{ flex: 1 }} radius={16}>
+                <Pressable
+                  onPress={() => {
+                    emitTourEvent(M2_EVENTS.TASKS_NAVIGATED);
+                    router.push('/tasks');
+                  }}
+                  style={({ pressed }) => [
+                    styles.bottomBtn,
+                    // Inside the target wrapper (which carries flex: 1),
+                    // the button sizes from content — flex: 1 here would
+                    // collapse to zero height in the auto-height wrapper.
+                    { flex: 0 },
+                    pressed && styles.bottomBtnPressed,
+                  ]}
+                  accessibilityRole="button"
+                >
+                  <Ionicons
+                    name="settings-outline"
+                    size={16}
+                    color={tokens.text.mid}
+                  />
+                  <Text style={styles.bottomBtnLabel}>
+                    {t('home.manageCta')}
+                  </Text>
+                </Pressable>
+              </TourTarget>
             </View>
           </>
         )}

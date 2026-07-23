@@ -28,7 +28,11 @@ import { useT } from '@/lib/i18n';
 import { TourModule } from '@/components/tour/TourModule';
 import { emitTourEvent } from '@/lib/tour/eventBus';
 import { buildM5Steps, M5_EVENTS } from '@/lib/tour/m5Steps';
-import { useIsCurrentTourModule, useTourStore } from '@/lib/tour/store';
+import {
+  useActiveTourStepStore,
+  useIsCurrentTourModule,
+  useTourStore,
+} from '@/lib/tour/store';
 import { tokens } from '@/theme';
 
 // Sub-pillar key types per pilar — kept narrow so TS catches mis-typings.
@@ -117,7 +121,10 @@ export default function CharacterScreen() {
   // tooltip card — same buffer pattern as the other modules.
   const m5OnMeStep =
     isM5Current && m5Status === 'in_progress' && m5StepIndex >= 1 && m5StepIndex <= 4;
-  const m5Bump = m5OnMeStep ? 260 : 0;
+  // Floor at the historical 260, but grow with the REAL measured card
+  // height so a taller restyled card can't eat the gap.
+  const tourCardHeight = useActiveTourStepStore((s) => s.cardHeight);
+  const m5Bump = m5OnMeStep ? Math.max(260, (tourCardHeight ?? 0) + 24) : 0;
 
   // M5 step 1 lives on Home and waits for the user to reach this tab.
   // Emit ME_NAVIGATED when the screen gains focus while step 1 is still
