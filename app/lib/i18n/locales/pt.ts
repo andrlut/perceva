@@ -35,6 +35,7 @@ const pt: Translations = {
     search: 'Buscar',
     gotIt: 'Entendi',
     trend: 'TENDÊNCIA',
+    changeIcon: 'Trocar',
   },
 
   a11y: {
@@ -735,6 +736,7 @@ const pt: Translations = {
       descPlaceholder: 'O que ela significa de verdade…',
       costLabel: 'Custo (moedas)',
       iconLabel: 'Ícone',
+      iconHint: 'O ícone que aparece no card da recompensa.',
       archiveBtn: 'Arquivar recompensa',
     },
   },

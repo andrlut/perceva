@@ -45,6 +45,7 @@ const en = {
     search: 'Search',
     gotIt: 'Got it',
     trend: 'TREND',
+    changeIcon: 'Change',
   },
 
   a11y: {
@@ -740,6 +741,7 @@ const en = {
       descPlaceholder: 'What it really means…',
       costLabel: 'Cost (coins)',
       iconLabel: 'Icon',
+      iconHint: 'The glyph shown on the reward card.',
       archiveBtn: 'Archive reward',
     },
   },

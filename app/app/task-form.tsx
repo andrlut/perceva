@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -15,6 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { IconPickerModal } from '@/components/IconPickerModal';
 import { RecurrencePicker } from '@/components/RecurrencePicker';
 import { SubPicker } from '@/components/SubPicker';
 import { TourModule } from '@/components/tour/TourModule';
@@ -174,6 +176,7 @@ export default function TaskFormScreen() {
   // null = auto (use the primary sub's icon at render time). User-picked
   // value sticks even if subs change later — predictable contract.
   const [icon, setIcon] = useState<string | null>(null);
+  const [iconPickerVisible, setIconPickerVisible] = useState(false);
   const [prefillApplied, setPrefillApplied] = useState(false);
   // Keep scroll content reachable while the keyboard is up. `endCoordinates`
   // doesn't always include the keyboard's tool/suggestion bar, so we add a
@@ -436,18 +439,21 @@ export default function TaskFormScreen() {
 
           <View style={styles.field}>
             <Text style={styles.label}>{t('taskForm.iconLabel')}</Text>
-            <Text style={styles.hint}>{t('taskForm.iconHint')}</Text>
-            <View style={styles.iconGrid}>
-              {/* "Auto" pick — clears the override, falls back to
-                  primary sub icon at render time. */}
-              <Pressable
-                onPress={() => setIcon(null)}
-                style={[
-                  styles.iconCell,
-                  icon === null && styles.iconCellSelected,
-                ]}
-                accessibilityLabel={t('taskForm.iconAutoA11y')}
-              >
+            {/* Compact row that opens the picker sheet — the old inline
+                43-cell grid buried the required subs/recurrence sections
+                ~500px down the form. */}
+            <Pressable
+              onPress={() => {
+                // Title autofocuses in create mode; drop the keyboard so
+                // it can't float over/behind the transparent modal.
+                Keyboard.dismiss();
+                setIconPickerVisible(true);
+              }}
+              style={({ pressed }) => [styles.iconRow, pressed && { opacity: 0.7 }]}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.changeIcon')}
+            >
+              <View style={styles.iconRowTile}>
                 {(() => {
                   const primarySubId = subs[0]?.sub_id;
                   const autoIcon = primarySubId
@@ -455,37 +461,23 @@ export default function TaskFormScreen() {
                     : ('ellipse-outline' as never);
                   return (
                     <Ionicons
-                      name={autoIcon}
+                      name={icon === null ? autoIcon : (icon as never)}
                       size={22}
-                      color={
-                        icon === null
-                          ? tokens.brand.violet2
-                          : tokens.text.mid
-                      }
+                      color={tokens.brand.violet2}
                     />
                   );
                 })()}
-              </Pressable>
-              {TASK_ICON_CHOICES.map((name) => {
-                const selected = name === icon;
-                return (
-                  <Pressable
-                    key={name}
-                    onPress={() => setIcon(name)}
-                    style={[
-                      styles.iconCell,
-                      selected && styles.iconCellSelected,
-                    ]}
-                  >
-                    <Ionicons
-                      name={name as never}
-                      size={22}
-                      color={selected ? tokens.brand.violet2 : tokens.text.mid}
-                    />
-                  </Pressable>
-                );
-              })}
-            </View>
+              </View>
+              <Text style={styles.iconRowHint} numberOfLines={2}>
+                {t('taskForm.iconHint')}
+              </Text>
+              <Text style={styles.iconRowChange}>{t('common.changeIcon')}</Text>
+              <Ionicons
+                name="chevron-forward"
+                size={16}
+                color={tokens.brand.violet2}
+              />
+            </Pressable>
           </View>
 
           <View
@@ -557,6 +549,24 @@ export default function TaskFormScreen() {
           )}
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <IconPickerModal
+        visible={iconPickerVisible}
+        title={t('taskForm.iconLabel')}
+        icons={TASK_ICON_CHOICES}
+        value={icon}
+        onSelect={setIcon}
+        onClose={() => setIconPickerVisible(false)}
+        accentColor={tokens.brand.violet2}
+        accentBg="rgba(155, 130, 255, 0.16)"
+        autoIcon={(() => {
+          const primarySubId = subs[0]?.sub_id;
+          return primarySubId
+            ? SUB_META[primarySubId]?.iconName ?? 'ellipse-outline'
+            : 'ellipse-outline';
+        })()}
+        autoA11yLabel={t('taskForm.iconAutoA11y')}
+      />
 
       {/* Post-login tour — M1 step 2 lives here (detail screen). The
          module is also mounted on Home for steps 1, 3, 4, 5; the
@@ -704,26 +714,38 @@ const styles = StyleSheet.create({
     color: tokens.text.dim,
     letterSpacing: 0.4,
   },
-  iconGrid: {
+  iconRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: tokens.space[2],
-  },
-  iconCell: {
-    width: 52,
-    height: 52,
-    borderRadius: tokens.radius.md,
+    alignItems: 'center',
+    gap: tokens.space[3],
     backgroundColor: tokens.bg.surface,
     borderWidth: 1,
     borderColor: tokens.border.base,
+    borderRadius: tokens.radius.md,
+    paddingVertical: tokens.space[2],
+    paddingHorizontal: tokens.space[3],
+  },
+  iconRowTile: {
+    width: 44,
+    height: 44,
+    borderRadius: tokens.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  iconCellSelected: {
-    // Violet accent matches the home check button — picks the task
+    borderWidth: 1,
+    // Violet accent matches the home check button — picks the prática
     // domain palette (gold goes to rewards).
     borderColor: tokens.brand.violet2,
     backgroundColor: 'rgba(155, 130, 255, 0.16)',
+  },
+  iconRowHint: {
+    flex: 1,
+    ...tokens.type.caption,
+    color: tokens.text.dim,
+  },
+  iconRowChange: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 13,
+    color: tokens.brand.violet2,
   },
   archiveButton: {
     flexDirection: 'row',
