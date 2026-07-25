@@ -21,6 +21,7 @@ import { DayClearedCelebration } from '@/components/DayClearedCelebration';
 import { MoodCheckinPrompt } from '@/components/MoodCheckinPrompt';
 import { MoodHubStrip } from '@/components/mood/MoodHubStrip';
 import { CompletedBucket, type CompletedItem } from '@/components/CompletedBucket';
+import { NotificationOptInCard } from '@/components/NotificationOptInCard';
 import { QuestChipsStrip } from '@/components/QuestChipsStrip';
 import { RewardStatsCard, XPStatsCard } from '@/components/StatsCards';
 import { TaskActionSheet } from '@/components/TaskActionSheet';
@@ -629,6 +630,11 @@ export default function HomeScreen() {
             <TourTarget id="home.quests" radius={18}>
               <QuestChipsStrip />
             </TourTarget>
+
+            {/* Contextual notification opt-in — the master switch defaults
+                OFF, so this card is how users discover reminders exist.
+                Once-ever; suppressed while the tour owns the screen. */}
+            <NotificationOptInCard enabled={!activeTourStep} />
 
             <View style={styles.taskList}>
               <Text style={styles.sectionHeader}>

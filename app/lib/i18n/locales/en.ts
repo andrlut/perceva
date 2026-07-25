@@ -943,6 +943,12 @@ const en = {
       skip: 'Skip today',
       hint: 'Swipe right to complete · left to skip',
     },
+    notifOptIn: {
+      title: 'Want reminders for your practices?',
+      body: 'A morning brief and an afternoon nudge. Nothing more.',
+      cta: 'Turn on reminders',
+      dismissA11y: 'Dismiss',
+    },
   },
 
   tasks: {

@@ -938,6 +938,12 @@ const pt: Translations = {
       skip: 'Pular hoje',
       hint: 'Arraste direita pra concluir · esquerda pra pular',
     },
+    notifOptIn: {
+      title: 'Quer lembretes das suas práticas?',
+      body: 'Um resumo de manhã e um toque à tarde. Nada além disso.',
+      cta: 'Ativar lembretes',
+      dismissA11y: 'Dispensar',
+    },
   },
 
   tasks: {
