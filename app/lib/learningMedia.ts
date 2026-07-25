@@ -5,7 +5,8 @@ import type {
 } from '@/lib/db/types';
 
 /**
- * Helpers for learning media attachments (podcast audio, infographics, decks).
+ * Helpers for learning media attachments (podcast audio, infographics, decks,
+ * short videos).
  *
  * Media rows store BUCKET-RELATIVE paths. The public URL is assembled here —
  * and only here — so a future storage move (e.g. Supabase → R2) is a

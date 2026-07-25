@@ -562,6 +562,9 @@ const en = {
       expand: 'Tap to expand',
       closeViewer: 'Close',
       audioError: "Couldn't load the audio. Try again.",
+      video: 'Video',
+      videoMin: { one: '{{count}} min video', other: '{{count}} min video' },
+      videoError: "Couldn't load the video. Try again.",
     },
     readFilter: {
       all: 'All',

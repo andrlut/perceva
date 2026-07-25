@@ -138,6 +138,45 @@ Write `supabase/migrations/<timestamp>_learning_material_<slug>.sql`:
 
 Always set `reasoning_log` to the reviewer-approved log.
 
+#### Media attachments (audio / infographic / deck / video)
+
+Materials MAY carry media rows in `learning_material_media` (one row per
+`kind` + `locale`); files live in the public Storage bucket
+`learning-media`. The bucket has NO client write policies — uploads are
+ALWAYS maintainer/CLI-side (`supabase storage cp` with the linked
+project or service tooling), NEVER user uploads. Full ingestion rules
+(transcode targets, naming) live in `learning-drops/README.md`.
+
+Video specifics (supported since migration `20260725000004`):
+
+- Short complementary videos only — H.264 + AAC in `.mp4` with
+  `+faststart`, ≤150 MB (bucket `file_size_limit`), MIME `video/mp4`
+  (the only video type in the bucket's `allowed_mime_types`).
+- Upload BEFORE the migration, then verify — the feed must never 404:
+
+  ```bash
+  supabase storage cp ./video.pt.mp4 \
+    ss:///learning-media/<slug>/video.pt.mp4 \
+    --content-type video/mp4 \
+    --cache-control "public, max-age=31536000, immutable" \
+    --experimental --linked
+  supabase storage ls ss:///learning-media/<slug>/ --experimental --linked
+  ```
+
+- Migration row — `path` is BUCKET-RELATIVE (the client builds the URL
+  via `learningMediaUrl()`); `duration_seconds` is required for video
+  (drives the "N min de vídeo" pill); `meta.width`/`meta.height` set the
+  player aspect ratio (16:9 when absent):
+
+  ```sql
+  insert into public.learning_material_media
+    (material_id, kind, locale, path, duration_seconds, source, meta)
+  select id, 'video', 'pt', '<slug>/video.pt.mp4', 312, 'manual',
+         '{"width": 1920, "height": 1080}'::jsonb
+  from public.learning_material where slug = '<slug>'
+  on conflict (material_id, kind, locale) do nothing;
+  ```
+
 ### 7. Apply
 
 ```bash

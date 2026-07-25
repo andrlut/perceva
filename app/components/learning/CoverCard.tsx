@@ -56,6 +56,7 @@ export function CoverCard({ card, read, onPress, isPremiumContent = false }: Pro
   // Extra consumption formats beyond text (any language counts — the
   // detail screen handles the cross-language fallback).
   const hasAudio = card.media.some((m) => m.kind === 'audio');
+  const hasVideo = card.media.some((m) => m.kind === 'video');
   const hasVisual = card.media.some(
     (m) => m.kind === 'infographic' || m.kind === 'deck',
   );
@@ -158,6 +159,14 @@ export function CoverCard({ card, read, onPress, isPremiumContent = false }: Pro
             size={11}
             color={tokens.text.dim}
             accessibilityLabel={t('learning.mode.listen')}
+          />
+        )}
+        {hasVideo && (
+          <Ionicons
+            name="videocam-outline"
+            size={11}
+            color={tokens.text.dim}
+            accessibilityLabel={t('learning.media.video')}
           />
         )}
         {hasVisual && (

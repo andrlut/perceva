@@ -557,6 +557,9 @@ const pt: Translations = {
       expand: 'Toque pra ampliar',
       closeViewer: 'Fechar',
       audioError: 'Não foi possível carregar o áudio. Tente de novo.',
+      video: 'Vídeo',
+      videoMin: { one: '{{count}} min de vídeo', other: '{{count}} min de vídeo' },
+      videoError: 'Não foi possível carregar o vídeo. Tente de novo.',
     },
     readFilter: {
       all: 'Todos',

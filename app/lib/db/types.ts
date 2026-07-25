@@ -729,9 +729,9 @@ export interface LearningMaterialSub {
   sub_id: SubId;
 }
 
-// ── Learning media (podcast audio / infographics / decks) ───────────────────
+// ── Learning media (podcast audio / infographics / decks / short videos) ─────
 
-export type LearningMediaKind = 'audio' | 'infographic' | 'deck';
+export type LearningMediaKind = 'audio' | 'infographic' | 'deck' | 'video';
 export type LearningMediaLocale = 'pt' | 'en';
 export type LearningMediaSource = 'notebooklm' | 'gemini-api' | 'manual';
 
@@ -749,7 +749,7 @@ export interface LearningMaterialMedia {
   path: string;
   /** Deck only: ordered bucket-relative paths of every rasterized page. */
   page_paths: string[] | null;
-  /** Audio only. */
+  /** Audio and video only. */
   duration_seconds: number | null;
   source: LearningMediaSource;
   meta: {
