@@ -322,7 +322,10 @@ export default function RewardFormScreen() {
               }}
               style={({ pressed }) => [styles.iconRow, pressed && { opacity: 0.7 }]}
               accessibilityRole="button"
-              accessibilityLabel={t('common.changeIcon')}
+              // Self-contained label — the override suppresses the inner
+              // text for screen readers, so bare 'Trocar' wouldn't say
+              // WHAT gets changed.
+              accessibilityLabel={t('common.changeIconA11y')}
             >
               <View style={styles.iconRowTile}>
                 <Ionicons name={icon as never} size={22} color={tokens.semantic.coin} />

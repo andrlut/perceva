@@ -36,6 +36,9 @@ const pt: Translations = {
     gotIt: 'Entendi',
     trend: 'TENDÊNCIA',
     changeIcon: 'Trocar',
+    // Variante a11y autocontida — o Pressable da linha de ícone suprime o
+    // texto interno pro leitor de tela, então o label precisa nomear o objeto.
+    changeIconA11y: 'Trocar ícone',
   },
 
   a11y: {
@@ -61,8 +64,9 @@ const pt: Translations = {
     descLabel: 'Descrição (opcional)',
     descPlaceholder: 'Notas, lembretes…',
     iconLabel: 'Ícone',
-    iconHint:
-      'Escolha o ícone que o card mostra. Deixe no padrão pra herdar do sub principal.',
+    // Tamanho de linha (renderiza com numberOfLines={2} na linha compacta
+    // de ícone); a célula Auto do picker carrega a explicação de herança.
+    iconHint: 'O ícone que aparece no card da prática.',
     iconAutoA11y: 'Usar ícone do sub principal',
     subsLabel: 'Subatributos + estrelas',
     subsHint:
@@ -390,7 +394,8 @@ const pt: Translations = {
     m2: {
       step1: {
         title: 'Crie as suas próprias',
-        body: 'As melhores práticas são as que você define. Toque em Gerenciar práticas.',
+        // 'melhores práticas' é jargão corporativo — refraseado pra escapar.
+        body: 'As práticas que mais transformam são as que você cria. Toque em Gerenciar práticas.',
       },
       step2: {
         title: 'Toque no +',
@@ -1035,7 +1040,7 @@ const pt: Translations = {
       premiumHint: '{{count}}/{{limit}} práticas ativas no plano gratuito · Premium libera ilimitadas',
     },
     bucketEmpty: 'Nenhuma prática nesse grupo.',
-    quickCompleteA11y: 'Concluir prática',
+    quickCompleteA11y: 'Concluir {{title}}',
     empty: {
       noMatchesTitle: 'Nada encontrado',
       noMatchesBody: 'Nada corresponde a "{{query}}".',
@@ -1374,7 +1379,7 @@ const pt: Translations = {
       label: 'Mobilidade',
       summary: 'Amplitude de movimento, coordenação e equilíbrio.',
       definition:
-        'Como o corpo se move — amplitude, controle, equilíbrio. Vai do básico (alongar, postura) a habilidades motoras (esporte de raquete, dança, escalada). É o que te mantém ágil e fluído com o passar dos anos, ou rígido e travado.',
+        'Como o corpo se move — amplitude, controle, equilíbrio. Vai do básico (alongar, postura) a habilidades motoras (esporte de raquete, dança, escalada). É o que te mantém ágil e fluido com o passar dos anos, ou rígido e travado.',
       low: 'Movimentos amplos doem ou são impossíveis. Postura é ruim, costas ou pescoço cobram. Você tropeça em coisas e não recupera bem. Evita esportes ou movimentos novos por medo de se machucar. Não pratica nada que exija coordenação.',
       mid: 'Você se move sem dor na maioria dos dias, mas tem áreas teimosas — quadril, ombro, cervical. Faz alongamento esporádico. Equilíbrio é ok, não treinado. Não sente progresso de amplitude ou controle ao longo dos meses.',
       high: 'Mobilidade trabalhada regularmente — yoga, alongamento, mobility work. Movimento é fluido e sem dor. Equilíbrio e coordenação são reais — você reage bem a tropeço, joga esporte, dança. Sente que tá mais móvel hoje do que era 6 meses atrás.',

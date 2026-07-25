@@ -253,6 +253,41 @@ function scheduledMonthlyInThisWeek(
   return false;
 }
 
+/** True when a monthly task's effective scheduled day (with the day>28
+ *  short-month fallback) fell on a day of the CURRENT week strictly
+ *  before today, within the same calendar month as today. Drives the
+ *  earlier catch-up: a missed scheduled monthly resurfaces in Hoje for
+ *  the rest of its week instead of staying invisible until month-end.
+ *  The same-month check keeps a week that straddles a month boundary
+ *  from resurrecting LAST month's occurrence (whose window is closed).
+ *  Local-date component math only — no UTC conversions.
+ *  Exported so Home's ring math (wasDueToday) can mirror the promotion. */
+export function scheduledMonthlyPassedThisWeek(
+  day: number,
+  today: Date,
+  weekStart: WeekStart,
+): boolean {
+  const dow = today.getDay();
+  const offset = weekStart === 'sunday' ? dow : (dow + 6) % 7;
+  const startWeek = new Date(today);
+  startWeek.setHours(0, 0, 0, 0);
+  startWeek.setDate(today.getDate() - offset);
+  // Only the days of this week BEFORE today (i < offset).
+  for (let i = 0; i < offset; i++) {
+    const d = new Date(startWeek);
+    d.setDate(startWeek.getDate() + i);
+    if (d.getMonth() !== today.getMonth()) continue;
+    const lastDayThatMonth = new Date(
+      d.getFullYear(),
+      d.getMonth() + 1,
+      0,
+    ).getDate();
+    const effectiveDay = Math.min(day, lastDayThatMonth);
+    if (d.getDate() === effectiveDay) return true;
+  }
+  return false;
+}
+
 function startOfThisMonth(): Date {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
@@ -590,8 +625,25 @@ async function fetchHomeBuckets(weekStartPref: WeekStart): Promise<HomeBuckets> 
         t.recurrence.type === 'monthly' &&
         typeof t.recurrence.day === 'number' &&
         scheduledMonthlyInThisWeek(t.recurrence.day, today, weekStartPref);
+      // Week catch-up: a scheduled monthly whose day already passed
+      // within the CURRENT week and is still needed gets promoted into
+      // Hoje right away — otherwise a missed day-5 monthly would vanish
+      // from Home until the last day of the month.
+      const missedThisWeekPromote =
+        stillNeeded &&
+        todayCount === 0 &&
+        !skippedTodayHere &&
+        !scheduledToday &&
+        t.recurrence.type === 'monthly' &&
+        typeof t.recurrence.day === 'number' &&
+        scheduledMonthlyPassedThisWeek(t.recurrence.day, today, weekStartPref);
 
-      if (scheduledPromote || lastDayPromote || unscheduledPromote) {
+      if (
+        scheduledPromote ||
+        lastDayPromote ||
+        unscheduledPromote ||
+        missedThisWeekPromote
+      ) {
         buckets.today.push(t);
       } else if (scheduledDayInWeek && !scheduledToday) {
         buckets.thisWeek.push(t);
@@ -736,7 +788,14 @@ export function useCompleteTask() {
         queryClient.cancelQueries({ queryKey: characterKeys.me() }),
       ]);
 
-      const prevBuckets = queryClient.getQueryData<HomeBuckets>(taskKeys.pending());
+      // The live buckets query is keyed [...taskKeys.pending(), weekStart]
+      // (see useHomeBuckets), so an exact-key getQueryData(taskKeys.pending())
+      // would never match it. getQueriesData/setQueriesData prefix-match
+      // every weekStart variant; the snapshot keeps [key, data] pairs so
+      // rollback can restore each entry.
+      const prevBuckets = queryClient.getQueriesData<HomeBuckets>({
+        queryKey: taskKeys.pending(),
+      });
       const prevChar = queryClient.getQueryData<CharacterWithProfile>(characterKeys.me());
 
       const reward = rewardForTaskSubs(params.subs);
@@ -748,20 +807,26 @@ export function useCompleteTask() {
       const isLive = !params.completedAt;
       const t = params.task;
       const singleTarget = (t.target_count ?? 1) === 1;
-      if (prevBuckets && isLive && singleTarget) {
+      if (isLive && singleTarget) {
         const removeFrom = (arr: TaskWithSubs[]) => arr.filter((x) => x.id !== t.id);
         // Preserve todayActivity as-is — onSettled refetch will rebuild
         // it with the new completion. Optimistic only handles "card
         // disappeared" feedback, drawer doesn't need to react instantly.
-        queryClient.setQueryData<HomeBuckets>(taskKeys.pending(), {
-          today: removeFrom(prevBuckets.today),
-          thisWeek: removeFrom(prevBuckets.thisWeek),
-          thisMonth: removeFrom(prevBuckets.thisMonth),
-          oneTime: removeFrom(prevBuckets.oneTime),
-          todayActivity: prevBuckets.todayActivity,
-          weekActivity: prevBuckets.weekActivity,
-          oneShotActivity: prevBuckets.oneShotActivity,
-        });
+        queryClient.setQueriesData<HomeBuckets>(
+          { queryKey: taskKeys.pending() },
+          (old) =>
+            old
+              ? {
+                  today: removeFrom(old.today),
+                  thisWeek: removeFrom(old.thisWeek),
+                  thisMonth: removeFrom(old.thisMonth),
+                  oneTime: removeFrom(old.oneTime),
+                  todayActivity: old.todayActivity,
+                  weekActivity: old.weekActivity,
+                  oneShotActivity: old.oneShotActivity,
+                }
+              : old,
+        );
       }
 
       if (prevChar) {
@@ -789,7 +854,12 @@ export function useCompleteTask() {
     },
 
     onError: (_err, _params, ctx) => {
-      if (ctx?.prevBuckets) queryClient.setQueryData(taskKeys.pending(), ctx.prevBuckets);
+      // Restore every snapshotted buckets variant (one per weekStart key).
+      if (ctx?.prevBuckets) {
+        for (const [key, data] of ctx.prevBuckets) {
+          queryClient.setQueryData(key, data);
+        }
+      }
       if (ctx?.prevChar) queryClient.setQueryData(characterKeys.me(), ctx.prevChar);
     },
 

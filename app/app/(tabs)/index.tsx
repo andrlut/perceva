@@ -50,6 +50,7 @@ import {
   useTourStore,
 } from '@/lib/tour/store';
 import {
+  scheduledMonthlyPassedThisWeek,
   useActiveTasks,
   useCompleteTask,
   useHomeBuckets,
@@ -423,7 +424,8 @@ export default function HomeScreen() {
 
     // Mirrors the fetchHomeBuckets promotion rules: dailies and
     // unscheduled recurring are due every day; scheduled recurring are
-    // due on their scheduled day plus the last-day-of-period catch-up.
+    // due on their scheduled day plus the last-day-of-period catch-up
+    // (and, for monthlies, the missed-day-this-week catch-up).
     const wasDueToday = (task: TaskWithSubs): boolean => {
       const rec = task.recurrence;
       if (rec.type === 'one_shot') return false;
@@ -433,12 +435,25 @@ export default function HomeScreen() {
         return isDueOn(rec, now) || isLastDayOfWeek;
       }
       if (typeof rec.day !== 'number') return true;
-      return isDueOn(rec, now) || isLastDayOfMonth;
+      return (
+        isDueOn(rec, now) ||
+        isLastDayOfMonth ||
+        scheduledMonthlyPassedThisWeek(rec.day, now, settings.weekStart)
+      );
     };
 
+    // Dedupe across the two lists: a task that was skipped AND later
+    // completed the same day (skip on Home, quick-complete from /tasks)
+    // counts once — otherwise the ring reads e.g. 3/3 where the day's
+    // contract was 2.
+    const completedIds = new Set(
+      data.todayActivity.completed.map((c) => c.task.id),
+    );
     return (
       data.todayActivity.completed.filter((c) => wasDueToday(c.task)).length +
-      data.todayActivity.skipped.filter(wasDueToday).length
+      data.todayActivity.skipped.filter(
+        (task) => !completedIds.has(task.id) && wasDueToday(task),
+      ).length
     );
   }, [data, settings.weekStart]);
   const ringTotal = ringDone + lists.today.length;
@@ -450,10 +465,14 @@ export default function HomeScreen() {
   //   - ringDone > 0 (an empty schedule never celebrates)
   //   - the list was seen >0 this session (a day that LOADS empty stays
   //     quiet). A latch ref instead of a strict >0→0 transition check:
-  //     useCompleteTask's optimistic update empties `today` while
-  //     todayActivity (→ ringDone) is still stale, so the transition
-  //     frame can fail the ringDone guard and only the refetch frame —
-  //     where remaining is ALREADY 0 — has the real numbers.
+  //     useCompleteTask's optimistic update (prefix-matched over the
+  //     [...pending, weekStart] cache keys) empties `today` for live
+  //     single-target completes while todayActivity (→ ringDone) is
+  //     still stale, so the transition frame can fail the ringDone
+  //     guard and only the refetch frame — where remaining is ALREADY
+  //     0 — has the real numbers. Multi-target and retro completes
+  //     skip the optimistic path entirely and only ever empty `today`
+  //     on the refetch frame.
   //   - once-per-day AsyncStorage stamp, written BEFORE showing, so an
   //     undo + re-complete while (or after) the modal is up can't re-fire
   //   - no active tour step (tour owns the overlay layer)

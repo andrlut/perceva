@@ -82,6 +82,7 @@ export function IconPickerModal({
                   onClose();
                 }}
                 style={[styles.cell, value === null && selectedStyle]}
+                accessibilityRole="button"
                 accessibilityLabel={autoA11yLabel}
               >
                 <Ionicons
@@ -101,6 +102,10 @@ export function IconPickerModal({
                     onClose();
                   }}
                   style={[styles.cell, selected && selectedStyle]}
+                  accessibilityRole="button"
+                  // The Ionicons slug ('pizza', 'barbell') beats silence;
+                  // a humanized name map can come later.
+                  accessibilityLabel={name}
                 >
                   <Ionicons
                     name={name as never}

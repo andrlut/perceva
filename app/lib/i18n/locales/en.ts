@@ -46,6 +46,9 @@ const en = {
     gotIt: 'Got it',
     trend: 'TREND',
     changeIcon: 'Change',
+    // Self-contained a11y variant — the icon-row Pressable overrides its
+    // inner text for screen readers, so the label must name the object.
+    changeIconA11y: 'Change icon',
   },
 
   a11y: {
@@ -71,8 +74,9 @@ const en = {
     descLabel: 'Description (optional)',
     descPlaceholder: 'Notes, reminders…',
     iconLabel: 'Icon',
-    iconHint:
-      'Pick the glyph the card shows. Leave on default to inherit from the primary sub.',
+    // Row-sized (renders at numberOfLines={2} in the compact icon row);
+    // the picker sheet's Auto cell carries the inherit explanation.
+    iconHint: 'The icon shown on the practice card.',
     iconAutoA11y: 'Use primary sub icon',
     subsLabel: 'Sub-dimensions + stars',
     subsHint:
@@ -94,7 +98,7 @@ const en = {
 
   recurrencePicker: {
     types: {
-      one_shot: 'One-shot',
+      one_shot: 'One-time',
       daily: 'Daily',
       weekly: 'Weekly',
       monthly: 'Monthly',
@@ -395,7 +399,8 @@ const en = {
     m2: {
       step1: {
         title: 'Make your own',
-        body: 'The best practices are the ones you define. Tap Manage practices.',
+        // 'best practices' is a corporate idiom — phrased around it.
+        body: 'The practices that stick are the ones you make. Tap Manage practices.',
       },
       step2: {
         title: 'Tap the +',
@@ -741,7 +746,7 @@ const en = {
       descPlaceholder: 'What it really means…',
       costLabel: 'Cost (coins)',
       iconLabel: 'Icon',
-      iconHint: 'The glyph shown on the reward card.',
+      iconHint: 'The icon shown on the reward card.',
       archiveBtn: 'Archive reward',
     },
   },
@@ -832,11 +837,11 @@ const en = {
     bucketTabs: {
       daily: 'Daily',
       weekly: 'Weekly',
-      oneshot: 'One-shot',
+      oneshot: 'One-time',
       all: 'All',
       emptyDaily: 'No daily practices pending.',
       emptyWeekly: 'No weekly practices pending.',
-      emptyOneshot: 'No one-shot practices pending.',
+      emptyOneshot: 'No one-time practices pending.',
       emptyAll: 'Nothing pending.',
       nextUp: 'Next up · tap to complete',
       // Legacy keys still referenced by some components — kept until those
@@ -954,7 +959,7 @@ const en = {
       targetHint: 'How many times per period this practice counts toward your goal.',
     },
     schedule: {
-      oneShot: 'One-shot',
+      oneShot: 'One-time',
       daily: 'Daily',
       weekly: 'Weekly',
       monthly: 'Monthly',
@@ -1040,7 +1045,7 @@ const en = {
       premiumHint: '{{count}}/{{limit}} active practices on the free plan · Premium unlocks unlimited',
     },
     bucketEmpty: 'No practices in this bucket.',
-    quickCompleteA11y: 'Complete practice',
+    quickCompleteA11y: 'Complete {{title}}',
     empty: {
       noMatchesTitle: 'No matches',
       noMatchesBody: 'Nothing matches "{{query}}".',

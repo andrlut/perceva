@@ -160,6 +160,11 @@ export default function TasksHubScreen() {
   const [pickerTemplate, setPickerTemplate] = useState<TaskTemplateWithSubs | null>(null);
   /** Row whose quick-complete mutation is in flight. */
   const [completingId, setCompletingId] = useState<string | null>(null);
+  /** Synchronous mirror of completingId — the double-tap guard. State
+   *  (and completeTask.isPending) is read from the current render, so
+   *  two taps landing in the same frame would both pass; the ref flips
+   *  before the first mutate() is issued. */
+  const completingIdRef = useRef<string | null>(null);
   /** Row briefly showing the post-success morph (green check pop). */
   const [justCompletedId, setJustCompletedId] = useState<string | null>(null);
   const successTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -306,7 +311,8 @@ export default function TasksHubScreen() {
   // success (the row stays in place — this list shows ALL active
   // practices, not just today's pending ones).
   const handleQuickComplete = (task: TaskWithSubs) => {
-    if (task.is_archived || completeTask.isPending) return;
+    if (task.is_archived || completingIdRef.current) return;
+    completingIdRef.current = task.id;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
     setCompletingId(task.id);
     completeTask.mutate(
@@ -329,7 +335,10 @@ export default function TasksHubScreen() {
               t('home.actionErrors.unknown'),
           );
         },
-        onSettled: () => setCompletingId(null),
+        onSettled: () => {
+          completingIdRef.current = null;
+          setCompletingId(null);
+        },
       },
     );
   };
@@ -773,6 +782,7 @@ function AllocatedDraggableBody({
             <Ionicons name="reorder-three" size={20} color={tokens.text.dim} />
             <DragRowInner task={item.task} />
             <QuickCompleteButton
+              title={item.task.title}
               pending={completingId === item.task.id}
               success={justCompletedId === item.task.id}
               disabled={isActive || completePending || item.task.is_archived}
@@ -1226,6 +1236,7 @@ function TaskRow({
         </View>
       </View>
       <QuickCompleteButton
+        title={task.title}
         pending={completing}
         success={justCompleted}
         disabled={completeDisabled}
@@ -1237,6 +1248,9 @@ function TaskRow({
 }
 
 interface QuickCompleteButtonProps {
+  /** Practice title — makes each button's a11y label unique so screen
+   *  readers can tell the rows apart. */
+  title: string;
   /** Mutation in flight for this row — spinner + no taps. */
   pending: boolean;
   /** Brief post-success morph: green fill + check pop. */
@@ -1254,6 +1268,7 @@ interface QuickCompleteButtonProps {
  * for a beat before reverting.
  */
 function QuickCompleteButton({
+  title,
   pending,
   success,
   disabled,
@@ -1282,7 +1297,7 @@ function QuickCompleteButton({
         disabled={disabled || pending}
         hitSlop={8}
         accessibilityRole="button"
-        accessibilityLabel={t('tasksHub.quickCompleteA11y')}
+        accessibilityLabel={t('tasksHub.quickCompleteA11y', { title })}
         style={({ pressed }) => [
           styles.quickCompleteBtn,
           success && styles.quickCompleteBtnSuccess,
