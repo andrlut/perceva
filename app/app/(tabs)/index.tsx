@@ -136,7 +136,7 @@ export default function HomeScreen() {
   // baked into navClearance; matches the visible gap users expected
   // when testing M1 step 5.
   const activeTourStep = useActiveTourStep();
-  // M2 step 1 spotlights the "Gerenciar tarefas" button — the very last
+  // M2 step 1 spotlights the "Gerenciar práticas" button — the very last
   // row of the scroll. It needs more bottom room than the M1 drawer
   // (which is mid-list) so the button clears the full tooltip card
   // height once we scroll to the end.
@@ -174,7 +174,7 @@ export default function HomeScreen() {
   };
 
   // Tour auto-scroll on Home:
-  //   - M2 step 1 targets the bottom-most "Gerenciar tarefas" button →
+  //   - M2 step 1 targets the bottom-most "Gerenciar práticas" button →
   //     scroll to the END so it settles in the gap above the tooltip.
   //   - M3 step 1 targets the quest chips strip near the TOP → scroll to
   //     the top so the strip is in view (the user may be scrolled down

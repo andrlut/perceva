@@ -54,8 +54,8 @@ const pt: Translations = {
   },
 
   taskForm: {
-    newTitle: 'Nova tarefa',
-    editTitle: 'Editar tarefa',
+    newTitle: 'Nova prática',
+    editTitle: 'Editar prática',
     titleLabel: 'Título',
     titlePlaceholder: 'Rotina matinal, 20 flexões, …',
     descLabel: 'Descrição (opcional)',
@@ -66,19 +66,19 @@ const pt: Translations = {
     iconAutoA11y: 'Usar ícone do sub principal',
     subsLabel: 'Subatributos + estrelas',
     subsHint:
-      'Escolha quais subs esta tarefa fortalece e o peso de cada esforço. As estrelas por sub vão até 5 — distribua com sinceridade.',
+      'Escolha quais subs esta prática fortalece e o peso de cada esforço. As estrelas por sub vão até 5 — distribua com sinceridade.',
     recurrenceLabel: 'Com que frequência',
-    archiveBtn: 'Arquivar tarefa',
+    archiveBtn: 'Arquivar prática',
     breakWarning:
-      'Editar título, descrição ou subs vai desvincular esta tarefa do template — ela vira uma criação sua. Só mudar a periodicidade preserva o vínculo.',
+      'Editar título, descrição ou subs vai desvincular esta prática do template — ela vira uma criação sua. Só mudar a periodicidade preserva o vínculo.',
     titleRequired: 'Título obrigatório',
-    titleRequiredBody: 'Dê um título à sua tarefa.',
+    titleRequiredBody: 'Dê um título à sua prática.',
     subRequired: 'Escolha ao menos um sub',
     subRequiredBody:
-      'Tarefas fortalecem um ou mais subatributos. Escolha os que esta tarefa toca e quantas estrelas cada um recebe.',
+      'Práticas fortalecem um ou mais subatributos. Escolha os que esta prática toca e quantas estrelas cada um recebe.',
     saveFailed: 'Falha ao salvar',
-    archiveConfirmTitle: 'Arquivar tarefa?',
-    archiveConfirmBody: 'Tarefas arquivadas deixam de aparecer na Home.',
+    archiveConfirmTitle: 'Arquivar prática?',
+    archiveConfirmBody: 'Práticas arquivadas deixam de aparecer na Home.',
     archiveFailed: 'Falha ao arquivar',
   },
 
@@ -245,7 +245,7 @@ const pt: Translations = {
   },
 
   tabs: {
-    tasks: 'Tarefas',
+    tasks: 'Práticas',
     history: 'Histórico',
     hero: 'Eu',
     rewards: 'Recompensas',
@@ -269,7 +269,7 @@ const pt: Translations = {
         'Big Five, Valores de Schwartz, ECR-R e mais: o retrato profundo da sua identidade.',
       unlimitedTitle: 'Sem limites',
       unlimitedDesc:
-        'Tarefas, recompensas, habilidades e missões ilimitadas.',
+        'Práticas, recompensas, habilidades e missões ilimitadas.',
       learnTitle: 'Artigos exclusivos',
       learnDesc: 'Conteúdo extra no Aprender, toda semana.',
       supportTitle: 'Apoie o Perceva',
@@ -280,7 +280,7 @@ const pt: Translations = {
       freeHeader: 'Free',
       premiumHeader: 'Premium',
       unlimited: 'Ilimitado',
-      tasksLabel: 'Tarefas',
+      tasksLabel: 'Práticas',
       tasksFree: '10 ativas',
       rewardsLabel: 'Recompensas',
       rewardsFree: '5 ativas',
@@ -340,7 +340,7 @@ const pt: Translations = {
     },
     // Modal de limite (P1.1) — reconhecimento por entidade antes do pitch.
     limit: {
-      taskLine1: 'Suas 10 tarefas ativas estão em uso — seu sistema está cheio.',
+      taskLine1: 'Suas 10 práticas ativas estão em uso — seu sistema está cheio.',
       rewardLine1: 'Suas 5 recompensas ativas estão em uso.',
       skillLine1: 'Suas 3 habilidades estão em desenvolvimento.',
       questLine1: 'Suas 3 missões ativas estão em andamento.',
@@ -363,16 +363,16 @@ const pt: Translations = {
     },
     m1: {
       step1: {
-        title: 'Suas tarefas do dia',
-        body: 'Toque numa tarefa pra explorar — depois volte aqui.',
+        title: 'Suas práticas do dia',
+        body: 'Toque numa prática pra explorar — depois volte aqui.',
       },
       step2: {
         title: 'Por que vale',
-        body: 'No detalhe você vê quais áreas a tarefa treina e quanta Dedicação ela rende.',
+        body: 'No detalhe você vê quais áreas a prática treina e quanta Dedicação ela rende.',
       },
       step3: {
         title: 'Pressione e segure',
-        body: 'Segure o dedo numa tarefa: abre o menu de ajustar, pular ou editar.',
+        body: 'Segure o dedo numa prática: abre o menu de ajustar, pular ou editar.',
       },
       step4: {
         title: 'Marcar como feita',
@@ -390,7 +390,7 @@ const pt: Translations = {
     m2: {
       step1: {
         title: 'Crie as suas próprias',
-        body: 'As melhores tarefas são as que você define. Toque em Gerenciar tarefas.',
+        body: 'As melhores práticas são as que você define. Toque em Gerenciar práticas.',
       },
       step2: {
         title: 'Toque no +',
@@ -398,7 +398,7 @@ const pt: Translations = {
       },
       step3: {
         title: 'O que ela treina',
-        body: 'Distribua até 5 estrelas entre as áreas que a tarefa treina. Mais estrelas, mais Dedicação.',
+        body: 'Distribua até 5 estrelas entre as áreas que a prática treina. Mais estrelas, mais Dedicação.',
       },
       step4: {
         title: 'Com qual frequência',
@@ -420,7 +420,7 @@ const pt: Translations = {
       },
       step3: {
         title: 'Os critérios',
-        body: 'Veja o que ela pede. Aceitando, o progresso anda sozinho com suas tarefas. Por ora, pode voltar sem aceitar.',
+        body: 'Veja o que ela pede. Aceitando, o progresso anda sozinho com suas práticas. Por ora, pode voltar sem aceitar.',
       },
     },
     m4: {
@@ -430,7 +430,7 @@ const pt: Translations = {
       },
       step2: {
         title: 'Suas moedas',
-        body: 'Seu saldo, ganho completando tarefas. Role até as sugestões logo abaixo.',
+        body: 'Seu saldo, ganho completando práticas. Role até as sugestões logo abaixo.',
       },
       step3: {
         title: 'Resgate e banco',
@@ -478,17 +478,17 @@ const pt: Translations = {
     },
     m0_5: {
       eyebrow: 'POR ONDE COMEÇAR',
-      title: 'Escolha 3 tarefas pra começar',
+      title: 'Escolha 3 práticas pra começar',
       body: 'Pegue 3 práticas pra cultivar nas próximas semanas. Você pode trocar e adicionar mais quando quiser.',
       counter: '{{count}} de {{target}} selecionadas',
       primary: 'Continuar',
       secondary: 'Pular esta etapa',
-      skipFallbackHint: 'Vamos adicionar 3 tarefas padrão pra você começar.',
+      skipFallbackHint: 'Vamos adicionar 3 práticas padrão pra você começar.',
     },
     wrap: {
       eyebrow: 'PRONTO',
       title: 'Tudo certo.',
-      body: 'O tour é só o começo. O que faz diferença é o que você pratica. Cada tarefa marcada é um voto em quem você quer se tornar. Pode revisitar qualquer módulo em Ajustes.',
+      body: 'O tour é só o começo. O que faz diferença é o que você pratica. Cada prática marcada é um voto em quem você quer se tornar. Pode revisitar qualquer módulo em Ajustes.',
       primary: 'Começar a praticar',
     },
     replay: {
@@ -505,9 +505,9 @@ const pt: Translations = {
       },
       modules: {
         M0: { name: 'Boas-vindas', desc: 'A tela de abertura do tour.' },
-        M0_5: { name: 'Tarefas iniciais', desc: 'Escolher 3 práticas pra começar.' },
-        M1: { name: 'Tarefas', desc: 'Concluir, ajustar e desfazer tarefas.' },
-        M2: { name: 'Criar tarefa', desc: 'Montar suas próprias tarefas.' },
+        M0_5: { name: 'Práticas iniciais', desc: 'Escolher 3 práticas pra começar.' },
+        M1: { name: 'Práticas', desc: 'Concluir, ajustar e desfazer práticas.' },
+        M2: { name: 'Criar prática', desc: 'Montar suas próprias práticas.' },
         M3: { name: 'Missões', desc: 'Jornadas maiores com prazo.' },
         M4: { name: 'Recompensas', desc: 'Resgatar e bancar recompensas.' },
         M5: { name: 'Eu', desc: 'Os três retratos da sua identidade.' },
@@ -515,7 +515,7 @@ const pt: Translations = {
       },
     },
     errors: {
-      adopt: 'Não foi possível adicionar as tarefas. Tente de novo.',
+      adopt: 'Não foi possível adicionar as práticas. Tente de novo.',
     },
   },
 
@@ -674,7 +674,7 @@ const pt: Translations = {
     questionnaireToday: 'Refazer questionário · feito hoje',
     questionnaireDaysAgo: 'Refazer questionário · {{count}}d atrás',
     mirrorCta: 'Comparar self vs questionário',
-    nudgeSuffix: 'está em {{score}}/5 — toque pra ver tasks recomendadas',
+    nudgeSuffix: 'está em {{score}}/5 — toque pra ver práticas recomendadas',
     hexAxisA11y: '{{dim}}: {{score}} de {{max}}',
   },
 
@@ -684,7 +684,7 @@ const pt: Translations = {
 
   adoptSheet: {
     eyebrow: 'Adotar',
-    body: 'Como você quer fazer essa task na sua rotina?',
+    body: 'Como você quer encaixar essa prática na sua rotina?',
     templateDefault: 'Padrão do sistema',
     templateDefaultHint: 'recomendado',
     daily: 'Diário · 1x por dia',
@@ -886,13 +886,13 @@ const pt: Translations = {
     },
     empty: {
       title: 'Tudo em dia.',
-      body: 'Nada pendente agora. Adicione uma tarefa pra começar.',
-      cta: 'Gerenciar tarefas',
+      body: 'Nada pendente agora. Adicione uma prática pra começar.',
+      cta: 'Gerenciar práticas',
     },
     error: 'Algo deu errado ao carregar seus dados. Puxe pra tentar de novo.',
-    manageCta: 'Gerenciar tarefas',
+    manageCta: 'Gerenciar práticas',
     actionErrors: {
-      complete: 'Não foi possível concluir a tarefa',
+      complete: 'Não foi possível concluir a prática',
       skip: 'Não foi possível pular',
       undo: 'Não foi possível desfazer',
       unskip: 'Não foi possível despular',
@@ -916,7 +916,7 @@ const pt: Translations = {
     },
     completedDrawer: {
       title: 'Concluído hoje',
-      empty: 'Conclua sua primeira tarefa pra ver aqui.',
+      empty: 'Conclua sua primeira prática pra ver aqui.',
       completedSummary: '{{count}} concluídas',
       skippedSummary: '{{count}} puladas',
       tapToToggle: ' · toque pra ',
@@ -936,17 +936,17 @@ const pt: Translations = {
   },
 
   tasks: {
-    new: 'Nova tarefa',
-    edit: 'Editar tarefa',
+    new: 'Nova prática',
+    edit: 'Editar prática',
     fields: {
       title: 'Título',
       titlePlaceholder: 'O que você quer fazer?',
       difficulty: 'Dificuldade',
       dimensions: 'Dimensões',
-      dimensionsHint: 'Escolha até 3 dimensões que esta tarefa desenvolve.',
+      dimensionsHint: 'Escolha até 3 dimensões que esta prática desenvolve.',
       schedule: 'Agendamento',
       target: 'Meta por período',
-      targetHint: 'Quantas vezes por período esta tarefa conta pra sua meta.',
+      targetHint: 'Quantas vezes por período esta prática conta pra sua meta.',
     },
     schedule: {
       oneShot: 'Único',
@@ -966,15 +966,15 @@ const pt: Translations = {
       archive: 'Arquivar',
       unarchive: 'Desarquivar',
       delete: 'Excluir',
-      confirmDelete: 'Excluir esta tarefa? Não dá pra desfazer.',
-      confirmHighDifficulty: 'Esta é uma tarefa de {{stars}} estrelas. Marcar como concluída?',
+      confirmDelete: 'Excluir esta prática? Não dá pra desfazer.',
+      confirmHighDifficulty: 'Esta é uma prática de {{stars}} estrelas. Marcar como concluída?',
     },
     actionSheet: {
       adjustStars: 'Ajustar estrelas',
       adjustStarsSub: 'Mude o peso dessa conclusão por sub',
       skipToday: 'Pular hoje',
       skipTodaySub: 'Esconde do dia sem concluir — sem XP, sem penalidade no Momentum',
-      editTask: 'Editar tarefa',
+      editTask: 'Editar prática',
       editTaskSub: 'Mudar título, subs, recorrência, etc',
     },
     completeSheet: {
@@ -1004,8 +1004,8 @@ const pt: Translations = {
   },
 
   tasksHub: {
-    title: 'Minhas tarefas',
-    newTask: 'Nova tarefa',
+    title: 'Minhas práticas',
+    newTask: 'Nova prática',
     filters: {
       allocated: 'Alocadas',
       mine: 'Minhas',
@@ -1014,7 +1014,7 @@ const pt: Translations = {
     search: {
       open: 'Buscar',
       close: 'Fechar busca',
-      placeholderMine: 'Buscar nas suas tarefas…',
+      placeholderMine: 'Buscar nas suas práticas…',
       placeholderCatalog: 'Buscar no catálogo…',
     },
     buckets: {
@@ -1032,17 +1032,17 @@ const pt: Translations = {
     },
     suggested: {
       hint: 'Toque numa sugestão pra ajustar do seu jeito antes de adicionar — ou toque em Adotar pra usar como está.',
-      premiumHint: '{{count}}/{{limit}} tarefas ativas no plano gratuito · Premium libera ilimitadas',
+      premiumHint: '{{count}}/{{limit}} práticas ativas no plano gratuito · Premium libera ilimitadas',
     },
-    bucketEmpty: 'Nenhuma tarefa nesse grupo.',
+    bucketEmpty: 'Nenhuma prática nesse grupo.',
     quickCompleteA11y: 'Concluir prática',
     empty: {
       noMatchesTitle: 'Nada encontrado',
       noMatchesBody: 'Nada corresponde a "{{query}}".',
       noMatchesCatalog: 'Nada no catálogo corresponde a "{{query}}".',
-      noTasksTitle: 'Sem tarefas ainda',
-      noTasksBody: 'Adicione sua primeira tarefa ou navegue pela aba Sugeridas.',
-      cta: 'Nova tarefa',
+      noTasksTitle: 'Sem práticas ainda',
+      noTasksBody: 'Adicione sua primeira prática ou navegue pela aba Sugeridas.',
+      cta: 'Nova prática',
     },
     errors: {
       couldNotAdoptTitle: 'Não foi possível adotar',
@@ -1468,7 +1468,7 @@ const pt: Translations = {
       account: 'Conta',
       preferences: 'Preferências',
       notifications: 'Notificações',
-      tasksProgress: 'Tarefas e Progresso',
+      tasksProgress: 'Práticas e Progresso',
       data: 'Dados',
       about: 'Sobre',
     },
@@ -1480,8 +1480,8 @@ const pt: Translations = {
       theme: 'Tema',
       language: 'Idioma',
       weekStart: 'Início da semana',
-      confirmHighDifficulty: 'Confirmar tarefas difíceis',
-      confirmHighDifficultyDescription: 'Pede confirmação antes de concluir tarefas de 4★ ou 5★. Evita toques acidentais.',
+      confirmHighDifficulty: 'Confirmar práticas difíceis',
+      confirmHighDifficultyDescription: 'Pede confirmação antes de concluir práticas de 4★ ou 5★. Evita toques acidentais.',
       defaultRewards: 'Recompensas padrão',
       dayResetTime: 'Reset do dia',
       midnight: 'Meia-noite (local)',
@@ -1507,11 +1507,11 @@ const pt: Translations = {
       mood: 'Check-in de humor',
       moodDescription: 'Um lembrete gentil no fim do dia pra registrar como você se sentiu.',
       daily: 'Lembrete diário',
-      dailyDescription: 'Um cutucão se ainda tem tarefas diárias pendentes.',
+      dailyDescription: 'Um cutucão se ainda tem práticas diárias pendentes.',
       quest: 'Lembrete de missão',
       questDescription: 'Aviso antes do prazo de uma missão.',
       momentum: 'Lembrete de Momentum',
-      momentumDescription: 'Cutucão noturno quando seu Momentum precisa de uma tarefa pequena.',
+      momentumDescription: 'Cutucão noturno quando seu Momentum precisa de uma prática pequena.',
       footnote: 'As notificações precisam de uma pequena configuração nativa — os toggles já salvam sua escolha e começam a disparar quando rolar.',
     },
     actions: {
@@ -1523,7 +1523,7 @@ const pt: Translations = {
       confirmSignOutBody: 'Você pode entrar de novo com o mesmo email.',
       deleteAccount: 'Excluir conta',
       confirmDelete: 'Excluir conta?',
-      confirmDeleteBody: 'Isto vai excluir permanentemente seu personagem, tarefas, recompensas e histórico. Não dá pra desfazer.',
+      confirmDeleteBody: 'Isto vai excluir permanentemente seu personagem, práticas, recompensas e histórico. Não dá pra desfazer.',
       deleteNotYet: 'Ainda não disponível',
       deleteNotYetBody: 'A exclusão de conta está conectada ao servidor mas o endpoint admin ainda não está ativo. Por enquanto, saia da conta e entre em contato se precisar remover.',
       deleteFailTitle: 'Não foi possível excluir a conta',
@@ -1642,8 +1642,8 @@ const pt: Translations = {
       descLabel: 'Descrição',
       descPlaceholder: 'O que você quer treinar?',
       durationLabel: 'Duração',
-      tasksLabel: 'Tasks vinculadas',
-      tasksEmpty: 'Você não tem tarefas ativas pra vincular.',
+      tasksLabel: 'Práticas vinculadas',
+      tasksEmpty: 'Você não tem práticas ativas pra vincular.',
       partialTitle: 'Aceita parcial',
       partialSub: 'Dias incompletos não resetam o progresso',
       rewardLabel: 'Recompensa',
@@ -1655,7 +1655,7 @@ const pt: Translations = {
       notFound: 'Quest não encontrada.',
       yourProgress: 'Seu progresso',
       notStarted: 'Não iniciada',
-      linkedTasks: 'Tasks vinculadas',
+      linkedTasks: 'Práticas vinculadas',
       rules: 'Regras',
       rulePartialOn: 'Partial OK: dias incompletos não resetam o progresso.',
       rulePartialOff: 'Sem partial: dias incompletos resetam o contador.',
@@ -1705,7 +1705,7 @@ const pt: Translations = {
     subtitle: 'Como você sente cada pilar agora?',
     pillarPrompt: 'Como está {{pillar}}?',
     subAttribute: 'sub-atributo',
-    recommendedTasks: 'Tasks recomendadas',
+    recommendedTasks: 'Práticas recomendadas',
     scale: {
       0: 'Nada',
       1: 'Mal',
@@ -1715,8 +1715,8 @@ const pt: Translations = {
       5: 'Ótimo',
     },
     insights: {
-      0: 'Não rastreado ainda. Começa com 1 task pequena.',
-      1: 'Atenção. Uma task diária aqui muda o jogo.',
+      0: 'Não rastreado ainda. Começa com 1 prática pequena.',
+      1: 'Atenção. Uma prática diária aqui muda o jogo.',
       2: 'Abaixo da linha de base. Vale aumentar foco.',
       3: 'Sólido. Mantém a consistência.',
       4: 'Forte. Próximo passo: uma skill avançada.',

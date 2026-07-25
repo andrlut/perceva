@@ -64,8 +64,8 @@ const en = {
   },
 
   taskForm: {
-    newTitle: 'New task',
-    editTitle: 'Edit task',
+    newTitle: 'New practice',
+    editTitle: 'Edit practice',
     titleLabel: 'Title',
     titlePlaceholder: 'Morning routine, 20 push-ups, …',
     descLabel: 'Description (optional)',
@@ -76,19 +76,19 @@ const en = {
     iconAutoA11y: 'Use primary sub icon',
     subsLabel: 'Sub-dimensions + stars',
     subsHint:
-      'Pick which subs this task contributes to and how heavy each effort is. Per-sub stars cap at 5 — distribute honestly.',
+      'Pick which subs this practice contributes to and how heavy each effort is. Per-sub stars cap at 5 — distribute honestly.',
     recurrenceLabel: 'How often',
-    archiveBtn: 'Archive task',
+    archiveBtn: 'Archive practice',
     breakWarning:
-      'Editing the title, description or subs unlinks this task from the template — it becomes your own creation. Changing only the periodicity keeps the link.',
+      'Editing the title, description or subs unlinks this practice from the template — it becomes your own creation. Changing only the periodicity keeps the link.',
     titleRequired: 'Title required',
-    titleRequiredBody: 'Give your task a title.',
+    titleRequiredBody: 'Give your practice a title.',
     subRequired: 'Pick at least one sub',
     subRequiredBody:
-      'Tasks contribute to one or more sub-dimensions. Pick the ones this task touches and how many stars each gets.',
+      'Practices contribute to one or more sub-dimensions. Pick the ones this practice touches and how many stars each gets.',
     saveFailed: 'Save failed',
-    archiveConfirmTitle: 'Archive task?',
-    archiveConfirmBody: 'Archived tasks stop appearing on Home.',
+    archiveConfirmTitle: 'Archive practice?',
+    archiveConfirmBody: 'Archived practices stop appearing on Home.',
     archiveFailed: 'Archive failed',
   },
 
@@ -255,7 +255,7 @@ const en = {
   },
 
   tabs: {
-    tasks: 'Tasks',
+    tasks: 'Practices',
     history: 'History',
     hero: 'Me',
     rewards: 'Rewards',
@@ -278,7 +278,7 @@ const en = {
       instrumentsDesc:
         'Big Five, Schwartz Values, ECR-R and more: the deep portrait of your identity.',
       unlimitedTitle: 'No limits',
-      unlimitedDesc: 'Unlimited tasks, rewards, skills and quests.',
+      unlimitedDesc: 'Unlimited practices, rewards, skills and quests.',
       learnTitle: 'Exclusive articles',
       learnDesc: 'Extra content in Learn, every week.',
       supportTitle: 'Support Perceva',
@@ -289,7 +289,7 @@ const en = {
       freeHeader: 'Free',
       premiumHeader: 'Premium',
       unlimited: 'Unlimited',
-      tasksLabel: 'Tasks',
+      tasksLabel: 'Practices',
       tasksFree: '10 active',
       rewardsLabel: 'Rewards',
       rewardsFree: '5 active',
@@ -348,7 +348,7 @@ const en = {
     },
     // Limit modal (P1.1) — recognition per entity before the pitch.
     limit: {
-      taskLine1: 'Your 10 active tasks are all in use — your system is full.',
+      taskLine1: 'Your 10 active practices are all in use — your system is full.',
       rewardLine1: 'Your 5 active rewards are all in use.',
       skillLine1: 'Your 3 skills are all in progress.',
       questLine1: 'Your 3 active quests are underway.',
@@ -368,16 +368,16 @@ const en = {
     },
     m1: {
       step1: {
-        title: 'Your tasks for today',
-        body: 'Tap a task to explore — then come back here.',
+        title: 'Your practices for today',
+        body: 'Tap a practice to explore — then come back here.',
       },
       step2: {
         title: 'Why it counts',
-        body: 'On the detail screen you can see which areas the task trains and how much Dedication it pays.',
+        body: 'On the detail screen you can see which areas the practice trains and how much Dedication it pays.',
       },
       step3: {
         title: 'Press and hold',
-        body: 'Long-press a task to open the menu: adjust stars, skip today, or edit.',
+        body: 'Long-press a practice to open the menu: adjust stars, skip today, or edit.',
       },
       step4: {
         title: 'Mark as done',
@@ -395,7 +395,7 @@ const en = {
     m2: {
       step1: {
         title: 'Make your own',
-        body: 'The best tasks are the ones you define. Tap Manage tasks.',
+        body: 'The best practices are the ones you define. Tap Manage practices.',
       },
       step2: {
         title: 'Tap the +',
@@ -403,7 +403,7 @@ const en = {
       },
       step3: {
         title: 'What it trains',
-        body: 'Spread up to 5 stars across the areas this task trains. More stars, more Dedication.',
+        body: 'Spread up to 5 stars across the areas this practice trains. More stars, more Dedication.',
       },
       step4: {
         title: 'How often',
@@ -425,7 +425,7 @@ const en = {
       },
       step3: {
         title: 'The criteria',
-        body: 'See what it asks. Once accepted, progress moves on its own with your tasks. For now, you can head back without accepting.',
+        body: 'See what it asks. Once accepted, progress moves on its own with your practices. For now, you can head back without accepting.',
       },
     },
     m4: {
@@ -435,7 +435,7 @@ const en = {
       },
       step2: {
         title: 'Your coins',
-        body: 'Your balance, earned by completing tasks. Scroll down to the suggestions below.',
+        body: 'Your balance, earned by completing practices. Scroll down to the suggestions below.',
       },
       step3: {
         title: 'Redeem and bank',
@@ -483,17 +483,17 @@ const en = {
     },
     m0_5: {
       eyebrow: 'WHERE TO START',
-      title: 'Pick 3 tasks to begin',
+      title: 'Pick 3 practices to begin',
       body: 'Choose 3 practices to cultivate over the next few weeks. You can swap or add more whenever you want.',
       counter: '{{count}} of {{target}} selected',
       primary: 'Continue',
       secondary: 'Skip this step',
-      skipFallbackHint: "We'll add 3 default tasks so you have something to start with.",
+      skipFallbackHint: "We'll add 3 default practices so you have something to start with.",
     },
     wrap: {
       eyebrow: 'READY',
       title: 'All set.',
-      body: 'The tour is just the start. What makes a difference is what you practice. Every task you check off is a vote for who you want to become. You can revisit any module from Settings.',
+      body: 'The tour is just the start. What makes a difference is what you practice. Every practice you check off is a vote for who you want to become. You can revisit any module from Settings.',
       primary: 'Start practicing',
     },
     replay: {
@@ -510,9 +510,9 @@ const en = {
       },
       modules: {
         M0: { name: 'Welcome', desc: "The tour's opening screen." },
-        M0_5: { name: 'Starter tasks', desc: 'Pick 3 practices to begin.' },
-        M1: { name: 'Tasks', desc: 'Complete, adjust and undo tasks.' },
-        M2: { name: 'Create a task', desc: 'Build your own tasks.' },
+        M0_5: { name: 'Starter practices', desc: 'Pick 3 practices to begin.' },
+        M1: { name: 'Practices', desc: 'Complete, adjust and undo practices.' },
+        M2: { name: 'Create a practice', desc: 'Build your own practices.' },
         M3: { name: 'Quests', desc: 'Bigger journeys with a deadline.' },
         M4: { name: 'Rewards', desc: 'Redeem and bank rewards.' },
         M5: { name: 'Me', desc: 'The three portraits of your identity.' },
@@ -520,7 +520,7 @@ const en = {
       },
     },
     errors: {
-      adopt: "Couldn't add the tasks. Try again.",
+      adopt: "Couldn't add the practices. Try again.",
     },
   },
 
@@ -679,7 +679,7 @@ const en = {
     questionnaireToday: 'Retake questionnaire · done today',
     questionnaireDaysAgo: 'Retake questionnaire · {{count}}d ago',
     mirrorCta: 'Compare self vs questionnaire',
-    nudgeSuffix: 'is at {{score}}/5 — tap to see recommended tasks',
+    nudgeSuffix: 'is at {{score}}/5 — tap to see recommended practices',
     hexAxisA11y: '{{dim}}: {{score}} out of {{max}}',
   },
 
@@ -689,7 +689,7 @@ const en = {
 
   adoptSheet: {
     eyebrow: 'Adopt',
-    body: 'How do you want to do this task in your routine?',
+    body: 'How do you want to fit this practice into your routine?',
     templateDefault: 'System default',
     templateDefaultHint: 'recommended',
     daily: 'Daily · once a day',
@@ -834,9 +834,9 @@ const en = {
       weekly: 'Weekly',
       oneshot: 'One-shot',
       all: 'All',
-      emptyDaily: 'No daily tasks pending.',
-      emptyWeekly: 'No weekly tasks pending.',
-      emptyOneshot: 'No one-shot tasks pending.',
+      emptyDaily: 'No daily practices pending.',
+      emptyWeekly: 'No weekly practices pending.',
+      emptyOneshot: 'No one-shot practices pending.',
       emptyAll: 'Nothing pending.',
       nextUp: 'Next up · tap to complete',
       // Legacy keys still referenced by some components — kept until those
@@ -891,13 +891,13 @@ const en = {
     },
     empty: {
       title: 'All clear.',
-      body: 'Nothing pending right now. Add a task to get started.',
-      cta: 'Manage tasks',
+      body: 'Nothing pending right now. Add a practice to get started.',
+      cta: 'Manage practices',
     },
     error: 'Something went wrong loading your data. Pull to retry.',
-    manageCta: 'Manage tasks',
+    manageCta: 'Manage practices',
     actionErrors: {
-      complete: 'Could not complete task',
+      complete: 'Could not complete practice',
       skip: 'Could not skip',
       undo: 'Could not undo',
       unskip: 'Could not unskip',
@@ -921,7 +921,7 @@ const en = {
     },
     completedDrawer: {
       title: 'Completed today',
-      empty: 'Complete your first task to see it here.',
+      empty: 'Complete your first practice to see it here.',
       completedSummary: '{{count}} completed',
       skippedSummary: '{{count}} skipped',
       tapToToggle: ' · tap to ',
@@ -941,17 +941,17 @@ const en = {
   },
 
   tasks: {
-    new: 'New task',
-    edit: 'Edit task',
+    new: 'New practice',
+    edit: 'Edit practice',
     fields: {
       title: 'Title',
       titlePlaceholder: 'What do you want to do?',
       difficulty: 'Difficulty',
       dimensions: 'Dimensions',
-      dimensionsHint: 'Pick up to 3 dimensions this task grows.',
+      dimensionsHint: 'Pick up to 3 dimensions this practice grows.',
       schedule: 'Schedule',
       target: 'Target per period',
-      targetHint: 'How many times per period this task counts toward your goal.',
+      targetHint: 'How many times per period this practice counts toward your goal.',
     },
     schedule: {
       oneShot: 'One-shot',
@@ -971,15 +971,15 @@ const en = {
       archive: 'Archive',
       unarchive: 'Unarchive',
       delete: 'Delete',
-      confirmDelete: 'Delete this task? This cannot be undone.',
-      confirmHighDifficulty: 'This is a {{stars}}-star task. Mark complete?',
+      confirmDelete: 'Delete this practice? This cannot be undone.',
+      confirmHighDifficulty: 'This is a {{stars}}-star practice. Mark complete?',
     },
     actionSheet: {
       adjustStars: 'Adjust stars',
       adjustStarsSub: 'Change how heavy this completion was per sub',
       skipToday: 'Skip today',
       skipTodaySub: 'Hide from today without completing — no XP, no Momentum penalty',
-      editTask: 'Edit task',
+      editTask: 'Edit practice',
       editTaskSub: 'Change title, subs, recurrence, etc',
     },
     completeSheet: {
@@ -1009,8 +1009,8 @@ const en = {
   },
 
   tasksHub: {
-    title: 'My Tasks',
-    newTask: 'New task',
+    title: 'My Practices',
+    newTask: 'New practice',
     filters: {
       allocated: 'Allocated',
       mine: 'Mine',
@@ -1019,7 +1019,7 @@ const en = {
     search: {
       open: 'Search',
       close: 'Close search',
-      placeholderMine: 'Search your tasks…',
+      placeholderMine: 'Search your practices…',
       placeholderCatalog: 'Search catalog…',
     },
     buckets: {
@@ -1037,17 +1037,17 @@ const en = {
     },
     suggested: {
       hint: 'Tap a suggestion to tweak it your way before adding — or tap Adopt to use it as is.',
-      premiumHint: '{{count}}/{{limit}} active tasks on the free plan · Premium unlocks unlimited',
+      premiumHint: '{{count}}/{{limit}} active practices on the free plan · Premium unlocks unlimited',
     },
-    bucketEmpty: 'No tasks in this bucket.',
+    bucketEmpty: 'No practices in this bucket.',
     quickCompleteA11y: 'Complete practice',
     empty: {
       noMatchesTitle: 'No matches',
       noMatchesBody: 'Nothing matches "{{query}}".',
       noMatchesCatalog: 'Nothing in the catalog matches "{{query}}".',
-      noTasksTitle: 'No tasks yet',
-      noTasksBody: 'Add your first task or browse the Suggested tab.',
-      cta: 'New task',
+      noTasksTitle: 'No practices yet',
+      noTasksBody: 'Add your first practice or browse the Suggested tab.',
+      cta: 'New practice',
     },
     errors: {
       couldNotAdoptTitle: 'Could not adopt',
@@ -1469,7 +1469,7 @@ const en = {
       account: 'Account',
       preferences: 'Preferences',
       notifications: 'Notifications',
-      tasksProgress: 'Tasks & Progress',
+      tasksProgress: 'Practices & Progress',
       data: 'Data',
       about: 'About',
     },
@@ -1481,8 +1481,8 @@ const en = {
       theme: 'Theme',
       language: 'Language',
       weekStart: 'Week starts on',
-      confirmHighDifficulty: 'Confirm hard quests',
-      confirmHighDifficultyDescription: 'Ask before completing a 4★ or 5★ task. Stops accidental taps.',
+      confirmHighDifficulty: 'Confirm hard practices',
+      confirmHighDifficultyDescription: 'Ask before completing a 4★ or 5★ practice. Stops accidental taps.',
       defaultRewards: 'Default rewards',
       dayResetTime: 'Day reset time',
       midnight: 'Midnight (local)',
@@ -1512,7 +1512,7 @@ const en = {
       quest: 'Quest reminder',
       questDescription: 'Heads-up before a quest deadline.',
       momentum: 'Momentum reminder',
-      momentumDescription: "Late-evening ping when today's Momentum could use a small task.",
+      momentumDescription: "Late-evening ping when today's Momentum could use a small practice.",
       footnote: 'Notifications need a small native setup pass — the toggles save your choice now and will start firing once that ships.',
     },
     actions: {
@@ -1524,7 +1524,7 @@ const en = {
       confirmSignOutBody: 'You can log back in with the same email.',
       deleteAccount: 'Delete account',
       confirmDelete: 'Delete account?',
-      confirmDeleteBody: 'This will permanently delete your character, tasks, rewards, and history. This cannot be undone.',
+      confirmDeleteBody: 'This will permanently delete your character, practices, rewards, and history. This cannot be undone.',
       deleteNotYet: 'Not yet available',
       deleteNotYetBody: 'Account deletion is wired to the server but the admin endpoint is not active yet. For now, sign out and contact us if you need the account removed.',
       deleteFailTitle: 'Could not delete account',
@@ -1643,8 +1643,8 @@ const en = {
       descLabel: 'Description',
       descPlaceholder: 'What do you want to train?',
       durationLabel: 'Duration',
-      tasksLabel: 'Linked tasks',
-      tasksEmpty: 'You have no active tasks to link.',
+      tasksLabel: 'Linked practices',
+      tasksEmpty: 'You have no active practices to link.',
       partialTitle: 'Partial OK',
       partialSub: 'Incomplete days do not reset progress',
       rewardLabel: 'Reward',
@@ -1656,7 +1656,7 @@ const en = {
       notFound: 'Quest not found.',
       yourProgress: 'Your progress',
       notStarted: 'Not started',
-      linkedTasks: 'Linked tasks',
+      linkedTasks: 'Linked practices',
       rules: 'Rules',
       rulePartialOn: 'Partial OK: incomplete days do not reset progress.',
       rulePartialOff: 'No partial: incomplete days reset the counter.',
@@ -1706,7 +1706,7 @@ const en = {
     subtitle: 'Where do you feel each pillar is right now?',
     pillarPrompt: 'How is your {{pillar}}?',
     subAttribute: 'sub-attribute',
-    recommendedTasks: 'Recommended tasks',
+    recommendedTasks: 'Recommended practices',
     scale: {
       0: 'Not at all',
       1: 'Barely',
@@ -1716,8 +1716,8 @@ const en = {
       5: 'Great',
     },
     insights: {
-      0: 'Not tracked yet. Start with one small task.',
-      1: 'Watch out. A daily task here changes the game.',
+      0: 'Not tracked yet. Start with one small practice.',
+      1: 'Watch out. A daily practice here changes the game.',
       2: 'Below baseline. Worth more focus.',
       3: 'Solid. Keep the consistency.',
       4: 'Strong. Next step: an advanced skill.',
