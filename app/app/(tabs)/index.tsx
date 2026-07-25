@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
@@ -16,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useBottomNavClearance } from '@/components/BottomNavBar';
 import { CompleteTaskSheet } from '@/components/CompleteTaskSheet';
+import { DayClearedCelebration } from '@/components/DayClearedCelebration';
 import { MoodCheckinPrompt } from '@/components/MoodCheckinPrompt';
 import { MoodHubStrip } from '@/components/mood/MoodHubStrip';
 import { CompletedBucket, type CompletedItem } from '@/components/CompletedBucket';
@@ -27,6 +29,7 @@ import { TodayAmbient } from '@/components/TodayAmbient';
 import { TodayHeader } from '@/components/TodayHeader';
 import { XPCoinFloat } from '@/components/XPCoinFloat';
 import { useCharacter } from '@/lib/api/character';
+import { todayDateKey } from '@/lib/api/mood';
 import { useT } from '@/lib/i18n';
 import { useTrackedReward } from '@/lib/api/rewards';
 import { useLoadedSettings } from '@/lib/settings';
@@ -66,6 +69,16 @@ interface FloatItem {
   id: number;
   xp: number;
   coins: number;
+}
+
+/** AsyncStorage day-stamp — "day-cleared celebration already fired today".
+ *  Same pattern as MoodCheckinPrompt's `@perceva/mood_prompt_shown`. */
+const DAY_CLEARED_KEY = '@perceva/day_cleared';
+
+interface DayClearedStats {
+  done: number;
+  skipped: number;
+  xp: number;
 }
 
 /**
@@ -430,6 +443,63 @@ export default function HomeScreen() {
   }, [data, settings.weekStart]);
   const ringTotal = ringDone + lists.today.length;
 
+  // ── Day-cleared celebration ───────────────────────────────────────────
+  // Fires once per day when the remaining "Hoje" list reaches 0 through
+  // user action (complete or skip). Guards:
+  //   - buckets loaded (no false fire on the transient empty pre-fetch)
+  //   - ringDone > 0 (an empty schedule never celebrates)
+  //   - the list was seen >0 this session (a day that LOADS empty stays
+  //     quiet). A latch ref instead of a strict >0→0 transition check:
+  //     useCompleteTask's optimistic update empties `today` while
+  //     todayActivity (→ ringDone) is still stale, so the transition
+  //     frame can fail the ringDone guard and only the refetch frame —
+  //     where remaining is ALREADY 0 — has the real numbers.
+  //   - once-per-day AsyncStorage stamp, written BEFORE showing, so an
+  //     undo + re-complete while (or after) the modal is up can't re-fire
+  //   - no active tour step (tour owns the overlay layer)
+  const [dayClearedStats, setDayClearedStats] =
+    useState<DayClearedStats | null>(null);
+  const sawPendingTodayRef = useRef(false);
+  const dayClearedFiringRef = useRef(false);
+  useEffect(() => {
+    if (!buckets.isSuccess || !data) return;
+    const remaining = lists.today.length;
+    if (remaining > 0) {
+      sawPendingTodayRef.current = true;
+      return;
+    }
+    if (!sawPendingTodayRef.current) return;
+    if (ringDone <= 0) return;
+    if (activeTourStep) return;
+
+    // No cleanup cancellation: the stamp is written BEFORE showing, so
+    // aborting between the two (e.g. a refetch re-running the effect)
+    // would burn the day without the celebration. The ref just prevents
+    // two overlapping runs from double-firing the haptic.
+    if (dayClearedFiringRef.current) return;
+    dayClearedFiringRef.current = true;
+    (async () => {
+      try {
+        const stamped = await AsyncStorage.getItem(DAY_CLEARED_KEY);
+        if (stamped === todayDateKey()) return;
+        // Stamp first — never twice a day, even if undo resurrects tasks
+        // while the modal is up.
+        await AsyncStorage.setItem(DAY_CLEARED_KEY, todayDateKey());
+        const completed = data.todayActivity.completed;
+        setDayClearedStats({
+          done: completed.length,
+          skipped: data.todayActivity.skipped.length,
+          xp: completed.reduce((sum, c) => sum + c.totalXp, 0),
+        });
+        Haptics.notificationAsync(
+          Haptics.NotificationFeedbackType.Success,
+        ).catch(() => {});
+      } finally {
+        dayClearedFiringRef.current = false;
+      }
+    })();
+  }, [buckets.isSuccess, data, lists.today.length, ringDone, activeTourStep]);
+
   const hero = formatHeroDate();
   const charXp = character.data?.character.total_xp ?? 0;
   const lp = levelProgress(charXp);
@@ -661,6 +731,14 @@ export default function HomeScreen() {
         onAdjustStars={handleActionAdjust}
         onSkipToday={handleActionSkip}
         onEdit={handleActionEdit}
+      />
+
+      <DayClearedCelebration
+        visible={dayClearedStats !== null}
+        doneCount={dayClearedStats?.done ?? 0}
+        skippedCount={dayClearedStats?.skipped ?? 0}
+        xpToday={dayClearedStats?.xp ?? 0}
+        onClose={() => setDayClearedStats(null)}
       />
 
       <MoodCheckinPrompt enabled={!activeTourStep} />

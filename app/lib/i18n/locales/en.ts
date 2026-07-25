@@ -863,6 +863,16 @@ const en = {
     skippedBucket: {
       today: 'Skipped today',
     },
+    dayCleared: {
+      title: 'Day cleared!',
+      body: "Every practice today was a vote for who you're becoming.",
+      allSkippedTitle: 'Day settled.',
+      allSkippedBody: 'Skipping is deciding too. Tomorrow brings more.',
+      statsDone: { one: '{{count}} practice done', other: '{{count}} practices done' },
+      statsSkipped: { one: '{{count}} skipped', other: '{{count}} skipped' },
+      statsXp: '+{{xp}} XP today',
+      cta: 'Continue',
+    },
     ring: {
       toDo: { one: '{{count}} to do', other: '{{count}} to do' },
       allDone: 'All done! 🎉',

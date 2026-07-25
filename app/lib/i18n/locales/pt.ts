@@ -858,6 +858,16 @@ const pt: Translations = {
     skippedBucket: {
       today: 'Puladas hoje',
     },
+    dayCleared: {
+      title: 'Dia fechado!',
+      body: 'Cada prática de hoje foi um voto em quem você está se tornando.',
+      allSkippedTitle: 'Dia limpo.',
+      allSkippedBody: 'Pular também é decidir. Amanhã tem mais.',
+      statsDone: { one: '{{count}} prática feita', other: '{{count}} práticas feitas' },
+      statsSkipped: { one: '{{count}} pulada', other: '{{count}} puladas' },
+      statsXp: '+{{xp}} XP hoje',
+      cta: 'Continuar',
+    },
     ring: {
       toDo: { one: '{{count}} a fazer', other: '{{count}} a fazer' },
       allDone: 'Tudo feito! 🎉',
