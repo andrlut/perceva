@@ -19,6 +19,7 @@ import { LearningBody } from '@/components/LearningBody';
 import { AudioPane } from '@/components/learning/AudioPane';
 import { FeedbackSheet } from '@/components/learning/FeedbackSheet';
 import { MediaViewer } from '@/components/learning/MediaViewer';
+import { VideoPane } from '@/components/learning/VideoPane';
 import { MaterialCover } from '@/components/MaterialCover';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import {
@@ -39,7 +40,7 @@ import { SUB_META } from '@/theme/dimensions';
 
 /**
  * Detail experience for materials that carry media attachments (podcast
- * audio / infographic / deck). Renders a book-style hero and a
+ * audio / infographic / deck / short video). Renders a book-style hero and a
  * Read | Listen | View mode switcher; materials WITHOUT media keep the
  * original screen in `app/material/[slug].tsx` untouched.
  *
@@ -97,14 +98,18 @@ export function MaterialMediaScreen({ detail: m }: Props) {
     () => pickMedia(m.media, ['infographic', 'deck'], locale === 'pt' ? 'pt' : 'en'),
     [m.media, locale],
   );
+  const videoPick = useMemo(
+    () => pickMedia(m.media, ['video'], locale === 'pt' ? 'pt' : 'en'),
+    [m.media, locale],
+  );
 
   const modes = useMemo(() => {
     const list: Mode[] = [];
     if (body) list.push('read');
     if (audioPick) list.push('listen');
-    if (visualPick) list.push('view');
+    if (videoPick || visualPick) list.push('view');
     return list;
-  }, [body, audioPick, visualPick]);
+  }, [body, audioPick, videoPick, visualPick]);
 
   const [mode, setMode] = useState<Mode>(() => (body ? 'read' : audioPick ? 'listen' : 'view'));
   // Player mounts on first Listen and stays mounted (hidden) afterwards.
@@ -178,16 +183,23 @@ export function MaterialMediaScreen({ detail: m }: Props) {
   const visualMeta = visualPick?.media.meta ?? null;
   const visualAspect =
     visualMeta?.width && visualMeta?.height ? visualMeta.width / visualMeta.height : 1080 / 1920;
+  const videoMeta = videoPick?.media.meta ?? null;
+  const videoAspect =
+    videoMeta?.width && videoMeta?.height ? videoMeta.width / videoMeta.height : 16 / 9;
+
+  // The switcher badge for View follows the pane's primary content — the
+  // video when one is attached, the infographic/deck otherwise.
+  const viewPrimary = videoPick ?? visualPick;
 
   const modeIcon: Record<Mode, keyof typeof Ionicons.glyphMap> = {
     read: 'book-outline',
     listen: 'headset-outline',
-    view: 'images-outline',
+    view: videoPick ? 'videocam-outline' : 'images-outline',
   };
   const modeBadge: Record<Mode, string | null> = {
     read: bodyIsFallback ? (locale === 'pt' ? 'EN' : 'PT') : null,
     listen: audioPick?.isFallback ? audioPick.media.locale.toUpperCase() : null,
-    view: visualPick?.isFallback ? visualPick.media.locale.toUpperCase() : null,
+    view: viewPrimary?.isFallback ? viewPrimary.media.locale.toUpperCase() : null,
   };
 
   return (
@@ -237,7 +249,14 @@ export function MaterialMediaScreen({ detail: m }: Props) {
                   ? t('learning.media.listenMin', {
                       count: Math.round(audioPick.media.duration_seconds / 60),
                     })
-                  : t('learning.readMin', { count: m.reading_minutes })}
+                  : videoPick?.media.duration_seconds && mode === 'view'
+                    ? t('learning.media.videoMin', {
+                        count: Math.max(
+                          1,
+                          Math.round(videoPick.media.duration_seconds / 60),
+                        ),
+                      })
+                    : t('learning.readMin', { count: m.reading_minutes })}
               </Text>
             </View>
             <View style={[styles.metaPill, { backgroundColor: dim.bg }]}>
@@ -339,9 +358,21 @@ export function MaterialMediaScreen({ detail: m }: Props) {
             </View>
           )}
 
+          {/* View — short video (when attached) above the inline
+              infographic. Mounted ONLY while in View mode and ONLY when the
+              material actually has a kind='video' row — unmounting stops
+              playback, and media-less materials never reach this screen. */}
+          {mode === 'view' && videoPick && (
+            <VideoPane
+              uri={learningMediaUrl(videoPick.media.path)}
+              aspectRatio={videoAspect}
+              langBadge={videoPick.isFallback ? videoPick.media.locale.toUpperCase() : null}
+            />
+          )}
+
           {/* View — inline full infographic; tap opens the zoom viewer. */}
           {mode === 'view' && visualPick && visualUri && (
-            <View style={styles.visualWrap}>
+            <View style={[styles.visualWrap, videoPick != null && styles.visualAfterVideo]}>
               <Pressable
                 onPress={() => setViewerOpen(true)}
                 accessibilityRole="imagebutton"
@@ -748,6 +779,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: tokens.border.strong,
+  },
+  visualAfterVideo: {
+    marginTop: tokens.space[4],
   },
   visualImage: {
     width: '100%',

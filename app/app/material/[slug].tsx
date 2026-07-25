@@ -142,8 +142,8 @@ export default function MaterialDetailScreen() {
 
   const m = material.data;
 
-  // Materials with media attachments (podcast / infographic / deck) get the
-  // Read|Listen|View experience; everything else keeps this original screen.
+  // Materials with media attachments (podcast / infographic / deck / video)
+  // get the Read|Listen|View experience; everything else keeps this screen.
   if (m.media.length > 0) {
     return <MaterialMediaScreen detail={m} />;
   }
