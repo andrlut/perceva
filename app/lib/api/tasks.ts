@@ -182,17 +182,21 @@ export interface PeriodActivity {
 }
 
 export interface HomeBuckets {
+  /** The "Hoje" list: dailies with unmet daily target, weekly/monthly
+   *  scheduled for today (or last-day catch-ups), and unscheduled
+   *  weekly/monthly with unmet period targets. Acted-today items are
+   *  excluded for the recurring types. */
   today: TaskWithSubs[];
+  /** Scheduled weekly/monthly NOT due today with an unmet period target.
+   *  Kept on the interface; the Home screen no longer renders it. */
   thisWeek: TaskWithSubs[];
   thisMonth: TaskWithSubs[];
   oneTime: TaskWithSubs[];
   /** Roll-up of "what happened today" — feeds the drawer at the bottom. */
   todayActivity: TodayActivity;
-  /** Weekly/monthly tasks completed at least once this week. Feeds the
-   *  "Done this week" drawer on the Weekly tab. */
+  /** Weekly/monthly tasks completed at least once this week. */
   weekActivity: PeriodActivity;
-  /** One-shot tasks ever completed. Feeds the "Completed" drawer on the
-   *  One-shot tab. */
+  /** One-shot tasks ever completed. */
   oneShotActivity: PeriodActivity;
 }
 
@@ -219,23 +223,6 @@ function isLastDayOfMonth(date: Date): boolean {
   return next.getMonth() !== date.getMonth();
 }
 
-/** True when the week containing `date` (under the configured week start)
- *  is the last calendar week of `date`'s month — i.e. the end-of-month
- *  falls within [startOfWeek, startOfWeek + 6 days]. */
-function isLastWeekOfMonth(date: Date, weekStart: WeekStart): boolean {
-  const dow = date.getDay();
-  const offset = weekStart === 'sunday' ? dow : (dow + 6) % 7;
-  const startWeek = new Date(date);
-  startWeek.setHours(0, 0, 0, 0);
-  startWeek.setDate(date.getDate() - offset);
-  const endWeek = new Date(startWeek);
-  endWeek.setDate(startWeek.getDate() + 6);
-  endWeek.setHours(23, 59, 59, 999);
-  const lastDayOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-  lastDayOfMonth.setHours(12, 0, 0, 0);
-  return lastDayOfMonth >= startWeek && lastDayOfMonth <= endWeek;
-}
-
 /** True when a monthly task's scheduled day-of-month falls within the
  *  current calendar week (under the user's configured week start). Used
  *  to escalate monthly tasks scheduled on a day in this week into the
@@ -255,6 +242,41 @@ function scheduledMonthlyInThisWeek(
   for (let i = 0; i < 7; i++) {
     const d = new Date(startWeek);
     d.setDate(startWeek.getDate() + i);
+    const lastDayThatMonth = new Date(
+      d.getFullYear(),
+      d.getMonth() + 1,
+      0,
+    ).getDate();
+    const effectiveDay = Math.min(day, lastDayThatMonth);
+    if (d.getDate() === effectiveDay) return true;
+  }
+  return false;
+}
+
+/** True when a monthly task's effective scheduled day (with the day>28
+ *  short-month fallback) fell on a day of the CURRENT week strictly
+ *  before today, within the same calendar month as today. Drives the
+ *  earlier catch-up: a missed scheduled monthly resurfaces in Hoje for
+ *  the rest of its week instead of staying invisible until month-end.
+ *  The same-month check keeps a week that straddles a month boundary
+ *  from resurrecting LAST month's occurrence (whose window is closed).
+ *  Local-date component math only — no UTC conversions.
+ *  Exported so Home's ring math (wasDueToday) can mirror the promotion. */
+export function scheduledMonthlyPassedThisWeek(
+  day: number,
+  today: Date,
+  weekStart: WeekStart,
+): boolean {
+  const dow = today.getDay();
+  const offset = weekStart === 'sunday' ? dow : (dow + 6) % 7;
+  const startWeek = new Date(today);
+  startWeek.setHours(0, 0, 0, 0);
+  startWeek.setDate(today.getDate() - offset);
+  // Only the days of this week BEFORE today (i < offset).
+  for (let i = 0; i < offset; i++) {
+    const d = new Date(startWeek);
+    d.setDate(startWeek.getDate() + i);
+    if (d.getMonth() !== today.getMonth()) continue;
     const lastDayThatMonth = new Date(
       d.getFullYear(),
       d.getMonth() + 1,
@@ -539,14 +561,23 @@ async function fetchHomeBuckets(weekStartPref: WeekStart): Promise<HomeBuckets> 
       continue;
     }
 
-    // weekly / monthly: optional schedule decides Today promotion;
-    // period target decides This Week / This Month presence.
-    // Effective need = target - skips this period.
+    // weekly / monthly — "Hoje" model (schedule-driven today list):
+    //   scheduled   → appears ONLY on scheduled days (isDueOn), plus the
+    //                 last-day-of-period catch-up when reps are still owed;
+    //   unscheduled → appears EVERY day until the effective period target
+    //                 (target - skips) is met;
+    //   acted today (completed or skipped) → drops out until tomorrow.
+    // buckets.thisWeek keeps ONLY scheduled tasks NOT due today with an
+    // unmet target — the Home screen no longer renders it, but the shape
+    // stays on the interface.
     const scheduledToday = isDueOn(t.recurrence, today);
     const scheduledPromote =
       scheduledToday && todayCount === 0 && !skippedTodayHere;
 
     if (t.recurrence.type === 'weekly') {
+      // parseRecurrence collapses an empty days[] to undefined, so
+      // `days !== undefined` is the canonical "has a schedule" check.
+      const hasSchedule = t.recurrence.days !== undefined;
       const weekCount = doneWeek.get(t.id) ?? 0;
       const weekSkips = skippedWeek.get(t.id) ?? 0;
       // Effective target shrinks by skips: a 3×/week task with 1 skip
@@ -554,52 +585,71 @@ async function fetchHomeBuckets(weekStartPref: WeekStart): Promise<HomeBuckets> 
       const effectiveTarget = Math.max(0, t.target_count - weekSkips);
       const stillNeeded = weekCount < effectiveTarget;
 
-      // Last-day promotion: when today is the final day of the user's
-      // configured week and the task still owes completions, surface it
-      // on Today instead of letting it sit in This Week until rollover.
+      // Last-day catch-up: a scheduled task whose day already passed but
+      // still owes completions surfaces on the final day of the week.
       const lastDayPromote =
         stillNeeded &&
         isLastDayOfWeek(today, weekStartPref) &&
         todayCount === 0 &&
         !skippedTodayHere;
 
-      if (scheduledPromote || lastDayPromote) {
+      // Unscheduled weekly shows up every day until the target is met.
+      const unscheduledPromote =
+        !hasSchedule && stillNeeded && todayCount === 0 && !skippedTodayHere;
+
+      if (scheduledPromote || lastDayPromote || unscheduledPromote) {
         buckets.today.push(t);
-      } else if (stillNeeded) {
+      } else if (hasSchedule && !scheduledToday && stillNeeded) {
         buckets.thisWeek.push(t);
       }
     } else {
       // monthly
+      const hasSchedule =
+        t.recurrence.type === 'monthly' && typeof t.recurrence.day === 'number';
       const monthCount = doneMonth.get(t.id) ?? 0;
       const monthSkips = skippedMonth.get(t.id) ?? 0;
       const effectiveTarget = Math.max(0, t.target_count - monthSkips);
       const stillNeeded = monthCount < effectiveTarget;
 
-      // Escalation: tasks surface earlier as the deadline approaches.
-      //   - last day of month (or scheduled day match) → Today
-      //   - specific day scheduled within this week     → This Week
-      //   - last calendar week of month                 → This Week
-      //   - otherwise → falls to Recurring (no push here)
+      // Last-day catch-up mirrors the weekly rule at month granularity.
       const lastDayPromote =
         stillNeeded &&
         isLastDayOfMonth(today) &&
         todayCount === 0 &&
         !skippedTodayHere;
+      // Unscheduled monthly shows up every day until the target is met.
+      const unscheduledPromote =
+        !hasSchedule && stillNeeded && todayCount === 0 && !skippedTodayHere;
       const scheduledDayInWeek =
         stillNeeded &&
         t.recurrence.type === 'monthly' &&
         typeof t.recurrence.day === 'number' &&
         scheduledMonthlyInThisWeek(t.recurrence.day, today, weekStartPref);
-      const lastWeekPromote =
-        stillNeeded && isLastWeekOfMonth(today, weekStartPref);
+      // Week catch-up: a scheduled monthly whose day already passed
+      // within the CURRENT week and is still needed gets promoted into
+      // Hoje right away — otherwise a missed day-5 monthly would vanish
+      // from Home until the last day of the month.
+      const missedThisWeekPromote =
+        stillNeeded &&
+        todayCount === 0 &&
+        !skippedTodayHere &&
+        !scheduledToday &&
+        t.recurrence.type === 'monthly' &&
+        typeof t.recurrence.day === 'number' &&
+        scheduledMonthlyPassedThisWeek(t.recurrence.day, today, weekStartPref);
 
-      if (scheduledPromote || lastDayPromote) {
+      if (
+        scheduledPromote ||
+        lastDayPromote ||
+        unscheduledPromote ||
+        missedThisWeekPromote
+      ) {
         buckets.today.push(t);
-      } else if (scheduledDayInWeek || lastWeekPromote) {
+      } else if (scheduledDayInWeek && !scheduledToday) {
         buckets.thisWeek.push(t);
       }
-      // else: monthly task stays off the today/week buckets — the Home
-      // screen will surface it under Recurring.
+      // else: scheduled monthly whose day is outside this week — it will
+      // surface on its scheduled day (or the last-day catch-up).
     }
   }
 
@@ -738,7 +788,14 @@ export function useCompleteTask() {
         queryClient.cancelQueries({ queryKey: characterKeys.me() }),
       ]);
 
-      const prevBuckets = queryClient.getQueryData<HomeBuckets>(taskKeys.pending());
+      // The live buckets query is keyed [...taskKeys.pending(), weekStart]
+      // (see useHomeBuckets), so an exact-key getQueryData(taskKeys.pending())
+      // would never match it. getQueriesData/setQueriesData prefix-match
+      // every weekStart variant; the snapshot keeps [key, data] pairs so
+      // rollback can restore each entry.
+      const prevBuckets = queryClient.getQueriesData<HomeBuckets>({
+        queryKey: taskKeys.pending(),
+      });
       const prevChar = queryClient.getQueryData<CharacterWithProfile>(characterKeys.me());
 
       const reward = rewardForTaskSubs(params.subs);
@@ -750,20 +807,26 @@ export function useCompleteTask() {
       const isLive = !params.completedAt;
       const t = params.task;
       const singleTarget = (t.target_count ?? 1) === 1;
-      if (prevBuckets && isLive && singleTarget) {
+      if (isLive && singleTarget) {
         const removeFrom = (arr: TaskWithSubs[]) => arr.filter((x) => x.id !== t.id);
         // Preserve todayActivity as-is — onSettled refetch will rebuild
         // it with the new completion. Optimistic only handles "card
         // disappeared" feedback, drawer doesn't need to react instantly.
-        queryClient.setQueryData<HomeBuckets>(taskKeys.pending(), {
-          today: removeFrom(prevBuckets.today),
-          thisWeek: removeFrom(prevBuckets.thisWeek),
-          thisMonth: removeFrom(prevBuckets.thisMonth),
-          oneTime: removeFrom(prevBuckets.oneTime),
-          todayActivity: prevBuckets.todayActivity,
-          weekActivity: prevBuckets.weekActivity,
-          oneShotActivity: prevBuckets.oneShotActivity,
-        });
+        queryClient.setQueriesData<HomeBuckets>(
+          { queryKey: taskKeys.pending() },
+          (old) =>
+            old
+              ? {
+                  today: removeFrom(old.today),
+                  thisWeek: removeFrom(old.thisWeek),
+                  thisMonth: removeFrom(old.thisMonth),
+                  oneTime: removeFrom(old.oneTime),
+                  todayActivity: old.todayActivity,
+                  weekActivity: old.weekActivity,
+                  oneShotActivity: old.oneShotActivity,
+                }
+              : old,
+        );
       }
 
       if (prevChar) {
@@ -791,7 +854,12 @@ export function useCompleteTask() {
     },
 
     onError: (_err, _params, ctx) => {
-      if (ctx?.prevBuckets) queryClient.setQueryData(taskKeys.pending(), ctx.prevBuckets);
+      // Restore every snapshotted buckets variant (one per weekStart key).
+      if (ctx?.prevBuckets) {
+        for (const [key, data] of ctx.prevBuckets) {
+          queryClient.setQueryData(key, data);
+        }
+      }
       if (ctx?.prevChar) queryClient.setQueryData(characterKeys.me(), ctx.prevChar);
     },
 

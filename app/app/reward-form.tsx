@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -15,6 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { IconPickerModal } from '@/components/IconPickerModal';
 import {
   useArchiveReward,
   useCreateReward,
@@ -32,9 +34,8 @@ import { REWARD_CATEGORY_META, REWARD_CATEGORY_ORDER } from '@/theme/rewards';
 
 // Curated Ionicons covering the main reward archetypes a single user
 // is likely to set up. Grouped here by domain for ease of editing; on
-// screen they render in a single flex grid so the user just scans for
-// the closest match. Add more sparingly — past ~40 the grid starts
-// scrolling and discovery drops.
+// screen they render as a flex grid inside the IconPickerModal sheet
+// so the user just scans for the closest match.
 const ICON_CHOICES = [
   // Food & drink
   'pizza',
@@ -97,6 +98,7 @@ export default function RewardFormScreen() {
   const [description, setDescription] = useState('');
   const [costStr, setCostStr] = useState('50');
   const [icon, setIcon] = useState<string>('gift');
+  const [iconPickerVisible, setIconPickerVisible] = useState(false);
   const [category, setCategory] = useState<RewardCategory>(initialCategory);
   const keyboardHeight = useKeyboardHeight();
 
@@ -309,24 +311,31 @@ export default function RewardFormScreen() {
 
           <View style={styles.field}>
             <Text style={styles.label}>{t('reward.form.iconLabel')}</Text>
-            <View style={styles.iconGrid}>
-              {ICON_CHOICES.map((name) => {
-                const selected = name === icon;
-                return (
-                  <Pressable
-                    key={name}
-                    onPress={() => setIcon(name)}
-                    style={[styles.iconCell, selected && styles.iconCellSelected]}
-                  >
-                    <Ionicons
-                      name={name as never}
-                      size={22}
-                      color={selected ? tokens.semantic.coin : tokens.text.mid}
-                    />
-                  </Pressable>
-                );
-              })}
-            </View>
+            {/* Compact row that opens the picker sheet — the old inline
+                36-cell grid pushed the archive button a full screen down. */}
+            <Pressable
+              onPress={() => {
+                // Title autofocuses in create mode; drop the keyboard so
+                // it can't float over/behind the transparent modal.
+                Keyboard.dismiss();
+                setIconPickerVisible(true);
+              }}
+              style={({ pressed }) => [styles.iconRow, pressed && { opacity: 0.7 }]}
+              accessibilityRole="button"
+              // Self-contained label — the override suppresses the inner
+              // text for screen readers, so bare 'Trocar' wouldn't say
+              // WHAT gets changed.
+              accessibilityLabel={t('common.changeIconA11y')}
+            >
+              <View style={styles.iconRowTile}>
+                <Ionicons name={icon as never} size={22} color={tokens.semantic.coin} />
+              </View>
+              <Text style={styles.iconRowHint} numberOfLines={2}>
+                {t('reward.form.iconHint')}
+              </Text>
+              <Text style={styles.iconRowChange}>{t('common.changeIcon')}</Text>
+              <Ionicons name="chevron-forward" size={16} color={tokens.semantic.coin} />
+            </Pressable>
           </View>
 
           {isEdit && (
@@ -344,6 +353,21 @@ export default function RewardFormScreen() {
           )}
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <IconPickerModal
+        visible={iconPickerVisible}
+        title={t('reward.form.iconLabel')}
+        icons={ICON_CHOICES}
+        value={icon}
+        // No Auto cell here — rewards always carry a concrete icon
+        // ('gift' default), so null never reaches setIcon.
+        onSelect={(name) => {
+          if (name) setIcon(name);
+        }}
+        onClose={() => setIconPickerVisible(false)}
+        accentColor={tokens.semantic.coin}
+        accentBg="rgba(255, 200, 61, 0.16)"
+      />
     </SafeAreaView>
   );
 }
@@ -413,24 +437,37 @@ const styles = StyleSheet.create({
     minHeight: 80,
     paddingTop: tokens.space[3],
   },
-  iconGrid: {
+  iconRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: tokens.space[2],
-  },
-  iconCell: {
-    width: 52,
-    height: 52,
-    borderRadius: tokens.radius.md,
+    alignItems: 'center',
+    gap: tokens.space[3],
     backgroundColor: tokens.bg.surface,
     borderWidth: 1,
     borderColor: tokens.border.base,
+    borderRadius: tokens.radius.md,
+    paddingVertical: tokens.space[2],
+    paddingHorizontal: tokens.space[3],
+  },
+  iconRowTile: {
+    width: 44,
+    height: 44,
+    borderRadius: tokens.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  iconCellSelected: {
+    borderWidth: 1,
+    // Coin-gold accent — rewards palette (violet goes to práticas).
     borderColor: tokens.semantic.coin,
     backgroundColor: 'rgba(255, 200, 61, 0.16)',
+  },
+  iconRowHint: {
+    flex: 1,
+    ...tokens.type.caption,
+    color: tokens.text.dim,
+  },
+  iconRowChange: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 13,
+    color: tokens.semantic.coin,
   },
   categoryRow: {
     flexDirection: 'row',

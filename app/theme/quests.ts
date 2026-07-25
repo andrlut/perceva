@@ -37,7 +37,7 @@ export const QUEST_CATEGORY_META: Record<string, CategoryMeta> = {
   sleep: subCategory('sleep', 'Sleep'),
   nutrition: subCategory('nutrition', 'Nutrition'),
   strength: subCategory('strength', 'Strength'),
-  dexterity: subCategory('dexterity', 'Dexterity'),
+  dexterity: subCategory('dexterity', 'Mobility'),
   learn: subCategory('learn', 'Learn'),
   contemplate: subCategory('contemplate', 'Contemplate'),
   money: subCategory('money', 'Money'),
