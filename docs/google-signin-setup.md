@@ -5,8 +5,9 @@ The native flow shipped in `feat/google-signin-icon`: the app already contains
 `app/lib/auth/google.ts`, and the "Continuar com Google" button on the login
 screen. The button is **self-disabling**: it only renders when
 `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` is non-empty (and the platform is Android).
-Both `eas.json` env blocks currently ship it **empty on purpose** — nothing
-appears in the app until the steps below are done.
+Every place that env var lives (`eas.json` build profiles, the CI workflow
+`env:` blocks) currently ships it **empty on purpose** — nothing appears in
+the app until the steps below are done.
 
 The exchange is `Play Services → Google ID token → supabase.auth.signInWithIdToken`.
 No deep links, no redirect URLs, no nonce — do not add any of those.
@@ -97,17 +98,35 @@ supabase db push --linked   # applies 20260725000002_handle_new_user_oauth_metad
 ## 3. Activation path — NO rebuild needed
 
 The native module is already inside every build made from this branch onward;
-only the JS needs to learn the client ID. So once steps 1–2 are done:
+only the JS needs to learn the client ID. `EXPO_PUBLIC_*` vars are inlined
+into the JS bundle **at export time from the exporting process's
+environment** — and crucially, **`eas update` does NOT read `eas.json` build
+env** (that only applies to `eas build`). So the value must live wherever the
+OTA export actually runs. Once steps 1–2 are done:
 
-1. Put the real Web client ID into `app/eas.json` → **both**
-   `build.preview.env` and `build.production.env` →
-   `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` (it is public-safe, like the Supabase
-   publishable key). Update CI env/secrets if any workflow injects it.
-2. For local dev, also set it in `app/.env.local` (see `app/.env.example`).
-3. Ship any `eas update` (`/ota-update`; `--channel preview` for the internal
-   APK, `--channel production` for the Play Store app). The OTA bundle
-   inlines the env var at export time → `isGoogleSignInAvailable` flips true
-   → the button appears. No `eas build` required.
+1. **CI workflows (the primary OTA path).** Set the real Web client ID in the
+   `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` entry of **both** workflow `env:`
+   blocks (it currently ships `''`):
+   - `.github/workflows/ci.yml` → `publish-ota` job → "Publish update to
+     preview channel" step (every merge to main republishes preview — if
+     this one stays empty, the next merge silently turns the button back
+     OFF on the internal APK);
+   - `.github/workflows/promote-production.yml` → "Publish to production
+     channel" step (the Play Store app).
+
+   The value is public-safe (like the Supabase publishable key), so plain
+   `env:` is fine — no secret needed.
+2. **Local shell / `.env.local`** — for manual `eas update` runs
+   (`/ota-update`): set it in `app/.env.local` (see `app/.env.example`),
+   which also covers local dev. `eas update` run from a shell picks it up
+   from the process env / dotenv, NOT from `eas.json`.
+3. **`app/eas.json`** → both `build.preview.env` and `build.production.env` —
+   this covers **future `eas build`s only**. Keep it in sync so fresh builds
+   are born with the button, but on its own it activates nothing via OTA.
+4. Ship any `eas update` through one of the paths above (merge to main for
+   preview; Promote to Production workflow for the Play Store app). The
+   exported bundle inlines the env var → `isGoogleSignInAvailable` flips
+   true → the button appears. No `eas build` required.
 
 The one-time rebuild that *was* required (native module + version 1.2.0) is
 the build produced from this branch itself. Builds older than 1.2.0 never get
@@ -120,7 +139,7 @@ correct, since they lack the native module.
 
 | Symptom | Cause / fix |
 |---|---|
-| Button doesn't appear at all | `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` empty in the env block that built/updated that channel, or running on web. Check `eas.json`, re-run `eas update` on the right channel. |
+| Button doesn't appear at all | `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` was empty **in the environment of the process that exported that bundle**, or running on web. For OTA that means the workflow `env:` blocks (ci.yml / promote-production.yml) or the local shell — `eas.json` env is irrelevant to `eas update`. Fix the right env, re-publish on the right channel. |
 | `idToken` comes back null (alert "Falha ao entrar com Google") | `webClientId` is missing/wrong — it must be the **Web application** client ID, not the Android one. |
 | Works on the internal `preview` APK but not the Play Store app | The **Play App Signing SHA-1** is missing on the Android OAuth client (the store re-signs the app). Add it from Play Console → App integrity. |
 | Works in store, fails on internal APK | Inverse of the above: EAS keystore SHA-1 missing. |

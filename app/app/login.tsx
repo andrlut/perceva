@@ -418,7 +418,7 @@ export default function LoginScreen() {
           {mode === 'login' && (
             <Pressable
               onPress={() => router.push('/forgot-password')}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isGoogleSubmitting}
               style={styles.forgotLink}
               hitSlop={8}
             >
@@ -460,7 +460,7 @@ export default function LoginScreen() {
               // The confirmation only exists in signup — never carry it across.
               setConfirmPassword('');
             }}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isGoogleSubmitting}
             style={styles.toggle}
           >
             <Text style={styles.toggleText}>
