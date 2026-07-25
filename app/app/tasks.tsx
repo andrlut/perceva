@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -18,6 +18,12 @@ import DraggableFlatList, {
   type RenderItemParams,
   ScaleDecorator,
 } from 'react-native-draggable-flatlist';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+} from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
@@ -33,6 +39,7 @@ import { LimitCounterBadge } from '@/components/premium/LimitCounterBadge';
 import { useT } from '@/lib/i18n';
 import {
   useActiveTasks,
+  useCompleteTask,
   useReorderTasks,
   useStartTaskFromTemplate,
   useTaskTemplates,
@@ -129,6 +136,7 @@ export default function TasksHubScreen() {
   const tasks = useActiveTasks();
   const templates = useTaskTemplates();
   const startFromTemplate = useStartTaskFromTemplate();
+  const completeTask = useCompleteTask();
   const isM2Current = useIsCurrentTourModule('M2');
 
   const [tab, setTab] = useState<Tab>('allocated');
@@ -150,6 +158,17 @@ export default function TasksHubScreen() {
   const [adoptingId, setAdoptingId] = useState<string | null>(null);
   /** Template currently sitting in the periodicity picker sheet. */
   const [pickerTemplate, setPickerTemplate] = useState<TaskTemplateWithSubs | null>(null);
+  /** Row whose quick-complete mutation is in flight. */
+  const [completingId, setCompletingId] = useState<string | null>(null);
+  /** Row briefly showing the post-success morph (green check pop). */
+  const [justCompletedId, setJustCompletedId] = useState<string | null>(null);
+  const successTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (successTimer.current) clearTimeout(successTimer.current);
+    },
+    [],
+  );
 
   // ── Counts (drive both filter pills and group counts) ─────────────────
   const totalTasks = tasks.data?.length ?? 0;
@@ -277,6 +296,40 @@ export default function TasksHubScreen() {
             e.message ?? t('tasksHub.errors.unknown'),
           );
         },
+      },
+    );
+  };
+
+  // Quick-complete straight from the manage list — same mutation Home's
+  // TaskCard fires (task + its default subs). One in flight at a time;
+  // the row shows a spinner while pending and a green check pop on
+  // success (the row stays in place — this list shows ALL active
+  // practices, not just today's pending ones).
+  const handleQuickComplete = (task: TaskWithSubs) => {
+    if (task.is_archived || completeTask.isPending) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    setCompletingId(task.id);
+    completeTask.mutate(
+      { task, subs: task.subs },
+      {
+        onSuccess: () => {
+          if (successTimer.current) clearTimeout(successTimer.current);
+          setJustCompletedId(task.id);
+          successTimer.current = setTimeout(
+            () => setJustCompletedId(null),
+            1200,
+          );
+        },
+        onError: (err) => {
+          const e = err as { message?: string; code?: string; details?: string };
+          console.error('[complete_task] failed', e);
+          Alert.alert(
+            t('home.actionErrors.complete'),
+            [e.message, e.code, e.details].filter(Boolean).join('\n') ||
+              t('home.actionErrors.unknown'),
+          );
+        },
+        onSettled: () => setCompletingId(null),
       },
     );
   };
@@ -422,6 +475,10 @@ export default function TasksHubScreen() {
             }
             onCreate={handleCreateTask}
             onReorder={(ids) => reorderTasks.mutate(ids)}
+            onQuickComplete={handleQuickComplete}
+            completingId={completingId}
+            justCompletedId={justCompletedId}
+            completePending={completeTask.isPending}
             t={t}
           />
         ) : (
@@ -470,6 +527,10 @@ export default function TasksHubScreen() {
                     router.push({ pathname: '/task-form', params: { id } })
                   }
                   onCreate={handleCreateTask}
+                  onQuickComplete={handleQuickComplete}
+                  completingId={completingId}
+                  justCompletedId={justCompletedId}
+                  completePending={completeTask.isPending}
                   t={t}
                 />
               )}
@@ -532,6 +593,11 @@ interface AllocatedDraggableBodyProps {
   onTaskPress: (id: string) => void;
   onCreate: () => void;
   onReorder: (orderedIds: string[]) => void;
+  onQuickComplete: (task: TaskWithSubs) => void;
+  completingId: string | null;
+  justCompletedId: string | null;
+  /** Any quick-complete mutation in flight — disables every button. */
+  completePending: boolean;
   t: (key: string, opts?: Record<string, string | number | undefined>) => string;
 }
 
@@ -547,6 +613,10 @@ function AllocatedDraggableBody({
   onTaskPress,
   onCreate,
   onReorder,
+  onQuickComplete,
+  completingId,
+  justCompletedId,
+  completePending,
   t,
 }: AllocatedDraggableBodyProps) {
   const bottomClearance = useBottomSafeClearance();
@@ -680,7 +750,9 @@ function AllocatedDraggableBody({
         </View>
       );
     }
-    // Task row
+    // Task row. The quick-complete button is hosted by the row (NOT by
+    // DragRowInner) so the drag-mode inner content stays untouched; it
+    // goes inert while the row is being dragged.
     return (
       <ScaleDecorator>
         <View style={styles.allocatedRowWrap}>
@@ -700,6 +772,12 @@ function AllocatedDraggableBody({
           >
             <Ionicons name="reorder-three" size={20} color={tokens.text.dim} />
             <DragRowInner task={item.task} />
+            <QuickCompleteButton
+              pending={completingId === item.task.id}
+              success={justCompletedId === item.task.id}
+              disabled={isActive || completePending || item.task.is_archived}
+              onPress={() => onQuickComplete(item.task)}
+            />
             <Ionicons name="chevron-forward" size={16} color={tokens.text.dim} />
           </Pressable>
         </View>
@@ -776,6 +854,9 @@ function AllocatedDraggableBody({
         commitReorder(data);
       }}
       activationDistance={20}
+      // Rows must re-render when a quick-complete starts/finishes even
+      // though `localItems` itself didn't change.
+      extraData={[completingId, justCompletedId, completePending]}
       contentContainerStyle={[
         styles.dragListContent,
         {
@@ -870,6 +951,11 @@ interface MineBodyProps {
   onToggle: (b: Bucket) => void;
   onTaskPress: (id: string) => void;
   onCreate: () => void;
+  onQuickComplete: (task: TaskWithSubs) => void;
+  completingId: string | null;
+  justCompletedId: string | null;
+  /** Any quick-complete mutation in flight — disables every button. */
+  completePending: boolean;
   t: (key: string, opts?: Record<string, string | number | undefined>) => string;
 }
 
@@ -881,6 +967,10 @@ function MineBody({
   onToggle,
   onTaskPress,
   onCreate,
+  onQuickComplete,
+  completingId,
+  justCompletedId,
+  completePending,
   t,
 }: MineBodyProps) {
   if (loading) {
@@ -934,6 +1024,10 @@ function MineBody({
           collapsed={collapsed[b.id]}
           onToggle={() => onToggle(b.id)}
           onTaskPress={onTaskPress}
+          onQuickComplete={onQuickComplete}
+          completingId={completingId}
+          justCompletedId={justCompletedId}
+          completePending={completePending}
           t={t}
         />
       ))}
@@ -947,6 +1041,10 @@ interface BucketSectionProps {
   collapsed: boolean;
   onToggle: () => void;
   onTaskPress: (id: string) => void;
+  onQuickComplete: (task: TaskWithSubs) => void;
+  completingId: string | null;
+  justCompletedId: string | null;
+  completePending: boolean;
   t: (key: string, opts?: Record<string, string | number | undefined>) => string;
 }
 
@@ -956,6 +1054,10 @@ function BucketSection({
   collapsed,
   onToggle,
   onTaskPress,
+  onQuickComplete,
+  completingId,
+  justCompletedId,
+  completePending,
   t,
 }: BucketSectionProps) {
   // Per-bucket accent: a left accent bar (full-height), a tinted tile
@@ -1017,12 +1119,16 @@ function BucketSection({
           {tasks.length === 0 ? (
             <Text style={styles.bucketEmpty}>{t('tasksHub.bucketEmpty')}</Text>
           ) : (
-            tasks.map((t, i) => (
+            tasks.map((task, i) => (
               <TaskRow
-                key={t.id}
-                task={t}
+                key={task.id}
+                task={task}
                 divider={i > 0}
-                onPress={() => onTaskPress(t.id)}
+                onPress={() => onTaskPress(task.id)}
+                onQuickComplete={() => onQuickComplete(task)}
+                completing={completingId === task.id}
+                justCompleted={justCompletedId === task.id}
+                completeDisabled={completePending || task.is_archived}
               />
             ))
           )}
@@ -1036,9 +1142,24 @@ interface TaskRowProps {
   task: TaskWithSubs;
   divider: boolean;
   onPress: () => void;
+  onQuickComplete: () => void;
+  /** Quick-complete mutation in flight for THIS row. */
+  completing: boolean;
+  /** Brief post-success window — row tint + green check pop. */
+  justCompleted: boolean;
+  /** Blocks the button (archived task or another row mid-mutation). */
+  completeDisabled: boolean;
 }
 
-function TaskRow({ task, divider, onPress }: TaskRowProps) {
+function TaskRow({
+  task,
+  divider,
+  onPress,
+  onQuickComplete,
+  completing,
+  justCompleted,
+  completeDisabled,
+}: TaskRowProps) {
   const { t } = useT();
   const meta = useMetaLookup();
   const isCustom = !task.template_id;
@@ -1057,6 +1178,7 @@ function TaskRow({ task, divider, onPress }: TaskRowProps) {
       style={({ pressed }) => [
         styles.taskRow,
         divider && styles.taskRowDivider,
+        justCompleted && styles.taskRowSuccess,
         pressed && { opacity: 0.7 },
       ]}
     >
@@ -1103,8 +1225,86 @@ function TaskRow({ task, divider, onPress }: TaskRowProps) {
           </View>
         </View>
       </View>
+      <QuickCompleteButton
+        pending={completing}
+        success={justCompleted}
+        disabled={completeDisabled}
+        onPress={onQuickComplete}
+      />
       <Ionicons name="chevron-forward" size={16} color={tokens.text.dim} />
     </Pressable>
+  );
+}
+
+interface QuickCompleteButtonProps {
+  /** Mutation in flight for this row — spinner + no taps. */
+  pending: boolean;
+  /** Brief post-success morph: green fill + check pop. */
+  success: boolean;
+  /** Archived task, active drag, or another row mid-mutation. */
+  disabled: boolean;
+  onPress: () => void;
+}
+
+/**
+ * Compact circular check — TaskCard's violet check-button visual
+ * language sized down for management rows. Lets the user log a
+ * practice straight from the manage screen, including ones that
+ * aren't scheduled for today. On success it morphs green and pops
+ * for a beat before reverting.
+ */
+function QuickCompleteButton({
+  pending,
+  success,
+  disabled,
+  onPress,
+}: QuickCompleteButtonProps) {
+  const { t } = useT();
+  const scale = useSharedValue(1);
+
+  useEffect(() => {
+    if (success) {
+      scale.value = withSequence(
+        withSpring(1.18, tokens.motion.springBouncy),
+        withSpring(1, tokens.motion.springSnappy),
+      );
+    }
+  }, [success, scale]);
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Animated.View style={animStyle}>
+      <Pressable
+        onPress={onPress}
+        disabled={disabled || pending}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel={t('tasksHub.quickCompleteA11y')}
+        style={({ pressed }) => [
+          styles.quickCompleteBtn,
+          success && styles.quickCompleteBtnSuccess,
+          pressed && styles.quickCompleteBtnPressed,
+        ]}
+      >
+        {!success && (
+          <LinearGradient
+            colors={tokens.gradient.taskCheckBtn}
+            locations={tokens.gradient.taskCheckBtnLocations}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+        )}
+        {pending ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Ionicons name="checkmark" size={16} color="#fff" />
+        )}
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -1644,6 +1844,28 @@ const styles = StyleSheet.create({
   taskRowDivider: {
     borderTopWidth: 1,
     borderTopColor: tokens.border.divider,
+  },
+  taskRowSuccess: {
+    backgroundColor: 'rgba(61,214,140,0.08)',
+    borderRadius: tokens.radius.sm,
+  },
+  quickCompleteBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(155,130,255,0.55)',
+  },
+  quickCompleteBtnSuccess: {
+    backgroundColor: tokens.semantic.xp,
+    borderColor: 'rgba(61,214,140,0.7)',
+  },
+  quickCompleteBtnPressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.9 }],
   },
   subDot: {
     width: 32,

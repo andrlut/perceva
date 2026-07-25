@@ -1040,6 +1040,7 @@ const en = {
       premiumHint: '{{count}}/{{limit}} active tasks on the free plan · Premium unlocks unlimited',
     },
     bucketEmpty: 'No tasks in this bucket.',
+    quickCompleteA11y: 'Complete practice',
     empty: {
       noMatchesTitle: 'No matches',
       noMatchesBody: 'Nothing matches "{{query}}".',

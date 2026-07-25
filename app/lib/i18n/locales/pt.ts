@@ -1035,6 +1035,7 @@ const pt: Translations = {
       premiumHint: '{{count}}/{{limit}} tarefas ativas no plano gratuito · Premium libera ilimitadas',
     },
     bucketEmpty: 'Nenhuma tarefa nesse grupo.',
+    quickCompleteA11y: 'Concluir prática',
     empty: {
       noMatchesTitle: 'Nada encontrado',
       noMatchesBody: 'Nada corresponde a "{{query}}".',
