@@ -106,7 +106,10 @@ OTA export actually runs. Once steps 1–2 are done:
 
 1. **CI workflows (the primary OTA path).** Set the real Web client ID in the
    `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` entry of **both** workflow `env:`
-   blocks (it currently ships `''`):
+   blocks. NOTE: the key does not pre-exist there — pushing workflow-file
+   changes needs a PAT with the `workflow` scope (`gh auth refresh -h
+   github.com -s workflow`) or the GitHub web editor; ADD the key next to
+   the EXPO_PUBLIC_SUPABASE_* vars, then fill it:
    - `.github/workflows/ci.yml` → `publish-ota` job → "Publish update to
      preview channel" step (every merge to main republishes preview — if
      this one stays empty, the next merge silently turns the button back
