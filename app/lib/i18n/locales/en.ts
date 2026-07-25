@@ -807,6 +807,10 @@ const en = {
       night: 'Late night',
     },
     defaultName: 'adventurer',
+    sections: {
+      today: 'Today',
+      oneshot: 'One-time',
+    },
     buckets: {
       today: 'Today',
       thisWeek: 'This Week',

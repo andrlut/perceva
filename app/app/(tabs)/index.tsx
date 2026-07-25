@@ -15,7 +15,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useBottomNavClearance } from '@/components/BottomNavBar';
-import { BucketTabsV2, type BucketTabSpec } from '@/components/BucketTabsV2';
 import { CompleteTaskSheet } from '@/components/CompleteTaskSheet';
 import { MoodCheckinPrompt } from '@/components/MoodCheckinPrompt';
 import { MoodHubStrip } from '@/components/mood/MoodHubStrip';
@@ -57,6 +56,7 @@ import {
 } from '@/lib/api/tasks';
 import { useQuests } from '@/lib/api/quests';
 import type { TaskSub, TaskWithSubs } from '@/lib/db/types';
+import { isDueOn } from '@/lib/recurrence';
 import { formatHeroDate } from '@/lib/time';
 import { compareOneShotsByFreshness, isInTrophyWindow } from '@/lib/trophy';
 import { levelProgress, rewardForTaskSubs } from '@/lib/xp';
@@ -68,10 +68,8 @@ interface FloatItem {
   coins: number;
 }
 
-type BucketTab = 'daily' | 'weekly' | 'oneshot';
-
 /**
- * Tasks home — V3 "Today Hub" layout.
+ * Practices home — V3 "Today Hub" layout.
  *
  *   ┌──────────────────────────────────────────────┐
  *   │  ambient (violet halo + Topo Iris glyph)     │  absolute, z 0
@@ -83,12 +81,13 @@ type BucketTab = 'daily' | 'weekly' | 'oneshot';
  *   │  XP card  ──────  290/500   LV 3             │
  *   │  Reward card  ──  🎯 ...  61%   610          │
  *   │                                              │
- *   │  Daily 1 | Weekly 3 ▔▔▔ | One-shot 2         │
  *   │  [⚔ Sem açúcar 1/3] [+ Browse]               │
  *   │                                              │
+ *   │  HOJE — schedule-driven single list          │
  *   │  ┌── TaskCard list (gradient + sub tile) ─┐ │
  *   │  │ 🧘 Meditar 10 min       [✓]            │ │
  *   │  └────────────────────────────────────────┘ │
+ *   │  PONTUAIS — one-shots (secondary header)     │
  *   └──────────────────────────────────────────────┘
  *
  * Three principles preserved from the user's brief:
@@ -112,7 +111,6 @@ export default function HomeScreen() {
   const unskipTask = useUnskipTaskToday();
   const undoCompletion = useUndoCompletion();
 
-  const [activeTab, setActiveTab] = useState<BucketTab>('daily');
   const [floats, setFloats] = useState<FloatItem[]>([]);
   const [actionTask, setActionTask] = useState<TaskWithSubs | null>(null);
   const [sheetTask, setSheetTask] = useState<TaskWithSubs | null>(null);
@@ -346,10 +344,14 @@ export default function HomeScreen() {
 
   const data = buckets.data;
 
-  // ── Type-flavored lists ───────────────────────────────────────────────
-  const lists = useMemo<Record<BucketTab, TaskWithSubs[]>>(() => {
+  // ── "Hoje" model lists ────────────────────────────────────────────────
+  // ONE schedule-driven today list (buckets.today) + the one-shots. The
+  // query layer already excludes acted-today weekly/monthly promotions;
+  // filterActedToday additionally drops multi-target dailies after their
+  // FIRST completion of the day (extras happen via the completed drawer).
+  const lists = useMemo(() => {
     if (!data) {
-      return { daily: [], weekly: [], oneshot: [] };
+      return { today: [] as TaskWithSubs[], oneshot: [] as TaskWithSubs[] };
     }
     const completedTodayIds = new Set(
       data.todayActivity.completed.map((c) => c.task.id),
@@ -360,21 +362,7 @@ export default function HomeScreen() {
     const filterActedToday = (t: TaskWithSubs) =>
       !completedTodayIds.has(t.id) && !skippedTodayIds.has(t.id);
 
-    const daily = data.today
-      .filter((t) => t.recurrence.type === 'daily')
-      .filter(filterActedToday);
-
-    const weeklySeen = new Set<string>();
-    const weekly: TaskWithSubs[] = [];
-    const pushWeekly = (t: TaskWithSubs) => {
-      if (weeklySeen.has(t.id)) return;
-      if (t.recurrence.type !== 'weekly' && t.recurrence.type !== 'monthly') return;
-      if (!filterActedToday(t)) return;
-      weeklySeen.add(t.id);
-      weekly.push(t);
-    };
-    data.today.forEach(pushWeekly);
-    data.thisWeek.forEach(pushWeekly);
+    const today = data.today.filter(filterActedToday);
 
     // One-shots are pre-filtered by useHomeBuckets to skip
     // completed-today / skipped-today. Sort trophies (recently-
@@ -383,10 +371,13 @@ export default function HomeScreen() {
       compareOneShotsByFreshness(a, b),
     );
 
-    return { daily, weekly, oneshot };
+    return { today, oneshot };
   }, [data]);
 
-  // ── Completion buckets per tab ────────────────────────────────────────
+  // ── Completion drawers ────────────────────────────────────────────────
+  // ONE drawer with everything completed today (dailies, weeklies,
+  // monthlies AND one-shots) — the per-tab week/one-shot drawers left
+  // with the bucket tabs.
   const completedTodayItems = useMemo<CompletedItem[]>(
     () =>
       (data?.todayActivity.completed ?? []).map((c) => ({
@@ -396,24 +387,6 @@ export default function HomeScreen() {
     [data?.todayActivity.completed],
   );
 
-  const completedThisWeekItems = useMemo<CompletedItem[]>(
-    () =>
-      (data?.weekActivity.completed ?? []).map((c) => ({
-        task: c.task,
-        completionId: c.latestCompletionId,
-      })),
-    [data?.weekActivity.completed],
-  );
-
-  const completedOneShotItems = useMemo<CompletedItem[]>(
-    () =>
-      (data?.oneShotActivity.completed ?? []).map((c) => ({
-        task: c.task,
-        completionId: c.latestCompletionId,
-      })),
-    [data?.oneShotActivity.completed],
-  );
-
   const skippedTodayItems = useMemo<CompletedItem[]>(
     () =>
       (data?.todayActivity.skipped ?? []).map((task) => ({ task })),
@@ -421,16 +394,41 @@ export default function HomeScreen() {
   );
 
   // ── Ring math + headline ──────────────────────────────────────────────
-  // ringTotal = pending daily + completed daily today (the daily contract).
-  // Tasks scheduled-for-today from weekly/monthly are excluded so the
-  // ring matches the Daily tab content the user reads under it.
-  const ringDoneDailyToday = useMemo(() => {
+  // The ring tracks the day's recurring contract: done = recurring items
+  // that were DUE today and got acted on (completed or skipped); total =
+  // done + whatever is still waiting in the Hoje list. One-shots never
+  // count — they would permanently block "day cleared".
+  const ringDone = useMemo(() => {
     if (!data) return 0;
-    return data.todayActivity.completed.filter(
-      (c) => c.task.recurrence.type === 'daily',
-    ).length;
-  }, [data]);
-  const ringTotal = ringDoneDailyToday + lists.daily.length;
+    const now = new Date();
+    const dow = now.getDay();
+    const isLastDayOfWeek =
+      settings.weekStart === 'sunday' ? dow === 6 : dow === 0;
+    const nextDay = new Date(now);
+    nextDay.setDate(now.getDate() + 1);
+    const isLastDayOfMonth = nextDay.getMonth() !== now.getMonth();
+
+    // Mirrors the fetchHomeBuckets promotion rules: dailies and
+    // unscheduled recurring are due every day; scheduled recurring are
+    // due on their scheduled day plus the last-day-of-period catch-up.
+    const wasDueToday = (task: TaskWithSubs): boolean => {
+      const rec = task.recurrence;
+      if (rec.type === 'one_shot') return false;
+      if (rec.type === 'daily') return true;
+      if (rec.type === 'weekly') {
+        if (rec.days === undefined) return true;
+        return isDueOn(rec, now) || isLastDayOfWeek;
+      }
+      if (typeof rec.day !== 'number') return true;
+      return isDueOn(rec, now) || isLastDayOfMonth;
+    };
+
+    return (
+      data.todayActivity.completed.filter((c) => wasDueToday(c.task)).length +
+      data.todayActivity.skipped.filter(wasDueToday).length
+    );
+  }, [data, settings.weekStart]);
+  const ringTotal = ringDone + lists.today.length;
 
   const hero = formatHeroDate();
   const charXp = character.data?.character.total_xp ?? 0;
@@ -440,24 +438,34 @@ export default function HomeScreen() {
     (q) => q.quest.status === 'active',
   ).length;
 
-  const tabSpecs: BucketTabSpec<BucketTab>[] = [
-    { value: 'daily', label: t('home.bucketTabs.daily'), count: lists.daily.length },
-    { value: 'weekly', label: t('home.bucketTabs.weekly'), count: lists.weekly.length },
-    { value: 'oneshot', label: t('home.bucketTabs.oneshot'), count: lists.oneshot.length },
-  ];
-
-  const activeList = lists[activeTab];
-  const activeEmptyKey: Record<BucketTab, string> = {
-    daily: 'home.bucketTabs.emptyDaily',
-    weekly: 'home.bucketTabs.emptyWeekly',
-    oneshot: 'home.bucketTabs.emptyOneshot',
+  // First rendered card overall carries the M1 tour anchor — normally
+  // the first Hoje item, falling back to the first one-shot when the
+  // Hoje list is empty.
+  const renderTaskCard = (task: TaskWithSubs, isTourAnchor: boolean) => {
+    const card = (
+      <TaskCard
+        task={task}
+        dimmed={isInTrophyWindow(task)}
+        onComplete={() => handleQuickComplete(task)}
+        onLongPress={() => handleLongPress(task)}
+        onSkip={() => handleSwipeSkip(task)}
+        onSwipeComplete={() => setSheetTask(task)}
+        onEdit={() => {
+          emitTourEvent(M1_EVENTS.TASK_TAPPED);
+          router.push({ pathname: '/task-form', params: { id: task.id } });
+        }}
+      />
+    );
+    // M1 steps 1/3/4 spotlight the first card — wrapping only the anchor
+    // keeps the gap flow identical for the rest.
+    return isTourAnchor ? (
+      <TourTarget key={task.id} id="home.task-first" radius={20}>
+        {card}
+      </TourTarget>
+    ) : (
+      <Fragment key={task.id}>{card}</Fragment>
+    );
   };
-  const completedBucketTitle =
-    activeTab === 'daily'
-      ? t('home.completedBucket.daily')
-      : activeTab === 'weekly'
-        ? t('home.completedBucket.weekly')
-        : t('home.completedBucket.oneshot');
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -485,7 +493,7 @@ export default function HomeScreen() {
           displayName={character.data?.profile.display_name ?? t('home.defaultName')}
           weekdayLabel={hero.weekday}
           monthDayLabel={hero.monthDay}
-          ringDone={ringDoneDailyToday}
+          ringDone={ringDone}
           ringTotal={ringTotal}
           hasActiveQuests={activeQuestCount > 0}
           onHistoryPress={() => router.push('/history')}
@@ -527,60 +535,41 @@ export default function HomeScreen() {
         ) : (
           <>
             {/* Order under the hero (XP / Reward cards above): quests
-                first, then the bucket selector, then the active list.
-                Tasks at the bottom so the selector context is always
-                visible when scanning the list. */}
+                first, then the "Hoje" list — the day's schedule-driven
+                contract — then the one-shots as a secondary section. */}
             <TourTarget id="home.quests" radius={18}>
               <QuestChipsStrip />
             </TourTarget>
 
-            <BucketTabsV2<BucketTab>
-              tabs={tabSpecs}
-              value={activeTab}
-              onChange={setActiveTab}
-            />
-
             <View style={styles.taskList}>
-              {activeList.length === 0 ? (
-                <Text style={styles.tabEmpty}>{t(activeEmptyKey[activeTab])}</Text>
+              <Text style={styles.sectionHeader}>
+                {t('home.sections.today')}
+              </Text>
+              {lists.today.length === 0 ? (
+                <Text style={styles.tabEmpty}>
+                  {t('home.bucketTabs.emptyToday')}
+                </Text>
               ) : (
-                activeList.map((task, idx) => {
-                  const card = (
-                    <TaskCard
-                      task={task}
-                      dimmed={isInTrophyWindow(task)}
-                      onComplete={() => handleQuickComplete(task)}
-                      onLongPress={() => handleLongPress(task)}
-                      onSkip={() => handleSwipeSkip(task)}
-                      onSwipeComplete={() => setSheetTask(task)}
-                      onEdit={() => {
-                        emitTourEvent(M1_EVENTS.TASK_TAPPED);
-                        router.push({ pathname: '/task-form', params: { id: task.id } });
-                      }}
-                    />
-                  );
-                  // M1 steps 1/3/4 spotlight the first card — wrapping
-                  // only idx 0 keeps the gap flow identical for the rest.
-                  return idx === 0 ? (
-                    <TourTarget key={task.id} id="home.task-first" radius={20}>
-                      {card}
-                    </TourTarget>
-                  ) : (
-                    <Fragment key={task.id}>{card}</Fragment>
-                  );
-                })
+                lists.today.map((task, idx) => renderTaskCard(task, idx === 0))
+              )}
+
+              {lists.oneshot.length > 0 && (
+                <>
+                  <Text
+                    style={[styles.sectionHeader, styles.sectionHeaderSecondary]}
+                  >
+                    {t('home.sections.oneshot')}
+                  </Text>
+                  {lists.oneshot.map((task, idx) =>
+                    renderTaskCard(task, lists.today.length === 0 && idx === 0),
+                  )}
+                </>
               )}
 
               <TourTarget id="home.completed" radius={18}>
                 <CompletedBucket
-                  items={
-                    activeTab === 'weekly'
-                      ? completedThisWeekItems
-                      : activeTab === 'oneshot'
-                        ? completedOneShotItems
-                        : completedTodayItems
-                  }
-                  title={completedBucketTitle}
+                  items={completedTodayItems}
+                  title={t('home.completedBucket.today')}
                   onUndo={handleUndo}
                   onExtra={(task) => handleQuickComplete(task)}
                   onToggle={(open) => {
@@ -764,6 +753,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: tokens.space[4],
     paddingTop: tokens.space[2],
     gap: tokens.space[2],
+  },
+  // "Hoje" / "Pontuais" section headers replacing the old bucket tabs.
+  sectionHeader: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 15,
+    color: tokens.text.hi,
+    letterSpacing: 0.4,
+    paddingTop: tokens.space[1],
+  },
+  // One-shots read as a lighter, secondary block under the day's list.
+  sectionHeaderSecondary: {
+    fontSize: 13,
+    color: tokens.text.mid,
+    marginTop: tokens.space[3],
   },
   tabEmpty: {
     ...tokens.type.caption,

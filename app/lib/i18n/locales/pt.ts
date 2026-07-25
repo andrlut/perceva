@@ -802,6 +802,10 @@ const pt: Translations = {
       night: 'Boa madrugada',
     },
     defaultName: 'aventureiro',
+    sections: {
+      today: 'Hoje',
+      oneshot: 'Pontuais',
+    },
     buckets: {
       today: 'Hoje',
       thisWeek: 'Esta Semana',
