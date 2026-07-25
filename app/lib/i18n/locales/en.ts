@@ -157,6 +157,13 @@ const en = {
       noAccount: "Don't have an account? ",
       signUpLink: 'Sign up',
     },
+    google: {
+      continue: 'Continue with Google',
+      failed: 'Google sign-in failed',
+      failedBody: "Couldn't sign in with Google. Try again.",
+      playServices: 'Google Play Services is unavailable or out of date on this device.',
+    },
+    divider: 'or',
     signup: {
       title: 'Create your account',
       submit: 'Sign up',

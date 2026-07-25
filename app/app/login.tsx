@@ -11,15 +11,19 @@ import {
   View,
 } from 'react-native';
 
+import { Ionicons } from '@expo/vector-icons';
+
 import { PercevaGlyph } from '@/components/PercevaGlyph';
 import {
   AUTH_REDIRECT_URL,
   CODE_MAX_LENGTH,
   CODE_MIN_LENGTH,
+  isGoogleSignInAvailable,
   isUnconfirmedEmail,
   localizeAuthError,
   RESEND_COOLDOWN_SECONDS,
   sanitizeCode,
+  signInWithGoogle,
 } from '@/lib/auth';
 import { useT } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
@@ -36,6 +40,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const keyboardHeight = useKeyboardHeight();
 
@@ -166,6 +171,31 @@ export default function LoginScreen() {
       openCodeScreen(email.trim(), 'signup');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsGoogleSubmitting(true);
+    try {
+      const result = await signInWithGoogle();
+      switch (result.type) {
+        case 'success':
+        case 'cancelled':
+        case 'in_progress':
+          // Success: AuthGate reacts to SIGNED_IN and routes away from
+          // here. Cancel and double-tap are non-events — stay silent.
+          return;
+        case 'play_services_unavailable':
+          Alert.alert(t('auth.google.failed'), t('auth.google.playServices'));
+          return;
+        case 'supabase_error':
+          Alert.alert(t('auth.google.failed'), localizeAuthError(result.error, t));
+          return;
+        default:
+          Alert.alert(t('auth.google.failed'), t('auth.google.failedBody'));
+      }
+    } finally {
+      setIsGoogleSubmitting(false);
     }
   };
 
@@ -374,7 +404,7 @@ export default function LoginScreen() {
               (pressed || isSubmitting) && styles.primaryButtonPressed,
             ]}
             onPress={handleSubmit}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isGoogleSubmitting}
           >
             {isSubmitting ? (
               <ActivityIndicator color={tokens.text.hi} />
@@ -388,12 +418,40 @@ export default function LoginScreen() {
           {mode === 'login' && (
             <Pressable
               onPress={() => router.push('/forgot-password')}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isGoogleSubmitting}
               style={styles.forgotLink}
               hitSlop={8}
             >
               <Text style={styles.forgotText}>{t('auth.login.forgot')}</Text>
             </Pressable>
+          )}
+
+          {isGoogleSignInAvailable && (
+            <>
+              <View style={styles.dividerRow}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>{t('auth.divider')}</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              <Pressable
+                style={({ pressed }) => [
+                  styles.googleButton,
+                  (pressed || isGoogleSubmitting) && styles.primaryButtonPressed,
+                ]}
+                onPress={handleGoogleSignIn}
+                disabled={isSubmitting || isGoogleSubmitting}
+              >
+                {isGoogleSubmitting ? (
+                  <ActivityIndicator color={tokens.text.hi} />
+                ) : (
+                  <>
+                    <Ionicons name="logo-google" size={18} color={tokens.text.hi} />
+                    <Text style={styles.googleButtonText}>{t('auth.google.continue')}</Text>
+                  </>
+                )}
+              </Pressable>
+            </>
           )}
 
           <Pressable
@@ -402,7 +460,7 @@ export default function LoginScreen() {
               // The confirmation only exists in signup — never carry it across.
               setConfirmPassword('');
             }}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isGoogleSubmitting}
             style={styles.toggle}
           >
             <Text style={styles.toggleText}>
@@ -522,6 +580,39 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: 6,
     ...tokens.type.h2,
+    color: tokens.text.hi,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[3],
+    marginTop: tokens.space[6],
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: tokens.border.base,
+  },
+  dividerText: {
+    ...tokens.type.caption,
+    color: tokens.text.faint,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  googleButton: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: tokens.space[3],
+    backgroundColor: tokens.bg.surface,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+    borderRadius: tokens.radius.md,
+    paddingVertical: tokens.space[4],
+    marginTop: tokens.space[6],
+  },
+  googleButtonText: {
+    ...tokens.type.h3,
     color: tokens.text.hi,
   },
   forgotLink: {

@@ -147,6 +147,13 @@ const pt: Translations = {
       noAccount: 'Ainda não tem conta? ',
       signUpLink: 'Criar conta',
     },
+    google: {
+      continue: 'Continuar com Google',
+      failed: 'Falha ao entrar com Google',
+      failedBody: 'Não foi possível entrar com o Google. Tente de novo.',
+      playServices: 'Google Play Services indisponível ou desatualizado neste aparelho.',
+    },
+    divider: 'ou',
     signup: {
       title: 'Crie sua conta',
       submit: 'Criar conta',
