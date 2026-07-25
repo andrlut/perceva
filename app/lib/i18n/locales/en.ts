@@ -1283,7 +1283,7 @@ const en = {
       label: 'Body',
       tagline: 'Earned, not given.',
       description:
-        'Strength + dexterity. Cardio, lifting, sport, mobility. The visible proof of consistency over time.',
+        'Strength + mobility. Cardio, lifting, sport, stretching. The visible proof of consistency over time.',
       examples: [
         '20 push-ups',
         'Run 5km',
@@ -1371,10 +1371,10 @@ const en = {
       high: "Strength training or intense sport 3+ times a week, with good form and progression. Body feels capable: you trust your movements, don't avoid effort, recover quickly. Stronger today than 6 months ago — in weight, reps, or volume — with concrete evidence.",
     },
     dexterity: {
-      label: 'Dexterity',
-      summary: 'Mobility, coordination, and balance.',
+      label: 'Mobility',
+      summary: 'Range of motion, coordination, and balance.',
       definition:
-        "How your body moves — range, control, balance. From basic mobility (stretching, posture) to motor skills (racquet sport, dance, climbing). It's what keeps you agile and fluid as years pass, or stiff and locked up.",
+        "How your body moves — range, control, balance. From the basics (stretching, posture) to motor skills (racquet sport, dance, climbing). It's what keeps you agile and fluid as years pass, or stiff and locked up.",
       low: "Wide movements hurt or aren't possible. Posture is poor, your back or neck pays for it. You stumble and don't recover well. You avoid sports or new movements out of injury fear. You practice nothing that requires coordination.",
       mid: "You move without pain most days, but with stubborn areas — hip, shoulder, neck. You stretch sporadically. Balance is okay, not trained. You don't feel range or control progress over the months.",
       high: 'Mobility worked regularly — yoga, stretching, mobility work. Movement is fluid and pain-free. Balance and coordination are real — you react well to stumbles, play sport, dance. You feel more mobile today than 6 months ago.',

@@ -1278,7 +1278,7 @@ const pt: Translations = {
       label: 'Corpo',
       tagline: 'Conquistado, não dado.',
       description:
-        'Força + destreza. Cardio, treino, esporte, mobilidade. A prova visível de consistência ao longo do tempo.',
+        'Força + mobilidade. Cardio, treino, esporte, alongamento. A prova visível de consistência ao longo do tempo.',
       examples: [
         '20 flexões',
         'Correr 5km',
@@ -1371,10 +1371,10 @@ const pt: Translations = {
       high: 'Treino de força ou esporte intenso 3+ vezes por semana, com forma boa e progressão. Corpo se sente capaz: você confia em movimentos, não evita esforço, recupera rápido. Mais forte hoje do que era 6 meses atrás — em peso, reps ou volume — e tem evidência concreta disso.',
     },
     dexterity: {
-      label: 'Destreza',
-      summary: 'Mobilidade, coordenação e equilíbrio.',
+      label: 'Mobilidade',
+      summary: 'Amplitude de movimento, coordenação e equilíbrio.',
       definition:
-        'Como o corpo se move — amplitude, controle, equilíbrio. Vai de mobilidade básica (alongar, postura) a habilidades motoras (esporte de raquete, dança, escalada). É o que te mantém ágil e fluído com o passar dos anos, ou rígido e travado.',
+        'Como o corpo se move — amplitude, controle, equilíbrio. Vai do básico (alongar, postura) a habilidades motoras (esporte de raquete, dança, escalada). É o que te mantém ágil e fluído com o passar dos anos, ou rígido e travado.',
       low: 'Movimentos amplos doem ou são impossíveis. Postura é ruim, costas ou pescoço cobram. Você tropeça em coisas e não recupera bem. Evita esportes ou movimentos novos por medo de se machucar. Não pratica nada que exija coordenação.',
       mid: 'Você se move sem dor na maioria dos dias, mas tem áreas teimosas — quadril, ombro, cervical. Faz alongamento esporádico. Equilíbrio é ok, não treinado. Não sente progresso de amplitude ou controle ao longo dos meses.',
       high: 'Mobilidade trabalhada regularmente — yoga, alongamento, mobility work. Movimento é fluido e sem dor. Equilíbrio e coordenação são reais — você reage bem a tropeço, joga esporte, dança. Sente que tá mais móvel hoje do que era 6 meses atrás.',
