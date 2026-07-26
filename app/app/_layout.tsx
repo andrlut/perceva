@@ -18,6 +18,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
 import { ConfirmHost } from '@/components/ConfirmHost';
+import { OtaUpdateGate } from '@/components/OtaUpdateGate';
 import { InstrumentTeaserHost } from '@/components/premium/InstrumentTeaserHost';
 import { LimitReachedHost } from '@/components/premium/LimitReachedHost';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -264,6 +265,7 @@ export default function RootLayout() {
         <ConfirmHost />
         <InstrumentTeaserHost />
         <LimitReachedHost />
+        <OtaUpdateGate />
         <StatusBar style="light" />
       </ThemeProvider>
     </QueryClientProvider>
