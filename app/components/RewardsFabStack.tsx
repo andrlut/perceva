@@ -29,6 +29,8 @@ interface Props {
  * when there's something banked, so the stack gracefully shrinks to
  * two buttons.
  */
+const pressedFx = { opacity: 0.85, transform: [{ scale: 0.96 }] };
+
 export function RewardsFabStack({
   bankCount,
   bottomOffset,
@@ -45,8 +47,9 @@ export function RewardsFabStack({
       <Pressable
         onPress={onManage}
         style={({ pressed }) => [
+          styles.fab,
           styles.manageFab,
-          pressed && { opacity: 0.7, transform: [{ scale: 0.94 }] },
+          pressed && pressedFx,
         ]}
         accessibilityRole="button"
         accessibilityLabel={t('rewards.manage.title')}
@@ -58,8 +61,9 @@ export function RewardsFabStack({
       <Pressable
         onPress={onCreate}
         style={({ pressed }) => [
+          styles.fab,
           styles.createFab,
-          pressed && { opacity: 0.85, transform: [{ scale: 0.96 }] },
+          pressed && pressedFx,
         ]}
         accessibilityRole="button"
         accessibilityLabel={t('reward.form.newTitle')}
@@ -72,16 +76,17 @@ export function RewardsFabStack({
         <Pressable
           onPress={onBank}
           style={({ pressed }) => [
+            styles.fab,
             styles.bankFab,
-            pressed && { opacity: 0.85, transform: [{ scale: 0.96 }] },
+            pressed && pressedFx,
           ]}
           accessibilityRole="button"
           accessibilityLabel={t('rewards.vault.tabs.bank', { count: bankCount })}
           hitSlop={8}
         >
           <LinearGradient
-            colors={['#FFE890', '#FFC83D', '#C8881C']}
-            locations={[0, 0.55, 1]}
+            colors={tokens.gradient.coinBtn}
+            locations={tokens.gradient.coinBtnLocations}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 1 }}
             style={StyleSheet.absoluteFill}
@@ -101,45 +106,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: tokens.space[2],
   },
+  // Shared circle-button base; per-button styles add size + color.
+  // Shadows are iOS-only by design — Android elevation looks bad
+  // against the dark background; borders carry the depth there.
+  fab: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+  },
   manageFab: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: 'rgba(20, 24, 56, 0.92)',
-    borderWidth: 1,
     borderColor: tokens.border.base,
+    shadowOpacity: 0,
   },
   createFab: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: tokens.brand.violet2,
-    borderWidth: 1,
     borderColor: 'rgba(217, 219, 250, 0.45)',
     shadowColor: tokens.brand.violet2,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
   },
   bankFab: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
     borderColor: 'rgba(255,224,138,0.6)',
     overflow: 'hidden',
-    // Soft drop shadow (iOS only — Android elevation looks bad against
-    // the dark background; the gold gradient + light border carry the
-    // depth on their own).
     shadowColor: '#FFC83D',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
   },
 });

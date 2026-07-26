@@ -41,7 +41,7 @@ import type { Reward, RewardCategory, RewardTemplate } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import {
   freeLimitEntity,
-  useLimitModalStore,
+  useLimitGuard,
   useRewardLimit,
 } from '@/lib/premium';
 import { TourModule } from '@/components/tour/TourModule';
@@ -80,7 +80,7 @@ export default function RewardsScreen() {
   const trackedId = useTrackedRewardId();
   const setTracked = useSetTrackedReward();
   const rewardLimit = useRewardLimit();
-  const openLimit = useLimitModalStore((s) => s.open);
+  const guardCreate = useLimitGuard(rewardLimit, 'reward');
 
   const [redeemingId, setRedeemingId] = useState<string | null>(null);
   const [addingTemplateId, setAddingTemplateId] = useState<string | null>(null);
@@ -238,16 +238,8 @@ export default function RewardsScreen() {
     setActionSheetReward(reward);
   };
 
-  // Same free-limit gate the manage screen applies: block navigation
-  // into the form when the user is at the reward cap, showing the
-  // global limit modal instead.
-  const handleCreateReward = () => {
-    if (rewardLimit.atLimit) {
-      openLimit('reward');
-      return;
-    }
-    router.push('/reward-form');
-  };
+  const handleCreateReward = () =>
+    guardCreate(() => router.push('/reward-form'));
 
   const handleEditReward = (reward: Reward) => {
     router.push({ pathname: '/reward-form', params: { id: reward.id } });

@@ -28,7 +28,7 @@ import {
 } from '@/lib/api/rewards';
 import type { Reward } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
-import { useLimitModalStore, useRewardLimit } from '@/lib/premium';
+import { useLimitGuard, useRewardLimit } from '@/lib/premium';
 import { confirmAction, showInfo } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 import { REWARD_CATEGORY_META } from '@/theme/rewards';
@@ -49,14 +49,9 @@ export default function RewardsManageScreen() {
   const router = useRouter();
   const { t } = useT();
   const rewardLimit = useRewardLimit();
-  const openLimit = useLimitModalStore((s) => s.open);
-  const handleCreateReward = () => {
-    if (rewardLimit.atLimit) {
-      openLimit('reward');
-      return;
-    }
-    router.push('/reward-form');
-  };
+  const guardCreate = useLimitGuard(rewardLimit, 'reward');
+  const handleCreateReward = () =>
+    guardCreate(() => router.push('/reward-form'));
   const active = useRewards();
   const archived = useArchivedRewards();
   const reorder = useReorderRewards();

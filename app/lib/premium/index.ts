@@ -27,4 +27,5 @@ export {
   useSkillLimit,
   useQuestLimit,
 } from './useEntityLimit';
+export { useLimitGuard } from './useLimitGuard';
 export { useLimitModalStore } from './limitModalStore';
