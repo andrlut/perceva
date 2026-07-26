@@ -93,6 +93,15 @@ export async function signInWithGoogle(): Promise<GoogleSignInResult> {
     return { type: 'success' };
   } catch (err) {
     if (isErrorWithCode(err)) {
+      // Signing cert + package of THIS build not registered in the GCP
+      // project — the classic Play-App-Signing SHA-1 gap that only
+      // reproduces on the store distribution. Surfaces as the string
+      // 'DEVELOPER_ERROR' or the raw Android status code 10 depending on
+      // the code path, so compare stringified.
+      const codeStr = String(err.code);
+      if (codeStr === 'DEVELOPER_ERROR' || codeStr === '10') {
+        return { type: 'developer_error' };
+      }
       switch (err.code) {
         case statusCodes.IN_PROGRESS:
           return { type: 'in_progress' };
@@ -102,13 +111,8 @@ export async function signInWithGoogle(): Promise<GoogleSignInResult> {
         // legacy code mapped in case a platform edge still throws it.
         case statusCodes.SIGN_IN_CANCELLED:
           return { type: 'cancelled' };
-        // Signing cert + package of THIS build not registered in the GCP
-        // project — the classic Play-App-Signing SHA-1 gap that only
-        // reproduces on the store distribution.
-        case 'DEVELOPER_ERROR':
-          return { type: 'developer_error' };
       }
-      return { type: 'failed', detail: String(err.code) };
+      return { type: 'failed', detail: codeStr };
     }
     return {
       type: 'failed',
