@@ -55,7 +55,9 @@ export function RewardsFabStack({
         accessibilityLabel={t('rewards.manage.title')}
         hitSlop={8}
       >
-        <Ionicons name="settings-outline" size={18} color={tokens.text.mid} />
+        {/* Sliders, not gear — gear is reserved for the Settings tab so
+            "manage" surfaces don't read as app settings. */}
+        <Ionicons name="options-outline" size={18} color={tokens.text.mid} />
       </Pressable>
 
       <Pressable

@@ -46,15 +46,16 @@ export const PREMIUM_PLANS: readonly PremiumPlan[] = [
 /**
  * Psych instruments behind the paywall. The self-assessment instruments
  * (`avaliacao_v1` / `avaliacao_v2`) are intentionally absent — they stay 100%
- * free. Decision (Artur, 2026-07-06): all six deep instruments are premium.
+ * free. Decision (Artur, 2026-07-26): `disc` and `tipos` moved to free as
+ * funnel entry points; the four remaining deep instruments stay premium.
+ * Must mirror the server-side list in enforce_premium_instrument()
+ * (migration 20260726000002).
  */
 export const PREMIUM_INSTRUMENT_IDS: ReadonlySet<string> = new Set([
   'big_five_120',
   'schwartz_pvq',
   'ecr_r',
-  'disc',
   'strengths',
-  'tipos',
 ]);
 
 export function isInstrumentPremium(instrumentId: string): boolean {
