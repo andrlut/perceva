@@ -1161,7 +1161,6 @@ const en = {
       eyebrow: 'IN THE BAG',
       title: 'Bought "{{title}}"',
       titleN: 'Bought {{qty}}× "{{title}}"',
-      bankLine: 'Bank: {{before}} → {{after}}',
       goToBank: 'Go to bank',
       enjoyNow: 'Enjoy now',
       saveForLater: 'Save for later',

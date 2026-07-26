@@ -1,12 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useT } from '@/lib/i18n';
-import { tokens } from '@/theme';
 
 interface Props {
-  /** Number of banked rewards waiting to be used. Doubles as the badge. */
+  /** Number of banked rewards waiting — feeds the accessibility label. */
   count: number;
   /** Distance from the bottom of the screen — caller should pass the
    *  bottom-nav clearance so the FAB doesn't sit underneath the tab bar. */
@@ -23,9 +22,6 @@ interface Props {
  * Visual language: gold gradient pill mirroring the affordable BUY
  * button, so the FAB reads as "open this reward" — a continuation of
  * the purchase journey rather than a separate navigation surface.
- *
- * The count badge sits top-right, in deep navy with gold text so the
- * number pops against the warm gradient body.
  */
 export function BankFab({ count, bottomOffset, onPress }: Props) {
   const { t } = useT();
@@ -52,13 +48,6 @@ export function BankFab({ count, bottomOffset, onPress }: Props) {
           style={StyleSheet.absoluteFill}
         />
         <Ionicons name="wallet" size={24} color="#3D2A00" />
-        {count > 0 && (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>
-              {count > 99 ? '99+' : count.toString()}
-            </Text>
-          </View>
-        )}
       </Pressable>
     </View>
   );
@@ -87,25 +76,5 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 12,
-  },
-  badge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    minWidth: 22,
-    height: 22,
-    paddingHorizontal: 6,
-    borderRadius: 11,
-    backgroundColor: tokens.bg.deep,
-    borderWidth: 1.5,
-    borderColor: '#FFE3A6',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badgeText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 11,
-    color: '#FFE3A6',
-    letterSpacing: 0.3,
   },
 });

@@ -95,15 +95,11 @@ export default function RewardsScreen() {
   // Custom in-aesthetic confirm modal — replaces the system Alert that
   // used to pop on BUY. Single state holds the reward; null = closed.
   const [confirmingPurchase, setConfirmingPurchase] = useState<Reward | null>(null);
-  // Celebration modal payload — set after a successful purchase. Captures
-  // the bank count BEFORE the redeem so the modal can show the before→after
-  // transition even though the live query has invalidated already.
+  // Celebration modal payload — set after a successful purchase.
   const [celebration, setCelebration] = useState<{
     reward: Reward;
     qty: number;
     costPaid: number;
-    bankBefore: number;
-    bankAfter: number;
     /** Redemption ids created by this purchase — feeds "enjoy now". */
     redemptionIds: string[];
   } | null>(null);
@@ -272,10 +268,6 @@ export default function RewardsScreen() {
     setConfirmingPurchase(null);
     setRedeemingId(reward.id);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-    // Snapshot before mutation — the bank query gets invalidated on
-    // settle, so reading from the cache after mutateAsync resolves is a
-    // race. Capturing here is exact.
-    const bankBefore = bankCount;
     try {
       const result = await redeem.mutateAsync({
         rewardId: reward.id,
@@ -286,8 +278,6 @@ export default function RewardsScreen() {
         reward,
         qty: result?.qty ?? qty,
         costPaid: result?.total_paid ?? reward.cost * qty,
-        bankBefore,
-        bankAfter: bankBefore + (result?.qty ?? qty),
         redemptionIds: result?.redemption_ids ?? [],
       });
     } catch (e) {
@@ -681,8 +671,6 @@ export default function RewardsScreen() {
         reward={celebration?.reward ?? null}
         qty={celebration?.qty ?? 1}
         costPaid={celebration?.costPaid ?? 0}
-        bankBefore={celebration?.bankBefore ?? 0}
-        bankAfter={celebration?.bankAfter ?? 0}
         canEnjoyNow={(celebration?.redemptionIds.length ?? 0) > 0}
         onEnjoyNow={() =>
           handleEnjoyNow(celebration?.redemptionIds ?? [])
