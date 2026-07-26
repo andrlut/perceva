@@ -632,13 +632,14 @@ export interface LearningMaterial {
    *  drops era — a material can be podcast/infographic-only. */
   body_pt: string | null;
   body_en: string | null;
-  /** 0..5 short bullets surfaced at the top of the detail screen. */
+  /** 0..5 short bullets — the recap card shown AFTER the body. */
   takeaways_pt: string[];
   takeaways_en: string[];
-  /** Bullet list answering "you're on track when..." — shown as a visual
-   *  Signs block on the detail screen instead of repeating a heading. */
-  signs_pt: string[];
-  signs_en: string[];
+  /** Legacy "you're on track when..." bullets. No longer surfaced in the
+   *  detail UI (removed 2026-07-26); nullable since the publisher stopped
+   *  producing them. Kept for the existing rows' historical data. */
+  signs_pt: string[] | null;
+  signs_en: string[] | null;
   /** One-paragraph "how the app tracks this sub" callout — shown in a
    *  small App Track block on the detail screen. */
   tracking_pt: string | null;

@@ -292,7 +292,7 @@ const en = {
         'Big Five, Schwartz Values, ECR-R and more: the deep portrait of your identity.',
       unlimitedTitle: 'No limits',
       unlimitedDesc: 'Unlimited practices, rewards, skills and quests.',
-      learnTitle: 'Exclusive articles',
+      learnTitle: 'Exclusive studies',
       learnDesc: 'Extra content in Learn, every week.',
       supportTitle: 'Support Perceva',
       supportDesc: "You directly fund the app's evolution.",
@@ -313,7 +313,7 @@ const en = {
       instrumentsLabel: 'Instruments',
       instrumentsFree: 'Assessment only',
       instrumentsPremium: 'All',
-      articlesLabel: 'Articles',
+      articlesLabel: 'Studies',
       articlesFree: 'Base',
       articlesPremium: '+ exclusive',
     },
@@ -481,11 +481,11 @@ const en = {
     m6: {
       step1: {
         title: 'Learn',
-        body: 'Short articles on habits, identity, and every area of your life. Tap the Learn tab.',
+        body: 'Short studies — read, listen, or watch — on habits, identity, and every area of your life. Tap the Learn tab.',
       },
       step2: {
         title: 'Always something new',
-        body: 'Short, visual explainers, with fresh material every week. Read at your own pace.',
+        body: 'Short, visual explainers, with fresh material every week. At your own pace.',
       },
     },
     m0: {
@@ -530,7 +530,7 @@ const en = {
         M3: { name: 'Quests', desc: 'Bigger journeys with a deadline.' },
         M4: { name: 'Rewards', desc: 'Redeem and bank rewards.' },
         M5: { name: 'Me', desc: 'The three portraits of your identity.' },
-        M6: { name: 'Learn', desc: 'Articles to understand the why.' },
+        M6: { name: 'Learn', desc: 'Studies to understand the why.' },
       },
     },
     errors: {
@@ -540,10 +540,11 @@ const en = {
 
   learning: {
     eyebrow: 'Library · Your path',
-    title: 'Reading nook',
-    subtitle: 'Short, visual, tied to what you’re cultivating.',
-    empty: 'No materials yet for this filter.',
-    read: 'Read',
+    title: 'Study nook',
+    subtitle: 'Read, listen, or watch — always short, always tied to what you cultivate.',
+    empty: 'Nothing here with this filter.',
+    read: { one: 'done', other: 'done' },
+    min: '{{count}} min',
     readMin: { one: '{{count}} min read', other: '{{count}} min read' },
     continueReading: 'Continue reading',
     continueProgress: '{{percent}}% read',
@@ -570,8 +571,8 @@ const en = {
     },
     readFilter: {
       all: 'All',
-      unread: 'Unread',
-      read: 'Read',
+      unread: 'Pending',
+      read: 'Done',
     },
     section: {
       new: 'New this month',
@@ -580,7 +581,6 @@ const en = {
     },
     filteringBy: 'Filtering: {{what}}',
     stats: {
-      summary: '{{read}} of {{total}} read',
       byDim: 'By dimension',
       byType: 'By type',
       bySub: 'By sub',
@@ -588,13 +588,12 @@ const en = {
     detail: {
       source: 'Source',
       takeaways: 'Walk away with this',
-      signs: 'On track when',
       tracking: 'How the app tracks it',
-      markRead: 'Mark as read',
-      markedRead: 'Read',
-      alreadyRead: 'You already read this one. XP was claimed.',
-      rewardPreview: '+{{xp}} XP and +{{coins}} coins for reading this.',
-      markFail: 'Could not mark as read',
+      markRead: 'Complete',
+      markedRead: 'Done',
+      alreadyRead: 'You already completed this one. XP was claimed.',
+      rewardPreview: '+{{xp}} XP and +{{coins}} coins for completing this.',
+      markFail: 'Could not complete',
       notFound: 'Material not found.',
       feedbackPrompt: 'Was this useful?',
       feedbackUp: 'Helpful',
