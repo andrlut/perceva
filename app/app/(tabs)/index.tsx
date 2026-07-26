@@ -51,7 +51,6 @@ import {
   useTourStore,
 } from '@/lib/tour/store';
 import {
-  scheduledMonthlyPassedThisWeek,
   useActiveTasks,
   useCompleteTask,
   useHomeBuckets,
@@ -416,31 +415,21 @@ export default function HomeScreen() {
   const ringDone = useMemo(() => {
     if (!data) return 0;
     const now = new Date();
-    const dow = now.getDay();
-    const isLastDayOfWeek =
-      settings.weekStart === 'sunday' ? dow === 6 : dow === 0;
-    const nextDay = new Date(now);
-    nextDay.setDate(now.getDate() + 1);
-    const isLastDayOfMonth = nextDay.getMonth() !== now.getMonth();
 
     // Mirrors the fetchHomeBuckets promotion rules: dailies and
     // unscheduled recurring are due every day; scheduled recurring are
-    // due on their scheduled day plus the last-day-of-period catch-up
-    // (and, for monthlies, the missed-day-this-week catch-up).
+    // due ONLY on their scheduled days (schedule = contract — no
+    // last-day or missed-day catch-ups).
     const wasDueToday = (task: TaskWithSubs): boolean => {
       const rec = task.recurrence;
       if (rec.type === 'one_shot') return false;
       if (rec.type === 'daily') return true;
       if (rec.type === 'weekly') {
         if (rec.days === undefined) return true;
-        return isDueOn(rec, now) || isLastDayOfWeek;
+        return isDueOn(rec, now);
       }
       if (typeof rec.day !== 'number') return true;
-      return (
-        isDueOn(rec, now) ||
-        isLastDayOfMonth ||
-        scheduledMonthlyPassedThisWeek(rec.day, now, settings.weekStart)
-      );
+      return isDueOn(rec, now);
     };
 
     // Dedupe across the two lists: a task that was skipped AND later
@@ -456,7 +445,7 @@ export default function HomeScreen() {
         (task) => !completedIds.has(task.id) && wasDueToday(task),
       ).length
     );
-  }, [data, settings.weekStart]);
+  }, [data]);
   const ringTotal = ringDone + lists.today.length;
 
   // ── Day-cleared celebration ───────────────────────────────────────────
