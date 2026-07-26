@@ -283,7 +283,7 @@ const pt: Translations = {
       unlimitedTitle: 'Sem limites',
       unlimitedDesc:
         'Práticas, recompensas, habilidades e missões ilimitadas.',
-      learnTitle: 'Artigos exclusivos',
+      learnTitle: 'Estudos exclusivos',
       learnDesc: 'Conteúdo extra no Aprender, toda semana.',
       supportTitle: 'Apoie o Perceva',
       supportDesc: 'Você financia diretamente a evolução do app.',
@@ -304,7 +304,7 @@ const pt: Translations = {
       instrumentsLabel: 'Instrumentos',
       instrumentsFree: 'Só Avaliação',
       instrumentsPremium: 'Todos',
-      articlesLabel: 'Artigos',
+      articlesLabel: 'Estudos',
       articlesFree: 'Base',
       articlesPremium: '+ exclusivos',
     },
@@ -476,11 +476,11 @@ const pt: Translations = {
     m6: {
       step1: {
         title: 'Aprender',
-        body: 'Artigos curtos sobre hábitos, identidade e cada área da sua vida. Toque na aba Aprender.',
+        body: 'Estudos curtos — pra ler, ouvir ou ver — sobre hábitos, identidade e cada área da sua vida. Toque na aba Aprender.',
       },
       step2: {
         title: 'Sempre tem novidade',
-        body: 'Explicações curtas e visuais, com material novo toda semana. Leia no seu ritmo.',
+        body: 'Explicações curtas e visuais, com material novo toda semana. No seu ritmo.',
       },
     },
     m0: {
@@ -525,7 +525,7 @@ const pt: Translations = {
         M3: { name: 'Missões', desc: 'Jornadas maiores com prazo.' },
         M4: { name: 'Recompensas', desc: 'Resgatar e bancar recompensas.' },
         M5: { name: 'Eu', desc: 'Os três retratos da sua identidade.' },
-        M6: { name: 'Aprender', desc: 'Artigos pra entender o porquê.' },
+        M6: { name: 'Aprender', desc: 'Estudos pra entender o porquê.' },
       },
     },
     errors: {
@@ -535,10 +535,11 @@ const pt: Translations = {
 
   learning: {
     eyebrow: 'Biblioteca · Sua via',
-    title: 'Cantinho de leitura',
-    subtitle: 'Curtos, visuais e ligados ao que você está cultivando.',
-    empty: 'Nenhum material por aqui ainda.',
-    read: 'Lido',
+    title: 'Recanto',
+    subtitle: 'Pra ler, ouvir ou ver — sempre curto, sempre ligado ao que você cultiva.',
+    empty: 'Nada por aqui com esse filtro.',
+    read: { one: 'concluído', other: 'concluídos' },
+    min: '{{count}} min',
     readMin: { one: '{{count}} min de leitura', other: '{{count}} min de leitura' },
     continueReading: 'Continue lendo',
     continueProgress: '{{percent}}% lido',
@@ -565,8 +566,8 @@ const pt: Translations = {
     },
     readFilter: {
       all: 'Todos',
-      unread: 'Não lidos',
-      read: 'Lidos',
+      unread: 'Pendentes',
+      read: 'Concluídos',
     },
     section: {
       new: 'Novidades do mês',
@@ -575,7 +576,6 @@ const pt: Translations = {
     },
     filteringBy: 'Filtrando: {{what}}',
     stats: {
-      summary: '{{read}} de {{total}} lidos',
       byDim: 'Por dimensão',
       byType: 'Por tipo',
       bySub: 'Por sub',
@@ -583,13 +583,12 @@ const pt: Translations = {
     detail: {
       source: 'Fonte',
       takeaways: 'O que levar daqui',
-      signs: 'Está bem quando',
       tracking: 'Como o app acompanha',
-      markRead: 'Marcar como lido',
-      markedRead: 'Lido',
-      alreadyRead: 'Você já leu esse material. XP já foi creditado.',
-      rewardPreview: '+{{xp}} de XP e +{{coins}} moedas por ler.',
-      markFail: 'Não foi possível marcar como lido',
+      markRead: 'Concluir',
+      markedRead: 'Concluído',
+      alreadyRead: 'Você já concluiu este material. O XP já foi creditado.',
+      rewardPreview: '+{{xp}} de XP e +{{coins}} moedas por concluir.',
+      markFail: 'Não foi possível concluir',
       notFound: 'Material não encontrado.',
       feedbackPrompt: 'Esse material foi útil?',
       feedbackUp: 'Foi bom',

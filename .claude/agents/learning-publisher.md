@@ -86,8 +86,6 @@ Expected return: a full material payload in this shape:
   "body_en": "<markdown with directives>",
   "takeaways_pt": ["...", "...", "..."],
   "takeaways_en": ["...", "...", "..."],
-  "signs_pt": ["...", "..."],
-  "signs_en": ["...", "..."],
   "tracking_pt": "...",
   "tracking_en": "...",
   "reading_minutes": 6,

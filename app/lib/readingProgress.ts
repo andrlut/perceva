@@ -11,13 +11,17 @@ import { create } from 'zustand';
  * is acceptable behaviour: re-opening any in-progress article will
  * populate the store again on the next scroll.
  *
- * Persistence: a single `rpgtasks.reading.v1` key in AsyncStorage,
+ * Persistence: a single `rpgtasks.reading.v2` key in AsyncStorage,
  * holding the full Record<slug, ReadingEntry>. Reads are O(1) and writes
  * are debounced upstream in material/[slug].tsx (every 500ms while the
  * user is actively scrolling — see useReadingProgressTracker).
+ *
+ * v2: bumped when the detail layout was reflowed (takeaways moved below
+ * the body, signs removed). Old high-watermark percentages were measured
+ * over a different page height, so we reset rather than carry them over.
  */
 
-const KEY = 'rpgtasks.reading.v1';
+const KEY = 'rpgtasks.reading.v2';
 /** Anything below this stays "not started" — pure interaction noise. */
 const MIN_PERSIST_PERCENT = 5;
 /**

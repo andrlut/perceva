@@ -107,7 +107,6 @@ in the hook prose → **WARN** (rule: `stat_redundancy`). Pick one.
 ## H. Structured fields
 - `takeaways_pt` / `takeaways_en` arrays of 3 (max 5). Each answer-first
   (i.e. could be read alone and still useful).
-- `signs_pt` / `signs_en` arrays of 3. Behavioral, not abstract.
 - `tracking_pt` / `tracking_en` non-empty single paragraph that mentions
   the app explicitly (sub name, task type, or skill).
 - `source_url` resolves to primary source (DOI/paper URL, not journal

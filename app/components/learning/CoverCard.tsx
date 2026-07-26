@@ -151,7 +151,7 @@ export function CoverCard({ card, read, onPress, isPremiumContent = false }: Pro
         )}
         <Text style={styles.metaText}>·</Text>
         <Text style={styles.metaText}>
-          {t('learning.readMin', { count: card.reading_minutes })}
+          {t('learning.min', { count: card.reading_minutes })}
         </Text>
         {hasAudio && (
           <Ionicons

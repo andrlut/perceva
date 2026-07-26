@@ -230,9 +230,8 @@ Closing paragraph
 - `title_pt`, `title_en` — 4-8 words, punchy
 - `summary_pt`, `summary_en` — 1 sentence, italic-card-worthy
 - `takeaways_pt`, `takeaways_en` — 3 bullets, answer-first, can stand
-  alone. These render as a card at top BEFORE the body — they're the
-  TL;DR for skimmers.
-- `signs_pt`, `signs_en` — 3 bullets, behavioral signals at the bottom
+  alone. These render as a card AFTER the body — the recap the reader
+  walks away with.
 - `tracking_pt`, `tracking_en` — 1 paragraph: how this material
   connects to the user's app actions
 - `source_url`, `source_label_pt`, `source_label_en` — primary source
@@ -258,8 +257,6 @@ Return a JSON object exactly like this:
   "body_en": "<markdown>",
   "takeaways_pt": ["...", "...", "..."],
   "takeaways_en": ["...", "...", "..."],
-  "signs_pt": ["...", "...", "..."],
-  "signs_en": ["...", "...", "..."],
   "tracking_pt": "...", "tracking_en": "...",
   "source_url": "https://...",
   "source_label_pt": "Author et al., Year · Journal · n=...",
