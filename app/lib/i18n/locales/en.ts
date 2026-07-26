@@ -162,6 +162,8 @@ const en = {
       failed: 'Google sign-in failed',
       failedBody: "Couldn't sign in with Google. Try again.",
       playServices: 'Google Play Services is unavailable or out of date on this device.',
+      developerError:
+        "This build's signature isn't registered for Google Sign-In (SHA-1 mismatch in the Google Cloud Android client). The app itself is fine — it's a console configuration gap.",
     },
     divider: 'or',
     signup: {

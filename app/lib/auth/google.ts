@@ -55,8 +55,13 @@ export type GoogleSignInResult =
   | { type: 'in_progress' }
   /** Device has no (or outdated) Google Play Services. */
   | { type: 'play_services_unavailable' }
-  /** Null idToken (wrong/missing web client ID) or unknown native error. */
-  | { type: 'failed' }
+  /** DEVELOPER_ERROR: this build's signing cert + package aren't registered
+   *  as an Android OAuth client in the Google Cloud project (wrong SHA-1). */
+  | { type: 'developer_error' }
+  /** Null idToken (wrong/missing web client ID) or unknown native error.
+   *  `detail` carries the raw code/message for the alert — turning the
+   *  generic "try again" into something diagnosable from a screenshot. */
+  | { type: 'failed'; detail?: string }
   /** GoTrue rejected the token — localize via localizeAuthError. */
   | { type: 'supabase_error'; error: AuthError };
 
@@ -77,7 +82,7 @@ export async function signInWithGoogle(): Promise<GoogleSignInResult> {
     const idToken = response.data.idToken;
     if (!idToken) {
       // Classic symptom of a missing/wrong WEB client ID in configure().
-      return { type: 'failed' };
+      return { type: 'failed', detail: 'null idToken (web client ID?)' };
     }
 
     const { error } = await supabase.auth.signInWithIdToken({
@@ -97,8 +102,17 @@ export async function signInWithGoogle(): Promise<GoogleSignInResult> {
         // legacy code mapped in case a platform edge still throws it.
         case statusCodes.SIGN_IN_CANCELLED:
           return { type: 'cancelled' };
+        // Signing cert + package of THIS build not registered in the GCP
+        // project — the classic Play-App-Signing SHA-1 gap that only
+        // reproduces on the store distribution.
+        case 'DEVELOPER_ERROR':
+          return { type: 'developer_error' };
       }
+      return { type: 'failed', detail: String(err.code) };
     }
-    return { type: 'failed' };
+    return {
+      type: 'failed',
+      detail: err instanceof Error ? err.message : String(err),
+    };
   }
 }
