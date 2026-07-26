@@ -209,20 +209,6 @@ function startOfThisWeek(weekStart: WeekStart): Date {
   return d;
 }
 
-/** Last day of the user's configured week: Saturday if week starts Sunday,
- *  Sunday if week starts Monday. */
-function isLastDayOfWeek(date: Date, weekStart: WeekStart): boolean {
-  const dow = date.getDay();
-  return weekStart === 'sunday' ? dow === 6 : dow === 0;
-}
-
-/** True when `date` is the final calendar day of its month. */
-function isLastDayOfMonth(date: Date): boolean {
-  const next = new Date(date);
-  next.setDate(date.getDate() + 1);
-  return next.getMonth() !== date.getMonth();
-}
-
 /** True when a monthly task's scheduled day-of-month falls within the
  *  current calendar week (under the user's configured week start). Used
  *  to escalate monthly tasks scheduled on a day in this week into the
@@ -242,41 +228,6 @@ function scheduledMonthlyInThisWeek(
   for (let i = 0; i < 7; i++) {
     const d = new Date(startWeek);
     d.setDate(startWeek.getDate() + i);
-    const lastDayThatMonth = new Date(
-      d.getFullYear(),
-      d.getMonth() + 1,
-      0,
-    ).getDate();
-    const effectiveDay = Math.min(day, lastDayThatMonth);
-    if (d.getDate() === effectiveDay) return true;
-  }
-  return false;
-}
-
-/** True when a monthly task's effective scheduled day (with the day>28
- *  short-month fallback) fell on a day of the CURRENT week strictly
- *  before today, within the same calendar month as today. Drives the
- *  earlier catch-up: a missed scheduled monthly resurfaces in Hoje for
- *  the rest of its week instead of staying invisible until month-end.
- *  The same-month check keeps a week that straddles a month boundary
- *  from resurrecting LAST month's occurrence (whose window is closed).
- *  Local-date component math only — no UTC conversions.
- *  Exported so Home's ring math (wasDueToday) can mirror the promotion. */
-export function scheduledMonthlyPassedThisWeek(
-  day: number,
-  today: Date,
-  weekStart: WeekStart,
-): boolean {
-  const dow = today.getDay();
-  const offset = weekStart === 'sunday' ? dow : (dow + 6) % 7;
-  const startWeek = new Date(today);
-  startWeek.setHours(0, 0, 0, 0);
-  startWeek.setDate(today.getDate() - offset);
-  // Only the days of this week BEFORE today (i < offset).
-  for (let i = 0; i < offset; i++) {
-    const d = new Date(startWeek);
-    d.setDate(startWeek.getDate() + i);
-    if (d.getMonth() !== today.getMonth()) continue;
     const lastDayThatMonth = new Date(
       d.getFullYear(),
       d.getMonth() + 1,
@@ -562,8 +513,10 @@ async function fetchHomeBuckets(weekStartPref: WeekStart): Promise<HomeBuckets> 
     }
 
     // weekly / monthly — "Hoje" model (schedule-driven today list):
-    //   scheduled   → appears ONLY on scheduled days (isDueOn), plus the
-    //                 last-day-of-period catch-up when reps are still owed;
+    //   scheduled   → appears ONLY on scheduled days (isDueOn) — the
+    //                 schedule is a contract; a missed day never leaks the
+    //                 task into other days (a Mon–Fri "Trabalho" must not
+    //                 resurface on Saturday);
     //   unscheduled → appears EVERY day until the effective period target
     //                 (target - skips) is met;
     //   acted today (completed or skipped) → drops out until tomorrow.
@@ -585,19 +538,11 @@ async function fetchHomeBuckets(weekStartPref: WeekStart): Promise<HomeBuckets> 
       const effectiveTarget = Math.max(0, t.target_count - weekSkips);
       const stillNeeded = weekCount < effectiveTarget;
 
-      // Last-day catch-up: a scheduled task whose day already passed but
-      // still owes completions surfaces on the final day of the week.
-      const lastDayPromote =
-        stillNeeded &&
-        isLastDayOfWeek(today, weekStartPref) &&
-        todayCount === 0 &&
-        !skippedTodayHere;
-
       // Unscheduled weekly shows up every day until the target is met.
       const unscheduledPromote =
         !hasSchedule && stillNeeded && todayCount === 0 && !skippedTodayHere;
 
-      if (scheduledPromote || lastDayPromote || unscheduledPromote) {
+      if (scheduledPromote || unscheduledPromote) {
         buckets.today.push(t);
       } else if (hasSchedule && !scheduledToday && stillNeeded) {
         buckets.thisWeek.push(t);
@@ -611,12 +556,6 @@ async function fetchHomeBuckets(weekStartPref: WeekStart): Promise<HomeBuckets> 
       const effectiveTarget = Math.max(0, t.target_count - monthSkips);
       const stillNeeded = monthCount < effectiveTarget;
 
-      // Last-day catch-up mirrors the weekly rule at month granularity.
-      const lastDayPromote =
-        stillNeeded &&
-        isLastDayOfMonth(today) &&
-        todayCount === 0 &&
-        !skippedTodayHere;
       // Unscheduled monthly shows up every day until the target is met.
       const unscheduledPromote =
         !hasSchedule && stillNeeded && todayCount === 0 && !skippedTodayHere;
@@ -625,25 +564,8 @@ async function fetchHomeBuckets(weekStartPref: WeekStart): Promise<HomeBuckets> 
         t.recurrence.type === 'monthly' &&
         typeof t.recurrence.day === 'number' &&
         scheduledMonthlyInThisWeek(t.recurrence.day, today, weekStartPref);
-      // Week catch-up: a scheduled monthly whose day already passed
-      // within the CURRENT week and is still needed gets promoted into
-      // Hoje right away — otherwise a missed day-5 monthly would vanish
-      // from Home until the last day of the month.
-      const missedThisWeekPromote =
-        stillNeeded &&
-        todayCount === 0 &&
-        !skippedTodayHere &&
-        !scheduledToday &&
-        t.recurrence.type === 'monthly' &&
-        typeof t.recurrence.day === 'number' &&
-        scheduledMonthlyPassedThisWeek(t.recurrence.day, today, weekStartPref);
 
-      if (
-        scheduledPromote ||
-        lastDayPromote ||
-        unscheduledPromote ||
-        missedThisWeekPromote
-      ) {
+      if (scheduledPromote || unscheduledPromote) {
         buckets.today.push(t);
       } else if (scheduledDayInWeek && !scheduledToday) {
         buckets.thisWeek.push(t);
