@@ -8,6 +8,8 @@ source_url: https://www.penguinrandomhouse.com/books/176227/antifragile-by-nassi
 source_label: Antifragile — Nassim Taleb (Random House, 2012)
 status: publicado
 published_migration: 20260722000006_learning_material_summary_antifragile.sql
+media_migrations:
+  - 20260725000005_learning_media_video_antifragile.sql # video.en.mp4 (Video Overview, 87s)
 ---
 
 # Antifrágil — o que melhora com o caos
