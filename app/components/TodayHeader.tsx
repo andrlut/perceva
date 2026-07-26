@@ -64,7 +64,7 @@ export function TodayHeader({
             onPress={onQuestsPress}
             badge={hasActiveQuests}
           />
-          <IconBtn icon="settings-outline" onPress={onManagePress} />
+          <IconBtn icon="options-outline" onPress={onManagePress} />
         </View>
       </View>
 

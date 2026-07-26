@@ -22,7 +22,9 @@ export function ManageTasksButton({ onPress }: Props) {
       accessibilityRole="button"
       accessibilityLabel={t('home.manageCta')}
     >
-      <Ionicons name="settings-outline" size={16} color={tokens.text.mid} />
+      {/* Sliders, not gear — gear is reserved for the Settings tab so
+          "manage" surfaces don't read as app settings. */}
+      <Ionicons name="options-outline" size={16} color={tokens.text.mid} />
       <Text style={styles.label}>{t('home.manageCta')}</Text>
     </Pressable>
   );

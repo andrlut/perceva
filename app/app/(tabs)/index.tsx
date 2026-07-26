@@ -708,7 +708,7 @@ export default function HomeScreen() {
                   accessibilityRole="button"
                 >
                   <Ionicons
-                    name="settings-outline"
+                    name="options-outline"
                     size={16}
                     color={tokens.text.mid}
                   />

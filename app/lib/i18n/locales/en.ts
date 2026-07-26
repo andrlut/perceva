@@ -289,7 +289,7 @@ const en = {
     benefit: {
       instrumentsTitle: 'Full instruments',
       instrumentsDesc:
-        'Big Five, Schwartz Values, ECR-R and more: the deep portrait of your identity.',
+        'Big Five, Schwartz Values, ECR-R and Strengths: the deep portrait of your identity.',
       unlimitedTitle: 'No limits',
       unlimitedDesc: 'Unlimited practices, rewards, skills and quests.',
       learnTitle: 'Exclusive studies',
@@ -311,7 +311,7 @@ const en = {
       questsLabel: 'Quests',
       questsFree: '3 active',
       instrumentsLabel: 'Instruments',
-      instrumentsFree: 'Assessment only',
+      instrumentsFree: 'Assessment, DISC and Types',
       instrumentsPremium: 'All',
       articlesLabel: 'Studies',
       articlesFree: 'Base',

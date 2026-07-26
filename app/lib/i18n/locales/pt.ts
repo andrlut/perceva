@@ -279,7 +279,7 @@ const pt: Translations = {
     benefit: {
       instrumentsTitle: 'Instrumentos completos',
       instrumentsDesc:
-        'Big Five, Valores de Schwartz, ECR-R e mais: o retrato profundo da sua identidade.',
+        'Big Five, Valores de Schwartz, ECR-R e Forças: o retrato profundo da sua identidade.',
       unlimitedTitle: 'Sem limites',
       unlimitedDesc:
         'Práticas, recompensas, habilidades e missões ilimitadas.',
@@ -302,7 +302,7 @@ const pt: Translations = {
       questsLabel: 'Missões',
       questsFree: '3 ativas',
       instrumentsLabel: 'Instrumentos',
-      instrumentsFree: 'Só Avaliação',
+      instrumentsFree: 'Avaliação, DISC e Tipos',
       instrumentsPremium: 'Todos',
       articlesLabel: 'Estudos',
       articlesFree: 'Base',
