@@ -79,6 +79,8 @@ jobs:
         env:
           EXPO_PUBLIC_SUPABASE_URL: https://uneqnpyzevosznwkmvvo.supabase.co
           EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_sWLt4U0F5J4S-Se-6V7SXw_1LyQqysV
+          # Web client ID (público) — sem ele o eas update esconde o botão Google
+          EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: 961793707652-c617r29esfgrcqv4ls923unourufljrd.apps.googleusercontent.com
         run: eas update --branch preview --auto --non-interactive
 
       - name: Summary
