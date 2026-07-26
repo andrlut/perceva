@@ -700,6 +700,7 @@ const en = {
   },
 
   autoconhecimento: {
+    kicker: 'Your inner path',
     lead: 'Deeper inventories measuring personality, values, attachment style, behavior, character strengths and type. Do not affect the Assessment hex.',
   },
 

@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import {
@@ -11,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { PercevaGlyph } from '@/components/PercevaGlyph';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { pickSubScoresDecimal, useCharacter } from '@/lib/api/character';
 import {
@@ -353,22 +355,23 @@ export function BigFiveCard({ onOpen }: { onOpen: () => void }) {
 
   const hasScores = traitScores.size > 0;
   const sinceDays = daysSince(lastSession.data?.taken_at);
+  const isLocked = locked && !hasScores;
 
   return (
     <Pressable
-      onPress={locked && !hasScores ? () => openTeaser('big_five_120') : onOpen}
+      onPress={isLocked ? () => openTeaser('big_five_120') : onOpen}
       style={({ pressed }) => [
-        styles.card,
-        styles.cardActive,
+        ...cardShell(isLocked, hasScores),
         pressed && { opacity: 0.92 },
       ]}
       hitSlop={4}
     >
+      {isLocked && <LockedSeal id="bigfive" />}
       <View style={styles.cardHeader}>
         <View style={styles.cardHeaderLeft}>
           <Ionicons name="cube" size={18} color={tokens.brand.violet2} />
           <Text style={styles.cardTitle}>Big Five</Text>
-          {locked && !hasScores && <LockChip />}
+          {isLocked && <PremiumBadge />}
         </View>
         <Text style={styles.cardSub}>
           {isPt
@@ -379,6 +382,7 @@ export function BigFiveCard({ onOpen }: { onOpen: () => void }) {
 
       {hasScores ? (
         <>
+          {sinceDays === 0 && <FreshChip isPt={isPt} />}
           <View style={styles.bfTraitGrid}>
             {BIG_FIVE_TRAIT_ORDER.map((trait) => {
               const raw = traitScores.get(trait);
@@ -400,17 +404,13 @@ export function BigFiveCard({ onOpen }: { onOpen: () => void }) {
               color={tokens.brand.violet2}
             />
             <Text style={styles.refazerText}>
-              {sinceDays === null
+              {sinceDays === null || sinceDays === 0
                 ? isPt
                   ? 'Ver detalhes'
                   : 'See details'
-                : sinceDays === 0
-                  ? isPt
-                    ? 'Refeito hoje · ver detalhes'
-                    : 'Done today · see details'
-                  : isPt
-                    ? `Ver detalhes · ${sinceDays}d atrás`
-                    : `See details · ${sinceDays}d ago`}
+                : isPt
+                  ? `Ver detalhes · ${sinceDays}d atrás`
+                  : `See details · ${sinceDays}d ago`}
             </Text>
           </View>
         </>
@@ -448,7 +448,12 @@ function BigFiveTraitRow({
     <View style={bfRowStyles.row}>
       <Text style={bfRowStyles.label}>{content.label.toUpperCase()}</Text>
       <View style={bfRowStyles.bar}>
-        <View
+        {/* Violet→gold sweep — reads as "Perceva insight" rather than a
+            generic progress bar. */}
+        <LinearGradient
+          colors={['#9B82FF', '#FFE3A6']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
           style={[bfRowStyles.barFill, { width: `${normalized * 100}%` }]}
         />
         <View
@@ -481,24 +486,25 @@ export function SchwartzCard({ onOpen }: { onOpen: () => void }) {
 
   const hasScores = top3.length > 0;
   const sinceDays = daysSince(lastSession.data?.taken_at);
+  const isLocked = locked && !hasScores;
 
   return (
     <Pressable
-      onPress={locked && !hasScores ? () => openTeaser('schwartz_pvq') : onOpen}
+      onPress={isLocked ? () => openTeaser('schwartz_pvq') : onOpen}
       style={({ pressed }) => [
-        styles.card,
-        styles.cardActive,
+        ...cardShell(isLocked, hasScores),
         pressed && { opacity: 0.92 },
       ]}
       hitSlop={4}
     >
+      {isLocked && <LockedSeal id="schwartz" />}
       <View style={styles.cardHeader}>
         <View style={styles.cardHeaderLeft}>
           <Ionicons name="compass" size={18} color={tokens.brand.violet2} />
           <Text style={styles.cardTitle}>
             {isPt ? 'Valores' : 'Values'}
           </Text>
-          {locked && !hasScores && <LockChip />}
+          {isLocked && <PremiumBadge />}
         </View>
         <Text style={styles.cardSub}>
           {isPt
@@ -509,6 +515,7 @@ export function SchwartzCard({ onOpen }: { onOpen: () => void }) {
 
       {hasScores ? (
         <>
+          {sinceDays === 0 && <FreshChip isPt={isPt} />}
           <Text style={styles.cardLede}>
             {isPt ? 'Top 3 valores:' : 'Top 3 values:'}
           </Text>
@@ -517,7 +524,17 @@ export function SchwartzCard({ onOpen }: { onOpen: () => void }) {
               const content = getValueContent(row.value, swLocale);
               return (
                 <View key={row.value} style={swCardStyles.row}>
-                  <Text style={swCardStyles.rank}>{i + 1}</Text>
+                  {/* Gold podium badge — a bit of ceremony for the top-3
+                      ranks instead of a bare numeral. */}
+                  <View style={swCardStyles.rankBadge}>
+                    <LinearGradient
+                      colors={['#FFE890', '#C8881C']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 0, y: 1 }}
+                      style={StyleSheet.absoluteFill}
+                    />
+                    <Text style={swCardStyles.rankNum}>{i + 1}</Text>
+                  </View>
                   <Text style={swCardStyles.label}>{content.label}</Text>
                 </View>
               );
@@ -526,11 +543,9 @@ export function SchwartzCard({ onOpen }: { onOpen: () => void }) {
           <View style={styles.refazerBtn}>
             <Ionicons name="refresh" size={14} color={tokens.brand.violet2} />
             <Text style={styles.refazerText}>
-              {sinceDays === null
+              {sinceDays === null || sinceDays === 0
                 ? isPt ? 'Ver detalhes' : 'See details'
-                : sinceDays === 0
-                  ? isPt ? 'Refeito hoje · ver detalhes' : 'Done today · see details'
-                  : isPt ? `Ver detalhes · ${sinceDays}d atrás` : `See details · ${sinceDays}d ago`}
+                : isPt ? `Ver detalhes · ${sinceDays}d atrás` : `See details · ${sinceDays}d ago`}
             </Text>
           </View>
         </>
@@ -559,6 +574,19 @@ const swCardStyles = StyleSheet.create({
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 11,
     color: tokens.brand.violet2,
+  },
+  rankBadge: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  rankNum: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 11,
+    color: '#3D2A00',
   },
   label: {
     flex: 1,
@@ -594,24 +622,25 @@ export function EcrRCard({ onOpen }: { onOpen: () => void }) {
   const sinceDays = daysSince(lastSession.data?.taken_at);
   const style = hasScores ? styleFromScales(anxiety, avoidance) : null;
   const styleContent = style ? getStyleContent(style, ecrLocale) : null;
+  const isLocked = locked && !hasScores;
 
   return (
     <Pressable
-      onPress={locked && !hasScores ? () => openTeaser('ecr_r') : onOpen}
+      onPress={isLocked ? () => openTeaser('ecr_r') : onOpen}
       style={({ pressed }) => [
-        styles.card,
-        styles.cardActive,
+        ...cardShell(isLocked, hasScores),
         pressed && { opacity: 0.92 },
       ]}
       hitSlop={4}
     >
+      {isLocked && <LockedSeal id="ecr" />}
       <View style={styles.cardHeader}>
         <View style={styles.cardHeaderLeft}>
           <Ionicons name="link" size={18} color={tokens.brand.violet2} />
           <Text style={styles.cardTitle}>
             {isPt ? 'Apego' : 'Attachment'}
           </Text>
-          {locked && !hasScores && <LockChip />}
+          {isLocked && <PremiumBadge />}
         </View>
         <Text style={styles.cardSub}>
           {isPt
@@ -622,6 +651,7 @@ export function EcrRCard({ onOpen }: { onOpen: () => void }) {
 
       {hasScores && styleContent ? (
         <>
+          {sinceDays === 0 && <FreshChip isPt={isPt} />}
           <Text style={styles.cardLede}>
             {isPt ? 'Padrão:' : 'Pattern:'}
           </Text>
@@ -632,11 +662,9 @@ export function EcrRCard({ onOpen }: { onOpen: () => void }) {
           <View style={styles.refazerBtn}>
             <Ionicons name="refresh" size={14} color={tokens.brand.violet2} />
             <Text style={styles.refazerText}>
-              {sinceDays === null
+              {sinceDays === null || sinceDays === 0
                 ? isPt ? 'Ver detalhes' : 'See details'
-                : sinceDays === 0
-                  ? isPt ? 'Refeito hoje · ver detalhes' : 'Done today · see details'
-                  : isPt ? `Ver detalhes · ${sinceDays}d atrás` : `See details · ${sinceDays}d ago`}
+                : isPt ? `Ver detalhes · ${sinceDays}d atrás` : `See details · ${sinceDays}d ago`}
             </Text>
           </View>
         </>
@@ -699,22 +727,23 @@ export function DiscCard({ onOpen }: { onOpen: () => void }) {
 
   const hasScores = blend !== null;
   const sinceDays = daysSince(lastSession.data?.taken_at);
+  const isLocked = locked && !hasScores;
 
   return (
     <Pressable
-      onPress={locked && !hasScores ? () => openTeaser('disc') : onOpen}
+      onPress={isLocked ? () => openTeaser('disc') : onOpen}
       style={({ pressed }) => [
-        styles.card,
-        styles.cardActive,
+        ...cardShell(isLocked, hasScores),
         pressed && { opacity: 0.92 },
       ]}
       hitSlop={4}
     >
+      {isLocked && <LockedSeal id="disc" />}
       <View style={styles.cardHeader}>
         <View style={styles.cardHeaderLeft}>
           <Ionicons name="shapes" size={18} color={tokens.brand.violet2} />
           <Text style={styles.cardTitle}>DISC</Text>
-          {locked && !hasScores && <LockChip />}
+          {isLocked && <PremiumBadge />}
         </View>
         <Text style={styles.cardSub}>
           {isPt
@@ -725,6 +754,7 @@ export function DiscCard({ onOpen }: { onOpen: () => void }) {
 
       {hasScores && blend ? (
         <>
+          {sinceDays === 0 && <FreshChip isPt={isPt} />}
           <Text style={styles.cardLede}>
             {isPt ? 'Perfil:' : 'Profile:'}
           </Text>
@@ -735,11 +765,9 @@ export function DiscCard({ onOpen }: { onOpen: () => void }) {
           <View style={styles.refazerBtn}>
             <Ionicons name="refresh" size={14} color={tokens.brand.violet2} />
             <Text style={styles.refazerText}>
-              {sinceDays === null
+              {sinceDays === null || sinceDays === 0
                 ? isPt ? 'Ver detalhes' : 'See details'
-                : sinceDays === 0
-                  ? isPt ? 'Refeito hoje · ver detalhes' : 'Done today · see details'
-                  : isPt ? `Ver detalhes · ${sinceDays}d atrás` : `See details · ${sinceDays}d ago`}
+                : isPt ? `Ver detalhes · ${sinceDays}d atrás` : `See details · ${sinceDays}d ago`}
             </Text>
           </View>
         </>
@@ -779,24 +807,25 @@ export function StrengthsCard({ onOpen }: { onOpen: () => void }) {
 
   const hasScores = top3.length > 0;
   const sinceDays = daysSince(lastSession.data?.taken_at);
+  const isLocked = locked && !hasScores;
 
   return (
     <Pressable
-      onPress={locked && !hasScores ? () => openTeaser('strengths') : onOpen}
+      onPress={isLocked ? () => openTeaser('strengths') : onOpen}
       style={({ pressed }) => [
-        styles.card,
-        styles.cardActive,
+        ...cardShell(isLocked, hasScores),
         pressed && { opacity: 0.92 },
       ]}
       hitSlop={4}
     >
+      {isLocked && <LockedSeal id="strengths" />}
       <View style={styles.cardHeader}>
         <View style={styles.cardHeaderLeft}>
           <Ionicons name="sparkles" size={18} color={tokens.brand.violet2} />
           <Text style={styles.cardTitle}>
             {isPt ? 'Forças' : 'Strengths'}
           </Text>
-          {locked && !hasScores && <LockChip />}
+          {isLocked && <PremiumBadge />}
         </View>
         <Text style={styles.cardSub}>
           {isPt
@@ -807,6 +836,7 @@ export function StrengthsCard({ onOpen }: { onOpen: () => void }) {
 
       {hasScores ? (
         <>
+          {sinceDays === 0 && <FreshChip isPt={isPt} />}
           <Text style={styles.cardLede}>
             {isPt ? 'Forças-assinatura:' : 'Signature strengths:'}
           </Text>
@@ -824,11 +854,9 @@ export function StrengthsCard({ onOpen }: { onOpen: () => void }) {
           <View style={styles.refazerBtn}>
             <Ionicons name="refresh" size={14} color={tokens.brand.violet2} />
             <Text style={styles.refazerText}>
-              {sinceDays === null
+              {sinceDays === null || sinceDays === 0
                 ? isPt ? 'Ver detalhes' : 'See details'
-                : sinceDays === 0
-                  ? isPt ? 'Refeito hoje · ver detalhes' : 'Done today · see details'
-                  : isPt ? `Ver detalhes · ${sinceDays}d atrás` : `See details · ${sinceDays}d ago`}
+                : isPt ? `Ver detalhes · ${sinceDays}d atrás` : `See details · ${sinceDays}d ago`}
             </Text>
           </View>
         </>
@@ -869,18 +897,23 @@ export function TypesCard({ onOpen }: { onOpen: () => void }) {
 
   const hasScores = result !== null;
   const sinceDays = daysSince(lastSession.data?.taken_at);
+  const isLocked = locked && !hasScores;
 
   return (
     <Pressable
-      onPress={locked && !hasScores ? () => openTeaser('tipos') : onOpen}
-      style={({ pressed }) => [styles.card, styles.cardActive, pressed && { opacity: 0.92 }]}
+      onPress={isLocked ? () => openTeaser('tipos') : onOpen}
+      style={({ pressed }) => [
+        ...cardShell(isLocked, hasScores),
+        pressed && { opacity: 0.92 },
+      ]}
       hitSlop={4}
     >
+      {isLocked && <LockedSeal id="tipos" />}
       <View style={styles.cardHeader}>
         <View style={styles.cardHeaderLeft}>
           <Ionicons name="compass-outline" size={18} color={tokens.brand.violet2} />
           <Text style={styles.cardTitle}>{isPt ? 'Tipos' : 'Types'}</Text>
-          {locked && !hasScores && <LockChip />}
+          {isLocked && <PremiumBadge />}
         </View>
         <Text style={styles.cardSub}>
           {isPt
@@ -891,6 +924,7 @@ export function TypesCard({ onOpen }: { onOpen: () => void }) {
 
       {hasScores && result ? (
         <>
+          {sinceDays === 0 && <FreshChip isPt={isPt} />}
           <Text style={styles.cardLede}>{isPt ? 'Tipo:' : 'Type:'}</Text>
           <Text style={ecrCardStyles.styleName}>
             {result.code} · {result.content.name}
@@ -899,11 +933,9 @@ export function TypesCard({ onOpen }: { onOpen: () => void }) {
           <View style={styles.refazerBtn}>
             <Ionicons name="refresh" size={14} color={tokens.brand.violet2} />
             <Text style={styles.refazerText}>
-              {sinceDays === null
+              {sinceDays === null || sinceDays === 0
                 ? isPt ? 'Ver detalhes' : 'See details'
-                : sinceDays === 0
-                  ? isPt ? 'Refeito hoje · ver detalhes' : 'Done today · see details'
-                  : isPt ? `Ver detalhes · ${sinceDays}d atrás` : `See details · ${sinceDays}d ago`}
+                : isPt ? `Ver detalhes · ${sinceDays}d atrás` : `See details · ${sinceDays}d ago`}
             </Text>
           </View>
         </>
@@ -922,18 +954,75 @@ export function TypesCard({ onOpen }: { onOpen: () => void }) {
 }
 
 /**
- * Small "Premium" pill shown in a locked instrument card's header, and the
- * locked CTA that replaces the "Fazer X" button. Both are rendered only when
- * the instrument is gated (premium instrument + free user + no prior result);
+ * Instrument-card shell style by state. Gold is reserved for the Premium
+ * signal (locked) and the completed "tracked" treatment (mirrors
+ * TrackedRewardCard's gold rim); available-but-not-taken keeps the violet
+ * active shell so free actions never read as paywalled.
+ */
+function cardShell(isLocked: boolean, hasScores: boolean) {
+  if (hasScores) return [styles.card, styles.cardDone];
+  if (isLocked) return [styles.card, styles.cardLocked];
+  return [styles.card, styles.cardActive];
+}
+
+/**
+ * Faint engraved Topo-Iris seal bleeding off a locked card's top-right
+ * corner — same device as the affordable Reward cards / tracked hero.
+ * Invites curiosity about what's behind the paywall.
+ */
+function LockedSeal({ id }: { id: string }) {
+  return (
+    <View style={styles.sealWrap} pointerEvents="none">
+      <PercevaGlyph size={130} bare palette="gilded" idSuffix={`seal-${id}`} />
+    </View>
+  );
+}
+
+/**
+ * Gold "Premium" pill in a locked instrument card's header — same visual
+ * DNA as the "PRONTO" badge on Reward cards. Rendered only when the
+ * instrument is gated (premium instrument + free user + no prior result);
  * a locked instrument the user already completed behaves normally so the
  * historical result stays viewable.
  */
-function LockChip() {
+function PremiumBadge() {
   const { t } = useT();
   return (
-    <View style={styles.lockChip}>
-      <Ionicons name="lock-closed" size={10} color={tokens.brand.violet2} />
-      <Text style={styles.lockChipText}>{t('premium.teaser.lockedChip')}</Text>
+    <View style={styles.premiumBadge}>
+      <LinearGradient
+        colors={['#FFE890', '#FFC83D', '#C8881C']}
+        locations={[0, 0.65, 1]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+      <Ionicons name="lock-closed" size={10} color="#3D2A00" />
+      <Text style={styles.premiumBadgeText}>
+        {t('premium.teaser.lockedChip')}
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * Solid gold freshness chip shown above a completed card's result block
+ * on the day it was (re)taken — matches the "NOVO"/"PRONTO" badge
+ * language used elsewhere instead of folding into the ghost button copy.
+ */
+function FreshChip({ isPt }: { isPt: boolean }) {
+  return (
+    <View style={styles.freshChip}>
+      <LinearGradient
+        colors={['#FFE890', '#FFC83D', '#C8881C']}
+        locations={[0, 0.65, 1]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+      <Ionicons name="refresh" size={10} color="#3D2A00" />
+      <Text style={styles.freshChipText}>
+        {isPt ? 'Refeito hoje' : 'Done today'}
+      </Text>
     </View>
   );
 }
@@ -942,8 +1031,10 @@ function LockedCta() {
   const { t } = useT();
   return (
     <View style={[styles.cta, styles.ctaLocked]}>
-      <Ionicons name="lock-closed" size={14} color={tokens.brand.violet2} />
-      <Text style={styles.ctaText}>{t('premium.teaser.cta')}</Text>
+      <Ionicons name="lock-closed" size={14} color="#FFE3A6" />
+      <Text style={[styles.ctaText, styles.ctaLockedText]}>
+        {t('premium.teaser.cta')}
+      </Text>
     </View>
   );
 }
@@ -993,10 +1084,36 @@ const styles = StyleSheet.create({
     backgroundColor: tokens.bg.surface,
     padding: tokens.space[4],
     gap: tokens.space[3],
+    // Clips the LockedSeal glyph bleeding off locked cards' corners.
+    overflow: 'hidden',
   },
   cardActive: {
     borderColor: 'rgba(155, 130, 255, 0.30)',
     backgroundColor: 'rgba(155, 130, 255, 0.04)',
+  },
+  // Locked (Premium) — faint gold outline signals "Premium", not
+  // "in progress". Gold stays reserved for Premium + completed states.
+  cardLocked: {
+    borderColor: 'rgba(255, 200, 61, 0.16)',
+  },
+  // Completed — gold rim + soft drop shadow, mirroring the
+  // TrackedRewardCard "tracked" signal. (The HTML mock's inset ring has
+  // no RN equivalent; the stronger border carries it.)
+  cardDone: {
+    borderColor: 'rgba(255, 200, 61, 0.38)',
+    backgroundColor: 'rgba(155, 130, 255, 0.04)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.28,
+    shadowRadius: 26,
+  },
+  sealWrap: {
+    position: 'absolute',
+    top: -18,
+    right: -18,
+    width: 130,
+    height: 130,
+    opacity: 0.15,
   },
   cardPending: {
     borderColor: tokens.border.base,
@@ -1073,27 +1190,49 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
     color: tokens.brand.violet2,
   },
+  // Gold-outline locked CTA — visually distinct from the violet free
+  // "Fazer X" sibling so locked vs. take-the-quiz reads at a glance.
   ctaLocked: {
-    backgroundColor: 'rgba(155, 130, 255, 0.06)',
-    borderColor: 'rgba(155, 130, 255, 0.22)',
+    backgroundColor: 'rgba(255, 200, 61, 0.10)',
+    borderColor: 'rgba(255, 200, 61, 0.30)',
   },
-  lockChip: {
+  ctaLockedText: {
+    color: '#FFE3A6',
+  },
+  premiumBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: tokens.radius.pill,
-    backgroundColor: 'rgba(155, 130, 255, 0.10)',
-    borderWidth: 1,
-    borderColor: 'rgba(155, 130, 255, 0.28)',
+    overflow: 'hidden',
+    // Pushes the badge to the right edge of the header row.
+    marginLeft: 'auto',
   },
-  lockChipText: {
+  premiumBadgeText: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 9,
+    fontSize: 10,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
-    color: tokens.brand.violet2,
+    color: '#3D2A00',
+  },
+  freshChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: tokens.radius.pill,
+    overflow: 'hidden',
+  },
+  freshChipText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 10,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    color: '#3D2A00',
   },
   pendingNote: {
     ...tokens.type.body,
@@ -1121,12 +1260,11 @@ const bfRowStyles = StyleSheet.create({
     flex: 1,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(255,255,255,0.07)',
     position: 'relative',
   },
   barFill: {
     height: '100%',
-    backgroundColor: tokens.brand.violet2,
     borderRadius: 2.5,
   },
   marker: {
