@@ -191,8 +191,15 @@ export default function LoginScreen() {
         case 'supabase_error':
           Alert.alert(t('auth.google.failed'), localizeAuthError(result.error, t));
           return;
+        case 'developer_error':
+          Alert.alert(t('auth.google.failed'), t('auth.google.developerError'));
+          return;
         default:
-          Alert.alert(t('auth.google.failed'), t('auth.google.failedBody'));
+          Alert.alert(
+            t('auth.google.failed'),
+            t('auth.google.failedBody') +
+              (result.detail ? `\n\n(${result.detail})` : ''),
+          );
       }
     } finally {
       setIsGoogleSubmitting(false);

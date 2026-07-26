@@ -152,6 +152,8 @@ const pt: Translations = {
       failed: 'Falha ao entrar com Google',
       failedBody: 'Não foi possível entrar com o Google. Tente de novo.',
       playServices: 'Google Play Services indisponível ou desatualizado neste aparelho.',
+      developerError:
+        'A assinatura deste build não está registrada pro login Google (SHA-1 errado no client Android do Google Cloud). O app está ok — é ajuste de console.',
     },
     divider: 'ou',
     signup: {
