@@ -695,6 +695,7 @@ const pt: Translations = {
   },
 
   autoconhecimento: {
+    kicker: 'Sua via interior',
     lead: 'Inventários mais profundos que medem personalidade, valores, estilo de apego, comportamento, forças de caráter e tipo. Não afetam o hex de Avaliação.',
   },
 

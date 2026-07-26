@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -9,6 +10,7 @@ import {
   StrengthsCard,
   TypesCard,
 } from '@/app/profile-mirror';
+import { PercevaGlyph } from '@/components/PercevaGlyph';
 import { useT } from '@/lib/i18n';
 import { tokens } from '@/theme';
 
@@ -30,6 +32,19 @@ export function AutoconhecimentoView() {
   const { t } = useT();
   return (
     <View style={styles.wrap}>
+      {/* Very low-opacity Topo-Iris watermark behind the card list —
+          background treatment only, must never compete with content. */}
+      <View style={styles.watermark} pointerEvents="none">
+        <PercevaGlyph size={280} bare palette="gilded" idSuffix="ac-mark" />
+      </View>
+
+      <View style={styles.hairline} />
+
+      <View style={styles.kickerRow}>
+        <Ionicons name="compass-outline" size={12} color="#FFE3A6" />
+        <Text style={styles.kicker}>{t('autoconhecimento.kicker')}</Text>
+      </View>
+
       <Text style={styles.lead}>{t('autoconhecimento.lead')}</Text>
       <View style={styles.list}>
         <BigFiveCard onOpen={() => router.push('/big-five')} />
@@ -46,6 +61,30 @@ export function AutoconhecimentoView() {
 const styles = StyleSheet.create({
   wrap: {
     gap: tokens.space[3],
+  },
+  watermark: {
+    position: 'absolute',
+    top: 60,
+    alignSelf: 'center',
+    width: 280,
+    height: 280,
+    opacity: 0.06,
+  },
+  hairline: {
+    height: 1,
+    backgroundColor: 'rgba(255, 200, 61, 0.18)',
+  },
+  kickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  kicker: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 11,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: '#FFE3A6',
   },
   lead: {
     fontFamily: 'Manrope_500Medium',
