@@ -30,8 +30,8 @@ import { tokens } from '@/theme';
 
 /**
  * Full-screen Bank route — replaces the old in-screen tab that lived
- * alongside Shop. Reached from the BankFab on the Shop screen and from
- * the BuyCelebrationModal's "Ir pro banco" CTA.
+ * alongside Shop. Reached from the wallet button in the Shop screen's
+ * FAB stack and from the BuyCelebrationModal's "Ir pro banco" CTA.
  *
  * Owns the long-press → action sheet → use/sell flow. Same components
  * the old in-screen view used, just hoisted to their own route so

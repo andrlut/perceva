@@ -28,7 +28,7 @@ import {
 } from '@/lib/api/rewards';
 import type { Reward } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
-import { useLimitModalStore, useRewardLimit } from '@/lib/premium';
+import { useLimitGuard, useRewardLimit } from '@/lib/premium';
 import { confirmAction, showInfo } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 import { REWARD_CATEGORY_META } from '@/theme/rewards';
@@ -49,14 +49,9 @@ export default function RewardsManageScreen() {
   const router = useRouter();
   const { t } = useT();
   const rewardLimit = useRewardLimit();
-  const openLimit = useLimitModalStore((s) => s.open);
-  const handleCreateReward = () => {
-    if (rewardLimit.atLimit) {
-      openLimit('reward');
-      return;
-    }
-    router.push('/reward-form');
-  };
+  const guardCreate = useLimitGuard(rewardLimit, 'reward');
+  const handleCreateReward = () =>
+    guardCreate(() => router.push('/reward-form'));
   const active = useRewards();
   const archived = useArchivedRewards();
   const reorder = useReorderRewards();
@@ -330,6 +325,18 @@ export default function RewardsManageScreen() {
         <Text style={styles.headerTitle}>{t('rewards.manage.title')}</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: tokens.space[2] }}>
           <LimitCounterBadge limit={rewardLimit} />
+          {/* History entry point — the top-right clock on the Shop
+              screen went away with the FAB-stack redesign, so this
+              rare-use surface now lives here (and in the Bank). */}
+          <Pressable
+            onPress={() => router.push('/rewards-history')}
+            style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('rewards.history.title')}
+          >
+            <Ionicons name="time-outline" size={20} color={tokens.text.hi} />
+          </Pressable>
           <Pressable
             onPress={handleCreateReward}
             style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}

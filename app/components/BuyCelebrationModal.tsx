@@ -23,14 +23,10 @@ interface Props {
   visible: boolean;
   reward: Reward | null;
   /** How many units were bought in this batch. Drives the "Comprou Nx X"
-   *  copy and the bankAfter delta. Defaults to 1 for the solo-buy path. */
+   *  copy. Defaults to 1 for the solo-buy path. */
   qty?: number;
   /** Total coins debited (sum across the qty units). */
   costPaid: number;
-  /** Number of items in the bank BEFORE this purchase landed. */
-  bankBefore: number;
-  /** Number of items in the bank AFTER this purchase (bankBefore + qty). */
-  bankAfter: number;
   /** When true, show the "enjoy now" primary CTA (consume one unit
    *  immediately). False on old servers that don't return redemption ids. */
   canEnjoyNow?: boolean;
@@ -46,8 +42,8 @@ interface Props {
  * Replaces the default `Alert.alert` success path (ugly system dialog
  * that breaks the gold/vault aesthetic) with an in-aesthetic celebration:
  * dark scrim, gold-rimmed card centered, the reward icon scales in with
- * a spring, the title fades up, and a "Bank: 3 → 4" line + two CTAs sit
- * below ("Go to bank" primary, "Close" ghost).
+ * a spring, the title fades up, and two CTAs sit below ("Go to bank"
+ * primary, "Close" ghost).
  *
  * The reward icon and category accent use the reward's category color so
  * the celebration carries the same identity as the card the user tapped.
@@ -59,8 +55,6 @@ export function BuyCelebrationModal({
   reward,
   qty = 1,
   costPaid,
-  bankBefore,
-  bankAfter,
   canEnjoyNow = false,
   onEnjoyNow,
   onClose,
@@ -191,17 +185,6 @@ export function BuyCelebrationModal({
                 <CoinIcon size={16} />
                 <Text style={styles.costText}>
                   −{costPaid.toLocaleString()}
-                </Text>
-              </View>
-
-              {/* Bank line */}
-              <View style={styles.bankRow}>
-                <Ionicons name="wallet" size={14} color="#FFE3A6" />
-                <Text style={styles.bankText}>
-                  {t('rewards.celebration.bankLine', {
-                    before: bankBefore.toLocaleString(),
-                    after: bankAfter.toLocaleString(),
-                  })}
                 </Text>
               </View>
 
@@ -353,23 +336,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 18,
     color: '#FFE3A6',
-  },
-  bankRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: tokens.space[3],
-    paddingVertical: tokens.space[2],
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 200, 61, 0.25)',
-    backgroundColor: 'rgba(255, 200, 61, 0.08)',
-  },
-  bankText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
-    color: '#FFE3A6',
-    letterSpacing: 0.3,
   },
   actions: {
     width: '100%',

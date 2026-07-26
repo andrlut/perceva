@@ -14,12 +14,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AddCard } from '@/components/AddCard';
-import { BankFab } from '@/components/BankFab';
 import { useBottomNavClearance } from '@/components/BottomNavBar';
 import { BuyCelebrationModal } from '@/components/BuyCelebrationModal';
 import { BuyConfirmModal } from '@/components/BuyConfirmModal';
 import { RewardActionSheet } from '@/components/RewardActionSheet';
 import { RewardCard } from '@/components/RewardCard';
+import { RewardsFabStack } from '@/components/RewardsFabStack';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { TemplateCard } from '@/components/TemplateCard';
 import { TrackedRewardCard } from '@/components/TrackedRewardCard';
@@ -39,7 +39,11 @@ import {
 } from '@/lib/api/rewards';
 import type { Reward, RewardCategory, RewardTemplate } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
-import { freeLimitEntity } from '@/lib/premium';
+import {
+  freeLimitEntity,
+  useLimitGuard,
+  useRewardLimit,
+} from '@/lib/premium';
 import { TourModule } from '@/components/tour/TourModule';
 import { emitTourEvent } from '@/lib/tour/eventBus';
 import { buildM4Steps, M4_EVENTS } from '@/lib/tour/m4Steps';
@@ -75,6 +79,8 @@ export default function RewardsScreen() {
   const banked = useBankedRewards();
   const trackedId = useTrackedRewardId();
   const setTracked = useSetTrackedReward();
+  const rewardLimit = useRewardLimit();
+  const guardCreate = useLimitGuard(rewardLimit, 'reward');
 
   const [redeemingId, setRedeemingId] = useState<string | null>(null);
   const [addingTemplateId, setAddingTemplateId] = useState<string | null>(null);
@@ -95,15 +101,11 @@ export default function RewardsScreen() {
   // Custom in-aesthetic confirm modal — replaces the system Alert that
   // used to pop on BUY. Single state holds the reward; null = closed.
   const [confirmingPurchase, setConfirmingPurchase] = useState<Reward | null>(null);
-  // Celebration modal payload — set after a successful purchase. Captures
-  // the bank count BEFORE the redeem so the modal can show the before→after
-  // transition even though the live query has invalidated already.
+  // Celebration modal payload — set after a successful purchase.
   const [celebration, setCelebration] = useState<{
     reward: Reward;
     qty: number;
     costPaid: number;
-    bankBefore: number;
-    bankAfter: number;
     /** Redemption ids created by this purchase — feeds "enjoy now". */
     redemptionIds: string[];
   } | null>(null);
@@ -236,6 +238,9 @@ export default function RewardsScreen() {
     setActionSheetReward(reward);
   };
 
+  const handleCreateReward = () =>
+    guardCreate(() => router.push('/reward-form'));
+
   const handleEditReward = (reward: Reward) => {
     router.push({ pathname: '/reward-form', params: { id: reward.id } });
   };
@@ -272,10 +277,6 @@ export default function RewardsScreen() {
     setConfirmingPurchase(null);
     setRedeemingId(reward.id);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-    // Snapshot before mutation — the bank query gets invalidated on
-    // settle, so reading from the cache after mutateAsync resolves is a
-    // race. Capturing here is exact.
-    const bankBefore = bankCount;
     try {
       const result = await redeem.mutateAsync({
         rewardId: reward.id,
@@ -286,8 +287,6 @@ export default function RewardsScreen() {
         reward,
         qty: result?.qty ?? qty,
         costPaid: result?.total_paid ?? reward.cost * qty,
-        bankBefore,
-        bankAfter: bankBefore + (result?.qty ?? qty),
         redemptionIds: result?.redemption_ids ?? [],
       });
     } catch (e) {
@@ -398,37 +397,6 @@ export default function RewardsScreen() {
           />
         }
       >
-        {/* Discrete header icons — clock opens the history modal,
-            gear opens the manage screen. Both are rare-use surfaces,
-            so they live as small icons in the top-right corner instead
-            of stealing tab real estate. */}
-        <View style={styles.headerIconsRow}>
-          <Pressable
-            onPress={() => router.push('/rewards-history')}
-            style={({ pressed }) => [
-              styles.headerIconBtn,
-              pressed && { opacity: 0.6 },
-            ]}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel={t('rewards.history.title')}
-          >
-            <Ionicons name="time-outline" size={18} color={tokens.text.mid} />
-          </Pressable>
-          <Pressable
-            onPress={() => router.push('/rewards-manage')}
-            style={({ pressed }) => [
-              styles.headerIconBtn,
-              pressed && { opacity: 0.6 },
-            ]}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel={t('rewards.manage.title')}
-          >
-            <Ionicons name="settings-outline" size={18} color={tokens.text.mid} />
-          </Pressable>
-        </View>
-
         <VaultHero balanceLabel={coins.toLocaleString()} status={headline} />
 
         {/* Tracked reward sits right under the coin balance so the user
@@ -604,7 +572,7 @@ export default function RewardsScreen() {
                 label={t('rewards.vault.addReward')}
                 sublabel={t('rewards.vault.addRewardSub')}
                 tint={tokens.brand.violet2}
-                onPress={() => router.push('/reward-form')}
+                onPress={handleCreateReward}
               />
             </View>
 
@@ -681,8 +649,6 @@ export default function RewardsScreen() {
         reward={celebration?.reward ?? null}
         qty={celebration?.qty ?? 1}
         costPaid={celebration?.costPaid ?? 0}
-        bankBefore={celebration?.bankBefore ?? 0}
-        bankAfter={celebration?.bankAfter ?? 0}
         canEnjoyNow={(celebration?.redemptionIds.length ?? 0) > 0}
         onEnjoyNow={() =>
           handleEnjoyNow(celebration?.redemptionIds ?? [])
@@ -694,19 +660,19 @@ export default function RewardsScreen() {
         }}
       />
 
-      {/* Bank FAB — sits in the bottom-right corner where the thumb
-          naturally lands. Only when there's actually something to
-          retrieve. Tap → /rewards-bank screen. */}
-      {bankCount > 0 && (
-        <BankFab
-          count={bankCount}
-          bottomOffset={bottomClearance}
-          onPress={() => {
-            Haptics.selectionAsync().catch(() => {});
-            router.push('/rewards-bank');
-          }}
-        />
-      )}
+      {/* Floating action stack — manage / create / bank, bottom-right
+          where the thumb naturally lands. Replaces the old top-right
+          header icons; history now lives inside manage and bank. */}
+      <RewardsFabStack
+        bankCount={bankCount}
+        bottomOffset={bottomClearance}
+        onCreate={handleCreateReward}
+        onManage={() => router.push('/rewards-manage')}
+        onBank={() => {
+          Haptics.selectionAsync().catch(() => {});
+          router.push('/rewards-bank');
+        }}
+      />
 
       {/* M4 steps 2-3 live here (balance + Inspiration). Step 1 is on
          Home (Rewards tab spotlight). Finishing returns the user to the
@@ -727,27 +693,6 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: tokens.bg.deep },
   content: {
     padding: tokens.space[4],
-  },
-  // Header icons row — discrete clock + gear at the top-right, replacing
-  // the old underline tab bar that mixed Shop/Bank/Used with the
-  // settings entry. Right-aligned with mild vertical padding so it sits
-  // above the coin balance without competing with it.
-  headerIconsRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: tokens.space[2],
-    paddingTop: tokens.space[2],
-    paddingHorizontal: 0,
-  },
-  headerIconBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth: 1,
-    borderColor: tokens.border.base,
   },
   chipsRow: {
     flexDirection: 'row',

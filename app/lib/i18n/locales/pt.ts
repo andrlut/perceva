@@ -1156,7 +1156,6 @@ const pt: Translations = {
       eyebrow: 'NA SACOLA',
       title: 'Comprou "{{title}}"',
       titleN: 'Comprou {{qty}}x "{{title}}"',
-      bankLine: 'Banco: {{before}} → {{after}}',
       goToBank: 'Ir pro banco',
       enjoyNow: 'Aproveitar agora',
       saveForLater: 'Guardar pra depois',
