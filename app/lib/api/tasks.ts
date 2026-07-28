@@ -723,14 +723,19 @@ export function useCompleteTask() {
 
       const reward = rewardForTaskSubs(params.subs);
 
-      // Optimistic removal from "pending today" only when:
-      //   - it's a live tap (no completedAt), AND
-      //   - the task's target is 1 (multi-target tasks need a refetch
-      //     to know whether THIS tap closed out the day).
+      // Optimistic removal from "pending today" on any live tap (no
+      // completedAt). The Home open list drops a task after its FIRST
+      // completion of the day regardless of target_count — filterActedToday
+      // does exactly that on the refetch frame, and extra reps happen via
+      // the completed drawer's "+", so removing multi-target tasks here too
+      // matches the settled state. Without this they lingered on the card
+      // until the (now heavier, multi-query) refetch landed, reading as
+      // "it didn't disappear" (e.g. a 5×/week "Trabalho"). The day-cleared
+      // celebration is separately gated on the settled frame (isPending /
+      // isFetching), so an early-empty `today` can't misfire it.
       const isLive = !params.completedAt;
       const t = params.task;
-      const singleTarget = (t.target_count ?? 1) === 1;
-      if (isLive && singleTarget) {
+      if (isLive) {
         const removeFrom = (arr: TaskWithSubs[]) => arr.filter((x) => x.id !== t.id);
         // Preserve todayActivity as-is — onSettled refetch will rebuild
         // it with the new completion. Optimistic only handles "card
