@@ -913,6 +913,17 @@ const en = {
     },
     error: 'Something went wrong loading your data. Pull to retry.',
     manageCta: 'Manage practices',
+    seeAllCta: 'See all practices',
+    clearDay: {
+      cta: 'Clear the day',
+      a11y: 'Clear the day and skip remaining practices',
+      confirmTitle: 'Clear the day now?',
+      confirmBody: {
+        one: '{{count}} practice waits for later. No XP, and your Momentum stays put.',
+        other: '{{count}} practices wait for later. No XP, and your Momentum stays put.',
+      },
+      confirmOk: 'Clear the day',
+    },
     actionErrors: {
       complete: 'Could not complete practice',
       skip: 'Could not skip',
@@ -1031,8 +1042,21 @@ const en = {
     },
   },
 
+  allPractices: {
+    title: 'All practices',
+    eyebrow: 'PRACTICES',
+    lead: 'Everything you can do beyond your daily routine.',
+    sections: {
+      recurring: 'Recurring',
+      oneshot: 'One-time',
+    },
+    emptyTitle: 'Just your dailies, for now',
+    emptyBody:
+      'Your dailies live on the Today screen. Create a weekly or one-time practice to see it here.',
+    emptyCta: 'Create practice',
+  },
   tasksHub: {
-    title: 'My Practices',
+    title: 'Manage practices',
     newTask: 'New practice',
     filters: {
       allocated: 'Allocated',

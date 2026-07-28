@@ -908,6 +908,17 @@ const pt: Translations = {
     },
     error: 'Algo deu errado ao carregar seus dados. Puxe pra tentar de novo.',
     manageCta: 'Gerenciar práticas',
+    seeAllCta: 'Ver todas as práticas',
+    clearDay: {
+      cta: 'Fechar o dia',
+      a11y: 'Fechar o dia e pular as práticas restantes',
+      confirmTitle: 'Fechar o dia agora?',
+      confirmBody: {
+        one: '{{count}} prática fica pra depois. Sem XP e sem mexer no seu Momentum.',
+        other: '{{count}} práticas ficam pra depois. Sem XP e sem mexer no seu Momentum.',
+      },
+      confirmOk: 'Fechar o dia',
+    },
     actionErrors: {
       complete: 'Não foi possível concluir a prática',
       skip: 'Não foi possível pular',
@@ -1026,8 +1037,21 @@ const pt: Translations = {
     },
   },
 
+  allPractices: {
+    title: 'Todas as práticas',
+    eyebrow: 'PRÁTICAS',
+    lead: 'Tudo que dá pra fazer além da rotina diária.',
+    sections: {
+      recurring: 'Recorrentes',
+      oneshot: 'Pontuais',
+    },
+    emptyTitle: 'Só as diárias, por enquanto',
+    emptyBody:
+      'Suas diárias moram na tela Hoje. Crie uma prática semanal ou pontual pra ela aparecer aqui.',
+    emptyCta: 'Criar prática',
+  },
   tasksHub: {
-    title: 'Minhas práticas',
+    title: 'Gerenciar práticas',
     newTask: 'Nova prática',
     filters: {
       allocated: 'Alocadas',

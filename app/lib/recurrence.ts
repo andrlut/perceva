@@ -42,6 +42,19 @@ export function isScheduledOn(rec: Recurrence, date: Date): boolean {
 export const isDueOn = isScheduledOn;
 
 /**
+ * True when a recurrence behaves as an everyday routine: a plain `daily`,
+ * or a `weekly` whose schedule covers all 7 weekdays (which collapses to
+ * Daily in the buckets). These are the practices that live on the Hoje
+ * screen and are therefore EXCLUDED from the "Todas as práticas" see-all
+ * surface. Shared by bucketFor (Manage) and the all-practices filter.
+ */
+export function isEffectivelyDaily(rec: Recurrence): boolean {
+  if (rec.type === 'daily') return true;
+  if (rec.type === 'weekly' && (rec.days?.length ?? 0) === 7) return true;
+  return false;
+}
+
+/**
  * Human-readable summary used by cards and forms.
  *   one_shot                     → "One-shot"
  *   daily, n=1                   → "Every day"

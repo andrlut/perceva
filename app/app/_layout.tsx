@@ -181,6 +181,7 @@ export default function RootLayout() {
             <Stack.Screen name="material/[slug]" options={{ headerShown: false }} />
             <Stack.Screen name="skills" options={{ headerShown: false }} />
             <Stack.Screen name="tasks" options={{ headerShown: false }} />
+            <Stack.Screen name="all-practices" options={{ headerShown: false }} />
             <Stack.Screen name="history" options={{ headerShown: false }} />
             <Stack.Screen
               name="dedicacao-history"

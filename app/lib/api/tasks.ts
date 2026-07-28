@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type {
   DimensionId,
@@ -517,8 +517,13 @@ async function fetchHomeBuckets(weekStartPref: WeekStart): Promise<HomeBuckets> 
     //                 schedule is a contract; a missed day never leaks the
     //                 task into other days (a Mon–Fri "Trabalho" must not
     //                 resurface on Saturday);
-    //   unscheduled → appears EVERY day until the effective period target
-    //                 (target - skips) is met;
+    //   unscheduled (no day marked) → NEVER appears on Hoje. A practice
+    //                 with no weekday/day-of-month set has no place on a
+    //                 specific day's contract; it lives only on the
+    //                 "Todas as práticas" see-all surface and in Gerenciar
+    //                 (at its defined periodicity), where it can be knocked
+    //                 out any day. This keeps Hoje a short, clearable list
+    //                 the user can empty to trigger the day-cleared ritual.
     //   acted today (completed or skipped) → drops out until tomorrow.
     // buckets.thisWeek keeps ONLY scheduled tasks NOT due today with an
     // unmet target — the Home screen no longer renders it, but the shape
@@ -538,34 +543,30 @@ async function fetchHomeBuckets(weekStartPref: WeekStart): Promise<HomeBuckets> 
       const effectiveTarget = Math.max(0, t.target_count - weekSkips);
       const stillNeeded = weekCount < effectiveTarget;
 
-      // Unscheduled weekly shows up every day until the target is met.
-      const unscheduledPromote =
-        !hasSchedule && stillNeeded && todayCount === 0 && !skippedTodayHere;
-
-      if (scheduledPromote || unscheduledPromote) {
+      // Only scheduled-for-today weekly reaches Hoje. Unscheduled weekly
+      // (no days marked) no longer auto-promotes — it lives in Todas as
+      // práticas / Gerenciar.
+      if (scheduledPromote) {
         buckets.today.push(t);
       } else if (hasSchedule && !scheduledToday && stillNeeded) {
         buckets.thisWeek.push(t);
       }
     } else {
       // monthly
-      const hasSchedule =
-        t.recurrence.type === 'monthly' && typeof t.recurrence.day === 'number';
       const monthCount = doneMonth.get(t.id) ?? 0;
       const monthSkips = skippedMonth.get(t.id) ?? 0;
       const effectiveTarget = Math.max(0, t.target_count - monthSkips);
       const stillNeeded = monthCount < effectiveTarget;
 
-      // Unscheduled monthly shows up every day until the target is met.
-      const unscheduledPromote =
-        !hasSchedule && stillNeeded && todayCount === 0 && !skippedTodayHere;
+      // Only scheduled-for-today monthly reaches Hoje. Unscheduled monthly
+      // (no day-of-month) no longer auto-promotes — see the weekly note.
       const scheduledDayInWeek =
         stillNeeded &&
         t.recurrence.type === 'monthly' &&
         typeof t.recurrence.day === 'number' &&
         scheduledMonthlyInThisWeek(t.recurrence.day, today, weekStartPref);
 
-      if (scheduledPromote || unscheduledPromote) {
+      if (scheduledPromote) {
         buckets.today.push(t);
       } else if (scheduledDayInWeek && !scheduledToday) {
         buckets.thisWeek.push(t);
@@ -800,6 +801,36 @@ export function useCompleteTask() {
 
 // ─── Skip ────────────────────────────────────────────────────────────────
 
+/**
+ * Optimistically drop the given task ids from the live "pending" buckets
+ * (today / thisWeek / thisMonth / oneTime) across every weekStart-keyed
+ * cache entry. Crucially LEAVES todayActivity / weekActivity /
+ * oneShotActivity untouched so ringDone stays server-truth until the
+ * refetch frame — the same invariant useCompleteTask relies on for the
+ * once-per-day day-cleared celebration. Shared by the single + bulk skip
+ * mutations.
+ */
+function dropTasksFromPendingBuckets(
+  queryClient: QueryClient,
+  taskIds: Set<string>,
+) {
+  const removeFrom = (arr: TaskWithSubs[]) =>
+    arr.filter((x) => !taskIds.has(x.id));
+  queryClient.setQueriesData<HomeBuckets>(
+    { queryKey: taskKeys.pending() },
+    (old) =>
+      old
+        ? {
+            ...old,
+            today: removeFrom(old.today),
+            thisWeek: removeFrom(old.thisWeek),
+            thisMonth: removeFrom(old.thisMonth),
+            oneTime: removeFrom(old.oneTime),
+          }
+        : old,
+  );
+}
+
 /** Skip a task for today (or a given local date). Hides it from Today /
  *  This Week / This Month bucket logic without logging a completion. No
  *  XP, no Momentum penalty. */
@@ -821,7 +852,77 @@ export function useSkipTaskToday() {
       );
       if (error) throw error;
     },
-    onSuccess: () => {
+    // Optimistic removal — without it the swiped card springs BACK into
+    // place and only vanishes one network round-trip later, so clearing
+    // several practices in a row flickers and feels broken (the real
+    // skip-velocity bottleneck). Snapshot every weekStart variant for
+    // rollback; drop the task immediately; reconcile on settle.
+    onMutate: async (params) => {
+      await queryClient.cancelQueries({ queryKey: taskKeys.pending() });
+      const prevBuckets = queryClient.getQueriesData<HomeBuckets>({
+        queryKey: taskKeys.pending(),
+      });
+      dropTasksFromPendingBuckets(queryClient, new Set([params.taskId]));
+      return { prevBuckets };
+    },
+    onError: (_err, _params, ctx) => {
+      if (ctx?.prevBuckets) {
+        for (const [key, data] of ctx.prevBuckets) {
+          queryClient.setQueryData(key, data);
+        }
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.pending() });
+    },
+  });
+}
+
+/**
+ * Bulk skip — "Fechar o dia": skip every remaining today practice in one
+ * shot. A single array upsert (not N looped round-trips) + one
+ * invalidation. Reuses the same optimistic removal so the Hoje list
+ * empties in one frame, which lets the EXISTING day-cleared celebration
+ * fire (remaining → 0). Because the skipped tasks were DUE today, ringDone
+ * increments on the refetch frame, so the ringDone > 0 celebration guard
+ * holds. No new RPC needed — the array upsert is atomic enough.
+ */
+export function useSkipTasksBulk() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { taskIds: string[]; date?: string }) => {
+      if (params.taskIds.length === 0) return;
+      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      if (userErr) throw userErr;
+      const userId = userData.user?.id;
+      if (!userId) throw new Error('Not authenticated');
+      const skippedFor = params.date ?? todayLocalDateKey();
+      const rows = params.taskIds.map((id) => ({
+        task_id: id,
+        character_id: userId,
+        skipped_for: skippedFor,
+      }));
+      const { error } = await supabase
+        .from('task_skip')
+        .upsert(rows, { onConflict: 'task_id,skipped_for' });
+      if (error) throw error;
+    },
+    onMutate: async (params) => {
+      await queryClient.cancelQueries({ queryKey: taskKeys.pending() });
+      const prevBuckets = queryClient.getQueriesData<HomeBuckets>({
+        queryKey: taskKeys.pending(),
+      });
+      dropTasksFromPendingBuckets(queryClient, new Set(params.taskIds));
+      return { prevBuckets };
+    },
+    onError: (_err, _params, ctx) => {
+      if (ctx?.prevBuckets) {
+        for (const [key, data] of ctx.prevBuckets) {
+          queryClient.setQueryData(key, data);
+        }
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.pending() });
     },
   });
