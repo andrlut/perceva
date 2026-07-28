@@ -7,11 +7,15 @@ import { formatScore } from '@/lib/util/formatScore';
 import { tokens } from '@/theme';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
-import { DIMENSION_ORDER, SUBS_BY_DIM } from '@/theme/dimensions';
+import { DIMENSION_ORDER, SUB_META, SUBS_BY_DIM } from '@/theme/dimensions';
 
 interface HexChartProps {
   /** Map of sub_id → score (0-5). Missing keys render as 0. */
   scores: Map<SubId, number>;
+  /** 'dims' (default) plots the 6 dimensions (each = its two subs summed,
+   *  out of 10). 'subs' plots all 12 sub-attributes (each out of 5) grouped
+   *  so a dimension's two subs sit adjacent, sharing its color. */
+  variant?: 'dims' | 'subs';
   /** Optional second series — rendered as an outline-only polygon in the
    *  secondary color, no vertex dots. Used for "self vs questionnaire"
    *  comparison without doubling up the visual weight. */
@@ -58,6 +62,7 @@ function dimScores(scores: Map<SubId, number>) {
 export function HexChart({
   scores,
   secondaryScores,
+  variant = 'dims',
   size = 320,
   secondaryColor = tokens.dimension.bonds,
   onDimPress,
@@ -69,30 +74,59 @@ export function HexChart({
 
   const mains = useMemo(() => dimScores(scores), [scores]);
 
+  // 12 subs in dim order, each tagged with its parent dim — so the dodecagon
+  // reads as six color-paired lobes when the user expands to sub grain.
+  const subOrder = useMemo(
+    () =>
+      DIMENSION_ORDER.flatMap((dim) =>
+        SUBS_BY_DIM[dim].map((sub) => ({ sub, dim })),
+      ),
+    [],
+  );
+
   const secondary = useMemo(() => {
     if (!secondaryScores) return undefined;
+    if (variant === 'subs') {
+      return subOrder.map(({ sub }) => (secondaryScores.get(sub) ?? 0) / SUB_MAX);
+    }
     return dimScores(secondaryScores).map((m) => m.score / DIM_MAX);
-  }, [secondaryScores]);
+  }, [secondaryScores, variant, subOrder]);
 
+  // Center stays the overall average of the six dimensions in both variants —
+  // the same wellbeing figure, just a coarser or finer shape around it.
   const overall = useMemo(() => {
     const sum = mains.reduce((s, m) => s + m.score, 0);
     return Math.round((sum / mains.length) * 10) / 10;
   }, [mains]);
 
-  const axes = useMemo<HexAxis[]>(
-    () =>
-      mains.map((m) => ({
-        dimId: m.dim,
-        ratio: m.score / DIM_MAX,
-        active: m.score > 0,
-        a11yLabel: t('avaliacao.hexAxisA11y', {
-          dim: metaLookup.dim(m.dim).label,
-          score: formatScore(m.score),
-          max: DIM_MAX,
-        }),
-      })),
-    [mains, t, metaLookup],
-  );
+  const axes = useMemo<HexAxis[]>(() => {
+    if (variant === 'subs') {
+      return subOrder.map(({ sub, dim }) => {
+        const score = scores.get(sub) ?? 0;
+        return {
+          dimId: dim,
+          iconName: SUB_META[sub].iconName,
+          ratio: score / SUB_MAX,
+          active: score > 0,
+          a11yLabel: t('avaliacao.hexAxisA11y', {
+            dim: metaLookup.sub(sub).label,
+            score: formatScore(score),
+            max: SUB_MAX,
+          }),
+        };
+      });
+    }
+    return mains.map((m) => ({
+      dimId: m.dim,
+      ratio: m.score / DIM_MAX,
+      active: m.score > 0,
+      a11yLabel: t('avaliacao.hexAxisA11y', {
+        dim: metaLookup.dim(m.dim).label,
+        score: formatScore(m.score),
+        max: DIM_MAX,
+      }),
+    }));
+  }, [variant, subOrder, scores, mains, t, metaLookup]);
 
   return (
     <View style={styles.canvas}>

@@ -700,6 +700,8 @@ const en = {
     sourceSelf: 'Self',
     sourceBoth: 'Both',
     sourceQuiz: 'Quiz',
+    hexShowSubs: 'Show the 12 subs',
+    hexShowDims: 'Show the 6 dimensions',
     nudgeSuffix: 'is at {{score}}/5 — tap to see recommended practices',
     hexAxisA11y: '{{dim}}: {{score}} out of {{max}}',
   },
