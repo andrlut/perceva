@@ -30,7 +30,11 @@ import { TodayAmbient } from '@/components/TodayAmbient';
 import { TodayHeader } from '@/components/TodayHeader';
 import { XPCoinFloat } from '@/components/XPCoinFloat';
 import { useCharacter } from '@/lib/api/character';
-import { dateKeyFromLocal, useDayDetail } from '@/lib/api/history';
+import {
+  dateKeyFromLocal,
+  taskFromCompletionSnapshot,
+  useDayDetail,
+} from '@/lib/api/history';
 import { todayDateKey } from '@/lib/api/mood';
 import { useT } from '@/lib/i18n';
 import { useLoadedSettings } from '@/lib/settings';
@@ -529,14 +533,19 @@ export default function HomeScreen() {
       );
   }, [isToday, dayDetail.data, selectedDate, retroPending]);
 
+  // Every completion the day's XP hero counts must also appear here, so the
+  // drawer and the hero never disagree. When the live task is gone from the
+  // active list (archived, or deleted), rebuild a minimal row from the
+  // completion snapshot instead of dropping it — undo stays wired via the
+  // completionId; the "+1" pill is suppressed on those rows (see orphaned).
   const pastCompletedItems = useMemo<CompletedItem[]>(() => {
     if (isToday || !dayDetail.data) return [];
-    return dayDetail.data.completions
-      .map((c): CompletedItem | null => {
-        const task = tasksById.get(c.taskId);
-        return task ? { task, completionId: c.id } : null;
-      })
-      .filter((x): x is CompletedItem => x !== null);
+    return dayDetail.data.completions.map((c): CompletedItem => {
+      const task = tasksById.get(c.taskId);
+      return task
+        ? { task, completionId: c.id }
+        : { task: taskFromCompletionSnapshot(c), completionId: c.id, orphaned: true };
+    });
   }, [isToday, dayDetail.data, tasksById]);
 
   const pastSkippedItems = useMemo<CompletedItem[]>(() => {

@@ -171,6 +171,39 @@ export interface DayCompletion {
 }
 
 /**
+ * Rebuild a minimal renderable task purely from a completion snapshot, for
+ * rows whose live task is no longer in the active list — it was archived,
+ * or deleted outright. The snapshot already carries everything a completed
+ * row needs to draw (title + subs → primary dimension), so an archived
+ * task's past completions keep rendering (and stay undoable) instead of
+ * silently vanishing from the drawer while the day's XP hero still counts
+ * their XP. The non-visual fields are placeholders; only `title`, `id`, and
+ * the derived `primary_dimension_id` reach the UI.
+ */
+export function taskFromCompletionSnapshot(c: DayCompletion): TaskWithSubs {
+  const subs = c.subs; // already sorted stars-desc by useDayDetail
+  const primary = subs[0]?.sub_id ?? ('sleep' as SubId);
+  return {
+    id: c.taskId,
+    character_id: '',
+    title: c.taskTitle,
+    description: null,
+    task_type: 'one_shot',
+    recurrence: { type: 'one_shot' },
+    target_count: 1,
+    is_archived: true,
+    created_at: c.completedAt,
+    updated_at: c.completedAt,
+    template_id: null,
+    icon: null,
+    subs,
+    primary_sub_id: primary,
+    primary_dimension_id: dimensionForSub(primary),
+    total_stars: c.totalStars,
+  };
+}
+
+/**
  * An open task for a given day, paired with how many of its target
  * completions are already logged for that day. Used by the "Forgot
  * something?" / "Still open today" list.

@@ -10,6 +10,13 @@ export interface CompletedItem {
   task: TaskWithSubs;
   /** When provided, the row becomes tappable and calls `onUndo(completionId)`. */
   completionId?: string;
+  /**
+   * Row was rebuilt from a completion snapshot because its live task is
+   * gone (archived/deleted). Undo still works, but the "+1" pill is
+   * suppressed — you can't sensibly log another completion of a task that
+   * no longer exists in the active list.
+   */
+  orphaned?: boolean;
 }
 
 type Variant = 'completed' | 'skipped';
@@ -113,7 +120,7 @@ export function CompletedBucket({
               : tokens.brand.violet2;
             return (
               <Pressable
-                key={item.task.id}
+                key={item.completionId ?? item.task.id}
                 disabled={!canTap}
                 onPress={() => {
                   if (!canTap) return;
@@ -159,7 +166,7 @@ export function CompletedBucket({
                     onExtra is wired. Tap target is distinct from the
                     row body so the user can log an extra without
                     accidentally undoing the original completion. */}
-                {!isSkipped && onExtra && (
+                {!isSkipped && onExtra && !item.orphaned && (
                   <Pressable
                     onPress={(e) => {
                       e.stopPropagation();
