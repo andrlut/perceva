@@ -60,6 +60,7 @@ const en = {
     increaseQty: 'Increase quantity',
     xpByDimension: 'XP distribution by dimension',
     scoreByDimension: 'Score by dimension',
+    momentumByDimension: 'Momentum by dimension',
     stopTracking: 'Stop tracking this reward',
     dayCellEmpty: 'no entries',
     dayCellXp: '{{xp}} XP',
@@ -957,6 +958,7 @@ const en = {
         peak: 'peak',
       },
       bonusActive: '+{{percent}}% bonus',
+      hexAxisA11y: '{{dim}}: momentum {{value}}',
       // Legacy streak-style keys (deprecated; kept while any leftover
       // V2 streak surface still references them).
       days: { one: '{{count}} day', other: '{{count}} days' },

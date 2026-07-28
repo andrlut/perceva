@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { HexRadar, type HexAxis } from '@/components/HexRadar';
 import type { DimensionId } from '@/lib/db/types';
+import { windowRatio } from '@/lib/dedicacao/scale';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { tokens } from '@/theme';
@@ -30,19 +31,6 @@ interface Props {
    *  render on the same screen (SVG defs share a flat namespace). */
   idSuffix: string;
 }
-
-/**
- * The leading dimension stops at 85% of the radius instead of touching the
- * outer ring. Without that headroom the leader reads as "maxed out" rather
- * than "biggest this window" — the scale is relative, not an achievement.
- */
-const LEADER_RATIO = 0.85;
-
-/**
- * Floor for any dim with non-zero XP, so a token amount still produces a
- * visible vertex instead of collapsing into the center and reading as zero.
- */
-const MIN_RATIO = 0.07;
 
 /**
  * Keep the centered figure to five glyphs. A raw total can run six digits,
@@ -85,22 +73,18 @@ export function XpHexChart({
 
   const vertices = useMemo(() => {
     const xpById = new Map(slices.map((s) => [s.dimId, s.xp]));
-    // Normalized against the largest dim in this window — nothing external.
-    // The sparklines' ceiling is numerically the same value, but they map it
-    // linearly to full height while this maps through LEADER_RATIO/MIN_RATIO,
-    // so the two visuals are not interchangeable scales. See the note in
-    // DedicacaoPanel.
+    // Normalized against the largest dim in this window — nothing external —
+    // via the shared `windowRatio` (app/lib/dedicacao/scale.ts), the same
+    // mapping the dimension-card bars use. The sparklines' ceiling is
+    // numerically this same value, but they map it linearly to full height,
+    // so the two visuals are not interchangeable scales.
     const max = DIMENSION_ORDER.reduce(
       (m, d) => Math.max(m, xpById.get(d) ?? 0),
       0,
     );
     return DIMENSION_ORDER.map((dimId) => {
       const xp = xpById.get(dimId) ?? 0;
-      const ratio =
-        max > 0 && xp > 0
-          ? Math.max(MIN_RATIO, (xp / max) * LEADER_RATIO)
-          : 0;
-      return { dimId, xp, ratio };
+      return { dimId, xp, ratio: windowRatio(xp, max) };
     });
   }, [slices]);
 

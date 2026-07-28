@@ -50,6 +50,7 @@ const pt: Translations = {
     increaseQty: 'Aumentar quantidade',
     xpByDimension: 'Distribuição de XP por dimensão',
     scoreByDimension: 'Pontuação por dimensão',
+    momentumByDimension: 'Momentum por dimensão',
     stopTracking: 'Parar de acompanhar esta recompensa',
     dayCellEmpty: 'sem registro',
     dayCellXp: '{{xp}} XP',
@@ -952,6 +953,7 @@ const pt: Translations = {
         peak: 'pleno',
       },
       bonusActive: '+{{percent}}% bônus',
+      hexAxisA11y: '{{dim}}: momentum {{value}}',
       // Legacy streak-style keys (deprecated; kept while any leftover
       // V2 streak surface still references them).
       days: { one: '{{count}} dia', other: '{{count}} dias' },

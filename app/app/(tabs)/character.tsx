@@ -272,10 +272,7 @@ export default function CharacterScreen() {
                 <AutoconhecimentoView />
               )}
               {activePillar === 'praticada' && currentSub === 'dedicacao' && (
-                <DedicacaoPanel
-                  dimensions={dimensions}
-                  scrollViewRef={scrollViewRef}
-                />
+                <DedicacaoPanel dimensions={dimensions} />
               )}
               {activePillar === 'praticada' && currentSub === 'momentum' && (
                 <MomentumView momentum={momentum.data?.attributes} />

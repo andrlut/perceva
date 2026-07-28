@@ -1,23 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  findNodeHandle,
-  Platform,
-  Pressable,
-  type ScrollView as ScrollViewType,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-  type View as ViewType,
-} from 'react-native';
+import { useMemo, useState } from 'react';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { InsightCard } from '@/components/InsightCard';
 import { PeriodSelector } from '@/components/dedicacao/PeriodSelector';
 import { Sparkline } from '@/components/dedicacao/Sparkline';
 import { XpHexChart } from '@/components/dedicacao/XpHexChart';
-import { ProgressBar } from '@/components/ProgressBar';
 import {
   computeWindow,
   useDedicacaoWindow,
@@ -25,6 +14,7 @@ import {
   type WindowSpec,
 } from '@/lib/api/dedicacao';
 import type { CharacterDimension, DimensionId } from '@/lib/db/types';
+import { LEADER_RATIO, windowRatio } from '@/lib/dedicacao/scale';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { useLoadedSettings } from '@/lib/settings';
@@ -39,10 +29,6 @@ import {
 
 interface Props {
   dimensions: CharacterDimension[];
-  /** ScrollView that wraps the panel — used to scroll to a card when a hex
-   *  axis is tapped. Optional: the panel still renders if absent (no
-   *  scroll behavior). */
-  scrollViewRef?: React.RefObject<ScrollViewType | null>;
 }
 
 const CHIP_LABELS_PT = {
@@ -95,24 +81,28 @@ function formatWindowLabel(
 
 const SPARK_HEIGHT = 64;
 
+function pct(ratio: number): `${number}%` {
+  return `${Math.max(0, Math.min(100, ratio * 100))}%`;
+}
+
 /**
- * Sub-pillar **Dedicação** (Praticada). Windowed XP view: period selector
- * up top, a 6-axis hex summarizing per-dim XP share for the window, and
- * per-dim cards with a tall cumulative sparkline (window XP overlaid
- * top-right). Cards expand for a per-sub breakdown.
+ * Sub-pillar **Dedicação** (Praticada). Standardized layout: the hex leads,
+ * then the period selector (the one input, sitting between the two surfaces
+ * it drives), then the six dimension cards in fixed order, then the history
+ * link, and the insight teaser as a footer.
  *
- * The sparklines share one ceiling (`sparkGlobalMax`, the leading dim's
- * final cumulative XP) so a sub-leading dim reads short next to the
- * leader's full-height climb. The hex does *not* use it: it normalizes
- * against the leading dim's window total (numerically the same number,
- * but mapped through LEADER_RATIO/MIN_RATIO rather than linearly), so the
- * two visuals are comparable within themselves, not against each other.
+ * Every bar shares the hex's exact normalization (`windowRatio` against the
+ * leading dimension's window XP), so a dim bar's fill equals its hex vertex
+ * radius and its two sub bars decompose it — one scale on the whole screen
+ * instead of the four that used to coexist. The leader tops out at 85% of
+ * the track (relative scale, not "maxed"), marked by a tick.
  *
- * Tapping a hex axis badge scrolls + briefly highlights the matching dim
- * card. Level + total XP stay all-time — only window XP, sparkline, and
- * sub breakdown change with the selector.
+ * Level and all-time XP stay in the LV pill and on the dim detail screen —
+ * only the window bars, sub bars, and the expanded trend sparkline change
+ * with the selector. Tapping a hex vertex opens that dimension's detail,
+ * matching the Avaliação hex.
  */
-export function DedicacaoPanel({ dimensions, scrollViewRef }: Props) {
+export function DedicacaoPanel({ dimensions }: Props) {
   const router = useRouter();
   const { locale } = useT();
   const metaLookup = useMetaLookup();
@@ -123,7 +113,6 @@ export function DedicacaoPanel({ dimensions, scrollViewRef }: Props) {
     granularity: 'month',
     offset: 0,
   });
-  const [highlightDim, setHighlightDim] = useState<DimensionId | null>(null);
   const [expanded, setExpanded] = useState<Set<DimensionId>>(new Set());
 
   const windowQuery = useDedicacaoWindow(spec, settings.weekStart);
@@ -180,6 +169,16 @@ export function DedicacaoPanel({ dimensions, scrollViewRef }: Props) {
     return m;
   }, [windowQuery.data]);
 
+  // One ceiling for every bar on this panel: the leading dimension's window
+  // XP — identical to the hex's own denominator. This is what makes the dim
+  // bars and sub bars agree with the chart above them.
+  const maxDimWinXp = useMemo(
+    () => slices.reduce((m, s) => Math.max(m, s.xp), 0),
+    [slices],
+  );
+
+  // The expanded trend sparkline keeps its own cumulative ceiling so a
+  // sub-leading dim reads short next to the leader's full-height climb.
   const sparkGlobalMax = useMemo(() => {
     let max = 0;
     for (const win of perDimWindow.values()) {
@@ -196,41 +195,8 @@ export function DedicacaoPanel({ dimensions, scrollViewRef }: Props) {
   const totalWindowXp = windowQuery.data?.totalXp ?? 0;
   const prevTotalXp = windowQuery.data?.prevTotalXp ?? 0;
 
-  const cardRefs = useRef<Partial<Record<DimensionId, ViewType | null>>>({});
-
-  useEffect(() => {
-    if (!highlightDim) return;
-    const id = setTimeout(() => setHighlightDim(null), 1600);
-    return () => clearTimeout(id);
-  }, [highlightDim]);
-
-  const handleAxisPress = (dim: DimensionId) => {
-    setHighlightDim(dim);
-    // findNodeHandle isn't supported on web (RN-Web restriction). The
-    // border still flashes; user scrolls manually. Native APK keeps
-    // the smooth auto-scroll.
-    if (Platform.OS === 'web') return;
-    const node = cardRefs.current[dim];
-    const sv = scrollViewRef?.current;
-    if (!node || !sv) return;
-    const svHandle = findNodeHandle(sv);
-    if (svHandle == null) return;
-    (
-      node as unknown as {
-        measureLayout: (
-          rel: number,
-          cb: (x: number, y: number) => void,
-          err: () => void,
-        ) => void;
-      }
-    ).measureLayout(
-      svHandle,
-      (_x, y) => {
-        sv.scrollTo({ y: Math.max(0, y - 24), animated: true });
-      },
-      () => {},
-    );
-  };
+  const hexSize = Math.max(240, Math.min((screenWidth || 360) - 16, 360));
+  const sparkWidth = Math.max(160, (screenWidth || 360) - 64);
 
   const toggleExpand = (dim: DimensionId) => {
     setExpanded((prev) => {
@@ -241,31 +207,26 @@ export function DedicacaoPanel({ dimensions, scrollViewRef }: Props) {
     });
   };
 
-  // Byte-identical to AvaliacaoPanel's `chartSize`. The hex reserves ~41px
-  // per side for the badge ring and its tap slop (HexRadar's PADDING), so a
-  // narrower box buys a much smaller plot than it looks like it should —
-  // which is exactly how this one ended up reading as the lesser chart. Both
-  // panels are direct children of the same tab container with no padding of
-  // their own, so the same formula is correct in both.
-  const hexSize = Math.max(240, Math.min((screenWidth || 360) - 16, 360));
-  const sparkWidth = Math.max(160, (screenWidth || 360) - 64);
-
-  // Order cards by window XP descending — leaders surface first. Ties
-  // fall back to the canonical DIMENSION_ORDER so the layout doesn't
-  // flicker as the user scrubs periods that yield equal values.
-  const orderedDims = useMemo(() => {
-    return [...DIMENSION_ORDER].sort((a, b) => {
-      const aXp = perDimWindow.get(a)?.window ?? 0;
-      const bXp = perDimWindow.get(b)?.window ?? 0;
-      if (aXp !== bXp) return bXp - aXp;
-      return DIMENSION_ORDER.indexOf(a) - DIMENSION_ORDER.indexOf(b);
-    });
-  }, [perDimWindow]);
+  const openDim = (dim: DimensionId) =>
+    router.push({ pathname: '/dimension/[id]', params: { id: dim } });
 
   return (
     <View style={styles.wrap}>
-      <InsightCard />
+      {/* Hex leads — same position as every pillar. */}
+      <View style={styles.hexWrap}>
+        <XpHexChart
+          slices={slices}
+          totalXp={totalWindowXp}
+          prevTotalXp={isAll ? null : prevTotalXp}
+          isLoading={windowQuery.isPending}
+          size={hexSize}
+          onAxisPress={openDim}
+          idSuffix="dedicacao"
+        />
+      </View>
 
+      {/* First extra below the hex: the period selector — an input that
+          drives the hex above and the cards below, so it sits between them. */}
       <PeriodSelector
         spec={spec}
         onChange={setSpec}
@@ -276,51 +237,10 @@ export function DedicacaoPanel({ dimensions, scrollViewRef }: Props) {
         labels={labels}
       />
 
-      <View style={styles.hexWrap}>
-        <XpHexChart
-          slices={slices}
-          totalXp={totalWindowXp}
-          prevTotalXp={isAll ? null : prevTotalXp}
-          isLoading={windowQuery.isPending}
-          size={hexSize}
-          onAxisPress={handleAxisPress}
-          idSuffix="dedicacao"
-        />
-        {/* Entry point to the history screen — sits in the space where the
-            caption used to be. Quiet, contextual, doesn't compete with the
-            chip selector above. */}
-        <Pressable
-          onPress={() =>
-            router.push({
-              pathname: '/dedicacao-history',
-              params: {
-                granularity: spec.granularity,
-                offset: String(spec.offset),
-              },
-            })
-          }
-          hitSlop={6}
-          style={({ pressed }) => [
-            styles.historyLink,
-            pressed && { opacity: 0.6 },
-          ]}
-          accessibilityRole="link"
-        >
-          <Text style={styles.historyLinkText}>
-            {locale === 'pt'
-              ? 'Ver histórico completo'
-              : 'Open full history'}
-          </Text>
-          <Ionicons
-            name="arrow-forward"
-            size={12}
-            color={tokens.text.mid}
-          />
-        </Pressable>
-      </View>
-
+      {/* Six dimension cards, fixed order so the layout is stable while
+          scrubbing periods and each card maps 1:1 to a hex vertex. */}
       <View style={styles.list}>
-        {orderedDims.map((id) => {
+        {DIMENSION_ORDER.map((id) => {
           const meta = DIMENSION_META[id];
           const xp = dimMap.get(id)?.xp ?? 0;
           const lp = levelProgress(xp);
@@ -328,28 +248,20 @@ export function DedicacaoPanel({ dimensions, scrollViewRef }: Props) {
           const winXp = win?.window ?? 0;
           const cumulative = win?.cumulative ?? [];
           const perSub = win?.perSub ?? [];
-          const isHighlighted = highlightDim === id;
           const isExpanded = expanded.has(id);
 
           return (
             <Pressable
               key={id}
-              ref={(node) => {
-                cardRefs.current[id] = node;
-              }}
               onPress={() => toggleExpand(id)}
               style={({ pressed }) => [
                 styles.attribute,
-                isHighlighted && {
-                  borderColor: `${meta.color}AA`,
-                  backgroundColor: meta.bg,
-                },
                 pressed && { opacity: 0.85 },
               ]}
               accessibilityRole="button"
               accessibilityState={{ expanded: isExpanded }}
             >
-              {/* Header: icon + name + total + LV pill + chevron */}
+              {/* Header: icon + name + all-time total + LV pill + chevron */}
               <View style={styles.attributeTop}>
                 <View style={[styles.iconHalo, { backgroundColor: meta.bg }]}>
                   <Ionicons
@@ -381,143 +293,93 @@ export function DedicacaoPanel({ dimensions, scrollViewRef }: Props) {
                 />
               </View>
 
-              {/* Level progress: bar + fraction inline (replaces the
-                  "234 XP até LV 5" sentence — same info, half the height). */}
-              <View style={styles.barRow}>
-                <View style={styles.barTrack}>
-                  <ProgressBar
-                    value={lp.xpInLevel}
-                    max={lp.xpNeededForLevel}
-                    color={meta.color}
-                    height={4}
+              {/* Dim window bar — the hex vertex, as a bar. Fills to the same
+                  windowRatio; the tick marks the 85% leader ceiling so the
+                  headroom reads as "relative scale", not an unfinished bar. */}
+              <View style={styles.dimBarRow}>
+                <View style={[styles.dimBar, { backgroundColor: `${meta.color}1A` }]}>
+                  <View
+                    style={[
+                      styles.dimBarFill,
+                      {
+                        width: pct(windowRatio(winXp, maxDimWinXp)),
+                        backgroundColor: meta.color,
+                      },
+                    ]}
                   />
+                  <View style={[styles.dimTick, { left: pct(LEADER_RATIO) }]} />
                 </View>
-                <Text style={styles.barFrac}>
-                  {lp.xpInLevel.toLocaleString()}/
-                  {lp.xpNeededForLevel.toLocaleString()}
+                <Text
+                  style={[
+                    styles.dimWinXp,
+                    { color: winXp > 0 ? meta.color : tokens.text.faint },
+                  ]}
+                >
+                  {winXp > 0 ? `+${winXp.toLocaleString()}` : '0'} XP
                 </Text>
               </View>
 
-              {/* Sparkline area — tall enough to read, with the window XP
-                  overlaid top-right. Empty-window state stays in the same
-                  box so card heights don't jump as you scrub periods. */}
-              <View style={styles.sparkBlock}>
-                <Sparkline
-                  cumulative={cumulative}
-                  color={meta.color}
-                  globalMax={sparkGlobalMax}
-                  height={SPARK_HEIGHT}
-                  width={sparkWidth}
-                  idSuffix={id}
-                />
-                <View style={styles.sparkOverlay} pointerEvents="none">
-                  {winXp > 0 ? (
-                    <Text style={[styles.sparkXp, { color: meta.color }]}>
-                      +{winXp.toLocaleString()} XP
+              {/* Two always-visible sub bars, same scale as the dim bar so
+                  they read as a decomposition of it. */}
+              {perSub.map((sub) => {
+                const subMeta = SUB_META[sub.subId];
+                return (
+                  <View key={sub.subId} style={styles.subBarRow}>
+                    <Ionicons
+                      name={subMeta.iconName as never}
+                      size={12}
+                      color={meta.color}
+                    />
+                    <View
+                      style={[styles.subBar, { backgroundColor: `${meta.color}1A` }]}
+                    >
+                      <View
+                        style={[
+                          styles.subBarFill,
+                          {
+                            width: pct(windowRatio(sub.windowXp, maxDimWinXp)),
+                            backgroundColor: meta.color,
+                          },
+                        ]}
+                      />
+                    </View>
+                    <Text
+                      style={[
+                        styles.subBarXp,
+                        sub.windowXp === 0 && { color: tokens.text.faint },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      +{sub.windowXp.toLocaleString()}
                     </Text>
-                  ) : (
-                    <Text style={styles.sparkXpDim}>0 XP</Text>
-                  )}
-                </View>
-              </View>
+                  </View>
+                );
+              })}
 
+              {/* Expanded: the cumulative trend the bars can't carry, plus a
+                  deep link to this dimension's full history. */}
               {isExpanded && (
                 <View style={styles.expandWrap}>
                   <View style={styles.divider} />
-                  {(() => {
-                    // Normalize sub sparklines against the leader within
-                    // this dim — comparing siblings, not cross-dim heroes.
-                    const subMax = perSub.reduce(
-                      (m, s) =>
-                        Math.max(
-                          m,
-                          s.cumulative.length
-                            ? s.cumulative[s.cumulative.length - 1]
-                            : 0,
-                        ),
-                      0,
-                    );
-                    return perSub.map((sub) => {
-                      const subMeta = SUB_META[sub.subId];
-                      const subLabel = metaLookup.sub(sub.subId).label;
-                      const share =
-                        winXp > 0
-                          ? Math.round((sub.windowXp / winXp) * 100)
-                          : 0;
-                      return (
-                        <Pressable
-                          key={sub.subId}
-                          onPress={() =>
-                            router.push({
-                              pathname: '/dedicacao-history',
-                              params: {
-                                granularity: spec.granularity,
-                                offset: String(spec.offset),
-                                subs: sub.subId,
-                              },
-                            })
-                          }
-                          style={({ pressed }) => [
-                            styles.subRow,
-                            pressed && { opacity: 0.6 },
-                          ]}
-                          hitSlop={4}
-                          accessibilityRole="link"
-                          accessibilityLabel={`${subLabel} history`}
-                        >
-                          <View
-                            style={[
-                              styles.subIcon,
-                              { backgroundColor: `${meta.color}1F` },
-                            ]}
-                          >
-                            <Ionicons
-                              name={subMeta.iconName as never}
-                              size={14}
-                              color={meta.color}
-                            />
-                          </View>
-                          <View style={styles.subTextCol}>
-                            <Text style={styles.subLabel} numberOfLines={1}>
-                              {subLabel}
-                            </Text>
-                            <Text style={styles.subShare}>
-                              {share}% {locale === 'pt' ? 'do' : 'of'}{' '}
-                              {metaLookup.dim(id).label}
-                            </Text>
-                          </View>
-                          <View style={styles.subSparkBlock}>
-                            <Sparkline
-                              cumulative={sub.cumulative}
-                              color={meta.color}
-                              globalMax={subMax}
-                              height={28}
-                              width={sparkWidth - 200}
-                              idSuffix={`${id}-${sub.subId}`}
-                            />
-                            <View
-                              style={styles.subSparkOverlay}
-                              pointerEvents="none"
-                            >
-                              <Text
-                                style={[
-                                  styles.subSparkXp,
-                                  {
-                                    color:
-                                      sub.windowXp > 0
-                                        ? meta.color
-                                        : tokens.text.faint,
-                                  },
-                                ]}
-                              >
-                                +{sub.windowXp.toLocaleString()}
-                              </Text>
-                            </View>
-                          </View>
-                        </Pressable>
-                      );
-                    });
-                  })()}
+                  <View style={styles.sparkBlock}>
+                    <Sparkline
+                      cumulative={cumulative}
+                      color={meta.color}
+                      globalMax={sparkGlobalMax}
+                      height={SPARK_HEIGHT}
+                      width={sparkWidth}
+                      idSuffix={id}
+                    />
+                    <View style={styles.sparkOverlay} pointerEvents="none">
+                      {winXp > 0 ? (
+                        <Text style={[styles.sparkXp, { color: meta.color }]}>
+                          +{winXp.toLocaleString()} XP
+                        </Text>
+                      ) : (
+                        <Text style={styles.sparkXpDim}>0 XP</Text>
+                      )}
+                    </View>
+                  </View>
                   <Pressable
                     onPress={() =>
                       router.push({
@@ -540,11 +402,7 @@ export function DedicacaoPanel({ dimensions, scrollViewRef }: Props) {
                         ? `Histórico de ${metaLookup.dim(id).label}`
                         : `${metaLookup.dim(id).label} history`}
                     </Text>
-                    <Ionicons
-                      name="arrow-forward"
-                      size={12}
-                      color={meta.color}
-                    />
+                    <Ionicons name="arrow-forward" size={12} color={meta.color} />
                   </Pressable>
                 </View>
               )}
@@ -552,6 +410,32 @@ export function DedicacaoPanel({ dimensions, scrollViewRef }: Props) {
           );
         })}
       </View>
+
+      {/* History link — after the cards, matching Avaliação's CTA position. */}
+      <View style={styles.historyLinkWrap}>
+        <Pressable
+          onPress={() =>
+            router.push({
+              pathname: '/dedicacao-history',
+              params: {
+                granularity: spec.granularity,
+                offset: String(spec.offset),
+              },
+            })
+          }
+          hitSlop={6}
+          style={({ pressed }) => [styles.historyLink, pressed && { opacity: 0.6 }]}
+          accessibilityRole="link"
+        >
+          <Text style={styles.historyLinkText}>
+            {locale === 'pt' ? 'Ver histórico completo' : 'Open full history'}
+          </Text>
+          <Ionicons name="arrow-forward" size={12} color={tokens.text.mid} />
+        </Pressable>
+      </View>
+
+      {/* Window-independent teaser — a footer, not part of the window block. */}
+      <InsightCard />
     </View>
   );
 }
@@ -559,6 +443,7 @@ export function DedicacaoPanel({ dimensions, scrollViewRef }: Props) {
 const styles = StyleSheet.create({
   wrap: { gap: tokens.space[3] },
   hexWrap: { alignItems: 'center', gap: tokens.space[2] },
+  historyLinkWrap: { alignItems: 'center' },
   historyLink: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -626,18 +511,66 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: tokens.text.hi,
   },
-  barRow: {
+  dimBarRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[2],
+    marginTop: 2,
   },
-  barTrack: { flex: 1 },
-  barFrac: {
+  dimBar: {
+    flex: 1,
+    height: 6,
+    borderRadius: 3,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  dimBarFill: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    borderRadius: 3,
+  },
+  dimTick: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: 1.5,
+    backgroundColor: 'rgba(255,255,255,0.4)',
+  },
+  dimWinXp: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 12,
+    letterSpacing: -0.1,
+    minWidth: 64,
+    textAlign: 'right',
+  },
+  subBarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  subBar: {
+    flex: 1,
+    height: 4,
+    borderRadius: 2,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  subBarFill: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    borderRadius: 2,
+    opacity: 0.7,
+  },
+  subBarXp: {
     fontFamily: 'Manrope_700Bold',
     fontSize: 10,
     color: tokens.text.dim,
-    letterSpacing: 0.3,
-    minWidth: 64,
+    letterSpacing: -0.1,
+    minWidth: 52,
     textAlign: 'right',
   },
   sparkBlock: {
@@ -668,48 +601,6 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: tokens.border.divider,
-  },
-  subRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[2],
-    paddingVertical: 4,
-  },
-  subIcon: {
-    width: 26,
-    height: 26,
-    borderRadius: tokens.radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  subTextCol: {
-    minWidth: 90,
-    gap: 1,
-  },
-  subLabel: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
-    color: tokens.text.base,
-  },
-  subShare: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 10,
-    color: tokens.text.dim,
-    letterSpacing: 0.2,
-  },
-  subSparkBlock: {
-    position: 'relative',
-    flex: 1,
-  },
-  subSparkOverlay: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-  },
-  subSparkXp: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 13,
-    letterSpacing: -0.1,
   },
   detailLink: {
     flexDirection: 'row',
