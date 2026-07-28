@@ -18,6 +18,7 @@
     "points": [
       {
         "n": 1,
+        "icon": "hourglass",
         "title": { "pt": "O mito dos 21 dias", "en": "The 21-day myth" },
         "body": {
           "pt": "Veio de Maltz nos anos 50. Lally (2010) mediu de verdade: média de 66 dias, variando de 18 a 254. Perder um dia não quebra o hábito.",
@@ -26,6 +27,7 @@
       },
       {
         "n": 2,
+        "icon": "finger-print",
         "title": { "pt": "Identidade acima de metas", "en": "Identity over goals" },
         "body": {
           "pt": "\"Cada ação é um voto no tipo de pessoa que você quer ser.\" É o que mais se sustenta no livro — e o que o Perceva chama de Identidade Praticada.",
@@ -34,6 +36,7 @@
       },
       {
         "n": 3,
+        "icon": "home",
         "title": { "pt": "Ambiente vence força de vontade", "en": "Environment beats willpower" },
         "body": {
           "pt": "Wood mostra que boa parte do comportamento diário é disparada pelo contexto, sem decisão consciente. Projete o ambiente, não a disciplina.",
@@ -42,6 +45,7 @@
       }
     ],
     "stat": {
+      "icon": "repeat",
       "value": "~43%",
       "caption": {
         "pt": "do comportamento diário é hábito automático (Wood & Neal)",

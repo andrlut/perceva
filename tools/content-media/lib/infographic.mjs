@@ -3,16 +3,24 @@
  * Branded infographic builder for Learning materials.
  *
  * Renders a portrait 1080×1920 SVG from STRUCTURED data (never free-form
- * layout). Text is real font glyphs and colors are exact Perceva design
- * tokens, so the output is deterministic, always spelled correctly, and
- * on-brand — which is exactly why we render code instead of asking an image
- * model to "draw an infographic" (see tools/content-media/README.md for the
- * evidence: even the best 2026 image model gets a fully-correct infographic
- * only ~49% of the time).
+ * layout). Text is real font glyphs (Manrope), icons are real Ionicons glyphs
+ * (the same set the app uses), and colors are exact Perceva design tokens — so
+ * the output is deterministic, correctly spelled, on-brand, and genuinely
+ * VISUAL (icon badges, cards, accent shapes) rather than a wall of text. This
+ * is why we render code instead of asking an image model to "draw an
+ * infographic" (even the best 2026 image model gets a fully-correct one only
+ * ~49% of the time).
  *
- * The caller (generate.mjs) rasterizes the returned SVG string to PNG with
- * @resvg/resvg-js and then to webp with ffmpeg.
+ * The caller (generate.mjs) rasterizes the returned SVG to PNG with
+ * @resvg/resvg-js (which loads the fonts in tools/content-media/fonts/) and
+ * then to webp with ffmpeg.
  */
+
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // ── Perceva design tokens (mirror of app/theme/tokens.ts) ────────────────
 const TOKENS = {
@@ -28,7 +36,25 @@ const TOKENS = {
   },
 };
 
-const FONT_STACK = "Manrope, 'Segoe UI', 'Helvetica Neue', system-ui, sans-serif";
+// Ionicons name for each dimension (mirror of app/theme/dimensions.ts).
+const DIM_ICON = {
+  health: 'heart',
+  body: 'fitness',
+  mind: 'sparkles',
+  wealth: 'cash',
+  bonds: 'people',
+  craft: 'color-palette',
+};
+
+const FONT_STACK = "Manrope, 'Segoe UI', system-ui, sans-serif";
+
+// Ionicons glyph map (name -> codepoint). Copied from @expo/vector-icons.
+let GLYPHS = {};
+try {
+  GLYPHS = JSON.parse(readFileSync(join(__dirname, '..', 'ionicons-glyphmap.json'), 'utf8'));
+} catch {
+  GLYPHS = {};
+}
 
 const esc = (s) =>
   String(s ?? '')
@@ -36,12 +62,16 @@ const esc = (s) =>
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 
-/**
- * Greedy word-wrap into at most `maxLines` lines. Returns an array of line
- * strings; the last line gets an ellipsis if text was truncated. `maxChars`
- * is an estimate derived from the font size and available width (sans-serif
- * average advance ≈ 0.54em; bold ≈ 0.58em).
- */
+/** Render an Ionicon glyph centered at (cx, cy). Returns '' if unknown. */
+function icon(name, cx, cy, size, color, opacity = 1) {
+  const code = GLYPHS[name];
+  if (!code) return '';
+  const o = opacity === 1 ? '' : ` opacity="${opacity}"`;
+  // +0.36em vertical nudge centers the glyph on cy for the Ionicons metrics.
+  return `<text x="${cx}" y="${cy + size * 0.36}" font-family="Ionicons" font-size="${size}" fill="${color}" text-anchor="middle"${o}>&#${code};</text>`;
+}
+
+/** Greedy word-wrap into at most `maxLines` lines, ellipsizing overflow. */
 function wrap(text, maxChars, maxLines = 99) {
   const words = String(text ?? '').trim().split(/\s+/).filter(Boolean);
   const lines = [];
@@ -58,10 +88,8 @@ function wrap(text, maxChars, maxLines = 99) {
   }
   if (cur && lines.length < maxLines) lines.push(cur);
   if (lines.length > maxLines) lines.length = maxLines;
-  // truncation ellipsis
-  const usedAllWords =
-    lines.join(' ').split(/\s+/).filter(Boolean).length === words.length;
-  if (!usedAllWords && lines.length) {
+  const usedAll = lines.join(' ').split(/\s+/).filter(Boolean).length === words.length;
+  if (!usedAll && lines.length) {
     let last = lines[lines.length - 1];
     while (last.length > 1 && last.length + 1 > maxChars) last = last.slice(0, -1);
     lines[lines.length - 1] = last.replace(/[\s.,;:]+$/, '') + '…';
@@ -74,159 +102,209 @@ function maxCharsFor(fontSize, width, weight = 'regular') {
   return Math.max(4, Math.floor(width / (fontSize * em)));
 }
 
+function fw(weight) {
+  return weight === 'bold' ? 800 : weight === 'semibold' ? 700 : weight === 'medium' ? 500 : 400;
+}
+
+function textEl(content, x, y, { size, weight = 'regular', fill, spacing, anchor }) {
+  return (
+    `<text x="${x}" y="${y}" font-family="${FONT_STACK}" font-size="${size}" font-weight="${fw(weight)}" fill="${fill}"` +
+    (spacing ? ` letter-spacing="${spacing}"` : '') +
+    (anchor ? ` text-anchor="${anchor}"` : '') +
+    `>${esc(content)}</text>`
+  );
+}
+
 /**
  * @param {object} opts
  * @param {'pt'|'en'} opts.locale
- * @param {string} opts.dimensionId  one of health|body|mind|wealth|bonds|craft
- * @param {object} opts.data         localized infographic content (see README contract)
- * @param {number} [opts.width]
- * @param {number} [opts.height]
+ * @param {string} opts.dimensionId  health|body|mind|wealth|bonds|craft
+ * @param {object} opts.data         localized infographic content (see README)
  * @returns {string} SVG document
  */
 export function buildInfographicSvg({ locale, dimensionId, data, width = 1080, height = 1920 }) {
   const accent = TOKENS.dimension[dimensionId] ?? TOKENS.dimension.mind;
-  const PAD = 96;
+  const dimIcon = DIM_ICON[dimensionId] ?? 'sparkles';
+  const PAD = 80;
   const inner = width - PAD * 2;
-  const pick = (v) => (v && typeof v === 'object' ? v[locale] ?? v.pt ?? v.en : v);
+  const pick = (v) => (v && typeof v === 'object' && !Array.isArray(v) ? v[locale] ?? v.pt ?? v.en : v);
 
-  const parts = [];
-  let y = 0;
+  const out = [];
 
-  const text = (content, { x = PAD, size, weight = 'regular', fill, spacing, anchor = 'start' } = {}) => {
-    const fw = weight === 'bold' ? 800 : weight === 'semibold' ? 700 : 500;
-    parts.push(
-      `<text x="${x}" y="${y}" font-family="${FONT_STACK}" font-size="${size}" font-weight="${fw}" fill="${fill}"` +
-        (spacing ? ` letter-spacing="${spacing}"` : '') +
-        (anchor !== 'start' ? ` text-anchor="${anchor}"` : '') +
-        `>${esc(content)}</text>`,
-    );
-  };
-
-  const multiline = (content, { size, weight = 'regular', fill, lineHeight, maxLines = 99, x = PAD }) => {
-    const lines = wrap(content, maxCharsFor(size, inner, weight), maxLines);
-    const lh = lineHeight ?? Math.round(size * 1.22);
-    const fw = weight === 'bold' ? 800 : weight === 'semibold' ? 700 : 500;
-    for (const line of lines) {
-      y += lh;
-      parts.push(
-        `<text x="${x}" y="${y}" font-family="${FONT_STACK}" font-size="${size}" font-weight="${fw}" fill="${fill}">${esc(line)}</text>`,
-      );
-    }
-    return lines.length;
-  };
-
-  // ── background ──────────────────────────────────────────────────────────
-  const defs =
+  // ── defs ──────────────────────────────────────────────────────────────
+  out.push(
     `<defs>` +
-    `<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">` +
-    `<stop offset="0" stop-color="${TOKENS.bg.top}"/>` +
-    `<stop offset="0.5" stop-color="${TOKENS.bg.base}"/>` +
-    `<stop offset="1" stop-color="${TOKENS.bg.deep}"/>` +
-    `</linearGradient>` +
-    `<radialGradient id="halo" cx="0.5" cy="0.12" r="0.8">` +
-    `<stop offset="0" stop-color="${accent}" stop-opacity="0.16"/>` +
-    `<stop offset="1" stop-color="${accent}" stop-opacity="0"/>` +
-    `</radialGradient>` +
-    `</defs>`;
-  const bg =
-    `<rect width="${width}" height="${height}" fill="url(#bg)"/>` +
-    `<rect width="${width}" height="${height}" fill="url(#halo)"/>` +
-    `<rect x="0" y="0" width="${width}" height="10" fill="${accent}"/>`;
+      `<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">` +
+      `<stop offset="0" stop-color="${TOKENS.bg.top}"/>` +
+      `<stop offset="0.55" stop-color="${TOKENS.bg.base}"/>` +
+      `<stop offset="1" stop-color="${TOKENS.bg.deep}"/>` +
+      `</linearGradient>` +
+      `<radialGradient id="orbA" cx="0.5" cy="0.5" r="0.5">` +
+      `<stop offset="0" stop-color="${accent}" stop-opacity="0.22"/>` +
+      `<stop offset="1" stop-color="${accent}" stop-opacity="0"/>` +
+      `</radialGradient>` +
+      `<radialGradient id="orbB" cx="0.5" cy="0.5" r="0.5">` +
+      `<stop offset="0" stop-color="${accent}" stop-opacity="0.14"/>` +
+      `<stop offset="1" stop-color="${accent}" stop-opacity="0"/>` +
+      `</radialGradient>` +
+      `</defs>`,
+  );
 
-  // ── header ──────────────────────────────────────────────────────────────
-  y = 150;
+  // ── background: gradient + orbs + watermark icon + accent bar ───────────
+  out.push(`<rect width="${width}" height="${height}" fill="url(#bg)"/>`);
+  out.push(`<circle cx="${width - 60}" cy="200" r="460" fill="url(#orbA)"/>`);
+  out.push(`<circle cx="40" cy="${height - 260}" r="420" fill="url(#orbB)"/>`);
+  // giant faint dimension glyph, bottom-right
+  out.push(icon(dimIcon, width - 250, height - 250, 620, accent, 0.05));
+  out.push(`<rect x="0" y="0" width="${width}" height="10" fill="${accent}"/>`);
+
+  let y = 150;
+
+  // ── header: icon chip + eyebrow ─────────────────────────────────────────
   const eyebrow = pick(data.eyebrow);
   if (eyebrow) {
-    text(String(eyebrow).toUpperCase(), { size: 30, weight: 'semibold', fill: accent, spacing: 4 });
-    y += 28;
+    const chipR = 40;
+    const chipCx = PAD + chipR;
+    const chipCy = y;
+    out.push(`<circle cx="${chipCx}" cy="${chipCy}" r="${chipR}" fill="${accent}" fill-opacity="0.16"/>`);
+    out.push(`<circle cx="${chipCx}" cy="${chipCy}" r="${chipR}" fill="none" stroke="${accent}" stroke-opacity="0.35" stroke-width="2"/>`);
+    out.push(icon(dimIcon, chipCx, chipCy, 40, accent));
+    out.push(
+      textEl(String(eyebrow).toUpperCase(), PAD + chipR * 2 + 24, chipCy + 11, {
+        size: 30,
+        weight: 'semibold',
+        fill: accent,
+        spacing: 3,
+      }),
+    );
+    y = chipCy + chipR + 44;
   }
 
-  y += 44;
-  multiline(pick(data.headline), { size: 86, weight: 'bold', fill: TOKENS.text.hi, lineHeight: 92, maxLines: 3 });
+  // ── headline ────────────────────────────────────────────────────────────
+  for (const line of wrap(pick(data.headline), maxCharsFor(84, inner, 'bold'), 3)) {
+    y += 90;
+    out.push(textEl(line, PAD, y, { size: 84, weight: 'bold', fill: TOKENS.text.hi }));
+  }
 
+  // ── subhead ─────────────────────────────────────────────────────────────
   const subhead = pick(data.subhead);
   if (subhead) {
-    y += 20;
-    multiline(subhead, { size: 38, weight: 'regular', fill: TOKENS.text.mid, lineHeight: 50, maxLines: 3 });
+    y += 22;
+    for (const line of wrap(subhead, maxCharsFor(37, inner), 3)) {
+      y += 48;
+      out.push(textEl(line, PAD, y, { size: 37, weight: 'regular', fill: TOKENS.text.mid }));
+    }
   }
 
-  // divider
-  y += 56;
-  parts.push(`<rect x="${PAD}" y="${y}" width="${inner}" height="3" rx="1.5" fill="${TOKENS.text.faint}" opacity="0.5"/>`);
-  y += 8;
+  y += 64;
 
-  // ── the 3 idea blocks ──────────────────────────────────────────────────
+  // ── the 3 idea cards ────────────────────────────────────────────────────
   const points = (data.points ?? []).slice(0, 3);
+  const cardPad = 40;
+  const badgeR = 44;
+  const railX = PAD + cardPad + badgeR * 2 + 28; // text column starts right of the badge
+  const railW = width - PAD - cardPad - (railX - PAD);
+
   for (let i = 0; i < points.length; i++) {
     const p = points[i];
-    y += 78;
-    const numY = y;
-    // big numeral in accent, left rail
-    parts.push(
-      `<text x="${PAD}" y="${numY}" font-family="${FONT_STACK}" font-size="64" font-weight="800" fill="${accent}">${p.n ?? i + 1}</text>`,
+    const titleLines = wrap(pick(p.title), maxCharsFor(42, railW, 'bold'), 2);
+    const bodyLines = wrap(pick(p.body), maxCharsFor(33, railW), 4);
+    const contentH = titleLines.length * 50 + 14 + bodyLines.length * 44;
+    const cardH = Math.max(contentH + cardPad * 2, badgeR * 2 + cardPad * 2);
+    const cardTop = y;
+
+    // card surface + border + left accent stripe
+    out.push(
+      `<rect x="${PAD}" y="${cardTop}" width="${inner}" height="${cardH}" rx="30" fill="${TOKENS.bg.top}" fill-opacity="0.55"/>`,
     );
-    // point title, indented past the numeral
-    const railX = PAD + 92;
-    const railInner = width - railX - PAD;
-    const titleLines = wrap(pick(p.title), maxCharsFor(44, railInner, 'bold'), 2);
-    let ty = numY;
+    out.push(
+      `<rect x="${PAD}" y="${cardTop}" width="${inner}" height="${cardH}" rx="30" fill="none" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="2"/>`,
+    );
+    out.push(`<rect x="${PAD}" y="${cardTop + 22}" width="8" height="${cardH - 44}" rx="4" fill="${accent}"/>`);
+
+    // icon badge
+    const badgeCx = PAD + cardPad + badgeR;
+    const badgeCy = cardTop + cardPad + badgeR;
+    out.push(`<circle cx="${badgeCx}" cy="${badgeCy}" r="${badgeR}" fill="${accent}" fill-opacity="0.16"/>`);
+    out.push(`<circle cx="${badgeCx}" cy="${badgeCy}" r="${badgeR}" fill="none" stroke="${accent}" stroke-opacity="0.4" stroke-width="2"/>`);
+    const pIcon = p.icon && GLYPHS[p.icon] ? p.icon : dimIcon;
+    out.push(icon(pIcon, badgeCx, badgeCy, 46, accent));
+
+    // faint step numeral, top-right of the card
+    out.push(
+      textEl(String(p.n ?? i + 1), PAD + inner - 28, cardTop + 82, {
+        size: 92,
+        weight: 'bold',
+        fill: accent,
+        anchor: 'end',
+      }).replace('<text ', '<text opacity="0.14" '),
+    );
+
+    // title
+    let ty = cardTop + cardPad + 42;
     for (let k = 0; k < titleLines.length; k++) {
-      if (k > 0) ty += 52;
-      parts.push(
-        `<text x="${railX}" y="${ty}" font-family="${FONT_STACK}" font-size="44" font-weight="700" fill="${TOKENS.text.hi}">${esc(titleLines[k])}</text>`,
-      );
+      if (k > 0) ty += 50;
+      out.push(textEl(titleLines[k], railX, ty, { size: 42, weight: 'bold', fill: TOKENS.text.hi }));
     }
-    y = ty;
-    // point body
-    const bodyLines = wrap(pick(p.body), maxCharsFor(34, railInner), 5);
+    // body
+    let by = ty + 14;
     for (const line of bodyLines) {
-      y += 46;
-      parts.push(
-        `<text x="${railX}" y="${y}" font-family="${FONT_STACK}" font-size="34" font-weight="500" fill="${TOKENS.text.base}">${esc(line)}</text>`,
-      );
+      by += 44;
+      out.push(textEl(line, railX, by, { size: 33, weight: 'regular', fill: TOKENS.text.base }));
     }
+
+    y = cardTop + cardH + 28;
   }
 
-  // ── optional highlight stat ────────────────────────────────────────────
-  // Guard: only render the stat if there's real room before the footer, so a
-  // material with three long idea blocks never collides with the source row.
-  const statFits = y < height - 420;
-  if (statFits && data.stat && pick(data.stat.value ?? data.stat)) {
+  // ── highlight stat card ─────────────────────────────────────────────────
+  if (data.stat && pick(data.stat.value ?? data.stat)) {
     const statValue = pick(data.stat.value ?? data.stat);
     const statCaption = pick(data.stat.caption);
-    y += 96;
-    parts.push(`<rect x="${PAD}" y="${y}" width="${inner}" height="3" rx="1.5" fill="${TOKENS.text.faint}" opacity="0.4"/>`);
-    y += 110;
-    parts.push(
-      `<text x="${PAD}" y="${y}" font-family="${FONT_STACK}" font-size="120" font-weight="800" fill="${accent}">${esc(statValue)}</text>`,
+    const statIcon = data.stat.icon && GLYPHS[data.stat.icon] ? data.stat.icon : 'stats-chart';
+    const statH = 220;
+    const cardTop = y;
+    out.push(`<rect x="${PAD}" y="${cardTop}" width="${inner}" height="${statH}" rx="30" fill="${accent}" fill-opacity="0.12"/>`);
+    out.push(
+      `<rect x="${PAD}" y="${cardTop}" width="${inner}" height="${statH}" rx="30" fill="none" stroke="${accent}" stroke-opacity="0.35" stroke-width="2"/>`,
     );
+    // icon chip left
+    const chipCx = PAD + 44 + 46;
+    const chipCy = cardTop + statH / 2;
+    out.push(`<circle cx="${chipCx}" cy="${chipCy}" r="52" fill="${accent}" fill-opacity="0.18"/>`);
+    out.push(icon(statIcon, chipCx, chipCy, 52, accent));
+    // big number + caption, stacked to the right of the chip
+    const tx = chipCx + 52 + 40;
+    out.push(textEl(statValue, tx, cardTop + 118, { size: 96, weight: 'bold', fill: accent }));
     if (statCaption) {
-      // Stack the caption just under the numeral (aligning it beside a
-      // variable-width numeral is unreliable in flat SVG).
-      y += 12;
-      multiline(statCaption, { size: 36, weight: 'regular', fill: TOKENS.text.mid, lineHeight: 46, maxLines: 3 });
+      let cy2 = cardTop + 118 + 8;
+      for (const line of wrap(statCaption, maxCharsFor(34, width - tx - PAD), 2)) {
+        cy2 += 42;
+        out.push(textEl(line, tx, cy2, { size: 34, weight: 'medium', fill: TOKENS.text.mid }));
+      }
     }
+    y = cardTop + statH + 28;
   }
 
   // ── footer ──────────────────────────────────────────────────────────────
-  const footerY = height - 96;
-  parts.push(`<rect x="${PAD}" y="${footerY - 44}" width="${inner}" height="2" rx="1" fill="${TOKENS.text.faint}" opacity="0.4"/>`);
+  const footerY = height - 84;
+  out.push(`<rect x="${PAD}" y="${footerY - 46}" width="${inner}" height="2" rx="1" fill="${TOKENS.text.faint}" opacity="0.4"/>`);
   const source = pick(data.source);
   if (source) {
-    parts.push(
-      `<text x="${PAD}" y="${footerY}" font-family="${FONT_STACK}" font-size="26" font-weight="500" fill="${TOKENS.text.dim}">${esc(source)}</text>`,
-    );
+    out.push(textEl(source, PAD, footerY, { size: 26, weight: 'medium', fill: TOKENS.text.dim }));
   }
-  // Perceva wordmark, right-aligned
-  parts.push(
-    `<text x="${width - PAD}" y="${footerY}" font-family="${FONT_STACK}" font-size="30" font-weight="800" fill="${TOKENS.text.mid}" text-anchor="end" letter-spacing="3">PERCEVA</text>`,
+  out.push(
+    textEl('PERCEVA', width - PAD, footerY, {
+      size: 30,
+      weight: 'bold',
+      fill: TOKENS.text.mid,
+      anchor: 'end',
+      spacing: 3,
+    }),
   );
 
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">` +
-    defs +
-    bg +
-    parts.join('') +
+    out.join('') +
     `</svg>`
   );
 }

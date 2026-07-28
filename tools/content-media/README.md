@@ -95,12 +95,14 @@ locale existir.
     "points": [                        // exatamente 3 — espelham as 3 ideias-herói do artigo
       {
         "n": 1,
+        "icon":  "hourglass",                // nome de um Ionicons (o mesmo set do app)
         "title": { "pt": "…", "en": "…" },   // 2–5 palavras
         "body":  { "pt": "…", "en": "…" }    // 1–3 frases curtas (~máx 4 linhas)
       }
       // … pontos 2 e 3
     ],
     "stat": {                          // destaque numérico (opcional)
+      "icon":    "repeat",                 // Ionicons (fallback: stats-chart)
       "value":   "~43%",
       "caption": { "pt": "…", "en": "…" }
     },
