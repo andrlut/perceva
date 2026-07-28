@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -13,6 +12,7 @@ import Svg, {
 } from 'react-native-svg';
 
 import { PercevaGlyph } from '@/components/PercevaGlyph';
+import { type PillarKey } from '@/components/PillarSwitcher';
 import { useCharacter } from '@/lib/api/character';
 import { useMomentum } from '@/lib/api/momentum';
 import { useSkillStates } from '@/lib/api/skills';
@@ -24,22 +24,39 @@ import { DIMENSION_META } from '@/theme/dimensions';
 
 type IoniconName = keyof typeof Ionicons.glyphMap;
 
+/** One glance-stat, tappable into its pillar. The label names what the
+ *  number is; the tap opens that pillar's full view. */
 function StatChip({
   icon,
   color,
   value,
+  label,
+  onPress,
 }: {
   icon: IoniconName;
   color: string;
   value: string;
+  label: string;
+  onPress?: () => void;
 }) {
   return (
-    <View style={styles.statChip}>
-      <Ionicons name={icon} size={13} color={color} />
-      <Text style={[styles.statValue, { color }]} numberOfLines={1}>
-        {value}
+    <Pressable
+      style={({ pressed }) => [styles.statChip, pressed && { opacity: 0.7 }]}
+      onPress={onPress}
+      disabled={!onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${label}: ${value}`}
+    >
+      <View style={styles.statTop}>
+        <Ionicons name={icon} size={13} color={color} />
+        <Text style={[styles.statValue, { color }]} numberOfLines={1}>
+          {value}
+        </Text>
+      </View>
+      <Text style={styles.statLabel} numberOfLines={1}>
+        {label}
       </Text>
-    </View>
+    </Pressable>
   );
 }
 
@@ -59,7 +76,14 @@ const RING_CIRCUMFERENCE = 2 * Math.PI * RING_R;
  * The text column is tappable: it opens the DISC result, or invites the
  * test when none is taken. Data is read via hooks; self-contained.
  */
-export function HeroHeader() {
+export function HeroHeader({
+  onPillarPress,
+}: {
+  /** Tap a glance-stat chip to jump to that pillar. Omit for a read-only
+   *  header (the caller decides whether switching is allowed right now — the
+   *  Eu tab suppresses it mid-tour). */
+  onPillarPress?: (pillar: PillarKey) => void;
+}) {
   const character = useCharacter();
   const { t } = useT();
   const router = useRouter();
@@ -126,20 +150,22 @@ export function HeroHeader() {
         <PercevaGlyph size={190} bare palette="primary" idSuffix="hero-mark" />
       </View>
 
-      {/* Ambient violet halo — a soft radial that tails into the screen
-          background on its own. The old top-left disk was clipped flat at the
-          header's bottom edge (overflow:hidden), which read as a hard seam;
-          this fades to transparent well before any edge, matching VaultHero. */}
+      {/* Ambient violet halo — a soft radial glow behind the avatar. The SVG
+          is SQUARE with the circle radius = half its side, so the gradient
+          reaches full transparency exactly at every edge: no matter where the
+          box ends there is no visible boundary, so it can never read as the
+          hard seam / line the earlier rectangular version did (its bottom
+          edge was clipped while the glow was still ~5% opaque). */}
       <View style={styles.halo} pointerEvents="none">
-        <Svg width={520} height={360} viewBox="0 0 520 360">
+        <Svg width={520} height={520} viewBox="0 0 520 520">
           <Defs>
             <RadialGradient id="hero-halo" cx="0.5" cy="0.5" r="0.5">
               <Stop offset="0" stopColor="#9B82FF" stopOpacity={0.22} />
-              <Stop offset="0.55" stopColor="#9B82FF" stopOpacity={0.08} />
+              <Stop offset="0.55" stopColor="#9B82FF" stopOpacity={0.07} />
               <Stop offset="1" stopColor="#9B82FF" stopOpacity={0} />
             </RadialGradient>
           </Defs>
-          <Circle cx={260} cy={180} r={260} fill="url(#hero-halo)" />
+          <Circle cx={260} cy={260} r={260} fill="url(#hero-halo)" />
         </Svg>
       </View>
 
@@ -287,42 +313,32 @@ export function HeroHeader() {
         </Pressable>
       </View>
 
-      {/* Glance-stat strip — one number per pillar (perceived score average,
-          practiced-momentum tier, desired-medal count). Read-only. */}
+      {/* Glance-stat strip — one stat per pillar, each labelled with what it
+          is and tappable into that pillar's view: perceived-score average,
+          practiced-momentum tier, desired-medal count. */}
       <View style={styles.statStrip}>
         <StatChip
           icon="eye-outline"
           color={tokens.brand.violet2}
           value={selfAvg.toFixed(1)}
+          label={t('pillar.top.percebida.label')}
+          onPress={onPillarPress ? () => onPillarPress('percebida') : undefined}
         />
         <StatChip
           icon="pulse"
           color={tokens.semantic.xp2}
           value={t(`home.momentum.tier.${momTier}`).toUpperCase()}
+          label={t('pillar.top.praticada.label')}
+          onPress={onPillarPress ? () => onPillarPress('praticada') : undefined}
         />
         <StatChip
           icon="compass-outline"
           color={tokens.semantic.coin}
           value={String(medals)}
+          label={t('pillar.top.desejada.label')}
+          onPress={onPillarPress ? () => onPillarPress('desejada') : undefined}
         />
       </View>
-
-      {/* Faint horizontal divider — separates header from the tab body
-          without drawing a hard line. The XP progress story already lives
-          in the avatar's ring; a second bar here was redundant. */}
-      <LinearGradient
-        colors={[
-          'rgba(255,255,255,0)',
-          'rgba(255,255,255,0.06)',
-          'rgba(255,255,255,0.06)',
-          'rgba(255,255,255,0)',
-        ]}
-        locations={[0, 0.3, 0.7, 1]}
-        start={{ x: 0, y: 0.5 }}
-        end={{ x: 1, y: 0.5 }}
-        style={styles.divider}
-      />
-
     </View>
   );
 }
@@ -339,11 +355,11 @@ const styles = StyleSheet.create({
   },
   halo: {
     position: 'absolute',
-    top: -110,
+    top: -170,
     left: '50%',
     marginLeft: -260,
     width: 520,
-    height: 360,
+    height: 520,
   },
   watermark: {
     position: 'absolute',
@@ -424,10 +440,8 @@ const styles = StyleSheet.create({
   },
   statChip: {
     flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
+    gap: 2,
     paddingVertical: 7,
     paddingHorizontal: 6,
     borderRadius: tokens.radius.md,
@@ -435,14 +449,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: tokens.border.base,
   },
+  statTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
   statValue: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 12,
     letterSpacing: 0.2,
   },
-  divider: {
-    height: 1,
-    marginTop: 18,
-    marginHorizontal: -20,
+  statLabel: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 9,
+    letterSpacing: 0.3,
+    color: tokens.text.dim,
+    textTransform: 'uppercase',
   },
 });
