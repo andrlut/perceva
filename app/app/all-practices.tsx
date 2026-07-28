@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -20,10 +20,11 @@ import { CompleteTaskSheet } from '@/components/CompleteTaskSheet';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { TaskCard } from '@/components/TaskCard';
 import { XPCoinFloat } from '@/components/XPCoinFloat';
+import { dateKeyFromLocal, useDayDetail } from '@/lib/api/history';
 import {
+  dimensionForSub,
   useActiveTasks,
   useCompleteTask,
-  useHomeBuckets,
   useUndoCompletion,
 } from '@/lib/api/tasks';
 import type { TaskSub, TaskWithSubs } from '@/lib/db/types';
@@ -31,6 +32,7 @@ import { useT } from '@/lib/i18n';
 import { useLimitModalStore, useTaskLimit } from '@/lib/premium';
 import { isEffectivelyDaily } from '@/lib/recurrence';
 import { useLoadedSettings } from '@/lib/settings';
+import { formatLongDate } from '@/lib/time';
 import { compareOneShotsByFreshness, isInTrophyWindow } from '@/lib/trophy';
 import { rewardForTaskSubs } from '@/lib/xp';
 import { tokens } from '@/theme';
@@ -57,13 +59,29 @@ interface FloatItem {
 export default function AllPracticesScreen() {
   const router = useRouter();
   const { t } = useT();
+  const { date } = useLocalSearchParams<{ date?: string }>();
   const settings = useLoadedSettings();
   const bottomClearance = useBottomSafeClearance();
   const tasks = useActiveTasks();
-  // useHomeBuckets only to derive what was completed today (drawer + hiding
-  // done items from the active lists) — the lists themselves come from the
-  // full active set so unscheduled practices show up here.
-  const buckets = useHomeBuckets(settings.weekStart);
+  // Optional `date` param makes this a date-aware log surface: opened from a
+  // past day (Home day-view / calendar), completing logs for THAT day.
+  const selectedDate = useMemo(() => {
+    if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      const [y, m, d] = date.split('-').map(Number);
+      const dt = new Date(y, m - 1, d);
+      dt.setHours(0, 0, 0, 0);
+      return dt;
+    }
+    const dt = new Date();
+    dt.setHours(0, 0, 0, 0);
+    return dt;
+  }, [date]);
+  const selectedKey = dateKeyFromLocal(selectedDate);
+  const isToday = selectedKey === dateKeyFromLocal(new Date());
+  // Selected day's detail — completions (drawer + hiding done items) and the
+  // one-shot list (with lastCompletedAt for trophy dimming). Works for today
+  // and any past day.
+  const dayDetail = useDayDetail(selectedDate, settings.weekStart);
   const completeTask = useCompleteTask();
   const undoCompletion = useUndoCompletion();
   const taskLimit = useTaskLimit();
@@ -97,8 +115,18 @@ export default function AllPracticesScreen() {
       { id: fid, xp: reward.total.xp, coins: reward.total.coins },
     ]);
     setPendingDone((prev) => new Set(prev).add(task.id));
+    // Retro when a past day is selected — file at noon of that local date.
+    const at = new Date(selectedDate);
+    at.setHours(12, 0, 0, 0);
     completeTask.mutate(
-      { task, subs },
+      isToday
+        ? { task, subs }
+        : {
+            task,
+            subs,
+            completedAt: at.toISOString(),
+            completedLocalDate: selectedKey,
+          },
       {
         onError: (err) => {
           // Restore the card — the completion didn't land.
@@ -143,70 +171,114 @@ export default function AllPracticesScreen() {
   };
 
   const handleRefresh = async () => {
-    await Promise.all([tasks.refetch(), buckets.refetch()]);
+    await Promise.all([tasks.refetch(), dayDetail.refetch()]);
   };
-  const isRefreshing = tasks.isRefetching || buckets.isRefetching;
+  const isRefreshing = tasks.isRefetching || dayDetail.isRefetching;
 
-  // Completed-today ids — hide from the active lists (they move to the
-  // drawer, mirroring Home).
-  const completedTodayIds = useMemo(
-    () =>
-      new Set(
-        (buckets.data?.todayActivity.completed ?? []).map((c) => c.task.id),
-      ),
-    [buckets.data],
+  // Completed on the SELECTED day — hide from the active lists (they move
+  // to the drawer).
+  const completedThatDayIds = useMemo(
+    () => new Set((dayDetail.data?.completions ?? []).map((c) => c.taskId)),
+    [dayDetail.data],
   );
 
-  // Recorrentes — weekly/monthly (excluding weekly-all-7, which is
-  // effectively daily and lives on Hoje), minus what's already done today
-  // or optimistically hidden this frame.
-  const recurring = useMemo(
-    () =>
-      (tasks.data ?? []).filter(
-        (task) =>
-          !isEffectivelyDaily(task.recurrence) &&
-          (task.recurrence.type === 'weekly' ||
-            task.recurrence.type === 'monthly') &&
-          !completedTodayIds.has(task.id) &&
-          !pendingDone.has(task.id),
-      ),
-    [tasks.data, completedTodayIds, pendingDone],
+  const activeById = useMemo(
+    () => new Map((tasks.data ?? []).map((tk) => [tk.id, tk])),
+    [tasks.data],
   );
 
-  // Pontuais — sourced from the Home buckets pipeline (buckets.oneTime),
-  // which already excludes completed/skipped-today AND, unlike
-  // useActiveTasks, carries lastCompletedAt. That gives us Home-parity
-  // trophy dimming + freshness sort for free, and its optimistic removal
-  // (useCompleteTask drops from oneTime) hides a tapped card instantly.
+  // Recorrentes — ALL weekly/monthly (excluding weekly-all-7, which is
+  // effectively daily and lives on Hoje), minus what's already done on the
+  // selected day or optimistically hidden this frame. NOT period-gated:
+  // this is the "log anything" catalog.
+  const recurring = useMemo(() => {
+    const dayEnd = new Date(selectedDate);
+    dayEnd.setHours(23, 59, 59, 999);
+    return (tasks.data ?? []).filter(
+      (task) =>
+        !isEffectivelyDaily(task.recurrence) &&
+        (task.recurrence.type === 'weekly' ||
+          task.recurrence.type === 'monthly') &&
+        // Never list a task on a day before it existed — a retro completion
+        // there would be dated before the task's own created_at (corrupting
+        // the heatmap + Momentum window). Mirrors useDayDetail's created_at
+        // scope, which already covers the one-shot list.
+        new Date(task.created_at).getTime() <= dayEnd.getTime() &&
+        !completedThatDayIds.has(task.id) &&
+        !pendingDone.has(task.id),
+    );
+  }, [tasks.data, completedThatDayIds, pendingDone, selectedDate]);
+
+  // Pontuais — from the selected day's openTasks (carries lastCompletedAt
+  // for trophy dimming + already excludes done/skipped-that-day), minus
+  // what's optimistically hidden this frame.
   const oneshot = useMemo(
     () =>
-      (buckets.data?.oneTime ?? [])
-        .filter((task) => !pendingDone.has(task.id))
-        .sort((a, b) => compareOneShotsByFreshness(a, b)),
-    [buckets.data, pendingDone],
+      (dayDetail.data?.openTasks ?? [])
+        .map((o) => o.task)
+        .filter(
+          (task) =>
+            task.recurrence.type === 'one_shot' && !pendingDone.has(task.id),
+        )
+        .sort((a, b) => compareOneShotsByFreshness(a, b, selectedDate)),
+    [dayDetail.data, pendingDone, selectedDate],
   );
 
-  // Prune the optimistic-hide set once the server confirms a completion
-  // (the id shows up in completedTodayIds). Pruning only AFTER the server
-  // reflects it means the card stays hidden through the handoff (no
-  // reappear-then-vanish flicker) and a later undo can bring it back.
+  // Prune the optimistic-hide set once the server reflects the completion
+  // (the id shows up in the day's completions). Pruning only AFTER the
+  // server reflects it keeps the card hidden through the handoff (no
+  // reappear-then-vanish flicker) and lets an undo bring it back.
   useEffect(() => {
     setPendingDone((prev) => {
       if (prev.size === 0) return prev;
-      const next = new Set([...prev].filter((id) => !completedTodayIds.has(id)));
+      const next = new Set(
+        [...prev].filter((id) => !completedThatDayIds.has(id)),
+      );
       return next.size === prev.size ? prev : next;
     });
-  }, [completedTodayIds]);
+  }, [completedThatDayIds]);
 
   const completedItems = useMemo<CompletedItem[]>(
     () =>
-      (buckets.data?.todayActivity.completed ?? [])
-        .filter((c) => !isEffectivelyDaily(c.task.recurrence))
-        .map((c) => ({ task: c.task, completionId: c.latestCompletionId })),
-    [buckets.data],
+      (dayDetail.data?.completions ?? [])
+        .map((c): CompletedItem | null => {
+          const task = activeById.get(c.taskId);
+          if (task) {
+            // Dailies belong to Hoje — this surface is non-daily only.
+            if (isEffectivelyDaily(task.recurrence)) return null;
+            return { task, completionId: c.id };
+          }
+          // Archived/deleted since completion — render from the snapshot so
+          // the day's record isn't silently lost (CompletedBucket only reads
+          // id/title/primary_sub/primary_dimension).
+          const sub = c.subs[0]?.sub_id;
+          const shim: TaskWithSubs = {
+            id: c.taskId,
+            character_id: '',
+            title: c.taskTitle,
+            description: null,
+            task_type: 'daily',
+            recurrence: { type: 'daily' },
+            target_count: 1,
+            is_archived: false,
+            created_at: '',
+            updated_at: '',
+            template_id: null,
+            icon: null,
+            subs: c.subs,
+            primary_sub_id: sub ?? ('sleep' as never),
+            primary_dimension_id: sub
+              ? dimensionForSub(sub)
+              : ('health' as never),
+            total_stars: c.totalStars,
+          };
+          return { task: shim, completionId: c.id };
+        })
+        .filter((x): x is CompletedItem => x !== null),
+    [dayDetail.data, activeById],
   );
 
-  const isLoading = tasks.isLoading;
+  const isLoading = tasks.isLoading || dayDetail.isLoading;
   const hasAny =
     recurring.length + oneshot.length > 0 || completedItems.length > 0;
 
@@ -214,7 +286,7 @@ export default function AllPracticesScreen() {
     <TaskCard
       key={task.id}
       task={task}
-      dimmed={isInTrophyWindow(task)}
+      dimmed={isInTrophyWindow(task, selectedDate)}
       onComplete={() => handleQuickComplete(task)}
       onLongPress={() => setSheetTask(task)}
       onSwipeComplete={() => setSheetTask(task)}
@@ -277,7 +349,13 @@ export default function AllPracticesScreen() {
             />
           }
         >
-          <Text style={styles.lead}>{t('allPractices.lead')}</Text>
+          <Text style={styles.lead}>
+            {isToday
+              ? t('allPractices.lead')
+              : t('allPractices.loggingFor', {
+                  date: formatLongDate(selectedDate),
+                })}
+          </Text>
 
           {isLoading ? (
             <View style={styles.loadingBox}>
@@ -317,7 +395,11 @@ export default function AllPracticesScreen() {
               {completedItems.length > 0 && (
                 <CompletedBucket
                   items={completedItems}
-                  title={t('home.completedBucket.today')}
+                  title={
+                    isToday
+                      ? t('home.completedBucket.today')
+                      : t('home.completedBucket.day')
+                  }
                   onUndo={handleUndo}
                   onExtra={(task) => handleQuickComplete(task)}
                 />

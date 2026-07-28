@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
@@ -30,6 +30,16 @@ interface Props {
 
 /** Gold celebration palette — same trio as the Vault buy celebration. */
 const GOLD = ['#FFE890', '#FFC83D', '#C8881C'] as const;
+
+/** Body copy variant keys (under `home.dayCleared.`), picked at random on
+ *  each open so the celebration doesn't read identical every day. Keep in
+ *  sync with the i18n catalogs (pt.ts / en.ts). */
+const BODY_KEYS = ['body', 'body2', 'body3', 'body4', 'body5', 'body6', 'body7'];
+const ALL_SKIPPED_KEYS = ['allSkippedBody', 'allSkippedBody2', 'allSkippedBody3'];
+
+function pickKey(keys: string[]): string {
+  return keys[Math.floor(Math.random() * keys.length)] ?? keys[0];
+}
 
 /** Radial burst geometry — pure reanimated (no confetti lib, OTA-safe). */
 const BURST_COUNT = 12;
@@ -109,6 +119,8 @@ export function DayClearedCelebration({
   onClose,
 }: Props) {
   const { t } = useT();
+  // Randomized body copy — chosen once per open (in the visible effect).
+  const [bodyKey, setBodyKey] = useState('body');
 
   // Card-level entry animation (fade + slide up) — same grammar as
   // BuyCelebrationModal so celebrations feel like one family.
@@ -119,6 +131,10 @@ export function DayClearedCelebration({
 
   useEffect(() => {
     if (visible) {
+      // Pick a fresh phrase for this open — the variant set depends on
+      // whether the day was cleared purely by skipping.
+      const skipped = doneCount === 0 && skippedCount > 0;
+      setBodyKey(pickKey(skipped ? ALL_SKIPPED_KEYS : BODY_KEYS));
       cardOpacity.value = withTiming(1, { duration: 220 });
       cardTranslateY.value = withSpring(0, { damping: 18, stiffness: 180 });
       glyphScale.value = withDelay(
@@ -135,7 +151,7 @@ export function DayClearedCelebration({
       cardTranslateY.value = 20;
       glyphScale.value = 0.4;
     }
-  }, [visible, cardOpacity, cardTranslateY, glyphScale]);
+  }, [visible, doneCount, skippedCount, cardOpacity, cardTranslateY, glyphScale]);
 
   const cardStyle = useAnimatedStyle(() => ({
     opacity: cardOpacity.value,
@@ -213,11 +229,7 @@ export function DayClearedCelebration({
                   ? t('home.dayCleared.allSkippedTitle')
                   : t('home.dayCleared.title')}
               </Text>
-              <Text style={styles.body}>
-                {allSkipped
-                  ? t('home.dayCleared.allSkippedBody')
-                  : t('home.dayCleared.body')}
-              </Text>
+              <Text style={styles.body}>{t(`home.dayCleared.${bodyKey}`)}</Text>
 
               {/* Stats row: X done · Y skipped · +Z XP */}
               {statParts.length > 0 && (

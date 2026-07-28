@@ -15,10 +15,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useT } from '@/lib/i18n';
 
-import { BucketTabsV2, type BucketTabSpec } from '@/components/BucketTabsV2';
 import { CompletedBucket, type CompletedItem } from '@/components/CompletedBucket';
 import { CompleteTaskSheet } from '@/components/CompleteTaskSheet';
-import { DayStatsCard } from '@/components/DayStatsCard';
+import { DayXpStat } from '@/components/DayXpStat';
 import { MoodDayDetail } from '@/components/mood/MoodDayDetail';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { DayHeatmap, type DayCellData } from '@/components/history/DayHeatmap';
@@ -41,8 +40,8 @@ import {
   useUndoCompletion,
   useUnskipTaskToday,
 } from '@/lib/api/tasks';
+import { isDueOn } from '@/lib/recurrence';
 import { useLoadedSettings } from '@/lib/settings';
-import { compareOneShotsByFreshness, isInTrophyWindow } from '@/lib/trophy';
 import { confirmAction, showInfo } from '@/lib/util/confirm';
 import type { DimensionId, SubId, TaskSub, TaskWithSubs } from '@/lib/db/types';
 import { rewardForTaskSubs } from '@/lib/xp';
@@ -124,14 +123,6 @@ export default function HistoryScreen() {
   const [sheetTask, setSheetTask] = useState<TaskWithSubs | null>(null);
   const [actionTask, setActionTask] = useState<TaskWithSubs | null>(null);
   const [floats, setFloats] = useState<{ id: number; xp: number; coins: number }[]>([]);
-
-  // Bucket tabs: Daily / Weekly / One-shot, identical to home. Lets
-  // the user retroactively log a weekly task on any day of its week
-  // (e.g. "I forgot to mark tennis on Thursday — let me put it on
-  // Friday"). Without the bucket switcher, weekly tasks were hidden
-  // because we only showed scheduled days.
-  type BucketTab = 'daily' | 'weekly' | 'oneshot';
-  const [activeTab, setActiveTab] = useState<BucketTab>('daily');
 
   // Heatmap range follows the visible month — the MonthGrid only needs
   // entries for the month it renders, so we fetch a tight window.
@@ -446,52 +437,29 @@ export default function HistoryScreen() {
           </View>
         ) : (
           <>
-            <DayStatsCard
-              xp={day.data?.totalXp ?? 0}
-              completed={day.data?.completions.length ?? 0}
-              skipped={day.data?.skipped.length ?? 0}
-            />
+            <View style={styles.xpStatWrap}>
+              <DayXpStat xp={day.data?.totalXp ?? 0} isToday={isToday} />
+            </View>
 
             <MoodDayDetail dateKey={dayKey} />
 
-            {/* Bucket tabs — same vocabulary as home. Lets the user
-                see weekly/one-shot candidates without leaving the day. */}
             {(() => {
-              const openByBucket: Record<BucketTab, TaskWithSubs[]> = {
-                daily: [],
-                weekly: [],
-                oneshot: [],
-              };
-              for (const { task } of day.data?.openTasks ?? []) {
-                if (task.recurrence.type === 'daily') {
-                  openByBucket.daily.push(task);
-                } else if (task.recurrence.type === 'one_shot') {
-                  openByBucket.oneshot.push(task);
-                } else {
-                  openByBucket.weekly.push(task);
-                }
-              }
-              // Trophy sort — recently-completed one-shots sink to the
-              // bottom. `now` is the selected day so the window logic
-              // is relative to what the user is browsing, not today.
-              openByBucket.oneshot.sort((a, b) =>
-                compareOneShotsByFreshness(a, b, selected),
-              );
-              const tabSpecs: BucketTabSpec<BucketTab>[] = [
-                { value: 'daily', label: t('home.bucketTabs.daily'), count: openByBucket.daily.length },
-                { value: 'weekly', label: t('home.bucketTabs.weekly'), count: openByBucket.weekly.length },
-                { value: 'oneshot', label: t('home.bucketTabs.oneshot'), count: openByBucket.oneshot.length },
-              ];
-              const activeList = openByBucket[activeTab];
-              const emptyKey: Record<BucketTab, string> = {
-                daily: 'home.bucketTabs.emptyDaily',
-                weekly: 'home.bucketTabs.emptyWeekly',
-                oneshot: 'home.bucketTabs.emptyOneshot',
-              };
+              // Unified open list — daily + scheduled-on-that-day recurring,
+              // no one-shots (matches the Home day-view). Anything else you
+              // want to log for this day lives behind "Ver todas as práticas".
+              const open = (day.data?.openTasks ?? [])
+                .map((o) => o.task)
+                .filter(
+                  (task) =>
+                    task.recurrence.type !== 'one_shot' &&
+                    (task.recurrence.type === 'daily' ||
+                      isDueOn(task.recurrence, selected)),
+                );
+              // Completed drawer — hydrate a minimal shim from each
+              // completion snapshot (CompletedBucket only reads id/title/
+              // primary_sub/primary_dimension), so archived/deleted tasks
+              // still render.
               const doneItems: CompletedItem[] = (day.data?.completions ?? []).map((c) => {
-                // Hydrate a minimal task shim from the completion snapshot —
-                // CompletedBucket only reads task.id, title, primary_sub_id,
-                // primary_dimension_id for rendering.
                 const sub = c.subs[0]?.sub_id;
                 const task: TaskWithSubs = {
                   id: c.taskId,
@@ -519,54 +487,76 @@ export default function HistoryScreen() {
                 (task) => ({ task }),
               );
               return (
-                <>
-                  <BucketTabsV2<BucketTab>
-                    tabs={tabSpecs}
-                    value={activeTab}
-                    onChange={setActiveTab}
+                <View style={styles.openList}>
+                  {open.length === 0 ? (
+                    <Text style={styles.tabEmpty}>{t('home.emptyPastDay')}</Text>
+                  ) : (
+                    open.map((task) => (
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        onComplete={() => handleRetroQuickComplete(task)}
+                        onSwipeComplete={() => setSheetTask(task)}
+                        onSkip={() => handleSwipeSkip(task)}
+                        onLongPress={() => setActionTask(task)}
+                        onEdit={() =>
+                          router.push({ pathname: '/task-form', params: { id: task.id } })
+                        }
+                      />
+                    ))
+                  )}
+
+                  {/* Log anything else FOR THIS DAY (weekly not scheduled
+                      today, one-shots, …) — the date-aware see-all. */}
+                  <Pressable
+                    onPress={() =>
+                      router.push({
+                        pathname: '/all-practices',
+                        params: { date: dayKey },
+                      })
+                    }
+                    style={({ pressed }) => [
+                      styles.seeAllBtn,
+                      pressed && { opacity: 0.7 },
+                    ]}
+                    accessibilityRole="button"
+                  >
+                    <Ionicons
+                      name="albums-outline"
+                      size={16}
+                      color={tokens.brand.violet2}
+                    />
+                    <Text style={styles.seeAllText}>{t('home.seeAllCta')}</Text>
+                  </Pressable>
+
+                  <CompletedBucket
+                    items={doneItems}
+                    title={
+                      isToday
+                        ? t('home.completedBucket.today')
+                        : t('home.completedBucket.day')
+                    }
+                    onUndo={(completionId) =>
+                      handleUndoCompletion(
+                        completionId,
+                        day.data?.completions.find((c) => c.id === completionId)?.taskTitle ?? '',
+                        day.data?.completions.find((c) => c.id === completionId)?.xpGranted ?? 0,
+                        day.data?.completions.find((c) => c.id === completionId)?.coinsGranted ?? 0,
+                      )
+                    }
+                    onExtra={(task) => handleRetroQuickComplete(task)}
                   />
-
-                  <View style={styles.openList}>
-                    {activeList.length === 0 ? (
-                      <Text style={styles.tabEmpty}>{t(emptyKey[activeTab])}</Text>
-                    ) : (
-                      activeList.map((task) => (
-                        <TaskCard
-                          key={task.id}
-                          task={task}
-                          dimmed={isInTrophyWindow(task, selected)}
-                          onComplete={() => handleRetroQuickComplete(task)}
-                          onSwipeComplete={() => setSheetTask(task)}
-                          onSkip={() => handleSwipeSkip(task)}
-                          onLongPress={() => setActionTask(task)}
-                          onEdit={() =>
-                            router.push({ pathname: '/task-form', params: { id: task.id } })
-                          }
-                        />
-                      ))
-                    )}
-
-                    <CompletedBucket
-                      items={doneItems}
-                      title={t('home.completedBucket.daily')}
-                      onUndo={(completionId) =>
-                        handleUndoCompletion(
-                          completionId,
-                          day.data?.completions.find((c) => c.id === completionId)?.taskTitle ?? '',
-                          day.data?.completions.find((c) => c.id === completionId)?.xpGranted ?? 0,
-                          day.data?.completions.find((c) => c.id === completionId)?.coinsGranted ?? 0,
-                        )
-                      }
-                      onExtra={(task) => handleRetroQuickComplete(task)}
-                    />
-                    <CompletedBucket
-                      items={skippedItems}
-                      title={t('home.skippedBucket.today')}
-                      variant="skipped"
-                      onUnskip={handleUnskip}
-                    />
-                  </View>
-                </>
+                  <CompletedBucket
+                    items={skippedItems}
+                    title={
+                      isToday
+                        ? t('home.skippedBucket.today')
+                        : t('home.skippedBucket.day')
+                    }
+                    variant="skipped"
+                    onUnskip={handleUnskip}
+                  />
+                </View>
               );
             })()}
 
@@ -692,9 +682,30 @@ const styles = StyleSheet.create({
   },
   // Slightly larger gap between cards so the swipe action zone has
   // breathing room on each side.
+  xpStatWrap: {
+    marginBottom: tokens.space[4],
+  },
   openList: {
     gap: tokens.space[2],
     marginTop: tokens.space[3],
+  },
+  seeAllBtn: {
+    flexDirection: 'row',
+    alignSelf: 'center',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: tokens.space[2] + 2,
+    paddingHorizontal: tokens.space[4],
+    marginTop: tokens.space[1],
+    borderRadius: tokens.radius.lg,
+    backgroundColor: tokens.bg.surface2,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+  },
+  seeAllText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 13,
+    color: tokens.brand.violet2,
   },
   tabEmpty: {
     ...tokens.type.caption,

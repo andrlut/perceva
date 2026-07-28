@@ -610,7 +610,6 @@ export default function HomeScreen() {
       ).length
     );
   }, [data]);
-  const ringTotal = ringDone + lists.today.length;
 
   // "Fechar o dia" — skip everything still waiting in the Hoje list in one
   // deliberate act (confirm first). Scoped to lists.today ONLY, so Pontuais
@@ -797,29 +796,17 @@ export default function HomeScreen() {
           displayName={character.data?.profile.display_name ?? t('home.defaultName')}
           weekdayLabel={hero.weekday}
           monthDayLabel={hero.monthDay}
-          ringDone={ringDone}
-          // Ring is a today-contract concept — hide it on past days.
-          ringTotal={isToday ? ringTotal : 0}
+          // XP earned that day is now a standalone glowing stat inside the
+          // header (no band, no ring). null until the day's detail lands so
+          // it never flashes a grey "+0" before the real value (guarding on
+          // isLoading missed today, where dayDetail loads separately).
+          xpOfDay={dayDetail.data ? xpOfDay : null}
+          isToday={isToday}
           canGoNext={!isToday}
           onPrevDay={() => stepDay(-1)}
           onNextDay={() => stepDay(1)}
           onResetToday={isToday ? undefined : goToToday}
         />
-
-        {/* XP earned on the selected day — the hero stat that replaced the
-            level bar + reward-progress cards. Reads dayDetail.totalXp so it
-            works for today and any past day. Hidden while loading so it
-            doesn't flash "+0". */}
-        {!isLoading && (
-          <View style={styles.xpHero}>
-            <Ionicons name="flash" size={18} color={tokens.semantic.xp} />
-            <Text style={styles.xpHeroNum}>+{xpOfDay}</Text>
-            <Text style={styles.xpHeroUnit}>XP</Text>
-            <Text style={styles.xpHeroLabel}>
-              {isToday ? t('home.xpHero.today') : t('home.xpHero.thatDay')}
-            </Text>
-          </View>
-        )}
 
         {isLoading ? (
           <View style={styles.loadingBox}>
@@ -933,7 +920,13 @@ export default function HomeScreen() {
           "Me leva lá" jumps straight to /tasks). */}
       <TasksFabStack
         bottomOffset={navClearance}
-        onSeeAll={() => router.push('/all-practices')}
+        onSeeAll={() =>
+          router.push(
+            isToday
+              ? '/all-practices'
+              : { pathname: '/all-practices', params: { date: selectedKey } },
+          )
+        }
         onCalendar={() => router.push('/history')}
         seeAllWrap={(node) => (
           <TourTarget id="home.manage" radius={28}>
@@ -1103,39 +1096,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: tokens.text.dim,
     letterSpacing: 0.3,
-  },
-  // XP-earned hero — the prominent day stat that replaced the level bar +
-  // reward-progress cards. Big green number in one clean row.
-  xpHero: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[2],
-    marginHorizontal: tokens.space[4],
-    marginTop: tokens.space[2],
-    marginBottom: tokens.space[1],
-    paddingVertical: tokens.space[3],
-    paddingHorizontal: tokens.space[4],
-    backgroundColor: tokens.bg.surface,
-    borderRadius: tokens.radius.lg,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-  },
-  xpHeroNum: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 30,
-    color: tokens.semantic.xp,
-    letterSpacing: -0.5,
-  },
-  xpHeroUnit: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 14,
-    color: tokens.semantic.xp,
-    marginLeft: -2,
-  },
-  xpHeroLabel: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 12,
-    color: tokens.text.dim,
-    marginLeft: 'auto',
   },
 });
