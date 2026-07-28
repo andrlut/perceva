@@ -61,13 +61,22 @@ article's spine — do not invent facts not in the article.
   (e.g. "66 dias, não 21"). This is the biggest text on the card.
 - `subhead` — **one** sentence framing the piece. Optional but usually worth it.
 - `points` — **exactly 3**, one per hero idea from `main_points`. Each:
+  - `icon` — an **Ionicons name** that visually captures the idea (the
+    renderer draws it in a badge). Pick a concrete, evocative one — e.g.
+    `hourglass` for time, `finger-print` for identity, `home` for
+    environment, `leaf` for calm/nature, `trending-up` for growth,
+    `shield-checkmark` for protection, `bulb` for insight, `heart` for love,
+    `people` for relationships, `flame` for intensity, `repeat` for habit,
+    `git-branch` for choices, `pulse` for health. Use only real Ionicons names
+    (kebab-case, no `-outline` suffix needed). If unsure, omit it and the
+    dimension icon is used.
   - `title` — 2–5 words, the idea named with personality.
   - `body` — 1–3 short sentences (fits ~4 lines). Compress `what` + `why` into
     plain prose. Keep one concrete anchor (a number, a name) when the article
     has one. No academic labels.
 - `stat` — the **single** most striking number in the article (value + short
-  caption), or omit if there isn't a clean one. Don't repeat a number that's
-  already the headline.
+  caption + an `icon`), or omit if there isn't a clean one. Don't repeat a
+  number that's already the headline.
 - `source` — the primary source label, same as `source_label_*`.
 
 Apply the drafter's voice rules: native PT/EN, no filler, "você"/"you",
@@ -95,11 +104,11 @@ teaching).
     "headline": { "pt": "…", "en": "…" },
     "subhead":  { "pt": "…", "en": "…" },
     "points": [
-      { "n": 1, "title": { "pt": "…", "en": "…" }, "body": { "pt": "…", "en": "…" } },
-      { "n": 2, "title": { "pt": "…", "en": "…" }, "body": { "pt": "…", "en": "…" } },
-      { "n": 3, "title": { "pt": "…", "en": "…" }, "body": { "pt": "…", "en": "…" } }
+      { "n": 1, "icon": "hourglass", "title": { "pt": "…", "en": "…" }, "body": { "pt": "…", "en": "…" } },
+      { "n": 2, "icon": "finger-print", "title": { "pt": "…", "en": "…" }, "body": { "pt": "…", "en": "…" } },
+      { "n": 3, "icon": "home", "title": { "pt": "…", "en": "…" }, "body": { "pt": "…", "en": "…" } }
     ],
-    "stat":   { "value": "…", "caption": { "pt": "…", "en": "…" } },
+    "stat":   { "icon": "repeat", "value": "…", "caption": { "pt": "…", "en": "…" } },
     "source": { "pt": "…", "en": "…" }
   }
 }
