@@ -23,7 +23,6 @@ import { MoodHubStrip } from '@/components/mood/MoodHubStrip';
 import { CompletedBucket, type CompletedItem } from '@/components/CompletedBucket';
 import { NotificationOptInCard } from '@/components/NotificationOptInCard';
 import { QuestChipsStrip } from '@/components/QuestChipsStrip';
-import { RewardStatsCard, XPStatsCard } from '@/components/StatsCards';
 import { TaskActionSheet } from '@/components/TaskActionSheet';
 import { TaskCard } from '@/components/TaskCard';
 import { TasksFabStack } from '@/components/TasksFabStack';
@@ -31,16 +30,16 @@ import { TodayAmbient } from '@/components/TodayAmbient';
 import { TodayHeader } from '@/components/TodayHeader';
 import { XPCoinFloat } from '@/components/XPCoinFloat';
 import { useCharacter } from '@/lib/api/character';
+import { dateKeyFromLocal, useDayDetail } from '@/lib/api/history';
 import { todayDateKey } from '@/lib/api/mood';
 import { useT } from '@/lib/i18n';
-import { useTrackedReward } from '@/lib/api/rewards';
 import { useLoadedSettings } from '@/lib/settings';
 import { TourModule } from '@/components/tour/TourModule';
 import { TourTarget } from '@/components/tour/TourTarget';
 import { emitTourEvent } from '@/lib/tour/eventBus';
 import { remeasureActiveTourTarget } from '@/lib/tour/targets';
 import { buildM1Steps, M1_EVENTS } from '@/lib/tour/m1Steps';
-import { buildM2Steps, M2_EVENTS } from '@/lib/tour/m2Steps';
+import { buildM2Steps } from '@/lib/tour/m2Steps';
 import { buildM3Steps } from '@/lib/tour/m3Steps';
 import { buildM4Steps } from '@/lib/tour/m4Steps';
 import { buildM5Steps } from '@/lib/tour/m5Steps';
@@ -66,7 +65,7 @@ import type { TaskSub, TaskWithSubs } from '@/lib/db/types';
 import { isDueOn } from '@/lib/recurrence';
 import { formatHeroDate } from '@/lib/time';
 import { compareOneShotsByFreshness, isInTrophyWindow } from '@/lib/trophy';
-import { levelProgress, rewardForTaskSubs } from '@/lib/xp';
+import { rewardForTaskSubs } from '@/lib/xp';
 import { tokens } from '@/theme';
 
 interface FloatItem {
@@ -121,7 +120,6 @@ export default function HomeScreen() {
   const character = useCharacter();
   const buckets = useHomeBuckets(settings.weekStart);
   const allActiveTasks = useActiveTasks();
-  const trackedReward = useTrackedReward();
   const quests = useQuests();
   const completeTask = useCompleteTask();
   const skipTask = useSkipTaskToday();
@@ -129,9 +127,30 @@ export default function HomeScreen() {
   const unskipTask = useUnskipTaskToday();
   const undoCompletion = useUndoCompletion();
 
+  // Selected day for the whole screen — defaults to today (local midnight).
+  // The header's prev/next arrows move it; the day's tasks, XP hero and
+  // completed drawer all follow. Past days are the retro-logging surface
+  // ("I always forget to mark something yesterday").
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
+  const todayKey = dateKeyFromLocal(new Date());
+  const selectedKey = dateKeyFromLocal(selectedDate);
+  const isToday = selectedKey === todayKey;
+  // The selected day's detail — completions (with undo), still-open tasks
+  // for retro logging, skips, and the day's XP total. Drives the past-day
+  // view AND the XP hero for every day (today included).
+  const dayDetail = useDayDetail(selectedDate, settings.weekStart);
+
   const [floats, setFloats] = useState<FloatItem[]>([]);
   const [actionTask, setActionTask] = useState<TaskWithSubs | null>(null);
   const [sheetTask, setSheetTask] = useState<TaskWithSubs | null>(null);
+  // Optimistic-hide set for RETRO completions on a past day (mirrors
+  // all-practices' pendingDone) — closes the double-tap duplicate window
+  // where the card lingers until the dayDetail refetch lands.
+  const [retroPending, setRetroPending] = useState<Set<string>>(new Set());
   const navClearance = useBottomNavClearance();
   // While a bottom-positioned tour tooltip is visible, the Home scroll
   // needs extra room so the user can scroll content above the overlay
@@ -241,8 +260,57 @@ export default function HomeScreen() {
     );
   };
 
+  // Complete for the currently-selected day. Today → live path (optimistic
+  // + M1 tour event). Past day → retro completion filed under that local
+  // date ("I forgot to mark it yesterday"); no optimistic removal (the day
+  // view refetches on settle), but still float the XP for feedback.
+  const completeForSelectedDay = (task: TaskWithSubs, subs: TaskSub[]) => {
+    if (isToday) {
+      fireCompletion(task, subs);
+      return;
+    }
+    if (completeTask.isPending) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    const reward = rewardForTaskSubs(subs);
+    const fid = Date.now();
+    setFloats((prev) => [
+      ...prev,
+      { id: fid, xp: reward.total.xp, coins: reward.total.coins },
+    ]);
+    // File the completion at noon of the selected day so completed_at sits
+    // squarely inside that local date; completedLocalDate is what the day
+    // buckets / History key off.
+    const at = new Date(selectedDate);
+    at.setHours(12, 0, 0, 0);
+    // Optimistic hide — the past-day list comes from dayDetail (no
+    // optimistic removal), so without this the card lingers until the
+    // refetch lands, a window where a second tap logs a DUPLICATE
+    // completion. Hide now; the prune effect drops it once the server
+    // confirms; restore on error.
+    setRetroPending((prev) => new Set(prev).add(task.id));
+    completeTask.mutate(
+      { task, subs, completedAt: at.toISOString(), completedLocalDate: selectedKey },
+      {
+        onError: (err) => {
+          setRetroPending((prev) => {
+            const next = new Set(prev);
+            next.delete(task.id);
+            return next;
+          });
+          const e = err as { message?: string; code?: string; details?: string };
+          console.error('[complete_task retro] failed', e);
+          Alert.alert(
+            t('home.actionErrors.complete'),
+            [e.message, e.code, e.details].filter(Boolean).join('\n') ||
+              t('home.actionErrors.unknown'),
+          );
+        },
+      },
+    );
+  };
+
   const handleQuickComplete = (task: TaskWithSubs) => {
-    fireCompletion(task, task.subs);
+    completeForSelectedDay(task, task.subs);
   };
 
   const handleLongPress = (task: TaskWithSubs) => {
@@ -255,7 +323,7 @@ export default function HomeScreen() {
     if (!sheetTask) return;
     const task = sheetTask;
     setSheetTask(null);
-    fireCompletion(task, subs);
+    completeForSelectedDay(task, subs);
   };
 
   const handleActionAdjust = () => {
@@ -271,7 +339,7 @@ export default function HomeScreen() {
     setActionTask(null);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     skipTask.mutate(
-      { taskId: task.id },
+      { taskId: task.id, date: isToday ? undefined : selectedKey },
       {
         onError: (err) => {
           const e = err as { message?: string };
@@ -286,7 +354,7 @@ export default function HomeScreen() {
 
   const handleSwipeSkip = (task: TaskWithSubs) => {
     skipTask.mutate(
-      { taskId: task.id },
+      { taskId: task.id, date: isToday ? undefined : selectedKey },
       {
         onError: (err) => {
           const e = err as { message?: string };
@@ -322,7 +390,7 @@ export default function HomeScreen() {
   const handleUnskip = (taskId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     unskipTask.mutate(
-      { taskId },
+      { taskId, date: isToday ? undefined : selectedKey },
       {
         onError: (err) => {
           const e = err as { message?: string };
@@ -335,7 +403,31 @@ export default function HomeScreen() {
     );
   };
 
-  const isLoading = character.isLoading || buckets.isLoading;
+  // ── Day navigation ────────────────────────────────────────────────────
+  const stepDay = (deltaDays: number) => {
+    setSelectedDate((prev) => {
+      const d = new Date(prev);
+      d.setDate(d.getDate() + deltaDays);
+      d.setHours(0, 0, 0, 0);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      // Never navigate into the future — there's no contract to act on.
+      if (d.getTime() > today.getTime()) return prev;
+      return d;
+    });
+  };
+  const goToToday = () => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    setSelectedDate(d);
+  };
+
+  const isLoading =
+    character.isLoading ||
+    buckets.isLoading ||
+    // Show the spinner (not a "+0 XP / nothing here" flash) while a past
+    // day's detail loads for the first time.
+    (!isToday && dayDetail.isLoading);
   const hasError = character.error || buckets.error;
 
   const handleRefresh = async () => {
@@ -343,6 +435,8 @@ export default function HomeScreen() {
       character.refetch(),
       buckets.refetch(),
       allActiveTasks.refetch(),
+      // The selected day's detail drives the past-day view + the XP hero.
+      dayDetail.refetch(),
       // QuestChipsStrip renders right below and shares this query key —
       // without this, pulling to refresh visibly updated the task buckets
       // while the quest chips above them kept a stale count.
@@ -353,6 +447,7 @@ export default function HomeScreen() {
     character.isRefetching ||
     buckets.isRefetching ||
     allActiveTasks.isRefetching ||
+    dayDetail.isRefetching ||
     quests.isRefetching;
 
   const data = buckets.data;
@@ -405,6 +500,75 @@ export default function HomeScreen() {
       (data?.todayActivity.skipped ?? []).map((task) => ({ task })),
     [data?.todayActivity.skipped],
   );
+
+  // ── Selected-day view model ───────────────────────────────────────────
+  // Unifies today (buckets) and any past day (dayDetail) into one shape the
+  // render consumes. Today keeps its polished buckets-driven behavior
+  // (ring, celebration, skip, "Fechar o dia"); past days are the read +
+  // retro-log surface. The XP hero reads dayDetail.totalXp for EVERY day.
+  const xpOfDay = dayDetail.data?.totalXp ?? 0;
+
+  const tasksById = useMemo(
+    () => new Map((allActiveTasks.data ?? []).map((tk) => [tk.id, tk])),
+    [allActiveTasks.data],
+  );
+
+  // Past-day open list: daily + scheduled-on-that-day recurring, no
+  // one-shots (they live in "Todas as práticas") — same filter as today.
+  // dayDetail.openTasks already drops what was completed/skipped that day.
+  const pastOpen = useMemo<TaskWithSubs[]>(() => {
+    if (isToday || !dayDetail.data) return [];
+    return dayDetail.data.openTasks
+      .map((o) => o.task)
+      .filter(
+        (task) =>
+          task.recurrence.type !== 'one_shot' &&
+          !retroPending.has(task.id) &&
+          (task.recurrence.type === 'daily' ||
+            isDueOn(task.recurrence, selectedDate)),
+      );
+  }, [isToday, dayDetail.data, selectedDate, retroPending]);
+
+  const pastCompletedItems = useMemo<CompletedItem[]>(() => {
+    if (isToday || !dayDetail.data) return [];
+    return dayDetail.data.completions
+      .map((c): CompletedItem | null => {
+        const task = tasksById.get(c.taskId);
+        return task ? { task, completionId: c.id } : null;
+      })
+      .filter((x): x is CompletedItem => x !== null);
+  }, [isToday, dayDetail.data, tasksById]);
+
+  const pastSkippedItems = useMemo<CompletedItem[]>(() => {
+    if (isToday || !dayDetail.data) return [];
+    return dayDetail.data.skipped.map((task) => ({ task }));
+  }, [isToday, dayDetail.data]);
+
+  // What the render consumes, resolved by which day is selected.
+  const dayOpen = isToday ? lists.today : pastOpen;
+  const dayCompletedItems = isToday ? completedTodayItems : pastCompletedItems;
+  const daySkippedItems = isToday ? skippedTodayItems : pastSkippedItems;
+
+  // Reset the retro optimistic-hide set when the selected day changes — a
+  // pending hide from one day must not carry over and hide the same task on
+  // another day.
+  useEffect(() => {
+    setRetroPending(new Set());
+  }, [selectedKey]);
+
+  // Prune the retro hide once the server reflects the completion (the id
+  // shows up in the day's completions) — dayDetail then excludes it from
+  // openTasks anyway, and dropping it here lets an undo bring the card back.
+  useEffect(() => {
+    const doneIds = new Set(
+      (dayDetail.data?.completions ?? []).map((c) => c.taskId),
+    );
+    setRetroPending((prev) => {
+      if (prev.size === 0) return prev;
+      const next = new Set([...prev].filter((id) => !doneIds.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [dayDetail.data]);
 
   // ── Ring math + headline ──────────────────────────────────────────────
   // The ring tracks the day's recurring contract: done = recurring items
@@ -576,9 +740,7 @@ export default function HomeScreen() {
     skipTasksBulk.isPending,
   ]);
 
-  const hero = formatHeroDate();
-  const charXp = character.data?.character.total_xp ?? 0;
-  const lp = levelProgress(charXp);
+  const hero = formatHeroDate(selectedDate);
 
   // First rendered card overall carries the M1 tour anchor — normally
   // the first Hoje item, falling back to the first one-shot when the
@@ -590,7 +752,7 @@ export default function HomeScreen() {
         dimmed={isInTrophyWindow(task)}
         onComplete={() => handleQuickComplete(task)}
         onLongPress={() => handleLongPress(task)}
-        onSkip={() => handleSwipeSkip(task)}
+        onSkip={isToday ? () => handleSwipeSkip(task) : undefined}
         onSwipeComplete={() => setSheetTask(task)}
         onEdit={() => {
           emitTourEvent(M1_EVENTS.TASK_TAPPED);
@@ -599,8 +761,8 @@ export default function HomeScreen() {
       />
     );
     // M1 steps 1/3/4 spotlight the first card — wrapping only the anchor
-    // keeps the gap flow identical for the rest.
-    return isTourAnchor ? (
+    // keeps the gap flow identical for the rest. Tour is today-only.
+    return isTourAnchor && isToday ? (
       <TourTarget key={task.id} id="home.task-first" radius={20}>
         {card}
       </TourTarget>
@@ -636,29 +798,27 @@ export default function HomeScreen() {
           weekdayLabel={hero.weekday}
           monthDayLabel={hero.monthDay}
           ringDone={ringDone}
-          ringTotal={ringTotal}
+          // Ring is a today-contract concept — hide it on past days.
+          ringTotal={isToday ? ringTotal : 0}
+          canGoNext={!isToday}
+          onPrevDay={() => stepDay(-1)}
+          onNextDay={() => stepDay(1)}
+          onResetToday={isToday ? undefined : goToToday}
         />
 
-        <XPStatsCard
-          level={lp.level}
-          xpInLevel={lp.xpInLevel}
-          xpNeededForLevel={lp.xpNeededForLevel}
-          onPress={() =>
-            router.push({
-              pathname: '/(tabs)/character',
-              params: { pillar: 'praticada' },
-            })
-          }
-        />
-
-        {trackedReward && (
-          <RewardStatsCard
-            rewardName={trackedReward.name}
-            iconName={trackedReward.icon}
-            coins={trackedReward.currentCoins}
-            totalCoins={trackedReward.totalCoins}
-            onPress={() => router.push('/(tabs)/rewards')}
-          />
+        {/* XP earned on the selected day — the hero stat that replaced the
+            level bar + reward-progress cards. Reads dayDetail.totalXp so it
+            works for today and any past day. Hidden while loading so it
+            doesn't flash "+0". */}
+        {!isLoading && (
+          <View style={styles.xpHero}>
+            <Ionicons name="flash" size={18} color={tokens.semantic.xp} />
+            <Text style={styles.xpHeroNum}>+{xpOfDay}</Text>
+            <Text style={styles.xpHeroUnit}>XP</Text>
+            <Text style={styles.xpHeroLabel}>
+              {isToday ? t('home.xpHero.today') : t('home.xpHero.thatDay')}
+            </Text>
+          </View>
         )}
 
         {isLoading ? (
@@ -672,34 +832,32 @@ export default function HomeScreen() {
           </View>
         ) : (
           <>
-            {/* Order under the hero (XP / Reward cards above): quests
-                first, then the "Hoje" list — the day's schedule-driven
-                contract — then the one-shots as a secondary section. */}
-            <TourTarget id="home.quests" radius={18}>
-              <QuestChipsStrip />
-            </TourTarget>
-
-            {/* Contextual notification opt-in — the master switch defaults
-                OFF, so this card is how users discover reminders exist.
-                Once-ever; suppressed while the tour owns the screen. */}
-            <NotificationOptInCard enabled={!activeTourStep} />
+            {/* Today-only context: quests + the notification opt-in. On a
+                past day the screen is purely "see + retro-log what you
+                forgot", so these stay hidden. */}
+            {isToday && (
+              <>
+                <TourTarget id="home.quests" radius={18}>
+                  <QuestChipsStrip />
+                </TourTarget>
+                <NotificationOptInCard enabled={!activeTourStep} />
+              </>
+            )}
 
             <View style={styles.taskList}>
-              <Text style={styles.sectionHeader}>
-                {t('home.sections.today')}
-              </Text>
-              {lists.today.length === 0 ? (
+              {dayOpen.length === 0 ? (
                 <Text style={styles.tabEmpty}>
-                  {t('home.bucketTabs.emptyToday')}
+                  {isToday
+                    ? t('home.bucketTabs.emptyToday')
+                    : t('home.emptyPastDay')}
                 </Text>
               ) : (
-                lists.today.map((task, idx) => renderTaskCard(task, idx === 0))
+                dayOpen.map((task, idx) => renderTaskCard(task, idx === 0))
               )}
 
-              {/* Low-prominence "close the day" — bulk-skip everything still
-                  waiting. Only when ≥2 remain (for a single card, the swipe
-                  is already one gesture). Scoped to the today list only. */}
-              {lists.today.length >= 2 && (
+              {/* "Fechar o dia" — today only; bulk-skip everything still
+                  waiting. Only when ≥2 remain (a single card is one swipe). */}
+              {isToday && dayOpen.length >= 2 && (
                 <Pressable
                   onPress={handleClearDay}
                   disabled={skipTasksBulk.isPending}
@@ -721,60 +879,63 @@ export default function HomeScreen() {
                 </Pressable>
               )}
 
-              {lists.oneshot.length > 0 && (
-                <>
-                  <Text
-                    style={[styles.sectionHeader, styles.sectionHeaderSecondary]}
-                  >
-                    {t('home.sections.oneshot')}
-                  </Text>
-                  {lists.oneshot.map((task, idx) =>
-                    renderTaskCard(task, lists.today.length === 0 && idx === 0),
-                  )}
-                </>
-              )}
+              {/* Completed drawer. On today it always renders (the tour's
+                  home.completed anchor lives on it, even at 0); on a past
+                  day only when there's something to show. */}
+              {(isToday || dayCompletedItems.length > 0) &&
+                (isToday ? (
+                  <TourTarget id="home.completed" radius={18}>
+                    <CompletedBucket
+                      items={dayCompletedItems}
+                      title={t('home.completedBucket.today')}
+                      onUndo={handleUndo}
+                      onExtra={(task) => handleQuickComplete(task)}
+                      onToggle={(open) => {
+                        if (open) emitTourEvent(M1_EVENTS.DRAWER_EXPANDED);
+                      }}
+                    />
+                  </TourTarget>
+                ) : (
+                  <CompletedBucket
+                    items={dayCompletedItems}
+                    title={t('home.completedBucket.day')}
+                    onUndo={handleUndo}
+                    onExtra={(task) => handleQuickComplete(task)}
+                  />
+                ))}
 
-              <TourTarget id="home.completed" radius={18}>
+              {daySkippedItems.length > 0 && (
                 <CompletedBucket
-                  items={completedTodayItems}
-                  title={t('home.completedBucket.today')}
-                  onUndo={handleUndo}
-                  onExtra={(task) => handleQuickComplete(task)}
-                  onToggle={(open) => {
-                    if (open) emitTourEvent(M1_EVENTS.DRAWER_EXPANDED);
-                  }}
+                  items={daySkippedItems}
+                  title={
+                    isToday
+                      ? t('home.skippedBucket.today')
+                      : t('home.skippedBucket.day')
+                  }
+                  variant="skipped"
+                  onUnskip={handleUnskip}
                 />
-              </TourTarget>
-              <CompletedBucket
-                items={skippedTodayItems}
-                title={t('home.skippedBucket.today')}
-                variant="skipped"
-                onUnskip={handleUnskip}
-              />
+              )}
             </View>
 
-            {/* Journal strip after the day's tasks — finish the tasks,
-                close the day. One tap logs; press opens the full check-in. */}
-            <MoodHubStrip />
+            {/* Journal strip — today only (the "close the day" ritual). */}
+            {isToday && <MoodHubStrip />}
           </>
         )}
       </ScrollView>
 
-      {/* Floating action stack (thumb zone) — replaces the three top-right
-          TodayHeader icons and the old bottom Calendar/Manage row. Uses the
-          RAW navClearance (not the tour-bumped bottomClearance) so it doesn't
-          leap up when a bottom tour tooltip shows. The Gerenciar button
-          hosts the M2 tour target + event (moved off the deleted bottom
-          button). */}
+      {/* Floating action stack (thumb zone). Two buttons: Calendário
+          (dedicated — opens the unified History calendar, a heavy, important
+          screen) and Todas as práticas (primary — the see-all doing surface,
+          which also hosts the "Gerenciar" entry inside it). RAW navClearance
+          (not the tour-bumped bottomClearance) so it doesn't leap up under a
+          bottom tour tooltip. The M2 tour spotlights the Todas button (its
+          "Me leva lá" jumps straight to /tasks). */}
       <TasksFabStack
         bottomOffset={navClearance}
         onSeeAll={() => router.push('/all-practices')}
         onCalendar={() => router.push('/history')}
-        onManage={() => {
-          emitTourEvent(M2_EVENTS.TASKS_NAVIGATED);
-          router.push('/tasks');
-        }}
-        manageWrap={(node) => (
+        seeAllWrap={(node) => (
           <TourTarget id="home.manage" radius={28}>
             {node}
           </TourTarget>
@@ -826,10 +987,10 @@ export default function HomeScreen() {
         enabled={isM1Current && (allActiveTasks.data?.length ?? 0) > 0}
       />
 
-      {/* M2 step 1 lives here (manage-tasks button). Tapping the real
-         button fires TASKS_NAVIGATED + navigates; if the user instead
-         taps Próximo / "Pular este passo" on the tooltip, walk them to
-         /tasks ourselves so step 2 has its surface. */}
+      {/* M2 step 1 spotlights the "Todas as práticas" FAB (via seeAllWrap's
+         'home.manage' target). It has no awaitEvent — the tooltip's "Me
+         leva lá" primary button advances and onAdvanceToNextScreen walks
+         the user to /tasks, where step 2 (the create +) lives. */}
       <TourModule
         module="M2"
         steps={buildM2Steps(t)}
@@ -942,5 +1103,39 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: tokens.text.dim,
     letterSpacing: 0.3,
+  },
+  // XP-earned hero — the prominent day stat that replaced the level bar +
+  // reward-progress cards. Big green number in one clean row.
+  xpHero: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[2],
+    marginHorizontal: tokens.space[4],
+    marginTop: tokens.space[2],
+    marginBottom: tokens.space[1],
+    paddingVertical: tokens.space[3],
+    paddingHorizontal: tokens.space[4],
+    backgroundColor: tokens.bg.surface,
+    borderRadius: tokens.radius.lg,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+  },
+  xpHeroNum: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 30,
+    color: tokens.semantic.xp,
+    letterSpacing: -0.5,
+  },
+  xpHeroUnit: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 14,
+    color: tokens.semantic.xp,
+    marginLeft: -2,
+  },
+  xpHeroLabel: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 12,
+    color: tokens.text.dim,
+    marginLeft: 'auto',
   },
 });

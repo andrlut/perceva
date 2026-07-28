@@ -867,6 +867,7 @@ const pt: Translations = {
       weekly: 'Feitas nesta semana',
       oneshot: 'Concluídas',
       all: 'Feitas hoje',
+      day: 'Concluídas',
       // Legacy compat
       today: 'Feitas hoje',
       week: 'Feitas esta semana',
@@ -874,6 +875,18 @@ const pt: Translations = {
     },
     skippedBucket: {
       today: 'Puladas hoje',
+      day: 'Puladas',
+    },
+    emptyPastDay: 'Nada em aberto neste dia.',
+    xpHero: {
+      today: 'hoje',
+      thatDay: 'neste dia',
+    },
+    dayNav: {
+      prev: 'Dia anterior',
+      next: 'Próximo dia',
+      today: 'Hoje',
+      backToTodayA11y: 'Voltar para hoje',
     },
     dayCleared: {
       title: 'Dia fechado!',

@@ -237,14 +237,26 @@ export default function AllPracticesScreen() {
             <Ionicons name="chevron-back" size={22} color={tokens.text.hi} />
           </Pressable>
           <Text style={styles.title}>{t('allPractices.title')}</Text>
-          <Pressable
-            onPress={handleCreate}
-            style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
-            hitSlop={8}
-            accessibilityLabel={t('tasksHub.newTask')}
-          >
-            <Ionicons name="add" size={22} color={tokens.brand.violet2} />
-          </Pressable>
+          <View style={styles.topActions}>
+            {/* Gerenciar práticas lives here (moved off the Home FAB) —
+                buckets, drag-reorder, adopt, edit. */}
+            <Pressable
+              onPress={() => router.push('/tasks')}
+              style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
+              hitSlop={8}
+              accessibilityLabel={t('tasksHub.title')}
+            >
+              <Ionicons name="options-outline" size={20} color={tokens.text.mid} />
+            </Pressable>
+            <Pressable
+              onPress={handleCreate}
+              style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
+              hitSlop={8}
+              accessibilityLabel={t('tasksHub.newTask')}
+            >
+              <Ionicons name="add" size={22} color={tokens.brand.violet2} />
+            </Pressable>
+          </View>
         </View>
 
         <ScrollView
@@ -350,6 +362,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: tokens.bg.surface,
+  },
+  topActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[2],
   },
   title: {
     ...tokens.type.h3,

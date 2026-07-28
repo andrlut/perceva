@@ -6,50 +6,37 @@ import { useT } from '@/lib/i18n';
 interface Props {
   /** Pass the RAW bottom-nav clearance (not the tour-bumped value). */
   bottomOffset: number;
-  /** Open the "Todas as práticas" see-all doing surface. */
+  /** Open the "Todas as práticas" see-all doing surface (which itself hosts
+   *  the "Gerenciar" entry). */
   onSeeAll: () => void;
-  /** Open the history / calendar trail. */
+  /** Open the unified History calendar. */
   onCalendar: () => void;
-  /** Open "Gerenciar práticas" (buckets, reorder, adopt, create). */
-  onManage: () => void;
-  /** Home wraps the manage button in the M2 tour TourTarget (id
+  /** Home wraps the primary (Todas) button in the M2 tour TourTarget (id
    *  'home.manage'); other hosts can leave it undefined. */
-  manageWrap?: (node: ReactNode) => ReactNode;
+  seeAllWrap?: (node: ReactNode) => ReactNode;
 }
 
 /**
- * Floating action stack for the Tasks home (Hoje) — mirrors
- * RewardsFabStack. Order top → bottom by inverted frequency of use:
- *   - Gerenciar (small, discreet) — the rarely-opened config surface
- *   - Calendário — the history trail
- *   - Todas as práticas (violet, largest, anchors the thumb zone) — the
- *     see-all doing surface, the most common daily jump off Hoje
- *
- * Replaces the three top-right TodayHeader icons: history + manage moved
- * here (bigger, thumb-reachable targets); quests dropped entirely (the
- * QuestChipsStrip already lives in the Home body).
+ * Floating action stack for the Tasks home (Hoje) — two buttons in the
+ * bottom-right thumb zone:
+ *   - Calendário (top) — the unified History calendar, a dedicated,
+ *     heavy screen worth its own button
+ *   - Todas as práticas (bottom, violet, primary) — the see-all doing
+ *     surface; "Gerenciar práticas" lives INSIDE it, so it doesn't need a
+ *     FAB of its own and the stack stays out of the way of the per-card
+ *     complete buttons.
  */
 export function TasksFabStack({
   bottomOffset,
   onSeeAll,
   onCalendar,
-  onManage,
-  manageWrap,
+  seeAllWrap,
 }: Props) {
   const { t } = useT();
   return (
     <FabStack
       bottomOffset={bottomOffset}
       actions={[
-        {
-          key: 'manage',
-          icon: 'options-outline',
-          onPress: onManage,
-          accessibilityLabel: t('tasksHub.title'),
-          size: 'sm',
-          tone: 'neutral',
-          wrap: manageWrap,
-        },
         {
           key: 'calendar',
           icon: 'calendar-outline',
@@ -65,6 +52,7 @@ export function TasksFabStack({
           accessibilityLabel: t('allPractices.title'),
           size: 'lg',
           tone: 'violet',
+          wrap: seeAllWrap,
         },
       ]}
     />

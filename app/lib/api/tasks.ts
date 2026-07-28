@@ -858,6 +858,9 @@ export function useSkipTaskToday() {
     // skip-velocity bottleneck). Snapshot every weekStart variant for
     // rollback; drop the task immediately; reconcile on settle.
     onMutate: async (params) => {
+      // Optimistic removal applies to TODAY's live buckets only — a dated
+      // (past-day) skip must not strip the task from today's list.
+      if (params.date) return { prevBuckets: undefined };
       await queryClient.cancelQueries({ queryKey: taskKeys.pending() });
       const prevBuckets = queryClient.getQueriesData<HomeBuckets>({
         queryKey: taskKeys.pending(),
@@ -874,6 +877,9 @@ export function useSkipTaskToday() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.pending() });
+      // The Home day-view reads a past day's skips from the History day
+      // cache — refresh it so a dated skip moves the card to the drawer.
+      queryClient.invalidateQueries({ queryKey: historyKeys.all });
     },
   });
 }
@@ -942,6 +948,9 @@ export function useUnskipTaskToday() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.pending() });
+      // Past-day unskip: refresh the History day cache the Home day-view
+      // reads, so the card leaves the Skipped drawer.
+      queryClient.invalidateQueries({ queryKey: historyKeys.all });
     },
   });
 }
