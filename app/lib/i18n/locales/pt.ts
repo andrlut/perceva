@@ -471,7 +471,7 @@ const pt: Translations = {
       },
       step5: {
         title: 'Identidade Desejada',
-        body: 'Quem você quer se tornar: Skills que você acompanha e Metas de longo prazo.',
+        body: 'Quem você quer se tornar: seu Norte — a meta que você traça pra cada área, sobre o contorno de onde está hoje — e o Caminho pra lá, com Metas e Skills.',
       },
     },
     m6: {
@@ -647,8 +647,8 @@ const pt: Translations = {
         momentum: 'Momentum',
       },
       desejada: {
-        goals: 'Metas',
-        skills: 'Skills',
+        norte: 'Norte',
+        caminho: 'Caminho',
       },
     },
     // ── Legacy keys (PR #136 — referência genérica de sub-pilar) ─
@@ -701,6 +701,15 @@ const pt: Translations = {
   autoconhecimento: {
     kicker: 'Sua via interior',
     lead: 'Inventários mais profundos que medem personalidade, valores, estilo de apego, comportamento, forças de caráter e tipo. Não afetam o hex de Avaliação.',
+  },
+
+  norte: {
+    legend: 'preenchido = onde quero chegar · contorno = hoje',
+    cta: 'Atualizar meu norte',
+    emptyTitle: 'Onde você quer chegar?',
+    emptyBody: 'Trace uma meta pra cada área. O contorno mostra onde você está hoje.',
+    emptyCta: 'Traçar meu norte',
+    setChip: 'definir',
   },
 
   adoptSheet: {

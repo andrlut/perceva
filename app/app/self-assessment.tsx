@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import * as Haptics from 'expo-haptics';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
   Alert,
@@ -31,7 +31,7 @@ import {
   questionnaireKeys,
   useAssessmentHistoryAll,
 } from '@/lib/api/questionnaire';
-import type { SubId } from '@/lib/db/types';
+import type { AssessmentSource, SubId } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { supabase } from '@/lib/supabase';
@@ -49,9 +49,23 @@ export default function SelfAssessmentScreen() {
   const { t, locale } = useT();
   const metaLookup = useMetaLookup();
   const character = useCharacter();
-  const history = useAssessmentHistoryAll('self');
+  const params = useLocalSearchParams<{ mode?: string }>();
+  const isDesired = params.mode === 'desired';
+  const source: AssessmentSource = isDesired ? 'desired' : 'self';
+  const accent = isDesired ? tokens.semantic.coin : tokens.brand.violet;
+  const history = useAssessmentHistoryAll(source);
   const qc = useQueryClient();
 
+  // Saved scores for the mode being edited. In 'desired' mode this is the
+  // aspirational target ('desired' source); in 'self' mode it's the current
+  // self rating.
+  const savedScores = useMemo(
+    () => pickSubScoresDecimal(character.data?.subScores ?? [], source),
+    [character.data?.subScores, source],
+  );
+  // Current self score — the "today" reference. Doubles as the baseline the
+  // desired sliders start from, so an untouched sub means "no target beyond
+  // today" (the read side treats an absent desired row as = current).
   const savedSelfScores = useMemo(
     () => pickSubScoresDecimal(character.data?.subScores ?? [], 'self'),
     [character.data?.subScores],
@@ -65,17 +79,25 @@ export default function SelfAssessmentScreen() {
     [character.data?.subScores],
   );
 
+  // Per-sub baseline the slider starts from and dirtiness is measured against.
+  // Desired mode with no saved target falls back to the current self score.
+  const baseFor = (subId: SubId) =>
+    isDesired
+      ? savedScores.get(subId) ?? savedSelfScores.get(subId) ?? 0
+      : savedScores.get(subId) ?? 0;
+
   const [drafts, setDrafts] = useState<DraftMap>(new Map());
   const [saving, setSaving] = useState(false);
 
   const dirtySubs = useMemo<SubId[]>(() => {
     const out: SubId[] = [];
     for (const [subId, value] of drafts.entries()) {
-      const saved = savedSelfScores.get(subId) ?? 0;
+      const saved = baseFor(subId);
       if (Math.abs(value - saved) > 0.01) out.push(subId);
     }
     return out;
-  }, [drafts, savedSelfScores]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drafts, savedScores, savedSelfScores, isDesired]);
 
   const hasPending = dirtySubs.length > 0;
 
@@ -96,7 +118,7 @@ export default function SelfAssessmentScreen() {
       score_decimal: drafts.get(sub_id),
     }));
     const { error } = await supabase.rpc('set_sub_scores_bulk', {
-      p_source: 'self',
+      p_source: source,
       p_entries: entries,
     });
     setSaving(false);
@@ -153,7 +175,13 @@ export default function SelfAssessmentScreen() {
           >
             <Ionicons name="close" size={22} color={tokens.text.hi} />
           </Pressable>
-          <Text style={styles.headerTitle}>{t('selfAssessment.title')}</Text>
+          <Text style={styles.headerTitle}>
+            {isDesired
+              ? locale === 'en'
+                ? 'My north'
+                : 'Meu norte'
+              : t('selfAssessment.title')}
+          </Text>
           <View style={styles.closeBtn} />
         </View>
 
@@ -162,9 +190,13 @@ export default function SelfAssessmentScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Text style={styles.intro}>
-            {locale === 'en'
-              ? 'Where you stand in each area today. Drag the slider to update — read the description first if you want a steadier reference.'
-              : 'Onde você tá em cada área hoje. Arraste o slider pra atualizar — leia a descrição antes se quiser uma âncora mais firme.'}
+            {isDesired
+              ? locale === 'en'
+                ? 'Where you want each area to get to. The sliders start where you are today — drag them up to set a target.'
+                : 'Onde você quer chegar em cada área. Os sliders começam em onde você está hoje — arraste pra cima pra definir uma meta.'
+              : locale === 'en'
+                ? 'Where you stand in each area today. Drag the slider to update — read the description first if you want a steadier reference.'
+                : 'Onde você tá em cada área hoje. Arraste o slider pra atualizar — leia a descrição antes se quiser uma âncora mais firme.'}
           </Text>
 
           <View style={styles.metaRow}>
@@ -173,19 +205,28 @@ export default function SelfAssessmentScreen() {
                 {locale === 'en' ? '0 missing · 5 mastery' : '0 vazio · 5 pleno'}
               </Text>
             </View>
-            {hasQuestionnaire && (
-              <View style={styles.qChip}>
-                <Ionicons
-                  name="clipboard"
-                  size={11}
-                  color={tokens.dimension.bonds}
-                />
-                <Text style={styles.qChipText}>
-                  {locale === 'en'
-                    ? 'Quiz reference shown'
-                    : 'Referência da Avaliação ativa'}
+            {isDesired ? (
+              <View style={[styles.qChip, { backgroundColor: 'rgba(255,200,61,0.14)' }]}>
+                <Ionicons name="flag" size={11} color={tokens.semantic.coin} />
+                <Text style={[styles.qChipText, { color: tokens.semantic.coin }]}>
+                  {locale === 'en' ? 'Today shown as reference' : 'Hoje mostrado como referência'}
                 </Text>
               </View>
+            ) : (
+              hasQuestionnaire && (
+                <View style={styles.qChip}>
+                  <Ionicons
+                    name="clipboard"
+                    size={11}
+                    color={tokens.dimension.bonds}
+                  />
+                  <Text style={styles.qChipText}>
+                    {locale === 'en'
+                      ? 'Quiz reference shown'
+                      : 'Referência da Avaliação ativa'}
+                  </Text>
+                </View>
+              )
             )}
           </View>
 
@@ -223,8 +264,14 @@ export default function SelfAssessmentScreen() {
                   <SubSliderCard
                     key={subId}
                     subId={subId}
-                    saved={savedSelfScores.get(subId) ?? 0}
-                    quizScore={savedQuizScores.get(subId)}
+                    saved={baseFor(subId)}
+                    refScore={
+                      isDesired
+                        ? savedSelfScores.get(subId)
+                        : savedQuizScores.get(subId)
+                    }
+                    refLabel={isDesired ? (locale === 'en' ? 'today' : 'hoje') : 'quiz'}
+                    refColor={isDesired ? tokens.semantic.coin : tokens.dimension.bonds}
                     pending={drafts.get(subId)}
                     history={history.data?.get(subId) ?? []}
                     onSlide={(v) => handleSlide(subId, v)}
@@ -253,7 +300,10 @@ export default function SelfAssessmentScreen() {
             disabled={!hasPending || saving}
             style={({ pressed }) => [
               styles.saveBtn,
-              hasPending && styles.saveBtnActive,
+              hasPending && [
+                styles.saveBtnActive,
+                { backgroundColor: accent, borderColor: accent },
+              ],
               pressed && hasPending && { opacity: 0.85 },
             ]}
             hitSlop={4}
@@ -291,7 +341,11 @@ export default function SelfAssessmentScreen() {
 interface SubSliderCardProps {
   subId: SubId;
   saved: number;
-  quizScore: number | undefined;
+  /** A reference score shown as a small chip — the quiz score in self mode,
+   *  or the current self score ("today") in desired mode. */
+  refScore: number | undefined;
+  refLabel: string;
+  refColor: string;
   pending: number | undefined;
   history: { score: number; recorded_at: string }[];
   onSlide: (value: number) => void;
@@ -300,7 +354,9 @@ interface SubSliderCardProps {
 function SubSliderCard({
   subId,
   saved,
-  quizScore,
+  refScore,
+  refLabel,
+  refColor,
   pending,
   history,
   onSlide,
@@ -383,9 +439,9 @@ function SubSliderCard({
           <View />
         )}
         <View style={cardStyles.metaRight}>
-          {quizScore != null && (
-            <Text style={cardStyles.quizRef}>
-              {locale === 'en' ? 'quiz' : 'quiz'} · {formatScore(quizScore)}
+          {refScore != null && (
+            <Text style={[cardStyles.quizRef, { color: refColor }]}>
+              {refLabel} · {formatScore(refScore)}
             </Text>
           )}
           {trendValues.length >= 2 && (

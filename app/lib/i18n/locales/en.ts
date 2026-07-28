@@ -476,7 +476,7 @@ const en = {
       },
       step5: {
         title: 'Desired identity',
-        body: 'Who you want to become: Skills you track and longer-term Goals.',
+        body: 'Who you want to become: your North — the target you set for each area, over the outline of where you are today — and the Path there, with Goals and Skills.',
       },
     },
     m6: {
@@ -652,8 +652,8 @@ const en = {
         momentum: 'Momentum',
       },
       desejada: {
-        goals: 'Goals',
-        skills: 'Skills',
+        norte: 'North',
+        caminho: 'Path',
       },
     },
     // ── Legacy keys (PR #136 — generic sub-pillar reference) ────
@@ -706,6 +706,15 @@ const en = {
   autoconhecimento: {
     kicker: 'Your inner path',
     lead: 'Deeper inventories measuring personality, values, attachment style, behavior, character strengths and type. Do not affect the Assessment hex.',
+  },
+
+  norte: {
+    legend: 'filled = where I want to get · outline = today',
+    cta: 'Update my north',
+    emptyTitle: 'Where do you want to get to?',
+    emptyBody: 'Set a target for each area. The outline shows where you are today.',
+    emptyCta: 'Chart my north',
+    setChip: 'set',
   },
 
   adoptSheet: {
