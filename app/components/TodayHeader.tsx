@@ -1,5 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient as SvgLinear, Stop } from 'react-native-svg';
 
 import { tokens } from '@/theme';
@@ -15,11 +14,6 @@ interface Props {
   ringDone: number;
   /** Total tasks contributing to today's closeout. */
   ringTotal: number;
-  /** Whether the user has active quests (shows the gold badge dot). */
-  hasActiveQuests: boolean;
-  onHistoryPress: () => void;
-  onQuestsPress: () => void;
-  onManagePress: () => void;
 }
 
 const RING_SIZE = 52;
@@ -30,12 +24,14 @@ const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 /**
  * Two-row header for the V3 Tasks home — replaces the old CompactHeader.
  *
- *   Row 1: SUN · MAY 24 · DECO        [📅] [⚔•] [⚙]
+ *   Row 1: SUN · MAY 24 · DECO
  *   Row 2: Sunday, May 24                 [ring 6/7]
  *
  * Eyebrow uses Perceva pale-gold (`coinLight`); the headline's date
  * portion is violet with a textShadow glow to mirror the Rewards card
- * vocabulary. Icons sit in 32×32 tiles on the right.
+ * vocabulary. The old top-right icon cluster (history / quests / manage)
+ * moved to the bottom-right TasksFabStack — bigger, thumb-reachable
+ * targets — so Row 1 now carries just the name.
  */
 export function TodayHeader({
   displayName,
@@ -43,10 +39,6 @@ export function TodayHeader({
   monthDayLabel,
   ringDone,
   ringTotal,
-  hasActiveQuests,
-  onHistoryPress,
-  onQuestsPress,
-  onManagePress,
 }: Props) {
   const pct = ringTotal > 0 ? Math.min(1, ringDone / ringTotal) : 0;
   const dashOffset = RING_CIRCUMFERENCE - pct * RING_CIRCUMFERENCE;
@@ -57,15 +49,6 @@ export function TodayHeader({
         <Text style={styles.eyebrow} numberOfLines={1}>
           {displayName.toUpperCase()}
         </Text>
-        <View style={styles.icons}>
-          <IconBtn icon="calendar-outline" onPress={onHistoryPress} />
-          <IconBtn
-            icon="flash-outline"
-            onPress={onQuestsPress}
-            badge={hasActiveQuests}
-          />
-          <IconBtn icon="options-outline" onPress={onManagePress} />
-        </View>
       </View>
 
       <View style={styles.dateRow}>
@@ -114,28 +97,6 @@ export function TodayHeader({
   );
 }
 
-interface IconBtnProps {
-  icon: keyof typeof Ionicons.glyphMap;
-  onPress: () => void;
-  badge?: boolean;
-}
-
-function IconBtn({ icon, onPress, badge }: IconBtnProps) {
-  return (
-    <Pressable
-      onPress={onPress}
-      hitSlop={6}
-      style={({ pressed }) => [
-        styles.iconBtn,
-        pressed && styles.iconBtnPressed,
-      ]}
-    >
-      <Ionicons name={icon} size={16} color={tokens.text.mid} />
-      {badge && <View style={styles.badgeDot} />}
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   wrap: {
     paddingHorizontal: tokens.space[4],
@@ -156,36 +117,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1.6,
     color: tokens.semantic.coinLight,
     textTransform: 'uppercase',
-  },
-  icons: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  iconBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 9,
-    backgroundColor: tokens.bg.surface,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-  iconBtnPressed: {
-    opacity: 0.7,
-    transform: [{ scale: 0.94 }],
-  },
-  badgeDot: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: tokens.semantic.coin,
-    borderWidth: 1.5,
-    borderColor: tokens.bg.deep,
   },
   dateRow: {
     flexDirection: 'row',

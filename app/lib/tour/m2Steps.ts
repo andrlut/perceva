@@ -29,7 +29,11 @@ export function buildM2Steps(t: Translator): ScreenedStep[] {
       screen: 'home',
       title: t('tour.m2.step1.title'),
       body: t('tour.m2.step1.body'),
-      position: 'bottom',
+      // 'top' so the tooltip card sits at the top and leaves the Gerenciar
+      // FAB (bottom-right thumb zone) and its spotlight ring fully visible.
+      // A 'bottom' card would cover the fixed FAB (it can't be scrolled out
+      // of the way like the old bottom-row button could).
+      position: 'top',
       awaitEvent: M2_EVENTS.TASKS_NAVIGATED,
       target: 'home.manage',
       awaitCtaLabel: t('tour.common.takeMe'),

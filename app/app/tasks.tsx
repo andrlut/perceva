@@ -52,7 +52,7 @@ import type {
   TaskWithSubs,
 } from '@/lib/db/types';
 import { useMetaLookup } from '@/lib/i18n/meta';
-import { describeRecurrence } from '@/lib/recurrence';
+import { describeRecurrence, isEffectivelyDaily } from '@/lib/recurrence';
 import { TourModule } from '@/components/tour/TourModule';
 import { TourTarget } from '@/components/tour/TourTarget';
 import { emitTourEvent } from '@/lib/tour/eventBus';
@@ -114,8 +114,7 @@ const BUCKETS: BucketMeta[] = [
  */
 function bucketFor(rec: Recurrence): Bucket {
   if (rec.type === 'one_shot') return 'one_time';
-  if (rec.type === 'daily') return 'daily';
-  if (rec.type === 'weekly' && (rec.days?.length ?? 0) === 7) return 'daily';
+  if (isEffectivelyDaily(rec)) return 'daily'; // daily OR weekly-all-7-days
   return 'weekly'; // weekly (any subset or flex) OR monthly
 }
 

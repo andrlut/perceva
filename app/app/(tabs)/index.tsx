@@ -26,6 +26,7 @@ import { QuestChipsStrip } from '@/components/QuestChipsStrip';
 import { RewardStatsCard, XPStatsCard } from '@/components/StatsCards';
 import { TaskActionSheet } from '@/components/TaskActionSheet';
 import { TaskCard } from '@/components/TaskCard';
+import { TasksFabStack } from '@/components/TasksFabStack';
 import { TodayAmbient } from '@/components/TodayAmbient';
 import { TodayHeader } from '@/components/TodayHeader';
 import { XPCoinFloat } from '@/components/XPCoinFloat';
@@ -55,9 +56,11 @@ import {
   useCompleteTask,
   useHomeBuckets,
   useSkipTaskToday,
+  useSkipTasksBulk,
   useUndoCompletion,
   useUnskipTaskToday,
 } from '@/lib/api/tasks';
+import { confirmAction } from '@/lib/util/confirm';
 import { useQuests } from '@/lib/api/quests';
 import type { TaskSub, TaskWithSubs } from '@/lib/db/types';
 import { isDueOn } from '@/lib/recurrence';
@@ -122,6 +125,7 @@ export default function HomeScreen() {
   const quests = useQuests();
   const completeTask = useCompleteTask();
   const skipTask = useSkipTaskToday();
+  const skipTasksBulk = useSkipTasksBulk();
   const unskipTask = useUnskipTaskToday();
   const undoCompletion = useUndoCompletion();
 
@@ -194,13 +198,8 @@ export default function HomeScreen() {
       );
       return () => clearTimeout(id);
     }
-    if (activeTourStep?.module === 'M2') {
-      const id = setTimeout(
-        () => scrollRef.current?.scrollToEnd({ animated: true }),
-        120,
-      );
-      return () => clearTimeout(id);
-    }
+    // M2 step 1 now spotlights the fixed bottom-right Gerenciar FAB (always
+    // on screen) with a top-anchored tooltip — no scroll needed.
     if (activeTourStep?.module === 'M3') {
       const id = setTimeout(
         () => scrollRef.current?.scrollTo({ y: 0, animated: true }),
@@ -424,11 +423,12 @@ export default function HomeScreen() {
       const rec = task.recurrence;
       if (rec.type === 'one_shot') return false;
       if (rec.type === 'daily') return true;
-      if (rec.type === 'weekly') {
-        if (rec.days === undefined) return true;
-        return isDueOn(rec, now);
-      }
-      if (typeof rec.day !== 'number') return true;
+      // Unscheduled recurring (no weekday / no day-of-month marked) no
+      // longer promotes to Hoje (see fetchHomeBuckets), so it must not
+      // count toward the day's contract either — otherwise completing one
+      // from another surface inflates ringDone with no matching card and
+      // misfires the day-cleared celebration. isDueOn returns false for
+      // weekly/monthly with no schedule, so this stays in lockstep.
       return isDueOn(rec, now);
     };
 
@@ -447,6 +447,45 @@ export default function HomeScreen() {
     );
   }, [data]);
   const ringTotal = ringDone + lists.today.length;
+
+  // "Fechar o dia" — skip everything still waiting in the Hoje list in one
+  // deliberate act (confirm first). Scoped to lists.today ONLY, so Pontuais
+  // (one-shots) are never nuked. The optimistic bulk-skip empties the list
+  // → the EXISTING day-cleared celebration fires (remaining → 0); because
+  // the skipped tasks were due today, ringDone increments so the muted
+  // all-skipped variant (not the gold fanfare) is what a zero-done clear
+  // shows. No new celebration path.
+  const handleClearDay = async () => {
+    const ids = lists.today.map((task) => task.id);
+    if (ids.length === 0 || skipTasksBulk.isPending) return;
+    const ok = await confirmAction(
+      t('home.clearDay.confirmTitle'),
+      t(
+        ids.length === 1
+          ? 'home.clearDay.confirmBody.one'
+          : 'home.clearDay.confirmBody.other',
+        { count: ids.length },
+      ),
+      {
+        okText: t('home.clearDay.confirmOk'),
+        cancelText: t('common.cancel'),
+      },
+    );
+    if (!ok) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    skipTasksBulk.mutate(
+      { taskIds: ids },
+      {
+        onError: (err) => {
+          const e = err as { message?: string };
+          Alert.alert(
+            t('home.actionErrors.skip'),
+            e.message ?? t('home.actionErrors.unknown'),
+          );
+        },
+      },
+    );
+  };
 
   // ── Day-cleared celebration ───────────────────────────────────────────
   // Fires once per day when the remaining "Hoje" list reaches 0 through
@@ -481,6 +520,24 @@ export default function HomeScreen() {
     if (ringDone <= 0) return;
     if (activeTourStep) return;
 
+    // Fire only on SETTLED data. An optimistic complete/skip empties
+    // `today` a full network round-trip before `todayActivity` (→ ringDone
+    // and the done/skipped stats) catches up. Firing on that frame shows
+    // wrong counts (e.g. a "Fechar o dia" bulk-skip after one completion
+    // would read done=1, skipped=0), and a skip that then FAILS would pop a
+    // false celebration AND burn the once-per-day stamp. Deferring until no
+    // mutation is in flight and the buckets refetch has landed guarantees
+    // the numbers are real — the optimistic list-emptying still happens
+    // instantly, so clearing stays snappy; only the celebration waits.
+    if (
+      completeTask.isPending ||
+      skipTask.isPending ||
+      skipTasksBulk.isPending ||
+      buckets.isFetching
+    ) {
+      return;
+    }
+
     // No cleanup cancellation: the stamp is written BEFORE showing, so
     // aborting between the two (e.g. a refetch re-running the effect)
     // would burn the day without the celebration. The ref just prevents
@@ -507,15 +564,21 @@ export default function HomeScreen() {
         dayClearedFiringRef.current = false;
       }
     })();
-  }, [buckets.isSuccess, data, lists.today.length, ringDone, activeTourStep]);
+  }, [
+    buckets.isSuccess,
+    buckets.isFetching,
+    data,
+    lists.today.length,
+    ringDone,
+    activeTourStep,
+    completeTask.isPending,
+    skipTask.isPending,
+    skipTasksBulk.isPending,
+  ]);
 
   const hero = formatHeroDate();
   const charXp = character.data?.character.total_xp ?? 0;
   const lp = levelProgress(charXp);
-
-  const activeQuestCount = (quests.data ?? []).filter(
-    (q) => q.quest.status === 'active',
-  ).length;
 
   // First rendered card overall carries the M1 tour anchor — normally
   // the first Hoje item, falling back to the first one-shot when the
@@ -574,10 +637,6 @@ export default function HomeScreen() {
           monthDayLabel={hero.monthDay}
           ringDone={ringDone}
           ringTotal={ringTotal}
-          hasActiveQuests={activeQuestCount > 0}
-          onHistoryPress={() => router.push('/history')}
-          onQuestsPress={() => router.push('/quests')}
-          onManagePress={() => router.push('/tasks')}
         />
 
         <XPStatsCard
@@ -637,6 +696,31 @@ export default function HomeScreen() {
                 lists.today.map((task, idx) => renderTaskCard(task, idx === 0))
               )}
 
+              {/* Low-prominence "close the day" — bulk-skip everything still
+                  waiting. Only when ≥2 remain (for a single card, the swipe
+                  is already one gesture). Scoped to the today list only. */}
+              {lists.today.length >= 2 && (
+                <Pressable
+                  onPress={handleClearDay}
+                  disabled={skipTasksBulk.isPending}
+                  style={({ pressed }) => [
+                    styles.clearDayBtn,
+                    pressed && { opacity: 0.55 },
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('home.clearDay.a11y')}
+                >
+                  <Ionicons
+                    name="checkmark-done-outline"
+                    size={15}
+                    color={tokens.text.dim}
+                  />
+                  <Text style={styles.clearDayText}>
+                    {t('home.clearDay.cta')}
+                  </Text>
+                </Pressable>
+              )}
+
               {lists.oneshot.length > 0 && (
                 <>
                   <Text
@@ -672,55 +756,30 @@ export default function HomeScreen() {
             {/* Journal strip after the day's tasks — finish the tasks,
                 close the day. One tap logs; press opens the full check-in. */}
             <MoodHubStrip />
-
-            <View style={styles.bottomActions}>
-              <Pressable
-                onPress={() => router.push('/history')}
-                style={({ pressed }) => [
-                  styles.bottomBtn,
-                  pressed && styles.bottomBtnPressed,
-                ]}
-                accessibilityRole="button"
-              >
-                <Ionicons
-                  name="calendar-outline"
-                  size={16}
-                  color={tokens.text.mid}
-                />
-                <Text style={styles.bottomBtnLabel}>
-                  {t('tabs.history')}
-                </Text>
-              </Pressable>
-              <TourTarget id="home.manage" style={{ flex: 1 }} radius={16}>
-                <Pressable
-                  onPress={() => {
-                    emitTourEvent(M2_EVENTS.TASKS_NAVIGATED);
-                    router.push('/tasks');
-                  }}
-                  style={({ pressed }) => [
-                    styles.bottomBtn,
-                    // Inside the target wrapper (which carries flex: 1),
-                    // the button sizes from content — flex: 1 here would
-                    // collapse to zero height in the auto-height wrapper.
-                    { flex: 0 },
-                    pressed && styles.bottomBtnPressed,
-                  ]}
-                  accessibilityRole="button"
-                >
-                  <Ionicons
-                    name="options-outline"
-                    size={16}
-                    color={tokens.text.mid}
-                  />
-                  <Text style={styles.bottomBtnLabel}>
-                    {t('home.manageCta')}
-                  </Text>
-                </Pressable>
-              </TourTarget>
-            </View>
           </>
         )}
       </ScrollView>
+
+      {/* Floating action stack (thumb zone) — replaces the three top-right
+          TodayHeader icons and the old bottom Calendar/Manage row. Uses the
+          RAW navClearance (not the tour-bumped bottomClearance) so it doesn't
+          leap up when a bottom tour tooltip shows. The Gerenciar button
+          hosts the M2 tour target + event (moved off the deleted bottom
+          button). */}
+      <TasksFabStack
+        bottomOffset={navClearance}
+        onSeeAll={() => router.push('/all-practices')}
+        onCalendar={() => router.push('/history')}
+        onManage={() => {
+          emitTourEvent(M2_EVENTS.TASKS_NAVIGATED);
+          router.push('/tasks');
+        }}
+        manageWrap={(node) => (
+          <TourTarget id="home.manage" radius={28}>
+            {node}
+          </TourTarget>
+        )}
+      />
 
       {floats.map((f) => (
         <XPCoinFloat
@@ -867,36 +926,21 @@ const styles = StyleSheet.create({
     paddingVertical: tokens.space[4],
     textAlign: 'center',
   },
-  // Bottom row at the end of the home scroll — Calendar (history) +
-  // Manage tasks side by side. The Calendar is here so the user can
-  // reach History without diving for the tiny top-right icon.
-  bottomActions: {
+  // "Fechar o dia" — deliberately low-prominence: no fill, dim text,
+  // centered under the last card so it reads as a quiet exit, not a CTA.
+  clearDayBtn: {
     flexDirection: 'row',
-    gap: tokens.space[2],
-    paddingTop: tokens.space[3],
-    paddingHorizontal: tokens.space[4],
-  },
-  bottomBtn: {
-    flex: 1,
-    paddingVertical: tokens.space[3] + 2,
-    paddingHorizontal: tokens.space[3],
-    backgroundColor: tokens.bg.surface2,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-    borderRadius: tokens.radius.lg,
-    flexDirection: 'row',
+    alignSelf: 'center',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: tokens.space[2],
+    gap: 6,
+    paddingVertical: tokens.space[2],
+    paddingHorizontal: tokens.space[3],
+    marginTop: tokens.space[1],
   },
-  bottomBtnPressed: {
-    opacity: 0.7,
-    borderColor: 'rgba(123, 92, 255, 0.3)',
-    backgroundColor: tokens.bg.surface,
-  },
-  bottomBtnLabel: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 13,
-    color: tokens.text.mid,
+  clearDayText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 12,
+    color: tokens.text.dim,
+    letterSpacing: 0.3,
   },
 });
