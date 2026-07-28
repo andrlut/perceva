@@ -872,6 +872,7 @@ const en = {
       weekly: 'Done this week',
       oneshot: 'Completed',
       all: 'Done today',
+      day: 'Completed',
       // Legacy compat
       today: 'Done today',
       week: 'Done this week',
@@ -879,6 +880,18 @@ const en = {
     },
     skippedBucket: {
       today: 'Skipped today',
+      day: 'Skipped',
+    },
+    emptyPastDay: 'Nothing open on this day.',
+    xpHero: {
+      today: 'today',
+      thatDay: 'on this day',
+    },
+    dayNav: {
+      prev: 'Previous day',
+      next: 'Next day',
+      today: 'Today',
+      backToTodayA11y: 'Back to today',
     },
     dayCleared: {
       title: 'Day cleared!',

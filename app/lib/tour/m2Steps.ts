@@ -29,14 +29,15 @@ export function buildM2Steps(t: Translator): ScreenedStep[] {
       screen: 'home',
       title: t('tour.m2.step1.title'),
       body: t('tour.m2.step1.body'),
-      // 'top' so the tooltip card sits at the top and leaves the Gerenciar
-      // FAB (bottom-right thumb zone) and its spotlight ring fully visible.
-      // A 'bottom' card would cover the fixed FAB (it can't be scrolled out
-      // of the way like the old bottom-row button could).
+      // Spotlights the "Todas as práticas" FAB — the entry to task
+      // management + creation in the new IA. NO awaitEvent: the FAB itself
+      // opens /all-practices, so the tour must not wait on a FAB tap.
+      // Instead the solid "Me leva lá" primary button advances (handleNext
+      // → onAdvanceToNextScreen → /tasks, where step 2 lives). 'top' keeps
+      // the bottom-right FAB + its pulsing ring visible.
       position: 'top',
-      awaitEvent: M2_EVENTS.TASKS_NAVIGATED,
       target: 'home.manage',
-      awaitCtaLabel: t('tour.common.takeMe'),
+      primaryLabel: t('tour.common.takeMe'),
     },
     {
       screen: 'tasks',

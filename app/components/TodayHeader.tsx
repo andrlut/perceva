@@ -1,6 +1,8 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient as SvgLinear, Stop } from 'react-native-svg';
 
+import { useT } from '@/lib/i18n';
 import { tokens } from '@/theme';
 
 interface Props {
@@ -10,10 +12,21 @@ interface Props {
   weekdayLabel: string;
   /** Big headline: month + day, e.g. "May 24". Drawn in violet with a glow. */
   monthDayLabel: string;
-  /** Tasks completed today — fills the ring proportionally. */
+  /** Tasks completed on the selected day — fills the ring proportionally. */
   ringDone: number;
-  /** Total tasks contributing to today's closeout. */
+  /** Total tasks contributing to the ring. Pass 0 to hide the ring (e.g.
+   *  on a past day, where "today's contract" doesn't apply). */
   ringTotal: number;
+  /** Step to the previous day. */
+  onPrevDay: () => void;
+  /** Step to the next day (no-op past today). */
+  onNextDay: () => void;
+  /** False when the selected day IS today — the next arrow greys out (you
+   *  can't act on a future contract). */
+  canGoNext: boolean;
+  /** Provided only when a past day is selected → tap the date or the "Hoje"
+   *  chip to jump straight back to today. */
+  onResetToday?: () => void;
 }
 
 const RING_SIZE = 52;
@@ -22,16 +35,17 @@ const RING_RADIUS = (RING_SIZE - RING_STROKE) / 2;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
 /**
- * Two-row header for the V3 Tasks home — replaces the old CompactHeader.
+ * Two-row header for the V3 Tasks home.
  *
- *   Row 1: SUN · MAY 24 · DECO
- *   Row 2: Sunday, May 24                 [ring 6/7]
+ *   Row 1: DECO                                   [ Hoje ]  (past days only)
+ *   Row 2: ‹  Segunda, Jul 27  ›              [ring 6/7]
  *
- * Eyebrow uses Perceva pale-gold (`coinLight`); the headline's date
- * portion is violet with a textShadow glow to mirror the Rewards card
- * vocabulary. The old top-right icon cluster (history / quests / manage)
- * moved to the bottom-right TasksFabStack — bigger, thumb-reachable
- * targets — so Row 1 now carries just the name.
+ * The date is the day selector: the ‹ › arrows step between adjacent days
+ * (the whole screen follows — tasks, XP hero, completed drawer), so the
+ * user can go back and log something they forgot on a past day. Tapping the
+ * date (or the "Hoje" chip) jumps back to today. The next arrow greys out
+ * on today. Eyebrow uses Perceva pale-gold; the month/day fragment is
+ * violet with a glow to mirror the Rewards card vocabulary.
  */
 export function TodayHeader({
   displayName,
@@ -39,7 +53,12 @@ export function TodayHeader({
   monthDayLabel,
   ringDone,
   ringTotal,
+  onPrevDay,
+  onNextDay,
+  canGoNext,
+  onResetToday,
 }: Props) {
+  const { t } = useT();
   const pct = ringTotal > 0 ? Math.min(1, ringDone / ringTotal) : 0;
   const dashOffset = RING_CIRCUMFERENCE - pct * RING_CIRCUMFERENCE;
 
@@ -49,13 +68,59 @@ export function TodayHeader({
         <Text style={styles.eyebrow} numberOfLines={1}>
           {displayName.toUpperCase()}
         </Text>
+        {onResetToday && (
+          <Pressable
+            onPress={onResetToday}
+            hitSlop={8}
+            style={({ pressed }) => [styles.todayChip, pressed && { opacity: 0.6 }]}
+            accessibilityRole="button"
+            accessibilityLabel={t('home.dayNav.backToTodayA11y')}
+          >
+            <Ionicons name="today-outline" size={13} color={tokens.brand.violet2} />
+            <Text style={styles.todayChipText}>{t('home.dayNav.today')}</Text>
+          </Pressable>
+        )}
       </View>
 
       <View style={styles.dateRow}>
-        <Text style={styles.headline} numberOfLines={1}>
-          {weekdayLabel}{' '}
-          <Text style={styles.headlineNum}>{monthDayLabel}</Text>
-        </Text>
+        <Pressable
+          onPress={onPrevDay}
+          hitSlop={8}
+          style={({ pressed }) => [styles.arrowBtn, pressed && { opacity: 0.5 }]}
+          accessibilityRole="button"
+          accessibilityLabel={t('home.dayNav.prev')}
+        >
+          <Ionicons name="chevron-back" size={22} color={tokens.text.hi} />
+        </Pressable>
+
+        <Pressable
+          onPress={onResetToday}
+          disabled={!onResetToday}
+          style={styles.headlineWrap}
+        >
+          <Text style={styles.headline} numberOfLines={1}>
+            {weekdayLabel}{' '}
+            <Text style={styles.headlineNum}>{monthDayLabel}</Text>
+          </Text>
+        </Pressable>
+
+        <Pressable
+          onPress={onNextDay}
+          disabled={!canGoNext}
+          hitSlop={8}
+          style={({ pressed }) => [
+            styles.arrowBtn,
+            pressed && canGoNext && { opacity: 0.5 },
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel={t('home.dayNav.next')}
+        >
+          <Ionicons
+            name="chevron-forward"
+            size={22}
+            color={canGoNext ? tokens.text.hi : tokens.text.faint}
+          />
+        </Pressable>
 
         {ringTotal > 0 && (
           <View style={styles.ringWrap}>
@@ -118,17 +183,41 @@ const styles = StyleSheet.create({
     color: tokens.semantic.coinLight,
     textTransform: 'uppercase',
   },
+  todayChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: 'rgba(123,92,255,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(123,92,255,0.4)',
+  },
+  todayChipText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 11,
+    color: tokens.brand.violet2,
+    letterSpacing: 0.3,
+  },
   dateRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: tokens.space[3],
+    gap: tokens.space[1],
+  },
+  arrowBtn: {
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headlineWrap: {
+    flex: 1,
   },
   headline: {
-    flex: 1,
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 26,
-    lineHeight: 29,
+    fontSize: 24,
+    lineHeight: 28,
     color: tokens.text.hi,
     letterSpacing: -0.3,
   },
@@ -142,6 +231,7 @@ const styles = StyleSheet.create({
     width: RING_SIZE,
     height: RING_SIZE,
     position: 'relative',
+    marginLeft: tokens.space[1],
   },
   ringCenter: {
     position: 'absolute',
