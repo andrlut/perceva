@@ -1,14 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
+  findNodeHandle,
+  Platform,
   Pressable,
+  type ScrollView as ScrollViewType,
   StyleSheet,
   Text,
   useWindowDimensions,
   View,
 } from 'react-native';
 
+import { DimensionCards, type DimCardRow } from '@/components/DimensionCards';
 import { HexChart } from '@/components/HexChart';
 import { MoodTodayCard } from '@/components/mood/MoodTodayCard';
 import type { CharacterSubScore } from '@/lib/db/types';
@@ -16,7 +20,9 @@ import { pickSubScores, pickSubScoresDecimal } from '@/lib/api/character';
 import { useLastWellbeingSession } from '@/lib/api/psych';
 import { daysSince } from '@/lib/api/questionnaire';
 import { useT } from '@/lib/i18n';
+import { formatScore } from '@/lib/util/formatScore';
 import { tokens } from '@/theme';
+import { DIMENSION_ORDER, SUBS_BY_DIM } from '@/theme/dimensions';
 
 type HexSource = 'self' | 'both' | 'questionnaire';
 
@@ -28,19 +34,37 @@ interface SourceToggleProps {
 }
 
 /**
- * Compact 3-icon source toggle — Self · Both · Quiz. Inline (~110px wide)
- * so it doesn't crowd the hex with a full-width SegmentedControl row.
+ * Compact source toggle — Self · Ambos · Quiz. A centered row of labelled
+ * pills that sits directly below the hex (the standard puts every extra
+ * under the chart, never over it). Only shown once the user has a
+ * questionnaire to compare against.
  */
 function SourceToggle({ value, onChange }: SourceToggleProps) {
+  const { t } = useT();
   const items: {
     key: HexSource;
     icon: 'person' | 'git-compare' | 'clipboard';
     color: string;
     label: string;
   }[] = [
-    { key: 'self', icon: 'person', color: tokens.brand.violet2, label: 'Self' },
-    { key: 'both', icon: 'git-compare', color: tokens.text.hi, label: 'Both' },
-    { key: 'questionnaire', icon: 'clipboard', color: QUESTIONNAIRE_COLOR, label: 'Quiz' },
+    {
+      key: 'self',
+      icon: 'person',
+      color: tokens.brand.violet2,
+      label: t('avaliacao.sourceSelf'),
+    },
+    {
+      key: 'both',
+      icon: 'git-compare',
+      color: tokens.text.hi,
+      label: t('avaliacao.sourceBoth'),
+    },
+    {
+      key: 'questionnaire',
+      icon: 'clipboard',
+      color: QUESTIONNAIRE_COLOR,
+      label: t('avaliacao.sourceQuiz'),
+    },
   ];
   return (
     <View style={toggleStyles.row}>
@@ -52,18 +76,27 @@ function SourceToggle({ value, onChange }: SourceToggleProps) {
             onPress={() => onChange(it.key)}
             style={({ pressed }) => [
               toggleStyles.btn,
-              active && { backgroundColor: `${it.color}25`, borderColor: it.color },
+              active && { backgroundColor: `${it.color}22`, borderColor: it.color },
               pressed && { opacity: 0.75 },
             ]}
             hitSlop={6}
             accessibilityRole="button"
+            accessibilityState={{ selected: active }}
             accessibilityLabel={it.label}
           >
             <Ionicons
               name={it.icon}
-              size={14}
+              size={13}
               color={active ? it.color : tokens.text.dim}
             />
+            <Text
+              style={[
+                toggleStyles.label,
+                { color: active ? it.color : tokens.text.dim },
+              ]}
+            >
+              {it.label}
+            </Text>
           </Pressable>
         );
       })}
@@ -75,37 +108,45 @@ const toggleStyles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignSelf: 'center',
-    gap: 4,
+    gap: 6,
   },
   btn: {
-    width: 36,
-    height: 28,
-    borderRadius: tokens.radius.sm,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    height: 30,
+    borderRadius: tokens.radius.pill,
     borderWidth: 1,
     borderColor: tokens.border.base,
     backgroundColor: 'rgba(255,255,255,0.02)',
+  },
+  label: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 11,
+    letterSpacing: 0.3,
   },
 });
 
 interface Props {
   subScores: CharacterSubScore[];
+  /** ScrollView wrapping the Eu tab — lets the M5 tour scroll the legend
+   *  cards into view by their measured position (robust to reordering). */
+  scrollViewRef?: React.RefObject<ScrollViewType | null>;
+  /** Reports the legend's absolute Y within the scroll view, so the tour
+   *  can scroll to the sub-score cards without a hand-tuned magic number. */
+  onLegendMeasured?: (y: number) => void;
 }
 
 /**
- * Pillar 1 — Avaliação. Contemplative tone.
- *
- * No outer card frame: the hex chart is the visual splash and any extra
- * border around it competes with its own geometry. Tone signal lives in
- * the active PillarTab halo above. Layout is simply:
- *   - Hex (full bleed, sized to the screen)
- *   - Optional violet-bordered nudge surfacing the weakest sub
- *   - CTA to update self-assessment
+ * Pillar 1 — Avaliação. The standardized layout: the hex leads, then every
+ * extra sits below it — the source toggle, the six dimension cards, the
+ * self-assessment / questionnaire CTAs, and finally the mood card as a
+ * quiet footer. Nothing but the hex sits at the top of the panel.
  *
  * Quiet by design: no XP, no Momentum, no confetti.
  */
-export function AvaliacaoPanel({ subScores }: Props) {
+export function AvaliacaoPanel({ subScores, scrollViewRef, onLegendMeasured }: Props) {
   const router = useRouter();
   const { t } = useT();
   const { width: screenWidth } = useWindowDimensions();
@@ -115,13 +156,13 @@ export function AvaliacaoPanel({ subScores }: Props) {
   // for visual presence, capped so it doesn't blow up on tablets.
   const chartSize = Math.max(240, Math.min((screenWidth || 360) - 16, 360));
 
+  const legendRef = useRef<View>(null);
+
   const selfScores = useMemo(
     () => pickSubScores(subScores, 'self'),
     [subScores],
   );
-  // Decimal precision when available (rows written by avaliacao_v2+). The
-  // hex itself has no per-vertex numbers, so this shows up as a truer
-  // vertex radius plus the legend cards' score badge and sub bar widths.
+  // Decimal precision when available (rows written by avaliacao_v2+).
   const questionnaireScores = useMemo(
     () => pickSubScoresDecimal(subScores, 'questionnaire'),
     [subScores],
@@ -140,6 +181,49 @@ export function AvaliacaoPanel({ subScores }: Props) {
     return { primary: selfScores, secondary: questionnaireScores };
   }, [hasQuestionnaire, hexSource, selfScores, questionnaireScores]);
 
+  // Legend cards mirror the active source: dim badge = score/10, sub bars =
+  // score/5. Same numbers the hex plots, spelled out per dimension.
+  const rows = useMemo<DimCardRow[]>(
+    () =>
+      DIMENSION_ORDER.map((dim) => {
+        const [a, b] = SUBS_BY_DIM[dim];
+        const sa = primary.get(a) ?? 0;
+        const sb = primary.get(b) ?? 0;
+        return {
+          dimId: dim,
+          badge: { text: formatScore(sa + sb), tone: 'solid' as const },
+          subs: [
+            { subId: a, fill: sa / 5 },
+            { subId: b, fill: sb / 5 },
+          ],
+        };
+      }),
+    [primary],
+  );
+
+  // Measure the legend's absolute position within the scroll view whenever
+  // it lays out, so the tour can scroll to it by real coordinates instead
+  // of a fraction of the total scroll range (which shifts when the panel
+  // reorders). measureLayout isn't available on web — the tour degrades to
+  // no auto-scroll there.
+  const measureLegend = useCallback(() => {
+    if (Platform.OS === 'web' || !onLegendMeasured) return;
+    const node = legendRef.current;
+    const sv = scrollViewRef?.current;
+    if (!node || !sv) return;
+    const svHandle = findNodeHandle(sv);
+    if (svHandle == null) return;
+    (
+      node as unknown as {
+        measureLayout: (
+          rel: number,
+          cb: (x: number, y: number) => void,
+          err: () => void,
+        ) => void;
+      }
+    ).measureLayout(svHandle, (_x, y) => onLegendMeasured(y), () => {});
+  }, [onLegendMeasured, scrollViewRef]);
+
   const lastTaken = lastSession.data?.taken_at ?? null;
   const sinceDays = daysSince(lastTaken);
   const questionnaireLabel =
@@ -151,8 +235,6 @@ export function AvaliacaoPanel({ subScores }: Props) {
 
   return (
     <View style={styles.wrap}>
-      <MoodTodayCard />
-
       <View style={styles.hexWrap}>
         <HexChart
           scores={primary}
@@ -163,11 +245,19 @@ export function AvaliacaoPanel({ subScores }: Props) {
             router.push({ pathname: '/dimension/[id]', params: { id: dim } })
           }
         />
-        {hasQuestionnaire && (
-          <View style={styles.toggleOverlay} pointerEvents="box-none">
-            <SourceToggle value={hexSource} onChange={setHexSource} />
-          </View>
-        )}
+      </View>
+
+      {hasQuestionnaire && (
+        <SourceToggle value={hexSource} onChange={setHexSource} />
+      )}
+
+      <View ref={legendRef} onLayout={measureLegend} collapsable={false}>
+        <DimensionCards
+          rows={rows}
+          onDimPress={(dim) =>
+            router.push({ pathname: '/dimension/[id]', params: { id: dim } })
+          }
+        />
       </View>
 
       <Pressable
@@ -181,10 +271,7 @@ export function AvaliacaoPanel({ subScores }: Props) {
 
       <Pressable
         onPress={() => router.push('/questionnaire')}
-        style={({ pressed }) => [
-          styles.ctaSecondary,
-          pressed && { opacity: 0.85 },
-        ]}
+        style={({ pressed }) => [styles.ctaSecondary, pressed && { opacity: 0.85 }]}
         hitSlop={4}
       >
         <Ionicons name="clipboard" size={14} color={tokens.brand.violet2} />
@@ -194,16 +281,17 @@ export function AvaliacaoPanel({ subScores }: Props) {
       {hasQuestionnaire && (
         <Pressable
           onPress={() => router.push('/profile-mirror')}
-          style={({ pressed }) => [
-            styles.ctaSecondary,
-            pressed && { opacity: 0.85 },
-          ]}
+          style={({ pressed }) => [styles.ctaSecondary, pressed && { opacity: 0.85 }]}
           hitSlop={4}
         >
           <Ionicons name="person-circle" size={14} color={tokens.brand.violet2} />
           <Text style={styles.ctaSecondaryText}>{t('avaliacao.mirrorCta')}</Text>
         </Pressable>
       )}
+
+      {/* Mood lives at the very bottom — a quiet daily check-in footer, not
+          a header. It used to sit above the hex, which broke the standard. */}
+      <MoodTodayCard />
     </View>
   );
 }
@@ -214,12 +302,6 @@ const styles = StyleSheet.create({
   },
   hexWrap: {
     alignItems: 'center',
-    position: 'relative',
-  },
-  toggleOverlay: {
-    position: 'absolute',
-    top: 0,
-    right: 4,
   },
   cta: {
     flexDirection: 'row',
