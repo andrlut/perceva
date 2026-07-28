@@ -15,16 +15,12 @@ export interface DimSubBar {
   /** Inner solid fill 0..1 — renders solid on top up to here, with `fill`
    *  drawn translucent behind it. Used by Desejada's current→desired bar. */
   baseFill?: number;
-  /** Right-aligned value label, e.g. "+840 XP". */
-  valueLabel?: string;
 }
 
 export interface DimCardRow {
   dimId: DimensionId;
   /** Header badge — a solid score pill, a soft delta chip, or a bare icon. */
   badge?: { text?: string; icon?: IoniconName; tone?: 'solid' | 'chip' };
-  /** Optional dim-level bar above the sub rows (Praticada window bar). */
-  dimBar?: { fill: number; tick?: number };
   /** Optional caption under the sub bars, e.g. "sono 3,5 → 4,5". */
   caption?: string;
   subs: DimSubBar[];
@@ -94,20 +90,6 @@ export function DimensionCards({ rows, accent, onDimPress }: Props) {
                   ) : null}
                 </View>
 
-                {row.dimBar ? (
-                  <View style={[styles.dimBar, { backgroundColor: `${color}1A` }]}>
-                    <View
-                      style={[
-                        styles.dimBarFill,
-                        { width: clampPct(row.dimBar.fill), backgroundColor: color },
-                      ]}
-                    />
-                    {row.dimBar.tick !== undefined ? (
-                      <View style={[styles.tick, { left: clampPct(row.dimBar.tick) }]} />
-                    ) : null}
-                  </View>
-                ) : null}
-
                 {row.subs.map((sub) => {
                   const subMeta = metaLookup.sub(sub.subId);
                   const stacked = sub.baseFill !== undefined;
@@ -140,11 +122,6 @@ export function DimensionCards({ rows, accent, onDimPress }: Props) {
                           />
                         ) : null}
                       </View>
-                      {sub.valueLabel ? (
-                        <Text style={styles.subValue} numberOfLines={1}>
-                          {sub.valueLabel}
-                        </Text>
-                      ) : null}
                     </View>
                   );
                 })}
@@ -244,27 +221,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 10,
   },
-  dimBar: {
-    height: 6,
-    borderRadius: 3,
-    overflow: 'hidden',
-    position: 'relative',
-    marginBottom: 2,
-  },
-  dimBarFill: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    borderRadius: 3,
-  },
-  tick: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    width: 1.5,
-    backgroundColor: 'rgba(255,255,255,0.55)',
-  },
   subRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -284,13 +240,6 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     borderRadius: 2,
-  },
-  subValue: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 10,
-    color: tokens.text.dim,
-    minWidth: 46,
-    textAlign: 'right',
   },
   caption: {
     fontFamily: 'Manrope_600SemiBold',

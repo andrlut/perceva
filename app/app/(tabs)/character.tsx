@@ -18,9 +18,9 @@ import { SubSelector } from '@/components/SubSelector';
 import { AutoconhecimentoView } from '@/components/pillars/AutoconhecimentoView';
 import { AvaliacaoPanel } from '@/components/pillars/AvaliacaoPanel';
 import { DedicacaoPanel } from '@/components/pillars/DedicacaoPanel';
-import { GoalsPreview } from '@/components/pillars/GoalsPreview';
+import { CaminhoPanel } from '@/components/pillars/CaminhoPanel';
 import { MomentumView } from '@/components/pillars/MomentumView';
-import { SkillsPanel } from '@/components/pillars/SkillsPanel';
+import { NortePanel } from '@/components/pillars/NortePanel';
 import { useCharacter } from '@/lib/api/character';
 import { useMomentum } from '@/lib/api/momentum';
 import { useSkillStates } from '@/lib/api/skills';
@@ -38,7 +38,7 @@ import { tokens } from '@/theme';
 // Sub-pillar key types per pilar — kept narrow so TS catches mis-typings.
 type PercebidaSub = 'avaliacao' | 'autoconhecimento';
 type PraticadaSub = 'dedicacao' | 'momentum';
-type DesejadaSub = 'goals' | 'skills';
+type DesejadaSub = 'norte' | 'caminho';
 
 interface ActiveSubState {
   percebida: PercebidaSub;
@@ -102,7 +102,7 @@ export default function CharacterScreen() {
   const [activeSub, setActiveSub] = useState<ActiveSubState>({
     percebida: 'avaliacao',
     praticada: 'dedicacao',
-    desejada: 'skills',
+    desejada: 'norte',
   });
   const bottomClearance = useBottomNavClearance();
   const scrollViewRef = useRef<ScrollView>(null);
@@ -204,8 +204,8 @@ export default function CharacterScreen() {
             { key: 'momentum', label: t('pillar.sub.praticada.momentum') },
           ]
         : [
-            { key: 'goals', label: t('pillar.sub.desejada.goals') },
-            { key: 'skills', label: t('pillar.sub.desejada.skills') },
+            { key: 'norte', label: t('pillar.sub.desejada.norte') },
+            { key: 'caminho', label: t('pillar.sub.desejada.caminho') },
           ];
   const currentSub = activeSub[activePillar];
 
@@ -277,11 +277,11 @@ export default function CharacterScreen() {
               {activePillar === 'praticada' && currentSub === 'momentum' && (
                 <MomentumView momentum={momentum.data?.attributes} />
               )}
-              {activePillar === 'desejada' && currentSub === 'goals' && (
-                <GoalsPreview />
+              {activePillar === 'desejada' && currentSub === 'norte' && (
+                <NortePanel subScores={character.data.subScores} />
               )}
-              {activePillar === 'desejada' && currentSub === 'skills' && (
-                <SkillsPanel skills={skillStates.data ?? []} />
+              {activePillar === 'desejada' && currentSub === 'caminho' && (
+                <CaminhoPanel skills={skillStates.data ?? []} />
               )}
             </View>
           </View>

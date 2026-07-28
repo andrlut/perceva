@@ -22,6 +22,12 @@ interface HexChartProps {
   /** When provided, the vertex badges become tappable and call this with
    *  the dim id — drills into the dim detail screen from the hex. */
   onDimPress?: (dim: DimensionId) => void;
+  /** SVG gradient-def namespace. Defaults to 'avaliacao'. Override when a
+   *  second hex (e.g. Norte's desired-state chart) can share the screen. */
+  idSuffix?: string;
+  /** Force the centered figure instead of the computed average — e.g. an
+   *  em dash for Norte's "no targets set yet" empty state. */
+  centerValue?: string;
 }
 
 const SUB_MAX = 5;
@@ -55,6 +61,8 @@ export function HexChart({
   size = 320,
   secondaryColor = tokens.dimension.bonds,
   onDimPress,
+  idSuffix = 'avaliacao',
+  centerValue,
 }: HexChartProps) {
   const { t } = useT();
   const metaLookup = useMetaLookup();
@@ -92,11 +100,11 @@ export function HexChart({
         axes={axes}
         secondary={secondary}
         secondaryColor={secondaryColor}
-        centerValue={overall.toFixed(1)}
+        centerValue={centerValue ?? overall.toFixed(1)}
         centerFontSize={28}
         size={size}
         onAxisPress={onDimPress}
-        idSuffix="avaliacao"
+        idSuffix={idSuffix}
         a11yLabel={t('a11y.scoreByDimension')}
       />
     </View>
