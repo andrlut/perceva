@@ -175,6 +175,43 @@ Video specifics (supported since migration `20260725000004`):
   on conflict (material_id, kind, locale) do nothing;
   ```
 
+### 6b. Generate media — cover + infographic (Fase A, automated)
+
+After the material row exists (INSERT or UPDATE applied), produce its cover and
+infographic automatically. This closes the loop so the twice-weekly run ships
+full visual materials, not text-only.
+
+1. **Art direction.** Dispatch the `learning-art-director` sub-agent with the
+   drafter payload (title, `main_points`, `dimension_id`, `subs`,
+   `source_label_*`). It writes `learning-drops/inbox/<slug>/media-spec.json`.
+
+2. **Render.** Run the local generator (first run only: `cd tools/content-media
+   && npm install`):
+
+   ```bash
+   node tools/content-media/generate.mjs --slug <slug>
+   ```
+
+   - Infographic (`infographic.<loc>.webp`) is code-rendered from brand tokens —
+     always produced, **no API cost**.
+   - Cover (`cover.webp`) needs `GEMINI_API_KEY` (AI Studio key, billing on). If
+     the key is absent, the run logs "cover failed" and continues with the
+     infographic only — that's fine; the material still gets an infographic.
+
+3. **Upload + attach.** Read `learning-drops/inbox/<slug>/manifest.json` and, for
+   each asset, `supabase storage cp` it into `learning-media/<bucketPath>` with
+   `--content-type <contentType>`, cache-control immutable, `--experimental
+   --linked`. Then write a media migration from the manifest:
+   - `role: 'cover'` → `update public.learning_material set hero_image_url =
+     '<hero_image_url>' where slug = '<slug>';`
+   - `role: 'media'` (infographic) → the `insert into
+     public.learning_material_media (…, source, …)` shown above, with
+     `source = '<asset.source>'` (`gemini-api` for the cover, `manual` for the
+     code-rendered infographic).
+
+   Upload BEFORE the migration and `storage ls` to confirm — the feed must never
+   404. The `inbox/` folder is gitignored, so only the migrations get committed.
+
 ### 7. Apply
 
 ```bash

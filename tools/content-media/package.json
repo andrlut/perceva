@@ -1,0 +1,17 @@
+{
+  "name": "@perceva/content-media",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local media pipeline for Learning materials — cover (Gemini image API) + infographic (branded SVG rendered with resvg). Standalone, NOT part of the pnpm workspace (installed with plain `npm install` here).",
+  "bin": {
+    "content-media": "./generate.mjs"
+  },
+  "scripts": {
+    "generate": "node generate.mjs"
+  },
+  "dependencies": {
+    "@google/genai": "^1.0.0",
+    "@resvg/resvg-js": "^2.6.2"
+  }
+}
