@@ -74,9 +74,13 @@ export interface DimensionSub {
 
 /**
  * Where a sub score came from. 'self' is the user's own gut rating,
- * 'questionnaire' is a derived score from the (future) onboarding quiz.
+ * 'questionnaire' is a derived score from the onboarding quiz, and
+ * 'desired' is an aspirational target — where the user wants that sub to
+ * be (the Desejada pillar), not where it is now. All three share the
+ * (character_id, source, sub_id) key space; 'desired' rows are created
+ * lazily on first save, like 'questionnaire'.
  */
-export type AssessmentSource = 'self' | 'questionnaire';
+export type AssessmentSource = 'self' | 'questionnaire' | 'desired';
 
 export interface CharacterSubScore {
   character_id: string;
