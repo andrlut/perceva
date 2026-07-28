@@ -895,9 +895,19 @@ const en = {
     },
     dayCleared: {
       title: 'Day cleared!',
+      // Body variants — picked at random each time the celebration fires so
+      // it doesn't read the same every day (see DayClearedCelebration).
       body: "Every practice today was a vote for who you're becoming.",
+      body2: 'Day closed, and closed well. This is how it gets built.',
+      body3: 'One more day toward the person you want to be.',
+      body4: "Done. Small steps, every day — that's what changes everything.",
+      body5: 'You showed up today. Consistency is made of this.',
+      body6: 'Day cleared. Tomorrow we keep building.',
+      body7: 'Every mark like this is you honoring what you decided.',
       allSkippedTitle: 'Day settled.',
       allSkippedBody: 'Skipping is deciding too. Tomorrow brings more.',
+      allSkippedBody2: 'Rest is part of it. The day is settled.',
+      allSkippedBody3: "Not every day is a go — and that's okay.",
       statsDone: { one: '{{count}} practice done', other: '{{count}} practices done' },
       statsSkipped: { one: '{{count}} skipped', other: '{{count}} skipped' },
       statsXp: '+{{xp}} XP today',
@@ -1059,6 +1069,7 @@ const en = {
     title: 'All practices',
     eyebrow: 'PRACTICES',
     lead: 'Everything you can do beyond your daily routine.',
+    loggingFor: 'Logging on {{date}}',
     sections: {
       recurring: 'Recurring',
       oneshot: 'One-time',

@@ -890,9 +890,19 @@ const pt: Translations = {
     },
     dayCleared: {
       title: 'Dia fechado!',
+      // Body variants — picked at random each time the celebration fires so
+      // it doesn't read the same every day (see DayClearedCelebration).
       body: 'Cada prática de hoje foi um voto em quem você está se tornando.',
+      body2: 'Dia fechado no capricho. É assim que se constrói.',
+      body3: 'Mais um dia somando pra pessoa que você quer ser.',
+      body4: 'Feito. Pequenos passos, todo dia — é o que muda tudo.',
+      body5: 'Você apareceu hoje. É disso que a consistência é feita.',
+      body6: 'Zerou o dia. Amanhã a gente continua a obra.',
+      body7: 'Cada marca dessas é você honrando o que decidiu.',
       allSkippedTitle: 'Dia limpo.',
       allSkippedBody: 'Pular também é decidir. Amanhã tem mais.',
+      allSkippedBody2: 'Descansar faz parte. O dia tá fechado.',
+      allSkippedBody3: 'Nem todo dia é dia — e tá tudo bem.',
       statsDone: { one: '{{count}} prática feita', other: '{{count}} práticas feitas' },
       statsSkipped: { one: '{{count}} pulada', other: '{{count}} puladas' },
       statsXp: '+{{xp}} XP hoje',
@@ -1054,6 +1064,7 @@ const pt: Translations = {
     title: 'Todas as práticas',
     eyebrow: 'PRÁTICAS',
     lead: 'Tudo que dá pra fazer além da rotina diária.',
+    loggingFor: 'Registrando em {{date}}',
     sections: {
       recurring: 'Recorrentes',
       oneshot: 'Pontuais',
