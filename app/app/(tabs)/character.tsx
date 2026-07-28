@@ -245,14 +245,7 @@ export default function CharacterScreen() {
           {/* Full-width header — sits flush against the SafeArea so the
               ambient halo bleeds from the screen edge. No surrounding
               padding; the header owns its own internal spacing. */}
-          <HeroHeader
-            onPillarPress={(p) => {
-              // Ignore stat-chip taps while the M5 tour is driving the pillar,
-              // so a tap can't fight the tour's forced portrait.
-              if (isM5Current && m5Status === 'in_progress') return;
-              setActivePillar(p);
-            }}
-          />
+          <HeroHeader />
 
           {/* Tab body — padded inset under the header. */}
           <View style={styles.body}>

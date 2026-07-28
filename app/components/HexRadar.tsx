@@ -12,9 +12,12 @@ import Svg, {
 
 import type { DimensionId } from '@/lib/db/types';
 import { tokens } from '@/theme';
-import { DIMENSION_META, DIMENSION_ORDER } from '@/theme/dimensions';
+import { DIMENSION_META } from '@/theme/dimensions';
 
 export interface HexAxis {
+  /** Dimension this axis belongs to — drives the vertex dot / badge color.
+   *  For a sub-level axis, pass the sub's PARENT dim here (so a dim's two
+   *  subs share its color) and override the glyph via `iconName`. */
   dimId: DimensionId;
   /** Distance from the center as a fraction of the outer ring (0..1). The
    *  caller owns the scale — absolute, relative, capped, floored, whatever
@@ -23,6 +26,9 @@ export interface HexAxis {
   /** Lights the badge and draws the vertex dot. False renders the axis
    *  present-but-muted, which is how "no data on this axis" reads. */
   active: boolean;
+  /** Optional glyph override for the outer badge. Defaults to the dim's own
+   *  icon; a sub axis passes its sub icon here. */
+  iconName?: string;
   a11yLabel: string;
 }
 
@@ -85,13 +91,13 @@ const FILL_TOP_ALPHA = 0.15;
 const FILL_BOTTOM_ALPHA = 0.04;
 const STROKE = tokens.text.mid;
 
-function angleAt(j: number) {
-  return (j / 6) * Math.PI * 2 - Math.PI / 2;
+function angleAt(j: number, n: number) {
+  return (j / n) * Math.PI * 2 - Math.PI / 2;
 }
 
-function ringPoints(cx: number, cy: number, r: number): string {
-  return DIMENSION_ORDER.map((_, j) => {
-    const a = angleAt(j);
+function ringPoints(cx: number, cy: number, r: number, n: number): string {
+  return Array.from({ length: n }, (_, j) => {
+    const a = angleAt(j, n);
     return `${cx + Math.cos(a) * r},${cy + Math.sin(a) * r}`;
   }).join(' ');
 }
@@ -136,11 +142,14 @@ export function HexRadar({
   const cx = size / 2;
   const cy = size / 2;
   const R = size / 2 - PADDING;
+  // Axis count is data-driven — six dims, or twelve subs when the caller
+  // hands over a finer breakdown. Every angle is computed against `n`.
+  const n = axes.length;
 
   const points = useMemo(
     () =>
       axes.map((axis, j) => {
-        const angle = angleAt(j);
+        const angle = angleAt(j, n);
         const r = Math.max(0, Math.min(1, axis.ratio)) * R;
         return {
           x: cx + Math.cos(angle) * r,
@@ -149,7 +158,7 @@ export function HexRadar({
           by: cy + Math.sin(angle) * (R + LABEL_GAP),
         };
       }),
-    [axes, cx, cy, R],
+    [axes, cx, cy, R, n],
   );
 
   const hasShape = axes.some((a) => a.active && a.ratio > 0);
@@ -161,12 +170,12 @@ export function HexRadar({
 
   const secondaryPoints = useMemo(() => {
     if (!secondary || !secondary.some((r) => r > 0)) return null;
-    return DIMENSION_ORDER.map((_, j) => {
-      const angle = angleAt(j);
+    return axes.map((_, j) => {
+      const angle = angleAt(j, n);
       const r = Math.max(0, Math.min(1, secondary[j] ?? 0)) * R;
       return { x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r };
     });
-  }, [secondary, cx, cy, R]);
+  }, [secondary, cx, cy, R, n, axes]);
 
   const gradId = `hexradar-${idSuffix}`;
 
@@ -219,7 +228,7 @@ export function HexRadar({
         {RING_STEPS.map((step) => (
           <Polygon
             key={step}
-            points={ringPoints(cx, cy, R * step)}
+            points={ringPoints(cx, cy, R * step, n)}
             fill="none"
             stroke={step === 1 ? tokens.border.strong : tokens.border.divider}
             strokeWidth={1}
@@ -227,10 +236,10 @@ export function HexRadar({
         ))}
 
         {axes.map((axis, j) => {
-          const a = angleAt(j);
+          const a = angleAt(j, n);
           return (
             <Line
-              key={axis.dimId}
+              key={`spoke-${j}`}
               x1={cx}
               y1={cy}
               x2={cx + Math.cos(a) * R}
@@ -276,7 +285,7 @@ export function HexRadar({
 
         {secondaryPoints?.map((p, j) => (
           <Circle
-            key={`sec-${DIMENSION_ORDER[j]}`}
+            key={`sec-${j}`}
             cx={p.x}
             cy={p.y}
             r={3}
@@ -288,7 +297,7 @@ export function HexRadar({
           axes.map((axis, j) =>
             axis.active ? (
               <Circle
-                key={axis.dimId}
+                key={`dot-${j}`}
                 cx={points[j].x}
                 cy={points[j].y}
                 r={4}
@@ -304,7 +313,7 @@ export function HexRadar({
         const meta = DIMENSION_META[axis.dimId];
         return (
           <Pressable
-            key={axis.dimId}
+            key={`badge-${j}`}
             disabled={!onAxisPress}
             onPress={() => onAxisPress?.(axis.dimId)}
             hitSlop={HIT_SLOP}
@@ -322,7 +331,7 @@ export function HexRadar({
             accessibilityLabel={axis.a11yLabel}
           >
             <Ionicons
-              name={meta.iconName as never}
+              name={(axis.iconName ?? meta.iconName) as never}
               size={15}
               color={axis.active ? meta.color : tokens.text.faint}
             />

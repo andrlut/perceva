@@ -695,6 +695,8 @@ const pt: Translations = {
     sourceSelf: 'Self',
     sourceBoth: 'Ambos',
     sourceQuiz: 'Quiz',
+    hexShowSubs: 'Ver as 12 subs',
+    hexShowDims: 'Ver as 6 dimensões',
     nudgeSuffix: 'está em {{score}}/5 — toque pra ver práticas recomendadas',
     hexAxisA11y: '{{dim}}: {{score}} de {{max}}',
   },

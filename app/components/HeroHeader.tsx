@@ -12,53 +12,12 @@ import Svg, {
 } from 'react-native-svg';
 
 import { PercevaGlyph } from '@/components/PercevaGlyph';
-import { type PillarKey } from '@/components/PillarSwitcher';
 import { useCharacter } from '@/lib/api/character';
-import { useMomentum } from '@/lib/api/momentum';
-import { useSkillStates } from '@/lib/api/skills';
 import { useT } from '@/lib/i18n';
 import { useDiscBlend } from '@/lib/psych/useDiscBlend';
-import { levelProgress, momentumTier } from '@/lib/xp';
+import { levelProgress } from '@/lib/xp';
 import { tokens } from '@/theme';
 import { DIMENSION_META } from '@/theme/dimensions';
-
-type IoniconName = keyof typeof Ionicons.glyphMap;
-
-/** One glance-stat, tappable into its pillar. The label names what the
- *  number is; the tap opens that pillar's full view. */
-function StatChip({
-  icon,
-  color,
-  value,
-  label,
-  onPress,
-}: {
-  icon: IoniconName;
-  color: string;
-  value: string;
-  label: string;
-  onPress?: () => void;
-}) {
-  return (
-    <Pressable
-      style={({ pressed }) => [styles.statChip, pressed && { opacity: 0.7 }]}
-      onPress={onPress}
-      disabled={!onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`${label}: ${value}`}
-    >
-      <View style={styles.statTop}>
-        <Ionicons name={icon} size={13} color={color} />
-        <Text style={[styles.statValue, { color }]} numberOfLines={1}>
-          {value}
-        </Text>
-      </View>
-      <Text style={styles.statLabel} numberOfLines={1}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
 
 const AVATAR = 92;
 const RING_R = 42;
@@ -70,26 +29,17 @@ const RING_CIRCUMFERENCE = 2 * Math.PI * RING_R;
  * center + XP progress arc wrapping the whole avatar. The eyebrow carries
  * the user's DISC archetype (an earned, self-knowledge identity — "LV 12 ·
  * O TIMONEIRO") instead of a level-derived nickname; the name reads big and
- * quiet; a glance-stat strip (one number per pillar) sits below.
+ * quiet.
  *
  * Not a card — no border, full-width, soft violet halo + brand watermark.
  * The text column is tappable: it opens the DISC result, or invites the
  * test when none is taken. Data is read via hooks; self-contained.
  */
-export function HeroHeader({
-  onPillarPress,
-}: {
-  /** Tap a glance-stat chip to jump to that pillar. Omit for a read-only
-   *  header (the caller decides whether switching is allowed right now — the
-   *  Eu tab suppresses it mid-tour). */
-  onPillarPress?: (pillar: PillarKey) => void;
-}) {
+export function HeroHeader() {
   const character = useCharacter();
   const { t } = useT();
   const router = useRouter();
   const blend = useDiscBlend();
-  const momentum = useMomentum();
-  const skillStates = useSkillStates();
 
   const totalXp = character.data?.character.total_xp ?? 0;
   const lp = levelProgress(totalXp);
@@ -113,32 +63,6 @@ export function HeroHeader({
 
   const archetype = blend.status === 'ready' ? blend.content.name : null;
   const goDisc = () => router.push('/disc');
-
-  // Glance-stat strip — one stat per pillar. All from queries the Eu tab
-  // already mounts (useCharacter/useMomentum/useSkillStates), so cache hits.
-  const selfAvg = useMemo(() => {
-    const rows = (character.data?.subScores ?? []).filter(
-      (r) => r.source === 'self',
-    );
-    if (rows.length === 0) return 0;
-    const sum = rows.reduce((s, r) => s + (r.score_decimal ?? r.score), 0);
-    return sum / rows.length;
-  }, [character.data?.subScores]);
-
-  const momTier = useMemo(() => {
-    const attrs = momentum.data?.attributes ?? [];
-    if (attrs.length === 0) return momentumTier(0);
-    const sum = attrs.reduce((s, a) => s + a.momentum, 0);
-    return momentumTier(Math.round(sum / attrs.length));
-  }, [momentum.data?.attributes]);
-
-  const medals = useMemo(
-    () =>
-      (skillStates.data ?? []).filter(
-        (s) => s.currentTier.tier_name !== 'beginner',
-      ).length,
-    [skillStates.data],
-  );
 
   return (
     <View style={styles.root}>
@@ -312,33 +236,6 @@ export function HeroHeader({
           )}
         </Pressable>
       </View>
-
-      {/* Glance-stat strip — one stat per pillar, each labelled with what it
-          is and tappable into that pillar's view: perceived-score average,
-          practiced-momentum tier, desired-medal count. */}
-      <View style={styles.statStrip}>
-        <StatChip
-          icon="eye-outline"
-          color={tokens.brand.violet2}
-          value={selfAvg.toFixed(1)}
-          label={t('pillar.top.percebida.label')}
-          onPress={onPillarPress ? () => onPillarPress('percebida') : undefined}
-        />
-        <StatChip
-          icon="pulse"
-          color={tokens.semantic.xp2}
-          value={t(`home.momentum.tier.${momTier}`).toUpperCase()}
-          label={t('pillar.top.praticada.label')}
-          onPress={onPillarPress ? () => onPillarPress('praticada') : undefined}
-        />
-        <StatChip
-          icon="compass-outline"
-          color={tokens.semantic.coin}
-          value={String(medals)}
-          label={t('pillar.top.desejada.label')}
-          onPress={onPillarPress ? () => onPillarPress('desejada') : undefined}
-        />
-      </View>
     </View>
   );
 }
@@ -432,38 +329,5 @@ const styles = StyleSheet.create({
     fontSize: 11,
     letterSpacing: 0.3,
     color: tokens.semantic.coinLight,
-  },
-  statStrip: {
-    flexDirection: 'row',
-    gap: tokens.space[2],
-    marginTop: tokens.space[3],
-  },
-  statChip: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 2,
-    paddingVertical: 7,
-    paddingHorizontal: 6,
-    borderRadius: tokens.radius.md,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-  },
-  statTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  statValue: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 12,
-    letterSpacing: 0.2,
-  },
-  statLabel: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 9,
-    letterSpacing: 0.3,
-    color: tokens.text.dim,
-    textTransform: 'uppercase',
   },
 });
