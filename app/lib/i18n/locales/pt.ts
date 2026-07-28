@@ -553,6 +553,7 @@ const pt: Translations = {
       read: 'Ler',
       listen: 'Ouvir',
       view: 'Ver',
+      soon: 'Em breve',
     },
     media: {
       onlyIn: 'Disponível só em {{lang}}',

@@ -52,6 +52,11 @@ import { SUB_META } from '@/theme/dimensions';
 type Translator = (key: string, options?: TranslateOptions) => string;
 type Mode = 'read' | 'listen' | 'view';
 
+// Every material advertises all three formats. The ones it doesn't carry yet
+// render as a muted, non-tappable "em breve" tab so the reader sees the full
+// shape of the material (and the roadmap) instead of a lonely single mode.
+const ALL_MODES: Mode[] = ['read', 'listen', 'view'];
+
 function typeLabel(type: LearningMaterialType, t: Translator): string {
   return t(`learning.type.${type}`);
 }
@@ -102,13 +107,14 @@ export function MaterialMediaScreen({ detail: m }: Props) {
     [m.media, locale],
   );
 
-  const modes = useMemo(() => {
-    const list: Mode[] = [];
-    if (body) list.push('read');
-    if (audioPick) list.push('listen');
-    if (videoPick || visualPick) list.push('view');
-    return list;
-  }, [body, audioPick, videoPick, visualPick]);
+  const available = useMemo<Record<Mode, boolean>>(
+    () => ({
+      read: !!body,
+      listen: !!audioPick,
+      view: !!(videoPick || visualPick),
+    }),
+    [body, audioPick, videoPick, visualPick],
+  );
 
   const [mode, setMode] = useState<Mode>(() => (body ? 'read' : audioPick ? 'listen' : 'view'));
   // Player mounts on first Listen and stays mounted (hidden) afterwards.
@@ -261,37 +267,56 @@ export function MaterialMediaScreen({ detail: m }: Props) {
             </View>
           </View>
 
-          {/* Mode switcher — only the available modes show up */}
-          {modes.length > 1 && (
-            <View style={styles.modeSwitch}>
-              {modes.map((mo) => {
-                const active = mode === mo;
-                return (
-                  <Pressable
-                    key={mo}
-                    onPress={() => switchMode(mo)}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: active }}
-                    style={[styles.modeBtn, active && styles.modeBtnActive]}
+          {/* Mode switcher — always shows all three formats. Modes the
+              material doesn't carry yet render muted + "em breve" and aren't
+              tappable. */}
+          <View style={styles.modeSwitch}>
+            {ALL_MODES.map((mo) => {
+              const active = mode === mo;
+              const avail = available[mo];
+              return (
+                <Pressable
+                  key={mo}
+                  onPress={() => {
+                    if (avail) switchMode(mo);
+                  }}
+                  disabled={!avail}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active, disabled: !avail }}
+                  style={[
+                    styles.modeBtn,
+                    active && styles.modeBtnActive,
+                    !avail && styles.modeBtnSoon,
+                  ]}
+                >
+                  <Ionicons
+                    name={modeIcon[mo]}
+                    size={15}
+                    color={active ? tokens.text.hi : avail ? tokens.text.mid : tokens.text.faint}
+                  />
+                  <Text
+                    style={[
+                      styles.modeBtnText,
+                      active && styles.modeBtnTextActive,
+                      !avail && styles.modeBtnTextSoon,
+                    ]}
                   >
-                    <Ionicons
-                      name={modeIcon[mo]}
-                      size={15}
-                      color={active ? tokens.text.hi : tokens.text.mid}
-                    />
-                    <Text style={[styles.modeBtnText, active && styles.modeBtnTextActive]}>
-                      {t(`learning.mode.${mo}`)}
-                    </Text>
-                    {modeBadge[mo] && (
-                      <View style={styles.modeLangBadge}>
-                        <Text style={styles.modeLangBadgeText}>{modeBadge[mo]}</Text>
-                      </View>
-                    )}
-                  </Pressable>
-                );
-              })}
-            </View>
-          )}
+                    {t(`learning.mode.${mo}`)}
+                  </Text>
+                  {avail && modeBadge[mo] && (
+                    <View style={styles.modeLangBadge}>
+                      <Text style={styles.modeLangBadgeText}>{modeBadge[mo]}</Text>
+                    </View>
+                  )}
+                  {!avail && (
+                    <View style={styles.modeSoonTag}>
+                      <Text style={styles.modeSoonTagText}>{t('learning.mode.soon')}</Text>
+                    </View>
+                  )}
+                </Pressable>
+              );
+            })}
+          </View>
 
           {/* ── Mode content ──────────────────────────────────────────── */}
 
@@ -694,6 +719,24 @@ const styles = StyleSheet.create({
     fontSize: 8,
     letterSpacing: 0.5,
     color: tokens.text.hi,
+  },
+  modeBtnSoon: {
+    opacity: 0.6,
+  },
+  modeBtnTextSoon: {
+    color: tokens.text.faint,
+  },
+  modeSoonTag: {
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  modeSoonTagText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 8,
+    letterSpacing: 0.3,
+    color: tokens.text.dim,
   },
   hiddenPane: {
     display: 'none',

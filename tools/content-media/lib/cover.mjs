@@ -14,13 +14,20 @@ import { GoogleGenAI } from '@google/genai';
 
 const MODEL = process.env.GEMINI_IMAGE_MODEL || 'gemini-2.5-flash-image';
 
-/** Style guardrails appended to every cover prompt so output stays on-brand. */
+/**
+ * Style guardrails appended to every cover prompt so output matches the
+ * Perceva house style: FLAT VECTOR ILLUSTRATION (like the domino / candle
+ * covers), never photorealistic. Deep navy background, warm gold accent.
+ */
 const STYLE_SUFFIX =
-  ' Atmospheric, cinematic, evocative editorial cover art. Deep dark background ' +
-  '(near-black navy/indigo), dramatic directional light, rich color, subtle depth ' +
-  'and texture, tasteful and premium. Portrait 2:3 composition with clear negative ' +
-  'space in the upper third for a title overlay. ABSOLUTELY NO text, no words, no ' +
-  'letters, no numbers, no logos, no watermarks, no UI. Not a collage, not a meme.';
+  ' Flat vector illustration in a modern, minimal editorial style — bold clean ' +
+  'simple shapes, smooth flat color fills with soft gradients, gentle depth, low ' +
+  'detail. NOT photorealistic, NOT a photograph, NOT a 3D render, not painterly, ' +
+  'no textures. Deep dark navy-to-indigo gradient background with a subtle radial ' +
+  'glow. Warm golden light as the focal accent, plus one harmonious accent color. ' +
+  'Calm, premium, a quiet sense of wonder. Vertical portrait 2:3 with generous ' +
+  'empty negative space in the upper third for a title overlay later. ABSOLUTELY ' +
+  'NO text, words, letters, numbers, logos, watermarks, charts or UI.';
 
 /**
  * Generate a cover image.

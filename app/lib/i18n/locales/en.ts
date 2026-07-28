@@ -558,6 +558,7 @@ const en = {
       read: 'Read',
       listen: 'Listen',
       view: 'View',
+      soon: 'Soon',
     },
     media: {
       onlyIn: 'Only available in {{lang}}',

@@ -178,7 +178,7 @@ export function buildInfographicSvg({ locale, dimensionId, data, width = 1080, h
     }
     y = ty;
     // point body
-    const bodyLines = wrap(pick(p.body), maxCharsFor(34, railInner), 4);
+    const bodyLines = wrap(pick(p.body), maxCharsFor(34, railInner), 5);
     for (const line of bodyLines) {
       y += 46;
       parts.push(
@@ -204,7 +204,7 @@ export function buildInfographicSvg({ locale, dimensionId, data, width = 1080, h
       // Stack the caption just under the numeral (aligning it beside a
       // variable-width numeral is unreliable in flat SVG).
       y += 12;
-      multiline(statCaption, { size: 36, weight: 'regular', fill: TOKENS.text.mid, lineHeight: 46, maxLines: 2 });
+      multiline(statCaption, { size: 36, weight: 'regular', fill: TOKENS.text.mid, lineHeight: 46, maxLines: 3 });
     }
   }
 
