@@ -1,8 +1,21 @@
-# Learning drops — conteúdo do Gemini Notebook → app
+# Learning drops — mídia do Learning → app
 
-Esteira semi-automática de conteúdo do Learning. Você produz no Gemini Notebook
-(ex-NotebookLM) e baixa os arquivos aqui; a ingestão (Claude) transcodifica, sobe
-pro bucket `learning-media`, escreve a migration e agenda o release.
+Duas esteiras alimentam a mesma pasta `inbox/<slug>/` e o mesmo bucket
+`learning-media`:
+
+- **Fase A — automática (capa + infográfico), via API.** O agente
+  `learning-art-director` escreve um `media-spec.json` e
+  `tools/content-media/generate.mjs` gera `cover.webp` (Gemini 2.5 Flash Image)
+  e `infographic.<loc>.webp` (SVG de marca renderizado localmente, US$ 0). É o
+  caminho default do cron `learning-publisher` e da skill `/content-drop`. Ver
+  `tools/content-media/README.md`.
+- **Fase B/manual — Gemini Notebook (ex-NotebookLM).** Áudio, vídeo e deck ainda
+  são produzidos à mão no Notebook e baixados aqui; a ingestão (Claude)
+  transcodifica, sobe pro bucket, escreve a migration e agenda o release. É o
+  que o resto deste README descreve.
+
+Os dois convergem no mesmo `inbox/<slug>/` + `manifest`/migration — dá pra
+misturar (capa+infográfico por API, áudio por drop manual) no mesmo material.
 
 ## Estrutura
 

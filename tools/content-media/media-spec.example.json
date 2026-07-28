@@ -1,0 +1,56 @@
+{
+  "slug": "summary-atomic-habits",
+  "dimension_id": "craft",
+  "title": {
+    "pt": "Hábitos Atômicos, sob escrutínio",
+    "en": "Atomic Habits, under scrutiny"
+  },
+  "cover": {
+    "prompt": "Uma fileira de dominós em gradiente de tamanho, do minúsculo ao gigante, com o primeiro dominó caindo, luz lateral dramática sobre fundo profundo."
+  },
+  "infographic": {
+    "eyebrow": { "pt": "Ofício · Hábitos", "en": "Craft · Habits" },
+    "headline": { "pt": "66 dias, não 21", "en": "66 days, not 21" },
+    "subhead": {
+      "pt": "O que sobrevive à ciência em Hábitos Atômicos — e o que é matemática de marketing.",
+      "en": "What survives the science in Atomic Habits — and what is marketing math."
+    },
+    "points": [
+      {
+        "n": 1,
+        "title": { "pt": "O mito dos 21 dias", "en": "The 21-day myth" },
+        "body": {
+          "pt": "Veio de Maltz nos anos 50. Lally (2010) mediu de verdade: média de 66 dias, variando de 18 a 254. Perder um dia não quebra o hábito.",
+          "en": "It came from Maltz in the 1950s. Lally (2010) actually measured it: 66 days on average, ranging from 18 to 254. Missing one day doesn't break the habit."
+        }
+      },
+      {
+        "n": 2,
+        "title": { "pt": "Identidade acima de metas", "en": "Identity over goals" },
+        "body": {
+          "pt": "\"Cada ação é um voto no tipo de pessoa que você quer ser.\" É o que mais se sustenta no livro — e o que o Perceva chama de Identidade Praticada.",
+          "en": "\"Every action is a vote for the type of person you want to become.\" It's what holds up best — what Perceva calls Practiced Identity."
+        }
+      },
+      {
+        "n": 3,
+        "title": { "pt": "Ambiente vence força de vontade", "en": "Environment beats willpower" },
+        "body": {
+          "pt": "Wood mostra que boa parte do comportamento diário é disparada pelo contexto, sem decisão consciente. Projete o ambiente, não a disciplina.",
+          "en": "Wood shows much of daily behavior is triggered by context, with no conscious choice. Design the environment, not the discipline."
+        }
+      }
+    ],
+    "stat": {
+      "value": "~43%",
+      "caption": {
+        "pt": "do comportamento diário é hábito automático (Wood & Neal)",
+        "en": "of daily behavior is automatic habit (Wood & Neal)"
+      }
+    },
+    "source": {
+      "pt": "Lally et al., 2010 · Eur. J. Social Psychology",
+      "en": "Lally et al., 2010 · Eur. J. Social Psychology"
+    }
+  }
+}
