@@ -51,11 +51,11 @@ export interface MessageCatalog {
 export const MESSAGES_PT: MessageCatalog = {
   dailyBrief: [
     { title: 'Bom dia 👋', body: 'Que tal ver o que tem planejado pra hoje?' },
-    { title: 'Perceva', body: 'Suas tasks de hoje estão esperando.' },
+    { title: 'Perceva', body: 'Suas práticas de hoje estão esperando.' },
     { title: 'Novo dia, nova chance', body: 'Dá uma olhada no que te espera hoje.' },
   ],
   checkpoint: [
-    { title: 'Perceva', body: 'Suas tasks te esperam. Dá uma olhada quando puder.' },
+    { title: 'Perceva', body: 'Suas práticas te esperam. Dá uma olhada quando puder.' },
     { title: 'Ainda dá tempo', body: 'Você ainda não abriu o app hoje.' },
   ],
   nightly: [
@@ -67,11 +67,11 @@ export const MESSAGES_PT: MessageCatalog = {
 export const MESSAGES_EN: MessageCatalog = {
   dailyBrief: [
     { title: 'Good morning 👋', body: "What's planned for you today?" },
-    { title: 'Perceva', body: "Today's tasks are waiting for you." },
+    { title: 'Perceva', body: "Today's practices are waiting for you." },
     { title: 'New day, new start', body: 'Take a look at what lies ahead today.' },
   ],
   checkpoint: [
-    { title: 'Perceva', body: 'Your tasks are waiting. Check in when you can.' },
+    { title: 'Perceva', body: 'Your practices are waiting. Check in when you can.' },
     { title: 'Still time left', body: "You haven't opened the app yet today." },
   ],
   nightly: [
