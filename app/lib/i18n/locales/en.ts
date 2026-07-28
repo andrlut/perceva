@@ -717,6 +717,12 @@ const en = {
     setChip: 'set',
   },
 
+  hero: {
+    discCta: 'Discover my profile',
+    discCtaA11y: 'Take the DISC test',
+    discChipA11y: 'DISC profile: {{name}}. Tap to view the result.',
+  },
+
   adoptSheet: {
     eyebrow: 'Adopt',
     body: 'How do you want to fit this practice into your routine?',
@@ -1307,12 +1313,6 @@ const en = {
     level: 'Level',
     xp: 'XP',
     coins: 'Coins',
-    ranks: {
-      master: 'Master',
-      adept: 'Adept',
-      builder: 'Builder',
-      apprentice: 'Apprentice',
-    },
     failedToLoad: 'Failed to load character.',
     sections: {
       stats: 'Stats',

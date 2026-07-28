@@ -712,6 +712,12 @@ const pt: Translations = {
     setChip: 'definir',
   },
 
+  hero: {
+    discCta: 'Descobrir meu perfil',
+    discCtaA11y: 'Fazer o teste DISC',
+    discChipA11y: 'Perfil DISC: {{name}}. Toque pra ver o resultado.',
+  },
+
   adoptSheet: {
     eyebrow: 'Adotar',
     body: 'Como você quer encaixar essa prática na sua rotina?',
@@ -1302,12 +1308,6 @@ const pt: Translations = {
     level: 'Nível',
     xp: 'XP',
     coins: 'Moedas',
-    ranks: {
-      master: 'Mestre',
-      adept: 'Adepto',
-      builder: 'Construtor',
-      apprentice: 'Aprendiz',
-    },
     failedToLoad: 'Falha ao carregar personagem.',
     sections: {
       stats: 'Estatísticas',
