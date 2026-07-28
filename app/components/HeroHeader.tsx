@@ -7,9 +7,11 @@ import Svg, {
   Defs,
   LinearGradient as SvgLinearGradient,
   Path,
+  RadialGradient,
   Stop,
 } from 'react-native-svg';
 
+import { PercevaGlyph } from '@/components/PercevaGlyph';
 import { useCharacter } from '@/lib/api/character';
 import { heroTitle } from '@/lib/heroTitle';
 import { useT } from '@/lib/i18n';
@@ -65,17 +67,28 @@ export function HeroHeader() {
 
   return (
     <View style={styles.root}>
-      {/* Ambient violet halo — bleeds in from the top-left. Sits behind
-          everything else; not interactive. */}
+      {/* Brand watermark — a faint Perceva glyph on the right edge, the same
+          gilded mark the Learn and Autoconhecimento surfaces carry. Behind
+          everything, non-interactive. Gives the header the branded feel the
+          other tabs have instead of a bare avatar row. */}
+      <View style={styles.watermark} pointerEvents="none">
+        <PercevaGlyph size={190} bare palette="primary" idSuffix="hero-mark" />
+      </View>
+
+      {/* Ambient violet halo — a soft radial that tails into the screen
+          background on its own. The old top-left disk was clipped flat at the
+          header's bottom edge (overflow:hidden), which read as a hard seam;
+          this fades to transparent well before any edge, matching VaultHero. */}
       <View style={styles.halo} pointerEvents="none">
-        <Svg width={320} height={320} viewBox="0 0 320 320">
+        <Svg width={520} height={360} viewBox="0 0 520 360">
           <Defs>
-            <SvgLinearGradient id="halo" x1="0.5" y1="0.5" x2="1" y2="1">
+            <RadialGradient id="hero-halo" cx="0.5" cy="0.5" r="0.5">
               <Stop offset="0" stopColor="#9B82FF" stopOpacity={0.22} />
-              <Stop offset="0.65" stopColor="#9B82FF" stopOpacity={0} />
-            </SvgLinearGradient>
+              <Stop offset="0.55" stopColor="#9B82FF" stopOpacity={0.08} />
+              <Stop offset="1" stopColor="#9B82FF" stopOpacity={0} />
+            </RadialGradient>
           </Defs>
-          <Circle cx={160} cy={160} r={160} fill="url(#halo)" />
+          <Circle cx={260} cy={180} r={260} fill="url(#hero-halo)" />
         </Svg>
       </View>
 
@@ -219,14 +232,24 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 22,
     paddingHorizontal: 20,
-    overflow: 'hidden',
+    // overflow visible so the radial halo and glyph watermark can tail off
+    // into the screen background instead of being cut at the header box.
+    overflow: 'visible',
   },
   halo: {
     position: 'absolute',
-    top: -100,
-    left: -100,
-    width: 320,
-    height: 320,
+    top: -110,
+    left: '50%',
+    marginLeft: -260,
+    width: 520,
+    height: 360,
+  },
+  watermark: {
+    position: 'absolute',
+    right: -10,
+    top: '50%',
+    marginTop: -95,
+    opacity: 0.06,
   },
   row: {
     flexDirection: 'row',

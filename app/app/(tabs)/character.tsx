@@ -111,10 +111,15 @@ export default function CharacterScreen() {
   const isM5Current = useIsCurrentTourModule('M5');
   const m5StepIndex = useTourStore((s) => s.stepIndices.M5 ?? 0);
   const m5Status = useTourStore((s) => s.modules.M5?.status);
-  // Measured for the step-3 partial scroll: drop the user ~70% down so the
+  // Measured for the step-3 partial scroll: drop the user down so the
   // Avaliação sub-score boxes land in the open space above the tooltip.
   const contentH = useRef(0);
   const viewportH = useRef(0);
+  // Absolute Y of the Avaliação legend within the scroll view, reported by
+  // AvaliacaoPanel via measureLayout. Lets the tour scroll to the real
+  // cards instead of a fraction of the scroll range (which broke whenever
+  // the panel reordered). 0 until measured → scrollTo(0), a harmless no-op.
+  const legendY = useRef(0);
 
   // While an M5 tooltip is open on this tab (steps 2-5, all bottom-pinned)
   // add extra bottom room so the user can scroll content clear of the
@@ -151,12 +156,12 @@ export default function CharacterScreen() {
     else if (m5StepIndex === 1 || m5StepIndex === 2) setActivePillar('percebida');
     const id = setTimeout(() => {
       if (m5StepIndex === 2) {
-        // Drop down to the Avaliação sub boxes. 70% of the real scroll
-        // range wasn't quite enough in testing, so double it (1.4×); the
-        // extra m5Bump buffer gives the room to go further without
-        // clamping short.
-        const range = Math.max(0, contentH.current - viewportH.current - m5Bump);
-        scrollViewRef.current?.scrollTo({ y: range * 1.4, animated: true });
+        // Drop down to the Avaliação legend cards by their measured position,
+        // leaving a little headroom so they sit clear of the bottom-pinned
+        // tooltip. Clamped to the scroll range so it never overshoots.
+        const range = Math.max(0, contentH.current - viewportH.current);
+        const target = Math.min(range, Math.max(0, legendY.current - 80));
+        scrollViewRef.current?.scrollTo({ y: target, animated: true });
       } else {
         scrollViewRef.current?.scrollTo({ y: 0, animated: true });
       }
@@ -255,7 +260,13 @@ export default function CharacterScreen() {
             />
             <View style={styles.subViewWrap}>
               {activePillar === 'percebida' && currentSub === 'avaliacao' && (
-                <AvaliacaoPanel subScores={character.data.subScores} />
+                <AvaliacaoPanel
+                  subScores={character.data.subScores}
+                  scrollViewRef={scrollViewRef}
+                  onLegendMeasured={(y) => {
+                    legendY.current = y;
+                  }}
+                />
               )}
               {activePillar === 'percebida' && currentSub === 'autoconhecimento' && (
                 <AutoconhecimentoView />
