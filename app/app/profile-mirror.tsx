@@ -45,14 +45,7 @@ import {
   type EcrLocale,
   type EcrScale,
 } from '@/lib/psych/ecr-r-content';
-import {
-  blendFromScores,
-  DISC_FACTOR_ORDER,
-  factorFromFacetId,
-  getBlendContent,
-  type DiscFactor,
-  type DiscLocale,
-} from '@/lib/psych/disc-content';
+import { useDiscBlend } from '@/lib/psych/useDiscBlend';
 import {
   getStrengthContent,
   strengthFromFacetId,
@@ -700,30 +693,19 @@ const ecrCardStyles = StyleSheet.create({
 
 export function DiscCard({ onOpen }: { onOpen: () => void }) {
   const { locale } = useT();
-  const discLocale: DiscLocale = locale === 'en' ? 'en' : 'pt';
-  const isPt = discLocale === 'pt';
+  const isPt = locale !== 'en';
 
   const lastSession = useLastPsychSession('disc');
-  const scoresQ = useSessionScores(lastSession.data?.id);
   const { locked } = useInstrumentAccess('disc');
   const openTeaser = useInstrumentTeaserStore((s) => s.open);
 
-  const blend = useMemo(() => {
-    const map = new Map<DiscFactor, number>();
-    for (const s of scoresQ.data ?? []) {
-      const f = factorFromFacetId(s.facet_id);
-      if (f) map.set(f, Number(s.score_decimal));
-    }
-    if (!DISC_FACTOR_ORDER.every((f) => map.has(f))) return null;
-    const scores = {
-      d: map.get('d')!,
-      i: map.get('i')!,
-      s: map.get('s')!,
-      c: map.get('c')!,
-    };
-    const code = blendFromScores(scores);
-    return { code, content: getBlendContent(code, discLocale) };
-  }, [scoresQ.data, discLocale]);
+  // Shared derivation — the hero eyebrow and the DISC result screen read the
+  // same blend, so they can never disagree.
+  const blendState = useDiscBlend();
+  const blend =
+    blendState.status === 'ready'
+      ? { code: blendState.code, content: blendState.content }
+      : null;
 
   const hasScores = blend !== null;
   const sinceDays = daysSince(lastSession.data?.taken_at);

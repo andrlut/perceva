@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, {
   Circle,
   Defs,
@@ -13,41 +14,66 @@ import Svg, {
 
 import { PercevaGlyph } from '@/components/PercevaGlyph';
 import { useCharacter } from '@/lib/api/character';
-import { heroTitle } from '@/lib/heroTitle';
+import { useMomentum } from '@/lib/api/momentum';
+import { useSkillStates } from '@/lib/api/skills';
 import { useT } from '@/lib/i18n';
-import { useMetaLookup } from '@/lib/i18n/meta';
-import { levelProgress } from '@/lib/xp';
+import { useDiscBlend } from '@/lib/psych/useDiscBlend';
+import { levelProgress, momentumTier } from '@/lib/xp';
 import { tokens } from '@/theme';
 import { DIMENSION_META } from '@/theme/dimensions';
+
+type IoniconName = keyof typeof Ionicons.glyphMap;
+
+function StatChip({
+  icon,
+  color,
+  value,
+}: {
+  icon: IoniconName;
+  color: string;
+  value: string;
+}) {
+  return (
+    <View style={styles.statChip}>
+      <Ionicons name={icon} size={13} color={color} />
+      <Text style={[styles.statValue, { color }]} numberOfLines={1}>
+        {value}
+      </Text>
+    </View>
+  );
+}
 
 const AVATAR = 92;
 const RING_R = 42;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_R;
 
 /**
- * Iris-Wrapped Avatar — full-width header for the Eu tab. Replaces the
- * previous LevelRing + chip layout with a Perceva-native composition:
- * concentric brand rings + gold-path signature + dim-tile center + XP
- * progress arc wrapping the whole avatar. Eyebrow communicates rank
- * (LV N · BODY APPRENTICE); name reads big and quiet; XP bar runs the
- * full width of the screen with a faint divider below.
+ * Iris-Wrapped Avatar — full-width header for the Eu tab. A Perceva-native
+ * composition: concentric brand rings + gold-path signature + dim-tile
+ * center + XP progress arc wrapping the whole avatar. The eyebrow carries
+ * the user's DISC archetype (an earned, self-knowledge identity — "LV 12 ·
+ * O TIMONEIRO") instead of a level-derived nickname; the name reads big and
+ * quiet; a glance-stat strip (one number per pillar) sits below.
  *
- * Not a card — no border, full-width, ambient violet halo bleeding from
- * the top-left corner. Pure display; no interaction.
- *
- * Data is read via hooks so the component is self-contained.
+ * Not a card — no border, full-width, soft violet halo + brand watermark.
+ * The text column is tappable: it opens the DISC result, or invites the
+ * test when none is taken. Data is read via hooks; self-contained.
  */
 export function HeroHeader() {
   const character = useCharacter();
-  const metaLookup = useMetaLookup();
-  const { locale } = useT();
+  const { t } = useT();
+  const router = useRouter();
+  const blend = useDiscBlend();
+  const momentum = useMomentum();
+  const skillStates = useSkillStates();
 
   const totalXp = character.data?.character.total_xp ?? 0;
   const lp = levelProgress(totalXp);
   const displayName = character.data?.profile.display_name ?? 'Hero';
 
   // Dominant dim = the dim carrying the most XP. Falls back to "body"
-  // for brand-new accounts where every dim is at zero.
+  // for brand-new accounts where every dim is at zero. Drives the avatar
+  // tile; the identity title now comes from DISC, not the dominant dim.
   const dominantDim = useMemo(() => {
     const dims = character.data?.dimensions ?? [];
     if (dims.length === 0) return null;
@@ -56,14 +82,39 @@ export function HeroHeader() {
 
   const dimId = dominantDim?.dimension_id ?? 'body';
   const dimMeta = DIMENSION_META[dimId];
-  const dimLabel = metaLookup.dim(dimId).label;
-  const hasAnyXp = (dominantDim?.xp ?? 0) > 0;
 
   // Progress arc — proportion of the current level's XP earned.
   const progressFraction = lp.fraction;
   const dashOffset = RING_CIRCUMFERENCE * (1 - progressFraction);
 
-  const title = heroTitle(lp.level, hasAnyXp ? dimLabel : null, locale);
+  const archetype = blend.status === 'ready' ? blend.content.name : null;
+  const goDisc = () => router.push('/disc');
+
+  // Glance-stat strip — one stat per pillar. All from queries the Eu tab
+  // already mounts (useCharacter/useMomentum/useSkillStates), so cache hits.
+  const selfAvg = useMemo(() => {
+    const rows = (character.data?.subScores ?? []).filter(
+      (r) => r.source === 'self',
+    );
+    if (rows.length === 0) return 0;
+    const sum = rows.reduce((s, r) => s + (r.score_decimal ?? r.score), 0);
+    return sum / rows.length;
+  }, [character.data?.subScores]);
+
+  const momTier = useMemo(() => {
+    const attrs = momentum.data?.attributes ?? [];
+    if (attrs.length === 0) return momentumTier(0);
+    const sum = attrs.reduce((s, a) => s + a.momentum, 0);
+    return momentumTier(Math.round(sum / attrs.length));
+  }, [momentum.data?.attributes]);
+
+  const medals = useMemo(
+    () =>
+      (skillStates.data ?? []).filter(
+        (s) => s.currentTier.tier_name !== 'beginner',
+      ).length,
+    [skillStates.data],
+  );
 
   return (
     <View style={styles.root}>
@@ -191,19 +242,69 @@ export function HeroHeader() {
           </View>
         </View>
 
-        {/* Text column */}
-        <View style={styles.textCol}>
+        {/* Text column — tappable into the DISC result / test. */}
+        <Pressable
+          style={styles.textCol}
+          onPress={goDisc}
+          disabled={blend.status === 'loading'}
+          hitSlop={4}
+          accessibilityRole="button"
+          accessibilityLabel={
+            archetype
+              ? t('hero.discChipA11y', { name: archetype })
+              : t('hero.discCtaA11y')
+          }
+        >
           <View style={styles.eyebrowRow}>
             <Text style={styles.eyebrowLv}>LV {lp.level}</Text>
-            <View style={styles.eyebrowDot} />
-            <Text style={styles.eyebrowTitle} numberOfLines={1}>
-              {title.toUpperCase()}
-            </Text>
+            {archetype && (
+              <>
+                <View style={styles.eyebrowDot} />
+                <Text style={styles.eyebrowTitle} numberOfLines={1}>
+                  {archetype.toUpperCase()}
+                </Text>
+              </>
+            )}
           </View>
           <Text style={styles.name} numberOfLines={1}>
             {displayName}
           </Text>
-        </View>
+          {blend.status === 'none' && (
+            <View style={styles.discCta}>
+              <Ionicons
+                name="sparkles-outline"
+                size={11}
+                color={tokens.semantic.coinLight}
+              />
+              <Text style={styles.discCtaText}>{t('hero.discCta')}</Text>
+              <Ionicons
+                name="chevron-forward"
+                size={11}
+                color={tokens.semantic.coinLight}
+              />
+            </View>
+          )}
+        </Pressable>
+      </View>
+
+      {/* Glance-stat strip — one number per pillar (perceived score average,
+          practiced-momentum tier, desired-medal count). Read-only. */}
+      <View style={styles.statStrip}>
+        <StatChip
+          icon="eye-outline"
+          color={tokens.brand.violet2}
+          value={selfAvg.toFixed(1)}
+        />
+        <StatChip
+          icon="pulse"
+          color={tokens.semantic.xp2}
+          value={t(`home.momentum.tier.${momTier}`).toUpperCase()}
+        />
+        <StatChip
+          icon="compass-outline"
+          color={tokens.semantic.coin}
+          value={String(medals)}
+        />
       </View>
 
       {/* Faint horizontal divider — separates header from the tab body
@@ -303,6 +404,41 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
     color: tokens.text.hi,
     marginTop: 2,
+  },
+  discCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+  },
+  discCtaText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 11,
+    letterSpacing: 0.3,
+    color: tokens.semantic.coinLight,
+  },
+  statStrip: {
+    flexDirection: 'row',
+    gap: tokens.space[2],
+    marginTop: tokens.space[3],
+  },
+  statChip: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    paddingVertical: 7,
+    paddingHorizontal: 6,
+    borderRadius: tokens.radius.md,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+  },
+  statValue: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 12,
+    letterSpacing: 0.2,
   },
   divider: {
     height: 1,
