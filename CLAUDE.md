@@ -26,7 +26,7 @@ This applies to **velocity and ceremony only** — security, RLS, secret hygiene
 The app is being repositioned around **3 pillars of identity** (filosofia v3):
 
 1. **Identidade Percebida** — *how the user sees themselves now*. Built via autoavaliação (sub sliders) + the 4 psych instruments. Done; surfaced in the **Eu** tab (Avaliação + Autoconhecimento panels).
-2. **Identidade Praticada** — *what their actions are training in them*. Tasks done; Quests→**Missões** shipped (skill/challenge types, partial rewards); **Dedicação** (XP) has windowed reads (period selector + donut + sparklines); **Momentum** shipped as the streak-v2 successor — a 30-day exponentially-decayed per-sub bonus (cap +25%) applied in `complete_task`/`complete_template`. It **replaced** the old `streak_multiplier` (now fully removed) — do NOT re-add streak on top of Momentum.
+2. **Identidade Praticada** — *what their actions are training in them*. Tasks done; Quests→**Missões** shipped (skill/challenge types, partial rewards); **Dedicação** (XP) has windowed reads (period selector + 6-axis XP hex + per-dim cards whose bars share the hex's normalization; expanded cards show a trend sparkline); **Momentum** shipped as the streak-v2 successor — a 30-day exponentially-decayed per-sub bonus (cap +25%) applied in `complete_task`/`complete_template`. It **replaced** the old `streak_multiplier` (now fully removed) — do NOT re-add streak on top of Momentum.
 3. **Identidade Desejada** — *who they want to become*. Skills done; **Goals→Metas** exists as a preview (GoalsPreview) — full CRUD still Phase 2.
 
 **Phase 1 (current) — fundação + polimento without new big features:**

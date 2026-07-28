@@ -1,12 +1,24 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 
+import { MomentumHexChart } from '@/components/dedicacao/MomentumHexChart';
 import type { DimensionId } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
-import { momentumBonus, momentumTier, type AttributeMomentum } from '@/lib/xp';
+import {
+  MOMENTUM_CAP_VALUE,
+  momentumBonus,
+  momentumTier,
+  type AttributeMomentum,
+} from '@/lib/xp';
 import { tokens } from '@/theme';
 import { DIMENSION_META, DIMENSION_ORDER, SUBS_BY_DIM } from '@/theme/dimensions';
 
@@ -15,26 +27,41 @@ interface Props {
 }
 
 /**
- * Sub-pillar **Momentum** (lives under Praticada). Per-sub recent-effort
- * snapshot with tier label (CALMO/SUBINDO/FORTE/PLENO) and active bonus %
- * on each sub.
- *
- * Pairs with DedicacaoPanel — together they make up Pilar 2 (Praticada).
- * Same row geometry to make the visual transition between sub-pilares
- * feel like a swap of lens, not a rebuild.
+ * Sub-pillar **Momentum** (lives under Praticada). Standardized like its
+ * sibling: a hex leads, then the six dimension cards. The hex is on an
+ * absolute /300 scale (a full hexagon = "peak everywhere"), and each sub row
+ * carries the same /300 bar next to its tier bonus — so the momentum snapshot
+ * reads shape-first just like Dedicação, only measuring recent effort decay
+ * instead of windowed XP.
  */
 export function MomentumView({ momentum = [] }: Props) {
   const router = useRouter();
   const { t } = useT();
   const metaLookup = useMetaLookup();
+  const { width: screenWidth } = useWindowDimensions();
+
   const momentumMap = useMemo(() => {
     const m = new Map<DimensionId, AttributeMomentum>();
     for (const attr of momentum) m.set(attr.dimensionId, attr);
     return m;
   }, [momentum]);
 
+  const hexSize = Math.max(240, Math.min((screenWidth || 360) - 16, 360));
+
+  const openDim = (id: DimensionId) =>
+    router.push({ pathname: '/dimension/[id]', params: { id } });
+
   return (
     <View style={styles.wrap}>
+      <View style={styles.hexWrap}>
+        <MomentumHexChart
+          momentum={momentum}
+          size={hexSize}
+          onAxisPress={openDim}
+          idSuffix="momentum"
+        />
+      </View>
+
       <Text style={styles.lead}>{t('home.momentum.recentEffort')}</Text>
 
       <View style={styles.list}>
@@ -49,9 +76,7 @@ export function MomentumView({ momentum = [] }: Props) {
           return (
             <Pressable
               key={id}
-              onPress={() =>
-                router.push({ pathname: '/dimension/[id]', params: { id } })
-              }
+              onPress={() => openDim(id)}
               style={({ pressed }) => [
                 styles.attribute,
                 pressed && { opacity: 0.7 },
@@ -85,11 +110,25 @@ export function MomentumView({ momentum = [] }: Props) {
                   const subMeta = metaLookup.sub(subId);
                   const subValue = subMomentum.get(subId) ?? 0;
                   const bonusPct = Math.round(momentumBonus(subValue) * 100);
+                  const fill = Math.min(1, subValue / MOMENTUM_CAP_VALUE);
                   return (
                     <View key={subId} style={styles.subRow}>
-                      <Text style={styles.subName}>
+                      <Text style={styles.subName} numberOfLines={1}>
                         {subMeta?.label ?? subId}
                       </Text>
+                      <View
+                        style={[styles.subBar, { backgroundColor: `${meta.color}1A` }]}
+                      >
+                        <View
+                          style={[
+                            styles.subBarFill,
+                            {
+                              width: `${Math.max(0, Math.min(100, fill * 100))}%`,
+                              backgroundColor: meta.color,
+                            },
+                          ]}
+                        />
+                      </View>
                       <View style={styles.subValueRow}>
                         {bonusPct > 0 && (
                           <Text style={[styles.subBonus, { color: meta.color }]}>
@@ -113,6 +152,9 @@ export function MomentumView({ momentum = [] }: Props) {
 const styles = StyleSheet.create({
   wrap: {
     gap: tokens.space[3],
+  },
+  hexWrap: {
+    alignItems: 'center',
   },
   lead: {
     fontFamily: 'Manrope_500Medium',
@@ -184,17 +226,30 @@ const styles = StyleSheet.create({
   subRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: tokens.space[2],
   },
   subName: {
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 12,
     color: tokens.text.mid,
+    width: 76,
+  },
+  subBar: {
+    flex: 1,
+    height: 4,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  subBarFill: {
+    height: '100%',
+    borderRadius: 2,
   },
   subValueRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
     gap: 6,
+    justifyContent: 'flex-end',
+    minWidth: 64,
   },
   subMomentum: {
     fontFamily: 'Manrope_800ExtraBold',
