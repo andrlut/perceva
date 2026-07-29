@@ -293,7 +293,12 @@ export function buildInfographicSvg({ locale, dimensionId, data, width = 1080, h
   out.push(`<rect x="${PAD}" y="${footerY - 46}" width="${inner}" height="2" rx="1" fill="${TOKENS.text.faint}" opacity="0.4"/>`);
   const source = pick(data.source);
   if (source) {
-    out.push(textEl(source, PAD, footerY, { size: 26, weight: 'medium', fill: TOKENS.text.dim }));
+    // The PERCEVA wordmark is anchored to the right edge of the same baseline.
+    // Reserve its footprint (~140px at size 30 bold + letter-spacing) plus a
+    // 24px gutter, then clamp the source to one line — otherwise a long
+    // citation runs straight under the wordmark.
+    const [srcLine] = wrap(source, maxCharsFor(26, inner - 164, 'medium'), 1);
+    out.push(textEl(srcLine, PAD, footerY, { size: 26, weight: 'medium', fill: TOKENS.text.dim }));
   }
   out.push(
     textEl('PERCEVA', width - PAD, footerY, {
