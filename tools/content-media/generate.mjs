@@ -33,8 +33,9 @@ import { fileURLToPath } from 'node:url';
 
 import { Resvg } from '@resvg/resvg-js';
 
+import { synthesizeDialogue, pcmToWav } from './lib/audio.mjs';
 import { generateCover } from './lib/cover.mjs';
-import { toWebp, toWebpCover } from './lib/ffmpeg.mjs';
+import { probeDurationSeconds, toM4a, toWebp, toWebpCover } from './lib/ffmpeg.mjs';
 import { buildInfographicSvg } from './lib/infographic.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -100,8 +101,9 @@ async function main() {
   const dimensionId = spec.dimension_id;
   if (!dimensionId) die('media-spec.json is missing "dimension_id".');
 
-  const wantCover = args.only !== 'infographic' && spec.cover?.prompt;
-  const wantInfographic = args.only !== 'cover' && spec.infographic;
+  const wantCover = !['infographic', 'audio'].includes(args.only) && spec.cover?.prompt;
+  const wantInfographic = !['cover', 'audio'].includes(args.only) && spec.infographic;
+  const wantAudio = !['cover', 'infographic'].includes(args.only);
 
   const localesAll = args.locales ?? ['pt', 'en'];
   mkdirSync(inboxDir, { recursive: true });
@@ -195,6 +197,50 @@ async function main() {
     }
   } else if (args.only !== 'infographic' && !spec.cover?.prompt) {
     log('  · cover: skipped (no cover.prompt in spec)');
+  }
+
+  // ── audio (2-host podcast per locale that has a dialogue script) ──────────
+  if (wantAudio) {
+    const audioLocales = localesAll.filter((loc) =>
+      existsSync(join(inboxDir, `audio-script.${loc}.json`)),
+    );
+    if (audioLocales.length === 0 && args.only === 'audio') {
+      log('  · audio: skipped (no audio-script.<loc>.json — run learning-audio-writer first)');
+    }
+    for (const locale of audioLocales) {
+      log(`  · audio.${locale} (Gemini TTS multi-voz) …`);
+      if (args.dryRun) continue;
+      try {
+        const script = JSON.parse(readFileSync(join(inboxDir, `audio-script.${locale}.json`), 'utf8'));
+        const { pcm, sampleRate, segments } = await synthesizeDialogue({
+          turns: script.turns,
+          hosts: script.hosts,
+          style: script.style,
+          onProgress: (m) => log(`      ${m}`),
+        });
+        const wavPath = join(tmpDir, `audio.${locale}.wav`);
+        writeFileSync(wavPath, pcmToWav(pcm, sampleRate));
+        const outM4a = join(inboxDir, `audio.${locale}.m4a`);
+        toM4a(wavPath, outM4a, '64k');
+        const dur = probeDurationSeconds(outM4a);
+        manifest.assets.push({
+          role: 'media',
+          kind: 'audio',
+          locale,
+          source: 'gemini-api',
+          localPath: `audio.${locale}.m4a`,
+          bucketPath: `${args.slug}/audio.${locale}.m4a`,
+          duration_seconds: dur,
+          contentType: 'audio/mp4',
+        });
+        manifest.generated.push(`audio.${locale}.m4a`);
+        const mm = Math.floor(dur / 60);
+        const ss = String(dur % 60).padStart(2, '0');
+        log(`    ✓ audio.${locale}.m4a (${segments} segmento(s), ${mm}:${ss})`);
+      } catch (e) {
+        log(`    ✗ audio.${locale} failed: ${e.message}`);
+      }
+    }
   }
 
   // ── manifest + cleanup ────────────────────────────────────────────────────

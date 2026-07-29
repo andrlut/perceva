@@ -82,3 +82,35 @@ export function toWebp(inputPath, outputPath, maxWidth, quality = 82) {
   const vf = `scale='min(${maxWidth},iw)':-2`;
   run(['-i', inputPath, '-vf', vf, '-c:v', 'libwebp', '-q:v', String(quality), outputPath]);
 }
+
+/**
+ * Transcode an audio file (e.g. a WAV) to AAC mono .m4a with faststart — the
+ * Learning pipeline's audio format (~0.5 MB/min). Matches the manual-drop
+ * recipe in the learning-media memory.
+ */
+export function toM4a(inputPath, outputPath, bitrate = '64k') {
+  run([
+    '-i', inputPath,
+    '-c:a', 'aac', '-b:a', bitrate, '-ac', '1',
+    '-movflags', '+faststart',
+    outputPath,
+  ]);
+}
+
+/** Duration of a media file in whole seconds (via ffprobe next to ffmpeg). */
+export function probeDurationSeconds(path) {
+  const ffmpeg = resolveFfmpeg();
+  const ffprobe = ffmpeg.endsWith('ffmpeg.exe')
+    ? ffmpeg.slice(0, -('ffmpeg.exe'.length)) + 'ffprobe.exe'
+    : 'ffprobe';
+  try {
+    const out = execFileSync(
+      ffprobe,
+      ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=nw=1:nk=1', path],
+      { encoding: 'utf8' },
+    );
+    return Math.round(parseFloat(out.trim()) || 0);
+  } catch {
+    return 0; // caller warns if duration is 0
+  }
+}

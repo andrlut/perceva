@@ -64,9 +64,19 @@ Quando o material já existe e você só quer capa/infográfico:
    passado).
 4. Suba do `manifest.json` e escreva **uma** migration só de mídia. Commit.
 
+## Áudio (Fase B, opt-in)
+
+Podcast de 2 vozes estilo NotebookLM, via API — **não roda por padrão** (custa
+e demora; ligar por material). Fluxo: dispare `learning-audio-writer` (escreve o
+diálogo → `audio-script.<loc>.json`) → `node tools/content-media/generate.mjs
+--slug <slug> --only audio` (Gemini TTS multi-voz → `audio.<loc>.m4a`) → suba +
+migration `kind='audio'` com `duration_seconds` do manifest. ~US$ 0,15 por
+episódio de 10 min. A aba **Áudio** sai do "em breve".
+
 ## Notas
 
-- **Custo**: infográfico ~US$ 0; capa ~US$ 0,039. Um drop completo é ~4 centavos.
+- **Custo**: infográfico ~US$ 0; capa ~US$ 0,039; áudio ~US$ 0,15/10 min. Um
+  drop de capa+infográfico é ~4 centavos; com áudio, ~19 centavos.
 - **`inbox/` é gitignored** — só as migrations vão pro git; os assets vivem no
   Storage.
 - **Idempotência**: se o slug já existe e você ia inserir, vire UPDATE (modo
