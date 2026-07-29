@@ -22,6 +22,7 @@ import { useIsCurrentTourModule, useTourStore } from '@/lib/tour/store';
 import { CarouselRow } from '@/components/learning/CarouselRow';
 import { ContinueLendoCard } from '@/components/learning/ContinueLendoCard';
 import { LearningStatsPanel, type PillFilter } from '@/components/LearningStatsPanel';
+import { ReelsEntryCard } from '@/components/reels/ReelsEntryCard';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { useLearningFeed, useReadMaterialIds, type LearningFeedCard } from '@/lib/api/learning';
 import type { DimensionId, LearningMaterialType, SubId } from '@/lib/db/types';
@@ -31,6 +32,8 @@ import {
   useContinueReading,
   useReadingProgressReady,
 } from '@/lib/readingProgress';
+import { buildReelDeck } from '@/lib/reels';
+import { useReelsProgressReady, useReelsProgressStore } from '@/lib/reelsProgress';
 import { tokens } from '@/theme';
 import { DIMENSION_ORDER, SUB_META } from '@/theme/dimensions';
 
@@ -41,7 +44,7 @@ const NEW_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
 export default function LearningScreen() {
   const router = useRouter();
-  const { t } = useT();
+  const { t, locale } = useT();
   const feed = useLearningFeed();
   const reads = useReadMaterialIds();
   const meta = useMetaLookup();
@@ -79,6 +82,9 @@ export default function LearningScreen() {
   // ContinueLendoCard hero can pick the right material without flashing
   // an empty state on cold start.
   useReadingProgressReady();
+  // Hydrate the reels store too — the entry card's deck order (seenAt for
+  // the replay tail) must match what the viewer builds on open.
+  useReelsProgressReady();
   const continueEntry = useContinueReading();
   // Match the in-progress entry to a card from the feed (the entry
   // alone has slug + materialId; we need the title/dim/etc).
@@ -101,6 +107,21 @@ export default function LearningScreen() {
     [feed.data],
   );
   const readSet = useMemo(() => reads.data ?? new Set<string>(), [reads.data]);
+
+  // Study Reels deck — drives the entry card (thumbnails + unread count).
+  // The viewer builds its own frozen copy when it opens; this one is only
+  // presentation state for the card.
+  const reelSeen = useReelsProgressStore((s) => s.entries);
+  const reelDeck = useMemo(() => {
+    const seenAt = Object.fromEntries(
+      Object.values(reelSeen).map((e) => [e.slug, e.seenAt]),
+    );
+    return buildReelDeck(all, locale === 'pt' ? 'pt' : 'en', readSet, seenAt);
+  }, [all, locale, readSet, reelSeen]);
+  const reelUnread = useMemo(
+    () => reelDeck.filter((g) => !readSet.has(g.materialId)).length,
+    [reelDeck, readSet],
+  );
 
   // Apply both filters (read-state AND pill). Each carousel reads from
   // the same filtered set, so empty groups drop out naturally.
@@ -164,6 +185,20 @@ export default function LearningScreen() {
             <Text style={styles.title}>{t('learning.title')}</Text>
             <Text style={styles.subtitle}>{t('learning.subtitle')}</Text>
           </View>
+
+          {/* Study Reels — story-mode pass over the infographics. Hidden
+             when no material has a story-ready visual. Waits for the reads
+             query too so the unread count never flashes inflated. */}
+          {!feed.isLoading && !reads.isLoading && reelDeck.length > 0 && (
+            <ReelsEntryCard
+              groups={reelDeck}
+              unreadCount={reelUnread}
+              onPress={() => {
+                Haptics.selectionAsync().catch(() => {});
+                router.push('/reels');
+              }}
+            />
+          )}
 
           {!feed.isLoading && all.length > 0 && (
             <LearningStatsPanel
