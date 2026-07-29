@@ -14,6 +14,7 @@ import {
 
 import { DimensionCards, type DimCardRow } from '@/components/DimensionCards';
 import { HexChart } from '@/components/HexChart';
+import { HexGrainToggle } from '@/components/HexGrainToggle';
 import { MoodTodayCard } from '@/components/mood/MoodTodayCard';
 import type { CharacterSubScore } from '@/lib/db/types';
 import { pickSubScores, pickSubScoresDecimal } from '@/lib/api/character';
@@ -251,27 +252,11 @@ export function AvaliacaoPanel({ subScores, scrollViewRef, onLegendMeasured }: P
         />
       </View>
 
-      {/* Granularity toggle — flip the hex between 6 dimensions and all 12
-          sub-attributes. Sits right under the chart, right-aligned. */}
-      <View style={styles.hexToolRow}>
-        <Pressable
-          onPress={() =>
-            setHexMode((m) => (m === 'dims' ? 'subs' : 'dims'))
-          }
-          style={({ pressed }) => [styles.hexToggle, pressed && { opacity: 0.7 }]}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityState={{ selected: hexMode === 'subs' }}
-          accessibilityLabel={
-            hexMode === 'dims'
-              ? t('avaliacao.hexShowSubs')
-              : t('avaliacao.hexShowDims')
-          }
-        >
-          <Ionicons name="git-network-outline" size={13} color={tokens.brand.violet2} />
-          <Text style={styles.hexToggleText}>{hexMode === 'dims' ? '6' : '12'}</Text>
-        </Pressable>
-      </View>
+      <HexGrainToggle
+        mode={hexMode}
+        accent={tokens.brand.violet2}
+        onToggle={() => setHexMode((m) => (m === 'dims' ? 'subs' : 'dims'))}
+      />
 
       {hasQuestionnaire && (
         <SourceToggle value={hexSource} onChange={setHexSource} />
@@ -328,27 +313,6 @@ const styles = StyleSheet.create({
   },
   hexWrap: {
     alignItems: 'center',
-  },
-  hexToolRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: -tokens.space[2],
-  },
-  hexToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 10,
-    height: 28,
-    borderRadius: tokens.radius.pill,
-    borderWidth: 1,
-    borderColor: 'rgba(155, 130, 255, 0.30)',
-    backgroundColor: 'rgba(123, 92, 255, 0.08)',
-  },
-  hexToggleText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 12,
-    color: tokens.brand.violet2,
   },
   cta: {
     flexDirection: 'row',

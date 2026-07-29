@@ -2,14 +2,20 @@ import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { HexRadar, type HexAxis } from '@/components/HexRadar';
-import type { DimensionId } from '@/lib/db/types';
+import type { DimensionId, SubId } from '@/lib/db/types';
 import { windowRatio } from '@/lib/dedicacao/scale';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { tokens } from '@/theme';
-import { DIMENSION_ORDER } from '@/theme/dimensions';
+import { DIMENSION_ORDER, SUB_META } from '@/theme/dimensions';
 
 interface DimSlice {
+  dimId: DimensionId;
+  xp: number;
+}
+
+interface SubSlice {
+  subId: SubId;
   dimId: DimensionId;
   xp: number;
 }
@@ -17,6 +23,12 @@ interface DimSlice {
 interface Props {
   /** Per-dim XP for this window, any order. Missing dims count as 0. */
   slices: DimSlice[];
+  /** 'dims' (default) plots the 6 dimensions; 'subs' plots all 12
+   *  sub-attributes from `subSlices`, normalized against the leading sub. */
+  variant?: 'dims' | 'subs';
+  /** Per-sub XP for the window, 12 entries in dim order. Required when
+   *  variant is 'subs'. */
+  subSlices?: SubSlice[];
   totalXp: number;
   /** Total XP in the prior window, or null when comparison doesn't apply
    *  (granularity = 'all'). */
@@ -61,6 +73,8 @@ function formatCenterXp(xp: number): string {
  */
 export function XpHexChart({
   slices,
+  variant = 'dims',
+  subSlices,
   totalXp,
   prevTotalXp,
   isLoading = false,
@@ -71,22 +85,38 @@ export function XpHexChart({
   const { t } = useT();
   const metaLookup = useMetaLookup();
 
+  // Normalized via the shared `windowRatio` — relative to the leading axis of
+  // the current grain (leading dim in 'dims', leading sub in 'subs'), the same
+  // mapping the dimension-card bars use. In 'subs' each axis carries its sub
+  // glyph but its parent dim's color, so the dodecagon reads as six lobes.
   const vertices = useMemo(() => {
+    if (variant === 'subs') {
+      const subs = subSlices ?? [];
+      const max = subs.reduce((m, s) => Math.max(m, s.xp), 0);
+      return subs.map((s) => ({
+        dimId: s.dimId,
+        iconName: SUB_META[s.subId].iconName as string | undefined,
+        label: metaLookup.sub(s.subId).label,
+        xp: s.xp,
+        ratio: windowRatio(s.xp, max),
+      }));
+    }
     const xpById = new Map(slices.map((s) => [s.dimId, s.xp]));
-    // Normalized against the largest dim in this window — nothing external —
-    // via the shared `windowRatio` (app/lib/dedicacao/scale.ts), the same
-    // mapping the dimension-card bars use. The sparklines' ceiling is
-    // numerically this same value, but they map it linearly to full height,
-    // so the two visuals are not interchangeable scales.
     const max = DIMENSION_ORDER.reduce(
       (m, d) => Math.max(m, xpById.get(d) ?? 0),
       0,
     );
     return DIMENSION_ORDER.map((dimId) => {
       const xp = xpById.get(dimId) ?? 0;
-      return { dimId, xp, ratio: windowRatio(xp, max) };
+      return {
+        dimId,
+        iconName: undefined as string | undefined,
+        label: metaLookup.dim(dimId).label,
+        xp,
+        ratio: windowRatio(xp, max),
+      };
     });
-  }, [slices]);
+  }, [variant, slices, subSlices, metaLookup]);
 
   const hasData = totalXp > 0 && vertices.some((v) => v.xp > 0);
 
@@ -94,14 +124,15 @@ export function XpHexChart({
     () =>
       vertices.map((v) => ({
         dimId: v.dimId,
+        iconName: v.iconName,
         ratio: hasData ? v.ratio : 0,
         active: v.xp > 0,
         a11yLabel: t('dedicacao.hexAxisA11y', {
-          dim: metaLookup.dim(v.dimId).label,
+          dim: v.label,
           xp: v.xp.toLocaleString(),
         }),
       })),
-    [vertices, hasData, t, metaLookup],
+    [vertices, hasData, t],
   );
 
   const delta = useMemo(() => {

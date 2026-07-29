@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { DimensionCards, type DimCardRow } from '@/components/DimensionCards';
 import { HexChart } from '@/components/HexChart';
+import { HexGrainToggle } from '@/components/HexGrainToggle';
 import { pickSubScoresDecimal } from '@/lib/api/character';
 import type { CharacterSubScore, SubId } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
@@ -41,6 +42,7 @@ export function NortePanel({ subScores }: Props) {
   const metaLookup = useMetaLookup();
   const { width: screenWidth } = useWindowDimensions();
   const chartSize = Math.max(240, Math.min((screenWidth || 360) - 16, 360));
+  const [hexMode, setHexMode] = useState<'dims' | 'subs'>('dims');
 
   const current = useMemo(
     () => pickSubScoresDecimal(subScores, 'self'),
@@ -118,6 +120,7 @@ export function NortePanel({ subScores }: Props) {
           scores={hasDesired ? desiredEff : new Map()}
           secondaryScores={current}
           secondaryColor={GHOST_COLOR}
+          variant={hexMode}
           centerValue={hasDesired ? undefined : '—'}
           size={chartSize}
           idSuffix="norte"
@@ -126,6 +129,12 @@ export function NortePanel({ subScores }: Props) {
           }
         />
       </View>
+
+      <HexGrainToggle
+        mode={hexMode}
+        accent={GOLD}
+        onToggle={() => setHexMode((m) => (m === 'dims' ? 'subs' : 'dims'))}
+      />
 
       <View style={styles.legendRow}>
         <View style={[styles.swatch, styles.swatchFill]} />
