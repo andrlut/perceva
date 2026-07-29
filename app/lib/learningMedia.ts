@@ -20,8 +20,12 @@ export function learningMediaUrl(path: string): string {
   return MEDIA_BASE_URL + path;
 }
 
-export interface PickedMedia {
-  media: LearningMaterialMedia;
+/** Minimal shape `pickMedia` needs — lets feed-level rows (a Pick of the
+ *  full media row) go through the same locale-fallback logic. */
+type MediaLike = { kind: LearningMediaKind; locale: LearningMediaLocale };
+
+export interface PickedMedia<T extends MediaLike = LearningMaterialMedia> {
+  media: T;
   /** True when the row is in the OTHER language than the app locale —
    *  the UI shows a small language badge in that case. */
   isFallback: boolean;
@@ -33,11 +37,11 @@ export interface PickedMedia {
  * are interchangeable for the "view" mode — pass both and the preferred
  * locale wins across kinds.
  */
-export function pickMedia(
-  media: LearningMaterialMedia[] | undefined,
+export function pickMedia<T extends MediaLike>(
+  media: T[] | undefined,
   kinds: LearningMediaKind[],
   locale: LearningMediaLocale,
-): PickedMedia | null {
+): PickedMedia<T> | null {
   if (!media || media.length === 0) return null;
   const ofKind = media.filter((m) => kinds.includes(m.kind));
   if (ofKind.length === 0) return null;

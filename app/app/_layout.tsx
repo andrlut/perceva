@@ -179,6 +179,14 @@ export default function RootLayout() {
             />
             <Stack.Screen name="skill/[id]" options={{ headerShown: false }} />
             <Stack.Screen name="material/[slug]" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="reels"
+              options={{
+                headerShown: false,
+                presentation: 'fullScreenModal',
+                animation: 'fade',
+              }}
+            />
             <Stack.Screen name="skills" options={{ headerShown: false }} />
             <Stack.Screen name="tasks" options={{ headerShown: false }} />
             <Stack.Screen name="all-practices" options={{ headerShown: false }} />

@@ -5,8 +5,6 @@ import type {
   LearningMaterialCard,
   LearningMaterialMedia,
   LearningMaterialSub,
-  LearningMediaKind,
-  LearningMediaLocale,
   MarkMaterialReadResult,
   SubId,
 } from '@/lib/db/types';
@@ -22,22 +20,26 @@ export const learningKeys = {
   myFeedback: (slug: string) => [...learningKeys.all, 'myFeedback', slug] as const,
 };
 
+/** Media columns the feed loads — enough for format icons AND the reels
+ *  deck (path + meta give the viewer its image URLs without a detail
+ *  roundtrip per material). Audio/video extras still load with the detail. */
+export type LearningFeedMedia = Pick<
+  LearningMaterialMedia,
+  'kind' | 'locale' | 'path' | 'page_paths' | 'meta'
+>;
+
 /**
  * A feed card hydrated with the subs it touches. Body fields are NOT loaded
  * here — kept light so the feed scrolls fast even with long materials.
  */
 export interface LearningFeedCard extends LearningMaterialCard {
   subs: SubId[];
-  /** Media formats attached to this material (kind + language only — the
-   *  feed shows format icons; full rows load with the detail). */
-  media: { kind: LearningMediaKind; locale: LearningMediaLocale }[];
+  media: LearningFeedMedia[];
 }
 
 interface FeedRow extends LearningMaterialCard {
   learning_material_sub: { sub_id: SubId }[] | null;
-  learning_material_media:
-    | { kind: LearningMediaKind; locale: LearningMediaLocale }[]
-    | null;
+  learning_material_media: LearningFeedMedia[] | null;
 }
 
 /**
@@ -58,7 +60,7 @@ export function useLearningFeed() {
            cta_action, released_at, version, is_archived,
            created_at, updated_at,
            learning_material_sub ( sub_id ),
-           learning_material_media ( kind, locale )`,
+           learning_material_media ( kind, locale, path, page_paths, meta )`,
         )
         .eq('is_archived', false)
         .lte('released_at', new Date().toISOString())
