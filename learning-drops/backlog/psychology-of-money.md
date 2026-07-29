@@ -6,7 +6,10 @@ subs: [money]
 topic: psychology-of-money-book
 source_url: https://harriman-house.com/authors/morgan-housel/the-psychology-of-money/9780857197689
 source_label: The Psychology of Money — Morgan Housel (Harriman House, 2020)
-status: pronto
+status: publicado
+published_migration: 20260729000240_learning_text_summary-psychology-of-money.sql
+media_migrations: [20260729000241_learning_media_summary-psychology-of-money.sql]
+released_at: 2026-07-29 (big-release; capa Gemini pendente — só infográfico pt/en gerado)
 ---
 
 # A Psicologia do Dinheiro — comportamento > planilha
