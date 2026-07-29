@@ -190,7 +190,7 @@ export function buildInfographicSvg({ locale, dimensionId, data, width = 1080, h
   const subhead = pick(data.subhead);
   if (subhead) {
     y += 22;
-    for (const line of wrap(subhead, maxCharsFor(37, inner), 3)) {
+    for (const line of wrap(subhead, maxCharsFor(37, inner), 2)) {
       y += 48;
       out.push(textEl(line, PAD, y, { size: 37, weight: 'regular', fill: TOKENS.text.mid }));
     }
@@ -208,7 +208,7 @@ export function buildInfographicSvg({ locale, dimensionId, data, width = 1080, h
   for (let i = 0; i < points.length; i++) {
     const p = points[i];
     const titleLines = wrap(pick(p.title), maxCharsFor(42, railW, 'bold'), 2);
-    const bodyLines = wrap(pick(p.body), maxCharsFor(33, railW), 4);
+    const bodyLines = wrap(pick(p.body), maxCharsFor(33, railW), 3);
     const contentH = titleLines.length * 50 + 14 + bodyLines.length * 44;
     const cardH = Math.max(contentH + cardPad * 2, badgeR * 2 + cardPad * 2);
     const cardTop = y;
@@ -257,11 +257,14 @@ export function buildInfographicSvg({ locale, dimensionId, data, width = 1080, h
   }
 
   // ── highlight stat card ─────────────────────────────────────────────────
-  if (data.stat && pick(data.stat.value ?? data.stat)) {
-    const statValue = pick(data.stat.value ?? data.stat);
+  // Only drawn if it fits above the footer — never let it overlap (the stat
+  // is optional, so dropping it beats a collision).
+  const statVal = data.stat ? pick(data.stat.value ?? data.stat) : null;
+  const statH = 210;
+  if (statVal && y + statH <= height - 150) {
+    const statValue = statVal;
     const statCaption = pick(data.stat.caption);
     const statIcon = data.stat.icon && GLYPHS[data.stat.icon] ? data.stat.icon : 'stats-chart';
-    const statH = 220;
     const cardTop = y;
     out.push(`<rect x="${PAD}" y="${cardTop}" width="${inner}" height="${statH}" rx="30" fill="${accent}" fill-opacity="0.12"/>`);
     out.push(
