@@ -61,9 +61,20 @@ node generate.mjs --slug summary-atomic-habits --only infographic
 # só a capa
 node generate.mjs --slug summary-atomic-habits --only cover
 
+# só o áudio (podcast 2 vozes) — precisa de audio-script.<loc>.json
+node generate.mjs --slug summary-atomic-habits --only audio
+
 # ver o que rodaria sem escrever nada
 node generate.mjs --slug summary-atomic-habits --dry-run
 ```
+
+**Áudio (Fase B):** o agente `learning-audio-writer` escreve o diálogo de 2 vozes
+e salva em `learning-drops/inbox/<slug>/audio-script.<loc>.json`. O
+`generate.mjs` (passo `audio`) sintetiza com **Gemini 2.5 Flash TTS
+multi-speaker** (24 kHz PCM), corta em segmentos de ~2,4 min (a qualidade
+degrada depois de poucos min), costura e converte pra `audio.<loc>.m4a` (AAC
+mono 64k). ~US$ 0,15 por episódio de 10 min (25 tokens/seg × $10/1M). Usa a
+**mesma `GEMINI_API_KEY`** da capa.
 
 Entrada: `learning-drops/inbox/<slug>/media-spec.json`
 Saída: mesma pasta (`cover.webp`, `infographic.*.webp`, `*.svg` p/ auditoria,
@@ -112,3 +123,22 @@ locale existir.
 ```
 
 Veja `media-spec.example.json` para um exemplo completo e preenchido.
+
+## Contrato do `audio-script.<loc>.json` (Fase B)
+
+Escrito pelo agente `learning-audio-writer`, um por locale:
+
+```jsonc
+{
+  "locale": "pt",
+  "hosts": [                          // EXATAMENTE 2 (limite do multispeaker)
+    { "name": "Bia", "voice": "Kore" },   // voice = nome de voz prebuilt do Gemini
+    { "name": "Téo", "voice": "Puck" }
+  ],
+  "style": "Leia como um podcast em pt-BR, conversa natural entre Bia e Téo:",
+  "turns": [                          // diálogo; speaker casa com hosts[].name
+    { "speaker": "Bia", "text": "…" },   // SEM dígitos/símbolos — soletrar ("setenta e um mil")
+    { "speaker": "Téo", "text": "…" }
+  ]
+}
+```
