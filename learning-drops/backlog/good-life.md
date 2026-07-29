@@ -6,7 +6,10 @@ subs: [circle, romance]
 topic: good-life-book
 source_url: https://the-good-life-book.com/
 source_label: The Good Life — Waldinger & Schulz (Simon & Schuster, 2023)
-status: pronto
+status: publicado
+published_migration: 20260729000220_learning_text_summary-good-life.sql
+media_migrations: [20260729000221_learning_media_summary-good-life.sql]
+released_at: 2026-07-29 (big-release; reusou a capa órfã good-life/cover.webp; infográfico pt/en gerado)
 ---
 
 # A Vida Boa — o que 85 anos de estudo dizem sobre relações
