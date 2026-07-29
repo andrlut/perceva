@@ -700,8 +700,6 @@ const en = {
     sourceSelf: 'Self',
     sourceBoth: 'Both',
     sourceQuiz: 'Quiz',
-    hexShowSubs: 'Show the 12 subs',
-    hexShowDims: 'Show the 6 dimensions',
     nudgeSuffix: 'is at {{score}}/5 — tap to see recommended practices',
     hexAxisA11y: '{{dim}}: {{score}} out of {{max}}',
   },
@@ -724,6 +722,11 @@ const en = {
     discCta: 'Discover my profile',
     discCtaA11y: 'Take the DISC test',
     discChipA11y: 'DISC profile: {{name}}. Tap to view the result.',
+  },
+
+  hex: {
+    showSubs: 'Show the 12 subs',
+    showDims: 'Show the 6 dimensions',
   },
 
   adoptSheet: {

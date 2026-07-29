@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
+import { HexGrainToggle } from '@/components/HexGrainToggle';
 import { InsightCard } from '@/components/InsightCard';
 import { PeriodSelector } from '@/components/dedicacao/PeriodSelector';
 import { Sparkline } from '@/components/dedicacao/Sparkline';
@@ -114,6 +115,7 @@ export function DedicacaoPanel({ dimensions }: Props) {
     offset: 0,
   });
   const [expanded, setExpanded] = useState<Set<DimensionId>>(new Set());
+  const [hexMode, setHexMode] = useState<'dims' | 'subs'>('dims');
 
   const windowQuery = useDedicacaoWindow(spec, settings.weekStart);
 
@@ -177,6 +179,19 @@ export function DedicacaoPanel({ dimensions }: Props) {
     [slices],
   );
 
+  // 12 per-sub window slices in dim order — feeds the hex's 'subs' grain.
+  const subSlices = useMemo(
+    () =>
+      DIMENSION_ORDER.flatMap((dim) =>
+        (perDimWindow.get(dim)?.perSub ?? []).map((s) => ({
+          subId: s.subId,
+          dimId: dim,
+          xp: s.windowXp,
+        })),
+      ),
+    [perDimWindow],
+  );
+
   // The expanded trend sparkline keeps its own cumulative ceiling so a
   // sub-leading dim reads short next to the leader's full-height climb.
   const sparkGlobalMax = useMemo(() => {
@@ -216,6 +231,8 @@ export function DedicacaoPanel({ dimensions }: Props) {
       <View style={styles.hexWrap}>
         <XpHexChart
           slices={slices}
+          variant={hexMode}
+          subSlices={subSlices}
           totalXp={totalWindowXp}
           prevTotalXp={isAll ? null : prevTotalXp}
           isLoading={windowQuery.isPending}
@@ -224,6 +241,12 @@ export function DedicacaoPanel({ dimensions }: Props) {
           idSuffix="dedicacao"
         />
       </View>
+
+      <HexGrainToggle
+        mode={hexMode}
+        accent={tokens.semantic.xp2}
+        onToggle={() => setHexMode((m) => (m === 'dims' ? 'subs' : 'dims'))}
+      />
 
       {/* First extra below the hex: the period selector — an input that
           drives the hex above and the cards below, so it sits between them. */}

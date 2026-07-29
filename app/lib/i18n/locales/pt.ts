@@ -695,8 +695,6 @@ const pt: Translations = {
     sourceSelf: 'Self',
     sourceBoth: 'Ambos',
     sourceQuiz: 'Quiz',
-    hexShowSubs: 'Ver as 12 subs',
-    hexShowDims: 'Ver as 6 dimensões',
     nudgeSuffix: 'está em {{score}}/5 — toque pra ver práticas recomendadas',
     hexAxisA11y: '{{dim}}: {{score}} de {{max}}',
   },
@@ -719,6 +717,11 @@ const pt: Translations = {
     discCta: 'Descobrir meu perfil',
     discCtaA11y: 'Fazer o teste DISC',
     discChipA11y: 'Perfil DISC: {{name}}. Toque pra ver o resultado.',
+  },
+
+  hex: {
+    showSubs: 'Ver as 12 subs',
+    showDims: 'Ver as 6 dimensões',
   },
 
   adoptSheet: {
