@@ -15,14 +15,21 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useBottomSafeClearance } from '@/components/BottomNavBar';
-import { CompletedBucket, type CompletedItem } from '@/components/CompletedBucket';
+import {
+  CompletedBucket,
+  completionsToItems,
+  type CompletedItem,
+} from '@/components/CompletedBucket';
 import { CompleteTaskSheet } from '@/components/CompleteTaskSheet';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { TaskCard } from '@/components/TaskCard';
 import { XPCoinFloat } from '@/components/XPCoinFloat';
-import { dateKeyFromLocal, useDayDetail } from '@/lib/api/history';
 import {
-  dimensionForSub,
+  dateKeyFromLocal,
+  taskFromCompletionSnapshot,
+  useDayDetail,
+} from '@/lib/api/history';
+import {
   useActiveTasks,
   useCompleteTask,
   useUndoCompletion,
@@ -182,6 +189,15 @@ export default function AllPracticesScreen() {
     [dayDetail.data],
   );
 
+  // Skipped on the SELECTED day. The one-shot list gets this for free (it
+  // comes from openTasks, which the shared predicate already filters); the
+  // recurring list is built from useActiveTasks, so it has to honor skips
+  // itself or a practice skipped on that day still shows up here.
+  const skippedThatDayIds = useMemo(
+    () => new Set((dayDetail.data?.skipped ?? []).map((task) => task.id)),
+    [dayDetail.data],
+  );
+
   const activeById = useMemo(
     () => new Map((tasks.data ?? []).map((tk) => [tk.id, tk])),
     [tasks.data],
@@ -205,9 +221,16 @@ export default function AllPracticesScreen() {
         // scope, which already covers the one-shot list.
         new Date(task.created_at).getTime() <= dayEnd.getTime() &&
         !completedThatDayIds.has(task.id) &&
+        !skippedThatDayIds.has(task.id) &&
         !pendingDone.has(task.id),
     );
-  }, [tasks.data, completedThatDayIds, pendingDone, selectedDate]);
+  }, [
+    tasks.data,
+    completedThatDayIds,
+    skippedThatDayIds,
+    pendingDone,
+    selectedDate,
+  ]);
 
   // Pontuais — from the selected day's openTasks (carries lastCompletedAt
   // for trophy dimming + already excludes done/skipped-that-day), minus
@@ -215,7 +238,6 @@ export default function AllPracticesScreen() {
   const oneshot = useMemo(
     () =>
       (dayDetail.data?.openTasks ?? [])
-        .map((o) => o.task)
         .filter(
           (task) =>
             task.recurrence.type === 'one_shot' && !pendingDone.has(task.id),
@@ -240,41 +262,15 @@ export default function AllPracticesScreen() {
 
   const completedItems = useMemo<CompletedItem[]>(
     () =>
-      (dayDetail.data?.completions ?? [])
-        .map((c): CompletedItem | null => {
-          const task = activeById.get(c.taskId);
-          if (task) {
-            // Dailies belong to Hoje — this surface is non-daily only.
-            if (isEffectivelyDaily(task.recurrence)) return null;
-            return { task, completionId: c.id };
-          }
-          // Archived/deleted since completion — render from the snapshot so
-          // the day's record isn't silently lost (CompletedBucket only reads
-          // id/title/primary_sub/primary_dimension).
-          const sub = c.subs[0]?.sub_id;
-          const shim: TaskWithSubs = {
-            id: c.taskId,
-            character_id: '',
-            title: c.taskTitle,
-            description: null,
-            task_type: 'daily',
-            recurrence: { type: 'daily' },
-            target_count: 1,
-            is_archived: false,
-            created_at: '',
-            updated_at: '',
-            template_id: null,
-            icon: null,
-            subs: c.subs,
-            primary_sub_id: sub ?? ('sleep' as never),
-            primary_dimension_id: sub
-              ? dimensionForSub(sub)
-              : ('health' as never),
-            total_stars: c.totalStars,
-          };
-          return { task: shim, completionId: c.id };
-        })
-        .filter((x): x is CompletedItem => x !== null),
+      completionsToItems(
+        dayDetail.data?.completions ?? [],
+        (id) => activeById.get(id),
+        taskFromCompletionSnapshot,
+        // Dailies belong to Hoje — this surface is non-daily only. An
+        // archived/deleted task keeps its row (rebuilt from the snapshot) so
+        // the day's record isn't silently lost.
+        (task, live) => !live || !isEffectivelyDaily(task.recurrence),
+      ),
     [dayDetail.data, activeById],
   );
 
@@ -401,7 +397,7 @@ export default function AllPracticesScreen() {
                       : t('home.completedBucket.day')
                   }
                   onUndo={handleUndo}
-                  onExtra={(task) => handleQuickComplete(task)}
+                  onExtra={handleQuickComplete}
                 />
               )}
             </View>

@@ -14,8 +14,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useT } from '@/lib/i18n';
+import { formatHeroDate } from '@/lib/time';
 
-import { CompletedBucket, type CompletedItem } from '@/components/CompletedBucket';
+import {
+  CompletedBucket,
+  completionsToItems,
+  type CompletedItem,
+} from '@/components/CompletedBucket';
 import { CompleteTaskSheet } from '@/components/CompleteTaskSheet';
 import { DayXpStat } from '@/components/DayXpStat';
 import { MoodDayDetail } from '@/components/mood/MoodDayDetail';
@@ -28,6 +33,7 @@ import { XPCoinFloat } from '@/components/XPCoinFloat';
 import {
   dateKeyFromLocal,
   useDailySummary,
+  taskFromCompletionSnapshot,
   useDayDetail,
   type DailySummaryEntry,
 } from '@/lib/api/history';
@@ -35,12 +41,12 @@ import { useMoodMonth } from '@/lib/api/mood';
 import { moodLevel } from '@/lib/mood';
 import {
   dimensionForSub,
+  useActiveTasks,
   useCompleteTask,
   useSkipTaskToday,
   useUndoCompletion,
   useUnskipTaskToday,
 } from '@/lib/api/tasks';
-import { isDueOn } from '@/lib/recurrence';
 import { useLoadedSettings } from '@/lib/settings';
 import { confirmAction, showInfo } from '@/lib/util/confirm';
 import type { DimensionId, SubId, TaskSub, TaskWithSubs } from '@/lib/db/types';
@@ -123,6 +129,15 @@ export default function HistoryScreen() {
   const [sheetTask, setSheetTask] = useState<TaskWithSubs | null>(null);
   const [actionTask, setActionTask] = useState<TaskWithSubs | null>(null);
   const [floats, setFloats] = useState<{ id: number; xp: number; coins: number }[]>([]);
+
+  // Live tasks, so a completion row can resolve back to its real task and
+  // keep the drawer's "+1" wired. Rows whose task is archived/deleted fall
+  // back to the completion snapshot and drop the "+1" (nothing to re-log).
+  const activeTasks = useActiveTasks();
+  const activeById = useMemo(
+    () => new Map((activeTasks.data ?? []).map((task) => [task.id, task])),
+    [activeTasks.data],
+  );
 
   // Heatmap range follows the visible month — the MonthGrid only needs
   // entries for the month it renders, so we fetch a tight window.
@@ -251,8 +266,10 @@ export default function HistoryScreen() {
     );
   };
 
-  const handleRetroQuickComplete = (task: TaskWithSubs) => {
-    fireRetroCompletion(task, task.subs);
+  // `subs` comes from the drawer's "+1" — it repeats the stars of that
+  // specific rep instead of falling back to the task's defaults.
+  const handleRetroQuickComplete = (task: TaskWithSubs, subs?: TaskSub[]) => {
+    fireRetroCompletion(task, subs ?? task.subs);
   };
 
   const handleSheetConfirm = (subs: TaskSub[]) => {
@@ -444,45 +461,23 @@ export default function HistoryScreen() {
             <MoodDayDetail dateKey={dayKey} />
 
             {(() => {
-              // Unified open list — daily + scheduled-on-that-day recurring,
-              // no one-shots (matches the Home day-view). Anything else you
-              // want to log for this day lives behind "Ver todas as práticas".
-              const open = (day.data?.openTasks ?? [])
-                .map((o) => o.task)
-                .filter(
-                  (task) =>
-                    task.recurrence.type !== 'one_shot' &&
-                    (task.recurrence.type === 'daily' ||
-                      isDueOn(task.recurrence, selected)),
-                );
-              // Completed drawer — hydrate a minimal shim from each
-              // completion snapshot (CompletedBucket only reads id/title/
-              // primary_sub/primary_dimension), so archived/deleted tasks
-              // still render.
-              const doneItems: CompletedItem[] = (day.data?.completions ?? []).map((c) => {
-                const sub = c.subs[0]?.sub_id;
-                const task: TaskWithSubs = {
-                  id: c.taskId,
-                  character_id: '',
-                  title: c.taskTitle,
-                  description: null,
-                  task_type: 'daily',
-                  recurrence: { type: 'daily' },
-                  target_count: 1,
-                  is_archived: false,
-                  created_at: '',
-                  updated_at: '',
-                  template_id: null,
-                  icon: null,
-                  subs: c.subs,
-                  primary_sub_id: sub ?? ('sleep' as never),
-                  primary_dimension_id: sub
-                    ? dimensionForSub(sub)
-                    : ('health' as never),
-                  total_stars: c.totalStars,
-                };
-                return { task, completionId: c.id };
-              });
+              // useDayDetail already applies the shared isOpenOnDay rule
+              // (scheduled that day, nothing logged, not skipped) — the same
+              // one Home uses, so the two screens cannot disagree about a
+              // day. Only the one-shot exclusion is this surface's own
+              // choice; those live behind "Ver todas as práticas".
+              const open = (day.data?.openTasks ?? []).filter(
+                (task) => task.recurrence.type !== 'one_shot',
+              );
+              // Completed drawer — one row per completion, carrying that
+              // rep's own XP/coins/stars. Every task here is rebuilt from
+              // the completion snapshot, so archived/deleted ones still
+              // render (and still keep the day's XP total honest).
+              const doneItems: CompletedItem[] = completionsToItems(
+                day.data?.completions ?? [],
+                (id) => activeById.get(id),
+                taskFromCompletionSnapshot,
+              );
               const skippedItems: CompletedItem[] = (day.data?.skipped ?? []).map(
                 (task) => ({ task }),
               );
@@ -544,7 +539,7 @@ export default function HistoryScreen() {
                         day.data?.completions.find((c) => c.id === completionId)?.coinsGranted ?? 0,
                       )
                     }
-                    onExtra={(task) => handleRetroQuickComplete(task)}
+                    onExtra={handleRetroQuickComplete}
                   />
                   <CompletedBucket
                     items={skippedItems}
@@ -588,6 +583,11 @@ export default function HistoryScreen() {
       <TaskActionSheet
         visible={actionTask !== null}
         taskTitle={actionTask?.title ?? ''}
+        dateLabel={
+          dayKey === dateKeyFromLocal(new Date())
+            ? undefined
+            : formatHeroDate(selected).monthDay
+        }
         onCancel={() => setActionTask(null)}
         onAdjustStars={handleActionAdjust}
         onSkipToday={handleActionSkip}

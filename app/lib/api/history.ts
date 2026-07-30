@@ -2,37 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 
 import { dimensionForSub } from '@/lib/api/tasks';
 import type { SubId, TaskSub, TaskWithSubs } from '@/lib/db/types';
-import { parseRecurrence } from '@/lib/recurrence';
+import { isOpenOnDay, parseRecurrence } from '@/lib/recurrence';
 import type { WeekStart } from '@/lib/settings';
 import { supabase } from '@/lib/supabase';
-
-/** First day of `d`'s week, honoring the user's week-start preference. */
-function startOfWeek(d: Date, weekStart: WeekStart): Date {
-  const x = startOfLocalDay(d);
-  const dow = x.getDay(); // 0=Sun..6=Sat
-  const offset = weekStart === 'sunday' ? dow : (dow + 6) % 7;
-  x.setDate(x.getDate() - offset);
-  return x;
-}
-
-/** Last day of `d`'s week at 23:59:59. */
-function endOfWeek(d: Date, weekStart: WeekStart): Date {
-  const s = startOfWeek(d, weekStart);
-  const e = new Date(s);
-  e.setDate(s.getDate() + 6);
-  e.setHours(23, 59, 59, 999);
-  return e;
-}
-
-function startOfMonth(d: Date): Date {
-  return new Date(d.getFullYear(), d.getMonth(), 1);
-}
-
-function endOfMonth(d: Date): Date {
-  const x = new Date(d.getFullYear(), d.getMonth() + 1, 0);
-  x.setHours(23, 59, 59, 999);
-  return x;
-}
 
 export const historyKeys = {
   all: ['history'] as const,
@@ -203,21 +175,19 @@ export function taskFromCompletionSnapshot(c: DayCompletion): TaskWithSubs {
   };
 }
 
-/**
- * An open task for a given day, paired with how many of its target
- * completions are already logged for that day. Used by the "Forgot
- * something?" / "Still open today" list.
- */
-export interface OpenTaskOnDay {
-  task: TaskWithSubs;
-  completedThisDay: number;
-}
-
 export interface DayDetail {
   dateKey: string;
   completions: DayCompletion[];
-  /** Active tasks not yet completed on this day — candidates for retro logging. */
-  openTasks: OpenTaskOnDay[];
+  /**
+   * Practices still open on this day — candidates for (retro) logging.
+   *
+   * Decided by the single shared predicate `isOpenOnDay`: scheduled on the
+   * day AND zero completions on the day AND not skipped on the day. The
+   * schedule filter lives HERE (it used to be re-applied, identically, by
+   * every consumer) so this list is directly renderable; consumers only
+   * strip one-shots when their surface doesn't show them.
+   */
+  openTasks: TaskWithSubs[];
   /** Tasks skipped on this specific day (task_skip rows). Each entry is
    *  hydrated to the live task; rows whose task no longer exists are
    *  filtered out. Used by the History "Skipped" drawer and the day
@@ -356,49 +326,6 @@ export function useDayDetail(date: Date, weekStart: WeekStart = 'monday') {
         });
       }
 
-      // For retro-logging UX we treat weekly/monthly tasks as "open"
-      // on every day of their period until the period target is hit,
-      // regardless of whether `recurrence.days` includes the selected
-      // day. Matches the user's mental model: "I forgot tennis on
-      // Thursday — let me log it on Friday."
-      //
-      // Two extra count queries needed: completions inside the week
-      // containing the selected day, and completions inside its month.
-      // Same key as above — a period target must count the completions
-      // the calendar shows inside that period, cell for cell.
-      const weekFrom = dateKeyFromLocal(startOfWeek(date, weekStart));
-      const weekTo = dateKeyFromLocal(endOfWeek(date, weekStart));
-      const monthFrom = dateKeyFromLocal(startOfMonth(date));
-      const monthTo = dateKeyFromLocal(endOfMonth(date));
-
-      const { data: weekRows, error: weekErr } = await supabase
-        .from('task_completion')
-        .select('task_id')
-        .gte('completed_local_date', weekFrom)
-        .lte('completed_local_date', weekTo);
-      if (weekErr) throw weekErr;
-      const completionCountThisWeek = new Map<string, number>();
-      (weekRows ?? []).forEach((c) => {
-        completionCountThisWeek.set(
-          c.task_id,
-          (completionCountThisWeek.get(c.task_id) ?? 0) + 1,
-        );
-      });
-
-      const { data: monthRows, error: monthErr } = await supabase
-        .from('task_completion')
-        .select('task_id')
-        .gte('completed_local_date', monthFrom)
-        .lte('completed_local_date', monthTo);
-      if (monthErr) throw monthErr;
-      const completionCountThisMonth = new Map<string, number>();
-      (monthRows ?? []).forEach((c) => {
-        completionCountThisMonth.set(
-          c.task_id,
-          (completionCountThisMonth.get(c.task_id) ?? 0) + 1,
-        );
-      });
-
       // Skips for the selected day — tasks the user explicitly opted
       // out of go to the Skipped drawer, not the open list.
       const { data: skipsThisDay, error: skipDayErr } = await supabase
@@ -410,38 +337,28 @@ export function useDayDetail(date: Date, weekStart: WeekStart = 'monday') {
         (skipsThisDay ?? []).map((s) => s.task_id),
       );
 
-      const openTasks: OpenTaskOnDay[] = taskRows
+      // One completion on the day closes the practice for that day, for
+      // every recurrence type — the same predicate fetchHomeBuckets uses
+      // for today, so the two surfaces cannot drift. This used to ask a
+      // PERIOD question here ("doneWeek < target"), which is what kept a
+      // weekly target-5 practice on the list after it was already logged
+      // three times that day.
+      const openTasks: TaskWithSubs[] = taskRows
         .map((t) => ({ raw: t, recurrence: parseRecurrence(t.recurrence) }))
-        .filter(({ raw, recurrence }) => {
-          if (skippedThisDayIds.has(raw.id)) return false;
-          const target = raw.target_count ?? 1;
-          if (recurrence.type === 'one_shot') {
-            // Trophy retention: one-shots stay visible unless completed
-            // ON this specific day (then they're in `completions`).
-            const doneToday = completionCountThisDay.get(raw.id) ?? 0;
-            return doneToday === 0;
-          }
-          if (recurrence.type === 'daily') {
-            const doneToday = completionCountThisDay.get(raw.id) ?? 0;
-            return doneToday < target;
-          }
-          if (recurrence.type === 'weekly') {
-            const doneWeek = completionCountThisWeek.get(raw.id) ?? 0;
-            return doneWeek < target;
-          }
-          // monthly
-          const doneMonth = completionCountThisMonth.get(raw.id) ?? 0;
-          return doneMonth < target;
-        })
+        .filter(({ raw, recurrence }) =>
+          isOpenOnDay({
+            recurrence,
+            day: date,
+            completionsOnDay: completionCountThisDay.get(raw.id) ?? 0,
+            skippedOnDay: skippedThisDayIds.has(raw.id),
+          }),
+        )
         .map(({ raw, recurrence }) => {
           const task = hydrateTask(raw, recurrence);
           if (recurrence.type === 'one_shot') {
             task.lastCompletedAt = oneShotLatest.get(raw.id) ?? null;
           }
-          return {
-            task,
-            completedThisDay: completionCountThisDay.get(raw.id) ?? 0,
-          };
+          return task;
         });
 
       // Hydrate skip rows for the Skipped drawer — reuses the same

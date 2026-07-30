@@ -20,7 +20,11 @@ import { CompleteTaskSheet } from '@/components/CompleteTaskSheet';
 import { DayClearedCelebration } from '@/components/DayClearedCelebration';
 import { MoodCheckinPrompt } from '@/components/MoodCheckinPrompt';
 import { MoodHubStrip } from '@/components/mood/MoodHubStrip';
-import { CompletedBucket, type CompletedItem } from '@/components/CompletedBucket';
+import {
+  CompletedBucket,
+  completionsToItems,
+  type CompletedItem,
+} from '@/components/CompletedBucket';
 import { NotificationOptInCard } from '@/components/NotificationOptInCard';
 import { QuestChipsStrip } from '@/components/QuestChipsStrip';
 import { TaskActionSheet } from '@/components/TaskActionSheet';
@@ -151,10 +155,22 @@ export default function HomeScreen() {
   const [floats, setFloats] = useState<FloatItem[]>([]);
   const [actionTask, setActionTask] = useState<TaskWithSubs | null>(null);
   const [sheetTask, setSheetTask] = useState<TaskWithSubs | null>(null);
-  // Optimistic-hide set for RETRO completions on a past day (mirrors
-  // all-practices' pendingDone) — closes the double-tap duplicate window
-  // where the card lingers until the dayDetail refetch lands.
-  const [retroPending, setRetroPending] = useState<Set<string>>(new Set());
+  // Optimistic-hide set for RETRO actions on a past day (mirrors
+  // all-practices' pendingDone). Past-day lists come from dayDetail, which
+  // has no optimistic layer, so without this the card sits in place for a
+  // full round-trip — a window where a second tap logs a DUPLICATE
+  // completion, and where a swipe-skip reads as "nothing happened".
+  // Holds ids hidden by BOTH retro completions and retro skips; the prune
+  // effect clears an id once the server confirms it either way.
+  const [retroHidden, setRetroHidden] = useState<Set<string>>(new Set());
+  const hideRetro = (taskId: string) =>
+    setRetroHidden((prev) => new Set(prev).add(taskId));
+  const unhideRetro = (taskId: string) =>
+    setRetroHidden((prev) => {
+      const next = new Set(prev);
+      next.delete(taskId);
+      return next;
+    });
   const navClearance = useBottomNavClearance();
   // While a bottom-positioned tour tooltip is visible, the Home scroll
   // needs extra room so the user can scroll content above the overlay
@@ -291,16 +307,12 @@ export default function HomeScreen() {
     // refetch lands, a window where a second tap logs a DUPLICATE
     // completion. Hide now; the prune effect drops it once the server
     // confirms; restore on error.
-    setRetroPending((prev) => new Set(prev).add(task.id));
+    hideRetro(task.id);
     completeTask.mutate(
       { task, subs, completedAt: at.toISOString(), completedLocalDate: selectedKey },
       {
         onError: (err) => {
-          setRetroPending((prev) => {
-            const next = new Set(prev);
-            next.delete(task.id);
-            return next;
-          });
+          unhideRetro(task.id);
           const e = err as { message?: string; code?: string; details?: string };
           console.error('[complete_task retro] failed', e);
           Alert.alert(
@@ -313,8 +325,12 @@ export default function HomeScreen() {
     );
   };
 
-  const handleQuickComplete = (task: TaskWithSubs) => {
-    completeForSelectedDay(task, task.subs);
+  // `subs` is supplied by the drawer's "+1", which repeats the stars of the
+  // row it sits on ("do it again, same as this one"). Without it, undoing a
+  // custom-starred rep and pressing "+1" would silently re-log the task's
+  // DEFAULT stars — not a round-trip.
+  const handleQuickComplete = (task: TaskWithSubs, subs?: TaskSub[]) => {
+    completeForSelectedDay(task, subs ?? task.subs);
   };
 
   const handleLongPress = (task: TaskWithSubs) => {
@@ -337,15 +353,17 @@ export default function HomeScreen() {
     setSheetTask(task);
   };
 
-  const handleActionSkip = () => {
-    if (!actionTask) return;
-    const task = actionTask;
-    setActionTask(null);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+  // Shared by the swipe and the long-press sheet. On a past day the skip is
+  // dated (useSkipTaskToday deliberately skips its optimistic pass for those,
+  // since today's buckets must not change) — so the hide has to happen here
+  // or the card sits still until the refetch and the swipe reads as broken.
+  const skipForSelectedDay = (task: TaskWithSubs) => {
+    if (!isToday) hideRetro(task.id);
     skipTask.mutate(
       { taskId: task.id, date: isToday ? undefined : selectedKey },
       {
         onError: (err) => {
+          if (!isToday) unhideRetro(task.id);
           const e = err as { message?: string };
           Alert.alert(
             t('home.actionErrors.skip'),
@@ -356,20 +374,16 @@ export default function HomeScreen() {
     );
   };
 
-  const handleSwipeSkip = (task: TaskWithSubs) => {
-    skipTask.mutate(
-      { taskId: task.id, date: isToday ? undefined : selectedKey },
-      {
-        onError: (err) => {
-          const e = err as { message?: string };
-          Alert.alert(
-            t('home.actionErrors.skip'),
-            e.message ?? t('home.actionErrors.unknown'),
-          );
-        },
-      },
-    );
+  const handleActionSkip = () => {
+    if (!actionTask) return;
+    const task = actionTask;
+    setActionTask(null);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    skipForSelectedDay(task);
   };
+
+  // TaskCard.fireSkip already fires a Medium haptic on the swipe.
+  const handleSwipeSkip = (task: TaskWithSubs) => skipForSelectedDay(task);
 
   const handleActionEdit = () => {
     if (!actionTask) return;
@@ -393,6 +407,9 @@ export default function HomeScreen() {
 
   const handleUnskip = (taskId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    // Drop any optimistic hide so the card returns to the open list in the
+    // same frame instead of waiting for the refetch.
+    unhideRetro(taskId);
     unskipTask.mutate(
       { taskId, date: isToday ? undefined : selectedKey },
       {
@@ -486,19 +503,6 @@ export default function HomeScreen() {
     return { today, oneshot };
   }, [data]);
 
-  // ── Completion drawers ────────────────────────────────────────────────
-  // ONE drawer with everything completed today (dailies, weeklies,
-  // monthlies AND one-shots) — the per-tab week/one-shot drawers left
-  // with the bucket tabs.
-  const completedTodayItems = useMemo<CompletedItem[]>(
-    () =>
-      (data?.todayActivity.completed ?? []).map((c) => ({
-        task: c.task,
-        completionId: c.latestCompletionId,
-      })),
-    [data?.todayActivity.completed],
-  );
-
   const skippedTodayItems = useMemo<CompletedItem[]>(
     () =>
       (data?.todayActivity.skipped ?? []).map((task) => ({ task })),
@@ -522,31 +526,36 @@ export default function HomeScreen() {
   // dayDetail.openTasks already drops what was completed/skipped that day.
   const pastOpen = useMemo<TaskWithSubs[]>(() => {
     if (isToday || !dayDetail.data) return [];
-    return dayDetail.data.openTasks
-      .map((o) => o.task)
-      .filter(
-        (task) =>
-          task.recurrence.type !== 'one_shot' &&
-          !retroPending.has(task.id) &&
-          (task.recurrence.type === 'daily' ||
-            isDueOn(task.recurrence, selectedDate)),
-      );
-  }, [isToday, dayDetail.data, selectedDate, retroPending]);
+    // The schedule + completed + skipped rules all live in useDayDetail now
+    // (isOpenOnDay). All that is left here is the presentation choice Home
+    // makes on EVERY day: one-shots belong to "Todas as práticas", not to a
+    // specific day's list.
+    return dayDetail.data.openTasks.filter(
+      (task) => task.recurrence.type !== 'one_shot' && !retroHidden.has(task.id),
+    );
+  }, [isToday, dayDetail.data, retroHidden]);
 
   // Every completion the day's XP hero counts must also appear here, so the
   // drawer and the hero never disagree. When the live task is gone from the
   // active list (archived, or deleted), rebuild a minimal row from the
   // completion snapshot instead of dropping it — undo stays wired via the
   // completionId; the "+1" pill is suppressed on those rows (see orphaned).
-  const pastCompletedItems = useMemo<CompletedItem[]>(() => {
-    if (isToday || !dayDetail.data) return [];
-    return dayDetail.data.completions.map((c): CompletedItem => {
-      const task = tasksById.get(c.taskId);
-      return task
-        ? { task, completionId: c.id }
-        : { task: taskFromCompletionSnapshot(c), completionId: c.id, orphaned: true };
-    });
-  }, [isToday, dayDetail.data, tasksById]);
+  // ── Completion drawer ─────────────────────────────────────────────────
+  // ONE row per completion, on EVERY day — today included. useDayDetail
+  // already runs for today (it feeds the XP hero), so sourcing the drawer
+  // from it too costs nothing and buys three things: the exact per-rep XP
+  // (the user can adjust stars, so reps of the same practice differ), an
+  // undo button that removes precisely the rep shown next to it, and a
+  // header total that can no longer disagree with the hero above it.
+  const dayCompletedItems = useMemo<CompletedItem[]>(
+    () =>
+      completionsToItems(
+        dayDetail.data?.completions ?? [],
+        (id) => tasksById.get(id),
+        taskFromCompletionSnapshot,
+      ),
+    [dayDetail.data, tasksById],
+  );
 
   const pastSkippedItems = useMemo<CompletedItem[]>(() => {
     if (isToday || !dayDetail.data) return [];
@@ -555,26 +564,30 @@ export default function HomeScreen() {
 
   // What the render consumes, resolved by which day is selected.
   const dayOpen = isToday ? lists.today : pastOpen;
-  const dayCompletedItems = isToday ? completedTodayItems : pastCompletedItems;
   const daySkippedItems = isToday ? skippedTodayItems : pastSkippedItems;
 
   // Reset the retro optimistic-hide set when the selected day changes — a
   // pending hide from one day must not carry over and hide the same task on
   // another day.
   useEffect(() => {
-    setRetroPending(new Set());
+    setRetroHidden(new Set());
   }, [selectedKey]);
 
-  // Prune the retro hide once the server reflects the completion (the id
-  // shows up in the day's completions) — dayDetail then excludes it from
-  // openTasks anyway, and dropping it here lets an undo bring the card back.
+  // Prune the retro hide once the server reflects the action — dayDetail
+  // then excludes the task from openTasks on its own, and dropping it here
+  // is what lets an undo (or an unskip) bring the card back.
+  //
+  // Prune against completions ∪ skipped, not completions alone: a skipped
+  // task never enters `completions`, so a completions-only prune would
+  // strand its id forever and no unskip could restore the card.
   useEffect(() => {
-    const doneIds = new Set(
-      (dayDetail.data?.completions ?? []).map((c) => c.taskId),
-    );
-    setRetroPending((prev) => {
+    const settled = new Set<string>([
+      ...(dayDetail.data?.completions ?? []).map((c) => c.taskId),
+      ...(dayDetail.data?.skipped ?? []).map((t) => t.id),
+    ]);
+    setRetroHidden((prev) => {
       if (prev.size === 0) return prev;
-      const next = new Set([...prev].filter((id) => !doneIds.has(id)));
+      const next = new Set([...prev].filter((id) => !settled.has(id)));
       return next.size === prev.size ? prev : next;
     });
   }, [dayDetail.data]);
@@ -628,10 +641,14 @@ export default function HomeScreen() {
   // all-skipped variant (not the gold fanfare) is what a zero-done clear
   // shows. No new celebration path.
   const handleClearDay = async () => {
-    const ids = lists.today.map((task) => task.id);
+    // dayOpen === lists.today when isToday, so this is unchanged on today
+    // and correctly closes the SELECTED day when the user is browsing back.
+    const ids = dayOpen.map((task) => task.id);
     if (ids.length === 0 || skipTasksBulk.isPending) return;
     const ok = await confirmAction(
-      t('home.clearDay.confirmTitle'),
+      isToday
+        ? t('home.clearDay.confirmTitle')
+        : t('home.clearDay.confirmTitleDay', { date: hero.monthDay }),
       t(
         ids.length === 1
           ? 'home.clearDay.confirmBody.one'
@@ -645,10 +662,15 @@ export default function HomeScreen() {
     );
     if (!ok) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    // A dated bulk skip gets no optimistic pass in the mutation (it must not
+    // touch today's buckets), so hide the cards here or they all freeze for
+    // the whole round-trip.
+    if (!isToday) ids.forEach(hideRetro);
     skipTasksBulk.mutate(
-      { taskIds: ids },
+      { taskIds: ids, date: isToday ? undefined : selectedKey },
       {
         onError: (err) => {
+          if (!isToday) ids.forEach(unhideRetro);
           const e = err as { message?: string };
           Alert.alert(
             t('home.actionErrors.skip'),
@@ -682,6 +704,10 @@ export default function HomeScreen() {
   const sawPendingTodayRef = useRef(false);
   const dayClearedFiringRef = useRef(false);
   useEffect(() => {
+    // Today-only ritual. Everything below reads TODAY's buckets, so without
+    // this the celebration could fire while the user is sitting on a past
+    // day — and now that a past day can be bulk-closed, it would.
+    if (!isToday) return;
     if (!buckets.isSuccess || !data) return;
     const remaining = lists.today.length;
     if (remaining > 0) {
@@ -737,6 +763,7 @@ export default function HomeScreen() {
       }
     })();
   }, [
+    isToday,
     buckets.isSuccess,
     buckets.isFetching,
     data,
@@ -760,7 +787,7 @@ export default function HomeScreen() {
         dimmed={isInTrophyWindow(task)}
         onComplete={() => handleQuickComplete(task)}
         onLongPress={() => handleLongPress(task)}
-        onSkip={isToday ? () => handleSwipeSkip(task) : undefined}
+        onSkip={() => handleSwipeSkip(task)}
         onSwipeComplete={() => setSheetTask(task)}
         onEdit={() => {
           emitTourEvent(M1_EVENTS.TASK_TAPPED);
@@ -853,7 +880,7 @@ export default function HomeScreen() {
 
               {/* "Fechar o dia" — today only; bulk-skip everything still
                   waiting. Only when ≥2 remain (a single card is one swipe). */}
-              {isToday && dayOpen.length >= 2 && (
+              {dayOpen.length >= 2 && (
                 <Pressable
                   onPress={handleClearDay}
                   disabled={skipTasksBulk.isPending}
@@ -875,30 +902,33 @@ export default function HomeScreen() {
                 </Pressable>
               )}
 
-              {/* Completed drawer. On today it always renders (the tour's
-                  home.completed anchor lives on it, even at 0); on a past
-                  day only when there's something to show. */}
-              {(isToday || dayCompletedItems.length > 0) &&
-                (isToday ? (
-                  <TourTarget id="home.completed" radius={18}>
-                    <CompletedBucket
-                      items={dayCompletedItems}
-                      title={t('home.completedBucket.today')}
-                      onUndo={handleUndo}
-                      onExtra={(task) => handleQuickComplete(task)}
-                      onToggle={(open) => {
-                        if (open) emitTourEvent(M1_EVENTS.DRAWER_EXPANDED);
-                      }}
-                    />
-                  </TourTarget>
-                ) : (
+              {/* Completed drawer. On today it always renders — showWhenEmpty
+                  keeps the tour's home.completed anchor a real, measurable
+                  box on a fresh day (it used to measure a zero-size view),
+                  and "Feitas hoje · 0" growing into the day's tally is the
+                  momentum arc in one line. A past day shows it only when
+                  there is something to show. */}
+              {isToday ? (
+                <TourTarget id="home.completed" radius={18}>
                   <CompletedBucket
                     items={dayCompletedItems}
-                    title={t('home.completedBucket.day')}
+                    title={t('home.completedBucket.today')}
+                    showWhenEmpty
                     onUndo={handleUndo}
-                    onExtra={(task) => handleQuickComplete(task)}
+                    onExtra={handleQuickComplete}
+                    onToggle={(open) => {
+                      if (open) emitTourEvent(M1_EVENTS.DRAWER_EXPANDED);
+                    }}
                   />
-                ))}
+                </TourTarget>
+              ) : (
+                <CompletedBucket
+                  items={dayCompletedItems}
+                  title={t('home.completedBucket.day')}
+                  onUndo={handleUndo}
+                  onExtra={handleQuickComplete}
+                />
+              )}
 
               {daySkippedItems.length > 0 && (
                 <CompletedBucket
@@ -963,6 +993,7 @@ export default function HomeScreen() {
       <TaskActionSheet
         visible={actionTask !== null}
         taskTitle={actionTask?.title ?? ''}
+        dateLabel={isToday ? undefined : hero.monthDay}
         onCancel={() => setActionTask(null)}
         onAdjustStars={handleActionAdjust}
         onSkipToday={handleActionSkip}

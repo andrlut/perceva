@@ -16,12 +16,13 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { useT } from '@/lib/i18n';
-import type { TaskSub, TaskWithSubs } from '@/lib/db/types';
+import type { TaskWithSubs } from '@/lib/db/types';
 import { describeRecurrence } from '@/lib/recurrence';
 import { rewardForTaskSubs } from '@/lib/xp';
 import { tokens } from '@/theme';
-import { DIMENSION_META, SUB_META } from '@/theme/dimensions';
+import { DIMENSION_META } from '@/theme/dimensions';
 
+import { SubColoredPips } from '@/components/SubColoredPips';
 import { useMetaLookup } from '@/lib/i18n/meta';
 
 import { SubStack } from './SubStack';
@@ -303,7 +304,7 @@ export function TaskCard({
                   size={18}
                 />
               )}
-              <SubColoredPips subs={task.subs} />
+              <SubColoredPips subs={task.subs} size={5} />
               <Text style={styles.rewardValue}>+{reward.total.xp}</Text>
               {showRecurrenceNote && (
                 <Text style={styles.recurrenceNote} numberOfLines={1}>
@@ -362,27 +363,6 @@ function SubIconTile({ task }: { task: TaskWithSubs }) {
   return (
     <View style={[styles.subTile, { backgroundColor: dim.bg }]}>
       <Ionicons name={iconName} size={18} color={dim.color} />
-    </View>
-  );
-}
-
-/** Pips colored per-sub: a 2★+1★+1★ task draws 2 of sub-1's color,
- *  1 of sub-2's, 1 of sub-3's. Total pips = sum of stars across subs. */
-function SubColoredPips({ subs }: { subs: TaskSub[] }) {
-  const pips: string[] = [];
-  for (const s of subs) {
-    const sub = SUB_META[s.sub_id];
-    const color = sub ? DIMENSION_META[sub.dimensionId].color : tokens.brand.violet2;
-    for (let i = 0; i < s.stars; i++) {
-      pips.push(color);
-    }
-  }
-  if (pips.length === 0) return null;
-  return (
-    <View style={styles.pipsRow}>
-      {pips.map((color, i) => (
-        <View key={i} style={[styles.pip, { backgroundColor: color }]} />
-      ))}
     </View>
   );
 }
@@ -495,15 +475,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: tokens.semantic.xp,
     letterSpacing: 0.2,
-  },
-  pipsRow: {
-    flexDirection: 'row',
-    gap: 2,
-  },
-  pip: {
-    width: 5,
-    height: 5,
-    borderRadius: 1.5,
   },
   recurrenceNote: {
     fontFamily: 'Manrope_500Medium',
