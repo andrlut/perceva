@@ -154,8 +154,12 @@ export default function AllPracticesScreen() {
     );
   };
 
-  const handleQuickComplete = (task: TaskWithSubs) =>
-    fireCompletion(task, task.subs);
+  // `subs` comes from the drawer's "+1" — it repeats the stars of that
+  // specific rep. Without the parameter the button would silently re-log
+  // the task's DEFAULT stars here while repeating the row's on Home and on
+  // the Calendar: same green button, three different meanings.
+  const handleQuickComplete = (task: TaskWithSubs, subs?: TaskSub[]) =>
+    fireCompletion(task, subs ?? task.subs);
 
   const handleSheetConfirm = (subs: TaskSub[]) => {
     if (!sheetTask) return;
@@ -203,11 +207,13 @@ export default function AllPracticesScreen() {
     [tasks.data],
   );
 
-  // Recorrentes — ALL weekly/monthly (excluding weekly-all-7, which is
-  // effectively daily and lives on Hoje), minus what's already done on the
-  // selected day or optimistically hidden this frame. NOT period-gated:
-  // this is the "log anything" catalog.
-  const recurring = useMemo(() => {
+  // Every weekly/monthly this user OWNS that already existed on the selected
+  // day (weekly-all-7 is effectively daily and lives on Hoje). Kept separate
+  // from the rendered list because it is what "does this user have any
+  // non-daily practice at all?" must be answered with — see `hasAny`.
+  // Listing a task on a day before it existed would date a retro completion
+  // before its own created_at, corrupting the heatmap + Momentum window.
+  const recurringOwned = useMemo(() => {
     const dayEnd = new Date(selectedDate);
     dayEnd.setHours(23, 59, 59, 999);
     return (tasks.data ?? []).filter(
@@ -215,22 +221,23 @@ export default function AllPracticesScreen() {
         !isEffectivelyDaily(task.recurrence) &&
         (task.recurrence.type === 'weekly' ||
           task.recurrence.type === 'monthly') &&
-        // Never list a task on a day before it existed — a retro completion
-        // there would be dated before the task's own created_at (corrupting
-        // the heatmap + Momentum window). Mirrors useDayDetail's created_at
-        // scope, which already covers the one-shot list.
-        new Date(task.created_at).getTime() <= dayEnd.getTime() &&
-        !completedThatDayIds.has(task.id) &&
-        !skippedThatDayIds.has(task.id) &&
-        !pendingDone.has(task.id),
+        new Date(task.created_at).getTime() <= dayEnd.getTime(),
     );
-  }, [
-    tasks.data,
-    completedThatDayIds,
-    skippedThatDayIds,
-    pendingDone,
-    selectedDate,
-  ]);
+  }, [tasks.data, selectedDate]);
+
+  // What actually renders: minus what's already done or skipped on the
+  // selected day, minus what's optimistically hidden this frame. NOT
+  // period-gated — this is the "log anything" catalog.
+  const recurring = useMemo(
+    () =>
+      recurringOwned.filter(
+        (task) =>
+          !completedThatDayIds.has(task.id) &&
+          !skippedThatDayIds.has(task.id) &&
+          !pendingDone.has(task.id),
+      ),
+    [recurringOwned, completedThatDayIds, skippedThatDayIds, pendingDone],
+  );
 
   // Pontuais — from the selected day's openTasks (carries lastCompletedAt
   // for trophy dimming + already excludes done/skipped-that-day), minus
@@ -276,7 +283,11 @@ export default function AllPracticesScreen() {
 
   const isLoading = tasks.isLoading || dayDetail.isLoading;
   const hasAny =
-    recurring.length + oneshot.length > 0 || completedItems.length > 0;
+    // Deliberately counts OWNED practices, not the day-filtered list: the
+    // empty state below says "create your first weekly or one-time practice",
+    // which would be a lie to a user whose whole catalog just happens to be
+    // done or skipped on this particular day.
+    recurringOwned.length + oneshot.length > 0 || completedItems.length > 0;
 
   const renderCard = (task: TaskWithSubs) => (
     <TaskCard

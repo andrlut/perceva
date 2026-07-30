@@ -358,20 +358,26 @@ export default function HomeScreen() {
   // since today's buckets must not change) — so the hide has to happen here
   // or the card sits still until the refetch and the swipe reads as broken.
   const skipForSelectedDay = (task: TaskWithSubs) => {
-    if (!isToday) hideRetro(task.id);
-    skipTask.mutate(
-      { taskId: task.id, date: isToday ? undefined : selectedKey },
-      {
-        onError: (err) => {
-          if (!isToday) unhideRetro(task.id);
-          const e = err as { message?: string };
-          Alert.alert(
-            t('home.actionErrors.skip'),
-            e.message ?? t('home.actionErrors.unknown'),
-          );
-        },
-      },
-    );
+    const dated = !isToday;
+    const dayKey = selectedKey;
+    if (dated) hideRetro(task.id);
+    // mutateAsync, NOT mutate: all skips share one mutation observer, and
+    // firing a second skip before the first settles detaches the observer
+    // from it — the first call's `onError` then never runs. On a past day
+    // that would strand the id in retroHidden (the server has no skip row,
+    // so the prune never clears it) and the practice would stay invisible
+    // for the rest of the session, with no error shown. The promise from
+    // mutateAsync rejects regardless of observer removal.
+    skipTask
+      .mutateAsync({ taskId: task.id, date: dated ? dayKey : undefined })
+      .catch((err: unknown) => {
+        if (dated) unhideRetro(task.id);
+        const e = err as { message?: string };
+        Alert.alert(
+          t('home.actionErrors.skip'),
+          e.message ?? t('home.actionErrors.unknown'),
+        );
+      });
   };
 
   const handleActionSkip = () => {
@@ -443,13 +449,15 @@ export default function HomeScreen() {
     setSelectedDate(d);
   };
 
+  // dayDetail is gated on EVERY day, not just past ones: the completed
+  // drawer and the day's XP now read from it on today too, so without this
+  // a cold load paints a finished-looking screen that says "Feitas hoje · 0"
+  // with no XP and an untappable drawer while the query is still in flight.
+  // Same reason it belongs in hasError — a failed dayDetail used to be
+  // invisible on today.
   const isLoading =
-    character.isLoading ||
-    buckets.isLoading ||
-    // Show the spinner (not a "+0 XP / nothing here" flash) while a past
-    // day's detail loads for the first time.
-    (!isToday && dayDetail.isLoading);
-  const hasError = character.error || buckets.error;
+    character.isLoading || buckets.isLoading || dayDetail.isLoading;
+  const hasError = character.error || buckets.error || dayDetail.error;
 
   const handleRefresh = async () => {
     await Promise.all([

@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   FadeIn,
@@ -143,6 +143,13 @@ export function CompletedBucket({
   const totalXp = showTotal
     ? items.reduce((sum, i) => sum + (i.xp ?? 0), 0)
     : 0;
+
+  // An expanded drawer that empties (undo the last rep) would otherwise be
+  // stuck open forever: the header is disabled when empty and the chevron
+  // is hidden, so nothing is left to collapse it.
+  useEffect(() => {
+    if (empty) setOpen(false);
+  }, [empty]);
 
   const chevron = useDerivedValue(() =>
     withSpring(open ? 180 : 0, { damping: 18, stiffness: 220 }),
@@ -317,7 +324,7 @@ function CompletedRow({
           {stars.length > 0 && (
             <>
               <Text style={styles.sep}>·</Text>
-              <SubColoredPips subs={stars} size={5} />
+              <SubColoredPips subs={stars} size={5} max={5} />
             </>
           )}
           {!!item.coins && item.coins > 0 && (
@@ -563,9 +570,14 @@ const styles = StyleSheet.create({
   rowTitleSkipped: {
     color: tokens.text.mid,
   },
+  // Wraps rather than bleeding under the button stack: only ~134dp is left
+  // for the text column once 44+4+44 is reserved on the right, and RN
+  // defaults children to flexShrink: 0. minHeight 60 with paddingVertical 8
+  // already tolerates a second meta line.
   metaLine: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: 6,
   },
   xpText: {

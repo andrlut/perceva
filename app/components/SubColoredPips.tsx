@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import type { TaskSub } from '@/lib/db/types';
 import { tokens } from '@/theme';
@@ -15,10 +15,17 @@ import { DIMENSION_META, SUB_META } from '@/theme/dimensions';
 export function SubColoredPips({
   subs,
   size = 6,
+  max,
 }: {
   subs: TaskSub[];
   /** Pip edge in dp. The drawer runs slightly smaller than the card. */
   size?: number;
+  /**
+   * Cap the strip and render "+N" for the remainder. There is no total-star
+   * cap per completion (only 5 per sub), so a 3-sub rep can legitimately be
+   * 9 stars — uncapped, that strip bleeds out of a narrow row.
+   */
+  max?: number;
 }) {
   const pips: string[] = [];
   for (const s of subs) {
@@ -29,9 +36,11 @@ export function SubColoredPips({
     }
   }
   if (pips.length === 0) return null;
+  const shown = max !== undefined ? pips.slice(0, max) : pips;
+  const hidden = pips.length - shown.length;
   return (
     <View style={styles.row}>
-      {pips.map((color, i) => (
+      {shown.map((color, i) => (
         <View
           key={i}
           style={[
@@ -45,6 +54,7 @@ export function SubColoredPips({
           ]}
         />
       ))}
+      {hidden > 0 && <Text style={styles.more}>+{hidden}</Text>}
     </View>
   );
 }
@@ -57,5 +67,11 @@ const styles = StyleSheet.create({
   },
   pip: {
     // width/height/radius/color come from the caller-sized style above.
+  },
+  more: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 9,
+    color: tokens.text.mid,
+    marginLeft: 1,
   },
 });
