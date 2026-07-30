@@ -22,6 +22,7 @@ import {
   type CompletedItem,
 } from '@/components/CompletedBucket';
 import { CompleteTaskSheet } from '@/components/CompleteTaskSheet';
+import { DaySeal } from '@/components/DaySeal';
 import { DayXpStat } from '@/components/DayXpStat';
 import { MoodDayDetail } from '@/components/mood/MoodDayDetail';
 import { ScreenBackground } from '@/components/ScreenBackground';
@@ -484,7 +485,26 @@ export default function HistoryScreen() {
               return (
                 <View style={styles.openList}>
                   {open.length === 0 ? (
-                    <Text style={styles.tabEmpty}>{t('home.emptyPastDay')}</Text>
+                    // Same panel the Home day-view shows — the two screens
+                    // already agree on the open list, the XP stat and the
+                    // drawers; this is the last branch that didn't.
+                    <DaySeal
+                      key={dayKey}
+                      completions={day.data?.completions ?? []}
+                      skippedCount={skippedItems.length}
+                      isToday={dayKey === dateKeyFromLocal(new Date())}
+                      // `isSuccess`, not `!isLoading`: a FAILED (or paused,
+                      // offline) query leaves data undefined with isLoading
+                      // false, and the panel would then assert "nothing was
+                      // scheduled" about a day it never managed to read.
+                      settled={
+                        day.isSuccess &&
+                        day.data?.dateKey === dayKey &&
+                        !day.isFetching &&
+                        !completeTask.isPending &&
+                        !skipTask.isPending
+                      }
+                    />
                   ) : (
                     open.map((task) => (
                       <TaskCard
@@ -706,13 +726,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_700Bold',
     fontSize: 13,
     color: tokens.brand.violet2,
-  },
-  tabEmpty: {
-    ...tokens.type.caption,
-    color: tokens.text.dim,
-    fontStyle: 'italic',
-    paddingVertical: tokens.space[4],
-    textAlign: 'center',
   },
   loadingBox: {
     paddingVertical: tokens.space[6],

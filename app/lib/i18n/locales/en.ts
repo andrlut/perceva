@@ -941,6 +941,33 @@ const en = {
       a11yResume: 'Resume {{title}} on this day',
     },
     emptyPastDay: 'Nothing open on this day.',
+    daySeal: {
+      // Everything scheduled got done — nothing skipped.
+      complete: {
+        title: 'Day complete.',
+        body: 'You did everything this day asked of you.',
+      },
+      // Part done, part skipped: the day was decided, not abandoned.
+      cleared: {
+        title: 'Day closed.',
+        body: 'Done or skipped — nothing was left unanswered.',
+      },
+      // Zero completions, skips only. Acknowledges the choice, no praise.
+      settled: {
+        title: 'Day settled.',
+        body: 'You looked at each one and left them for later.',
+      },
+      // Nothing fell on this day. No achievement to claim.
+      none: {
+        day: 'Nothing was scheduled this day.',
+        today: 'Nothing scheduled for today.',
+      },
+      trained: 'What you trained',
+      a11yPillar: {
+        one: '{{dimension}}: 1 practice',
+        other: '{{dimension}}: {{count}} practices',
+      },
+    },
     xpHero: {
       today: 'today',
       thatDay: 'on this day',
@@ -969,6 +996,13 @@ const en = {
       statsDone: { one: '{{count}} practice done', other: '{{count}} practices done' },
       statsSkipped: { one: '{{count}} skipped', other: '{{count}} skipped' },
       statsXp: '+{{xp}} XP today',
+      // Retro variants — the user went back with the header arrows and
+      // closed a PAST day. `dateLabel` opens the stats row.
+      statsXpDay: '+{{xp}} XP',
+      retroBody: 'You went back and closed it. Nothing left behind.',
+      retroBody2: 'Day recovered. The record tells the right story now.',
+      retroBody3: 'Closed late, but closed. Counts the same.',
+      retroAllSkippedBody: 'Marked as skipped. The day is settled.',
       cta: 'Continue',
     },
     ring: {
