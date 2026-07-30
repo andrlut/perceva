@@ -493,6 +493,17 @@ export default function HistoryScreen() {
                       completions={day.data?.completions ?? []}
                       skippedCount={skippedItems.length}
                       isToday={dayKey === dateKeyFromLocal(new Date())}
+                      // `isSuccess`, not `!isLoading`: a FAILED (or paused,
+                      // offline) query leaves data undefined with isLoading
+                      // false, and the panel would then assert "nothing was
+                      // scheduled" about a day it never managed to read.
+                      settled={
+                        day.isSuccess &&
+                        day.data?.dateKey === dayKey &&
+                        !day.isFetching &&
+                        !completeTask.isPending &&
+                        !skipTask.isPending
+                      }
                     />
                   ) : (
                     open.map((task) => (

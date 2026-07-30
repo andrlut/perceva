@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useIsFocused } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
@@ -176,6 +177,11 @@ export default function HomeScreen() {
       return next;
     });
   const navClearance = useBottomNavClearance();
+  // Home is a tab screen: it stays MOUNTED (effects running) while
+  // /all-practices or /history are pushed on top. Both act on the same day
+  // and invalidate historyKeys, which would satisfy the celebration's guards
+  // while the user is looking at another screen entirely.
+  const isFocused = useIsFocused();
   // While a bottom-positioned tour tooltip is visible, the Home scroll
   // needs extra room so the user can scroll content above the overlay
   // — but only just enough that the relevant section (e.g. M1 step 5
@@ -312,6 +318,7 @@ export default function HomeScreen() {
     // completion. Hide now; the prune effect drops it once the server
     // confirms; restore on error.
     hideRetro(task.id);
+    actedOnDaysRef.current.add(selectedKey);
     completeTask.mutate(
       { task, subs, completedAt: at.toISOString(), completedLocalDate: selectedKey },
       {
@@ -364,6 +371,7 @@ export default function HomeScreen() {
   const skipForSelectedDay = (task: TaskWithSubs) => {
     const dated = !isToday;
     const dayKey = selectedKey;
+    actedOnDaysRef.current.add(dayKey);
     if (dated) hideRetro(task.id);
     // mutateAsync, NOT mutate: all skips share one mutation observer, and
     // firing a second skip before the first settles detaches the observer
@@ -677,6 +685,7 @@ export default function HomeScreen() {
     // A dated bulk skip gets no optimistic pass in the mutation (it must not
     // touch today's buckets), so hide the cards here or they all freeze for
     // the whole round-trip.
+    actedOnDaysRef.current.add(selectedKey);
     if (!isToday) ids.forEach(hideRetro);
     skipTasksBulk.mutate(
       { taskIds: ids, date: isToday ? undefined : selectedKey },
@@ -713,12 +722,18 @@ export default function HomeScreen() {
   //   - no active tour step (tour owns the overlay layer)
   const [dayClearedStats, setDayClearedStats] =
     useState<DayClearedStats | null>(null);
-  // Holds the dateKey of the day we've SEEN open work on this session. It is
-  // re-set on every frame where the currently-viewed day still has open
-  // items, so returning to a day with work always re-arms it. The only day
-  // that never latches is one that LOADS already-empty — exactly the day
-  // that must stay silent while the user arrows through history.
-  const sawOpenForDayRef = useRef<string | null>(null);
+  // Days we've SEEN open work on this session. A Set, not a single slot: the
+  // window between "list empties" and "modal fires" is a whole round-trip, so
+  // a slot would be overwritten by any day the user arrows to meanwhile — and
+  // the day they just closed could then never fire, since on return it LOADS
+  // empty and never re-latches.
+  const sawOpenDaysRef = useRef<Set<string>>(new Set());
+  // Days the user ACTED on from this screen (completed / skipped / bulk
+  // closed). "The list went to zero" is NOT proof the user closed the day:
+  // archiving a practice, or editing its recurrence off that weekday, empties
+  // it just as well — and would otherwise pop a gold "Dia fechado!" with
+  // done=0, skipped=0 for a day nothing happened on.
+  const actedOnDaysRef = useRef<Set<string>>(new Set());
   const dayClearedFiringRef = useRef(false);
 
   // Declared ABOVE the effect on purpose: a dependency array is evaluated
@@ -727,8 +742,6 @@ export default function HomeScreen() {
   const hero = formatHeroDate(selectedDate);
 
   useEffect(() => {
-    if (activeTourStep) return;
-
     // Today reads the buckets (ring + todayActivity); any other day reads
     // dayDetail. Both must be settled before we trust the numbers.
     if (isToday) {
@@ -740,16 +753,27 @@ export default function HomeScreen() {
     }
 
     if (dayOpen.length > 0) {
-      sawOpenForDayRef.current = selectedKey;
+      sawOpenDaysRef.current.add(selectedKey);
       return;
     }
-    // Never fire for a day we only ever saw empty — that is browsing, not
-    // clearing.
-    if (sawOpenForDayRef.current !== selectedKey) return;
-    // An empty schedule never celebrates. On a past day `pastOpen` already
-    // excludes one-shots, so "this day's open list was > 0" is itself proof
-    // the day had a recurring contract — ringDone is a today-only concept.
-    if (isToday && ringDone <= 0) return;
+    // Observation happens above the tour guard, the FIRE below it: the tour
+    // owns the overlay layer, but Home stays mounted under the tour screens,
+    // so gating observation too would freeze the latch for the whole M1–M6
+    // run and silence any day cleared during it.
+    if (activeTourStep) return;
+    // The modal is a native window that draws over EVERYTHING. Home stays
+    // mounted under /all-practices and /history, and both act on the same day
+    // and invalidate historyKeys — so without this the celebration pops over
+    // whichever screen the user is actually looking at.
+    if (!isFocused) return;
+    // Never fire for a day we only ever saw empty — that is browsing.
+    if (!sawOpenDaysRef.current.has(selectedKey)) return;
+    // Proof the user closed the day, rather than the day merely becoming
+    // empty. Today has server truth for this (ringDone counts the day's
+    // activity); a past day uses what this screen actually did.
+    if (isToday ? ringDone <= 0 : !actedOnDaysRef.current.has(selectedKey)) {
+      return;
+    }
 
     // Fire only on SETTLED data. An optimistic complete/skip empties the
     // list a full network round-trip before the stats catch up. Firing on
@@ -838,6 +862,7 @@ export default function HomeScreen() {
     completeTask.isPending,
     skipTask.isPending,
     skipTasksBulk.isPending,
+    isFocused,
     hero.monthDay,
   ]);
 
@@ -944,6 +969,19 @@ export default function HomeScreen() {
                   completions={dayDetail.data?.completions ?? []}
                   skippedCount={daySkippedItems.length}
                   isToday={isToday}
+                  // Same settled-data test the celebration uses: the mode is
+                  // read from caches with no optimistic pass, so it must not
+                  // be trusted while an action is still in flight.
+                  settled={
+                    dayDetail.isSuccess &&
+                    dayDetail.data?.dateKey === selectedKey &&
+                    !dayDetail.isFetching &&
+                    !buckets.isFetching &&
+                    !completeTask.isPending &&
+                    !skipTask.isPending &&
+                    !skipTasksBulk.isPending &&
+                    retroHidden.size === 0
+                  }
                 />
               ) : (
                 dayOpen.map((task, idx) => renderTaskCard(task, idx === 0))

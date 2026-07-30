@@ -30,6 +30,19 @@ interface Props {
   skippedCount: number;
   /** Only picks between the two `none` strings (today vs. that day). */
   isToday: boolean;
+  /**
+   * Is the data behind `completions` / `skippedCount` in agreement with the
+   * server yet?
+   *
+   * Load-bearing. The condition that MOUNTS this panel (`dayOpen.length === 0`)
+   * is fed by the OPTIMISTIC bucket cache, while both props that decide its
+   * MODE come from caches with no optimistic pass. So for one whole
+   * round-trip after the day's last action the panel would see done=0 and
+   * skipped=0 and confidently announce "Nada programado" over a day the user
+   * just finished. While unsettled we fall back to the old data-independent
+   * line, which is true in every state.
+   */
+  settled: boolean;
 }
 
 /**
@@ -55,14 +68,20 @@ interface Props {
  * and no burst either — those stay exclusive to the once-a-day modal.
  * Register split: modal = a motion event, panel = a motion arrival.
  */
-export function DaySeal({ completions, skippedCount, isToday }: Props) {
+export function DaySeal({
+  completions,
+  skippedCount,
+  isToday,
+  settled,
+}: Props) {
   const { t } = useT();
   const meta = useMetaLookup();
   const reduceMotion = useReducedMotion();
 
   const done = completions.length;
-  const mode: 'complete' | 'cleared' | 'settled' | 'none' =
-    done > 0 && skippedCount === 0
+  const mode: 'complete' | 'cleared' | 'settled' | 'none' | 'pending' = !settled
+    ? 'pending'
+    : done > 0 && skippedCount === 0
       ? 'complete'
       : done > 0
         ? 'cleared'
@@ -86,14 +105,35 @@ export function DaySeal({ completions, skippedCount, isToday }: Props) {
     );
   }, [completions]);
 
+  // Driven off the MODE TRANSITION, not off mount. `useReducedMotion()`
+  // returns a module-level constant and a shared value's identity never
+  // changes, so a mount-only effect would fire its single spring while the
+  // panel was still showing a plain line — and the seal would then appear
+  // already at rest, never popping. That is the normal path: the panel mounts
+  // in `pending`/`none` on the frame the day's last practice is closed.
   const sealScale = useSharedValue(reduceMotion ? 1 : 0.72);
+  const hasSeal = mode === 'complete' || mode === 'cleared' || mode === 'settled';
   useEffect(() => {
-    if (reduceMotion) return;
+    if (reduceMotion || !hasSeal) return;
+    sealScale.value = 0.72;
     sealScale.value = withDelay(90, withSpring(1, tokens.motion.springBouncy));
-  }, [reduceMotion, sealScale]);
+  }, [reduceMotion, hasSeal, sealScale]);
   const sealStyle = useAnimatedStyle(() => ({
     transform: [{ scale: sealScale.value }],
   }));
+
+  // `pending` reuses the pre-existing, data-INDEPENDENT copy: it only ever
+  // claimed nothing was OPEN, which stays true through the optimistic frame,
+  // unlike `none`'s positive claim that nothing was scheduled.
+  if (mode === 'pending') {
+    return (
+      <Text style={styles.quietLine}>
+        {isToday
+          ? t('home.bucketTabs.emptyToday')
+          : t('home.emptyPastDay')}
+      </Text>
+    );
+  }
 
   if (mode === 'none') {
     return (
