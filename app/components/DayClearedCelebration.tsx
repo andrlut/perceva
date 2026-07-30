@@ -23,8 +23,12 @@ interface Props {
   doneCount: number;
   /** Practices explicitly skipped today. */
   skippedCount: number;
-  /** Total XP earned from today's completions. 0 hides the stat. */
+  /** Total XP earned from the day's completions. 0 hides the stat. */
   xpToday: number;
+  /** Short date ("27 de jul"), set ONLY when the day being celebrated is not
+   *  today — the user went back with the header arrows and closed it late.
+   *  Presence of this prop is what switches the modal into retro mode. */
+  dateLabel?: string;
   onClose: () => void;
 }
 
@@ -36,6 +40,11 @@ const GOLD = ['#FFE890', '#FFC83D', '#C8881C'] as const;
  *  sync with the i18n catalogs (pt.ts / en.ts). */
 const BODY_KEYS = ['body', 'body2', 'body3', 'body4', 'body5', 'body6', 'body7'];
 const ALL_SKIPPED_KEYS = ['allSkippedBody', 'allSkippedBody2', 'allSkippedBody3'];
+/** Retro variants — the user arrowed back and closed a PAST day. Four of the
+ *  ten normal variants are day-anchored ("hoje"), so a past day needs its own
+ *  set rather than a filtered one. */
+const RETRO_KEYS = ['retroBody', 'retroBody2', 'retroBody3'];
+const RETRO_ALL_SKIPPED_KEYS = ['retroAllSkippedBody'];
 
 function pickKey(keys: string[]): string {
   return keys[Math.floor(Math.random() * keys.length)] ?? keys[0];
@@ -116,6 +125,7 @@ export function DayClearedCelebration({
   doneCount,
   skippedCount,
   xpToday,
+  dateLabel,
   onClose,
 }: Props) {
   const { t } = useT();
@@ -134,7 +144,18 @@ export function DayClearedCelebration({
       // Pick a fresh phrase for this open — the variant set depends on
       // whether the day was cleared purely by skipping.
       const skipped = doneCount === 0 && skippedCount > 0;
-      setBodyKey(pickKey(skipped ? ALL_SKIPPED_KEYS : BODY_KEYS));
+      const retro = !!dateLabel;
+      setBodyKey(
+        pickKey(
+          retro
+            ? skipped
+              ? RETRO_ALL_SKIPPED_KEYS
+              : RETRO_KEYS
+            : skipped
+              ? ALL_SKIPPED_KEYS
+              : BODY_KEYS,
+        ),
+      );
       cardOpacity.value = withTiming(1, { duration: 220 });
       cardTranslateY.value = withSpring(0, { damping: 18, stiffness: 180 });
       glyphScale.value = withDelay(
@@ -151,7 +172,7 @@ export function DayClearedCelebration({
       cardTranslateY.value = 20;
       glyphScale.value = 0.4;
     }
-  }, [visible, doneCount, skippedCount, cardOpacity, cardTranslateY, glyphScale]);
+  }, [visible, doneCount, skippedCount, dateLabel, cardOpacity, cardTranslateY, glyphScale]);
 
   const cardStyle = useAnimatedStyle(() => ({
     opacity: cardOpacity.value,
@@ -166,6 +187,9 @@ export function DayClearedCelebration({
   const allSkipped = doneCount === 0 && skippedCount > 0;
 
   const statParts: string[] = [];
+  // On a retro close the date leads the row — otherwise the modal would be
+  // congratulating an unnamed day while the user browses several.
+  if (dateLabel) statParts.push(dateLabel);
   if (doneCount > 0) {
     statParts.push(t('home.dayCleared.statsDone', { count: doneCount }));
   }
@@ -173,7 +197,12 @@ export function DayClearedCelebration({
     statParts.push(t('home.dayCleared.statsSkipped', { count: skippedCount }));
   }
   if (xpToday > 0) {
-    statParts.push(t('home.dayCleared.statsXp', { xp: xpToday }));
+    // `statsXp` reads "+N XP hoje" — wrong for a past day.
+    statParts.push(
+      t(dateLabel ? 'home.dayCleared.statsXpDay' : 'home.dayCleared.statsXp', {
+        xp: xpToday,
+      }),
+    );
   }
 
   return (

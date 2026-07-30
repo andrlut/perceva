@@ -936,6 +936,33 @@ const pt: Translations = {
       a11yResume: 'Retomar {{title}} neste dia',
     },
     emptyPastDay: 'Nada em aberto neste dia.',
+    daySeal: {
+      // Tudo que estava marcado foi concluído — nada pulado.
+      complete: {
+        title: 'Dia completo.',
+        body: 'Você fez tudo o que este dia pedia.',
+      },
+      // Parte feita, parte pulada: o dia foi decidido, não abandonado.
+      cleared: {
+        title: 'Dia fechado.',
+        body: 'Fez ou pulou — nada ficou sem resposta.',
+      },
+      // Zero conclusões, só pulos. Reconhece a escolha, não parabeniza.
+      settled: {
+        title: 'Dia limpo.',
+        body: 'Você olhou cada uma e decidiu deixar pra depois.',
+      },
+      // Nada caía neste dia. Nenhuma conquista a reivindicar.
+      none: {
+        day: 'Nada programado neste dia.',
+        today: 'Nada programado pra hoje.',
+      },
+      trained: 'O que você treinou',
+      a11yPillar: {
+        one: '{{dimension}}: 1 prática',
+        other: '{{dimension}}: {{count}} práticas',
+      },
+    },
     xpHero: {
       today: 'hoje',
       thatDay: 'neste dia',
@@ -964,6 +991,13 @@ const pt: Translations = {
       statsDone: { one: '{{count}} prática feita', other: '{{count}} práticas feitas' },
       statsSkipped: { one: '{{count}} pulada', other: '{{count}} puladas' },
       statsXp: '+{{xp}} XP hoje',
+      // Variantes retroativas — o usuário voltou pelas setas do topo e
+      // fechou um dia PASSADO. `dateLabel` abre a linha de stats.
+      statsXpDay: '+{{xp}} XP',
+      retroBody: 'Voltou lá atrás e fechou. Nada fica pra trás.',
+      retroBody2: 'Dia recuperado. O registro agora conta a história certa.',
+      retroBody3: 'Fechado com atraso, mas fechado. Vale igual.',
+      retroAllSkippedBody: 'Marcado como pulado. O dia está resolvido.',
       cta: 'Continuar',
     },
     ring: {

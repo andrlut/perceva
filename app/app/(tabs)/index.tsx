@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBottomNavClearance } from '@/components/BottomNavBar';
 import { CompleteTaskSheet } from '@/components/CompleteTaskSheet';
 import { DayClearedCelebration } from '@/components/DayClearedCelebration';
+import { DaySeal } from '@/components/DaySeal';
 import { MoodCheckinPrompt } from '@/components/MoodCheckinPrompt';
 import { MoodHubStrip } from '@/components/mood/MoodHubStrip';
 import {
@@ -90,6 +91,9 @@ interface DayClearedStats {
   done: number;
   skipped: number;
   xp: number;
+  /** Set only for a RETRO close (the user arrowed back and finished a past
+   *  day). Prepends the date to the stats row and switches the body copy. */
+  dateLabel?: string;
 }
 
 /**
@@ -709,37 +713,60 @@ export default function HomeScreen() {
   //   - no active tour step (tour owns the overlay layer)
   const [dayClearedStats, setDayClearedStats] =
     useState<DayClearedStats | null>(null);
-  const sawPendingTodayRef = useRef(false);
+  // Holds the dateKey of the day we've SEEN open work on this session. It is
+  // re-set on every frame where the currently-viewed day still has open
+  // items, so returning to a day with work always re-arms it. The only day
+  // that never latches is one that LOADS already-empty — exactly the day
+  // that must stay silent while the user arrows through history.
+  const sawOpenForDayRef = useRef<string | null>(null);
   const dayClearedFiringRef = useRef(false);
+
+  // Declared ABOVE the effect on purpose: a dependency array is evaluated
+  // eagerly during render, so referencing `hero` from one while it is
+  // declared further down would throw a TDZ ReferenceError on every render.
+  const hero = formatHeroDate(selectedDate);
+
   useEffect(() => {
-    // Today-only ritual. Everything below reads TODAY's buckets, so without
-    // this the celebration could fire while the user is sitting on a past
-    // day — and now that a past day can be bulk-closed, it would.
-    if (!isToday) return;
-    if (!buckets.isSuccess || !data) return;
-    const remaining = lists.today.length;
-    if (remaining > 0) {
-      sawPendingTodayRef.current = true;
-      return;
-    }
-    if (!sawPendingTodayRef.current) return;
-    if (ringDone <= 0) return;
     if (activeTourStep) return;
 
-    // Fire only on SETTLED data. An optimistic complete/skip empties
-    // `today` a full network round-trip before `todayActivity` (→ ringDone
-    // and the done/skipped stats) catches up. Firing on that frame shows
-    // wrong counts (e.g. a "Fechar o dia" bulk-skip after one completion
-    // would read done=1, skipped=0), and a skip that then FAILS would pop a
-    // false celebration AND burn the once-per-day stamp. Deferring until no
-    // mutation is in flight and the buckets refetch has landed guarantees
-    // the numbers are real — the optimistic list-emptying still happens
-    // instantly, so clearing stays snappy; only the celebration waits.
+    // Today reads the buckets (ring + todayActivity); any other day reads
+    // dayDetail. Both must be settled before we trust the numbers.
+    if (isToday) {
+      if (!buckets.isSuccess || !data) return;
+    } else {
+      // The belt for a day-switch race: dayDetail may still hold the
+      // PREVIOUS day's payload for a frame after selectedKey changes.
+      if (!dayDetail.isSuccess || dayDetail.data?.dateKey !== selectedKey) return;
+    }
+
+    if (dayOpen.length > 0) {
+      sawOpenForDayRef.current = selectedKey;
+      return;
+    }
+    // Never fire for a day we only ever saw empty — that is browsing, not
+    // clearing.
+    if (sawOpenForDayRef.current !== selectedKey) return;
+    // An empty schedule never celebrates. On a past day `pastOpen` already
+    // excludes one-shots, so "this day's open list was > 0" is itself proof
+    // the day had a recurring contract — ringDone is a today-only concept.
+    if (isToday && ringDone <= 0) return;
+
+    // Fire only on SETTLED data. An optimistic complete/skip empties the
+    // list a full network round-trip before the stats catch up. Firing on
+    // that frame shows wrong counts, and an action that then FAILS would pop
+    // a false celebration AND burn the once-per-day stamp.
+    //
+    // retroHidden is the past-day equivalent of the isFetching guard: retro
+    // mutations get no optimistic cache pass, so those ids are hidden purely
+    // client-side until the server agrees. Empty ⟺ screen and server match.
+    // On today it is always empty, so this costs the shared path nothing.
     if (
       completeTask.isPending ||
       skipTask.isPending ||
       skipTasksBulk.isPending ||
-      buckets.isFetching
+      buckets.isFetching ||
+      retroHidden.size > 0 ||
+      (!isToday && dayDetail.isFetching)
     ) {
       return;
     }
@@ -750,19 +777,44 @@ export default function HomeScreen() {
     // two overlapping runs from double-firing the haptic.
     if (dayClearedFiringRef.current) return;
     dayClearedFiringRef.current = true;
+    const dayKey = selectedKey;
+    const retro = !isToday;
     (async () => {
       try {
-        const stamped = await AsyncStorage.getItem(DAY_CLEARED_KEY);
-        if (stamped === todayDateKey()) return;
-        // Stamp first — never twice a day, even if undo resurrects tasks
-        // while the modal is up.
-        await AsyncStorage.setItem(DAY_CLEARED_KEY, todayDateKey());
-        const completed = data.todayActivity.completed;
-        setDayClearedStats({
-          done: completed.length,
-          skipped: data.todayActivity.skipped.length,
-          xp: completed.reduce((sum, c) => sum + c.totalXp, 0),
-        });
+        // Per-day slot. The old single slot held one date string, so
+        // stamping a past day would burn today's stamp and vice-versa.
+        const slot = `${DAY_CLEARED_KEY}:${dayKey}`;
+        const stamped = await AsyncStorage.getItem(slot);
+        if (stamped) return;
+        // Legacy single-slot read, one release only: users who already
+        // cleared TODAY under the old scheme must not see it fire again.
+        if (!retro) {
+          const legacy = await AsyncStorage.getItem(DAY_CLEARED_KEY);
+          if (legacy === todayDateKey()) return;
+        }
+        // Stamp first — never twice for the same day, even if an undo
+        // resurrects practices while the modal is up.
+        await AsyncStorage.setItem(slot, '1');
+
+        if (retro) {
+          const d = dayDetail.data;
+          setDayClearedStats({
+            // dayDetail.completions is one row PER COMPLETION while
+            // todayActivity.completed is one entry PER TASK — dedupe by task
+            // so "{{count}} práticas feitas" means the same thing on both.
+            done: new Set((d?.completions ?? []).map((c) => c.taskId)).size,
+            skipped: d?.skipped.length ?? 0,
+            xp: d?.totalXp ?? 0,
+            dateLabel: hero.monthDay,
+          });
+        } else {
+          const completed = data!.todayActivity.completed;
+          setDayClearedStats({
+            done: completed.length,
+            skipped: data!.todayActivity.skipped.length,
+            xp: completed.reduce((sum, c) => sum + c.totalXp, 0),
+          });
+        }
         Haptics.notificationAsync(
           Haptics.NotificationFeedbackType.Success,
         ).catch(() => {});
@@ -772,18 +824,22 @@ export default function HomeScreen() {
     })();
   }, [
     isToday,
+    selectedKey,
     buckets.isSuccess,
     buckets.isFetching,
     data,
-    lists.today.length,
+    dayDetail.isSuccess,
+    dayDetail.isFetching,
+    dayDetail.data,
+    dayOpen.length,
+    retroHidden.size,
     ringDone,
     activeTourStep,
     completeTask.isPending,
     skipTask.isPending,
     skipTasksBulk.isPending,
+    hero.monthDay,
   ]);
-
-  const hero = formatHeroDate(selectedDate);
 
   // First rendered card overall carries the M1 tour anchor — normally
   // the first Hoje item, falling back to the first one-shot when the
@@ -877,11 +933,18 @@ export default function HomeScreen() {
 
             <View style={styles.taskList}>
               {dayOpen.length === 0 ? (
-                <Text style={styles.tabEmpty}>
-                  {isToday
-                    ? t('home.bucketTabs.emptyToday')
-                    : t('home.emptyPastDay')}
-                </Text>
+                // key={selectedKey} is load-bearing and is the ONLY allowed
+                // key: it replays the entrance once per day as the user
+                // arrows across cleared days, while keeping the panel mounted
+                // (and still) through refetches, undo and pull-to-refresh.
+                // Keying on anything data-derived would re-animate on every
+                // one of those.
+                <DaySeal
+                  key={selectedKey}
+                  completions={dayDetail.data?.completions ?? []}
+                  skippedCount={daySkippedItems.length}
+                  isToday={isToday}
+                />
               ) : (
                 dayOpen.map((task, idx) => renderTaskCard(task, idx === 0))
               )}
@@ -1013,6 +1076,7 @@ export default function HomeScreen() {
         doneCount={dayClearedStats?.done ?? 0}
         skippedCount={dayClearedStats?.skipped ?? 0}
         xpToday={dayClearedStats?.xp ?? 0}
+        dateLabel={dayClearedStats?.dateLabel}
         onClose={() => setDayClearedStats(null)}
       />
 
@@ -1120,13 +1184,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: tokens.text.mid,
     marginTop: tokens.space[3],
-  },
-  tabEmpty: {
-    ...tokens.type.caption,
-    color: tokens.text.dim,
-    fontStyle: 'italic',
-    paddingVertical: tokens.space[4],
-    textAlign: 'center',
   },
   // "Fechar o dia" — deliberately low-prominence: no fill, dim text,
   // centered under the last card so it reads as a quiet exit, not a CTA.
