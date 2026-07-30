@@ -916,10 +916,18 @@ const pt: Translations = {
       today: 'Feitas hoje',
       week: 'Feitas esta semana',
       recurring: 'Cadências em dia',
+      empty: 'Nada registrado ainda. A primeira prática aparece aqui com o XP exato.',
+      a11yExtra: 'Registrar de novo: {{title}}',
+      a11yUndo: 'Desfazer {{title}} — devolve {{xp}} XP',
+      a11yRow: '{{title}} — {{xp}} XP',
+      a11yDayTotal: '{{xp}} XP no dia',
     },
     skippedBucket: {
       today: 'Puladas hoje',
       day: 'Puladas',
+      rowMeta: 'Pulada · sem XP',
+      resume: 'Retomar',
+      a11yResume: 'Retomar {{title}} neste dia',
     },
     emptyPastDay: 'Nada em aberto neste dia.',
     xpHero: {
@@ -980,6 +988,7 @@ const pt: Translations = {
       cta: 'Fechar o dia',
       a11y: 'Fechar o dia e pular as práticas restantes',
       confirmTitle: 'Fechar o dia agora?',
+      confirmTitleDay: 'Fechar {{date}}?',
       confirmBody: {
         one: '{{count}} prática fica pra depois. Sem XP e sem mexer no seu Momentum.',
         other: '{{count}} práticas ficam pra depois. Sem XP e sem mexer no seu Momentum.',
@@ -1010,23 +1019,11 @@ const pt: Translations = {
       best: 'Recorde: {{count}}',
       atRisk: 'Em risco',
     },
-    completedDrawer: {
-      title: 'Concluído hoje',
-      empty: 'Conclua sua primeira prática pra ver aqui.',
-      completedSummary: '{{count}} concluídas',
-      skippedSummary: '{{count}} puladas',
-      tapToToggle: ' · toque pra ',
-      tapHide: 'esconder',
-      tapView: 'ver',
-      skippedToday: 'Pulada hoje',
-      undo: 'Desfazer',
-      addExtra: '+ Extra',
-      unskip: 'Despular',
-    },
     pullToRefresh: 'Puxe pra atualizar',
     swipe: {
       complete: 'Concluir',
-      skip: 'Pular hoje',
+      // Neutro em relação à data: a mesma pílula aparece em dias passados.
+      skip: 'Pular',
       hint: 'Arraste direita pra concluir · esquerda pra pular',
     },
     notifOptIn: {
@@ -1075,6 +1072,8 @@ const pt: Translations = {
       adjustStars: 'Ajustar estrelas',
       adjustStarsSub: 'Mude o peso dessa conclusão por sub',
       skipToday: 'Pular hoje',
+      /** Variante de dia passado — a folha também abre de um dia anterior. */
+      skipDay: 'Pular em {{date}}',
       skipTodaySub: 'Esconde do dia sem concluir — sem XP, sem penalidade no Momentum',
       editTask: 'Editar prática',
       editTaskSub: 'Mudar título, subs, recorrência, etc',

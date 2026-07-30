@@ -13,6 +13,10 @@ import { tokens } from '@/theme';
 interface Props {
   visible: boolean;
   taskTitle: string;
+  /** Short label of the day being acted on (e.g. "27 de jul"). Pass it only
+   *  when that day is NOT today — the skip row then names the date instead
+   *  of saying "hoje", which is plainly wrong on a day you navigated back to. */
+  dateLabel?: string;
   onCancel: () => void;
   onAdjustStars: () => void;
   onSkipToday: () => void;
@@ -23,7 +27,8 @@ interface Props {
  * Bottom-sheet menu opened by long-press on a task's complete button.
  * Routes to one of three actions:
  *   - Adjust stars: opens the per-sub stepper popup (CompleteTaskSheet)
- *   - Skip today: marks the task skipped for today, hides from buckets
+ *   - Skip: marks the task skipped for the SELECTED day, hiding it from
+ *     that day's open list
  *   - Edit task: opens /task-form
  *
  * A plain tap on the check still does quick-complete with defaults —
@@ -32,6 +37,7 @@ interface Props {
 export function TaskActionSheet({
   visible,
   taskTitle,
+  dateLabel,
   onCancel,
   onAdjustStars,
   onSkipToday,
@@ -84,7 +90,11 @@ export function TaskActionSheet({
               />
             </View>
             <View style={styles.actionBody}>
-              <Text style={styles.actionTitle}>{t('tasks.actionSheet.skipToday')}</Text>
+              <Text style={styles.actionTitle}>
+                {dateLabel
+                  ? t('tasks.actionSheet.skipDay', { date: dateLabel })
+                  : t('tasks.actionSheet.skipToday')}
+              </Text>
               <Text style={styles.actionSub}>{t('tasks.actionSheet.skipTodaySub')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={16} color={tokens.text.dim} />

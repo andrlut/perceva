@@ -30,6 +30,18 @@ export function formatLongDate(date: Date = new Date(), locale?: LanguageCode): 
   });
 }
 
+/** "07:42" (pt-BR) / "7:42 AM" (en-US). hour12 is left to the locale. */
+export function formatTimeOfDay(
+  input: Date | string,
+  locale?: LanguageCode,
+): string {
+  const d = typeof input === 'string' ? new Date(input) : input;
+  return d.toLocaleTimeString(bcp47(locale), {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 /** Compact uppercase format for dense headers — e.g. "SUN, MAY 3" / "DOM, 3 MAI". */
 export function formatCompactDate(date: Date = new Date(), locale?: LanguageCode): string {
   const tag = bcp47(locale);

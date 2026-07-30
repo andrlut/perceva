@@ -42,6 +42,42 @@ export function isScheduledOn(rec: Recurrence, date: Date): boolean {
 export const isDueOn = isScheduledOn;
 
 /**
+ * THE day-contract predicate. One definition of "is this practice still
+ * open on local day D", shared by fetchHomeBuckets (today), useDayDetail
+ * (Home past day + Calendar) and all-practices.
+ *
+ *   open(D) ⟺ scheduledOn(D) ∧ completionsOn(D) === 0 ∧ ¬skippedOn(D)
+ *
+ * `target_count` plays NO part: ONE completion closes the practice for that
+ * day, for every recurrence type ("se eu já fiz ela 1x no dia ela precisa
+ * sumir"). Extra reps go through the completed drawer's "+1" pill.
+ *
+ * The PERIOD target is expressed by the SCHEDULE, not by re-listing a card
+ * on a day it was already done. Judging a day against a week's count is what
+ * made "Trabalho Extra" (3 done on Jul 27, target 5) reappear after every
+ * retro completion — and, in the other direction, hid a `weekly [1,3,5]
+ * target 1` on Wednesday just because Monday was already logged.
+ *
+ * isScheduledOn returns true for daily and one_shot, so this is one
+ * expression. Keep it one expression.
+ */
+export function isOpenOnDay(args: {
+  recurrence: Recurrence;
+  /** Any time on the local day being judged. */
+  day: Date;
+  /** Completions whose `completed_local_date` is that day. */
+  completionsOnDay: number;
+  /** A `task_skip` row exists for (task, that day). */
+  skippedOnDay: boolean;
+}): boolean {
+  return (
+    args.completionsOnDay === 0 &&
+    !args.skippedOnDay &&
+    isScheduledOn(args.recurrence, args.day)
+  );
+}
+
+/**
  * True when a recurrence behaves as an everyday routine: a plain `daily`,
  * or a `weekly` whose schedule covers all 7 weekdays (which collapses to
  * Daily in the buckets). These are the practices that live on the Hoje

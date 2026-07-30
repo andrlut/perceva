@@ -8,7 +8,7 @@ import type {
   TaskTemplateWithSubs,
   TaskWithSubs,
 } from '@/lib/db/types';
-import { isDueOn, parseRecurrence } from '@/lib/recurrence';
+import { isOpenOnDay, parseRecurrence } from '@/lib/recurrence';
 import type { WeekStart } from '@/lib/settings';
 import { supabase } from '@/lib/supabase';
 import { SUB_META } from '@/theme/dimensions';
@@ -176,81 +176,25 @@ export interface TodayActivity {
   skipped: TaskWithSubs[];
 }
 
-export interface PeriodActivity {
-  /** Tasks completed at least once in the period, with latest completion id. */
-  completed: { task: TaskWithSubs; latestCompletionId: string; count: number }[];
-}
-
 export interface HomeBuckets {
-  /** The "Hoje" list: dailies with unmet daily target, weekly/monthly
-   *  scheduled for today (or last-day catch-ups), and unscheduled
-   *  weekly/monthly with unmet period targets. Acted-today items are
-   *  excluded for the recurring types. */
+  /**
+   * The "Hoje" list: every practice scheduled for today with zero
+   * completions today and no skip today — decided by `isOpenOnDay`, the
+   * same predicate `useDayDetail` applies to any other day.
+   *
+   * `target_count` deliberately plays no part: one completion closes the
+   * practice for the day and extra reps go through the completed drawer's
+   * "+1". The period target is carried by the SCHEDULE (a Mon–Fri practice
+   * presents itself five times a week), never by re-listing a card on a day
+   * it was already done.
+   */
   today: TaskWithSubs[];
-  /** Scheduled weekly/monthly NOT due today with an unmet period target.
-   *  Kept on the interface; the Home screen no longer renders it. */
-  thisWeek: TaskWithSubs[];
-  thisMonth: TaskWithSubs[];
+  /** One-shots: never completed, or completed on an earlier day (trophy
+   *  retention — the UI dims recently-done ones). Currently unrendered on
+   *  Home; one-shots live on "Todas as práticas". */
   oneTime: TaskWithSubs[];
   /** Roll-up of "what happened today" — feeds the drawer at the bottom. */
   todayActivity: TodayActivity;
-  /** Weekly/monthly tasks completed at least once this week. */
-  weekActivity: PeriodActivity;
-  /** One-shot tasks ever completed. */
-  oneShotActivity: PeriodActivity;
-}
-
-function startOfThisWeek(weekStart: WeekStart): Date {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  const dow = d.getDay(); // 0=Sun..6=Sat
-  const offset = weekStart === 'sunday' ? dow : (dow + 6) % 7;
-  d.setDate(d.getDate() - offset);
-  return d;
-}
-
-/** True when a monthly task's scheduled day-of-month falls within the
- *  current calendar week (under the user's configured week start). Used
- *  to escalate monthly tasks scheduled on a day in this week into the
- *  This Week bucket — even if the scheduled day already passed. Honors
- *  the day>28 fallback: for short months we treat the last day as the
- *  effective scheduled day. */
-function scheduledMonthlyInThisWeek(
-  day: number,
-  today: Date,
-  weekStart: WeekStart,
-): boolean {
-  const dow = today.getDay();
-  const offset = weekStart === 'sunday' ? dow : (dow + 6) % 7;
-  const startWeek = new Date(today);
-  startWeek.setHours(0, 0, 0, 0);
-  startWeek.setDate(today.getDate() - offset);
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(startWeek);
-    d.setDate(startWeek.getDate() + i);
-    const lastDayThatMonth = new Date(
-      d.getFullYear(),
-      d.getMonth() + 1,
-      0,
-    ).getDate();
-    const effectiveDay = Math.min(day, lastDayThatMonth);
-    if (d.getDate() === effectiveDay) return true;
-  }
-  return false;
-}
-
-function startOfThisMonth(): Date {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  d.setDate(1);
-  return d;
-}
-
-function endOfThisMonth(): Date {
-  const d = new Date();
-  d.setHours(23, 59, 59, 999);
-  d.setMonth(d.getMonth() + 1, 0);
-  return d;
 }
 
 
@@ -271,22 +215,15 @@ function todayLocalDateKey(): string {
   return localDateKey(new Date());
 }
 
-async function fetchHomeBuckets(weekStartPref: WeekStart): Promise<HomeBuckets> {
+async function fetchHomeBuckets(): Promise<HomeBuckets> {
   const today = new Date();
-  const weekStart = startOfThisWeek(weekStartPref);
-  const monthStart = startOfThisMonth();
-  const monthEnd = endOfThisMonth();
+  // Counts below range on `completed_local_date`, NOT on `completed_at`.
+  // The two disagree for every row written before the column existed
+  // (backfilled as the UTC day) and for anything logged near midnight, and
+  // useDayDetail in lib/api/history.ts keys the calendar off the local
+  // column. Both hooks answer "was this done on day D?" and must count the
+  // same rows, or Home and History contradict each other on the same task.
   const todayKey = todayLocalDateKey();
-  // Period counts below range on `completed_local_date`, NOT on
-  // `completed_at`. The two disagree for every row written before the
-  // column existed (backfilled as the UTC day) and for anything logged
-  // near midnight, and useDayDetail in lib/api/history.ts keys the
-  // calendar off the local column. Two hooks answering "did this task
-  // hit its weekly target?" have to count the same rows, or Home and
-  // History contradict each other on the same task.
-  const weekStartKey = localDateKey(weekStart);
-  const monthStartKey = localDateKey(monthStart);
-  const monthEndKey = localDateKey(monthEnd);
 
   const { data: tasks, error: taskErr } = await supabase
     .from('task')
@@ -330,41 +267,6 @@ async function fetchHomeBuckets(weekStartPref: WeekStart): Promise<HomeBuckets> 
     }
   });
 
-  const { data: completionsWeek, error: weekErr } = await supabase
-    .from('task_completion')
-    .select('id, task_id, completed_at')
-    .gte('completed_local_date', weekStartKey)
-    .order('completed_at', { ascending: false });
-  if (weekErr) throw weekErr;
-  const doneWeek = new Map<string, number>();
-  /** Per-task: latest completion id this week + count. Drives the
-   *  "Done this week" drawer on the Weekly tab. */
-  const weekCompletionData = new Map<
-    string,
-    { latestId: string; count: number }
-  >();
-  (completionsWeek ?? []).forEach((c) => {
-    doneWeek.set(c.task_id, (doneWeek.get(c.task_id) ?? 0) + 1);
-    const cur = weekCompletionData.get(c.task_id);
-    if (cur) {
-      cur.count += 1;
-    } else {
-      // First row = most recent (desc order)
-      weekCompletionData.set(c.task_id, { latestId: c.id, count: 1 });
-    }
-  });
-
-  const { data: completionsMonth, error: monthErr } = await supabase
-    .from('task_completion')
-    .select('task_id')
-    .gte('completed_local_date', monthStartKey)
-    .lte('completed_local_date', monthEndKey);
-  if (monthErr) throw monthErr;
-  const doneMonth = new Map<string, number>();
-  (completionsMonth ?? []).forEach((c) => {
-    doneMonth.set(c.task_id, (doneMonth.get(c.task_id) ?? 0) + 1);
-  });
-
   const oneShotIds = allTasks
     .filter((t) => t.recurrence.type === 'one_shot')
     .map((t) => t.id);
@@ -393,7 +295,8 @@ async function fetchHomeBuckets(weekStartPref: WeekStart): Promise<HomeBuckets> 
   }
 
   // Today's explicit skips — used to hide tasks the user opted out of.
-  // Also fetch this-week/month skips so we can reduce period targets.
+  // Skips no longer shrink a period target: they remove the practice from
+  // that ONE day, exactly as they do on every other day in useDayDetail.
   const { data: skipsToday, error: skipTodayErr } = await supabase
     .from('task_skip')
     .select('task_id')
@@ -401,40 +304,10 @@ async function fetchHomeBuckets(weekStartPref: WeekStart): Promise<HomeBuckets> 
   if (skipTodayErr) throw skipTodayErr;
   const skippedToday = new Set((skipsToday ?? []).map((s) => s.task_id));
 
-  // weekStartKey / monthStartKey / monthEndKey are the local-day keys
-  // computed at the top. They used to be derived here via
-  // `toISOString().slice(0, 10)`, which is the UTC day: with monthEnd
-  // pinned to 23:59:59.999 local, a UTC−3 device rolled it forward into
-  // the first of the next month and over-counted skips by a day.
-  const { data: skipsWeek, error: skipWeekErr } = await supabase
-    .from('task_skip')
-    .select('task_id')
-    .gte('skipped_for', weekStartKey);
-  if (skipWeekErr) throw skipWeekErr;
-  const skippedWeek = new Map<string, number>();
-  (skipsWeek ?? []).forEach((s) => {
-    skippedWeek.set(s.task_id, (skippedWeek.get(s.task_id) ?? 0) + 1);
-  });
-
-  const { data: skipsMonth, error: skipMonthErr } = await supabase
-    .from('task_skip')
-    .select('task_id')
-    .gte('skipped_for', monthStartKey)
-    .lte('skipped_for', monthEndKey);
-  if (skipMonthErr) throw skipMonthErr;
-  const skippedMonth = new Map<string, number>();
-  (skipsMonth ?? []).forEach((s) => {
-    skippedMonth.set(s.task_id, (skippedMonth.get(s.task_id) ?? 0) + 1);
-  });
-
   const buckets: HomeBuckets = {
     today: [],
-    thisWeek: [],
-    thisMonth: [],
     oneTime: [],
     todayActivity: { completed: [], skipped: [] },
-    weekActivity: { completed: [] },
-    oneShotActivity: { completed: [] },
   };
 
   // Build today activity drawer data first — relies on allTasks for hydration.
@@ -455,140 +328,50 @@ async function fetchHomeBuckets(weekStartPref: WeekStart): Promise<HomeBuckets> 
     if (task) buckets.todayActivity.skipped.push(task);
   }
 
-  // weekActivity: every weekly/monthly task with at least one completion
-  // this week. Same shape as todayActivity.completed so the existing
-  // CompletedBucket UI just works on the Weekly tab.
-  for (const [taskId, info] of weekCompletionData.entries()) {
-    const task = tasksById.get(taskId);
-    if (!task) continue;
-    if (task.recurrence.type !== 'weekly' && task.recurrence.type !== 'monthly') {
+  // ONE predicate decides "still open today", and useDayDetail applies the
+  // very same one to every other day — so Home and the Calendar can never
+  // again disagree about the same practice on the same date.
+  //
+  // Unscheduled weekly/monthly (no weekday / no day-of-month) are false by
+  // construction: isScheduledOn returns false for them, so they never reach
+  // Hoje and live only on "Todas as práticas" / Gerenciar. That keeps Hoje a
+  // short, clearable list — the thing the day-cleared ritual depends on.
+  for (const t of allTasks) {
+    if (
+      !isOpenOnDay({
+        recurrence: t.recurrence,
+        day: today,
+        completionsOnDay: doneToday.get(t.id) ?? 0,
+        skippedOnDay: skippedToday.has(t.id),
+      })
+    ) {
       continue;
     }
-    buckets.weekActivity.completed.push({
-      task,
-      latestCompletionId: info.latestId,
-      count: info.count,
-    });
-  }
-
-  // oneShotActivity: every one-shot ever completed — feeds the
-  // "Completed" drawer on the One-shot tab. Order matches the desc
-  // sort from the fetch.
-  for (const [taskId, info] of oneShotCompletionData.entries()) {
-    const task = tasksById.get(taskId);
-    if (!task) continue;
-    buckets.oneShotActivity.completed.push({
-      task,
-      latestCompletionId: info.latestId,
-      count: 1,
-    });
-  }
-
-  for (const t of allTasks) {
-    const todayCount = doneToday.get(t.id) ?? 0;
-    const skippedTodayHere = skippedToday.has(t.id);
 
     if (t.recurrence.type === 'one_shot') {
-      // Trophy retention: one-shots STAY in the Pontual bucket after
-      // completion. They only leave when:
-      //   - completed today (then they live in todayActivity.completed)
-      //   - explicitly skipped today
-      // Everything else (never completed OR completed yesterday or
-      // before) keeps them visible; the UI dims recently-done ones.
-      if (todayCount > 0 || skippedTodayHere) continue;
-      const info = oneShotCompletionData.get(t.id);
+      // Trophy retention: a one-shot completed on an EARLIER day stays
+      // visible (dimmed by the UI); only today's completion moves it into
+      // todayActivity.completed.
       buckets.oneTime.push({
         ...t,
-        lastCompletedAt: info?.latestAt ?? null,
+        lastCompletedAt: oneShotCompletionData.get(t.id)?.latestAt ?? null,
       });
-      continue;
-    }
-
-    if (t.recurrence.type === 'daily') {
-      // Daily clears once today's target is met OR if explicitly skipped today.
-      if (!skippedTodayHere && todayCount < t.target_count) {
-        buckets.today.push(t);
-      }
-      continue;
-    }
-
-    // weekly / monthly — "Hoje" model (schedule-driven today list):
-    //   scheduled   → appears ONLY on scheduled days (isDueOn) — the
-    //                 schedule is a contract; a missed day never leaks the
-    //                 task into other days (a Mon–Fri "Trabalho" must not
-    //                 resurface on Saturday);
-    //   unscheduled (no day marked) → NEVER appears on Hoje. A practice
-    //                 with no weekday/day-of-month set has no place on a
-    //                 specific day's contract; it lives only on the
-    //                 "Todas as práticas" see-all surface and in Gerenciar
-    //                 (at its defined periodicity), where it can be knocked
-    //                 out any day. This keeps Hoje a short, clearable list
-    //                 the user can empty to trigger the day-cleared ritual.
-    //   acted today (completed or skipped) → drops out until tomorrow.
-    // buckets.thisWeek keeps ONLY scheduled tasks NOT due today with an
-    // unmet target — the Home screen no longer renders it, but the shape
-    // stays on the interface.
-    const scheduledToday = isDueOn(t.recurrence, today);
-    const scheduledPromote =
-      scheduledToday && todayCount === 0 && !skippedTodayHere;
-
-    if (t.recurrence.type === 'weekly') {
-      // parseRecurrence collapses an empty days[] to undefined, so
-      // `days !== undefined` is the canonical "has a schedule" check.
-      const hasSchedule = t.recurrence.days !== undefined;
-      const weekCount = doneWeek.get(t.id) ?? 0;
-      const weekSkips = skippedWeek.get(t.id) ?? 0;
-      // Effective target shrinks by skips: a 3×/week task with 1 skip
-      // needs 2 more this week.
-      const effectiveTarget = Math.max(0, t.target_count - weekSkips);
-      const stillNeeded = weekCount < effectiveTarget;
-
-      // Only scheduled-for-today weekly reaches Hoje. Unscheduled weekly
-      // (no days marked) no longer auto-promotes — it lives in Todas as
-      // práticas / Gerenciar.
-      if (scheduledPromote) {
-        buckets.today.push(t);
-      } else if (hasSchedule && !scheduledToday && stillNeeded) {
-        buckets.thisWeek.push(t);
-      }
     } else {
-      // monthly
-      const monthCount = doneMonth.get(t.id) ?? 0;
-      const monthSkips = skippedMonth.get(t.id) ?? 0;
-      const effectiveTarget = Math.max(0, t.target_count - monthSkips);
-      const stillNeeded = monthCount < effectiveTarget;
-
-      // Only scheduled-for-today monthly reaches Hoje. Unscheduled monthly
-      // (no day-of-month) no longer auto-promotes — see the weekly note.
-      const scheduledDayInWeek =
-        stillNeeded &&
-        t.recurrence.type === 'monthly' &&
-        typeof t.recurrence.day === 'number' &&
-        scheduledMonthlyInThisWeek(t.recurrence.day, today, weekStartPref);
-
-      if (scheduledPromote) {
-        buckets.today.push(t);
-      } else if (scheduledDayInWeek && !scheduledToday) {
-        buckets.thisWeek.push(t);
-      }
-      // else: scheduled monthly whose day is outside this week — it will
-      // surface on its scheduled day (or the last-day catch-up).
+      buckets.today.push(t);
     }
   }
-
-  // Tasks promoted to Today (scheduled day) shouldn't appear ALSO in
-  // This Week — would be double-listing. Filter out any task already in
-  // Today from the period bucket.
-  const todayIds = new Set(buckets.today.map((t) => t.id));
-  buckets.thisWeek = buckets.thisWeek.filter((t) => !todayIds.has(t.id));
 
   return buckets;
 }
 
 export function useHomeBuckets(weekStart: WeekStart = 'monday') {
+  // `weekStart` no longer changes what the buckets contain (the open rule is
+  // per-day, not per-period) but stays in the key so existing cache entries
+  // don't collide. The local-day segment is what matters now: without it the
+  // cache would still answer "today" with yesterday's list after midnight.
   return useQuery({
-    queryKey: [...taskKeys.pending(), weekStart],
-    queryFn: () => fetchHomeBuckets(weekStart),
+    queryKey: [...taskKeys.pending(), weekStart, todayLocalDateKey()],
+    queryFn: () => fetchHomeBuckets(),
   });
 }
 
@@ -746,12 +529,8 @@ export function useCompleteTask() {
             old
               ? {
                   today: removeFrom(old.today),
-                  thisWeek: removeFrom(old.thisWeek),
-                  thisMonth: removeFrom(old.thisMonth),
                   oneTime: removeFrom(old.oneTime),
                   todayActivity: old.todayActivity,
-                  weekActivity: old.weekActivity,
-                  oneShotActivity: old.oneShotActivity,
                 }
               : old,
         );
@@ -808,12 +587,10 @@ export function useCompleteTask() {
 
 /**
  * Optimistically drop the given task ids from the live "pending" buckets
- * (today / thisWeek / thisMonth / oneTime) across every weekStart-keyed
- * cache entry. Crucially LEAVES todayActivity / weekActivity /
- * oneShotActivity untouched so ringDone stays server-truth until the
- * refetch frame — the same invariant useCompleteTask relies on for the
- * once-per-day day-cleared celebration. Shared by the single + bulk skip
- * mutations.
+ * (today / oneTime) across every keyed cache entry. Crucially LEAVES
+ * todayActivity untouched so ringDone stays server-truth until the refetch
+ * frame — the same invariant useCompleteTask relies on for the once-per-day
+ * day-cleared celebration. Shared by the single + bulk skip mutations.
  */
 function dropTasksFromPendingBuckets(
   queryClient: QueryClient,
@@ -828,17 +605,15 @@ function dropTasksFromPendingBuckets(
         ? {
             ...old,
             today: removeFrom(old.today),
-            thisWeek: removeFrom(old.thisWeek),
-            thisMonth: removeFrom(old.thisMonth),
             oneTime: removeFrom(old.oneTime),
           }
         : old,
   );
 }
 
-/** Skip a task for today (or a given local date). Hides it from Today /
- *  This Week / This Month bucket logic without logging a completion. No
- *  XP, no Momentum penalty. */
+/** Skip a task for a local date (defaults to today). Removes it from that
+ *  ONE day's open list without logging a completion. No XP, no Momentum
+ *  penalty. */
 export function useSkipTaskToday() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -919,6 +694,9 @@ export function useSkipTasksBulk() {
       if (error) throw error;
     },
     onMutate: async (params) => {
+      // Same rule as the single skip: a dated (past-day) bulk close must
+      // not strip today's list. The caller hides those cards itself.
+      if (params.date) return { prevBuckets: undefined };
       await queryClient.cancelQueries({ queryKey: taskKeys.pending() });
       const prevBuckets = queryClient.getQueriesData<HomeBuckets>({
         queryKey: taskKeys.pending(),
@@ -935,6 +713,9 @@ export function useSkipTasksBulk() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.pending() });
+      // The Home day-view and the Calendar both read the day through
+      // historyKeys — without this a past-day bulk close never lands.
+      queryClient.invalidateQueries({ queryKey: historyKeys.all });
     },
   });
 }

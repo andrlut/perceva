@@ -921,10 +921,18 @@ const en = {
       today: 'Done today',
       week: 'Done this week',
       recurring: 'Cadences on track',
+      empty: 'Nothing logged yet. Your first practice lands here with its exact XP.',
+      a11yExtra: 'Log again: {{title}}',
+      a11yUndo: 'Undo {{title}} — returns {{xp}} XP',
+      a11yRow: '{{title}} — {{xp}} XP',
+      a11yDayTotal: '{{xp}} XP on the day',
     },
     skippedBucket: {
       today: 'Skipped today',
       day: 'Skipped',
+      rowMeta: 'Skipped · no XP',
+      resume: 'Resume',
+      a11yResume: 'Resume {{title}} on this day',
     },
     emptyPastDay: 'Nothing open on this day.',
     xpHero: {
@@ -985,6 +993,7 @@ const en = {
       cta: 'Clear the day',
       a11y: 'Clear the day and skip remaining practices',
       confirmTitle: 'Clear the day now?',
+      confirmTitleDay: 'Close out {{date}}?',
       confirmBody: {
         one: '{{count}} practice waits for later. No XP, and your Momentum stays put.',
         other: '{{count}} practices wait for later. No XP, and your Momentum stays put.',
@@ -1015,23 +1024,11 @@ const en = {
       best: 'Best: {{count}}',
       atRisk: 'At risk',
     },
-    completedDrawer: {
-      title: 'Completed today',
-      empty: 'Complete your first practice to see it here.',
-      completedSummary: '{{count}} completed',
-      skippedSummary: '{{count}} skipped',
-      tapToToggle: ' · tap to ',
-      tapHide: 'hide',
-      tapView: 'view',
-      skippedToday: 'Skipped today',
-      undo: 'Undo',
-      addExtra: '+ Extra',
-      unskip: 'Unskip',
-    },
     pullToRefresh: 'Pull to refresh',
     swipe: {
       complete: 'Complete',
-      skip: 'Skip today',
+      // Date-neutral: the same pill renders on past days too.
+      skip: 'Skip',
       hint: 'Swipe right to complete · left to skip',
     },
     notifOptIn: {
@@ -1080,7 +1077,9 @@ const en = {
       adjustStars: 'Adjust stars',
       adjustStarsSub: 'Change how heavy this completion was per sub',
       skipToday: 'Skip today',
-      skipTodaySub: 'Hide from today without completing — no XP, no Momentum penalty',
+      /** Past-day variant — the sheet also opens from a day you navigated back to. */
+      skipDay: 'Skip on {{date}}',
+      skipTodaySub: 'Hide from the day without completing — no XP, no Momentum penalty',
       editTask: 'Edit practice',
       editTaskSub: 'Change title, subs, recurrence, etc',
     },
