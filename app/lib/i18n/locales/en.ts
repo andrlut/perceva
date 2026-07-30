@@ -606,6 +606,12 @@ const en = {
       byType: 'By type',
       bySub: 'By sub',
     },
+    filter: {
+      open: 'Filters',
+      title: 'Filter library',
+      subtitle: '{{read}}/{{total}} done',
+      clear: 'Clear filter',
+    },
     detail: {
       source: 'Source',
       takeaways: 'Walk away with this',
