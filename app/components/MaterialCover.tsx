@@ -79,11 +79,15 @@ export function MaterialCover({
           style={StyleSheet.absoluteFill}
           resizeMode="cover"
         />
-        {/* Soft dark gradient so foreground caption text on top reads. */}
+        {/* Fade the TOP (not the bottom): overlaid controls/title sit up top,
+           and the covers are composed with empty breathing room up there —
+           so we darken the top and leave the lower art (its subject) vivid
+           and un-dimmed. Was a full-height bottom fade that greyed out the
+           most important part of every cover. */}
         <LinearGradient
-          colors={['rgba(0,0,0,0)', 'rgba(10, 14, 38, 0.55)']}
+          colors={['rgba(10, 14, 38, 0.55)', 'rgba(10, 14, 38, 0)']}
           start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
+          end={{ x: 0.5, y: 0.55 }}
           style={StyleSheet.absoluteFill}
         />
       </View>

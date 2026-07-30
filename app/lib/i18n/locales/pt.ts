@@ -601,6 +601,12 @@ const pt: Translations = {
       byType: 'Por tipo',
       bySub: 'Por sub',
     },
+    filter: {
+      open: 'Filtros',
+      title: 'Filtrar biblioteca',
+      subtitle: '{{read}}/{{total}} concluídos',
+      clear: 'Limpar filtro',
+    },
     detail: {
       source: 'Fonte',
       takeaways: 'O que levar daqui',

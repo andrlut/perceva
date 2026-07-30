@@ -12,7 +12,7 @@ import { SUB_META } from '@/theme/dimensions';
 
 import { MaterialCover } from '../MaterialCover';
 
-import { TypeSash } from './TypeSash';
+import { TYPE_META } from './TypeSash';
 
 /**
  * Book-cover-style tile for the Learn carousel. 2:3 aspect ratio, title
@@ -79,20 +79,6 @@ export function CoverCard({ card, read, onPress, isPremiumContent = false }: Pro
           variant="card"
         />
 
-        {/* Bottom dark fade — only the lower 55% of the cover, transparent
-           at the top fading to a stronger opacity at the bottom. Matches
-           the design's `bottom-anchored 55% height` mask so the title
-           reads without darkening the upper cover art. */}
-        <LinearGradient
-          colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.65)'] as [string, string]}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-          style={styles.bottomFade}
-        />
-
-        {/* Top-left type sash — distinguishes explainer / summary / news */}
-        <TypeSash type={card.type} />
-
         {/* Premium seal — inert until the Learn premium column exists. */}
         {isPremiumContent && (
           <View style={styles.premiumSeal}>
@@ -101,14 +87,16 @@ export function CoverCard({ card, read, onPress, isPremiumContent = false }: Pro
           </View>
         )}
 
-        {/* Title overlay — bottom-anchored with padding */}
+        {/* Title only — TOP-anchored over the art's empty upper third, so the
+           lower part of the cover (the illustration's subject) stays visible
+           and undimmed. The type moved to the meta row below the cover. */}
         <View style={styles.titleWrap}>
           <Text style={styles.title} numberOfLines={4}>
             {title}
           </Text>
         </View>
 
-        {/* Read indicator */}
+        {/* Read indicator — bottom-right now that the title moved up. */}
         {read && (
           <View style={styles.readBadge}>
             <Ionicons name="checkmark" size={12} color="#FFFFFF" />
@@ -139,6 +127,14 @@ export function CoverCard({ card, read, onPress, isPremiumContent = false }: Pro
         {summary}
       </Text>
       <View style={styles.metaRow}>
+        {/* Material type — now a small colored icon here instead of a badge on
+           the cover, so the cover top is left entirely to the title. */}
+        <Ionicons
+          name={TYPE_META[card.type].glyph}
+          size={11}
+          color={TYPE_META[card.type].color}
+          accessibilityLabel={t(`learning.type.${card.type}`)}
+        />
         {subMeta && (
           <View style={styles.metaPill}>
             <Ionicons
@@ -225,21 +221,14 @@ const styles = StyleSheet.create({
     height: '100%',
     overflow: 'hidden',
   },
-  bottomFade: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: '55%',
-  },
   titleWrap: {
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: 0,
+    top: 0,
     paddingHorizontal: 12,
-    paddingBottom: 14,
-    paddingTop: 20,
+    paddingTop: 12,
+    paddingBottom: 16,
   },
   title: {
     fontFamily: 'Manrope_800ExtraBold',
@@ -271,7 +260,7 @@ const styles = StyleSheet.create({
   },
   readBadge: {
     position: 'absolute',
-    top: 8,
+    bottom: 8,
     right: 8,
     width: 22,
     height: 22,

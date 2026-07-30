@@ -15,13 +15,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useBottomNavClearance } from '@/components/BottomNavBar';
+import { FabStack } from '@/components/FabStack';
 import { TourModule } from '@/components/tour/TourModule';
 import { emitTourEvent } from '@/lib/tour/eventBus';
 import { buildM6Steps, M6_EVENTS } from '@/lib/tour/m6Steps';
 import { useIsCurrentTourModule, useTourStore } from '@/lib/tour/store';
 import { CarouselRow } from '@/components/learning/CarouselRow';
 import { ContinueLendoCard } from '@/components/learning/ContinueLendoCard';
-import { LearningStatsPanel, type PillFilter } from '@/components/LearningStatsPanel';
+import { LearningFilterSheet, type PillFilter } from '@/components/learning/LearningFilterSheet';
 import { ReelsEntryCard } from '@/components/reels/ReelsEntryCard';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { useLearningFeed, useReadMaterialIds, type LearningFeedCard } from '@/lib/api/learning';
@@ -51,7 +52,7 @@ export default function LearningScreen() {
 
   const [readFilter, setReadFilter] = useState<ReadFilter>('unread');
   const [pillFilter, setPillFilter] = useState<PillFilter>(null);
-  const [statsOpen, setStatsOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
   const bottomClearance = useBottomNavClearance();
 
   // ── M6 tour plumbing ────────────────────────────────────────────────
@@ -200,26 +201,6 @@ export default function LearningScreen() {
             />
           )}
 
-          {!feed.isLoading && all.length > 0 && (
-            <LearningStatsPanel
-              cards={all}
-              readSet={readSet}
-              open={statsOpen}
-              onToggle={() => {
-                Haptics.selectionAsync().catch(() => {});
-                setStatsOpen((v) => !v);
-              }}
-              filter={pillFilter}
-              onFilterChange={(next) => {
-                setPillFilter(next);
-                // Auto-open the panel when picking a filter from elsewhere
-                // (no-op when already open). Don't close on clear — the
-                // user might want to pick another.
-                if (next && !statsOpen) setStatsOpen(true);
-              }}
-            />
-          )}
-
           {/* Active filter chip — shown when pillFilter is set */}
           {pillFilter && (
             <ActiveFilterChip
@@ -298,6 +279,45 @@ export default function LearningScreen() {
           </View>
         </ScrollView>
       </ScreenBackground>
+
+      {/* Floating filter button — opens the filter sheet, matching the
+         Tasks/Rewards FAB vocabulary. A gold dot marks an active filter.
+         Only shown once the feed has content to filter. */}
+      {!feed.isLoading && all.length > 0 && (
+        <FabStack
+          bottomOffset={bottomClearance}
+          actions={[
+            {
+              key: 'filter',
+              icon: 'options-outline',
+              tone: 'violet',
+              size: 'lg',
+              accessibilityLabel: t('learning.filter.open'),
+              onPress: () => {
+                Haptics.selectionAsync().catch(() => {});
+                setFilterOpen(true);
+              },
+              wrap: pillFilter
+                ? (node) => (
+                    <View>
+                      {node}
+                      <View style={styles.fabDot} pointerEvents="none" />
+                    </View>
+                  )
+                : undefined,
+            },
+          ]}
+        />
+      )}
+
+      <LearningFilterSheet
+        visible={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        cards={all}
+        readSet={readSet}
+        filter={pillFilter}
+        onFilterChange={setPillFilter}
+      />
 
       {/* M6 step 2 lives here (Learn explainer). Step 1 is on Home (Learn
          tab spotlight). Next ends the module → Wrap-up. Tab screen, so no
@@ -521,6 +541,18 @@ const readFilterStyles = StyleSheet.create({
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: tokens.bg.deep },
+  /** Gold dot on the filter FAB when a pill filter is active. */
+  fabDot: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: tokens.semantic.coin,
+    borderWidth: 2,
+    borderColor: tokens.bg.deep,
+  },
   header: {
     paddingHorizontal: tokens.space[4],
     paddingTop: tokens.space[4],
