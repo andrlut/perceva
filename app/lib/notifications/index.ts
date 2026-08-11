@@ -13,36 +13,32 @@ export {
   cancelAllNotifications,
   cancelCheckpoint,
   configureNotificationHandler,
-  getBriefTime,
   scheduleCheckpoint,
   scheduleDailyBrief,
   scheduleNightlyCheckin,
-  setBriefTime,
 } from './scheduler';
-export {
-  DAILY_BRIEF_HOUR_DEFAULT,
-  DAILY_BRIEF_MINUTE_DEFAULT,
-  NOTIFICATION_IDS,
-  type NotificationLocale,
-} from './constants';
+export { NOTIFICATION_IDS, type NotificationLocale } from './constants';
 
 import { registerAppOpen } from './session';
 import {
   cancelAllNotifications,
-  getBriefTime,
   scheduleCheckpoint,
   scheduleDailyBrief,
   scheduleNightlyCheckin,
 } from './scheduler';
 import type { NotificationLocale } from './constants';
 
-/** Per-type notification toggles from Settings (the master switch is
+/** Per-type notification toggles + times from Settings (the master switch is
  *  handled separately). Each maps to a real scheduled notification. */
 export interface NotificationToggles {
-  /** Morning Daily Brief (08:00) + the 12:30 "come back" checkpoint. */
+  /** Morning Daily Brief + the 12:30 "come back" checkpoint. */
   dailyReminder: boolean;
-  /** Evening mood check-in (21:00), deep-links to /mood-checkin. */
+  /** Evening mood check-in, deep-links to /mood-checkin. */
   moodCheckin: boolean;
+  /** Daily Brief time, from AppSettings. */
+  brief: { hour: number; minute: number };
+  /** End-of-day check-in time, from AppSettings. */
+  dayEnd: { hour: number; minute: number };
 }
 
 /**
@@ -51,9 +47,9 @@ export interface NotificationToggles {
  * notifications whose Settings toggle is on. Safe to call on boot and on
  * every Settings change.
  *
- *   - `dailyReminder` on → Daily Brief (saved time, default 08:00) + the
- *     12:30 checkpoint armed for tomorrow (see scheduleCheckpoint).
- *   - `moodCheckin` on → the 21:00 nightly mood check-in.
+ *   - `dailyReminder` on → Daily Brief at the user's chosen time + the 12:30
+ *     checkpoint armed for tomorrow (see scheduleCheckpoint).
+ *   - `moodCheckin` on → the nightly mood check-in at the user's day-end time.
  *   - Today's open is always stamped so the checkpoint has correct semantics.
  */
 export async function setupNotifications(
@@ -64,12 +60,11 @@ export async function setupNotifications(
   await cancelAllNotifications();
 
   if (toggles.dailyReminder) {
-    const { hour, minute } = await getBriefTime();
-    await scheduleDailyBrief(hour, minute, locale);
+    await scheduleDailyBrief(toggles.brief.hour, toggles.brief.minute, locale);
     await scheduleCheckpoint(locale);
   }
   if (toggles.moodCheckin) {
-    await scheduleNightlyCheckin(locale);
+    await scheduleNightlyCheckin(toggles.dayEnd.hour, toggles.dayEnd.minute, locale);
   }
 
   await registerAppOpen();

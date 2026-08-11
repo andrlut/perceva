@@ -26,8 +26,34 @@ export interface AppSettings {
   /** @deprecated No notification is wired to this yet — kept for settings
    *  back-compat; not surfaced in the UI. */
   momentumReminder: boolean;
-  /** Mood check-in: the 21:00 nightly notification + the in-app Today Hub prompt. */
+  /** Mood check-in: the nightly notification + the in-app Today Hub prompt. */
   moodCheckinPrompt: boolean;
+  /** Daily Brief time. The 12:30 checkpoint is NOT derived from it — it means
+   *  "we haven't seen you at midday", which isn't tied to wake time. */
+  briefHour: number;
+  briefMinute: number;
+  /**
+   * End-of-day check-in time. ONE value drives BOTH the nightly push and the
+   * earliest hour the in-app mood prompt may appear: they are the same felt
+   * event ("o app me pergunta como foi meu dia") and already share one
+   * toggle. Two hour fields for one event is how you get "I set it to 22 and
+   * it still popped at 17".
+   */
+  dayEndHour: number;
+  dayEndMinute: number;
+}
+
+/** Guards a persisted value that a corrupt blob could otherwise turn into a
+ *  notification scheduled at NaN o'clock (i.e. never). */
+function clampInt(
+  v: unknown,
+  min: number,
+  max: number,
+  fallback: number,
+): number {
+  return typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max
+    ? Math.trunc(v)
+    : fallback;
 }
 
 const DEFAULTS: AppSettings = {
@@ -40,6 +66,13 @@ const DEFAULTS: AppSettings = {
   questReminder: false,
   momentumReminder: false,
   moodCheckinPrompt: true,
+  // Literals, deliberately not imported from lib/notifications/constants:
+  // useNotificationsSetup already imports this module, so the reverse import
+  // would be a cycle. These reproduce the previous hardcoded behaviour.
+  briefHour: 8,
+  briefMinute: 0,
+  dayEndHour: 21,
+  dayEndMinute: 0,
 };
 
 type Status = 'unknown' | 'ready';
@@ -71,6 +104,10 @@ export const useSettingsStore = create<Store>((set, get) => ({
           ...parsed,
           momentumReminder: parsed.momentumReminder ?? parsed.streakReminder ?? false,
           language,
+          briefHour: clampInt(parsed.briefHour, 0, 23, DEFAULTS.briefHour),
+          briefMinute: clampInt(parsed.briefMinute, 0, 59, DEFAULTS.briefMinute),
+          dayEndHour: clampInt(parsed.dayEndHour, 0, 23, DEFAULTS.dayEndHour),
+          dayEndMinute: clampInt(parsed.dayEndMinute, 0, 59, DEFAULTS.dayEndMinute),
         },
       });
     } catch {

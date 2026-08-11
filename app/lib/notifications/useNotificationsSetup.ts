@@ -77,17 +77,26 @@ export function useNotificationsSetup() {
       await setupNotifications(osLocale, {
         dailyReminder: settings.dailyReminder,
         moodCheckin: settings.moodCheckinPrompt,
+        brief: { hour: settings.briefHour, minute: settings.briefMinute },
+        dayEnd: { hour: settings.dayEndHour, minute: settings.dayEndMinute },
       });
     })();
 
     return () => {
       cancelled = true;
     };
+    // The four time values are load-bearing deps, not decoration: without
+    // them Settings saves the new hour, the store updates, and the OS
+    // notification never moves — a feature that looks like it worked.
   }, [
     settingsStatus,
     settings.notificationsEnabled,
     settings.dailyReminder,
     settings.moodCheckinPrompt,
+    settings.briefHour,
+    settings.briefMinute,
+    settings.dayEndHour,
+    settings.dayEndMinute,
     osLocale,
   ]);
 

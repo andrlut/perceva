@@ -42,6 +42,36 @@ export function formatTimeOfDay(
   });
 }
 
+/**
+ * "21:00" (pt-BR) · "9:00 PM" (en-US). Formats a bare hour/minute pair.
+ *
+ * pt is built by hand rather than routed through toLocaleTimeString: under
+ * `hour: 'numeric'` the zero-padding depends on how Hermes' ICU resolves the
+ * pattern, and under `'2-digit'` en-US renders "09:00 PM", which reads broken.
+ */
+export function formatClock(
+  hour: number,
+  minute: number,
+  locale?: LanguageCode,
+): string {
+  const lang = locale ?? getCurrentLocale();
+  if (lang !== 'en') {
+    return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+  }
+  const d = new Date();
+  d.setHours(hour, minute, 0, 0);
+  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+/** Hour-only chip label: "21" (pt-BR) · "9 PM" (en-US). */
+export function formatHourShort(hour: number, locale?: LanguageCode): string {
+  const lang = locale ?? getCurrentLocale();
+  if (lang !== 'en') return String(hour).padStart(2, '0');
+  const d = new Date();
+  d.setHours(hour, 0, 0, 0);
+  return d.toLocaleTimeString('en-US', { hour: 'numeric' });
+}
+
 /** Compact uppercase format for dense headers — e.g. "SUN, MAY 3" / "DOM, 3 MAI". */
 export function formatCompactDate(date: Date = new Date(), locale?: LanguageCode): string {
   const tag = bcp47(locale);

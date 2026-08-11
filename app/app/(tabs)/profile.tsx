@@ -30,7 +30,9 @@ import { confirmAction, showInfo } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 
 import { PremiumBadge } from '@/components/PremiumBadge';
+import { TimePickerSheet } from '@/components/TimePickerSheet';
 import { UsernameEditModal } from '@/components/UsernameEditModal';
+import { formatClock } from '@/lib/time';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -38,13 +40,28 @@ export default function SettingsScreen() {
   const session = useSession();
   const settings = useLoadedSettings();
   const setSetting = useSettingsStore((s) => s.set);
-  const { t } = useT();
+  const { t, locale } = useT();
 
   const profile = character.data?.profile;
   const email = session.user?.email ?? '—';
   const [usernameOpen, setUsernameOpen] = useState(false);
+  const [timeSheet, setTimeSheet] = useState<'brief' | 'dayEnd' | null>(null);
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const bottomClearance = useBottomNavClearance();
+
+  // A DAILY trigger whose time already passed today silently waits until
+  // tomorrow. Computed at render — which is exactly when it matters, right
+  // after a save re-renders this screen.
+  const nowMinutes = (() => {
+    const n = new Date();
+    return n.getHours() * 60 + n.getMinutes();
+  })();
+  const passedToday =
+    (settings.moodCheckinPrompt &&
+      settings.dayEndHour * 60 + settings.dayEndMinute < nowMinutes) ||
+    (settings.notificationsEnabled &&
+      settings.dailyReminder &&
+      settings.briefHour * 60 + settings.briefMinute < nowMinutes);
 
   const handleSignOut = async () => {
     const ok = await confirmAction(
@@ -225,6 +242,18 @@ export default function SettingsScreen() {
             value={settings.moodCheckinPrompt}
             onChange={(v) => setSetting('moodCheckinPrompt', v)}
           />
+          {/* Deliberately NOT gated by the master push switch: this value also
+              drives the in-app prompt, which works with push off. Hiding it
+              behind the master switch would hide the control the user asked
+              for. */}
+          <ButtonRow
+            icon="moon-outline"
+            label={t('profile.notifications.time')}
+            value={formatClock(settings.dayEndHour, settings.dayEndMinute, locale)}
+            onPress={() => setTimeSheet('dayEnd')}
+            chevron
+            disabled={!settings.moodCheckinPrompt}
+          />
           <Divider />
           <ToggleRow
             label={t('profile.notifications.daily')}
@@ -233,6 +262,17 @@ export default function SettingsScreen() {
             onChange={(v) => setSetting('dailyReminder', v)}
             disabled={!settings.notificationsEnabled}
           />
+          <ButtonRow
+            icon="sunny-outline"
+            label={t('profile.notifications.time')}
+            value={formatClock(settings.briefHour, settings.briefMinute, locale)}
+            onPress={() => setTimeSheet('brief')}
+            chevron
+            disabled={!settings.notificationsEnabled || !settings.dailyReminder}
+          />
+          {passedToday && (
+            <NoteText>{t('profile.notifications.startsTomorrow')}</NoteText>
+          )}
           <NoteText>{t('profile.notifications.footnote')}</NoteText>
         </Card>
 
@@ -273,6 +313,36 @@ export default function SettingsScreen() {
             : ''}
         </Text>
       </ScrollView>
+
+      <TimePickerSheet
+        visible={timeSheet !== null}
+        eyebrow={t('profile.sections.notifications')}
+        title={
+          timeSheet === 'brief'
+            ? t('profile.notifications.daily')
+            : t('profile.notifications.mood')
+        }
+        description={
+          timeSheet === 'brief'
+            ? t('profile.notifications.dailyTimeHelp')
+            : t('profile.notifications.moodTimeHelp')
+        }
+        hour={timeSheet === 'brief' ? settings.briefHour : settings.dayEndHour}
+        minute={timeSheet === 'brief' ? settings.briefMinute : settings.dayEndMinute}
+        minHour={timeSheet === 'brief' ? 4 : 12}
+        maxHour={timeSheet === 'brief' ? 13 : 23}
+        onCancel={() => setTimeSheet(null)}
+        onConfirm={async (h, m) => {
+          if (timeSheet === 'brief') {
+            await setSetting('briefHour', h);
+            await setSetting('briefMinute', m);
+          } else {
+            await setSetting('dayEndHour', h);
+            await setSetting('dayEndMinute', m);
+          }
+          setTimeSheet(null);
+        }}
+      />
 
       <UsernameEditModal
         visible={usernameOpen}

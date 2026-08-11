@@ -19,21 +19,22 @@ export const NOTIFICATION_IDS = {
 /** Route a tapped nightly check-in deep-links to. */
 export const NIGHTLY_CHECKIN_ROUTE = '/mood-checkin';
 
-export const DAILY_BRIEF_HOUR_DEFAULT = 8;
-export const DAILY_BRIEF_MINUTE_DEFAULT = 0;
-
+/**
+ * The Daily Brief and the nightly check-in times are USER SETTINGS
+ * (`AppSettings.briefHour/Minute` and `dayEndHour/Minute`) — they are passed
+ * into the schedulers, not read from here.
+ *
+ * The checkpoint stays a constant on purpose: it means "we haven't seen you
+ * at midday", which is not tied to when the user wakes or winds down. It is
+ * also armed for TOMORROW and cancelled on every app open, so a user-set
+ * evening hour would mean it essentially never fires — a control that does
+ * nothing is worse than no control.
+ */
 export const CHECKPOINT_HOUR = 12;
 export const CHECKPOINT_MINUTE = 30;
 
-/** Nightly mood check-in — evening wind-down ("fim do dia"). */
-export const NIGHTLY_CHECKIN_HOUR = 21;
-export const NIGHTLY_CHECKIN_MINUTE = 0;
-
 /** AsyncStorage key for "did the user open the app today?". */
 export const LAST_OPEN_KEY = '@perceva/last_open_date';
-/** AsyncStorage keys for the user's configured Daily Brief time. */
-export const BRIEF_HOUR_KEY = '@perceva/brief_hour';
-export const BRIEF_MINUTE_KEY = '@perceva/brief_minute';
 
 export type NotificationLocale = 'pt-BR' | 'en-US';
 
