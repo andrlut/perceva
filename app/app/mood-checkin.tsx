@@ -149,7 +149,10 @@ export default function MoodCheckinScreen() {
   const dirty =
     mood !== null &&
     (mood !== savedMood || note.trim() !== savedNote.trim() || !sameTags);
-  const canSave = mood !== null && !logMood.isPending;
+  // `day.isSuccess` is belt-and-braces: saving is an UPSERT, so arming it
+  // before that day's existing entry has been read would let a blank form
+  // overwrite a real note and its tags.
+  const canSave = mood !== null && !logMood.isPending && day.isSuccess;
 
   const dateLabel = useMemo(() => {
     const localeTag = locale === 'en' ? 'en-US' : 'pt-BR';

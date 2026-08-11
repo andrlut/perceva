@@ -82,6 +82,17 @@ interface Store {
   settings: AppSettings;
   load: () => Promise<void>;
   set: <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => Promise<void>;
+  /**
+   * Commit several keys as ONE store update and ONE persist.
+   *
+   * Required for values that are read together. Two sequential `set` calls
+   * are two renders, and anything watching both (the notifications effect
+   * watches all four time fields) runs once with a HALF-updated pair —
+   * scheduling a reminder at the new hour with the old minute, which then
+   * survives because the second run's cancel snapshot was taken before it
+   * existed. One write, one run.
+   */
+  setMany: (partial: Partial<AppSettings>) => Promise<void>;
 }
 
 export const useSettingsStore = create<Store>((set, get) => ({
@@ -119,6 +130,17 @@ export const useSettingsStore = create<Store>((set, get) => ({
   },
   set: async (key, value) => {
     const next = { ...get().settings, [key]: value };
+    set({ settings: next });
+    try {
+      await AsyncStorage.setItem(KEY, JSON.stringify(next));
+    } catch {
+      // best-effort; in-memory still updated
+    }
+  },
+  setMany: async (partial) => {
+    // ONE spread off a single read, ONE set, ONE persist — splitting any of
+    // those reintroduces the half-updated render this exists to prevent.
+    const next = { ...get().settings, ...partial };
     set({ settings: next });
     try {
       await AsyncStorage.setItem(KEY, JSON.stringify(next));

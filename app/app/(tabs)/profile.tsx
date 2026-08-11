@@ -40,6 +40,7 @@ export default function SettingsScreen() {
   const session = useSession();
   const settings = useLoadedSettings();
   const setSetting = useSettingsStore((s) => s.set);
+  const setSettings = useSettingsStore((s) => s.setMany);
   const { t, locale } = useT();
 
   const profile = character.data?.profile;
@@ -52,16 +53,24 @@ export default function SettingsScreen() {
   // A DAILY trigger whose time already passed today silently waits until
   // tomorrow. Computed at render — which is exactly when it matters, right
   // after a save re-renders this screen.
+  //
+  // Both flags require the master switch: the note is about the PUSH. The
+  // in-app mood prompt is NOT gated by that switch and fires the same day as
+  // soon as the hour passes, so "starts tomorrow" would be wrong about it.
+  // Each note renders under its own row — one shared note under the last row
+  // would attribute a mood-triggered warning to the Daily Brief.
   const nowMinutes = (() => {
     const n = new Date();
     return n.getHours() * 60 + n.getMinutes();
   })();
-  const passedToday =
-    (settings.moodCheckinPrompt &&
-      settings.dayEndHour * 60 + settings.dayEndMinute < nowMinutes) ||
-    (settings.notificationsEnabled &&
-      settings.dailyReminder &&
-      settings.briefHour * 60 + settings.briefMinute < nowMinutes);
+  const dayEndPassedToday =
+    settings.notificationsEnabled &&
+    settings.moodCheckinPrompt &&
+    settings.dayEndHour * 60 + settings.dayEndMinute < nowMinutes;
+  const briefPassedToday =
+    settings.notificationsEnabled &&
+    settings.dailyReminder &&
+    settings.briefHour * 60 + settings.briefMinute < nowMinutes;
 
   const handleSignOut = async () => {
     const ok = await confirmAction(
@@ -254,6 +263,9 @@ export default function SettingsScreen() {
             chevron
             disabled={!settings.moodCheckinPrompt}
           />
+          {dayEndPassedToday && (
+            <NoteText>{t('profile.notifications.startsTomorrow')}</NoteText>
+          )}
           <Divider />
           <ToggleRow
             label={t('profile.notifications.daily')}
@@ -270,7 +282,7 @@ export default function SettingsScreen() {
             chevron
             disabled={!settings.notificationsEnabled || !settings.dailyReminder}
           />
-          {passedToday && (
+          {briefPassedToday && (
             <NoteText>{t('profile.notifications.startsTomorrow')}</NoteText>
           )}
           <NoteText>{t('profile.notifications.footnote')}</NoteText>
@@ -332,14 +344,16 @@ export default function SettingsScreen() {
         minHour={timeSheet === 'brief' ? 4 : 12}
         maxHour={timeSheet === 'brief' ? 13 : 23}
         onCancel={() => setTimeSheet(null)}
+        // ONE write, deliberately: two sequential setSetting calls are two
+        // renders, and the notifications effect would run once on the
+        // half-updated pair — scheduling a reminder at the new hour with the
+        // old minute, which then survives alongside the intended one.
         onConfirm={async (h, m) => {
-          if (timeSheet === 'brief') {
-            await setSetting('briefHour', h);
-            await setSetting('briefMinute', m);
-          } else {
-            await setSetting('dayEndHour', h);
-            await setSetting('dayEndMinute', m);
-          }
+          await setSettings(
+            timeSheet === 'brief'
+              ? { briefHour: h, briefMinute: m }
+              : { dayEndHour: h, dayEndMinute: m },
+          );
           setTimeSheet(null);
         }}
       />
@@ -423,15 +437,33 @@ function ButtonRow({
           <Ionicons
             name={icon}
             size={20}
-            color={danger ? tokens.semantic.danger : tokens.brand.violet2}
+            color={
+              // A disabled Pressable never reports `pressed`, so without a
+              // dimmed state the row is pixel-identical to a live one and
+              // reads as broken rather than unavailable.
+              disabled
+                ? tokens.text.dim
+                : danger
+                  ? tokens.semantic.danger
+                  : tokens.brand.violet2
+            }
           />
         )}
-        <Text style={[styles.rowLabel, danger && { color: tokens.semantic.danger }]}>
+        <Text
+          style={[
+            styles.rowLabel,
+            danger && { color: tokens.semantic.danger },
+            disabled && { color: tokens.text.dim },
+          ]}
+        >
           {label}
         </Text>
       </View>
       {value ? (
-        <Text style={styles.rowValue} numberOfLines={1}>
+        <Text
+          style={[styles.rowValue, disabled && { color: tokens.text.dim }]}
+          numberOfLines={1}
+        >
           {value}
         </Text>
       ) : null}

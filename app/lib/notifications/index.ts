@@ -52,22 +52,39 @@ export interface NotificationToggles {
  *   - `moodCheckin` on → the nightly mood check-in at the user's day-end time.
  *   - Today's open is always stamped so the checkpoint has correct semantics.
  */
-export async function setupNotifications(
+/**
+ * Serializes every run. Each run is `cancelAll` followed by up to three
+ * schedules, and `cancelById` works off a snapshot of what exists at that
+ * instant — so two interleaved runs each cancel only what the OTHER had
+ * already scheduled, and both survive. That is how a user ends up with two
+ * daily briefs, one of them at a time they never chose. Boot and a Settings
+ * change can overlap exactly this way.
+ */
+let setupChain: Promise<void> = Promise.resolve();
+
+export function setupNotifications(
   locale: NotificationLocale,
   toggles: NotificationToggles,
 ): Promise<void> {
-  // Clean slate so flipping a sub-toggle OFF actually removes its notification.
-  await cancelAllNotifications();
+  const run = setupChain.then(async () => {
+    // Clean slate so flipping a sub-toggle OFF actually removes its
+    // notification. Kept in the same critical section as the schedules
+    // below: aborting between them would leave NOTHING scheduled.
+    await cancelAllNotifications();
 
-  if (toggles.dailyReminder) {
-    await scheduleDailyBrief(toggles.brief.hour, toggles.brief.minute, locale);
-    await scheduleCheckpoint(locale);
-  }
-  if (toggles.moodCheckin) {
-    await scheduleNightlyCheckin(toggles.dayEnd.hour, toggles.dayEnd.minute, locale);
-  }
+    if (toggles.dailyReminder) {
+      await scheduleDailyBrief(toggles.brief.hour, toggles.brief.minute, locale);
+      await scheduleCheckpoint(locale);
+    }
+    if (toggles.moodCheckin) {
+      await scheduleNightlyCheckin(toggles.dayEnd.hour, toggles.dayEnd.minute, locale);
+    }
 
-  await registerAppOpen();
+    await registerAppOpen();
+  });
+  // Never let one failed run poison the chain for every later one.
+  setupChain = run.catch(() => {});
+  return run;
 }
 
 /** Toggle handler for the Settings master switch. */
