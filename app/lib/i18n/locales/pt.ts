@@ -1653,14 +1653,23 @@ const pt: Translations = {
       master: 'Ativar notificações',
       masterDescription: 'Chave geral pros lembretes abaixo.',
       mood: 'Check-in de humor',
-      moodDescription: 'Um lembrete gentil no fim do dia pra registrar como você se sentiu.',
+      moodDescription:
+        'Um lembrete gentil pra registrar como você se sentiu, no horário que você escolher abaixo.',
       daily: 'Lembrete diário',
-      dailyDescription: 'Um cutucão se ainda tem práticas diárias pendentes.',
+      dailyDescription:
+        'O resumo da manhã, mais um cutucão no meio-dia se você não abrir o app.',
       quest: 'Lembrete de missão',
       questDescription: 'Aviso antes do prazo de uma missão.',
       momentum: 'Lembrete de Momentum',
       momentumDescription: 'Cutucão noturno quando seu Momentum precisa de uma prática pequena.',
-      footnote: 'As notificações precisam de uma pequena configuração nativa — os toggles já salvam sua escolha e começam a disparar quando rolar.',
+      time: 'Horário',
+      moodTimeHelp:
+        'Quando o Perceva pergunta como foi seu dia — no push e dentro do app.',
+      dailyTimeHelp:
+        'Quando chega o resumo da manhã. O cutucão do meio-dia continua às 12:30.',
+      startsTomorrow: 'Esse horário já passou hoje — os lembretes começam amanhã.',
+      footnote:
+        'Os horários seguem o relógio do seu celular. O Android pode segurar um lembrete alguns minutos pra economizar bateria.',
     },
     actions: {
       replayOnboarding: 'Refazer tutorial',
@@ -1973,6 +1982,12 @@ const pt: Translations = {
     notEnoughSub: 'Poucos dias com {{label}} ainda. Registre mais uns dias pra comparar.',
     cardBest: 'Humor mais alto nos dias com {{label}} ({{delta}})',
     cardGeneric: 'Veja como seu humor e suas atividades andam juntos',
+  },
+
+  timePicker: {
+    hourLabel: 'Hora',
+    minuteLabel: 'Minutos',
+    a11ySelect: 'Definir para {{time}}',
   },
 
   mood: {

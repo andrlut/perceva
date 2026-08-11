@@ -1654,14 +1654,21 @@ const en = {
       master: 'Enable notifications',
       masterDescription: 'Master switch for all reminders below.',
       mood: 'Mood check-in',
-      moodDescription: 'A gentle end-of-day nudge to log how you felt.',
+      moodDescription: 'A gentle nudge to log how you felt, at the time you pick below.',
       daily: 'Daily reminder',
-      dailyDescription: 'A nudge if you have unfinished daily quests.',
+      dailyDescription: 'The morning brief, plus a midday nudge if you have not opened the app.',
       quest: 'Quest reminder',
       questDescription: 'Heads-up before a quest deadline.',
       momentum: 'Momentum reminder',
       momentumDescription: "Late-evening ping when today's Momentum could use a small practice.",
-      footnote: 'Notifications need a small native setup pass — the toggles save your choice now and will start firing once that ships.',
+      time: 'Time',
+      moodTimeHelp:
+        'When Perceva asks how your day went — both the push and the check-in inside the app.',
+      dailyTimeHelp:
+        'When the morning brief arrives. The midday nudge stays at 12:30.',
+      startsTomorrow: 'That time already passed today — reminders start tomorrow.',
+      footnote:
+        "Times follow your phone's clock. Android may hold a reminder back a few minutes to save battery.",
     },
     actions: {
       replayOnboarding: 'Replay tutorial',
@@ -1974,6 +1981,12 @@ const en = {
     notEnoughSub: 'Not enough days with {{label}} yet. Log a few more to compare.',
     cardBest: 'Higher mood on days with {{label}} ({{delta}})',
     cardGeneric: 'See how your mood and activities move together',
+  },
+
+  timePicker: {
+    hourLabel: 'Hour',
+    minuteLabel: 'Minutes',
+    a11ySelect: 'Set to {{time}}',
   },
 
   mood: {

@@ -13,8 +13,9 @@ import { tokens } from '@/theme';
 
 /** AsyncStorage day-stamp — "already shown/dismissed the prompt today". */
 const PROMPT_SHOWN_KEY = '@perceva/mood_prompt_shown';
-/** Only nudge in the evening ("fim do dia"), never in the morning. */
-const MIN_HOUR = 17;
+// The earliest hour is the user's own `dayEnd` setting (default 21:00) — the
+// same value that schedules the nightly push, because they are one felt
+// event. It used to be a hardcoded 17:00, which read as far too early.
 
 interface Props {
   /** Suppress while a tour or other overlay owns the screen. */
@@ -41,7 +42,13 @@ export function MoodCheckinPrompt({ enabled = true }: Props) {
     if (!settings.moodCheckinPrompt) return;
     if (today.isLoading) return;
     if (today.data) return; // already logged today
-    if (new Date().getHours() < MIN_HOUR) return;
+    const now = new Date();
+    if (
+      now.getHours() * 60 + now.getMinutes() <
+      settings.dayEndHour * 60 + settings.dayEndMinute
+    ) {
+      return;
+    }
 
     let active = true;
     (async () => {
@@ -51,7 +58,14 @@ export function MoodCheckinPrompt({ enabled = true }: Props) {
     return () => {
       active = false;
     };
-  }, [enabled, settings.moodCheckinPrompt, today.isLoading, today.data]);
+  }, [
+    enabled,
+    settings.moodCheckinPrompt,
+    settings.dayEndHour,
+    settings.dayEndMinute,
+    today.isLoading,
+    today.data,
+  ]);
 
   const stampAndClose = async () => {
     setVisible(false);

@@ -21,6 +21,7 @@ import { CompleteTaskSheet } from '@/components/CompleteTaskSheet';
 import { DayClearedCelebration } from '@/components/DayClearedCelebration';
 import { DaySeal } from '@/components/DaySeal';
 import { MoodCheckinPrompt } from '@/components/MoodCheckinPrompt';
+import { MoodDayDetail } from '@/components/mood/MoodDayDetail';
 import { MoodHubStrip } from '@/components/mood/MoodHubStrip';
 import {
   CompletedBucket,
@@ -1054,7 +1055,20 @@ export default function HomeScreen() {
             </View>
 
             {/* Journal strip — today only (the "close the day" ritual). */}
-            {isToday && <MoodHubStrip />}
+            {/* Journal. Today: the quick 5-face strip (the "close the day"
+                ritual). Any past day: the same read/edit card the Calendar
+                day view uses, one tap into the check-in scoped to that date —
+                so the two surfaces cannot disagree about the same day.
+                Deliberately OUTSIDE the `dayOpen.length === 0` branch: a past
+                day with open cards must still be loggable, and DaySeal is a
+                statement about what was trained, not a place for a control. */}
+            {isToday ? (
+              <MoodHubStrip />
+            ) : (
+              <View style={styles.moodDayWrap}>
+                <MoodDayDetail dateKey={selectedKey} />
+              </View>
+            )}
           </>
         )}
       </ScrollView>
@@ -1221,6 +1235,12 @@ const styles = StyleSheet.create({
   sectionHeaderSecondary: {
     fontSize: 13,
     color: tokens.text.mid,
+    marginTop: tokens.space[3],
+  },
+  // MoodDayDetail's own card carries no horizontal margin (it relies on its
+  // History container), so this matches MoodHubStrip's outer box.
+  moodDayWrap: {
+    marginHorizontal: tokens.space[4],
     marginTop: tokens.space[3],
   },
   // "Fechar o dia" — deliberately low-prominence: no fill, dim text,

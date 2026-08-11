@@ -89,9 +89,15 @@ export default function MoodCheckinScreen() {
   const router = useRouter();
   const { t, locale } = useT();
   const params = useLocalSearchParams<{ date?: string }>();
+  // This is a deep-linkable route, so `date` is untrusted free text that
+  // would otherwise reach the RPC and `new Date(y, m-1, d)` unvalidated.
+  // Every in-app caller passes a real dateKey; anything else falls back to
+  // today. Future dates are rejected here too — the server also refuses
+  // them, but failing in the UI beats a thrown RPC.
+  const rawDate = typeof params.date === 'string' ? params.date : '';
   const targetDate =
-    typeof params.date === 'string' && params.date.length > 0
-      ? params.date
+    /^\d{4}-\d{2}-\d{2}$/.test(rawDate) && rawDate <= todayDateKey()
+      ? rawDate
       : todayDateKey();
   const isToday = targetDate === todayDateKey();
 
@@ -143,7 +149,10 @@ export default function MoodCheckinScreen() {
   const dirty =
     mood !== null &&
     (mood !== savedMood || note.trim() !== savedNote.trim() || !sameTags);
-  const canSave = mood !== null && !logMood.isPending;
+  // `day.isSuccess` is belt-and-braces: saving is an UPSERT, so arming it
+  // before that day's existing entry has been read would let a blank form
+  // overwrite a real note and its tags.
+  const canSave = mood !== null && !logMood.isPending && day.isSuccess;
 
   const dateLabel = useMemo(() => {
     const localeTag = locale === 'en' ? 'en-US' : 'pt-BR';

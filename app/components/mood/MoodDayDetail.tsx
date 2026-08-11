@@ -25,6 +25,14 @@ export function MoodDayDetail({ dateKey }: Props) {
   const day = useMoodForDay(dateKey);
   const catalog = useMoodTags();
 
+  // "Unknown" must never render as "not logged". Until the read succeeds,
+  // `day.data` is undefined for THREE different reasons — still loading,
+  // failed, and genuinely empty — and only the third one may show the empty
+  // state. Showing it for the other two is not just a wrong label: its CTA
+  // opens the check-in pre-filled as blank, and saving there upserts over a
+  // real entry, wiping that day's note and tags.
+  if (!day.isSuccess) return null;
+
   const entry = day.data ?? null;
   const level = entry ? moodLevel(entry.mood) : null;
 

@@ -30,7 +30,9 @@ import { confirmAction, showInfo } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 
 import { PremiumBadge } from '@/components/PremiumBadge';
+import { TimePickerSheet } from '@/components/TimePickerSheet';
 import { UsernameEditModal } from '@/components/UsernameEditModal';
+import { formatClock } from '@/lib/time';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -38,13 +40,37 @@ export default function SettingsScreen() {
   const session = useSession();
   const settings = useLoadedSettings();
   const setSetting = useSettingsStore((s) => s.set);
-  const { t } = useT();
+  const setSettings = useSettingsStore((s) => s.setMany);
+  const { t, locale } = useT();
 
   const profile = character.data?.profile;
   const email = session.user?.email ?? '—';
   const [usernameOpen, setUsernameOpen] = useState(false);
+  const [timeSheet, setTimeSheet] = useState<'brief' | 'dayEnd' | null>(null);
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const bottomClearance = useBottomNavClearance();
+
+  // A DAILY trigger whose time already passed today silently waits until
+  // tomorrow. Computed at render — which is exactly when it matters, right
+  // after a save re-renders this screen.
+  //
+  // Both flags require the master switch: the note is about the PUSH. The
+  // in-app mood prompt is NOT gated by that switch and fires the same day as
+  // soon as the hour passes, so "starts tomorrow" would be wrong about it.
+  // Each note renders under its own row — one shared note under the last row
+  // would attribute a mood-triggered warning to the Daily Brief.
+  const nowMinutes = (() => {
+    const n = new Date();
+    return n.getHours() * 60 + n.getMinutes();
+  })();
+  const dayEndPassedToday =
+    settings.notificationsEnabled &&
+    settings.moodCheckinPrompt &&
+    settings.dayEndHour * 60 + settings.dayEndMinute < nowMinutes;
+  const briefPassedToday =
+    settings.notificationsEnabled &&
+    settings.dailyReminder &&
+    settings.briefHour * 60 + settings.briefMinute < nowMinutes;
 
   const handleSignOut = async () => {
     const ok = await confirmAction(
@@ -225,6 +251,21 @@ export default function SettingsScreen() {
             value={settings.moodCheckinPrompt}
             onChange={(v) => setSetting('moodCheckinPrompt', v)}
           />
+          {/* Deliberately NOT gated by the master push switch: this value also
+              drives the in-app prompt, which works with push off. Hiding it
+              behind the master switch would hide the control the user asked
+              for. */}
+          <ButtonRow
+            icon="moon-outline"
+            label={t('profile.notifications.time')}
+            value={formatClock(settings.dayEndHour, settings.dayEndMinute, locale)}
+            onPress={() => setTimeSheet('dayEnd')}
+            chevron
+            disabled={!settings.moodCheckinPrompt}
+          />
+          {dayEndPassedToday && (
+            <NoteText>{t('profile.notifications.startsTomorrow')}</NoteText>
+          )}
           <Divider />
           <ToggleRow
             label={t('profile.notifications.daily')}
@@ -233,6 +274,17 @@ export default function SettingsScreen() {
             onChange={(v) => setSetting('dailyReminder', v)}
             disabled={!settings.notificationsEnabled}
           />
+          <ButtonRow
+            icon="sunny-outline"
+            label={t('profile.notifications.time')}
+            value={formatClock(settings.briefHour, settings.briefMinute, locale)}
+            onPress={() => setTimeSheet('brief')}
+            chevron
+            disabled={!settings.notificationsEnabled || !settings.dailyReminder}
+          />
+          {briefPassedToday && (
+            <NoteText>{t('profile.notifications.startsTomorrow')}</NoteText>
+          )}
           <NoteText>{t('profile.notifications.footnote')}</NoteText>
         </Card>
 
@@ -273,6 +325,38 @@ export default function SettingsScreen() {
             : ''}
         </Text>
       </ScrollView>
+
+      <TimePickerSheet
+        visible={timeSheet !== null}
+        eyebrow={t('profile.sections.notifications')}
+        title={
+          timeSheet === 'brief'
+            ? t('profile.notifications.daily')
+            : t('profile.notifications.mood')
+        }
+        description={
+          timeSheet === 'brief'
+            ? t('profile.notifications.dailyTimeHelp')
+            : t('profile.notifications.moodTimeHelp')
+        }
+        hour={timeSheet === 'brief' ? settings.briefHour : settings.dayEndHour}
+        minute={timeSheet === 'brief' ? settings.briefMinute : settings.dayEndMinute}
+        minHour={timeSheet === 'brief' ? 4 : 12}
+        maxHour={timeSheet === 'brief' ? 13 : 23}
+        onCancel={() => setTimeSheet(null)}
+        // ONE write, deliberately: two sequential setSetting calls are two
+        // renders, and the notifications effect would run once on the
+        // half-updated pair — scheduling a reminder at the new hour with the
+        // old minute, which then survives alongside the intended one.
+        onConfirm={async (h, m) => {
+          await setSettings(
+            timeSheet === 'brief'
+              ? { briefHour: h, briefMinute: m }
+              : { dayEndHour: h, dayEndMinute: m },
+          );
+          setTimeSheet(null);
+        }}
+      />
 
       <UsernameEditModal
         visible={usernameOpen}
@@ -353,15 +437,33 @@ function ButtonRow({
           <Ionicons
             name={icon}
             size={20}
-            color={danger ? tokens.semantic.danger : tokens.brand.violet2}
+            color={
+              // A disabled Pressable never reports `pressed`, so without a
+              // dimmed state the row is pixel-identical to a live one and
+              // reads as broken rather than unavailable.
+              disabled
+                ? tokens.text.dim
+                : danger
+                  ? tokens.semantic.danger
+                  : tokens.brand.violet2
+            }
           />
         )}
-        <Text style={[styles.rowLabel, danger && { color: tokens.semantic.danger }]}>
+        <Text
+          style={[
+            styles.rowLabel,
+            danger && { color: tokens.semantic.danger },
+            disabled && { color: tokens.text.dim },
+          ]}
+        >
           {label}
         </Text>
       </View>
       {value ? (
-        <Text style={styles.rowValue} numberOfLines={1}>
+        <Text
+          style={[styles.rowValue, disabled && { color: tokens.text.dim }]}
+          numberOfLines={1}
+        >
           {value}
         </Text>
       ) : null}

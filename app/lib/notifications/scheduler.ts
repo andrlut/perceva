@@ -1,17 +1,10 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 
 import {
-  BRIEF_HOUR_KEY,
-  BRIEF_MINUTE_KEY,
   CHECKPOINT_HOUR,
   CHECKPOINT_MINUTE,
-  DAILY_BRIEF_HOUR_DEFAULT,
-  DAILY_BRIEF_MINUTE_DEFAULT,
   MESSAGES_EN,
   MESSAGES_PT,
-  NIGHTLY_CHECKIN_HOUR,
-  NIGHTLY_CHECKIN_MINUTE,
   NIGHTLY_CHECKIN_ROUTE,
   NOTIFICATION_IDS,
   type NotificationLocale,
@@ -61,8 +54,8 @@ async function cancelById(id: string): Promise<void> {
  * every app boot and on Settings save).
  */
 export async function scheduleDailyBrief(
-  hour: number = DAILY_BRIEF_HOUR_DEFAULT,
-  minute: number = DAILY_BRIEF_MINUTE_DEFAULT,
+  hour: number,
+  minute: number,
   locale: NotificationLocale = 'pt-BR',
 ): Promise<void> {
   await cancelById(NOTIFICATION_IDS.DAILY_BRIEF);
@@ -91,6 +84,8 @@ export async function scheduleDailyBrief(
  * useNotificationsSetup). Cancel-first so it's idempotent.
  */
 export async function scheduleNightlyCheckin(
+  hour: number,
+  minute: number,
   locale: NotificationLocale = 'pt-BR',
 ): Promise<void> {
   await cancelById(NOTIFICATION_IDS.NIGHTLY_CHECKIN);
@@ -108,8 +103,8 @@ export async function scheduleNightlyCheckin(
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DAILY,
-      hour: NIGHTLY_CHECKIN_HOUR,
-      minute: NIGHTLY_CHECKIN_MINUTE,
+      hour,
+      minute,
     },
   });
 }
@@ -162,24 +157,8 @@ export async function cancelAllNotifications(): Promise<void> {
   await Notifications.cancelAllScheduledNotificationsAsync();
 }
 
-/** Read the user's saved Daily Brief time from AsyncStorage. Returns
- *  defaults when unset — so first-time users still get an 8:00 brief. */
-export async function getBriefTime(): Promise<{ hour: number; minute: number }> {
-  const [h, m] = await Promise.all([
-    AsyncStorage.getItem(BRIEF_HOUR_KEY),
-    AsyncStorage.getItem(BRIEF_MINUTE_KEY),
-  ]);
-  return {
-    hour: h !== null ? Number(h) : DAILY_BRIEF_HOUR_DEFAULT,
-    minute: m !== null ? Number(m) : DAILY_BRIEF_MINUTE_DEFAULT,
-  };
-}
-
-/** Persist the Daily Brief time. Settings UI calls this then immediately
- *  re-schedules so the new time takes effect without a reboot. */
-export async function setBriefTime(hour: number, minute: number): Promise<void> {
-  await AsyncStorage.multiSet([
-    [BRIEF_HOUR_KEY, String(hour)],
-    [BRIEF_MINUTE_KEY, String(minute)],
-  ]);
-}
+// getBriefTime/setBriefTime lived here with their own AsyncStorage keys and
+// never had a single caller — the time was settable in code and unreachable
+// from the UI. The value now lives in AppSettings alongside every other
+// preference, so rescheduling happens reactively in useNotificationsSetup
+// rather than needing the Settings screen to call the scheduler itself.
