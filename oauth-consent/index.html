@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Perceva — autorizar acesso</title>
+<!--
+  OAuth 2.1 consent page (Supabase Auth OAuth Server, beta).
+  Served via GitHub Pages (gh-pages branch) at:
+    https://andrlut.github.io/perceva/oauth-consent/
+  because *.supabase.co rewrites HTML responses (Edge Functions AND Storage)
+  to text/plain + sandbox CSP — HTML cannot be hosted on the project domain.
+
+  GoTrue redirects here as {SITE_URL}{authorization_path}?authorization_id=…
+  (auth config: site_url=https://andrlut.github.io/perceva,
+   oauth_server_authorization_path=/oauth-consent/).
+
+  Deploy: this file on `main` is the source of truth; copy it to the
+  gh-pages branch (oauth-consent/index.html) to publish changes.
+
+  The embedded key is the PUBLISHABLE key — safe in any client by design
+  (same key the app ships with; RLS is the boundary).
+-->
+<style>
+  :root {
+    --bg: #0A0E26; --surface: #1A1F44; --surface2: #232958;
+    --text: #D9DBFA; --text-hi: #F2F3FF; --text-mid: #9AA0D4;
+    --violet: #7B5CFF; --violet2: #9B82FF; --danger: #FF5C7A;
+    --border: rgba(255,255,255,0.1);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center;
+    background: radial-gradient(600px 300px at 50% -60px, rgba(123,92,255,.18), transparent 70%), #0A0E26;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    color: var(--text); padding: 20px;
+  }
+  .card {
+    width: 100%; max-width: 420px; background: linear-gradient(160deg, rgba(36,42,88,.7), rgba(20,24,60,.9));
+    border: 1px solid var(--border); border-radius: 18px; padding: 28px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+  .glyph {
+    width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
+    background: linear-gradient(140deg, #9B82FF, #4B2FCC); font-size: 16px;
+  }
+  .brand b { color: var(--text-hi); font-size: 17px; letter-spacing: .02em; }
+  h1 { font-size: 19px; color: var(--text-hi); margin: 0 0 6px; }
+  p { font-size: 14px; line-height: 1.55; margin: 0 0 12px; }
+  .mid { color: var(--text-mid); }
+  label { display: block; font-size: 12px; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--text-mid); margin: 14px 0 6px; }
+  input {
+    width: 100%; padding: 12px 14px; border-radius: 10px; font-size: 16px;
+    background: rgba(10,14,38,.6); border: 1px solid var(--border); color: var(--text-hi);
+  }
+  input:focus { outline: 2px solid var(--violet); border-color: transparent; }
+  button {
+    width: 100%; margin-top: 16px; padding: 13px; border: 0; border-radius: 12px;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+    background: linear-gradient(140deg, #9B82FF, #5B3CE0); color: #fff;
+  }
+  button.secondary { background: transparent; border: 1px solid var(--border); color: var(--text-mid); }
+  button:disabled { opacity: .5; cursor: default; }
+  button:focus-visible { outline: 2px solid var(--violet2); outline-offset: 2px; }
+  .notice {
+    margin: 16px 0 4px; padding: 13px 15px; border-radius: 12px; font-size: 13px; line-height: 1.55;
+    background: rgba(123,92,255,.1); border: 1px solid rgba(123,92,255,.3);
+  }
+  .error { color: var(--danger); font-size: 13.5px; margin-top: 10px; min-height: 18px; }
+  .who { font-size: 13px; color: var(--text-mid); margin-top: 14px; display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+  .who a { color: var(--violet2); cursor: pointer; text-decoration: underline; }
+  .hidden { display: none; }
+  .scopes { font-size: 13px; color: var(--text-mid); }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="brand"><div class="glyph">🪞</div><b>Perceva</b></div>
+
+  <div id="loading"><p class="mid">Carregando…</p></div>
+
+  <div id="login" class="hidden">
+    <h1>Entrar para autorizar</h1>
+    <p class="mid">Um app pediu acesso aos seus dados do Perceva. Confirme sua identidade com o e-mail da sua conta.</p>
+    <div id="step-email">
+      <label for="email">Seu e-mail</label>
+      <input id="email" type="email" autocomplete="email" placeholder="voce@exemplo.com">
+      <button id="send-code">Enviar código</button>
+    </div>
+    <div id="step-code" class="hidden">
+      <p class="mid">Enviamos um código para <b id="sent-to"></b>. Digite-o abaixo.</p>
+      <label for="code">Código</label>
+      <input id="code" inputmode="numeric" autocomplete="one-time-code" placeholder="********">
+      <button id="verify-code">Confirmar</button>
+    </div>
+    <div class="error" id="login-error"></div>
+  </div>
+
+  <div id="consent" class="hidden">
+    <h1><span id="client-name">O app</span> quer acessar seus dados</h1>
+    <p class="scopes" id="scopes-line"></p>
+    <div class="notice">
+      Você está conectando sua conta do Perceva ao <b>seu</b> assistente de IA.
+      Os dados que você consultar — incluindo, se você pedir, suas anotações de
+      humor — serão processados pela <b>Anthropic (EUA)</b> sob os termos e as
+      configurações de privacidade <b>da sua própria conta</b> nesse serviço,
+      incluindo sua escolha sobre treinamento de IA. O acesso é somente leitura,
+      só dos seus dados, e o Perceva não vê suas conversas. Você pode revogar
+      quando quiser.
+    </div>
+    <button id="approve">Autorizar</button>
+    <button id="deny" class="secondary">Negar</button>
+    <div class="who"><span id="as-user"></span><a id="switch">Trocar conta</a></div>
+    <div class="error" id="consent-error"></div>
+  </div>
+
+  <div id="fatal" class="hidden">
+    <h1>Link inválido</h1>
+    <p class="mid">Esta página só funciona a partir de um pedido de autorização
+    (ex.: adicionar o Perceva como conector no Claude). Feche e tente de novo
+    a partir do app que pediu o acesso.</p>
+  </div>
+</div>
+
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+  const supabase = createClient(
+    'https://uneqnpyzevosznwkmvvo.supabase.co',
+    'sb_publishable_sWLt4U0F5J4S-Se-6V7SXw_1LyQqysV'
+  );
+  const authorizationId = new URLSearchParams(location.search).get('authorization_id');
+
+  const el = (id) => document.getElementById(id);
+  const show = (id) => {
+    for (const s of ['loading', 'login', 'consent', 'fatal']) el(s).classList.add('hidden');
+    el(id).classList.remove('hidden');
+  };
+
+  if (!authorizationId) {
+    show('fatal');
+  } else {
+    boot();
+  }
+
+  async function boot() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { show('login'); return; }
+    await loadConsent(session);
+  }
+
+  async function loadConsent(session) {
+    show('loading');
+    const { data, error } = await supabase.auth.oauth.getAuthorizationDetails(authorizationId);
+    if (error) {
+      show('consent');
+      el('consent-error').textContent = 'Não foi possível carregar o pedido: ' + error.message;
+      return;
+    }
+    // Already consented before → GoTrue short-circuits with a redirect.
+    if (data && data.redirect_url) { location.href = data.redirect_url; return; }
+
+    el('client-name').textContent = (data.client && data.client.name) || 'O app';
+    el('scopes-line').textContent = data.scope
+      ? 'Permissões pedidas: ' + data.scope
+      : '';
+    el('as-user').textContent = 'Conectado como ' + ((data.user && data.user.email) || session.user.email);
+    show('consent');
+  }
+
+  el('send-code').addEventListener('click', async () => {
+    const email = el('email').value.trim();
+    el('login-error').textContent = '';
+    if (!email) { el('login-error').textContent = 'Digite seu e-mail.'; return; }
+    el('send-code').disabled = true;
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: false },
+    });
+    el('send-code').disabled = false;
+    if (error) {
+      el('login-error').textContent = /rate/i.test(error.message)
+        ? 'Limite de e-mails atingido — espere um pouco e tente de novo.'
+        : 'Não deu: ' + error.message;
+      return;
+    }
+    el('sent-to').textContent = email;
+    el('step-email').classList.add('hidden');
+    el('step-code').classList.remove('hidden');
+  });
+
+  el('verify-code').addEventListener('click', async () => {
+    const email = el('sent-to').textContent;
+    const token = el('code').value.trim();
+    el('login-error').textContent = '';
+    if (!token) { el('login-error').textContent = 'Digite o código.'; return; }
+    el('verify-code').disabled = true;
+    const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
+    el('verify-code').disabled = false;
+    if (error || !data.session) {
+      el('login-error').textContent = 'Código inválido ou expirado.';
+      return;
+    }
+    await loadConsent(data.session);
+  });
+
+  el('approve').addEventListener('click', async () => {
+    el('approve').disabled = true; el('deny').disabled = true;
+    const { data, error } = await supabase.auth.oauth.approveAuthorization(authorizationId);
+    if (error || !data?.redirect_url) {
+      el('approve').disabled = false; el('deny').disabled = false;
+      el('consent-error').textContent = 'Falhou: ' + (error ? error.message : 'sem redirect');
+      return;
+    }
+    location.href = data.redirect_url;
+  });
+
+  el('deny').addEventListener('click', async () => {
+    el('approve').disabled = true; el('deny').disabled = true;
+    const { data, error } = await supabase.auth.oauth.denyAuthorization(authorizationId);
+    if (data?.redirect_url) { location.href = data.redirect_url; return; }
+    el('consent-error').textContent = error ? ('Falhou: ' + error.message) : 'Acesso negado. Pode fechar esta aba.';
+  });
+
+  el('switch').addEventListener('click', async () => {
+    await supabase.auth.signOut();
+    el('step-email').classList.remove('hidden');
+    el('step-code').classList.add('hidden');
+    show('login');
+  });
+</script>
+</body>
+</html>
