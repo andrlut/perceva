@@ -41,3 +41,11 @@ enable_confirmations = false
 enabled = true
 policy = "oneshot"
 inspector_port = 8083
+
+# Remote MCP server (claude.ai custom connector). MUST stay verify_jwt=false:
+# the platform's own 401 has no WWW-Authenticate header, and that header is
+# how Claude discovers the OAuth server (RFC 9728). Auth happens inside the
+# function (Bearer → auth.getUser → RLS).
+[functions.perceva-mcp]
+enabled = true
+verify_jwt = false
