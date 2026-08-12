@@ -1,0 +1,49 @@
+{
+  "slug": "glossary-build",
+  "reels": [
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "tv",
+        "b": "hammer"
+      },
+      "headline": {
+        "pt": "Mil vídeos não valem uma cadeira torta.",
+        "en": "A thousand videos can't beat one wobbly chair."
+      },
+      "lede": {
+        "pt": "Você assiste quem cozinha, constrói e vence. Mas, no fim da noite, nada disso é seu. A ciência achou duas coisas que só um objeto terminado pelas suas mãos entrega — e que mil horas de tela não entregam.",
+        "en": "You watch people cook, build, and win. But at the end of the night, none of it is yours. Science found two things only an object finished by your own hands can give — and a thousand hours of screen can't."
+      }
+    },
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "checkmark-circle",
+        "b": "people"
+      },
+      "headline": {
+        "pt": "Fazer só muda você sob três condições.",
+        "en": "Making only changes you on three conditions."
+      },
+      "lede": {
+        "pt": "Um violão parado, um curso pela metade, uma estante inacabada. Parece que começar já vale algo. Mas a pesquisa aponta as três condições que fazem o trabalho das mãos mudar você — e quase todo projeto tropeça em uma.",
+        "en": "A guitar in the corner, a half-done course, a shelf never finished. Starting feels like it should count. But research points to three conditions that let making change you — and almost every project trips on one."
+      }
+    },
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "scale"
+      },
+      "headline": {
+        "pt": "As 10 mil horas nunca foram promessa.",
+        "en": "The 10,000 hours were never a promise."
+      },
+      "lede": {
+        "pt": "Pratique 10 mil horas, crie em vez de consumir, ache um propósito. A autoajuda vende o pacote. Mas, quando a ciência pôs cada promessa na balança, os números encolheram — e saber onde quebram evita a frustração.",
+        "en": "Practice 10,000 hours, create instead of consuming, find your purpose. Self-help sells the bundle. But when science weighed each promise, the numbers shrank — and knowing where they break saves you the frustration."
+      }
+    }
+  ]
+}

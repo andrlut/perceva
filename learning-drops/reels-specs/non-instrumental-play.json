@@ -1,0 +1,49 @@
+{
+  "slug": "non-instrumental-play",
+  "reels": [
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "moon",
+        "b": "bed"
+      },
+      "headline": {
+        "pt": "Descansar não é o contrário de esforço.",
+        "en": "Rest isn't the opposite of effort."
+      },
+      "lede": {
+        "pt": "Fim do dia, você desaba no sofá pra 'recarregar'. Mas a psicologia da recuperação mapeou quatro jeitos de encher o tanque — e o mais estranho deles exige suor, tem nome grego e uma condição inegociável.",
+        "en": "End of the day, you collapse on the couch to 'recharge'. But recovery psychology maps four ways to refill the tank — and the strangest one takes sweat, comes with a Greek name and one non-negotiable condition."
+      }
+    },
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "trophy"
+      },
+      "headline": {
+        "pt": "Em 1973, um prêmio matou a vontade de desenhar.",
+        "en": "In 1973, a prize killed the urge to draw."
+      },
+      "lede": {
+        "pt": "A corrida ganhou pace, o bolo virou encomenda, o desenho virou post. Mas um experimento de 1973 com crianças que amavam desenhar mostrou o que um prêmio faz com o prazer — e o efeito tem nome próprio.",
+        "en": "The run got a pace, the cake got orders, the drawings got posted. But a 1973 experiment with kids who loved to draw showed what a promised prize does to joy — and the effect has a name of its own."
+      }
+    },
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "briefcase",
+        "b": "game-controller"
+      },
+      "headline": {
+        "pt": "Nem tudo na sua vida precisa render.",
+        "en": "Not everything in your life has to pay off."
+      },
+      "lede": {
+        "pt": "Você já pensou em cobrar pelo bolo, pela foto, pela aula. Calma: nem sempre isso estraga o hobby. Mas a sua recuperação depende de proteger um espaço específico da semana — e dá pra montar em quatro passos.",
+        "en": "You've thought about charging for the cake, the photos, the lessons. Relax: going paid doesn't always ruin it. But your recovery depends on protecting one kind of space each week — and there's a four-step recipe."
+      }
+    }
+  ]
+}

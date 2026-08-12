@@ -572,7 +572,7 @@ const en = {
       videoError: "Couldn't load the video. Try again.",
     },
     reels: {
-      entry: 'Study reels',
+      entry: 'Explore',
       entrySubtitle: { one: '{{count}} new to view', other: '{{count}} new to view' },
       entryCaughtUp: 'All caught up · replay the collection',
       counter: '{{current}} of {{total}}',
@@ -581,7 +581,7 @@ const en = {
       nextZone: 'Next material',
       readFull: 'Read in full',
       setDone: 'Set complete',
-      seenToday: { one: '{{count}} material viewed', other: '{{count}} materials viewed' },
+      seenToday: { one: '{{count}} card viewed', other: '{{count}} cards viewed' },
       continueSet: { one: 'Continue · {{count}} more', other: 'Continue · {{count}} more' },
       allSeen: 'All caught up',
       nextDrop: 'New materials land with every drop. Check back soon.',

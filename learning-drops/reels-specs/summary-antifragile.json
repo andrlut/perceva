@@ -1,0 +1,41 @@
+{
+  "slug": "summary-antifragile",
+  "reels": [
+    {
+      "metaphor": "trio",
+      "icons": { "a": "wine", "b": "shield" },
+      "headline": {
+        "pt": "O contrário de frágil não é resistente.",
+        "en": "The opposite of fragile isn't resilient."
+      },
+      "lede": {
+        "pt": "A gente treina, poupa e vive pra 'aguentar firme'. Mas aguentar é só empatar com o caos. Taleb aponta um terceiro estado — com nome próprio, uma mitologia inteira e um jeito de treinar pra ele.",
+        "en": "We train, save and live to 'hold firm'. But holding is just a draw against chaos. Taleb points to a third state — with a name of its own, a whole mythology, and a way to train for it."
+      }
+    },
+    {
+      "metaphor": "ring",
+      "icons": { "symbol": "minus" },
+      "headline": {
+        "pt": "E se o próximo passo for tirar, não adicionar?",
+        "en": "What if the next step is removing, not adding?"
+      },
+      "lede": {
+        "pt": "Toda semana chega uma solução nova: um app, um suplemento, uma rotina. Taleb argumenta que esse acúmulo tem um custo escondido — e que o movimento contrário costuma render mais.",
+        "en": "Every week brings a new fix: an app, a supplement, a routine. Taleb argues the pile-up carries a hidden cost — and that the opposite move usually pays more."
+      }
+    },
+    {
+      "metaphor": "asymmetry",
+      "icons": {},
+      "headline": {
+        "pt": "O meio-termo é o lugar mais arriscado.",
+        "en": "The middle ground is the riskiest place."
+      },
+      "lede": {
+        "pt": "Investir 'moderado', carreira 'equilibrada', treino 'na média'. Parece prudente — mas é onde a perda não tem trava. A alternativa de Taleb usa os dois extremos ao mesmo tempo.",
+        "en": "Investing 'moderately', a 'balanced' career, training 'average'. It feels prudent — but it's where the loss has no floor. Taleb's alternative uses both extremes at once."
+      }
+    }
+  ]
+}

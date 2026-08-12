@@ -1,0 +1,48 @@
+{
+  "slug": "summary-good-life",
+  "reels": [
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "wallet",
+        "b": "medkit"
+      },
+      "headline": {
+        "pt": "Aos 50, já dá pra ver quem chega bem aos 80.",
+        "en": "At 50, you can already tell who thrives at 80."
+      },
+      "lede": {
+        "pt": "A gente mede saúde em exame: colesterol, pressão. Mas o estudo mais longo já feito sobre felicidade — 85 anos, Harvard — achou um previsor que não sai em exame nenhum. E 308 mil pessoas apontam na mesma direção.",
+        "en": "We measure health in lab work: cholesterol, blood pressure, glucose. But the longest happiness study ever run — 85 years, Harvard — found a predictor no blood test shows. And 308,000 people point the same way."
+      }
+    },
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "people"
+      },
+      "headline": {
+        "pt": "Não é quantos amigos você tem. Nunca foi.",
+        "en": "It was never about how many friends you have."
+      },
+      "lede": {
+        "pt": "Agenda cheia, grupos no celular, aniversário todo fim de semana — e ainda assim dá pra se sentir só. Casais de 80 anos anotaram dor e humor dia a dia, e o padrão que apareceu revela o que de fato protege.",
+        "en": "Full calendar, group chats, a birthday every weekend — and you can still feel alone. Couples in their 80s logged pain and mood day by day, and the pattern that emerged shows what actually protects you."
+      }
+    },
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "barbell"
+      },
+      "headline": {
+        "pt": "Você treina o corpo. E quem você ama?",
+        "en": "You train your body. What about your people?"
+      },
+      "lede": {
+        "pt": "Você marca treino, cuida da comida, monitora o sono. Mas trata os laços como permanentes — e o amigo que 'sempre quis ligar' vai sumindo sem briga nenhuma. Harvard dá nome a esse erro. E um treino pra ele.",
+        "en": "You book workouts, watch your diet, track your sleep. But you treat your bonds as permanent — and the friend you 'always meant to call' quietly fades. The Harvard authors name that mistake. And a way to train it."
+      }
+    }
+  ]
+}

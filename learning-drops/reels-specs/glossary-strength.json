@@ -1,0 +1,49 @@
+{
+  "slug": "glossary-strength",
+  "reels": [
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "hand-left"
+      },
+      "headline": {
+        "pt": "Seu aperto de mão sabe algo que você não sabe.",
+        "en": "Your handshake knows something you don't."
+      },
+      "lede": {
+        "pt": "Nada dói, nada falha, a escada ainda passa despercebida. Mas existe um teste de 2 minutos, com duas sacolas de mercado, que revela pra onde o seu corpo está indo — e um sinal que prediz mais que a pressão arterial.",
+        "en": "Nothing hurts, nothing fails, the stairs still feel easy. But there's a 2-minute test — two grocery bags — that shows where your body is headed, plus a signal that predicts more than blood pressure does."
+      }
+    },
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "walk",
+        "b": "flash"
+      },
+      "headline": {
+        "pt": "E se o treino mais importante for o mais leve?",
+        "en": "What if the workout that counts is the easy one?"
+      },
+      "lede": {
+        "pt": "Você acelera, sua e termina destruído — e chama isso de treino bom. Mas a base que seu corpo mais precisa se constrói em outro ritmo: tem nome próprio, teste sem aparelho e uma dose semanal mínima.",
+        "en": "You push hard, sweat, finish wrecked — and call that a good workout. But the base your body needs most is built at a different pace: it has a name, a no-gear test, and a weekly minimum dose."
+      }
+    },
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "barbell",
+        "b": "walk"
+      },
+      "headline": {
+        "pt": "Existe um piso semanal. Abaixo dele, você perde.",
+        "en": "There's a weekly floor. Below it, you're losing."
+      },
+      "lede": {
+        "pt": "Todo mundo carrega um número na cabeça: 10 mil passos, academia todo dia, dor no dia seguinte como prova. Mas a OMS publicou o piso real — e ele desmonta mais de um mito no caminho.",
+        "en": "Everyone carries a number in their head: 10,000 steps, gym every day, soreness as proof it worked. But the WHO published the actual floor — and it takes down more than one myth along the way."
+      }
+    }
+  ]
+}

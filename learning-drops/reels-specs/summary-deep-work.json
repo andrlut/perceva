@@ -1,0 +1,49 @@
+{
+  "slug": "summary-deep-work",
+  "reels": [
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "hourglass",
+        "b": "flash"
+      },
+      "headline": {
+        "pt": "Foco não soma. Multiplica.",
+        "en": "Focus doesn't add. It multiplies."
+      },
+      "lede": {
+        "pt": "Você responde 'só uma mensagem' e volta ao trabalho. Mas parte da cabeça fica presa lá atrás, cobrando pedágio da próxima tarefa. Newport mostra por que o dia picado rende menos que a conta — e o arrasto tem nome.",
+        "en": "You answer 'just one message' and get back to work. But part of your head stays behind, taxing the next task. Newport shows why a chopped-up day yields less than the hours suggest — and the drag has a name."
+      }
+    },
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "trophy",
+        "b": "barbell"
+      },
+      "headline": {
+        "pt": "O que você controla é menor do que parece.",
+        "en": "The lever you control is smaller than it looks."
+      },
+      "lede": {
+        "pt": "A promessa é sedutora: treino focado, no limite, com feedback — e a maestria vem. Mas quando a ciência pesou quanto disso explica a performance de elite, o número incomodou. O artigo mostra quem carrega o resto.",
+        "en": "The promise is seductive: focused practice at your edge, with feedback, and mastery follows. But when researchers weighed how much of elite performance that explains, the number stung. See what carries the rest."
+      }
+    },
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "calendar"
+      },
+      "headline": {
+        "pt": "Seu problema de foco não é força de vontade.",
+        "en": "Your focus problem isn't willpower."
+      },
+      "lede": {
+        "pt": "Segunda: 'essa semana eu foco de verdade'. Quarta: a agenda engoliu o plano. Pra Newport, 'foque mais' é conselho vazio — ele mapeia quatro rotas pro trabalho profundo, e só uma é realista pra quem tem emprego.",
+        "en": "Monday: this week I finally focus. Wednesday: the calendar has eaten the plan. Newport calls 'focus more' empty advice — he maps four routes into deep work, and only one is realistic for people with actual jobs."
+      }
+    }
+  ]
+}

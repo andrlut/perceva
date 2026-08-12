@@ -1,0 +1,48 @@
+{
+  "slug": "glossary-contemplate",
+  "reels": [
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "hourglass"
+      },
+      "headline": {
+        "pt": "Metade da sua vida acontece sem você.",
+        "en": "Half your life happens without you."
+      },
+      "lede": {
+        "pt": "Você lê uma frase e já está na mensagem sem resposta, no jantar, no ontem. Harvard mediu isso no dia real de 2.250 pessoas — e achou algo desconfortável sobre a ordem entre distração e humor.",
+        "en": "Mid-sentence, part of you is already on the unanswered text, dinner, yesterday. Harvard tracked 2,250 people's real days — and found something uncomfortable about which comes first: the drifting or the low mood."
+      }
+    },
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "medkit",
+        "b": "walk"
+      },
+      "headline": {
+        "pt": "Meditar funciona. Menos do que te venderam.",
+        "en": "Meditation works — just less than advertised."
+      },
+      "lede": {
+        "pt": "O app promete transformação em 8 semanas; o cético jura que é firula. Uma revisão com 3.515 pessoas em 47 ensaios clínicos chegou a um veredito que desagrada os dois — e a um risco que não aparece no folheto.",
+        "en": "The app promises transformation in 8 weeks; the skeptic swears it's all fluff. A review of 47 clinical trials, 3,515 people, reached a verdict that pleases neither side — plus a risk the brochures never mention."
+      }
+    },
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "leaf"
+      },
+      "headline": {
+        "pt": "Sentar em silêncio é só uma das portas.",
+        "en": "Sitting in silence is just one door."
+      },
+      "lede": {
+        "pt": "Você tentou meditar, a mente não parou, e você concluiu que 'isso não é pra mim'. Mas a ciência testou outros caminhos pra dentro — com menos barreira, evidência própria, e um deles age em cerca de um segundo.",
+        "en": "You tried meditating, your mind wouldn't stop, and you filed it under 'not for me'. But science has tested other inward paths — lower barrier, evidence of their own, and one works in about a second."
+      }
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "slug": "glossary-career",
+  "reels": [
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "briefcase",
+        "b": "trending-up"
+      },
+      "headline": {
+        "pt": "24 secretárias, o mesmo cargo, três trabalhos.",
+        "en": "24 assistants, one title, three different jobs."
+      },
+      "lede": {
+        "pt": "A gente aposta que um aumento resolveria. Mas em 1997, pesquisadores acharam pessoas com o mesmo cargo e o mesmo salário divididas em três relações com o trabalho — e o que as separava cabe num teste de uma frase.",
+        "en": "A raise would fix it, right? But in 1997, researchers found people with the same title and the same pay split into three distinct relationships with work — and what set them apart fits in a one-sentence test."
+      }
+    },
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "wallet",
+        "b": "flash"
+      },
+      "headline": {
+        "pt": "O que te move no trabalho não é o contracheque.",
+        "en": "What moves you at work isn't the paycheck."
+      },
+      "lede": {
+        "pt": "Reunião, prazo, chefe — a gente aguenta porque o pagamento compensa. Mas meio século de pesquisa achou três ingredientes do trabalho com sentido, e nenhum é salário ou cargo. Um deles deixa os outros pra trás.",
+        "en": "Meetings, deadlines, a boss — you put up with it for the money. But half a century of research found three ingredients of meaningful work, and none is salary or title. One towers over the rest."
+      }
+    },
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "construct"
+      },
+      "headline": {
+        "pt": "Dá pra trocar de trabalho sem trocar de emprego.",
+        "en": "You can change your job without quitting it."
+      },
+      "lede": {
+        "pt": "Quando o trabalho pesa, o instinto é procurar outro. Mas num estudo clássico, faxineiros de hospital descreviam trabalhos opostos — com a mesma descrição de cargo. A técnica tem nome, três alavancas e um aviso.",
+        "en": "When work drags, the instinct says find another. But in a classic study, hospital cleaners described entirely different jobs — under the same job description. The technique has a name, three levers, and a warning."
+      }
+    }
+  ]
+}

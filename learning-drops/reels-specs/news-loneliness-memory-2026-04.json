@@ -1,0 +1,49 @@
+{
+  "slug": "news-loneliness-memory-2026-04",
+  "reels": [
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "person",
+        "b": "bulb"
+      },
+      "headline": {
+        "pt": "Solidão e memória: a manchete errou o verbo.",
+        "en": "The loneliness headline got one verb wrong."
+      },
+      "lede": {
+        "pt": "Desde 2023 se repete que solidão empurra pra demência. Mas um estudo de seis anos com 10 mil idosos separou duas coisas que a manchete misturava — e só uma delas se confirmou.",
+        "en": "Since 2023 we've heard that loneliness pushes you toward dementia. But a six-year study of 10k older adults split apart two things the headline blurred — and only one of them held up."
+      }
+    },
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "call"
+      },
+      "headline": {
+        "pt": "O melhor motivo pra ligar não está em 2046.",
+        "en": "The best reason to call isn't waiting in 2046."
+      },
+      "lede": {
+        "pt": "A gente cuida das amizades como quem paga seguro: o retorno viria na velhice. Mas um estudo recente enfraqueceu justamente esse argumento — e o motivo que sobra no lugar é mais difícil de empurrar com a barriga.",
+        "en": "We tend friendships like an insurance policy: the payoff comes in old age. But a recent study weakened exactly that argument — and the reason left standing is much harder to keep putting off."
+      }
+    },
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "medkit",
+        "b": "newspaper"
+      },
+      "headline": {
+        "pt": "Uma manchete caiu. O alerta continua de pé.",
+        "en": "One headline fell. The warning still stands."
+      },
+      "lede": {
+        "pt": "Quando a ciência corrige um medo famoso, dá vontade de relaxar de vez. Mas o estudo mexeu numa afirmação específica — e o que ficou de pé se conta, pela estimativa da OMS, em centenas de milhares de vidas por ano.",
+        "en": "When science corrects a famous fear, it's tempting to relax for good. But the study touched one very specific claim — and what still stands is counted, by WHO estimate, in hundreds of thousands of lives a year."
+      }
+    }
+  ]
+}

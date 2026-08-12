@@ -1,0 +1,49 @@
+{
+  "slug": "glossary-dexterity",
+  "reels": [
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "medkit",
+        "b": "barbell"
+      },
+      "headline": {
+        "pt": "Um 'truque de festa' prevê quanto você vive.",
+        "en": "A 'party trick' predicts how long you live."
+      },
+      "lede": {
+        "pt": "Você mede pressão e colesterol no check-up. Mas um gesto simples, feito no chão da sala, previu mortalidade em 2 mil adultos melhor que boa parte dos exames. Pesquisadores brasileiros deram nome — e nota — a ele.",
+        "en": "You track blood pressure and cholesterol. But a simple move on your living-room floor predicted mortality in 2,000 adults better than much of your checkup. Brazilian researchers gave it a name — and a score."
+      }
+    },
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "barbell"
+      },
+      "headline": {
+        "pt": "Ser forte não te impede de ir ao chão.",
+        "en": "Being strong won't keep you off the floor."
+      },
+      "lede": {
+        "pt": "Você treina, carrega peso, se sente firme. Mas quedas matam 41 mil idosos por ano só nos EUA — e o que a idade rouba primeiro não é a força. É outra coisa, com nome próprio, que dá pra flagrar cedo.",
+        "en": "You lift, you carry groceries, you feel solid. But falls kill 41,000 older Americans every year — and what age steals first isn't strength. It's something else, with a name of its own, and an early way to spot it."
+      }
+    },
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "barbell",
+        "b": "walk"
+      },
+      "headline": {
+        "pt": "Alongar não é o que te segura em pé.",
+        "en": "Stretching isn't what keeps you upright."
+      },
+      "lede": {
+        "pt": "Você alonga antes do treino, conta 30 segundos, se sente protegido. Mas revisões com milhares de pessoas apontam outro tipo de treino — e uma aula lenta, quase 'boba', que cortou quedas quase pela metade.",
+        "en": "You stretch before your workout, count to 30, feel covered. But reviews spanning thousands of people point to a different kind of training — and a slow, almost 'silly' class that nearly halved falls in one trial."
+      }
+    }
+  ]
+}

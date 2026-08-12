@@ -1,0 +1,48 @@
+{
+  "slug": "glossary-money",
+  "reels": [
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "briefcase",
+        "b": "wallet"
+      },
+      "headline": {
+        "pt": "O fundo 'burro' ganha do gestor bem pago.",
+        "en": "The 'dumb' fund beats the well-paid manager."
+      },
+      "lede": {
+        "pt": "A indústria vende que enriquecer exige um gestor esperto e a dica certa. Mas, em 20 anos, cerca de 92% dos profissionais perdem pra um fundo que não pensa em nada. Um Nobel provou por quê — e não é falta de talento.",
+        "en": "The industry sells you the clever manager and the hot tip. But over 20 years, about 92% of the pros lose to a fund that thinks about nothing. A Nobel laureate proved why — and it has nothing to do with talent."
+      }
+    },
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "minus"
+      },
+      "headline": {
+        "pt": "O investidor médio perde pro próprio fundo.",
+        "en": "The average investor loses to their own fund."
+      },
+      "lede": {
+        "pt": "Você pesquisa, escolhe um fundo bom e deixa quieto. Mas o investidor médio rende até 1,7 ponto a menos por ano que o próprio fundo que ele tem. Por trás disso há duas goteiras — e uma delas atende pelo seu nome.",
+        "en": "You research, pick a decent fund, and leave it alone. But the average investor earns up to 1.7 points less per year than the very fund they own. Behind it are two silent leaks — and one of them answers to your name."
+      }
+    },
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "flag"
+      },
+      "headline": {
+        "pt": "A independência financeira tem um número.",
+        "en": "Financial independence has a number."
+      },
+      "lede": {
+        "pt": "Você guarda o que sobra e torce pra um dia ser bastante. Mas desde 1994 existe uma regra, testada em décadas de mercado, que transforma 'o suficiente' num número pra mirar — e quem decide a chegada não é o mercado.",
+        "en": "You save what's left and hope it adds up. But since 1994 there's been a rule, tested against decades of market history, that turns 'enough' into a number you can aim at — and the finish date isn't set by the market."
+      }
+    }
+  ]
+}

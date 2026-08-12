@@ -1,0 +1,48 @@
+{
+  "slug": "explainer-career-capital",
+  "reels": [
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "swap-horizontal"
+      },
+      "headline": {
+        "pt": "'Siga sua paixão' erra numa coisa: a ordem.",
+        "en": "'Follow your passion' has the order wrong."
+      },
+      "lede": {
+        "pt": "Alguém largou tudo pra 'seguir a paixão' e você se pergunta se falta coragem. Mas talvez o conselho esteja de trás pra frente: Newport descreve a moeda que compra um trabalho bom — e ela vem antes do amor.",
+        "en": "Someone quit everything to 'follow their passion' and you wonder if you lack the nerve. But maybe the advice is backwards: Newport describes the currency that buys great work — and it comes before love."
+      }
+    },
+    {
+      "metaphor": "solo",
+      "icons": {
+        "symbol": "heart"
+      },
+      "headline": {
+        "pt": "'Não é minha paixão' esconde outra frase.",
+        "en": "'Not my passion' usually hides another phrase."
+      },
+      "lede": {
+        "pt": "Violão, código, um idioma novo: a empolgação do começo costuma morrer no mesmo lugar — o platô. Mas cinco estudos com quase 500 pessoas acharam o que faz a vontade despencar ali. E não tem nada a ver com talento.",
+        "en": "Guitar, code, a new language: the beginner thrill tends to die in the same spot — the plateau. But five studies with nearly 500 people found what makes the drive collapse there. And it has nothing to do with talent."
+      }
+    },
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "briefcase",
+        "b": "rocket"
+      },
+      "headline": {
+        "pt": "Antes de trocar de área, uma pergunta mais dura.",
+        "en": "Before you switch fields, one harder question."
+      },
+      "lede": {
+        "pt": "De novo rascunhando o currículo pra recomeçar em outra área. Mas o atrito do começo quase nunca é o veredito que parece. Existe um roteiro chato de propósito — e um jeito de saber quando trocar é decisão, não fuga.",
+        "en": "Drafting a resume for another field, again. But early friction is almost never the verdict it feels like. There's a routine that's boring on purpose — and a way to tell when switching is a decision, not an escape."
+      }
+    }
+  ]
+}

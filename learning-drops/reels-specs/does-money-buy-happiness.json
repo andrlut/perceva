@@ -1,0 +1,49 @@
+{
+  "slug": "does-money-buy-happiness",
+  "reels": [
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "cash"
+      },
+      "headline": {
+        "pt": "O teto dos 75 mil nunca foi sobre a sua vida.",
+        "en": "The $75k ceiling was never about your life."
+      },
+      "lede": {
+        "pt": "'Dinheiro compra felicidade, mas só até certo ponto.' Você já ouviu — o número saiu do estudo de um Nobel. Mas o que ele mediu não é o que a frase promete. O artigo recupera a metade que sumiu das rodas de jantar.",
+        "en": "'Money buys happiness, but only up to a point.' You've heard it — the number came from a Nobel winner's study. But it never measured what the line promises. The article restores the half that fell off the table."
+      }
+    },
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "remove",
+        "b": "trending-up"
+      },
+      "headline": {
+        "pt": "Dois estudos opostos. Os dois estavam certos.",
+        "en": "Two opposite studies. Both were right."
+      },
+      "lede": {
+        "pt": "Kahneman dizia que a felicidade empacava; um rival provou que não. Em vez de trocar farpas, eles juntaram os dados num acordo raro na ciência. O veredito explica por que um aumento pode não mudar nada no seu humor.",
+        "en": "Kahneman said happiness stalls; a rival proved it doesn't. Instead of trading papers, they pooled their data in a rare kind of scientific truce. The verdict explains why a raise might not move your mood at all."
+      }
+    },
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "cash",
+        "b": "cash"
+      },
+      "headline": {
+        "pt": "A felicidade não conta em reais.",
+        "en": "Happiness doesn't count in dollars."
+      },
+      "lede": {
+        "pt": "Você compara aumentos em reais: 500 a mais parece pouco, 5 mil parece muito. Mas a felicidade faz outra conta — e nela, um salto pequeno na sua faixa pode valer mais que um grande. O artigo mostra qual é a conta.",
+        "en": "You size up raises in dollars: an extra $500 feels small, $5,000 feels big. But happiness runs a different math — one where a small bump at your level can beat a big one. The article shows which math it is."
+      }
+    }
+  ]
+}

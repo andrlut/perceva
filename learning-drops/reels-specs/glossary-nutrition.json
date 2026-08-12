@@ -1,0 +1,49 @@
+{
+  "slug": "glossary-nutrition",
+  "reels": [
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "restaurant",
+        "b": "fast-food"
+      },
+      "headline": {
+        "pt": "Mesmas calorias. Fomes diferentes.",
+        "en": "Same calories, different appetites."
+      },
+      "lede": {
+        "pt": "Você compara rótulos, escolhe o 'equivalente'. Mas num experimento do NIH, duas dietas idênticas no papel fizeram gente comer 500 kcal a mais numa delas — sem notar. O artigo mostra o que o rótulo esconde.",
+        "en": "You compare labels and pick the 'equivalent' option. But in an NIH experiment, two diets identical on paper made people eat 500 more calories on one — without noticing. The article shows what the label hides."
+      }
+    },
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "leaf",
+        "b": "flame"
+      },
+      "headline": {
+        "pt": "A briga das dietas tem um placar incômodo.",
+        "en": "The diet wars have an awkward scoreboard."
+      },
+      "lede": {
+        "pt": "Low carb, jejum, ceto — cada mesa tem um torcedor certíssimo. Mas Stanford sorteou 609 pessoas entre duas dietas rivais por um ano, e o placar constrangeu as duas torcidas. O artigo mostra o que decide o jogo.",
+        "en": "Low-carb, fasting, keto — every table has a true believer. But Stanford randomized 609 people between two rival diets for a year, and the scoreboard embarrassed both camps. The article shows what decides the game."
+      }
+    },
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "podium"
+      },
+      "headline": {
+        "pt": "Esqueça a dieta. Guarde três números.",
+        "en": "Forget the diet. Keep three numbers."
+      },
+      "lede": {
+        "pt": "Mais proteína, menos açúcar, 'coma fibra' — regras que todo mundo repete sem alvo. Mas a pesquisa aponta um número específico pra cada uma, e um deles quase todo mundo decorou errado. O artigo entrega os três.",
+        "en": "More protein, less sugar, 'eat fiber' — rules everyone repeats with no target. But research points to a specific number for each, and one of them most people memorized wrong. The article hands you all three."
+      }
+    }
+  ]
+}

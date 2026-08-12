@@ -567,7 +567,7 @@ const pt: Translations = {
       videoError: 'Não foi possível carregar o vídeo. Tente de novo.',
     },
     reels: {
-      entry: 'Reels de estudo',
+      entry: 'Explorar',
       entrySubtitle: { one: '{{count}} novo pra ver', other: '{{count}} novos pra ver' },
       entryCaughtUp: 'Tudo em dia · rever a coleção',
       counter: '{{current}} de {{total}}',
@@ -576,7 +576,7 @@ const pt: Translations = {
       nextZone: 'Próximo material',
       readFull: 'Ler completo',
       setDone: 'Sequência concluída',
-      seenToday: { one: '{{count}} material visto', other: '{{count}} materiais vistos' },
+      seenToday: { one: '{{count}} conteúdo visto', other: '{{count}} conteúdos vistos' },
       continueSet: { one: 'Continuar · mais {{count}}', other: 'Continuar · mais {{count}}' },
       allSeen: 'Tudo em dia',
       nextDrop: 'Novos materiais chegam a cada drop. Volte em breve.',

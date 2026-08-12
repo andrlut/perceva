@@ -1,0 +1,48 @@
+{
+  "slug": "glossary-play",
+  "reels": [
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "bed",
+        "b": "tv"
+      },
+      "headline": {
+        "pt": "O sofá só entrega um pedaço do descanso.",
+        "en": "The couch delivers only part of your rest."
+      },
+      "lede": {
+        "pt": "Domingo no sofá, feed, três episódios — e na segunda você acorda cansado igual. Mas parar não é descansar. Pesquisadores mediram o que o tempo livre precisa entregar — e 'não fazer nada' ficou de fora.",
+        "en": "A Sunday on the couch, scrolling, three episodes — and Monday you wake up just as tired. But stopping isn't resting. Researchers measured what free time must deliver — and 'doing nothing' didn't make the list."
+      }
+    },
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "airplane"
+      },
+      "headline": {
+        "pt": "Suas férias somem antes da mala desfeita.",
+        "en": "Your vacation fades before you unpack."
+      },
+      "lede": {
+        "pt": "Você atravessa o ano contando os dias pras férias. Mas a ciência mediu: o alívio é modesto e evapora em cerca de um mês. Um estudo sem praia nenhuma — reservistas convocados — mostrou o que de fato cura.",
+        "en": "You spend the year counting the days to the trip. But the science measured it: the relief is modest and gone within about a month. One study with no beach at all — army reservists — showed what actually heals."
+      }
+    },
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "hammer"
+      },
+      "headline": {
+        "pt": "A pior semana é a melhor hora pro hobby.",
+        "en": "Your worst week is the best time for a hobby."
+      },
+      "lede": {
+        "pt": "Semana cheia: o hobby fica pra 'quando sobrar energia' — e o tempo livre vira rolagem infinita. Mas uma revisão de 363 estudos achou o que o lazer precisa entregar pra te fazer bem. São cinco — e dá pra construir.",
+        "en": "Busy week, the hobby waits for leftover energy — and free time turns into endless scrolling. But a review of 363 studies found what leisure must deliver to do you good. Five needs — and you can build them."
+      }
+    }
+  ]
+}

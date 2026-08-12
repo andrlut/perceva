@@ -35,7 +35,7 @@ export function ReelsEntryCard({ groups, unreadCount, onPress }: Props) {
         <View style={styles.thumbRow}>
           {thumbs.map((g, i) => (
             <View
-              key={g.materialId}
+              key={g.key}
               style={[
                 styles.thumbFrame,
                 { borderColor: g.accent, marginLeft: i === 0 ? 0 : -14, zIndex: 3 - i },
