@@ -1,0 +1,49 @@
+{
+  "slug": "attachment-styles-love",
+  "reels": [
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "heart",
+        "b": "shield"
+      },
+      "headline": {
+        "pt": "Ninguém é 'ansioso'. Nem 'evitativo'.",
+        "en": "Nobody is 'anxious'. Or 'avoidant'."
+      },
+      "lede": {
+        "pt": "Você responde o teste de apego e guarda uma palavra: 'sou ansioso'. Mas quem criou a medida avisou: isso não é diagnóstico. O que o teste entrega de verdade é outra coisa — e ela se move.",
+        "en": "You take the attachment test and keep one word: 'I'm anxious'. But the people who built the measure said plainly: that's not a diagnosis. What the test actually hands you is something else — and it moves."
+      }
+    },
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "infinite"
+      },
+      "headline": {
+        "pt": "Um persegue, o outro foge. A dança tem nome.",
+        "en": "One chases, one flees. The dance has a name."
+      },
+      "lede": {
+        "pt": "A décima mensagem sem resposta de um lado; o celular no silencioso do outro. Mas a pesquisa diz que os dois gestos nascem do mesmo lugar — e que, num casal, o estrago não soma: multiplica.",
+        "en": "The tenth unanswered text on one side; the phone on silent on the other. But research says both moves come from the same place — and that in a couple, the damage doesn't add up: it multiplies."
+      }
+    },
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "construct",
+        "b": "flash"
+      },
+      "headline": {
+        "pt": "Você não precisa 'virar seguro'.",
+        "en": "You don't have to 'become secure'."
+      },
+      "lede": {
+        "pt": "A internet promete reforma: 'cure seu apego, vire seguro'. Mas um estudo de 23 anos mostra que essa história foi vendida maior do que é. O que muda relações de verdade é menor — e acontece num momento exato.",
+        "en": "The internet promises a renovation: 'heal your attachment, become secure'. But a 23-year study found that story is oversold. What actually changes a relationship is smaller — and it happens in one exact moment."
+      }
+    }
+  ]
+}

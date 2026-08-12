@@ -56,6 +56,8 @@ Thumbs.db
 # Learning drops — media files stay local, only fichas (backlog/) are versioned
 learning-drops/inbox/
 learning-drops/published/
+# Rendered teaser cards (re-derivable from reels-specs/, which IS versioned)
+learning-drops/reels-out/
 
 # Coverage / testing
 coverage/

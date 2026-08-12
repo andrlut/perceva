@@ -122,3 +122,40 @@ teaching).
 - **Exactly 3 points.** The article has 3 hero ideas by construction; use them.
 - Keep bodies short — the renderer truncates overflow with an ellipsis, and a
   truncated sentence looks broken. Aim for ≤ ~4 lines (~200 chars PT).
+
+## 3. Teaser reels (`learning-drops/reels-specs/<slug>.json`)
+
+Besides the media spec, write the **teaser cards** for the "Explorar" feed —
+3 independent publications (one per hero idea), newspaper-headline vibe that
+INSTIGATES without giving the answer. Rendered by
+`tools/content-media/reels.mjs` (needs `_materials.json` refreshed with the
+new material's row).
+
+```json
+{
+  "slug": "…",
+  "reels": [
+    { "metaphor": "trio|ring|asymmetry|solo",
+      "icons": { "a": "…", "b": "…", "symbol": "…" },
+      "headline": { "pt": "…", "en": "…" },
+      "lede": { "pt": "…", "en": "…" } }
+  ]
+}
+```
+
+Rules (formato aprovado 2026-08-11, protótipo antifrágil):
+- `headline` ≤ 48 chars: manchete com lacuna de curiosidade — afirma algo
+  intrigante SEM entregar a resposta. Ex.: "O contrário de frágil não é
+  resistente." / "E se o próximo passo for tirar, não adicionar?"
+- `lede` 140–215 chars, receita fixa: **cena** cotidiana que o leitor
+  reconhece → **tensão** ("mas…") → **promessa** do que o artigo revela,
+  sem nomear a resposta. Nomear o autor ou dizer "tem nome" é ok; dizer o
+  nome/mecanismo não.
+- `metaphor`: `trio` = 2 estados conhecidos + "?" (`icons.a`/`icons.b`);
+  `ring` = símbolo central num anel (`icons.symbol`; `"minus"` desenha a
+  barra de subtração); `asymmetry` = proporção desigual com "?"; `solo` =
+  ícone grande + "?" (fallback). Ícones = Ionicons v5 kebab-case sem
+  `-outline`; inválidos caem no ícone da dimensão.
+- Checklist do comitê: fidelidade ao artigo (números com hedge se o artigo
+  hedgeia), card standalone (sem jargão órfão), promessa paga pelo artigo,
+  PT/EN nativos paralelos, NUNCA reticências "…".

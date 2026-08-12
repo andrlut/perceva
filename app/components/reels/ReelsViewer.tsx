@@ -231,7 +231,7 @@ export function ReelsViewer({ groups, initialIndex }: Props) {
             ref={listRef}
             data={items}
             renderItem={renderItem}
-            keyExtractor={(item) => (item.type === 'group' ? item.group.materialId : 'end')}
+            keyExtractor={(item) => (item.type === 'group' ? item.group.key : 'end')}
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}

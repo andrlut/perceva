@@ -1,0 +1,49 @@
+{
+  "slug": "summary-outlive",
+  "reels": [
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "pulse"
+      },
+      "headline": {
+        "pt": "Quatro doenças. E talvez uma raiz comum.",
+        "en": "Four diseases. And maybe one common root."
+      },
+      "lede": {
+        "pt": "Check-up em dia, tratamento quando o problema aparece. Mas a medicina costuma chegar depois do estrago feito. Attia mapeia as quatro famílias que dominam a mortalidade — e a suspeita de um fio ligando todas.",
+        "en": "Yearly check-up, treatment once the problem shows. But medicine tends to arrive after the damage is done. Attia maps the four families that dominate mortality — and one suspect that might tie them together."
+      }
+    },
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "moon",
+        "b": "restaurant"
+      },
+      "headline": {
+        "pt": "Existe um risco maior que fumar. E treinável.",
+        "en": "One risk factor beats smoking. It's trainable."
+      },
+      "lede": {
+        "pt": "A gente larga o cigarro, ajusta o prato, dorme cedo. Mas o fator de risco mais forte não é nenhum desses — e é o único que dá pra treinar de verdade. Attia mostra o tamanho do corte: perto de 5 vezes.",
+        "en": "We quit smoking, fix the plate, sleep on time. But the strongest death-risk factor is none of those — and it's the one you can actually train. Attia shows the size of the cut: close to 5x."
+      }
+    },
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "card",
+        "b": "flask"
+      },
+      "headline": {
+        "pt": "O caro é discutível. O que funciona é barato.",
+        "en": "The pricey parts are shaky. What works is cheap."
+      },
+      "lede": {
+        "pt": "Ressonância de corpo inteiro, remédio off-label, médico concierge: a receita parece coisa de bilionário. Mas, separado o que é aposta do que é consenso, o que sobra cabe num exame de rotina e num treino.",
+        "en": "Whole-body MRI, off-label pills, a concierge doctor: the protocol reads like billionaire territory. But once you sort bets from consensus, what's left fits a routine blood draw and a workout plan."
+      }
+    }
+  ]
+}

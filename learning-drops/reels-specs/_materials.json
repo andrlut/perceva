@@ -1,0 +1,282 @@
+[
+ {
+  "slug": "attachment-styles-love",
+  "type": "explainer",
+  "dimension_id": "bonds",
+  "title_pt": "Apego no amor: dois números, não um rótulo",
+  "title_en": "Attachment in love: two numbers, not a label",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/attachment-styles-love/cover.webp",
+  "reading_minutes": 6,
+  "has_rlog": true
+ },
+ {
+  "slug": "catch-up-sleep-weekend",
+  "type": "explainer",
+  "dimension_id": "health",
+  "title_pt": "O sábado paga a dívida de sono?",
+  "title_en": "Does Saturday Repay Your Sleep Debt?",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/catch-up-sleep-weekend/cover.webp",
+  "reading_minutes": 7,
+  "has_rlog": true
+ },
+ {
+  "slug": "does-money-buy-happiness",
+  "type": "explainer",
+  "dimension_id": "wealth",
+  "title_pt": "Dinheiro compra felicidade? O acordo de 2023",
+  "title_en": "Does Money Buy Happiness? Settled in 2023",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/does-money-buy-happiness/cover.webp",
+  "reading_minutes": 6,
+  "has_rlog": true
+ },
+ {
+  "slug": "explainer-career-capital",
+  "type": "explainer",
+  "dimension_id": "wealth",
+  "title_pt": "Por que \"siga sua paixão\" falha",
+  "title_en": "Why \"follow your passion\" backfires",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/explainer-career-capital/cover.webp",
+  "reading_minutes": 6,
+  "has_rlog": true
+ },
+ {
+  "slug": "glossary-build",
+  "type": "explainer",
+  "dimension_id": "craft",
+  "title_pt": "Construir muda quem você é",
+  "title_en": "Building Changes Who You Are",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/glossary-build/cover.webp",
+  "reading_minutes": 6,
+  "has_rlog": true
+ },
+ {
+  "slug": "glossary-career",
+  "type": "explainer",
+  "dimension_id": "wealth",
+  "title_pt": "Emprego, carreira ou chamado",
+  "title_en": "Job, Career, or Calling",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/glossary-career/cover.webp",
+  "reading_minutes": 6,
+  "has_rlog": true
+ },
+ {
+  "slug": "glossary-circle",
+  "type": "explainer",
+  "dimension_id": "bonds",
+  "title_pt": "Quem você vê muda quanto você vive",
+  "title_en": "Who You See Changes How Long You Live",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/glossary-circle/cover.webp",
+  "reading_minutes": 6,
+  "has_rlog": true
+ },
+ {
+  "slug": "glossary-contemplate",
+  "type": "explainer",
+  "dimension_id": "mind",
+  "title_pt": "Contemplar: a mente que foge e volta",
+  "title_en": "Contemplation: the mind that wanders and returns",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/glossary-contemplate/cover.webp",
+  "reading_minutes": 6,
+  "has_rlog": true
+ },
+ {
+  "slug": "glossary-dexterity",
+  "type": "explainer",
+  "dimension_id": "body",
+  "title_pt": "Levantar do chão prediz quanto você vive",
+  "title_en": "Getting off the floor predicts how long you live",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/glossary-dexterity/cover.webp",
+  "reading_minutes": 6,
+  "has_rlog": true
+ },
+ {
+  "slug": "glossary-learn",
+  "type": "explainer",
+  "dimension_id": "mind",
+  "title_pt": "A sensação de aprender mente",
+  "title_en": "The feeling of learning lies",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/glossary-learn/cover.webp",
+  "reading_minutes": 7,
+  "has_rlog": true
+ },
+ {
+  "slug": "glossary-money",
+  "type": "explainer",
+  "dimension_id": "wealth",
+  "title_pt": "A parte chata de ficar rico",
+  "title_en": "The Boring Part of Getting Rich",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/glossary-money/cover.webp",
+  "reading_minutes": 6,
+  "has_rlog": true
+ },
+ {
+  "slug": "glossary-nutrition",
+  "type": "explainer",
+  "dimension_id": "health",
+  "title_pt": "Comida não é só caloria",
+  "title_en": "Food isn't just calories",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/glossary-nutrition/cover.webp",
+  "reading_minutes": 7,
+  "has_rlog": true
+ },
+ {
+  "slug": "glossary-play",
+  "type": "explainer",
+  "dimension_id": "craft",
+  "title_pt": "Descanso é uma habilidade, não um prêmio",
+  "title_en": "Rest Is a Skill, Not a Prize",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/glossary-play/cover.webp",
+  "reading_minutes": 6,
+  "has_rlog": true
+ },
+ {
+  "slug": "glossary-romance",
+  "type": "explainer",
+  "dimension_id": "bonds",
+  "title_pt": "O que realmente mantém o amor vivo",
+  "title_en": "What Actually Keeps Love Alive",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/glossary-romance/cover.webp",
+  "reading_minutes": 6,
+  "has_rlog": true
+ },
+ {
+  "slug": "glossary-sleep",
+  "type": "explainer",
+  "dimension_id": "health",
+  "title_pt": "Sono — a base de tudo",
+  "title_en": "Sleep — the foundation under everything",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/glossary-sleep/cover.webp",
+  "reading_minutes": 6,
+  "has_rlog": true
+ },
+ {
+  "slug": "glossary-strength",
+  "type": "explainer",
+  "dimension_id": "body",
+  "title_pt": "Força — o corpo como capacidade",
+  "title_en": "Strength — the body as capability",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/glossary-strength/cover.webp",
+  "reading_minutes": 7,
+  "has_rlog": true
+ },
+ {
+  "slug": "news-loneliness-memory-2026-04",
+  "type": "news",
+  "dimension_id": "bonds",
+  "title_pt": "Solidão piora memória — mas não acelera a queda",
+  "title_en": "Loneliness hurts memory — but doesn't speed up its decline",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/news-loneliness-memory-2026-04/cover.webp",
+  "reading_minutes": 4,
+  "has_rlog": true
+ },
+ {
+  "slug": "news-oral-glp1-2026-05",
+  "type": "news",
+  "dimension_id": "health",
+  "title_pt": "Pílula oral segura a perda de peso pós-Ozempic",
+  "title_en": "Oral pill holds weight loss after Ozempic",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/news-oral-glp1-2026-05/cover.webp",
+  "reading_minutes": 4,
+  "has_rlog": true
+ },
+ {
+  "slug": "non-instrumental-play",
+  "type": "explainer",
+  "dimension_id": "craft",
+  "title_pt": "O hobby mais inútil é o que mais descansa",
+  "title_en": "The Most Useless Hobby Rests You Best",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/non-instrumental-play/cover.webp",
+  "reading_minutes": 6,
+  "has_rlog": true
+ },
+ {
+  "slug": "summary-antifragile",
+  "type": "summary",
+  "dimension_id": "mind",
+  "title_pt": "Antifrágil — o que melhora com o caos",
+  "title_en": "Antifragile — what gains from disorder",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/antifragil/cover.webp",
+  "reading_minutes": 6,
+  "has_rlog": true
+ },
+ {
+  "slug": "summary-atomic-habits",
+  "type": "summary",
+  "dimension_id": "craft",
+  "title_pt": "Hábitos Atômicos — 66 dias, não 21",
+  "title_en": "Atomic Habits — 66 days, not 21",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/atomic-habits/cover.webp",
+  "reading_minutes": 6,
+  "has_rlog": true
+ },
+ {
+  "slug": "summary-deep-work",
+  "type": "summary",
+  "dimension_id": "craft",
+  "title_pt": "Deep Work — o foco como vantagem",
+  "title_en": "Deep Work — focus as an edge",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/deep-work/cover.webp",
+  "reading_minutes": 6,
+  "has_rlog": true
+ },
+ {
+  "slug": "summary-good-life",
+  "type": "summary",
+  "dimension_id": "bonds",
+  "title_pt": "A Vida Boa: o que 85 anos revelam",
+  "title_en": "The Good Life: what 85 years reveal",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/summary-good-life/cover.webp",
+  "reading_minutes": 7,
+  "has_rlog": true
+ },
+ {
+  "slug": "summary-outlive",
+  "type": "summary",
+  "dimension_id": "health",
+  "title_pt": "Outlive: o que sobra depois do ceticismo",
+  "title_en": "Outlive: What Survives a Skeptic's Read",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/summary-outlive/cover.webp",
+  "reading_minutes": 6,
+  "has_rlog": true
+ },
+ {
+  "slug": "summary-psychology-of-money",
+  "type": "summary",
+  "dimension_id": "wealth",
+  "title_pt": "Dinheiro é comportamento, não planilha",
+  "title_en": "Money Is Behavior, Not Math",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/summary-psychology-of-money/cover.webp",
+  "reading_minutes": 7,
+  "has_rlog": true
+ },
+ {
+  "slug": "summary-why-we-sleep",
+  "type": "summary",
+  "dimension_id": "health",
+  "title_pt": "Why We Sleep — com lápis cético na mão",
+  "title_en": "Why We Sleep — read with a skeptic's pencil",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/summary-why-we-sleep/cover.webp",
+  "reading_minutes": 7,
+  "has_rlog": true
+ },
+ {
+  "slug": "ten-second-balance-test",
+  "type": "explainer",
+  "dimension_id": "body",
+  "title_pt": "Dez segundos num pé só",
+  "title_en": "Ten seconds on one leg",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/ten-second-balance-test/cover.webp",
+  "reading_minutes": 6,
+  "has_rlog": true
+ },
+ {
+  "slug": "weak-ties-job-search",
+  "type": "explainer",
+  "dimension_id": "wealth",
+  "title_pt": "O emprego vem do conhecido, não do amigo",
+  "title_en": "Your Next Job Comes From an Acquaintance",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/weak-ties-job-search/cover.webp",
+  "reading_minutes": 6,
+  "has_rlog": true
+ }
+]

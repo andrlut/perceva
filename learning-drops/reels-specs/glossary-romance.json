@@ -1,0 +1,48 @@
+{
+  "slug": "glossary-romance",
+  "reels": [
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "restaurant",
+        "b": "chatbubble"
+      },
+      "headline": {
+        "pt": "Meio segundo vale mais que o jantar caro.",
+        "en": "Half a second beats the anniversary dinner."
+      },
+      "lede": {
+        "pt": "Seu parceiro diz 'olha esse passarinho' e você responde sem tirar os olhos da tela. Parece nada. Mas Gottman filmou casais por anos e achou, nesses instantes, um placar que separou quem ficou de quem saiu.",
+        "en": "Your partner says 'look at that bird' and you answer without lifting your eyes. Feels like nothing. But Gottman filmed couples for years and found, in these instants, a score that separated who stayed from who left."
+      }
+    },
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "trophy"
+      },
+      "headline": {
+        "pt": "O verdadeiro teste do casal não é a queda.",
+        "en": "The real test of a couple isn't the fall."
+      },
+      "lede": {
+        "pt": "Seu parceiro chega com uma boa notícia e você solta um 'que bom, amor' sem levantar a cabeça. Parece apoio. Mas Gable mapeou quatro reações à vitória do outro — só uma constrói o vínculo, e três corroem em silêncio.",
+        "en": "Your partner walks in with good news and you offer a 'nice, honey' without looking up. Feels supportive. But Gable mapped four ways to react to a win — only one builds the bond, and three quietly erode it."
+      }
+    },
+    {
+      "metaphor": "solo",
+      "icons": {
+        "symbol": "heart"
+      },
+      "headline": {
+        "pt": "O sentimento é invisível. E isso é um problema.",
+        "en": "The feeling is invisible. That's a problem."
+      },
+      "lede": {
+        "pt": "Você ama, mas a rotina engole: cansaço, telas, semanas no automático. Quando pesquisadoras perguntaram a centenas de pessoas o que de fato sustenta uma relação, apareceram cinco coisas — e nenhuma exige inspiração.",
+        "en": "You love them, but the routine swallows it: tiredness, screens, autopilot. When researchers asked hundreds of people what actually keeps a relationship alive, five things came up — and none requires inspiration."
+      }
+    }
+  ]
+}

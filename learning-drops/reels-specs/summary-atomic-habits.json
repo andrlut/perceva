@@ -1,0 +1,49 @@
+{
+  "slug": "summary-atomic-habits",
+  "reels": [
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "trending-up",
+        "b": "pulse"
+      },
+      "headline": {
+        "pt": "1% melhor por dia. A conta fecha. Você, não.",
+        "en": "1% better daily. The math holds. You won't."
+      },
+      "lede": {
+        "pt": "Você já viu a promessa: 1% melhor por dia, 37 vezes melhor em um ano. A aritmética confere. Mas tem uma coisa que a conta finge não ver — e o resumo separa o que é ciência e o que é marketing no best-seller.",
+        "en": "You've seen the promise: 1% better every day, 37 times better in a year. The arithmetic checks out. But the math skips over one thing — and this summary sorts the science from the marketing in the best-seller."
+      }
+    },
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "bulb"
+      },
+      "headline": {
+        "pt": "Quase metade do seu dia acontece sem você.",
+        "en": "Almost half your day happens without you."
+      },
+      "lede": {
+        "pt": "Escovar os dentes, pegar o celular, o trajeto de sempre: você jura que decidiu. Wendy Wood mediu quanto do dia roda sozinho — e o que ela achou explica por que força de vontade perde, e o que vence no lugar dela.",
+        "en": "Brushing your teeth, grabbing your phone, the usual route: you'd swear you decided. Wendy Wood measured how much of your day runs on its own — and what she found explains why willpower loses, and what wins instead."
+      }
+    },
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "trophy",
+        "b": "construct"
+      },
+      "headline": {
+        "pt": "A ideia mais citada é a menos testada.",
+        "en": "The most quoted idea is the least tested."
+      },
+      "lede": {
+        "pt": "Tem uma frase de Hábitos Atômicos que todo mundo repete em papo de bar. Clear a apoia numa teoria de 1977 que não foi feita pra provar isso. O resumo mostra o que ela vale — e como usar sem se iludir.",
+        "en": "There's one line from Atomic Habits everyone repeats at bars. Clear rests it on a 1977 theory that was never built to prove it. This summary shows what it's worth — and how to use it without fooling yourself."
+      }
+    }
+  ]
+}

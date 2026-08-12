@@ -1,0 +1,49 @@
+{
+  "slug": "news-oral-glp1-2026-05",
+  "reels": [
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "medkit",
+        "b": "trending-up"
+      },
+      "headline": {
+        "pt": "Parar a injeção cobrava um preço. Até agora?",
+        "en": "Stopping the shot used to cost you. Until now?"
+      },
+      "lede": {
+        "pt": "Emagreceu com a injeção semanal e adia o dia de parar, porque parar costuma devolver o peso. Mas um ensaio fase 3 testou pela primeira vez uma rampa de saída — e quem fez a troca segurou a maior parte do resultado.",
+        "en": "You lost weight on the weekly shot and dread the day you stop, because stopping usually hands it back. But a phase 3 trial just tested an exit ramp — and the group that switched kept most of what they had lost."
+      }
+    },
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "flash",
+        "b": "battery-half"
+      },
+      "headline": {
+        "pt": "'Ozempic em pílula' erra duas vezes.",
+        "en": "'Ozempic in a pill' gets it wrong twice."
+      },
+      "lede": {
+        "pt": "Você já viu a manchete: a caneta famosa virou comprimido. Mas a frase falha nos dois sentidos — e a metade que ninguém cita muda o que dá pra esperar dele. O artigo desmonta a comparação peça por peça, com números.",
+        "en": "You've seen the headline: the famous pen, now a pill. But the phrase fails in both directions — and the half nobody quotes changes what to expect from it. The article takes the comparison apart, number by number."
+      }
+    },
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "scale"
+      },
+      "headline": {
+        "pt": "A balança não vê o que você perde junto.",
+        "en": "The scale can't see what you lose with the fat."
+      },
+      "lede": {
+        "pt": "Remédio novo nas manchetes e a tentação de repensar o plano. Mas o ensaio mediu só o número da balança — e o que ela não registra é o que separa emagrecer bem de emagrecer mal. Essa parte segue no seu controle.",
+        "en": "A new drug in the headlines and the urge to rethink the plan. But the trial only measured the scale — and what the scale misses separates losing weight well from losing it badly. That part is still in your hands."
+      }
+    }
+  ]
+}

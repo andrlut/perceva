@@ -1,0 +1,49 @@
+{
+  "slug": "summary-psychology-of-money",
+  "reels": [
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "bulb",
+        "b": "school"
+      },
+      "headline": {
+        "pt": "O diploma era dele. Os milhões, dela.",
+        "en": "He had the diploma. She had the millions."
+      },
+      "lede": {
+        "pt": "Você compara taxas, monta planilha, faz tudo 'certo'. Mas em 2010 um executivo de Harvard quebrou, e uma secretária deixou cerca de 7 milhões. Housel aponta o que separou os dois — e não está em planilha nenhuma.",
+        "en": "You run the numbers and do everything 'right'. But in 2010 a Harvard-trained executive went broke while a secretary left about $7 million to charity. Housel names what set them apart — and it's on no spreadsheet."
+      }
+    },
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "trending-up",
+        "b": "wallet"
+      },
+      "headline": {
+        "pt": "Seu fundo rendeu mais do que você.",
+        "en": "Your fund made more money than you did."
+      },
+      "lede": {
+        "pt": "O mercado sobe e você aporta animado; despenca e você resgata correndo. Parece prudência. A Morningstar mediu esse reflexo em mais de 20 mil fundos e achou um pedágio anual — que tem nome, e tem antídoto.",
+        "en": "The market climbs and you buy in excited; it crashes and you rush to sell. Feels like prudence. Morningstar measured that reflex across 20,000-plus funds and found a yearly toll — one with a name, and an antidote."
+      }
+    },
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "scale"
+      },
+      "headline": {
+        "pt": "10 milhões de cópias — e uma meia verdade.",
+        "en": "10 million copies — and one half-truth."
+      },
+      "lede": {
+        "pt": "Comportamento vale mais que conhecimento — o livro do Housel espalhou esse mantra. Mas 76 experimentos com mais de 160 mil pessoas contam outra história, e o resumo mostra onde a tese segura e onde ela racha.",
+        "en": "Behavior beats knowledge — Housel's book spread that mantra worldwide. But 76 controlled trials with over 160,000 people tell a different story, and the summary shows where the thesis holds and where it cracks."
+      }
+    }
+  ]
+}

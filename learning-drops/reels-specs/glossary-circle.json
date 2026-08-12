@@ -1,0 +1,49 @@
+{
+  "slug": "glossary-circle",
+  "reels": [
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "moon",
+        "b": "scale"
+      },
+      "headline": {
+        "pt": "O fator de risco que ninguém mede.",
+        "en": "The risk factor nobody measures."
+      },
+      "lede": {
+        "pt": "Você sabe quantas horas dormiu, quantos passos deu, quanto pesa. Mas um número fica de fora — e ele senta na prateleira do cigarro e da pressão alta. Uma meta-análise com 308 mil pessoas mostra o tamanho da conta.",
+        "en": "You know how long you slept, how many steps you took, what you weigh. But one number never makes the list — and it sits on the same risk shelf as smoking and high blood pressure. A 308,000-person study sized it up."
+      }
+    },
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "heart",
+        "b": "calendar"
+      },
+      "headline": {
+        "pt": "E se a solidão não for a vilã da história?",
+        "en": "What if loneliness isn't the villain here?"
+      },
+      "lede": {
+        "pt": "Dá pra se sentir só numa festa cheia — e em paz jantando sozinho. Todo mundo jura que 'a solidão é que mata'. Mas quando um estudo separou o sentimento da agenda, quem previu a mortalidade foi outra coisa.",
+        "en": "You can feel alone at a packed party — and perfectly fine eating dinner solo. Everyone swears 'loneliness is what kills you'. But when a study pulled feeling apart from calendar, something else predicted who died."
+      }
+    },
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "people"
+      },
+      "headline": {
+        "pt": "Não é sobre quantos amigos você tem.",
+        "en": "It's not about how many friends you have."
+      },
+      "lede": {
+        "pt": "Cientistas pingaram vírus de resfriado no nariz de 276 voluntários. Quem adoeceu menos não foi quem tinha mais amigos — o escudo era outro detalhe da rede, e ele muda o que vale a pena cultivar.",
+        "en": "Scientists dripped live cold virus into 276 volunteers' noses. Staying well wasn't about having the most friends — the shield was another feature of the network, one that changes what's worth building."
+      }
+    }
+  ]
+}

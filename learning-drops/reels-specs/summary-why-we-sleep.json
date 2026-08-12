@@ -1,0 +1,49 @@
+{
+  "slug": "summary-why-we-sleep",
+  "reels": [
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "moon"
+      },
+      "headline": {
+        "pt": "Você passa um terço da vida fora do ar.",
+        "en": "You spend a third of your life offline."
+      },
+      "lede": {
+        "pt": "Toda noite você desliga: não come, não se reproduz, não se defende. Mas nenhuma espécie estudada abriu mão disso — a evolução seguiu pagando o preço. Walker aponta o que o cérebro faz nesse turno — em duas frentes.",
+        "en": "Every night you power down: no eating, no reproducing, no defending. Yet no species ever studied gave it up — evolution kept paying that bill. Walker points to what the brain does on that shift — on two fronts."
+      }
+    },
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "book",
+        "b": "search"
+      },
+      "headline": {
+        "pt": "Auditaram o livro do sono, linha por linha.",
+        "en": "The sleep bestseller got audited, line by line."
+      },
+      "lede": {
+        "pt": "Milhões leram, podcasts repetiram, o livro chegou ao debate público. Aí, em 2019, um pesquisador foi conferir as notas de rodapé — e uma delas não levava aonde dizia. O artigo mostra o que caiu e o que ficou de pé.",
+        "en": "Millions read it, podcasts quoted it, the book reached policy debates. Then, in 2019, a researcher went checking the footnotes — and one didn't lead where it claimed. The article shows what fell and what holds."
+      }
+    },
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "book",
+        "b": "bed"
+      },
+      "headline": {
+        "pt": "Ler sobre sono fez gente dormir pior.",
+        "en": "Reading about sleep made people sleep worse."
+      },
+      "lede": {
+        "pt": "Você mira as 8 horas, mede no relógio, confere no app. Mas clínicos do sono relatam pacientes que pioraram fazendo exatamente isso — e o padrão tem nome próprio. O artigo entrega a régua que resiste, sem ansiedade.",
+        "en": "You aim for 8 hours, check the watch, check the app. But sleep clinicians report patients who got worse doing just that — and the pattern has a name. The article hands you the ruler that holds, minus the anxiety."
+      }
+    }
+  ]
+}

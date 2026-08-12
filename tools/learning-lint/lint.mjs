@@ -239,6 +239,38 @@ function lintSpec(spec, name) {
   return out;
 }
 
+// Teaser reels spec (learning-drops/reels-specs/<slug>.json) — formato
+// "Explorar" aprovado 2026-08-11: 3 cards, manchete + lede, sem resposta.
+const REEL_METAPHORS = new Set(['trio', 'ring', 'asymmetry', 'solo']);
+function lintReels(spec, name) {
+  const out = [];
+  const reels = spec.reels || [];
+  if (reels.length !== 3)
+    out.push({ sev: 'FAIL', msg: `spec.reels tem ${reels.length} cards (precisa de exatamente 3)`, where: name });
+  reels.forEach((r, idx) => {
+    const w = `${name}:reel${idx + 1}`;
+    if (!REEL_METAPHORS.has(r.metaphor))
+      out.push({ sev: 'FAIL', msg: `metaphor "${r.metaphor}" inválida (trio|ring|asymmetry|solo)`, where: w });
+    for (const loc of ['pt', 'en']) {
+      const h = String(r.headline?.[loc] ?? '').trim();
+      const l = String(r.lede?.[loc] ?? '').trim();
+      if (!h) out.push({ sev: 'FAIL', msg: `headline.${loc} vazia`, where: w });
+      else if (h.length > 48) out.push({ sev: 'FAIL', msg: `headline.${loc} com ${h.length} chars (máx 48)`, where: w });
+      if (!l) out.push({ sev: 'FAIL', msg: `lede.${loc} vazio`, where: w });
+      else if (l.length > 215) out.push({ sev: 'FAIL', msg: `lede.${loc} com ${l.length} chars (máx 215)`, where: w });
+      else if (l.length < 120) out.push({ sev: 'WARN', msg: `lede.${loc} curto (${l.length} chars; alvo 140-215)`, where: w });
+      if (h.includes('…') || l.includes('…'))
+        out.push({ sev: 'FAIL', msg: `reticências "…" em ${loc} (parecem texto cortado)`, where: w });
+    }
+    for (const k of ['a', 'b', 'symbol']) {
+      const ic = r.icons?.[k];
+      if (ic && ic !== 'minus' && ICONS.size && !ICONS.has(ic))
+        out.push({ sev: 'WARN', msg: `icons.${k} "${ic}" não é Ionicon válido (cai no ícone da dimensão)`, where: w });
+    }
+  });
+  return out;
+}
+
 // ─── driver ────────────────────────────────────────────────────────────────
 function report(all) {
   const fails = all.filter((p) => p.sev === 'FAIL');
@@ -293,8 +325,29 @@ if (args.includes('--all')) {
   const { fails } = report(probs);
   if (!probs.length) console.log('✓ clean');
   exit = fails > 0 ? 1 : 0;
+} else if (argVal('--reels')) {
+  const path = resolve(argVal('--reels'));
+  const spec = JSON.parse(readFileSync(path, 'utf8'));
+  const probs = lintReels(spec, path);
+  const { fails } = report(probs);
+  if (!probs.length) console.log('✓ clean');
+  exit = fails > 0 ? 1 : 0;
+} else if (argVal('--reels-all')) {
+  const dir = resolve(argVal('--reels-all'));
+  const files = readdirSync(dir).filter((f) => f.endsWith('.json') && !f.startsWith('_'));
+  console.log(`Linting ${files.length} reels specs in ${dir}\n`);
+  let tf = 0, tw = 0;
+  for (const f of files.sort()) {
+    const spec = JSON.parse(readFileSync(join(dir, f), 'utf8'));
+    const probs = lintReels(spec, f);
+    if (probs.length) console.log(`── ${f}`);
+    const { fails, warns } = report(probs);
+    tf += fails; tw += warns;
+  }
+  console.log(`\nTOTAL: ${tf} FAIL, ${tw} WARN across ${files.length} reels specs`);
+  exit = tf > 0 ? 1 : 0;
 } else {
-  console.error('usage: lint.mjs --all <dir> | --draft <file> | --body <file> [--locale pt|en] | --spec <file>');
+  console.error('usage: lint.mjs --all <dir> | --draft <file> | --body <file> [--locale pt|en] | --spec <file> | --reels <file> | --reels-all <dir>');
   exit = 2;
 }
 process.exit(exit);

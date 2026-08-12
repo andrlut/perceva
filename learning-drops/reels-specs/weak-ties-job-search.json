@@ -1,0 +1,48 @@
+{
+  "slug": "weak-ties-job-search",
+  "reels": [
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "people"
+      },
+      "headline": {
+        "pt": "Quem mais quer te ajudar é quem menos consegue.",
+        "en": "The ones most eager to help you help the least."
+      },
+      "lede": {
+        "pt": "Você precisa de emprego e escreve pros cinco de sempre. Todos respondem, todos querem ajudar. Mas eles leem o que você lê e conhecem quem você conhece — e um experimento de cinco anos achou quem abre porta.",
+        "en": "You need a job, so you message the same five people. They all reply, and they all mean it. But they read what you read and know who you know — and a five-year experiment found who actually opens doors."
+      }
+    },
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "heart",
+        "b": "person"
+      },
+      "headline": {
+        "pt": "Existe um número certo de conexões em comum.",
+        "en": "There is a right number of mutual connections."
+      },
+      "lede": {
+        "pt": "Na dúvida, você pede a força pro amigo íntimo ou pro estranho influente. Mas um sorteio com 20 milhões de perfis do LinkedIn desenhou a curva real da chance de emprego — e o pico não fica em nenhum dos dois.",
+        "en": "Asking around for a lead, you pick between the close friend and the well-placed stranger. But a randomized test on 20 million LinkedIn profiles drew a curve of job odds — and the peak lands on neither of them."
+      }
+    },
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "mail"
+      },
+      "headline": {
+        "pt": "Você não precisa conhecer mais ninguém.",
+        "en": "You do not need to meet anyone new."
+      },
+      "lede": {
+        "pt": "Você acha um ex-colega na empresa dos sonhos e não escreve: depois de anos, ia parecer interesse. Mas um estudo achou nesses contatos sumidos o que os ativos não entregam — e um jeito de voltar sem constrangimento.",
+        "en": "You spot an old coworker at your dream company and say nothing: after years, it would look needy. But a study found in lapsed contacts what active ones cannot give — and a way back that does not feel like begging."
+      }
+    }
+  ]
+}

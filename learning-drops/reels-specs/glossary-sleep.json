@@ -1,0 +1,49 @@
+{
+  "slug": "glossary-sleep",
+  "reels": [
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "moon",
+        "b": "moon"
+      },
+      "headline": {
+        "pt": "Suas 8 horas podem estar perdendo de 6,5.",
+        "en": "Your 8 hours might be losing to 6.5."
+      },
+      "lede": {
+        "pt": "Você soma as horas, compensa no fim de semana e acha que fechou a conta. Mas um estudo com 61 mil adultos achou um fator que previu mortalidade melhor que a duração — e quase ninguém presta atenção nele.",
+        "en": "You add up the hours and catch up on weekends, figuring the math works out. But a study of 61,000 adults found one factor that predicted mortality better than duration — and it's the piece almost everyone ignores."
+      }
+    },
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "restaurant"
+      },
+      "headline": {
+        "pt": "A fome esquisita do dia seguinte não é gula.",
+        "en": "The day-after hunger isn't about willpower."
+      },
+      "lede": {
+        "pt": "A fome chega fora de hora, puxando pão e doce, e você promete mais disciplina. Mas bastam duas noites de 4 horas pra desregular algo mensurável no seu corpo — e não é força de vontade que conserta.",
+        "en": "Hunger shows up off-schedule, pulling you toward bread and sweets, and you promise more discipline. But two nights of four hours are enough to knock something measurable out of tune — and willpower isn't the fix."
+      }
+    },
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "card",
+        "b": "hourglass"
+      },
+      "headline": {
+        "pt": "O ajuste que mais melhora o sono é de graça.",
+        "en": "The best sleep upgrade costs exactly nothing."
+      },
+      "lede": {
+        "pt": "Colchão, chá, anel medindo sono profundo — a gente paga caro pra dormir melhor. Mas a receita mínima tem só quatro itens, e o que mais move o ponteiro não custa dinheiro nem tempo extra na cama: custa uma decisão.",
+        "en": "Mattress, tea, a ring grading your deep sleep — we pay good money to sleep better. But the minimum recipe has four items, and the top one costs no money and no extra time in bed — just one decision."
+      }
+    }
+  ]
+}

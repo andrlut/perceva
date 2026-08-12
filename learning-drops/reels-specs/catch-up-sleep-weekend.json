@@ -1,0 +1,48 @@
+{
+  "slug": "catch-up-sleep-weekend",
+  "reels": [
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "flask"
+      },
+      "headline": {
+        "pt": "Você acorda descansado. Seu corpo, não.",
+        "en": "You wake up rested. Your body does not."
+      },
+      "lede": {
+        "pt": "Sábado, 11h, e a sensação é de semana quitada. Mas o único experimento que trancou gente num laboratório pra testar isso achou algo que o cansaço não mostra — e que dois dias livres não consertaram.",
+        "en": "Saturday, 11am, and the week feels paid off. But the one experiment that locked people in a lab to test it found something tiredness never shows — and two free days failed to fix it."
+      }
+    },
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "trending-up",
+        "b": "trending-down"
+      },
+      "headline": {
+        "pt": "Mesmos dados, dois vereditos opostos.",
+        "en": "Same data, two opposite verdicts."
+      },
+      "lede": {
+        "pt": "A manchete rodou o mundo: dormir até tarde no sábado protegeria o coração. Mas outra equipe abriu a mesma base de quase 90 mil britânicos e não achou benefício nenhum. Um detalhe separa os dois resultados.",
+        "en": "The headline went around the world: sleeping in on Saturday might protect your heart. But another team opened the same database of nearly 90,000 Brits and found no benefit. One detail separates the two results."
+      }
+    },
+    {
+      "metaphor": "solo",
+      "icons": {
+        "a": "airplane"
+      },
+      "headline": {
+        "pt": "Três fusos toda sexta, sem sair de casa.",
+        "en": "Three time zones every Friday, no flight."
+      },
+      "lede": {
+        "pt": "Na semana, meia-noite às 6h. No sábado, 2h às 11h. Parece só descanso merecido. Mas a cronobiologia dá nome a esse vaivém — e dados de 60 mil pulsos mostram que ele pode pesar mais que as horas dormidas.",
+        "en": "Weekdays, midnight to 6am. Saturday, 2am to 11am. It feels like well-earned rest. But chronobiology has a name for that swing — and data from 60,000 wrists suggest it can outweigh the hours you actually sleep."
+      }
+    }
+  ]
+}

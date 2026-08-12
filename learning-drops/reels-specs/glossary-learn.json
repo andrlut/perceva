@@ -1,0 +1,48 @@
+{
+  "slug": "glossary-learn",
+  "reels": [
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "book"
+      },
+      "headline": {
+        "pt": "Quem estudou 'errado' venceu por 21 pontos.",
+        "en": "The 'wrong' way to study won by 21 points."
+      },
+      "lede": {
+        "pt": "Você relê, grifa, e tudo vai ficando familiar — parece que está entrando. Mas num experimento clássico, essa sensação perdeu feio uma semana depois. O grupo vencedor fez algo que parece ineficiente.",
+        "en": "You reread, you highlight, the text starts to feel familiar — like it's sinking in. But in a classic experiment, that feeling lost badly a week later. The winning group did something that looks inefficient."
+      }
+    },
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "bulb"
+      },
+      "headline": {
+        "pt": "O exame que reconstrói uma parte do cérebro.",
+        "en": "The exam that rebuilds part of the brain."
+      },
+      "lede": {
+        "pt": "Passar anos decorando algo parece só decoreba. Mas quando cientistas escanearam quem vive disso, acharam uma mudança que dava pra medir — e um segundo estudo mostrou que ela se desfaz quando o treino para.",
+        "en": "Years spent memorizing something sounds like pure rote work. But when scientists scanned people who do it for a living, they found a measurable change — and a second study showed it fades once the training stops."
+      }
+    },
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "hourglass",
+        "b": "eye"
+      },
+      "headline": {
+        "pt": "As 10 mil horas nunca foram sobre horas.",
+        "en": "The 10,000 hours were never about hours."
+      },
+      "lede": {
+        "pt": "Você já ouviu: 10 mil horas viram expertise, cada um tem seu 'estilo' de aprender, acreditar já melhora. Mas a pesquisa por trás dos três diz outra coisa. O artigo desmonta os mitos e mostra o que sobrou de pé.",
+        "en": "You've heard all three: 10,000 hours make an expert, everyone has a learning 'style', believing alone improves you. But the research behind each says otherwise. The article takes them apart and shows what survives."
+      }
+    }
+  ]
+}

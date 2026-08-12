@@ -1,0 +1,48 @@
+{
+  "slug": "ten-second-balance-test",
+  "reels": [
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "barbell",
+        "b": "walk"
+      },
+      "headline": {
+        "pt": "O sistema que a academia não treina.",
+        "en": "The system your gym routine never trains."
+      },
+      "lede": {
+        "pt": "Você sabe seu agachamento e seu pace. Mas tem uma capacidade que quase ninguém mede — e ela desaba numa janela de vinte anos. Um teste de dez segundos, descalço no banheiro, mostra onde você está nessa curva.",
+        "en": "You know your squat and your 5K pace. But one capacity almost nobody measures — and it collapses inside a twenty-year window. A ten-second test, barefoot in your bathroom, shows where you sit on that curve."
+      }
+    },
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "alarm"
+      },
+      "headline": {
+        "pt": "Um alarme não é uma sentença.",
+        "en": "An alarm is not a sentence."
+      },
+      "lede": {
+        "pt": "O teste do pé só virou manchete: quem falha morre num ritmo 84% maior. Mas esse número é o teto da literatura, não o consenso. O artigo mostra de onde vem a diferença — e o que fazer com o alarme.",
+        "en": "The one-leg test made headlines: fail it and you die at an 84% higher rate. But that number is the ceiling, not the consensus. The article shows where the gap comes from — and what to do with the alarm."
+      }
+    },
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "footsteps"
+      },
+      "headline": {
+        "pt": "O seu lado pior sabe algo que a média apaga.",
+        "en": "Your weaker side knows what the average hides."
+      },
+      "lede": {
+        "pt": "Doze segundos num pé, quatro no outro — a média diz oito e encerra o assunto. Mas é o lado ruim que encontra a escada escura primeiro. O artigo mostra o que anotar e por que treinar não é repetir a pose.",
+        "en": "Twelve seconds on one leg, four on the other: the average says eight. But the weak side is the one that meets the dark staircase first. The article shows what to log — and why training isn't repeating the pose."
+      }
+    }
+  ]
+}

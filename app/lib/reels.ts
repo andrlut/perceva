@@ -4,15 +4,17 @@ import { learningMediaUrl, pickMedia } from '@/lib/learningMedia';
 import { DIMENSION_META } from '@/theme/dimensions';
 
 /**
- * Deck builder for the Study Reels viewer — pure functions only, no hooks.
+ * Deck builder for the "Explorar" viewer — pure functions only, no hooks.
  *
- * A "deck" is an ordered list of ReelGroups (one per material). Each group
- * carries 1..N full-screen cards: today every material has a single
- * infographic, but `page_paths` (sliced story cards, phase 2) flows through
- * unchanged, so the viewer is N-card-tolerant from day one.
+ * A "deck" is an ordered list of ReelGroups. With teaser assets
+ * (kind='reel'), every card in `page_paths` becomes its OWN group — an
+ * independent publication, shuffled into the feed ("mostrar eles
+ * randômicos"). Materials that only have the legacy single infographic
+ * fall back to one group with that composite, so mixed catalogs work
+ * during rollout.
  */
 
-/** How many materials a reel session shows before the "continue?" card. */
+/** How many cards a session shows before the "continue?" card. */
 export const REEL_SET_SIZE = 5;
 
 /** Story-card canvas the content pipeline renders at. Anything else is a
@@ -33,6 +35,8 @@ export interface ReelCard {
 }
 
 export interface ReelGroup {
+  /** Unique per group — with teasers a material yields several groups. */
+  key: string;
   materialId: string;
   slug: string;
   title: string;
@@ -47,86 +51,84 @@ export interface ReelGroup {
   cards: ReelCard[];
 }
 
-function toGroup(
-  card: LearningFeedCard,
-  locale: LearningMediaLocale,
-): ReelGroup | null {
+function toGroups(card: LearningFeedCard, locale: LearningMediaLocale): ReelGroup[] {
   // Off-template guard BEFORE the locale pick: an off-spec preferred-locale
-  // asset (legacy NotebookLM canvas) must fall back to an on-spec
-  // other-locale one — with the langBadge — not hide the material entirely.
+  // asset must fall back to an on-spec other-locale one (with the badge),
+  // not hide the material entirely.
   const onCanvas = card.media.filter(
     (m) => m.meta?.width === CANVAS_W && m.meta?.height === CANVAS_H,
   );
-  const pick = pickMedia<LearningFeedMedia>(onCanvas, ['infographic'], locale);
-  if (!pick) return null;
+  // Teaser cards win over the legacy composite when both exist.
+  const reelPick = pickMedia<LearningFeedMedia>(onCanvas, ['reel'], locale);
+  const pick = reelPick ?? pickMedia<LearningFeedMedia>(onCanvas, ['infographic'], locale);
+  if (!pick) return [];
 
   const meta = pick.media.meta;
-  if (!meta || meta.width == null || meta.height == null) return null; // filter guarantees
+  if (!meta || meta.width == null || meta.height == null) return []; // filter guarantees
   const { width: cardW, height: cardH, alt } = meta;
 
-  const paths = pick.media.page_paths?.length
-    ? pick.media.page_paths
-    : [pick.media.path];
+  const paths = pick.media.page_paths?.length ? pick.media.page_paths : [pick.media.path];
 
-  const title = locale === 'pt' ? card.title_pt : card.title_en;
-  const summary = locale === 'pt' ? card.summary_pt : card.summary_en;
-
-  return {
+  const base = {
     materialId: card.id,
     slug: card.slug,
-    title,
-    summary,
+    title: locale === 'pt' ? card.title_pt : card.title_en,
+    summary: locale === 'pt' ? card.summary_pt : card.summary_en,
     dimensionId: card.dimension_id,
     accent: DIMENSION_META[card.dimension_id].color,
     langBadge: pick.isFallback ? pick.media.locale.toUpperCase() : null,
     xpPreview: 5 + 5 * card.subs.length,
     releasedAt: new Date(card.released_at).getTime(),
-    cards: paths.map((p, i) => ({
-      key: `${card.id}:${i}`,
-      uri: learningMediaUrl(p),
-      width: cardW,
-      height: cardH,
-      alt: alt ?? null,
-      pageIndex: i,
-      pageCount: paths.length,
-    })),
   };
+  const toCard = (p: string, i: number, pageCount: number): ReelCard => ({
+    key: `${card.id}:${i}`,
+    uri: learningMediaUrl(p),
+    width: cardW,
+    height: cardH,
+    alt: alt ?? null,
+    pageIndex: i,
+    pageCount,
+  });
+
+  if (reelPick) {
+    // Independent publications: one single-card group per teaser.
+    return paths.map((p, i) => ({
+      ...base,
+      key: `${card.id}:${i}`,
+      cards: [toCard(p, i, 1)],
+    }));
+  }
+  // Legacy composite: one group carrying all pages.
+  return [{ ...base, key: card.id, cards: paths.map((p, i) => toCard(p, i, paths.length)) }];
 }
 
-/**
- * Round-robin across dimensions so a run of same-dimension materials (the
- * 12 glossaries) never stacks into a wall of one color. Queues keep their
- * own newest-first order; the dimension whose freshest material is newest
- * leads each cycle, so a brand-new drop still opens the deck.
- */
-function interleaveByDimension(groups: ReelGroup[]): ReelGroup[] {
-  const queues = new Map<DimensionId, ReelGroup[]>();
-  for (const g of groups) {
-    const q = queues.get(g.dimensionId) ?? [];
-    q.push(g);
-    queues.set(g.dimensionId, q);
+function shuffled<T>(arr: T[]): T[] {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j]!, a[i]!];
   }
-  const dims = [...queues.keys()].sort(
-    (a, b) => (queues.get(b)![0]?.releasedAt ?? 0) - (queues.get(a)![0]?.releasedAt ?? 0),
-  );
+  return a;
+}
+
+/** Greedy pass so two cards of the same material never sit adjacent when
+ *  avoidable — pure shuffle clusters more than people expect. */
+function spreadByMaterial(groups: ReelGroup[]): ReelGroup[] {
   const out: ReelGroup[] = [];
-  let remaining = groups.length;
-  while (remaining > 0) {
-    for (const d of dims) {
-      const g = queues.get(d)!.shift();
-      if (g) {
-        out.push(g);
-        remaining -= 1;
-      }
-    }
+  const pool = groups.slice();
+  while (pool.length > 0) {
+    const prev = out[out.length - 1];
+    let idx = pool.findIndex((g) => g.materialId !== prev?.materialId);
+    if (idx < 0) idx = 0;
+    out.push(pool.splice(idx, 1)[0]!);
   }
   return out;
 }
 
 /**
- * Builds the session deck: unread materials first (newest first, dimension
- * interleaved), then already-read ones for replay (least-recently-seen in
- * reels first — `seenAt` comes from the local reels-progress store).
+ * Builds the session deck: unread materials' cards first (shuffled — the
+ * Explorar feed is a discovery surface), already-read ones as a replay
+ * tail (least-recently-seen first, from the local reels-progress store).
  */
 export function buildReelDeck(
   cards: LearningFeedCard[],
@@ -135,14 +137,9 @@ export function buildReelDeck(
   seenAt: Record<string, number> = {},
 ): ReelGroup[] {
   const groups: ReelGroup[] = [];
-  for (const c of cards) {
-    const g = toGroup(c, locale);
-    if (g) groups.push(g);
-  }
+  for (const c of cards) groups.push(...toGroups(c, locale));
 
-  const unread = groups
-    .filter((g) => !readSet.has(g.materialId))
-    .sort((a, b) => b.releasedAt - a.releasedAt);
+  const unread = groups.filter((g) => !readSet.has(g.materialId));
   const read = groups
     .filter((g) => readSet.has(g.materialId))
     .sort((a, b) => {
@@ -151,5 +148,5 @@ export function buildReelDeck(
       return b.releasedAt - a.releasedAt;
     });
 
-  return [...interleaveByDimension(unread), ...read];
+  return [...spreadByMaterial(shuffled(unread)), ...spreadByMaterial(read)];
 }
