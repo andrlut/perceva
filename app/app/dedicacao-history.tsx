@@ -37,6 +37,10 @@ import {
   type HistoryFilters as Filters,
 } from '@/lib/api/dedicacaoHistory';
 import type { DimensionId, SubId } from '@/lib/db/types';
+import {
+  formatWindowLabel,
+  windowChipLabels,
+} from '@/lib/dedicacao/windowLabel';
 import { useT } from '@/lib/i18n';
 import { useLoadedSettings } from '@/lib/settings';
 import { tokens } from '@/theme';
@@ -79,49 +83,6 @@ function parseGranularity(raw: unknown): Granularity {
 function parseNumber(raw: unknown, fallback: number): number {
   const n = Number(raw);
   return Number.isFinite(n) ? n : fallback;
-}
-
-const CHIP_LABELS_PT = {
-  week: 'Semana',
-  month: 'Mês',
-  quarter: 'Trimestre',
-  all: 'Total',
-};
-const CHIP_LABELS_EN = {
-  week: 'Week',
-  month: 'Month',
-  quarter: 'Quarter',
-  all: 'All',
-};
-
-function formatWindowLabel(
-  spec: WindowSpec,
-  start: Date,
-  end: Date,
-  language: 'pt' | 'en',
-): string {
-  const loc = language === 'pt' ? 'pt-BR' : 'en-US';
-  if (spec.granularity === 'all') {
-    return language === 'pt' ? 'últimos 12 meses' : 'last 12 months';
-  }
-  if (spec.granularity === 'week') {
-    const day = new Intl.DateTimeFormat(loc, { day: 'numeric' });
-    const month = new Intl.DateTimeFormat(loc, { month: 'short' });
-    return `${day.format(start)} – ${day.format(end)} ${month
-      .format(end)
-      .replace('.', '')}`;
-  }
-  if (spec.granularity === 'month') {
-    return new Intl.DateTimeFormat(loc, {
-      month: 'long',
-      year: 'numeric',
-    }).format(start);
-  }
-  const month = new Intl.DateTimeFormat(loc, { month: 'short' });
-  const year = new Intl.DateTimeFormat(loc, { year: 'numeric' });
-  return `${month.format(start).replace('.', '')} – ${month
-    .format(end)
-    .replace('.', '')} ${year.format(end)}`;
 }
 
 /**
@@ -238,7 +199,7 @@ export default function DedicacaoHistoryScreen() {
     );
   };
 
-  const chipLabels = locale === 'pt' ? CHIP_LABELS_PT : CHIP_LABELS_EN;
+  const chipLabels = windowChipLabels(t);
   const periodLabel = formatWindowLabel(
     spec,
     windowComp.start,

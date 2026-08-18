@@ -8,17 +8,12 @@ import { InsightCard } from '@/components/InsightCard';
 import { PeriodSelector } from '@/components/dedicacao/PeriodSelector';
 import { Sparkline } from '@/components/dedicacao/Sparkline';
 import { XpHexChart } from '@/components/dedicacao/XpHexChart';
-import {
-  computeWindow,
-  useDedicacaoWindow,
-  type SubWindow,
-  type WindowSpec,
-} from '@/lib/api/dedicacao';
+import { type SubWindow } from '@/lib/api/dedicacao';
 import type { CharacterDimension, DimensionId } from '@/lib/db/types';
-import { LEADER_RATIO, windowRatio } from '@/lib/dedicacao/scale';
+import { LEADER_RATIO, pct, windowRatio } from '@/lib/dedicacao/scale';
+import { useWindowScrub } from '@/lib/dedicacao/useWindowScrub';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
-import { useLoadedSettings } from '@/lib/settings';
 import { levelProgress } from '@/lib/xp';
 import { tokens } from '@/theme';
 import {
@@ -32,59 +27,7 @@ interface Props {
   dimensions: CharacterDimension[];
 }
 
-const CHIP_LABELS_PT = {
-  week: 'Semana',
-  month: 'Mês',
-  quarter: 'Trimestre',
-  all: 'Total',
-};
-const CHIP_LABELS_EN = {
-  week: 'Week',
-  month: 'Month',
-  quarter: 'Quarter',
-  all: 'All',
-};
-
-function localeTag(language: 'pt' | 'en'): string {
-  return language === 'pt' ? 'pt-BR' : 'en-US';
-}
-
-function formatWindowLabel(
-  spec: WindowSpec,
-  start: Date,
-  end: Date,
-  language: 'pt' | 'en',
-): string {
-  const loc = localeTag(language);
-  if (spec.granularity === 'all') {
-    return language === 'pt' ? 'últimos 12 meses' : 'last 12 months';
-  }
-  if (spec.granularity === 'week') {
-    const day = new Intl.DateTimeFormat(loc, { day: 'numeric' });
-    const month = new Intl.DateTimeFormat(loc, { month: 'short' });
-    return `${day.format(start)} – ${day.format(end)} ${month
-      .format(end)
-      .replace('.', '')}`;
-  }
-  if (spec.granularity === 'month') {
-    return new Intl.DateTimeFormat(loc, {
-      month: 'long',
-      year: 'numeric',
-    }).format(start);
-  }
-  // quarter
-  const month = new Intl.DateTimeFormat(loc, { month: 'short' });
-  const year = new Intl.DateTimeFormat(loc, { year: 'numeric' });
-  return `${month.format(start).replace('.', '')} – ${month
-    .format(end)
-    .replace('.', '')} ${year.format(end)}`;
-}
-
 const SPARK_HEIGHT = 64;
-
-function pct(ratio: number): `${number}%` {
-  return `${Math.max(0, Math.min(100, ratio * 100))}%`;
-}
 
 /**
  * Sub-pillar **Dedicação** (Praticada). Standardized layout: the hex leads,
@@ -107,32 +50,23 @@ export function DedicacaoPanel({ dimensions }: Props) {
   const router = useRouter();
   const { locale } = useT();
   const metaLookup = useMetaLookup();
-  const settings = useLoadedSettings();
   const { width: screenWidth } = useWindowDimensions();
 
-  const [spec, setSpec] = useState<WindowSpec>({
-    granularity: 'month',
-    offset: 0,
-  });
+  const {
+    spec,
+    setSpec,
+    query: windowQuery,
+    label,
+    chipLabels,
+  } = useWindowScrub();
   const [expanded, setExpanded] = useState<Set<DimensionId>>(new Set());
   const [hexMode, setHexMode] = useState<'dims' | 'subs'>('dims');
-
-  const windowQuery = useDedicacaoWindow(spec, settings.weekStart);
 
   const dimMap = useMemo(() => {
     const m = new Map<DimensionId, CharacterDimension>();
     for (const d of dimensions) m.set(d.dimension_id, d);
     return m;
   }, [dimensions]);
-
-  const computed = useMemo(
-    () => computeWindow(spec, settings.weekStart),
-    [spec, settings.weekStart],
-  );
-  const label = useMemo(
-    () => formatWindowLabel(spec, computed.start, computed.end, locale),
-    [spec, computed, locale],
-  );
 
   const slices = useMemo(
     () =>
@@ -205,7 +139,6 @@ export function DedicacaoPanel({ dimensions }: Props) {
     return max;
   }, [perDimWindow]);
 
-  const labels = locale === 'pt' ? CHIP_LABELS_PT : CHIP_LABELS_EN;
   const isAll = spec.granularity === 'all';
   const totalWindowXp = windowQuery.data?.totalXp ?? 0;
   const prevTotalXp = windowQuery.data?.prevTotalXp ?? 0;
@@ -257,7 +190,7 @@ export function DedicacaoPanel({ dimensions }: Props) {
         accent={tokens.semantic.xp2}
         halo="rgba(111, 232, 170, 0.18)"
         border="rgba(61, 214, 140, 0.35)"
-        labels={labels}
+        labels={chipLabels}
       />
 
       {/* Six dimension cards, fixed order so the layout is stable while

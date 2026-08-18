@@ -225,6 +225,10 @@ function bucketIndex(
 export function useDedicacaoWindow(spec: WindowSpec, weekStart: WeekStart) {
   return useQuery({
     queryKey: dedicacaoKeys.window(spec, weekStart),
+    // Dedicação and Espelho are mutually exclusive panels sharing this key;
+    // without a staleTime every toggle between them refires the full
+    // task_completion fetch. Cached rows still paint instantly.
+    staleTime: 60_000,
     queryFn: async (): Promise<WindowResult> => {
       const comp = computeWindow(spec, weekStart);
       const queryStart = comp.prevStart ?? comp.start;

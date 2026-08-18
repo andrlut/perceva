@@ -729,6 +729,39 @@ const en = {
     hexAxisA11y: '{{dim}}: {{score}} out of {{max}}',
   },
 
+  /**
+   * Dedicação window-selector labels (chips + "Total"), read by every
+   * surface that scrubs periods (Dedicação, Espelho, history).
+   */
+  dedicacaoWindow: {
+    week: 'Week',
+    month: 'Month',
+    quarter: 'Quarter',
+    all: 'All',
+    last12Months: 'last 12 months',
+  },
+
+  /**
+   * Espelho (Mirror) — the cross-pillar Perceived × Practiced view on the
+   * Eu tab: how you see yourself laid over what you practice, per life
+   * area. Tone: adult kindness, no guilt — the mirror shows, never charges.
+   */
+  espelho: {
+    title: 'Mirror',
+    intro: 'Two portraits, side by side — the difference is where you notice yourself.',
+    legendSelf: 'how you see yourself',
+    legendPractice: 'what you practice',
+    gapSeeMore: 'you see yourself strong here — and barely practiced it this period. Noticed?',
+    gapDoMore: 'in practice, better than you think. Give yourself credit.',
+    emptyPractice:
+      'No practice logged in this period. No guilt — switch periods or start today.',
+    emptyPerception:
+      'Your portrait is missing: tell us how you see yourself to reveal the mirror.',
+    perceptionCta: 'Take the self-assessment',
+    rowA11y:
+      '{{dim}}: you see yourself at {{score}} out of 10; {{xp}} XP practiced this period',
+  },
+
   autoconhecimento: {
     kicker: 'Your inner path',
     lead: 'Deeper inventories measuring personality, values, attachment style, behavior, character strengths and type. Do not affect the Assessment hex.',

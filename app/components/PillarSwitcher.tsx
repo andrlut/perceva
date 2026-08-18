@@ -7,9 +7,20 @@ import { tokens } from '@/theme';
 
 export type PillarKey = 'percebida' | 'praticada' | 'desejada';
 
+/** The Eu tab's top-level views: the three pillars plus the cross-pillar
+ *  Espelho (percepção × prática), which lives beside them, not inside any. */
+export type EuViewKey = PillarKey | 'espelho';
+
+/** Neutral silver tone of the Espelho — shared with the panel it opens. */
+export const MIRROR_TONE = {
+  accent: tokens.text.hi,
+  halo: 'rgba(255,255,255,0.08)',
+  border: 'rgba(255,255,255,0.28)',
+};
+
 interface Props {
-  active: PillarKey;
-  onChange: (next: PillarKey) => void;
+  active: EuViewKey;
+  onChange: (next: EuViewKey) => void;
 }
 
 interface Item {
@@ -46,16 +57,26 @@ const ITEMS: Item[] = [
 
 /**
  * Top-level pillar switcher — three icons (one per V3 pilar) laid out
- * full-width with a tone-tinted halo on the active item. Replaces the
- * V2 PillarTabs which used text segments and KPIs.
+ * full-width with a tone-tinted halo on the active item, plus a compact
+ * icon-only Espelho tab at the end. Replaces the V2 PillarTabs which used
+ * text segments and KPIs.
  *
  * Tones mirror the V3 feedback registers:
  *   - Percebida → contemplative (violet)
  *   - Praticada → dopaminergic (xp green)
  *   - Desejada → ceremonious (coin gold)
+ *   - Espelho → neutral silver (the lens over the pillars, not a pillar)
  */
 export function PillarSwitcher({ active, onChange }: Props) {
   const { t } = useT();
+
+  const select = (next: EuViewKey) => {
+    if (next !== active) Haptics.selectionAsync().catch(() => {});
+    onChange(next);
+  };
+
+  const mirrorActive = active === 'espelho';
+
   return (
     <View style={styles.row}>
       {ITEMS.map((it) => {
@@ -63,10 +84,7 @@ export function PillarSwitcher({ active, onChange }: Props) {
         return (
           <Pressable
             key={it.key}
-            onPress={() => {
-              if (!isActive) Haptics.selectionAsync().catch(() => {});
-              onChange(it.key);
-            }}
+            onPress={() => select(it.key)}
             style={({ pressed }) => [
               styles.tab,
               isActive && {
@@ -97,6 +115,28 @@ export function PillarSwitcher({ active, onChange }: Props) {
           </Pressable>
         );
       })}
+      <Pressable
+        onPress={() => select('espelho')}
+        style={({ pressed }) => [
+          styles.tab,
+          styles.mirrorTab,
+          mirrorActive && {
+            backgroundColor: MIRROR_TONE.halo,
+            borderColor: MIRROR_TONE.border,
+          },
+          pressed && { opacity: 0.85 },
+        ]}
+        hitSlop={4}
+        accessibilityRole="button"
+        accessibilityState={mirrorActive ? { selected: true } : {}}
+        accessibilityLabel={t('espelho.title')}
+      >
+        <Ionicons
+          name={mirrorActive ? 'contrast' : 'contrast-outline'}
+          size={22}
+          color={mirrorActive ? MIRROR_TONE.accent : tokens.text.dim}
+        />
+      </Pressable>
     </View>
   );
 }
@@ -117,6 +157,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: tokens.border.base,
+  },
+  // Espelho — icon-only fixed-width tab so the three pillar labels keep
+  // their room on narrow screens.
+  mirrorTab: {
+    flex: 0,
+    width: 48,
+    paddingHorizontal: 0,
   },
   label: {
     fontFamily: 'Manrope_800ExtraBold',
