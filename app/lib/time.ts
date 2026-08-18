@@ -6,7 +6,9 @@ const LOCALE_MAP: Record<LanguageCode, string> = {
   pt: 'pt-BR',
 };
 
-function bcp47(locale?: LanguageCode): string {
+/** BCP-47 tag for a language code ('pt' → 'pt-BR'), defaulting to the
+ *  current app locale. The one home for this mapping — don't inline it. */
+export function bcp47(locale?: LanguageCode): string {
   return LOCALE_MAP[locale ?? getCurrentLocale()];
 }
 

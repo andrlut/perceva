@@ -724,6 +724,39 @@ const pt: Translations = {
     hexAxisA11y: '{{dim}}: {{score}} de {{max}}',
   },
 
+  /**
+   * Rótulos do seletor de janela da Dedicação (chips + "Total"), lidos
+   * pelas superfícies que scrubam períodos (Dedicação, Espelho, histórico).
+   */
+  dedicacaoWindow: {
+    week: 'Semana',
+    month: 'Mês',
+    quarter: 'Trimestre',
+    all: 'Total',
+    last12Months: 'últimos 12 meses',
+  },
+
+  /**
+   * Espelho — a visão cruzada Percebida × Praticada da aba Eu: como você
+   * se vê sobreposto ao que você pratica, por área da vida. Tom: gentileza
+   * adulta, sem culpa — o espelho mostra, nunca cobra.
+   */
+  espelho: {
+    title: 'Espelho',
+    intro: 'Dois retratos, lado a lado — é na diferença que você se percebe.',
+    legendSelf: 'como você se vê',
+    legendPractice: 'o que você pratica',
+    gapSeeMore: 'você se vê bem aqui — e quase não praticou no período. Percebeu?',
+    gapDoMore: 'na prática, melhor do que você acha. Dê o crédito a si.',
+    emptyPractice:
+      'Nenhuma prática registrada nesse período. Sem culpa — troque o período ou comece hoje.',
+    emptyPerception:
+      'Falta o seu retrato: conte como você se vê pra revelar o espelho.',
+    perceptionCta: 'Fazer autoavaliação',
+    rowA11y:
+      '{{dim}}: você se vê em {{score}} de 10; prática de {{xp}} XP no período',
+  },
+
   autoconhecimento: {
     kicker: 'Sua via interior',
     lead: 'Inventários mais profundos que medem personalidade, valores, estilo de apego, comportamento, forças de caráter e tipo. Não afetam o hex de Avaliação.',

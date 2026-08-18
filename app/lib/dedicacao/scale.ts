@@ -22,3 +22,8 @@ export const MIN_RATIO = 0.07;
 export function windowRatio(xp: number, max: number): number {
   return max > 0 && xp > 0 ? Math.max(MIN_RATIO, (xp / max) * LEADER_RATIO) : 0;
 }
+
+/** Ratio (0..1) → clamped CSS percentage width for bar fills. */
+export function pct(ratio: number): `${number}%` {
+  return `${Math.max(0, Math.min(100, ratio * 100))}%`;
+}
