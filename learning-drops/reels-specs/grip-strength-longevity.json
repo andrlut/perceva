@@ -1,0 +1,48 @@
+{
+  "slug": "grip-strength-longevity",
+  "reels": [
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "pulse",
+        "b": "hand-left"
+      },
+      "headline": {
+        "pt": "O aparelho certo não é o de pressão.",
+        "en": "The right device isn't the pressure cuff."
+      },
+      "lede": {
+        "pt": "Todo posto de saúde tem um aparelho de pressão. Quase nenhum tem o teste de um minuto que, em 142.861 adultos, previu morte melhor que ela. O artigo mostra qual é — e por que prever melhor não basta.",
+        "en": "Every clinic owns a blood-pressure cuff. Almost none has the one-minute test that, across 142,861 adults, predicted death better than the cuff. The article shows which test — and why predicting better isn't enough."
+      }
+    },
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "thermometer"
+      },
+      "headline": {
+        "pt": "Melhorar o número não melhora você.",
+        "en": "Improving the number doesn't improve you."
+      },
+      "lede": {
+        "pt": "Existe um número medido na sua mão que prevê morte melhor que a pressão arterial. A reação óbvia é treinar esse número — e é exatamente aí que quase todo mundo erra. O artigo explica o que a mão está contando.",
+        "en": "A number measured in your hand predicts death better than blood pressure. The obvious move is to train that number — and that's where almost everyone goes wrong. The article explains what the hand is reporting."
+      }
+    },
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "barbell"
+      },
+      "headline": {
+        "pt": "O mínimo que funciona é ridículo.",
+        "en": "The minimum that works is embarrassing."
+      },
+      "lede": {
+        "pt": "Você adia a musculação porque imagina cinco sessões por semana e uma hora de aparelho. A revisão que foi procurar o piso do que funciona achou um número constrangedor de tão pequeno. O artigo mostra a dose inteira.",
+        "en": "You keep putting off lifting because you picture five sessions a week and an hour on the machines. The review that hunted for the floor of what works found a number embarrassingly small. The article shows the dose."
+      }
+    }
+  ]
+}
