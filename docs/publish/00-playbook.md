@@ -47,7 +47,7 @@ O gargalo do Google é o **closed testing de 14 dias corridos com 12 testadores*
 
 ## A2. App Store Connect — criar o app e registrar o Bundle ID
 
-1. **Certificates, Identifiers & Profiles → Identifiers → App IDs** → registrar o Bundle ID **`com.andrlut.rpgtasks`** (decisão travada — espelha o Android). Não precisa de capabilities especiais (sem push remoto, sem IAP).
+1. **Certificates, Identifiers & Profiles → Identifiers → App IDs** → registrar o Bundle ID **`com.andrlut.rpgtasks`** (decisão travada — espelha o Android). Não precisa de capabilities especiais (sem push remoto; a capability In-App Purchase, necessária pro Premium/RevenueCat desde a decisão 2026-08-18, já vem habilitada por padrão em todo App ID).
 2. **App Store Connect → Apps → +** → criar o app:
    - Nome: **Perceva** (nomes são globais e únicos na App Store — se "Perceva" estiver tomado, precisará de um variant; verifique nesse passo).
    - Primary language: **Português (Brasil)**.

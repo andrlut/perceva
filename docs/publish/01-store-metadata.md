@@ -34,7 +34,7 @@ The app has no violence, no sexual/suggestive content, no profanity, no gambling
 | Marketing URL (App Store, optional) | `https://perceva.app` |
 | Privacy Policy URL (required both stores) | `https://perceva.app/privacidade` / `https://perceva.app/privacy` |
 | Play "Website" | `https://perceva.app` |
-| Support email (Play, required) | `suporte@perceva.app` (set a real inbox before submit) |
+| Support email (Play, required) | `contact@perceva.app` — **decisao 2026-08-18**: caixa real, conferida e recebendo (Zoho); e o MESMO endereco publicado no site, exigencia de consistencia. `suporte@` foi descartado. |
 
 > If `perceva.app` isn't registered yet, a GitHub Pages or Notion public page works for v1 as long as the Support URL and Privacy Policy URL resolve. Both stores reject dead links.
 
@@ -397,8 +397,8 @@ Category: select **"Reference, News, or Educational"** or **"Utility, Productivi
 | Does the app share the user's location with other users | No |
 | Does the app allow users to interact or exchange content/media with each other | **No** (no social/UGC exchange) |
 | Does the app share user-provided personal info with third parties | **No** |
-| Does the app allow purchase of digital goods | **No** (no IAP in v1) |
-| Digital purchases / real-money | No |
+| Does the app allow purchase of digital goods | **Yes** — **decisao 2026-08-18**: assinatura Perceva Premium (R$ 14,90/mes ou R$ 99,90/ano) via RevenueCat entra no v1. A resposta antiga ("No, no IAP in v1") esta superada. |
+| Digital purchases / real-money | Yes (assinatura via Play Billing / StoreKit, intermediada pelo RevenueCat) |
 | Does the app collect/share personal or sensitive data | Yes → email + self-reflection responses; declare in Data Safety (section 6). This affects Data Safety, not the age rating. |
 
 **Result: Livre / Everyone (all regions: ESRB Everyone, PEGI 3, USK 0, ClassInd L).**
