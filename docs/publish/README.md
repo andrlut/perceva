@@ -86,7 +86,7 @@ Marcadores: 💳 = custa dinheiro/tem latência (comece cedo) · 🤖 = eu execu
 | Privacy hosting (GitHub Pages) | grátis |
 | **Total ano 1** | **~US$ 124** (depois ~US$ 99/ano) |
 
-Sem IAP no v1 → **sem StoreKit/Play Billing**. Sem login social → **sem Sign in with Apple**. Sem tracking → **sem ATT**. Isso simplifica muito os formulários.
+~~Sem IAP no v1~~ → **atualizacao 2026-08-18: IAP ENTRA no v1** (assinatura Premium via RevenueCat, que abstrai StoreKit/Play Billing). Formularios de loja (IARC + Data Safety) devem declarar compras — ver `01-store-metadata.md` secao 5. Sem login social → **sem Sign in with Apple**. Sem tracking → **sem ATT**.
 
 ## ⏱️ Timeline realista
 
