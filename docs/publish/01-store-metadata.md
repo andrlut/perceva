@@ -30,9 +30,9 @@ The app has no violence, no sexual/suggestive content, no profanity, no gambling
 
 | Field | Value |
 |---|---|
-| Support URL (required both stores) | `https://perceva.app/suporte` (pt) · `https://perceva.app/support` (en) — or a single `https://perceva.app/support` |
-| Marketing URL (App Store, optional) | `https://perceva.app` |
-| Privacy Policy URL (required both stores) | `https://perceva.app/privacidade` / `https://perceva.app/privacy` |
+| Support URL (required both stores) | `https://perceva.app/suporte` (pt-BR) · `https://perceva.app/support` (en-US) |
+| Marketing URL (App Store, optional) | `https://perceva.app` (pt-BR) · `https://perceva.app/en/` (en-US) |
+| Privacy Policy URL (required both stores) | `https://perceva.app/privacy` (pt-BR) · **`https://perceva.app/en/privacy`** (en-US) — desde 2026-08-19 o site tem árvore `/en/` canônica com hreflang, então o campo per-locale da App Store tem URL EN de verdade pra colar (antes só existia `?lang=en`, não-canônico). Slug pt `/privacidade` segue como 301. |
 | Play "Website" | `https://perceva.app` |
 | Support email (Play, required) | `contact@perceva.app` — **decisao 2026-08-18**: caixa real, conferida e recebendo (Zoho); e o MESMO endereco publicado no site, exigencia de consistencia. `suporte@` foi descartado. |
 
