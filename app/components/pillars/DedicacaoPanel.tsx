@@ -8,8 +8,14 @@ import { InsightCard } from '@/components/InsightCard';
 import { PeriodSelector } from '@/components/dedicacao/PeriodSelector';
 import { Sparkline } from '@/components/dedicacao/Sparkline';
 import { XpHexChart } from '@/components/dedicacao/XpHexChart';
+import { pickSubScoresDecimal } from '@/lib/api/character';
 import { type SubWindow } from '@/lib/api/dedicacao';
-import type { CharacterDimension, DimensionId } from '@/lib/db/types';
+import type {
+  CharacterDimension,
+  CharacterSubScore,
+  DimensionId,
+  SubId,
+} from '@/lib/db/types';
 import { LEADER_RATIO, pct, windowRatio } from '@/lib/dedicacao/scale';
 import { useWindowScrub } from '@/lib/dedicacao/useWindowScrub';
 import { useT } from '@/lib/i18n';
@@ -25,9 +31,15 @@ import {
 
 interface Props {
   dimensions: CharacterDimension[];
+  /** All character_sub_score rows — feeds the mirror outline on the hex. */
+  subScores: CharacterSubScore[];
 }
 
 const SPARK_HEIGHT = 64;
+
+/** Perception outline tone — Percebida's violet, because that is exactly
+ *  what the line is: the Percebida portrait visiting the Praticada hex. */
+const MIRROR_COLOR = tokens.brand.violet2;
 
 /**
  * Sub-pillar **Dedicação** (Praticada). Standardized layout: the hex leads,
@@ -46,9 +58,9 @@ const SPARK_HEIGHT = 64;
  * with the selector. Tapping a hex vertex opens that dimension's detail,
  * matching the Avaliação hex.
  */
-export function DedicacaoPanel({ dimensions }: Props) {
+export function DedicacaoPanel({ dimensions, subScores }: Props) {
   const router = useRouter();
-  const { locale } = useT();
+  const { t, locale } = useT();
   const metaLookup = useMetaLookup();
   const { width: screenWidth } = useWindowDimensions();
 
@@ -61,6 +73,7 @@ export function DedicacaoPanel({ dimensions }: Props) {
   } = useWindowScrub();
   const [expanded, setExpanded] = useState<Set<DimensionId>>(new Set());
   const [hexMode, setHexMode] = useState<'dims' | 'subs'>('dims');
+  const [showMirror, setShowMirror] = useState(true);
 
   const dimMap = useMemo(() => {
     const m = new Map<DimensionId, CharacterDimension>();
@@ -126,6 +139,56 @@ export function DedicacaoPanel({ dimensions }: Props) {
     [perDimWindow],
   );
 
+  // ── The mirror outline ──────────────────────────────────────────────
+  // How the user SEES themselves, plotted over what they practice. Self
+  // scores lead; a sub the user never rated falls back to the questionnaire
+  // so a quiz-only user still gets a reflection.
+  //
+  // Normalized the SAME relative way as the XP it overlays (windowRatio
+  // against the leading axis), never as an absolute /5. That is the whole
+  // point: both silhouettes then answer "how is this spread across my six
+  // areas", so where the violet line reaches past the filled shape the user
+  // sees themselves strong in an area they are not currently feeding — and
+  // where it falls short, they are practicing more than they give
+  // themselves credit for. Mixing an absolute scale with a relative one
+  // would make the two outlines uncomparable and the reading a lie.
+  const perception = useMemo(() => {
+    const self = pickSubScoresDecimal(subScores, 'self');
+    const quiz = pickSubScoresDecimal(subScores, 'questionnaire');
+    const perSub = new Map<SubId, number>();
+    for (const dim of DIMENSION_ORDER) {
+      for (const sub of SUBS_BY_DIM[dim]) {
+        const s = self.get(sub) ?? 0;
+        perSub.set(sub, s > 0 ? s : (quiz.get(sub) ?? 0));
+      }
+    }
+    const perDim = new Map<DimensionId, number>();
+    for (const dim of DIMENSION_ORDER) {
+      perDim.set(
+        dim,
+        SUBS_BY_DIM[dim].reduce((sum, sub) => sum + (perSub.get(sub) ?? 0), 0),
+      );
+    }
+    const hasAny = [...perSub.values()].some((v) => v > 0);
+    return { perSub, perDim, hasAny };
+  }, [subScores]);
+
+  // Ratios in the active grain's axis order — 6 dims or 12 subs, matching
+  // whatever the hex is currently plotting.
+  const mirrorSeries = useMemo(() => {
+    if (!perception.hasAny) return undefined;
+    if (hexMode === 'subs') {
+      const values = DIMENSION_ORDER.flatMap((dim) =>
+        SUBS_BY_DIM[dim].map((sub) => perception.perSub.get(sub) ?? 0),
+      );
+      const max = Math.max(0, ...values);
+      return values.map((v) => windowRatio(v, max));
+    }
+    const values = DIMENSION_ORDER.map((dim) => perception.perDim.get(dim) ?? 0);
+    const max = Math.max(0, ...values);
+    return values.map((v) => windowRatio(v, max));
+  }, [perception, hexMode]);
+
   // The expanded trend sparkline keeps its own cumulative ceiling so a
   // sub-leading dim reads short next to the leader's full-height climb.
   const sparkGlobalMax = useMemo(() => {
@@ -169,6 +232,8 @@ export function DedicacaoPanel({ dimensions }: Props) {
           totalXp={totalWindowXp}
           prevTotalXp={isAll ? null : prevTotalXp}
           isLoading={windowQuery.isPending}
+          secondary={showMirror ? mirrorSeries : undefined}
+          secondaryColor={MIRROR_COLOR}
           size={hexSize}
           onAxisPress={openDim}
           idSuffix="dedicacao"
@@ -180,6 +245,29 @@ export function DedicacaoPanel({ dimensions }: Props) {
         accent={tokens.semantic.xp2}
         onToggle={() => setHexMode((m) => (m === 'dims' ? 'subs' : 'dims'))}
       />
+
+      {/* The mirror legend — same shape as Norte's: fill vs outline, named.
+          Tappable so the outline can be dismissed when the user just wants
+          to read the window's XP shape on its own. */}
+      {mirrorSeries && (
+        <Pressable
+          onPress={() => setShowMirror((v) => !v)}
+          style={({ pressed }) => [styles.legendRow, pressed && { opacity: 0.7 }]}
+          hitSlop={6}
+          accessibilityRole="button"
+          accessibilityState={{ selected: showMirror }}
+          accessibilityLabel={t('dedicacao.mirrorLegendA11y')}
+        >
+          <View style={styles.swatchFill} />
+          <Text style={styles.legendText}>{t('dedicacao.mirrorLegend')}</Text>
+          <View
+            style={[
+              styles.swatchGhost,
+              !showMirror && { borderColor: tokens.text.faint },
+            ]}
+          />
+        </Pressable>
+      )}
 
       {/* First extra below the hex: the period selector — an input that
           drives the hex above and the cards below, so it sits between them. */}
@@ -398,6 +486,33 @@ export function DedicacaoPanel({ dimensions }: Props) {
 const styles = StyleSheet.create({
   wrap: { gap: tokens.space[3] },
   hexWrap: { alignItems: 'center', gap: tokens.space[2] },
+  legendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  legendText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 11,
+    color: tokens.text.dim,
+    letterSpacing: 0.2,
+  },
+  swatchFill: {
+    width: 14,
+    height: 10,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    borderWidth: 1,
+    borderColor: tokens.text.mid,
+  },
+  swatchGhost: {
+    width: 14,
+    height: 10,
+    borderRadius: 3,
+    borderWidth: 1,
+    borderColor: MIRROR_COLOR,
+  },
   historyLinkWrap: { alignItems: 'center' },
   historyLink: {
     flexDirection: 'row',

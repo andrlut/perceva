@@ -37,6 +37,11 @@ interface Props {
    *  caption — `slices` reads all-zero before the data lands, and asserting
    *  an empty period we haven't loaded yet is a lie, not a placeholder. */
   isLoading?: boolean;
+  /** Optional comparison outline, ratios already normalized 0..1 and in the
+   *  same axis order as the active grain. Used by the mirror reading: how
+   *  the user SEES themselves, drawn over what they practice. */
+  secondary?: number[];
+  secondaryColor?: string;
   size?: number;
   onAxisPress?: (dim: DimensionId) => void;
   /** Stable id for the gradient def — required when more than one hex can
@@ -78,6 +83,8 @@ export function XpHexChart({
   totalXp,
   prevTotalXp,
   isLoading = false,
+  secondary,
+  secondaryColor,
   size = 240,
   onAxisPress,
   idSuffix,
@@ -153,6 +160,8 @@ export function XpHexChart({
           letting the string dictate the geometry. */}
       <HexRadar
         axes={axes}
+        secondary={secondary}
+        secondaryColor={secondaryColor}
         centerValue={formatCenterXp(totalXp)}
         centerUnit="XP"
         centerFontSize={24}
