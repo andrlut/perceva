@@ -1409,7 +1409,6 @@ const pt: Translations = {
     },
     views: {
       list: 'Lista',
-      quarter: 'Trimestre',
       month: 'Mês',
     },
     legend: {
@@ -1436,7 +1435,10 @@ const pt: Translations = {
       practices: 'Práticas',
       dims: 'Dimensões',
       subs: 'Subs',
+      dimsAndSubs: 'Dimensões e subs',
       tags: 'Marcações do humor',
+      searchPractices: 'Buscar prática',
+      noPracticeMatch: 'Nenhuma prática com esse nome.',
       minXp: 'XP mínimo',
       minXpAny: 'sem piso',
       minXpValue: '{{xp}} XP ou mais',
@@ -1453,9 +1455,6 @@ const pt: Translations = {
     list: {
       empty: 'Nenhum dia bate com este filtro.',
       hint: 'Toque num dia para abri-lo no mês.',
-    },
-    quarter: {
-      hint: 'Cada mês pintado pela frente ativa; dias fora do filtro se apagam.',
     },
     day: {
       practices: 'Práticas',

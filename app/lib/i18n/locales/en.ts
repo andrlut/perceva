@@ -1414,7 +1414,6 @@ const en = {
     },
     views: {
       list: 'List',
-      quarter: 'Quarter',
       month: 'Month',
     },
     legend: {
@@ -1441,7 +1440,10 @@ const en = {
       practices: 'Practices',
       dims: 'Dimensions',
       subs: 'Subs',
+      dimsAndSubs: 'Dimensions and subs',
       tags: 'Mood tags',
+      searchPractices: 'Search a practice',
+      noPracticeMatch: 'No practice by that name.',
       minXp: 'Minimum XP',
       minXpAny: 'no floor',
       minXpValue: '{{xp}} XP or more',
@@ -1458,9 +1460,6 @@ const en = {
     list: {
       empty: 'No day matches this filter.',
       hint: 'Tap a day to open it in the month.',
-    },
-    quarter: {
-      hint: 'Each month painted by the active front; days outside the filter fade out.',
     },
     day: {
       practices: 'Practices',

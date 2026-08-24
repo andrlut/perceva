@@ -27,8 +27,13 @@ import type { MoodValue } from '@/lib/mood';
 /** Which reading of a day the grid paints. */
 export type CalendarFront = 'rotina' | 'humor' | 'vault';
 
-/** How the range is laid out. The day panel rides along with all three. */
-export type CalendarView = 'month' | 'list' | 'quarter';
+/**
+ * How the range is laid out. A quarter view of mini month maps existed briefly
+ * and was cut: at that size a cell is a few dp of near-black on near-black, so
+ * it read as an empty screen rather than as density, and the month grid plus
+ * the list already answer "how did the period go" without the extra zoom level.
+ */
+export type CalendarView = 'month' | 'list';
 
 interface CalendarState {
   front: CalendarFront;
