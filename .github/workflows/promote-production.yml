@@ -52,10 +52,16 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
+      # 22, not 20: `eas-version: latest` resolves at run time, and eas-cli 22.3
+      # pulls @oclif/plugin-autocomplete, which declares engines.node >= 22. On
+      # Node 20 the install aborts with "Found incompatible module" and the
+      # promote never reaches `eas update`. This stayed hidden while the action's
+      # eas-cli cache kept being restored — the first job to miss the cache
+      # installs fresh and fails.
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
 
       - name: Setup EAS CLI
