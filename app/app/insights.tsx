@@ -14,7 +14,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { SegmentedControl } from '@/components/SegmentedControl';
-import { HistoryLensTabs } from '@/components/history/HistoryLensTabs';
 import { MoodFace } from '@/components/mood/MoodFace';
 import { useCorrelation } from '@/lib/api/correlation';
 import { useMoodTags } from '@/lib/api/mood';
@@ -140,8 +139,10 @@ export default function InsightsScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          <HistoryLensTabs current="insights" />
-
+          {/* No lens switcher any more: Rotina and Dedicação merged into the
+              calendar, and this screen stayed its own because correlation reads
+              a rolling 90-day window — a different question from "what did this
+              month look like". The calendar's mood front links here. */}
           <SegmentedControl<Lens>
             options={[
               { value: 'feeling', label: t('insights.lensFeeling') },

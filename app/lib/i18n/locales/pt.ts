@@ -55,6 +55,12 @@ const pt: Translations = {
     dayCellEmpty: 'sem registro',
     dayCellXp: '{{xp}} XP',
     dayCellNote: 'com anotação',
+    dayCellSpent: '{{coins}} moedas gastas',
+    dayCellPractices: {
+      one: '{{count}} prática',
+      other: '{{count}} práticas',
+    },
+    dayCellFiltered: 'fora do filtro atual',
   },
 
   taskForm: {
@@ -1411,6 +1417,81 @@ const pt: Translations = {
     errUnskip: 'Não foi possível retomar',
   },
 
+  calendar: {
+    eyebrow: 'CALENDÁRIO',
+    fronts: {
+      rotina: 'Rotina',
+      humor: 'Humor',
+      vault: 'Vault',
+    },
+    views: {
+      list: 'Lista',
+      quarter: 'Trimestre',
+      month: 'Mês',
+    },
+    legend: {
+      less: 'menos',
+      more: 'mais',
+      moodScale: '1 → 5',
+      spent: 'moedas gastas',
+    },
+    summary: {
+      rotina: '{{days}} dias ativos · {{xp}} XP',
+      humor: 'humor médio {{avg}}',
+      humorEmpty: 'nenhum humor registrado',
+      vault: '{{count}} resgates · {{coins}} moedas',
+      filtered: 'filtrado',
+      byDimension: 'Por dimensão',
+      openBreakdown: 'Resumo do mês',
+      patterns: 'Ver padrões',
+      longRangeHint: 'Trimestre e total continuam na aba Eu.',
+    },
+    filter: {
+      title: 'Filtrar',
+      open: 'Filtrar dias',
+      moods: 'Humor do dia',
+      practices: 'Práticas',
+      dims: 'Dimensões',
+      subs: 'Subs',
+      tags: 'Marcações do humor',
+      minXp: 'XP mínimo',
+      minXpAny: 'sem piso',
+      minXpValue: '{{xp}} XP ou mais',
+      rewards: 'Recompensas',
+      withRedemption: 'Só dias com resgate',
+      explain:
+        'O filtro escolhe quais dias contam — em todas as frentes, visões e resumos. Os outros apagam, nunca somem.',
+      clear: 'Limpar',
+      apply: 'Aplicar',
+      applyCount: 'Aplicar ({{count}})',
+      emptyPractices: 'Nenhuma prática registrada neste período ainda.',
+    },
+    list: {
+      empty: 'Nenhum dia bate com este filtro.',
+      hint: 'Toque num dia para abri-lo no mês.',
+    },
+    quarter: {
+      hint: 'Cada mês pintado pela frente ativa; dias fora do filtro se apagam.',
+    },
+    day: {
+      practices: 'Práticas',
+      practicesXp: 'Práticas · {{xp}} XP',
+      mood: 'Humor',
+      rewards: 'Recompensas',
+      noRewards: 'Nenhum resgate neste dia.',
+      redeemed: 'Resgatou: {{title}}',
+      used: 'Usou: {{title}}',
+      redeemedSub: 'saiu do banco de moedas',
+      usedSub: 'estava guardada no Vault',
+      stillOpen: 'Ainda dava pra fazer',
+      unfiltered: 'O retro-log ignora filtros de propósito.',
+      undoTitle: 'Desfazer esta conclusão?',
+      undoBody: '{{title}} — você devolve {{xp}} XP e {{coins}} moedas.',
+      undoConfirm: 'Desfazer',
+      undoCancel: 'Manter',
+    },
+  },
+
   character: {
     title: 'Personagem',
     level: 'Nível',
@@ -1979,12 +2060,6 @@ const pt: Translations = {
     notAuthenticated: 'Você precisa estar logado pra isso.',
     notFound: 'Não encontrado',
     unknown: 'Erro inesperado. Tente novamente.',
-  },
-
-  historyHub: {
-    rotina: 'Rotina',
-    dedicacao: 'Dedicação',
-    insights: 'Insights',
   },
 
   insights: {

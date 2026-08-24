@@ -1,59 +1,83 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
-import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useT } from '@/lib/i18n';
-import { formatHeroDate } from '@/lib/time';
-
-import {
-  CompletedBucket,
-  completionsToItems,
-  type CompletedItem,
-} from '@/components/CompletedBucket';
+import { useBottomSafeClearance } from '@/components/BottomNavBar';
+import { CalendarActiveFilters } from '@/components/calendar/CalendarActiveFilters';
+import { CalendarDayPanel } from '@/components/calendar/CalendarDayPanel';
+import { CalendarFilterSheet } from '@/components/calendar/CalendarFilterSheet';
+import { CalendarGrid } from '@/components/calendar/CalendarGrid';
+import { CalendarListView } from '@/components/calendar/CalendarListView';
+import { CalendarQuarterView } from '@/components/calendar/CalendarQuarterView';
+import { CalendarSummary } from '@/components/calendar/CalendarSummary';
 import { CompleteTaskSheet } from '@/components/CompleteTaskSheet';
-import { DaySeal } from '@/components/DaySeal';
-import { DayXpStat } from '@/components/DayXpStat';
-import { MoodDayDetail } from '@/components/mood/MoodDayDetail';
+import { FabStack } from '@/components/FabStack';
 import { ScreenBackground } from '@/components/ScreenBackground';
-import { DayHeatmap, type DayCellData } from '@/components/history/DayHeatmap';
-import { HistoryLensTabs } from '@/components/history/HistoryLensTabs';
+import { SegmentedControl } from '@/components/SegmentedControl';
 import { TaskActionSheet } from '@/components/TaskActionSheet';
-import { TaskCard } from '@/components/TaskCard';
 import { XPCoinFloat } from '@/components/XPCoinFloat';
 import {
-  dateKeyFromLocal,
-  useDailySummary,
-  taskFromCompletionSnapshot,
-  useDayDetail,
-  type DailySummaryEntry,
-} from '@/lib/api/history';
-import { useMoodMonth } from '@/lib/api/mood';
-import { moodLevel } from '@/lib/mood';
+  calendarKeys,
+  endOfMonth,
+  startOfMonth,
+  useCalendarMonth,
+  useCalendarRange,
+} from '@/lib/api/calendar';
+import { dateKeyFromLocal } from '@/lib/api/history';
+import { useMoodTags } from '@/lib/api/mood';
 import {
-  dimensionForSub,
-  useActiveTasks,
   useCompleteTask,
   useSkipTaskToday,
   useUndoCompletion,
   useUnskipTaskToday,
 } from '@/lib/api/tasks';
-import { useLoadedSettings } from '@/lib/settings';
-import { confirmAction, showInfo } from '@/lib/util/confirm';
+import {
+  activeFacetCount,
+  dayMatchesFilter,
+  isFilterActive,
+  summarize,
+  type CalendarDay,
+} from '@/lib/calendar/filters';
+import { applyFilterSeed, useCalendarStore, type CalendarFront, type CalendarView } from '@/lib/calendar/store';
 import type { DimensionId, SubId, TaskSub, TaskWithSubs } from '@/lib/db/types';
+import { useT } from '@/lib/i18n';
+import { useLoadedSettings } from '@/lib/settings';
+import { formatHeroDate } from '@/lib/time';
+import { confirmAction, showInfo } from '@/lib/util/confirm';
 import { rewardForTaskSubs } from '@/lib/xp';
 import { tokens } from '@/theme';
-import { DIMENSION_ORDER } from '@/theme/dimensions';
+import { DIMENSION_ORDER, SUB_META } from '@/theme/dimensions';
+
+/**
+ * The calendar. One grid, three fronts, one filter.
+ *
+ * This screen replaces what used to be three: Rotina (this route), Dedicação
+ * (`/dedicacao-history`) and Insights (`/insights`). They were three screens
+ * because each owned a different reading of the same days; they are now three
+ * *fronts* over one grid, because the days never differed — only the question
+ * did. Both old routes survive as thin redirects that translate their params
+ * into this screen's filter.
+ *
+ * The architecture is three orthogonal axes, each with exactly one home:
+ *
+ *   front  — what the grid paints        (the segmented control)
+ *   filter — which days count            (the floating funnel; see lib/calendar/filters.ts)
+ *   period — where you are               (month arrows, and the quarter view)
+ *
+ * Keeping period out of the filter is what stops the calendar from having two
+ * competing notions of "when", which is exactly the collision the old
+ * Dedicação filters would have caused with a per-practice filter here.
+ */
+
+const EMPTY_DAYS: Map<string, CalendarDay> = new Map();
+
+function addMonths(d: Date, delta: number): Date {
+  return new Date(d.getFullYear(), d.getMonth() + delta, 1);
+}
 
 function startOfDay(d: Date): Date {
   const x = new Date(d);
@@ -67,157 +91,184 @@ function addDays(d: Date, days: number): Date {
   return x;
 }
 
-/** First day of `d`'s month at 00:00 local. */
-function startOfMonth(d: Date): Date {
-  return new Date(d.getFullYear(), d.getMonth(), 1);
-}
-
-/** Last day of `d`'s month at 23:59:59 local. */
-function endOfMonth(d: Date): Date {
-  const e = new Date(d.getFullYear(), d.getMonth() + 1, 0);
-  e.setHours(23, 59, 59, 999);
-  return e;
-}
-
-/** True if `a` and `b` fall in the same year + month. */
 function isSameMonth(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
 }
 
-function isSameDay(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
-}
+const VALID_DIMS = new Set<string>(DIMENSION_ORDER);
+const VALID_SUBS = new Set<string>(Object.keys(SUB_META));
 
-/**
- * Which pillars a day touched, in catalog order. Deliberately dimension-
- * level and not sub-level: `SUB_META` carries no per-sub palette, so
- * sibling subs (sleep and nutrition are both #FF6B7A) would render
- * pixel-identical dots.
- */
-function dimensionsInDay(entry: DailySummaryEntry | undefined): DimensionId[] {
-  if (!entry) return [];
-  const hit = new Set<DimensionId>();
-  for (const [sub, xp] of Object.entries(entry.bySub)) {
-    if ((xp ?? 0) > 0) hit.add(dimensionForSub(sub as SubId));
-  }
-  return DIMENSION_ORDER.filter((d) => hit.has(d));
-}
-
-function formatDay(d: Date): string {
-  const today = startOfDay(new Date());
-  const target = startOfDay(d);
-  const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000);
-  if (diffDays === 0) return 'Today';
-  if (diffDays === -1) return 'Yesterday';
-  return d.toLocaleDateString(undefined, {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  });
-}
-
-export default function HistoryScreen() {
+export default function CalendarScreen() {
+  const { t, locale } = useT();
   const router = useRouter();
-  const { t } = useT();
+  const queryClient = useQueryClient();
+  const settings = useLoadedSettings();
+  const bottomClearance = useBottomSafeClearance();
+
+  const front = useCalendarStore((s) => s.front);
+  const setFront = useCalendarStore((s) => s.setFront);
+  const view = useCalendarStore((s) => s.view);
+  const setView = useCalendarStore((s) => s.setView);
+  const filter = useCalendarStore((s) => s.filter);
+
   const [selected, setSelected] = useState<Date>(() => startOfDay(new Date()));
   const [visibleMonth, setVisibleMonth] = useState<Date>(() => startOfMonth(new Date()));
-  // Sheets + floats — mirror the home so retro-logging on a past day
-  // feels identical to logging today.
+  const [filterOpen, setFilterOpen] = useState(false);
   const [sheetTask, setSheetTask] = useState<TaskWithSubs | null>(null);
   const [actionTask, setActionTask] = useState<TaskWithSubs | null>(null);
   const [floats, setFloats] = useState<{ id: number; xp: number; coins: number }[]>([]);
 
-  // Live tasks, so a completion row can resolve back to its real task and
-  // keep the drawer's "+1" wired. Rows whose task is archived/deleted fall
-  // back to the completion snapshot and drop the "+1" (nothing to re-log).
-  const activeTasks = useActiveTasks();
-  const activeById = useMemo(
-    () => new Map((activeTasks.data ?? []).map((task) => [task.id, task])),
-    [activeTasks.data],
-  );
+  // --- deep-link seed ------------------------------------------------------
+  // `/dedicacao-history` redirects here with its old params. Seed once: a link
+  // is a destination, and re-applying it on every render would fight the user.
+  const params = useLocalSearchParams<{ dims?: string; subs?: string; minXp?: string }>();
+  const seeded = useRef(false);
+  useEffect(() => {
+    if (seeded.current) return;
+    seeded.current = true;
+    const dims = (params.dims ?? '')
+      .split(',')
+      .map((v) => v.trim())
+      .filter((v) => VALID_DIMS.has(v)) as DimensionId[];
+    const subs = (params.subs ?? '')
+      .split(',')
+      .map((v) => v.trim())
+      .filter((v) => VALID_SUBS.has(v)) as SubId[];
+    const minXp = Math.max(0, Number.parseInt(params.minXp ?? '', 10) || 0);
+    if (dims.length > 0 || subs.length > 0 || minXp > 0) {
+      applyFilterSeed({ dims, subs, minXp });
+    }
+  }, [params.dims, params.subs, params.minXp]);
 
-  // Heatmap range follows the visible month — the MonthGrid only needs
-  // entries for the month it renders, so we fetch a tight window.
-  const monthRange = useMemo(
-    () => ({ from: startOfMonth(visibleMonth), to: endOfMonth(visibleMonth) }),
+  // --- data ----------------------------------------------------------------
+  const monthQuery = useCalendarMonth(visibleMonth);
+  // List and quarter share one three-month window ending at the visible month,
+  // so switching between them is free. Gated on the view: the month front is
+  // the default and should never pay for a range it is not showing.
+  const quarterMonths = useMemo(
+    () => [addMonths(visibleMonth, -2), addMonths(visibleMonth, -1), startOfMonth(visibleMonth)],
     [visibleMonth],
   );
+  const quarterQuery = useCalendarRange(
+    quarterMonths[0],
+    endOfMonth(visibleMonth),
+    view !== 'month',
+  );
 
-  const settings = useLoadedSettings();
-  const summary = useDailySummary(monthRange.from, monthRange.to);
-  const moodMonth = useMoodMonth(visibleMonth);
-  const day = useDayDetail(selected, settings.weekStart);
+  const source = view === 'month' ? monthQuery : quarterQuery;
+  const days = source.data?.days ?? EMPTY_DAYS;
+  const reference = source.data?.reference ?? 100;
+
+  const moodTags = useMoodTags();
+  const tagEmojis = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const tag of moodTags.data ?? []) if (tag.emoji) map.set(tag.slug, tag.emoji);
+    return map;
+  }, [moodTags.data]);
+  const tagLabels = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const tag of moodTags.data ?? []) {
+      map.set(tag.slug, locale === 'pt' ? tag.label_pt : tag.label_en);
+    }
+    return map;
+  }, [moodTags.data, locale]);
+
+  /** Practices seen in the loaded range, most-logged first — the filter's menu. */
+  const practices = useMemo(() => {
+    const counts = new Map<string, { taskId: string; title: string; count: number }>();
+    for (const day of days.values()) {
+      for (const p of day.practices) {
+        if (!p.title) continue;
+        const seen = counts.get(p.taskId);
+        if (seen) seen.count += p.count;
+        else counts.set(p.taskId, { taskId: p.taskId, title: p.title, count: p.count });
+      }
+    }
+    return [...counts.values()].sort(
+      (a, b) => b.count - a.count || a.title.localeCompare(b.title),
+    );
+  }, [days]);
+
+  const taskTitles = useMemo(
+    () => new Map(practices.map((p) => [p.taskId, p.title])),
+    [practices],
+  );
+
+  const totals = useMemo(() => summarize(days.values(), filter), [days, filter]);
+
+  const dimXp = useMemo(() => {
+    const acc = Object.fromEntries(DIMENSION_ORDER.map((d) => [d, 0])) as Record<
+      DimensionId,
+      number
+    >;
+    for (const day of days.values()) {
+      if (!dayMatchesFilter(day, filter)) continue;
+      for (const dim of DIMENSION_ORDER) acc[dim] += day.xpByDim[dim] ?? 0;
+    }
+    return acc;
+  }, [days, filter]);
+
+  const listDays = useMemo(
+    () => [...days.values()].sort((a, b) => b.dateKey.localeCompare(a.dateKey)),
+    [days],
+  );
+
+  // A mood check-in or a reward redeemed elsewhere does not pass through the
+  // task mutations this key inherits from, so refresh on the way back in.
+  useFocusEffect(
+    useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: calendarKeys.all });
+    }, [queryClient]),
+  );
+
+  // --- mutations -----------------------------------------------------------
   const completeTask = useCompleteTask();
   const skipTask = useSkipTaskToday();
   const unskipTask = useUnskipTaskToday();
   const undoCompletion = useUndoCompletion();
 
-  const isToday = isSameDay(selected, new Date());
-  const canGoNext = !isToday;
+  const dayKey = dateKeyFromLocal(selected);
+  const isToday = dayKey === dateKeyFromLocal(new Date());
 
-  const handlePrev = () => {
-    setSelected((d) => {
-      const next = addDays(d, -1);
-      // When the day step crosses a month boundary, drag the visible
-      // month with it so the grid keeps the selected cell on-screen.
-      if (!isSameMonth(next, visibleMonth)) {
-        setVisibleMonth(startOfMonth(next));
-      }
-      return next;
-    });
-  };
-  const handleNext = () => {
-    if (!canGoNext) return;
-    setSelected((d) => {
-      const next = addDays(d, 1);
-      if (!isSameMonth(next, visibleMonth)) {
-        setVisibleMonth(startOfMonth(next));
-      }
-      return next;
-    });
-  };
+  const fireRetroCompletion = (task: TaskWithSubs, subs: TaskSub[]) => {
+    if (completeTask.isPending) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
 
-  const handleSelectDay = (d: Date) => {
-    setSelected(d);
-    if (!isSameMonth(d, visibleMonth)) {
-      setVisibleMonth(startOfMonth(d));
-    }
+    const reward = rewardForTaskSubs(subs);
+    const fid = Date.now();
+    setFloats((prev) => [...prev, { id: fid, xp: reward.total.xp, coins: reward.total.coins }]);
+
+    const stamp = new Date(selected);
+    stamp.setHours(12, 0, 0, 0); // noon local — sidesteps day-boundary timezone wobble.
+    completeTask.mutate(
+      {
+        task,
+        subs,
+        completedAt: stamp.toISOString(),
+        completedLocalDate: dayKey,
+      },
+      {
+        onError: (err) => {
+          const e = err as { message?: string };
+          showInfo(t('historyScreen.errLog'), e.message ?? t('common.unknownError'));
+        },
+      },
+    );
   };
 
-  // Month navigation from the grid header. We DON'T touch `selected`
-  // here — the user explicitly asked to let them keep the previous
-  // selection while browsing months. They'll either tap a day cell or
-  // use the day chevrons to move the active selection.
-  const handlePrevMonth = () => {
-    const next = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1);
-    setVisibleMonth(next);
-  };
-  const handleNextMonth = () => {
-    const next = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1);
-    if (next.getTime() > Date.now()) return; // never enter a future month
-    setVisibleMonth(next);
+  const handleRetroComplete = (task: TaskWithSubs, subs?: TaskSub[]) => {
+    fireRetroCompletion(task, subs ?? task.subs);
   };
 
-  const today = new Date();
-  const canGoNextMonth =
-    visibleMonth.getFullYear() < today.getFullYear() ||
-    (visibleMonth.getFullYear() === today.getFullYear() &&
-      visibleMonth.getMonth() < today.getMonth());
-
-  const handleUndoCompletion = async (
-    completionId: string,
-    title: string,
-    xp: number,
-    coins: number,
-  ) => {
+  const handleUndo = async (completionId: string, title: string, xp: number, coins: number) => {
     const ok = await confirmAction(
-      'Undo this completion?',
-      `"${title}" — you'll lose +${xp} XP and +${coins} coins.`,
-      { okText: 'Undo', cancelText: 'Keep it', destructive: true },
+      t('calendar.day.undoTitle'),
+      t('calendar.day.undoBody', { title, xp, coins }),
+      {
+        okText: t('calendar.day.undoConfirm'),
+        cancelText: t('calendar.day.undoCancel'),
+        destructive: true,
+      },
     );
     if (!ok) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
@@ -229,81 +280,11 @@ export default function HistoryScreen() {
     });
   };
 
-  /**
-   * Retro-completion shared by tap (default subs) and swipe (sheet-
-   * adjusted subs). `subs` defaults to the task's own subs; pass a
-   * different array to log with custom stars.
-   *
-   * No confirm dialog anymore — tapping the card OR swiping it
-   * is itself the consent action. Errors still surface as alerts;
-   * users can undo by long-pressing a completion.
-   */
-  const fireRetroCompletion = (task: TaskWithSubs, subs: TaskSub[]) => {
-    if (completeTask.isPending) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-
-    const reward = rewardForTaskSubs(subs);
-    const fid = Date.now();
-    setFloats((prev) => [
-      ...prev,
-      { id: fid, xp: reward.total.xp, coins: reward.total.coins },
-    ]);
-
-    const stamp = new Date(selected);
-    stamp.setHours(12, 0, 0, 0); // noon local — sidesteps day-boundary timezone wobble.
-    completeTask.mutate(
-      {
-        task,
-        subs,
-        completedAt: stamp.toISOString(),
-        completedLocalDate: dateKeyFromLocal(selected),
-      },
-      {
-        onError: (err) => {
-          const e = err as { message?: string };
-          showInfo(t('historyScreen.errLog'), e.message ?? t('common.unknownError'));
-        },
-      },
-    );
-  };
-
-  // `subs` comes from the drawer's "+1" — it repeats the stars of that
-  // specific rep instead of falling back to the task's defaults.
-  const handleRetroQuickComplete = (task: TaskWithSubs, subs?: TaskSub[]) => {
-    fireRetroCompletion(task, subs ?? task.subs);
-  };
-
-  const handleSheetConfirm = (subs: TaskSub[]) => {
-    if (!sheetTask) return;
-    const task = sheetTask;
-    setSheetTask(null);
-    fireRetroCompletion(task, subs);
-  };
-
-  const handleActionAdjust = () => {
-    if (!actionTask) return;
-    const task = actionTask;
-    setActionTask(null);
-    setSheetTask(task);
-  };
-
-  const handleActionEdit = () => {
-    if (!actionTask) return;
-    const task = actionTask;
-    setActionTask(null);
-    router.push({ pathname: '/task-form', params: { id: task.id } });
-  };
-
-  // Retro skip: marks task_skip for the SELECTED day, not today. The
-  // user-facing distinction matches the home behavior (swipe-left
-  // pulls the task into the Skipped drawer with the option to unskip).
-  const dayKey = dateKeyFromLocal(selected);
-  const handleSwipeSkip = (task: TaskWithSubs) => {
+  const handleSkip = (task: TaskWithSubs) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
     skipTask.mutate(
       { taskId: task.id, date: dayKey },
       {
-        onSuccess: () => day.refetch(),
         onError: (err) => {
           const e = err as { message?: string };
           showInfo(t('historyScreen.errSkip'), e.message ?? t('common.unknownError'));
@@ -311,12 +292,12 @@ export default function HistoryScreen() {
       },
     );
   };
+
   const handleUnskip = (taskId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     unskipTask.mutate(
       { taskId, date: dayKey },
       {
-        onSuccess: () => day.refetch(),
         onError: (err) => {
           const e = err as { message?: string };
           showInfo(t('historyScreen.errUnskip'), e.message ?? t('common.unknownError'));
@@ -324,294 +305,317 @@ export default function HistoryScreen() {
       },
     );
   };
-  const handleActionSkip = () => {
-    if (!actionTask) return;
-    const task = actionTask;
-    setActionTask(null);
-    handleSwipeSkip(task);
+
+  // --- navigation ----------------------------------------------------------
+  const today = new Date();
+  const canGoNextMonth =
+    visibleMonth.getFullYear() < today.getFullYear() ||
+    (visibleMonth.getFullYear() === today.getFullYear() &&
+      visibleMonth.getMonth() < today.getMonth());
+
+  const handleSelectDay = (d: Date) => {
+    setSelected(d);
+    if (!isSameMonth(d, visibleMonth)) setVisibleMonth(startOfMonth(d));
   };
+
+  const stepDay = (delta: number) => {
+    const next = addDays(selected, delta);
+    if (delta > 0 && next.getTime() > Date.now()) return;
+    setSelected(next);
+    if (!isSameMonth(next, visibleMonth)) setVisibleMonth(startOfMonth(next));
+  };
+
+  const toggleView = (target: CalendarView) => {
+    Haptics.selectionAsync().catch(() => {});
+    setView(view === target ? 'month' : target);
+  };
+
+  const facets = activeFacetCount(filter);
+  const filtering = isFilterActive(filter);
+  const selectedDay = monthQuery.data?.days.get(dayKey);
+
+  const dayLabel = useMemo(() => {
+    const intlTag = locale === 'pt' ? 'pt-BR' : 'en-US';
+    const raw = selected.toLocaleDateString(intlTag, {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    });
+    return raw.charAt(0).toUpperCase() + raw.slice(1);
+  }, [selected, locale]);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <ScreenBackground>
-      <ScrollView
-        // SafeAreaView['bottom'] already handles OS nav clearance — content
-        // only needs a small visual breathing room above the safe-area edge.
-        contentContainerStyle={[
-          styles.content,
-          { paddingBottom: tokens.space[5] },
-        ]}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={summary.isRefetching || day.isRefetching}
-            onRefresh={() => {
-              summary.refetch();
-              day.refetch();
-            }}
-            tintColor={tokens.brand.violet2}
-          />
-        }
-      >
-        <View style={styles.header}>
-          <Pressable
-            onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
-            style={({ pressed }) => [
-              styles.backBtn,
-              pressed && { opacity: 0.7 },
-            ]}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel={t('common.back')}
-          >
-            <Ionicons name="chevron-back" size={22} color={tokens.text.hi} />
-          </Pressable>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.eyebrow}>{t('historyScreen.eyebrow')}</Text>
-            <Text style={styles.title}>{t('historyScreen.title')}</Text>
-          </View>
-        </View>
-
-        <View style={{ marginBottom: tokens.space[4] }}>
-          <HistoryLensTabs current="rotina" />
-        </View>
-
-        {/* One calendar, three channels: the cell fill is the day's mood,
-            the figure is its XP, and the dots are the pillars it touched.
-            The old Atividade|Humor toggle existed only because a cell
-            could carry one of those at a time. */}
-        <View style={styles.heatmapCard}>
-          {summary.isLoading || moodMonth.isLoading ? (
-            <View style={styles.heatmapLoading}>
-              <ActivityIndicator color={tokens.brand.violet2} />
+        <ScrollView
+          contentContainerStyle={[styles.content, { paddingBottom: bottomClearance + 72 }]}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={source.isRefetching}
+              onRefresh={() => source.refetch()}
+              tintColor={tokens.brand.violet2}
+            />
+          }
+        >
+          <View style={styles.header}>
+            <Pressable
+              onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+              style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.7 }]}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.back')}
+            >
+              <Ionicons name="chevron-back" size={22} color={tokens.text.hi} />
+            </Pressable>
+            <View style={styles.headerText}>
+              <Text style={styles.eyebrow}>{t('calendar.eyebrow')}</Text>
+              <Text style={styles.title}>{t('historyScreen.title')}</Text>
             </View>
-          ) : (
-            <DayHeatmap
-              monthDate={visibleMonth}
-              selected={selected}
-              onSelectDay={handleSelectDay}
-              onPrevMonth={handlePrevMonth}
-              onNextMonth={handleNextMonth}
-              canGoNext={canGoNextMonth}
-              weekStart={settings.weekStart}
-              dataFor={(key) => {
-                const mood = moodMonth.data?.get(key);
-                const entry = summary.data?.get(key);
-                if (!mood && !entry) return null;
-                const level = mood ? moodLevel(mood.mood) : null;
-                const cell: DayCellData = {
-                  bg: level?.color,
-                  ink: level?.ink,
-                  xp: entry?.totalXp ?? 0,
-                  dims: dimensionsInDay(entry),
-                  mark: !!mood && (!!mood.note || (mood.tags?.length ?? 0) > 0),
-                  a11yNote: level ? t(`mood.levels.${level.key}`) : undefined,
-                };
-                return cell;
+            <Pressable
+              onPress={() => toggleView('list')}
+              style={({ pressed }) => [
+                styles.iconBtn,
+                view === 'list' && styles.iconBtnActive,
+                pressed && { opacity: 0.7 },
+              ]}
+              hitSlop={6}
+              accessibilityRole="button"
+              accessibilityState={{ selected: view === 'list' }}
+              accessibilityLabel={t('calendar.views.list')}
+            >
+              <Ionicons
+                name="list-outline"
+                size={19}
+                color={view === 'list' ? tokens.brand.violet2 : tokens.text.hi}
+              />
+            </Pressable>
+            <Pressable
+              onPress={() => toggleView('quarter')}
+              style={({ pressed }) => [
+                styles.iconBtn,
+                view === 'quarter' && styles.iconBtnActive,
+                pressed && { opacity: 0.7 },
+              ]}
+              hitSlop={6}
+              accessibilityRole="button"
+              accessibilityState={{ selected: view === 'quarter' }}
+              accessibilityLabel={t('calendar.views.quarter')}
+            >
+              <Ionicons
+                name="grid-outline"
+                size={18}
+                color={view === 'quarter' ? tokens.brand.violet2 : tokens.text.hi}
+              />
+            </Pressable>
+          </View>
+
+          <View style={styles.fronts}>
+            <SegmentedControl<CalendarFront>
+              options={[
+                { value: 'rotina', label: t('calendar.fronts.rotina') },
+                { value: 'humor', label: t('calendar.fronts.humor') },
+                { value: 'vault', label: t('calendar.fronts.vault') },
+              ]}
+              value={front}
+              onChange={(next) => {
+                Haptics.selectionAsync().catch(() => {});
+                setFront(next);
               }}
             />
-          )}
-        </View>
-
-        <View style={styles.dayNav}>
-          <Pressable
-            onPress={handlePrev}
-            style={({ pressed }) => [styles.navBtn, pressed && styles.navBtnPressed]}
-            hitSlop={8}
-          >
-            <Ionicons name="chevron-back" size={20} color={tokens.text.hi} />
-          </Pressable>
-
-          <View style={styles.dayLabelWrap}>
-            <Text style={styles.dayLabel}>{formatDay(selected)}</Text>
-            {!isToday && (
-              <Pressable onPress={() => setSelected(startOfDay(new Date()))}>
-                <Text style={styles.todayLink}>{t('common.today')}</Text>
-              </Pressable>
-            )}
           </View>
 
-          <Pressable
-            onPress={handleNext}
-            disabled={!canGoNext}
-            style={({ pressed }) => [
-              styles.navBtn,
-              pressed && canGoNext && styles.navBtnPressed,
-              !canGoNext && styles.navBtnDisabled,
-            ]}
-            hitSlop={8}
-          >
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color={canGoNext ? tokens.text.hi : tokens.text.faint}
-            />
-          </Pressable>
-        </View>
+          <CalendarActiveFilters filter={filter} taskTitles={taskTitles} tagLabels={tagLabels} />
 
-        {day.isLoading ? (
-          <View style={styles.loadingBox}>
-            <ActivityIndicator color={tokens.brand.violet2} />
-          </View>
-        ) : (
-          <>
-            <View style={styles.xpStatWrap}>
-              <DayXpStat xp={day.data?.totalXp ?? 0} isToday={isToday} />
+          {source.isLoading ? (
+            <View style={styles.loading}>
+              <ActivityIndicator color={tokens.brand.violet2} />
             </View>
+          ) : view === 'month' ? (
+            <>
+              <View style={styles.card}>
+                <CalendarGrid
+                  monthDate={visibleMonth}
+                  days={days}
+                  reference={reference}
+                  front={front}
+                  filter={filter}
+                  selectedKey={dayKey}
+                  onSelectDay={handleSelectDay}
+                  onPrevMonth={() => setVisibleMonth(addMonths(visibleMonth, -1))}
+                  onNextMonth={() => setVisibleMonth(addMonths(visibleMonth, 1))}
+                  canGoNext={canGoNextMonth}
+                  weekStart={settings.weekStart}
+                  tagEmojis={tagEmojis}
+                />
+                <CalendarSummary
+                  totals={totals}
+                  front={front}
+                  filtering={filtering}
+                  dimXp={dimXp}
+                  locale={locale}
+                />
+              </View>
 
-            <MoodDayDetail dateKey={dayKey} />
-
-            {(() => {
-              // useDayDetail already applies the shared isOpenOnDay rule
-              // (scheduled that day, nothing logged, not skipped) — the same
-              // one Home uses, so the two screens cannot disagree about a
-              // day. Only the one-shot exclusion is this surface's own
-              // choice; those live behind "Ver todas as práticas".
-              const open = (day.data?.openTasks ?? []).filter(
-                (task) => task.recurrence.type !== 'one_shot',
-              );
-              // Completed drawer — one row per completion, carrying that
-              // rep's own XP/coins/stars. Every task here is rebuilt from
-              // the completion snapshot, so archived/deleted ones still
-              // render (and still keep the day's XP total honest).
-              const doneItems: CompletedItem[] = completionsToItems(
-                day.data?.completions ?? [],
-                (id) => activeById.get(id),
-                taskFromCompletionSnapshot,
-              );
-              const skippedItems: CompletedItem[] = (day.data?.skipped ?? []).map(
-                (task) => ({ task }),
-              );
-              return (
-                <View style={styles.openList}>
-                  {open.length === 0 ? (
-                    // Same panel the Home day-view shows — the two screens
-                    // already agree on the open list, the XP stat and the
-                    // drawers; this is the last branch that didn't.
-                    <DaySeal
-                      key={dayKey}
-                      completions={day.data?.completions ?? []}
-                      skippedCount={skippedItems.length}
-                      isToday={dayKey === dateKeyFromLocal(new Date())}
-                      // `isSuccess`, not `!isLoading`: a FAILED (or paused,
-                      // offline) query leaves data undefined with isLoading
-                      // false, and the panel would then assert "nothing was
-                      // scheduled" about a day it never managed to read.
-                      settled={
-                        day.isSuccess &&
-                        day.data?.dateKey === dayKey &&
-                        !day.isFetching &&
-                        !completeTask.isPending &&
-                        !skipTask.isPending
-                      }
-                    />
-                  ) : (
-                    open.map((task) => (
-                      <TaskCard
-                        key={task.id}
-                        task={task}
-                        onComplete={() => handleRetroQuickComplete(task)}
-                        onSwipeComplete={() => setSheetTask(task)}
-                        onSkip={() => handleSwipeSkip(task)}
-                        onLongPress={() => setActionTask(task)}
-                        onEdit={() =>
-                          router.push({ pathname: '/task-form', params: { id: task.id } })
-                        }
-                      />
-                    ))
+              <View style={styles.dayNav}>
+                <Pressable
+                  onPress={() => stepDay(-1)}
+                  style={({ pressed }) => [styles.navBtn, pressed && { opacity: 0.6 }]}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('home.dayNav.prev')}
+                >
+                  <Ionicons name="chevron-back" size={20} color={tokens.text.hi} />
+                </Pressable>
+                <View style={styles.dayLabelWrap}>
+                  <Text style={styles.dayLabel}>{dayLabel}</Text>
+                  {!isToday && (
+                    <Pressable onPress={() => setSelected(startOfDay(new Date()))} hitSlop={8}>
+                      <Text style={styles.todayLink}>{t('common.today')}</Text>
+                    </Pressable>
                   )}
-
-                  {/* Log anything else FOR THIS DAY (weekly not scheduled
-                      today, one-shots, …) — the date-aware see-all. */}
-                  <Pressable
-                    onPress={() =>
-                      router.push({
-                        pathname: '/all-practices',
-                        params: { date: dayKey },
-                      })
-                    }
-                    style={({ pressed }) => [
-                      styles.seeAllBtn,
-                      pressed && { opacity: 0.7 },
-                    ]}
-                    accessibilityRole="button"
-                  >
-                    <Ionicons
-                      name="albums-outline"
-                      size={16}
-                      color={tokens.brand.violet2}
-                    />
-                    <Text style={styles.seeAllText}>{t('home.seeAllCta')}</Text>
-                  </Pressable>
-
-                  <CompletedBucket
-                    items={doneItems}
-                    title={
-                      isToday
-                        ? t('home.completedBucket.today')
-                        : t('home.completedBucket.day')
-                    }
-                    onUndo={(completionId) =>
-                      handleUndoCompletion(
-                        completionId,
-                        day.data?.completions.find((c) => c.id === completionId)?.taskTitle ?? '',
-                        day.data?.completions.find((c) => c.id === completionId)?.xpGranted ?? 0,
-                        day.data?.completions.find((c) => c.id === completionId)?.coinsGranted ?? 0,
-                      )
-                    }
-                    onExtra={handleRetroQuickComplete}
-                  />
-                  <CompletedBucket
-                    items={skippedItems}
-                    title={
-                      isToday
-                        ? t('home.skippedBucket.today')
-                        : t('home.skippedBucket.day')
-                    }
-                    variant="skipped"
-                    onUnskip={handleUnskip}
-                  />
                 </View>
-              );
-            })()}
+                <Pressable
+                  onPress={() => stepDay(1)}
+                  disabled={isToday}
+                  style={({ pressed }) => [
+                    styles.navBtn,
+                    isToday && styles.navBtnDisabled,
+                    pressed && !isToday && { opacity: 0.6 },
+                  ]}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('home.dayNav.next')}
+                >
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={isToday ? tokens.text.faint : tokens.text.hi}
+                  />
+                </Pressable>
+              </View>
 
-          </>
-        )}
-      </ScrollView>
+              <CalendarDayPanel
+                date={selected}
+                front={front}
+                redemptions={selectedDay?.redemptions ?? []}
+                weekStart={settings.weekStart}
+                isMutating={completeTask.isPending || skipTask.isPending}
+                onRetroComplete={handleRetroComplete}
+                onSwipeComplete={setSheetTask}
+                onSkip={handleSkip}
+                onUnskip={handleUnskip}
+                onLongPress={setActionTask}
+                onEdit={(task) =>
+                  router.push({ pathname: '/task-form', params: { id: task.id } })
+                }
+                onUndo={handleUndo}
+              />
+            </>
+          ) : view === 'list' ? (
+            <CalendarListView
+              days={listDays}
+              front={front}
+              filter={filter}
+              onSelectDay={(key) => {
+                const [y, m, d] = key.split('-').map(Number);
+                const date = new Date(y, m - 1, d);
+                setVisibleMonth(startOfMonth(date));
+                setSelected(date);
+                setView('month');
+              }}
+              locale={locale}
+            />
+          ) : (
+            <CalendarQuarterView
+              monthDates={quarterMonths}
+              days={days}
+              reference={reference}
+              front={front}
+              filter={filter}
+              onSelectMonth={(month) => {
+                setVisibleMonth(startOfMonth(month));
+                setView('month');
+              }}
+              locale={locale}
+            />
+          )}
+        </ScrollView>
       </ScreenBackground>
 
-      {/* XP/coin float that pops out of the screen on each retro
-          completion — same component the Home uses. */}
+      <FabStack
+        bottomOffset={bottomClearance}
+        actions={[
+          {
+            key: 'filter',
+            icon: 'options-outline',
+            onPress: () => {
+              Haptics.selectionAsync().catch(() => {});
+              setFilterOpen(true);
+            },
+            accessibilityLabel: t('calendar.filter.open'),
+            size: 'lg',
+            tone: 'violet',
+            wrap: (node) => (
+              <View>
+                {node}
+                {facets > 0 && (
+                  <View style={styles.badge} pointerEvents="none">
+                    <Text style={styles.badgeText}>{facets}</Text>
+                  </View>
+                )}
+              </View>
+            ),
+          },
+        ]}
+      />
+
       {floats.map((f) => (
         <XPCoinFloat
           key={f.id}
           xp={f.xp}
           coins={f.coins}
-          onDone={() =>
-            setFloats((prev) => prev.filter((x) => x.id !== f.id))
-          }
+          onDone={() => setFloats((prev) => prev.filter((x) => x.id !== f.id))}
         />
       ))}
+
+      <CalendarFilterSheet
+        visible={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        practices={practices}
+      />
 
       <CompleteTaskSheet
         visible={sheetTask !== null}
         task={sheetTask}
         onCancel={() => setSheetTask(null)}
-        onConfirm={handleSheetConfirm}
+        onConfirm={(subs) => {
+          const task = sheetTask;
+          setSheetTask(null);
+          if (task) fireRetroCompletion(task, subs);
+        }}
       />
 
       <TaskActionSheet
         visible={actionTask !== null}
         taskTitle={actionTask?.title ?? ''}
-        dateLabel={
-          dayKey === dateKeyFromLocal(new Date())
-            ? undefined
-            : formatHeroDate(selected).monthDay
-        }
+        dateLabel={isToday ? undefined : formatHeroDate(selected).monthDay}
         onCancel={() => setActionTask(null)}
-        onAdjustStars={handleActionAdjust}
-        onSkipToday={handleActionSkip}
-        onEdit={handleActionEdit}
+        onAdjustStars={() => {
+          const task = actionTask;
+          setActionTask(null);
+          setSheetTask(task);
+        }}
+        onSkipToday={() => {
+          const task = actionTask;
+          setActionTask(null);
+          if (task) handleSkip(task);
+        }}
+        onEdit={() => {
+          const task = actionTask;
+          setActionTask(null);
+          if (task) router.push({ pathname: '/task-form', params: { id: task.id } });
+        }}
       />
     </SafeAreaView>
   );
@@ -619,18 +623,16 @@ export default function HistoryScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: tokens.bg.deep },
-  content: {
-    padding: tokens.space[4],
-    paddingBottom: tokens.space[8],
-  },
+  content: { padding: tokens.space[4] },
   header: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: tokens.space[3],
+    gap: tokens.space[2],
     paddingTop: tokens.space[2],
     paddingBottom: tokens.space[4],
   },
-  backBtn: {
+  headerText: { flex: 1, minWidth: 0 },
+  iconBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -639,6 +641,10 @@ const styles = StyleSheet.create({
     borderColor: tokens.border.base,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  iconBtnActive: {
+    borderColor: tokens.brand.violet2,
+    backgroundColor: 'rgba(123, 92, 255, 0.16)',
   },
   eyebrow: {
     ...tokens.type.eyebrow,
@@ -646,89 +652,57 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
-  title: {
-    ...tokens.type.h1,
-    color: tokens.text.hi,
-    marginTop: 2,
-  },
-  heatmapCard: {
+  title: { ...tokens.type.h1, color: tokens.text.hi, marginTop: 2 },
+  fronts: { marginBottom: tokens.space[3] },
+  card: {
     backgroundColor: tokens.bg.surface,
     borderRadius: tokens.radius.lg,
     borderWidth: 1,
     borderColor: tokens.border.base,
     padding: tokens.space[4],
-    marginBottom: tokens.space[5],
   },
-  heatmapLoading: {
-    paddingVertical: tokens.space[6],
-    alignItems: 'center',
-  },
+  loading: { paddingVertical: tokens.space[8], alignItems: 'center' },
   dayNav: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: tokens.space[4],
+    marginTop: tokens.space[5],
   },
   navBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
     backgroundColor: tokens.bg.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
     borderWidth: 1,
     borderColor: tokens.border.base,
-  },
-  navBtnPressed: {
-    opacity: 0.6,
-    transform: [{ scale: 0.95 }],
-  },
-  navBtnDisabled: {
-    opacity: 0.4,
-  },
-  dayLabelWrap: {
-    flex: 1,
     alignItems: 'center',
-    gap: 2,
+    justifyContent: 'center',
   },
-  dayLabel: {
-    ...tokens.type.h2,
-    color: tokens.text.hi,
-  },
+  navBtnDisabled: { opacity: 0.4 },
+  dayLabelWrap: { flex: 1, alignItems: 'center', gap: 2 },
+  dayLabel: { ...tokens.type.h3, color: tokens.text.hi, textAlign: 'center' },
   todayLink: {
     ...tokens.type.caption,
     color: tokens.brand.violet2,
     fontFamily: 'Manrope_700Bold',
   },
-  // Slightly larger gap between cards so the swipe action zone has
-  // breathing room on each side.
-  xpStatWrap: {
-    marginBottom: tokens.space[4],
-  },
-  openList: {
-    gap: tokens.space[2],
-    marginTop: tokens.space[3],
-  },
-  seeAllBtn: {
-    flexDirection: 'row',
-    alignSelf: 'center',
+  badge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    paddingHorizontal: 5,
     alignItems: 'center',
-    gap: 6,
-    paddingVertical: tokens.space[2] + 2,
-    paddingHorizontal: tokens.space[4],
-    marginTop: tokens.space[1],
-    borderRadius: tokens.radius.lg,
-    backgroundColor: tokens.bg.surface2,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
+    justifyContent: 'center',
+    backgroundColor: tokens.semantic.coin,
+    borderWidth: 2,
+    borderColor: tokens.bg.deep,
   },
-  seeAllText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 13,
-    color: tokens.brand.violet2,
-  },
-  loadingBox: {
-    paddingVertical: tokens.space[6],
-    alignItems: 'center',
+  badgeText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 11,
+    color: '#1A1400',
   },
 });

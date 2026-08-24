@@ -338,14 +338,11 @@ export function DedicacaoPanel({ dimensions }: Props) {
                   </View>
                   <Pressable
                     onPress={() =>
-                      router.push({
-                        pathname: '/dedicacao-history',
-                        params: {
-                          granularity: spec.granularity,
-                          offset: String(spec.offset),
-                          dims: id,
-                        },
-                      })
+                      // Straight to the calendar, pre-filtered on this
+                      // dimension. The window (granularity/offset) does not
+                      // travel: the calendar's period is navigation, not filter
+                      // state, so it opens on the current month.
+                      router.push({ pathname: '/history', params: { dims: id } })
                     }
                     style={({ pressed }) => [
                       styles.detailLink,
@@ -371,13 +368,7 @@ export function DedicacaoPanel({ dimensions }: Props) {
       <View style={styles.historyLinkWrap}>
         <Pressable
           onPress={() =>
-            router.push({
-              pathname: '/dedicacao-history',
-              params: {
-                granularity: spec.granularity,
-                offset: String(spec.offset),
-              },
-            })
+            router.push('/history')
           }
           hitSlop={6}
           style={({ pressed }) => [styles.historyLink, pressed && { opacity: 0.6 }]}
