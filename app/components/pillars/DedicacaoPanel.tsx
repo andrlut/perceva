@@ -338,13 +338,15 @@ export function DedicacaoPanel({ dimensions }: Props) {
                   </View>
                   <Pressable
                     onPress={() =>
+                      // Straight to the calendar, pre-filtered on this
+                      // dimension. Front and view travel too, because the
+                      // calendar's store is session-scoped: without them this
+                      // link could land on the Vault quarter map. The window
+                      // (granularity/offset) does not travel — the calendar's
+                      // period is navigation, not filter state.
                       router.push({
-                        pathname: '/dedicacao-history',
-                        params: {
-                          granularity: spec.granularity,
-                          offset: String(spec.offset),
-                          dims: id,
-                        },
+                        pathname: '/history',
+                        params: { dims: id, front: 'rotina', view: 'month' },
                       })
                     }
                     style={({ pressed }) => [
@@ -372,11 +374,8 @@ export function DedicacaoPanel({ dimensions }: Props) {
         <Pressable
           onPress={() =>
             router.push({
-              pathname: '/dedicacao-history',
-              params: {
-                granularity: spec.granularity,
-                offset: String(spec.offset),
-              },
+              pathname: '/history',
+              params: { front: 'rotina', view: 'month' },
             })
           }
           hitSlop={6}

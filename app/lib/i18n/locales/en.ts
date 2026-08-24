@@ -65,6 +65,16 @@ const en = {
     dayCellEmpty: 'no entries',
     dayCellXp: '{{xp}} XP',
     dayCellNote: 'has a note',
+    dayCellSpent: '{{coins}} coins spent',
+    dayCellRedemptions: {
+      one: '{{count}} redemption',
+      other: '{{count}} redemptions',
+    },
+    dayCellPractices: {
+      one: '{{count}} practice',
+      other: '{{count}} practices',
+    },
+    dayCellFiltered: 'outside the current filter',
   },
 
   taskForm: {
@@ -1416,6 +1426,82 @@ const en = {
     errUnskip: 'Could not unskip',
   },
 
+  calendar: {
+    eyebrow: 'CALENDAR',
+    fronts: {
+      rotina: 'Routine',
+      humor: 'Mood',
+      vault: 'Vault',
+    },
+    views: {
+      list: 'List',
+      quarter: 'Quarter',
+      month: 'Month',
+    },
+    legend: {
+      less: 'less',
+      more: 'more',
+      moodScale: '1 → 5',
+      spent: 'coins spent',
+    },
+    summary: {
+      rotina: '{{days}} active days · {{xp}} XP',
+      humor: 'average mood {{avg}}',
+      humorEmpty: 'no mood logged yet',
+      vault: '{{count}} redemptions · {{coins}} coins',
+      filtered: 'filtered',
+      byDimension: 'By dimension',
+      openBreakdown: 'Month summary',
+      patterns: 'See patterns',
+      longRangeHint: 'Quarter and all-time totals live in the You tab.',
+    },
+    filter: {
+      title: 'Filter',
+      open: 'Filter days',
+      moods: 'Mood of the day',
+      practices: 'Practices',
+      dims: 'Dimensions',
+      subs: 'Subs',
+      tags: 'Mood tags',
+      minXp: 'Minimum XP',
+      minXpAny: 'no floor',
+      minXpValue: '{{xp}} XP or more',
+      rewards: 'Rewards',
+      withRedemption: 'Only days with a redemption',
+      explain:
+        'A filter picks which days count — on every front, view and summary. The others dim, they never disappear.',
+      clear: 'Clear',
+      apply: 'Apply',
+      applyCount: 'Apply ({{count}})',
+      emptyPractices: 'No practices logged in this range yet.',
+      practiceUnknown: 'Selected practice',
+    },
+    list: {
+      empty: 'No day matches this filter.',
+      hint: 'Tap a day to open it in the month.',
+    },
+    quarter: {
+      hint: 'Each month painted by the active front; days outside the filter fade out.',
+    },
+    day: {
+      practices: 'Practices',
+      practicesXp: 'Practices · {{xp}} XP',
+      mood: 'Mood',
+      rewards: 'Rewards',
+      noRewards: 'No redemption on this day.',
+      redeemed: 'Redeemed: {{title}}',
+      used: 'Used: {{title}}',
+      redeemedSub: 'left the coin bank',
+      usedSub: 'was waiting in the Vault',
+      stillOpen: 'Still could be done',
+      unfiltered: 'The retro-log ignores filters on purpose.',
+      undoTitle: 'Undo this completion?',
+      undoBody: '{{title}} — you give back {{xp}} XP and {{coins}} coins.',
+      undoConfirm: 'Undo',
+      undoCancel: 'Keep it',
+    },
+  },
+
   character: {
     title: 'Character',
     level: 'Level',
@@ -1978,12 +2064,6 @@ const en = {
     notAuthenticated: 'You need to be signed in for this.',
     notFound: 'Not found',
     unknown: 'Unexpected error. Try again.',
-  },
-
-  historyHub: {
-    rotina: 'Routine',
-    dedicacao: 'Dedication',
-    insights: 'Insights',
   },
 
   insights: {
