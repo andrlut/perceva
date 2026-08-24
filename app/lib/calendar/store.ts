@@ -51,6 +51,8 @@ interface CalendarState {
    * being archived, which `useActiveTasks` would not.
    */
   taskLabels: Record<string, string>;
+  /** Reward id → title, captured on select. Same reasoning as `taskLabels`. */
+  rewardLabels: Record<string, string>;
   setFront: (front: CalendarFront) => void;
   setView: (view: CalendarView) => void;
   toggleMood: (mood: MoodValue) => void;
@@ -60,6 +62,7 @@ interface CalendarState {
   toggleTag: (slug: string) => void;
   nudgeMinXp: (direction: 1 | -1) => void;
   toggleWithRedemption: () => void;
+  toggleReward: (rewardId: string, title: string) => void;
   /** Drop one facet whole — what the ✕ on an active-filter chip does. */
   clearFacet: (facet: keyof CalendarFilter) => void;
   clearFilter: () => void;
@@ -70,6 +73,7 @@ export const useCalendarStore = create<CalendarState>((set) => ({
   view: 'month',
   filter: EMPTY_FILTER,
   taskLabels: {},
+  rewardLabels: {},
   setFront: (front) => set({ front }),
   setView: (view) => set({ view }),
   toggleMood: (mood) =>
@@ -91,9 +95,14 @@ export const useCalendarStore = create<CalendarState>((set) => ({
     set((s) => ({ filter: { ...s.filter, minXp: stepMinXp(s.filter.minXp, direction) } })),
   toggleWithRedemption: () =>
     set((s) => ({ filter: { ...s.filter, withRedemption: !s.filter.withRedemption } })),
+  toggleReward: (rewardId, title) =>
+    set((s) => ({
+      filter: { ...s.filter, rewardIds: toggleValue(s.filter.rewardIds, rewardId) },
+      rewardLabels: title ? { ...s.rewardLabels, [rewardId]: title } : s.rewardLabels,
+    })),
   clearFacet: (facet) =>
     set((s) => ({ filter: { ...s.filter, [facet]: EMPTY_FILTER[facet] } })),
-  clearFilter: () => set({ filter: EMPTY_FILTER, taskLabels: {} }),
+  clearFilter: () => set({ filter: EMPTY_FILTER, taskLabels: {}, rewardLabels: {} }),
 }));
 
 /**

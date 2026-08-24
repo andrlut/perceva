@@ -51,7 +51,10 @@ export function CalendarSummary({ totals, front, filtering, dimXp, locale }: Pro
             }),
           });
   } else if (front === 'vault') {
+    // Days first: with a reward facet active this line is answering "how many
+    // days did I do that", and days is a different number from events.
     context = t('calendar.summary.vault', {
+      days: totals.redemptionDays,
       count: totals.redemptionCount,
       coins: totals.spent.toLocaleString(intlTag),
     });

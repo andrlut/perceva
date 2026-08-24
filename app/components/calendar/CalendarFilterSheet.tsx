@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
+  Keyboard,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -58,16 +60,44 @@ import { DIMENSION_META, DIMENSION_ORDER, SUBS_BY_DIM, SUB_META } from '@/theme/
 const MOOD_VALUES: MoodValue[] = [1, 2, 3, 4, 5];
 
 /** Which open-ended section is expanded. Only one at a time, by design. */
-type OpenSection = 'tags' | 'practices' | null;
+type OpenSection = 'tags' | 'practices' | 'rewards' | null;
+
+/**
+ * Keyboard height, for pushing a bottom-anchored sheet clear of it.
+ *
+ * `KeyboardAvoidingView` is the house pattern, but it leans on the Activity
+ * resizing — and a React Native `Modal` is its own window that does not, so
+ * inside a sheet the input ends up under the keyboard and you cannot see what
+ * you are typing. Measuring the keyboard and padding the scrim is the one
+ * mechanism that behaves the same on both platforms in this situation.
+ */
+function useKeyboardHeight(): number {
+  const [height, setHeight] = useState(0);
+  useEffect(() => {
+    // iOS gets the "will" events so the sheet travels with the keyboard rather
+    // than jumping after it has finished animating.
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const show = Keyboard.addListener(showEvent, (e) => setHeight(e.endCoordinates.height));
+    const hide = Keyboard.addListener(hideEvent, () => setHeight(0));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+  return height;
+}
 
 interface Props {
   visible: boolean;
   onClose: () => void;
   /** Practices seen in the loaded range, already sorted most-logged first. */
   practices: { taskId: string; title: string; dim: DimensionId | null }[];
+  /** Rewards seen in the loaded range, most-redeemed first. */
+  rewards: { rewardId: string; title: string; icon: string | null }[];
 }
 
-export function CalendarFilterSheet({ visible, onClose, practices }: Props) {
+export function CalendarFilterSheet({ visible, onClose, practices, rewards }: Props) {
   const { t, locale } = useT();
   const meta = useMetaLookup();
   const { height } = useWindowDimensions();
@@ -81,11 +111,14 @@ export function CalendarFilterSheet({ visible, onClose, practices }: Props) {
   const toggleTag = useCalendarStore((s) => s.toggleTag);
   const nudgeMinXp = useCalendarStore((s) => s.nudgeMinXp);
   const toggleWithRedemption = useCalendarStore((s) => s.toggleWithRedemption);
+  const toggleReward = useCalendarStore((s) => s.toggleReward);
   const clearFilter = useCalendarStore((s) => s.clearFilter);
   const taskLabels = useCalendarStore((s) => s.taskLabels);
+  const rewardLabels = useCalendarStore((s) => s.rewardLabels);
 
   const [open, setOpen] = useState<OpenSection>(null);
   const [search, setSearch] = useState('');
+  const keyboardHeight = useKeyboardHeight();
 
   const facets = activeFacetCount(filter);
 
@@ -116,6 +149,17 @@ export function CalendarFilterSheet({ visible, onClose, practices }: Props) {
       })),
   ];
 
+  const allRewards = [
+    ...rewards,
+    ...filter.rewardIds
+      .filter((id) => !rewards.some((r) => r.rewardId === id))
+      .map((id) => ({
+        rewardId: id,
+        title: rewardLabels[id] ?? t('calendar.filter.rewardUnknown'),
+        icon: null as string | null,
+      })),
+  ];
+
   const needle = search.trim().toLocaleLowerCase();
   const shownPractices = needle
     ? allPractices.filter((p) => p.title.toLocaleLowerCase().includes(needle))
@@ -128,12 +172,18 @@ export function CalendarFilterSheet({ visible, onClose, practices }: Props) {
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.scrim} onPress={onClose}>
+      <Pressable
+        style={[styles.scrim, { paddingBottom: keyboardHeight }]}
+        onPress={onClose}
+      >
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
           <View style={styles.handle} />
 
           <ScrollView
-            style={{ maxHeight: Math.min(height * 0.72, height - 200) }}
+            // The keyboard eats from the same budget: without subtracting it the
+            // list keeps its full height, the sheet grows past the top of the
+            // screen and the footer walks off the bottom.
+            style={{ maxHeight: Math.min(height * 0.72, height - 200 - keyboardHeight) }}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
@@ -174,7 +224,7 @@ export function CalendarFilterSheet({ visible, onClose, practices }: Props) {
               disabled={orderedTags.length === 0}
             />
             {open === 'tags' && orderedTags.length > 0 && (
-              <View style={styles.chipWrap}>
+              <View style={[styles.chipWrap, styles.expanded]}>
                 {orderedTags.map((tag) => (
                   <Chip
                     key={tag.slug}
@@ -235,7 +285,7 @@ export function CalendarFilterSheet({ visible, onClose, practices }: Props) {
                 <Text style={styles.emptyText}>{t('calendar.filter.emptyPractices')}</Text>
               ) : (
                 <>
-                  <View style={styles.searchBox}>
+                  <View style={[styles.searchBox, styles.expanded]}>
                     <Ionicons name="search" size={15} color={tokens.text.dim} />
                     <TextInput
                       value={search}
@@ -298,17 +348,38 @@ export function CalendarFilterSheet({ visible, onClose, practices }: Props) {
               />
             </View>
 
-            <Text style={styles.sectionTitle}>{t('calendar.filter.rewards')}</Text>
-            <View style={styles.chipWrap}>
-              <Chip
-                label={t('calendar.filter.withRedemption')}
-                active={filter.withRedemption}
-                onPress={toggleWithRedemption}
-                leading={
-                  <View style={[styles.dot, { backgroundColor: tokens.semantic.coin }]} />
-                }
-              />
-            </View>
+            <CollapsibleHeader
+              title={t('calendar.filter.rewards')}
+              count={filter.rewardIds.length + (filter.withRedemption ? 1 : 0)}
+              expanded={open === 'rewards'}
+              onPress={() => toggleSection('rewards')}
+              disabled={false}
+            />
+            {open === 'rewards' && (
+              <View style={[styles.chipWrap, styles.expanded]}>
+                <Chip
+                  label={t('calendar.filter.withRedemption')}
+                  active={filter.withRedemption}
+                  onPress={toggleWithRedemption}
+                  leading={<View style={[styles.dot, { backgroundColor: tokens.semantic.coin }]} />}
+                />
+                {allRewards.map((reward) => (
+                  <Chip
+                    key={reward.rewardId}
+                    label={reward.title}
+                    active={filter.rewardIds.includes(reward.rewardId)}
+                    onPress={() => toggleReward(reward.rewardId, reward.title)}
+                    leading={
+                      <Ionicons
+                        name={(reward.icon ?? 'gift') as keyof typeof Ionicons.glyphMap}
+                        size={12}
+                        color={tokens.semantic.coin}
+                      />
+                    }
+                  />
+                ))}
+              </View>
+            )}
 
             <Text style={styles.explain}>{t('calendar.filter.explain')}</Text>
           </ScrollView>
@@ -382,8 +453,8 @@ function CollapsibleHeader({ title, count, expanded, onPress, disabled }: Collap
         </View>
       )}
       <Ionicons
-        name={expanded ? 'chevron-up' : 'chevron-down'}
-        size={15}
+        name={expanded ? 'chevron-up' : 'chevron-forward'}
+        size={16}
         color={disabled ? tokens.text.faint : tokens.brand.violet2}
       />
     </Pressable>
@@ -485,12 +556,25 @@ const styles = StyleSheet.create({
     marginTop: tokens.space[4],
     marginBottom: tokens.space[2],
   },
+  // A real surface, not a bare line of text: as plain type with a chevron these
+  // read as headings rather than as controls, and the sections behind them went
+  // unnoticed. Same fill and border as a chip, so "this is tappable" is stated
+  // in the same visual language the rest of the sheet already uses.
   collapsible: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    paddingVertical: 11,
+    paddingHorizontal: 12,
+    borderRadius: tokens.radius.md,
+    backgroundColor: tokens.bg.surface2,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+    marginTop: tokens.space[4],
   },
-  collapsibleTitle: { flex: 1 },
+  // The title inside the row carries no margin of its own — the row owns the
+  // spacing now.
+  collapsibleTitle: { flex: 1, marginTop: 0, marginBottom: 0 },
   disabledText: { color: tokens.text.faint },
   badge: {
     minWidth: 18,
@@ -529,6 +613,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(123, 92, 255, 0.14)',
   },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  /** Breathing room under a collapsible row when its body is showing. */
+  expanded: { marginTop: tokens.space[2] },
   dimTree: { gap: 6 },
   dimRow: { flexDirection: 'row', gap: 6 },
   // Flex ratios, not wrapping: this is what pins the tree to exactly six rows
