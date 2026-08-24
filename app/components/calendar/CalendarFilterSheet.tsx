@@ -1,9 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
-  Keyboard,
   Modal,
   Platform,
   Pressable,
@@ -14,9 +13,11 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MoodFace } from '@/components/mood/MoodFace';
 import { useMoodTags } from '@/lib/api/mood';
+import { useKeyboardHeight } from '@/lib/use-keyboard-height';
 import { activeFacetCount, MIN_XP_MAX, stepMinXp } from '@/lib/calendar/filters';
 import { useCalendarStore } from '@/lib/calendar/store';
 import type { DimensionId, MoodTag } from '@/lib/db/types';
@@ -62,32 +63,6 @@ const MOOD_VALUES: MoodValue[] = [1, 2, 3, 4, 5];
 /** Which open-ended section is expanded. Only one at a time, by design. */
 type OpenSection = 'tags' | 'practices' | 'rewards' | null;
 
-/**
- * Keyboard height, for pushing a bottom-anchored sheet clear of it.
- *
- * `KeyboardAvoidingView` is the house pattern, but it leans on the Activity
- * resizing — and a React Native `Modal` is its own window that does not, so
- * inside a sheet the input ends up under the keyboard and you cannot see what
- * you are typing. Measuring the keyboard and padding the scrim is the one
- * mechanism that behaves the same on both platforms in this situation.
- */
-function useKeyboardHeight(): number {
-  const [height, setHeight] = useState(0);
-  useEffect(() => {
-    // iOS gets the "will" events so the sheet travels with the keyboard rather
-    // than jumping after it has finished animating.
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-    const show = Keyboard.addListener(showEvent, (e) => setHeight(e.endCoordinates.height));
-    const hide = Keyboard.addListener(hideEvent, () => setHeight(0));
-    return () => {
-      show.remove();
-      hide.remove();
-    };
-  }, []);
-  return height;
-}
-
 interface Props {
   visible: boolean;
   onClose: () => void;
@@ -118,7 +93,31 @@ export function CalendarFilterSheet({ visible, onClose, practices, rewards }: Pr
 
   const [open, setOpen] = useState<OpenSection>(null);
   const [search, setSearch] = useState('');
+
+  /**
+   * How far to lift the sheet so the keyboard cannot cover it.
+   *
+   * `KeyboardAvoidingView` is the house pattern everywhere else, but it leans
+   * on the Activity resizing — and a React Native `Modal` is its own window
+   * that does not. Inside a sheet the input ends up under the keyboard and you
+   * cannot see what you are typing, so the height is measured and the scrim is
+   * padded instead.
+   *
+   * The `+ insets.bottom` on Android is not a fudge. From API 30 RN reports the
+   * keyboard as `imeInsets.bottom - barInsets.bottom` — the IME height minus
+   * the navigation bar — which assumes a window that already stops above that
+   * bar. This one does not: `edgeToEdgeEnabled` in app.json makes the modal's
+   * window edge-to-edge, so its bottom edge is the physical bottom of the
+   * screen and the missing nav-bar band (48dp with 3-button navigation) is
+   * exactly how much of the footer stays hidden — enough to swallow the Apply
+   * button. Below API 30 RN takes the legacy path, which already reports the
+   * full height, so adding the inset there would over-lift instead.
+   */
+  const insets = useSafeAreaInsets();
   const keyboardHeight = useKeyboardHeight();
+  const navGap =
+    Platform.OS === 'android' && Number(Platform.Version) >= 30 ? insets.bottom : 0;
+  const lift = keyboardHeight > 0 ? keyboardHeight + navGap : 0;
 
   const facets = activeFacetCount(filter);
 
@@ -172,10 +171,7 @@ export function CalendarFilterSheet({ visible, onClose, practices, rewards }: Pr
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable
-        style={[styles.scrim, { paddingBottom: keyboardHeight }]}
-        onPress={onClose}
-      >
+      <Pressable style={[styles.scrim, { paddingBottom: lift }]} onPress={onClose}>
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
           <View style={styles.handle} />
 
@@ -183,7 +179,7 @@ export function CalendarFilterSheet({ visible, onClose, practices, rewards }: Pr
             // The keyboard eats from the same budget: without subtracting it the
             // list keeps its full height, the sheet grows past the top of the
             // screen and the footer walks off the bottom.
-            style={{ maxHeight: Math.min(height * 0.72, height - 200 - keyboardHeight) }}
+            style={{ maxHeight: Math.min(height * 0.72, height - 200 - lift) }}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >

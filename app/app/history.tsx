@@ -230,9 +230,20 @@ export default function CalendarScreen() {
     for (const day of days.values()) {
       for (const r of day.redemptions) {
         if (!r.title) continue;
+        // Only purchases rank a reward, but any event puts it in the list: a
+        // reward bought last month and consumed this one still belongs in the
+        // menu, it just has not been paid for inside this range.
+        const weight = r.kind === 'redeem' ? 1 : 0;
         const seen = counts.get(r.rewardId);
-        if (seen) seen.count += 1;
-        else counts.set(r.rewardId, { rewardId: r.rewardId, title: r.title, icon: r.icon, count: 1 });
+        if (seen) seen.count += weight;
+        else {
+          counts.set(r.rewardId, {
+            rewardId: r.rewardId,
+            title: r.title,
+            icon: r.icon,
+            count: weight,
+          });
+        }
       }
     }
     return [...counts.values()].sort(

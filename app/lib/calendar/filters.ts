@@ -208,10 +208,15 @@ export interface CalendarTotals {
   moodAvg: number | null;
   redemptionCount: number;
   /**
-   * Surviving days carrying at least one counted redemption. With a reward
-   * facet active this is the answer to "how many days did I do that" — which
-   * is a different number from `redemptionCount` whenever it happened twice in
-   * one day.
+   * Surviving days on which at least one counted reward was **paid for**. With
+   * a reward facet active this is the answer to "how many days did I do that" —
+   * a different number from `redemptionCount` whenever it happened twice in one
+   * day, but never larger than it.
+   *
+   * Purchases only, deliberately: consuming something banked earlier is a
+   * separate event on a separate day (`use_reward` stamps `used_at` whenever it
+   * happens), and counting those here would report days you did not do the
+   * thing — the exact number this field exists to get right.
    */
   redemptionDays: number;
   spent: number;
@@ -248,7 +253,10 @@ export function summarize(days: Iterable<CalendarDay>, f: CalendarFilter): Calen
     const redeems = counted.filter((r) => r.kind === 'redeem');
     totals.redemptionCount += redeems.length;
     totals.spent += redeems.reduce((sum, r) => sum + r.cost, 0);
-    if (counted.length > 0) totals.redemptionDays += 1;
+    // `redeems`, not `counted`: all three figures on the Vault line have to sit
+    // on one base, or a month spent consuming the bank reads "4 days · 0
+    // redemptions · 0 coins".
+    if (redeems.length > 0) totals.redemptionDays += 1;
     const reps = day.practices.reduce((sum, p) => sum + p.count, 0);
     totals.practiceCount += reps;
     if (reps > 0) totals.activeDays += 1;
