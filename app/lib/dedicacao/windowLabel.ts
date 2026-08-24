@@ -5,7 +5,7 @@ import { bcp47 } from '@/lib/time';
 
 /**
  * Window-label shaping shared by every surface that scrubs a Dedicação
- * window (DedicacaoPanel, EspelhoPanel, dedicacao-history). User-facing
+ * window (DedicacaoPanel, and the history front). User-facing
  * strings live in the locale catalogs (`dedicacaoWindow.*`); this module
  * only owns the Intl date shaping.
  */

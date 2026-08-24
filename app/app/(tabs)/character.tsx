@@ -12,17 +12,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useBottomNavClearance } from '@/components/BottomNavBar';
 import { HeroHeader } from '@/components/HeroHeader';
-import {
-  PillarSwitcher,
-  type EuViewKey,
-  type PillarKey,
-} from '@/components/PillarSwitcher';
+import { PillarSwitcher, type PillarKey } from '@/components/PillarSwitcher';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { SubSelector } from '@/components/SubSelector';
 import { AutoconhecimentoView } from '@/components/pillars/AutoconhecimentoView';
 import { AvaliacaoPanel } from '@/components/pillars/AvaliacaoPanel';
 import { DedicacaoPanel } from '@/components/pillars/DedicacaoPanel';
-import { EspelhoPanel } from '@/components/pillars/EspelhoPanel';
 import { CaminhoPanel } from '@/components/pillars/CaminhoPanel';
 import { MomentumView } from '@/components/pillars/MomentumView';
 import { NortePanel } from '@/components/pillars/NortePanel';
@@ -72,17 +67,15 @@ const PILLAR_TONE: Record<PillarKey, { accent: string; halo: string; border: str
 };
 
 /**
- * Eu tab — full-width HeroHeader on top (Iris-Wrapped Avatar), then the
- * pillar switcher (3 pilares + the cross-pillar Espelho tab) followed by a
- * 2-segment sub-selector for the active pilar's sub-pilares. Content
- * renders directly into the page scroll (no card wrapper) so the chart /
- * list / placeholder dominates.
+ * Eu tab — full-width HeroHeader on top (Iris-Wrapped Avatar), then a
+ * 3-icon pillar switcher followed by a 2-segment sub-selector for the
+ * active pilar's sub-pilares. Content renders directly into the page
+ * scroll (no card wrapper) so the chart / list / placeholder dominates.
  *
  * Default sub per pilar:
  *   - Percebida → Avaliação (hex chamariz)
  *   - Praticada → Dedicação (XP view)
  *   - Desejada → Skills (real content; Goals lands later)
- *   - Espelho → percepção × prática overlay (no sub-selector)
  */
 export default function CharacterScreen() {
   const { t } = useT();
@@ -90,24 +83,19 @@ export default function CharacterScreen() {
   const character = useCharacter();
   const skillStates = useSkillStates();
   const momentum = useMomentum();
-  const params = useLocalSearchParams<{ pillar?: EuViewKey }>();
+  const params = useLocalSearchParams<{ pillar?: PillarKey }>();
 
-  // One state for the tab's top-level view: a pillar or the cross-pillar
-  // Espelho. Naming a pillar inherently leaves the mirror — no second
-  // boolean to keep in sync.
-  const [activeView, setActiveView] = useState<EuViewKey>(
+  const [activePillar, setActivePillar] = useState<PillarKey>(
     params.pillar ?? 'percebida',
   );
-  const activePillar: PillarKey | null =
-    activeView === 'espelho' ? null : activeView;
 
   // Honor `?pillar=` changes after mount — e.g. the Home XP card pushes
   // back to this tab to land on Praticada/Dedicação. Without this, the
   // first push works but subsequent re-pushes with the same param do
-  // nothing because activeView is already set.
+  // nothing because activePillar is already set.
   useEffect(() => {
-    if (params.pillar && params.pillar !== activeView) {
-      setActiveView(params.pillar);
+    if (params.pillar && params.pillar !== activePillar) {
+      setActivePillar(params.pillar);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.pillar]);
@@ -163,9 +151,9 @@ export default function CharacterScreen() {
   // every other step returns to the top so the switcher is in view.
   useEffect(() => {
     if (!isM5Current || m5Status !== 'in_progress') return;
-    if (m5StepIndex === 3) setActiveView('praticada');
-    else if (m5StepIndex === 4) setActiveView('desejada');
-    else if (m5StepIndex === 1 || m5StepIndex === 2) setActiveView('percebida');
+    if (m5StepIndex === 3) setActivePillar('praticada');
+    else if (m5StepIndex === 4) setActivePillar('desejada');
+    else if (m5StepIndex === 1 || m5StepIndex === 2) setActivePillar('percebida');
     const id = setTimeout(() => {
       if (m5StepIndex === 2) {
         // Drop down to the Avaliação legend cards by their measured position,
@@ -201,75 +189,28 @@ export default function CharacterScreen() {
     );
   }
 
-  const { dimensions, subScores } = character.data;
+  const { dimensions } = character.data;
+  const tone = PILLAR_TONE[activePillar];
+
+  const subOptions: [{ key: string; label: string }, { key: string; label: string }] =
+    activePillar === 'percebida'
+      ? [
+          { key: 'avaliacao', label: t('pillar.sub.percebida.avaliacao') },
+          { key: 'autoconhecimento', label: t('pillar.sub.percebida.autoconhecimento') },
+        ]
+      : activePillar === 'praticada'
+        ? [
+            { key: 'dedicacao', label: t('pillar.sub.praticada.dedicacao') },
+            { key: 'momentum', label: t('pillar.sub.praticada.momentum') },
+          ]
+        : [
+            { key: 'norte', label: t('pillar.sub.desejada.norte') },
+            { key: 'caminho', label: t('pillar.sub.desejada.caminho') },
+          ];
+  const currentSub = activeSub[activePillar];
 
   const handleSubChange = (key: string) => {
-    if (!activePillar) return;
     setActiveSub((prev) => ({ ...prev, [activePillar]: key } as ActiveSubState));
-  };
-
-  /** Sub-selector + panel for the active pillar — the Espelho branch below
-   *  swaps this whole block out, so its chrome is only built when shown. */
-  const renderPillarBody = (pillar: PillarKey) => {
-    const tone = PILLAR_TONE[pillar];
-    const subOptions: [
-      { key: string; label: string },
-      { key: string; label: string },
-    ] =
-      pillar === 'percebida'
-        ? [
-            { key: 'avaliacao', label: t('pillar.sub.percebida.avaliacao') },
-            { key: 'autoconhecimento', label: t('pillar.sub.percebida.autoconhecimento') },
-          ]
-        : pillar === 'praticada'
-          ? [
-              { key: 'dedicacao', label: t('pillar.sub.praticada.dedicacao') },
-              { key: 'momentum', label: t('pillar.sub.praticada.momentum') },
-            ]
-          : [
-              { key: 'norte', label: t('pillar.sub.desejada.norte') },
-              { key: 'caminho', label: t('pillar.sub.desejada.caminho') },
-            ];
-    const currentSub = activeSub[pillar];
-
-    return (
-      <>
-        <SubSelector
-          options={subOptions}
-          active={currentSub}
-          onChange={handleSubChange}
-          accent={tone.accent}
-          halo={tone.halo}
-          border={tone.border}
-        />
-        <View style={styles.subViewWrap}>
-          {pillar === 'percebida' && currentSub === 'avaliacao' && (
-            <AvaliacaoPanel
-              subScores={subScores}
-              scrollViewRef={scrollViewRef}
-              onLegendMeasured={(y) => {
-                legendY.current = y;
-              }}
-            />
-          )}
-          {pillar === 'percebida' && currentSub === 'autoconhecimento' && (
-            <AutoconhecimentoView />
-          )}
-          {pillar === 'praticada' && currentSub === 'dedicacao' && (
-            <DedicacaoPanel dimensions={dimensions} />
-          )}
-          {pillar === 'praticada' && currentSub === 'momentum' && (
-            <MomentumView momentum={momentum.data?.attributes} />
-          )}
-          {pillar === 'desejada' && currentSub === 'norte' && (
-            <NortePanel subScores={subScores} />
-          )}
-          {pillar === 'desejada' && currentSub === 'caminho' && (
-            <CaminhoPanel skills={skillStates.data ?? []} />
-          )}
-        </View>
-      </>
-    );
   };
 
   return (
@@ -308,14 +249,44 @@ export default function CharacterScreen() {
 
           {/* Tab body — padded inset under the header. */}
           <View style={styles.body}>
-            <PillarSwitcher active={activeView} onChange={setActiveView} />
-            {activePillar === null ? (
-              <View style={styles.subViewWrap}>
-                <EspelhoPanel subScores={subScores} />
-              </View>
-            ) : (
-              renderPillarBody(activePillar)
-            )}
+            <PillarSwitcher active={activePillar} onChange={setActivePillar} />
+            <SubSelector
+              options={subOptions}
+              active={currentSub}
+              onChange={handleSubChange}
+              accent={tone.accent}
+              halo={tone.halo}
+              border={tone.border}
+            />
+            <View style={styles.subViewWrap}>
+              {activePillar === 'percebida' && currentSub === 'avaliacao' && (
+                <AvaliacaoPanel
+                  subScores={character.data.subScores}
+                  scrollViewRef={scrollViewRef}
+                  onLegendMeasured={(y) => {
+                    legendY.current = y;
+                  }}
+                />
+              )}
+              {activePillar === 'percebida' && currentSub === 'autoconhecimento' && (
+                <AutoconhecimentoView />
+              )}
+              {activePillar === 'praticada' && currentSub === 'dedicacao' && (
+                <DedicacaoPanel
+                  dimensions={dimensions}
+                  subScores={character.data.subScores}
+                />
+              )}
+              {activePillar === 'praticada' && currentSub === 'momentum' && (
+                <MomentumView momentum={momentum.data?.attributes} />
+              )}
+              {activePillar === 'desejada' && currentSub === 'norte' && (
+                <NortePanel subScores={character.data.subScores} />
+              )}
+              {activePillar === 'desejada' && currentSub === 'caminho' && (
+                <CaminhoPanel skills={skillStates.data ?? []} />
+              )}
+            </View>
           </View>
         </ScrollView>
       </ScreenBackground>
