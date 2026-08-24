@@ -12,7 +12,6 @@ import { CalendarDayPanel } from '@/components/calendar/CalendarDayPanel';
 import { CalendarFilterSheet } from '@/components/calendar/CalendarFilterSheet';
 import { CalendarGrid } from '@/components/calendar/CalendarGrid';
 import { CalendarListView } from '@/components/calendar/CalendarListView';
-import { CalendarQuarterView } from '@/components/calendar/CalendarQuarterView';
 import { CalendarSummary } from '@/components/calendar/CalendarSummary';
 import { CompleteTaskSheet } from '@/components/CompleteTaskSheet';
 import { FabStack } from '@/components/FabStack';
@@ -65,7 +64,7 @@ import { DIMENSION_ORDER, SUB_META } from '@/theme/dimensions';
  *
  *   front  — what the grid paints        (the segmented control)
  *   filter — which days count            (the floating funnel; see lib/calendar/filters.ts)
- *   period — where you are               (month arrows, and the quarter view)
+ *   period — where you are               (the month arrows)
  *
  * Keeping period out of the filter is what stops the calendar from having two
  * competing notions of "when", which is exactly the collision the old
@@ -138,7 +137,7 @@ export default function CalendarScreen() {
     if (params.front === 'rotina' || params.front === 'humor' || params.front === 'vault') {
       setFront(params.front);
     }
-    if (params.view === 'month' || params.view === 'list' || params.view === 'quarter') {
+    if (params.view === 'month' || params.view === 'list') {
       setView(params.view);
     }
     const dims = (params.dims ?? '')
@@ -160,20 +159,16 @@ export default function CalendarScreen() {
 
   // --- data ----------------------------------------------------------------
   const monthQuery = useCalendarMonth(visibleMonth);
-  // List and quarter share one three-month window ending at the visible month,
-  // so switching between them is free. Gated on the view: the month front is
-  // the default and should never pay for a range it is not showing.
-  const quarterMonths = useMemo(
-    () => [addMonths(visibleMonth, -2), addMonths(visibleMonth, -1), startOfMonth(visibleMonth)],
-    [visibleMonth],
-  );
-  const quarterQuery = useCalendarRange(
-    quarterMonths[0],
+  // The list reaches back three months so scrolling it is worth doing. Gated on
+  // the view: the month is the default and should never pay for a range it is
+  // not showing.
+  const listQuery = useCalendarRange(
+    addMonths(visibleMonth, -2),
     endOfMonth(visibleMonth),
-    view !== 'month',
+    view === 'list',
   );
 
-  const source = view === 'month' ? monthQuery : quarterQuery;
+  const source = view === 'month' ? monthQuery : listQuery;
   const days = source.data?.days ?? EMPTY_DAYS;
   const reference = source.data?.reference ?? 100;
 
@@ -191,15 +186,29 @@ export default function CalendarScreen() {
     return map;
   }, [moodTags.data, locale]);
 
-  /** Practices seen in the loaded range, most-logged first — the filter's menu. */
+  /**
+   * Practices seen in the loaded range, most-logged first — the filter's menu.
+   * The count is not shown any more (it made every row longer to say something
+   * the ordering already says) but it still decides that ordering.
+   */
   const practices = useMemo(() => {
-    const counts = new Map<string, { taskId: string; title: string; count: number }>();
+    const counts = new Map<
+      string,
+      { taskId: string; title: string; count: number; dim: DimensionId | null }
+    >();
     for (const day of days.values()) {
       for (const p of day.practices) {
         if (!p.title) continue;
         const seen = counts.get(p.taskId);
         if (seen) seen.count += p.count;
-        else counts.set(p.taskId, { taskId: p.taskId, title: p.title, count: p.count });
+        else {
+          counts.set(p.taskId, {
+            taskId: p.taskId,
+            title: p.title,
+            count: p.count,
+            dim: p.dims[0] ?? null,
+          });
+        }
       }
     }
     return [...counts.values()].sort(
@@ -448,24 +457,6 @@ export default function CalendarScreen() {
                 color={view === 'list' ? tokens.brand.violet2 : tokens.text.hi}
               />
             </Pressable>
-            <Pressable
-              onPress={() => toggleView('quarter')}
-              style={({ pressed }) => [
-                styles.iconBtn,
-                view === 'quarter' && styles.iconBtnActive,
-                pressed && { opacity: 0.7 },
-              ]}
-              hitSlop={6}
-              accessibilityRole="button"
-              accessibilityState={{ selected: view === 'quarter' }}
-              accessibilityLabel={t('calendar.views.quarter')}
-            >
-              <Ionicons
-                name="grid-outline"
-                size={18}
-                color={view === 'quarter' ? tokens.brand.violet2 : tokens.text.hi}
-              />
-            </Pressable>
           </View>
 
           <View style={styles.fronts}>
@@ -570,7 +561,7 @@ export default function CalendarScreen() {
                 onUndo={handleUndo}
               />
             </>
-          ) : view === 'list' ? (
+          ) : (
             <CalendarListView
               days={listDays}
               front={front}
@@ -580,19 +571,6 @@ export default function CalendarScreen() {
                 const date = new Date(y, m - 1, d);
                 setVisibleMonth(startOfMonth(date));
                 setSelected(date);
-                setView('month');
-              }}
-              locale={locale}
-            />
-          ) : (
-            <CalendarQuarterView
-              monthDates={quarterMonths}
-              days={days}
-              reference={reference}
-              front={front}
-              filter={filter}
-              onSelectMonth={(month) => {
-                goToMonth(month);
                 setView('month');
               }}
               locale={locale}

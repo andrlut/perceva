@@ -1,12 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useState } from 'react';
 import {
   Modal,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -15,7 +17,7 @@ import { MoodFace } from '@/components/mood/MoodFace';
 import { useMoodTags } from '@/lib/api/mood';
 import { activeFacetCount, MIN_XP_MAX, stepMinXp } from '@/lib/calendar/filters';
 import { useCalendarStore } from '@/lib/calendar/store';
-import type { DimensionId, MoodTag, SubId } from '@/lib/db/types';
+import type { DimensionId, MoodTag } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { moodLevel, splitMoodTags, type MoodValue } from '@/lib/mood';
@@ -28,23 +30,41 @@ import { DIMENSION_META, DIMENSION_ORDER, SUBS_BY_DIM, SUB_META } from '@/theme/
  * **There is no draft state: each chip applies the instant it is tapped.** The
  * month behind the scrim re-paints under the new filter while the sheet is
  * still open, which is the whole point — the user watches days dim and knows
- * what the facet did before committing to it. "Aplicar" therefore only closes;
- * it exists because a sheet with no primary action reads unfinished, and
- * because it is the affordance people reach for to get back to the month.
+ * what the facet did before committing to it. "Aplicar" therefore only closes.
  * That is a decision, not an omission — do not add a staged copy of the filter.
+ *
+ * ## Why the sections are shaped so differently
+ *
+ * The first version laid every facet out flat and the sheet opened as a wall of
+ * fifty-odd chips — the filter's own menu was the most cluttered surface in the
+ * app. Each facet now gets the shape its data actually has:
+ *
+ * - **Mood** is five fixed options, so it is five faces on one line with no
+ *   labels. The face already carries the level in colour and curvature; a word
+ *   beside it would double the width to say the same thing again.
+ * - **Dimensions and subs** are a fixed 6×(1+2) tree, so they are six rows of
+ *   "dimension, then its two subs". Laid out with flex ratios rather than wrap,
+ *   which is what guarantees exactly six lines on every screen width instead of
+ *   a ragged block that reflows as labels change length.
+ * - **Tags** and **practices** are open-ended and personal — they collapse. Only
+ *   one of the two is open at a time, so the sheet stays roughly one screen tall
+ *   however many practices the user has accumulated.
+ *
+ * Practices additionally get a search field and no repetition count: with
+ * dozens of them, finding one by name beats reading a ranked list, and the
+ * count was decoration that made every row longer.
  */
 
 const MOOD_VALUES: MoodValue[] = [1, 2, 3, 4, 5];
 
-const ALL_SUBS: { sub: SubId; dim: DimensionId }[] = DIMENSION_ORDER.flatMap((dim) =>
-  SUBS_BY_DIM[dim].map((sub) => ({ sub, dim })),
-);
+/** Which open-ended section is expanded. Only one at a time, by design. */
+type OpenSection = 'tags' | 'practices' | null;
 
 interface Props {
   visible: boolean;
   onClose: () => void;
-  /** Praticas que aparecem no periodo visivel, ja ordenadas por contagem desc. */
-  practices: { taskId: string; title: string; count: number }[];
+  /** Practices seen in the loaded range, already sorted most-logged first. */
+  practices: { taskId: string; title: string; dim: DimensionId | null }[];
 }
 
 export function CalendarFilterSheet({ visible, onClose, practices }: Props) {
@@ -64,23 +84,10 @@ export function CalendarFilterSheet({ visible, onClose, practices }: Props) {
   const clearFilter = useCalendarStore((s) => s.clearFilter);
   const taskLabels = useCalendarStore((s) => s.taskLabels);
 
-  const facets = activeFacetCount(filter);
+  const [open, setOpen] = useState<OpenSection>(null);
+  const [search, setSearch] = useState('');
 
-  // A practice selected in another period is not in `practices` (which only
-  // covers the loaded range), and without this it would vanish from the sheet
-  // while still dimming the month — selectable but not deselectable. Appending
-  // it with a zero count keeps every active facet reversible from the same
-  // place it was set.
-  const practiceChips = [
-    ...practices,
-    ...filter.taskIds
-      .filter((id) => !practices.some((p) => p.taskId === id))
-      .map((id) => ({
-        taskId: id,
-        title: taskLabels[id] ?? t('calendar.filter.practiceUnknown'),
-        count: 0,
-      })),
-  ];
+  const facets = activeFacetCount(filter);
 
   const catalog: MoodTag[] = tagsQuery.data ?? [];
   const { emotions, contexts } = splitMoodTags(catalog);
@@ -95,144 +102,213 @@ export function CalendarFilterSheet({ visible, onClose, practices }: Props) {
   const xpLabel = (xp: number) =>
     xp > 0 ? t('calendar.filter.minXpValue', { xp }) : t('calendar.filter.minXpAny');
 
+  // A practice selected in another period is not in `practices` (which only
+  // covers the loaded range), and without this it would vanish from the sheet
+  // while still dimming the month — selectable but not deselectable.
+  const allPractices = [
+    ...practices,
+    ...filter.taskIds
+      .filter((id) => !practices.some((p) => p.taskId === id))
+      .map((id) => ({
+        taskId: id,
+        title: taskLabels[id] ?? t('calendar.filter.practiceUnknown'),
+        dim: null as DimensionId | null,
+      })),
+  ];
+
+  const needle = search.trim().toLocaleLowerCase();
+  const shownPractices = needle
+    ? allPractices.filter((p) => p.title.toLocaleLowerCase().includes(needle))
+    : allPractices;
+
+  const toggleSection = (section: Exclude<OpenSection, null>) => {
+    Haptics.selectionAsync().catch(() => {});
+    setOpen((current) => (current === section ? null : section));
+  };
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.scrim} onPress={onClose}>
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
           <View style={styles.handle} />
-          <Text style={styles.sheetTitle}>{t('calendar.filter.title')}</Text>
 
           <ScrollView
-            // 72% of the screen, minus the sheet chrome (handle + title +
-            // footer ≈ 200) so the Aplicar row never gets pushed off a short
-            // device. On tall phones the 72% ceiling is the one that binds.
             style={{ maxHeight: Math.min(height * 0.72, height - 200) }}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollBody}
+            keyboardShouldPersistTaps="handled"
           >
-            <Section title={t('calendar.filter.moods')}>
-              <View style={styles.chipWrap}>
-                {MOOD_VALUES.map((value) => {
-                  const active = filter.moods.includes(value);
-                  const label = t(`mood.levels.${moodLevel(value).key}`);
-                  return (
-                    <Chip
-                      key={value}
-                      label={label}
-                      active={active}
-                      onPress={() => toggleMood(value)}
-                      leading={<MoodFace value={value} size={16} active />}
-                    />
-                  );
-                })}
-              </View>
-            </Section>
+            {/* Mood — five fixed options, so always open and label-free. */}
+            <Text style={styles.sectionTitle}>{t('calendar.filter.moods')}</Text>
+            <View style={styles.moodRow}>
+              {MOOD_VALUES.map((value) => {
+                const active = filter.moods.includes(value);
+                return (
+                  <Pressable
+                    key={value}
+                    onPress={() => {
+                      Haptics.selectionAsync().catch(() => {});
+                      toggleMood(value);
+                    }}
+                    style={({ pressed }) => [
+                      styles.moodBtn,
+                      active && styles.moodBtnActive,
+                      !active && styles.moodBtnIdle,
+                      pressed && { opacity: 0.7 },
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: active }}
+                    accessibilityLabel={t(`mood.levels.${moodLevel(value).key}`)}
+                  >
+                    <MoodFace value={value} size={38} active />
+                  </Pressable>
+                );
+              })}
+            </View>
 
-            <Section title={t('calendar.filter.practices')}>
-              {practiceChips.length === 0 ? (
-                <Text style={styles.emptyText}>{t('calendar.filter.emptyPractices')}</Text>
-              ) : (
-                <View style={styles.chipWrap}>
-                  {practiceChips.map((practice) => (
-                    <Chip
-                      key={practice.taskId}
-                      label={
-                        practice.count > 0
-                          ? `${practice.title} · ${practice.count}`
-                          : practice.title
-                      }
-                      active={filter.taskIds.includes(practice.taskId)}
-                      onPress={() => toggleTask(practice.taskId, practice.title)}
-                    />
-                  ))}
-                </View>
-              )}
-            </Section>
-
-            <Section title={t('calendar.filter.dims')}>
+            {/* Mood tags — open-ended, so collapsed by default. */}
+            <CollapsibleHeader
+              title={t('calendar.filter.tags')}
+              count={filter.tagIds.length}
+              expanded={open === 'tags'}
+              onPress={() => toggleSection('tags')}
+              disabled={orderedTags.length === 0}
+            />
+            {open === 'tags' && orderedTags.length > 0 && (
               <View style={styles.chipWrap}>
-                {DIMENSION_ORDER.map((dim) => (
+                {orderedTags.map((tag) => (
                   <Chip
-                    key={dim}
+                    key={tag.slug}
+                    label={`${tag.emoji ? `${tag.emoji} ` : ''}${
+                      locale === 'pt' ? tag.label_pt : tag.label_en
+                    }`}
+                    active={filter.tagIds.includes(tag.slug)}
+                    onPress={() => toggleTag(tag.slug)}
+                  />
+                ))}
+              </View>
+            )}
+
+            {/* Dimensions and their subs — a fixed tree, so always open. */}
+            <Text style={styles.sectionTitle}>{t('calendar.filter.dimsAndSubs')}</Text>
+            <View style={styles.dimTree}>
+              {DIMENSION_ORDER.map((dim) => (
+                <View key={dim} style={styles.dimRow}>
+                  <Chip
+                    style={styles.dimCell}
                     label={meta.dim(dim).label}
                     active={filter.dims.includes(dim)}
                     onPress={() => toggleDim(dim)}
                     leading={
-                      <View style={[styles.disc, { backgroundColor: DIMENSION_META[dim].color }]} />
+                      <View style={[styles.dot, { backgroundColor: DIMENSION_META[dim].color }]} />
                     }
                   />
-                ))}
-              </View>
-            </Section>
-
-            <Section title={t('calendar.filter.subs')}>
-              <View style={styles.chipWrap}>
-                {ALL_SUBS.map(({ sub, dim }) => (
-                  <Chip
-                    key={sub}
-                    label={meta.sub(sub).label}
-                    active={filter.subs.includes(sub)}
-                    onPress={() => toggleSub(sub)}
-                    leading={
-                      <Ionicons
-                        name={SUB_META[sub].iconName as keyof typeof Ionicons.glyphMap}
-                        size={13}
-                        color={DIMENSION_META[dim].color}
-                      />
-                    }
-                  />
-                ))}
-              </View>
-            </Section>
-
-            {orderedTags.length > 0 && (
-              <Section title={t('calendar.filter.tags')}>
-                <View style={styles.chipWrap}>
-                  {orderedTags.map((tag) => {
-                    const label = locale === 'pt' ? tag.label_pt : tag.label_en;
-                    return (
-                      <Chip
-                        key={tag.slug}
-                        label={tag.emoji ? `${tag.emoji} ${label}` : label}
-                        active={filter.tagIds.includes(tag.slug)}
-                        onPress={() => toggleTag(tag.slug)}
-                      />
-                    );
-                  })}
+                  {SUBS_BY_DIM[dim].map((sub) => (
+                    <Chip
+                      key={sub}
+                      style={styles.subCell}
+                      label={meta.sub(sub).label}
+                      active={filter.subs.includes(sub)}
+                      onPress={() => toggleSub(sub)}
+                      leading={
+                        <Ionicons
+                          name={SUB_META[sub].iconName as keyof typeof Ionicons.glyphMap}
+                          size={12}
+                          color={DIMENSION_META[dim].color}
+                        />
+                      }
+                    />
+                  ))}
                 </View>
-              </Section>
-            )}
+              ))}
+            </View>
 
-            <Section title={t('calendar.filter.minXp')}>
-              <View style={styles.stepper}>
-                <StepButton
-                  icon="remove"
-                  disabled={atFloor}
-                  onPress={() => nudgeMinXp(-1)}
-                  label={xpLabel(stepMinXp(filter.minXp, -1))}
-                />
-                <Text style={styles.stepperValue}>{xpLabel(filter.minXp)}</Text>
-                <StepButton
-                  icon="add"
-                  disabled={atCeiling}
-                  onPress={() => nudgeMinXp(1)}
-                  label={xpLabel(stepMinXp(filter.minXp, 1))}
-                />
-              </View>
-            </Section>
+            {/* Practices — open-ended and personal, so collapsed and searchable. */}
+            <CollapsibleHeader
+              title={t('calendar.filter.practices')}
+              count={filter.taskIds.length}
+              expanded={open === 'practices'}
+              onPress={() => toggleSection('practices')}
+              disabled={allPractices.length === 0}
+            />
+            {open === 'practices' &&
+              (allPractices.length === 0 ? (
+                <Text style={styles.emptyText}>{t('calendar.filter.emptyPractices')}</Text>
+              ) : (
+                <>
+                  <View style={styles.searchBox}>
+                    <Ionicons name="search" size={15} color={tokens.text.dim} />
+                    <TextInput
+                      value={search}
+                      onChangeText={setSearch}
+                      placeholder={t('calendar.filter.searchPractices')}
+                      placeholderTextColor={tokens.text.faint}
+                      style={styles.searchInput}
+                      autoCorrect={false}
+                      returnKeyType="search"
+                    />
+                    {search.length > 0 && (
+                      <Pressable onPress={() => setSearch('')} hitSlop={8}>
+                        <Ionicons name="close-circle" size={16} color={tokens.text.dim} />
+                      </Pressable>
+                    )}
+                  </View>
+                  {shownPractices.length === 0 ? (
+                    <Text style={styles.emptyText}>{t('calendar.filter.noPracticeMatch')}</Text>
+                  ) : (
+                    <View style={styles.chipWrap}>
+                      {shownPractices.map((practice) => (
+                        <Chip
+                          key={practice.taskId}
+                          label={practice.title}
+                          active={filter.taskIds.includes(practice.taskId)}
+                          onPress={() => toggleTask(practice.taskId, practice.title)}
+                          leading={
+                            <View
+                              style={[
+                                styles.dot,
+                                {
+                                  backgroundColor: practice.dim
+                                    ? DIMENSION_META[practice.dim].color
+                                    : tokens.text.faint,
+                                },
+                              ]}
+                            />
+                          }
+                        />
+                      ))}
+                    </View>
+                  )}
+                </>
+              ))}
 
-            <Section title={t('calendar.filter.rewards')}>
-              <View style={styles.chipWrap}>
-                <Chip
-                  label={t('calendar.filter.withRedemption')}
-                  active={filter.withRedemption}
-                  onPress={toggleWithRedemption}
-                  leading={
-                    <View style={[styles.disc, { backgroundColor: tokens.semantic.coin }]} />
-                  }
-                />
-              </View>
-            </Section>
+            <Text style={styles.sectionTitle}>{t('calendar.filter.minXp')}</Text>
+            <View style={styles.stepperRow}>
+              <StepButton
+                icon="remove"
+                disabled={atFloor}
+                onPress={() => nudgeMinXp(-1)}
+                label={xpLabel(stepMinXp(filter.minXp, -1))}
+              />
+              <Text style={styles.stepperValue}>{xpLabel(filter.minXp)}</Text>
+              <StepButton
+                icon="add"
+                disabled={atCeiling}
+                onPress={() => nudgeMinXp(1)}
+                label={xpLabel(stepMinXp(filter.minXp, 1))}
+              />
+            </View>
+
+            <Text style={styles.sectionTitle}>{t('calendar.filter.rewards')}</Text>
+            <View style={styles.chipWrap}>
+              <Chip
+                label={t('calendar.filter.withRedemption')}
+                active={filter.withRedemption}
+                onPress={toggleWithRedemption}
+                leading={
+                  <View style={[styles.dot, { backgroundColor: tokens.semantic.coin }]} />
+                }
+              />
+            </View>
 
             <Text style={styles.explain}>{t('calendar.filter.explain')}</Text>
           </ScrollView>
@@ -242,6 +318,7 @@ export function CalendarFilterSheet({ visible, onClose, practices }: Props) {
               onPress={() => {
                 Haptics.selectionAsync().catch(() => {});
                 clearFilter();
+                setSearch('');
               }}
               style={({ pressed }) => [styles.clearBtn, pressed && { opacity: 0.6 }]}
               accessibilityRole="button"
@@ -277,17 +354,39 @@ export function CalendarFilterSheet({ visible, onClose, practices }: Props) {
   );
 }
 
-interface SectionProps {
+interface CollapsibleHeaderProps {
   title: string;
-  children: React.ReactNode;
+  /** Selected values inside; shown as a badge so a collapsed section still speaks. */
+  count: number;
+  expanded: boolean;
+  onPress: () => void;
+  disabled: boolean;
 }
 
-function Section({ title, children }: SectionProps) {
+function CollapsibleHeader({ title, count, expanded, onPress, disabled }: CollapsibleHeaderProps) {
   return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      {children}
-    </View>
+    <Pressable
+      onPress={disabled ? undefined : onPress}
+      disabled={disabled}
+      style={({ pressed }) => [styles.collapsible, pressed && !disabled && { opacity: 0.7 }]}
+      accessibilityRole="button"
+      accessibilityState={{ expanded, disabled }}
+      accessibilityLabel={title}
+    >
+      <Text style={[styles.sectionTitle, styles.collapsibleTitle, disabled && styles.disabledText]}>
+        {title}
+      </Text>
+      {count > 0 && (
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>{count}</Text>
+        </View>
+      )}
+      <Ionicons
+        name={expanded ? 'chevron-up' : 'chevron-down'}
+        size={15}
+        color={disabled ? tokens.text.faint : tokens.brand.violet2}
+      />
+    </Pressable>
   );
 }
 
@@ -295,11 +394,13 @@ interface ChipProps {
   label: string;
   active: boolean;
   onPress: () => void;
-  /** Disc, icon or face rendered before the label. */
+  /** Disc or icon rendered before the label. */
   leading?: React.ReactNode;
+  /** Layout override — the dimension tree sizes its cells by flex ratio. */
+  style?: object;
 }
 
-function Chip({ label, active, onPress, leading }: ChipProps) {
+function Chip({ label, active, onPress, leading, style }: ChipProps) {
   return (
     <Pressable
       onPress={() => {
@@ -308,6 +409,7 @@ function Chip({ label, active, onPress, leading }: ChipProps) {
       }}
       style={({ pressed }) => [
         styles.chip,
+        style,
         active && styles.chipActive,
         pressed && { opacity: 0.7 },
       ]}
@@ -317,7 +419,9 @@ function Chip({ label, active, onPress, leading }: ChipProps) {
       accessibilityLabel={label}
     >
       {leading}
-      <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>{label}</Text>
+      <Text style={[styles.chipLabel, active && styles.chipLabelActive]} numberOfLines={1}>
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -346,11 +450,7 @@ function StepButton({ icon, disabled, onPress, label }: StepButtonProps) {
       accessibilityState={{ disabled }}
       accessibilityLabel={label}
     >
-      <Ionicons
-        name={icon}
-        size={16}
-        color={disabled ? tokens.text.faint : tokens.brand.violet2}
-      />
+      <Ionicons name={icon} size={16} color={disabled ? tokens.text.faint : tokens.brand.violet2} />
     </Pressable>
   );
 }
@@ -376,31 +476,72 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: tokens.space[3],
   },
-  sheetTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 16,
-    color: tokens.text.hi,
-    marginBottom: tokens.space[3],
-  },
-  scrollBody: {
-    gap: tokens.space[4],
-    paddingBottom: tokens.space[2],
-  },
-  section: {
-    gap: tokens.space[2],
-  },
   sectionTitle: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: 'Manrope_800ExtraBold',
     fontSize: 10.5,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
     color: tokens.text.dim,
+    marginTop: tokens.space[4],
+    marginBottom: tokens.space[2],
   },
-  chipWrap: {
+  collapsible: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 8,
+  },
+  collapsibleTitle: { flex: 1 },
+  disabledText: { color: tokens.text.faint },
+  badge: {
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    paddingHorizontal: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(123, 92, 255, 0.24)',
+  },
+  badgeText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 10.5,
+    color: tokens.brand.violet2,
+  },
+  moodRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     gap: 6,
   },
+  moodBtn: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 6,
+    borderRadius: tokens.radius.md,
+    borderWidth: 1.5,
+  },
+  moodBtnIdle: {
+    borderColor: 'transparent',
+    // Unselected faces stay legible but recede, so the row reads as a choice
+    // rather than as five equally-lit buttons.
+    opacity: 0.45,
+  },
+  moodBtnActive: {
+    borderColor: tokens.brand.violet2,
+    backgroundColor: 'rgba(123, 92, 255, 0.14)',
+  },
+  chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  dimTree: { gap: 6 },
+  dimRow: { flexDirection: 'row', gap: 6 },
+  // Flex ratios, not wrapping: this is what pins the tree to exactly six rows
+  // on every width. The dimension cell gets more room because its labels are
+  // the longest ("Prosperidade").
+  //
+  // Tighter horizontal padding than a free-standing chip, because the row's
+  // width is fixed and every dp spent on padding comes off the label. On a
+  // 320dp phone a sub cell still only has ~52dp of text, so the longest labels
+  // ellipsize — an accepted trade for the six-row guarantee, and the icon plus
+  // the parent dimension's colour carry the identity when the word is cut.
+  dimCell: { flex: 1.25, minWidth: 0, paddingHorizontal: 8, gap: 5 },
+  subCell: { flex: 1, minWidth: 0, paddingHorizontal: 8, gap: 5 },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -413,90 +554,77 @@ const styles = StyleSheet.create({
     borderColor: tokens.border.base,
   },
   chipActive: {
-    backgroundColor: 'rgba(123,92,255,0.2)',
+    backgroundColor: 'rgba(123, 92, 255, 0.2)',
     borderColor: tokens.brand.violet2,
   },
   chipLabel: {
+    flexShrink: 1,
     fontFamily: 'Manrope_700Bold',
     fontSize: 12,
     color: tokens.text.base,
   },
-  chipLabelActive: {
-    color: tokens.brand.violet2,
+  chipLabelActive: { color: tokens.brand.violet2 },
+  dot: { width: 9, height: 9, borderRadius: 5 },
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
+    height: 38,
+    borderRadius: tokens.radius.md,
+    backgroundColor: tokens.bg.surface2,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+    marginBottom: tokens.space[2],
   },
-  disc: {
-    width: 9,
-    height: 9,
-    borderRadius: 4.5,
+  searchInput: {
+    flex: 1,
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 13,
+    color: tokens.text.hi,
+    padding: 0,
   },
   emptyText: {
     fontFamily: 'Manrope_500Medium',
     fontSize: 12,
-    lineHeight: 17,
     color: tokens.text.faint,
   },
-  stepper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[3],
-  },
+  stepperRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   stepBtn: {
     width: 28,
     height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: tokens.radius.sm,
     backgroundColor: tokens.bg.surface2,
     borderWidth: 1,
     borderColor: tokens.border.base,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  stepBtnDisabled: {
-    opacity: 0.4,
-  },
+  stepBtnDisabled: { opacity: 0.4 },
   stepperValue: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
-    color: tokens.text.base,
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 13,
+    color: tokens.text.hi,
+    minWidth: 110,
+    textAlign: 'center',
   },
   explain: {
     fontFamily: 'Manrope_500Medium',
-    fontStyle: 'italic',
     fontSize: 11,
     lineHeight: 16,
+    fontStyle: 'italic',
     color: tokens.text.dim,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[2],
     marginTop: tokens.space[4],
   },
-  clearBtn: {
-    flex: 1,
-    height: 44,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: tokens.bg.base,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-  },
+  footer: { flexDirection: 'row', gap: 10, marginTop: tokens.space[4] },
+  clearBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 11 },
   clearText: {
     fontFamily: 'Manrope_700Bold',
     fontSize: 13,
     color: tokens.brand.violet2,
   },
-  applyBtn: {
-    flex: 2,
-    height: 44,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  applyFill: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  applyBtn: { flex: 2, borderRadius: 13, overflow: 'hidden' },
+  applyFill: { alignItems: 'center', justifyContent: 'center', paddingVertical: 11 },
   applyText: {
     fontFamily: 'Manrope_700Bold',
     fontSize: 13,

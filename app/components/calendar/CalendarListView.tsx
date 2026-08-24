@@ -267,7 +267,10 @@ const styles = StyleSheet.create({
     letterSpacing: 1.4,
     textTransform: 'uppercase',
     color: tokens.brand.violet2,
-    backgroundColor: tokens.bg.deep,
+    // No background: the screen sits on an ambient gradient, so an opaque
+    // bg.deep fill behind the text painted a visible black slab across the
+    // month label. It was there to keep a sticky header legible over scrolling
+    // content, and these headers do not stick (the parent owns the scroller).
     paddingVertical: 6,
   },
   dayRow: {
