@@ -49,6 +49,8 @@ export interface CalendarPractice {
 /** A reward event on a day. `use` rows carry no cost (the coins left earlier). */
 export interface CalendarRedemption {
   id: string;
+  /** The reward this came from — the identity the filter facet selects on. */
+  rewardId: string;
   title: string;
   icon: string | null;
   /** Coins debited. Always 0 for `kind: 'use'`. */
@@ -98,6 +100,15 @@ export interface CalendarFilter {
   minXp: number;
   /** Keep only days carrying at least one reward event. */
   withRedemption: boolean;
+  /**
+   * Specific rewards to keep. Empty = any.
+   *
+   * Not redundant with `withRedemption`: rewards are not only treats. Charging
+   * yourself for a cigarette makes the reward a ledger of the habit, and then
+   * "which days did I smoke" is a question about ONE reward, not about spending
+   * in general.
+   */
+  rewardIds: string[];
 }
 
 export const EMPTY_FILTER: CalendarFilter = {
@@ -108,6 +119,7 @@ export const EMPTY_FILTER: CalendarFilter = {
   tagIds: [],
   minXp: 0,
   withRedemption: false,
+  rewardIds: [],
 };
 
 /**
@@ -123,7 +135,8 @@ export function activeFacetCount(f: CalendarFilter): number {
     (f.subs.length > 0 ? 1 : 0) +
     (f.tagIds.length > 0 ? 1 : 0) +
     (f.minXp > 0 ? 1 : 0) +
-    (f.withRedemption ? 1 : 0)
+    (f.withRedemption ? 1 : 0) +
+    (f.rewardIds.length > 0 ? 1 : 0)
   );
 }
 
@@ -156,6 +169,12 @@ export function dayMatchesFilter(day: CalendarDay, f: CalendarFilter): boolean {
   }
   if (f.minXp > 0 && day.xp < f.minXp) return false;
   if (f.withRedemption && day.redemptions.length === 0) return false;
+  if (
+    f.rewardIds.length > 0 &&
+    !day.redemptions.some((r) => f.rewardIds.includes(r.rewardId))
+  ) {
+    return false;
+  }
   return true;
 }
 
@@ -188,6 +207,18 @@ export interface CalendarTotals {
   /** Mean of the mood entries among surviving days; null when none carry one. */
   moodAvg: number | null;
   redemptionCount: number;
+  /**
+   * Surviving days on which at least one counted reward was **paid for**. With
+   * a reward facet active this is the answer to "how many days did I do that" —
+   * a different number from `redemptionCount` whenever it happened twice in one
+   * day, but never larger than it.
+   *
+   * Purchases only, deliberately: consuming something banked earlier is a
+   * separate event on a separate day (`use_reward` stamps `used_at` whenever it
+   * happens), and counting those here would report days you did not do the
+   * thing — the exact number this field exists to get right.
+   */
+  redemptionDays: number;
   spent: number;
 }
 
@@ -200,6 +231,7 @@ export function summarize(days: Iterable<CalendarDay>, f: CalendarFilter): Calen
     practiceCount: 0,
     moodAvg: null,
     redemptionCount: 0,
+    redemptionDays: 0,
     spent: 0,
   };
   let moodSum = 0;
@@ -209,8 +241,22 @@ export function summarize(days: Iterable<CalendarDay>, f: CalendarFilter): Calen
     totals.matchedDays += 1;
     totals.xp += day.xp;
     totals.coins += day.coins;
-    totals.spent += day.spent;
-    totals.redemptionCount += day.redemptions.filter((r) => r.kind === 'redeem').length;
+
+    // With a reward facet active the reward figures narrow to that reward. A
+    // day kept because you charged yourself for a cigarette should not also
+    // count the pizza you bought the same evening — otherwise "12 days, 19
+    // redemptions" reads as smoking more than you did.
+    const counted =
+      f.rewardIds.length > 0
+        ? day.redemptions.filter((r) => f.rewardIds.includes(r.rewardId))
+        : day.redemptions;
+    const redeems = counted.filter((r) => r.kind === 'redeem');
+    totals.redemptionCount += redeems.length;
+    totals.spent += redeems.reduce((sum, r) => sum + r.cost, 0);
+    // `redeems`, not `counted`: all three figures on the Vault line have to sit
+    // on one base, or a month spent consuming the bank reads "4 days · 0
+    // redemptions · 0 coins".
+    if (redeems.length > 0) totals.redemptionDays += 1;
     const reps = day.practices.reduce((sum, p) => sum + p.count, 0);
     totals.practiceCount += reps;
     if (reps > 0) totals.activeDays += 1;

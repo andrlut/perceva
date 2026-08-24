@@ -25,13 +25,21 @@ interface Props {
   taskTitles: Map<string, string>;
   /** Mood-tag slug → translated label. */
   tagLabels: Map<string, string>;
+  /** Reward id → title, for the reward facet. */
+  rewardTitles: Map<string, string>;
 }
 
-export function CalendarActiveFilters({ filter, taskTitles, tagLabels }: Props) {
+export function CalendarActiveFilters({
+  filter,
+  taskTitles,
+  tagLabels,
+  rewardTitles,
+}: Props) {
   const { t } = useT();
   const meta = useMetaLookup();
   const clearFacet = useCalendarStore((s) => s.clearFacet);
   const taskLabels = useCalendarStore((s) => s.taskLabels);
+  const rewardLabels = useCalendarStore((s) => s.rewardLabels);
 
   const chips: { facet: keyof CalendarFilter; label: string }[] = [];
 
@@ -65,6 +73,12 @@ export function CalendarActiveFilters({ filter, taskTitles, tagLabels }: Props) 
   }
   if (filter.withRedemption) {
     chips.push({ facet: 'withRedemption', label: t('calendar.filter.withRedemption') });
+  }
+  if (filter.rewardIds.length > 0) {
+    const names = filter.rewardIds.map(
+      (id) => rewardTitles.get(id) ?? rewardLabels[id] ?? t('calendar.filter.rewardUnknown'),
+    );
+    chips.push({ facet: 'rewardIds', label: names.join(' / ') });
   }
 
   if (chips.length === 0) return null;

@@ -221,6 +221,41 @@ export default function CalendarScreen() {
     [practices],
   );
 
+  /** Rewards seen in the loaded range, most-redeemed first. */
+  const rewards = useMemo(() => {
+    const counts = new Map<
+      string,
+      { rewardId: string; title: string; icon: string | null; count: number }
+    >();
+    for (const day of days.values()) {
+      for (const r of day.redemptions) {
+        if (!r.title) continue;
+        // Only purchases rank a reward, but any event puts it in the list: a
+        // reward bought last month and consumed this one still belongs in the
+        // menu, it just has not been paid for inside this range.
+        const weight = r.kind === 'redeem' ? 1 : 0;
+        const seen = counts.get(r.rewardId);
+        if (seen) seen.count += weight;
+        else {
+          counts.set(r.rewardId, {
+            rewardId: r.rewardId,
+            title: r.title,
+            icon: r.icon,
+            count: weight,
+          });
+        }
+      }
+    }
+    return [...counts.values()].sort(
+      (a, b) => b.count - a.count || a.title.localeCompare(b.title),
+    );
+  }, [days]);
+
+  const rewardTitles = useMemo(
+    () => new Map(rewards.map((r) => [r.rewardId, r.title])),
+    [rewards],
+  );
+
   const totals = useMemo(() => summarize(days.values(), filter), [days, filter]);
 
   const dimXp = useMemo(() => {
@@ -474,7 +509,12 @@ export default function CalendarScreen() {
             />
           </View>
 
-          <CalendarActiveFilters filter={filter} taskTitles={taskTitles} tagLabels={tagLabels} />
+          <CalendarActiveFilters
+            filter={filter}
+            taskTitles={taskTitles}
+            tagLabels={tagLabels}
+            rewardTitles={rewardTitles}
+          />
 
           {source.isLoading ? (
             <View style={styles.loading}>
@@ -619,6 +659,7 @@ export default function CalendarScreen() {
         visible={filterOpen}
         onClose={() => setFilterOpen(false)}
         practices={practices}
+        rewards={rewards}
       />
 
       <CompleteTaskSheet

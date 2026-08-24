@@ -277,6 +277,7 @@ export function useCalendarRange(
         const cost = kind === 'redeem' ? row.cost_paid : 0;
         day.redemptions.push({
           id: `${row.id}:${kind}`,
+          rewardId: row.reward_id,
           title: reward?.title ?? '',
           icon: reward?.icon ?? null,
           cost,
