@@ -66,6 +66,10 @@ const en = {
     dayCellXp: '{{xp}} XP',
     dayCellNote: 'has a note',
     dayCellSpent: '{{coins}} coins spent',
+    dayCellRedemptions: {
+      one: '{{count}} redemption',
+      other: '{{count}} redemptions',
+    },
     dayCellPractices: {
       one: '{{count}} practice',
       other: '{{count}} practices',
@@ -1470,6 +1474,7 @@ const en = {
       apply: 'Apply',
       applyCount: 'Apply ({{count}})',
       emptyPractices: 'No practices logged in this range yet.',
+      practiceUnknown: 'Selected practice',
     },
     list: {
       empty: 'No day matches this filter.',

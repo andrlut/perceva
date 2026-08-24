@@ -31,6 +31,7 @@ export function CalendarActiveFilters({ filter, taskTitles, tagLabels }: Props) 
   const { t } = useT();
   const meta = useMetaLookup();
   const clearFacet = useCalendarStore((s) => s.clearFacet);
+  const taskLabels = useCalendarStore((s) => s.taskLabels);
 
   const chips: { facet: keyof CalendarFilter; label: string }[] = [];
 
@@ -41,7 +42,12 @@ export function CalendarActiveFilters({ filter, taskTitles, tagLabels }: Props) 
     chips.push({ facet: 'moods', label: `${t('calendar.filter.moods')}: ${names.join(' / ')}` });
   }
   if (filter.taskIds.length > 0) {
-    const names = filter.taskIds.map((id) => taskTitles.get(id) ?? '—');
+    // Range-derived title first so a rename shows up, then the label captured
+    // when the practice was picked — which is the only one that still exists in
+    // a month where that practice was never logged.
+    const names = filter.taskIds.map(
+      (id) => taskTitles.get(id) ?? taskLabels[id] ?? t('calendar.filter.practiceUnknown'),
+    );
     chips.push({ facet: 'taskIds', label: names.join(' / ') });
   }
   if (filter.dims.length > 0) {

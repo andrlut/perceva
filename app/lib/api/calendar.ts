@@ -26,7 +26,7 @@
  * allow would silently drop the edge days.
  */
 
-import { useQuery, type UseQueryResult } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, type UseQueryResult } from '@tanstack/react-query';
 
 import type {
   CalendarDay,
@@ -80,15 +80,27 @@ function unwrap<T>(value: Embedded<T>): T | null {
   return value ?? null;
 }
 
+/**
+ * `task_id` is nullable and `template_id` carries the other half: migration
+ * 20260517000002 made a completion come from exactly one of the two, so that a
+ * catalog template can be logged without adopting it as a personal task. Rows
+ * with a null `task_id` are real and present in production — treating the
+ * column as the identity would collapse every template completion of a day into
+ * one nameless row.
+ */
 interface CompletionRow {
   id: string;
-  task_id: string;
+  task_id: string | null;
+  template_id: string | null;
   completed_local_date: string;
   completed_at: string;
   xp_granted: number;
   coins_granted: number;
   task_completion_sub: { sub_id: string; xp_granted: number; coins_granted: number }[] | null;
   task: Embedded<{ id: string; title: string }>;
+  // `task_template` is a single-locale catalog — it has `title` and no
+  // `title_pt`; asking for one would fail the whole query with a 42703.
+  template: Embedded<{ id: string; title: string }>;
 }
 
 interface RedemptionRow {
@@ -135,6 +147,14 @@ export function useCalendarRange(
 
   return useQuery({
     enabled,
+    // Every month is its own key, so without this a month step would drop the
+    // query back to `isLoading` and the screen would swap the whole grid for a
+    // spinner — collapsing ~700dp to ~100dp, throwing away the scroll position
+    // and remounting the summary's expanded state on every arrow tap. Holding
+    // the previous month's data keeps the layout mounted; cells are looked up
+    // by date key, so the carried-over map yields blank cells rather than wrong
+    // paint while the new month lands.
+    placeholderData: keepPreviousData,
     queryKey: calendarKeys.range(fromKey, toKey),
     queryFn: async (): Promise<CalendarRange> => {
       const fromIso = startOfLocalDay(from).toISOString();
@@ -144,7 +164,7 @@ export function useCalendarRange(
         supabase
           .from('task_completion')
           .select(
-            'id, task_id, completed_local_date, completed_at, xp_granted, coins_granted, task_completion_sub(sub_id, xp_granted, coins_granted), task:task_id(id, title)',
+            'id, task_id, template_id, completed_local_date, completed_at, xp_granted, coins_granted, task_completion_sub(sub_id, xp_granted, coins_granted), task:task_id(id, title), template:template_id(id, title)',
           )
           .gte('completed_local_date', fromKey)
           .lte('completed_local_date', toKey)
@@ -190,12 +210,18 @@ export function useCalendarRange(
         day.xp += raw.xp_granted;
         day.coins += raw.coins_granted;
 
-        const key = `${raw.completed_local_date}::${raw.task_id}`;
+        // One identity for both halves. The two id spaces cannot collide — a
+        // task id is a uuid, a template id is a text slug — so this stays a
+        // usable key for the practice filter facet. `raw.id` is the last resort
+        // so a row that somehow has neither still counts as its own practice
+        // instead of merging with every other orphan of the day.
+        const sourceId = raw.task_id ?? raw.template_id ?? raw.id;
+        const key = `${raw.completed_local_date}::${sourceId}`;
         let practice = practiceIndex.get(key);
         if (!practice) {
           practice = {
-            taskId: raw.task_id,
-            title: unwrap(raw.task)?.title ?? '',
+            taskId: sourceId,
+            title: unwrap(raw.task)?.title ?? unwrap(raw.template)?.title ?? '',
             count: 0,
             xp: 0,
             coins: 0,

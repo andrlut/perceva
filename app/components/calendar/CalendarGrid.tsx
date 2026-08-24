@@ -167,6 +167,13 @@ export function CalendarGrid({
               if (day.practices.length > 0) {
                 parts.push(t('a11y.dayCellPractices', { count: day.practices.length }));
               }
+              // The event first, its cost second: a day whose only reward
+              // activity was consuming something already banked costs nothing,
+              // and keying the announcement off `spent` alone would read that
+              // day out as "no entries" while the Vault front paints it gold.
+              if (day.redemptions.length > 0) {
+                parts.push(t('a11y.dayCellRedemptions', { count: day.redemptions.length }));
+              }
               if (day.spent > 0) parts.push(t('a11y.dayCellSpent', { coins: day.spent }));
               if (day.hasNote) parts.push(t('a11y.dayCellNote'));
             }

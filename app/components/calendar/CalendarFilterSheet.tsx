@@ -62,8 +62,25 @@ export function CalendarFilterSheet({ visible, onClose, practices }: Props) {
   const nudgeMinXp = useCalendarStore((s) => s.nudgeMinXp);
   const toggleWithRedemption = useCalendarStore((s) => s.toggleWithRedemption);
   const clearFilter = useCalendarStore((s) => s.clearFilter);
+  const taskLabels = useCalendarStore((s) => s.taskLabels);
 
   const facets = activeFacetCount(filter);
+
+  // A practice selected in another period is not in `practices` (which only
+  // covers the loaded range), and without this it would vanish from the sheet
+  // while still dimming the month — selectable but not deselectable. Appending
+  // it with a zero count keeps every active facet reversible from the same
+  // place it was set.
+  const practiceChips = [
+    ...practices,
+    ...filter.taskIds
+      .filter((id) => !practices.some((p) => p.taskId === id))
+      .map((id) => ({
+        taskId: id,
+        title: taskLabels[id] ?? t('calendar.filter.practiceUnknown'),
+        count: 0,
+      })),
+  ];
 
   const catalog: MoodTag[] = tagsQuery.data ?? [];
   const { emotions, contexts } = splitMoodTags(catalog);
@@ -112,16 +129,20 @@ export function CalendarFilterSheet({ visible, onClose, practices }: Props) {
             </Section>
 
             <Section title={t('calendar.filter.practices')}>
-              {practices.length === 0 ? (
+              {practiceChips.length === 0 ? (
                 <Text style={styles.emptyText}>{t('calendar.filter.emptyPractices')}</Text>
               ) : (
                 <View style={styles.chipWrap}>
-                  {practices.map((practice) => (
+                  {practiceChips.map((practice) => (
                     <Chip
                       key={practice.taskId}
-                      label={`${practice.title} · ${practice.count}`}
+                      label={
+                        practice.count > 0
+                          ? `${practice.title} · ${practice.count}`
+                          : practice.title
+                      }
                       active={filter.taskIds.includes(practice.taskId)}
-                      onPress={() => toggleTask(practice.taskId)}
+                      onPress={() => toggleTask(practice.taskId, practice.title)}
                     />
                   ))}
                 </View>

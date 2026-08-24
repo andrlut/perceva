@@ -1,7 +1,4 @@
 import { Redirect, useLocalSearchParams } from 'expo-router';
-import { useEffect } from 'react';
-
-import { useCalendarStore } from '@/lib/calendar/store';
 
 /**
  * Retired route. Dedicação is no longer a screen — it is the Rotina front of
@@ -22,17 +19,16 @@ import { useCalendarStore } from '@/lib/calendar/store';
 export default function DedicacaoHistoryRedirect() {
   const params = useLocalSearchParams<{ dims?: string; subs?: string; minXp?: string }>();
 
-  // The calendar seeds its filter from the params it receives; the front is
-  // store state, so it is set here instead of travelling through the URL.
-  useEffect(() => {
-    useCalendarStore.setState({ front: 'rotina', view: 'month' });
-  }, []);
-
   return (
     <Redirect
       href={{
         pathname: '/history',
         params: {
+          // Dedicação was the XP reading of the month, so it lands on the front
+          // that carries XP. Passing it through the URL rather than poking the
+          // store keeps the redirect stateless.
+          front: 'rotina',
+          view: 'month',
           ...(params.dims ? { dims: params.dims } : {}),
           ...(params.subs ? { subs: params.subs } : {}),
           ...(params.minXp ? { minXp: params.minXp } : {}),

@@ -34,10 +34,22 @@ interface CalendarState {
   front: CalendarFront;
   view: CalendarView;
   filter: CalendarFilter;
+  /**
+   * Task id → title, captured when a practice is selected.
+   *
+   * The filter is global and survives month navigation, but the practice menu
+   * is derived from the days currently loaded — so in a month where the chosen
+   * practice was never logged there is nothing left to resolve its name from,
+   * and the active-filter chip would degrade to a dash while the whole month
+   * sits dimmed with no readable explanation. Capturing the label at selection
+   * time is the only source that cannot go missing; it also survives a task
+   * being archived, which `useActiveTasks` would not.
+   */
+  taskLabels: Record<string, string>;
   setFront: (front: CalendarFront) => void;
   setView: (view: CalendarView) => void;
   toggleMood: (mood: MoodValue) => void;
-  toggleTask: (taskId: string) => void;
+  toggleTask: (taskId: string, title: string) => void;
   toggleDim: (dim: DimensionId) => void;
   toggleSub: (sub: SubId) => void;
   toggleTag: (slug: string) => void;
@@ -52,12 +64,18 @@ export const useCalendarStore = create<CalendarState>((set) => ({
   front: 'rotina',
   view: 'month',
   filter: EMPTY_FILTER,
+  taskLabels: {},
   setFront: (front) => set({ front }),
   setView: (view) => set({ view }),
   toggleMood: (mood) =>
     set((s) => ({ filter: { ...s.filter, moods: toggleValue(s.filter.moods, mood) } })),
-  toggleTask: (taskId) =>
-    set((s) => ({ filter: { ...s.filter, taskIds: toggleValue(s.filter.taskIds, taskId) } })),
+  toggleTask: (taskId, title) =>
+    set((s) => ({
+      filter: { ...s.filter, taskIds: toggleValue(s.filter.taskIds, taskId) },
+      // Kept on deselect too: it is a label cache, and holding it makes
+      // re-selecting the same practice in another month resolve instantly.
+      taskLabels: title ? { ...s.taskLabels, [taskId]: title } : s.taskLabels,
+    })),
   toggleDim: (dim) =>
     set((s) => ({ filter: { ...s.filter, dims: toggleValue(s.filter.dims, dim) } })),
   toggleSub: (sub) =>
@@ -70,7 +88,7 @@ export const useCalendarStore = create<CalendarState>((set) => ({
     set((s) => ({ filter: { ...s.filter, withRedemption: !s.filter.withRedemption } })),
   clearFacet: (facet) =>
     set((s) => ({ filter: { ...s.filter, [facet]: EMPTY_FILTER[facet] } })),
-  clearFilter: () => set({ filter: EMPTY_FILTER }),
+  clearFilter: () => set({ filter: EMPTY_FILTER, taskLabels: {} }),
 }));
 
 /**

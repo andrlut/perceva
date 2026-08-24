@@ -56,6 +56,10 @@ const pt: Translations = {
     dayCellXp: '{{xp}} XP',
     dayCellNote: 'com anotação',
     dayCellSpent: '{{coins}} moedas gastas',
+    dayCellRedemptions: {
+      one: '{{count}} resgate',
+      other: '{{count}} resgates',
+    },
     dayCellPractices: {
       one: '{{count}} prática',
       other: '{{count}} práticas',
@@ -1465,6 +1469,7 @@ const pt: Translations = {
       apply: 'Aplicar',
       applyCount: 'Aplicar ({{count}})',
       emptyPractices: 'Nenhuma prática registrada neste período ainda.',
+      practiceUnknown: 'Prática selecionada',
     },
     list: {
       empty: 'Nenhum dia bate com este filtro.',

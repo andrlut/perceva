@@ -339,10 +339,15 @@ export function DedicacaoPanel({ dimensions }: Props) {
                   <Pressable
                     onPress={() =>
                       // Straight to the calendar, pre-filtered on this
-                      // dimension. The window (granularity/offset) does not
-                      // travel: the calendar's period is navigation, not filter
-                      // state, so it opens on the current month.
-                      router.push({ pathname: '/history', params: { dims: id } })
+                      // dimension. Front and view travel too, because the
+                      // calendar's store is session-scoped: without them this
+                      // link could land on the Vault quarter map. The window
+                      // (granularity/offset) does not travel — the calendar's
+                      // period is navigation, not filter state.
+                      router.push({
+                        pathname: '/history',
+                        params: { dims: id, front: 'rotina', view: 'month' },
+                      })
                     }
                     style={({ pressed }) => [
                       styles.detailLink,
@@ -368,7 +373,10 @@ export function DedicacaoPanel({ dimensions }: Props) {
       <View style={styles.historyLinkWrap}>
         <Pressable
           onPress={() =>
-            router.push('/history')
+            router.push({
+              pathname: '/history',
+              params: { front: 'rotina', view: 'month' },
+            })
           }
           hitSlop={6}
           style={({ pressed }) => [styles.historyLink, pressed && { opacity: 0.6 }]}

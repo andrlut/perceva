@@ -21,13 +21,12 @@ import { SegmentedControl } from '@/components/SegmentedControl';
 import { TaskActionSheet } from '@/components/TaskActionSheet';
 import { XPCoinFloat } from '@/components/XPCoinFloat';
 import {
-  calendarKeys,
   endOfMonth,
   startOfMonth,
   useCalendarMonth,
   useCalendarRange,
 } from '@/lib/api/calendar';
-import { dateKeyFromLocal } from '@/lib/api/history';
+import { dateKeyFromLocal, historyKeys, useDayDetail } from '@/lib/api/history';
 import { useMoodTags } from '@/lib/api/mood';
 import {
   useCompleteTask,
@@ -121,11 +120,27 @@ export default function CalendarScreen() {
   // --- deep-link seed ------------------------------------------------------
   // `/dedicacao-history` redirects here with its old params. Seed once: a link
   // is a destination, and re-applying it on every render would fight the user.
-  const params = useLocalSearchParams<{ dims?: string; subs?: string; minXp?: string }>();
+  const params = useLocalSearchParams<{
+    dims?: string;
+    subs?: string;
+    minXp?: string;
+    front?: string;
+    view?: string;
+  }>();
   const seeded = useRef(false);
   useEffect(() => {
     if (seeded.current) return;
     seeded.current = true;
+    // Front and view travel in the URL so a deep link is self-describing.
+    // Without this a link promising "this dimension's dedication" would land on
+    // whatever front and view the session-scoped store happened to hold — the
+    // Vault quarter map, say, with no XP anywhere on screen.
+    if (params.front === 'rotina' || params.front === 'humor' || params.front === 'vault') {
+      setFront(params.front);
+    }
+    if (params.view === 'month' || params.view === 'list' || params.view === 'quarter') {
+      setView(params.view);
+    }
     const dims = (params.dims ?? '')
       .split(',')
       .map((v) => v.trim())
@@ -138,7 +153,10 @@ export default function CalendarScreen() {
     if (dims.length > 0 || subs.length > 0 || minXp > 0) {
       applyFilterSeed({ dims, subs, minXp });
     }
-  }, [params.dims, params.subs, params.minXp]);
+    // `setFront`/`setView` are stable Zustand actions; the effect is a one-shot
+    // guarded by `seeded`, so only the params belong in the dependency list.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.dims, params.subs, params.minXp, params.front, params.view]);
 
   // --- data ----------------------------------------------------------------
   const monthQuery = useCalendarMonth(visibleMonth);
@@ -213,11 +231,18 @@ export default function CalendarScreen() {
     [days],
   );
 
-  // A mood check-in or a reward redeemed elsewhere does not pass through the
-  // task mutations this key inherits from, so refresh on the way back in.
+  // The day query, mounted here purely so pull-to-refresh and the spinner can
+  // see it. `CalendarDayPanel` asks for the same key, so React Query dedupes:
+  // no extra request, and no prop drilling of a refetch handle.
+  const dayQuery = useDayDetail(selected, settings.weekStart);
+
+  // Invalidating `historyKeys.all` rather than `calendarKeys.all`: the latter is
+  // a child of the former, so it would miss the day query
+  // (`['history','day',…]`) — which is what left the open list stale after
+  // coming back from /task-form or a mood check-in.
   useFocusEffect(
     useCallback(() => {
-      queryClient.invalidateQueries({ queryKey: calendarKeys.all });
+      queryClient.invalidateQueries({ queryKey: historyKeys.all });
     }, [queryClient]),
   );
 
@@ -318,6 +343,36 @@ export default function CalendarScreen() {
     if (!isSameMonth(d, visibleMonth)) setVisibleMonth(startOfMonth(d));
   };
 
+  /**
+   * Move the visible month AND carry the selection with it.
+   *
+   * The two have to stay in the same month. The day panel's rewards come from
+   * the month feed, so a selection left behind in August while the grid shows
+   * July reads that day out of July's map, finds nothing, and reports "no
+   * redemptions" for a day that has some — while the panel's own day query
+   * keeps showing August's practices and header. The grid also loses its
+   * selection ring, because no visible cell matches the selected key.
+   *
+   * Landing day: the last day of the target month, or today when that month is
+   * the current one. Keeping the day-of-month instead would routinely land on a
+   * future date (Aug 31 → stepping into a month still in progress), which the
+   * grid itself refuses to select.
+   */
+  const goToMonth = (month: Date) => {
+    const first = startOfMonth(month);
+    setVisibleMonth(first);
+    if (isSameMonth(selected, first)) return;
+    const lastOfMonth = startOfDay(new Date(first.getFullYear(), first.getMonth() + 1, 0));
+    const todayStart = startOfDay(new Date());
+    setSelected(lastOfMonth.getTime() > todayStart.getTime() ? todayStart : lastOfMonth);
+  };
+
+  const goToToday = () => {
+    const now = startOfDay(new Date());
+    setSelected(now);
+    setVisibleMonth(startOfMonth(now));
+  };
+
   const stepDay = (delta: number) => {
     const next = addDays(selected, delta);
     if (delta > 0 && next.getTime() > Date.now()) return;
@@ -352,8 +407,11 @@ export default function CalendarScreen() {
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
-              refreshing={source.isRefetching}
-              onRefresh={() => source.refetch()}
+              refreshing={source.isRefetching || dayQuery.isRefetching}
+              onRefresh={() => {
+                source.refetch();
+                dayQuery.refetch();
+              }}
               tintColor={tokens.brand.violet2}
             />
           }
@@ -442,8 +500,8 @@ export default function CalendarScreen() {
                   filter={filter}
                   selectedKey={dayKey}
                   onSelectDay={handleSelectDay}
-                  onPrevMonth={() => setVisibleMonth(addMonths(visibleMonth, -1))}
-                  onNextMonth={() => setVisibleMonth(addMonths(visibleMonth, 1))}
+                  onPrevMonth={() => goToMonth(addMonths(visibleMonth, -1))}
+                  onNextMonth={() => goToMonth(addMonths(visibleMonth, 1))}
                   canGoNext={canGoNextMonth}
                   weekStart={settings.weekStart}
                   tagEmojis={tagEmojis}
@@ -470,7 +528,7 @@ export default function CalendarScreen() {
                 <View style={styles.dayLabelWrap}>
                   <Text style={styles.dayLabel}>{dayLabel}</Text>
                   {!isToday && (
-                    <Pressable onPress={() => setSelected(startOfDay(new Date()))} hitSlop={8}>
+                    <Pressable onPress={goToToday} hitSlop={8}>
                       <Text style={styles.todayLink}>{t('common.today')}</Text>
                     </Pressable>
                   )}
@@ -534,7 +592,7 @@ export default function CalendarScreen() {
               front={front}
               filter={filter}
               onSelectMonth={(month) => {
-                setVisibleMonth(startOfMonth(month));
+                goToMonth(month);
                 setView('month');
               }}
               locale={locale}
