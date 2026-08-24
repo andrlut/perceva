@@ -1,0 +1,48 @@
+{
+  "slug": "play-deprivation-adults",
+  "reels": [
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "warning",
+        "b": "sad"
+      },
+      "headline": {
+        "pt": "Seu cérebro guarda isso junto com o medo.",
+        "en": "Your brain files this next to fear."
+      },
+      "lede": {
+        "pt": "Sexta à noite você abre o fim de semana e conta: nada ali existe sem finalidade. Parece falta de tempo. Mas um neurocientista pegou justamente o que ficou de fora e guardou na mesma prateleira do medo e do luto.",
+        "en": "Friday night you scan the weekend and count: nothing there exists without a purpose. Looks like a time problem. But a neuroscientist took exactly what got left out and filed it on the same shelf as fear and grief."
+      }
+    },
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "flask"
+      },
+      "headline": {
+        "pt": "A prova mais forte não é sobre você.",
+        "en": "The strongest proof is not about you."
+      },
+      "lede": {
+        "pt": "Você já viu a versão de palco: criança sem brincadeira vira adulto perigoso. Ela rodou o mundo vinda de um piloto que nunca passou por revisão por pares. O artigo separa o que a evidência sustenta do que ela sugere.",
+        "en": "You have seen the stage version: a childhood without play breeds a dangerous adult. It traveled the world on a pilot that never passed peer review. The article separates what the evidence holds from what it hints."
+      }
+    },
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "calendar"
+      },
+      "headline": {
+        "pt": "Esperar tempo livre é esperar por nada.",
+        "en": "Waiting for free time is waiting on nothing."
+      },
+      "lede": {
+        "pt": "Domingo acaba e você lista o que fez: treinar, adiantar, descansar pra render na segunda. Cada item com uma finalidade. Existe um teste caseiro que lê essa lista e aponta a única coisa que deveria estar faltando.",
+        "en": "Sunday ends and you list it out: train, get ahead, rest so Monday goes better. Every item with a purpose. A home test reads that list and names the one thing that should have been missing from it."
+      }
+    }
+  ]
+}
