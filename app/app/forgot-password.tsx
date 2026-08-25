@@ -23,7 +23,7 @@ import {
 } from '@/lib/auth';
 import { useT } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
-import { useKeyboardHeight } from '@/lib/use-keyboard-height';
+import { useKeyboardOverlap } from '@/lib/use-keyboard-height';
 import { tokens } from '@/theme';
 
 /**
@@ -52,7 +52,7 @@ export default function ForgotPasswordScreen() {
   const [cooldown, setCooldown] = useState(0);
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const scrollRef = useRef<ScrollView>(null);
-  const keyboardHeight = useKeyboardHeight();
+  const keyboardHeight = useKeyboardOverlap();
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -147,8 +147,11 @@ export default function ForgotPasswordScreen() {
       {/* Reserve the real keyboard height on the flex container: under
           edge-to-edge (SDK 54) Android does NOT resize the window for the
           keyboard, and a KeyboardAvoidingView with behavior=undefined does
-          nothing there. `useKeyboardHeight` fires on both platforms, so this
-          replaces the KAV on iOS too (same pattern as mood-checkin). */}
+          nothing there. `useKeyboardOverlap` fires on both platforms, so this
+          replaces the KAV on iOS too. It is the *overlap* hook and not the raw
+          height because this container has no bottom inset — its edge is the
+          bottom of the screen, so the navigation-bar band Android leaves out
+          has to be added back or the last control sits under the keyboard. */}
       <View style={[styles.flex, { paddingBottom: keyboardHeight }]}>
         <ScrollView
           ref={scrollRef}

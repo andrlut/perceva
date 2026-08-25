@@ -36,7 +36,7 @@ import { questProgressRatio } from '@/lib/quests/progress';
 import { TourModule } from '@/components/tour/TourModule';
 import { buildM3Steps } from '@/lib/tour/m3Steps';
 import { useIsCurrentTourModule, useTourStore } from '@/lib/tour/store';
-import { useKeyboardHeight } from '@/lib/use-keyboard-height';
+import { useKeyboardOverlap } from '@/lib/use-keyboard-height';
 import type {
   QuestTemplate,
   QuestTemplateRequirement,
@@ -74,7 +74,7 @@ export default function QuestDetailScreen() {
   const completeQuest = useCompleteQuest();
   const logChallenge = useLogChallengeProgress();
   const [logValue, setLogValue] = useState('');
-  const keyboardHeight = useKeyboardHeight();
+  const keyboardHeight = useKeyboardOverlap();
   const isM3Current = useIsCurrentTourModule('M3');
 
   // M3 step 3 (criteria) is the last step and lives here. If the user

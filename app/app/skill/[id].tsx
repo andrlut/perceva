@@ -29,7 +29,7 @@ import {
 import type { SkillLog, SkillTier, TierName } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useLocalizedPick } from '@/lib/i18n/catalog';
-import { useKeyboardHeight } from '@/lib/use-keyboard-height';
+import { useKeyboardOverlap } from '@/lib/use-keyboard-height';
 import { tokens } from '@/theme';
 import {
   alpha,
@@ -117,12 +117,18 @@ export default function SkillDetailScreen() {
 
   const [valueStr, setValueStr] = useState('');
   const insets = useSafeAreaInsets();
-  const keyboardHeight = useKeyboardHeight();
+  const keyboardHeight = useKeyboardOverlap();
   // CTA bar sits above the system gesture bar via insets.bottom + a small
   // visual gap. Content padding must reserve room for the CTA bar height
   // (56) + its bottom offset so the scroll's last items aren't hidden.
   const ctaBottom = Math.max(insets.bottom, 8) + 16;
   const ctaClearance = 56 + ctaBottom + 8;
+  // The bar carries the value input, and it is absolutely positioned against
+  // the bottom of the screen — so with the keyboard up it was sitting entirely
+  // underneath it, and you typed a number you could not see. Padding the
+  // ScrollView does not help something that is not in the scroll: the bar has
+  // to move itself.
+  const ctaOffset = keyboardHeight > 0 ? keyboardHeight + tokens.space[2] : ctaBottom;
 
   const state = skillStates.data?.find((s) => s.skill.id === skillId);
 
@@ -511,7 +517,7 @@ export default function SkillDetailScreen() {
           )}
 
           {/* CTA bar — sticky at bottom, respects safe-area gesture bar */}
-          <View style={[styles.ctaBar, { bottom: ctaBottom }]}>
+          <View style={[styles.ctaBar, { bottom: ctaOffset }]}>
             <View style={styles.inputPill}>
               <Ionicons
                 name={state.skill.icon as never}
