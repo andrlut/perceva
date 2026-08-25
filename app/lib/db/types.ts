@@ -252,23 +252,26 @@ export interface Profile {
 }
 
 /**
- * One line of the "Minha Semana" sheet. slot 1..3 = one of the week's 3
- * bigs; null slot = a regular "more this week" item. week_start is the
- * client-computed LOCAL week anchor (settings.weekStart), frozen per row.
- * Wired to ZERO gamification by design — checking grants nothing.
+ * One line of the "Minha Semana" world. The model is a POOL: items live in
+ * a general queue (week_start null = "Pra depois") and each week is a
+ * SELECTION over it. slot 1..3 = one of the week's 3 bigs; parent_id set =
+ * a sub-step of a big (inherits the parent's week_start by client
+ * convention). Wired to ZERO gamification — checking grants nothing.
  */
 export interface WeekItem {
   id: string;
   character_id: string;
-  /** Local YYYY-MM-DD of the week's first day. */
-  week_start: string;
+  /** Local YYYY-MM-DD of the allocated week's first day; null = in the pool. */
+  week_start: string | null;
   slot: 1 | 2 | 3 | null;
   title: string;
-  /** "Primeira ação concreta" of a big. Nudged, never required. */
+  /** Legacy "primeira ação" text — superseded by sub-items (parent_id). */
   first_action: string | null;
   /** 0=Sunday .. 6=Saturday (recurrence.days convention); null = any day. */
   day: number | null;
   done_at: string | null;
+  /** Set = this row is a step under a big. */
+  parent_id: string | null;
   sort_order: number;
   created_at: string;
   updated_at: string;
