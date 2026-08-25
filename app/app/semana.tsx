@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BigSlot } from '@/components/week/BigSlot';
+import { ItemEditorModal } from '@/components/week/ItemEditorModal';
 import { PickBigModal, type BigCandidate } from '@/components/week/PickBig';
 import { WeekAddInput } from '@/components/week/WeekAddInput';
 import { WeekItemRow } from '@/components/week/WeekItemRow';
@@ -56,11 +57,22 @@ export default function SemanaScreen() {
   const addItem = useAddWeekItem();
   const allocate = useAllocateItem();
   const weekActions = useWeekItemActions(ws);
-  const poolActions = useWeekItemActions(null);
 
   const [pickSlot, setPickSlot] = useState<1 | 2 | 3 | null>(null);
   const [doneOpen, setDoneOpen] = useState(false);
   const [poolOpen, setPoolOpen] = useState(false);
+  // The central item manager — resolved LIVE from the caches so edits made
+  // inside it (day, move) reflect immediately.
+  const [editing, setEditing] = useState<{
+    id: string;
+    cacheWeek: string | null;
+  } | null>(null);
+  const editingItem =
+    editing == null
+      ? null
+      : ((editing.cacheWeek == null
+          ? pool.data?.find((i) => i.id === editing.id)
+          : sheet.data?.items.find((i) => i.id === editing.id)) ?? null);
 
   // Same week-range label the Dedicação window header uses ("25 – 31 ago").
   const range = useMemo(() => {
@@ -98,15 +110,6 @@ export default function SemanaScreen() {
       destructive: true,
     });
     if (ok) weekActions.remove(step);
-  };
-
-  const handleDeletePoolItem = async (item: WeekItem) => {
-    const ok = await confirmAction(t('week.deleteConfirmTitle'), item.title, {
-      okText: t('common.delete'),
-      cancelText: t('common.cancel'),
-      destructive: true,
-    });
-    if (ok) poolActions.remove(item);
   };
 
   const isLoading = sheet.isLoading || pool.isLoading;
@@ -207,10 +210,7 @@ export default function SemanaScreen() {
                 addItem.mutate({ weekStart: ws, title, parentId: parent.id })
               }
               onDeleteStep={handleDeleteStep}
-              onUnslot={(item) =>
-                allocate.mutate({ item, fromWeek: ws, toWeek: ws, slot: null })
-              }
-              onDelete={weekActions.remove}
+              onOpen={(item) => setEditing({ id: item.id, cacheWeek: ws })}
             />
           ))}
 
@@ -224,7 +224,7 @@ export default function SemanaScreen() {
               item={item}
               onToggleDone={weekActions.toggleDone}
               onSetDay={weekActions.setDay}
-              onDelete={weekActions.remove}
+              onOpen={(i) => setEditing({ id: i.id, cacheWeek: ws })}
             />
           ))}
           <WeekAddInput
@@ -257,7 +257,7 @@ export default function SemanaScreen() {
                     item={item}
                     onToggleDone={weekActions.toggleDone}
                     onSetDay={weekActions.setDay}
-                    onDelete={weekActions.remove}
+                    onOpen={(i) => setEditing({ id: i.id, cacheWeek: ws })}
                   />
                 ))}
             </>
@@ -285,9 +285,18 @@ export default function SemanaScreen() {
                 pool.data!.map((item) => (
                   <View key={item.id} style={styles.poolRow}>
                     <Pressable
-                      onLongPress={() => handleDeletePoolItem(item)}
-                      style={styles.poolMain}
-                      accessibilityLabel={item.title}
+                      onPress={() => setEditing({ id: item.id, cacheWeek: null })}
+                      onLongPress={() =>
+                        setEditing({ id: item.id, cacheWeek: null })
+                      }
+                      style={({ pressed }) => [
+                        styles.poolMain,
+                        pressed && styles.pressed,
+                      ]}
+                      accessibilityRole="button"
+                      accessibilityLabel={t('week.editor.openA11y', {
+                        title: item.title,
+                      })}
                     >
                       <Text style={styles.poolTitle} numberOfLines={2}>
                         {item.title}
@@ -337,6 +346,13 @@ export default function SemanaScreen() {
           onClose={() => setPickSlot(null)}
         />
       )}
+
+      <ItemEditorModal
+        item={editingItem}
+        cacheWeek={editing?.cacheWeek ?? null}
+        sheetWeek={ws}
+        onClose={() => setEditing(null)}
+      />
     </SafeAreaView>
   );
 }
