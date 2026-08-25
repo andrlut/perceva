@@ -27,7 +27,7 @@ import {
 import type { RewardCategory } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { freeLimitEntity, useLimitModalStore } from '@/lib/premium';
-import { useKeyboardHeight } from '@/lib/use-keyboard-height';
+import { useKeyboardOverlap } from '@/lib/use-keyboard-height';
 import { confirmAction } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 import { REWARD_CATEGORY_META, REWARD_CATEGORY_ORDER } from '@/theme/rewards';
@@ -100,7 +100,7 @@ export default function RewardFormScreen() {
   const [icon, setIcon] = useState<string>('gift');
   const [iconPickerVisible, setIconPickerVisible] = useState(false);
   const [category, setCategory] = useState<RewardCategory>(initialCategory);
-  const keyboardHeight = useKeyboardHeight();
+  const keyboardHeight = useKeyboardOverlap();
 
   useEffect(() => {
     if (existing.data) {
