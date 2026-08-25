@@ -32,6 +32,7 @@ import { NotificationOptInCard } from '@/components/NotificationOptInCard';
 import { QuestChipsStrip } from '@/components/QuestChipsStrip';
 import { TaskActionSheet } from '@/components/TaskActionSheet';
 import { TaskCard } from '@/components/TaskCard';
+import { WeekStrip } from '@/components/WeekStrip';
 import { TasksFabStack } from '@/components/TasksFabStack';
 import { TodayAmbient } from '@/components/TodayAmbient';
 import { TodayHeader } from '@/components/TodayHeader';
@@ -954,6 +955,8 @@ export default function HomeScreen() {
                   <QuestChipsStrip />
                 </TourTarget>
                 <NotificationOptInCard enabled={!activeTourStep} />
+                {/* Minha Semana — module-gated; renders nothing when off. */}
+                <WeekStrip />
               </>
             )}
 

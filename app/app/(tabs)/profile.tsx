@@ -18,6 +18,7 @@ import { useBottomNavClearance } from '@/components/BottomNavBar';
 import { useCharacter } from '@/lib/api/character';
 import { useSession } from '@/lib/auth';
 import { useT } from '@/lib/i18n';
+import { useModules, useSetModule } from '@/lib/modules';
 import {
   useLoadedSettings,
   useSettingsStore,
@@ -41,6 +42,8 @@ export default function SettingsScreen() {
   const settings = useLoadedSettings();
   const setSetting = useSettingsStore((s) => s.set);
   const setSettings = useSettingsStore((s) => s.setMany);
+  const modules = useModules();
+  const setModule = useSetModule();
   const { t, locale } = useT();
 
   const profile = character.data?.profile;
@@ -232,6 +235,22 @@ export default function SettingsScreen() {
               { value: 'monday', label: t('profile.weekStart.monday') },
             ]}
             onChange={(v) => setSetting('weekStart', v)}
+          />
+        </Card>
+
+        {/* ───── MODULES ─────
+            Per-user opt-in surfaces (profile.modules). The raw switch list is
+            deliberate: the simple/complete preset UX is a future project — but
+            without a switch the flags would be dead code. When module #2
+            lands, promote MODULE_DEFAULTS to a registry and map over it here
+            (the i18n keys already follow the registry shape). */}
+        <SectionHeader icon="apps-outline" label={t('profile.sections.modules')} />
+        <Card>
+          <ToggleRow
+            label={t('profile.modules.semana')}
+            description={t('profile.modules.semanaDesc')}
+            value={modules.semana}
+            onChange={(v) => setModule.mutate({ key: 'semana', value: v })}
           />
         </Card>
 

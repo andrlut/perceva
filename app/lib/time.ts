@@ -82,6 +82,16 @@ export function formatCompactDate(date: Date = new Date(), locale?: LanguageCode
   return `${dow}, ${md}`;
 }
 
+/** Uppercase short weekday for a 0=Sunday..6=Saturday index — "DOM" / "SUN".
+ *  Derived from Intl over a fixed reference week (2024-01-07 was a Sunday),
+ *  never from a locale catalog — day names are the locale's job. */
+export function weekdayShortByIndex(day: number, locale?: LanguageCode): string {
+  return new Date(2024, 0, 7 + day)
+    .toLocaleDateString(bcp47(locale), { weekday: 'short' })
+    .replace(/\.$/, '')
+    .toUpperCase();
+}
+
 /** Big-headline date for the V3 home — split form so the caller can style
  *  the month/day fragment distinctly.
  *
