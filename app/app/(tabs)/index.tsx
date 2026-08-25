@@ -30,6 +30,7 @@ import {
 } from '@/components/CompletedBucket';
 import { NotificationOptInCard } from '@/components/NotificationOptInCard';
 import { QuestChipsStrip } from '@/components/QuestChipsStrip';
+import { StoreUpdateCard } from '@/components/StoreUpdateCard';
 import { TaskActionSheet } from '@/components/TaskActionSheet';
 import { TaskCard } from '@/components/TaskCard';
 import { WeekStrip } from '@/components/WeekStrip';
@@ -951,6 +952,9 @@ export default function HomeScreen() {
                 forgot", so these stay hidden. */}
             {isToday && (
               <>
+                {/* A newer native build on the Play Store — the one update
+                    an OTA can't deliver; renders only when truly outdated. */}
+                <StoreUpdateCard />
                 <TourTarget id="home.quests" radius={18}>
                   <QuestChipsStrip />
                 </TourTarget>
