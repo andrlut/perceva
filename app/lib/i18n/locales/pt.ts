@@ -891,6 +891,10 @@ const pt: Translations = {
       night: 'Boa madrugada',
     },
     defaultName: 'aventureiro',
+    storeUpdate: {
+      title: 'Versão nova na Play Store',
+      sub: 'Atualiza pra pegar o que o app não consegue baixar sozinho.',
+    },
     sections: {
       today: 'Hoje',
       oneshot: 'Pontuais',

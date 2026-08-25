@@ -896,6 +896,10 @@ const en = {
       night: 'Late night',
     },
     defaultName: 'adventurer',
+    storeUpdate: {
+      title: 'New version on the Play Store',
+      sub: 'Update to get what OTA cannot deliver.',
+    },
     sections: {
       today: 'Today',
       oneshot: 'One-time',
