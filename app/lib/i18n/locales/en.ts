@@ -2165,6 +2165,14 @@ const en = {
     bigMenu: {
       unslot: 'Remove from the 3',
     },
+    editor: {
+      titlePlaceholder: 'Item name…',
+      dayLabel: 'Day',
+      toWeek: 'Bring to this week',
+      toPool: 'Send to the queue',
+      save: 'Done',
+      openA11y: 'Manage {{title}}',
+    },
     steps: {
       add: '+ step',
       placeholder: 'Write the step…',

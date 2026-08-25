@@ -7,25 +7,24 @@ import { DayPickerModal } from '@/components/week/DayPickerModal';
 import type { WeekItem } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { weekdayShortByIndex } from '@/lib/time';
-import { confirmAction } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 
 /**
- * One item line: checkbox + title + optional day chip. The chip opens a
- * popup (DayPickerModal) — nothing expands inline. Checking is wired to
- * ZERO gamification: light haptic, the row leaves the open list, done.
- * Long-press deletes (with confirm) — the sheet is the user's text.
+ * One item line. Gestures are split on purpose (owner feedback — hidden
+ * long-presses don't exist for users): the CHECKBOX marks done, tapping the
+ * TEXT opens the item manager (rename / day / move / delete), the day chip
+ * opens the day popup. Checking is wired to ZERO gamification.
  */
 export function WeekItemRow({
   item,
   onToggleDone,
   onSetDay,
-  onDelete,
+  onOpen,
 }: {
   item: WeekItem;
   onToggleDone: (item: WeekItem) => void;
   onSetDay: (item: WeekItem, day: number | null) => void;
-  onDelete: (item: WeekItem) => void;
+  onOpen: (item: WeekItem) => void;
 }) {
   const { t, locale } = useT();
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -36,30 +35,30 @@ export function WeekItemRow({
     onToggleDone(item);
   };
 
-  const handleLongPress = async () => {
-    const ok = await confirmAction(t('week.deleteConfirmTitle'), item.title, {
-      okText: t('common.delete'),
-      cancelText: t('common.cancel'),
-      destructive: true,
-    });
-    if (ok) onDelete(item);
-  };
-
   return (
     <View style={styles.row}>
       <Pressable
         onPress={handleToggle}
-        onLongPress={handleLongPress}
-        style={({ pressed }) => [styles.main, pressed && styles.pressed]}
+        hitSlop={8}
+        style={({ pressed }) => [
+          styles.checkbox,
+          done && styles.checkboxDone,
+          pressed && styles.pressed,
+        ]}
         accessibilityRole="checkbox"
         accessibilityState={{ checked: done }}
         accessibilityLabel={item.title}
       >
-        <View style={[styles.checkbox, done && styles.checkboxDone]}>
-          {done && (
-            <Ionicons name="checkmark" size={13} color={tokens.text.hi} />
-          )}
-        </View>
+        {done && <Ionicons name="checkmark" size={13} color={tokens.text.hi} />}
+      </Pressable>
+
+      <Pressable
+        onPress={() => onOpen(item)}
+        onLongPress={() => onOpen(item)}
+        style={({ pressed }) => [styles.main, pressed && styles.pressed]}
+        accessibilityRole="button"
+        accessibilityLabel={t('week.editor.openA11y', { title: item.title })}
+      >
         <Text style={[styles.title, done && styles.titleDone]} numberOfLines={2}>
           {item.title}
         </Text>
@@ -111,9 +110,6 @@ const styles = StyleSheet.create({
   },
   main: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[3],
   },
   pressed: {
     opacity: 0.75,
@@ -132,7 +128,6 @@ const styles = StyleSheet.create({
     backgroundColor: tokens.brand.violetDeep,
   },
   title: {
-    flex: 1,
     fontFamily: tokens.font.familyBold,
     fontSize: 14,
     color: tokens.text.hi,
