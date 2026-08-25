@@ -1713,10 +1713,16 @@ const pt: Translations = {
     sections: {
       account: 'Conta',
       preferences: 'Preferências',
+      modules: 'Módulos',
       notifications: 'Notificações',
       tasksProgress: 'Práticas e Progresso',
       data: 'Dados',
       about: 'Sobre',
+    },
+    modules: {
+      semana: 'Minha Semana',
+      semanaDesc:
+        'A folha da semana: as 3 da semana + o que precisa acontecer. Desligar só esconde — nada é apagado.',
     },
     fields: {
       displayName: 'Nome de exibição',
@@ -2134,6 +2140,56 @@ const pt: Translations = {
       title: 'Como foi seu dia?',
       writeMore: 'Escrever mais',
       notNow: 'Agora não',
+    },
+  },
+
+  /**
+   * Minha Semana — a folha da semana (3 grandes + itens de vida). NÃO é
+   * calendário, NÃO é prática, zero gamificação: o check é a recompensa.
+   */
+  week: {
+    title: 'Minha Semana',
+    big3: 'As 3 da semana',
+    more: 'Mais desta semana',
+    addPlaceholder: 'Adicionar à semana…',
+    emptySlot: 'Escreva a {{n}}ª…',
+    firstAction: 'Primeiro passo',
+    firstActionPlaceholder: 'Qual é o primeiro passo concreto?',
+    deleteConfirmTitle: 'Tirar da folha?',
+    dayChipA11y: 'Escolher um dia da semana',
+    prevWeek: 'Semana anterior',
+    nextWeek: 'Próxima semana',
+    thisWeek: 'Voltar pra esta semana',
+    empty: {
+      title: 'Semana ainda sem folha',
+      body: 'Três que importam, mais o resto da vida. Dois minutos e a semana ganha forma.',
+      cta: 'Montar a semana',
+    },
+    strip: {
+      label: 'Minha Semana',
+      setupCta: 'Montar a sua semana',
+      setupSub: 'As 3 da semana + o que precisa acontecer',
+      noBigs: 'As 3 ainda não foram escolhidas — toque pra escrever.',
+      more: { one: '+ 1 item', other: '+ {{count}} itens' },
+    },
+    setup: {
+      title: 'Montar a semana',
+      targetNext: 'próxima semana',
+      leftTitle: 'O que ficou?',
+      leftSub: 'Sobrou da semana passada. Carrega ou solta — sem culpa, é só decisão.',
+      bring: 'Trazer',
+      drop: 'Soltar',
+      nothingLeft: 'Nada ficou pendente. Semana limpa.',
+      dumpLabel: 'O que mais está na cabeça?',
+      dumpPlaceholder: 'Despeja aqui, decide depois…',
+      bigTitle: 'Quais são as 3?',
+      bigSub: 'Se a semana acabar e só isso sair, ainda foi uma boa semana.',
+      bigPlaceholder: '{{n}}ª grande…',
+      slot1Hint: 'Se só uma sair, que seja a 1ª.',
+      restTitle: 'O resto da semana',
+      restSub: 'Dê um dia a cada uma se quiser — ou deixe solto.',
+      next: 'Continuar',
+      done: 'Pronto',
     },
   },
 

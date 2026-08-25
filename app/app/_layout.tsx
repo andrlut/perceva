@@ -191,6 +191,11 @@ export default function RootLayout() {
             <Stack.Screen name="tasks" options={{ headerShown: false }} />
             <Stack.Screen name="all-practices" options={{ headerShown: false }} />
             <Stack.Screen name="history" options={{ headerShown: false }} />
+            <Stack.Screen name="semana" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="semana-montar"
+              options={{ presentation: 'modal', headerShown: false }}
+            />
             <Stack.Screen
               name="dedicacao-history"
               options={{ headerShown: false }}

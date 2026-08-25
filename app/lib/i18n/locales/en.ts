@@ -1714,10 +1714,16 @@ const en = {
     sections: {
       account: 'Account',
       preferences: 'Preferences',
+      modules: 'Modules',
       notifications: 'Notifications',
       tasksProgress: 'Practices & Progress',
       data: 'Data',
       about: 'About',
+    },
+    modules: {
+      semana: 'My Week',
+      semanaDesc:
+        'The weekly sheet: your 3 for the week + what needs to happen. Turning it off hides it — nothing is deleted.',
     },
     fields: {
       displayName: 'Display name',
@@ -2133,6 +2139,56 @@ const en = {
       title: 'How was your day?',
       writeMore: 'Write more',
       notNow: 'Not now',
+    },
+  },
+
+  /**
+   * Minha Semana — the weekly sheet (3 bigs + life-admin items). NOT a
+   * calendar, NOT practices, zero gamification: the tick is the reward.
+   */
+  week: {
+    title: 'My Week',
+    big3: 'Your 3 this week',
+    more: 'More this week',
+    addPlaceholder: 'Add to the week…',
+    emptySlot: 'Write big #{{n}}…',
+    firstAction: 'First step',
+    firstActionPlaceholder: 'What is the concrete first step?',
+    deleteConfirmTitle: 'Remove from the sheet?',
+    dayChipA11y: 'Pick a day of the week',
+    prevWeek: 'Previous week',
+    nextWeek: 'Next week',
+    thisWeek: 'Back to this week',
+    empty: {
+      title: 'No sheet for this week yet',
+      body: 'Three that matter, plus the rest of life. Two minutes and the week has a shape.',
+      cta: 'Set up the week',
+    },
+    strip: {
+      label: 'My Week',
+      setupCta: 'Set up your week',
+      setupSub: 'Your 3 for the week + what needs to happen',
+      noBigs: 'No big 3 picked yet — tap to write them.',
+      more: { one: '+ 1 item', other: '+ {{count}} items' },
+    },
+    setup: {
+      title: 'Set up the week',
+      targetNext: 'next week',
+      leftTitle: 'What carried over?',
+      leftSub: 'Left from last week. Bring it or let it go — no guilt, just a decision.',
+      bring: 'Bring',
+      drop: 'Let go',
+      nothingLeft: 'Nothing left over. Clean slate.',
+      dumpLabel: 'What else is on your mind?',
+      dumpPlaceholder: 'Dump it here, decide later…',
+      bigTitle: 'Which 3?',
+      bigSub: 'If the week ends and only these got done, it was still a good week.',
+      bigPlaceholder: 'Big #{{n}}…',
+      slot1Hint: 'If only one happens, make it #1.',
+      restTitle: 'The rest of the week',
+      restSub: 'Give each a day if you want — or leave it loose.',
+      next: 'Continue',
+      done: 'Done',
     },
   },
 

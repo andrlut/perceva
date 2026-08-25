@@ -244,6 +244,32 @@ export interface Profile {
   avatar_url: string | null;
   /** Cosmetic Premium flag (beta). Granted manually via Supabase Studio. */
   subscription_tier: 'free' | 'premium';
+  /** Per-user opt-in module toggles ({"semana": true, ...}). Only explicitly
+   *  flipped keys are stored; the client merges over MODULE_DEFAULTS. */
+  modules: Record<string, boolean>;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * One line of the "Minha Semana" sheet. slot 1..3 = one of the week's 3
+ * bigs; null slot = a regular "more this week" item. week_start is the
+ * client-computed LOCAL week anchor (settings.weekStart), frozen per row.
+ * Wired to ZERO gamification by design — checking grants nothing.
+ */
+export interface WeekItem {
+  id: string;
+  character_id: string;
+  /** Local YYYY-MM-DD of the week's first day. */
+  week_start: string;
+  slot: 1 | 2 | 3 | null;
+  title: string;
+  /** "Primeira ação concreta" of a big. Nudged, never required. */
+  first_action: string | null;
+  /** 0=Sunday .. 6=Saturday (recurrence.days convention); null = any day. */
+  day: number | null;
+  done_at: string | null;
+  sort_order: number;
   created_at: string;
   updated_at: string;
 }
