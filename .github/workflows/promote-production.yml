@@ -113,7 +113,18 @@ jobs:
             echo "::warning::Could not resolve a runtimeVersion from app.json (non-appVersion policy?). Skipping this guard."
             exit 0
           fi
-          LIVE_RUNTIME=$(npx eas update:list --branch production --limit 1 --json --non-interactive             | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const j=JSON.parse(s);const g=(j.currentPage||j)[0]||{};console.log(g.runtimeVersion||((g.updates||[{}])[0]||{}).runtimeVersion||'')})")
+          # `eas`, NOT `npx eas`: the CLI comes from expo-github-action on
+          # PATH; npx tries to resolve an npm package named "eas" and dies
+          # before the guard logic runs — with pipefail, the empty stdout then
+          # crashes JSON.parse (the 2026-08-25 promote failures). Capture the
+          # listing separately so an infra error fails with a CLEAR message
+          # instead of publishing blind or exploding mid-pipe.
+          LIST_JSON=$(eas update:list --branch production --limit 1 --json --non-interactive || true)
+          if [ -z "$LIST_JSON" ]; then
+            echo "::error::Could not read the production branch from EAS to compare runtimes (CLI or EXPO_TOKEN problem). Refusing to publish blind."
+            exit 1
+          fi
+          LIVE_RUNTIME=$(printf '%s' "$LIST_JSON" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const j=JSON.parse(s);const g=(j.currentPage||j)[0]||{};console.log(g.runtimeVersion||((g.updates||[{}])[0]||{}).runtimeVersion||'')})")
           echo "app.json runtime: $LOCAL_RUNTIME | production is serving: $LIVE_RUNTIME"
           if [ -n "$LIVE_RUNTIME" ] && [ "$LOCAL_RUNTIME" != "$LIVE_RUNTIME" ] && [ "$NEW_RUNTIME_OK" != "true" ]; then
             echo "::error::runtimeVersion moved ($LIVE_RUNTIME -> $LOCAL_RUNTIME). Installed binaries on $LIVE_RUNTIME would IGNORE this update. Ship 'eas build --profile production' + a Play Store release first, then re-run with newRuntimeOk=true."
