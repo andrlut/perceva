@@ -6,15 +6,21 @@ import type { WeekStart } from '@/lib/settings';
 import { supabase } from '@/lib/supabase';
 
 /**
- * "Minha Semana" data layer — the weekly sheet (3 bigs + life-admin items).
+ * "Minha Semana" data layer — pool model.
  *
- * Week doctrine: the week is a USER-LOCAL concept. The client computes the
- * week's first day from `settings.weekStart` (sunday|monday) with local date
- * components and freezes it per row; the server never derives weeks and never
- * knows timezones (task_skip / mood_log precedent).
+ * Items live in a general POOL (week_start null, "Pra depois"); each week is
+ * a SELECTION over it: pick 3 bigs (slot 1..3), give days to the rest.
+ * Undone items flow back to the pool at the next ritual and get re-allocated.
+ * A big can hold sub-steps (parent_id) that inherit the parent's week.
+ *
+ * Caches hold RAW WeekItem[] rows (pool and per-week); screens consume the
+ * shaped WeekSheet via `select`, so optimistic patches stay trivial.
+ *
+ * Week doctrine: the week is a USER-LOCAL concept — the client computes and
+ * freezes week_start (task_skip precedent); the server never derives weeks.
  */
 
-// ─── Local-date helpers (day keys come from history's dateKeyFromLocal) ──────
+// ─── Local-date helpers ──────────────────────────────────────────────────────
 
 /** Local YYYY-MM-DD of the first day of the week containing `d`. */
 export function weekStartKey(d: Date, weekStart: WeekStart): string {
@@ -53,9 +59,50 @@ export function ritualTargetWeek(
 export const weekKeys = {
   all: ['week'] as const,
   items: (weekStart: string) => ['week', 'items', weekStart] as const,
+  pool: () => ['week', 'pool'] as const,
 };
 
-async function fetchWeekItems(weekStart: string): Promise<WeekItem[]> {
+function keyFor(weekStart: string | null) {
+  return weekStart == null ? weekKeys.pool() : weekKeys.items(weekStart);
+}
+
+/** A big with its sub-steps attached. */
+export interface WeekBig {
+  item: WeekItem;
+  steps: WeekItem[];
+}
+
+export interface WeekSheet {
+  /** Top-level rows of the week (subs excluded). */
+  items: WeekItem[];
+  /** slot → big with steps. */
+  bigs: Map<number, WeekBig>;
+  /** Regular (non-big) open items. */
+  rest: WeekItem[];
+  restDone: WeekItem[];
+}
+
+export function shapeSheet(rows: WeekItem[]): WeekSheet {
+  const tops = rows.filter((r) => r.parent_id == null);
+  const bigs = new Map<number, WeekBig>();
+  for (const r of tops) {
+    if (r.slot != null) {
+      bigs.set(r.slot, {
+        item: r,
+        steps: rows.filter((s) => s.parent_id === r.id),
+      });
+    }
+  }
+  const regular = tops.filter((r) => r.slot == null);
+  return {
+    items: tops,
+    bigs,
+    rest: regular.filter((r) => r.done_at == null),
+    restDone: regular.filter((r) => r.done_at != null),
+  };
+}
+
+async function fetchWeekRows(weekStart: string): Promise<WeekItem[]> {
   const { data, error } = await supabase
     .from('week_item')
     .select('*')
@@ -67,10 +114,32 @@ async function fetchWeekItems(weekStart: string): Promise<WeekItem[]> {
   return (data ?? []) as WeekItem[];
 }
 
-export function useWeekItems(weekStart: string, enabled = true) {
+export function useWeekSheet(weekStart: string, enabled = true) {
   return useQuery({
     queryKey: weekKeys.items(weekStart),
-    queryFn: () => fetchWeekItems(weekStart),
+    queryFn: () => fetchWeekRows(weekStart),
+    select: shapeSheet,
+    enabled,
+  });
+}
+
+/** The pool — "Pra depois": open top-level items with no week allocated. */
+async function fetchPoolRows(): Promise<WeekItem[]> {
+  const { data, error } = await supabase
+    .from('week_item')
+    .select('*')
+    .is('week_start', null)
+    .is('parent_id', null)
+    .is('done_at', null)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as WeekItem[];
+}
+
+export function usePool(enabled = true) {
+  return useQuery({
+    queryKey: weekKeys.pool(),
+    queryFn: fetchPoolRows,
     enabled,
   });
 }
@@ -78,10 +147,12 @@ export function useWeekItems(weekStart: string, enabled = true) {
 // ─── Mutations ───────────────────────────────────────────────────────────────
 
 export interface AddWeekItemInput {
-  weekStart: string;
+  /** null/omitted = straight into the pool. */
+  weekStart?: string | null;
   title: string;
   slot?: 1 | 2 | 3;
-  firstAction?: string | null;
+  /** Set to create a sub-step under a big (weekStart must match the parent's). */
+  parentId?: string;
 }
 
 export function useAddWeekItem() {
@@ -99,10 +170,10 @@ export function useAddWeekItem() {
         .from('week_item')
         .insert({
           character_id: userId,
-          week_start: input.weekStart,
+          week_start: input.weekStart ?? null,
           title: input.title.trim(),
           slot: input.slot ?? null,
-          first_action: input.firstAction?.trim() || null,
+          parent_id: input.parentId ?? null,
         })
         .select('*')
         .single();
@@ -110,20 +181,17 @@ export function useAddWeekItem() {
       return data as WeekItem;
     },
     onSettled: (_data, _err, input) => {
-      qc.invalidateQueries({ queryKey: weekKeys.items(input.weekStart) });
+      qc.invalidateQueries({ queryKey: keyFor(input.weekStart ?? null) });
     },
   });
 }
 
 export interface UpdateWeekItemInput {
   id: string;
-  /** Week the item currently lives in — the list cache to patch. */
-  weekStart: string;
+  /** Cache the row currently lives in: a week key, or null for the pool. */
+  weekStart: string | null;
   patch: Partial<
-    Pick<
-      WeekItem,
-      'title' | 'first_action' | 'day' | 'done_at' | 'slot' | 'week_start'
-    >
+    Pick<WeekItem, 'title' | 'day' | 'done_at' | 'slot' | 'week_start'>
   >;
 }
 
@@ -138,18 +206,18 @@ export function useUpdateWeekItem() {
       if (error) throw error;
     },
     onMutate: async (input) => {
-      const key = weekKeys.items(input.weekStart);
+      const key = keyFor(input.weekStart);
       await qc.cancelQueries({ queryKey: key });
       const prev = qc.getQueryData<WeekItem[]>(key);
       if (prev) {
         const movedAway =
-          input.patch.week_start != null &&
+          input.patch.week_start !== undefined &&
           input.patch.week_start !== input.weekStart;
         qc.setQueryData<WeekItem[]>(
           key,
           movedAway
-            ? prev.filter((i) => i.id !== input.id)
-            : prev.map((i) => (i.id === input.id ? { ...i, ...input.patch } : i)),
+            ? prev.filter((r) => r.id !== input.id)
+            : prev.map((r) => (r.id === input.id ? { ...r, ...input.patch } : r)),
         );
       }
       return { prev, key };
@@ -158,11 +226,14 @@ export function useUpdateWeekItem() {
       if (ctx?.prev) qc.setQueryData(ctx.key, ctx.prev);
     },
     onSettled: (_data, _err, input) => {
-      qc.invalidateQueries({ queryKey: weekKeys.items(input.weekStart) });
-      // A carry moves the row into another week's cache — refresh that one too.
-      const movedTo = input.patch.week_start;
-      if (movedTo && movedTo !== input.weekStart) {
-        qc.invalidateQueries({ queryKey: weekKeys.items(movedTo) });
+      qc.invalidateQueries({ queryKey: keyFor(input.weekStart) });
+      if (
+        input.patch.week_start !== undefined &&
+        input.patch.week_start !== input.weekStart
+      ) {
+        qc.invalidateQueries({
+          queryKey: keyFor(input.patch.week_start ?? null),
+        });
       }
     },
   });
@@ -171,7 +242,7 @@ export function useUpdateWeekItem() {
 export function useDeleteWeekItem() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { id: string; weekStart: string }) => {
+    mutationFn: async (input: { id: string; weekStart: string | null }) => {
       const { error } = await supabase
         .from('week_item')
         .delete()
@@ -179,13 +250,14 @@ export function useDeleteWeekItem() {
       if (error) throw error;
     },
     onMutate: async (input) => {
-      const key = weekKeys.items(input.weekStart);
+      const key = keyFor(input.weekStart);
       await qc.cancelQueries({ queryKey: key });
       const prev = qc.getQueryData<WeekItem[]>(key);
       if (prev) {
+        // Removes the row AND its steps (DB cascades; mirror it locally).
         qc.setQueryData<WeekItem[]>(
           key,
-          prev.filter((i) => i.id !== input.id),
+          prev.filter((r) => r.id !== input.id && r.parent_id !== input.id),
         );
       }
       return { prev, key };
@@ -194,7 +266,50 @@ export function useDeleteWeekItem() {
       if (ctx?.prev) qc.setQueryData(ctx.key, ctx.prev);
     },
     onSettled: (_data, _err, input) => {
-      qc.invalidateQueries({ queryKey: weekKeys.items(input.weekStart) });
+      qc.invalidateQueries({ queryKey: keyFor(input.weekStart) });
+    },
+  });
+}
+
+/**
+ * Move a top-level item between pool and week (or across weeks), carrying
+ * its sub-steps along (steps mirror the parent's week_start). Allocating
+ * always clears the day; `slot` places it as one of the 3.
+ */
+export function useAllocateItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      item: WeekItem;
+      /** Cache the row currently lives in. */
+      fromWeek: string | null;
+      /** null = back to the pool. */
+      toWeek: string | null;
+      slot?: 1 | 2 | 3 | null;
+    }) => {
+      const slot = input.slot === undefined ? null : input.slot;
+      const now = new Date().toISOString();
+      const patch: Record<string, unknown> = {
+        week_start: input.toWeek,
+        slot,
+        updated_at: now,
+      };
+      // Changing weeks resets the day; promoting within the same week keeps it.
+      if (input.toWeek !== input.fromWeek) patch.day = null;
+      const { error } = await supabase
+        .from('week_item')
+        .update(patch)
+        .eq('id', input.item.id);
+      if (error) throw error;
+      const { error: stepErr } = await supabase
+        .from('week_item')
+        .update({ week_start: input.toWeek, updated_at: now })
+        .eq('parent_id', input.item.id);
+      if (stepErr) throw stepErr;
+    },
+    onSettled: (_d, _e, input) => {
+      qc.invalidateQueries({ queryKey: keyFor(input.fromWeek) });
+      qc.invalidateQueries({ queryKey: keyFor(input.toWeek) });
     },
   });
 }
@@ -202,10 +317,10 @@ export function useDeleteWeekItem() {
 // ─── Row gestures ────────────────────────────────────────────────────────────
 
 /**
- * The row gestures bound to one week's cache — shared by the sheet and the
- * ritual so the two screens can't drift apart on behavior.
+ * The row gestures bound to one cache (a week key, or null for the pool) —
+ * shared by the sheet and the ritual so the screens can't drift apart.
  */
-export function useWeekItemActions(weekStart: string) {
+export function useWeekItemActions(weekStart: string | null) {
   const updateItem = useUpdateWeekItem();
   const deleteItem = useDeleteWeekItem();
   return {
@@ -217,12 +332,6 @@ export function useWeekItemActions(weekStart: string) {
       }),
     setDay: (item: WeekItem, day: number | null) =>
       updateItem.mutate({ id: item.id, weekStart, patch: { day } }),
-    setFirstAction: (item: WeekItem, firstAction: string) =>
-      updateItem.mutate({
-        id: item.id,
-        weekStart,
-        patch: { first_action: firstAction || null },
-      }),
     remove: (item: WeekItem) => deleteItem.mutate({ id: item.id, weekStart }),
   };
 }

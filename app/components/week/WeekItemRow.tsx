@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { DayPickerModal } from '@/components/week/DayPickerModal';
 import type { WeekItem } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { weekdayShortByIndex } from '@/lib/time';
@@ -9,13 +11,10 @@ import { confirmAction } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 
 /**
- * One "Mais desta semana" line: checkbox + title + optional day chip.
- * Tapping the chip unfolds an inline row of the 7 days (+ "any day") — no
- * modal, no time picker: the sheet's "when" is a day at most, never an hour.
- * Long-press deletes (with confirm) — the sheet is the user's text to erase.
- *
- * Checking is wired to ZERO gamification by design: it flips `done_at`,
- * nothing else. The tick is the reward.
+ * One item line: checkbox + title + optional day chip. The chip opens a
+ * popup (DayPickerModal) — nothing expands inline. Checking is wired to
+ * ZERO gamification: light haptic, the row leaves the open list, done.
+ * Long-press deletes (with confirm) — the sheet is the user's text.
  */
 export function WeekItemRow({
   item,
@@ -32,25 +31,26 @@ export function WeekItemRow({
   const [pickerOpen, setPickerOpen] = useState(false);
   const done = item.done_at != null;
 
+  const handleToggle = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    onToggleDone(item);
+  };
+
   const handleLongPress = async () => {
-    const ok = await confirmAction(
-      t('week.deleteConfirmTitle'),
-      item.title,
-      {
-        okText: t('common.delete'),
-        cancelText: t('common.cancel'),
-        destructive: true,
-      },
-    );
+    const ok = await confirmAction(t('week.deleteConfirmTitle'), item.title, {
+      okText: t('common.delete'),
+      cancelText: t('common.cancel'),
+      destructive: true,
+    });
     if (ok) onDelete(item);
   };
 
   return (
-    <View style={styles.wrap}>
+    <View style={styles.row}>
       <Pressable
-        onPress={() => onToggleDone(item)}
+        onPress={handleToggle}
         onLongPress={handleLongPress}
-        style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+        style={({ pressed }) => [styles.main, pressed && styles.pressed]}
         accessibilityRole="checkbox"
         accessibilityState={{ checked: done }}
         accessibilityLabel={item.title}
@@ -60,78 +60,43 @@ export function WeekItemRow({
             <Ionicons name="checkmark" size={13} color={tokens.text.hi} />
           )}
         </View>
-        <Text
-          style={[styles.title, done && styles.titleDone]}
-          numberOfLines={2}
-        >
+        <Text style={[styles.title, done && styles.titleDone]} numberOfLines={2}>
           {item.title}
         </Text>
-        <Pressable
-          onPress={() => setPickerOpen((v) => !v)}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel={t('week.dayChipA11y')}
-          style={({ pressed }) => [
-            styles.dayChip,
-            item.day == null && styles.dayChipEmpty,
-            pressed && styles.pressed,
-          ]}
-        >
-          <Text
-            style={[
-              styles.dayChipText,
-              item.day == null && styles.dayChipTextEmpty,
-            ]}
-          >
-            {item.day == null ? '—' : weekdayShortByIndex(item.day, locale)}
-          </Text>
-        </Pressable>
       </Pressable>
 
-      {pickerOpen && (
-        <View style={styles.picker}>
-          {[0, 1, 2, 3, 4, 5, 6].map((d) => (
-            <Pressable
-              key={d}
-              onPress={() => {
-                onSetDay(item, d);
-                setPickerOpen(false);
-              }}
-              style={({ pressed }) => [
-                styles.pickerDay,
-                item.day === d && styles.pickerDayOn,
-                pressed && styles.pressed,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.pickerDayText,
-                  item.day === d && styles.pickerDayTextOn,
-                ]}
-              >
-                {weekdayShortByIndex(d, locale)}
-              </Text>
-            </Pressable>
-          ))}
-          <Pressable
-            onPress={() => {
-              onSetDay(item, null);
-              setPickerOpen(false);
-            }}
-            style={({ pressed }) => [styles.pickerDay, pressed && styles.pressed]}
-          >
-            <Text style={styles.pickerDayText}>—</Text>
-          </Pressable>
-        </View>
-      )}
+      <Pressable
+        onPress={() => setPickerOpen(true)}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel={t('week.dayChipA11y')}
+        style={({ pressed }) => [
+          styles.dayChip,
+          item.day == null && styles.dayChipEmpty,
+          pressed && styles.pressed,
+        ]}
+      >
+        <Text
+          style={[
+            styles.dayChipText,
+            item.day == null && styles.dayChipTextEmpty,
+          ]}
+        >
+          {item.day == null ? '—' : weekdayShortByIndex(item.day, locale)}
+        </Text>
+      </Pressable>
+
+      <DayPickerModal
+        visible={pickerOpen}
+        day={item.day}
+        onSelect={(d) => onSetDay(item, d)}
+        onClose={() => setPickerOpen(false)}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: {
-    marginBottom: tokens.space[2],
-  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -142,6 +107,13 @@ const styles = StyleSheet.create({
     borderRadius: tokens.radius.md,
     paddingVertical: tokens.space[3],
     paddingHorizontal: tokens.space[3],
+    marginBottom: tokens.space[2],
+  },
+  main: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[3],
   },
   pressed: {
     opacity: 0.75,
@@ -192,34 +164,5 @@ const styles = StyleSheet.create({
   },
   dayChipTextEmpty: {
     color: tokens.text.dim,
-  },
-  picker: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    paddingVertical: tokens.space[2],
-    paddingHorizontal: tokens.space[1],
-  },
-  pickerDay: {
-    borderRadius: tokens.radius.pill,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-    paddingHorizontal: 11,
-    paddingVertical: 6,
-    minWidth: 44,
-    alignItems: 'center',
-  },
-  pickerDayOn: {
-    borderColor: tokens.brand.violet2,
-    backgroundColor: 'rgba(123, 92, 255, 0.18)',
-  },
-  pickerDayText: {
-    fontFamily: tokens.font.familyBold,
-    fontSize: 10,
-    letterSpacing: 0.6,
-    color: tokens.text.mid,
-  },
-  pickerDayTextOn: {
-    color: tokens.text.hi,
   },
 });
