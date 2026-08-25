@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { GOLD_BADGE_BG, GOLD_TINT_BG } from '@/components/week/gold';
-import { useWeekItems, weekStartKey } from '@/lib/api/week';
+import { useWeekSheet, weekStartKey } from '@/lib/api/week';
 import { useT } from '@/lib/i18n';
 import { useModuleEnabled } from '@/lib/modules';
 import { useLoadedSettings } from '@/lib/settings';
@@ -27,17 +27,17 @@ export function WeekStrip() {
   const enabled = useModuleEnabled('semana');
   const settings = useLoadedSettings();
   const ws = weekStartKey(new Date(), settings.weekStart);
-  const items = useWeekItems(ws, enabled);
+  const sheet = useWeekSheet(ws, enabled);
 
-  if (!enabled || !items.data) return null;
+  if (!enabled || !sheet.data) return null;
 
-  const bigs = items.data.filter((i) => i.slot != null);
-  const restOpen = items.data.filter(
-    (i) => i.slot == null && i.done_at == null,
-  ).length;
+  const bigs = [...sheet.data.bigs.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([, b]) => b.item);
+  const restOpen = sheet.data.rest.length;
 
   // ── Empty week: the invitation ────────────────────────────────────────────
-  if (items.data.length === 0) {
+  if (sheet.data.items.length === 0) {
     return (
       <Pressable
         onPress={() => router.push('/semana-montar')}

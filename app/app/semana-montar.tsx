@@ -7,43 +7,42 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { GOLD_BADGE_BG, GOLD_TINT_BG } from '@/components/week/gold';
+import { GOLD_BADGE_BG } from '@/components/week/gold';
+import { DayPickerModal } from '@/components/week/DayPickerModal';
+import { BigCandidateList, type BigCandidate } from '@/components/week/PickBig';
 import { WeekAddInput } from '@/components/week/WeekAddInput';
 import { WeekItemRow } from '@/components/week/WeekItemRow';
 import {
   addDaysToKey,
   ritualTargetWeek,
   useAddWeekItem,
-  useDeleteWeekItem,
-  useUpdateWeekItem,
+  useAllocateItem,
+  usePool,
   useWeekItemActions,
-  useWeekItems,
+  useWeekSheet,
 } from '@/lib/api/week';
 import type { WeekItem } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useRequireModule } from '@/lib/modules';
 import { useLoadedSettings } from '@/lib/settings';
+import { weekdayShortByIndex } from '@/lib/time';
 import { tokens } from '@/theme';
 
-type BigDraft = { title: string; firstAction: string };
-
 /**
- * Montar a semana — the Monday ritual, three steps, ~3 minutes:
+ * Montar a semana — the ritual over the POOL model, three steps:
  *
- *   1. What carried over? Last week's undone items, each a decision:
- *      bring it or let it go (no guilt — "let go" just leaves it behind,
- *      nothing turns red). Plus a free "dump it here" line.
- *   2. The week's 3 — "if the week ends and only these got done, it was
- *      a good week". First concrete step nudged under each.
- *   3. The rest — day chips optional, or leave everything loose.
+ *   1. What's left? Last week's undone items — each goes "Esta semana" or
+ *      "Depois" (back to the pool; the default — no guilt). Free dump line
+ *      feeds the pool.
+ *   2. Pick the 3 — CHOSEN from the pool + this week's items, never typed
+ *      twice. Selection order matters: #1 is "if only one happens".
+ *   3. Give days — the 3 first, then the rest. All optional.
  *
- * Every step persists as it goes (items are real rows the moment they're
- * created), so an interrupted ritual resumes where it left off.
+ * Everything persists as it goes; an interrupted ritual resumes.
  */
 export default function SemanaMontarScreen() {
   const router = useRouter();
@@ -58,78 +57,73 @@ export default function SemanaMontarScreen() {
   const targetWs = target.weekStartKey;
   const prevWs = addDaysToKey(targetWs, -7);
 
-  const targetItems = useWeekItems(targetWs, moduleOn);
-  const prevItems = useWeekItems(prevWs, moduleOn);
+  const targetSheet = useWeekSheet(targetWs, moduleOn);
+  const prevSheet = useWeekSheet(prevWs, moduleOn);
+  const pool = usePool(moduleOn);
   const addItem = useAddWeekItem();
-  const updateItem = useUpdateWeekItem();
-  const deleteItem = useDeleteWeekItem();
-  const actions = useWeekItemActions(targetWs);
+  const allocate = useAllocateItem();
+  const targetActions = useWeekItemActions(targetWs);
 
   const [step, setStep] = useState<0 | 1 | 2>(0);
   const [saving, setSaving] = useState(false);
 
-  // ── Step 1 state: carry decisions (default = bring; nothing lost silently)
+  // ── Step 1 state: destination per leftover (default = back to the pool)
   const leftovers = useMemo(
-    () => (prevItems.data ?? []).filter((i) => i.done_at == null),
-    [prevItems.data],
+    () => (prevSheet.data?.items ?? []).filter((i) => i.done_at == null),
+    [prevSheet.data?.items],
   );
-  const [dropped, setDropped] = useState<Record<string, boolean>>({});
+  const [toWeek, setToWeek] = useState<Record<string, boolean>>({});
 
-  // ── Step 2 state: the three bigs
-  const [bigDrafts, setBigDrafts] = useState<BigDraft[]>([
-    { title: '', firstAction: '' },
-    { title: '', firstAction: '' },
-    { title: '', firstAction: '' },
-  ]);
-  const [bigsSeeded, setBigsSeeded] = useState(false);
-
-  const bigsBySlot = useMemo(() => {
-    const map = new Map<number, WeekItem>();
-    for (const i of targetItems.data ?? []) {
-      if (i.slot != null) map.set(i.slot, i);
-    }
-    return map;
-  }, [targetItems.data]);
-
-  // Seed the big inputs from what the target week already holds — once,
-  // as soon as data is available (re-running the ritual edits in place).
+  // ── Step 2 state: ordered selection of the 3
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [seeded, setSeeded] = useState(false);
   useEffect(() => {
-    if (bigsSeeded || !targetItems.data) return;
-    setBigDrafts(
-      ([1, 2, 3] as const).map((slot) => {
-        const existing = bigsBySlot.get(slot);
-        return {
-          title: existing?.title ?? '',
-          firstAction: existing?.first_action ?? '',
-        };
-      }),
-    );
-    setBigsSeeded(true);
-  }, [bigsSeeded, targetItems.data, bigsBySlot]);
+    if (seeded || !targetSheet.data) return;
+    const current = [...targetSheet.data.bigs.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([, big]) => big.item.id);
+    setSelectedIds(current);
+    setSeeded(true);
+  }, [seeded, targetSheet.data]);
 
-  const targetRest = useMemo(
-    () => (targetItems.data ?? []).filter((i) => i.slot == null),
-    [targetItems.data],
-  );
+  const candidates: BigCandidate[] = useMemo(() => {
+    const bigsNow = [...(targetSheet.data?.bigs.values() ?? [])].map(
+      (b) => ({ item: b.item, from: 'week' as const }),
+    );
+    return [
+      ...bigsNow,
+      ...(targetSheet.data?.rest ?? []).map((item) => ({
+        item,
+        from: 'week' as const,
+      })),
+      ...(pool.data ?? []).map((item) => ({ item, from: 'pool' as const })),
+    ];
+  }, [targetSheet.data, pool.data]);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((sel) =>
+      sel.includes(id)
+        ? sel.filter((s) => s !== id)
+        : sel.length >= 3
+          ? sel
+          : [...sel, id],
+    );
+  };
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
-  /** Apply carries (everything not explicitly dropped) and move to step 2. */
+  /** Step 1 → allocate each leftover (week or pool) and advance. */
   const advanceFromLeftovers = async () => {
     setSaving(true);
     try {
       await Promise.all(
-        leftovers
-          .filter((i) => !dropped[i.id])
-          .map((i) =>
-            updateItem.mutateAsync({
-              id: i.id,
-              weekStart: prevWs,
-              // A carried big arrives as a REGULAR item — the new week's 3
-              // are chosen fresh in the next step, never inherited.
-              patch: { week_start: targetWs, slot: null, day: null },
-            }),
-          ),
+        leftovers.map((item) =>
+          allocate.mutateAsync({
+            item,
+            fromWeek: prevWs,
+            toWeek: toWeek[item.id] ? targetWs : null,
+          }),
+        ),
       );
       setStep(1);
     } finally {
@@ -137,57 +131,55 @@ export default function SemanaMontarScreen() {
     }
   };
 
-  /** Reconcile the three big inputs against the target week's slots. */
-  const advanceFromBigs = async () => {
+  /** Step 2 → reconcile the selection against the week's slots. */
+  const advanceFromPick = async () => {
     setSaving(true);
     try {
-      await Promise.all(
-        ([1, 2, 3] as const).map((slot) => {
-          const existing = bigsBySlot.get(slot);
-          const draft = bigDrafts[slot - 1];
-          const title = draft.title.trim();
-          const firstAction = draft.firstAction.trim();
-          if (!title && existing) {
-            return deleteItem.mutateAsync({
-              id: existing.id,
-              weekStart: targetWs,
-            });
-          }
-          if (title && !existing) {
-            return addItem.mutateAsync({
-              weekStart: targetWs,
-              title,
-              slot,
-              firstAction: firstAction || null,
-            });
-          }
-          if (
-            existing &&
-            (title !== existing.title ||
-              firstAction !== (existing.first_action ?? ''))
-          ) {
-            return updateItem.mutateAsync({
-              id: existing.id,
-              weekStart: targetWs,
-              patch: { title, first_action: firstAction || null },
-            });
-          }
-          return Promise.resolve();
-        }),
-      );
+      const byId = new Map(candidates.map((c) => [c.item.id, c]));
+      const currentBigs = [...(targetSheet.data?.bigs.values() ?? [])];
+      const ops: Promise<unknown>[] = [];
+      // Demote bigs that fell out of the selection (stay in the week).
+      for (const big of currentBigs) {
+        if (!selectedIds.includes(big.item.id)) {
+          ops.push(
+            allocate.mutateAsync({
+              item: big.item,
+              fromWeek: targetWs,
+              toWeek: targetWs,
+              slot: null,
+            }),
+          );
+        }
+      }
+      // Place the selected, in order.
+      selectedIds.forEach((id, idx) => {
+        const c = byId.get(id);
+        if (!c) return;
+        const slot = (idx + 1) as 1 | 2 | 3;
+        if (c.item.slot === slot && c.item.week_start === targetWs) return;
+        ops.push(
+          allocate.mutateAsync({
+            item: c.item,
+            fromWeek: c.from === 'pool' ? null : targetWs,
+            toWeek: targetWs,
+            slot,
+          }),
+        );
+      });
+      await Promise.all(ops);
       setStep(2);
     } finally {
       setSaving(false);
     }
   };
 
-  const loading = prevItems.isLoading || targetItems.isLoading;
+  const loading =
+    prevSheet.isLoading || targetSheet.isLoading || pool.isLoading;
 
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      {/* Header: dots + close */}
       <View style={styles.header}>
         <View style={styles.dots}>
           {[0, 1, 2].map((s) => (
@@ -221,7 +213,7 @@ export default function SemanaMontarScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* ═══ Step 1 — what carried over ═══ */}
+          {/* ═══ Step 1 — what's left ═══ */}
           {step === 0 && (
             <>
               <Text style={styles.stepTitle}>{t('week.setup.leftTitle')}</Text>
@@ -233,58 +225,46 @@ export default function SemanaMontarScreen() {
                 </Text>
               ) : (
                 leftovers.map((item) => {
-                  const isDropped = !!dropped[item.id];
+                  const bring = !!toWeek[item.id];
                   return (
                     <View key={item.id} style={styles.leftoverRow}>
-                      <Text
-                        style={[
-                          styles.leftoverTitle,
-                          isDropped && styles.leftoverTitleDropped,
-                        ]}
-                        numberOfLines={2}
-                      >
+                      <Text style={styles.leftoverTitle} numberOfLines={2}>
                         {item.title}
                       </Text>
                       <Pressable
                         onPress={() =>
-                          setDropped((d) => ({ ...d, [item.id]: false }))
+                          setToWeek((d) => ({ ...d, [item.id]: true }))
                         }
                         style={({ pressed }) => [
-                          styles.leftoverBtn,
-                          !isDropped && styles.leftoverBtnOn,
+                          styles.destBtn,
+                          bring && styles.destBtnOn,
                           pressed && styles.pressed,
                         ]}
                         accessibilityRole="button"
-                        accessibilityLabel={t('week.setup.bring')}
+                        accessibilityState={{ selected: bring }}
                       >
                         <Text
-                          style={[
-                            styles.leftoverBtnText,
-                            !isDropped && styles.leftoverBtnTextOn,
-                          ]}
+                          style={[styles.destText, bring && styles.destTextOn]}
                         >
-                          {t('week.setup.bring')}
+                          {t('week.setup.toWeek')}
                         </Text>
                       </Pressable>
                       <Pressable
                         onPress={() =>
-                          setDropped((d) => ({ ...d, [item.id]: true }))
+                          setToWeek((d) => ({ ...d, [item.id]: false }))
                         }
                         style={({ pressed }) => [
-                          styles.leftoverBtn,
-                          isDropped && styles.leftoverBtnDrop,
+                          styles.destBtn,
+                          !bring && styles.destBtnLater,
                           pressed && styles.pressed,
                         ]}
                         accessibilityRole="button"
-                        accessibilityLabel={t('week.setup.drop')}
+                        accessibilityState={{ selected: !bring }}
                       >
                         <Text
-                          style={[
-                            styles.leftoverBtnText,
-                            isDropped && styles.leftoverBtnTextDrop,
-                          ]}
+                          style={[styles.destText, !bring && styles.destTextLater]}
                         >
-                          {t('week.setup.drop')}
+                          {t('week.setup.toPool')}
                         </Text>
                       </Pressable>
                     </View>
@@ -295,11 +275,11 @@ export default function SemanaMontarScreen() {
               <Text style={styles.dumpLabel}>{t('week.setup.dumpLabel')}</Text>
               <WeekAddInput
                 placeholder={t('week.setup.dumpPlaceholder')}
-                onSubmit={(title) => addItem.mutate({ weekStart: targetWs, title })}
+                onSubmit={(title) => addItem.mutate({ title })}
               />
-              {targetRest.length > 0 && (
+              {(pool.data?.length ?? 0) > 0 && (
                 <View style={styles.dumpedList}>
-                  {targetRest.map((i) => (
+                  {pool.data!.map((i) => (
                     <Text key={i.id} style={styles.dumpedItem} numberOfLines={1}>
                       •  {i.title}
                     </Text>
@@ -309,70 +289,64 @@ export default function SemanaMontarScreen() {
             </>
           )}
 
-          {/* ═══ Step 2 — the week's 3 ═══ */}
+          {/* ═══ Step 2 — pick the 3 ═══ */}
           {step === 1 && (
             <>
               <Text style={styles.stepTitle}>{t('week.setup.bigTitle')}</Text>
               <Text style={styles.stepSub}>{t('week.setup.bigSub')}</Text>
+              <Text style={styles.counter}>
+                {t('week.pick.counter', { n: selectedIds.length })}
+              </Text>
 
-              {([1, 2, 3] as const).map((slot) => (
-                <View key={slot} style={styles.bigCard}>
-                  <View style={styles.bigTitleRow}>
-                    <View style={styles.bigNum}>
-                      <Text style={styles.bigNumText}>{slot}</Text>
-                    </View>
-                    <TextInput
-                      style={styles.bigInput}
-                      value={bigDrafts[slot - 1].title}
-                      onChangeText={(text) =>
-                        setBigDrafts((d) =>
-                          d.map((b, i) =>
-                            i === slot - 1 ? { ...b, title: text } : b,
-                          ),
-                        )
-                      }
-                      placeholder={t('week.setup.bigPlaceholder', { n: slot })}
-                      placeholderTextColor={tokens.text.faint}
-                      returnKeyType="next"
-                    />
-                  </View>
-                  {!!bigDrafts[slot - 1].title.trim() && (
-                    <TextInput
-                      style={styles.bigFirstAction}
-                      value={bigDrafts[slot - 1].firstAction}
-                      onChangeText={(text) =>
-                        setBigDrafts((d) =>
-                          d.map((b, i) =>
-                            i === slot - 1 ? { ...b, firstAction: text } : b,
-                          ),
-                        )
-                      }
-                      placeholder={t('week.firstActionPlaceholder')}
-                      placeholderTextColor={tokens.text.faint}
-                      returnKeyType="done"
-                    />
-                  )}
-                </View>
-              ))}
-              {bigDrafts.some((d) => d.title.trim().length > 0) && (
-                <Text style={styles.bigHint}>{t('week.setup.slot1Hint')}</Text>
+              <BigCandidateList
+                candidates={candidates}
+                selectedIds={selectedIds}
+                onToggle={toggleSelect}
+                onCreate={async (title) => {
+                  const created = await addItem.mutateAsync({ title });
+                  setSelectedIds((sel) =>
+                    sel.length >= 3 ? sel : [...sel, created.id],
+                  );
+                }}
+              />
+              {selectedIds.length > 0 && (
+                <Text style={styles.hint}>{t('week.setup.slot1Hint')}</Text>
               )}
             </>
           )}
 
-          {/* ═══ Step 3 — the rest ═══ */}
+          {/* ═══ Step 3 — give days ═══ */}
           {step === 2 && (
             <>
               <Text style={styles.stepTitle}>{t('week.setup.restTitle')}</Text>
               <Text style={styles.stepSub}>{t('week.setup.restSub')}</Text>
 
-              {targetRest.map((item) => (
+              {(targetSheet.data?.bigs.size ?? 0) > 0 && (
+                <>
+                  <Text style={styles.groupLabel}>{t('week.setup.bigDays')}</Text>
+                  {[...(targetSheet.data?.bigs.entries() ?? [])]
+                    .sort((a, b) => a[0] - b[0])
+                    .map(([slot, big]) => (
+                      <BigDayRow
+                        key={big.item.id}
+                        slot={slot}
+                        item={big.item}
+                        onSetDay={targetActions.setDay}
+                      />
+                    ))}
+                </>
+              )}
+
+              {(targetSheet.data?.rest.length ?? 0) > 0 && (
+                <Text style={styles.groupLabel}>{t('week.more')}</Text>
+              )}
+              {(targetSheet.data?.rest ?? []).map((item) => (
                 <WeekItemRow
                   key={item.id}
                   item={item}
-                  onToggleDone={actions.toggleDone}
-                  onSetDay={actions.setDay}
-                  onDelete={actions.remove}
+                  onToggleDone={targetActions.toggleDone}
+                  onSetDay={targetActions.setDay}
+                  onDelete={targetActions.remove}
                 />
               ))}
               <WeekAddInput
@@ -384,7 +358,6 @@ export default function SemanaMontarScreen() {
         </ScrollView>
       )}
 
-      {/* ── Footer CTA ── */}
       {!loading && (
         <View style={styles.footer}>
           <Pressable
@@ -392,7 +365,7 @@ export default function SemanaMontarScreen() {
               step === 0
                 ? advanceFromLeftovers
                 : step === 1
-                  ? advanceFromBigs
+                  ? advanceFromPick
                   : () => router.back()
             }
             disabled={saving}
@@ -413,6 +386,53 @@ export default function SemanaMontarScreen() {
         </View>
       )}
     </SafeAreaView>
+  );
+}
+
+/** Compact "big + day chip" row for step 3. */
+function BigDayRow({
+  slot,
+  item,
+  onSetDay,
+}: {
+  slot: number;
+  item: WeekItem;
+  onSetDay: (item: WeekItem, day: number | null) => void;
+}) {
+  const { t, locale } = useT();
+  const [open, setOpen] = useState(false);
+  return (
+    <View style={styles.bigDayRow}>
+      <View style={styles.bigBadge}>
+        <Text style={styles.bigBadgeText}>{slot}</Text>
+      </View>
+      <Text style={styles.bigDayTitle} numberOfLines={1}>
+        {item.title}
+      </Text>
+      <Pressable
+        onPress={() => setOpen(true)}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel={t('week.dayChipA11y')}
+        style={({ pressed }) => [
+          styles.dayChip,
+          item.day == null && styles.dayChipEmpty,
+          pressed && styles.pressed,
+        ]}
+      >
+        <Text
+          style={[styles.dayChipText, item.day == null && styles.dayChipTextEmpty]}
+        >
+          {item.day == null ? '—' : weekdayShortByIndex(item.day, locale)}
+        </Text>
+      </Pressable>
+      <DayPickerModal
+        visible={open}
+        day={item.day}
+        onSelect={(d) => onSetDay(item, d)}
+        onClose={() => setOpen(false)}
+      />
+    </View>
   );
 }
 
@@ -479,6 +499,18 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: tokens.space[4],
   },
+  counter: {
+    fontFamily: tokens.font.familyHeavy,
+    fontSize: 12,
+    color: tokens.semantic.coinLight,
+    marginBottom: tokens.space[3],
+  },
+  hint: {
+    fontFamily: tokens.font.family,
+    fontSize: 12,
+    color: tokens.text.dim,
+    marginTop: tokens.space[2],
+  },
   nothingLeft: {
     fontFamily: tokens.font.family,
     fontSize: 13,
@@ -503,36 +535,31 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: tokens.text.hi,
   },
-  leftoverTitleDropped: {
-    color: tokens.text.faint,
-    textDecorationLine: 'line-through',
-    fontFamily: tokens.font.family,
-  },
-  leftoverBtn: {
+  destBtn: {
     borderRadius: tokens.radius.pill,
     borderWidth: 1,
     borderColor: tokens.border.base,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
-  leftoverBtnOn: {
+  destBtnOn: {
     borderColor: tokens.brand.violet2,
     backgroundColor: 'rgba(123, 92, 255, 0.16)',
   },
-  leftoverBtnDrop: {
+  destBtnLater: {
     borderColor: tokens.border.strong,
     backgroundColor: tokens.bg.surface2,
   },
-  leftoverBtnText: {
+  destText: {
     fontFamily: tokens.font.familyBold,
     fontSize: 10,
     letterSpacing: 0.4,
     color: tokens.text.dim,
   },
-  leftoverBtnTextOn: {
+  destTextOn: {
     color: tokens.brand.violet2,
   },
-  leftoverBtnTextDrop: {
+  destTextLater: {
     color: tokens.text.mid,
   },
   dumpLabel: {
@@ -553,53 +580,68 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: tokens.text.base,
   },
-  bigCard: {
-    borderRadius: tokens.radius.md,
-    borderWidth: 1,
-    borderColor: tokens.semantic.coinRim,
-    backgroundColor: GOLD_TINT_BG,
-    paddingVertical: tokens.space[3],
-    paddingHorizontal: tokens.space[3],
+  groupLabel: {
+    fontFamily: tokens.font.familyBold,
+    fontSize: 11,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: tokens.text.mid,
+    marginTop: tokens.space[3],
     marginBottom: tokens.space[2],
   },
-  bigTitleRow: {
+  bigDayRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[3],
+    borderRadius: tokens.radius.md,
+    borderWidth: 1,
+    borderColor: tokens.semantic.coinRim,
+    backgroundColor: 'rgba(255, 200, 61, 0.05)',
+    paddingVertical: tokens.space[2],
+    paddingHorizontal: tokens.space[3],
+    marginBottom: tokens.space[2],
   },
-  bigNum: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+  bigBadge: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     backgroundColor: GOLD_BADGE_BG,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  bigNumText: {
+  bigBadgeText: {
     fontFamily: tokens.font.familyHeavy,
-    fontSize: 11,
+    fontSize: 10,
     color: tokens.semantic.coinLight,
   },
-  bigInput: {
+  bigDayTitle: {
     flex: 1,
     fontFamily: tokens.font.familyBold,
-    fontSize: 14,
-    color: tokens.text.hi,
-    padding: 0,
-  },
-  bigFirstAction: {
-    marginTop: tokens.space[2],
-    marginLeft: 20 + tokens.space[3],
-    fontFamily: tokens.font.family,
     fontSize: 13,
-    color: tokens.text.base,
-    padding: 0,
+    color: tokens.text.hi,
   },
-  bigHint: {
-    fontFamily: tokens.font.family,
-    fontSize: 12,
+  dayChip: {
+    borderRadius: tokens.radius.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(155, 130, 255, 0.4)',
+    backgroundColor: 'rgba(123, 92, 255, 0.12)',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    minWidth: 44,
+    alignItems: 'center',
+  },
+  dayChipEmpty: {
+    borderColor: tokens.border.base,
+    backgroundColor: 'transparent',
+  },
+  dayChipText: {
+    fontFamily: tokens.font.familyBold,
+    fontSize: 10,
+    letterSpacing: 0.6,
+    color: tokens.brand.violet2,
+  },
+  dayChipTextEmpty: {
     color: tokens.text.dim,
-    marginTop: tokens.space[2],
   },
   footer: {
     paddingHorizontal: tokens.space[4],
