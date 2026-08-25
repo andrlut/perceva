@@ -105,6 +105,12 @@ export default function MoodCheckinScreen() {
   const catalog = useMoodTags();
   const logMood = useLogMood();
   const scrollRef = useRef<ScrollView>(null);
+  // The raw height, and the only screen in the app that wants it: this one
+  // wraps in a SafeAreaView that includes the 'bottom' edge, so the content
+  // already stops above the navigation bar — exactly the geometry Android's
+  // reported value assumes. Everywhere else is edge-to-edge and uses
+  // `useKeyboardOverlap`; switching this one to match would open a dead gap the
+  // size of the navigation bar between the Save button and the keyboard.
   const keyboardHeight = useKeyboardHeight();
 
   const savedMood = (day.data?.mood ?? null) as MoodValue | null;

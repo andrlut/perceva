@@ -22,7 +22,7 @@ import { useActiveTasks } from '@/lib/api/tasks';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { freeLimitEntity, useLimitModalStore } from '@/lib/premium';
-import { useKeyboardHeight } from '@/lib/use-keyboard-height';
+import { useKeyboardOverlap } from '@/lib/use-keyboard-height';
 import { showInfo } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 
@@ -73,7 +73,7 @@ export default function QuestCreateScreen() {
   const [durationDays, setDurationDays] = useState<number>(21);
   const [linkedTaskIds, setLinkedTaskIds] = useState<Set<string>>(new Set());
   const [partial, setPartial] = useState(true);
-  const keyboardHeight = useKeyboardHeight();
+  const keyboardHeight = useKeyboardOverlap();
 
   const rewardXp = useMemo(() => deriveRewardXp(durationDays), [durationDays]);
   const rewardCoins = useMemo(() => deriveRewardCoins(rewardXp), [rewardXp]);

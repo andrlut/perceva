@@ -35,7 +35,7 @@ import {
   type TaskFormInput,
 } from '@/lib/api/tasks';
 import type { Recurrence, TaskSub } from '@/lib/db/types';
-import { useKeyboardHeight } from '@/lib/use-keyboard-height';
+import { useKeyboardOverlap } from '@/lib/use-keyboard-height';
 import { confirmAction } from '@/lib/util/confirm';
 import { rewardForTaskSubs } from '@/lib/xp';
 import { tokens } from '@/theme';
@@ -181,7 +181,7 @@ export default function TaskFormScreen() {
   // Keep scroll content reachable while the keyboard is up. `endCoordinates`
   // doesn't always include the keyboard's tool/suggestion bar, so we add a
   // generous buffer below.
-  const keyboardHeight = useKeyboardHeight();
+  const keyboardHeight = useKeyboardOverlap();
 
   // M2 tour auto-scroll: steps 3 (subs) and 4 (recurrence) live below
   // the title/description/icon fold, so the tour scrolls them into view

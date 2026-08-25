@@ -4,7 +4,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import {
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,11 +12,10 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MoodFace } from '@/components/mood/MoodFace';
 import { useMoodTags } from '@/lib/api/mood';
-import { useKeyboardHeight } from '@/lib/use-keyboard-height';
+import { useKeyboardOverlap } from '@/lib/use-keyboard-height';
 import { activeFacetCount, MIN_XP_MAX, stepMinXp } from '@/lib/calendar/filters';
 import { useCalendarStore } from '@/lib/calendar/store';
 import type { DimensionId, MoodTag } from '@/lib/db/types';
@@ -97,27 +95,16 @@ export function CalendarFilterSheet({ visible, onClose, practices, rewards }: Pr
   /**
    * How far to lift the sheet so the keyboard cannot cover it.
    *
-   * `KeyboardAvoidingView` is the house pattern everywhere else, but it leans
-   * on the Activity resizing — and a React Native `Modal` is its own window
-   * that does not. Inside a sheet the input ends up under the keyboard and you
-   * cannot see what you are typing, so the height is measured and the scrim is
-   * padded instead.
+   * `KeyboardAvoidingView` is the house pattern elsewhere, but it leans on the
+   * Activity resizing — and a React Native `Modal` is its own window that does
+   * not, so inside a sheet the input ends up under the keyboard and you cannot
+   * see what you are typing. Padding the scrim is the mechanism instead.
    *
-   * The `+ insets.bottom` on Android is not a fudge. From API 30 RN reports the
-   * keyboard as `imeInsets.bottom - barInsets.bottom` — the IME height minus
-   * the navigation bar — which assumes a window that already stops above that
-   * bar. This one does not: `edgeToEdgeEnabled` in app.json makes the modal's
-   * window edge-to-edge, so its bottom edge is the physical bottom of the
-   * screen and the missing nav-bar band (48dp with 3-button navigation) is
-   * exactly how much of the footer stays hidden — enough to swallow the Apply
-   * button. Below API 30 RN takes the legacy path, which already reports the
-   * full height, so adding the inset there would over-lift instead.
+   * `useKeyboardOverlap`, not `useKeyboardHeight`: this window is edge-to-edge,
+   * so its bottom edge is the physical bottom of the screen and the raw value
+   * is short by the navigation bar. See the hook for the full reasoning.
    */
-  const insets = useSafeAreaInsets();
-  const keyboardHeight = useKeyboardHeight();
-  const navGap =
-    Platform.OS === 'android' && Number(Platform.Version) >= 30 ? insets.bottom : 0;
-  const lift = keyboardHeight > 0 ? keyboardHeight + navGap : 0;
+  const lift = useKeyboardOverlap();
 
   const facets = activeFacetCount(filter);
 
