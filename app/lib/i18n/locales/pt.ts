@@ -2166,6 +2166,14 @@ const pt: Translations = {
     bigMenu: {
       unslot: 'Tirar das 3',
     },
+    editor: {
+      titlePlaceholder: 'Nome do item…',
+      dayLabel: 'Dia',
+      toWeek: 'Trazer pra esta semana',
+      toPool: 'Mandar pra fila',
+      save: 'Pronto',
+      openA11y: 'Gerenciar {{title}}',
+    },
     steps: {
       add: '+ passo',
       placeholder: 'Escreva o passo…',

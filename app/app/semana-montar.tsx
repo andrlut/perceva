@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { GOLD_BADGE_BG } from '@/components/week/gold';
 import { DayPickerModal } from '@/components/week/DayPickerModal';
+import { ItemEditorModal } from '@/components/week/ItemEditorModal';
 import { BigCandidateList, type BigCandidate } from '@/components/week/PickBig';
 import { WeekAddInput } from '@/components/week/WeekAddInput';
 import { WeekItemRow } from '@/components/week/WeekItemRow';
@@ -66,6 +67,11 @@ export default function SemanaMontarScreen() {
 
   const [step, setStep] = useState<0 | 1 | 2>(0);
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const editingItem =
+    editingId == null
+      ? null
+      : (targetSheet.data?.items.find((i) => i.id === editingId) ?? null);
 
   // ── Step 1 state: destination per leftover (default = back to the pool)
   const leftovers = useMemo(
@@ -346,7 +352,7 @@ export default function SemanaMontarScreen() {
                   item={item}
                   onToggleDone={targetActions.toggleDone}
                   onSetDay={targetActions.setDay}
-                  onDelete={targetActions.remove}
+                  onOpen={(i) => setEditingId(i.id)}
                 />
               ))}
               <WeekAddInput
@@ -385,6 +391,13 @@ export default function SemanaMontarScreen() {
           </Pressable>
         </View>
       )}
+
+      <ItemEditorModal
+        item={editingItem}
+        cacheWeek={targetWs}
+        sheetWeek={targetWs}
+        onClose={() => setEditingId(null)}
+      />
     </SafeAreaView>
   );
 }

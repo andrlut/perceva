@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { DayPickerModal } from '@/components/week/DayPickerModal';
 import {
@@ -32,8 +32,7 @@ export function BigSlot({
   onToggleStep,
   onAddStep,
   onDeleteStep,
-  onUnslot,
-  onDelete,
+  onOpen,
 }: {
   slot: 1 | 2 | 3;
   big: WeekBig | undefined;
@@ -43,8 +42,8 @@ export function BigSlot({
   onToggleStep: (step: WeekItem) => void;
   onAddStep: (parent: WeekItem, title: string) => void;
   onDeleteStep: (step: WeekItem) => void;
-  onUnslot: (item: WeekItem) => void;
-  onDelete: (item: WeekItem) => void;
+  /** Opens the central item manager (rename / move / demote / delete). */
+  onOpen: (item: WeekItem) => void;
 }) {
   const { t, locale } = useT();
   const [addingStep, setAddingStep] = useState(false);
@@ -85,42 +84,40 @@ export function BigSlot({
     if (title) onAddStep(item, title);
   };
 
-  const openMenu = () => {
-    Alert.alert(item.title, undefined, [
-      { text: t('common.cancel'), style: 'cancel' },
-      { text: t('week.bigMenu.unslot'), onPress: () => onUnslot(item) },
-      {
-        text: t('common.delete'),
-        style: 'destructive',
-        onPress: () => onDelete(item),
-      },
-    ]);
-  };
-
   const handleToggle = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     onToggleDone(item);
   };
 
-  // ── Filled slot ───────────────────────────────────────────────────────────
+  // ── Filled slot: badge marks done, the TEXT opens the item manager ────────
   return (
     <View style={[styles.card, done && styles.cardDone]}>
       <View style={styles.headerRow}>
         <Pressable
           onPress={handleToggle}
-          onLongPress={openMenu}
-          style={({ pressed }) => [styles.headerMain, pressed && styles.pressed]}
+          hitSlop={8}
+          style={({ pressed }) => [
+            styles.num,
+            done && styles.numDone,
+            pressed && styles.pressed,
+          ]}
           accessibilityRole="checkbox"
           accessibilityState={{ checked: done }}
           accessibilityLabel={item.title}
         >
-          <View style={[styles.num, done && styles.numDone]}>
-            {done ? (
-              <Ionicons name="checkmark" size={11} color={tokens.bg.deep} />
-            ) : (
-              <Text style={styles.numText}>{slot}</Text>
-            )}
-          </View>
+          {done ? (
+            <Ionicons name="checkmark" size={11} color={tokens.bg.deep} />
+          ) : (
+            <Text style={styles.numText}>{slot}</Text>
+          )}
+        </Pressable>
+        <Pressable
+          onPress={() => onOpen(item)}
+          onLongPress={() => onOpen(item)}
+          style={({ pressed }) => [styles.headerMain, pressed && styles.pressed]}
+          accessibilityRole="button"
+          accessibilityLabel={t('week.editor.openA11y', { title: item.title })}
+        >
           <Text style={[styles.title, done && styles.titleDone]} numberOfLines={2}>
             {item.title}
           </Text>
