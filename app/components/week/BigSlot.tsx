@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { DayPickerModal } from '@/components/week/DayPickerModal';
@@ -49,6 +49,7 @@ export function BigSlot({
   const [addingStep, setAddingStep] = useState(false);
   const [stepDraft, setStepDraft] = useState('');
   const [dayPickerOpen, setDayPickerOpen] = useState(false);
+  const submittingStep = useRef(false);
 
   // ── Empty slot: invitation to pick ────────────────────────────────────────
   if (!big) {
@@ -77,11 +78,25 @@ export function BigSlot({
   const item = big.item;
   const done = item.done_at != null;
 
+  // Submitting the step input fires onSubmitEditing AND, as the keyboard
+  // closes and the input unmounts, onBlur — both still seeing the draft
+  // (state updates are async), which created the step twice. The ref latches
+  // the submit and is only released when a NEW step input is opened, so the
+  // trailing blur can never re-add. Resetting it at the end of this function
+  // would not work: the blur arrives in a later tick.
   const submitStep = () => {
+    if (submittingStep.current) return;
+    submittingStep.current = true;
     const title = stepDraft.trim();
     setStepDraft('');
     setAddingStep(false);
     if (title) onAddStep(item, title);
+  };
+
+  const startAddingStep = () => {
+    submittingStep.current = false;
+    setStepDraft('');
+    setAddingStep(true);
   };
 
   const handleToggle = () => {
@@ -205,7 +220,7 @@ export function BigSlot({
               </View>
             ) : (
               <Pressable
-                onPress={() => setAddingStep(true)}
+                onPress={startAddingStep}
                 style={({ pressed }) => [styles.addStep, pressed && styles.pressed]}
                 accessibilityRole="button"
                 accessibilityLabel={t('week.steps.add')}
