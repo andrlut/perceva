@@ -1,0 +1,46 @@
+{
+  "slug": "attention-residue",
+  "reels": [
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "videocam",
+        "b": "laptop"
+      },
+      "headline": {
+        "pt": "A reunião ruim não estraga a reunião.",
+        "en": "The bad meeting doesn't wreck the meeting."
+      },
+      "lede": {
+        "pt": "A das 14h termina 14h58 e às 15h você já está em outra, câmera ligada. O corpo chegou inteiro; metade da cabeça não. Um experimento de 2009 mostra onde a conta aparece, disfarçada de noite mal dormida.",
+        "en": "The two o'clock ends at 2:58 and by three you're in another one, camera on. Your body made it whole; half your head didn't. A 2009 experiment shows where the bill lands, disguised as a bad night's sleep."
+      }
+    },
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "infinite"
+      },
+      "headline": {
+        "pt": "Terminar não solta a sua cabeça.",
+        "en": "Finishing doesn't free your head."
+      },
+      "lede": {
+        "pt": "Você entrega, fecha a aba e vai pra próxima — e a anterior continua voltando. No experimento de Leroy, quem terminou com o relógio no pescoço soltou melhor que quem terminou devagar. O que solta cabe num minuto.",
+        "en": "You ship it, close the tab, move on — and the last task keeps coming back. In Leroy's experiment, people who finished with the clock on their neck let go better than those who finished slowly. It takes a minute."
+      }
+    },
+    {
+      "metaphor": "asymmetry",
+      "icons": {},
+      "headline": {
+        "pt": "23 minutos pra voltar ao foco? Sem fonte.",
+        "en": "23 minutes to refocus? No paper behind it."
+      },
+      "lede": {
+        "pt": "Você já viu o número em post, palestra e slide de produtividade. Quem foi atrás do artigo revisado por pares não achou nenhum. E outros dois clássicos que você repete sobre foco estão na mesma situação.",
+        "en": "You've seen the figure in a post, a talk, a productivity slide. People who went looking for the peer-reviewed paper found none. Two other classics you repeat about focus are in the same shape."
+      }
+    }
+  ]
+}

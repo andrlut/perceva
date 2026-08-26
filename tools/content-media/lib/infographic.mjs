@@ -260,10 +260,18 @@ export function buildInfographicSvg({ locale, dimensionId, data, width = 1080, h
   // Only drawn if it fits above the footer — never let it overlap (the stat
   // is optional, so dropping it beats a collision).
   const statVal = data.stat ? pick(data.stat.value ?? data.stat) : null;
-  const statH = 210;
+  // The caption column starts right of the icon chip: PAD + 44 + 46 (chip cx)
+  // + 52 (chip r) + 40 (gutter). Resolve it up front so the caption can be
+  // wrapped BEFORE the card height is chosen.
+  const statTx = PAD + 182;
+  const statCaption = statVal ? pick(data.stat.caption) : null;
+  const statCapLines = statCaption ? wrap(statCaption, maxCharsFor(34, width - statTx - PAD), 2) : [];
+  // 210 holds the number plus ONE caption line. A second line's baseline lands
+  // at cardTop + 210 — exactly the bottom edge — so the card has to grow or the
+  // line is clipped off.
+  const statH = 210 + (statCapLines.length > 1 ? 44 : 0);
   if (statVal && y + statH <= height - 150) {
     const statValue = statVal;
-    const statCaption = pick(data.stat.caption);
     const statIcon = data.stat.icon && GLYPHS[data.stat.icon] ? data.stat.icon : 'stats-chart';
     const cardTop = y;
     out.push(`<rect x="${PAD}" y="${cardTop}" width="${inner}" height="${statH}" rx="30" fill="${accent}" fill-opacity="0.12"/>`);
@@ -276,11 +284,11 @@ export function buildInfographicSvg({ locale, dimensionId, data, width = 1080, h
     out.push(`<circle cx="${chipCx}" cy="${chipCy}" r="52" fill="${accent}" fill-opacity="0.18"/>`);
     out.push(icon(statIcon, chipCx, chipCy, 52, accent));
     // big number + caption, stacked to the right of the chip
-    const tx = chipCx + 52 + 40;
+    const tx = statTx;
     out.push(textEl(statValue, tx, cardTop + 118, { size: 96, weight: 'bold', fill: accent }));
-    if (statCaption) {
+    if (statCapLines.length) {
       let cy2 = cardTop + 118 + 8;
-      for (const line of wrap(statCaption, maxCharsFor(34, width - tx - PAD), 2)) {
+      for (const line of statCapLines) {
         cy2 += 42;
         out.push(textEl(line, tx, cy2, { size: 34, weight: 'medium', fill: TOKENS.text.mid }));
       }
