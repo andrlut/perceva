@@ -60,7 +60,6 @@ const en = {
     increaseQty: 'Increase quantity',
     xpByDimension: 'XP distribution by dimension',
     scoreByDimension: 'Score by dimension',
-    momentumByDimension: 'Momentum by dimension',
     stopTracking: 'Stop tracking this reward',
     dayCellEmpty: 'no entries',
     dayCellXp: '{{xp}} XP',
@@ -1047,8 +1046,8 @@ const en = {
       confirmTitle: 'Clear the day now?',
       confirmTitleDay: 'Close out {{date}}?',
       confirmBody: {
-        one: '{{count}} practice waits for later. No XP, and your Momentum stays put.',
-        other: '{{count}} practices wait for later. No XP, and your Momentum stays put.',
+        one: '{{count}} practice waits for later — you lose nothing.',
+        other: '{{count}} practices wait for later — you lose nothing.',
       },
       confirmOk: 'Clear the day',
     },
@@ -1058,23 +1057,6 @@ const en = {
       undo: 'Could not undo',
       unskip: 'Could not unskip',
       unknown: 'Unknown error.',
-    },
-    momentum: {
-      label: 'Momentum',
-      recentEffort: 'Recent effort by attribute',
-      tier: {
-        calm: 'calm',
-        building: 'building',
-        strong: 'strong',
-        peak: 'peak',
-      },
-      bonusActive: '+{{percent}}% bonus',
-      hexAxisA11y: '{{dim}}: momentum {{value}}',
-      // Legacy streak-style keys (deprecated; kept while any leftover
-      // V2 streak surface still references them).
-      days: { one: '{{count}} day', other: '{{count}} days' },
-      best: 'Best: {{count}}',
-      atRisk: 'At risk',
     },
     pullToRefresh: 'Pull to refresh',
     swipe: {
@@ -1131,7 +1113,7 @@ const en = {
       skipToday: 'Skip today',
       /** Past-day variant — the sheet also opens from a day you navigated back to. */
       skipDay: 'Skip on {{date}}',
-      skipTodaySub: 'Hide from the day without completing — no XP, no Momentum penalty',
+      skipTodaySub: 'Hide from the day without completing — you lose nothing',
       editTask: 'Edit practice',
       editTaskSub: 'Change title, subs, recurrence, etc',
     },
@@ -1761,8 +1743,6 @@ const en = {
       dailyDescription: 'The morning brief, plus a midday nudge if you have not opened the app.',
       quest: 'Quest reminder',
       questDescription: 'Heads-up before a quest deadline.',
-      momentum: 'Momentum reminder',
-      momentumDescription: "Late-evening ping when today's Momentum could use a small practice.",
       time: 'Time',
       moodTimeHelp:
         'When Perceva asks how your day went — both the push and the check-in inside the app.',

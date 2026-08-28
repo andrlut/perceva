@@ -50,7 +50,6 @@ const pt: Translations = {
     increaseQty: 'Aumentar quantidade',
     xpByDimension: 'Distribuição de XP por dimensão',
     scoreByDimension: 'Pontuação por dimensão',
-    momentumByDimension: 'Momentum por dimensão',
     stopTracking: 'Parar de acompanhar esta recompensa',
     dayCellEmpty: 'sem registro',
     dayCellXp: '{{xp}} XP',
@@ -1041,8 +1040,8 @@ const pt: Translations = {
       confirmTitle: 'Fechar o dia agora?',
       confirmTitleDay: 'Fechar {{date}}?',
       confirmBody: {
-        one: '{{count}} prática fica pra depois. Sem XP e sem mexer no seu Momentum.',
-        other: '{{count}} práticas ficam pra depois. Sem XP e sem mexer no seu Momentum.',
+        one: '{{count}} prática fica pra depois — sem perder nada.',
+        other: '{{count}} práticas ficam pra depois — sem perder nada.',
       },
       confirmOk: 'Fechar o dia',
     },
@@ -1052,23 +1051,6 @@ const pt: Translations = {
       undo: 'Não foi possível desfazer',
       unskip: 'Não foi possível despular',
       unknown: 'Erro desconhecido.',
-    },
-    momentum: {
-      label: 'Momentum',
-      recentEffort: 'Esforço recente por atributo',
-      tier: {
-        calm: 'calmo',
-        building: 'subindo',
-        strong: 'forte',
-        peak: 'pleno',
-      },
-      bonusActive: '+{{percent}}% bônus',
-      hexAxisA11y: '{{dim}}: momentum {{value}}',
-      // Legacy streak-style keys (deprecated; kept while any leftover
-      // V2 streak surface still references them).
-      days: { one: '{{count}} dia', other: '{{count}} dias' },
-      best: 'Recorde: {{count}}',
-      atRisk: 'Em risco',
     },
     pullToRefresh: 'Puxe pra atualizar',
     swipe: {
@@ -1125,7 +1107,7 @@ const pt: Translations = {
       skipToday: 'Pular hoje',
       /** Variante de dia passado — a folha também abre de um dia anterior. */
       skipDay: 'Pular em {{date}}',
-      skipTodaySub: 'Esconde do dia sem concluir — sem XP, sem penalidade no Momentum',
+      skipTodaySub: 'Esconde do dia sem concluir — sem perder nada',
       editTask: 'Editar prática',
       editTaskSub: 'Mudar título, subs, recorrência, etc',
     },
@@ -1761,8 +1743,6 @@ const pt: Translations = {
         'O resumo da manhã, mais um cutucão no meio-dia se você não abrir o app.',
       quest: 'Lembrete de missão',
       questDescription: 'Aviso antes do prazo de uma missão.',
-      momentum: 'Lembrete de Momentum',
-      momentumDescription: 'Cutucão noturno quando seu Momentum precisa de uma prática pequena.',
       time: 'Horário',
       moodTimeHelp:
         'Quando o Perceva pergunta como foi seu dia — no push e dentro do app.',

@@ -33,9 +33,10 @@ export interface CompletedItem {
   orphaned?: boolean;
   /**
    * XP granted by THIS completion (`task_completion.xp_granted`).
-   * NOT derivable client-side: the server folds in the Momentum bonus (up
-   * to +25%), so the same stars pay differently on different days — which
-   * is exactly why the number has to be shown rather than inferred.
+   * NOT derivable client-side: historical rows carry the Momentum-era
+   * bonus (up to +25%, dormant since 2026-08), so the same stars paid
+   * differently on different days — which is exactly why the number has
+   * to be shown rather than inferred.
    * Omitted → the XP fragment and the header total are not rendered.
    */
   xp?: number;

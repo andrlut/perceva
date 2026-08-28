@@ -23,9 +23,6 @@ export interface AppSettings {
   /** @deprecated No notification is wired to this yet — kept for settings
    *  back-compat; not surfaced in the UI. */
   questReminder: boolean;
-  /** @deprecated No notification is wired to this yet — kept for settings
-   *  back-compat; not surfaced in the UI. */
-  momentumReminder: boolean;
   /** Mood check-in: the nightly notification + the in-app Today Hub prompt. */
   moodCheckinPrompt: boolean;
   /** Daily Brief time. The 12:30 checkpoint is NOT derived from it — it means
@@ -64,7 +61,6 @@ const DEFAULTS: AppSettings = {
   notificationsEnabled: false,
   dailyReminder: true,
   questReminder: false,
-  momentumReminder: false,
   moodCheckinPrompt: true,
   // Literals, deliberately not imported from lib/notifications/constants:
   // useNotificationsSetup already imports this module, so the reverse import
@@ -102,9 +98,9 @@ export const useSettingsStore = create<Store>((set, get) => ({
     if (get().status !== 'unknown') return;
     try {
       const raw = await AsyncStorage.getItem(KEY);
-      const parsed = raw
-        ? (JSON.parse(raw) as Partial<AppSettings> & { streakReminder?: boolean })
-        : {};
+      // Historical keys that may still sit in stored JSON (streakReminder,
+      // momentumReminder) are simply ignored by the spread below.
+      const parsed = raw ? (JSON.parse(raw) as Partial<AppSettings>) : {};
       // Auto-detect language from device on first launch (no stored value).
       // Once the user has saved a preference, never override it.
       const language = parsed.language ?? detectDeviceLanguage();
@@ -113,7 +109,6 @@ export const useSettingsStore = create<Store>((set, get) => ({
         settings: {
           ...DEFAULTS,
           ...parsed,
-          momentumReminder: parsed.momentumReminder ?? parsed.streakReminder ?? false,
           language,
           briefHour: clampInt(parsed.briefHour, 0, 23, DEFAULTS.briefHour),
           briefMinute: clampInt(parsed.briefMinute, 0, 59, DEFAULTS.briefMinute),

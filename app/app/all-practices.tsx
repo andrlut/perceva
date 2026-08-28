@@ -212,7 +212,7 @@ export default function AllPracticesScreen() {
   // from the rendered list because it is what "does this user have any
   // non-daily practice at all?" must be answered with — see `hasAny`.
   // Listing a task on a day before it existed would date a retro completion
-  // before its own created_at, corrupting the heatmap + Momentum window.
+  // before its own created_at, corrupting the heatmap + Dedicação windows.
   const recurringOwned = useMemo(() => {
     const dayEnd = new Date(selectedDate);
     dayEnd.setHours(23, 59, 59, 999);

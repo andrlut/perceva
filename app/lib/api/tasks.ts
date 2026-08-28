@@ -17,7 +17,6 @@ import { rewardForTaskSubs } from '@/lib/xp';
 import { characterKeys, type CharacterWithProfile } from './character';
 import { historyKeys } from './history';
 import { questKeys } from './quests';
-import { momentumKeys } from './momentum';
 
 export const taskKeys = {
   all: ['tasks'] as const,
@@ -573,7 +572,6 @@ export function useCompleteTask() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.pending() });
       queryClient.invalidateQueries({ queryKey: characterKeys.me() });
-      queryClient.invalidateQueries({ queryKey: momentumKeys.me() });
       queryClient.invalidateQueries({ queryKey: historyKeys.all });
       // Invalidate the whole quests namespace (active + standalone progress
       // hooks like useSubStarsProgress) — completing a task can move the
@@ -612,8 +610,7 @@ function dropTasksFromPendingBuckets(
 }
 
 /** Skip a task for a local date (defaults to today). Removes it from that
- *  ONE day's open list without logging a completion. No XP, no Momentum
- *  penalty. */
+ *  ONE day's open list without logging a completion. No XP involved. */
 export function useSkipTaskToday() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -862,7 +859,6 @@ export function useUndoCompletion() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: taskKeys.pending() });
       queryClient.invalidateQueries({ queryKey: characterKeys.me() });
-      queryClient.invalidateQueries({ queryKey: momentumKeys.me() });
       queryClient.invalidateQueries({ queryKey: historyKeys.all });
       queryClient.invalidateQueries({ queryKey: questKeys.active() });
     },
@@ -905,7 +901,7 @@ export function useTaskTemplates() {
 
 /**
  * Complete a system task_template **directly**, without first adopting it
- * into the user's personal task list. XP/coins/Momentum still accrue;
+ * into the user's personal task list. XP/coins still accrue;
  * the resulting task_completion row has task_id=null and template_id set.
  *
  * Used by the "Geral" tab so users can mark a one-off thing they did
@@ -931,7 +927,7 @@ export function useCompleteTemplate() {
         // Must be sent explicitly: complete_template defaults p_local_date
         // to `(now() at time zone 'UTC')::date`, so omitting it files a
         // UTC−3 evening completion under tomorrow — on the wrong calendar
-        // cell, in the wrong Momentum window. Mirrors useCompleteTask.
+        // cell, in the wrong Dedicação window. Mirrors useCompleteTask.
         p_local_date: params.completedLocalDate ?? todayLocalDateKey(),
         p_sub_overrides: params.subOverrides ?? null,
       });
@@ -944,11 +940,10 @@ export function useCompleteTemplate() {
       };
     },
     onSuccess: () => {
-      // Same invalidations as complete_task — XP/coins/momentum surfaces
-      // depend on these refreshing.
+      // Same invalidations as complete_task — XP/coins surfaces depend on
+      // these refreshing.
       queryClient.invalidateQueries({ queryKey: taskKeys.pending() });
       queryClient.invalidateQueries({ queryKey: characterKeys.me() });
-      queryClient.invalidateQueries({ queryKey: ['momentum'] });
       queryClient.invalidateQueries({ queryKey: ['dedicacao'] });
     },
   });
