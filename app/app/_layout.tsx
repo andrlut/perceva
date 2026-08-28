@@ -25,6 +25,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useRecoveryStore, useRegisterRecoveryListener, useSession } from '@/lib/auth';
 import { useNotificationsSetup } from '@/lib/notifications/useNotificationsSetup';
 import { useLoadOnboarding } from '@/lib/onboarding';
+import { usePurchasesSetup } from '@/lib/purchases';
 import { useModuleStatus, useTourReady } from '@/lib/tour/store';
 import { freeLimitEntity, useLimitModalStore } from '@/lib/premium';
 
@@ -124,6 +125,10 @@ export default function RootLayout() {
   // to the Settings master switch, and re-stamps the daily "open" on
   // foreground events. No-op until the user toggles notifications on.
   useNotificationsSetup();
+  // RevenueCat identity — binds Purchases.logIn to the Supabase uid so
+  // store subscriptions land on the right profile row (via webhook).
+  // No-op in Expo Go / binaries without the native module.
+  usePurchasesSetup();
   const [fontsLoaded] = useFonts({
     Manrope_500Medium,
     Manrope_600SemiBold,

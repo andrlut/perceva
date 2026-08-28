@@ -326,6 +326,20 @@ const pt: Translations = {
       annualEquiv: 'equivale a R$ 8,32/mês',
       monthlyName: 'Mensal',
       monthlyPrice: 'R$ 14,90/mês',
+      // Live store prices (source of truth once purchases are on).
+      annualPriceLive: '{{price}}/ano',
+      monthlyPriceLive: '{{price}}/mês',
+    },
+    purchase: {
+      failTitle: 'Não foi possível concluir',
+      noOffering: 'Os planos não carregaram. Verifica a conexão e tenta de novo.',
+      pendingTitle: 'Compra pendente',
+      pendingBody:
+        'A loja ainda está confirmando o pagamento. Seu Premium ativa assim que aprovar.',
+      restoreOkTitle: 'Compras restauradas',
+      restoreOkBody: 'Seu Perceva Premium está ativo de novo.',
+      restoreNoneTitle: 'Nada pra restaurar',
+      restoreNoneBody: 'Não encontramos uma assinatura ativa nesta conta da loja.',
     },
     cta: {
       subscribe: 'Assinar Perceva Premium',
