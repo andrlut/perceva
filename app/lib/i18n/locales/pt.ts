@@ -1696,7 +1696,7 @@ const pt: Translations = {
         'Desafios com prazo: junte estrelas nas práticas e resgate a recompensa.',
       metas: 'Metas',
       metasDesc:
-        'Objetivos com prazo — um norte que não precisa estar preso às práticas do dia.',
+        'Objetivos com prazo, sem precisar atrelar às práticas do dia.',
       semana: 'Minha Semana',
       semanaDesc: 'A folha da semana: as 3 da semana + o que precisa acontecer.',
       skills: 'Habilidades',
