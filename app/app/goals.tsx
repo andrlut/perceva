@@ -23,6 +23,7 @@ import {
   useStartQuestFromTemplate,
 } from '@/lib/api/quests';
 import { useT } from '@/lib/i18n';
+import { useRequireModule } from '@/lib/modules';
 import type { QuestTemplate, QuestWithProgress } from '@/lib/db/types';
 import { freeLimitEntity } from '@/lib/premium';
 import { showInfo } from '@/lib/util/confirm';
@@ -41,8 +42,11 @@ import { QUEST_CATEGORY_ORDER, getQuestCategoryMeta } from '@/theme/quests';
 export default function GoalsBoardScreen() {
   const router = useRouter();
   const { t } = useT();
-  const quests = useQuests();
-  const templates = useQuestTemplates();
+  // Module gate — bounces home when `metas` is off (covers deep links)
+  // and keeps the queries idle until the profile confirms it's on.
+  const gate = useRequireModule('metas');
+  const quests = useQuests({ enabled: gate });
+  const templates = useQuestTemplates({ enabled: gate });
   const startTemplate = useStartQuestFromTemplate();
   const completeQuest = useCompleteQuest();
   const bottomClearance = useBottomNavClearance();

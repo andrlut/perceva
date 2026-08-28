@@ -33,9 +33,11 @@ export function useSkillLimit(): EntityLimit {
   return computeEntityLimit('skill', count, isPremium);
 }
 
-export function useQuestLimit(): EntityLimit {
+export function useQuestLimit(enabled = true): EntityLimit {
   const isPremium = useIsPremium();
-  const { data } = useQuests();
+  // Module-gated screens pass their gate here so a bounced deep link never
+  // fires the quest fetch just to count toward a limit badge.
+  const { data } = useQuests({ enabled });
   const count = (data ?? []).filter((q) => q.quest.status === 'active').length;
   return computeEntityLimit('quest', count, isPremium);
 }

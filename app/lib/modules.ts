@@ -23,7 +23,7 @@ import { supabase } from '@/lib/supabase';
  * Derived from the shared `character/me` query (useIsPremium precedent):
  * zero extra fetch, survives reinstall, syncs across devices.
  */
-export type ModuleKey = 'semana';
+export type ModuleKey = 'semana' | 'missoes' | 'metas';
 
 export interface ModuleDef {
   key: ModuleKey;
@@ -36,11 +36,19 @@ export interface ModuleDef {
  * Settings "Módulos" card maps over this, and the i18n keys follow the
  * registry shape (`profile.modules.{key}` / `{key}Desc`). Adding a module =
  * one entry here + the two i18n strings + the gates on its surfaces.
+ *
+ * Every default is FALSE — simple is the factory setting (owner decision,
+ * 2026-08-28). The core loop (practices + mood + Avaliação) needs no key;
+ * everything computed on top of it starts hidden and is one switch away.
  */
 export const MODULE_REGISTRY: readonly ModuleDef[] = [
-  // "Minha Semana" — ON by default for the current tester base. The
-  // simple-by-default flip lands with the other module keys.
-  { key: 'semana', default: true },
+  // Missões — sub-star challenges with deadlines and claimable rewards.
+  { key: 'missoes', default: false },
+  // Metas — deadline-bound goals (every non-sub_stars quest kind). Shares
+  // the quest table with Missões but is its own product surface and key.
+  { key: 'metas', default: false },
+  // Minha Semana — the weekly sheet + Monday ritual.
+  { key: 'semana', default: false },
 ];
 
 export const MODULE_DEFAULTS: Record<ModuleKey, boolean> = Object.fromEntries(
@@ -70,6 +78,24 @@ export function useRequireModule(key: ModuleKey): boolean {
   const router = useRouter();
   const { data } = useCharacter();
   const enabled = useModuleEnabled(key);
+  const ready = data != null;
+  useEffect(() => {
+    if (ready && !enabled) router.replace('/');
+  }, [ready, enabled, router]);
+  return ready && enabled;
+}
+
+/**
+ * Route gate for screens SHARED by more than one module (quest-create and
+ * quest-detail serve both Missões and Metas): pass while ANY of the keys is
+ * on, bounce home when the profile has loaded and every one is off. Same
+ * fail-closed contract as useRequireModule.
+ */
+export function useRequireAnyModule(keys: readonly ModuleKey[]): boolean {
+  const router = useRouter();
+  const { data } = useCharacter();
+  const modules = useModules();
+  const enabled = keys.some((k) => modules[k]);
   const ready = data != null;
   useEffect(() => {
     if (ready && !enabled) router.replace('/');

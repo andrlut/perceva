@@ -6,6 +6,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { useQuests } from '@/lib/api/quests';
 import { useT } from '@/lib/i18n';
+import { useModuleEnabled } from '@/lib/modules';
 import { emitTourEvent } from '@/lib/tour/eventBus';
 import { M3_EVENTS } from '@/lib/tour/m3Steps';
 import type { QuestWithProgress } from '@/lib/db/types';
@@ -31,7 +32,11 @@ import { tokens } from '@/theme';
 export function QuestChipsStrip() {
   const router = useRouter();
   const { t } = useT();
-  const quests = useQuests();
+  const missoesOn = useModuleEnabled('missoes');
+  const metasOn = useModuleEnabled('metas');
+  // Module-gated like WeekStrip: no fetch and no pixels while both keys are
+  // off — the hub is exactly what it was before quests existed.
+  const quests = useQuests({ enabled: missoesOn || metasOn });
 
   const { missoes, metas } = useMemo(() => {
     const m: QuestWithProgress[] = [];
@@ -46,6 +51,8 @@ export function QuestChipsStrip() {
     return { missoes: m, metas: g };
   }, [quests.data]);
 
+  if (!missoesOn && !metasOn) return null;
+
   return (
     <ScrollView
       horizontal
@@ -53,54 +60,62 @@ export function QuestChipsStrip() {
       contentContainerStyle={styles.row}
     >
       {/* ── Missões (gold) ───────────────────────────────────────────── */}
-      {missoes.map((q) => (
-        <QuestChip
-          key={`m-${q.quest.id}`}
-          quest={q}
-          variant="missao"
-          onPress={() =>
-            router.push({
-              pathname: '/quest-detail/[id]',
-              params: { id: q.quest.id, kind: 'quest' },
-            })
-          }
-        />
-      ))}
+      {missoesOn && (
+        <>
+          {missoes.map((q) => (
+            <QuestChip
+              key={`m-${q.quest.id}`}
+              quest={q}
+              variant="missao"
+              onPress={() =>
+                router.push({
+                  pathname: '/quest-detail/[id]',
+                  params: { id: q.quest.id, kind: 'quest' },
+                })
+              }
+            />
+          ))}
 
-      <BrowsePill
-        variant="violet"
-        label={t('home.quests.browseChip')}
-        onPress={() => {
-          emitTourEvent(M3_EVENTS.QUESTS_NAVIGATED);
-          router.push('/quests');
-        }}
-      />
+          <BrowsePill
+            variant="violet"
+            label={t('home.quests.browseChip')}
+            onPress={() => {
+              emitTourEvent(M3_EVENTS.QUESTS_NAVIGATED);
+              router.push('/quests');
+            }}
+          />
+        </>
+      )}
 
-      {/* ── Divider between the Missões group and the Metas group ─────── */}
-      <View style={styles.groupDivider} />
+      {/* ── Divider — only when both groups are present ───────────────── */}
+      {missoesOn && metasOn && <View style={styles.groupDivider} />}
 
       {/* ── Metas (orange) ───────────────────────────────────────────── */}
-      {metas.map((q) => (
-        <QuestChip
-          key={`g-${q.quest.id}`}
-          quest={q}
-          variant="meta"
-          onPress={() =>
-            router.push({
-              pathname: '/quest-detail/[id]',
-              params: { id: q.quest.id, kind: 'quest' },
-            })
-          }
-        />
-      ))}
+      {metasOn && (
+        <>
+          {metas.map((q) => (
+            <QuestChip
+              key={`g-${q.quest.id}`}
+              quest={q}
+              variant="meta"
+              onPress={() =>
+                router.push({
+                  pathname: '/quest-detail/[id]',
+                  params: { id: q.quest.id, kind: 'quest' },
+                })
+              }
+            />
+          ))}
 
-      {/* Always show the "+ Metas" pill so goals are discoverable even at
-         zero — mirrors the always-present "+ Missões" pill above. */}
-      <BrowsePill
-        variant="violet"
-        label={t('home.goals.browseChip')}
-        onPress={() => router.push('/goals')}
-      />
+          {/* Always show the "+ Metas" pill so goals are discoverable even
+             at zero — mirrors the always-present "+ Missões" pill above. */}
+          <BrowsePill
+            variant="violet"
+            label={t('home.goals.browseChip')}
+            onPress={() => router.push('/goals')}
+          />
+        </>
+      )}
 
       {/* Pad the right edge so the last chip doesn't kiss the screen edge. */}
       <View style={{ width: tokens.space[4] }} />

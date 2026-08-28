@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBottomSafeClearance } from '@/components/BottomNavBar';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { useT } from '@/lib/i18n';
+import { useModules, type ModuleKey } from '@/lib/modules';
 import type { TourModule, TourModuleStatus } from '@/lib/tour/constants';
 import { useTourStore } from '@/lib/tour/store';
 import { tokens } from '@/theme';
@@ -33,6 +34,10 @@ interface ReplayModuleSpec {
   /** Full-screen route to open; content modules (M1-M6) just go Home,
    *  where their step 1 lives. */
   route?: Href;
+  /** When set, the row only shows while this app module is enabled —
+   *  replaying a tour for a surface that doesn't render would strand
+   *  the user (Home's auto-skip would eat it instantly anyway). */
+  moduleKey?: ModuleKey;
 }
 
 const REPLAY_MODULES: ReplayModuleSpec[] = [
@@ -40,7 +45,7 @@ const REPLAY_MODULES: ReplayModuleSpec[] = [
   { id: 'M0_5', route: '/tour/m0-5' },
   { id: 'M1' },
   { id: 'M2' },
-  { id: 'M3' },
+  { id: 'M3', moduleKey: 'missoes' },
   { id: 'M4' },
   { id: 'M5' },
   { id: 'M6' },
@@ -60,6 +65,10 @@ export default function TourReplayScreen() {
   const replayModule = useTourStore((s) => s.replayModule);
   const resetAll = useTourStore((s) => s.resetAll);
   const bottomClearance = useBottomSafeClearance();
+  const appModules = useModules();
+  const visibleModules = REPLAY_MODULES.filter(
+    (spec) => spec.moduleKey == null || appModules[spec.moduleKey],
+  );
 
   const handleReplay = async (spec: ReplayModuleSpec) => {
     Haptics.selectionAsync().catch(() => {});
@@ -99,7 +108,7 @@ export default function TourReplayScreen() {
           <Text style={styles.subtitle}>{t('tour.replay.subtitle')}</Text>
 
           <View style={styles.list}>
-            {REPLAY_MODULES.map((spec) => {
+            {visibleModules.map((spec) => {
               const status: TourModuleStatus = modules[spec.id]?.status ?? 'pending';
               const tone = STATUS_TONE[status];
               return (

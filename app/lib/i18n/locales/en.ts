@@ -1721,6 +1721,12 @@ const en = {
       about: 'About',
     },
     modules: {
+      missoes: 'Missions',
+      missoesDesc:
+        'Deadline challenges: collect stars from your practices and claim the reward.',
+      metas: 'Goals',
+      metasDesc:
+        'Deadline-bound goals — a north star that lives apart from your daily practices.',
       semana: 'My Week',
       semanaDesc: 'The weekly sheet: your 3 for the week + what needs to happen.',
       footnote: 'Turning a module off never deletes anything. Turn it back on and everything returns.',

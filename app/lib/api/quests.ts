@@ -26,8 +26,9 @@ export const questKeys = {
  * Also expires overdue active quests on read (calls expire_overdue_quests RPC
  * once per fetch — server-side; idempotent and cheap).
  */
-export function useQuests() {
+export function useQuests(opts?: { enabled?: boolean }) {
   return useQuery({
+    enabled: opts?.enabled ?? true,
     queryKey: questKeys.active(),
     queryFn: async (): Promise<QuestWithProgress[]> => {
       // 0. Expire overdue ones first (cheap, server-side). Errors are
@@ -217,8 +218,9 @@ export function useLogChallengeProgress() {
   });
 }
 
-export function useQuestTemplates() {
+export function useQuestTemplates(opts?: { enabled?: boolean }) {
   return useQuery({
+    enabled: opts?.enabled ?? true,
     queryKey: questKeys.templates(),
     queryFn: async (): Promise<QuestTemplate[]> => {
       const { data, error } = await supabase

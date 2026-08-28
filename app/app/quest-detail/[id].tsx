@@ -31,6 +31,7 @@ import { useActiveTasks } from '@/lib/api/tasks';
 import { freeLimitEntity } from '@/lib/premium';
 import { useT } from '@/lib/i18n';
 import { useLocalizedPick } from '@/lib/i18n/catalog';
+import { useRequireAnyModule } from '@/lib/modules';
 import { getSubMeta, useMetaLookup } from '@/lib/i18n/meta';
 import { questProgressRatio } from '@/lib/quests/progress';
 import { TourModule } from '@/components/tour/TourModule';
@@ -66,8 +67,11 @@ export default function QuestDetailScreen() {
   const inferredKind: DetailKind =
     (params.kind as DetailKind | undefined) ?? (UUID_RE.test(id) ? 'quest' : 'template');
 
-  const quests = useQuests();
-  const templates = useQuestTemplates();
+  // Shared surface: chips from both quest modules open this detail, so any
+  // of the two keys keeps it alive; both off bounces home (deep links too).
+  const gate = useRequireAnyModule(['missoes', 'metas']);
+  const quests = useQuests({ enabled: gate });
+  const templates = useQuestTemplates({ enabled: gate });
   const tasks = useActiveTasks();
   const startTemplate = useStartQuestFromTemplate();
   const abandonQuest = useAbandonQuest();

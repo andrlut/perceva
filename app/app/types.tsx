@@ -28,6 +28,7 @@ import type {
   PsychSessionItem,
 } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
+import { useModules } from '@/lib/modules';
 import { useInstrumentStartGate } from '@/lib/premium';
 import {
   AXIS_LETTERS,
@@ -688,6 +689,10 @@ function TypeActionBridge({
   const letter = letterForAxis(axis, axisMeans[axis]);
   const growth = getPoleGrowth(letter, locale);
   const accent = AXIS_COLOR[axis];
+  // "Virar missão" targets /quest-create — a quest-module surface, so it
+  // only shows while at least one of the two quest keys is on.
+  const modules = useModules();
+  const questsOn = modules.missoes || modules.metas;
   return (
     <>
       <Text style={styles.sectionHeader}>
@@ -701,16 +706,18 @@ function TypeActionBridge({
             : "Your result doesn't have to stop at the screen. Turn it into training:"}
         </Text>
         <View style={styles.bridgeBtns}>
-          <Pressable
-            onPress={() => router.push('/quest-create')}
-            style={({ pressed }) => [styles.bridgeBtn, pressed && { opacity: 0.75 }]}
-            hitSlop={4}
-          >
-            <Ionicons name="flag-outline" size={15} color={tokens.brand.violet2} />
-            <Text style={styles.bridgeBtnText}>
-              {isPt ? 'Virar missão' : 'Make a mission'}
-            </Text>
-          </Pressable>
+          {questsOn && (
+            <Pressable
+              onPress={() => router.push('/quest-create')}
+              style={({ pressed }) => [styles.bridgeBtn, pressed && { opacity: 0.75 }]}
+              hitSlop={4}
+            >
+              <Ionicons name="flag-outline" size={15} color={tokens.brand.violet2} />
+              <Text style={styles.bridgeBtnText}>
+                {isPt ? 'Virar missão' : 'Make a mission'}
+              </Text>
+            </Pressable>
+          )}
           <Pressable
             onPress={() => router.push('/skill-form')}
             style={({ pressed }) => [styles.bridgeBtn, pressed && { opacity: 0.75 }]}

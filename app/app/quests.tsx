@@ -24,6 +24,7 @@ import {
   useStartQuestFromTemplate,
 } from '@/lib/api/quests';
 import { useT } from '@/lib/i18n';
+import { useRequireModule } from '@/lib/modules';
 import { freeLimitEntity, useLimitModalStore, useQuestLimit } from '@/lib/premium';
 import { TourModule } from '@/components/tour/TourModule';
 import { emitTourEvent } from '@/lib/tour/eventBus';
@@ -46,8 +47,11 @@ import { QUEST_CATEGORY_ORDER, getQuestCategoryMeta } from '@/theme/quests';
 export default function QuestBoardScreen() {
   const router = useRouter();
   const { t } = useT();
-  const quests = useQuests();
-  const templates = useQuestTemplates();
+  // Module gate — bounces home when `missoes` is off (covers deep links)
+  // and keeps the queries idle until the profile confirms it's on.
+  const gate = useRequireModule('missoes');
+  const quests = useQuests({ enabled: gate });
+  const templates = useQuestTemplates({ enabled: gate });
   const startTemplate = useStartQuestFromTemplate();
   const completeQuest = useCompleteQuest();
   const bottomClearance = useBottomNavClearance();
@@ -189,7 +193,7 @@ export default function QuestBoardScreen() {
     });
   };
 
-  const questLimit = useQuestLimit();
+  const questLimit = useQuestLimit(gate);
   const openLimit = useLimitModalStore((s) => s.open);
   const handleCreateCustom = () => {
     if (questLimit.atLimit) {
