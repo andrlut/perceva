@@ -21,7 +21,7 @@ import { useStartCustomQuest } from '@/lib/api/quests';
 import { useActiveTasks } from '@/lib/api/tasks';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
-import { useRequireAnyModule } from '@/lib/modules';
+import { useRequireModule } from '@/lib/modules';
 import { freeLimitEntity, useLimitModalStore } from '@/lib/premium';
 import { useKeyboardOverlap } from '@/lib/use-keyboard-height';
 import { showInfo } from '@/lib/util/confirm';
@@ -66,9 +66,11 @@ export default function QuestCreateScreen() {
   const router = useRouter();
   const { t } = useT();
   const meta = useMetaLookup();
-  // Shared surface: reachable from both quest modules (and the psych
-  // result bridges), so any of the two keys keeps it alive.
-  useRequireAnyModule(['missoes', 'metas']);
+  // Metas-gated, deliberately NOT any-of: this form only emits
+  // non-sub_stars quests, which render exclusively on the Metas surfaces.
+  // Letting a missoes-only user in would create quests that show nowhere
+  // while still consuming a free-limit slot.
+  useRequireModule('metas');
   const tasks = useActiveTasks();
   const startCustomQuest = useStartCustomQuest();
 

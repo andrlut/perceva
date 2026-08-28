@@ -234,8 +234,11 @@ export default function GoalsBoardScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => {
-              quests.refetch();
-              templates.refetch();
+              // refetch() bypasses `enabled` — keep the module gate.
+              if (gate) {
+                quests.refetch();
+                templates.refetch();
+              }
             }}
             tintColor={tokens.brand.violet2}
           />

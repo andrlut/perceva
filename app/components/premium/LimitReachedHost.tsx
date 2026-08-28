@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useT } from '@/lib/i18n';
+import { useModules } from '@/lib/modules';
 import { useLimitModalStore, type LimitedEntity } from '@/lib/premium';
 import { tokens } from '@/theme';
 
@@ -23,6 +24,7 @@ const LINE1_KEY: Record<LimitedEntity, string> = {
 export function LimitReachedHost() {
   const router = useRouter();
   const { t } = useT();
+  const modules = useModules();
   const entity = useLimitModalStore((s) => s.entity);
   const close = useLimitModalStore((s) => s.close);
   const visible = entity !== null;
@@ -48,7 +50,11 @@ export function LimitReachedHost() {
         router.push('/skills');
         break;
       case 'quest':
-        router.push('/quests');
+        // Both quest boards share the free limit. Route to a board the
+        // user's module keys actually keep alive — pushing a gated-off
+        // /quests would bounce a metas-only user straight home, the
+        // exact dead-end this modal promises not to be.
+        router.push(modules.missoes ? '/quests' : '/goals');
         break;
     }
   };

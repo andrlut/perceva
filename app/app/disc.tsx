@@ -666,10 +666,11 @@ function ActionBridge({
   const router = useRouter();
   const isPt = locale === 'pt';
   // Each bridge button targets a module-owned surface, so each shows only
-  // while its key is on ("Virar missão" serves both quest modules). With
-  // every key off the growth insight stays — only the CTAs disappear.
+  // while its key is on. "Virar missão" pushes /quest-create, which only
+  // emits Metas-side quests — hence the metas key, not any-of. With every
+  // key off the growth insight stays — only the CTAs disappear.
   const modules = useModules();
-  const questsOn = modules.missoes || modules.metas;
+  const questsOn = modules.metas;
   const skillsOn = modules.skills;
   const anyBridge = questsOn || skillsOn;
   return (
