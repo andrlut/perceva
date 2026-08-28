@@ -23,7 +23,7 @@ import { supabase } from '@/lib/supabase';
  * Derived from the shared `character/me` query (useIsPremium precedent):
  * zero extra fetch, survives reinstall, syncs across devices.
  */
-export type ModuleKey = 'semana' | 'missoes' | 'metas';
+export type ModuleKey = 'semana' | 'missoes' | 'metas' | 'skills';
 
 export interface ModuleDef {
   key: ModuleKey;
@@ -49,6 +49,10 @@ export const MODULE_REGISTRY: readonly ModuleDef[] = [
   { key: 'metas', default: false },
   // Minha Semana — the weekly sheet + Monday ritual.
   { key: 'semana', default: false },
+  // Habilidades — personal records with medal ladders. Co-gate: with it
+  // off, quest templates that require reach_skill_value are filtered from
+  // the Metas browse so no startable quest points at an invisible entity.
+  { key: 'skills', default: false },
 ];
 
 export const MODULE_DEFAULTS: Record<ModuleKey, boolean> = Object.fromEntries(

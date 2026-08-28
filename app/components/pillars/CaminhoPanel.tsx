@@ -16,24 +16,33 @@ interface Props {
  * Desejada · Caminho — "how I get there" to Norte's "where I want to get".
  * A pure composition of the two paths that carry the user toward their
  * desired identity: Metas (deadline-bound quests) above, Skills (the
- * medal-ranked practice ladder) below. Both surfaces render verbatim; this
- * panel only frames them under one roof.
+ * medal-ranked practice ladder) below. Each section shows only while its
+ * module key is on; with both off the panel renders nothing and Desejada
+ * is Norte alone.
  */
 export function CaminhoPanel({ skills }: Props) {
   const { t } = useT();
   const metasOn = useModuleEnabled('metas');
+  const skillsOn = useModuleEnabled('skills');
+
+  if (!metasOn && !skillsOn) return null;
+
   return (
     <View style={styles.wrap}>
       {/* GoalsPreview self-gates on `metas`; the divider between the two
           sections only makes sense while both are visible. */}
       <GoalsPreview />
-      {metasOn && <View style={styles.divider} />}
+      {metasOn && skillsOn && <View style={styles.divider} />}
 
-      <View style={styles.sectionHeader}>
-        <Ionicons name="ribbon" size={14} color={tokens.semantic.coin} />
-        <Text style={styles.sectionTitle}>{t('pillar.skills.short')}</Text>
-      </View>
-      <SkillsPanel skills={skills} />
+      {skillsOn && (
+        <>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="ribbon" size={14} color={tokens.semantic.coin} />
+            <Text style={styles.sectionTitle}>{t('pillar.skills.short')}</Text>
+          </View>
+          <SkillsPanel skills={skills} />
+        </>
+      )}
     </View>
   );
 }

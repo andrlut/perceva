@@ -1719,6 +1719,8 @@ const en = {
         'Deadline-bound goals — a north star that lives apart from your daily practices.',
       semana: 'My Week',
       semanaDesc: 'The weekly sheet: your 3 for the week + what needs to happen.',
+      skills: 'Skills',
+      skillsDesc: 'Personal records with a medal ladder, per life area.',
       footnote: 'Turning a module off never deletes anything. Turn it back on and everything returns.',
     },
     fields: {

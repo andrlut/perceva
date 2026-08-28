@@ -24,9 +24,10 @@ export function useRewardLimit(): EntityLimit {
   return computeEntityLimit('reward', data?.length ?? 0, isPremium);
 }
 
-export function useSkillLimit(): EntityLimit {
+export function useSkillLimit(enabled = true): EntityLimit {
   const isPremium = useIsPremium();
-  const { data } = useSkillStates();
+  // Same contract as useQuestLimit: module-gated screens pass their gate.
+  const { data } = useSkillStates({ enabled });
   // useSkillStates returns catalog (character_id null) + user-owned rows; the
   // limit is on custom (user-owned) skills only.
   const count = (data ?? []).filter((s) => s.skill.character_id != null).length;

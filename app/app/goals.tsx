@@ -23,7 +23,7 @@ import {
   useStartQuestFromTemplate,
 } from '@/lib/api/quests';
 import { useT } from '@/lib/i18n';
-import { useRequireModule } from '@/lib/modules';
+import { useModuleEnabled, useRequireModule } from '@/lib/modules';
 import type { QuestTemplate, QuestWithProgress } from '@/lib/db/types';
 import { freeLimitEntity } from '@/lib/premium';
 import { showInfo } from '@/lib/util/confirm';
@@ -73,14 +73,21 @@ export default function GoalsBoardScreen() {
     return map;
   }, [active]);
 
+  // Co-gate with the skills module: with it off, templates that require
+  // reach_skill_value would offer startable quests pointing at entities the
+  // user can't see — filter them from the browse. In-flight quests keep
+  // rendering (off = invisibility, never deletion).
+  const skillsOn = useModuleEnabled('skills');
   const inactiveTemplates = useMemo(
     () =>
       (templates.data ?? []).filter(
         (tmpl) =>
           !activeByTemplateId.has(tmpl.id) &&
-          tmpl.requirements.every((r) => r.kind !== 'accumulate_sub_stars'),
+          tmpl.requirements.every((r) => r.kind !== 'accumulate_sub_stars') &&
+          (skillsOn ||
+            tmpl.requirements.every((r) => r.kind !== 'reach_skill_value')),
       ),
-    [templates.data, activeByTemplateId],
+    [templates.data, activeByTemplateId, skillsOn],
   );
 
   // ── Sections ───────────────────────────────────────────────────────────

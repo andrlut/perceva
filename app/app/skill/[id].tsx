@@ -29,6 +29,7 @@ import {
 import type { SkillLog, SkillTier, TierName } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useLocalizedPick } from '@/lib/i18n/catalog';
+import { useRequireModule } from '@/lib/modules';
 import { useKeyboardOverlap } from '@/lib/use-keyboard-height';
 import { tokens } from '@/theme';
 import {
@@ -110,8 +111,11 @@ export default function SkillDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>();
   const skillId = params.id;
 
-  const skillStates = useSkillStates();
-  const log = useSkillLogHistory(skillId);
+  // Module gate — bounces home when `skills` is off (covers deep links,
+  // including quest-detail rows that point at a skill).
+  const gate = useRequireModule('skills');
+  const skillStates = useSkillStates({ enabled: gate });
+  const log = useSkillLogHistory(gate ? skillId : null);
   const logPR = useLogSkillPR();
   const deleteSkill = useDeleteCustomSkill();
 

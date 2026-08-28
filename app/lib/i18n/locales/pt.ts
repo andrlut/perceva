@@ -1717,6 +1717,8 @@ const pt: Translations = {
         'Objetivos com prazo — um norte que não precisa estar preso às práticas do dia.',
       semana: 'Minha Semana',
       semanaDesc: 'A folha da semana: as 3 da semana + o que precisa acontecer.',
+      skills: 'Habilidades',
+      skillsDesc: 'Recordes pessoais com escada de medalhas, por área da vida.',
       footnote: 'Desligar nunca apaga nada. Religou, voltou tudo.',
     },
     fields: {

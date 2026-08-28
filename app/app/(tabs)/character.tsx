@@ -21,6 +21,7 @@ import { NortePanel } from '@/components/pillars/NortePanel';
 import { useCharacter } from '@/lib/api/character';
 import { useSkillStates } from '@/lib/api/skills';
 import { useT } from '@/lib/i18n';
+import { useModuleEnabled } from '@/lib/modules';
 import { TourModule } from '@/components/tour/TourModule';
 import { emitTourEvent } from '@/lib/tour/eventBus';
 import { buildM5Steps, M5_EVENTS } from '@/lib/tour/m5Steps';
@@ -47,7 +48,10 @@ export default function CharacterScreen() {
   const { t } = useT();
   const router = useRouter();
   const character = useCharacter();
-  const skillStates = useSkillStates();
+  // Skills feed the Desejada pillar's Caminho section only — no fetch
+  // while the module is off (CaminhoPanel hides the section too).
+  const skillsOn = useModuleEnabled('skills');
+  const skillStates = useSkillStates({ enabled: skillsOn });
   const params = useLocalSearchParams<{ pillar?: PillarKey }>();
 
   const [activePillar, setActivePillar] = useState<PillarKey>(
@@ -169,7 +173,8 @@ export default function CharacterScreen() {
               refreshing={character.isRefetching || skillStates.isRefetching}
               onRefresh={() => {
                 character.refetch();
-                skillStates.refetch();
+                // refetch() bypasses `enabled` — keep the module gate.
+                if (skillsOn) skillStates.refetch();
               }}
               tintColor={tokens.brand.violet2}
             />
