@@ -1,11 +1,21 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useQueryClient } from '@tanstack/react-query';
+import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScreenBackground } from '@/components/ScreenBackground';
+import { characterKeys } from '@/lib/api/character';
 import { useT } from '@/lib/i18n';
 import {
   normalizePremiumSource,
@@ -14,7 +24,22 @@ import {
   useIsPremium,
   type PlanId,
 } from '@/lib/premium';
+import {
+  packageForPlan,
+  purchasePremium,
+  purchasesAvailable,
+  restorePremium,
+  useOffering,
+} from '@/lib/purchases';
+import { showInfo } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
+
+/**
+ * Effective sell switch: the P2 kill switch AND this binary actually being
+ * able to sell (native module + platform API key). Expo Go, pre-1.3.0
+ * binaries and iOS-before-Apple-products all fall back to "Em breve".
+ */
+const CAN_SELL = PURCHASES_ENABLED && purchasesAvailable();
 
 /**
  * Perceva Premium paywall — the P1 conversion surface. Reachable from the
@@ -33,12 +58,76 @@ export default function PremiumScreen() {
   const isPremium = useIsPremium();
   const params = useLocalSearchParams<{ source?: string }>();
   const [selectedPlan, setSelectedPlan] = useState<PlanId>('annual');
+  const [busy, setBusy] = useState<'purchase' | 'restore' | null>(null);
+  const offering = useOffering();
+  const queryClient = useQueryClient();
 
   // Origin of the visit. P1: dev-log only. P3: becomes an analytics event.
   useEffect(() => {
     const source = normalizePremiumSource(params.source);
     if (source) console.log(`[premium] opened from: ${source}`);
   }, [params.source]);
+
+  // The store confirmed the purchase but our DB flag flips asynchronously
+  // (RevenueCat webhook → subscription_tier). Poll the character query for
+  // up to ~15s so the screen transitions to the thank-you state on its own;
+  // if the webhook is slower than that, the flag still lands on the next
+  // refetch — nothing is lost.
+  const syncTierAfterPurchase = async () => {
+    for (let i = 0; i < 10; i++) {
+      await new Promise((r) => setTimeout(r, 1500));
+      await queryClient.invalidateQueries({ queryKey: characterKeys.me() });
+      const data = queryClient.getQueryData<{
+        profile: { subscription_tier: string };
+      }>(characterKeys.me());
+      if (data?.profile.subscription_tier === 'premium') return;
+    }
+  };
+
+  const handlePurchase = async () => {
+    if (busy) return;
+    const pkg = packageForPlan(offering.data, selectedPlan);
+    if (!pkg) {
+      showInfo(t('premium.purchase.failTitle'), t('premium.purchase.noOffering'));
+      return;
+    }
+    setBusy('purchase');
+    try {
+      const outcome = await purchasePremium(pkg);
+      if (outcome === 'premium') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+        await syncTierAfterPurchase();
+      } else if (outcome === 'pending') {
+        showInfo(t('premium.purchase.pendingTitle'), t('premium.purchase.pendingBody'));
+      }
+      // 'cancelled' → silent; the user changed their mind, no dialog needed.
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : t('common.unknownError');
+      showInfo(t('premium.purchase.failTitle'), msg);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (busy) return;
+    setBusy('restore');
+    try {
+      const restored = await restorePremium();
+      if (restored) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+        await syncTierAfterPurchase();
+        showInfo(t('premium.purchase.restoreOkTitle'), t('premium.purchase.restoreOkBody'));
+      } else {
+        showInfo(t('premium.purchase.restoreNoneTitle'), t('premium.purchase.restoreNoneBody'));
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : t('common.unknownError');
+      showInfo(t('premium.purchase.failTitle'), msg);
+    } finally {
+      setBusy(null);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
@@ -67,9 +156,16 @@ export default function PremiumScreen() {
             <>
               <Benefits />
               <Comparison />
-              <PlanPicker selected={selectedPlan} onSelect={setSelectedPlan} />
-              <Cta />
-              <Footer />
+              <PlanPicker
+                selected={selectedPlan}
+                onSelect={setSelectedPlan}
+                livePrices={{
+                  annual: offering.data?.annual?.product.priceString ?? null,
+                  monthly: offering.data?.monthly?.product.priceString ?? null,
+                }}
+              />
+              <Cta onPress={handlePurchase} busy={busy === 'purchase'} />
+              <Footer onRestore={handleRestore} restoring={busy === 'restore'} />
             </>
           )}
         </ScrollView>
@@ -178,9 +274,14 @@ function Comparison() {
 function PlanPicker({
   selected,
   onSelect,
+  livePrices,
 }: {
   selected: PlanId;
   onSelect: (id: PlanId) => void;
+  /** Store-localized prices from the live offering; null → i18n fallback.
+   *  The store is the source of truth once purchases are live — hardcoded
+   *  strings drift the moment a price changes in the console. */
+  livePrices: Record<PlanId, string | null>;
 }) {
   const { t } = useT();
   return (
@@ -189,7 +290,10 @@ function PlanPicker({
       {PREMIUM_PLANS.map((plan) => {
         const active = plan.id === selected;
         const name = t(`premium.plan.${plan.id}Name`);
-        const price = t(`premium.plan.${plan.id}Price`);
+        const live = livePrices[plan.id];
+        const price = live
+          ? t(`premium.plan.${plan.id}PriceLive`, { price: live })
+          : t(`premium.plan.${plan.id}Price`);
         return (
           <Pressable
             key={plan.id}
@@ -226,11 +330,12 @@ function PlanPicker({
 
 /* ─────────────────────────── CTA ──────────────────────────── */
 
-function Cta() {
+function Cta({ onPress, busy }: { onPress: () => void; busy: boolean }) {
   const { t } = useT();
-  // P1: purchases disabled — render a non-interactive "Em breve" button so
-  // the funnel is visible in preview without a dead purchase path.
-  if (!PURCHASES_ENABLED) {
+  // "Em breve" whenever this binary can't sell (kill switch off, Expo Go,
+  // old binary, or platform without an API key yet) — the funnel stays
+  // navigable without a dead purchase path.
+  if (!CAN_SELL) {
     return (
       <View style={[styles.cta, styles.ctaDisabled]} accessibilityRole="button">
         <Ionicons name="time-outline" size={18} color={tokens.text.mid} />
@@ -240,6 +345,8 @@ function Cta() {
   }
   return (
     <Pressable
+      onPress={onPress}
+      disabled={busy}
       style={({ pressed }) => [styles.cta, pressed && { opacity: 0.9 }]}
       accessibilityRole="button"
     >
@@ -249,14 +356,24 @@ function Cta() {
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
-      <Text style={styles.ctaText}>{t('premium.cta.subscribe')}</Text>
+      {busy ? (
+        <ActivityIndicator color={tokens.text.hi} />
+      ) : (
+        <Text style={styles.ctaText}>{t('premium.cta.subscribe')}</Text>
+      )}
     </Pressable>
   );
 }
 
 /* ────────────────────────── Footer ────────────────────────── */
 
-function Footer() {
+function Footer({
+  onRestore,
+  restoring,
+}: {
+  onRestore: () => void;
+  restoring: boolean;
+}) {
   const { t } = useT();
   return (
     <View style={styles.footer}>
@@ -266,9 +383,13 @@ function Footer() {
         <Text style={styles.footerSep}>{t('premium.footer.separator')}</Text>
         <Text style={styles.footerLink}>{t('premium.footer.privacy')}</Text>
       </View>
-      {/* "Restaurar compras" stays hidden until purchases are enabled (P2). */}
-      {PURCHASES_ENABLED && (
-        <Text style={styles.footerRestore}>{t('premium.footer.restore')}</Text>
+      {/* "Restaurar compras" only where this binary can actually sell. */}
+      {CAN_SELL && (
+        <Pressable onPress={onRestore} disabled={restoring} hitSlop={8}>
+          <Text style={[styles.footerRestore, restoring && { opacity: 0.5 }]}>
+            {t('premium.footer.restore')}
+          </Text>
+        </Pressable>
       )}
     </View>
   );

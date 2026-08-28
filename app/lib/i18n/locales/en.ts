@@ -335,6 +335,19 @@ const en = {
       annualEquiv: "that's R$ 8.32/month",
       monthlyName: 'Monthly',
       monthlyPrice: 'R$ 14.90/month',
+      annualPriceLive: '{{price}}/year',
+      monthlyPriceLive: '{{price}}/month',
+    },
+    purchase: {
+      failTitle: "Couldn't complete",
+      noOffering: "Plans didn't load. Check your connection and try again.",
+      pendingTitle: 'Purchase pending',
+      pendingBody:
+        'The store is still confirming the payment. Premium activates as soon as it clears.',
+      restoreOkTitle: 'Purchases restored',
+      restoreOkBody: 'Your Perceva Premium is active again.',
+      restoreNoneTitle: 'Nothing to restore',
+      restoreNoneBody: 'No active subscription found on this store account.',
     },
     cta: {
       subscribe: 'Get Perceva Premium',

@@ -9,12 +9,14 @@
  */
 
 /**
- * Master kill-switch for the purchase CTA. While `false` the "Assinar" button
- * renders disabled with a "Em breve" label — the funnel is visible in preview
- * but nothing is purchasable and "Restaurar compras" stays hidden. Flips to
- * `true` in P2 once RevenueCat is wired.
+ * Master kill-switch for the purchase CTA. Flipped on in P2 with the
+ * RevenueCat wiring — but it is only half the gate: the paywall sells only
+ * when `PURCHASES_ENABLED && purchasesAvailable()` (native module present +
+ * platform API key in the build). Expo Go, pre-1.3.0 binaries and iOS
+ * builds without the Apple key keep rendering "Em breve" automatically.
+ * Flip back to false to kill sales everywhere via OTA.
  */
-export const PURCHASES_ENABLED: boolean = false;
+export const PURCHASES_ENABLED: boolean = true;
 
 /**
  * Learn premium-content flag — see the §4 investigation in the PR. The
