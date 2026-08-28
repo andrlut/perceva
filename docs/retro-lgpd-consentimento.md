@@ -37,10 +37,17 @@
   específico e EM DESTAQUE para a transferência**, distinto das demais
   finalidades (a minuta abaixo faz isso, com a menção aos EUA dentro do
   próprio texto do aceite).
-- **Achado colateral**: se o projeto Supabase está em `us-east`, a base
+- **CONFIRMADO (2026-08-28): o projeto está em `us-east-2` (Ohio, EUA).** A base
   INTEIRA já é transferência internacional hoje — independente desta feature.
-  Solução limpa a avaliar: migrar para `sa-east-1` (São Paulo); sobraria só o
-  fluxo Anthropic para resolver via consentimento.
+  Ou seja, o aviso de transferência não é só sobre a Anthropic: os próprios
+  dados do app já ficam hospedados nos EUA, e o termo/política precisa dizer
+  isso. Migrar para `sa-east-1` (São Paulo) resolveria a base, mas o Supabase
+  não troca região no lugar: é criar projeto novo + restaurar backup, o que
+  muda o project ref (nova URL → rebuild nativo do app). Decisão pré-launch,
+  não agora.
+  ⚠️ Não confundir com o header `x-sb-edge-region` das Edge Functions, que
+  mostra onde a *função* rodou (pode ser sa-east-1, perto do usuário) — o dado
+  mora onde o **banco** está.
 
 ## 4. Requisitos operacionais
 
@@ -182,7 +189,10 @@ de IA. O Perceva não vê suas conversas."; (b) escopo mínimo read-only;
 - ✅ Essencial: termo específico/destacado com EUA em destaque; 3 toggles;
   registro versionado; revogação funcional; enforcement no script; expurgo de
   transcripts; treinamento desligado; canal de contato; trava de menor.
-- ⚠️ Vale avaliar: migrar Supabase para `sa-east-1`; pós-validação anti-citação.
+- ⚠️ Vale avaliar: dizer no termo/política que a hospedagem é nos EUA
+  (`us-east-2`) — isso é fato hoje, não hipótese; migrar para `sa-east-1` só
+  faz sentido pré-launch (exige projeto novo + restore + rebuild do app);
+  pós-validação anti-citação.
 - ❌ Excesso nessa escala: RIPD formal, DPO nomeado, CPCs com Anthropic/
   Supabase, política multi-página, consultoria dedicada.
 
