@@ -1721,8 +1721,8 @@ const pt: Translations = {
     },
     modules: {
       semana: 'Minha Semana',
-      semanaDesc:
-        'A folha da semana: as 3 da semana + o que precisa acontecer. Desligar só esconde — nada é apagado.',
+      semanaDesc: 'A folha da semana: as 3 da semana + o que precisa acontecer.',
+      footnote: 'Desligar nunca apaga nada. Religou, voltou tudo.',
     },
     fields: {
       displayName: 'Nome de exibição',

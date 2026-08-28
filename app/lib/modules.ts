@@ -25,11 +25,27 @@ import { supabase } from '@/lib/supabase';
  */
 export type ModuleKey = 'semana';
 
-export const MODULE_DEFAULTS: Record<ModuleKey, boolean> = {
+export interface ModuleDef {
+  key: ModuleKey;
+  /** What a fresh profile gets before the user ever touches the switch. */
+  default: boolean;
+}
+
+/**
+ * Central module registry — the single place a module is declared. The
+ * Settings "Módulos" card maps over this, and the i18n keys follow the
+ * registry shape (`profile.modules.{key}` / `{key}Desc`). Adding a module =
+ * one entry here + the two i18n strings + the gates on its surfaces.
+ */
+export const MODULE_REGISTRY: readonly ModuleDef[] = [
   // "Minha Semana" — ON by default for the current tester base. The
-  // simple/complete preset UX (a future project) will own new-user defaults.
-  semana: true,
-};
+  // simple-by-default flip lands with the other module keys.
+  { key: 'semana', default: true },
+];
+
+export const MODULE_DEFAULTS: Record<ModuleKey, boolean> = Object.fromEntries(
+  MODULE_REGISTRY.map((def) => [def.key, def.default]),
+) as Record<ModuleKey, boolean>;
 
 export function useModules(): Record<ModuleKey, boolean> {
   const { data } = useCharacter();

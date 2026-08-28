@@ -1722,8 +1722,8 @@ const en = {
     },
     modules: {
       semana: 'My Week',
-      semanaDesc:
-        'The weekly sheet: your 3 for the week + what needs to happen. Turning it off hides it — nothing is deleted.',
+      semanaDesc: 'The weekly sheet: your 3 for the week + what needs to happen.',
+      footnote: 'Turning a module off never deletes anything. Turn it back on and everything returns.',
     },
     fields: {
       displayName: 'Display name',
