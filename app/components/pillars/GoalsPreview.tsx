@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { QuestCard } from '@/components/QuestCard';
 import { useT } from '@/lib/i18n';
+import { useModuleEnabled } from '@/lib/modules';
 import { useQuests } from '@/lib/api/quests';
 import type { QuestWithProgress } from '@/lib/db/types';
 import { tokens } from '@/theme';
@@ -25,7 +26,9 @@ const TEASER_COUNT = 3;
 export function GoalsPreview() {
   const router = useRouter();
   const { t } = useT();
-  const quests = useQuests();
+  // Module-gated like WeekStrip: no fetch and no pixels with `metas` off.
+  const metasOn = useModuleEnabled('metas');
+  const quests = useQuests({ enabled: metasOn });
 
   const activeGoals = useMemo<QuestWithProgress[]>(() => {
     const all = (quests.data ?? []).filter(
@@ -44,6 +47,8 @@ export function GoalsPreview() {
 
   const hasGoals = activeGoals.length > 0;
   const teaser = activeGoals.slice(0, TEASER_COUNT);
+
+  if (!metasOn) return null;
 
   return (
     <View style={styles.wrap}>

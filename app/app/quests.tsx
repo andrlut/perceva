@@ -24,6 +24,7 @@ import {
   useStartQuestFromTemplate,
 } from '@/lib/api/quests';
 import { useT } from '@/lib/i18n';
+import { useModuleEnabled, useRequireModule } from '@/lib/modules';
 import { freeLimitEntity, useLimitModalStore, useQuestLimit } from '@/lib/premium';
 import { TourModule } from '@/components/tour/TourModule';
 import { emitTourEvent } from '@/lib/tour/eventBus';
@@ -46,8 +47,11 @@ import { QUEST_CATEGORY_ORDER, getQuestCategoryMeta } from '@/theme/quests';
 export default function QuestBoardScreen() {
   const router = useRouter();
   const { t } = useT();
-  const quests = useQuests();
-  const templates = useQuestTemplates();
+  // Module gate — bounces home when `missoes` is off (covers deep links)
+  // and keeps the queries idle until the profile confirms it's on.
+  const gate = useRequireModule('missoes');
+  const quests = useQuests({ enabled: gate });
+  const templates = useQuestTemplates({ enabled: gate });
   const startTemplate = useStartQuestFromTemplate();
   const completeQuest = useCompleteQuest();
   const bottomClearance = useBottomNavClearance();
@@ -189,8 +193,13 @@ export default function QuestBoardScreen() {
     });
   };
 
-  const questLimit = useQuestLimit();
+  const questLimit = useQuestLimit(gate);
   const openLimit = useLimitModalStore((s) => s.open);
+  // quest-create only emits non-sub_stars quests, which live on the METAS
+  // side of the partition — with `metas` off, a quest created from this
+  // board would render on no surface while still eating a free-limit slot.
+  // So the create CTA follows the metas key, not this board's.
+  const metasOn = useModuleEnabled('metas');
   const handleCreateCustom = () => {
     if (questLimit.atLimit) {
       openLimit('quest');
@@ -238,8 +247,11 @@ export default function QuestBoardScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => {
-              quests.refetch();
-              templates.refetch();
+              // refetch() bypasses `enabled` — keep the module gate.
+              if (gate) {
+                quests.refetch();
+                templates.refetch();
+              }
             }}
             tintColor={tokens.brand.violet2}
           />
@@ -321,8 +333,8 @@ export default function QuestBoardScreen() {
           </>
         )}
 
-        {/* Create custom quest CTA */}
-        {!isLoading && (
+        {/* Create custom quest CTA — metas-gated, see handleCreateCustom. */}
+        {!isLoading && metasOn && (
           <Pressable
             onPress={handleCreateCustom}
             style={({ pressed }) => [

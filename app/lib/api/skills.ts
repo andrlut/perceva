@@ -39,8 +39,9 @@ export function tierForValue(
 /**
  * Fetches catalog (skill + skill_tier), per-user logs, and computes state per skill.
  */
-export function useSkillStates() {
+export function useSkillStates(opts?: { enabled?: boolean }) {
   return useQuery({
+    enabled: opts?.enabled ?? true,
     queryKey: skillKeys.states(),
     queryFn: async (): Promise<SkillState[]> => {
       const [{ data: skills, error: sErr }, { data: tiers, error: tErr }, { data: logs, error: lErr }] =

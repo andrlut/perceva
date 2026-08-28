@@ -237,6 +237,7 @@ export default function RootLayout() {
               options={{ presentation: 'modal', headerShown: false }}
             />
             <Stack.Screen name="insights" options={{ headerShown: false }} />
+            <Stack.Screen name="perfil" options={{ headerShown: false }} />
             <Stack.Screen
               name="questionnaire"
               options={{ presentation: 'modal', headerShown: false }}

@@ -22,6 +22,7 @@ import {
 } from '@/lib/api/skills';
 import type { SubId, TierName } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
+import { useRequireModule } from '@/lib/modules';
 import { freeLimitEntity, useLimitModalStore } from '@/lib/premium';
 import { useKeyboardOverlap } from '@/lib/use-keyboard-height';
 import { tokens } from '@/theme';
@@ -69,6 +70,8 @@ export default function SkillFormScreen() {
   const router = useRouter();
   const { t } = useT();
   const metaLookup = useMetaLookup();
+  // Module gate — bounces home when `skills` is off (covers deep links).
+  useRequireModule('skills');
   const createSkill = useCreateCustomSkill();
 
   const [name, setName] = useState('');

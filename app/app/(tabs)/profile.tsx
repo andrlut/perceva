@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import * as Updates from 'expo-updates';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -18,7 +18,7 @@ import { useBottomNavClearance } from '@/components/BottomNavBar';
 import { useCharacter } from '@/lib/api/character';
 import { useSession } from '@/lib/auth';
 import { useT } from '@/lib/i18n';
-import { useModules, useSetModule } from '@/lib/modules';
+import { MODULE_REGISTRY, useModules, useSetModule } from '@/lib/modules';
 import {
   useLoadedSettings,
   useSettingsStore,
@@ -239,19 +239,24 @@ export default function SettingsScreen() {
         </Card>
 
         {/* ───── MODULES ─────
-            Per-user opt-in surfaces (profile.modules). The raw switch list is
-            deliberate: the simple/complete preset UX is a future project — but
-            without a switch the flags would be dead code. When module #2
-            lands, promote MODULE_DEFAULTS to a registry and map over it here
-            (the i18n keys already follow the registry shape). */}
+            Per-user opt-in surfaces (profile.modules), mapped straight off
+            MODULE_REGISTRY — declaring a module there is what puts its
+            switch here. Off = invisibility, never deletion (the footnote
+            promises exactly that). */}
         <SectionHeader icon="apps-outline" label={t('profile.sections.modules')} />
         <Card>
-          <ToggleRow
-            label={t('profile.modules.semana')}
-            description={t('profile.modules.semanaDesc')}
-            value={modules.semana}
-            onChange={(v) => setModule.mutate({ key: 'semana', value: v })}
-          />
+          {MODULE_REGISTRY.map((def, i) => (
+            <Fragment key={def.key}>
+              {i > 0 && <Divider />}
+              <ToggleRow
+                label={t(`profile.modules.${def.key}`)}
+                description={t(`profile.modules.${def.key}Desc`)}
+                value={modules[def.key]}
+                onChange={(v) => setModule.mutate({ key: def.key, value: v })}
+              />
+            </Fragment>
+          ))}
+          <NoteText>{t('profile.modules.footnote')}</NoteText>
         </Card>
 
         {/* ───── NOTIFICATIONS ───── */}

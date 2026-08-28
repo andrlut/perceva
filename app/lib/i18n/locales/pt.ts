@@ -50,7 +50,6 @@ const pt: Translations = {
     increaseQty: 'Aumentar quantidade',
     xpByDimension: 'Distribuição de XP por dimensão',
     scoreByDimension: 'Pontuação por dimensão',
-    momentumByDimension: 'Momentum por dimensão',
     stopTracking: 'Parar de acompanhar esta recompensa',
     dayCellEmpty: 'sem registro',
     dayCellXp: '{{xp}} XP',
@@ -473,15 +472,15 @@ const pt: Translations = {
       },
       step3: {
         title: 'Identidade Percebida',
-        body: 'Como você se vê hoje: mapa de áreas e questionários de autoconhecimento.',
+        body: 'Como você se vê hoje: o mapa das suas áreas. O perfil completo abre tocando no seu personagem, lá em cima.',
       },
       step4: {
         title: 'Identidade Praticada',
-        body: 'O que suas ações treinam: a Dedicação que cada área recebe e seu Momentum ao longo do tempo.',
+        body: 'O que suas ações treinam: a Dedicação que cada área recebe.',
       },
       step5: {
         title: 'Identidade Desejada',
-        body: 'Quem você quer se tornar: seu Norte — a meta que você traça pra cada área, sobre o contorno de onde está hoje — e o Caminho pra lá, com Metas e Skills.',
+        body: 'Quem você quer se tornar: seu Norte — a meta que você traça pra cada área, sobre o contorno de onde está hoje.',
       },
     },
     m6: {
@@ -672,21 +671,6 @@ const pt: Translations = {
       praticada: { label: 'Praticada', long: 'Identidade Praticada' },
       desejada: { label: 'Desejada', long: 'Identidade Desejada' },
     },
-    // ── Sub-pilares dentro de cada top ──────────────────────────
-    sub: {
-      percebida: {
-        avaliacao: 'Avaliação',
-        autoconhecimento: 'Autoconhecimento',
-      },
-      praticada: {
-        dedicacao: 'Dedicação',
-        momentum: 'Momentum',
-      },
-      desejada: {
-        norte: 'Norte',
-        caminho: 'Caminho',
-      },
-    },
     // ── Legacy keys (PR #136 — referência genérica de sub-pilar) ─
     avaliacao: {
       short: 'Avaliação',
@@ -762,8 +746,12 @@ const pt: Translations = {
 
   hero: {
     discCta: 'Descobrir meu perfil',
-    discCtaA11y: 'Fazer o teste DISC',
-    discChipA11y: 'Perfil DISC: {{name}}. Toque pra ver o resultado.',
+    perfilA11y: 'Abrir seu perfil completo',
+  },
+
+  perfil: {
+    eyebrow: 'Perfil',
+    fallbackTitle: 'Seu perfil',
   },
 
   hex: {
@@ -1056,8 +1044,8 @@ const pt: Translations = {
       confirmTitle: 'Fechar o dia agora?',
       confirmTitleDay: 'Fechar {{date}}?',
       confirmBody: {
-        one: '{{count}} prática fica pra depois. Sem XP e sem mexer no seu Momentum.',
-        other: '{{count}} práticas ficam pra depois. Sem XP e sem mexer no seu Momentum.',
+        one: '{{count}} prática fica pra depois — sem perder nada.',
+        other: '{{count}} práticas ficam pra depois — sem perder nada.',
       },
       confirmOk: 'Fechar o dia',
     },
@@ -1067,23 +1055,6 @@ const pt: Translations = {
       undo: 'Não foi possível desfazer',
       unskip: 'Não foi possível despular',
       unknown: 'Erro desconhecido.',
-    },
-    momentum: {
-      label: 'Momentum',
-      recentEffort: 'Esforço recente por atributo',
-      tier: {
-        calm: 'calmo',
-        building: 'subindo',
-        strong: 'forte',
-        peak: 'pleno',
-      },
-      bonusActive: '+{{percent}}% bônus',
-      hexAxisA11y: '{{dim}}: momentum {{value}}',
-      // Legacy streak-style keys (deprecated; kept while any leftover
-      // V2 streak surface still references them).
-      days: { one: '{{count}} dia', other: '{{count}} dias' },
-      best: 'Recorde: {{count}}',
-      atRisk: 'Em risco',
     },
     pullToRefresh: 'Puxe pra atualizar',
     swipe: {
@@ -1140,7 +1111,7 @@ const pt: Translations = {
       skipToday: 'Pular hoje',
       /** Variante de dia passado — a folha também abre de um dia anterior. */
       skipDay: 'Pular em {{date}}',
-      skipTodaySub: 'Esconde do dia sem concluir — sem XP, sem penalidade no Momentum',
+      skipTodaySub: 'Esconde do dia sem concluir — sem perder nada',
       editTask: 'Editar prática',
       editTaskSub: 'Mudar título, subs, recorrência, etc',
     },
@@ -1724,9 +1695,17 @@ const pt: Translations = {
       about: 'Sobre',
     },
     modules: {
+      missoes: 'Missões',
+      missoesDesc:
+        'Desafios com prazo: junte estrelas nas práticas e resgate a recompensa.',
+      metas: 'Metas',
+      metasDesc:
+        'Objetivos com prazo, sem precisar atrelar às práticas do dia.',
       semana: 'Minha Semana',
-      semanaDesc:
-        'A folha da semana: as 3 da semana + o que precisa acontecer. Desligar só esconde — nada é apagado.',
+      semanaDesc: 'A folha da semana: as 3 da semana + o que precisa acontecer.',
+      skills: 'Habilidades',
+      skillsDesc: 'Recordes pessoais com escada de medalhas, por área da vida.',
+      footnote: 'Desligar nunca apaga nada. Religou, voltou tudo.',
     },
     fields: {
       displayName: 'Nome de exibição',
@@ -1768,8 +1747,6 @@ const pt: Translations = {
         'O resumo da manhã, mais um cutucão no meio-dia se você não abrir o app.',
       quest: 'Lembrete de missão',
       questDescription: 'Aviso antes do prazo de uma missão.',
-      momentum: 'Lembrete de Momentum',
-      momentumDescription: 'Cutucão noturno quando seu Momentum precisa de uma prática pequena.',
       time: 'Horário',
       moodTimeHelp:
         'Quando o Perceva pergunta como foi seu dia — no push e dentro do app.',

@@ -14,17 +14,14 @@ import { useBottomNavClearance } from '@/components/BottomNavBar';
 import { HeroHeader } from '@/components/HeroHeader';
 import { PillarSwitcher, type PillarKey } from '@/components/PillarSwitcher';
 import { ScreenBackground } from '@/components/ScreenBackground';
-import { SubSelector } from '@/components/SubSelector';
-import { AutoconhecimentoView } from '@/components/pillars/AutoconhecimentoView';
 import { AvaliacaoPanel } from '@/components/pillars/AvaliacaoPanel';
 import { DedicacaoPanel } from '@/components/pillars/DedicacaoPanel';
 import { CaminhoPanel } from '@/components/pillars/CaminhoPanel';
-import { MomentumView } from '@/components/pillars/MomentumView';
 import { NortePanel } from '@/components/pillars/NortePanel';
 import { useCharacter } from '@/lib/api/character';
-import { useMomentum } from '@/lib/api/momentum';
 import { useSkillStates } from '@/lib/api/skills';
 import { useT } from '@/lib/i18n';
+import { useModuleEnabled } from '@/lib/modules';
 import { TourModule } from '@/components/tour/TourModule';
 import { emitTourEvent } from '@/lib/tour/eventBus';
 import { buildM5Steps, M5_EVENTS } from '@/lib/tour/m5Steps';
@@ -35,54 +32,26 @@ import {
 } from '@/lib/tour/store';
 import { tokens } from '@/theme';
 
-// Sub-pillar key types per pilar — kept narrow so TS catches mis-typings.
-type PercebidaSub = 'avaliacao' | 'autoconhecimento';
-type PraticadaSub = 'dedicacao' | 'momentum';
-type DesejadaSub = 'norte' | 'caminho';
-
-interface ActiveSubState {
-  percebida: PercebidaSub;
-  praticada: PraticadaSub;
-  desejada: DesejadaSub;
-}
-
-// Visual tones per pilar — match PillarSwitcher; reused by SubSelector
-// so the sub-chip tint stays coherent with the pillar above.
-const PILLAR_TONE: Record<PillarKey, { accent: string; halo: string; border: string }> = {
-  percebida: {
-    accent: tokens.brand.violet2,
-    halo: 'rgba(155, 130, 255, 0.18)',
-    border: 'rgba(155, 130, 255, 0.35)',
-  },
-  praticada: {
-    accent: tokens.semantic.xp2,
-    halo: 'rgba(111, 232, 170, 0.18)',
-    border: 'rgba(61, 214, 140, 0.35)',
-  },
-  desejada: {
-    accent: tokens.semantic.coin,
-    halo: 'rgba(255, 200, 61, 0.18)',
-    border: 'rgba(255, 200, 61, 0.35)',
-  },
-};
-
 /**
  * Eu tab — full-width HeroHeader on top (Iris-Wrapped Avatar), then a
- * 3-icon pillar switcher followed by a 2-segment sub-selector for the
- * active pilar's sub-pilares. Content renders directly into the page
- * scroll (no card wrapper) so the chart / list / placeholder dominates.
+ * 3-icon pillar switcher with ONE panel per pillar (the second segments
+ * are gone: Autoconhecimento moved to /perfil behind the avatar tap,
+ * Momentum went dormant, Caminho folded under Norte and self-gates by
+ * module). Content renders directly into the page scroll (no card
+ * wrapper) so the chart / list / placeholder dominates.
  *
- * Default sub per pilar:
  *   - Percebida → Avaliação (hex chamariz)
  *   - Praticada → Dedicação (XP view)
- *   - Desejada → Skills (real content; Goals lands later)
+ *   - Desejada  → Norte (+ Caminho below it while its modules are on)
  */
 export default function CharacterScreen() {
   const { t } = useT();
   const router = useRouter();
   const character = useCharacter();
-  const skillStates = useSkillStates();
-  const momentum = useMomentum();
+  // Skills feed the Desejada pillar's Caminho section only — no fetch
+  // while the module is off (CaminhoPanel hides the section too).
+  const skillsOn = useModuleEnabled('skills');
+  const skillStates = useSkillStates({ enabled: skillsOn });
   const params = useLocalSearchParams<{ pillar?: PillarKey }>();
 
   const [activePillar, setActivePillar] = useState<PillarKey>(
@@ -99,11 +68,6 @@ export default function CharacterScreen() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.pillar]);
-  const [activeSub, setActiveSub] = useState<ActiveSubState>({
-    percebida: 'avaliacao',
-    praticada: 'dedicacao',
-    desejada: 'norte',
-  });
   const bottomClearance = useBottomNavClearance();
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -190,28 +154,6 @@ export default function CharacterScreen() {
   }
 
   const { dimensions } = character.data;
-  const tone = PILLAR_TONE[activePillar];
-
-  const subOptions: [{ key: string; label: string }, { key: string; label: string }] =
-    activePillar === 'percebida'
-      ? [
-          { key: 'avaliacao', label: t('pillar.sub.percebida.avaliacao') },
-          { key: 'autoconhecimento', label: t('pillar.sub.percebida.autoconhecimento') },
-        ]
-      : activePillar === 'praticada'
-        ? [
-            { key: 'dedicacao', label: t('pillar.sub.praticada.dedicacao') },
-            { key: 'momentum', label: t('pillar.sub.praticada.momentum') },
-          ]
-        : [
-            { key: 'norte', label: t('pillar.sub.desejada.norte') },
-            { key: 'caminho', label: t('pillar.sub.desejada.caminho') },
-          ];
-  const currentSub = activeSub[activePillar];
-
-  const handleSubChange = (key: string) => {
-    setActiveSub((prev) => ({ ...prev, [activePillar]: key } as ActiveSubState));
-  };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -228,15 +170,11 @@ export default function CharacterScreen() {
           }}
           refreshControl={
             <RefreshControl
-              refreshing={
-                character.isRefetching ||
-                skillStates.isRefetching ||
-                momentum.isRefetching
-              }
+              refreshing={character.isRefetching || skillStates.isRefetching}
               onRefresh={() => {
                 character.refetch();
-                skillStates.refetch();
-                momentum.refetch();
+                // refetch() bypasses `enabled` — keep the module gate.
+                if (skillsOn) skillStates.refetch();
               }}
               tintColor={tokens.brand.violet2}
             />
@@ -247,19 +185,13 @@ export default function CharacterScreen() {
               padding; the header owns its own internal spacing. */}
           <HeroHeader />
 
-          {/* Tab body — padded inset under the header. */}
+          {/* Tab body — padded inset under the header. One panel per
+              pillar; Desejada stacks Caminho under Norte (its sections
+              self-gate by module, so a module-light user sees Norte only). */}
           <View style={styles.body}>
             <PillarSwitcher active={activePillar} onChange={setActivePillar} />
-            <SubSelector
-              options={subOptions}
-              active={currentSub}
-              onChange={handleSubChange}
-              accent={tone.accent}
-              halo={tone.halo}
-              border={tone.border}
-            />
             <View style={styles.subViewWrap}>
-              {activePillar === 'percebida' && currentSub === 'avaliacao' && (
+              {activePillar === 'percebida' && (
                 <AvaliacaoPanel
                   subScores={character.data.subScores}
                   scrollViewRef={scrollViewRef}
@@ -268,23 +200,17 @@ export default function CharacterScreen() {
                   }}
                 />
               )}
-              {activePillar === 'percebida' && currentSub === 'autoconhecimento' && (
-                <AutoconhecimentoView />
-              )}
-              {activePillar === 'praticada' && currentSub === 'dedicacao' && (
+              {activePillar === 'praticada' && (
                 <DedicacaoPanel
                   dimensions={dimensions}
                   subScores={character.data.subScores}
                 />
               )}
-              {activePillar === 'praticada' && currentSub === 'momentum' && (
-                <MomentumView momentum={momentum.data?.attributes} />
-              )}
-              {activePillar === 'desejada' && currentSub === 'norte' && (
-                <NortePanel subScores={character.data.subScores} />
-              )}
-              {activePillar === 'desejada' && currentSub === 'caminho' && (
-                <CaminhoPanel skills={skillStates.data ?? []} />
+              {activePillar === 'desejada' && (
+                <View style={styles.desejadaStack}>
+                  <NortePanel subScores={character.data.subScores} />
+                  <CaminhoPanel skills={skillStates.data ?? []} />
+                </View>
               )}
             </View>
           </View>
@@ -317,5 +243,8 @@ const styles = StyleSheet.create({
   },
   subViewWrap: {
     marginTop: 0,
+  },
+  desejadaStack: {
+    gap: tokens.space[5],
   },
 });

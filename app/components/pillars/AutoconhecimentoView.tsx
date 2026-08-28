@@ -15,10 +15,11 @@ import { useT } from '@/lib/i18n';
 import { tokens } from '@/theme';
 
 /**
- * Autoconhecimento sub-view (Pilar Percebida). Surfaces the 3 deeper
- * psychometric inventories — Big Five, Schwartz Values, ECR-R Attachment —
- * with their full result-summary cards (top-3 values, 5-trait bars,
- * attachment style headline) instead of bare name + status rows.
+ * Autoconhecimento — the deep psychometric layer, hosted by /perfil (the
+ * hero's status sheet behind the HeroHeader avatar tap; it used to be the
+ * Percebida pillar's second segment). Surfaces the six inventories with
+ * their full result-summary cards (top-3 values, 5-trait bars, attachment
+ * style headline) instead of bare name + status rows.
  *
  * The cards are the same ones rendered in /profile-mirror — reused via
  * export so the answer-preview surface stays consistent and we don't

@@ -74,6 +74,7 @@ import {
 } from '@/lib/api/tasks';
 import { confirmAction } from '@/lib/util/confirm';
 import { useQuests } from '@/lib/api/quests';
+import { useModuleEnabled } from '@/lib/modules';
 import type { TaskSub, TaskWithSubs } from '@/lib/db/types';
 import { isDueOn } from '@/lib/recurrence';
 import { formatHeroDate } from '@/lib/time';
@@ -111,7 +112,6 @@ interface DayClearedStats {
  *   │  Sunday, May 24                  [ring 6]    │
  *   │                                              │
  *   │  XP card  ──────  290/500   LV 3             │
- *   │  Reward card  ──  🎯 ...  61%   610          │
  *   │                                              │
  *   │  [⚔ Sem açúcar 1/3] [+ Browse]               │
  *   │                                              │
@@ -136,7 +136,13 @@ export default function HomeScreen() {
   const character = useCharacter();
   const buckets = useHomeBuckets(settings.weekStart);
   const allActiveTasks = useActiveTasks();
-  const quests = useQuests();
+  // Home only holds this query for pull-to-refresh + the M3 tour handoff —
+  // QuestChipsStrip shares the key. With both quest modules off there is
+  // nothing to keep fresh, so the fetch is gated too.
+  const missoesOn = useModuleEnabled('missoes');
+  const metasOn = useModuleEnabled('metas');
+  const questsEnabled = missoesOn || metasOn;
+  const quests = useQuests({ enabled: questsEnabled });
   const completeTask = useCompleteTask();
   const skipTask = useSkipTaskToday();
   const skipTasksBulk = useSkipTasksBulk();
@@ -219,6 +225,19 @@ export default function HomeScreen() {
   const isM4Current = useIsCurrentTourModule('M4');
   const isM5Current = useIsCurrentTourModule('M5');
   const isM6Current = useIsCurrentTourModule('M6');
+
+  // M3 (Missões) is module-gated: when its turn comes and the missoes key
+  // is off, mark it skipped so the M0–M6 sequence flows on instead of
+  // stranding on a tooltip whose surface doesn't render. Waits for the
+  // profile (source of profile.modules) — MODULE_DEFAULTS reads false
+  // before the fetch lands, and skipping on that would eat M3 for a user
+  // who actually has Missões on.
+  const setTourStatus = useTourStore((s) => s.setStatus);
+  useEffect(() => {
+    if (character.data != null && isM3Current && !missoesOn) {
+      void setTourStatus('M3', 'skipped');
+    }
+  }, [character.data, isM3Current, missoesOn, setTourStatus]);
 
   // M6 completes (or is skipped) → the always-runs Wrap-up. Guard on the
   // wrap module still being pending so an isolated M6 replay (which marks
@@ -483,8 +502,9 @@ export default function HomeScreen() {
       dayDetail.refetch(),
       // QuestChipsStrip renders right below and shares this query key —
       // without this, pulling to refresh visibly updated the task buckets
-      // while the quest chips above them kept a stale count.
-      quests.refetch(),
+      // while the quest chips above them kept a stale count. refetch()
+      // bypasses `enabled`, so it must be guarded by the module gate.
+      ...(questsEnabled ? [quests.refetch()] : []),
     ]);
   };
   const isRefreshing =
@@ -1164,11 +1184,12 @@ export default function HomeScreen() {
 
       {/* M3 step 1 lives here (quest chips strip). Tapping "+ Missões"
          fires QUESTS_NAVIGATED + navigates; Próximo / skip walks the
-         user to /quests so step 2 has its surface. */}
+         user to /quests so step 2 has its surface. `missoesOn` keeps the
+         tooltip from flashing while the auto-skip effect above resolves. */}
       <TourModule
         module="M3"
         steps={buildM3Steps(t)}
-        enabled={isM3Current}
+        enabled={isM3Current && missoesOn}
         onAdvanceToNextScreen={() => router.push('/quests')}
       />
 

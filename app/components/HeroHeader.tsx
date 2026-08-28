@@ -32,8 +32,9 @@ const RING_CIRCUMFERENCE = 2 * Math.PI * RING_R;
  * quiet.
  *
  * Not a card — no border, full-width, soft violet halo + brand watermark.
- * The text column is tappable: it opens the DISC result, or invites the
- * test when none is taken. Data is read via hooks; self-contained.
+ * The whole avatar + text block is tappable: it opens /perfil, the hero's
+ * status sheet with the six deep instruments (the DISC archetype shown in
+ * the eyebrow lives there too). Data is read via hooks; self-contained.
  */
 export function HeroHeader() {
   const character = useCharacter();
@@ -62,7 +63,7 @@ export function HeroHeader() {
   const dashOffset = RING_CIRCUMFERENCE * (1 - progressFraction);
 
   const archetype = blend.status === 'ready' ? blend.content.name : null;
-  const goDisc = () => router.push('/disc');
+  const goPerfil = () => router.push('/perfil');
 
   return (
     <View style={styles.root}>
@@ -93,7 +94,13 @@ export function HeroHeader() {
         </Svg>
       </View>
 
-      <View style={styles.row}>
+      <Pressable
+        style={styles.row}
+        onPress={goPerfil}
+        hitSlop={4}
+        accessibilityRole="button"
+        accessibilityLabel={t('hero.perfilA11y')}
+      >
         {/* Avatar — single SVG, layered: progress ring, brand rings,
             gold path, dim tile. Icon overlay sits on top in a View so
             we can use the Ionicon font directly. */}
@@ -192,19 +199,8 @@ export function HeroHeader() {
           </View>
         </View>
 
-        {/* Text column — tappable into the DISC result / test. */}
-        <Pressable
-          style={styles.textCol}
-          onPress={goDisc}
-          disabled={blend.status === 'loading'}
-          hitSlop={4}
-          accessibilityRole="button"
-          accessibilityLabel={
-            archetype
-              ? t('hero.discChipA11y', { name: archetype })
-              : t('hero.discCtaA11y')
-          }
-        >
+        {/* Text column — part of the same /perfil press target. */}
+        <View style={styles.textCol}>
           <View style={styles.eyebrowRow}>
             <Text style={styles.eyebrowLv}>LV {lp.level}</Text>
             {archetype && (
@@ -234,8 +230,8 @@ export function HeroHeader() {
               />
             </View>
           )}
-        </Pressable>
-      </View>
+        </View>
+      </Pressable>
     </View>
   );
 }

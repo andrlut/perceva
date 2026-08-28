@@ -365,7 +365,7 @@ export interface TaskCompletion {
   task_id: string;
   character_id: string;
   completed_at: string;
-  /** Local YYYY-MM-DD used for Momentum calculations. */
+  /** Local YYYY-MM-DD — keys the calendar cells and Dedicação windows. */
   completed_local_date: string;
   xp_granted: number;
   coins_granted: number;

@@ -18,6 +18,7 @@ import { LimitCounterBadge } from '@/components/premium/LimitCounterBadge';
 import { useSkillStates } from '@/lib/api/skills';
 import type { DimensionId, SkillState, SubId, TierName } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
+import { useRequireModule } from '@/lib/modules';
 import { useLimitModalStore, useSkillLimit } from '@/lib/premium';
 import { useLocalizedPick } from '@/lib/i18n/catalog';
 import { useMetaLookup } from '@/lib/i18n/meta';
@@ -68,7 +69,9 @@ function totals(states: SkillState[]): MedalTotals {
 export default function SkillsHubScreen() {
   const router = useRouter();
   const { t } = useT();
-  const skillLimit = useSkillLimit();
+  // Module gate — bounces home when `skills` is off (covers deep links).
+  const gate = useRequireModule('skills');
+  const skillLimit = useSkillLimit(gate);
   const openLimit = useLimitModalStore((s) => s.open);
   const handleCreateSkill = () => {
     if (skillLimit.atLimit) {
@@ -79,7 +82,7 @@ export default function SkillsHubScreen() {
   };
   const metaLookup = useMetaLookup();
   const { pick } = useLocalizedPick();
-  const skillStates = useSkillStates();
+  const skillStates = useSkillStates({ enabled: gate });
   const [query, setQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeDim, setActiveDim] = useState<DimensionId>('health');

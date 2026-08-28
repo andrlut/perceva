@@ -28,6 +28,7 @@ import type {
   PsychSessionItem,
 } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
+import { useModules } from '@/lib/modules';
 import { useInstrumentStartGate } from '@/lib/premium';
 import {
   AXIS_LETTERS,
@@ -688,6 +689,14 @@ function TypeActionBridge({
   const letter = letterForAxis(axis, axisMeans[axis]);
   const growth = getPoleGrowth(letter, locale);
   const accent = AXIS_COLOR[axis];
+  // Each bridge button targets a module-owned surface, so each shows only
+  // while its key is on. "Virar missão" pushes /quest-create, which only
+  // emits Metas-side quests — hence the metas key, not any-of. With every
+  // key off the growth insight stays — only the CTAs disappear.
+  const modules = useModules();
+  const questsOn = modules.metas;
+  const skillsOn = modules.skills;
+  const anyBridge = questsOn || skillsOn;
   return (
     <>
       <Text style={styles.sectionHeader}>
@@ -695,33 +704,41 @@ function TypeActionBridge({
       </Text>
       <View style={[styles.bridgeCard, { borderColor: `${accent}44` }]}>
         <Text style={styles.bridgeGrowth}>{growth}</Text>
-        <Text style={styles.bridgeHint}>
-          {isPt
-            ? 'Seu resultado não precisa parar na tela. Vira treino:'
-            : "Your result doesn't have to stop at the screen. Turn it into training:"}
-        </Text>
-        <View style={styles.bridgeBtns}>
-          <Pressable
-            onPress={() => router.push('/quest-create')}
-            style={({ pressed }) => [styles.bridgeBtn, pressed && { opacity: 0.75 }]}
-            hitSlop={4}
-          >
-            <Ionicons name="flag-outline" size={15} color={tokens.brand.violet2} />
-            <Text style={styles.bridgeBtnText}>
-              {isPt ? 'Virar missão' : 'Make a mission'}
+        {anyBridge && (
+          <>
+            <Text style={styles.bridgeHint}>
+              {isPt
+                ? 'Seu resultado não precisa parar na tela. Vira treino:'
+                : "Your result doesn't have to stop at the screen. Turn it into training:"}
             </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => router.push('/skill-form')}
-            style={({ pressed }) => [styles.bridgeBtn, pressed && { opacity: 0.75 }]}
-            hitSlop={4}
-          >
-            <Ionicons name="barbell-outline" size={15} color={tokens.brand.violet2} />
-            <Text style={styles.bridgeBtnText}>
-              {isPt ? 'Criar habilidade' : 'Create a skill'}
-            </Text>
-          </Pressable>
-        </View>
+            <View style={styles.bridgeBtns}>
+              {questsOn && (
+                <Pressable
+                  onPress={() => router.push('/quest-create')}
+                  style={({ pressed }) => [styles.bridgeBtn, pressed && { opacity: 0.75 }]}
+                  hitSlop={4}
+                >
+                  <Ionicons name="flag-outline" size={15} color={tokens.brand.violet2} />
+                  <Text style={styles.bridgeBtnText}>
+                    {isPt ? 'Virar missão' : 'Make a mission'}
+                  </Text>
+                </Pressable>
+              )}
+              {skillsOn && (
+                <Pressable
+                  onPress={() => router.push('/skill-form')}
+                  style={({ pressed }) => [styles.bridgeBtn, pressed && { opacity: 0.75 }]}
+                  hitSlop={4}
+                >
+                  <Ionicons name="barbell-outline" size={15} color={tokens.brand.violet2} />
+                  <Text style={styles.bridgeBtnText}>
+                    {isPt ? 'Criar habilidade' : 'Create a skill'}
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+          </>
+        )}
       </View>
     </>
   );

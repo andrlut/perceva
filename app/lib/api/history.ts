@@ -78,7 +78,7 @@ export function endOfLocalDay(d: Date): Date {
  * snapshots so multi-sub tasks split honestly across pillars.
  *
  * Grouping is on the stored `completed_local_date`, not on `completed_at`
- * re-derived client-side: `mood_log.logged_for` and the Momentum window
+ * re-derived client-side: `mood_log.logged_for` and the Dedicação windows
  * both key off that column, so a late-evening completion has to land in
  * the same cell as the mood the user logged for the same day.
  */
