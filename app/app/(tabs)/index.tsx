@@ -110,7 +110,6 @@ interface DayClearedStats {
  *   │  Sunday, May 24                  [ring 6]    │
  *   │                                              │
  *   │  XP card  ──────  290/500   LV 3             │
- *   │  Reward card  ──  🎯 ...  61%   610          │
  *   │                                              │
  *   │  [⚔ Sem açúcar 1/3] [+ Browse]               │
  *   │                                              │

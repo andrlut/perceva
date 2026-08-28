@@ -113,8 +113,8 @@ export function NotificationOptInCard({ enabled = true }: Props) {
 }
 
 const styles = StyleSheet.create({
-  // Same footprint grammar as the Home stats cards (StatsCards.tsx):
-  // space[4] gutters, radius 16, surface + subtle border.
+  // Same footprint grammar as the other Home cards: space[4] gutters,
+  // radius 16, surface + subtle border.
   card: {
     flexDirection: 'row',
     alignItems: 'flex-start',

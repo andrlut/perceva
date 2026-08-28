@@ -3,8 +3,8 @@ import type { QuestWithProgress } from '@/lib/db/types';
 /**
  * Single source of truth for "how full is this quest".
  *
- * This lived inline in four places (QuestCard, QuestChip, QuestChipsStrip,
- * ActiveQuestsCard) and each copy drifted, so the same quest rendered a
+ * This lived inline in several quest surfaces (QuestCard, QuestChipsStrip,
+ * quest-detail) and each copy drifted, so the same quest rendered a
  * different number on every surface — the board said `40 / 100 ⭐`, the Home
  * chip said `0/1`, and the detail screen said `0 / 0`.
  *
