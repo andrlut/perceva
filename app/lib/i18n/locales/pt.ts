@@ -473,15 +473,15 @@ const pt: Translations = {
       },
       step3: {
         title: 'Identidade Percebida',
-        body: 'Como você se vê hoje: mapa de áreas e questionários de autoconhecimento.',
+        body: 'Como você se vê hoje: o mapa das suas áreas. O perfil completo abre tocando no seu personagem, lá em cima.',
       },
       step4: {
         title: 'Identidade Praticada',
-        body: 'O que suas ações treinam: a Dedicação que cada área recebe e seu Momentum ao longo do tempo.',
+        body: 'O que suas ações treinam: a Dedicação que cada área recebe.',
       },
       step5: {
         title: 'Identidade Desejada',
-        body: 'Quem você quer se tornar: seu Norte — a meta que você traça pra cada área, sobre o contorno de onde está hoje — e o Caminho pra lá, com Metas e Skills.',
+        body: 'Quem você quer se tornar: seu Norte — a meta que você traça pra cada área, sobre o contorno de onde está hoje.',
       },
     },
     m6: {
@@ -672,21 +672,6 @@ const pt: Translations = {
       praticada: { label: 'Praticada', long: 'Identidade Praticada' },
       desejada: { label: 'Desejada', long: 'Identidade Desejada' },
     },
-    // ── Sub-pilares dentro de cada top ──────────────────────────
-    sub: {
-      percebida: {
-        avaliacao: 'Avaliação',
-        autoconhecimento: 'Autoconhecimento',
-      },
-      praticada: {
-        dedicacao: 'Dedicação',
-        momentum: 'Momentum',
-      },
-      desejada: {
-        norte: 'Norte',
-        caminho: 'Caminho',
-      },
-    },
     // ── Legacy keys (PR #136 — referência genérica de sub-pilar) ─
     avaliacao: {
       short: 'Avaliação',
@@ -762,8 +747,12 @@ const pt: Translations = {
 
   hero: {
     discCta: 'Descobrir meu perfil',
-    discCtaA11y: 'Fazer o teste DISC',
-    discChipA11y: 'Perfil DISC: {{name}}. Toque pra ver o resultado.',
+    perfilA11y: 'Abrir seu perfil completo',
+  },
+
+  perfil: {
+    eyebrow: 'Perfil',
+    fallbackTitle: 'Seu perfil',
   },
 
   hex: {

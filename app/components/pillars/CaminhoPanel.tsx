@@ -5,6 +5,7 @@ import { GoalsPreview } from '@/components/pillars/GoalsPreview';
 import { SkillsPanel } from '@/components/pillars/SkillsPanel';
 import type { SkillState } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
+import { useModuleEnabled } from '@/lib/modules';
 import { tokens } from '@/theme';
 
 interface Props {
@@ -20,11 +21,13 @@ interface Props {
  */
 export function CaminhoPanel({ skills }: Props) {
   const { t } = useT();
+  const metasOn = useModuleEnabled('metas');
   return (
     <View style={styles.wrap}>
+      {/* GoalsPreview self-gates on `metas`; the divider between the two
+          sections only makes sense while both are visible. */}
       <GoalsPreview />
-
-      <View style={styles.divider} />
+      {metasOn && <View style={styles.divider} />}
 
       <View style={styles.sectionHeader}>
         <Ionicons name="ribbon" size={14} color={tokens.semantic.coin} />

@@ -478,15 +478,15 @@ const en = {
       },
       step3: {
         title: 'Perceived identity',
-        body: 'How you see yourself today: your map of areas plus self-knowledge questionnaires.',
+        body: 'How you see yourself today: your map of areas. The full profile opens by tapping your character up top.',
       },
       step4: {
         title: 'Practiced identity',
-        body: 'What your actions train: the Dedication each area earns and your Momentum over time.',
+        body: 'What your actions train: the Dedication each area earns.',
       },
       step5: {
         title: 'Desired identity',
-        body: 'Who you want to become: your North — the target you set for each area, over the outline of where you are today — and the Path there, with Goals and Skills.',
+        body: 'Who you want to become: your North — the target you set for each area, over the outline of where you are today.',
       },
     },
     m6: {
@@ -678,20 +678,6 @@ const en = {
       desejada: { label: 'Desired', long: 'Desired Identity' },
     },
     // ── Sub-pilares within each top pillar ──────────────────────
-    sub: {
-      percebida: {
-        avaliacao: 'Assessment',
-        autoconhecimento: 'Self-knowledge',
-      },
-      praticada: {
-        dedicacao: 'Dedication',
-        momentum: 'Momentum',
-      },
-      desejada: {
-        norte: 'North',
-        caminho: 'Path',
-      },
-    },
     // ── Legacy keys (PR #136 — generic sub-pillar reference) ────
     avaliacao: {
       short: 'Assessment',
@@ -767,8 +753,12 @@ const en = {
 
   hero: {
     discCta: 'Discover my profile',
-    discCtaA11y: 'Take the DISC test',
-    discChipA11y: 'DISC profile: {{name}}. Tap to view the result.',
+    perfilA11y: 'Open your full profile',
+  },
+
+  perfil: {
+    eyebrow: 'Profile',
+    fallbackTitle: 'Your profile',
   },
 
   hex: {
