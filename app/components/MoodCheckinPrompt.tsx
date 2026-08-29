@@ -9,6 +9,7 @@ import { todayDateKey, useLogMood, useTodayMood } from '@/lib/api/mood';
 import { useT } from '@/lib/i18n';
 import type { MoodValue } from '@/lib/mood';
 import { useLoadedSettings } from '@/lib/settings';
+import { useSheetBottomInset } from '@/components/useSheetBottomInset';
 import { tokens } from '@/theme';
 
 /** AsyncStorage day-stamp — "already shown/dismissed the prompt today". */
@@ -31,6 +32,7 @@ interface Props {
  */
 export function MoodCheckinPrompt({ enabled = true }: Props) {
   const { t } = useT();
+  const sheetBottom = useSheetBottomInset();
   const router = useRouter();
   const settings = useLoadedSettings();
   const today = useTodayMood();
@@ -95,7 +97,7 @@ export function MoodCheckinPrompt({ enabled = true }: Props) {
       onRequestClose={stampAndClose}
     >
       <Pressable style={styles.scrim} onPress={stampAndClose}>
-        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+        <Pressable style={[styles.sheet, { paddingBottom: sheetBottom }]} onPress={(e) => e.stopPropagation()}>
           <View style={styles.handle} />
           <Text style={styles.title}>{t('mood.prompt.title')}</Text>
           <Text style={styles.subtitle}>{t('mood.subtitle')}</Text>

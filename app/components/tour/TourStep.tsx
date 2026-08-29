@@ -268,6 +268,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: tokens.space[4],
     // paddingTop/paddingBottom are set inline based on `position` +
     // the floating BottomNavBar clearance.
+    // Above the SpotlightBackdrop sibling (zIndex/elevation 10): the
+    // card's own elevation can't cross its parent's stacking context,
+    // so without this the dim paints OVER the tooltip — it reads as
+    // non-interactive and hard to read.
+    zIndex: 14,
+    elevation: 14,
   },
   card: {
     backgroundColor: 'rgba(26, 31, 68, 0.98)',

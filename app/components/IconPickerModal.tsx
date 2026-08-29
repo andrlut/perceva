@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 
+import { useSheetBottomInset } from '@/components/useSheetBottomInset';
 import { tokens } from '@/theme';
 
 interface Props {
@@ -51,6 +52,7 @@ export function IconPickerModal({
   autoA11yLabel,
 }: Props) {
   const { height: windowHeight } = useWindowDimensions();
+  const sheetBottom = useSheetBottomInset();
   const selectedStyle = { borderColor: accentColor, backgroundColor: accentBg };
 
   return (
@@ -65,7 +67,7 @@ export function IconPickerModal({
       <Pressable style={styles.scrim} onPress={onClose}>
         {/* stopPropagation so taps inside the sheet (grid, padding) don't
             bubble to the scrim's close handler. */}
-        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+        <Pressable style={[styles.sheet, { paddingBottom: sheetBottom }]} onPress={(e) => e.stopPropagation()}>
           <View style={styles.handle} />
           <Text style={styles.title}>{title}</Text>
           <ScrollView

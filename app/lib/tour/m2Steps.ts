@@ -21,6 +21,10 @@ type Translator = (key: string, options?: TranslateOptions) => string;
  * returns the user to Home.
  */
 export const M2_EVENTS = {
+  /** Fired by Home's "Todas as práticas" FAB while M2 step 1 is active —
+   *  the FAB then routes to /tasks (not /all-practices) so tapping the
+   *  spotlighted button itself advances the tour. */
+  PRACTICES_OPENED: 'practices:opened',
   CREATE_TASK_TAPPED: 'create-task:tapped',
 } as const;
 
@@ -30,15 +34,16 @@ export function buildM2Steps(t: Translator): ScreenedStep[] {
       screen: 'home',
       title: t('tour.m2.step1.title'),
       body: t('tour.m2.step1.body'),
-      // Spotlights the "Todas as práticas" FAB — the entry to task
-      // management + creation in the new IA. NO awaitEvent: the FAB itself
-      // opens /all-practices, so the tour must not wait on a FAB tap.
-      // Instead the solid "Me leva lá" primary button advances (handleNext
-      // → onAdvanceToNextScreen → /tasks, where step 2 lives). 'top' keeps
-      // the bottom-right FAB + its pulsing ring visible.
+      // Spotlights the "Todas as práticas" FAB. Two ways forward, both
+      // landing on /tasks where step 2 lives: tapping the spotlighted FAB
+      // itself (Home reroutes it to /tasks + emits PRACTICES_OPENED while
+      // this step is active — event advance does NOT navigate on its own),
+      // or the assist "Me leva lá" (handleNext → onAdvanceToNextScreen).
+      // 'top' keeps the bottom-right FAB + its pulsing ring visible.
       position: 'top',
       target: 'home.manage',
-      primaryLabel: t('tour.common.takeMe'),
+      awaitEvent: M2_EVENTS.PRACTICES_OPENED,
+      awaitCtaLabel: t('tour.common.takeMe'),
     },
     {
       screen: 'tasks',

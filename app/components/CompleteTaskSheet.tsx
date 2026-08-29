@@ -12,6 +12,7 @@ import type { TaskSub, TaskWithSubs } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { rewardForTaskSubs } from '@/lib/xp';
+import { useSheetBottomInset } from '@/components/useSheetBottomInset';
 import { tokens } from '@/theme';
 
 import { CoinIcon } from './CoinIcon';
@@ -41,6 +42,7 @@ export function CompleteTaskSheet({
   onConfirm,
 }: Props) {
   const { t } = useT();
+  const sheetBottom = useSheetBottomInset();
   const meta = useMetaLookup();
   const [draft, setDraft] = useState<TaskSub[]>([]);
 
@@ -94,7 +96,7 @@ export function CompleteTaskSheet({
       onRequestClose={onCancel}
     >
       <Pressable style={styles.scrim} onPress={onCancel}>
-        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+        <Pressable style={[styles.sheet, { paddingBottom: sheetBottom }]} onPress={(e) => e.stopPropagation()}>
           <View style={styles.handle} />
           <Text style={styles.eyebrow}>
             {t('tasks.actionSheet.adjustStars').toUpperCase()} · {task.title.toUpperCase()}

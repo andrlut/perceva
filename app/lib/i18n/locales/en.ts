@@ -428,7 +428,7 @@ const en = {
       step1: {
         title: 'Make your own',
         // 'best practices' is a corporate idiom — phrased around it.
-        body: "The practices that stick are the ones you make. Let me take you to where they're created.",
+        body: 'The practices that stick are the ones you make. Tap the highlighted button — or let me take you there.',
       },
       step2: {
         title: 'Tap the +',
