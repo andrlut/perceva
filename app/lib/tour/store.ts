@@ -180,6 +180,24 @@ export function useIsCurrentTourModule(module: TourModule): boolean {
 }
 
 /**
+ * True only when the whole tour is over: store hydrated AND every module
+ * is `completed` or `skipped`. Fails CLOSED (false) while hydrating, so
+ * consumers that suppress themselves during the tour (e.g. the mood
+ * check-in prompt) never flash over it on cold boot. Also false during a
+ * per-module replay from Settings — replayModule sets the target back to
+ * `pending`, which is exactly when overlays should stay quiet again.
+ */
+export function useTourFinished(): boolean {
+  return useTourStore((s) => {
+    if (s.status !== 'ready') return false;
+    return TOUR_MODULES.every((m) => {
+      const status = s.modules[m]?.status ?? 'pending';
+      return status === 'completed' || status === 'skipped';
+    });
+  });
+}
+
+/**
  * Transient "what's on screen right now" descriptor for the active
  * tour step. Set by `<TourModule>` whenever its step changes, cleared
  * to null when the module finishes. Screens consume it to:
