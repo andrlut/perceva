@@ -61,6 +61,7 @@ import {
   useActiveTourStep,
   useActiveTourStepStore,
   useIsCurrentTourModule,
+  useTourFinished,
   useTourStore,
 } from '@/lib/tour/store';
 import {
@@ -199,6 +200,11 @@ export default function HomeScreen() {
   // baked into navClearance; matches the visible gap users expected
   // when testing M1 step 5.
   const activeTourStep = useActiveTourStep();
+  // Whole-tour gate for the mood prompt: `!activeTourStep` alone only
+  // covers inline spotlight steps — during the dedicated M0/M0.5 route
+  // screens Home is still mounted underneath with no active step, and
+  // the prompt's Modal would pop OVER the tour on first open.
+  const tourFinished = useTourFinished();
   // M2 step 1 spotlights the "Gerenciar práticas" button — the very last
   // row of the scroll. It needs more bottom room than the M1 drawer
   // (which is mid-list) so the button clears the full tooltip card
@@ -1159,7 +1165,7 @@ export default function HomeScreen() {
         onClose={() => setDayClearedStats(null)}
       />
 
-      <MoodCheckinPrompt enabled={!activeTourStep} />
+      <MoodCheckinPrompt enabled={tourFinished && !activeTourStep} />
 
       {/* Post-login tour — M1 (Tasks). Only renders when the user has
          tasks visible behind the spotlight and M1 is the current
