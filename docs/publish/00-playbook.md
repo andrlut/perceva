@@ -1,5 +1,12 @@
 # Playbook de Publicação — Perceva (App Store + Google Play)
 
+> ⚠️ **Delta posterior (2026-08):** quando o check-in de humor com texto
+> livre + resumos por IA for ligado, os formulários das duas lojas mudam —
+> ver `03-mood-ai-store-delta.md` (tratamento dividido User Content ×
+> Health, política GenAI do Play, pré-requisitos de consentimento). O mesmo
+> doc lista pontos deste playbook já defasados (IAP/RevenueCat ativos,
+> delete-account real).
+
 Para quem nunca publicou. Sequencial, com custos, tempos e fontes. Todos os fatos foram verificados na web em junho de 2026.
 
 **Fatos-chave do app que moldam este playbook** (do contexto do projeto):
