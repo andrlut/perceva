@@ -22,6 +22,7 @@ import type { DimensionId, MoodTag } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { moodLevel, splitMoodTags, type MoodValue } from '@/lib/mood';
+import { useSheetBottomInset } from '@/components/useSheetBottomInset';
 import { tokens } from '@/theme';
 import { DIMENSION_META, DIMENSION_ORDER, SUBS_BY_DIM, SUB_META } from '@/theme/dimensions';
 
@@ -72,6 +73,7 @@ interface Props {
 
 export function CalendarFilterSheet({ visible, onClose, practices, rewards }: Props) {
   const { t, locale } = useT();
+  const sheetBottom = useSheetBottomInset();
   const meta = useMetaLookup();
   const { height } = useWindowDimensions();
   const tagsQuery = useMoodTags();
@@ -159,7 +161,7 @@ export function CalendarFilterSheet({ visible, onClose, practices, rewards }: Pr
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={[styles.scrim, { paddingBottom: lift }]} onPress={onClose}>
-        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+        <Pressable style={[styles.sheet, { paddingBottom: sheetBottom }]} onPress={(e) => e.stopPropagation()}>
           <View style={styles.handle} />
 
           <ScrollView

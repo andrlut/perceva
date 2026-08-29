@@ -52,7 +52,7 @@ import { TourTarget } from '@/components/tour/TourTarget';
 import { emitTourEvent } from '@/lib/tour/eventBus';
 import { remeasureActiveTourTarget } from '@/lib/tour/targets';
 import { buildM1Steps, M1_EVENTS } from '@/lib/tour/m1Steps';
-import { buildM2Steps } from '@/lib/tour/m2Steps';
+import { buildM2Steps, M2_EVENTS } from '@/lib/tour/m2Steps';
 import { buildM3Steps } from '@/lib/tour/m3Steps';
 import { buildM4Steps } from '@/lib/tour/m4Steps';
 import { buildM5Steps } from '@/lib/tour/m5Steps';
@@ -1122,13 +1122,24 @@ export default function HomeScreen() {
           "Me leva lá" jumps straight to /tasks). */}
       <TasksFabStack
         bottomOffset={navClearance}
-        onSeeAll={() =>
+        onSeeAll={() => {
+          // While M2 step 1 spotlights this FAB, tapping it advances the
+          // tour and lands on /tasks (where step 2 lives) instead of
+          // /all-practices, which hosts no tour mount — otherwise the
+          // most natural gesture (tapping the highlighted button) strands
+          // the user on a screen the tour can't follow. Event-driven
+          // advance never navigates by itself, so we push here.
+          if (isM2Current && (useTourStore.getState().stepIndices.M2 ?? 0) === 0) {
+            emitTourEvent(M2_EVENTS.PRACTICES_OPENED);
+            router.push('/tasks');
+            return;
+          }
           router.push(
             isToday
               ? '/all-practices'
               : { pathname: '/all-practices', params: { date: selectedKey } },
-          )
-        }
+          );
+        }}
         onCalendar={() => router.push('/history')}
         seeAllWrap={(node) => (
           <TourTarget id="home.manage" radius={28}>

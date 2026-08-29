@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useT } from '@/lib/i18n';
+import { useSheetBottomInset } from '@/components/useSheetBottomInset';
 import { tokens } from '@/theme';
 
 interface Props {
@@ -24,6 +25,7 @@ export function HistoryActionSheet({
   onUnuse,
 }: Props) {
   const { t } = useT();
+  const sheetBottom = useSheetBottomInset();
   return (
     <Modal
       visible={visible}
@@ -32,7 +34,7 @@ export function HistoryActionSheet({
       onRequestClose={onCancel}
     >
       <Pressable style={styles.scrim} onPress={onCancel}>
-        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+        <Pressable style={[styles.sheet, { paddingBottom: sheetBottom }]} onPress={(e) => e.stopPropagation()}>
           <View style={styles.handle} />
           <Text style={styles.title} numberOfLines={1}>
             {rewardTitle}

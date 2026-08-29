@@ -424,7 +424,7 @@ const pt: Translations = {
       step1: {
         title: 'Crie as suas próprias',
         // 'melhores práticas' é jargão corporativo — refraseado pra escapar.
-        body: 'As práticas que mais transformam são as que você cria. Vou te levar pra área de criação.',
+        body: 'As práticas que mais transformam são as que você cria. Toca no botão destacado — ou deixa que eu te levo.',
       },
       step2: {
         title: 'Toque no +',
