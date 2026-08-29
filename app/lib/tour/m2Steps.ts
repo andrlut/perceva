@@ -4,22 +4,23 @@ import type { TranslateOptions } from '@/lib/i18n';
 type Translator = (key: string, options?: TranslateOptions) => string;
 
 /**
- * M2 — Criar task customizada. Spec says 4 spotlights, but Home has no
- * direct `+` button (creation lives behind the manage screen), so we
- * use a 5-step flow that mirrors the user's real journey:
+ * M2 — Criar task customizada. 5-step flow mirroring the user's real
+ * journey in the current IA:
  *
- *   1. (home)   manage tasks button         — awaitEvent TASKS_NAVIGATED
- *   2. (tasks)  the `+` icon                — awaitEvent CREATE_TASK_TAPPED
- *   3. (create) subs + stars section        — Next
- *   4. (create) recurrence picker section   — Next
- *   5. (create) close button / wrap-up      — Next, closes form
+ *   1. (home)   "Todas as práticas" FAB      — advanced by the tour's own
+ *                                              "Me leva lá" CTA (the FAB
+ *                                              itself opens /all-practices,
+ *                                              which hosts no tour mount)
+ *   2. (tasks)  the `+` icon                 — awaitEvent CREATE_TASK_TAPPED
+ *   3. (create) subs + stars section         — Next
+ *   4. (create) recurrence picker section    — Next
+ *   5. (create) close button / wrap-up       — Next, closes form
  *
  * The form is passive: no requirement to fill or save anything. Step
  * 5's Next (or the X tap) just closes the modal-style task-form and
  * returns the user to Home.
  */
 export const M2_EVENTS = {
-  TASKS_NAVIGATED: 'tasks:navigated',
   CREATE_TASK_TAPPED: 'create-task:tapped',
 } as const;
 

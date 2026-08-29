@@ -205,10 +205,10 @@ export default function HomeScreen() {
   // screens Home is still mounted underneath with no active step, and
   // the prompt's Modal would pop OVER the tour on first open.
   const tourFinished = useTourFinished();
-  // M2 step 1 spotlights the "Gerenciar práticas" button — the very last
-  // row of the scroll. It needs more bottom room than the M1 drawer
-  // (which is mid-list) so the button clears the full tooltip card
-  // height once we scroll to the end.
+  // M2 step 1 spotlights the "Todas as práticas" FAB in the bottom
+  // stack. It needs more bottom room than the M1 drawer (which is
+  // mid-list) so the FAB clears the full tooltip card height once we
+  // scroll to the end.
   // Floor at the historical constants, but grow with the REAL measured
   // card height (reported by TourStep on layout) so restyles that make
   // the card taller can't silently eat the gap the target settles into.
@@ -350,6 +350,13 @@ export default function HomeScreen() {
     completeTask.mutate(
       { task, subs, completedAt: at.toISOString(), completedLocalDate: selectedKey },
       {
+        onSuccess: () => {
+          // A retro completion satisfies M1's "complete a practice" step
+          // too — without this emit, a user who arrowed to yesterday
+          // mid-tour left the step waiting on an event that could never
+          // fire from this path.
+          emitTourEvent(M1_EVENTS.TASK_COMPLETED);
+        },
         onError: (err) => {
           unhideRetro(task.id);
           const e = err as { message?: string; code?: string; details?: string };

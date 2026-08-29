@@ -57,7 +57,9 @@ import { TourModule } from '@/components/tour/TourModule';
 import { TourTarget } from '@/components/tour/TourTarget';
 import { emitTourEvent } from '@/lib/tour/eventBus';
 import { buildM2Steps, M2_EVENTS } from '@/lib/tour/m2Steps';
-import { useIsCurrentTourModule } from '@/lib/tour/store';
+import { useIsFocused } from '@react-navigation/native';
+
+import { useIsCurrentTourModule, useTourStore } from '@/lib/tour/store';
 import { rewardForTaskSubs } from '@/lib/xp';
 import { tokens } from '@/theme';
 import {
@@ -123,12 +125,17 @@ export default function TasksHubScreen() {
   const { t } = useT();
   const taskLimit = useTaskLimit();
   const openLimit = useLimitModalStore((s) => s.open);
-  const handleCreateTask = () => {
+  // Returns whether navigation actually happened — the M2 tour advance
+  // MUST only fire on a real navigation, otherwise the module steps into
+  // the form screen that never mounts and jams the whole tour (the
+  // sequential current-module gate then hides M3+ forever).
+  const handleCreateTask = (): boolean => {
     if (taskLimit.atLimit) {
       openLimit('task');
-      return;
+      return false;
     }
     router.push('/task-form');
+    return true;
   };
   const bottomClearance = useBottomSafeClearance();
   const reorderTasks = useReorderTasks();
@@ -137,6 +144,21 @@ export default function TasksHubScreen() {
   const startFromTemplate = useStartTaskFromTemplate();
   const completeTask = useCompleteTask();
   const isM2Current = useIsCurrentTourModule('M2');
+  const isFocused = useIsFocused();
+  const m2StepIndex = useTourStore((s) => s.stepIndices.M2 ?? 0);
+  const setStepIndex = useTourStore((s) => s.setStepIndex);
+
+  // M2 self-heal: the step-2 "Me leva lá" CTA advances the index BEFORE
+  // the navigation callback runs, and the free-limit gate may refuse to
+  // open the form. If the index points at form steps (2+) while this
+  // screen still holds focus after a grace period, the form never
+  // mounted — walk back to the "+" step instead of stranding the module
+  // (a stuck M2 hides every later module via the current-module gate).
+  useEffect(() => {
+    if (!isM2Current || !isFocused || m2StepIndex < 2) return;
+    const id = setTimeout(() => setStepIndex('M2', 1), 1200);
+    return () => clearTimeout(id);
+  }, [isM2Current, isFocused, m2StepIndex, setStepIndex]);
 
   const [tab, setTab] = useState<Tab>('allocated');
   const [query, setQuery] = useState('');
@@ -399,8 +421,9 @@ export default function TasksHubScreen() {
             <TourTarget id="tasks.create" radius={999}>
               <Pressable
                 onPress={() => {
-                  emitTourEvent(M2_EVENTS.CREATE_TASK_TAPPED);
-                  handleCreateTask();
+                  if (handleCreateTask()) {
+                    emitTourEvent(M2_EVENTS.CREATE_TASK_TAPPED);
+                  }
                 }}
                 style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
                 hitSlop={8}
@@ -559,14 +582,18 @@ export default function TasksHubScreen() {
          Home covers step 1; the mount on task-form covers steps 3-5.
          `flatNav` because this Stack screen has no floating BottomNavBar.
          Tapping `+` fires CREATE_TASK_TAPPED + navigates; tapping the
-         tooltip's Próximo / skip walks the user to the form instead. */}
+         tooltip's Próximo / skip walks the user to the form instead —
+         through the same limit gate, so the tour never advances into a
+         form that refused to open. */}
       <TourModule
         module="M2"
         screen="tasks"
         steps={buildM2Steps(t)}
         enabled={isM2Current}
         flatNav
-        onAdvanceToNextScreen={() => router.push('/task-form')}
+        onAdvanceToNextScreen={() => {
+          handleCreateTask();
+        }}
       />
     </SafeAreaView>
   );
