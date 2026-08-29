@@ -47,7 +47,12 @@ import {
 import { TourModule } from '@/components/tour/TourModule';
 import { emitTourEvent } from '@/lib/tour/eventBus';
 import { buildM4Steps, M4_EVENTS } from '@/lib/tour/m4Steps';
-import { useIsCurrentTourModule, useTourStore } from '@/lib/tour/store';
+import {
+  useActiveTourStep,
+  useActiveTourStepStore,
+  useIsCurrentTourModule,
+  useTourStore,
+} from '@/lib/tour/store';
 import { confirmAction, showInfo } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 import { REWARD_CATEGORY_META, REWARD_CATEGORY_ORDER } from '@/theme/rewards';
@@ -109,7 +114,17 @@ export default function RewardsScreen() {
     /** Redemption ids created by this purchase — feeds "enjoy now". */
     redemptionIds: string[];
   } | null>(null);
-  const bottomClearance = useBottomNavClearance();
+  const navClearance = useBottomNavClearance();
+  // Bottom-positioned M4 tooltip cards need scroll room above them —
+  // same device Home/Eu/task-form already use. Floor at 160, grow with
+  // the real measured card height so restyles can't eat the gap.
+  const activeTourStep = useActiveTourStep();
+  const tourCardHeight = useActiveTourStepStore((s) => s.cardHeight);
+  const tourBottomBump =
+    activeTourStep?.position === 'bottom'
+      ? Math.max(160, (tourCardHeight ?? 0) + 24)
+      : 0;
+  const bottomClearance = navClearance + tourBottomBump;
 
   // ── M4 tour plumbing ────────────────────────────────────────────────
   const isM4Current = useIsCurrentTourModule('M4');

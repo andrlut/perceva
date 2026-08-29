@@ -419,10 +419,6 @@ const en = {
         title: 'Mark as done',
         body: 'Tap the check to log a completion. This is the gesture that drives everything here.',
       },
-      step5: {
-        title: 'Identity in practice',
-        body: 'Each action strengthens specific areas. You can watch this grow over time.',
-      },
       step6: {
         title: 'Done today',
         body: 'What you finished today lives here. Tap to open — you can undo anything.',
@@ -432,7 +428,7 @@ const en = {
       step1: {
         title: 'Make your own',
         // 'best practices' is a corporate idiom — phrased around it.
-        body: 'The practices that stick are the ones you make. Tap Manage practices.',
+        body: "The practices that stick are the ones you make. Let me take you to where they're created.",
       },
       step2: {
         title: 'Tap the +',
@@ -475,8 +471,8 @@ const en = {
         body: 'Your balance, earned by completing practices. Scroll down to the suggestions below.',
       },
       step3: {
-        title: 'Redeem and bank',
-        body: 'A movie, a dinner, some rest. Redeem with coins and use whenever — or refund and they come back.',
+        title: 'Redeem when you want',
+        body: 'A movie, a dinner, some rest. Redeem with coins — what you buy waits in the golden wallet at the bottom corner until the right moment.',
       },
     },
     m5: {

@@ -415,10 +415,6 @@ const pt: Translations = {
         title: 'Marcar como feita',
         body: 'Toque no check pra registrar a prática. É o gesto que move tudo aqui.',
       },
-      step5: {
-        title: 'Sua identidade praticada',
-        body: 'Cada ação fortalece áreas específicas. Você vai vendo isso crescer com o tempo.',
-      },
       step6: {
         title: 'Concluídas hoje',
         body: 'Aqui ficam as feitas de hoje. Toque pra abrir — dá pra desfazer qualquer uma.',
@@ -428,7 +424,7 @@ const pt: Translations = {
       step1: {
         title: 'Crie as suas próprias',
         // 'melhores práticas' é jargão corporativo — refraseado pra escapar.
-        body: 'As práticas que mais transformam são as que você cria. Toque em Gerenciar práticas.',
+        body: 'As práticas que mais transformam são as que você cria. Vou te levar pra área de criação.',
       },
       step2: {
         title: 'Toque no +',
@@ -471,8 +467,8 @@ const pt: Translations = {
         body: 'Seu saldo, ganho completando práticas. Role até as sugestões logo abaixo.',
       },
       step3: {
-        title: 'Resgate e banco',
-        body: 'Um filme, um jantar, um descanso. Resgate com moedas e use quando quiser — ou devolva e elas voltam.',
+        title: 'Resgate quando quiser',
+        body: 'Um filme, um jantar, um descanso. Resgate com moedas — o que você compra fica na carteira dourada, no canto de baixo, pra usar na hora certa.',
       },
     },
     m5: {
