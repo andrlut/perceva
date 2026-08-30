@@ -320,7 +320,8 @@ const pt: Translations = {
     },
     plan: {
       selectLabel: 'Escolha seu plano',
-      annualBadge: '4 meses grátis',
+      // 12 × R$14,90 = R$178,80 vs R$99,90/ano → ~5,3 meses de economia.
+      annualBadge: '5 meses grátis',
       annualName: 'Anual',
       annualPrice: 'R$ 99,90/ano',
       annualEquiv: 'equivale a R$ 8,32/mês',
