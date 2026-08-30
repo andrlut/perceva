@@ -21,13 +21,13 @@ import { ConfirmHost } from '@/components/ConfirmHost';
 import { OtaUpdateGate } from '@/components/OtaUpdateGate';
 import { InstrumentTeaserHost } from '@/components/premium/InstrumentTeaserHost';
 import { LimitReachedHost } from '@/components/premium/LimitReachedHost';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useRecoveryStore, useRegisterRecoveryListener, useSession } from '@/lib/auth';
 import { useNotificationsSetup } from '@/lib/notifications/useNotificationsSetup';
 import { useLoadOnboarding } from '@/lib/onboarding';
 import { usePurchasesSetup } from '@/lib/purchases';
 import { useModuleStatus, useTourReady } from '@/lib/tour/store';
 import { freeLimitEntity, useLimitModalStore } from '@/lib/premium';
+import { ACTIVE_THEME } from '@/theme';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -105,7 +105,6 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -150,7 +149,14 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <ThemeProvider
+          value={
+            // The app's palette is our own boot-time choice (ACTIVE_THEME),
+            // not the device scheme — keep react-navigation's chrome (modal
+            // sheets, default backgrounds) in lockstep with it.
+            ACTIVE_THEME === 'light' ? DefaultTheme : DarkTheme
+          }
+        >
           <AuthGate>
             <Stack>
             <Stack.Screen name="onboarding" options={{ headerShown: false }} />
@@ -286,7 +292,7 @@ export default function RootLayout() {
         <InstrumentTeaserHost />
         <LimitReachedHost />
         <OtaUpdateGate />
-        <StatusBar style="light" />
+        <StatusBar style={ACTIVE_THEME === 'light' ? 'dark' : 'light'} />
       </ThemeProvider>
     </QueryClientProvider>
     </GestureHandlerRootView>

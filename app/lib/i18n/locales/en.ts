@@ -329,7 +329,7 @@ const en = {
     },
     plan: {
       selectLabel: 'Choose your plan',
-      annualBadge: '4 months free',
+      annualBadge: '5 months free',
       annualName: 'Annual',
       annualPrice: 'R$ 99.90/year',
       annualEquiv: "that's R$ 8.32/month",
