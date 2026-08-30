@@ -464,7 +464,7 @@ const pt: Translations = {
       },
       step2: {
         title: 'Suas moedas',
-        body: 'Seu saldo, ganho completando práticas. Role até as sugestões logo abaixo.',
+        body: 'Seu saldo, ganho completando práticas. É com ele que você resgata as recompensas daqui.',
       },
       step3: {
         title: 'Resgate quando quiser',

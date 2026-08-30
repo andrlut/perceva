@@ -4,15 +4,17 @@ import type { TranslateOptions } from '@/lib/i18n';
 type Translator = (key: string, options?: TranslateOptions) => string;
 
 /**
- * M4 — Rewards. The spec had 3 spotlights ending on a reward *detail*
- * screen, but the real Rewards tab has no detail route — suggestions
- * ("Inspiração") live inline at the bottom of the scroll and tapping one
- * adds it to the shop. So we keep 3 steps but fold the cost/bank/refund
- * explanation into the inspiration step:
+ * M4 — Rewards.
  *
- *   1. (home)    Rewards bottom-nav tab     — awaitEvent REWARDS_NAVIGATED
+ *   1. (home)    Rewards bottom-nav tab      — awaitEvent REWARDS_NAVIGATED
  *   2. (rewards) balance + your rewards      — Next (auto-scroll to top)
- *   3. (rewards) Inspiration + how it works  — Next (auto-scroll to end)
+ *   3. (rewards) redeem + the wallet FAB     — Next (spotlights the golden
+ *                wallet; the screen forces it visible during M4 even with
+ *                an empty bank, so the anchor always exists)
+ *
+ * Step 3 used to auto-scroll to the "Inspiração" block, which disappears
+ * once the user owns every template — the wallet is a stable anchor and
+ * matches the copy about where purchases wait.
  *
  * No commitment: we never ask the user to redeem or add anything.
  */
@@ -42,6 +44,7 @@ export function buildM4Steps(t: Translator): ScreenedStep[] {
       title: t('tour.m4.step3.title'),
       body: t('tour.m4.step3.body'),
       position: 'top',
+      target: 'rewards.bank',
     },
   ];
 }

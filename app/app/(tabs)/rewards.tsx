@@ -45,6 +45,7 @@ import {
   useRewardLimit,
 } from '@/lib/premium';
 import { TourModule } from '@/components/tour/TourModule';
+import { TourTarget } from '@/components/tour/TourTarget';
 import { emitTourEvent } from '@/lib/tour/eventBus';
 import { buildM4Steps, M4_EVENTS } from '@/lib/tour/m4Steps';
 import {
@@ -147,13 +148,14 @@ export default function RewardsScreen() {
     }, [isM4Current]),
   );
 
-  // Auto-scroll as the M4 steps open: step 2 (balance) → top, step 3
-  // (Inspiration, which sits at the bottom of the scroll) → end.
+  // Auto-scroll as the M4 steps open: step 2 (balance) → top. Step 3
+  // spotlights the floating wallet FAB, which doesn't scroll — the old
+  // scrollToEnd chased the "Inspiração" block, which disappears once
+  // the user owns every template.
   useEffect(() => {
     if (!isM4Current || m4Status !== 'in_progress') return;
     const id = setTimeout(() => {
       if (m4StepIndex === 1) scrollRef.current?.scrollTo({ y: 0, animated: true });
-      else if (m4StepIndex === 2) scrollRef.current?.scrollToEnd({ animated: true });
     }, 150);
     return () => clearTimeout(id);
   }, [isM4Current, m4Status, m4StepIndex]);
@@ -677,7 +679,10 @@ export default function RewardsScreen() {
 
       {/* Floating action stack — manage / create / bank, bottom-right
           where the thumb naturally lands. Replaces the old top-right
-          header icons; history now lives inside manage and bank. */}
+          header icons; history now lives inside manage and bank.
+          During M4 the wallet renders even with an empty bank (forceBank)
+          so step 3's spotlight has the real thing to anchor on — tapping
+          it just shows the bank's empty state, which is honest. */}
       <RewardsFabStack
         bankCount={bankCount}
         bottomOffset={bottomClearance}
@@ -687,9 +692,15 @@ export default function RewardsScreen() {
           Haptics.selectionAsync().catch(() => {});
           router.push('/rewards-bank');
         }}
+        forceBank={isM4Current}
+        bankWrap={(node) => (
+          <TourTarget id="rewards.bank" radius={999}>
+            {node}
+          </TourTarget>
+        )}
       />
 
-      {/* M4 steps 2-3 live here (balance + Inspiration). Step 1 is on
+      {/* M4 steps 2-3 live here (balance + wallet). Step 1 is on
          Home (Rewards tab spotlight). Finishing returns the user to the
          Tasks home so the next module's Home-anchored step 1 can show.
          No `flatNav` — this is a tab screen WITH the floating BottomNavBar. */}

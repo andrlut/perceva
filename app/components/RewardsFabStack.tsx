@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useT } from '@/lib/i18n';
@@ -15,6 +16,13 @@ interface Props {
   onCreate: () => void;
   onManage: () => void;
   onBank: () => void;
+  /** Render the wallet even with an empty bank — the M4 tour spotlights
+   *  it, and a fresh user hasn't bought anything yet. */
+  forceBank?: boolean;
+  /** Wrapper around the wallet FAB — the Rewards screen passes a
+   *  TourTarget here so M4 step 3 can anchor its spotlight (same
+   *  pattern as TasksFabStack's seeAllWrap). */
+  bankWrap?: (node: ReactNode) => ReactNode;
 }
 
 /**
@@ -37,6 +45,8 @@ export function RewardsFabStack({
   onCreate,
   onManage,
   onBank,
+  forceBank = false,
+  bankWrap = (node) => node,
 }: Props) {
   const { t } = useT();
   return (
@@ -74,28 +84,29 @@ export function RewardsFabStack({
         <Ionicons name="add" size={26} color="#1E1348" />
       </Pressable>
 
-      {bankCount > 0 && (
-        <Pressable
-          onPress={onBank}
-          style={({ pressed }) => [
-            styles.fab,
-            styles.bankFab,
-            pressed && pressedFx,
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel={t('rewards.vault.tabs.bank', { count: bankCount })}
-          hitSlop={8}
-        >
-          <LinearGradient
-            colors={tokens.gradient.coinBtn}
-            locations={tokens.gradient.coinBtnLocations}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-          <Ionicons name="wallet" size={24} color="#3D2A00" />
-        </Pressable>
-      )}
+      {(bankCount > 0 || forceBank) &&
+        bankWrap(
+          <Pressable
+            onPress={onBank}
+            style={({ pressed }) => [
+              styles.fab,
+              styles.bankFab,
+              pressed && pressedFx,
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={t('rewards.vault.tabs.bank', { count: bankCount })}
+            hitSlop={8}
+          >
+            <LinearGradient
+              colors={tokens.gradient.coinBtn}
+              locations={tokens.gradient.coinBtnLocations}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <Ionicons name="wallet" size={24} color="#3D2A00" />
+          </Pressable>,
+        )}
     </View>
   );
 }
