@@ -37,6 +37,12 @@ export function buildM1Steps(t: Translator): ScreenedStep[] {
       position: 'bottom',
       awaitEvent: M1_EVENTS.TASK_TAPPED,
       target: 'home.task-first',
+      // Fallback for a day with no open practice (nothing to tap): the
+      // assist jumps to the next HOME step — step 2 lives on the detail
+      // screen the tap would have opened, so a plain advance would
+      // strand the module there.
+      awaitCtaLabel: t('tour.common.next'),
+      assistSkipsToSameScreen: true,
     },
     {
       // Fires on the task-form (detail) screen the user lands on after
@@ -54,6 +60,8 @@ export function buildM1Steps(t: Translator): ScreenedStep[] {
       position: 'bottom',
       awaitEvent: M1_EVENTS.TASK_LONG_PRESSED,
       target: 'home.task-first',
+      awaitCtaLabel: t('tour.common.next'),
+      assistSkipsToSameScreen: true,
     },
     {
       screen: 'home',
@@ -62,6 +70,8 @@ export function buildM1Steps(t: Translator): ScreenedStep[] {
       position: 'bottom',
       awaitEvent: M1_EVENTS.TASK_COMPLETED,
       target: 'home.task-first',
+      awaitCtaLabel: t('tour.common.next'),
+      assistSkipsToSameScreen: true,
     },
     {
       screen: 'home',
@@ -70,6 +80,8 @@ export function buildM1Steps(t: Translator): ScreenedStep[] {
       position: 'bottom',
       awaitEvent: M1_EVENTS.DRAWER_EXPANDED,
       target: 'home.completed',
+      awaitCtaLabel: t('tour.common.next'),
+      assistSkipsToSameScreen: true,
     },
   ];
 }

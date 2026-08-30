@@ -148,6 +148,24 @@ export default function RewardsScreen() {
     }, [isM4Current]),
   );
 
+  // M4 step 3 completes by USING the wallet: opening the bank sets the
+  // flag, and when this screen regains focus (bank closed) we emit —
+  // the event advance finishes the module, and we hand the user back to
+  // Home so M5's Home-anchored step 1 can show (the event path never
+  // fires onExitScreen; only the tooltip's button does).
+  const bankVisitedInTour = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (!bankVisitedInTour.current) return;
+      bankVisitedInTour.current = false;
+      const idx = useTourStore.getState().stepIndices.M4 ?? 0;
+      if (isM4Current && idx === 2) {
+        emitTourEvent(M4_EVENTS.BANK_VISITED);
+        router.navigate('/(tabs)');
+      }
+    }, [isM4Current, router]),
+  );
+
   // Auto-scroll as the M4 steps open: step 2 (balance) → top. Step 3
   // spotlights the floating wallet FAB, which doesn't scroll — the old
   // scrollToEnd chased the "Inspiração" block, which disappears once
@@ -690,6 +708,9 @@ export default function RewardsScreen() {
         onManage={() => router.push('/rewards-manage')}
         onBank={() => {
           Haptics.selectionAsync().catch(() => {});
+          if (isM4Current && (useTourStore.getState().stepIndices.M4 ?? 0) === 2) {
+            bankVisitedInTour.current = true;
+          }
           router.push('/rewards-bank');
         }}
         forceBank={isM4Current}
