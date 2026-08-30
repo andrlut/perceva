@@ -468,7 +468,7 @@ const en = {
       },
       step2: {
         title: 'Your coins',
-        body: 'Your balance, earned by completing practices. Scroll down to the suggestions below.',
+        body: "Your balance, earned by completing practices. It's what you redeem rewards with here.",
       },
       step3: {
         title: 'Redeem when you want',
