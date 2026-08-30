@@ -215,17 +215,25 @@ export function AvaliacaoPanel({ subScores, scrollViewRef, onLegendMeasured }: P
     const node = legendRef.current;
     const sv = scrollViewRef?.current;
     if (!node || !sv) return;
-    const svHandle = findNodeHandle(sv);
-    if (svHandle == null) return;
+    // Fabric (new arch) requires `measureLayout` to receive a ref to a
+    // native component — a findNodeHandle number throws "must be called
+    // with a ref to a native component". getNativeScrollRef() hands us
+    // the host ScrollView; the node-handle path stays as an old-arch
+    // fallback.
+    const target =
+      (
+        sv as unknown as { getNativeScrollRef?: () => unknown }
+      ).getNativeScrollRef?.() ?? findNodeHandle(sv);
+    if (target == null) return;
     (
       node as unknown as {
         measureLayout: (
-          rel: number,
+          rel: never,
           cb: (x: number, y: number) => void,
           err: () => void,
         ) => void;
       }
-    ).measureLayout(svHandle, (_x, y) => onLegendMeasured(y), () => {});
+    ).measureLayout(target as never, (_x, y) => onLegendMeasured(y), () => {});
   }, [onLegendMeasured, scrollViewRef]);
 
   const lastTaken = lastSession.data?.taken_at ?? null;

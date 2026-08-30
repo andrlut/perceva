@@ -32,6 +32,16 @@ export type TourScreen =
 export type ScreenedStep = TourStepData & {
   /** Screen this step lives on. Defaults to 'home'. */
   screen?: TourScreen;
+  /**
+   * When true, the assist button / "Pular este passo" link jumps to the
+   * NEXT step that lives on THIS screen (finishing the module when none
+   * remains) instead of advancing by one. Set it on gesture steps whose
+   * following step lives on a deeper screen the gesture would have
+   * opened — advancing into that step from a fallback button would
+   * strand the module on a screen that never mounts (the M2 jam,
+   * generalized).
+   */
+  assistSkipsToSameScreen?: boolean;
 };
 
 interface Props {
@@ -192,6 +202,18 @@ export function TourModule({
       onExitScreen?.();
     });
   };
+  // Fallback advance for `assistSkipsToSameScreen` steps: land on the
+  // next step of THIS screen, or finish the module when none is left.
+  const handleAssistSkip = () => {
+    const next = steps.findIndex(
+      (s, i) => i > stepIndex && (s.screen ?? 'home') === currentScreen,
+    );
+    if (next === -1) {
+      void finish('completed').then(() => onExitScreen?.());
+      return;
+    }
+    setStepIndex(module, next);
+  };
 
   return (
     <TourStep
@@ -201,6 +223,7 @@ export function TourModule({
       totalSteps={steps.length}
       onNext={handleNext}
       onSkip={handleSkip}
+      onSkipStep={step.assistSkipsToSameScreen ? handleAssistSkip : undefined}
     />
   );
 }

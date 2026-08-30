@@ -20,6 +20,10 @@ type Translator = (key: string, options?: TranslateOptions) => string;
  */
 export const M4_EVENTS = {
   REWARDS_NAVIGATED: 'rewards:navigated',
+  /** Fired by the Rewards screen when it regains focus after the user
+   *  opened the wallet during step 3 — visiting the bank completes the
+   *  module without needing an extra "Próximo" tap. */
+  BANK_VISITED: 'rewards-bank:visited',
 } as const;
 
 export function buildM4Steps(t: Translator): ScreenedStep[] {
@@ -45,6 +49,10 @@ export function buildM4Steps(t: Translator): ScreenedStep[] {
       body: t('tour.m4.step3.body'),
       position: 'top',
       target: 'rewards.bank',
+      // Opening the wallet (and coming back) completes the module; the
+      // assist stays for whoever prefers not to tap.
+      awaitEvent: M4_EVENTS.BANK_VISITED,
+      awaitCtaLabel: t('tour.common.next'),
     },
   ];
 }
