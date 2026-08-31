@@ -1737,7 +1737,8 @@ const en = {
       light: 'Light',
       dark: 'Dark',
       system: 'System',
-      note: 'Switching themes reloads the app briefly.',
+      note: 'Applying the theme briefly reloads the app.',
+      apply: 'Apply theme',
     },
     language: {
       english: 'English',

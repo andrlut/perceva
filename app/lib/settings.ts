@@ -5,6 +5,9 @@ import { create } from 'zustand';
 import { detectDeviceLanguage } from '@/lib/i18n/detect';
 
 const KEY = 'rpgtasks.settings.v1';
+/** Exported for the theme entry gate (index.js), which must read the
+ *  persisted theme pref BEFORE this module graph loads. Keep in sync. */
+export const SETTINGS_STORAGE_KEY = KEY;
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type LanguageCode = 'en' | 'pt';

@@ -1737,7 +1737,8 @@ const pt: Translations = {
       light: 'Claro',
       dark: 'Escuro',
       system: 'Sistema',
-      note: 'Trocar o tema recarrega o app rapidinho.',
+      note: 'A troca aplica com um recarregamento rápido do app.',
+      apply: 'Aplicar tema',
     },
     language: {
       english: 'English',
