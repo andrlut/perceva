@@ -5,7 +5,12 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import { ReelProgressBar } from '@/components/reels/ReelProgressBar';
 import type { ReelGroup } from '@/lib/reels';
 import { useT } from '@/lib/i18n';
-import { tokens } from '@/theme';
+// PINNED-DARK SURFACE: the reel chrome floats over dark infographic
+// artwork in BOTH themes (stories-player semantics — a light stage
+// around dark art would look broken). Import the dark palette
+// directly so light-theme boots don't flip these labels to ink over
+// the dark imagery.
+import { tokens } from '@/theme/tokens';
 import { DIMENSION_META } from '@/theme/dimensions';
 
 /**

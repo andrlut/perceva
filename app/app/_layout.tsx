@@ -28,6 +28,7 @@ import { usePurchasesSetup } from '@/lib/purchases';
 import { useModuleStatus, useTourReady } from '@/lib/tour/store';
 import { freeLimitEntity, useLimitModalStore } from '@/lib/premium';
 import { ACTIVE_THEME } from '@/theme';
+import { useThemeSystemSync } from '@/theme/useThemeSystemSync';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -128,6 +129,9 @@ export default function RootLayout() {
   // store subscriptions land on the right profile row (via webhook).
   // No-op in Expo Go / binaries without the native module.
   usePurchasesSetup();
+  // Reload into the matching palette when the OS theme flips
+  // mid-session (boot-time token capture — see theme/activeTheme.ts).
+  useThemeSystemSync();
   const [fontsLoaded] = useFonts({
     Manrope_500Medium,
     Manrope_600SemiBold,
