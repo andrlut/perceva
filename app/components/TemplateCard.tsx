@@ -5,11 +5,15 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import type { RewardTemplate } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useLocalizedPick } from '@/lib/i18n/catalog';
-import { tokens } from '@/theme';
+import { ACTIVE_THEME, tokens } from '@/theme';
 import { REWARD_CATEGORY_META } from '@/theme/rewards';
 
 import { CoinIcon } from './CoinIcon';
 import { PercevaGlyph } from './PercevaGlyph';
+
+/** Boot-time theme flag — dark keeps its original hardcoded washes
+ *  pixel-for-pixel; light swaps them per the Tema Claro palette. */
+const LIGHT = ACTIVE_THEME === 'light';
 
 /**
  * Inspiration / template row in the Vault Rewards screen.
@@ -41,9 +45,13 @@ export function TemplateCard({ template, onAdd, isAdding }: Props) {
       disabled={isAdding}
       style={({ pressed }) => [styles.root, (pressed || isAdding) && { opacity: 0.92 }]}
     >
-      {/* Dark gradient surface */}
+      {/* Surface wash — warm navy on dark, warm porcelain on light. */}
       <LinearGradient
-        colors={['rgba(50,38,18,0.55)', 'rgba(20,24,60,0.85)']}
+        colors={
+          LIGHT
+            ? ['rgba(251,243,220,0.75)', 'rgba(255,255,255,0.95)']
+            : ['rgba(50,38,18,0.55)', 'rgba(20,24,60,0.85)']
+        }
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFill}
@@ -96,8 +104,8 @@ export function TemplateCard({ template, onAdd, isAdding }: Props) {
       {/* + CTA — gold gradient pill, same DNA as COMPRAR */}
       <View style={styles.ctaWrap}>
         <LinearGradient
-          colors={['#FFE890', '#FFC83D', '#C8881C']}
-          locations={[0, 0.5, 1]}
+          colors={tokens.gradient.coinBtn as [string, string, string]}
+          locations={tokens.gradient.coinBtnLocations as [number, number, number]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={styles.cta}
@@ -123,7 +131,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,200,61,0.35)',
+    borderColor: LIGHT ? tokens.semantic.coinRim : 'rgba(255,200,61,0.35)',
     overflow: 'hidden',
   },
   glyphWrap: {
@@ -180,14 +188,14 @@ const styles = StyleSheet.create({
   cost: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 11,
-    color: '#FFE3A6',
+    color: tokens.semantic.coinLight,
   },
   ctaWrap: {
     flexShrink: 0,
     borderRadius: 999,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255,224,138,0.55)',
+    borderColor: tokens.semantic.coinRim,
   },
   cta: {
     width: 36,

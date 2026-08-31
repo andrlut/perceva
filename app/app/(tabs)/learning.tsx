@@ -35,7 +35,7 @@ import {
 } from '@/lib/readingProgress';
 import { buildReelDeck } from '@/lib/reels';
 import { useReelsProgressReady, useReelsProgressStore } from '@/lib/reelsProgress';
-import { tokens } from '@/theme';
+import { ACTIVE_THEME, tokens } from '@/theme';
 import { DIMENSION_ORDER, SUB_META } from '@/theme/dimensions';
 
 type Translator = (key: string, options?: TranslateOptions) => string;
@@ -468,9 +468,7 @@ function ReadFilterRow({ value, onChange, t }: ReadFilterRowProps) {
             {active && (
               <View style={readFilterStyles.activeBg} pointerEvents="none">
                 <LinearGradient
-                  colors={
-                    ['#FFE890', '#FFC83D', '#C8881C'] as [string, string, string]
-                  }
+                  colors={tokens.gradient.coinBtn as [string, string, string]}
                   locations={[0, 0.6, 1]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 0, y: 1 }}
@@ -496,12 +494,16 @@ function ReadFilterRow({ value, onChange, t }: ReadFilterRowProps) {
 const readFilterStyles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(36, 42, 88, 0.55)',
+    // Glass token — same navy family on dark, porcelain glass on light.
+    backgroundColor: tokens.bg.glass,
     borderRadius: 999,
     padding: 3,
     borderWidth: 1,
     // Pale-gold rim — mirrors the Vault chip vocabulary.
-    borderColor: 'rgba(255, 200, 61, 0.22)',
+    borderColor:
+      ACTIVE_THEME === 'light'
+        ? 'rgba(166, 111, 14, 0.30)'
+        : 'rgba(255, 200, 61, 0.22)',
   },
   seg: {
     flex: 1,
@@ -517,7 +519,7 @@ const readFilterStyles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: 'rgba(255, 224, 138, 0.55)',
+    borderColor: tokens.semantic.coinRim,
     overflow: 'hidden',
   },
   segText: {
