@@ -1,4 +1,3 @@
-import * as NavigationBar from 'expo-navigation-bar';
 import * as Updates from 'expo-updates';
 import { useEffect } from 'react';
 import { Appearance, DevSettings, Platform } from 'react-native';
@@ -17,9 +16,21 @@ import { ACTIVE_THEME, resolveThemePref } from './activeTheme';
 export function useAndroidNavBarTheme(): void {
   useEffect(() => {
     if (Platform.OS !== 'android') return;
-    NavigationBar.setButtonStyleAsync(
-      ACTIVE_THEME === 'light' ? 'dark' : 'light',
-    ).catch(() => {});
+    try {
+      // Guarded require — binaries built before expo-navigation-bar was
+      // added lack the native module and the package THROWS on import;
+      // an OTA must never assume it exists (same pattern as
+      // react-native-purchases). Those binaries keep the OS default
+      // until their next native build.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const NavigationBar =
+        require('expo-navigation-bar') as typeof import('expo-navigation-bar');
+      NavigationBar.setButtonStyleAsync(
+        ACTIVE_THEME === 'light' ? 'dark' : 'light',
+      ).catch(() => {});
+    } catch {
+      // Native module absent — nothing to steer.
+    }
   }, []);
 }
 
