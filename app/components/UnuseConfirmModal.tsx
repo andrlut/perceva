@@ -71,7 +71,7 @@ export function UnuseConfirmModal({
         <Animated.View style={[styles.cardWrap, cardStyle]}>
           <Pressable onPress={(e) => e.stopPropagation()} style={styles.card}>
             <LinearGradient
-              colors={['rgba(36,30,68,0.95)', 'rgba(20,24,60,0.98)']}
+              colors={tokens.gradient.confirmCardCool}
               start={{ x: 0, y: 0 }}
               end={{ x: 0, y: 1 }}
               style={StyleSheet.absoluteFill}

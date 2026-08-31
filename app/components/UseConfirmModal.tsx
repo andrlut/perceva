@@ -103,7 +103,7 @@ export function UseConfirmModal({
         <Animated.View style={[styles.cardWrap, cardStyle]}>
           <Pressable onPress={(e) => e.stopPropagation()} style={styles.card}>
             <LinearGradient
-              colors={['rgba(60,45,20,0.95)', 'rgba(20,24,60,0.98)']}
+              colors={tokens.gradient.celebrationCard}
               start={{ x: 0, y: 0 }}
               end={{ x: 0, y: 1 }}
               style={StyleSheet.absoluteFill}
@@ -131,7 +131,7 @@ export function UseConfirmModal({
 
             <View style={styles.content}>
               <View style={styles.eyebrowRow}>
-                <Ionicons name="sparkles" size={12} color="#FFE3A6" />
+                <Ionicons name="sparkles" size={12} color={tokens.semantic.coinLight} />
                 <Text style={styles.eyebrow}>
                   {t('rewards.useConfirm.eyebrow')}
                 </Text>
@@ -171,7 +171,7 @@ export function UseConfirmModal({
                   accessibilityRole="button"
                 >
                   <LinearGradient
-                    colors={['#FFE890', '#FFC83D', '#C8881C']}
+                    colors={tokens.gradient.coinBtn as [string, string, string]}
                     locations={[0, 0.5, 1]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 0, y: 1 }}
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: 'rgba(255, 200, 61, 0.55)',
+    borderColor: tokens.semantic.coinRim,
     overflow: 'hidden',
   },
   glyphWrap: {
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 10,
     letterSpacing: 1.6,
-    color: '#FFE3A6',
+    color: tokens.semantic.coinLight,
   },
   iconTile: {
     width: 96,
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     lineHeight: 26,
     textAlign: 'center',
-    color: '#FFE3A6',
+    color: tokens.semantic.coinLight,
     paddingHorizontal: tokens.space[2],
   },
   reward: {
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
     paddingVertical: tokens.space[3],
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: 'rgba(255,224,138,0.55)',
+    borderColor: tokens.semantic.coinRim,
     overflow: 'hidden',
   },
   primaryText: {

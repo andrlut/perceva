@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useT } from '@/lib/i18n';
-import { tokens } from '@/theme';
+import { ACTIVE_THEME, tokens } from '@/theme';
 
 interface Props {
   /** Number of banked rewards waiting — feeds the accessibility label.
@@ -81,7 +81,11 @@ export function RewardsFabStack({
         accessibilityLabel={t('reward.form.newTitle')}
         hitSlop={8}
       >
-        <Ionicons name="add" size={26} color="#1E1348" />
+        <Ionicons
+          name="add"
+          size={26}
+          color={ACTIVE_THEME === 'light' ? '#FFFFFF' : '#1E1348'}
+        />
       </Pressable>
 
       {(bankCount > 0 || forceBank) &&
@@ -134,7 +138,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: 'rgba(20, 24, 56, 0.92)',
+    backgroundColor: tokens.bg.glassStrong,
     borderColor: tokens.border.base,
     shadowOpacity: 0,
   },

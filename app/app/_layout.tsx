@@ -28,7 +28,10 @@ import { usePurchasesSetup } from '@/lib/purchases';
 import { useModuleStatus, useTourReady } from '@/lib/tour/store';
 import { freeLimitEntity, useLimitModalStore } from '@/lib/premium';
 import { ACTIVE_THEME } from '@/theme';
-import { useThemeSystemSync } from '@/theme/useThemeSystemSync';
+import {
+  useAndroidNavBarTheme,
+  useThemeSystemSync,
+} from '@/theme/useThemeSystemSync';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -133,6 +136,9 @@ export default function RootLayout() {
   // mid-session (boot-time token capture — the persisted pref itself is
   // applied by the entry gate in index.js, before this module loads).
   useThemeSystemSync();
+  // Android nav-bar buttons follow the app palette (white icons vanish
+  // over porcelain backgrounds otherwise).
+  useAndroidNavBarTheme();
   const [fontsLoaded] = useFonts({
     Manrope_500Medium,
     Manrope_600SemiBold,

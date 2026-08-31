@@ -1,10 +1,27 @@
+import * as NavigationBar from 'expo-navigation-bar';
 import * as Updates from 'expo-updates';
 import { useEffect } from 'react';
-import { Appearance, DevSettings } from 'react-native';
+import { Appearance, DevSettings, Platform } from 'react-native';
 
 import { useSettingsStore } from '@/lib/settings';
 
 import { ACTIVE_THEME, resolveThemePref } from './activeTheme';
+
+/**
+ * Android's system navigation bar draws its own buttons over the app.
+ * With the OS in dark mode they render WHITE — invisible over the light
+ * theme's porcelain backgrounds (and vice-versa). Steer the button
+ * style to match the app's palette, not the OS. Root-layout hook;
+ * no-op on iOS (the home indicator self-adjusts).
+ */
+export function useAndroidNavBarTheme(): void {
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    NavigationBar.setButtonStyleAsync(
+      ACTIVE_THEME === 'light' ? 'dark' : 'light',
+    ).catch(() => {});
+  }, []);
+}
 
 /**
  * Reload the JS so the app reboots into the current theme preference.

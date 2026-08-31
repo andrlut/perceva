@@ -80,7 +80,7 @@ export function SellConfirmModal({
         <Animated.View style={[styles.cardWrap, cardStyle]}>
           <Pressable onPress={(e) => e.stopPropagation()} style={styles.card}>
             <LinearGradient
-              colors={['rgba(36,30,68,0.95)', 'rgba(20,24,60,0.98)']}
+              colors={tokens.gradient.confirmCardCool}
               start={{ x: 0, y: 0 }}
               end={{ x: 0, y: 1 }}
               style={StyleSheet.absoluteFill}
@@ -127,7 +127,7 @@ export function SellConfirmModal({
                   {t('rewards.sellConfirm.refundLabel')}
                 </Text>
                 <View style={styles.refundValue}>
-                  <Ionicons name="add" size={16} color="#FFE3A6" />
+                  <Ionicons name="add" size={16} color={tokens.semantic.coinLight} />
                   <CoinIcon size={16} />
                   <Text style={styles.refundText}>
                     {refund.toLocaleString()}
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
   refundText: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 18,
-    color: '#FFE3A6',
+    color: tokens.semantic.coinLight,
     marginLeft: 2,
   },
   actions: {

@@ -73,7 +73,7 @@ export function VaultBankCard({
       {/* Dark gradient surface — warm top fades into cool bottom, same
           treatment used by affordable shop cards. */}
       <LinearGradient
-        colors={['rgba(50,38,18,0.7)', 'rgba(20,24,60,0.9)']}
+        colors={tokens.gradient.bankCard}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFill}
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
   metaCost: {
     fontFamily: 'Manrope_700Bold',
     fontSize: 11,
-    color: '#FFE3A6',
+    color: tokens.semantic.coinLight,
   },
   metaDot: {
     color: tokens.text.dim,
