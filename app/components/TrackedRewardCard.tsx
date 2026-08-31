@@ -4,11 +4,15 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { Reward } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
-import { tokens } from '@/theme';
+import { ACTIVE_THEME, tokens } from '@/theme';
 import { REWARD_CATEGORY_META } from '@/theme/rewards';
 
 import { CoinIcon } from './CoinIcon';
 import { PercevaGlyph } from './PercevaGlyph';
+
+/** Boot-time theme flag — dark keeps its original hardcoded washes
+ *  pixel-for-pixel; light swaps them per the Tema Claro palette. */
+const LIGHT = ACTIVE_THEME === 'light';
 
 interface Props {
   reward: Reward;
@@ -58,9 +62,13 @@ export function TrackedRewardCard({
 
   return (
     <View style={styles.root}>
-      {/* Dark gradient background */}
+      {/* Surface gradient — dark navy wash, or porcelain in light. */}
       <LinearGradient
-        colors={['rgba(36,42,88,0.85)', 'rgba(20,24,60,0.95)']}
+        colors={
+          LIGHT
+            ? ['rgba(255,255,255,0.94)', 'rgba(249,249,254,0.98)']
+            : ['rgba(36,42,88,0.85)', 'rgba(20,24,60,0.95)']
+        }
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFill}
@@ -86,7 +94,7 @@ export function TrackedRewardCard({
         {/* Header: SUA META eyebrow + untrack X */}
         <View style={styles.header}>
           <View style={styles.eyebrowRow}>
-            <Ionicons name="bookmark" size={12} color="#FFE3A6" />
+            <Ionicons name="bookmark" size={12} color={tokens.semantic.coinLight} />
             <Text style={styles.eyebrow}>
               {t('rewards.vault.tracked.eyebrow')}
             </Text>
@@ -134,7 +142,11 @@ export function TrackedRewardCard({
         <View style={styles.progress}>
           <View style={styles.progressTrack}>
             <LinearGradient
-              colors={['#FFE3A6', '#FFC83D', '#C8881C']}
+              colors={
+                LIGHT
+                  ? (['#F8CE5B', '#F2B21B', '#C98E12'] as [string, string, string])
+                  : (['#FFE3A6', '#FFC83D', '#C8881C'] as [string, string, string])
+              }
               locations={[0, 0.6, 1]}
               start={{ x: 0, y: 0.5 }}
               end={{ x: 1, y: 0.5 }}
@@ -174,8 +186,8 @@ export function TrackedRewardCard({
             hitSlop={6}
           >
             <LinearGradient
-              colors={['#FFE890', '#FFC83D', '#C8881C']}
-              locations={[0, 0.5, 1]}
+              colors={tokens.gradient.coinBtn as [string, string, string]}
+              locations={tokens.gradient.coinBtnLocations as [number, number, number]}
               start={{ x: 0, y: 0 }}
               end={{ x: 0, y: 1 }}
               style={StyleSheet.absoluteFill}
@@ -198,7 +210,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(255, 200, 61, 0.35)',
+    borderColor: LIGHT ? tokens.semantic.coinRim : 'rgba(255, 200, 61, 0.35)',
     overflow: 'hidden',
   },
   glyphWrap: {
@@ -228,13 +240,13 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    color: '#FFE3A6',
+    color: tokens.semantic.coinLight,
   },
   untrackBtn: {
     width: 24,
     height: 24,
     borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: LIGHT ? 'rgba(28,32,64,0.06)' : 'rgba(255,255,255,0.05)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -274,9 +286,9 @@ const styles = StyleSheet.create({
   progressTrack: {
     height: 8,
     borderRadius: 999,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    backgroundColor: LIGHT ? 'rgba(28,32,64,0.08)' : 'rgba(0,0,0,0.35)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.04)',
+    borderColor: LIGHT ? 'rgba(28,32,64,0.06)' : 'rgba(255,255,255,0.04)',
     overflow: 'hidden',
   },
   progressFill: {
@@ -300,7 +312,7 @@ const styles = StyleSheet.create({
   coinsText: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 12,
-    color: '#FFE3A6',
+    color: tokens.semantic.coinLight,
   },
   coinsDim: {
     color: tokens.text.dim,
@@ -320,7 +332,7 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: 'rgba(255,224,138,0.55)',
+    borderColor: tokens.semantic.coinRim,
     overflow: 'hidden',
   },
   ctaText: {

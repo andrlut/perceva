@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { Stack, useRouter } from 'expo-router';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   type NativeScrollEvent,
@@ -35,7 +35,7 @@ import { useMetaLookup } from '@/lib/i18n/meta';
 import { learningMediaUrl, pickMedia } from '@/lib/learningMedia';
 import { useReadingProgressStore } from '@/lib/readingProgress';
 import { showInfo } from '@/lib/util/confirm';
-import { tokens } from '@/theme';
+import { ACTIVE_THEME, tokens } from '@/theme';
 import { SUB_META } from '@/theme/dimensions';
 
 /**
@@ -154,6 +154,13 @@ export function MaterialMediaScreen({ detail: m }: Props) {
   // past the player must not fabricate a "Continue reading 90%" card.
   const updateProgress = useReadingProgressStore((s) => s.update);
   const lastWriteRef = useRef<number>(0);
+  // Trailing-write state. The old leading-only throttle (`return` inside
+  // the 500ms window) DROPPED the final scroll events of a fling — the
+  // position where the reader actually stopped (usually the end of the
+  // article) never persisted, so "Continue lendo" stuck at whatever
+  // mid-scroll event happened to pass the throttle.
+  const pendingPercentRef = useRef<number | null>(null);
+  const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onContentScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (mode !== 'read') return;
     const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
@@ -161,10 +168,35 @@ export function MaterialMediaScreen({ detail: m }: Props) {
     if (scrollable <= 0) return;
     const percent = (contentOffset.y / scrollable) * 100;
     const now = Date.now();
-    if (now - lastWriteRef.current < 500) return;
-    lastWriteRef.current = now;
-    updateProgress(m.slug, m.id, percent);
+    if (now - lastWriteRef.current >= 500) {
+      lastWriteRef.current = now;
+      updateProgress(m.slug, m.id, percent);
+      return;
+    }
+    pendingPercentRef.current = percent;
+    if (flushTimerRef.current == null) {
+      flushTimerRef.current = setTimeout(() => {
+        flushTimerRef.current = null;
+        if (pendingPercentRef.current != null) {
+          lastWriteRef.current = Date.now();
+          updateProgress(m.slug, m.id, pendingPercentRef.current);
+          pendingPercentRef.current = null;
+        }
+      }, 550);
+    }
   };
+  // Leaving the screen mid-window: flush the pending position so the
+  // last-read watermark survives the navigation.
+  useEffect(
+    () => () => {
+      if (flushTimerRef.current != null) clearTimeout(flushTimerRef.current);
+      if (pendingPercentRef.current != null) {
+        updateProgress(m.slug, m.id, pendingPercentRef.current);
+        pendingPercentRef.current = null;
+      }
+    },
+    [m.slug, m.id, updateProgress],
+  );
 
   const xpPreview = 5 + 5 * m.subs.length;
 
@@ -992,7 +1024,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: tokens.space[4],
     paddingTop: tokens.space[3],
     paddingBottom: tokens.space[5],
-    backgroundColor: 'rgba(10, 14, 38, 0.92)',
+    // Frosted band behind the sticky CTA — deep navy on dark, porcelain
+    // on light (a hardcoded navy here was the "Concluir escuro" bug in
+    // the light-theme test).
+    backgroundColor:
+      ACTIVE_THEME === 'light'
+        ? 'rgba(249, 249, 254, 0.94)'
+        : 'rgba(10, 14, 38, 0.92)',
     borderTopWidth: 1,
     borderTopColor: tokens.border.base,
   },

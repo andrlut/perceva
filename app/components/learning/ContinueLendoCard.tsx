@@ -93,8 +93,8 @@ export function ContinueLendoCard({ card, percent, onPress }: Props) {
       {/* Gold play CTA — visual sibling of the Vault COMPRAR pill. */}
       <View style={styles.ctaWrap}>
         <LinearGradient
-          colors={['#FFE890', '#FFC83D', '#C8881C'] as [string, string, string]}
-          locations={[0, 0.5, 1]}
+          colors={tokens.gradient.coinBtn as [string, string, string]}
+          locations={tokens.gradient.coinBtnLocations as [number, number, number]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={StyleSheet.absoluteFillObject}
@@ -114,9 +114,9 @@ const styles = StyleSheet.create({
     marginHorizontal: tokens.space[4],
     marginBottom: tokens.space[3],
     borderRadius: tokens.radius.lg,
-    backgroundColor: 'rgba(36, 42, 88, 0.85)',
+    backgroundColor: tokens.bg.glassStrong,
     borderWidth: 1,
-    borderColor: 'rgba(255, 200, 61, 0.4)',
+    borderColor: tokens.semantic.coinRim,
     paddingVertical: tokens.space[3],
     paddingHorizontal: tokens.space[3] + 2,
     paddingRight: tokens.space[3] + 44, // room for the CTA on the right
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   },
   barTrack: {
     height: 3,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: tokens.border.divider,
     borderRadius: 999,
     overflow: 'hidden',
     marginTop: 4,
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     marginTop: -18,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: 'rgba(255, 224, 138, 0.55)',
+    borderColor: tokens.semantic.coinRim,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
