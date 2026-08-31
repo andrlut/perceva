@@ -1737,7 +1737,7 @@ const pt: Translations = {
       light: 'Claro',
       dark: 'Escuro',
       system: 'Sistema',
-      note: 'Temas claro e sistema chegam em breve — por enquanto a UI segue o escuro.',
+      note: 'Trocar o tema recarrega o app rapidinho.',
     },
     language: {
       english: 'English',

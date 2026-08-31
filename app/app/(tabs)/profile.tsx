@@ -29,6 +29,8 @@ import {
 import { supabase } from '@/lib/supabase';
 import { confirmAction, showInfo } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
+import { ACTIVE_THEME, resolveThemePref } from '@/theme/activeTheme';
+import { reloadForTheme } from '@/theme/useThemeSystemSync';
 
 import { PremiumBadge } from '@/components/PremiumBadge';
 import { TimePickerSheet } from '@/components/TimePickerSheet';
@@ -213,8 +215,13 @@ export default function SettingsScreen() {
               { value: 'dark', label: t('profile.theme.dark') },
               { value: 'system', label: t('profile.theme.system') },
             ]}
-            onChange={(v) => setSetting('theme', v)}
-            note={settings.theme !== 'dark' ? t('profile.theme.note') : undefined}
+            onChange={async (v) => {
+              // Persist FIRST — the reload boots a fresh JS context that
+              // reads the stored pref, so racing it would lose the choice.
+              await setSetting('theme', v);
+              if (resolveThemePref(v) !== ACTIVE_THEME) reloadForTheme();
+            }}
+            note={t('profile.theme.note')}
           />
           <Divider />
           <SegmentedRow<LanguageCode>
