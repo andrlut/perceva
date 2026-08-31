@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useT } from '@/lib/i18n';
-import { tokens } from '@/theme';
+import { ACTIVE_THEME, tokens } from '@/theme';
 
 /**
  * The page after each set of REEL_SET_SIZE materials. Bounded-by-default:
@@ -64,7 +64,10 @@ export function SetEndCard({ pageW, pageH, seenCount, remaining, onContinue, onC
 
 const styles = StyleSheet.create({
   page: {
-    backgroundColor: '#0A0E26',
+    // Unlike the reel stage (pinned dark to blend with the artwork),
+    // this end-of-set page is plain UI — it follows the theme, and the
+    // token text ramp above follows with it.
+    backgroundColor: tokens.bg.deep,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
@@ -93,7 +96,10 @@ const styles = StyleSheet.create({
     borderRadius: tokens.radius.pill,
     borderWidth: 1,
     borderColor: tokens.semantic.coinRim,
-    backgroundColor: 'rgba(255, 200, 61, 0.10)',
+    backgroundColor:
+      ACTIVE_THEME === 'light'
+        ? 'rgba(166, 111, 14, 0.10)'
+        : 'rgba(255, 200, 61, 0.10)',
   },
   continueText: {
     fontFamily: 'Manrope_700Bold',
