@@ -54,7 +54,11 @@ function clampInt(
 }
 
 const DEFAULTS: AppSettings = {
-  theme: 'dark',
+  // 'system' since the theme row went live (2026-09) — fresh installs
+  // follow the device. Users who saved settings under the old placeholder
+  // default carry theme:'dark' forward, which keeps them exactly where
+  // they were until they choose.
+  theme: 'system',
   language: 'en',
   weekStart: 'sunday',
   confirmHighDifficultyComplete: true,

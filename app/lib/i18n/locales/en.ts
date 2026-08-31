@@ -1737,7 +1737,7 @@ const en = {
       light: 'Light',
       dark: 'Dark',
       system: 'System',
-      note: 'Light/system themes are coming soon — UI follows dark for now.',
+      note: 'Switching themes reloads the app briefly.',
     },
     language: {
       english: 'English',
