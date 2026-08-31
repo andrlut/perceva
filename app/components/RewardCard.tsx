@@ -4,11 +4,15 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { Reward } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
-import { tokens } from '@/theme';
+import { ACTIVE_THEME, tokens } from '@/theme';
 import { REWARD_CATEGORY_META } from '@/theme/rewards';
 
 import { CoinIcon } from './CoinIcon';
 import { PercevaGlyph } from './PercevaGlyph';
+
+/** Boot-time theme flag — dark keeps its original hardcoded washes
+ *  pixel-for-pixel; light swaps them per the Tema Claro palette. */
+const LIGHT = ACTIVE_THEME === 'light';
 
 interface Props {
   reward: Reward;
@@ -66,7 +70,7 @@ export function RewardCard({
 }: Props) {
   const { t } = useT();
   const cat = REWARD_CATEGORY_META[reward.category];
-  const accent = affordable ? '#FFC83D' : cat.color;
+  const accent = affordable ? tokens.semantic.coin : cat.color;
   const pct = Math.max(0, Math.min(100, Math.round((coins / reward.cost) * 100)));
 
   return (
@@ -74,18 +78,23 @@ export function RewardCard({
       style={[
         styles.root,
         {
-          borderColor: affordable
-            ? 'rgba(255,200,61,0.45)'
-            : 'rgba(255,255,255,0.07)',
+          borderColor: affordable ? tokens.semantic.coinRim : tokens.border.base,
         },
       ]}
     >
-      {/* Surface gradient */}
+      {/* Surface gradient — warm-tinted for affordable, neutral for the
+          rest; the light theme swaps the dark navy washes for white/
+          porcelain ones (the hardcoded navy was why reward cards stayed
+          dark in the light-theme test). */}
       <LinearGradient
         colors={
-          affordable
-            ? ['rgba(50,38,18,0.7)', 'rgba(20,24,60,0.9)']
-            : ['rgba(36,42,88,0.65)', 'rgba(20,24,60,0.85)']
+          LIGHT
+            ? affordable
+              ? ['rgba(251,243,220,0.92)', 'rgba(255,255,255,0.96)']
+              : ['rgba(255,255,255,0.92)', 'rgba(249,249,254,0.96)']
+            : affordable
+              ? ['rgba(50,38,18,0.7)', 'rgba(20,24,60,0.9)']
+              : ['rgba(36,42,88,0.65)', 'rgba(20,24,60,0.85)']
         }
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
@@ -207,7 +216,7 @@ export function RewardCard({
             <Text
               style={[
                 styles.cost,
-                { color: affordable ? '#FFE3A6' : tokens.text.dim },
+                { color: affordable ? tokens.semantic.coinLight : tokens.text.dim },
               ]}
             >
               {reward.cost.toLocaleString()}
@@ -227,8 +236,8 @@ export function RewardCard({
               hitSlop={6}
             >
               <LinearGradient
-                colors={['#FFE890', '#FFC83D', '#C8881C']}
-                locations={[0, 0.5, 1]}
+                colors={tokens.gradient.coinBtn as [string, string, string]}
+                locations={tokens.gradient.coinBtnLocations as [number, number, number]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 0, y: 1 }}
                 style={StyleSheet.absoluteFill}
@@ -251,7 +260,7 @@ export function RewardCard({
               <Ionicons
                 name="bookmark"
                 size={9}
-                color="#C2A1FF"
+                color={LIGHT ? tokens.brand.violet2 : '#C2A1FF'}
                 style={{ marginRight: 4 }}
               />
               <Text style={styles.ctaTrackText}>
@@ -333,7 +342,7 @@ const styles = StyleSheet.create({
   },
   progressTrack: {
     height: 4,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: LIGHT ? 'rgba(28,32,64,0.10)' : 'rgba(0,0,0,0.4)',
     borderRadius: 999,
     overflow: 'hidden',
   },
@@ -375,7 +384,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   ctaBuy: {
-    borderColor: 'rgba(255,224,138,0.55)',
+    borderColor: tokens.semantic.coinRim,
   },
   ctaBuyText: {
     fontFamily: 'Manrope_800ExtraBold',
@@ -384,14 +393,14 @@ const styles = StyleSheet.create({
     color: '#3D2A00',
   },
   ctaTrack: {
-    borderColor: 'rgba(155,130,255,0.35)',
-    backgroundColor: 'rgba(155,130,255,0.1)',
+    borderColor: LIGHT ? 'rgba(106,75,244,0.35)' : 'rgba(155,130,255,0.35)',
+    backgroundColor: LIGHT ? 'rgba(106,75,244,0.10)' : 'rgba(155,130,255,0.1)',
     paddingHorizontal: 10,
   },
   ctaTrackText: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 10,
     letterSpacing: 0.7,
-    color: '#C2A1FF',
+    color: LIGHT ? tokens.brand.violet2 : '#C2A1FF',
   },
 });
