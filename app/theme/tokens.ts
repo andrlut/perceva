@@ -256,6 +256,16 @@ export const tokens = {
       'rgba(255, 138, 61, 0.28)',
       'rgba(195, 56, 24, 0.10)',
     ] as const,
+    /**
+     * Modal/card surface washes — the warm/cool navy gradients shared by
+     * the buy/celebration/confirm modals and the bank card. Promoted to
+     * tokens so the light palette can swap them (they were the "popups
+     * continuam escuros" batch of the light-theme test).
+     */
+    celebrationCard: ['rgba(60, 45, 20, 0.95)', 'rgba(20, 24, 60, 0.98)'] as const,
+    confirmCardWarm: ['rgba(50, 38, 18, 0.95)', 'rgba(20, 24, 60, 0.98)'] as const,
+    confirmCardCool: ['rgba(36, 30, 68, 0.95)', 'rgba(20, 24, 60, 0.98)'] as const,
+    bankCard: ['rgba(50, 38, 18, 0.7)', 'rgba(20, 24, 60, 0.9)'] as const,
     /** Reward progress bar fill with a shimmer end → mid → start. */
     rewardBarFill: ['#C8881C', '#FFC83D', '#FFE3A6'] as const,
     rewardBarFillLocations: [0, 0.5, 1] as const,

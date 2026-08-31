@@ -33,7 +33,7 @@ interface Props {
 }
 
 /** Gold celebration palette — same trio as the Vault buy celebration. */
-const GOLD = ['#FFE890', '#FFC83D', '#C8881C'] as const;
+const GOLD = tokens.gradient.coinBtn as [string, string, string];
 
 /** Body copy variant keys (under `home.dayCleared.`), picked at random on
  *  each open so the celebration doesn't read identical every day. Keep in
@@ -219,7 +219,7 @@ export function DayClearedCelebration({
             {/* Warm gold-over-night gradient — the "completed" state of
                 the day, same base as the Vault celebration. */}
             <LinearGradient
-              colors={['rgba(60,45,20,0.95)', 'rgba(20,24,60,0.98)']}
+              colors={tokens.gradient.celebrationCard}
               start={{ x: 0, y: 0 }}
               end={{ x: 0, y: 1 }}
               style={StyleSheet.absoluteFill}
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: 'rgba(255, 200, 61, 0.55)',
+    borderColor: tokens.semantic.coinRim,
     overflow: 'hidden',
   },
   content: {
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
     height: 96,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255, 200, 61, 0.55)',
+    borderColor: tokens.semantic.coinRim,
     backgroundColor: 'rgba(255, 200, 61, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
   statsText: {
     fontFamily: 'Manrope_700Bold',
     fontSize: 12,
-    color: '#FFE3A6',
+    color: tokens.semantic.coinLight,
     letterSpacing: 0.3,
   },
   primaryBtn: {
@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
     paddingVertical: tokens.space[3],
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: 'rgba(255,224,138,0.55)',
+    borderColor: tokens.semantic.coinRim,
     overflow: 'hidden',
     marginTop: tokens.space[2],
   },

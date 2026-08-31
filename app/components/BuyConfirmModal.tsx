@@ -114,7 +114,7 @@ export function BuyConfirmModal({
         <Animated.View style={[styles.cardWrap, cardStyle]}>
           <Pressable onPress={(e) => e.stopPropagation()} style={styles.card}>
             <LinearGradient
-              colors={['rgba(50,38,18,0.95)', 'rgba(20,24,60,0.98)']}
+              colors={tokens.gradient.confirmCardWarm}
               start={{ x: 0, y: 0 }}
               end={{ x: 0, y: 1 }}
               style={StyleSheet.absoluteFill}
@@ -211,7 +211,7 @@ export function BuyConfirmModal({
                   <Text
                     style={[
                       styles.totalText,
-                      { color: canBuy ? '#FFE3A6' : tokens.semantic.danger },
+                      { color: canBuy ? tokens.semantic.coinLight : tokens.semantic.danger },
                     ]}
                   >
                     {total.toLocaleString()}
@@ -240,7 +240,7 @@ export function BuyConfirmModal({
                 >
                   {canBuy && (
                     <LinearGradient
-                      colors={['#FFE890', '#FFC83D', '#C8881C']}
+                      colors={tokens.gradient.coinBtn as [string, string, string]}
                       locations={[0, 0.5, 1]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 0, y: 1 }}
@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
     paddingVertical: tokens.space[3],
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: 'rgba(255,224,138,0.55)',
+    borderColor: tokens.semantic.coinRim,
     overflow: 'hidden',
   },
   primaryBtnDisabled: {

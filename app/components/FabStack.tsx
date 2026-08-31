@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { tokens } from '@/theme';
+import { ACTIVE_THEME, tokens } from '@/theme';
 
 export type FabTone = 'neutral' | 'violet';
 export type FabSize = 'sm' | 'md' | 'lg';
@@ -75,7 +75,15 @@ export function FabStack({ bottomOffset, actions }: Props) {
               <Ionicons
                 name={a.icon}
                 size={a.iconSize ?? DEFAULT_ICON[size]}
-                color={tone === 'violet' ? '#1E1348' : tokens.text.mid}
+                color={
+                  tone === 'violet'
+                    ? // Dark ink pops on the pale dark-theme violet; the
+                      // deeper light-theme violet needs white.
+                      ACTIVE_THEME === 'light'
+                      ? '#FFFFFF'
+                      : '#1E1348'
+                    : tokens.text.mid
+                }
               />
             </Pressable>
           );
@@ -111,7 +119,9 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
   },
   neutral: {
-    backgroundColor: 'rgba(20, 24, 56, 0.92)',
+    // Glass token — navy on dark, porcelain on light (the hardcoded navy
+    // was the "calendário escuro" of the light-theme test).
+    backgroundColor: tokens.bg.glassStrong,
     borderColor: tokens.border.base,
     shadowOpacity: 0,
   },
