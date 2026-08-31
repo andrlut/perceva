@@ -28,7 +28,6 @@ import { usePurchasesSetup } from '@/lib/purchases';
 import { useModuleStatus, useTourReady } from '@/lib/tour/store';
 import { freeLimitEntity, useLimitModalStore } from '@/lib/premium';
 import { ACTIVE_THEME } from '@/theme';
-import { useThemeBoot } from '@/theme/useThemeBoot';
 import { useThemeSystemSync } from '@/theme/useThemeSystemSync';
 
 export const unstable_settings = {
@@ -131,11 +130,9 @@ export default function RootLayout() {
   // No-op in Expo Go / binaries without the native module.
   usePurchasesSetup();
   // Reload into the matching palette when the OS theme flips
-  // mid-session (boot-time token capture — see theme/activeTheme.ts).
+  // mid-session (boot-time token capture — the persisted pref itself is
+  // applied by the entry gate in index.js, before this module loads).
   useThemeSystemSync();
-  // Apply the persisted Ajustes theme pref BEFORE any route renders —
-  // the null-return below holds the splash until it lands.
-  const themeReady = useThemeBoot();
   const [fontsLoaded] = useFonts({
     Manrope_500Medium,
     Manrope_600SemiBold,
@@ -150,7 +147,7 @@ export default function RootLayout() {
     DMSerifDisplay_400Regular,
   });
 
-  if (!fontsLoaded || !themeReady) {
+  if (!fontsLoaded) {
     return null;
   }
 

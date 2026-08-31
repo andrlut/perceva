@@ -215,14 +215,27 @@ export default function SettingsScreen() {
               { value: 'dark', label: t('profile.theme.dark') },
               { value: 'system', label: t('profile.theme.system') },
             ]}
-            onChange={async (v) => {
-              // Persist FIRST — the reload boots a fresh JS context that
-              // reads the stored pref, so racing it would lose the choice.
-              await setSetting('theme', v);
-              if (resolveThemePref(v) !== ACTIVE_THEME) reloadForTheme();
-            }}
+            onChange={(v) => setSetting('theme', v)}
             note={t('profile.theme.note')}
           />
+          {/* Apply appears only when the SAVED pref resolves to a palette
+              other than the running one — switching themes is a JS reload
+              (boot-time token capture), so it stays an explicit action. */}
+          {resolveThemePref(settings.theme) !== ACTIVE_THEME && (
+            <Pressable
+              onPress={reloadForTheme}
+              style={({ pressed }) => [
+                styles.applyThemeBtn,
+                pressed && { opacity: 0.85 },
+              ]}
+              accessibilityRole="button"
+            >
+              <Ionicons name="color-palette" size={15} color={tokens.brand.violet2} />
+              <Text style={styles.applyThemeText}>
+                {t('profile.theme.apply')}
+              </Text>
+            </Pressable>
+          )}
           <Divider />
           <SegmentedRow<LanguageCode>
             label={t('profile.fields.language')}
@@ -587,6 +600,25 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: tokens.bg.base },
   content: {
     padding: tokens.space[4],
+  },
+  applyThemeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: tokens.space[2],
+    marginBottom: tokens.space[2],
+    paddingVertical: tokens.space[2] + 2,
+    borderRadius: tokens.radius.md,
+    borderWidth: 1,
+    borderColor: 'rgba(123, 92, 255, 0.35)',
+    backgroundColor: 'rgba(123, 92, 255, 0.10)',
+  },
+  applyThemeText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 13,
+    letterSpacing: 0.3,
+    color: tokens.brand.violet2,
   },
   titleRow: {
     flexDirection: 'row',
