@@ -170,6 +170,16 @@
   "has_rlog": true
  },
  {
+  "slug": "ikea-effect",
+  "type": "explainer",
+  "dimension_id": "craft",
+  "title_pt": "A estante torta que você não joga fora",
+  "title_en": "The crooked shelf you can't throw out",
+  "hero_image_url": "https://uneqnpyzevosznwkmvvo.supabase.co/storage/v1/object/public/learning-media/ikea-effect/cover.webp",
+  "reading_minutes": 6,
+  "has_rlog": true
+ },
+ {
   "slug": "news-loneliness-memory-2026-04",
   "type": "news",
   "dimension_id": "bonds",

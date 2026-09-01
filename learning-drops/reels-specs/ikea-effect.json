@@ -1,0 +1,49 @@
+{
+  "slug": "ikea-effect",
+  "reels": [
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "hammer",
+        "b": "cube"
+      },
+      "headline": {
+        "pt": "O apego não está na estante.",
+        "en": "The attachment isn't in the shelf."
+      },
+      "lede": {
+        "pt": "Duas horas no chão da sala, um parafuso sobrando, uma porta torta — e você ainda prefere essa estante à que chegou pronta. Um experimento com origami mostra onde o apego gruda de verdade.",
+        "en": "Two hours on the living room floor, one screw left over, a crooked door — and you still like that shelf better than the one that arrived built. An origami experiment shows where the attachment actually sticks."
+      }
+    },
+    {
+      "metaphor": "asymmetry",
+      "icons": {
+        "a": "megaphone",
+        "b": "flask"
+      },
+      "headline": {
+        "pt": "63% a mais? O número encolheu.",
+        "en": "63% more? The number shrank."
+      },
+      "lede": {
+        "pt": "O dado que circula em post e palestra saiu de um artigo só, em condições de laboratório bem específicas. Catorze anos e 55 estudos depois dá pra fazer a conta melhor — e o tamanho real muda o que fazer com ele.",
+        "en": "The figure you see in posts and talks came out of a single paper, under very specific lab conditions. Fourteen years and 55 studies later the sum can be done better — and the real size changes what you do with it."
+      }
+    },
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "pricetag"
+      },
+      "headline": {
+        "pt": "O elogio mente. O preço não.",
+        "en": "Compliments lie. Prices don't."
+      },
+      "lede": {
+        "pt": "Você mostra o que fez e ouve que ficou ótimo. Não serve: ninguém quer te machucar. Um experimento com sapos de papel achou a pergunta que arranca a verdade — e mais quatro defesas contra o próprio apego.",
+        "en": "You show what you made and hear that it looks great. Useless: nobody wants to hurt you. An experiment with paper frogs found the question that forces the truth — plus four more guards against your own attachment."
+      }
+    }
+  ]
+}
