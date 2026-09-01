@@ -13,6 +13,10 @@
  * folder. The `learning-publisher` agent (or a human) uploads via
  * `supabase storage cp` and writes the migration from manifest.json.
  *
+ * A partial run (`--only cover`, `--locales pt`) MERGES into the manifest
+ * already in the drop folder instead of replacing it — otherwise the assets an
+ * earlier run produced vanish from the manifest and are never uploaded.
+ *
  * Usage:
  *   node generate.mjs --slug <slug> [--only cover|infographic]
  *                     [--locales pt,en] [--dry-run]
@@ -74,6 +78,51 @@ function die(msg) {
 
 function log(msg) {
   console.log(msg);
+}
+
+// Canonical asset order in the manifest, so the output does not depend on which
+// partial runs happened in which order.
+const KIND_ORDER = ['infographic', 'cover', 'audio'];
+
+/**
+ * Fold the manifest already on disk into the one this run built. Every prior
+ * asset this run did not regenerate is carried over, as long as its file is
+ * still in the drop folder — a manifest entry without a file breaks the upload
+ * step. Mutates `manifest`; returns how many entries were carried over.
+ */
+function mergePriorManifest(manifest, inboxDir) {
+  const priorPath = join(inboxDir, 'manifest.json');
+  if (!existsSync(priorPath)) return 0;
+
+  let prior;
+  try {
+    prior = JSON.parse(readFileSync(priorPath, 'utf8'));
+  } catch (e) {
+    log(`  ! manifest.json on disk is not valid JSON (${e.message}) — overwriting it`);
+    return 0;
+  }
+  if (!prior || prior.slug !== manifest.slug || !Array.isArray(prior.assets)) return 0;
+
+  const fresh = new Set(manifest.assets.map((a) => a.bucketPath));
+  const carried = [];
+  for (const a of prior.assets) {
+    if (!a?.bucketPath || !a.localPath || fresh.has(a.bucketPath)) continue;
+    if (!existsSync(join(inboxDir, a.localPath))) {
+      log(`  ! dropped stale manifest entry ${a.localPath} (file no longer in the drop folder)`);
+      continue;
+    }
+    carried.push(a);
+    log(`  · carried over ${a.localPath} from a previous run`);
+  }
+  if (carried.length === 0) return 0;
+
+  manifest.assets = [...manifest.assets, ...carried].sort(
+    (x, y) =>
+      KIND_ORDER.indexOf(x.kind) - KIND_ORDER.indexOf(y.kind) ||
+      String(x.locale ?? '').localeCompare(String(y.locale ?? '')),
+  );
+  manifest.generated = manifest.assets.map((a) => a.localPath);
+  return carried.length;
 }
 
 // ── main ────────────────────────────────────────────────────────────────────
@@ -244,7 +293,9 @@ async function main() {
   }
 
   // ── manifest + cleanup ────────────────────────────────────────────────────
+  const producedNow = manifest.generated.length;
   if (!args.dryRun) {
+    mergePriorManifest(manifest, inboxDir);
     writeFileSync(join(inboxDir, 'manifest.json'), JSON.stringify(manifest, null, 2), 'utf8');
     try {
       rmSync(tmpDir, { recursive: true, force: true });
@@ -254,7 +305,7 @@ async function main() {
   }
 
   // ── summary + next steps ──────────────────────────────────────────────────
-  log(`\n✓ Done. ${manifest.generated.length} asset(s) in learning-drops/inbox/${args.slug}/`);
+  log(`\n✓ Done. ${producedNow} asset(s) generated, ${manifest.generated.length} in the manifest · learning-drops/inbox/${args.slug}/`);
   if (manifest.assets.length && !args.dryRun) {
     log('\nNext (ingestion — the publisher agent does this automatically):');
     for (const a of manifest.assets) {

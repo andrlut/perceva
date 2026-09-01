@@ -9,7 +9,11 @@ Gera os **assets de mídia** de um material do Learning a partir de um
   **SVG com os tokens de marca do Perceva** (resvg), **US$ 0 de API**.
 - **`manifest.json`** — descreve o que subir pro bucket e as linhas a inserir no
   banco. O agente `learning-publisher` (ou você) faz o `supabase storage cp` +
-  a migration a partir daí.
+  a migration a partir daí. Uma rodada parcial (`--only cover`, `--locales pt`)
+  **faz merge** com o manifest que já está na pasta em vez de sobrescrevê-lo:
+  entradas anteriores são mantidas se o arquivo ainda existir, e descartadas com
+  aviso se não existir. Sem isso, retomar uma etapa que falhou apagava as outras
+  do manifest e elas nunca subiam.
 
 Este pacote é **isolado do workspace pnpm** de propósito (não arrasta a árvore
 do Expo). Instale com `npm install` aqui dentro, não com `pnpm`.
