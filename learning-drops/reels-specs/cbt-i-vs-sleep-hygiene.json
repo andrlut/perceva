@@ -1,0 +1,48 @@
+{
+  "slug": "cbt-i-vs-sleep-hygiene",
+  "reels": [
+    {
+      "metaphor": "trio",
+      "icons": {
+        "a": "list",
+        "b": "moon"
+      },
+      "headline": {
+        "pt": "Você cumpriu a lista. E segue acordado.",
+        "en": "You kept the checklist. Still awake."
+      },
+      "lede": {
+        "pt": "Cortina blackout, celular na sala desde as nove, último café ao meio-dia. São três da manhã e você está de olho aberto. Um guideline de 2016 diz que a lista nunca foi o tratamento — e nomeia o que é.",
+        "en": "Blackout curtains, phone left in the living room since nine, last coffee at noon. It's 3am and your eyes are open. A 2016 guideline says the checklist was never the treatment — and names what is."
+      }
+    },
+    {
+      "metaphor": "ring",
+      "icons": {
+        "symbol": "minus"
+      },
+      "headline": {
+        "pt": "O tratamento te dá menos tempo na cama.",
+        "en": "The treatment gives you less time in bed."
+      },
+      "lede": {
+        "pt": "Oito horas e meia deitado, cinco e meia dormindo: a manobra de primeira linha encolhe a sua janela até perto do sono que você de fato tem. Você fica pior durante o dia antes de dormir melhor à noite.",
+        "en": "Eight and a half hours in bed, five and a half asleep: the first-line move shrinks your window toward the sleep you actually get. You feel worse by day before you sleep better at night."
+      }
+    },
+    {
+      "metaphor": "solo",
+      "icons": {
+        "symbol": "medkit"
+      },
+      "headline": {
+        "pt": "Antes de encurtar seu sono, um filtro.",
+        "en": "Before you shorten your sleep, a filter."
+      },
+      "lede": {
+        "pt": "Você ronca alto, ou acorda moído mesmo depois de oito horas na cama. Nesses casos o protocolo do sono resolve o problema errado, e tem gente que não deve tentá-lo sozinha. Quem precisa de médico antes.",
+        "en": "You snore loudly, or wake up wrecked even after eight hours in bed. Then the sleep protocol solves the wrong problem, and some people shouldn't run it alone. Who needs a doctor first, and why."
+      }
+    }
+  ]
+}
