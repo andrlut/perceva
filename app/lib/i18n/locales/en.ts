@@ -1701,7 +1701,6 @@ const en = {
       preferences: 'Preferences',
       modules: 'Modules',
       notifications: 'Notifications',
-      tasksProgress: 'Practices & Progress',
       data: 'Data',
       about: 'About',
     },
@@ -1728,10 +1727,6 @@ const en = {
       weekStart: 'Week starts on',
       confirmHighDifficulty: 'Confirm hard practices',
       confirmHighDifficultyDescription: 'Ask before completing a 4★ or 5★ practice. Stops accidental taps.',
-      defaultRewards: 'Default rewards',
-      dayResetTime: 'Day reset time',
-      midnight: 'Midnight (local)',
-      comingSoon: 'Coming soon',
     },
     theme: {
       light: 'Light',

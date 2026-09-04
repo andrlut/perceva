@@ -332,16 +332,6 @@ export default function SettingsScreen() {
           <NoteText>{t('profile.notifications.footnote')}</NoteText>
         </Card>
 
-        {/* ───── TASKS & PROGRESS ───── */}
-        <SectionHeader icon="trophy-outline" label={t('profile.sections.tasksProgress')} />
-        <Card>
-          <InfoRow
-            label={t('profile.fields.dayResetTime')}
-            value={t('profile.fields.midnight')}
-            muted
-          />
-        </Card>
-
         {/* ───── ABOUT ───── */}
         <SectionHeader icon="information-circle-outline" label={t('profile.sections.about')} />
         <Card>

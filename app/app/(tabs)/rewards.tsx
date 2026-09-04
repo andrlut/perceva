@@ -233,7 +233,12 @@ export default function RewardsScreen() {
     return (templates.data ?? []).filter(
       (tmpl) =>
         (!filterActive || selectedCategories.has(tmpl.category)) &&
-        !owned.has(tmpl.title.trim().toLowerCase()),
+        // Match BOTH titles: adopting snapshots the catalog text in the
+        // user's locale (lib/api/rewards.ts), so a reward taken in pt-BR
+        // is stored as 'Café especial' and would stop matching the EN
+        // `title` — the suggestion would reappear as if never taken.
+        !owned.has(tmpl.title.trim().toLowerCase()) &&
+        !owned.has((tmpl.title_pt ?? '').trim().toLowerCase()),
     );
   }, [templates.data, rewards.data, selectedCategories, filterActive]);
 
