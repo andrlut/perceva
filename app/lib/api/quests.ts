@@ -257,12 +257,24 @@ export interface CustomQuestPayload {
   reward_coins: number;
   allow_partial: boolean;
   requirements: {
-    kind: 'complete_task_n_times' | 'complete_any_in_dim' | 'reach_skill_value';
+    kind:
+      | 'complete_task_n_times'
+      | 'complete_any_in_dim'
+      | 'reach_skill_value'
+      | 'accumulate_sub_stars';
     task_id?: string | null;
     dimension_id?: string | null;
     skill_id?: string | null;
+    /** Requerido por `accumulate_sub_stars` (CHECK quest_requirement_kind_payload). */
+    sub_id?: SubId | null;
     target_count?: number;
     min_value?: number;
+    /**
+     * Uma missão multi-sub tem N requisitos do MESMO kind; o cliente os
+     * ordena por esta coluna. Só passou a ser escrito pela RPC em
+     * 20260904000002 — junto com `sub_id`, que ela também nunca preencheu.
+     */
+    sort_order?: number;
   }[];
 }
 

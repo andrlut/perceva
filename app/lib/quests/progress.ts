@@ -14,13 +14,17 @@ import type { QuestWithProgress } from '@/lib/db/types';
  * target of 0 and pins those quests at 0% forever.
  */
 export function questProgressRatio(data: QuestWithProgress): number {
-  const subStarsReq = data.requirements.find(
+  // TODOS os requisitos sub_stars, não o primeiro: desde 20260904000002 uma
+  // missão personalizada pode exigir estrelas em vários subs ao mesmo tempo
+  // ("30★ em nutrição E 20★ em força neste mês"), e ler só um deles fixaria
+  // a barra no progresso de um sub qualquer. Com um único requisito o
+  // resultado é idêntico ao anterior, então nenhuma quest existente muda.
+  const subStarsReqs = data.requirements.filter(
     (r) => r.requirement.kind === 'accumulate_sub_stars',
   );
 
-  if (subStarsReq) {
-    const target = Number(subStarsReq.requirement.target_count ?? 0);
-    return target > 0 ? Math.min(1, subStarsReq.currentCount / target) : 0;
+  if (subStarsReqs.length > 0) {
+    return aggregateProgress(subStarsReqs);
   }
 
   if (data.quest.quest_type === 'challenge') {

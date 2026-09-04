@@ -17,73 +17,113 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CoinIcon } from '@/components/CoinIcon';
+import {
+  SubStarTargetPicker,
+  type SubStarTarget,
+} from '@/components/SubStarTargetPicker';
 import { useStartCustomQuest } from '@/lib/api/quests';
 import { useActiveTasks } from '@/lib/api/tasks';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
-import { useRequireModule } from '@/lib/modules';
+import { useModules, useRequireAnyModule } from '@/lib/modules';
 import { freeLimitEntity, useLimitModalStore } from '@/lib/premium';
+import { deriveQuestReward } from '@/lib/quests/reward';
 import { useKeyboardOverlap } from '@/lib/use-keyboard-height';
 import { showInfo } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 
 /**
- * Custom quest creation. Form fields:
- *   - title (required, max 60)
- *   - description (optional, max 200)
- *   - duration in days (7 / 14 / 21 / 30 / custom)
- *   - linked tasks (multi-select against the user's active task list)
- *   - allow_partial toggle
+ * Criação de quest personalizada — formulário COMPARTILHADO pelos dois
+ * boards, porque a tabela `quest` é uma só e o que separa os produtos é
+ * o kind do requisito:
  *
- * Category is intentionally NOT in this form — `quest` has no category
- * column, so saving one for a custom quest would have nowhere to land.
- * Custom quests show up under the "custom" bucket on the board.
+ *   Missões  → `accumulate_sub_stars`  (junte N★ num sub)
+ *   Metas    → `complete_task_n_times` (faça a prática N vezes)
  *
- * Reward XP/coins are derived from duration (preview-only, no slider):
- *   xp    = 50 + 10 * durationDays
- *   coins = floor(xp / 4)
+ * O modo é DERIVADO do gate no render, nunca capturado num inicializador
+ * de useState: `useModules()` devolve tudo false até o profile carregar,
+ * então uma escolha feita nesse instante estaria errada. Com as duas
+ * chaves ligadas aparece um seletor; com uma só, o modo é o dela.
  *
- * Per-task target_count defaults to `max(7, floor(durationDays / 2))`
- * — a rough "do this regularly" baseline that scales with the window.
+ * Antes desta versão a tela era gateada só por `metas`, e quem ligava
+ * apenas Missões via o board sem botão de criar — o pedido que originou
+ * esta mudança.
+ *
+ * Categoria continua fora do formulário de propósito: `quest` não tem
+ * coluna de categoria, então não haveria onde pousar.
+ *
+ * Recompensa é DERIVADA das estrelas exigidas (lib/quests/reward.ts), não
+ * digitada. A fórmula antiga daqui (`50 + 10 * dias`) pagava pelo TEMPO,
+ * então esticar o prazo aumentava o prêmio de uma missão mais fácil.
  */
 const DURATION_PRESETS = [7, 14, 21, 30];
 const MAX_TITLE = 60;
 const MAX_DESCRIPTION = 200;
 
-function deriveRewardXp(days: number): number {
-  return Math.max(20, 50 + 10 * days);
-}
-
-function deriveRewardCoins(xp: number): number {
-  return Math.max(5, Math.floor(xp / 4));
-}
-
+/** Baseline "faça isso com regularidade", escalando com a janela. */
 function defaultTaskTarget(days: number): number {
   return Math.max(7, Math.floor(days / 2));
 }
+
+type QuestMode = 'sub_stars' | 'tasks';
 
 export default function QuestCreateScreen() {
   const router = useRouter();
   const { t } = useT();
   const meta = useMetaLookup();
-  // Metas-gated, deliberately NOT any-of: this form only emits
-  // non-sub_stars quests, which render exclusively on the Metas surfaces.
-  // Letting a missoes-only user in would create quests that show nowhere
-  // while still consuming a free-limit slot.
-  useRequireModule('metas');
+  // Any-of: o formulário serve os dois boards. Fail-closed — `false` até
+  // o profile carregar, e redireciona pra home se as duas chaves estiverem
+  // desligadas (cobre deep link).
+  const gate = useRequireAnyModule(['missoes', 'metas']);
+  const modules = useModules();
   const tasks = useActiveTasks();
   const startCustomQuest = useStartCustomQuest();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [durationDays, setDurationDays] = useState<number>(21);
+  const [durationDays, setDurationDays] = useState<number>(30);
   const [linkedTaskIds, setLinkedTaskIds] = useState<Set<string>>(new Set());
+  const [subTargets, setSubTargets] = useState<SubStarTarget[]>([]);
   const [partial, setPartial] = useState(true);
+  const [modePick, setModePick] = useState<QuestMode>('sub_stars');
   const keyboardHeight = useKeyboardOverlap();
 
-  const rewardXp = useMemo(() => deriveRewardXp(durationDays), [durationDays]);
-  const rewardCoins = useMemo(() => deriveRewardCoins(rewardXp), [rewardXp]);
-  const canSave = title.trim().length > 0 && !startCustomQuest.isPending;
+  // Modo derivado no render. Com as duas chaves ligadas o usuário escolhe;
+  // com uma só, é a dela. NUNCA um useState inicializado a partir de
+  // `modules`, que é todo-false enquanto o profile carrega.
+  const bothOn = modules.missoes && modules.metas;
+  const mode: QuestMode = bothOn
+    ? modePick
+    : modules.missoes
+      ? 'sub_stars'
+      : 'tasks';
+
+  // Estrelas exigidas — a base da recompensa nos dois modos.
+  const totalStars = useMemo(() => {
+    if (mode === 'sub_stars') {
+      return subTargets.reduce((sum, s) => sum + s.stars, 0);
+    }
+    const perTask = defaultTaskTarget(durationDays);
+    return (tasks.data ?? [])
+      .filter((task) => linkedTaskIds.has(task.id))
+      .reduce((sum, task) => sum + perTask * (task.total_stars ?? 1), 0);
+  }, [mode, subTargets, tasks.data, linkedTaskIds, durationDays]);
+
+  const { xp: rewardXp, coins: rewardCoins } = useMemo(
+    () => deriveQuestReward(totalStars),
+    [totalStars],
+  );
+
+  const requirementCount =
+    mode === 'sub_stars' ? subTargets.length : linkedTaskIds.size;
+
+  // Exigir pelo menos um requisito: sem isso a RPC cria uma quest que nunca
+  // fecha, e que ainda aparece no board de Metas (o `.every` de goals.tsx é
+  // verdadeiro vacuamente sobre um array vazio).
+  const canSave =
+    title.trim().length > 0 &&
+    requirementCount > 0 &&
+    !startCustomQuest.isPending;
 
   const toggleTask = (taskId: string) => {
     Haptics.selectionAsync().catch(() => {});
@@ -98,11 +138,22 @@ export default function QuestCreateScreen() {
   const handleSave = async () => {
     if (!canSave) return;
     const deadline = new Date(Date.now() + durationDays * 86400000).toISOString();
-    const requirements = [...linkedTaskIds].map((taskId) => ({
-      kind: 'complete_task_n_times' as const,
-      task_id: taskId,
-      target_count: defaultTaskTarget(durationDays),
-    }));
+    // UM requisito por sub: o CHECK quest_requirement_kind_payload amarra
+    // sub_id singular + target_count na mesma linha. Os dois arrays nunca
+    // se misturam — uma quest é de um modo só.
+    const requirements =
+      mode === 'sub_stars'
+        ? subTargets.map((s, i) => ({
+            kind: 'accumulate_sub_stars' as const,
+            sub_id: s.sub_id,
+            target_count: s.stars,
+            sort_order: i,
+          }))
+        : [...linkedTaskIds].map((taskId) => ({
+            kind: 'complete_task_n_times' as const,
+            task_id: taskId,
+            target_count: defaultTaskTarget(durationDays),
+          }));
 
     try {
       await startCustomQuest.mutateAsync({
@@ -148,7 +199,11 @@ export default function QuestCreateScreen() {
         >
           <Ionicons name="close" size={16} color={tokens.text.mid} />
         </Pressable>
-        <Text style={styles.headerTitle}>{t('quests.create.title')}</Text>
+        <Text style={styles.headerTitle}>
+          {mode === 'sub_stars'
+            ? t('quests.create.titleMissao')
+            : t('quests.create.title')}
+        </Text>
         <Pressable
           onPress={handleSave}
           disabled={!canSave}
@@ -166,6 +221,14 @@ export default function QuestCreateScreen() {
         </Pressable>
       </View>
 
+      {!gate ? (
+        // `useModules()` é todo-false até o profile carregar; montar o corpo
+        // agora escolheria o modo errado e piscaria o formulário do outro
+        // board na cara do usuário.
+        <View style={styles.gateLoading}>
+          <ActivityIndicator color={tokens.brand.violet2} />
+        </View>
+      ) : (
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
@@ -179,6 +242,41 @@ export default function QuestCreateScreen() {
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="interactive"
         >
+          {/* Mode — só quando as DUAS chaves estão ligadas. Com uma só, o
+              modo é o dela e um seletor de uma opção seria ruído. */}
+          {bothOn && (
+            <View style={styles.field}>
+              <Text style={styles.label}>{t('quests.create.modeLabel')}</Text>
+              <View style={styles.durationRow}>
+                {(['sub_stars', 'tasks'] as const).map((m) => {
+                  const selected = mode === m;
+                  return (
+                    <Pressable
+                      key={m}
+                      onPress={() => setModePick(m)}
+                      style={({ pressed }) => [
+                        styles.modePill,
+                        selected && styles.durationPillSelected,
+                        pressed && { opacity: 0.85 },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.durationText,
+                          selected && styles.durationTextSelected,
+                        ]}
+                      >
+                        {m === 'sub_stars'
+                          ? t('quests.create.modeSubStars')
+                          : t('quests.create.modeTasks')}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          )}
+
           {/* Title */}
           <View style={styles.field}>
             <Text style={styles.label}>{t('quests.create.nameLabel')}</Text>
@@ -236,7 +334,17 @@ export default function QuestCreateScreen() {
             </View>
           </View>
 
-          {/* Linked tasks */}
+          {/* Sub star targets — o construtor de Missões */}
+          {mode === 'sub_stars' && (
+            <View style={styles.field}>
+              <Text style={styles.label}>{t('quests.create.subsLabel')}</Text>
+              <Text style={styles.hint}>{t('quests.create.subsHint')}</Text>
+              <SubStarTargetPicker value={subTargets} onChange={setSubTargets} />
+            </View>
+          )}
+
+          {/* Linked tasks — o construtor de Metas */}
+          {mode === 'tasks' && (
           <View style={styles.field}>
             <Text style={styles.label}>{t('quests.create.tasksLabel')}</Text>
             <View style={styles.tasksWrap}>
@@ -287,6 +395,7 @@ export default function QuestCreateScreen() {
               )}
             </View>
           </View>
+          )}
 
           {/* Partial toggle */}
           <View style={styles.field}>
@@ -325,12 +434,34 @@ export default function QuestCreateScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: tokens.bg.deep },
+  gateLoading: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modePill: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 9,
+    paddingHorizontal: 10,
+    borderRadius: tokens.radius.pill,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+    backgroundColor: tokens.bg.surface,
+  },
+  hint: {
+    ...tokens.type.caption,
+    color: tokens.text.mid,
+    marginTop: -4,
+    marginBottom: tokens.space[2],
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

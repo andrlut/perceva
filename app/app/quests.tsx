@@ -24,7 +24,7 @@ import {
   useStartQuestFromTemplate,
 } from '@/lib/api/quests';
 import { useT } from '@/lib/i18n';
-import { useModuleEnabled, useRequireModule } from '@/lib/modules';
+import { useRequireModule } from '@/lib/modules';
 import { freeLimitEntity, useLimitModalStore, useQuestLimit } from '@/lib/premium';
 import { TourModule } from '@/components/tour/TourModule';
 import { emitTourEvent } from '@/lib/tour/eventBus';
@@ -195,11 +195,10 @@ export default function QuestBoardScreen() {
 
   const questLimit = useQuestLimit(gate);
   const openLimit = useLimitModalStore((s) => s.open);
-  // quest-create only emits non-sub_stars quests, which live on the METAS
-  // side of the partition — with `metas` off, a quest created from this
-  // board would render on no surface while still eating a free-limit slot.
-  // So the create CTA follows the metas key, not this board's.
-  const metasOn = useModuleEnabled('metas');
+  // O CTA já foi gateado por `metas`, porque quest-create só emitia quests
+  // não-sub_stars e uma criada daqui não renderizaria em superfície nenhuma.
+  // O formulário agora é compartilhado e emite o kind do módulo ligado, então
+  // o board de Missões volta a ter botão próprio.
   const handleCreateCustom = () => {
     if (questLimit.atLimit) {
       openLimit('quest');
@@ -333,8 +332,8 @@ export default function QuestBoardScreen() {
           </>
         )}
 
-        {/* Create custom quest CTA — metas-gated, see handleCreateCustom. */}
-        {!isLoading && metasOn && (
+        {/* Create custom quest CTA. */}
+        {!isLoading && (
           <Pressable
             onPress={handleCreateCustom}
             style={({ pressed }) => [
