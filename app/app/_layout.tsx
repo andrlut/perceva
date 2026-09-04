@@ -139,7 +139,11 @@ export default function RootLayout() {
   // Android nav-bar buttons follow the app palette (white icons vanish
   // over porcelain backgrounds otherwise).
   useAndroidNavBarTheme();
-  const [fontsLoaded] = useFonts({
+  // Second return value is the load ERROR. Without it a single failed
+  // TTF leaves the root rendering null forever — a blank app with no
+  // crash and no log. Booting with fallback system fonts is strictly
+  // better than not booting.
+  const [fontsLoaded, fontError] = useFonts({
     Manrope_500Medium,
     Manrope_600SemiBold,
     Manrope_700Bold,
@@ -153,7 +157,7 @@ export default function RootLayout() {
     DMSerifDisplay_400Regular,
   });
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded && !fontError) {
     return null;
   }
 
