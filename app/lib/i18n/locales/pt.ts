@@ -1701,7 +1701,6 @@ const pt: Translations = {
       preferences: 'Preferências',
       modules: 'Módulos',
       notifications: 'Notificações',
-      tasksProgress: 'Práticas e Progresso',
       data: 'Dados',
       about: 'Sobre',
     },
@@ -1728,10 +1727,6 @@ const pt: Translations = {
       weekStart: 'Início da semana',
       confirmHighDifficulty: 'Confirmar práticas difíceis',
       confirmHighDifficultyDescription: 'Pede confirmação antes de concluir práticas de 4★ ou 5★. Evita toques acidentais.',
-      defaultRewards: 'Recompensas padrão',
-      dayResetTime: 'Reset do dia',
-      midnight: 'Meia-noite (local)',
-      comingSoon: 'Em breve',
     },
     theme: {
       light: 'Claro',
