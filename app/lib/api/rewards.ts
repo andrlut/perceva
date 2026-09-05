@@ -4,6 +4,8 @@ import type { Reward, RewardCategory, RewardTemplate } from '@/lib/db/types';
 import { getCurrentLocale } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 
+import { dateKeyFromLocal, daysBetweenKeys } from './history';
+
 import { characterKeys, type CharacterWithProfile } from './character';
 
 export const rewardKeys = {
@@ -15,6 +17,7 @@ export const rewardKeys = {
   bank: () => [...rewardKeys.all, 'bank'] as const,
   used: () => [...rewardKeys.all, 'used'] as const,
   tracked: () => [...rewardKeys.all, 'tracked'] as const,
+  gaps: () => [...rewardKeys.all, 'gaps'] as const,
 };
 
 export interface RedemptionEntry {
@@ -112,6 +115,109 @@ export function useRewards() {
   });
 }
 
+export interface RewardGap {
+  rewardId: string;
+  title: string;
+  category: RewardCategory;
+  icon: string | null;
+  /** Dias desde o último resgate. null = nunca resgatada. */
+  daysSinceLast: number | null;
+  /** Maior intervalo entre dois resgates consecutivos. null com < 2 resgates. */
+  previousBestGapDays: number | null;
+  redemptionsTotal: number;
+  /** O intervalo atual já passou do maior anterior. */
+  isPastPreviousBest: boolean;
+}
+
+/**
+ * Há quantos DIAS cada recompensa não é resgatada.
+ *
+ * Esta métrica existia só no MCP (`get_rewards`) e em nenhuma tela do app.
+ * Ela importa porque este produto também é usado ao contrário: o dono paga
+ * moedas quando faz algo que quer parar. Para esse uso, "quanto gastei" não
+ * responde nada — "há quantos dias" responde tudo.
+ *
+ * DUAS DIVERGÊNCIAS DELIBERADAS do MCP, ambas correções:
+ *
+ *   1. Ordem. O MCP usa `ascending: true` com limite, então descarta os
+ *      resgates MAIS RECENTES quando o histórico passa do limite — que são
+ *      exatamente os que determinam o intervalo atual. Aqui a busca é DESC
+ *      (mantém os mais recentes) e o array é REVERTIDO por recompensa antes
+ *      da matemática, senão os intervalos saem negativos.
+ *   2. O guard de 2 resgates. Com um único resgate não existe "intervalo
+ *      anterior": o MCP compara contra 0 e marca recorde sempre.
+ *
+ * Fuso: `dateKeyFromLocal`, do dispositivo — não a constante do servidor.
+ */
+export function useRewardGaps() {
+  const rewards = useRewards();
+  return useQuery({
+    enabled: rewards.data != null,
+    queryKey: rewardKeys.gaps(),
+    queryFn: async (): Promise<RewardGap[]> => {
+      const { data, error } = await supabase
+        .from('reward_redemption')
+        .select('reward_id, redeemed_at')
+        .order('redeemed_at', { ascending: false })
+        .limit(2000);
+      if (error) throw error;
+
+      const byReward = new Map<string, string[]>();
+      for (const row of (data ?? []) as {
+        reward_id: string;
+        redeemed_at: string;
+      }[]) {
+        const slot = byReward.get(row.reward_id) ?? [];
+        slot.push(row.redeemed_at);
+        byReward.set(row.reward_id, slot);
+      }
+
+      const today = dateKeyFromLocal(new Date());
+
+      return (rewards.data ?? []).map((reward): RewardGap => {
+        // DESC vindo do banco -> ascendente para a matemática de intervalo.
+        const stamps = (byReward.get(reward.id) ?? [])
+          .slice()
+          .reverse()
+          .map((iso) => dateKeyFromLocal(new Date(iso)));
+
+        const total = stamps.length;
+        if (total === 0) {
+          return {
+            rewardId: reward.id,
+            title: reward.title,
+            category: reward.category,
+            icon: reward.icon,
+            daysSinceLast: null,
+            previousBestGapDays: null,
+            redemptionsTotal: 0,
+            isPastPreviousBest: false,
+          };
+        }
+
+        let best: number | null = null;
+        for (let i = 1; i < stamps.length; i++) {
+          const gap = daysBetweenKeys(stamps[i - 1]!, stamps[i]!);
+          if (best === null || gap > best) best = gap;
+        }
+
+        const daysSinceLast = daysBetweenKeys(stamps[total - 1]!, today);
+        return {
+          rewardId: reward.id,
+          title: reward.title,
+          category: reward.category,
+          icon: reward.icon,
+          daysSinceLast,
+          previousBestGapDays: total >= 2 ? best : null,
+          redemptionsTotal: total,
+          isPastPreviousBest:
+            total >= 2 && best !== null && daysSinceLast > best,
+        };
+      });
+    },
+  });
+}
+
 /**
  * Archived rewards — the bin behind the Manage screen. Newest archive
  * first so a just-arquivada reward sits at the top for an obvious undo.
@@ -174,6 +280,7 @@ export function useCreateReward() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: rewardKeys.active() });
+      queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
     },
   });
 }
@@ -196,6 +303,7 @@ export function useUpdateReward(rewardId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: rewardKeys.active() });
+      queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
       queryClient.invalidateQueries({ queryKey: rewardKeys.detail(rewardId) });
     },
   });
@@ -213,6 +321,7 @@ export function useArchiveReward() {
     },
     onSuccess: (_data, rewardId) => {
       queryClient.invalidateQueries({ queryKey: rewardKeys.active() });
+      queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
       queryClient.invalidateQueries({ queryKey: rewardKeys.archived() });
       queryClient.invalidateQueries({ queryKey: rewardKeys.detail(rewardId) });
       // Tracked row may have pointed at this reward; clearing UX is the
@@ -238,6 +347,7 @@ export function useRestoreReward() {
     },
     onSuccess: (_data, rewardId) => {
       queryClient.invalidateQueries({ queryKey: rewardKeys.active() });
+      queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
       queryClient.invalidateQueries({ queryKey: rewardKeys.archived() });
       queryClient.invalidateQueries({ queryKey: rewardKeys.detail(rewardId) });
     },
@@ -261,6 +371,7 @@ export function useDeleteReward() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: rewardKeys.active() });
+      queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
       queryClient.invalidateQueries({ queryKey: rewardKeys.archived() });
     },
   });
@@ -300,6 +411,7 @@ export function useReorderRewards() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: rewardKeys.active() });
+      queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
     },
   });
 }
@@ -359,6 +471,7 @@ export function useAddTemplateToShop() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: rewardKeys.active() });
+      queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
     },
   });
 }
@@ -404,6 +517,7 @@ export function useRedeemReward() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: characterKeys.me() });
       queryClient.invalidateQueries({ queryKey: rewardKeys.bank() });
+      queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
     },
   });
 }
@@ -459,6 +573,7 @@ export function useRedeemRewardN() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: characterKeys.me() });
       queryClient.invalidateQueries({ queryKey: rewardKeys.bank() });
+      queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
     },
   });
 }
@@ -543,6 +658,7 @@ export function useUseReward() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: rewardKeys.bank() });
+      queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
       queryClient.invalidateQueries({ queryKey: rewardKeys.used() });
     },
   });
@@ -599,6 +715,7 @@ export function useSellReward() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: rewardKeys.bank() });
+      queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
       queryClient.invalidateQueries({ queryKey: characterKeys.me() });
     },
   });
@@ -653,6 +770,7 @@ export function useUnuseReward() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: rewardKeys.bank() });
+      queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
       queryClient.invalidateQueries({ queryKey: rewardKeys.used() });
     },
   });

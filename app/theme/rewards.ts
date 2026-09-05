@@ -1,6 +1,10 @@
 import type { RewardCategory } from '@/lib/db/types';
 
-import { tokens } from './tokens';
+// Do barril ('.'), NUNCA de './tokens': aquele é o objeto da paleta ESCURA
+// crua. O gate de tema reescreve IN PLACE só o objeto exportado pelo index,
+// então importar './tokens' congela este módulo no escuro para sempre — era
+// por isso que as cores daqui nunca clareavam, em tela nenhuma.
+import { tokens } from '.';
 
 /**
  * Visual identity per reward category. Display strings (label) are NOT
