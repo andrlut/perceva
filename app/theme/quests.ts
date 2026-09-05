@@ -1,7 +1,11 @@
 import type { SubId } from '@/lib/db/types';
 
 import { DIMENSION_META, SUB_META } from './dimensions';
-import { tokens } from './tokens';
+// Do barril ('.'), NUNCA de './tokens': aquele é o objeto da paleta ESCURA
+// crua. O gate de tema reescreve IN PLACE só o objeto exportado pelo index,
+// então importar './tokens' congela este módulo no escuro para sempre — era
+// por isso que as cores daqui nunca clareavam, em tela nenhuma.
+import { tokens } from '.';
 
 interface CategoryMeta {
   label: string;

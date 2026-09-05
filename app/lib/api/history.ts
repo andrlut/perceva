@@ -58,6 +58,21 @@ export function dateKeyFromLocal(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+/**
+ * Dias inteiros entre duas chaves 'YYYY-MM-DD'.
+ *
+ * Via Date.UTC de propósito: as chaves já foram resolvidas no fuso local
+ * por `dateKeyFromLocal`, então reinterpretá-las como datas locais aqui
+ * reintroduziria o horário de verão na subtração.
+ */
+export function daysBetweenKeys(from: string, to: string): number {
+  const [fy, fm, fd] = from.split('-').map(Number);
+  const [ty, tm, td] = to.split('-').map(Number);
+  const a = Date.UTC(fy!, fm! - 1, fd!);
+  const b = Date.UTC(ty!, tm! - 1, td!);
+  return Math.round((b - a) / 86400000);
+}
+
 /** Local start-of-day for the given date. */
 export function startOfLocalDay(d: Date): Date {
   const x = new Date(d);

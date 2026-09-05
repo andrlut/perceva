@@ -6,6 +6,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBottomSafeClearance } from '@/components/BottomNavBar';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { AutoconhecimentoView } from '@/components/pillars/AutoconhecimentoView';
+import { ConectorCard } from '@/components/perfil/ConectorCard';
+import { VaultGapsCard } from '@/components/perfil/VaultGapsCard';
 import { useCharacter } from '@/lib/api/character';
 import { useT } from '@/lib/i18n';
 import { tokens } from '@/theme';
@@ -54,7 +56,13 @@ export default function PerfilScreen() {
           contentContainerStyle={[styles.content, { paddingBottom: bottomClearance }]}
           showsVerticalScrollIndicator={false}
         >
+          {/* Os seis instrumentos são o payload histórico da tela e ficam
+             no topo. Os blocos abaixo respondem "como está a vida agora",
+             que é outra pergunta — e nenhum deles pode empurrar os cards
+             duas telas para baixo. */}
           <AutoconhecimentoView />
+          <VaultGapsCard />
+          <ConectorCard />
         </ScrollView>
       </ScreenBackground>
     </SafeAreaView>
