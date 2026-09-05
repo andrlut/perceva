@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-na
 import { DimensionCards, type DimCardRow } from '@/components/DimensionCards';
 import { HexChart } from '@/components/HexChart';
 import { HexGrainToggle } from '@/components/HexGrainToggle';
+import { HexSeriesLegend } from '@/components/HexSeriesLegend';
 import { pickSubScoresDecimal } from '@/lib/api/character';
 import type { CharacterSubScore, SubId } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
@@ -43,6 +44,10 @@ export function NortePanel({ subScores }: Props) {
   const { width: screenWidth } = useWindowDimensions();
   const chartSize = Math.max(240, Math.min((screenWidth || 360) - 16, 360));
   const [hexMode, setHexMode] = useState<'dims' | 'subs'>('dims');
+  // A legenda do Norte era inerte — uma View copiada dos outros painéis.
+  // Agora ela liga/desliga o contorno "hoje", que é o que ela sempre
+  // descreveu sem controlar.
+  const [showToday, setShowToday] = useState(true);
 
   const current = useMemo(
     () => pickSubScoresDecimal(subScores, 'self'),
@@ -118,7 +123,7 @@ export function NortePanel({ subScores }: Props) {
       <View style={styles.hexWrap}>
         <HexChart
           scores={hasDesired ? desiredEff : new Map()}
-          secondaryScores={current}
+          secondaryScores={showToday ? current : undefined}
           secondaryColor={GHOST_COLOR}
           variant={hexMode}
           centerValue={hasDesired ? undefined : '—'}
@@ -136,11 +141,27 @@ export function NortePanel({ subScores }: Props) {
         onToggle={() => setHexMode((m) => (m === 'dims' ? 'subs' : 'dims'))}
       />
 
-      <View style={styles.legendRow}>
-        <View style={[styles.swatch, styles.swatchFill]} />
-        <Text style={styles.legendText}>{t('norte.legend')}</Text>
-        <View style={[styles.swatch, styles.swatchGhost]} />
-      </View>
+      <HexSeriesLegend
+        accent={GOLD}
+        entries={[
+          {
+            key: 'desired',
+            label: t('hex.seriesDesired'),
+            shape: 'fill',
+            // Sem meta definida a série não existe no gráfico: a entrada fica
+            // apagada e sem toque, lendo como "ainda não definido".
+            visible: hasDesired,
+          },
+          {
+            key: 'today',
+            label: t('hex.seriesToday'),
+            shape: 'outline',
+            color: GHOST_COLOR,
+            visible: showToday,
+            onToggle: hasDesired ? () => setShowToday((v) => !v) : undefined,
+          },
+        ]}
+      />
 
       {!hasDesired && (
         <Pressable
@@ -186,32 +207,6 @@ const styles = StyleSheet.create({
   },
   hexWrap: {
     alignItems: 'center',
-  },
-  legendRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  legendText: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 11,
-    color: tokens.text.dim,
-    letterSpacing: 0.2,
-  },
-  swatch: {
-    width: 14,
-    height: 10,
-    borderRadius: 3,
-  },
-  swatchFill: {
-    backgroundColor: 'rgba(255,255,255,0.16)',
-    borderWidth: 1,
-    borderColor: tokens.text.mid,
-  },
-  swatchGhost: {
-    borderWidth: 1,
-    borderColor: GHOST_COLOR,
   },
   heroCta: {
     flexDirection: 'row',

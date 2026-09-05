@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { HexGrainToggle } from '@/components/HexGrainToggle';
+import { HexSeriesLegend } from '@/components/HexSeriesLegend';
 import { InsightCard } from '@/components/InsightCard';
 import { PeriodSelector } from '@/components/dedicacao/PeriodSelector';
 import { Sparkline } from '@/components/dedicacao/Sparkline';
@@ -249,25 +250,29 @@ export function DedicacaoPanel({ dimensions, subScores }: Props) {
       {/* The mirror legend — same shape as Norte's: fill vs outline, named.
           Tappable so the outline can be dismissed when the user just wants
           to read the window's XP shape on its own. */}
-      {mirrorSeries && (
-        <Pressable
-          onPress={() => setShowMirror((v) => !v)}
-          style={({ pressed }) => [styles.legendRow, pressed && { opacity: 0.7 }]}
-          hitSlop={6}
-          accessibilityRole="button"
-          accessibilityState={{ selected: showMirror }}
-          accessibilityLabel={t('dedicacao.mirrorLegendA11y')}
-        >
-          <View style={styles.swatchFill} />
-          <Text style={styles.legendText}>{t('dedicacao.mirrorLegend')}</Text>
-          <View
-            style={[
-              styles.swatchGhost,
-              !showMirror && { borderColor: tokens.text.faint },
-            ]}
-          />
-        </Pressable>
-      )}
+      <HexSeriesLegend
+        accent={tokens.semantic.xp2}
+        entries={[
+          {
+            key: 'xp',
+            label: t('hex.seriesPracticed'),
+            shape: 'fill',
+            visible: true,
+          },
+          ...(mirrorSeries
+            ? [
+                {
+                  key: 'mirror',
+                  label: t('hex.seriesSelf'),
+                  shape: 'outline' as const,
+                  color: MIRROR_COLOR,
+                  visible: showMirror,
+                  onToggle: () => setShowMirror((v) => !v),
+                },
+              ]
+            : []),
+        ]}
+      />
 
       {/* First extra below the hex: the period selector — an input that
           drives the hex above and the cards below, so it sits between them. */}
@@ -486,33 +491,6 @@ export function DedicacaoPanel({ dimensions, subScores }: Props) {
 const styles = StyleSheet.create({
   wrap: { gap: tokens.space[3] },
   hexWrap: { alignItems: 'center', gap: tokens.space[2] },
-  legendRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  legendText: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 11,
-    color: tokens.text.dim,
-    letterSpacing: 0.2,
-  },
-  swatchFill: {
-    width: 14,
-    height: 10,
-    borderRadius: 3,
-    backgroundColor: 'rgba(255,255,255,0.16)',
-    borderWidth: 1,
-    borderColor: tokens.text.mid,
-  },
-  swatchGhost: {
-    width: 14,
-    height: 10,
-    borderRadius: 3,
-    borderWidth: 1,
-    borderColor: MIRROR_COLOR,
-  },
   historyLinkWrap: { alignItems: 'center' },
   historyLink: {
     flexDirection: 'row',

@@ -15,6 +15,7 @@ import {
 import { DimensionCards, type DimCardRow } from '@/components/DimensionCards';
 import { HexChart } from '@/components/HexChart';
 import { HexGrainToggle } from '@/components/HexGrainToggle';
+import { HexSeriesLegend } from '@/components/HexSeriesLegend';
 import { MoodTodayCard } from '@/components/mood/MoodTodayCard';
 import type { CharacterSubScore } from '@/lib/db/types';
 import { pickSubScores, pickSubScoresDecimal } from '@/lib/api/character';
@@ -25,109 +26,9 @@ import { formatScore } from '@/lib/util/formatScore';
 import { tokens } from '@/theme';
 import { DIMENSION_ORDER, SUBS_BY_DIM } from '@/theme/dimensions';
 
-type HexSource = 'self' | 'both' | 'questionnaire';
-
-const QUESTIONNAIRE_COLOR = '#4DD0FF';
-
-interface SourceToggleProps {
-  value: HexSource;
-  onChange: (v: HexSource) => void;
-}
-
-/**
- * Compact source toggle — Self · Ambos · Quiz. A centered row of labelled
- * pills that sits directly below the hex (the standard puts every extra
- * under the chart, never over it). Only shown once the user has a
- * questionnaire to compare against.
- */
-function SourceToggle({ value, onChange }: SourceToggleProps) {
-  const { t } = useT();
-  const items: {
-    key: HexSource;
-    icon: 'person' | 'git-compare' | 'clipboard';
-    color: string;
-    label: string;
-  }[] = [
-    {
-      key: 'self',
-      icon: 'person',
-      color: tokens.brand.violet2,
-      label: t('avaliacao.sourceSelf'),
-    },
-    {
-      key: 'both',
-      icon: 'git-compare',
-      color: tokens.text.hi,
-      label: t('avaliacao.sourceBoth'),
-    },
-    {
-      key: 'questionnaire',
-      icon: 'clipboard',
-      color: QUESTIONNAIRE_COLOR,
-      label: t('avaliacao.sourceQuiz'),
-    },
-  ];
-  return (
-    <View style={toggleStyles.row}>
-      {items.map((it) => {
-        const active = it.key === value;
-        return (
-          <Pressable
-            key={it.key}
-            onPress={() => onChange(it.key)}
-            style={({ pressed }) => [
-              toggleStyles.btn,
-              active && { backgroundColor: `${it.color}22`, borderColor: it.color },
-              pressed && { opacity: 0.75 },
-            ]}
-            hitSlop={6}
-            accessibilityRole="button"
-            accessibilityState={{ selected: active }}
-            accessibilityLabel={it.label}
-          >
-            <Ionicons
-              name={it.icon}
-              size={13}
-              color={active ? it.color : tokens.text.dim}
-            />
-            <Text
-              style={[
-                toggleStyles.label,
-                { color: active ? it.color : tokens.text.dim },
-              ]}
-            >
-              {it.label}
-            </Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
-
-const toggleStyles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignSelf: 'center',
-    gap: 6,
-  },
-  btn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 12,
-    height: 30,
-    borderRadius: tokens.radius.pill,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-    backgroundColor: 'rgba(255,255,255,0.02)',
-  },
-  label: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
-    letterSpacing: 0.3,
-  },
-});
+/** Contorno da série do questionário no hex. Token, não literal: no tema
+ *  claro '#4DD0FF' desaparece sobre a porcelana. */
+const QUESTIONNAIRE_COLOR = tokens.dimension.bonds;
 
 interface Props {
   subScores: CharacterSubScore[];
@@ -152,7 +53,11 @@ export function AvaliacaoPanel({ subScores, scrollViewRef, onLegendMeasured }: P
   const { t } = useT();
   const { width: screenWidth } = useWindowDimensions();
   const lastSession = useLastWellbeingSession();
-  const [hexSource, setHexSource] = useState<HexSource>('self');
+  // Duas séries independentes em vez de um segmented de 3 estados
+  // exclusivos. Os mesmos três estados continuam alcançáveis (self / ambos /
+  // só quiz), e "ambos" — o mais útil — passou a custar UM toque.
+  const [showSelf, setShowSelf] = useState(true);
+  const [showQuiz, setShowQuiz] = useState(false);
   // 'dims' = the 6-dimension hexagon (default); 'subs' = the 12-sub
   // dodecagon. A small toggle by the hex flips between them.
   const [hexMode, setHexMode] = useState<'dims' | 'subs'>('dims');
@@ -173,17 +78,21 @@ export function AvaliacaoPanel({ subScores, scrollViewRef, onLegendMeasured }: P
   );
   const hasQuestionnaire = questionnaireScores.size > 0;
 
-  // Map the segment selection to (primary, secondary) score maps.
+  const quizOn = hasQuestionnaire && showQuiz;
+  // Regra do último de pé: com o quiz desligado, "como me vejo" não pode
+  // sumir, senão o gráfico fica vazio.
+  const selfOn = !quizOn || showSelf;
+
+  // Map the visible series to (primary, secondary) score maps.
   const { primary, secondary } = useMemo(() => {
-    if (!hasQuestionnaire || hexSource === 'self') {
-      return { primary: selfScores, secondary: undefined };
+    if (quizOn && selfOn) {
+      return { primary: selfScores, secondary: questionnaireScores };
     }
-    if (hexSource === 'questionnaire') {
+    if (quizOn) {
       return { primary: questionnaireScores, secondary: undefined };
     }
-    // both
-    return { primary: selfScores, secondary: questionnaireScores };
-  }, [hasQuestionnaire, hexSource, selfScores, questionnaireScores]);
+    return { primary: selfScores, secondary: undefined };
+  }, [quizOn, selfOn, selfScores, questionnaireScores]);
 
   // Legend cards mirror the active source: dim badge = score/10, sub bars =
   // score/5. Same numbers the hex plots, spelled out per dimension.
@@ -266,9 +175,32 @@ export function AvaliacaoPanel({ subScores, scrollViewRef, onLegendMeasured }: P
         onToggle={() => setHexMode((m) => (m === 'dims' ? 'subs' : 'dims'))}
       />
 
-      {hasQuestionnaire && (
-        <SourceToggle value={hexSource} onChange={setHexSource} />
-      )}
+      <HexSeriesLegend
+        accent={tokens.brand.violet2}
+        entries={[
+          {
+            key: 'self',
+            label: t('hex.seriesSelf'),
+            shape: 'fill',
+            visible: selfOn,
+            onToggle: hasQuestionnaire
+              ? () => setShowSelf((v) => !v)
+              : undefined,
+          },
+          ...(hasQuestionnaire
+            ? [
+                {
+                  key: 'quiz',
+                  label: t('hex.seriesQuiz'),
+                  shape: (selfOn ? 'outline' : 'fill') as 'fill' | 'outline',
+                  color: QUESTIONNAIRE_COLOR,
+                  visible: quizOn,
+                  onToggle: () => setShowQuiz((v) => !v),
+                },
+              ]
+            : []),
+        ]}
+      />
 
       <View ref={legendRef} onLayout={measureLegend} collapsable={false}>
         <DimensionCards
