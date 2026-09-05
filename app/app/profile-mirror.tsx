@@ -27,7 +27,9 @@ import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import {
   BIG_FIVE_TRAIT_ORDER,
+  bucketForTraitScore,
   getTraitContent,
+  getTraitNarrative,
   traitFromFacetId,
   type BigFiveLocale,
   type BigFiveTrait,
@@ -62,7 +64,7 @@ import {
 } from '@/lib/psych/types-content';
 import { useInstrumentAccess, useInstrumentTeaserStore } from '@/lib/premium';
 import { formatScore } from '@/lib/util/formatScore';
-import { tokens } from '@/theme';
+import { ACTIVE_THEME, tokens } from '@/theme';
 import {
   DIMENSION_META,
   DIMENSION_ORDER,
@@ -328,7 +330,7 @@ function DimRow({
 }
 
 export function BigFiveCard({ onOpen }: { onOpen: () => void }) {
-  const { locale } = useT();
+  const { t, locale } = useT();
   const bfLocale: BigFiveLocale = locale === 'en' ? 'en' : 'pt';
   const isPt = bfLocale === 'pt';
 
@@ -349,22 +351,57 @@ export function BigFiveCard({ onOpen }: { onOpen: () => void }) {
   const hasScores = traitScores.size > 0;
   const sinceDays = daysSince(lastSession.data?.taken_at);
   const isLocked = locked && !hasScores;
+  const isLoading =
+    lastSession.isLoading || (!!lastSession.data && scoresQ.isLoading);
+
+  /**
+   * O traço mais DISTANTE do meio — não o de maior score.
+   *
+   * Ranquear por score seria hierarquia, e o enquadramento não-hierárquico
+   * do Big Five é decisão travada aqui (#122-#126): a própria tela de
+   * resultado diz "cada traço é um espectro, não uma nota". Por score,
+   * "Sensibilidade intensa" (neuroticismo alto) viraria o resumo de
+   * identidade de alguém. Distintividade responde "o que te diferencia",
+   * que é a pergunta certa e não julga.
+   */
+  const bfSummary = useMemo(() => {
+    if (traitScores.size === 0) return null;
+    let best: { trait: BigFiveTrait; raw: number; dist: number } | null = null;
+    let allMid = true;
+    for (const [trait, raw] of traitScores) {
+      if (bucketForTraitScore(raw) !== 'mid') allMid = false;
+      const dist = Math.abs((raw - 24) / 96 - 0.5);
+      if (!best || dist > best.dist) best = { trait, raw, dist };
+    }
+    if (allMid || !best) return { balanced: true as const };
+    return {
+      balanced: false as const,
+      headline: getTraitNarrative(
+        best.trait,
+        bucketForTraitScore(best.raw),
+        bfLocale,
+      ).headline,
+      label: getTraitContent(best.trait, bfLocale).label,
+    };
+  }, [traitScores, bfLocale]);
 
   return (
     <Pressable
       onPress={isLocked ? () => openTeaser('big_five_120') : onOpen}
       style={({ pressed }) => [
-        ...cardShell(isLocked, hasScores),
+        ...cardShell(isLocked, hasScores, isLoading),
         pressed && { opacity: 0.92 },
       ]}
       hitSlop={4}
     >
       {isLocked && <LockedSeal id="bigfive" />}
+      {hasScores && <DoneWash />}
       <View style={styles.cardHeader}>
         <View style={styles.cardHeaderLeft}>
           <Ionicons name="cube" size={18} color={tokens.brand.violet2} />
           <Text style={styles.cardTitle}>Big Five</Text>
           {isLocked && <PremiumBadge />}
+          {hasScores && <DoneChip />}
         </View>
         <Text style={styles.cardSub}>
           {isPt
@@ -375,7 +412,21 @@ export function BigFiveCard({ onOpen }: { onOpen: () => void }) {
 
       {hasScores ? (
         <>
-          {sinceDays === 0 && <FreshChip isPt={isPt} />}
+          <DoneMeta sinceDays={sinceDays} />
+          {bfSummary && (
+            <ResultHeadline
+              headline={
+                bfSummary.balanced
+                  ? t('perfil.card.bigFiveBalanced')
+                  : bfSummary.headline
+              }
+              subline={
+                bfSummary.balanced
+                  ? null
+                  : t('perfil.card.bigFiveTop', { trait: bfSummary.label })
+              }
+            />
+          )}
           <View style={styles.bfTraitGrid}>
             {BIG_FIVE_TRAIT_ORDER.map((trait) => {
               const raw = traitScores.get(trait);
@@ -480,17 +531,20 @@ export function SchwartzCard({ onOpen }: { onOpen: () => void }) {
   const hasScores = top3.length > 0;
   const sinceDays = daysSince(lastSession.data?.taken_at);
   const isLocked = locked && !hasScores;
+  const isLoading =
+    lastSession.isLoading || (!!lastSession.data && scoresQ.isLoading);
 
   return (
     <Pressable
       onPress={isLocked ? () => openTeaser('schwartz_pvq') : onOpen}
       style={({ pressed }) => [
-        ...cardShell(isLocked, hasScores),
+        ...cardShell(isLocked, hasScores, isLoading),
         pressed && { opacity: 0.92 },
       ]}
       hitSlop={4}
     >
       {isLocked && <LockedSeal id="schwartz" />}
+      {hasScores && <DoneWash />}
       <View style={styles.cardHeader}>
         <View style={styles.cardHeaderLeft}>
           <Ionicons name="compass" size={18} color={tokens.brand.violet2} />
@@ -498,6 +552,7 @@ export function SchwartzCard({ onOpen }: { onOpen: () => void }) {
             {isPt ? 'Valores' : 'Values'}
           </Text>
           {isLocked && <PremiumBadge />}
+          {hasScores && <DoneChip />}
         </View>
         <Text style={styles.cardSub}>
           {isPt
@@ -508,7 +563,11 @@ export function SchwartzCard({ onOpen }: { onOpen: () => void }) {
 
       {hasScores ? (
         <>
-          {sinceDays === 0 && <FreshChip isPt={isPt} />}
+          <DoneMeta sinceDays={sinceDays} />
+          <ResultHeadline
+            headline={getValueContent(top3[0]!.value, swLocale).label}
+            subline={getValueContent(top3[0]!.value, swLocale).oneLiner}
+          />
           <Text style={styles.cardLede}>
             {isPt ? 'Top 3 valores:' : 'Top 3 values:'}
           </Text>
@@ -616,17 +675,20 @@ export function EcrRCard({ onOpen }: { onOpen: () => void }) {
   const style = hasScores ? styleFromScales(anxiety, avoidance) : null;
   const styleContent = style ? getStyleContent(style, ecrLocale) : null;
   const isLocked = locked && !hasScores;
+  const isLoading =
+    lastSession.isLoading || (!!lastSession.data && scoresQ.isLoading);
 
   return (
     <Pressable
       onPress={isLocked ? () => openTeaser('ecr_r') : onOpen}
       style={({ pressed }) => [
-        ...cardShell(isLocked, hasScores),
+        ...cardShell(isLocked, hasScores, isLoading),
         pressed && { opacity: 0.92 },
       ]}
       hitSlop={4}
     >
       {isLocked && <LockedSeal id="ecr" />}
+      {hasScores && <DoneWash />}
       <View style={styles.cardHeader}>
         <View style={styles.cardHeaderLeft}>
           <Ionicons name="link" size={18} color={tokens.brand.violet2} />
@@ -634,6 +696,7 @@ export function EcrRCard({ onOpen }: { onOpen: () => void }) {
             {isPt ? 'Apego' : 'Attachment'}
           </Text>
           {isLocked && <PremiumBadge />}
+          {hasScores && <DoneChip />}
         </View>
         <Text style={styles.cardSub}>
           {isPt
@@ -644,7 +707,11 @@ export function EcrRCard({ onOpen }: { onOpen: () => void }) {
 
       {hasScores && styleContent ? (
         <>
-          {sinceDays === 0 && <FreshChip isPt={isPt} />}
+          <DoneMeta sinceDays={sinceDays} />
+          <ResultHeadline
+            headline={styleContent.label}
+            subline={styleContent.headline}
+          />
           <Text style={styles.cardLede}>
             {isPt ? 'Padrão:' : 'Pattern:'}
           </Text>
@@ -710,22 +777,26 @@ export function DiscCard({ onOpen }: { onOpen: () => void }) {
   const hasScores = blend !== null;
   const sinceDays = daysSince(lastSession.data?.taken_at);
   const isLocked = locked && !hasScores;
+  // useDiscBlend já expõe o estado de carregamento das duas queries.
+  const isLoading = blendState.status === 'loading';
 
   return (
     <Pressable
       onPress={isLocked ? () => openTeaser('disc') : onOpen}
       style={({ pressed }) => [
-        ...cardShell(isLocked, hasScores),
+        ...cardShell(isLocked, hasScores, isLoading),
         pressed && { opacity: 0.92 },
       ]}
       hitSlop={4}
     >
       {isLocked && <LockedSeal id="disc" />}
+      {hasScores && <DoneWash />}
       <View style={styles.cardHeader}>
         <View style={styles.cardHeaderLeft}>
           <Ionicons name="shapes" size={18} color={tokens.brand.violet2} />
           <Text style={styles.cardTitle}>DISC</Text>
           {isLocked && <PremiumBadge />}
+          {hasScores && <DoneChip />}
         </View>
         <Text style={styles.cardSub}>
           {isPt
@@ -736,7 +807,11 @@ export function DiscCard({ onOpen }: { onOpen: () => void }) {
 
       {hasScores && blend ? (
         <>
-          {sinceDays === 0 && <FreshChip isPt={isPt} />}
+          <DoneMeta sinceDays={sinceDays} />
+          <ResultHeadline
+            headline={`${blend.content.name} · ${blend.code}`}
+            subline={blend.content.headline}
+          />
           <Text style={styles.cardLede}>
             {isPt ? 'Perfil:' : 'Profile:'}
           </Text>
@@ -790,17 +865,20 @@ export function StrengthsCard({ onOpen }: { onOpen: () => void }) {
   const hasScores = top3.length > 0;
   const sinceDays = daysSince(lastSession.data?.taken_at);
   const isLocked = locked && !hasScores;
+  const isLoading =
+    lastSession.isLoading || (!!lastSession.data && scoresQ.isLoading);
 
   return (
     <Pressable
       onPress={isLocked ? () => openTeaser('strengths') : onOpen}
       style={({ pressed }) => [
-        ...cardShell(isLocked, hasScores),
+        ...cardShell(isLocked, hasScores, isLoading),
         pressed && { opacity: 0.92 },
       ]}
       hitSlop={4}
     >
       {isLocked && <LockedSeal id="strengths" />}
+      {hasScores && <DoneWash />}
       <View style={styles.cardHeader}>
         <View style={styles.cardHeaderLeft}>
           <Ionicons name="sparkles" size={18} color={tokens.brand.violet2} />
@@ -808,6 +886,7 @@ export function StrengthsCard({ onOpen }: { onOpen: () => void }) {
             {isPt ? 'Forças' : 'Strengths'}
           </Text>
           {isLocked && <PremiumBadge />}
+          {hasScores && <DoneChip />}
         </View>
         <Text style={styles.cardSub}>
           {isPt
@@ -818,7 +897,11 @@ export function StrengthsCard({ onOpen }: { onOpen: () => void }) {
 
       {hasScores ? (
         <>
-          {sinceDays === 0 && <FreshChip isPt={isPt} />}
+          <DoneMeta sinceDays={sinceDays} />
+          <ResultHeadline
+            headline={getStrengthContent(top3[0]!.slug, stLocale).label}
+            subline={getStrengthContent(top3[0]!.slug, stLocale).signature}
+          />
           <Text style={styles.cardLede}>
             {isPt ? 'Forças-assinatura:' : 'Signature strengths:'}
           </Text>
@@ -880,22 +963,26 @@ export function TypesCard({ onOpen }: { onOpen: () => void }) {
   const hasScores = result !== null;
   const sinceDays = daysSince(lastSession.data?.taken_at);
   const isLocked = locked && !hasScores;
+  const isLoading =
+    lastSession.isLoading || (!!lastSession.data && scoresQ.isLoading);
 
   return (
     <Pressable
       onPress={isLocked ? () => openTeaser('tipos') : onOpen}
       style={({ pressed }) => [
-        ...cardShell(isLocked, hasScores),
+        ...cardShell(isLocked, hasScores, isLoading),
         pressed && { opacity: 0.92 },
       ]}
       hitSlop={4}
     >
       {isLocked && <LockedSeal id="tipos" />}
+      {hasScores && <DoneWash />}
       <View style={styles.cardHeader}>
         <View style={styles.cardHeaderLeft}>
           <Ionicons name="compass-outline" size={18} color={tokens.brand.violet2} />
           <Text style={styles.cardTitle}>{isPt ? 'Tipos' : 'Types'}</Text>
           {isLocked && <PremiumBadge />}
+          {hasScores && <DoneChip />}
         </View>
         <Text style={styles.cardSub}>
           {isPt
@@ -906,7 +993,11 @@ export function TypesCard({ onOpen }: { onOpen: () => void }) {
 
       {hasScores && result ? (
         <>
-          {sinceDays === 0 && <FreshChip isPt={isPt} />}
+          <DoneMeta sinceDays={sinceDays} />
+          <ResultHeadline
+            headline={`${result.code} · ${result.content.name}`}
+            subline={result.content.headline}
+          />
           <Text style={styles.cardLede}>{isPt ? 'Tipo:' : 'Type:'}</Text>
           <Text style={ecrCardStyles.styleName}>
             {result.code} · {result.content.name}
@@ -941,10 +1032,95 @@ export function TypesCard({ onOpen }: { onOpen: () => void }) {
  * TrackedRewardCard's gold rim); available-but-not-taken keeps the violet
  * active shell so free actions never read as paywalled.
  */
-function cardShell(isLocked: boolean, hasScores: boolean) {
+function cardShell(isLocked: boolean, hasScores: boolean, isLoading = false) {
+  // Enquanto carrega, SEMPRE a casca neutra (nunca a de locked): as duas
+  // queries resolvem em dois beats, e sem esta guarda um usuário free que
+  // já fez o instrumento via o card piscar "Premium" antes de virar
+  // "feito" — o card mentia sobre o próprio estado.
+  if (isLoading) return [styles.card, styles.cardActive];
   if (hasScores) return [styles.card, styles.cardDone];
   if (isLocked) return [styles.card, styles.cardLocked];
   return [styles.card, styles.cardActive];
+}
+
+/**
+ * Selo sólido de conquista no header de um card concluído. Mesma gramática
+ * do "PRONTO" das recompensas — é o sinal que faltava: antes, feito e não
+ * feito diferiam só na cor da borda.
+ */
+/** Lavagem dourada sobre o card concluído — mesmo device do DaySeal. */
+function DoneWash() {
+  const light = ACTIVE_THEME === 'light';
+  return (
+    <LinearGradient
+      colors={
+        light
+          ? ['rgba(242, 178, 27, 0.14)', 'transparent']
+          : ['rgba(255, 200, 61, 0.09)', 'transparent']
+      }
+      locations={[0, 0.55]}
+      start={{ x: 0.5, y: 0 }}
+      end={{ x: 0.5, y: 1 }}
+      style={styles.doneWash}
+      pointerEvents="none"
+    />
+  );
+}
+
+function DoneChip() {
+  const { t } = useT();
+  return (
+    <View style={styles.doneChip}>
+      <LinearGradient
+        colors={['#FFE890', '#FFC83D', '#C8881C']}
+        locations={[0, 0.65, 1]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+      <Ionicons name="checkmark-circle" size={10} color="#3D2A00" />
+      <Text style={styles.doneChipText}>{t('perfil.card.doneChip')}</Text>
+    </View>
+  );
+}
+
+/**
+ * A RESPOSTA do instrumento, em uma frase — o pedido do dono era que o card
+ * destacasse o resultado, não só que o teste foi feito. Vira o maior texto
+ * do card, acima das barras/listas, que passam a ser o detalhe.
+ */
+function ResultHeadline({
+  headline,
+  subline,
+}: {
+  headline: string;
+  subline?: string | null;
+}) {
+  return (
+    <View style={styles.resultWrap}>
+      <Text style={styles.resultHeadline}>{headline}</Text>
+      {subline ? (
+        <Text style={styles.resultSubline} numberOfLines={2}>
+          {subline}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
+/** Linha dourada com quando foi feito. Absorve o antigo FreshChip. */
+function DoneMeta({ sinceDays }: { sinceDays: number | null }) {
+  const { t } = useT();
+  const label =
+    sinceDays === null
+      ? null
+      : sinceDays === 0
+        ? t('perfil.card.doneToday')
+        : sinceDays === 1
+          ? t('perfil.card.doneYesterday')
+          : t('perfil.card.doneDaysAgo', { count: sinceDays });
+  if (!label) return null;
+  return <Text style={styles.doneMeta}>{label}</Text>;
 }
 
 /**
@@ -981,29 +1157,6 @@ function PremiumBadge() {
       <Ionicons name="lock-closed" size={10} color="#3D2A00" />
       <Text style={styles.premiumBadgeText}>
         {t('premium.teaser.lockedChip')}
-      </Text>
-    </View>
-  );
-}
-
-/**
- * Solid gold freshness chip shown above a completed card's result block
- * on the day it was (re)taken — matches the "NOVO"/"PRONTO" badge
- * language used elsewhere instead of folding into the ghost button copy.
- */
-function FreshChip({ isPt }: { isPt: boolean }) {
-  return (
-    <View style={styles.freshChip}>
-      <LinearGradient
-        colors={['#FFE890', '#FFC83D', '#C8881C']}
-        locations={[0, 0.65, 1]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
-      <Ionicons name="refresh" size={10} color="#3D2A00" />
-      <Text style={styles.freshChipText}>
-        {isPt ? 'Refeito hoje' : 'Done today'}
       </Text>
     </View>
   );
@@ -1081,13 +1234,60 @@ const styles = StyleSheet.create({
   // Completed — gold rim + soft drop shadow, mirroring the
   // TrackedRewardCard "tracked" signal. (The HTML mock's inset ring has
   // no RN equivalent; the stronger border carries it.)
+  // Concluído. Três correções sobre a versão anterior, que na prática só
+  // trocava a cor da borda:
+  //   1. a sombra antiga tinha shadow* mas nem `elevation` nem `boxShadow`,
+  //      então NÃO renderizava no Android — o token coinGlowSoft tem os dois;
+  //   2. o fundo era o MESMO rgba violeta do cardActive, então o fill não
+  //      distinguia nada. Agora é opaco, o que também evita o Android pintar
+  //      a elevação por baixo de superfície translúcida;
+  //   3. rim por token, que escurece no tema claro em vez de sumir.
   cardDone: {
-    borderColor: 'rgba(255, 200, 61, 0.38)',
-    backgroundColor: 'rgba(155, 130, 255, 0.04)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.28,
-    shadowRadius: 26,
+    borderColor: tokens.semantic.coinRim,
+    borderWidth: 1.5,
+    backgroundColor: tokens.bg.surface,
+    ...tokens.shadow.coinGlowSoft,
+  },
+  doneWash: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  doneChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: tokens.radius.pill,
+    overflow: 'hidden',
+    marginLeft: 'auto',
+  },
+  doneChipText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 10,
+    letterSpacing: 0.3,
+    color: '#3D2A00',
+  },
+  resultWrap: {
+    gap: 3,
+  },
+  resultHeadline: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 18,
+    lineHeight: 22,
+    color: tokens.text.hi,
+  },
+  resultSubline: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 12,
+    lineHeight: 17,
+    fontStyle: 'italic',
+    color: tokens.text.mid,
+  },
+  doneMeta: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 11,
+    letterSpacing: 0.2,
+    color: tokens.semantic.coinDeep,
   },
   sealWrap: {
     position: 'absolute',
@@ -1193,23 +1393,6 @@ const styles = StyleSheet.create({
     marginLeft: 'auto',
   },
   premiumBadgeText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 10,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    color: '#3D2A00',
-  },
-  freshChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: tokens.radius.pill,
-    overflow: 'hidden',
-  },
-  freshChipText: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 10,
     letterSpacing: 0.5,

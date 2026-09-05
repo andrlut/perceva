@@ -763,6 +763,17 @@ const en = {
   perfil: {
     eyebrow: 'Profile',
     fallbackTitle: 'Your profile',
+    card: {
+      doneChip: 'Done',
+      doneToday: 'Done today',
+      doneYesterday: 'Done yesterday',
+      doneDaysAgo: {
+        one: 'Done {{count}} day ago',
+        other: 'Done {{count}} days ago',
+      },
+      bigFiveTop: '{{trait}} is what sets your pattern apart',
+      bigFiveBalanced: 'Balanced across all five traits',
+    },
   },
 
   hex: {

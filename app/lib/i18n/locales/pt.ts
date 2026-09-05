@@ -759,6 +759,17 @@ const pt: Translations = {
   perfil: {
     eyebrow: 'Perfil',
     fallbackTitle: 'Seu perfil',
+    card: {
+      doneChip: 'Feito',
+      doneToday: 'Feito hoje',
+      doneYesterday: 'Feito ontem',
+      doneDaysAgo: {
+        one: 'Feito há {{count}} dia',
+        other: 'Feito há {{count}} dias',
+      },
+      bigFiveTop: '{{trait}} é o traço que mais te distingue',
+      bigFiveBalanced: 'Perfil equilibrado nos cinco traços',
+    },
   },
 
   hex: {
