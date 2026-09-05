@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 import type { DimensionId, SubId } from '@/lib/db/types';
 import { DIMENSION_META, SUB_META } from '@/theme/dimensions';
 
@@ -97,11 +99,18 @@ export function useSubMeta(id: SubId): TranslatedSubMeta {
  */
 export function useMetaLookup() {
   const { t } = useT();
-  return {
-    dim: (id: DimensionId) => dimFromTranslate(id, t),
-    sub: (id: SubId) => subFromTranslate(id, t),
-    score: (score: number) => t(`subScoreLabels.${score}`),
-  };
+  // Memoizado: sem isso o objeto é novo a cada render, e qualquer useMemo
+  // que o tenha nas deps (o `sections` da aba Learning, por exemplo) nunca
+  // acerta o cache — o que re-renderiza a lista inteira a cada render.
+  // `t` já é estável (useT devolve um useMemo em [language]).
+  return useMemo(
+    () => ({
+      dim: (id: DimensionId) => dimFromTranslate(id, t),
+      sub: (id: SubId) => subFromTranslate(id, t),
+      score: (score: number) => t(`subScoreLabels.${score}`),
+    }),
+    [t],
+  );
 }
 
 /** Non-React access. Reads from the current locale. */

@@ -1,10 +1,27 @@
 import { Ionicons } from '@expo/vector-icons';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { memo, useCallback } from 'react';
+import { FlatList, Platform, StyleSheet, Text, View } from 'react-native';
 
 import type { LearningFeedCard } from '@/lib/api/learning';
 import { tokens } from '@/theme';
 
-import { CoverCard } from './CoverCard';
+import { COVER_WIDTH, CoverCard } from './CoverCard';
+
+/**
+ * Espaço entre cards. Vive aqui e NÃO em `styles.scroll` como `gap`:
+ * o separador da FlatList já o desenha, e um `gap` somando por cima faria
+ * o `getItemLayout` mentir sobre o offset de cada célula.
+ */
+const GAP = 12;
+const STRIDE = COVER_WIDTH + GAP;
+
+const Sep = () => <View style={{ width: GAP }} />;
+const keyExtractor = (c: LearningFeedCard) => c.id;
+const getItemLayout = (_: unknown, index: number) => ({
+  length: COVER_WIDTH,
+  offset: STRIDE * index,
+  index,
+});
 
 /**
  * A Netflix/Headway-style horizontal carousel. Section header + horizontal
@@ -25,7 +42,7 @@ interface Props {
   count?: number;
 }
 
-export function CarouselRow({
+export const CarouselRow = memo(function CarouselRow({
   title,
   iconName,
   accentColor,
@@ -34,6 +51,17 @@ export function CarouselRow({
   onCardPress,
   count,
 }: Props) {
+  const renderItem = useCallback(
+    ({ item }: { item: LearningFeedCard }) => (
+      <CoverCard
+        card={item}
+        read={readSet.has(item.id)}
+        onPress={onCardPress}
+      />
+    ),
+    [readSet, onCardPress],
+  );
+
   if (cards.length === 0) return null;
 
   return (
@@ -54,23 +82,26 @@ export function CarouselRow({
         )}
       </View>
 
-      <ScrollView
+      {/* FlatList, não ScrollView: com o catálogo cheio o ScrollView montava
+          TODOS os cards de TODAS as linhas de uma vez. Aqui ficam ~4 vivos
+          por linha, que é de onde vem o grosso do ganho de memória. */}
+      <FlatList
         horizontal
+        data={cards}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scroll}
-      >
-        {cards.map((card) => (
-          <CoverCard
-            key={card.id}
-            card={card}
-            read={readSet.has(card.id)}
-            onPress={onCardPress}
-          />
-        ))}
-      </ScrollView>
+        ItemSeparatorComponent={Sep}
+        getItemLayout={getItemLayout}
+        initialNumToRender={3}
+        maxToRenderPerBatch={3}
+        windowSize={3}
+        removeClippedSubviews={Platform.OS === 'android'}
+      />
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   root: {
@@ -108,6 +139,5 @@ const styles = StyleSheet.create({
   },
   scroll: {
     paddingHorizontal: tokens.space[4],
-    gap: 12,
   },
 });

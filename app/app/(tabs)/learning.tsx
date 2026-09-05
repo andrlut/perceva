@@ -5,9 +5,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  FlatList,
   Pressable,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -162,16 +162,99 @@ export default function LearningScreen() {
     return { novidades, byDim };
   }, [filtered]);
 
-  const onCardPress = (card: LearningFeedCard) => {
-    Haptics.selectionAsync().catch(() => {});
-    router.push(`/material/${card.slug}`);
-  };
+  // useCallback obrigatorio: e dep do renderItem da CarouselRow, e uma
+  // identidade nova a cada render anularia o memo de todos os CoverCard.
+  const onCardPress = useCallback(
+    (card: LearningFeedCard) => {
+      Haptics.selectionAsync().catch(() => {});
+      router.push(`/material/${card.slug}`);
+    },
+    [router],
+  );
+
+  /** Uma entrada por carrossel — os dados da FlatList vertical. */
+  const sections = useMemo(() => {
+    const out: {
+      key: string;
+      title: string;
+      iconName: keyof typeof Ionicons.glyphMap;
+      accentColor: string;
+      cards: LearningFeedCard[];
+      groupLabel?: string;
+    }[] = [];
+
+    if (buckets.novidades.length > 0) {
+      out.push({
+        key: 'novidades',
+        title: t('learning.section.new'),
+        iconName: 'sparkles',
+        accentColor: tokens.semantic.coinLight,
+        cards: buckets.novidades,
+      });
+    }
+
+    let first = true;
+    for (const dimId of DIMENSION_ORDER) {
+      const list = buckets.byDim.get(dimId);
+      if (!list || list.length === 0) continue;
+      const dim = meta.dim(dimId);
+      out.push({
+        key: dimId,
+        title: dim.label,
+        iconName: dim.iconName as keyof typeof Ionicons.glyphMap,
+        accentColor: dim.color,
+        cards: list,
+        // O rotulo "Por dimensao" acompanha a PRIMEIRA linha de dimensao em
+        // vez de um wrapper fixo: sem nenhuma linha ele simplesmente nao
+        // aparece, em vez de ficar orfao como acontecia antes.
+        groupLabel: first ? t('learning.section.byDim') : undefined,
+      });
+      first = false;
+    }
+
+    return out;
+  }, [buckets, meta, t]);
+
+  const renderSection = useCallback(
+    ({ item }: { item: (typeof sections)[number] }) => (
+      <View>
+        {item.groupLabel && (
+          <View style={styles.sectionGroup}>
+            <Text style={styles.sectionGroupTitle}>{item.groupLabel}</Text>
+          </View>
+        )}
+        <CarouselRow
+          title={item.title}
+          iconName={item.iconName}
+          accentColor={item.accentColor}
+          cards={item.cards}
+          readSet={readSet}
+          onCardPress={onCardPress}
+          count={item.cards.length}
+        />
+      </View>
+    ),
+    [readSet, onCardPress],
+  );
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScreenBackground withGoldHalo>
-        <ScrollView
+        {/* FlatList e nao ScrollView: com o catalogo cheio, montar as 7
+           linhas de uma vez (cada uma com todos os seus cards) era o que
+           travava a aba. Sem removeClippedSubviews e com windowSize 5 de
+           proposito: desmontar uma CarouselRow zera o offset horizontal
+           dela, entao rolar pra baixo e voltar jogaria a linha de volta no
+           primeiro card. Sao no maximo 7 linhas — o ganho grande vem da
+           FlatList horizontal dentro de cada uma. */}
+        <FlatList
+          data={sections}
+          keyExtractor={(s) => s.key}
+          renderItem={renderSection}
           contentContainerStyle={{ paddingBottom: bottomClearance }}
+          initialNumToRender={2}
+          maxToRenderPerBatch={2}
+          windowSize={5}
           refreshControl={
             <RefreshControl
               refreshing={feed.isFetching && !feed.isLoading}
@@ -179,7 +262,8 @@ export default function LearningScreen() {
               tintColor={tokens.text.mid}
             />
           }
-        >
+          ListHeaderComponent={
+            <>
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.eyebrow}>{t('learning.eyebrow')}</Text>
@@ -240,44 +324,9 @@ export default function LearningScreen() {
             </View>
           )}
 
-          {/* Novidades — accent in pale-gold to match the Perceva
-             vocabulary; the per-dim sections below keep their own
-             dim color so dimension recognition still pops. */}
-          {buckets.novidades.length > 0 && (
-            <CarouselRow
-              title={t('learning.section.new')}
-              iconName="sparkles"
-              accentColor={tokens.semantic.coinLight}
-              cards={buckets.novidades}
-              readSet={readSet}
-              onCardPress={onCardPress}
-              count={buckets.novidades.length}
-            />
-          )}
-
-          {/* Por dimensão — 6 rows. "Por tipo" was removed since the
-             TypeSash on each cover now communicates type inline. */}
-          <View style={styles.sectionGroup}>
-            <Text style={styles.sectionGroupTitle}>{t('learning.section.byDim')}</Text>
-            {DIMENSION_ORDER.map((dimId) => {
-              const list = buckets.byDim.get(dimId);
-              if (!list || list.length === 0) return null;
-              const dim = meta.dim(dimId);
-              return (
-                <CarouselRow
-                  key={dimId}
-                  title={dim.label}
-                  iconName={dim.iconName as keyof typeof Ionicons.glyphMap}
-                  accentColor={dim.color}
-                  cards={list}
-                  readSet={readSet}
-                  onCardPress={onCardPress}
-                  count={list.length}
-                />
-              );
-            })}
-          </View>
-        </ScrollView>
+            </>
+          }
+        />
       </ScreenBackground>
 
       {/* Floating filter button — opens the filter sheet, matching the
