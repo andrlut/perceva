@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Image as RNImage, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Svg, {
   Defs,
   G,
@@ -74,10 +75,26 @@ export function MaterialCover({
   if (imageUrl) {
     return (
       <View style={containerStyle}>
-        <RNImage
-          source={{ uri: imageUrl }}
+        {/* expo-image, não o Image do react-native — este era o último uso
+            do componente do RN no app, e era o que travava a aba Learning.
+            As capas são 768×1152 e a moldura do card é 156×234: o Image do
+            RN decodifica no tamanho ORIGINAL e segura o bitmap inteiro na
+            memória, então ~35 cards abertos ao mesmo tempo estouravam o
+            teto de bitmap do Android. `allowDownscaling` (default true no
+            expo-image) decodifica no tamanho da view.
+
+            recyclingKey: sem ele a célula reciclada da FlatList mostra a
+            capa antiga por um frame antes de trocar.
+            cachePolicy: tira a revalidação de rede do caminho crítico —
+            o bucket já serve as capas com max-age de um ano, immutable. */}
+        <Image
+          source={imageUrl}
           style={StyleSheet.absoluteFill}
-          resizeMode="cover"
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          recyclingKey={imageUrl}
+          transition={120}
+          priority={variant === 'hero' ? 'high' : 'normal'}
         />
         {/* Fade the TOP (not the bottom): overlaid controls/title sit up top,
            and the covers are composed with empty breathing room up there —

@@ -49,6 +49,11 @@ interface FeedRow extends LearningMaterialCard {
  */
 export function useLearningFeed() {
   return useQuery({
+    // O catálogo é conteúdo publicado, não estado do usuário: refetch a
+    // cada foco da aba só rende trabalho de render. Sem staleTime, cada
+    // refetch produzia um array novo e invalidava a cadeia inteira de
+    // useMemo do feed (filtered -> buckets -> sections).
+    staleTime: 5 * 60_000,
     queryKey: learningKeys.feed(),
     queryFn: async (): Promise<LearningFeedCard[]> => {
       const { data, error } = await supabase
@@ -118,6 +123,10 @@ export function useLearningMaterial(slug: string | null | undefined) {
 /** Set of material_ids the user has already read. */
 export function useReadMaterialIds() {
   return useQuery({
+    // Mesmo motivo, com raio de explosão MAIOR: o queryFn devolve um Set
+    // novo a cada fetch, então mesmo com os mesmos ids a identidade muda e
+    // tudo que depende de `readSet` recalcula.
+    staleTime: 60_000,
     queryKey: learningKeys.views(),
     queryFn: async (): Promise<Set<string>> => {
       const { data, error } = await supabase

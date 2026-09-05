@@ -1,14 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
+import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { LearningFeedCard } from '@/lib/api/learning';
 import { useT } from '@/lib/i18n';
-import { useMetaLookup } from '@/lib/i18n/meta';
 import { useMaterialProgress } from '@/lib/readingProgress';
 import { tokens } from '@/theme';
-import { SUB_META } from '@/theme/dimensions';
+import { DIMENSION_META, SUB_META } from '@/theme/dimensions';
 
 import { MaterialCover } from '../MaterialCover';
 
@@ -37,15 +37,22 @@ interface Props {
   isPremiumContent?: boolean;
 }
 
-export function CoverCard({ card, read, onPress, isPremiumContent = false }: Props) {
+export const CoverCard = memo(function CoverCard({
+  card,
+  read,
+  onPress,
+  isPremiumContent = false,
+}: Props) {
   const { t, locale } = useT();
-  const meta = useMetaLookup();
 
   const title = locale === 'pt' ? card.title_pt : card.title_en;
   const summary = locale === 'pt' ? card.summary_pt : card.summary_en;
-  const dim = meta.dim(card.dimension_id);
+  // Direto do DIMENSION_META em vez de meta.dim(): o lookup traduzido
+  // resolvia 4 chaves i18n mais um array de exemplos por card, e daqui só
+  // sai a cor — que é estática. Idem meta.sub(), do qual só usamos o label.
+  const dimColor = DIMENSION_META[card.dimension_id].color;
   const primarySub = card.subs[0];
-  const subMeta = primarySub ? meta.sub(primarySub) : null;
+  const subLabel = primarySub ? t(`subs.${primarySub}.label`) : null;
 
   // Scroll-progress watermark: 0 when the user hasn't started, 0..100
   // otherwise. Cards transition into the "in-progress" treatment between
@@ -135,14 +142,14 @@ export function CoverCard({ card, read, onPress, isPremiumContent = false }: Pro
           color={TYPE_META[card.type].color}
           accessibilityLabel={t(`learning.type.${card.type}`)}
         />
-        {subMeta && (
+        {subLabel && (
           <View style={styles.metaPill}>
             <Ionicons
               name={SUB_META[primarySub!].iconName as keyof typeof Ionicons.glyphMap}
               size={10}
-              color={dim.color}
+              color={dimColor}
             />
-            <Text style={[styles.metaText, { color: dim.color }]}>{subMeta.label}</Text>
+            <Text style={[styles.metaText, { color: dimColor }]}>{subLabel}</Text>
           </View>
         )}
         <Text style={styles.metaText}>·</Text>
@@ -176,7 +183,7 @@ export function CoverCard({ card, read, onPress, isPremiumContent = false }: Pro
       </View>
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   root: {
@@ -195,8 +202,8 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.35,
-    shadowRadius: 18,
-    elevation: 8,
+    shadowRadius: 10,
+    elevation: 4,
   },
   /** Gold rim + glow when the user has scrolled but not finished. Mirrors
    *  the affordable Vault card treatment so the brand vocabulary stays
