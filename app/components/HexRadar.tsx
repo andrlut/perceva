@@ -76,8 +76,7 @@ const PADDING = BADGE / 2 + LABEL_GAP + HIT_SLOP;
 const RING_STEPS = [0.34, 0.67, 1];
 
 /**
- * The plotted region is deliberately hue-free — the same frosted translucency
- * the floating nav bar uses, rather than a per-screen identity color.
+ * The plotted region is deliberately hue-free — ink, not an identity color.
  *
  * Two reasons it is a constant and not a prop. Identity is already carried by
  * the vertex dots and the icon badges, so tinting the area repeats it in a
@@ -85,8 +84,13 @@ const RING_STEPS = [0.34, 0.67, 1];
  * read, which makes it the worst available carrier for anything. Leaving it
  * as a prop was what let the two charts drift apart in the first place — the
  * only thing a caller should be able to vary is the data.
+ *
+ * TOKEN, not the literal white it used to be. White at 15%/4% over the light
+ * theme's porcelain (#F4F4FB) is invisible: the plotted polygon simply did
+ * not render, and the series legend below would be pointing at a shape that
+ * is not there. `text.hi` pairs with STROKE (`text.mid`) in both palettes.
  */
-const FILL = '#FFFFFF';
+const FILL = tokens.text.hi;
 const FILL_TOP_ALPHA = 0.15;
 const FILL_BOTTOM_ALPHA = 0.04;
 const STROKE = tokens.text.mid;

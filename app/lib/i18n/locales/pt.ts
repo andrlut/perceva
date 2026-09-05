@@ -722,9 +722,6 @@ const pt: Translations = {
     questionnaireToday: 'Refazer questionário · feito hoje',
     questionnaireDaysAgo: 'Refazer questionário · {{count}}d atrás',
     mirrorCta: 'Comparar self vs questionário',
-    sourceSelf: 'Self',
-    sourceBoth: 'Ambos',
-    sourceQuiz: 'Quiz',
     nudgeSuffix: 'está em {{score}}/5 — toque pra ver práticas recomendadas',
     hexAxisA11y: '{{dim}}: {{score}} de {{max}}',
   },
@@ -747,7 +744,6 @@ const pt: Translations = {
   },
 
   norte: {
-    legend: 'preenchido = onde quero chegar · contorno = hoje',
     cta: 'Atualizar meu norte',
     emptyTitle: 'Onde você quer chegar?',
     emptyBody: 'Trace uma meta pra cada área. O contorno mostra onde você está hoje.',
@@ -768,6 +764,12 @@ const pt: Translations = {
   hex: {
     showSubs: 'Ver as 12 subs',
     showDims: 'Ver as 6 dimensões',
+    seriesSelf: 'como me vejo',
+    seriesQuiz: 'questionário',
+    seriesPracticed: 'o que pratico',
+    seriesDesired: 'onde quero chegar',
+    seriesToday: 'hoje',
+    seriesToggleA11y: 'Mostrar ou ocultar {{series}} no gráfico',
   },
 
   adoptSheet: {
@@ -2040,8 +2042,6 @@ const pt: Translations = {
     hexEmpty: 'Nenhum XP nesse período',
     deltaNew: '+{{xp}} novo',
     // O espelho: o contorno da percepção sobre a forma da prática.
-    mirrorLegend: 'preenchido = o que pratico · contorno = como me vejo',
-    mirrorLegendA11y: 'Mostrar ou ocultar o contorno de como você se vê',
   },
 
   errors: {

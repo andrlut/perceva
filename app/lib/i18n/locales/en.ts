@@ -726,9 +726,6 @@ const en = {
     questionnaireToday: 'Retake questionnaire · done today',
     questionnaireDaysAgo: 'Retake questionnaire · {{count}}d ago',
     mirrorCta: 'Compare self vs questionnaire',
-    sourceSelf: 'Self',
-    sourceBoth: 'Both',
-    sourceQuiz: 'Quiz',
     nudgeSuffix: 'is at {{score}}/5 — tap to see recommended practices',
     hexAxisA11y: '{{dim}}: {{score}} out of {{max}}',
   },
@@ -751,7 +748,6 @@ const en = {
   },
 
   norte: {
-    legend: 'filled = where I want to get · outline = today',
     cta: 'Update my north',
     emptyTitle: 'Where do you want to get to?',
     emptyBody: 'Set a target for each area. The outline shows where you are today.',
@@ -772,6 +768,12 @@ const en = {
   hex: {
     showSubs: 'Show the 12 subs',
     showDims: 'Show the 6 dimensions',
+    seriesSelf: 'how I see myself',
+    seriesQuiz: 'questionnaire',
+    seriesPracticed: 'what I practice',
+    seriesDesired: 'where I want to get',
+    seriesToday: 'today',
+    seriesToggleA11y: 'Show or hide {{series}} on the chart',
   },
 
   adoptSheet: {
@@ -2038,8 +2040,6 @@ const en = {
     hexEmpty: 'No XP in this period',
     deltaNew: '+{{xp}} new',
     // The mirror: the perception outline over the shape of practice.
-    mirrorLegend: 'filled = what I practice · outline = how I see myself',
-    mirrorLegendA11y: 'Show or hide the outline of how you see yourself',
   },
 
   errors: {
