@@ -1,0 +1,41 @@
+{
+  "slug": "protein-distribution-30g-myth",
+  "reels": [
+    {
+      "metaphor": "trio",
+      "icons": { "a": "restaurant", "b": "body" },
+      "headline": {
+        "pt": "O estudo dos 30g nunca olhou o intestino.",
+        "en": "The 30g study never looked at your gut."
+      },
+      "lede": {
+        "pt": "No churrasco, alguém avisa que o corpo só absorve 30 gramas por vez, e você olha os 60 gramas de picanha no prato. Existe mesmo um estudo por trás da frase — só que ele mediu outra coisa.",
+        "en": "At the barbecue someone says your body only absorbs 30 grams at a time, and you look down at the 60 grams of steak on your plate. There is a real study behind the line — it just measured something else."
+      }
+    },
+    {
+      "metaphor": "ring",
+      "icons": { "symbol": "flash" },
+      "headline": {
+        "pt": "Existe um interruptor. Você liga uma vez.",
+        "en": "There's a switch. You flip it once a day."
+      },
+      "lede": {
+        "pt": "Pão na chapa de manhã, marmita com duas colheres de frango, jantar reforçado. No papel o total parece razoável, mas o músculo só começa a construir quando um limiar é cruzado — e ontem ele foi cruzado à noite.",
+        "en": "Toast for breakfast, a lunchbox with two spoonfuls of chicken, a heavy dinner. On paper the total looks fine, but muscle only starts building once a threshold is crossed — and yesterday it was crossed at night."
+      }
+    },
+    {
+      "metaphor": "asymmetry",
+      "icons": { "a": "moon", "b": "sunny" },
+      "headline": {
+        "pt": "O prato a consertar não é o do jantar.",
+        "en": "The plate to fix isn't the dinner one."
+      },
+      "lede": {
+        "pt": "Você janta bem e imagina que o resto do dia se ajeita. Mas a mesma comida, redistribuída, rendeu mais num ensaio de alimentação controlada — e o ponto de correção quase sempre é a refeição do automático.",
+        "en": "You eat well at dinner and assume the rest of the day sorts itself out. But the same food, redistributed, did more in a controlled-feeding trial — and the fix almost always sits in the meal you eat on autopilot."
+      }
+    }
+  ]
+}
