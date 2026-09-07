@@ -36,7 +36,8 @@ export type PercevaPaletteName =
   | 'primary'
   | 'midnight'
   | 'gilded'
-  | 'arcane';
+  | 'arcane'
+  | 'tide';
 
 export interface PercevaPalette {
   /** Background tile gradient top color (only used when bare=false). */
@@ -53,7 +54,12 @@ export interface PercevaPalette {
   accentDeep: string;
 }
 
-const PALETTES: Record<PercevaPaletteName, PercevaPalette> = {
+/**
+ * As quatro paletas da marca. Exportadas porque o Emblema pinta os mesmos
+ * canais (anéis, braços, halo) e precisa das mesmas tintas — duas listas
+ * separadas divergiriam no primeiro ajuste de cor.
+ */
+export const PALETTES: Record<PercevaPaletteName, PercevaPalette> = {
   primary: {
     bgA: '#1A1F44',
     bgB: '#3F2B8F',
@@ -85,6 +91,16 @@ const PALETTES: Record<PercevaPaletteName, PercevaPalette> = {
     markDeep: '#4B2FCC',
     accent: '#FFE3A6',
     accentDeep: '#A77416',
+  },
+  /** Maré — a tinta que o Emblema ganha pela leitura. Ciano nos anéis,
+   *  traço quase branco nos braços para eles não sumirem no fundo frio. */
+  tide: {
+    bgA: '#0A1E2E',
+    bgB: '#12506B',
+    mark: '#EAF8FF',
+    markDeep: '#5FA8C4',
+    accent: '#4DD0FF',
+    accentDeep: '#1B6E8C',
   },
 };
 

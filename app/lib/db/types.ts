@@ -247,8 +247,33 @@ export interface Profile {
   /** Per-user opt-in module toggles ({"semana": true, ...}). Only explicitly
    *  flipped keys are stored; the client merges over MODULE_DEFAULTS. */
   modules: Record<string, boolean>;
+  /** Personalização do Emblema. Ver `app/lib/identity.ts` para o shape e o
+   *  porquê de não morar em `modules`. Preferência, não entitlement. */
+  identity: ProfileIdentity;
   created_at: string;
   updated_at: string;
+}
+
+/** Título escolhido: de qual instrumento veio e qual resultado. */
+export interface IdentityTitle {
+  source: string;
+  key: string;
+}
+
+/**
+ * Conteúdo de `profile.identity`. Todas as chaves são opcionais — um perfil
+ * novo é `{}` e o cliente resolve os defaults.
+ */
+export interface ProfileIdentity {
+  /**
+   * `undefined` = nunca escolheu (cai no padrão histórico, o DISC).
+   * `null` = escolheu "sem título" de propósito. A diferença importa: sem
+   * ela, quem tira o título veria ele voltar sozinho no próximo boot.
+   */
+  title?: IdentityTitle | null;
+  palette?: string;
+  /** Marca máxima já atingida em cada canal de janela móvel. Só sobe. */
+  best?: { xp30?: number; read30?: number };
 }
 
 /**

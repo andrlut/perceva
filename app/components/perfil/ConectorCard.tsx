@@ -7,12 +7,18 @@ import { useT } from '@/lib/i18n';
 import { tokens } from '@/theme';
 
 /**
- * Porta de entrada para o conector MCP.
+ * Atalho para o conector MCP dentro do /perfil.
  *
  * SEM gate de módulo e SEM gate premium, de propósito: isto é integração
  * externa, não uma feature do produto. Uma chave no MODULE_REGISTRY diria
  * que existe algo a ligar dentro do app, e não existe — o que existe é uma
  * instrução para configurar o claude.ai.
+ *
+ * A CASA do conector agora é Ajustes; aqui ele é só um atalho, e por isso
+ * encolheu para uma linha. O motivo de o atalho continuar existindo é que
+ * o que o conector devolve (`get_profile_summary`, os dias sem resgate do
+ * `get_rewards`) É o retrato — mas ele não pode competir em altura com o
+ * Emblema, que passou a abrir a tela.
  */
 export function ConectorCard() {
   const { t } = useT();
@@ -25,15 +31,12 @@ export function ConectorCard() {
       accessibilityRole="button"
     >
       <View style={styles.glyph}>
-        <PercevaGlyph size={34} bare palette="gilded" idSuffix="conector" />
+        <PercevaGlyph size={26} bare palette="gilded" idSuffix="conector" />
       </View>
-      <View style={styles.text}>
-        <Text style={styles.title}>{t('conector.cardTitle')}</Text>
-        <Text style={styles.sub} numberOfLines={2}>
-          {t('conector.cardSub')}
-        </Text>
-      </View>
-      <Ionicons name="chevron-forward" size={18} color={tokens.text.dim} />
+      <Text style={styles.title} numberOfLines={1}>
+        {t('conector.cardTitle')}
+      </Text>
+      <Ionicons name="chevron-forward" size={16} color={tokens.text.dim} />
     </Pressable>
   );
 }
@@ -47,24 +50,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: tokens.border.base,
     backgroundColor: tokens.bg.surface,
-    padding: tokens.space[4],
+    paddingHorizontal: tokens.space[4],
+    paddingVertical: tokens.space[3],
   },
   glyph: {
-    width: 34,
-    height: 34,
+    width: 26,
+    height: 26,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  text: { flex: 1, gap: 2 },
   title: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 14,
-    color: tokens.text.hi,
-  },
-  sub: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
-    lineHeight: 16,
-    color: tokens.text.mid,
+    flex: 1,
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 13,
+    color: tokens.text.base,
   },
 });
