@@ -1954,7 +1954,10 @@ const pt: Translations = {
       partialTitle: 'Aceita parcial',
       partialSub: 'Dias incompletos não resetam o progresso',
       rewardLabel: 'Recompensa',
-      rewardNote: 'Calculada a partir das estrelas exigidas',
+      rewardNote: 'Sugerida pelas estrelas exigidas — a moeda você ajusta',
+      rewardNoteCustom: 'Moedas definidas por você',
+      coinsA11y: 'Moedas que esta missão paga',
+      coinsReset: 'voltar para {{coins}}',
       saveFail: 'Não foi possível criar a quest',
     },
     detail: {

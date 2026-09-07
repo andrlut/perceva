@@ -1952,7 +1952,10 @@ const en = {
       partialTitle: 'Partial OK',
       partialSub: 'Incomplete days do not reset progress',
       rewardLabel: 'Reward',
-      rewardNote: 'Computed from the stars required',
+      rewardNote: 'Suggested from the stars required — coins are yours to set',
+      rewardNoteCustom: 'Coins set by you',
+      coinsA11y: 'Coins this mission pays',
+      coinsReset: 'back to {{coins}}',
       saveFail: 'Could not create quest',
     },
     detail: {
