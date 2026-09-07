@@ -1,0 +1,90 @@
+{
+  "slug": "catch-up-sleep-weekend",
+  "type": "explainer",
+  "material_title": {
+    "pt": "O sábado paga a dívida de sono?",
+    "en": "Does Saturday pay off the sleep debt?"
+  },
+  "ideas": [
+    {
+      "id": "acorda-descansado",
+      "ordinal": 1,
+      "title": {
+        "pt": "Você acorda descansado. Seu corpo, não.",
+        "en": "You wake up rested. Your body doesn't."
+      },
+      "claim": {
+        "pt": "Dormir até tarde no fim de semana devolve a disposição, mas não desfaz o que cinco noites curtas fizeram com o seu metabolismo.",
+        "en": "Sleeping in on the weekend brings your energy back, but it doesn't undo what five short nights did to your metabolism."
+      },
+      "body": {
+        "pt": "A sensação de recuperação é real: depois de duas noites longas, a sonolência cai e a atenção volta. O problema é o que a sonolência não mede. No estudo de [Depner et al. (2019)](https://doi.org/10.1016/j.cub.2019.01.069), 36 adultos saudáveis passaram uma semana dormindo cinco horas por noite; um grupo pôde dormir à vontade no fim de semana, o outro não. Nos dois, a sensibilidade à insulina caiu e o peso subiu cerca de 1,5 kg em duas semanas. Quem recuperou no sábado voltou a comer tarde da noite assim que a segunda-feira chegou, e a **sensibilidade à insulina dos músculos e do fígado ficou pior** do que no grupo que nunca recuperou. A recuperação existe, mas é parcial e curta. Se a semana é curta de sono, o fim de semana alivia o sintoma, não a causa: o que protege o metabolismo é encurtar a dívida durante a semana, nem que seja em meia hora por noite.",
+        "en": "The feeling of recovery is real: after two long nights, sleepiness drops and attention comes back. The problem is what sleepiness doesn't measure. In [Depner et al. (2019)](https://doi.org/10.1016/j.cub.2019.01.069), 36 healthy adults spent a week sleeping five hours a night; one group could sleep as much as they wanted on the weekend, the other could not. In both, insulin sensitivity fell and weight went up by about 1.5 kg in two weeks. Those who caught up on Saturday went back to late-night eating as soon as Monday arrived, and **muscle and liver insulin sensitivity ended up worse** than in the group that never caught up. Recovery exists, but it is partial and short. If the week is short on sleep, the weekend relieves the symptom, not the cause: what protects your metabolism is shrinking the debt during the week, even by half an hour a night."
+      },
+      "image_brief": "Um quarto de manhã com luz forte entrando pela janela; uma pessoa se espreguiça sorridente na cama, mas o corpo dela projeta no lençol uma sombra pesada e encolhida, como se ainda estivesse exausta.",
+      "sources": [
+        {
+          "label": { "pt": "Depner et al., 2019 · Current Biology", "en": "Depner et al., 2019 · Current Biology" },
+          "url": "https://doi.org/10.1016/j.cub.2019.01.069"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "mesmos-dados-dois-vereditos",
+      "ordinal": 2,
+      "title": {
+        "pt": "Mesmos dados, dois vereditos opostos.",
+        "en": "Same data, two opposite verdicts."
+      },
+      "claim": {
+        "pt": "Dormir pouco na semana e compensar no fim de semana não encurta a vida; dormir pouco todos os dias, inclusive no fim de semana, encurta.",
+        "en": "Short weeknights plus long weekends don't shorten your life; short nights every day, weekends included, do."
+      },
+      "body": {
+        "pt": "Se o laboratório diz que o sábado não conserta o metabolismo, a vida real diz outra coisa sobre longevidade. [Åkerstedt et al. (2019)](https://doi.org/10.1111/jsr.12712) acompanharam 43.880 adultos suecos por treze anos, perguntando separadamente quanto dormiam em dias úteis e em dias de folga. Entre os menores de 65 anos, quem dormia cinco horas ou menos **nos dois tipos de dia** teve mortalidade 52% maior do que quem dormia seis ou sete horas de forma constante. Já quem dormia pouco na semana e esticava no fim de semana não se diferenciou em nada do grupo de referência. As duas leituras não se contradizem: uma mede glicose em duas semanas de laboratório, a outra mede sobrevivência em treze anos de rotina. O que sobra de prático é uma hierarquia. Dormir o suficiente todo dia é o melhor; compensar no fim de semana é um remendo que funciona; não compensar nunca é o cenário que custa caro.",
+        "en": "If the lab says Saturday doesn't fix your metabolism, real life says something else about longevity. [Åkerstedt et al. (2019)](https://doi.org/10.1111/jsr.12712) followed 43,880 Swedish adults for thirteen years, asking separately how long they slept on workdays and on days off. Among people under 65, those sleeping five hours or less **on both kinds of day** had 52% higher mortality than those who slept six or seven hours consistently. Those who slept little on weekdays and stretched it on weekends were no different from the reference group. The two readings don't contradict each other: one measures glucose over two weeks in a lab, the other measures survival over thirteen years of routine. What's left is a hierarchy. Enough sleep every day is best; catching up on the weekend is a patch that works; never catching up is the scenario that costs you."
+      },
+      "image_brief": "Uma balança antiga de dois pratos sobre uma mesa de madeira: num prato, cinco travesseiros pequenos e amassados; no outro, dois travesseiros grandes e fofos. Os pratos estão quase no mesmo nível.",
+      "sources": [
+        {
+          "label": { "pt": "Åkerstedt et al., 2019 · Journal of Sleep Research", "en": "Åkerstedt et al., 2019 · Journal of Sleep Research" },
+          "url": "https://doi.org/10.1111/jsr.12712"
+        },
+        {
+          "label": { "pt": "Depner et al., 2019 · Current Biology", "en": "Depner et al., 2019 · Current Biology" },
+          "url": "https://doi.org/10.1016/j.cub.2019.01.069"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "tres-fusos-toda-sexta",
+      "ordinal": 3,
+      "title": {
+        "pt": "Três fusos toda sexta, sem sair de casa.",
+        "en": "Three time zones every Friday, at home."
+      },
+      "claim": {
+        "pt": "Acordar três horas mais tarde no sábado é um jetlag sem viagem, e cada hora dele vem acompanhada de mais peso e pior humor.",
+        "en": "Waking up three hours later on Saturday is jet lag without a trip, and every hour of it comes with more weight and a worse mood."
+      },
+      "body": {
+        "pt": "O relógio biológico não sabe que é sábado. Quando você dorme às 3h e acorda ao meio-dia, ele recebe o mesmo sinal de uma viagem de três fusos para o oeste — e na segunda-feira precisa voltar. [Wittmann et al. (2006)](https://doi.org/10.1080/07420520500545979) deram nome a isso: jetlag social, a diferença entre o meio do sono nos dias úteis e nos dias livres. Em uma base com mais de 65 mil pessoas, [Roenneberg et al. (2012)](https://doi.org/10.1016/j.cub.2012.03.038) encontraram que cada hora de jetlag social vinha associada a uma chance cerca de 33% maior de estar acima do peso, independentemente de quanto a pessoa dormia no total. O ajuste que preserva a recuperação sem o jetlag é simples: **mantenha a hora de acordar dentro de uma hora da habitual** e vá dormir mais cedo na sexta. A luz da manhã no sábado, mesmo pela janela, segura o relógio no lugar.",
+        "en": "Your body clock doesn't know it's Saturday. When you sleep at 3 a.m. and wake at noon, it gets the same signal as a trip three time zones west — and on Monday it has to fly back. [Wittmann et al. (2006)](https://doi.org/10.1080/07420520500545979) named this social jetlag: the gap between mid-sleep on workdays and on free days. In a database of more than 65,000 people, [Roenneberg et al. (2012)](https://doi.org/10.1016/j.cub.2012.03.038) found that each hour of social jetlag came with roughly 33% higher odds of being overweight, regardless of how much the person slept in total. The adjustment that keeps the recovery without the jetlag is simple: **keep your wake-up time within an hour of the usual one** and go to bed earlier on Friday instead. Saturday morning light, even through the window, holds the clock in place."
+      },
+      "image_brief": "Um relógio de parede redondo cujos ponteiros estão sendo puxados para trás por uma mão, enquanto pela janela ao lado o sol já está alto; uma mala fechada e intocada encostada no canto do quarto.",
+      "sources": [
+        {
+          "label": { "pt": "Roenneberg et al., 2012 · Current Biology", "en": "Roenneberg et al., 2012 · Current Biology" },
+          "url": "https://doi.org/10.1016/j.cub.2012.03.038"
+        },
+        {
+          "label": { "pt": "Wittmann et al., 2006 · Chronobiology International", "en": "Wittmann et al., 2006 · Chronobiology International" },
+          "url": "https://doi.org/10.1080/07420520500545979"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

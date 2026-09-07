@@ -1,0 +1,28 @@
+{
+  "slug": "ten-second-balance-test",
+  "type": "news",
+  "material_title": {
+    "pt": "O teste de equilíbrio de dez segundos",
+    "en": "The ten-second balance test"
+  },
+  "ideas": [
+    {
+      "id": "dez-segundos-num-pe",
+      "ordinal": 1,
+      "title": { "pt": "Dez segundos num pé só dizem muito.", "en": "Ten seconds on one foot say a lot." },
+      "claim": {
+        "pt": "Quem não consegue ficar dez segundos num pé só, entre 51 e 75 anos, teve quase o dobro de risco de morrer nos sete anos seguintes.",
+        "en": "People aged 51 to 75 who couldn't stand on one leg for ten seconds had nearly double the risk of dying over the next seven years."
+      },
+      "body": {
+        "pt": "[Araujo et al. (2022)](https://doi.org/10.1136/bjsports-2021-105360) testaram 1.702 adultos: um em cada cinco falhou, e falhar veio com 84% mais risco de morte em sete anos. Treine equilíbrio escovando os dentes num pé só.",
+        "en": "[Araujo et al. (2022)](https://doi.org/10.1136/bjsports-2021-105360) tested 1,702 adults: one in five failed, and failing came with 84% higher risk of death over seven years. Train balance by brushing your teeth on one leg."
+      },
+      "image_brief": "Uma pessoa de meia-idade equilibrada num pé só sobre uma pedra lisa à beira de um lago calmo, braços abertos, com o reflexo tremendo levemente na água.",
+      "sources": [
+        { "label": { "pt": "Araujo et al., 2022 · British Journal of Sports Medicine", "en": "Araujo et al., 2022 · British Journal of Sports Medicine" }, "url": "https://doi.org/10.1136/bjsports-2021-105360" }
+      ],
+      "cta": null
+    }
+  ]
+}

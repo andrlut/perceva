@@ -1,28 +1,37 @@
 #!/usr/bin/env node
 /* eslint-env node */
 /**
- * Content-media pipeline — Phase A (cover + infographic).
+ * Content-media pipeline — Phase A (cover + infographic + audio + ideas).
  *
  * Reads a media spec written by the `learning-art-director` agent and produces
  * the media assets for one Learning material, ready for ingestion:
- *   - cover.webp            (Gemini 3.1 Flash Image, 2:3, textless)
- *   - infographic.<loc>.webp (branded SVG -> resvg -> webp, one per locale)
- *   - manifest.json         (what to upload + the DB rows to insert)
+ *   - cover.webp              (Gemini 3.1 Flash Image, 2:3, textless)
+ *   - infographic.<loc>.webp  (branded SVG -> resvg -> webp, one per locale)
+ *   - audio.<loc>.m4a         (Gemini TTS, from audio-script.<loc>.json)
+ *   - idea.<n>.<sha8>.webp    (Gemini 3.1 Flash Image, 4:5, one per entry of
+ *                              spec.ideas — Recanto em ideias)
+ *   - manifest.json           (what to upload + the DB rows to insert)
  *
  * It does NOT touch Supabase or git — it only writes files into the drop
  * folder. The `learning-publisher` agent (or a human) uploads via
- * `supabase storage cp` and writes the migration from manifest.json.
+ * `supabase storage cp` and writes the migration from manifest.json
+ * (`emit-migration.mjs` does the `ideas` one).
  *
  * A partial run (`--only cover`, `--locales pt`) MERGES into the manifest
  * already in the drop folder instead of replacing it — otherwise the assets an
  * earlier run produced vanish from the manifest and are never uploaded.
  *
  * Usage:
- *   node generate.mjs --slug <slug> [--only cover|infographic]
+ *   node generate.mjs --slug <slug> [--only cover|infographic|audio|ideas]
  *                     [--locales pt,en] [--dry-run]
  *
- * Spec location:  learning-drops/inbox/<slug>/media-spec.json
- * Output:         same folder
+ * `--only` is an ALLOWLIST: one step, nothing else runs; any other value is an
+ * error. Without it, cover + infographic + audio run as before, plus ideas
+ * when the spec carries a non-empty `ideas` array.
+ *
+ * Spec location:  learning-drops/media-specs/<slug>.json      (versioned; first)
+ *                 learning-drops/inbox/<slug>/media-spec.json  (fallback)
+ * Output:         learning-drops/inbox/<slug>/  (assets + manifest, gitignored)
  *
  * Env:
  *   GEMINI_API_KEY        required for cover generation (AI Studio key, billing on)
@@ -36,6 +45,7 @@
  *   FFMPEG_PATH           optional ffmpeg override
  */
 
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -43,7 +53,7 @@ import { fileURLToPath } from 'node:url';
 import { Resvg } from '@resvg/resvg-js';
 
 import { synthesizeDialogue, pcmToWav } from './lib/audio.mjs';
-import { generateCover } from './lib/cover.mjs';
+import { generateCover, generateIdeaImage } from './lib/cover.mjs';
 import { probeDurationSeconds, probeImageSize, toM4a, toWebp, toWebpCover } from './lib/ffmpeg.mjs';
 import { buildInfographicSvg } from './lib/infographic.mjs';
 
@@ -55,8 +65,14 @@ const MEDIA_PUBLIC_BASE = `${SUPABASE_URL}/storage/v1/object/public/learning-med
 
 const COVER_W = 768;
 const COVER_H = 1152; // 2:3
+const IDEA_W = 960;
+const IDEA_H = 1200; // 4:5 — the idea image is shown whole inside the card
 const INFO_W = 1080;
 const INFO_H = 1920; // 9:16 portrait
+
+// `--only` allowlist. A value outside it is an error, not "everything" — the
+// old exclusion-list semantics made `--only ideas` regenerate every asset.
+const ONLY_STEPS = ['cover', 'infographic', 'audio', 'ideas'];
 
 // Background color resvg paints behind the SVG (matches token bg.deep so any
 // transparent edge blends instead of showing white).
@@ -87,7 +103,18 @@ function log(msg) {
 
 // Canonical asset order in the manifest, so the output does not depend on which
 // partial runs happened in which order.
-const KIND_ORDER = ['infographic', 'cover', 'audio'];
+const KIND_ORDER = ['infographic', 'cover', 'audio', 'idea'];
+
+/**
+ * Stable file name for one idea image. The hash covers the id AND the prompt:
+ * a re-brief produces a new path (the bucket never overwrites — 409), and the
+ * `ideas` JSON in the DB points at whichever one the migration was emitted
+ * from. 8 hex chars is plenty for ≤5 ideas per material.
+ */
+function ideaFileName(id, ordinal, imagePrompt) {
+  const sha8 = createHash('sha256').update(`${id}\n${imagePrompt}`).digest('hex').slice(0, 8);
+  return `idea.${ordinal}.${sha8}.webp`;
+}
 
 /**
  * Fold the manifest already on disk into the one this run built. Every prior
@@ -109,9 +136,18 @@ function mergePriorManifest(manifest, inboxDir) {
   if (!prior || prior.slug !== manifest.slug || !Array.isArray(prior.assets)) return 0;
 
   const fresh = new Set(manifest.assets.map((a) => a.bucketPath));
+  // An idea regenerated with a new prompt gets a new sha8 path, so bucketPath
+  // alone would keep BOTH versions in the manifest; key ideas by idea_id too.
+  const freshIdeas = new Set(
+    manifest.assets.filter((a) => a.kind === 'idea').map((a) => a.idea_id),
+  );
   const carried = [];
   for (const a of prior.assets) {
     if (!a?.bucketPath || !a.localPath || fresh.has(a.bucketPath)) continue;
+    if (a.kind === 'idea' && freshIdeas.has(a.idea_id)) {
+      log(`  · superseded ${a.localPath} (idea ${a.idea_id} regenerated in this run)`);
+      continue;
+    }
     if (!existsSync(join(inboxDir, a.localPath))) {
       log(`  ! dropped stale manifest entry ${a.localPath} (file no longer in the drop folder)`);
       continue;
@@ -124,7 +160,8 @@ function mergePriorManifest(manifest, inboxDir) {
   manifest.assets = [...manifest.assets, ...carried].sort(
     (x, y) =>
       KIND_ORDER.indexOf(x.kind) - KIND_ORDER.indexOf(y.kind) ||
-      String(x.locale ?? '').localeCompare(String(y.locale ?? '')),
+      String(x.locale ?? '').localeCompare(String(y.locale ?? '')) ||
+      (x.ordinal ?? 0) - (y.ordinal ?? 0),
   );
   manifest.generated = manifest.assets.map((a) => a.localPath);
   return carried.length;
@@ -133,31 +170,48 @@ function mergePriorManifest(manifest, inboxDir) {
 // ── main ────────────────────────────────────────────────────────────────────
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  if (!args.slug) die('Missing --slug. Usage: node generate.mjs --slug <slug> [--only cover|infographic] [--dry-run]');
+  const usage = `Usage: node generate.mjs --slug <slug> [--only ${ONLY_STEPS.join('|')}] [--locales pt,en] [--dry-run]`;
+  if (!args.slug) die(`Missing --slug. ${usage}`);
+  // Validated before the spec lookup so a typo fails the same way whether or
+  // not the drop folder exists.
+  if (args.only != null && !ONLY_STEPS.includes(args.only)) {
+    die(`Unknown --only value "${args.only}". Allowed: ${ONLY_STEPS.join(' | ')}\n  ${usage}`);
+  }
 
   const inboxDir = join(REPO_ROOT, 'learning-drops', 'inbox', args.slug);
-  const specPath = join(inboxDir, 'media-spec.json');
-  if (!existsSync(specPath)) {
+  // The versioned spec wins; the in-drop file is the pre-media-specs/ layout.
+  const specCandidates = [
+    join(REPO_ROOT, 'learning-drops', 'media-specs', `${args.slug}.json`),
+    join(inboxDir, 'media-spec.json'),
+  ];
+  const specPath = specCandidates.find((p) => existsSync(p));
+  if (!specPath) {
     die(
-      `No media-spec.json at ${specPath}\n` +
-        `  The learning-art-director agent writes this file. See tools/content-media/README.md for the contract.`,
+      `No media spec for "${args.slug}". Looked for:\n` +
+        specCandidates.map((p) => `    ${p}`).join('\n') +
+        `\n  The learning-art-director agent writes this file. See tools/content-media/README.md for the contract.`,
     );
   }
 
   /** @type {any} */
   let spec;
   try {
-    spec = JSON.parse(readFileSync(specPath, 'utf8'));
+    // Windows editors like to prepend a BOM, which JSON.parse rejects.
+    spec = JSON.parse(readFileSync(specPath, 'utf8').replace(/^\uFEFF/, ''));
   } catch (e) {
-    die(`media-spec.json is not valid JSON: ${e.message}`);
+    die(`${specPath} is not valid JSON: ${e.message}`);
   }
 
   const dimensionId = spec.dimension_id;
-  if (!dimensionId) die('media-spec.json is missing "dimension_id".');
+  if (!dimensionId) die('media spec is missing "dimension_id".');
 
-  const wantCover = !['infographic', 'audio'].includes(args.only) && spec.cover?.prompt;
-  const wantInfographic = !['cover', 'audio'].includes(args.only) && spec.infographic;
-  const wantAudio = !['cover', 'infographic'].includes(args.only);
+  // No --only: every step is in scope (ideas only if the spec has any).
+  const inScope = (step) => args.only == null || args.only === step;
+  const ideas = Array.isArray(spec.ideas) ? spec.ideas : [];
+  const wantCover = inScope('cover') && Boolean(spec.cover?.prompt);
+  const wantInfographic = inScope('infographic') && Boolean(spec.infographic);
+  const wantAudio = inScope('audio');
+  const wantIdeas = inScope('ideas') && (args.only === 'ideas' || ideas.length > 0);
 
   const localesAll = args.locales ?? ['pt', 'en'];
   mkdirSync(inboxDir, { recursive: true });
@@ -167,6 +221,7 @@ async function main() {
   const manifest = { slug: args.slug, dimension_id: dimensionId, generated: [], assets: [] };
 
   log(`\n▶ content-media · ${args.slug}  (${dimensionId})`);
+  log(`  spec: ${specPath}`);
   if (args.dryRun) log('  [dry-run: no files written, no API calls]');
 
   // ── infographic (one webp per locale that has content) ────────────────────
@@ -266,8 +321,69 @@ async function main() {
         log('      (infographic assets, if any, were still produced)');
       }
     }
-  } else if (args.only !== 'infographic' && !spec.cover?.prompt) {
+  } else if (inScope('cover')) {
     log('  · cover: skipped (no cover.prompt in spec)');
+  }
+
+  // ── ideas (one 4:5 image per idea, textless) ──────────────────────────────
+  // One failure logs and moves on: an idea without an image still ships (the
+  // idea screen falls back to the card without art); the whole material
+  // failing over one refused prompt would not.
+  if (wantIdeas) {
+    if (ideas.length === 0) log('  · ideas: skipped (no "ideas" array in spec)');
+    for (const idea of ideas) {
+      const id = idea?.id;
+      const ordinal = idea?.ordinal;
+      const imagePrompt = typeof idea?.image_prompt === 'string' ? idea.image_prompt.trim() : '';
+      if (!id || !Number.isInteger(ordinal) || ordinal < 1 || !imagePrompt) {
+        log(`    ✗ idea ${ordinal ?? '?'} (${id ?? 'sem id'}): needs id, ordinal ≥ 1 and image_prompt — skipped`);
+        continue;
+      }
+      const fileName = ideaFileName(id, ordinal, imagePrompt);
+      log(`  · ${fileName} ← ${id} (Gemini 3.1 Flash Image, 4:5) …`);
+      if (args.dryRun) continue;
+      try {
+        const { buffer, mimeType, refs } = await generateIdeaImage({
+          prompt: imagePrompt,
+          onWarn: (m) => log(`      ! ${m}`),
+        });
+        const ext = mimeType.includes('png') ? 'png' : mimeType.includes('webp') ? 'webp' : 'jpg';
+        const rawPath = join(tmpDir, `idea.${ordinal}.raw.${ext}`);
+        writeFileSync(rawPath, buffer);
+
+        const size = probeImageSize(rawPath);
+        const ratio = size ? size.width / size.height : null;
+        log(
+          `      ${size ? `${size.width}×${size.height}` : 'dimensões desconhecidas'}` +
+            (ratio
+              ? Math.abs(ratio - 4 / 5) < 0.01
+                ? ' (4:5 honrado)'
+                : ' (NÃO é 4:5 — o crop corta)'
+              : '') +
+            ` · ${refs.length} ref(s) de estilo${refs.length ? `: ${refs.join(', ')}` : ''}`,
+        );
+
+        toWebpCover(rawPath, join(inboxDir, fileName), IDEA_W, IDEA_H, 84);
+
+        manifest.assets.push({
+          role: 'idea',
+          kind: 'idea',
+          idea_id: id,
+          ordinal,
+          source: 'gemini-api',
+          localPath: fileName,
+          bucketPath: `${args.slug}/${fileName}`,
+          width: IDEA_W,
+          height: IDEA_H,
+          contentType: 'image/webp',
+        });
+        manifest.generated.push(fileName);
+        log(`    ✓ ${fileName}`);
+      } catch (e) {
+        log(`    ✗ idea ${ordinal} (${id}) failed: ${e.message}`);
+        log('      (continuing with the remaining ideas)');
+      }
+    }
   }
 
   // ── audio (2-host podcast per locale that has a dialogue script) ──────────
@@ -340,6 +456,10 @@ async function main() {
     log('\n  Then write a migration from manifest.json:');
     log('   · cover  -> update learning_material set hero_image_url = <hero_image_url> where slug = ...');
     log("   · media  -> insert into learning_material_media (kind, locale, path, source, meta) ...");
+    if (manifest.assets.some((a) => a.kind === 'idea')) {
+      log(`   · ideas  -> node tools/content-media/emit-migration.mjs --slug ${args.slug}`);
+      log('              (joins learning-drops/ideas-specs/<slug>.json with this manifest)');
+    }
   }
 }
 

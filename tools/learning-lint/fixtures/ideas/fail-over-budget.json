@@ -1,0 +1,46 @@
+{
+  "slug": "ikea-effect",
+  "type": "news",
+  "material_title": {
+    "pt": "O efeito IKEA: por que o que você monta vale mais",
+    "en": "The IKEA effect: why what you build is worth more"
+  },
+  "ideas": [
+    {
+      "id": "montou-vale-mais",
+      "ordinal": 1,
+      "title": { "pt": "Montou? Agora vale 63% mais.", "en": "Built it? Now it's worth 63% more." },
+      "claim": {
+        "pt": "Quem monta o próprio móvel passa a valorizá-lo como se fosse feito por um especialista — e paga mais por isso.",
+        "en": "People who assemble their own furniture come to value it as if an expert had made it — and pay more for it."
+      },
+      "body": {
+        "pt": "[Norton, Mochon e Ariely (2012)](https://doi.org/10.1016/j.jcps.2011.08.002) pediram a participantes que montassem uma caixa da IKEA, dobrassem origamis ou construíssem com Lego, e depois mediram quanto pagariam pelo objeto. Quem montou ofereceu, em média, **63% a mais** do que quem recebeu o mesmo item pronto — e avaliou sua criação amadora tão bem quanto a de um especialista. O efeito não é orgulho vazio: esforço bem-sucedido gera sensação de competência, e a gente cola essa sensação no objeto. Isso explica por que o bolo de mistura precisa que você quebre o ovo, e por que hábitos que você desenhou pegam mais do que os copiados. Faça parte da construção; a posse vem junto.",
+        "en": "[Norton, Mochon and Ariely (2012)](https://doi.org/10.1016/j.jcps.2011.08.002) asked participants to assemble an IKEA box, fold origami or build with Lego, then measured how much they would pay for the object. Builders offered, on average, **63% more** than people who received the same item ready-made — and rated their amateur creation as highly as an expert's. The effect isn't empty pride: successful effort creates a sense of competence, and we glue that feeling onto the object. It explains why cake mix needs you to crack the egg, and why habits you designed stick better than copied ones. Take part in the building; ownership comes with it."
+      },
+      "image_brief": "Uma estante de madeira simples recém-montada numa sala clara, com a caixa de papelão amassada ao lado e uma pessoa sentada no chão olhando para a estante com as mãos ainda sujas de poeira.",
+      "sources": [
+        { "label": { "pt": "Norton, Mochon & Ariely, 2012 · Journal of Consumer Psychology", "en": "Norton, Mochon & Ariely, 2012 · Journal of Consumer Psychology" }, "url": "https://doi.org/10.1016/j.jcps.2011.08.002" }
+      ],
+      "cta": null
+    },
+    {
+      "id": "so-conta-se-terminar",
+      "ordinal": 2,
+      "title": { "pt": "O efeito some se você não termina.", "en": "The effect vanishes if you don't finish." },
+      "claim": {
+        "pt": "Montar pela metade não gera apego; a valorização extra só aparece quando a peça fica pronta — e desmontar a apaga.",
+        "en": "Half-building creates no attachment; the extra value only shows up when the piece is finished — and taking it apart erases it."
+      },
+      "body": {
+        "pt": "O mesmo estudo de [Norton, Mochon e Ariely (2012)](https://doi.org/10.1016/j.jcps.2011.08.002) testou o limite do efeito. Quando os participantes eram interrompidos antes de terminar a montagem, ou quando montavam e depois desmontavam a peça, a disposição a pagar caía para o nível de quem não montou nada. O apego não vem do esforço em si, mas do **esforço que termina em algo pronto**. Para hábitos, a leitura é direta: uma prática que você começa e larga no meio não constrói identidade, só cansaço. Melhor um hábito minúsculo que fecha todo dia do que um ambicioso que fica pela metade. Termine pequeno; o orgulho de dono vem do ponto final, não do tamanho.",
+        "en": "The same study by [Norton, Mochon and Ariely (2012)](https://doi.org/10.1016/j.jcps.2011.08.002) tested the effect's limit. When participants were interrupted before finishing the assembly, or when they built and then took the piece apart, willingness to pay fell to the level of people who had built nothing. Attachment doesn't come from effort itself, but from **effort that ends in something finished**. For habits, the reading is direct: a practice you start and drop halfway builds no identity, only fatigue. Better a tiny habit that closes every day than an ambitious one left half-done. Finish small; the owner's pride comes from the full stop, not the size."
+      },
+      "image_brief": "Duas mesinhas de madeira lado a lado num quarto: uma completa e firme com um vaso em cima, a outra com metade das peças ainda espalhadas pelo chão e um parafuso solto na mão de alguém.",
+      "sources": [
+        { "label": { "pt": "Norton, Mochon & Ariely, 2012 · Journal of Consumer Psychology", "en": "Norton, Mochon & Ariely, 2012 · Journal of Consumer Psychology" }, "url": "https://doi.org/10.1016/j.jcps.2011.08.002" }
+      ],
+      "cta": null
+    }
+  ]
+}

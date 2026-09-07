@@ -33,6 +33,7 @@ import type { LearningMaterialType } from '@/lib/db/types';
 import { useT, type TranslateOptions } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { learningMediaUrl, pickMedia } from '@/lib/learningMedia';
+import { xpForMaterial } from '@/lib/learningXp';
 import { useReadingProgressStore } from '@/lib/readingProgress';
 import { showInfo } from '@/lib/util/confirm';
 import { ACTIVE_THEME, tokens } from '@/theme';
@@ -198,7 +199,7 @@ export function MaterialMediaScreen({ detail: m }: Props) {
     [m.slug, m.id, updateProgress],
   );
 
-  const xpPreview = 5 + 5 * m.subs.length;
+  const xpPreview = xpForMaterial(m.idea_count ?? 0, m.subs.length);
 
   const onMarkRead = async () => {
     if (isRead || busy) return;

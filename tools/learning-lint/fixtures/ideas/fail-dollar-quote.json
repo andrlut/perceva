@@ -1,0 +1,29 @@
+{
+  "slug": "weak-ties-job-search",
+  "type": "news",
+  "material_title": {
+    "pt": "Laços fracos: de onde vem o próximo emprego",
+    "en": "Weak ties: where the next job comes from"
+  },
+  "ideas": [
+    {
+      "id": "conhecido-de-longe",
+      "ordinal": 1,
+      "title": { "pt": "O emprego vem do conhecido de longe.", "en": "The job comes from the distant acquaintance." },
+      "claim": {
+        "pt": "Num experimento com 20 milhões de pessoas no LinkedIn, os laços fracos moderados foram os que mais levaram a novos empregos.",
+        "en": "In an experiment with 20 million people on LinkedIn, moderately weak ties were the ones that most led to new jobs."
+      },
+      "body": {
+        "pt": "Granovetter propôs em 1973 que informação nova chega pelos laços fracos, porque os fortes já sabem o que você sabe. Por décadas foi uma teoria elegante com evidência correlacional. [Rajkumar et al. (2022)](https://doi.org/10.1126/science.abl4476) testaram de verdade: ao variar o algoritmo de 'pessoas que talvez você conheça' para 20 milhões de usuários do LinkedIn ao longo de cinco anos, viram que **laços moderadamente fracos geraram mais mudanças de emprego** do que os fortes — e do que os fraquíssimos. A curva tem formato de U invertido: um conhecido com quem você trocou umas dez mensagens vale mais do que o melhor amigo e do que o estranho. O custo de uma mensagem para retomar contato é quase $$ zero; o retorno esperado, não.",
+        "en": "Granovetter proposed in 1973 that new information arrives through weak ties, because strong ones already know what you know. For decades it was an elegant theory with correlational evidence. [Rajkumar et al. (2022)](https://doi.org/10.1126/science.abl4476) tested it for real: by varying the 'people you may know' algorithm for 20 million LinkedIn users over five years, they saw that **moderately weak ties generated more job changes** than strong ones — and than the very weakest. The curve is an inverted U: an acquaintance you exchanged about ten messages with is worth more than your best friend and than a stranger. The cost of one message to reconnect is nearly zero; the expected return is not."
+      },
+      "image_brief": "Uma rede de fios finos esticados entre postes numa praça ao entardecer; a maioria dos fios está frouxa e cinza, mas um único fio fino brilha em dourado, ligando duas pessoas distantes.",
+      "sources": [
+        { "label": { "pt": "Rajkumar et al., 2022 · Science", "en": "Rajkumar et al., 2022 · Science" }, "url": "https://doi.org/10.1126/science.abl4476" },
+        { "label": { "pt": "Granovetter, 1973 · American Journal of Sociology", "en": "Granovetter, 1973 · American Journal of Sociology" }, "url": "https://doi.org/10.1086/225469" }
+      ],
+      "cta": null
+    }
+  ]
+}

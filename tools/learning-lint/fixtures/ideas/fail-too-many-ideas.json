@@ -1,0 +1,118 @@
+{
+  "slug": "summary-atomic-habits",
+  "type": "summary",
+  "material_title": {
+    "pt": "Hábitos Atômicos, sob escrutínio",
+    "en": "Atomic Habits, under scrutiny"
+  },
+  "ideas": [
+    {
+      "id": "sessenta-e-seis-dias",
+      "ordinal": 1,
+      "title": { "pt": "21 dias é uma média inventada.", "en": "21 days is a made-up average." },
+      "claim": {
+        "pt": "Formar um hábito levou em média 66 dias no único estudo que mediu de verdade, com pessoas variando de 18 a 254.",
+        "en": "Forming a habit took 66 days on average in the one study that actually measured it, with people ranging from 18 to 254."
+      },
+      "body": {
+        "pt": "O número de 21 dias veio de Maxwell Maltz, um cirurgião plástico dos anos 1950 que observou quanto tempo pacientes levavam para se acostumar com o novo rosto. Não era um estudo sobre hábitos. Quem mediu foi [Lally et al. (2010)](https://doi.org/10.1002/ejsp.674): 96 voluntários escolheram um comportamento novo e responderam a um questionário diário por doze semanas. A automaticidade levou **66 dias em média** para se estabilizar, com pessoas indo de 18 a 254 dias, e pular um dia não zerou o progresso. O livro cita o estudo, mas o mito dos 21 dias continua vivo no marketing. Troque a contagem regressiva por uma pergunta melhor: o quanto isso já está ficando automático?",
+        "en": "The 21-day figure came from Maxwell Maltz, a plastic surgeon in the 1950s who noticed how long patients took to get used to a new face. It was not a study about habits. The people who measured it were [Lally et al. (2010)](https://doi.org/10.1002/ejsp.674): 96 volunteers picked a new behavior and answered a daily questionnaire for twelve weeks. Automaticity took **66 days on average** to level off, with individuals ranging from 18 to 254 days, and missing one day did not reset progress. The book cites the study, yet the 21-day myth lives on in marketing. Swap the countdown for a better question: how automatic is this getting?"
+      },
+      "image_brief": "Sessenta e seis pedrinhas empilhadas em fila numa prateleira de madeira, as primeiras cobertas de poeira e as últimas ainda limpas, com uma lupa deitada ao lado.",
+      "sources": [
+        { "label": { "pt": "Lally et al., 2010 · European Journal of Social Psychology", "en": "Lally et al., 2010 · European Journal of Social Psychology" }, "url": "https://doi.org/10.1002/ejsp.674" }
+      ],
+      "cta": null
+    },
+    {
+      "id": "conta-do-um-por-cento",
+      "ordinal": 2,
+      "title": { "pt": "A conta do 1% ao dia não fecha.", "en": "The 1%-a-day math doesn't add up." },
+      "claim": {
+        "pt": "Melhorar 1% ao dia por um ano dá 37 vezes só se você fosse uma poupança; hábitos não rendem juros compostos.",
+        "en": "Getting 1% better every day for a year yields 37x only if you were a savings account; habits don't earn compound interest."
+      },
+      "body": {
+        "pt": "O gráfico mais compartilhado do livro mostra 1,01 elevado a 365 chegando a 37,8. A aritmética está certa; a analogia, não. Juros compostos exigem que cada ganho vire base para o próximo, e quase nenhuma habilidade funciona assim: a corrida melhora rápido no começo e depois estaciona, o vocabulário novo esquece se não é usado, a força de preensão tem teto. O próprio [James Clear](https://jamesclear.com/continuous-improvement) apresenta a curva como metáfora, não como medida. O que sobrevive é a versão modesta: **pequenas melhorias repetidas somam, mas não se multiplicam**. Trate o 1% como direção, não como projeção, e pare de esperar o ponto em que a curva dispara.",
+        "en": "The book's most shared chart shows 1.01 raised to 365 reaching 37.8. The arithmetic is right; the analogy isn't. Compound interest requires every gain to become the base for the next, and almost no skill works that way: running improves quickly at first and then plateaus, new vocabulary fades if unused, grip strength has a ceiling. [James Clear](https://jamesclear.com/continuous-improvement) himself presents the curve as a metaphor, not a measurement. What survives is the modest version: **small repeated improvements add up, but they don't multiply**. Treat the 1% as a direction, not a projection, and stop waiting for the point where the curve takes off."
+      },
+      "image_brief": "Duas rampas lado a lado numa paisagem aberta: uma sobe em curva exponencial e some nas nuvens, a outra sobe devagar em degraus de pedra; uma pessoa de mochila caminha pela rampa de degraus.",
+      "sources": [
+        { "label": { "pt": "James Clear · Continuous Improvement", "en": "James Clear · Continuous Improvement" }, "url": "https://jamesclear.com/continuous-improvement" }
+      ],
+      "cta": null
+    },
+    {
+      "id": "mude-a-pessoa",
+      "ordinal": 3,
+      "title": { "pt": "Mude a pessoa, não o hábito.", "en": "Change the person, not the habit." },
+      "claim": {
+        "pt": "Quando o objetivo vira parte de quem você é, a ação deixa de ser esforço e vira coerência — e isso aparece até nas urnas.",
+        "en": "When the goal becomes part of who you are, the action stops being effort and becomes consistency — it even shows up at the polls."
+      },
+      "body": {
+        "pt": "A ideia mais forte do livro é que cada ação é um voto no tipo de pessoa que você quer ser. Não é só retórica. [Bryan et al. (2011)](https://doi.org/10.1073/pnas.1103343108) testaram isso em eleições reais: pedir às pessoas para 'ser um eleitor' em vez de 'votar' aumentou o comparecimento em mais de dez pontos percentuais em dois experimentos de campo. A formulação transformou a ação em identidade, e identidade é algo que as pessoas defendem. Na prática, **nomeie quem você está sendo, não o que está fazendo**: 'sou alguém que caminha de manhã' pesa mais do que 'preciso caminhar'. No Perceva, é a Identidade Praticada — o que suas ações estão treinando em você.",
+        "en": "The book's strongest idea is that every action is a vote for the kind of person you want to be. It is not just rhetoric. [Bryan et al. (2011)](https://doi.org/10.1073/pnas.1103343108) tested it in real elections: asking people to 'be a voter' instead of 'to vote' raised turnout by more than ten percentage points across two field experiments. The wording turned an action into an identity, and identity is something people defend. In practice, **name who you are being, not what you are doing**: 'I'm someone who walks in the morning' carries more weight than 'I need to walk'. In Perceva this is Practiced Identity — what your actions are training in you."
+      },
+      "image_brief": "Uma pessoa de tênis parada diante de um espelho de corpo inteiro numa sala clara; o reflexo dá um passo à frente, já em movimento, enquanto a pessoa ainda está imóvel.",
+      "sources": [
+        { "label": { "pt": "Bryan et al., 2011 · PNAS", "en": "Bryan et al., 2011 · PNAS" }, "url": "https://doi.org/10.1073/pnas.1103343108" }
+      ],
+      "cta": null
+    },
+    {
+      "id": "geladeira-decide",
+      "ordinal": 4,
+      "title": { "pt": "Sua geladeira decide mais do que você.", "en": "Your fridge decides more than you do." },
+      "claim": {
+        "pt": "Quase metade do que fazemos por dia acontece no piloto automático, disparado pelo lugar e pela hora, não por uma decisão.",
+        "en": "Almost half of what we do each day runs on autopilot, triggered by place and time, not by a decision."
+      },
+      "body": {
+        "pt": "[Wood, Quinn e Kashy (2002)](https://doi.org/10.1037/0022-3514.83.6.1281) pediram a estudantes que registrassem, de hora em hora, o que estavam fazendo, onde e no que pensavam. Cerca de **43% dos comportamentos eram hábitos**: repetidos quase todo dia, no mesmo contexto, com a cabeça em outro lugar. Isso muda o alvo. Se o contexto dispara a ação, brigar com a força de vontade é atacar o elo errado da corrente; mais barato é mudar o gatilho. É o capítulo do livro que melhor se sustenta: o ambiente como arquiteto silencioso. Deixe a fruta à vista e o doce no armário alto, o tênis ao lado da cama e o celular carregando em outro cômodo. Você não decidirá melhor; simplesmente decidirá menos.",
+        "en": "[Wood, Quinn and Kashy (2002)](https://doi.org/10.1037/0022-3514.83.6.1281) asked students to record, hour by hour, what they were doing, where, and what they were thinking about. Roughly **43% of behaviors were habits**: repeated almost daily, in the same context, with the mind elsewhere. That changes the target. If context triggers the action, fighting with willpower attacks the wrong link in the chain; changing the cue is cheaper. It is the chapter of the book that holds up best: the environment as silent architect. Keep fruit in sight and sweets on the high shelf, sneakers by the bed and the phone charging in another room. You won't decide better; you'll simply decide less."
+      },
+      "image_brief": "Uma cozinha vista de frente, à noite: a geladeira aberta ilumina uma pessoa parada com a mão estendida, e a luz projeta no chão uma sombra que puxa a pessoa pelo braço.",
+      "sources": [
+        { "label": { "pt": "Wood, Quinn & Kashy, 2002 · Journal of Personality and Social Psychology", "en": "Wood, Quinn & Kashy, 2002 · Journal of Personality and Social Psychology" }, "url": "https://doi.org/10.1037/0022-3514.83.6.1281" }
+      ],
+      "cta": null
+    },
+    {
+      "id": "pequeno-demais-para-falhar",
+      "ordinal": 5,
+      "title": { "pt": "Comece pequeno demais para falhar.", "en": "Start too small to fail." },
+      "claim": {
+        "pt": "A regra dos dois minutos funciona porque começar é o único obstáculo que sempre existe — e o resto costuma vir junto.",
+        "en": "The two-minute rule works because starting is the only obstacle that is always there — and the rest tends to follow."
+      },
+      "body": {
+        "pt": "Clear propõe reduzir qualquer hábito novo a uma versão que cabe em dois minutos: ler uma página, calçar o tênis, abrir o caderno. Parece truque, mas a evidência sobre planos concretos é robusta. A meta-análise de [Gollwitzer e Sheeran (2006)](https://doi.org/10.1016/S0065-2601(06)38002-1) reuniu 94 estudos sobre intenções de implementação — planos no formato 'quando X, farei Y' — e encontrou um efeito médio de d = 0,65 sobre atingir metas, o que é grande para a psicologia. Um hábito de dois minutos é exatamente esse tipo de plano: **um gatilho claro e uma ação pequena o bastante para não ser negociada**. O erro comum é aumentar a dose cedo demais; primeiro a presença vira automática, depois ela cresce.",
+        "en": "Clear proposes shrinking any new habit to a version that fits in two minutes: read one page, put on the sneakers, open the notebook. It sounds like a gimmick, but the evidence on concrete plans is robust. The meta-analysis by [Gollwitzer and Sheeran (2006)](https://doi.org/10.1016/S0065-2601(06)38002-1) pooled 94 studies on implementation intentions — plans of the form 'when X, I will do Y' — and found an average effect of d = 0.65 on goal attainment, which is large for psychology. A two-minute habit is exactly that kind of plan: **a clear cue and an action small enough not to be negotiated**. The common mistake is raising the dose too early; first showing up becomes automatic, then it grows."
+      },
+      "image_brief": "Um par de tênis de corrida amarrado e posicionado exatamente na soleira da porta da frente, com a chave pendurada na fechadura e a luz da manhã entrando pela fresta.",
+      "sources": [
+        { "label": { "pt": "Gollwitzer & Sheeran, 2006 · Advances in Experimental Social Psychology", "en": "Gollwitzer & Sheeran, 2006 · Advances in Experimental Social Psychology" }, "url": "https://doi.org/10.1016/S0065-2601(06)38002-1" }
+      ],
+      "cta": null
+    },
+    {
+      "id": "cole-no-que-ja-existe",
+      "ordinal": 6,
+      "title": { "pt": "Cole o hábito novo num que já existe.", "en": "Stick the new habit to one you already have." },
+      "claim": {
+        "pt": "Empilhar hábitos é a versão doméstica de uma técnica com 25 anos de evidência: amarrar a ação nova a um momento que já acontece.",
+        "en": "Habit stacking is the household version of a technique with 25 years of evidence: tie the new action to a moment that already happens."
+      },
+      "body": {
+        "pt": "'Depois de escovar os dentes, vou passar fio dental' é o exemplo clássico de empilhamento. A base científica é a mesma das intenções de implementação de [Gollwitzer (1999)](https://doi.org/10.1037/0003-066X.54.7.493): quando a situação e a resposta são especificadas de antemão, a situação passa a disparar a resposta sem deliberação. Um hábito existente é o gatilho mais confiável que você tem, porque já acontece todo dia no mesmo lugar. Dois cuidados. O hábito-âncora precisa ser tão frequente quanto o novo — não amarre uma ação diária a algo que acontece só às terças. E **a ordem importa**: o novo vem logo depois da âncora, não 'em algum momento da manhã'. Quanto menor a janela, menos espaço para a negociação interna.",
+        "en": "'After I brush my teeth, I will floss' is the classic stacking example. The scientific basis is the same as [Gollwitzer's (1999)](https://doi.org/10.1037/0003-066X.54.7.493) implementation intentions: when the situation and the response are specified in advance, the situation starts triggering the response without deliberation. An existing habit is the most reliable cue you have, because it already happens every day in the same place. Two cautions. The anchor habit needs to be as frequent as the new one — don't tie a daily action to something that only happens on Tuesdays. And **order matters**: the new one comes right after the anchor, not 'sometime in the morning'. The smaller the window, the less room for internal negotiation."
+      },
+      "image_brief": "Uma escova de dentes e um rolo de fio dental presos um ao outro por uma fita, apoiados numa pia de banheiro branca sob a luz suave da manhã.",
+      "sources": [
+        { "label": { "pt": "Gollwitzer, 1999 · American Psychologist", "en": "Gollwitzer, 1999 · American Psychologist" }, "url": "https://doi.org/10.1037/0003-066X.54.7.493" }
+      ],
+      "cta": null
+    }
+  ]
+}

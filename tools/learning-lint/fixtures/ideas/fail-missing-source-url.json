@@ -1,0 +1,28 @@
+{
+  "slug": "protein-distribution-30g-myth",
+  "type": "news",
+  "material_title": {
+    "pt": "Proteína ao longo do dia: o mito dos 30 g",
+    "en": "Protein across the day: the 30 g myth"
+  },
+  "ideas": [
+    {
+      "id": "nao-e-quanto-e-quando",
+      "ordinal": 1,
+      "title": { "pt": "Não é só quanto. É quando.", "en": "It's not just how much. It's when." },
+      "claim": {
+        "pt": "Espalhar a mesma proteína em três refeições parecidas rendeu 25% mais síntese muscular do que concentrar quase tudo no jantar.",
+        "en": "Spreading the same protein across three similar meals yielded 25% more muscle protein synthesis than loading almost all of it at dinner."
+      },
+      "body": {
+        "pt": "O brasileiro médio come pouca proteína no café da manhã e quase toda no jantar. [Mamerow et al. (2014)](https://doi.org/10.3945/jn.113.185280) testaram exatamente esse padrão contra uma distribuição uniforme, cerca de 30 g por refeição, com o mesmo total diário de 90 g. Em sete dias, a síntese de proteína muscular ao longo de 24 horas foi **25% maior no grupo distribuído**. O mecanismo é um limiar: cada refeição precisa de proteína suficiente para ligar a síntese, e o excesso do jantar não compensa a falta da manhã. A conclusão prática não exige balança: garanta uma fonte de proteína decente nas três refeições — ovos, iogurte, leguminosas, carne — em vez de tentar acertar tudo à noite.",
+        "en": "The average Brazilian eats little protein at breakfast and almost all of it at dinner. [Mamerow et al. (2014)](https://doi.org/10.3945/jn.113.185280) tested exactly that pattern against an even spread, about 30 g per meal, with the same daily total of 90 g. Over seven days, 24-hour muscle protein synthesis was **25% higher in the even group**. The mechanism is a threshold: each meal needs enough protein to switch synthesis on, and dinner's surplus doesn't make up for the morning's shortfall. The practical conclusion needs no scale: get a decent protein source into all three meals — eggs, yogurt, legumes, meat — instead of trying to fix everything at night."
+      },
+      "image_brief": "Três pratos iguais alinhados numa mesa de madeira, cada um com uma porção parecida de ovos, feijão e um pedaço de carne; ao lado, um prato enorme sozinho, vazio, empurrado para a borda.",
+      "sources": [
+        { "label": { "pt": "Mamerow et al., 2014 · Journal of Nutrition", "en": "Mamerow et al., 2014 · Journal of Nutrition" } }
+      ],
+      "cta": null
+    }
+  ]
+}
