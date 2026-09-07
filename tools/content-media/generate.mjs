@@ -5,7 +5,7 @@
  *
  * Reads a media spec written by the `learning-art-director` agent and produces
  * the media assets for one Learning material, ready for ingestion:
- *   - cover.webp            (Gemini 2.5 Flash Image, 2:3, textless)
+ *   - cover.webp            (Gemini 3.1 Flash Image, 2:3, textless)
  *   - infographic.<loc>.webp (branded SVG -> resvg -> webp, one per locale)
  *   - manifest.json         (what to upload + the DB rows to insert)
  *
@@ -26,7 +26,12 @@
  *
  * Env:
  *   GEMINI_API_KEY        required for cover generation (AI Studio key, billing on)
- *   GEMINI_IMAGE_MODEL    optional override (default gemini-2.5-flash-image)
+ *   GEMINI_IMAGE_MODEL    optional override (default gemini-3.1-flash-image)
+ *   GEMINI_IMAGE_SIZE     optional override (default 1K)
+ *   COVER_STYLE_REFS      'none' disables the style reference images, or a
+ *                         comma-separated list of files in style-refs/
+ *   COVER_STYLE_GLYPH     'on' adds the Perceva glyph as a reference (off by
+ *                         default — see lib/styleRefs.mjs for why)
  *   EXPO_PUBLIC_SUPABASE_URL  used to precompute the cover hero_image_url
  *   FFMPEG_PATH           optional ffmpeg override
  */
@@ -39,7 +44,7 @@ import { Resvg } from '@resvg/resvg-js';
 
 import { synthesizeDialogue, pcmToWav } from './lib/audio.mjs';
 import { generateCover } from './lib/cover.mjs';
-import { probeDurationSeconds, toM4a, toWebp, toWebpCover } from './lib/ffmpeg.mjs';
+import { probeDurationSeconds, probeImageSize, toM4a, toWebp, toWebpCover } from './lib/ffmpeg.mjs';
 import { buildInfographicSvg } from './lib/infographic.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -214,13 +219,30 @@ async function main() {
 
   // ── cover (single 2:3 image, textless) ────────────────────────────────────
   if (wantCover) {
-    log('  · cover (Gemini 2.5 Flash Image, 2:3) …');
+    log('  · cover (Gemini 3.1 Flash Image, 2:3) …');
     if (!args.dryRun) {
       try {
-        const { buffer, mimeType } = await generateCover({ prompt: spec.cover.prompt });
+        const { buffer, mimeType, refs } = await generateCover({
+          prompt: spec.cover.prompt,
+          onWarn: (m) => log(`      ! ${m}`),
+        });
         const ext = mimeType.includes('png') ? 'png' : mimeType.includes('webp') ? 'webp' : 'jpg';
         const rawPath = join(tmpDir, `cover.raw.${ext}`);
         writeFileSync(rawPath, buffer);
+
+        // Logged on every run so we learn whether aspectRatio was honoured
+        // instead of assuming it — the ffmpeg crop hides the answer otherwise.
+        const size = probeImageSize(rawPath);
+        const ratio = size ? size.width / size.height : null;
+        log(
+          `      ${size ? `${size.width}×${size.height}` : 'dimensões desconhecidas'}` +
+            (ratio
+              ? Math.abs(ratio - 2 / 3) < 0.01
+                ? ' (2:3 honrado)'
+                : ' (NÃO é 2:3 — o crop corta)'
+              : '') +
+            ` · ${refs.length} ref(s) de estilo${refs.length ? `: ${refs.join(', ')}` : ''}`,
+        );
 
         const outWebp = join(inboxDir, 'cover.webp');
         toWebpCover(rawPath, outWebp, COVER_W, COVER_H, 84);

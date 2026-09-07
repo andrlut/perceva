@@ -97,12 +97,38 @@ export function toM4a(inputPath, outputPath, bitrate = '64k') {
   ]);
 }
 
+/** Locate ffprobe next to the resolved ffmpeg. */
+function resolveFfprobe() {
+  const ffmpeg = resolveFfmpeg();
+  return ffmpeg.endsWith('ffmpeg.exe')
+    ? ffmpeg.slice(0, -'ffmpeg.exe'.length) + 'ffprobe.exe'
+    : 'ffprobe';
+}
+
+/**
+ * Pixel size of an image, or null if it cannot be read. Format-agnostic (the
+ * image model returns png, webp or jpeg depending on the day), which is why
+ * this shells out instead of sniffing headers. Used to report whether the
+ * model honoured the requested aspect ratio — the cover crop hides the answer.
+ */
+export function probeImageSize(path) {
+  try {
+    const out = execFileSync(
+      resolveFfprobe(),
+      ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height',
+        '-of', 'csv=p=0:s=x', path],
+      { encoding: 'utf8' },
+    );
+    const [w, h] = out.trim().split('x').map(Number);
+    return w && h ? { width: w, height: h } : null;
+  } catch {
+    return null; // never worth failing a cover over
+  }
+}
+
 /** Duration of a media file in whole seconds (via ffprobe next to ffmpeg). */
 export function probeDurationSeconds(path) {
-  const ffmpeg = resolveFfmpeg();
-  const ffprobe = ffmpeg.endsWith('ffmpeg.exe')
-    ? ffmpeg.slice(0, -('ffmpeg.exe'.length)) + 'ffprobe.exe'
-    : 'ffprobe';
+  const ffprobe = resolveFfprobe();
   try {
     const out = execFileSync(
       ffprobe,

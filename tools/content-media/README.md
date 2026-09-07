@@ -3,8 +3,9 @@
 Gera os **assets de mídia** de um material do Learning a partir de um
 `media-spec.json` (escrito pelo agente `learning-art-director`):
 
-- **`cover.webp`** — capa 2:3 atmosférica e **sem texto**, via Gemini 2.5 Flash
-  Image (Nano Banana), ~US$ 0,039/imagem.
+- **`cover.webp`** — capa 2:3 atmosférica e **sem texto**, via Gemini 3.1 Flash
+  Image (Nano Banana 2), ~US$ 0,067/imagem a 1K, com **referências de estilo**
+  (ver `style-refs/`).
 - **`infographic.<pt|en>.webp`** — infográfico retrato 1080×1920, renderizado de
   **SVG com os tokens de marca do Perceva** (resvg), **US$ 0 de API**.
 - **`manifest.json`** — descreve o que subir pro bucket e as linhas a inserir no
@@ -30,6 +31,19 @@ de ~200–800 caracteres, pior ainda em PT com acento.
 Renderizar SVG → PNG resolve isso de forma determinística: texto é glifo de
 fonte real, cor é hex exato do token. Reservamos o modelo de imagem só pro que
 ele faz bem: a **capa sem texto**.
+
+## Referências de estilo (por que a capa não é só prompt)
+
+O modelo recebe, junto do prompt, **3 capas que já estão no ar** como
+referência de estilo. Isso existe porque estilo escrito em adjetivos não
+sobrevive a troca de geração de modelo: na migração do 2.5 pro 3.1, o mesmo
+`STYLE_SUFFIX` que produzia o carvão dessaturado do acervo passou a produzir um
+roxo saturado. Com as referências, o look volta a bater. Detalhes, critério de
+escolha e as chaves `COVER_STYLE_REFS` / `COVER_STYLE_GLYPH` em
+[`style-refs/README.md`](style-refs/README.md).
+
+Se as referências sumirem ou falharem, a geração **degrada pro prompt puro** e
+segue — nenhum drop falha por causa disso.
 
 ## Setup
 
