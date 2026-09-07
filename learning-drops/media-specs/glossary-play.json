@@ -1,0 +1,25 @@
+{
+  "slug": "glossary-play",
+  "dimension_id": "craft",
+  "title": {
+    "pt": "Descanso é uma habilidade, não um prêmio",
+    "en": "Rest Is a Skill, Not a Prize"
+  },
+  "ideas": [
+    {
+      "id": "sofa-um-pedaco",
+      "ordinal": 1,
+      "image_prompt": "Uma sala: à esquerda, uma pessoa afundada no sofá com o controle remoto na mão, iluminada por uma luz azulada fria; à direita, na bancada da cozinha, outra pessoa sova massa de pão com farinha até os cotovelos — toda a luz quente da cena cai sobre a bancada, e o sofá fica na penumbra."
+    },
+    {
+      "id": "ferias-somem",
+      "ordinal": 2,
+      "image_prompt": "Uma mala de viagem fechada e ainda cheia, encostada no canto de um escritório em casa, com um fio de areia de praia escapando pelo fecho; na mesa ao lado, uma pessoa já curvada sobre uma pilha de trabalho."
+    },
+    {
+      "id": "pior-semana-hobby",
+      "ordinal": 3,
+      "image_prompt": "Uma pessoa sentada no chão de um escritório abarrotado, pastas empilhadas até o teto ao redor, tocando violão com atenção total; a única luz quente da cena cai sobre o violão."
+    }
+  ]
+}

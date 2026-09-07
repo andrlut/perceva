@@ -228,7 +228,10 @@ function lintDraft(draft, name) {
 function lintSpec(spec, name) {
   const out = [];
   if (!spec.dimension_id) out.push({ sev: 'FAIL', msg: 'dimension_id missing (generate.mjs requires it)', where: `${name}` });
-  if (!spec.cover || !String(spec.cover.prompt || '').trim())
+  // A backfill spec (ideas only, the material already has its cover) may omit the cover.
+  const ideasOnly = !spec.cover && Array.isArray(spec.ideas) && spec.ideas.length > 0;
+  if (ideasOnly) out.push({ sev: 'WARN', msg: 'no cover block (ideas-only backfill spec)', where: `${name}:cover` });
+  else if (!spec.cover || !String(spec.cover.prompt || '').trim())
     out.push({ sev: 'FAIL', msg: 'cover.prompt missing', where: `${name}:cover` });
   const bi = (o, f) => o && o[f] && String(o[f].pt || '').trim() && String(o[f].en || '').trim();
 

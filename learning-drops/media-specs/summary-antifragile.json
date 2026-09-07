@@ -1,0 +1,30 @@
+{
+  "slug": "summary-antifragile",
+  "dimension_id": "mind",
+  "title": {
+    "pt": "Antifrágil — o que melhora com o caos",
+    "en": "Antifragile — what gains from disorder"
+  },
+  "ideas": [
+    {
+      "id": "terceiro-estado",
+      "ordinal": 1,
+      "image_prompt": "Uma única rajada de vento atravessando a cena da esquerda para a direita: no caminho dela, uma vela pequena se apaga com um fio de fumaça, e mais à frente uma fogueira cresce com as chamas inclinadas na mesma direção do vento."
+    },
+    {
+      "id": "via-negativa",
+      "ordinal": 2,
+      "image_prompt": "Uma tesoura de poda cortando galhos secos e emaranhados de uma árvore jovem; o lado já podado tem poucos galhos, grossos, com brotos novos, e o lado ainda não podado está entupido de galhos finos que se atrapalham."
+    },
+    {
+      "id": "barbell",
+      "ordinal": 3,
+      "image_prompt": "Uma barra de halteres vista de lado, apoiada em dois suportes nas extremidades: discos grandes e pesados numa ponta, dois discos pequenos na outra, e o trecho vazio do meio da barra suspenso sobre uma fenda escura no chão."
+    },
+    {
+      "id": "pele-em-jogo",
+      "ordinal": 4,
+      "image_prompt": "Um construtor em pé embaixo da viga principal da casa que acabou de erguer, no momento em que as últimas escoras são retiradas e a estrutura passa a sustentar o próprio peso sobre a cabeça dele."
+    }
+  ]
+}
