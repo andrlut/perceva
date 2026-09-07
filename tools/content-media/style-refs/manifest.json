@@ -1,0 +1,36 @@
+{
+  "why": "Style is transferred to the image model as PIXELS, not adjectives. A prose STYLE_SUFFIX does not survive a model generation change (2.5 -> 3.1), which is exactly how this folder came to exist. Every ref here is a cover that is LIVE in the app, so new covers are anchored to the real catalog look.",
+  "chosen": "These three are the most consistent expression of the house style: desaturated charcoal-navy ground, flat vector, subject anchored in the bottom third with the top two thirds nearly empty, a single warm amber light as the focal accent, and a muted sage secondary. The ikea-effect cover was deliberately EXCLUDED: it is light, warm and near-3D, the outlier of the catalog, and would teach the model the wrong thing.",
+  "refresh": "To refresh a ref, copy the file from learning-drops/inbox/<slug>/cover.webp (or the public bucket at /storage/v1/object/public/learning-media/<slug>/cover.webp) and update the entry below. Keep the count at 3: Gemini 3.x flash accepts up to 3 style reference images.",
+  "refs": [
+    {
+      "file": "cover-attention-residue.webp",
+      "mimeType": "image/webp",
+      "kind": "cover",
+      "slug": "attention-residue",
+      "note": "Two figures, doorway light. The cleanest example of the bottom-anchored composition."
+    },
+    {
+      "file": "cover-cbt-i-vs-sleep-hygiene.webp",
+      "mimeType": "image/webp",
+      "kind": "cover",
+      "slug": "cbt-i-vs-sleep-hygiene",
+      "note": "Curtain and nightstand. Carries the sage secondary and the thin amber edge light."
+    },
+    {
+      "file": "cover-play-deprivation-adults.webp",
+      "mimeType": "image/webp",
+      "kind": "cover",
+      "slug": "play-deprivation-adults",
+      "note": "Bottles on a shelf. Single glowing focal object against a dead-empty upper field."
+    },
+    {
+      "file": "glyph.svg",
+      "mimeType": "image/png",
+      "kind": "glyph",
+      "rasterize": 512,
+      "slug": null,
+      "note": "Brand palette only (navy tile, violet rings, gold path). OFF by default: no house cover contains a mark, and feeding a logo as a style ref is the shortest path to it being stamped into the art. Enable with CONTENT_MEDIA_STYLE_GLYPH=on."
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Perceva brand glyph "Topo Iris", midnight palette with tile.
+       Plain-SVG twin of app/components/PercevaGlyph.tsx (react-native-svg),
+       kept here so the media pipeline can rasterize it without importing the
+       app. If the component's paths or palette change, mirror them here. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0A0E26"/>
+      <stop offset="1" stop-color="#1F1655"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.35" r="0.7">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="pupil" cx="0.4" cy="0.4" r="0.7">
+      <stop offset="0" stop-color="#FFE3A6"/>
+      <stop offset="1" stop-color="#A77416"/>
+    </radialGradient>
+  </defs>
+
+  <rect x="0" y="0" width="1024" height="1024" rx="230.4" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1024" height="1024" rx="230.4" fill="url(#glow)"/>
+
+  <g stroke="#7B5CFF" fill="none" stroke-width="14">
+    <circle cx="512" cy="512" r="320" opacity="0.45"/>
+    <circle cx="512" cy="512" r="260" opacity="0.55"/>
+    <circle cx="512" cy="512" r="200" opacity="0.7"/>
+    <circle cx="512" cy="512" r="140" opacity="0.85"/>
+    <circle cx="512" cy="512" r="80" opacity="1"/>
+  </g>
+
+  <path d="M 180 720 Q 380 600 512 512 Q 644 424 844 304" fill="none"
+        stroke="#FFE3A6" stroke-width="22" stroke-linecap="round"/>
+  <circle cx="180" cy="720" r="18" fill="#FFE3A6"/>
+  <circle cx="844" cy="304" r="22" fill="#FFE3A6"/>
+  <circle cx="512" cy="512" r="38" fill="url(#pupil)"/>
+</svg>

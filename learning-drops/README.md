@@ -5,7 +5,7 @@ Duas esteiras alimentam a mesma pasta `inbox/<slug>/` e o mesmo bucket
 
 - **Fase A — automática (capa + infográfico), via API.** O agente
   `learning-art-director` escreve um `media-spec.json` e
-  `tools/content-media/generate.mjs` gera `cover.webp` (Gemini 2.5 Flash Image)
+  `tools/content-media/generate.mjs` gera `cover.webp` (Gemini 3.1 Flash Image)
   e `infographic.<loc>.webp` (SVG de marca renderizado localmente, US$ 0). É o
   caminho default do cron `learning-publisher` e da skill `/content-drop`. Ver
   `tools/content-media/README.md`.
@@ -36,7 +36,7 @@ learning-drops/
 | `infographic.pt.png` / `infographic.en.png` | Infográfico exportado | não |
 | `deck.pt.pdf` / `deck.en.pdf` | Slide deck em PDF (vira páginas de imagem na ingestão) | não |
 | `report.pt.md` / `report.en.docx` | Texto do report (md, docx ou txt) | não |
-| `cover.png` | Capa retrato 2:3 (Nano Banana, SEM texto na arte) | recomendado |
+| `cover.png` | Capa retrato 2:3 (SEM texto na arte) | recomendado |
 
 Só sobe o que existir — o app mostra apenas os modos disponíveis e sinaliza
 mídia em uma língua só com um badge (PT/EN).

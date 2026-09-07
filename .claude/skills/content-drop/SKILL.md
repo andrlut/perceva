@@ -7,7 +7,7 @@ description: Roda o pipeline de conteúdo do Learning sob demanda (agora), geran
 
 Dispara o pipeline de conteúdo do Learning **agora**, na sua máquina (onde as
 credenciais existem). É a versão manual do cron `learning-publisher`
-(dom+qua). Fase A: texto + **capa** (Gemini 2.5 Flash Image) + **infográfico**
+(dom+qua). Fase A: texto + **capa** (Gemini 3.1 Flash Image) + **infográfico**
 (render local de SVG, sem custo de API).
 
 ## Modos
@@ -75,8 +75,8 @@ episódio de 10 min. A aba **Áudio** sai do "em breve".
 
 ## Notas
 
-- **Custo**: infográfico ~US$ 0; capa ~US$ 0,039; áudio ~US$ 0,15/10 min. Um
-  drop de capa+infográfico é ~4 centavos; com áudio, ~19 centavos.
+- **Custo**: infográfico ~US$ 0; capa ~US$ 0,067; áudio ~US$ 0,15/10 min. Um
+  drop de capa+infográfico é ~7 centavos; com áudio, ~22 centavos.
 - **`inbox/` é gitignored** — só as migrations vão pro git; os assets vivem no
   Storage.
 - **Idempotência**: se o slug já existe e você ia inserir, vire UPDATE (modo

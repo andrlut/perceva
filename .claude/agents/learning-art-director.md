@@ -43,6 +43,12 @@ Rules:
 - **Zero text** — no words, letters, numbers, charts, or UI. The renderer
   appends the brand style + a hard "no text" instruction, so you only write the
   scene. Don't restate style ("dark background", "cinematic") — just the subject.
+- **Avoid the reference subjects.** The renderer also attaches three published
+  covers as STYLE reference images, and a prompt whose subject is close to one
+  of them invites the model to copy the reference instead of inventing. Steer
+  clear of: two people sitting either side of an open doorway; a bedroom with a
+  curtain and a nightstand; a row of bottles on a shelf with one glowing. The
+  current set lives in `tools/content-media/style-refs/manifest.json`.
 - Portrait, with breathing room up top (a title is overlaid later).
 - Write it in PT (the model handles PT prompts fine). ~1–2 sentences.
 
