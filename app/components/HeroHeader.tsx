@@ -1,92 +1,77 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, {
-  Circle,
-  Defs,
-  LinearGradient as SvgLinearGradient,
-  Path,
-  RadialGradient,
-  Stop,
-} from 'react-native-svg';
+import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 
+import { Emblema } from '@/components/Emblema';
 import { PercevaGlyph } from '@/components/PercevaGlyph';
 import { useCharacter } from '@/lib/api/character';
+import { useEmblemaState } from '@/lib/emblema';
+import { resolvePalette, useActiveTitle } from '@/lib/identity';
 import { useT } from '@/lib/i18n';
 import { useDiscBlend } from '@/lib/psych/useDiscBlend';
 import { levelProgress } from '@/lib/xp';
 import { tokens } from '@/theme';
-import { DIMENSION_META } from '@/theme/dimensions';
 
-const AVATAR = 92;
-const RING_R = 42;
-const RING_CIRCUMFERENCE = 2 * Math.PI * RING_R;
+const EMBLEM = 92;
 
 /**
- * Iris-Wrapped Avatar — full-width header for the Eu tab. A Perceva-native
- * composition: concentric brand rings + gold-path signature + dim-tile
- * center + XP progress arc wrapping the whole avatar. The eyebrow carries
- * the user's DISC archetype (an earned, self-knowledge identity — "LV 12 ·
- * O TIMONEIRO") instead of a level-derived nickname; the name reads big and
- * quiet.
+ * A capa do perfil — cabeçalho de largura inteira da aba Eu.
  *
- * Not a card — no border, full-width, soft violet halo + brand watermark.
- * The whole avatar + text block is tappable: it opens /perfil, the hero's
- * status sheet with the six deep instruments (the DISC archetype shown in
- * the eyebrow lives there too). Data is read via hooks; self-contained.
+ * Regra que manda aqui: a capa é só de olhar. Sem CTA, sem "próximo
+ * passo", sem contador, sem chip. Ela divide a tela com o hex que abre
+ * para 12 eixos, então cada elemento a mais custa caro — e por isso o
+ * Emblema aparece na versão de três anéis e sem satélites.
+ *
+ * O emblema substituiu o brasão fixo e a barra de XP que o circundava: os
+ * anéis passaram a carregar o esforço da janela de 30 dias, então a barra
+ * virava a mesma informação desenhada duas vezes. O nível continua legível
+ * no eyebrow, em texto.
+ *
+ * O eyebrow carrega o arquétipo DISC ("LV 12 · O TIMONEIRO") em vez de um
+ * apelido derivado do nível; o nome lê grande e quieto. O bloco inteiro
+ * abre /perfil, onde o emblema aparece grande e dá para personalizar.
  */
 export function HeroHeader() {
   const character = useCharacter();
   const { t } = useT();
   const router = useRouter();
   const blend = useDiscBlend();
+  const emblema = useEmblemaState();
+  const active = useActiveTitle();
 
   const totalXp = character.data?.character.total_xp ?? 0;
   const lp = levelProgress(totalXp);
   const displayName = character.data?.profile.display_name ?? 'Hero';
 
-  // Dominant dim = the dim carrying the most XP. Falls back to "body"
-  // for brand-new accounts where every dim is at zero. Drives the avatar
-  // tile; the identity title now comes from DISC, not the dominant dim.
-  const dominantDim = useMemo(() => {
-    const dims = character.data?.dimensions ?? [];
-    if (dims.length === 0) return null;
-    return dims.reduce((a, b) => (b.xp > a.xp ? b : a), dims[0]);
-  }, [character.data?.dimensions]);
-
-  const dimId = dominantDim?.dimension_id ?? 'body';
-  const dimMeta = DIMENSION_META[dimId];
-
-  // Progress arc — proportion of the current level's XP earned.
-  const progressFraction = lp.fraction;
-  const dashOffset = RING_CIRCUMFERENCE * (1 - progressFraction);
-
-  const archetype = blend.status === 'ready' ? blend.content.name : null;
+  // O título escolhido em Personalizar; sem escolha, cai no blend do DISC,
+  // que é o comportamento que a capa sempre teve. A CTA de "descobrir" só
+  // aparece quando não existe DISC nenhum, e não quando a pessoa tirou o
+  // título de propósito.
+  const archetype = active?.label ?? null;
   const goPerfil = () => router.push('/perfil');
 
   return (
     <View style={styles.root}>
-      {/* Brand watermark — a faint Perceva glyph on the right edge, the same
-          gilded mark the Learn and Autoconhecimento surfaces carry. Behind
-          everything, non-interactive. Gives the header the branded feel the
-          other tabs have instead of a bare avatar row. */}
+      {/* Marca-d'água — o mesmo glifo dourado que Learn e Autoconhecimento
+          carregam. Atrás de tudo, não interativo. */}
       <View style={styles.watermark} pointerEvents="none">
         <PercevaGlyph size={190} bare palette="primary" idSuffix="hero-mark" />
       </View>
 
-      {/* Ambient violet halo — a soft radial glow behind the avatar. The SVG
-          is SQUARE with the circle radius = half its side, so the gradient
-          reaches full transparency exactly at every edge: no matter where the
-          box ends there is no visible boundary, so it can never read as the
-          hard seam / line the earlier rectangular version did (its bottom
-          edge was clipped while the glow was still ~5% opaque). */}
+      {/* Halo ambiente do cabeçalho — o brilho FIXO da tela. O halo que
+          responde à leitura é o do próprio Emblema; este aqui ficou mais
+          fraco para os dois não empilharem em cima do avatar.
+
+          SVG quadrado com o raio do círculo = metade do lado, para o
+          gradiente chegar a zero exatamente na borda: assim não existe
+          costura visível onde a caixa termina. */}
       <View style={styles.halo} pointerEvents="none">
         <Svg width={520} height={520} viewBox="0 0 520 520">
           <Defs>
             <RadialGradient id="hero-halo" cx="0.5" cy="0.5" r="0.5">
-              <Stop offset="0" stopColor="#9B82FF" stopOpacity={0.22} />
-              <Stop offset="0.55" stopColor="#9B82FF" stopOpacity={0.07} />
+              <Stop offset="0" stopColor="#9B82FF" stopOpacity={0.14} />
+              <Stop offset="0.55" stopColor="#9B82FF" stopOpacity={0.05} />
               <Stop offset="1" stopColor="#9B82FF" stopOpacity={0} />
             </RadialGradient>
           </Defs>
@@ -101,105 +86,15 @@ export function HeroHeader() {
         accessibilityRole="button"
         accessibilityLabel={t('hero.perfilA11y')}
       >
-        {/* Avatar — single SVG, layered: progress ring, brand rings,
-            gold path, dim tile. Icon overlay sits on top in a View so
-            we can use the Ionicon font directly. */}
-        <View style={styles.avatarWrap}>
-          <Svg width={AVATAR} height={AVATAR} viewBox={`0 0 ${AVATAR} ${AVATAR}`}>
-            <Defs>
-              <SvgLinearGradient
-                id="xpRing"
-                x1="0"
-                y1="0"
-                x2="1"
-                y2="1"
-              >
-                <Stop offset="0" stopColor="#A08FFF" />
-                <Stop offset="1" stopColor="#7B5CFF" />
-              </SvgLinearGradient>
-            </Defs>
+        <Emblema
+          state={emblema}
+          size={EMBLEM}
+          rings={3}
+          palette={resolvePalette(character.data?.profile.identity?.palette)}
+          idSuffix="hero"
+        />
 
-            {/* XP progress ring — track + colored fill. Rotated -90 so
-                fill starts at the top. */}
-            <Circle
-              cx={46}
-              cy={46}
-              r={RING_R}
-              stroke="rgba(0,0,0,0.4)"
-              strokeWidth={4}
-              fill="none"
-            />
-            <Circle
-              cx={46}
-              cy={46}
-              r={RING_R}
-              stroke="url(#xpRing)"
-              strokeWidth={4}
-              strokeLinecap="round"
-              fill="none"
-              strokeDasharray={`${RING_CIRCUMFERENCE} ${RING_CIRCUMFERENCE}`}
-              strokeDashoffset={dashOffset}
-              transform={`rotate(-90 46 46)`}
-            />
-
-            {/* Concentric brand rings — Topo Iris reference in miniature. */}
-            <Circle
-              cx={46}
-              cy={46}
-              r={34}
-              stroke="rgba(255,227,166,0.35)"
-              strokeWidth={1}
-              fill="none"
-            />
-            <Circle
-              cx={46}
-              cy={46}
-              r={28}
-              stroke="rgba(255,227,166,0.35)"
-              strokeWidth={1}
-              fill="none"
-            />
-            <Circle
-              cx={46}
-              cy={46}
-              r={22}
-              stroke="rgba(255,227,166,0.35)"
-              strokeWidth={1}
-              fill="none"
-            />
-
-            {/* Gold diagonal — the brand signature. */}
-            <Path
-              d="M 22 65 Q 36 56 46 46 Q 56 36 70 27"
-              fill="none"
-              stroke="#FFE3A6"
-              strokeWidth={1.5}
-              strokeLinecap="round"
-              opacity={0.65}
-            />
-            <Circle cx={22} cy={65} r={1.8} fill="#FFE3A6" opacity={0.75} />
-            <Circle cx={70} cy={27} r={1.8} fill="#FFE3A6" opacity={0.75} />
-
-            {/* Dim tile — color matches the dominant dim. */}
-            <Circle
-              cx={46}
-              cy={46}
-              r={18}
-              fill={dimMeta.bg}
-              stroke={`${dimMeta.color}73`}
-              strokeWidth={1}
-            />
-          </Svg>
-          <View style={styles.avatarIcon} pointerEvents="none">
-            <Ionicons
-              name={dimMeta.iconName as never}
-              size={22}
-              color={dimMeta.color}
-            />
-          </View>
-        </View>
-
-        {/* Text column — part of the same /perfil press target. */}
+        {/* Coluna de texto — parte do mesmo alvo de toque. */}
         <View style={styles.textCol}>
           <View style={styles.eyebrowRow}>
             <Text style={styles.eyebrowLv}>LV {lp.level}</Text>
@@ -242,8 +137,8 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 22,
     paddingHorizontal: 20,
-    // overflow visible so the radial halo and glyph watermark can tail off
-    // into the screen background instead of being cut at the header box.
+    // overflow visível para o halo e a marca-d'água morrerem no fundo da
+    // tela em vez de serem cortados na caixa do cabeçalho.
     overflow: 'visible',
   },
   halo: {
@@ -265,16 +160,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
-  },
-  avatarWrap: {
-    width: AVATAR,
-    height: AVATAR,
-    position: 'relative',
-  },
-  avatarIcon: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   textCol: {
     flex: 1,

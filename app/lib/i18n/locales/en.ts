@@ -760,9 +760,56 @@ const en = {
     perfilA11y: 'Open your full profile',
   },
 
+  personalizar: {
+    title: 'Customize',
+    nameSection: 'Name',
+    titleSection: 'Title',
+    paletteSection: 'Palette',
+    titleEmpty: 'Titles come from the tests. Take DISC or Types to get one.',
+    noTitle: 'No title',
+    saveError: 'Could not save',
+    note: 'Nothing here changes what the emblem measures — only how it is painted.',
+    source: {
+      disc: 'DISC · your current result',
+      tipos: 'Types · your current result',
+      strengths: 'Strengths · your signature strength',
+      schwartz_pvq: 'Values · what moves you most',
+      ecr_r: 'Attachment · how you bond',
+      big_five_120: 'Big Five · your most distinctive trait',
+    },
+    palette: {
+      primary: 'Default',
+      midnight: 'Midnight',
+      tide: 'Tide',
+      arcane: 'Arcane',
+      gilded: 'Gilded',
+    },
+    unlock: {
+      rings: '5 rings',
+      reading: '8 reads',
+      instruments: '6 tests',
+    },
+  },
   perfil: {
     eyebrow: 'Profile',
     fallbackTitle: 'Your profile',
+    emblema: {
+      noPractice: 'No practice in the last 30 days',
+      legend: {
+        title: 'What the emblem shows',
+        effort: 'Effort',
+        effortWhat: 'areas with {{floor}}+ points this month light up on the emblem',
+        effortValue: '{{xp}} / {{max}} in 30 days',
+        effortValueFull: '{{xp}} XP this month',
+        self: 'Self-knowledge',
+        selfWhat: 'the golden arms',
+        selfValue: '{{done}} of {{total}} tests',
+        reading: 'Reading',
+        readingWhat: 'the glow behind',
+        readingValue: '{{done}} of {{total}} materials',
+        window: 'All from the last 30 days, except the tests — those stay for good.',
+      },
+    },
     card: {
       doneChip: 'Done',
       doneToday: 'Done today',
@@ -787,7 +834,6 @@ const en = {
 
   conector: {
     cardTitle: 'Talk to your data',
-    cardSub: 'Connect Perceva to Claude and ask about your routine out loud.',
     title: 'Connector',
     lead: 'Perceva exposes your data as a connector for Claude. Once connected, you ask in plain language and it reads straight from your history — only yours.',
     boundaryTitle: 'What it does, and what it does not',
@@ -1752,7 +1798,12 @@ const en = {
       modules: 'Modules',
       notifications: 'Notifications',
       data: 'Data',
+      conector: 'Connector',
       about: 'About',
+    },
+    conectorRow: {
+      title: 'Perceva in Claude',
+      sub: 'Ask about your days, mood and rewards',
     },
     modules: {
       missoes: 'Missions',

@@ -756,9 +756,56 @@ const pt: Translations = {
     perfilA11y: 'Abrir seu perfil completo',
   },
 
+  personalizar: {
+    title: 'Personalizar',
+    nameSection: 'Nome',
+    titleSection: 'Título',
+    paletteSection: 'Paleta',
+    titleEmpty: 'Os títulos vêm dos testes. Faça o DISC ou o Tipos para ter um.',
+    noTitle: 'Sem título',
+    saveError: 'Não foi possível salvar',
+    note: 'Nada aqui muda o que o emblema mede — só como ele é pintado.',
+    source: {
+      disc: 'DISC · seu resultado atual',
+      tipos: 'Tipos · seu resultado atual',
+      strengths: 'Forças · sua força de assinatura',
+      schwartz_pvq: 'Valores · o que mais te move',
+      ecr_r: 'Apego · seu jeito de se ligar',
+      big_five_120: 'Big Five · seu traço mais distintivo',
+    },
+    palette: {
+      primary: 'Padrão',
+      midnight: 'Noturna',
+      tide: 'Maré',
+      arcane: 'Arcana',
+      gilded: 'Dourada',
+    },
+    unlock: {
+      rings: '5 anéis',
+      reading: '8 leituras',
+      instruments: '6 testes',
+    },
+  },
   perfil: {
     eyebrow: 'Perfil',
     fallbackTitle: 'Seu perfil',
+    emblema: {
+      noPractice: 'Sem prática nos últimos 30 dias',
+      legend: {
+        title: 'O que o emblema mostra',
+        effort: 'Esforço',
+        effortWhat: 'áreas com {{floor}}+ pontos no mês acendem no emblema',
+        effortValue: '{{xp}} / {{max}} em 30 dias',
+        effortValueFull: '{{xp}} XP no mês',
+        self: 'Autoconhecimento',
+        selfWhat: 'os braços dourados',
+        selfValue: '{{done}} de {{total}} testes',
+        reading: 'Leitura',
+        readingWhat: 'o brilho atrás',
+        readingValue: '{{done}} de {{total}} materiais',
+        window: 'Tudo nos últimos 30 dias, menos os testes — esses ficam pra sempre.',
+      },
+    },
     card: {
       doneChip: 'Feito',
       doneToday: 'Feito hoje',
@@ -783,7 +830,6 @@ const pt: Translations = {
 
   conector: {
     cardTitle: 'Converse com seus dados',
-    cardSub: 'Conecte o Perceva ao Claude e pergunte sobre a sua rotina em voz alta.',
     title: 'Conector',
     lead: 'O Perceva expõe seus dados como um conector para o Claude. Depois de conectar, você pergunta em português e ele lê direto do seu histórico — só o seu.',
     boundaryTitle: 'O que ele faz, e o que não faz',
@@ -1752,7 +1798,12 @@ const pt: Translations = {
       modules: 'Módulos',
       notifications: 'Notificações',
       data: 'Dados',
+      conector: 'Conector',
       about: 'Sobre',
+    },
+    conectorRow: {
+      title: 'Perceva no Claude',
+      sub: 'Pergunte sobre seus dias, humor e recompensas',
     },
     modules: {
       missoes: 'Missões',

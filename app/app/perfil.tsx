@@ -7,6 +7,7 @@ import { useBottomSafeClearance } from '@/components/BottomNavBar';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { AutoconhecimentoView } from '@/components/pillars/AutoconhecimentoView';
 import { ConectorCard } from '@/components/perfil/ConectorCard';
+import { PerfilHero } from '@/components/perfil/PerfilHero';
 import { VaultGapsCard } from '@/components/perfil/VaultGapsCard';
 import { useCharacter } from '@/lib/api/character';
 import { useT } from '@/lib/i18n';
@@ -56,10 +57,15 @@ export default function PerfilScreen() {
           contentContainerStyle={[styles.content, { paddingBottom: bottomClearance }]}
           showsVerticalScrollIndicator={false}
         >
-          {/* Os seis instrumentos são o payload histórico da tela e ficam
-             no topo. Os blocos abaixo respondem "como está a vida agora",
-             que é outra pergunta — e nenhum deles pode empurrar os cards
-             duas telas para baixo. */}
+          {/* O Emblema abre a tela: é a primeira coisa que se vê ao entrar,
+             no tamanho em que dá para ler os quatro canais. Ele fica ACIMA
+             dos instrumentos porque é o retrato, e os cards são o detalhe.
+
+             Os seis instrumentos seguem sendo o payload histórico da tela.
+             Os blocos abaixo deles respondem "como está a vida agora", que
+             é outra pergunta — e nenhum pode empurrar os cards duas telas
+             para baixo. */}
+          <PerfilHero />
           <AutoconhecimentoView />
           <VaultGapsCard />
           <ConectorCard />

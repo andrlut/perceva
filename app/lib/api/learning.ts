@@ -11,6 +11,7 @@ import type {
 import { supabase } from '@/lib/supabase';
 
 import { characterKeys } from './character';
+import { dateKeyFromLocal } from './history';
 
 export const learningKeys = {
   all: ['learning'] as const,
@@ -239,6 +240,40 @@ export function useMarkMaterialRead() {
       queryClient.invalidateQueries({ queryKey: characterKeys.me() });
       queryClient.invalidateQueries({ queryKey: learningKeys.views() });
       queryClient.invalidateQueries({ queryKey: learningKeys.detail(input.slug) });
+    },
+  });
+}
+
+/**
+ * Quantos materiais o usuário leu nos últimos `days` dias.
+ *
+ * Hook separado de `useReadMaterialIds` de propósito: aquele devolve o
+ * conjunto inteiro e é consumido pelo feed em cada card, então mudar o
+ * shape dele custaria caro. Aqui só o número interessa, e o corte por
+ * `read_at` acontece no servidor.
+ *
+ * A chave inclui só a DATA do corte, não o instante: sem isso a queryKey
+ * mudaria a cada render e o cache nunca acertaria.
+ */
+export function useRecentReadCount(days = 30) {
+  // Dia LOCAL, igual ao `dateKeyFromLocal` que a janela de esforço usa.
+  // Com `toISOString()` a chave era lida em UTC depois de uma aritmética
+  // local: no fuso do Brasil a borda saltava 24h a partir das 21h, e os
+  // dois canais do mesmo emblema passavam a medir períodos diferentes.
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - (days - 1));
+  const cutoffKey = dateKeyFromLocal(cutoff);
+
+  return useQuery({
+    staleTime: 60_000,
+    queryKey: [...learningKeys.all, 'recent-reads', cutoffKey] as const,
+    queryFn: async (): Promise<number> => {
+      const { count, error } = await supabase
+        .from('learning_view')
+        .select('material_id', { count: 'exact', head: true })
+        .gte('read_at', `${cutoffKey}T00:00:00Z`);
+      if (error) throw error;
+      return count ?? 0;
     },
   });
 }

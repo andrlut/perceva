@@ -78,6 +78,12 @@ export function useSubmitPsychSession() {
  */
 export function useLastPsychSession(instrumentId: string) {
   return useQuery({
+    // Sessão concluída é imutável, e `useSubmitPsychSession` invalida
+    // `psychKeys.all` ao terminar um teste — então revalidar a cada foco
+    // só rendia trabalho. Passou a importar quando o Emblema trouxe as
+    // seis fontes de título para a capa: sem isto, abrir a aba Eu
+    // disparava doze requisições que já estavam respondidas.
+    staleTime: 5 * 60_000,
     queryKey: psychKeys.lastSession(instrumentId),
     queryFn: async (): Promise<PsychSession | null> => {
       const { data, error } = await supabase
@@ -118,6 +124,7 @@ export function useLastWellbeingSession() {
 /** Score rows for one session, keyed by facet_id. */
 export function useSessionScores(sessionId: string | undefined) {
   return useQuery({
+    staleTime: 5 * 60_000,
     queryKey: sessionId
       ? psychKeys.scores(sessionId)
       : [...psychKeys.all, 'scores', 'none'],
@@ -155,4 +162,43 @@ export function pickSubDecimalScores(
     map.set(subId, Number(s.score_decimal));
   }
   return map;
+}
+
+/**
+ * Os seis instrumentos profundos, na ordem da trilha sugerida. A Avaliação
+ * (`avaliacao_v1`/`v2`) fica de fora de propósito: ela é estado, não traço,
+ * e é refeita periodicamente — o Emblema conta o que é permanente.
+ */
+export const DEEP_INSTRUMENT_IDS = [
+  'disc',
+  'tipos',
+  'big_five_120',
+  'schwartz_pvq',
+  'ecr_r',
+  'strengths',
+] as const;
+
+/**
+ * Quais dos seis instrumentos profundos já foram concluídos.
+ *
+ * Uma query só em vez de seis `useLastPsychSession`: o Emblema precisa
+ * apenas do conjunto, não das sessões. `useSubmitPsychSession` já invalida
+ * `psychKeys.all`, então terminar um teste redesenha o braço de graça.
+ */
+export function useCompletedInstruments() {
+  return useQuery({
+    staleTime: 5 * 60_000,
+    queryKey: [...psychKeys.all, 'completed-set'] as const,
+    queryFn: async (): Promise<Set<string>> => {
+      const { data, error } = await supabase
+        .from('psych_session')
+        .select('instrument_id')
+        .eq('is_complete', true)
+        .in('instrument_id', [...DEEP_INSTRUMENT_IDS]);
+      if (error) throw error;
+      return new Set(
+        (data ?? []).map((r: { instrument_id: string }) => r.instrument_id),
+      );
+    },
+  });
 }

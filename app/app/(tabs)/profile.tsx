@@ -279,6 +279,25 @@ export default function SettingsScreen() {
           <NoteText>{t('profile.modules.footnote')}</NoteText>
         </Card>
 
+        {/* ───── CONECTOR ─────
+            Integração externa, não superfície do app: por isso NÃO tem
+            chave no MODULE_REGISTRY nem gate premium. Uma chave diria que
+            existe algo a ligar aqui dentro, e o que existe é uma instrução
+            para configurar o claude.ai.
+
+            Mora em Ajustes porque é onde integração mora em qualquer app
+            adulto — até aqui só existia atrás de um toque no avatar. */}
+        <SectionHeader icon="link-outline" label={t('profile.sections.conector')} />
+        <Card>
+          <ButtonRow
+            icon="link-outline"
+            label={t('profile.conectorRow.title')}
+            onPress={() => router.push('/conector')}
+            chevron
+          />
+          <NoteText>{t('profile.conectorRow.sub')}</NoteText>
+        </Card>
+
         {/* ───── NOTIFICATIONS ───── */}
         <SectionHeader icon="notifications-outline" label={t('profile.sections.notifications')} />
         <Card>
