@@ -33,20 +33,47 @@ const MIN_XP = 20;
 const MIN_COINS = 4;
 
 /**
- * Teto — 2× o tier mais alto do catálogo (20★ = 200 XP). Existe para que
- * um alvo absurdo (500★) não vire uma fábrica de XP que distorce a curva
- * de nível, que é linear em (nível-1)×100.
+ * Teto do XP — 2× o tier mais alto do catálogo (20★ = 200 XP).
+ *
+ * XP é MEDIDA, não moeda: alimenta a curva de nível e o hex da Dedicação,
+ * que são leituras sobre o quanto a pessoa praticou. Deixar o usuário
+ * digitar XP seria deixá-lo calibrar a própria balança — o resultado não é
+ * "gastar errado", é ACREDITAR errado, e é exatamente o que o pilar da
+ * identidade praticada existe para manter honesto. Por isso o XP continua
+ * derivado e com teto, e a moeda não.
  */
 export const MAX_QUEST_XP = 400;
+
+/**
+ * Teto da SUGESTÃO de moedas. Não é limite do valor final: a partir de
+ * 2026-09-07 o usuário edita o número livremente (decisão do dono — "quero
+ * colocar uma quest de dieta de 30 dias que paga 500 moedas porque é muito
+ * desafio pra mim").
+ *
+ * Abrir foi a decisão certa por três razões:
+ *   1. Moeda é dinheiro que a pessoa gasta com ela mesma, e ela já define
+ *      os preços do Vault. Não há outra pessoa nesta economia.
+ *   2. Estrela mede VOLUME de prática, não dificuldade. As mesmas 60★ são
+ *      brutais para uma pessoa e triviais para outra; a fórmula não tem
+ *      como saber, o usuário tem.
+ *   3. A trava era teatro: `quest` só tem `check (reward_coins >= 0)` e
+ *      `start_custom_quest` repassa o payload. O clamp era client-side,
+ *      então prendia apenas quem usava a tela honestamente.
+ */
 const MAX_QUEST_COINS = 80;
+
+/** Bound do CAMPO editável — pega dedo gordo, não define política. */
+export const MAX_COINS_INPUT = 99999;
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, v));
 }
 
 /**
- * Recompensa derivada do total de estrelas exigidas pela missão.
- * `totalStars` é a soma dos alvos de todos os requisitos.
+ * Recompensa SUGERIDA a partir do total de estrelas exigidas.
+ *
+ * O XP daqui é final. As moedas são só o valor inicial do campo: assim que
+ * o usuário digita, o número dele manda (ver `quest-create.tsx`).
  */
 export function deriveQuestReward(totalStars: number): {
   xp: number;

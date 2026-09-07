@@ -109,10 +109,21 @@ export default function QuestCreateScreen() {
       .reduce((sum, task) => sum + perTask * (task.total_stars ?? 1), 0);
   }, [mode, subTargets, tasks.data, linkedTaskIds, durationDays]);
 
-  const { xp: rewardXp, coins: rewardCoins } = useMemo(
+  const { xp: rewardXp, coins: suggestedCoins } = useMemo(
     () => deriveQuestReward(totalStars),
     [totalStars],
   );
+
+  /**
+   * Moedas: sugestão até a pessoa encostar no campo; depois, o número dela.
+   *
+   * `null` significa "ainda não editei" e é o que faz a sugestão continuar
+   * acompanhando as estrelas. Sem esse estado separado, mexer nos subs
+   * depois de digitar 500 sobrescreveria o 500 — o pior tipo de perda,
+   * porque é silenciosa e acontece quando você está só ajustando o alvo.
+   */
+  const [coinsOverride, setCoinsOverride] = useState<number | null>(null);
+  const rewardCoins = coinsOverride ?? suggestedCoins;
 
   const requirementCount =
     mode === 'sub_stars' ? subTargets.length : linkedTaskIds.size;
@@ -417,20 +428,53 @@ export default function QuestCreateScreen() {
           <View style={styles.field}>
             <Text style={styles.label}>{t('quests.create.rewardLabel')}</Text>
             <View style={styles.rewardPreview}>
+              {/* XP: derivado e NÃO editável. É medida, não moeda — ver o
+                  comentário em lib/quests/reward.ts. */}
               <View style={styles.rewardChip}>
                 <Ionicons name="flash" size={13} color={tokens.brand.violet2} />
                 <Text style={[styles.rewardChipText, { color: tokens.brand.violet2 }]}>
                   +{rewardXp} XP
                 </Text>
               </View>
-              <View style={styles.rewardChip}>
-                <CoinIcon size={13} />
-                <Text style={[styles.rewardChipText, { color: tokens.semantic.coin }]}>
-                  +{rewardCoins}
-                </Text>
+
+              {/* Moedas: editável. Só você sabe quanto vale, pra você, o que
+                  esta missão exige. */}
+              <View style={styles.coinField}>
+                <CoinIcon size={14} />
+                <TextInput
+                  value={String(rewardCoins)}
+                  onChangeText={(v) => {
+                    const digits = v.replace(/[^0-9]/g, '').slice(0, 5);
+                    setCoinsOverride(digits === '' ? 0 : Number(digits));
+                  }}
+                  keyboardType="number-pad"
+                  style={styles.coinInput}
+                  selectTextOnFocus
+                  accessibilityLabel={t('quests.create.coinsA11y')}
+                />
               </View>
-              <Text style={styles.rewardNote}>{t('quests.create.rewardNote')}</Text>
+
+              {coinsOverride !== null && coinsOverride !== suggestedCoins && (
+                <Pressable
+                  onPress={() => setCoinsOverride(null)}
+                  style={({ pressed }) => [
+                    styles.resetCoins,
+                    pressed && { opacity: 0.7 },
+                  ]}
+                  hitSlop={8}
+                >
+                  <Ionicons name="refresh" size={12} color={tokens.text.mid} />
+                  <Text style={styles.resetCoinsText}>
+                    {t('quests.create.coinsReset', { coins: suggestedCoins })}
+                  </Text>
+                </Pressable>
+              )}
             </View>
+            <Text style={styles.rewardNote}>
+              {coinsOverride === null
+                ? t('quests.create.rewardNote')
+                : t('quests.create.rewardNoteCustom')}
+            </Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -461,6 +505,33 @@ const styles = StyleSheet.create({
     color: tokens.text.mid,
     marginTop: -4,
     marginBottom: tokens.space[2],
+  },
+  coinField: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    height: 34,
+    borderRadius: tokens.radius.pill,
+    borderWidth: 1,
+    borderColor: tokens.semantic.coinRim,
+    backgroundColor: tokens.bg.surface,
+  },
+  coinInput: {
+    minWidth: 52,
+    padding: 0,
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 14,
+    color: tokens.semantic.coinDeep,
+  },
+  resetCoins: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  resetCoinsText: {
+    ...tokens.type.caption,
+    color: tokens.text.mid,
   },
   header: {
     flexDirection: 'row',
