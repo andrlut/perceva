@@ -15,7 +15,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Emblema } from '@/components/Emblema';
 import { PercevaGlyph, type PercevaPaletteName } from '@/components/PercevaGlyph';
 import { useCharacter } from '@/lib/api/character';
-import { useSetIdentity, useUpdateDisplayName } from '@/lib/api/profile';
+import {
+  ABOUT_MAX,
+  PROFESSION_MAX,
+  useSetIdentity,
+  useUpdateAbout,
+  useUpdateDisplayName,
+} from '@/lib/api/profile';
 import { DEEP_INSTRUMENT_IDS } from '@/lib/api/psych';
 import { GLOW_FULL_READS, LADDER_5, useEmblemaState } from '@/lib/emblema';
 import {
@@ -60,6 +66,7 @@ export function PersonalizarSheet({
   const active = useActiveTitle();
   const setIdentity = useSetIdentity();
   const updateName = useUpdateDisplayName();
+  const updateAbout = useUpdateAbout();
 
   const identity = character.data?.profile.identity;
   const displayName = character.data?.profile.display_name ?? '';
@@ -72,6 +79,8 @@ export function PersonalizarSheet({
   const [touched, setTouched] = useState(false);
   const [palette, setPalette] = useState<PercevaPaletteName>(DEFAULT_PALETTE);
   const [name, setName] = useState('');
+  const [profession, setProfession] = useState('');
+  const [about, setAbout] = useState('');
 
   // Re-semeia o rascunho na ABERTURA, e só nela. Depender de `identity`
   // aqui parecia inofensivo e não é: a query do personagem revalida ao
@@ -96,6 +105,8 @@ export function PersonalizarSheet({
     setTouched(false);
     setPalette(resolvePalette(identity?.palette));
     setName(character.data.profile.display_name ?? '');
+    setProfession(character.data.profile.profession ?? '');
+    setAbout(character.data.profile.about ?? '');
   }, [visible, titlesLoading, character.data, active, identity]);
 
   const unlocked = unlockedPalettes(
@@ -115,6 +126,15 @@ export function PersonalizarSheet({
       const trimmed = name.trim();
       if (trimmed && trimmed !== character.data?.profile.display_name) {
         await updateName.mutateAsync(trimmed);
+      }
+      // Colunas próprias, escrita própria — e só quando mudou, para não
+      // invalidar o personagem à toa.
+      const p = character.data?.profile;
+      if (
+        profession.trim() !== (p?.profession ?? '') ||
+        about.trim() !== (p?.about ?? '')
+      ) {
+        await updateAbout.mutateAsync({ profession, about });
       }
       await setIdentity.mutateAsync({
         // Só grava o título se a pessoa realmente escolheu algo aqui. Se
@@ -159,16 +179,20 @@ export function PersonalizarSheet({
           <Pressable
             onPress={save}
             disabled={
-              setIdentity.isPending || updateName.isPending || !seeded.current
+              setIdentity.isPending || updateName.isPending ||
+              updateAbout.isPending ||
+              !seeded.current
             }
             style={({ pressed }) => [
               styles.saveBtn,
-              (setIdentity.isPending || updateName.isPending) && { opacity: 0.5 },
+              (setIdentity.isPending || updateName.isPending || updateAbout.isPending) && {
+                opacity: 0.5,
+              },
               pressed && { opacity: 0.85 },
             ]}
             hitSlop={8}
           >
-            {setIdentity.isPending || updateName.isPending ? (
+            {setIdentity.isPending || updateName.isPending || updateAbout.isPending ? (
               <ActivityIndicator color={tokens.text.hi} size="small" />
             ) : (
               <Text style={styles.saveText}>{t('common.save')}</Text>
@@ -213,6 +237,37 @@ export function PersonalizarSheet({
             style={styles.input}
             returnKeyType="done"
           />
+
+          {/* ── Sobre você ───────────────────────────────────────────
+             Contexto que o conector usa. A finalidade é dita AQUI, no
+             campo, porque é o que torna o preenchimento um ato de
+             consentimento: nasce vazio e nada é inferido pelo app. */}
+          <Text style={styles.section}>{t('personalizar.aboutSection')}</Text>
+          <TextInput
+            value={profession}
+            onChangeText={setProfession}
+            maxLength={PROFESSION_MAX}
+            placeholder={t('personalizar.professionPlaceholder')}
+            placeholderTextColor={tokens.text.faint}
+            style={styles.input}
+            returnKeyType="next"
+          />
+          <TextInput
+            value={about}
+            onChangeText={setAbout}
+            maxLength={ABOUT_MAX}
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
+            placeholder={t('personalizar.aboutPlaceholder')}
+            placeholderTextColor={tokens.text.faint}
+            style={[styles.input, styles.inputMultiline]}
+          />
+          <Text style={styles.hint}>
+            {t('personalizar.aboutHint', {
+              left: ABOUT_MAX - about.length,
+            })}
+          </Text>
 
           {/* ── Título ───────────────────────────────────────────────── */}
           <Text style={styles.section}>{t('personalizar.titleSection')}</Text>
@@ -415,6 +470,18 @@ const styles = StyleSheet.create({
     color: tokens.text.hi,
     fontFamily: 'Manrope_500Medium',
     fontSize: 15,
+  },
+  inputMultiline: {
+    minHeight: 96,
+    paddingTop: tokens.space[3],
+    lineHeight: 20,
+  },
+  hint: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 11,
+    lineHeight: 15,
+    color: tokens.text.dim,
+    marginTop: 2,
   },
   empty: {
     fontFamily: 'Manrope_500Medium',

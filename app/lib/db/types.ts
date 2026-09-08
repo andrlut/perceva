@@ -250,6 +250,15 @@ export interface Profile {
   /** Personalização do Emblema. Ver `app/lib/identity.ts` para o shape e o
    *  porquê de não morar em `modules`. Preferência, não entitlement. */
   identity: ProfileIdentity;
+  /** O que a pessoa faz, em texto curto (<= 80). Escrito por ela. */
+  profession: string | null;
+  /**
+   * Nota livre de contexto, <= 600. Escrita com a finalidade declarada de
+   * informar o conector — ver a migration 20260908000001 para o porquê de
+   * peso, altura e sexo terem ficado de fora. Pode conter dado sensível:
+   * tratar com o mesmo cuidado das notas de humor.
+   */
+  about: string | null;
   created_at: string;
   updated_at: string;
 }

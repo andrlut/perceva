@@ -48,6 +48,16 @@ import { createClient } from '@supabase/supabase-js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
 
+import {
+  deriveBigFive,
+  deriveDisc,
+  deriveEcr,
+  deriveStrengths,
+  deriveTypes,
+  deriveValues,
+  type Row,
+} from './self-knowledge.ts';
+
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 
@@ -300,7 +310,17 @@ function buildServer(token: string, userId: string): McpServer {
         'WHERE TO START: a whole week or month → get_period_digest; what is left',
         'today → get_day_plan; averages and correlations → get_mood_stats; the',
         'words themselves → get_mood_entries; anything about coins spent, or how',
-        'many days since something → get_rewards.',
+        'many days since something → get_rewards; who they ARE, and how to talk',
+        'to them → get_self_knowledge.',
+        'WHO THEY ARE vs WHAT THEY DID: get_self_knowledge carries the six',
+        'instrument results and the context they wrote about themselves. Read it',
+        'before giving advice with any weight — the same suggestion lands very',
+        'differently on someone whose signature is Conscienciosidade alta and on',
+        'someone who improvises. An instrument they never took comes back null:',
+        'say so, and never infer a personality result from practice or mood data.',
+        'Those results are self-report, stable over years, and say nothing about',
+        'this week. Attachment style is a way of bonding, never a disorder, and',
+        'when its borderline flag is true the label is a convention — soften it.',
         'REWARDS ARE NOT ALWAYS TREATS: this user also pays coins as a penalty',
         'when they do something they are trying to stop, so a redemption is not',
         'a win — do not congratulate one, and answer those questions in days',
@@ -1060,6 +1080,113 @@ function buildServer(token: string, userId: string): McpServer {
           ? { mood: existing.mood, note: existing.note, tags: existing.tags ?? [] }
           : null,
         tags_rejected: rejected,
+      });
+    },
+  );
+
+  server.registerTool(
+    'get_self_knowledge',
+    {
+      title: 'Self-knowledge — who the user is across the six instruments',
+      description:
+        'The results of the six deep instruments the user actually sat ' +
+        'through, plus the free-text context they wrote about themselves. ' +
+        'This is the only tool that says who they ARE rather than what they ' +
+        'did: DISC blend, four-letter type, signature strength, dominant ' +
+        'value, attachment style and Big Five levels — each with the ' +
+        'archetype name the app shows them. ' +
+        'Use it to decide HOW to talk to them: what lands, what grates, what ' +
+        'they are likely to resist. An instrument they never took comes back ' +
+        'null — say so plainly instead of guessing, and never infer a result ' +
+        'from their practice or mood data. ' +
+        'These are self-report questionnaires, not diagnosis. Attachment in ' +
+        'particular is a way of bonding, never a disorder; when borderline is ' +
+        'true the label is a convention and the framing must soften. ' +
+        'When NOT to use this: for anything that changed recently. These ' +
+        'results are stable over years and say nothing about this week — for ' +
+        'that use get_period_digest, get_mood_stats or get_day_plan.',
+      inputSchema: {},
+      annotations: { readOnlyHint: true },
+    },
+    async (_args, _extra) => {
+      const db = userClient(token);
+
+      const [sessionsRes, profileRes] = await Promise.all([
+        db
+          .from('psych_session')
+          .select('id,instrument_id,taken_at')
+          .eq('is_complete', true)
+          .order('taken_at', { ascending: false }),
+        db.from('profile').select('display_name,profession,about,identity').limit(1),
+      ]);
+      if (sessionsRes.error) {
+        return fail(`get_self_knowledge: ${sessionsRes.error.message}`);
+      }
+
+      // A sessão VIGENTE de cada instrumento: a lista já vem da mais nova
+      // para a mais velha, então a primeira de cada id é a que vale. Um
+      // retake troca o resultado, e é isso que o app mostra.
+      const latest = new Map<string, { id: string; taken_at: string }>();
+      for (const s of sessionsRes.data ?? []) {
+        const key = s.instrument_id as string;
+        if (!latest.has(key)) {
+          latest.set(key, { id: s.id as string, taken_at: s.taken_at as string });
+        }
+      }
+
+      const ids = [...latest.values()].map((v) => v.id);
+      const byInstrument = new Map<string, Row[]>();
+      if (ids.length > 0) {
+        const scores = await db
+          .from('psych_score')
+          .select('session_id,facet_id,score_decimal')
+          .in('session_id', ids);
+        if (scores.error) {
+          return fail(`get_self_knowledge: ${scores.error.message}`);
+        }
+        const sessionToInstrument = new Map(
+          [...latest.entries()].map(([inst, v]) => [v.id, inst]),
+        );
+        for (const r of scores.data ?? []) {
+          const inst = sessionToInstrument.get(r.session_id as string);
+          if (!inst) continue;
+          if (!byInstrument.has(inst)) byInstrument.set(inst, []);
+          byInstrument.get(inst)!.push({
+            facet_id: r.facet_id as string,
+            score_decimal: Number(r.score_decimal),
+          });
+        }
+      }
+
+      const rows = (id: string) => byInstrument.get(id) ?? [];
+      const takenAt = (id: string) => latest.get(id)?.taken_at ?? null;
+      const withDate = <T,>(id: string, v: T | null) =>
+        v === null ? null : { ...v, taken_at: takenAt(id) };
+
+      const p = profileRes.data?.[0] ?? {};
+      const identity = (p.identity ?? {}) as Record<string, unknown>;
+      const chosen = identity.title as { source?: string; key?: string } | null;
+
+      const done = [...latest.keys()].filter((k) =>
+        ['disc', 'tipos', 'strengths', 'schwartz_pvq', 'ecr_r', 'big_five_120'].includes(k),
+      );
+
+      return ok({
+        display_name: p.display_name ?? null,
+        // O contexto que a própria pessoa escreveu. Pode estar vazio: não
+        // preencher é uma escolha, não uma lacuna a ser suprida por
+        // inferência.
+        profession: p.profession ?? null,
+        about: p.about ?? null,
+        chosen_title: chosen ? { source: chosen.source, key: chosen.key } : null,
+        instruments_done: done.length,
+        instruments_total: 6,
+        disc: withDate('disc', deriveDisc(rows('disc'))),
+        tipos: withDate('tipos', deriveTypes(rows('tipos'))),
+        forcas: withDate('strengths', deriveStrengths(rows('strengths'))),
+        valores: withDate('schwartz_pvq', deriveValues(rows('schwartz_pvq'))),
+        apego: withDate('ecr_r', deriveEcr(rows('ecr_r'))),
+        big_five: withDate('big_five_120', deriveBigFive(rows('big_five_120'))),
       });
     },
   );

@@ -795,6 +795,10 @@ const pt: Translations = {
   personalizar: {
     title: 'Personalizar',
     nameSection: 'Nome',
+    aboutSection: 'Sobre você',
+    professionPlaceholder: 'O que você faz',
+    aboutPlaceholder: 'O que você está vivendo agora, o que quer mudar, o que ajuda a te entender…',
+    aboutHint: 'Isto vai para o Claude quando você usa o conector — e para mais nada. Deixe vazio se preferir. Restam {{left}} caracteres.',
     titleSection: 'Título',
     paletteSection: 'Paleta',
     titleEmpty: 'Os títulos vêm dos testes. Faça o DISC ou o Tipos para ter um.',
