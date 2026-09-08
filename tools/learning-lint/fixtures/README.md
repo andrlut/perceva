@@ -21,17 +21,18 @@ Fixtures são **material de teste**, não conteúdo publicável: os textos foram
 
 | fixture | o que prova |
 |---|---|
-| `pass.json` | explainer com 3 ideias, todas dentro do contrato: título ≤48 ≠ título do material, afirmação ≤140, texto 100–180 palavras por idioma (paridade PT/EN ≤25%), ≤2 negritos, links e fontes http(s), brief sem texto/placa/UI, `cta: null`. Serve de **exemplo do contrato** pro cutter/drafter. |
+| `pass.json` | explainer com 3 ideias, todas dentro do contrato: título ≤48 ≠ título do material, afirmação ≤120 (o alvo — é o verso do card, lido inteiro num card de 132px), texto 100–180 palavras por idioma (paridade PT/EN ≤25%), ≤2 negritos, links e fontes http(s), brief sem texto/placa/UI, `cta: null`. Serve de **exemplo do contrato** pro cutter/drafter — por isso sai com **0 WARN**. |
+| `pass-claim-over-target.json` | `claim.pt` com **exatos 140** chars e `claim.en` com 122 → **exit 0 com 2 WARN**: entre 121 e 140 a afirmação estoura o orçamento do card (só cabe com a fonte encolhida) mas não é erro, e 140 continua aceito. O runner não afirma WARN, só mostra a contagem na linha — confira o "(2 WARN)". |
 | `fail-too-many-ideas.json` | 6 ideias → estoura o teto duro 1..5 (summary; o budget por tipo não dispara em cima, é a mesma discrepância) |
 | `fail-over-budget.json` | 2 ideias num `news` → acima do budget do tipo (news 1, explainer 3, summary 5), mesmo dentro do teto duro |
 | `fail-bad-ordinal.json` | ordinais 1 e 3 → sequência quebrada (ordinal precisa ser 1..n sem buracos) |
-| `fail-claim-too-long.json` | `claim.pt` com mais de 140 caracteres |
+| `fail-claim-too-long.json` | `claim.pt` com mais de 140 caracteres (teto duro; 121–140 é só WARN, ver `pass-claim-over-target.json`) |
 | `fail-body-too-short.json` | `body.pt`/`body.en` com menos de 60 palavras (abaixo de 100 é só WARN; abaixo de 60 é FAIL) |
 | `fail-missing-source-url.json` | fonte só com `label`, sem `url` http(s) |
 | `fail-image-brief-text.json` | `image_brief` menciona "placa" e "texto" — a imagem tem que ser uma cena sem texto, placa, logo, legenda ou UI |
 | `fail-dollar-quote.json` | `$$` dentro de `body.pt` — quebraria o `$ideas$…$ideas$` da migration |
 
-Regras que hoje só têm cobertura indireta (WARN, ou sem fixture própria): título igual ao do material, >2 negritos, muletas ("vale lembrar", "it's worth noting"…), paridade PT/EN >25%, link inline não-http, `type` inválido, `id` duplicado/fora de `^[a-z0-9-]{3,40}$`, `cta` que não é `null`/objeto. Ao endurecer qualquer uma delas, adicione a fixture correspondente.
+Regras que hoje só têm cobertura indireta (WARN, ou sem fixture própria): afirmação entre 121 e 140 chars (WARN — `pass-claim-over-target.json` só a exercita, o runner não afirma WARNs), título igual ao do material, >2 negritos, muletas ("vale lembrar", "it's worth noting"…), paridade PT/EN >25%, link inline não-http, `type` inválido, `id` duplicado/fora de `^[a-z0-9-]{3,40}$`, `cta` que não é `null`/objeto. Ao endurecer qualquer uma delas, adicione a fixture correspondente.
 
 ## Adicionando uma fixture
 

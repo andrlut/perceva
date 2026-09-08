@@ -661,6 +661,7 @@ const pt: Translations = {
       open: 'Filtros',
       title: 'Filtrar biblioteca',
       subtitle: '{{read}}/{{total}} concluídos',
+      state: 'Estado',
       clear: 'Limpar filtro',
     },
     detail: {

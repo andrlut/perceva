@@ -32,7 +32,9 @@ maintainer aprova antes de qualquer imagem ser gerada, e é a fonte que
       "id": "acorda-descansado",   // ^[a-z0-9-]{3,40}$ — IMUTÁVEL, chave da coleta
       "ordinal": 1,                // 1..n contíguo; só ele renumera
       "title": { "pt": "…", "en": "…" },   // ≤ 48 chars, gancho de curiosidade, nunca o nome do tema
-      "claim": { "pt": "…", "en": "…" },   // ≤ 140 chars, resposta primeiro, vale sozinha (é o verso do card)
+      "claim": { "pt": "…", "en": "…" },   // alvo ≤ 120 chars (teto duro 140): é o verso do card, lido inteiro num card de 132px
+                                           // (rail do material e Minhas ideias); 121-140 só cabe com a fonte encolhida — evitar.
+                                           // Resposta primeiro, vale sozinha
       "body":  { "pt": "…", "en": "…" },   // 100-180 palavras: mecanismo + número com estudo nomeado + o que fazer;
                                            // **negrito** em até 2 trechos; [texto](url) inline permitido
       "image_brief": "…",                  // PT, UMA cena concreta e sem texto que RETRATA a afirmação
@@ -74,4 +76,6 @@ vêm do manifest de mídia, via `emit-migration.mjs`.
 4. `emit-migration.mjs` → `/db-migration`
 
 `tools/learning-lint/lint.mjs --ideas` valida a parte mecânica do contrato
-(contagens, limites, ids, fontes). Rode antes de pedir aprovação.
+(contagens, limites, ids, fontes). Rode antes de pedir aprovação. Afirmação
+entre 121 e 140 chars sai como WARN, não como erro — mas não é aprovação:
+aperte a frase em vez de contar com a fonte encolhida.

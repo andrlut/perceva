@@ -24,12 +24,23 @@ export type PillFilter =
   | null;
 
 /**
+ * Read-state filter for the Learn feed. Single source of truth — the tab
+ * owns the state, the sheet owns the control. Default is `unread`
+ * (Pendentes); anything else counts as an active filter on the feed.
+ */
+export type ReadFilter = 'all' | 'unread' | 'read';
+
+const READ_FILTERS: ReadFilter[] = ['unread', 'read', 'all'];
+
+/**
  * Bottom-sheet filter for the Learn feed — opened by the floating filter
  * button, mirroring the app's TrackPickerSheet vocabulary (Modal +
  * slide-up + backdrop/handle/close). Every counter is a clickable filter:
  * tap a dim / type / sub to filter, tap the active one again to clear.
  * Picking applies + closes; the applied filter surfaces via the inline
- * ActiveFilterChip on the feed.
+ * ActiveFilterChip on the feed. The read-state row at the top is the one
+ * exception: it is a segmented choice (always one active), so tapping it
+ * applies without closing.
  */
 
 interface Props {
@@ -39,6 +50,8 @@ interface Props {
   readSet: Set<string>;
   filter: PillFilter;
   onFilterChange: (next: PillFilter) => void;
+  readFilter: ReadFilter;
+  onReadFilterChange: (next: ReadFilter) => void;
 }
 
 const TYPES: LearningMaterialType[] = ['explainer', 'summary', 'news'];
@@ -58,6 +71,8 @@ export function LearningFilterSheet({
   readSet,
   filter,
   onFilterChange,
+  readFilter,
+  onReadFilterChange,
 }: Props) {
   const { t } = useT();
   const meta = useMetaLookup();
@@ -98,6 +113,16 @@ export function LearningFilterSheet({
     onClose();
   };
 
+  // Read-state is a segmented choice, not a toggle: pick applies at once
+  // and keeps the sheet open so the user can stack a dim/type on top.
+  const pickRead = (next: ReadFilter) => {
+    if (next === readFilter) return;
+    Haptics.selectionAsync().catch(() => {});
+    onReadFilterChange(next);
+  };
+  const readCount = (key: ReadFilter): number =>
+    key === 'all' ? stats.total : key === 'read' ? stats.read : stats.total - stats.read;
+
   return (
     <Modal
       visible={visible}
@@ -129,6 +154,39 @@ export function LearningFilterSheet({
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.body}>
+            {/* Read-state row — same pill vocabulary as the type row */}
+            <Text style={styles.section}>{t('learning.filter.state')}</Text>
+            <View style={styles.typeRow}>
+              {READ_FILTERS.map((key) => {
+                const active = readFilter === key;
+                return (
+                  <Pressable
+                    key={key}
+                    onPress={() => pickRead(key)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: active }}
+                    style={({ pressed }) => [
+                      styles.typePill,
+                      active && styles.typePillActive,
+                      pressed && styles.pressed,
+                    ]}
+                  >
+                    <Text style={[styles.typeLabel, active && styles.typeLabelActive]}>
+                      {t(`learning.readFilter.${key}`)}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.typeRatio,
+                        { color: active ? tokens.brand.violet2 : tokens.text.dim },
+                      ]}
+                    >
+                      {readCount(key)}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
             {/* Per-dim grid */}
             <Text style={styles.section}>{t('learning.stats.byDim')}</Text>
             <View style={styles.grid}>
@@ -246,12 +304,15 @@ export function LearningFilterSheet({
               </>
             )}
 
-            {/* Clear — only when a filter is set */}
-            {filter && (
+            {/* Clear — whenever anything is non-default (same condition
+               that lights the gold dot on the FAB): drops the pill filter
+               AND resets the read state to Pendentes. */}
+            {(filter || readFilter !== 'unread') && (
               <Pressable
                 onPress={() => {
                   Haptics.selectionAsync().catch(() => {});
                   onFilterChange(null);
+                  onReadFilterChange('unread');
                   onClose();
                 }}
                 style={({ pressed }) => [styles.clearBtn, pressed && styles.pressed]}

@@ -30,9 +30,22 @@ import { DIMENSION_META } from '@/theme/dimensions';
  * FRONT: the idea illustration (or a dimension-tinted placeholder with the
  * dimension's Ionicon), a dimension-tinted gradient at the bottom and the
  * hook title over it, inside a thin frame in the dimension color.
- * BACK: dark glass, a thin top bar in the dimension color, the claim in bold,
- * the first source label muted at the bottom and — when `onOpen` is given —
- * a small "Abrir ideia" pill.
+ * BACK: dark glass, a thin top bar in the dimension color and the claim in
+ * bold — nothing else. The claim owns the whole face (vertically centered,
+ * left-aligned) and ALWAYS fits whole: the size is pre-fitted from the
+ * character budget below (font AND line height shrink together, down to
+ * 60% of the base) and `adjustsFontSizeToFit` stays on as a safety net for
+ * the cases the estimate gets wrong. The source label lives on the idea
+ * screen, not here (`data.sourceLabel` is kept for other surfaces).
+ *
+ * Opening an idea from the back: `openAffordance="corner"` + `onOpen` renders
+ * a 30px round arrow button in the top-right corner of the back face (the
+ * collection uses it). The claim box starts below that button, so the arrow
+ * never sits on text — it costs one line of the top band, never a footer.
+ * The button is its own Pressable inside the face; React Native's responder
+ * system hands the touch to the innermost Pressable, so tapping it calls
+ * `onOpen` and does NOT flip the card. It only receives touches while the
+ * back faces the user (`pointerEvents` on the back face).
  *
  * The card knows nothing about collecting: it only reports the FIRST time it
  * turns to the back via `onFirstFlip` (fired once per mount, whether or not
@@ -44,8 +57,33 @@ import { DIMENSION_META } from '@/theme/dimensions';
  * collect after a failed RPC) the guard re-arms so the next flip to the
  * back can retry instead of needing a remount.
  *
+ * ── Claim character budget (glyph-cell model, reviewed 2026-09-08) ────────
+ * Assumptions: Manrope 700 average advance ≈ 0.56em, lineHeight = 1.3×size
+ * (rounded to whole px), inner width = width − 2·pad, usable height =
+ * height − topBar(3) − 2·pad, height = width / 0.8. "Cells" is
+ * lines × chars-per-line at the BASE size — the ceiling before any shrink.
+ * Real word wrap keeps ~80–90% of it; the last column is a synthetic
+ * pt-BR text with 5-letter words, greedy-wrapped with the same model.
+ *
+ * | Surface (width)                  | pad | inner W×H | base/lh | lines×cpl | cells | ≈ wrapped |
+ * |----------------------------------|-----|-----------|---------|-----------|-------|-----------|
+ * | Rail (132)                       | 10  | 112×142   | 13/17   | 8 × 15    | 120   | ~95       |
+ * | Collection cell (171 on 390 pt)  | 12  | 147×187   | 14.5/19 | 9 × 18    | 162   | ~148      |
+ * |   …with the corner affordance    | 12  | 147×155   | 14.5/19 | 8 × 18    | 144   | ~132      |
+ * | Idea screen card (300)           | 18  | 264×336   | 18/23   | 14 × 26   | 364   | ~317      |
+ *
+ * Editorial budget: **120 chars target, 140 hard cap.** 120 is the rail's
+ * cell budget at the base size (on the phone a 120-char claim lands at
+ * 11.5–12px after the pre-fit, whole). The longest pilot claims (137–140)
+ * pre-fit to 11/14 on the rail and 13–13.5/17–18 on the collection cell —
+ * no truncation, RN's own shrink never needed. Above 140 the rail heads
+ * toward the 0.6 floor (7.8px), which is where legibility, not fit, gives.
+ *
  * Self-contained: only `useT`, reanimated and haptics.
  */
+
+/** How the back face lets the user open the idea (see the header). */
+export type IdeaCardOpenAffordance = 'none' | 'corner';
 
 export interface IdeaCardProps {
   data: IdeaCardData;
@@ -56,8 +94,10 @@ export interface IdeaCardProps {
   collected: boolean;
   /** Called once, the first time the card turns to the back. */
   onFirstFlip?: () => void;
-  /** When given, the back shows an "Abrir ideia" pill that calls it. */
+  /** Called by the corner button on the back (needs `openAffordance="corner"`). */
   onOpen?: () => void;
+  /** `"corner"` shows the round arrow button on the back when `onOpen` is given. Default `"none"`. */
+  openAffordance?: IdeaCardOpenAffordance;
   /** Disables the tap (no flip, no haptic). */
   disabled?: boolean;
   testID?: string;
@@ -66,7 +106,27 @@ export interface IdeaCardProps {
 const FLIP_MS = 420;
 /** Width at which the "large" type sizes apply (rail → large is linear). */
 const LARGE_WIDTH = 300;
+/** Collection cell on a 390-pt phone (`collectionCardWidth(390)`) — the mid stop of the claim size. */
+const COLLECTION_CELL_WIDTH = 171;
 const OVERLAY_LOCATIONS = [0, 0.45, 1] as const;
+
+/** Height of the dimension-colored bar at the top of the back face. */
+const TOP_BAR_H = 3;
+/** Corner "open" button: diameter, inset from the bar/right edge, gap to the claim. */
+const OPEN_BTN_SIZE = 30;
+const OPEN_BTN_INSET = 8;
+const OPEN_BTN_GAP = 6;
+
+/** Claim type: base size stops (width → px), line height and the shrink floor. */
+const CLAIM_SIZE_STOPS: readonly (readonly [number, number])[] = [
+  [IDEA_CARD_RAIL_WIDTH, 13],
+  [COLLECTION_CELL_WIDTH, 14.5],
+  [LARGE_WIDTH, 18],
+];
+const CLAIM_LINE_HEIGHT = 1.3;
+const CLAIM_MIN_SCALE = 0.6;
+/** Manrope 700 average glyph advance as a fraction of the font size. */
+const CLAIM_AVG_ADVANCE_EM = 0.56;
 
 /** Linear size between the rail width and the large width, clamped. */
 function scaled(width: number, atRail: number, atLarge: number): number {
@@ -75,6 +135,86 @@ function scaled(width: number, atRail: number, atLarge: number): number {
     Math.max(0, (width - IDEA_CARD_RAIL_WIDTH) / (LARGE_WIDTH - IDEA_CARD_RAIL_WIDTH)),
   );
   return Math.round((atRail + (atLarge - atRail) * t) * 2) / 2;
+}
+
+/** Piecewise-linear claim base size through `CLAIM_SIZE_STOPS`, in 0.5px steps, clamped. */
+function claimBaseSize(width: number): number {
+  const first = CLAIM_SIZE_STOPS[0];
+  if (width <= first[0]) return first[1];
+  for (let i = 1; i < CLAIM_SIZE_STOPS.length; i += 1) {
+    const [w0, s0] = CLAIM_SIZE_STOPS[i - 1];
+    const [w1, s1] = CLAIM_SIZE_STOPS[i];
+    if (width <= w1) {
+      return Math.round((s0 + ((s1 - s0) * (width - w0)) / (w1 - w0)) * 2) / 2;
+    }
+  }
+  return CLAIM_SIZE_STOPS[CLAIM_SIZE_STOPS.length - 1][1];
+}
+
+function claimLineHeight(size: number): number {
+  return Math.round(size * CLAIM_LINE_HEIGHT);
+}
+
+/**
+ * Greedy word-wrap line count for `text` when `charsPerLine` glyph cells fit
+ * on a line (a word longer than the line spills over as many lines as needed).
+ */
+function estimateLines(text: string, charsPerLine: number): number {
+  const cpl = Math.max(1, charsPerLine);
+  let lines = 1;
+  let used = 0;
+  for (const word of text.split(/\s+/)) {
+    const len = word.length;
+    if (len === 0) continue;
+    if (used > 0 && used + 1 + len <= cpl) {
+      used += 1 + len;
+      continue;
+    }
+    if (used > 0) lines += 1;
+    lines += Math.ceil(len / cpl) - 1;
+    used = len % cpl || cpl;
+  }
+  return lines;
+}
+
+interface ClaimBox {
+  lineHeight: number;
+  /** Lines that fit in the box at `lineHeight` — also the `numberOfLines` cap. */
+  maxLines: number;
+  /** Glyph cells per line at this size (0.56em average advance). */
+  charsPerLine: number;
+}
+
+interface ClaimFit {
+  fontSize: number;
+  lineHeight: number;
+  maxLines: number;
+}
+
+function claimBoxAt(size: number, innerW: number, innerH: number): ClaimBox {
+  const lineHeight = claimLineHeight(size);
+  return {
+    lineHeight,
+    maxLines: Math.max(1, Math.floor(innerH / lineHeight)),
+    charsPerLine: Math.max(1, Math.floor(innerW / (size * CLAIM_AVG_ADVANCE_EM))),
+  };
+}
+
+/**
+ * Largest size in [0.6·base, base] (0.5px steps) at which the claim's
+ * estimated line count fits the box; font and line height shrink together.
+ * At the floor the estimate may still not fit — `adjustsFontSizeToFit`
+ * takes over from there.
+ */
+function fitClaim(claim: string, base: number, innerW: number, innerH: number): ClaimFit {
+  const floor = Math.ceil(base * CLAIM_MIN_SCALE * 2) / 2;
+  let size = base;
+  let box = claimBoxAt(size, innerW, innerH);
+  while (size - 0.5 >= floor && estimateLines(claim, box.charsPerLine) > box.maxLines) {
+    size -= 0.5;
+    box = claimBoxAt(size, innerW, innerH);
+  }
+  return { fontSize: size, lineHeight: box.lineHeight, maxLines: box.maxLines };
 }
 
 /** `#RRGGBB` (or `#RGB`) → `rgba(r, g, b, alpha)`; non-hex colors pass through. */
@@ -103,6 +243,7 @@ export const IdeaCard = memo(function IdeaCard({
   collected,
   onFirstFlip,
   onOpen,
+  openAffordance = 'none',
   disabled = false,
   testID,
 }: IdeaCardProps) {
@@ -111,7 +252,6 @@ export const IdeaCard = memo(function IdeaCard({
 
   const title = pickLocalized(data.title, locale);
   const claim = pickLocalized(data.claim, locale);
-  const source = data.sourceLabel ? pickLocalized(data.sourceLabel, locale) : '';
   const imageUri = ideaImageUriFromPath(data.imagePath);
 
   const dim = DIMENSION_META[data.dimensionId];
@@ -122,10 +262,19 @@ export const IdeaCard = memo(function IdeaCard({
   // ~20px on a 300px hero card.
   const pad = scaled(width, 10, 18);
   const titleSize = scaled(width, 13, 20);
-  const claimSize = scaled(width, 12.5, 18);
-  const sourceSize = scaled(width, 9, 11.5);
   const iconSize = Math.round(width * 0.28);
   const compact = width < 200;
+
+  const showOpen = openAffordance === 'corner' && onOpen != null;
+  // The claim box: below the top bar (and below the corner button when it is
+  // there), `pad` on the other three sides.
+  const claimTop = showOpen
+    ? TOP_BAR_H + OPEN_BTN_INSET + OPEN_BTN_SIZE + OPEN_BTN_GAP
+    : TOP_BAR_H + pad;
+  const claimFit = useMemo(
+    () => fitClaim(claim, claimBaseSize(width), width - 2 * pad, height - claimTop - pad),
+    [claim, width, pad, height, claimTop],
+  );
 
   const overlayColors = useMemo(
     () =>
@@ -241,9 +390,9 @@ export const IdeaCard = memo(function IdeaCard({
         )}
       </Animated.View>
 
-      {/* BACK — glass, dimension top bar, claim, source, optional open pill.
+      {/* BACK — glass, dimension top bar, the claim, optional corner button.
          Touches only reach it while it faces the user (Android can otherwise
-         hit the rotated-away pill through the front). */}
+         hit the rotated-away button through the front). */}
       <Animated.View
         pointerEvents={flipped ? 'auto' : 'none'}
         style={[styles.face, styles.back, frameStyle, backStyle]}
@@ -254,46 +403,34 @@ export const IdeaCard = memo(function IdeaCard({
           style={StyleSheet.absoluteFill}
         />
         <View style={[styles.topBar, { backgroundColor: dimColor }]} />
-        <View style={[styles.backBody, { padding: pad, paddingTop: pad + 3 }]}>
-          <View style={styles.claimWrap}>
-            <Text
-              style={[
-                styles.claim,
-                { fontSize: claimSize, lineHeight: Math.round(claimSize * 1.3) },
-              ]}
-              numberOfLines={compact ? 6 : 8}
-            >
-              {claim}
-            </Text>
-          </View>
-          {(source.length > 0 || onOpen) && (
-            <View style={styles.backFooter}>
-              {source.length > 0 && (
-                <Text
-                  style={[
-                    styles.source,
-                    { fontSize: sourceSize, lineHeight: Math.round(sourceSize * 1.35) },
-                  ]}
-                  numberOfLines={2}
-                >
-                  {source}
-                </Text>
-              )}
-              {onOpen && (
-                <Pressable
-                  onPress={onOpen}
-                  hitSlop={6}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('learning.ideas.openIdea')}
-                  style={({ pressed }) => [styles.openPill, pressed && styles.pressed]}
-                >
-                  <Text style={styles.openPillText}>{t('learning.ideas.openIdea')}</Text>
-                  <Ionicons name="arrow-forward" size={11} color={tokens.brand.violet2} />
-                </Pressable>
-              )}
-            </View>
-          )}
+        <View style={[styles.claimBox, { top: claimTop, left: pad, right: pad, bottom: pad }]}>
+          <Text
+            style={[
+              styles.claim,
+              { fontSize: claimFit.fontSize, lineHeight: claimFit.lineHeight },
+            ]}
+            numberOfLines={claimFit.maxLines}
+            adjustsFontSizeToFit
+            minimumFontScale={CLAIM_MIN_SCALE}
+          >
+            {claim}
+          </Text>
         </View>
+        {showOpen && (
+          <Pressable
+            onPress={onOpen}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('learning.ideas.openIdea')}
+            style={({ pressed }) => [
+              styles.openBtn,
+              { borderColor: withAlpha(dimColor, 0.7) },
+              pressed && styles.pressed,
+            ]}
+          >
+            <Ionicons name="arrow-forward" size={16} color={tokens.text.hi} />
+          </Pressable>
+        )}
       </Animated.View>
     </Pressable>
   );
@@ -358,42 +495,30 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 3,
+    height: TOP_BAR_H,
   },
-  backBody: {
-    flex: 1,
-  },
-  claimWrap: {
-    flex: 1,
+  /** The claim's box — the whole face minus the top bar/corner button and `pad`. */
+  claimBox: {
+    position: 'absolute',
     justifyContent: 'center',
   },
   claim: {
     fontFamily: 'Manrope_700Bold',
     color: tokens.text.hi,
+    textAlign: 'left',
   },
-  backFooter: {
-    gap: 8,
-  },
-  source: {
-    fontFamily: 'Manrope_600SemiBold',
-    color: tokens.text.dim,
-  },
-  openPill: {
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
+  /** Round arrow in the top-right corner of the back — dark glass, dimension rim. */
+  openBtn: {
+    position: 'absolute',
+    top: TOP_BAR_H + OPEN_BTN_INSET,
+    right: OPEN_BTN_INSET,
+    width: OPEN_BTN_SIZE,
+    height: OPEN_BTN_SIZE,
+    borderRadius: OPEN_BTN_SIZE / 2,
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: tokens.radius.pill,
-    backgroundColor: 'rgba(123, 92, 255, 0.16)',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(6, 8, 30, 0.85)',
     borderWidth: 1,
-    borderColor: 'rgba(123, 92, 255, 0.42)',
-  },
-  openPillText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
-    color: tokens.brand.violet2,
   },
   pressed: {
     opacity: 0.8,
