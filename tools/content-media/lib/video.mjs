@@ -380,8 +380,8 @@ export function posterWebp(input, output, opts = {}) {
 
 /**
  * Deep dive audio → AAC 64k mono .m4a with +faststart (the Learning audio
- * format, ~0.5 MB/min; the raw Notebook download is ~34 MB and over the
- * bucket's 30 MB audio cap). Same recipe as `toM4a` in ./ffmpeg.mjs, plus
+ * format, ~0.5 MB/min; the raw Notebook download is ~34 MB; the bucket
+ * allows 150 MB per object, this is just the house format). Same recipe as `toM4a` in ./ffmpeg.mjs, plus
  * `-vn` so a container that happens to carry video still yields audio-only.
  * @param {string} input
  * @param {string} output
