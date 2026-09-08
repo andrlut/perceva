@@ -140,6 +140,7 @@ jobs:
           EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: 961793707652-c617r29esfgrcqv4ls923unourufljrd.apps.googleusercontent.com
           # RevenueCat public SDK key (Android) — sem ela o paywall cai em "Em breve"
           EXPO_PUBLIC_REVENUECAT_GOOGLE_KEY: goog_XnOnkdVVlRWMmNeIkDRlrJbwPMJ
+          EXPO_PUBLIC_REVENUECAT_APPLE_KEY: appl_aVYyGubrAplehAnTAyBkIsGQFsd
           # Via env, not inline `${{ }}` — a quote or backtick in the message
           # would otherwise be pasted straight into the shell body.
           INPUT_MESSAGE: ${{ inputs.message }}
