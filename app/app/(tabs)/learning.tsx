@@ -20,15 +20,29 @@ import { TourModule } from '@/components/tour/TourModule';
 import { emitTourEvent } from '@/lib/tour/eventBus';
 import { buildM6Steps, M6_EVENTS } from '@/lib/tour/m6Steps';
 import { useIsCurrentTourModule, useTourStore } from '@/lib/tour/store';
+import { MyIdeasStrip } from '@/components/ideas/MyIdeasStrip';
 import { CarouselRow } from '@/components/learning/CarouselRow';
 import { ContinueLendoCard } from '@/components/learning/ContinueLendoCard';
+import type { CoverIdeaMeta } from '@/components/learning/CoverCard';
 import { LearningFilterSheet, type PillFilter } from '@/components/learning/LearningFilterSheet';
 import { ReelsEntryCard } from '@/components/reels/ReelsEntryCard';
 import { ScreenBackground } from '@/components/ScreenBackground';
-import { useLearningFeed, useReadMaterialIds, type LearningFeedCard } from '@/lib/api/learning';
-import type { DimensionId, LearningMaterialType, SubId } from '@/lib/db/types';
+import {
+  useCollectedIdeas,
+  useIdeaCards,
+  useLearningFeed,
+  useReadMaterialIds,
+  type LearningFeedCard,
+} from '@/lib/api/learning';
+import type {
+  DimensionId,
+  LearningIdeaPublic,
+  LearningMaterialType,
+  SubId,
+} from '@/lib/db/types';
 import { useT, type TranslateOptions } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
+import { pickLocalized, type IdeaLocale } from '@/lib/ideas';
 import {
   useContinueReading,
   useReadingProgressReady,
@@ -43,12 +57,35 @@ type ReadFilter = 'all' | 'unread' | 'read';
 
 const NEW_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
+/** Stable empty collection so the idea memos don't churn while loading. */
+const EMPTY_COLLECTION: Map<string, Set<string>> = new Map();
+
+/** The Continue hero pick for a material with ideas (0 < absorbed < total). */
+interface IdeaContinuePick {
+  card: LearningFeedCard;
+  /** absorbed / total, 0..100, rounded. */
+  percent: number;
+  /** Absorbed ideas of the material (0 < collected < total by construction). */
+  collected: number;
+  /** Published ideas of the material. */
+  total: number;
+  /** Localized title of the lowest-ordinal idea not yet absorbed. */
+  nextTitle: string;
+}
+
 export default function LearningScreen() {
   const router = useRouter();
   const { t, locale } = useT();
   const feed = useLearningFeed();
   const reads = useReadMaterialIds();
+  // Ideas: one row per published idea + the user's collection. Both cheap
+  // (a view select and a two-column self-only select) and cached 5 min /
+  // 1 min; they feed the cover cards' "N ideias · c/N", the Continue hero
+  // and the "Minhas ideias" strip.
+  const ideaCards = useIdeaCards();
+  const collectedIdeas = useCollectedIdeas();
   const meta = useMetaLookup();
+  const ideaLocale: IdeaLocale = locale === 'pt' ? 'pt' : 'en';
 
   const [readFilter, setReadFilter] = useState<ReadFilter>('unread');
   const [pillFilter, setPillFilter] = useState<PillFilter>(null);
@@ -91,7 +128,11 @@ export default function LearningScreen() {
   // alone has slug + materialId; we need the title/dim/etc).
   const continueCard = useMemo<LearningFeedCard | null>(() => {
     if (!continueEntry) return null;
-    return (feed.data ?? []).find((c) => c.slug === continueEntry.slug) ?? null;
+    const card = (feed.data ?? []).find((c) => c.slug === continueEntry.slug) ?? null;
+    // A stale scroll entry for a material that has since gained ideas is not
+    // a legacy candidate: those measure progress in absorbed ideas, never in
+    // scroll (the new screen does not write the readingProgress store).
+    return card && card.idea_count === 0 ? card : null;
   }, [continueEntry, feed.data]);
 
   // Chronological: newest released material first. Sorting once at the
@@ -108,6 +149,65 @@ export default function LearningScreen() {
     [feed.data],
   );
   const readSet = useMemo(() => reads.data ?? new Set<string>(), [reads.data]);
+
+  // ── Ideas ───────────────────────────────────────────────────────────
+  const collectedMap = collectedIdeas.data ?? EMPTY_COLLECTION;
+
+  // material_id → { collected, total, hasVideo }. `total` counts the view's
+  // rows (published ideas), `collected` only the ids still present in them,
+  // so a re-cut that dropped an idea never over-counts. Insertion order is
+  // the view's order (released_at desc), which the Continue pick relies on.
+  const ideaMetaByMaterial = useMemo(() => {
+    const out = new Map<string, CoverIdeaMeta>();
+    for (const row of ideaCards.data ?? []) {
+      let m = out.get(row.material_id);
+      if (!m) {
+        m = { collected: 0, total: 0, hasVideo: false };
+        out.set(row.material_id, m);
+      }
+      m.total += 1;
+      if (collectedMap.get(row.material_id)?.has(row.idea_id)) m.collected += 1;
+      if (row.video_pt_path || row.video_en_path) m.hasVideo = true;
+    }
+    return out;
+  }, [ideaCards.data, collectedMap]);
+
+  // Absorbed ideas, newest release first — the strip's count + thumbs.
+  const collectedRows = useMemo(
+    () =>
+      (ideaCards.data ?? []).filter((r) =>
+        collectedMap.get(r.material_id)?.has(r.idea_id),
+      ),
+    [ideaCards.data, collectedMap],
+  );
+
+  // Continue hero for ideas: the most recently released material with some
+  // but not all ideas absorbed, and the title of its next idea (lowest
+  // ordinal not yet collected). Wins over the legacy scroll candidate.
+  const ideaContinue = useMemo<IdeaContinuePick | null>(() => {
+    const rows = ideaCards.data;
+    if (!rows || rows.length === 0) return null;
+    for (const [materialId, m] of ideaMetaByMaterial) {
+      if (m.collected <= 0 || m.collected >= m.total) continue;
+      const card = all.find((c) => c.id === materialId);
+      if (!card) continue;
+      const done = collectedMap.get(materialId);
+      let next: LearningIdeaPublic | null = null;
+      for (const row of rows) {
+        if (row.material_id !== materialId || done?.has(row.idea_id)) continue;
+        if (next === null || row.ordinal < next.ordinal) next = row;
+      }
+      if (!next) continue;
+      return {
+        card,
+        percent: Math.round((m.collected / m.total) * 100),
+        collected: m.collected,
+        total: m.total,
+        nextTitle: pickLocalized({ pt: next.title_pt, en: next.title_en }, ideaLocale),
+      };
+    }
+    return null;
+  }, [ideaCards.data, ideaMetaByMaterial, collectedMap, all, ideaLocale]);
 
   // Study Reels deck — drives the entry card (thumbnails + unread count).
   // The viewer builds its own frozen copy when it opens; this one is only
@@ -231,10 +331,11 @@ export default function LearningScreen() {
           readSet={readSet}
           onCardPress={onCardPress}
           count={item.cards.length}
+          ideaMetaByMaterial={ideaMetaByMaterial}
         />
       </View>
     ),
-    [readSet, onCardPress],
+    [readSet, onCardPress, ideaMetaByMaterial],
   );
 
   return (
@@ -298,14 +399,36 @@ export default function LearningScreen() {
             <ReadFilterRow value={readFilter} onChange={setReadFilter} t={t} />
           </View>
 
-          {/* Continue Lendo hero — appears once the user has at least
-             5% scroll progress on any article. Picks the most recently
-             touched one. */}
-          {continueCard && continueEntry && (
+          {/* Continue hero. Ideas first: a material with some but not all
+             ideas absorbed shows "Próxima: <ideia>" and absorbed/total.
+             Otherwise the legacy pick — at least 5% scroll progress on an
+             article, most recently touched one. */}
+          {ideaContinue ? (
+            <ContinueLendoCard
+              card={ideaContinue.card}
+              percent={ideaContinue.percent}
+              subtitle={t('learning.ideas.nextIdeaLabel', { title: ideaContinue.nextTitle })}
+              metaText={t('learning.ideas.progress', {
+                collected: ideaContinue.collected,
+                total: ideaContinue.total,
+              })}
+              onPress={() => router.push(`/material/${ideaContinue.card.slug}`)}
+            />
+          ) : continueCard && continueEntry ? (
             <ContinueLendoCard
               card={continueCard}
               percent={continueEntry.percent}
               onPress={() => router.push(`/material/${continueCard.slug}`)}
+            />
+          ) : null}
+
+          {/* "Minhas ideias" — entry to the collection, once the user has
+             absorbed at least one idea. */}
+          {collectedRows.length >= 1 && (
+            <MyIdeasStrip
+              count={collectedRows.length}
+              recent={collectedRows}
+              onPress={() => router.push('/collection')}
             />
           )}
 

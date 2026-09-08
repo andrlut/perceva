@@ -1,0 +1,91 @@
+{
+  "slug": "catch-up-sleep-weekend",
+  "type": "explainer",
+  "material_title": {
+    "pt": "O sábado paga a dívida de sono?",
+    "en": "Does Saturday Repay Your Sleep Debt?"
+  },
+  "ideas": [
+    {
+      "id": "acorda-descansado",
+      "ordinal": 1,
+      "title": {
+        "pt": "Você acorda descansado. Seu corpo, não.",
+        "en": "You wake up rested. Your body does not."
+      },
+      "claim": {
+        "pt": "Dois dias de sono livre devolvem cansaço, humor e atenção — mas não devolveram a sensibilidade à insulina perdida em cinco noites curtas.",
+        "en": "Two free nights give you back your mood, focus and energy — but they did not restore the insulin sensitivity lost over five short nights."
+      },
+      "body": {
+        "pt": "Em 2019, Christopher Depner e Kenneth Wright trancaram 36 adultos jovens e saudáveis num laboratório por duas semanas. Um grupo dormiu 9 horas por noite. Outro ficou em 5, sem folga. O terceiro dormiu 5 horas por cinco noites, ganhou dois dias livres e voltou pra rotina curta — o seu fim de semana, em laboratório.\n\nO terceiro grupo dormiu mesmo: mais de uma hora extra por noite. Mesmo assim, a sensibilidade à insulina — o quanto o corpo responde ao hormônio que tira açúcar do sangue — caiu entre 9% e 27% neles. No grupo que nunca recuperou, caiu cerca de 13%. **O fim de semana não protegeu.** No músculo e no fígado a resistência ficou pior, e os dois grupos restritos ganharam peso (Depner et al., Current Biology, 2019).\n\nRessalva: 36 pessoas jovens, duas semanas. O que ele não mede: dormir mais no sábado recupera humor, cansaço e atenção. Você acorda melhor; o metabolismo não acorda junto. Use o sábado como diagnóstico: se dorme três horas a mais sem despertador, o problema está na semana.",
+        "en": "In 2019, Christopher Depner and Kenneth Wright locked 36 young, healthy adults in a lab for two weeks. One group slept nine hours a night. A second was held to five, no relief. The third slept five hours for five nights, got two free days, then went back to the short schedule — your weekend, in a lab.\n\nThat third group did sleep in: over an extra hour a night. Even so, their insulin sensitivity — how well the body responds to the hormone that pulls sugar out of the blood — fell by 9% to 27%. In the group that never recovered, it fell about 13%. **The weekend protected nobody.** In muscle and liver, resistance got worse, and both restricted groups gained weight (Depner et al., Current Biology, 2019).\n\nCaveat: 36 young people, two weeks. What it doesn't measure: sleeping in on Saturday restores mood, fatigue and attention. You wake up better; your metabolism doesn't. Use Saturday as a diagnostic: if you sleep three extra hours with no alarm, the problem is the week."
+      },
+      "image_brief": "Uma pessoa em pé diante da janela numa manhã ensolarada de sábado, alerta, braços esticados no espreguiçar; a sombra dela projetada no chão continua deitada e encolhida, como se não tivesse levantado.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Depner et al., 2019 · Current Biology 29(6) · ensaio randomizado em laboratório, n=36",
+            "en": "Depner et al., 2019 · Current Biology 29(6) · randomized in-laboratory trial, n=36"
+          },
+          "url": "https://doi.org/10.1016/j.cub.2019.01.069"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "mesmos-dados",
+      "ordinal": 2,
+      "title": {
+        "pt": "Mesmos dados, dois vereditos opostos.",
+        "en": "Same data, two opposite verdicts."
+      },
+      "claim": {
+        "pt": "Mesma base britânica: 19% menos doença cardíaca num estudo, benefício nenhum no outro. Compensar só ajuda quem dorme pouco na semana.",
+        "en": "Same British database: 19% less heart disease in one study, no benefit in the other. Catching up only helps people truly short all week."
+      },
+      "body": {
+        "pt": "Em 2024, Jean-Philippe Chaput e colegas acompanharam por oito anos 73.513 adultos do UK Biobank com sensor no pulso, sono medido por aparelho e não por memória. Quem dormia pelo menos 2 horas a mais no fim de semana não morreu menos nem teve menos doença cardiovascular (Chaput et al., Sleep, 2024). Meses antes, um grupo de Pequim apresentou o oposto com a mesma coorte: os 25% que mais compensavam tiveram 19% menos doença cardíaca. A manchete rodou o mundo; segue sendo resumo de congresso, sem revisão.\n\nNo ELSA-Brasil (2025), quem compensava mais de 90 minutos teve 38% menos chance de cálcio novo nas coronárias — **mas só entre quem realmente dormia pouco na semana.** A dose tem teto: uma análise americana de 2025 achou uma curva em U, menor risco perto de 40 a 60 minutos extras.\n\nDormir pouco na semana também marca turno noturno e apneia não tratada. Dorme 7 horas nos dias úteis? Essa evidência não fala de você. Menos de 6? É o seu subgrupo — e uma hora extra basta.",
+        "en": "In 2024, Jean-Philippe Chaput and colleagues followed 73,513 UK Biobank adults for eight years, wrist sensors on — sleep measured by device, not memory. People sleeping at least two extra hours on weekends did not die less or develop less cardiovascular disease (Chaput et al., Sleep, 2024). Months earlier, a Beijing team had presented the opposite from the same cohort: the top 25% of catch-up sleepers had 19% less heart disease. That headline travelled the world; it remains an unreviewed congress abstract.\n\nWhat separates them? In ELSA-Brasil (2025), people catching up more than 90 minutes had 38% lower odds of new calcium in their coronary arteries — **but only among those short on sleep during the week.** The dose has a ceiling: a 2025 American analysis found a U-shaped curve, lowest risk near 40 to 60 extra minutes.\n\nShort weekday sleep also marks night shifts, two jobs, untreated apnea. If you sleep seven hours on weekdays, this evidence isn't about you. If you sleep under six, it's your subgroup — and one extra hour is enough."
+      },
+      "image_brief": "Duas balanças de dois pratos idênticas, lado a lado sobre uma bancada de laboratório, com pesos idênticos em cada prato — uma pende para a esquerda, a outra para a direita.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Chaput et al., 2024 · Sleep 47(11) · UK Biobank, acelerômetro, n=73.513",
+            "en": "Chaput et al., 2024 · Sleep 47(11) · UK Biobank, accelerometer, n=73,513"
+          },
+          "url": "https://doi.org/10.1093/sleep/zsae135"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "tres-fusos",
+      "ordinal": 3,
+      "title": {
+        "pt": "Três fusos toda sexta, sem sair de casa.",
+        "en": "Three time zones every Friday, no flight."
+      },
+      "claim": {
+        "pt": "Meia-noite às 6h na semana, 2h às 11h no sábado: o relógio anda 3h30. Horário regular previu mortalidade melhor que horas dormidas.",
+        "en": "Midnight to 6 all week, 2 to 11 on Saturday: your clock drifts 3.5 hours. Regular timing beat total hours at predicting mortality."
+      },
+      "body": {
+        "pt": "Em 2006, o cronobiólogo Till Roenneberg batizou de jet lag social a diferença entre o meio do seu sono nos dias de trabalho e nos dias livres. Na semana, meia-noite às 6h: o meio é 3h. No sábado, 2h às 11h: o meio vira 6h30. Três horas e meia: como atravessar três fusos toda sexta e voltar toda segunda, sem sair de casa.\n\nEm 2024, Daniel Windred e colegas processaram mais de 10 milhões de horas de sensor de 60.977 britânicos e criaram um índice de regularidade: o quanto seus horários de deitar e levantar se repetem dia após dia. **Os mais regulares morreram de 20% a 48% menos que os mais irregulares**; a regularidade previu melhor que a duração total (Windred et al., Sleep, 2024).\n\nDormir até as 11h faz duas coisas opostas: repõe horas e empurra o relógio pra frente. Ancore o horário de acordar: no máximo uma hora de diferença entre semana e fim de semana. Se for compensar, deite mais cedo, não acorde mais tarde. E pegue sol nos primeiros 30 minutos, domingo incluído.",
+        "en": "In 2006, chronobiologist Till Roenneberg named it social jetlag: the gap between the midpoint of your sleep on workdays and on free days. Weekdays, midnight to 6am: midpoint 3am. Saturday, 2am to 11am: midpoint 6:30am. Three and a half hours — like crossing three time zones every Friday and flying back every Monday, without leaving your bedroom.\n\nIn 2024, Daniel Windred and colleagues processed more than 10 million hours of sensor data from 60,977 British adults and built a sleep regularity index: how closely your bed and wake times repeat day after day. **The most regular sleepers died 20% to 48% less often than the least regular** — and regularity predicted outcomes better than total duration (Windred et al., Sleep, 2024).\n\nSleeping until eleven does two things that fight each other: it puts hours back and pushes your clock later. Anchor your wake time — keep the weekday-to-weekend gap under an hour. If you must catch up, go to bed earlier rather than getting up later. And get outside within 30 minutes of waking, Sunday included."
+      },
+      "image_brief": "Uma pessoa de pijama e chinelos arrastando uma mala de rodinhas pelo corredor da própria casa, travesseiro debaixo do braço; pela janela do corredor, um avião cruza o céu do amanhecer.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Windred et al., 2024 · Sleep 47(1) · índice de regularidade do sono, n=60.977",
+            "en": "Windred et al., 2024 · Sleep 47(1) · sleep regularity index, n=60,977"
+          },
+          "url": "https://doi.org/10.1093/sleep/zsad253"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

@@ -1,36 +1,47 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { IdeasMaterialScreen } from '@/components/learning/IdeasMaterialScreen';
-import { MaterialMediaScreen } from '@/components/learning/MaterialMediaScreen';
+import { IdeaScreen } from '@/components/ideas/IdeaScreen';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { useLearningMaterial } from '@/lib/api/learning';
 import { useT } from '@/lib/i18n';
 import { tokens } from '@/theme';
 
 /**
- * Material detail route.
+ * Idea route — `/idea/[slug]?idea=n` (fullScreenModal, registered in
+ * `_layout.tsx`). `idea` is the 1-based ordinal to open on (default 1).
  *
- * EVERY material — with or without media attachments — renders through
- * MaterialMediaScreen, which owns the Texto | Áudio | Visual switcher. Formats
- * a material doesn't carry yet show up muted + "em breve" instead of being
- * hidden, so a text-only material still advertises the full shape (and reads
- * fine on the Texto tab). This route only owns the loading and not-found
- * states; MaterialMediaScreen is a superset of the old text screen (body,
- * takeaways, tracking, reward CTA, feedback, reading-progress tracking).
- *
- * Exception (Recanto em ideias): a material whose `ideas` is a non-empty
- * array renders IdeasMaterialScreen instead — the legacy screen stays
- * byte-identical for everything else.
+ * Owns only loading / not-found, like `material/[slug]`. A material that
+ * has no ideas has no idea screen: the route bounces back instead of
+ * rendering an empty pager (the material page never links here for those,
+ * so this is a deep-link / stale-cache guard).
  */
-export default function MaterialDetailScreen() {
+
+function parseOrdinal(raw: string | string[] | undefined): number {
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  const n = Number.parseInt(value ?? '', 10);
+  return Number.isFinite(n) && n >= 1 ? n : 1;
+}
+
+export default function IdeaRoute() {
   const router = useRouter();
   const { t } = useT();
-  const params = useLocalSearchParams<{ slug: string }>();
+  const params = useLocalSearchParams<{ slug: string; idea?: string }>();
   const material = useLearningMaterial(params.slug);
 
-  if (material.isLoading) {
+  const data = material.data;
+  const hasIdeas = !!data?.ideas && data.ideas.length > 0;
+
+  useEffect(() => {
+    if (data && !hasIdeas) {
+      if (router.canGoBack()) router.back();
+      else router.replace(`/material/${data.slug}`);
+    }
+  }, [data, hasIdeas, router]);
+
+  if (material.isLoading || (data && !hasIdeas)) {
     return (
       <SafeAreaView style={styles.safe}>
         <ScreenBackground>
@@ -43,7 +54,7 @@ export default function MaterialDetailScreen() {
     );
   }
 
-  if (!material.data) {
+  if (!data) {
     return (
       <SafeAreaView style={styles.safe}>
         <ScreenBackground>
@@ -59,10 +70,7 @@ export default function MaterialDetailScreen() {
     );
   }
 
-  if (material.data.ideas && material.data.ideas.length > 0) {
-    return <IdeasMaterialScreen detail={material.data} />;
-  }
-  return <MaterialMediaScreen detail={material.data} />;
+  return <IdeaScreen detail={data} initialOrdinal={parseOrdinal(params.idea)} />;
 }
 
 const styles = StyleSheet.create({

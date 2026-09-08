@@ -5,9 +5,16 @@
  * are good at — at ~$0.067/image (1K). The infographic (which needs correct
  * text and data) is rendered from code instead; see lib/infographic.mjs.
  *
+ * The same call also produces the per-IDEA images (Recanto em ideias): same
+ * house style, same style references, but 4:5 with the subject centered and
+ * no reserved title band — the idea card overlays its title on a framed copy,
+ * not on empty space. `aspect` selects the format sentence and the model's
+ * aspectRatio; everything else in the request is shared. `generateIdeaImage`
+ * is the thin 4:5 entry point.
+ *
  * Requires GEMINI_API_KEY (an AI Studio key with billing enabled — image
  * generation has no API free tier). Returns the raw image bytes; the caller
- * transcodes to a 2:3 webp.
+ * transcodes to a webp (2:3 cover crop, 4:5 idea crop).
  *
  * MODEL HISTORY: the covers currently live were made with
  * gemini-2.5-flash-image, which SHUTS DOWN 2026-10-02. 3.1 is the successor.
@@ -55,16 +62,51 @@ const IMAGE_SIZE = process.env.GEMINI_IMAGE_SIZE || '1K';
  * refs override it, so it only bites in the degraded prompt-only path. If you
  * ever rewrite the colour sentences, do it in its own commit so the effect is
  * attributable, and re-run the comparison in style-refs/README.md.
+ *
+ * The suffix is one string split in three — stem, per-aspect FORMAT sentence,
+ * tail — so the idea images can share everything but the format line. For
+ * '2:3' the concatenation is byte-identical to the suffix that produced the
+ * live covers (see `styleSuffix`).
  */
-const STYLE_SUFFIX =
+const STYLE_STEM =
   ' Flat vector illustration in a modern, minimal editorial style — bold clean ' +
   'simple shapes, smooth flat color fills with soft gradients, gentle depth, low ' +
   'detail. NOT photorealistic, NOT a photograph, NOT a 3D render, not painterly, ' +
   'no textures. Deep dark navy-to-indigo gradient background with a subtle radial ' +
   'glow. Warm golden light as the focal accent, plus one harmonious accent color. ' +
-  'Calm, premium, a quiet sense of wonder. Vertical portrait 2:3 with generous ' +
-  'empty negative space in the upper third for a title overlay later. ABSOLUTELY ' +
-  'NO text, words, letters, numbers, logos, watermarks, charts or UI.';
+  'Calm, premium, a quiet sense of wonder. ';
+
+/**
+ * The format sentence is the ONLY part of the suffix that knows what the image
+ * is for. '2:3' keeps the empty upper third the app's title overlay depends
+ * on; '4:5' is the idea image, which is shown whole (the card frames it and
+ * puts the title on top), so a reserved band would just read as a hole.
+ */
+const FORMAT_SENTENCE = {
+  '2:3':
+    'Vertical portrait 2:3 with generous empty negative space in the upper third ' +
+    'for a title overlay later.',
+  '4:5':
+    'Vertical portrait 4:5, subject centered with breathing room on all sides; ' +
+    'no title area, no empty band.',
+};
+
+const STYLE_TAIL =
+  ' ABSOLUTELY NO text, words, letters, numbers, logos, watermarks, charts or UI.';
+
+export const ASPECTS = Object.keys(FORMAT_SENTENCE);
+
+/**
+ * Full style suffix for one aspect. Exported so a test can pin the '2:3'
+ * result to the historical string without reaching into the module.
+ */
+export function styleSuffix(aspect) {
+  const format = FORMAT_SENTENCE[aspect];
+  if (!format) {
+    throw new Error(`Unsupported aspect "${aspect}". Use one of: ${ASPECTS.join(', ')}`);
+  }
+  return STYLE_STEM + format + STYLE_TAIL;
+}
 
 /**
  * Scopes the reference images BEFORE the model sees them. This must never sit
@@ -125,8 +167,8 @@ async function withRetry(fn, onWarn) {
 }
 
 // ── request/response plumbing ──────────────────────────────────────────────
-function buildContents(prompt, refParts) {
-  const scene = prompt.trim() + STYLE_SUFFIX;
+function buildContents(prompt, refParts, aspect) {
+  const scene = prompt.trim() + styleSuffix(aspect);
   // No refs -> byte-identical to the request that produced the live covers.
   if (refParts.length === 0) return scene;
   return [{ text: REF_BRIEF }, ...refParts, { text: SCENE_LEAD + scene }];
@@ -147,15 +189,17 @@ function extractImage(response) {
 }
 
 /**
- * Generate a cover image.
+ * Generate a cover (or, with `aspect: '4:5'`, an idea) image.
  * @param {object} opts
  * @param {string} opts.prompt   the scene description (textless)
+ * @param {'2:3' | '4:5'} [opts.aspect] '2:3' (cover, default) or '4:5' (idea)
  * @param {string} [opts.apiKey] defaults to process.env.GEMINI_API_KEY
  * @param {(msg: string) => void} [opts.onWarn]
  * @returns {Promise<{ buffer: Buffer, mimeType: string, refs: string[] }>}
  */
 export async function generateCover({
   prompt,
+  aspect = '2:3',
   apiKey = process.env.GEMINI_API_KEY,
   onWarn = (m) => console.warn(`      ! ${m}`),
 }) {
@@ -166,6 +210,9 @@ export async function generateCover({
     );
   }
   if (!prompt || !prompt.trim()) throw new Error('Cover prompt is empty.');
+  // Validate before any network call so a bad aspect fails in the log, not
+  // as a 400 from the API three retries later.
+  styleSuffix(aspect);
 
   const ai = new GoogleGenAI({ apiKey });
   const { parts: refParts, names: refNames } = await loadStyleRefs(onWarn);
@@ -175,14 +222,14 @@ export async function generateCover({
       () =>
         ai.models.generateContent({
           model: MODEL,
-          contents: buildContents(prompt, parts),
+          contents: buildContents(prompt, parts, aspect),
           config: {
             responseModalities: ['IMAGE'],
-            // 2:3 portrait, natively supported by 3.1. The ffmpeg cover-crop
-            // downstream stays as the safety net: aspectRatio is still
-            // reported as ignored in some cases, and a square result has to
-            // become a clean 2:3 webp either way.
-            imageConfig: { aspectRatio: '2:3', imageSize: IMAGE_SIZE },
+            // 2:3 and 4:5 portrait are both natively supported by 3.1. The
+            // ffmpeg crop downstream stays as the safety net: aspectRatio is
+            // still reported as ignored in some cases, and a square result
+            // has to become a clean webp of the right shape either way.
+            imageConfig: { aspectRatio: aspect, imageSize: IMAGE_SIZE },
           },
         }),
       onWarn,
@@ -213,4 +260,14 @@ export async function generateCover({
   }
 
   return { ...image, refs: used };
+}
+
+/**
+ * One idea image: 4:5, subject centered, no title band. Same model, same
+ * style references, same retry and prompt-only fallback as the cover — the
+ * only difference is the aspect. Caller crops to 960×1200 webp.
+ * @param {Omit<Parameters<typeof generateCover>[0], 'aspect'>} opts
+ */
+export function generateIdeaImage(opts) {
+  return generateCover({ ...opts, aspect: '4:5' });
 }

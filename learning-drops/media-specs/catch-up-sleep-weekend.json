@@ -1,0 +1,25 @@
+{
+  "slug": "catch-up-sleep-weekend",
+  "dimension_id": "health",
+  "title": {
+    "pt": "O sábado paga a dívida de sono?",
+    "en": "Does Saturday Repay Your Sleep Debt?"
+  },
+  "ideas": [
+    {
+      "id": "acorda-descansado",
+      "ordinal": 1,
+      "image_prompt": "Uma pessoa em pé diante da janela numa manhã ensolarada de sábado, alerta, braços esticados no espreguiçar; a sombra dela projetada no chão continua deitada e encolhida, como se não tivesse levantado."
+    },
+    {
+      "id": "mesmos-dados",
+      "ordinal": 2,
+      "image_prompt": "Duas balanças de dois pratos idênticas, lado a lado sobre uma bancada de laboratório, com pesos idênticos em cada prato — uma pende para a esquerda, a outra para a direita."
+    },
+    {
+      "id": "tres-fusos",
+      "ordinal": 3,
+      "image_prompt": "Uma pessoa de pijama e chinelos arrastando uma mala de rodinhas pelo corredor da própria casa, travesseiro debaixo do braço; pela janela do corredor, um avião cruza o céu do amanhecer."
+    }
+  ]
+}

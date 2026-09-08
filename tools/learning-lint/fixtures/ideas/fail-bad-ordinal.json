@@ -1,0 +1,48 @@
+{
+  "slug": "cbt-i-vs-sleep-hygiene",
+  "type": "explainer",
+  "material_title": {
+    "pt": "Higiene do sono ou TCC-I: o que trata a insônia?",
+    "en": "Sleep hygiene or CBT-I: what actually treats insomnia?"
+  },
+  "ideas": [
+    {
+      "id": "higiene-nao-e-tratamento",
+      "ordinal": 1,
+      "title": { "pt": "Higiene do sono não trata insônia.", "en": "Sleep hygiene doesn't treat insomnia." },
+      "claim": {
+        "pt": "A lista de bons hábitos de sono é prevenção; para quem já tem insônia crônica, ela sozinha quase nunca resolve.",
+        "en": "The list of good sleep habits is prevention; for someone who already has chronic insomnia, on its own it almost never works."
+      },
+      "body": {
+        "pt": "Evitar cafeína à noite, quarto escuro, sem celular na cama: são conselhos corretos e, para insônia estabelecida, insuficientes. A diretriz da Academia Americana de Medicina do Sono ([Edinger et al., 2021](https://doi.org/10.5664/jcsm.8986)) revisou a literatura e recomendou **contra** o uso de higiene do sono como tratamento isolado para insônia crônica — não por fazer mal, mas por não fazer efeito mensurável. O tratamento de primeira linha é a terapia cognitivo-comportamental para insônia, a TCC-I, cuja meta-análise de [Trauer et al. (2015)](https://doi.org/10.7326/M14-2841) mostrou ganhos que se mantêm meses depois. A confusão é cara: quem tenta a lista, falha e conclui que 'nada funciona' costuma partir para o remédio antes de ter tentado o que funciona.",
+        "en": "No caffeine at night, dark room, no phone in bed: correct advice and, for established insomnia, insufficient. The American Academy of Sleep Medicine guideline ([Edinger et al., 2021](https://doi.org/10.5664/jcsm.8986)) reviewed the literature and recommended **against** using sleep hygiene as a standalone treatment for chronic insomnia — not because it harms, but because it has no measurable effect. The first-line treatment is cognitive behavioral therapy for insomnia, CBT-I, whose meta-analysis by [Trauer et al. (2015)](https://doi.org/10.7326/M14-2841) showed gains that hold months later. The confusion is costly: people who try the list, fail and conclude that 'nothing works' often move on to medication before trying the thing that does."
+      },
+      "image_brief": "Um quarto perfeitamente arrumado e escuro, com cortinas fechadas e nenhum aparelho, onde uma pessoa está sentada na beira da cama de olhos bem abertos, encarando a parede.",
+      "sources": [
+        { "label": { "pt": "Edinger et al., 2021 · Journal of Clinical Sleep Medicine", "en": "Edinger et al., 2021 · Journal of Clinical Sleep Medicine" }, "url": "https://doi.org/10.5664/jcsm.8986" },
+        { "label": { "pt": "Trauer et al., 2015 · Annals of Internal Medicine", "en": "Trauer et al., 2015 · Annals of Internal Medicine" }, "url": "https://doi.org/10.7326/M14-2841" }
+      ],
+      "cta": null
+    },
+    {
+      "id": "menos-tempo-na-cama",
+      "ordinal": 3,
+      "title": { "pt": "Para dormir mais, fique menos na cama.", "en": "To sleep more, spend less time in bed." },
+      "claim": {
+        "pt": "A parte da TCC-I que mais funciona é contraintuitiva: encurtar a janela na cama até o sono ficar denso, e só então alargar.",
+        "en": "The part of CBT-I that works best is counterintuitive: shrink the window in bed until sleep gets dense, then widen it."
+      },
+      "body": {
+        "pt": "Insônia crônica costuma vir com uma reação natural: ficar mais tempo na cama para 'compensar'. O resultado é uma noite rala, cheia de vigília, que ensina o cérebro a associar cama com estar acordado. A restrição de sono inverte isso. Você limita a janela na cama ao tempo que realmente dorme — nunca menos de cinco horas — e vai ampliando 15 minutos por semana conforme a eficiência sobe. Na meta-análise de [Trauer et al. (2015)](https://doi.org/10.7326/M14-2841), a TCC-I reduziu o tempo para pegar no sono em cerca de 19 minutos e o tempo acordado no meio da noite em 26 minutos, com **eficiência do sono quase 10 pontos maior**. As primeiras semanas são duras; é por isso que o protocolo pede acompanhamento, e não improviso.",
+        "en": "Chronic insomnia usually comes with a natural reaction: spend more time in bed to 'make up' for it. The result is a thin night full of wakefulness that teaches the brain to pair bed with being awake. Sleep restriction flips that. You limit the window in bed to the time you actually sleep — never under five hours — and widen it by 15 minutes a week as efficiency climbs. In the meta-analysis by [Trauer et al. (2015)](https://doi.org/10.7326/M14-2841), CBT-I cut the time to fall asleep by about 19 minutes and time awake during the night by 26 minutes, with **sleep efficiency almost 10 points higher**. The first weeks are hard; that is why the protocol asks for supervision, not improvisation."
+      },
+      "image_brief": "Uma cama grande de casal onde apenas uma faixa estreita do colchão está iluminada por uma luz quente vinda do teto; uma pessoa dorme profundamente dentro dessa faixa e o resto da cama fica na penumbra.",
+      "sources": [
+        { "label": { "pt": "Trauer et al., 2015 · Annals of Internal Medicine", "en": "Trauer et al., 2015 · Annals of Internal Medicine" }, "url": "https://doi.org/10.7326/M14-2841" },
+        { "label": { "pt": "Miller et al., 2014 · Sleep Medicine Reviews", "en": "Miller et al., 2014 · Sleep Medicine Reviews" }, "url": "https://doi.org/10.1016/j.smrv.2014.01.006" }
+      ],
+      "cta": null
+    }
+  ]
+}

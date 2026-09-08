@@ -1,0 +1,28 @@
+{
+  "slug": "attention-residue",
+  "type": "news",
+  "material_title": {
+    "pt": "Resíduo de atenção: o custo escondido de trocar de tarefa",
+    "en": "Attention residue: the hidden cost of switching tasks"
+  },
+  "ideas": [
+    {
+      "id": "reuniao-ainda-na-sala",
+      "ordinal": 1,
+      "title": { "pt": "A reunião anterior ainda está na sala.", "en": "The last meeting is still in the room." },
+      "claim": {
+        "pt": "Trocar de tarefa sem fechar a anterior deixa um resíduo de atenção que derruba o desempenho na tarefa seguinte.",
+        "en": "Switching tasks without closing the previous one leaves an attention residue that drags down performance on the next."
+      },
+      "body": {
+        "pt": "Sophie Leroy chamou de resíduo de atenção o pedaço da cabeça que fica na tarefa anterior. Em [Leroy (2009)](https://doi.org/10.1016/j.obhdp.2009.04.002), participantes interrompidos no meio de um quebra-cabeça, e mandados para uma segunda tarefa, continuaram pensando na primeira e tiveram desempenho pior na segunda. O detalhe útil: quem terminou a primeira tarefa sob pressão de tempo soltou melhor do que quem terminou com calma — **fechar com um ponto final conta mais do que fechar bem**. A aplicação é um ritual de um minuto entre blocos: anotar onde parou, o próximo passo e a dúvida que ficou. Não é produtividade de planilha; é dar ao cérebro permissão para largar.",
+        "en": "Sophie Leroy named attention residue the part of the mind that stays on the previous task. In [Leroy (2009)](https://doi.org/10.1016/j.obhdp.2009.04.002), participants interrupted mid-puzzle and sent to a second task kept thinking about the first and performed worse on the second. The useful detail: those who finished the first task under time pressure let go better than those who finished at leisure — **closing with a full stop matters more than closing well**. The application is a one-minute ritual between blocks: write down where you stopped, the next step and the open question. It isn't spreadsheet productivity; it is giving the brain permission to let go."
+      },
+      "image_brief": "Uma sala de reunião vazia com uma placa na porta e um texto na lousa listando os tópicos pendentes, enquanto pela janela se vê uma pessoa já sentada em outra mesa, olhando para trás.",
+      "sources": [
+        { "label": { "pt": "Leroy, 2009 · Organizational Behavior and Human Decision Processes", "en": "Leroy, 2009 · Organizational Behavior and Human Decision Processes" }, "url": "https://doi.org/10.1016/j.obhdp.2009.04.002" }
+      ],
+      "cta": null
+    }
+  ]
+}

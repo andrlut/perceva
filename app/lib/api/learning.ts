@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type {
+  CollectIdeaResult,
+  LearningIdeaPublic,
   LearningMaterial,
   LearningMaterialCard,
   LearningMaterialMedia,
@@ -19,6 +21,8 @@ export const learningKeys = {
   detail: (slug: string) => [...learningKeys.all, 'detail', slug] as const,
   views: () => [...learningKeys.all, 'views'] as const,
   myFeedback: (slug: string) => [...learningKeys.all, 'myFeedback', slug] as const,
+  ideaCards: () => [...learningKeys.all, 'ideaCards'] as const,
+  collected: () => [...learningKeys.all, 'collected'] as const,
 };
 
 /** Media columns the feed loads — enough for format icons AND the reels
@@ -63,7 +67,7 @@ export function useLearningFeed() {
           `id, slug, type, dimension_id, topic, reading_minutes,
            title_pt, title_en, summary_pt, summary_en,
            hero_image_url, source_url, source_label_pt, source_label_en,
-           cta_action, released_at, version, is_archived,
+           cta_action, released_at, version, is_archived, idea_count,
            created_at, updated_at,
            learning_material_sub ( sub_id ),
            learning_material_media ( kind, locale, path, page_paths, meta )`,
@@ -221,9 +225,93 @@ export function useRateMaterial() {
   });
 }
 
+// ── Ideas (Recanto em ideias) ──────────────────────────────────────────────
+
 /**
- * Marks the material as read (idempotent). On the first read awards
- * 5 base + 5 per related sub XP and matching coins.
+ * One row per published idea, from the `learning_idea_public` view. Feeds the
+ * per-idea Explorar, "Minhas ideias" and the next-idea CTA — never the feed,
+ * which stays on `idea_count` only. Loaded on demand by the screens that need
+ * it, not by the tab.
+ */
+export function useIdeaCards() {
+  return useQuery({
+    staleTime: 5 * 60_000,
+    queryKey: learningKeys.ideaCards(),
+    queryFn: async (): Promise<LearningIdeaPublic[]> => {
+      const { data, error } = await supabase
+        .from('learning_idea_public')
+        .select('*')
+        .order('released_at', { ascending: false })
+        .order('ordinal', { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as LearningIdeaPublic[];
+    },
+  });
+}
+
+/** material_id → set of idea ids the user has absorbed (flipped the card). */
+export function useCollectedIdeas() {
+  return useQuery({
+    // Mesma disciplina de identidade do useReadMaterialIds: cada fetch devolve
+    // um Map novo, então o staleTime segura a cadeia de useMemo dos consumidores.
+    staleTime: 60_000,
+    queryKey: learningKeys.collected(),
+    queryFn: async (): Promise<Map<string, Set<string>>> => {
+      const { data, error } = await supabase
+        .from('learning_idea_collect')
+        .select('material_id, idea_id');
+      if (error) throw error;
+      const out = new Map<string, Set<string>>();
+      for (const row of (data ?? []) as { material_id: string; idea_id: string }[]) {
+        let set = out.get(row.material_id);
+        if (!set) {
+          set = new Set<string>();
+          out.set(row.material_id, set);
+        }
+        set.add(row.idea_id);
+      }
+      return out;
+    },
+  });
+}
+
+interface CollectIdeaInput {
+  slug: string;
+  ideaId: string;
+}
+
+/**
+ * Flip the card = absorb the idea (idempotent). When the last live idea of a
+ * material is collected the RPC closes the material through
+ * mark_material_read, so XP/coins land in the same `already_read`-guarded
+ * path the legacy CTA uses.
+ */
+export function useCollectIdea() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CollectIdeaInput): Promise<CollectIdeaResult> => {
+      const { data, error } = await supabase.rpc('collect_idea', {
+        p_slug: input.slug,
+        p_idea_id: input.ideaId,
+      });
+      if (error) throw error;
+      return data as CollectIdeaResult;
+    },
+    onSuccess: (result, input) => {
+      queryClient.invalidateQueries({ queryKey: learningKeys.collected() });
+      if (result.completed) {
+        queryClient.invalidateQueries({ queryKey: characterKeys.me() });
+        queryClient.invalidateQueries({ queryKey: learningKeys.views() });
+        queryClient.invalidateQueries({ queryKey: learningKeys.detail(input.slug) });
+      }
+    },
+  });
+}
+
+/**
+ * Marks the material as read (idempotent). Legacy materials award
+ * 5 base + 5 per related sub XP; materials with ideas award 10 + 2 per idea
+ * (see app/lib/learningXp.ts and migration 20260907000002).
  */
 export function useMarkMaterialRead() {
   const queryClient = useQueryClient();

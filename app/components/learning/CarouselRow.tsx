@@ -5,7 +5,7 @@ import { FlatList, Platform, StyleSheet, Text, View } from 'react-native';
 import type { LearningFeedCard } from '@/lib/api/learning';
 import { tokens } from '@/theme';
 
-import { COVER_WIDTH, CoverCard } from './CoverCard';
+import { COVER_WIDTH, CoverCard, type CoverIdeaMeta } from './CoverCard';
 
 /**
  * Espaço entre cards. Vive aqui e NÃO em `styles.scroll` como `gap`:
@@ -40,6 +40,12 @@ interface Props {
   onCardPress: (card: LearningFeedCard) => void;
   /** Optional small count shown next to the title (e.g. "12"). */
   count?: number;
+  /**
+   * material_id → idea progress, built once by the tab from the idea view +
+   * the user's collection. Cards of materials with ideas read their gold bar,
+   * "N ideias · c/N" meta and video icon from here; legacy cards ignore it.
+   */
+  ideaMetaByMaterial?: Map<string, CoverIdeaMeta>;
 }
 
 export const CarouselRow = memo(function CarouselRow({
@@ -50,6 +56,7 @@ export const CarouselRow = memo(function CarouselRow({
   readSet,
   onCardPress,
   count,
+  ideaMetaByMaterial,
 }: Props) {
   const renderItem = useCallback(
     ({ item }: { item: LearningFeedCard }) => (
@@ -57,9 +64,10 @@ export const CarouselRow = memo(function CarouselRow({
         card={item}
         read={readSet.has(item.id)}
         onPress={onCardPress}
+        ideaMeta={ideaMetaByMaterial?.get(item.id)}
       />
     ),
-    [readSet, onCardPress],
+    [readSet, onCardPress, ideaMetaByMaterial],
   );
 
   if (cards.length === 0) return null;
@@ -94,6 +102,13 @@ export const CarouselRow = memo(function CarouselRow({
         contentContainerStyle={styles.scroll}
         ItemSeparatorComponent={Sep}
         getItemLayout={getItemLayout}
+        // Snap card-by-card: the interval is the same STRIDE getItemLayout
+        // reports, so a fling always settles with a cover's left edge on the
+        // 16px content inset instead of half a card off-screen.
+        snapToInterval={STRIDE}
+        snapToAlignment="start"
+        decelerationRate="fast"
+        disableIntervalMomentum
         initialNumToRender={3}
         maxToRenderPerBatch={3}
         windowSize={3}

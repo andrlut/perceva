@@ -1,6 +1,7 @@
 import type { LearningFeedCard, LearningFeedMedia } from '@/lib/api/learning';
 import type { DimensionId, LearningMediaLocale } from '@/lib/db/types';
 import { learningMediaUrl, pickMedia } from '@/lib/learningMedia';
+import { xpForMaterial } from '@/lib/learningXp';
 import { DIMENSION_META } from '@/theme/dimensions';
 
 /**
@@ -45,13 +46,17 @@ export interface ReelGroup {
   accent: string;
   /** Non-null when the asset is in the other language — badge text ("PT"). */
   langBadge: string | null;
-  /** Mirrors the detail screen's award math (5 base + 5 per sub). */
+  /** Mirrors the detail screen's award math (app/lib/learningXp.ts). */
   xpPreview: number;
   releasedAt: number;
   cards: ReelCard[];
 }
 
 function toGroups(card: LearningFeedCard, locale: LearningMediaLocale): ReelGroup[] {
+  // Materials that already carry ideas leave the legacy deck: their baked reel
+  // cards would let "Concluir" here mark the material read and skip the
+  // whole absorb flow. They come back as native per-idea cards later.
+  if ((card.idea_count ?? 0) > 0) return [];
   // Off-template guard BEFORE the locale pick: an off-spec preferred-locale
   // asset must fall back to an on-spec other-locale one (with the badge),
   // not hide the material entirely.
@@ -77,7 +82,7 @@ function toGroups(card: LearningFeedCard, locale: LearningMediaLocale): ReelGrou
     dimensionId: card.dimension_id,
     accent: DIMENSION_META[card.dimension_id].color,
     langBadge: pick.isFallback ? pick.media.locale.toUpperCase() : null,
-    xpPreview: 5 + 5 * card.subs.length,
+    xpPreview: xpForMaterial(card.idea_count ?? 0, card.subs.length),
     releasedAt: new Date(card.released_at).getTime(),
   };
   const toCard = (p: string, i: number, pageCount: number): ReelCard => ({

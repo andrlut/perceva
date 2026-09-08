@@ -710,11 +710,89 @@ export interface LearningMaterial {
   /** Structured drafter answers per reasoning step + reviewer notes. NULL
    *  for legacy materials authored before the publisher pipeline. */
   reasoning_log: LearningReasoningLog | null;
+  /** 1..5 ideias (Recanto em ideias, migration 20260907000002). NULL = material
+   *  legado, que renderiza a tela antiga. Nunca selecionado pelo feed. */
+  ideas: LearningIdea[] | null;
+  /** Generated column: jsonb_array_length(ideas) or 0 — the ONLY idea field
+   *  the feed selects. */
+  idea_count: number;
   released_at: string;
   version: number;
   is_archived: boolean;
   created_at: string;
   updated_at: string;
+}
+
+// ── Learning ideas (Recanto em ideias) ────────────────────────────────────────
+
+export interface LearningLocalized {
+  pt: string;
+  en: string;
+}
+
+export interface LearningIdeaSource {
+  label: LearningLocalized;
+  url: string;
+}
+
+/** Bucket-relative path of the idea's illustration (960x1200, textless). */
+export interface LearningIdeaImage {
+  path: string;
+  width: number;
+  height: number;
+}
+
+/** Per-idea Notebook video. Lives INSIDE the ideas jsonb because
+ *  learning_material_media is UNIQUE (material_id, kind, locale). */
+export interface LearningIdeaVideo {
+  path: string;
+  duration_seconds: number;
+  poster: string | null;
+}
+
+export interface LearningIdea {
+  /** Immutable slug — keys the user's collection (learning_idea_collect). */
+  id: string;
+  ordinal: number;
+  /** Curiosity hook, ≤48 chars. */
+  title: LearningLocalized;
+  /** One sentence that stands alone — the back of the card, ≤140 chars. */
+  claim: LearningLocalized;
+  /** 100–180 words: mechanism, the number with its study, what to do. */
+  body: LearningLocalized;
+  image: LearningIdeaImage | null;
+  video: { pt: LearningIdeaVideo | null; en: LearningIdeaVideo | null };
+  sources: LearningIdeaSource[];
+  /** Reserved (no UI yet). */
+  cta: LearningCtaAction | null;
+}
+
+/** One row of the `learning_idea_public` view (one per published idea). */
+export interface LearningIdeaPublic {
+  material_id: string;
+  slug: string;
+  type: LearningMaterialType;
+  dimension_id: DimensionId;
+  released_at: string;
+  idea_id: string;
+  ordinal: number;
+  title_pt: string;
+  title_en: string;
+  claim_pt: string;
+  claim_en: string;
+  image_path: string | null;
+  video_pt_path: string | null;
+  video_en_path: string | null;
+}
+
+/** Return shape of the collect_idea RPC. */
+export interface CollectIdeaResult {
+  collected: number;
+  total: number;
+  completed: boolean;
+  already_read: boolean;
+  xp_awarded: number;
+  coins_awarded: number;
 }
 
 /** Drafter agent fills `steps` (one entry per reasoning step in the
@@ -781,6 +859,7 @@ export type LearningMaterialCard = Omit<
   | 'signs_pt' | 'signs_en'
   | 'tracking_pt' | 'tracking_en'
   | 'reasoning_log'
+  | 'ideas'
 >;
 
 export interface LearningMaterialSub {

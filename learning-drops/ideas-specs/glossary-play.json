@@ -1,0 +1,91 @@
+{
+  "slug": "glossary-play",
+  "type": "explainer",
+  "material_title": {
+    "pt": "Descanso é uma habilidade, não um prêmio",
+    "en": "Rest Is a Skill, Not a Prize"
+  },
+  "ideas": [
+    {
+      "id": "sofa-um-pedaco",
+      "ordinal": 1,
+      "title": {
+        "pt": "O sofá só entrega um pedaço do descanso.",
+        "en": "The couch delivers only part of your rest."
+      },
+      "claim": {
+        "pt": "Descanso que recupera tem quatro ingredientes: desligar, relaxar, maestria e controle. O sofá entrega um; um hobby exigente entrega três.",
+        "en": "Restorative rest has four ingredients: detaching, relaxing, mastery and control. The couch delivers one; a demanding hobby delivers three."
+      },
+      "body": {
+        "pt": "Em 2007, duas pesquisadoras criaram um questionário pra medir o que o tempo livre precisa entregar pra te recuperar (Sonnentag & Fritz, 2007). Chegaram a quatro ingredientes. Desligamento: tirar o trabalho da cabeça, não só sair da mesa. Relaxamento: corpo e mente em marcha lenta, sem cobrança. Maestria: um desafio que você escolheu — violão, um prato difícil, escalada. Controle: você decidindo o que fazer com o tempo, não a agenda de outra pessoa.\n\nUma meta-análise de 54 estudos e 26.592 pessoas (Bennett, Bakker & Field, 2018) confirma: os quatro preveem menos estresse e mais bem-estar, e desligar do trabalho é o que mais pesa.\n\nO terceiro quebra a intuição de que descanso é ausência de esforço. **Um hobby exigente pode te recuperar mais do que uma tarde deitado.** O sofá entrega relaxamento e nada mais. Aprender a fazer pão entrega desligamento, maestria e controle de uma vez. Por isso o domingo no feed deixa você igual na segunda: parar não é descansar. Escolha um hobby que exige algo de você — aprender, praticar, progredir.",
+        "en": "In 2007, two researchers built a questionnaire to measure what off-time has to deliver to recover you (Sonnentag & Fritz, 2007). They landed on four ingredients. Detachment: getting work out of your head, not just leaving your desk. Relaxation: body and mind in low gear, nothing demanded of you. Mastery: a challenge you chose — guitar, a hard recipe, climbing. Control: you deciding what to do with the time, not someone else's schedule.\n\nA meta-analysis of 54 studies and 26,592 people (Bennett, Bakker & Field, 2018) confirms it: all four predict less strain and more well-being, and detaching from work carries the most weight.\n\nThe third one breaks the intuition that rest means the absence of effort. **A demanding hobby can restore you more than an afternoon lying down.** The couch delivers relaxation and nothing else. Learning to bake bread delivers detachment, mastery and control at once. That's why a Sunday on the feed leaves you just as tired on Monday: stopping isn't resting. Pick a hobby that asks something of you — learning, practice, progress."
+      },
+      "image_brief": "Uma sala: à esquerda, uma pessoa afundada no sofá com o controle remoto na mão, iluminada por uma luz azulada fria; à direita, na bancada da cozinha, outra pessoa sova massa de pão com farinha até os cotovelos — toda a luz quente da cena cai sobre a bancada, e o sofá fica na penumbra.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Newman, Tay & Diener, 2014 · Journal of Happiness Studies · revisão de 363 estudos",
+            "en": "Newman, Tay & Diener, 2014 · Journal of Happiness Studies · review of 363 studies"
+          },
+          "url": "https://link.springer.com/article/10.1007/s10902-013-9435-x"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "ferias-somem",
+      "ordinal": 2,
+      "title": {
+        "pt": "Suas férias somem antes da mala desfeita.",
+        "en": "Your vacation fades before you unpack."
+      },
+      "claim": {
+        "pt": "O ganho das férias é modesto e some em cerca de um mês. O que cura não é a viagem, é desligar — reservistas sem praia nenhuma provaram isso.",
+        "en": "Vacation gains are modest and gone in about a month. What heals isn't the trip, it's detaching — army reservists with no beach proved it."
+      },
+      "body": {
+        "pt": "Uma meta-análise de 13 estudos mediu pessoas antes e depois de viagens de 11 dias, em média (Speth, Wendsche & Wegge, 2023). Voltavam com mais ânimo, mas o efeito era modesto e a satisfação com a vida quase não se mexia.\n\nO ganho evapora. Em 54 trabalhadores numa viagem de três semanas, o bem-estar fez pico no oitavo dia e voltou ao normal menos de uma semana depois (de Bloom et al., 2010). Em 131 professores, o alívio sumia em cerca de um mês, mais rápido pra quem voltava pra uma pilha de trabalho (Kühnel & Sonnentag, 2011).\n\n**Não é a viagem que cura, é o desligar.** A prova: 81 homens convocados pra reserva militar — nada de praia — voltaram com menos estresse que 81 colegas que ficaram no trabalho, e o alívio seguia quanto cada um tinha desligado a cabeça (Etzion, Eden & Lapidot, 1998). Uma viagem por ano não conserta um ano de tempo livre mal usado. Proteja uma janela por dia sem notificação de trabalho, e a primeira semana de volta.",
+        "en": "A meta-analysis of 13 studies measured people before and after trips lasting 11 days on average (Speth, Wendsche & Wegge, 2023). They came back with more energy, but the effect was modest and life satisfaction barely moved.\n\nThe gain evaporates. Among 54 workers on a three-week trip, well-being peaked around day eight and was back to baseline less than a week after the return (de Bloom et al., 2010). Among 131 teachers, burnout relief faded within about a month, faster for those who came back to a pile of work (Kühnel & Sonnentag, 2011).\n\n**It isn't the trip that heals, it's the detaching.** The proof: 81 men called up for reserve duty — no beach at all — came back with less stress than 81 colleagues who stayed at work, and the relief tracked how far each one had switched his head off (Etzion, Eden & Lapidot, 1998). One trip a year won't fix a year of badly spent free time. Guard one window a day with zero work notifications, and your first week back."
+      },
+      "image_brief": "Uma mala de viagem fechada e ainda cheia, encostada no canto de um escritório em casa, com um fio de areia de praia escapando pelo fecho; na mesa ao lado, uma pessoa já curvada sobre uma pilha de trabalho.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Newman, Tay & Diener, 2014 · Journal of Happiness Studies · revisão de 363 estudos",
+            "en": "Newman, Tay & Diener, 2014 · Journal of Happiness Studies · review of 363 studies"
+          },
+          "url": "https://link.springer.com/article/10.1007/s10902-013-9435-x"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "pior-semana-hobby",
+      "ordinal": 3,
+      "title": {
+        "pt": "A pior semana é a melhor hora pro hobby.",
+        "en": "Your worst week is the best time for a hobby."
+      },
+      "claim": {
+        "pt": "Lazer que faz bem se constrói de propósito — com meta, aprendizado e gente — e rende mais justamente nas semanas de trabalho mais pesado.",
+        "en": "Leisure that does you good is built on purpose — goal, learning, people — and pays off most in the heaviest work weeks."
+      },
+      "body": {
+        "pt": "Uma revisão de 363 estudos nomeou as cinco necessidades que o lazer precisa satisfazer pra te fazer bem (Newman, Tay & Diener, 2014). Os pesquisadores chamam de DRAMMA: desligamento, autonomia (você no comando), maestria (progredir em algo), significado (aquilo importa pra você) e afiliação (gente de quem você gosta). Duas pessoas na mesma caminhada saem com recuperação diferente, conforme quantas necessidades ela tocou.\n\nDá pra construir isso. Chamam de moldar o próprio lazer (leisure crafting): buscar deliberadamente atividades com meta, aprendizado e conexão, em vez de deixar o tempo livre virar rolagem infinita. Nas semanas em que a pessoa moldava mais o lazer, relatava mais sentido e engajamento (Petrou, Bakker & van den Heuvel, 2016). **E é justamente nas semanas de trabalho mais pesado que as pessoas moldam mais o próprio lazer** (Petrou & Bakker, 2015), quando mais precisam.\n\nRessalva: o tédio sem objetivo também alimenta a criatividade; as duas coisas convivem. Nas semanas pesadas, agende o lazer de propósito em vez de esperar sobrar energia, e marque tempo com quem você gosta, sem segunda agenda.",
+        "en": "A review of 363 studies named the five needs your leisure has to satisfy to do you good (Newman, Tay & Diener, 2014). The researchers call it DRAMMA: detachment, autonomy (you in charge), mastery (getting better at something), meaning (it matters to you) and affiliation (people you like). Two people on the same walk come away with different recovery, depending on how many of those needs the walk touched.\n\nYou can build this. Researchers call it leisure crafting: deliberately going after activities with a goal, learning and connection, instead of letting free time collapse into endless scrolling. In the weeks people crafted their leisure more, they reported more meaning and more engagement (Petrou, Bakker & van den Heuvel, 2016). **And people craft their leisure most in the weeks when work is heaviest** (Petrou & Bakker, 2015) — exactly when they need it.\n\nOne caveat: aimless boredom also feeds creativity — both can be true. In the heaviest weeks, schedule leisure on purpose instead of waiting for spare energy, and book time with people you like, with no second agenda."
+      },
+      "image_brief": "Uma pessoa sentada no chão de um escritório abarrotado, pastas empilhadas até o teto ao redor, tocando violão com atenção total; a única luz quente da cena cai sobre o violão.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Newman, Tay & Diener, 2014 · Journal of Happiness Studies · revisão de 363 estudos",
+            "en": "Newman, Tay & Diener, 2014 · Journal of Happiness Studies · review of 363 studies"
+          },
+          "url": "https://link.springer.com/article/10.1007/s10902-013-9435-x"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}
