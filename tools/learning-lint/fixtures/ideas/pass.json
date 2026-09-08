@@ -14,7 +14,7 @@
         "en": "You wake up rested. Your body doesn't."
       },
       "claim": {
-        "pt": "Dormir até tarde no fim de semana devolve a disposição, mas não desfaz o que cinco noites curtas fizeram com o seu metabolismo.",
+        "pt": "Dormir até tarde no sábado devolve a disposição, mas não desfaz o que cinco noites curtas fizeram no seu metabolismo.",
         "en": "Sleeping in on the weekend brings your energy back, but it doesn't undo what five short nights did to your metabolism."
       },
       "body": {
@@ -38,7 +38,7 @@
         "en": "Same data, two opposite verdicts."
       },
       "claim": {
-        "pt": "Dormir pouco na semana e compensar no fim de semana não encurta a vida; dormir pouco todos os dias, inclusive no fim de semana, encurta.",
+        "pt": "Dormir pouco na semana e compensar no sábado não encurta a vida; dormir pouco todos os dias, sábado incluído, encurta.",
         "en": "Short weeknights plus long weekends don't shorten your life; short nights every day, weekends included, do."
       },
       "body": {
@@ -66,8 +66,8 @@
         "en": "Three time zones every Friday, at home."
       },
       "claim": {
-        "pt": "Acordar três horas mais tarde no sábado é um jetlag sem viagem, e cada hora dele vem acompanhada de mais peso e pior humor.",
-        "en": "Waking up three hours later on Saturday is jet lag without a trip, and every hour of it comes with more weight and a worse mood."
+        "pt": "Acordar três horas mais tarde no sábado é um jetlag sem viagem, e cada hora dele vem com mais peso e pior humor.",
+        "en": "Waking three hours later on Saturday is jet lag without a trip, and every hour of it adds weight and sours your mood."
       },
       "body": {
         "pt": "O relógio biológico não sabe que é sábado. Quando você dorme às 3h e acorda ao meio-dia, ele recebe o mesmo sinal de uma viagem de três fusos para o oeste — e na segunda-feira precisa voltar. [Wittmann et al. (2006)](https://doi.org/10.1080/07420520500545979) deram nome a isso: jetlag social, a diferença entre o meio do sono nos dias úteis e nos dias livres. Em uma base com mais de 65 mil pessoas, [Roenneberg et al. (2012)](https://doi.org/10.1016/j.cub.2012.03.038) encontraram que cada hora de jetlag social vinha associada a uma chance cerca de 33% maior de estar acima do peso, independentemente de quanto a pessoa dormia no total. O ajuste que preserva a recuperação sem o jetlag é simples: **mantenha a hora de acordar dentro de uma hora da habitual** e vá dormir mais cedo na sexta. A luz da manhã no sábado, mesmo pela janela, segura o relógio no lugar.",

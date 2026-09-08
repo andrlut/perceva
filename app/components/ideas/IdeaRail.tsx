@@ -13,7 +13,9 @@ import { tokens } from '@/theme';
  * claim but NEVER collect from here — `onFirstFlip` is deliberately left
  * undefined so `collect_idea` only ever fires from the card at the end of
  * the idea screen. Collected cards show the gold rim from the set the
- * parent passes in. The "Abrir ideia" pill on the back calls `onOpen`.
+ * parent passes in. The rail does NOT open ideas either: no `onOpen`, no
+ * `openAffordance` — the back face is the claim alone, and the list rows
+ * under the rail are what open an idea.
  */
 
 const GAP = 10;
@@ -24,8 +26,6 @@ export interface IdeaRailProps {
   /** `useCollectedIdeas().data?.get(material.id)` — may be undefined while loading. */
   collected: Set<string> | undefined;
   locale: IdeaLocale;
-  /** From the "Abrir ideia" pill on the back of a card. */
-  onOpen: (idea: LearningIdea) => void;
   /** Defaults to `IDEA_CARD_RAIL_WIDTH`. */
   cardWidth?: number;
 }
@@ -35,7 +35,6 @@ export const IdeaRail = memo(function IdeaRail({
   material,
   collected,
   locale,
-  onOpen,
   cardWidth = IDEA_CARD_RAIL_WIDTH,
 }: IdeaRailProps) {
   const { id, slug, dimension_id } = material;
@@ -65,7 +64,6 @@ export const IdeaRail = memo(function IdeaRail({
           width={cardWidth}
           locale={locale}
           collected={collected?.has(idea.id) ?? false}
-          onOpen={() => onOpen(idea)}
           testID={`idea-rail-card-${idea.ordinal}`}
         />
       ))}

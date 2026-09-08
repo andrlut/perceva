@@ -318,14 +318,19 @@ function lintReels(spec, name) {
 //   { slug, type: summary|explainer|news, material_title: {pt,en},
 //     ideas: [{ id: /^[a-z0-9-]{3,40}$/ (IMUTÁVEL, chave da coleta), ordinal: 1..,
 //               title: {pt,en} ≤48 (gancho, nunca o nome do tema),
-//               claim: {pt,en} ≤140 (uma frase que vale sozinha),
+//               claim: {pt,en} alvo ≤120 / teto 140 (uma frase que vale sozinha — é o verso do
+//                      card, lido inteiro no menor card (132px, rail + Minhas ideias); 121-140
+//                      só cabe com a fonte encolhida → WARN; >140 → FAIL),
 //               body:  {pt,en} 100–180 palavras, **negrito** em até 2 trechos, [link](https://…),
 //               image_brief: cena em PT que RETRATA a afirmação, sem texto/placa/logo/UI,
 //               sources: [{label:{pt,en}, url:https://…}] (1..3), cta: null }] }
 const IDEA_BUDGET = { news: { min: 1, max: 1 }, explainer: { min: 1, max: 3 }, summary: { min: 2, max: 5 } };
 const IDEA_HARD_CAP = 5;
 const IDEA_ID_RE = /^[a-z0-9-]{3,40}$/;
-const IDEA_TITLE_MAX = 48, IDEA_CLAIM_MAX = 140;
+const IDEA_TITLE_MAX = 48;
+// Claim = verso do card. 120 é o que cabe inteiro, em fonte cheia, no menor card (132px);
+// o app encolhe a fonte até 0.6x, então 140 ainda cabe — mas é teto, não alvo.
+const IDEA_CLAIM_TARGET = 120, IDEA_CLAIM_MAX = 140;
 const IDEA_WORDS = { failLo: 60, failHi: 220, warnLo: 100, warnHi: 180 };
 const IDEA_BOLD_MAX = 2;
 const IDEA_PARITY_MAX = 0.25; // PT vs EN word-count divergence
@@ -423,6 +428,8 @@ function lintIdeas(spec, name) {
       const claim = String(idea.claim?.[loc] ?? '').trim();
       if (!claim) fail(`claim.${loc} missing`, w(`claim.${loc}`));
       else if (claim.length > IDEA_CLAIM_MAX) fail(`claim.${loc} has ${claim.length} chars (max ${IDEA_CLAIM_MAX})`, w(`claim.${loc}`));
+      else if (claim.length > IDEA_CLAIM_TARGET)
+        warn(`claim.${loc} has ${claim.length} chars — above the ${IDEA_CLAIM_TARGET}-char card budget (fits only with font shrink; max ${IDEA_CLAIM_MAX})`, w(`claim.${loc}`));
 
       const body = String(idea.body?.[loc] ?? '');
       if (!body.trim()) {

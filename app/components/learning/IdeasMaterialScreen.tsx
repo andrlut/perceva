@@ -1,8 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { IdeaListRow } from '@/components/ideas/IdeaListRow';
@@ -19,7 +28,7 @@ import {
   useRateMaterial,
   useReadMaterialIds,
 } from '@/lib/api/learning';
-import type { LearningIdea, LearningMaterialType } from '@/lib/db/types';
+import type { LearningMaterialType } from '@/lib/db/types';
 import { useT, type TranslateOptions } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import type { IdeaLocale } from '@/lib/ideas';
@@ -28,6 +37,7 @@ import { learningMediaUrl, pickMedia } from '@/lib/learningMedia';
 import { xpForMaterial } from '@/lib/learningXp';
 import { ACTIVE_THEME, tokens } from '@/theme';
 import { SUB_META } from '@/theme/dimensions';
+import { alpha } from '@/theme/skillTiers';
 
 /**
  * Detail screen for a material that carries `ideas` (Recanto em ideias).
@@ -40,11 +50,37 @@ import { SUB_META } from '@/theme/dimensions';
  * completo" (collapsed) → dimension/subs, source, feedback. A sticky CTA
  * opens the next idea to absorb.
  *
+ * Hero (Deepstash-style, 2026-09-08): when the material has a real cover
+ * (`hero_image_url`), this screen shows it as a full-bleed PORTRAIT hero —
+ * the covers are 2:3 (768×1152) and the shared 220px landscape banner in
+ * `MaterialCover variant="hero"` cropped most of the art away top and
+ * bottom. The hero is window-wide, `width / HERO_ASPECT` tall (capped at
+ * `HERO_MAX_VH` of the window so short phones keep the title above the
+ * fold), and melts into the page through a bottom fade to `tokens.bg.deep`
+ * over its last `HERO_FADE` share. No rounded corners on purpose.
+ *
+ * The maintainer is undecided on this one ("tô em dúvida"), so the change
+ * is deliberately cheap to walk back: the old banner path is still here
+ * behind the `hero_image_url == null` check (generated covers render
+ * exactly as before), and the shape is a single tunable `HERO_ASPECT`.
+ * `MaterialMediaScreen` / `MaterialCover` are untouched.
+ *
  * Nothing here writes: absorbing happens on the idea screen (the card at
  * the end), and finishing the material is the server's job inside
  * `collect_idea`. So no `useMarkMaterialRead`, no reading-progress store,
  * no "Concluir" button — progress is derived from `useCollectedIdeas()`.
  */
+
+/**
+ * Hero width:height. 4/5 shows (almost) the whole 2:3 cover with a thin
+ * crop top and bottom; 2/3 would show it entirely, 1 would be square.
+ * Tune this one number — everything else derives from it.
+ */
+const HERO_ASPECT = 4 / 5;
+/** Hard cap on the hero height as a share of the window height. */
+const HERO_MAX_VH = 0.58;
+/** Share of the hero (from the bottom) covered by the fade into the page. */
+const HERO_FADE = 0.35;
 
 type Translator = (key: string, options?: TranslateOptions) => string;
 
@@ -61,6 +97,10 @@ export function IdeasMaterialScreen({ detail: m }: Props) {
   const { t, locale: appLocale } = useT();
   const locale: IdeaLocale = appLocale === 'pt' ? 'pt' : 'en';
   const meta = useMetaLookup();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const heroHeight = Math.round(
+    Math.min(windowWidth / HERO_ASPECT, windowHeight * HERO_MAX_VH),
+  );
 
   const reads = useReadMaterialIds();
   const collectedQuery = useCollectedIdeas();
@@ -135,7 +175,6 @@ export function IdeasMaterialScreen({ detail: m }: Props) {
     },
     [router, m.slug],
   );
-  const openFromRail = useCallback((idea: LearningIdea) => openIdea(idea.ordinal), [openIdea]);
 
   // CTA: start (nothing absorbed) → continue (in progress) → review (done).
   // Review opens idea 1; start/continue open the lowest uncollected ordinal.
@@ -172,14 +211,43 @@ export function IdeasMaterialScreen({ detail: m }: Props) {
         <Stack.Screen options={{ headerShown: false }} />
 
         <ScrollView contentContainerStyle={styles.scroll}>
-          {/* Hero — same banner as the legacy screen */}
+          {/* Hero — full-bleed portrait cover when there is real art;
+             the legacy generated banner otherwise (see JSDoc). The back
+             button and type pill overlay both the same way. */}
           <View style={styles.heroWrap}>
-            <MaterialCover
-              dimensionId={m.dimension_id}
-              subId={m.subs[0] ?? null}
-              imageUrl={m.hero_image_url}
-              variant="hero"
-            />
+            {m.hero_image_url ? (
+              <View style={[styles.heroImage, { width: windowWidth, height: heroHeight }]}>
+                {/* expo-image (not RN's Image) for the same reason as
+                   MaterialCover: decodes at view size, not 768×1152. */}
+                <Image
+                  source={m.hero_image_url}
+                  style={StyleSheet.absoluteFill}
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
+                  recyclingKey={m.hero_image_url}
+                  transition={150}
+                  priority="high"
+                />
+                {/* Bottom fade: page color at alpha 0 → page color, so the
+                   art dissolves into the screen instead of ending on an
+                   edge. Same hex at both stops — a literal 'transparent'
+                   would interpolate through black on iOS. */}
+                <LinearGradient
+                  colors={[alpha(tokens.bg.deep, 0), tokens.bg.deep]}
+                  start={{ x: 0.5, y: 0 }}
+                  end={{ x: 0.5, y: 1 }}
+                  style={styles.heroFade}
+                  pointerEvents="none"
+                />
+              </View>
+            ) : (
+              <MaterialCover
+                dimensionId={m.dimension_id}
+                subId={m.subs[0] ?? null}
+                imageUrl={m.hero_image_url}
+                variant="hero"
+              />
+            )}
             <Pressable
               onPress={() => router.back()}
               style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.7 }]}
@@ -236,14 +304,9 @@ export function IdeasMaterialScreen({ detail: m }: Props) {
             )}
           </View>
 
-          {/* Card rail — flips reveal the claim, never collect */}
-          <IdeaRail
-            ideas={ideas}
-            material={m}
-            collected={collectedSet}
-            locale={locale}
-            onOpen={openFromRail}
-          />
+          {/* Card rail — flips reveal the claim, never collect nor open
+             (the rows below are what open an idea) */}
+          <IdeaRail ideas={ideas} material={m} collected={collectedSet} locale={locale} />
 
           {/* One row per idea */}
           <View style={styles.listCard}>
@@ -492,6 +555,19 @@ const styles = StyleSheet.create({
   // Hero
   heroWrap: {
     position: 'relative',
+  },
+  // Portrait cover frame — size comes inline from the window. Page color
+  // behind it so the loading frame is invisible, not a grey box.
+  heroImage: {
+    overflow: 'hidden',
+    backgroundColor: tokens.bg.deep,
+  },
+  heroFade: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: `${Math.round(HERO_FADE * 100)}%`,
   },
   backBtn: {
     position: 'absolute',

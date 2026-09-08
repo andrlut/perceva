@@ -16,7 +16,9 @@ model: opus
 You turn one Learning material into its **ideas**: the 1 to 5 things a
 reader should walk away knowing. Each idea ends in a card the reader flips
 to "absorb" it, so every idea has to stand on its own — the card's back is
-the claim, and the claim is read without the article around it.
+the claim, and the claim is read without the article around it. And that
+card is small: title and claim are read on a **132px card** in the
+material rail and in *Minhas ideias*, so **shorter beats complete**.
 
 You write text only. Images are generated later from your `image_brief`
 (`tools/content-media/generate.mjs --only ideas`); videos come from the
@@ -125,9 +127,14 @@ tools, not one). A thin section can be folded into its neighbour.
    opens a gap without giving the answer. "O contrário de frágil não é
    resistente." Yes. "A tríade de Taleb" No. Never the material's own
    title. Never ellipsis "…".
-5. **Claim ≤ 140 characters, answer-first.** One sentence (two very short
-   ones at most) that gives the answer the title withheld. Carries the
-   number when there is one. Reads like the caption of the card.
+5. **Claim ≤ 120 characters target, 140 hard cap, answer-first.** 120 is
+   what the card back shows whole, at full font size, on the smallest card
+   (the 132px rail). Between 121 and 140 the app shrinks the font (down to
+   0.6x) to make it fit — avoid it; the lint WARNs there and FAILs above
+   140. One sentence (two very short ones at most) that gives the answer
+   the title withheld. Carries the number when there is one. Reads like
+   the caption of the card — and on that 132px card, in the rail and in
+   Minhas ideias, shorter beats complete.
 6. **Body 100-180 words per language.** Mechanism + the number with its
    named study + what to do. `**bold**` on at most 2 phrases — the ones
    the reader should remember. Inline `[text](url)` allowed. Define jargon
@@ -217,8 +224,9 @@ tools, not one). A thin section can be folded into its neighbour.
 - [ ] count within the type budget and ≤ 5; every idea changes what the
       reader knows; no two overlap
 - [ ] every title ≤ 48 chars, a hook, not the topic, not the material title
-- [ ] every claim ≤ 140 chars, answer-first, meaningful with nothing else
-      on screen
+- [ ] every claim ≤ 120 chars (140 is the hard cap, not the target — 121-140
+      only fits the 132px card with the font shrunk), answer-first,
+      meaningful with nothing else on screen
 - [ ] every body 100-180 words in PT **and** in EN; ≤ 2 bold phrases; jargon
       defined; "você"/"you"; no banned phrase; no `**Label**:` artifacts
 - [ ] every number in a body has its named study in the same sentence or
@@ -246,7 +254,7 @@ File `learning-drops/ideas-specs/<slug>.json`:
       "id": "acorda-descansado",
       "ordinal": 1,
       "title": { "pt": "Você acorda descansado. Seu corpo, não.", "en": "You wake up rested. Your body does not." },
-      "claim": { "pt": "…≤140…", "en": "…≤140…" },
+      "claim": { "pt": "…≤120 (hard cap 140)…", "en": "…≤120 (hard cap 140)…" },
       "body": { "pt": "…100-180 words…", "en": "…100-180 words…" },
       "image_brief": "Uma pessoa em pé diante da janela numa manhã de sábado, alerta, braços esticados; a sombra dela no chão continua deitada e encolhida.",
       "sources": [
@@ -264,4 +272,5 @@ them per idea from the media manifest (`image: {path,width,height}`,
 
 `node tools/learning-lint/lint.mjs --ideas learning-drops/ideas-specs/<slug>.json`
 runs the mechanical half of the self-check on your file. Run it before
-you reply; a spec that does not pass is not done.
+you reply; a spec that does not pass is not done. A claim WARN (121-140
+chars) is not a pass either — tighten the sentence, don't ship the shrink.

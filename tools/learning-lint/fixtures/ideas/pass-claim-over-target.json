@@ -1,0 +1,28 @@
+{
+  "slug": "grip-strength-longevity",
+  "type": "news",
+  "material_title": {
+    "pt": "A força do aperto de mão prevê quanto você vive",
+    "en": "Grip strength predicts how long you live"
+  },
+  "ideas": [
+    {
+      "id": "aperto-de-mao-prognostico",
+      "ordinal": 1,
+      "title": { "pt": "O aperto de mão que prevê o futuro.", "en": "The handshake that predicts the future." },
+      "claim": {
+        "pt": "Em quase 140 mil adultos de 17 países, cada 5 kg a menos de força de preensão vieram junto com 16% mais chance de morrer por qualquer causa.",
+        "en": "Across nearly 140,000 adults in 17 countries, every 5 kg less grip strength came with 16% higher all-cause mortality risk."
+      },
+      "body": {
+        "pt": "Apertar um dinamômetro por três segundos parece pouco para dizer algo sobre longevidade, mas o estudo PURE, publicado por [Leong et al. (2015)](https://doi.org/10.1016/S0140-6736(14)62000-6), acompanhou 139.691 adultos de 17 países por quatro anos e encontrou uma associação clara: cada **5 kg a menos de força de preensão** vinha com 16% mais risco de morte por qualquer causa, 17% mais de morte cardiovascular e 7% mais de infarto. A força da mão não é a causa; é um termômetro barato da massa muscular e da saúde geral do corpo. Você não precisa de dinamômetro para agir. Treinar força duas vezes por semana, carregando peso de verdade, é o que move esse marcador — e leva junto quase tudo o que ele mede.",
+        "en": "Squeezing a dynamometer for three seconds seems too little to say anything about longevity, but the PURE study, published by [Leong et al. (2015)](https://doi.org/10.1016/S0140-6736(14)62000-6), followed 139,691 adults across 17 countries for four years and found a clear association: every **5 kg less grip strength** came with 16% higher all-cause mortality, 17% higher cardiovascular death and 7% more heart attacks. Hand strength is not the cause; it is a cheap thermometer for muscle mass and overall bodily health. You don't need a dynamometer to act. Strength training twice a week, carrying real weight, is what moves this marker — and takes along almost everything it measures."
+      },
+      "image_brief": "Duas mãos se cumprimentando em primeiro plano, uma delas firme e marcada por veias, e ao fundo, desfocada, uma estrada longa que segue até o horizonte ao amanhecer.",
+      "sources": [
+        { "label": { "pt": "Leong et al., 2015 · The Lancet", "en": "Leong et al., 2015 · The Lancet" }, "url": "https://doi.org/10.1016/S0140-6736(14)62000-6" }
+      ],
+      "cta": null
+    }
+  ]
+}

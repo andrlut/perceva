@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -20,11 +19,14 @@ import { TourModule } from '@/components/tour/TourModule';
 import { emitTourEvent } from '@/lib/tour/eventBus';
 import { buildM6Steps, M6_EVENTS } from '@/lib/tour/m6Steps';
 import { useIsCurrentTourModule, useTourStore } from '@/lib/tour/store';
-import { MyIdeasStrip } from '@/components/ideas/MyIdeasStrip';
 import { CarouselRow } from '@/components/learning/CarouselRow';
 import { ContinueLendoCard } from '@/components/learning/ContinueLendoCard';
 import type { CoverIdeaMeta } from '@/components/learning/CoverCard';
-import { LearningFilterSheet, type PillFilter } from '@/components/learning/LearningFilterSheet';
+import {
+  LearningFilterSheet,
+  type PillFilter,
+  type ReadFilter,
+} from '@/components/learning/LearningFilterSheet';
 import { ReelsEntryCard } from '@/components/reels/ReelsEntryCard';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import {
@@ -40,7 +42,7 @@ import type {
   LearningMaterialType,
   SubId,
 } from '@/lib/db/types';
-import { useT, type TranslateOptions } from '@/lib/i18n';
+import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { pickLocalized, type IdeaLocale } from '@/lib/ideas';
 import {
@@ -49,11 +51,8 @@ import {
 } from '@/lib/readingProgress';
 import { buildReelDeck } from '@/lib/reels';
 import { useReelsProgressReady, useReelsProgressStore } from '@/lib/reelsProgress';
-import { ACTIVE_THEME, tokens } from '@/theme';
+import { tokens } from '@/theme';
 import { DIMENSION_ORDER, SUB_META } from '@/theme/dimensions';
-
-type Translator = (key: string, options?: TranslateOptions) => string;
-type ReadFilter = 'all' | 'unread' | 'read';
 
 const NEW_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -81,7 +80,7 @@ export default function LearningScreen() {
   // Ideas: one row per published idea + the user's collection. Both cheap
   // (a view select and a two-column self-only select) and cached 5 min /
   // 1 min; they feed the cover cards' "N ideias · c/N", the Continue hero
-  // and the "Minhas ideias" strip.
+  // and the count badge on the "Minhas ideias" bulb FAB.
   const ideaCards = useIdeaCards();
   const collectedIdeas = useCollectedIdeas();
   const meta = useMetaLookup();
@@ -172,14 +171,19 @@ export default function LearningScreen() {
     return out;
   }, [ideaCards.data, collectedMap]);
 
-  // Absorbed ideas, newest release first — the strip's count + thumbs.
-  const collectedRows = useMemo(
-    () =>
-      (ideaCards.data ?? []).filter((r) =>
-        collectedMap.get(r.material_id)?.has(r.idea_id),
-      ),
-    [ideaCards.data, collectedMap],
-  );
+  // Absorbed ideas — the bulb FAB's badge. Once the view rows are loaded
+  // the count is clamped to ids still published (the per-material meta
+  // already does that); before that, the raw collection size so the badge
+  // never flashes 0 on a cold start with a cached collection.
+  const collectedCount = useMemo(() => {
+    let n = 0;
+    if (ideaCards.data) {
+      for (const m of ideaMetaByMaterial.values()) n += m.collected;
+    } else {
+      for (const set of collectedMap.values()) n += set.size;
+    }
+    return n;
+  }, [ideaCards.data, ideaMetaByMaterial, collectedMap]);
 
   // Continue hero for ideas: the most recently released material with some
   // but not all ideas absorbed, and the title of its next idea (lowest
@@ -386,18 +390,23 @@ export default function LearningScreen() {
             />
           )}
 
-          {/* Active filter chip — shown when pillFilter is set */}
-          {pillFilter && (
-            <ActiveFilterChip
-              filter={pillFilter}
-              onClear={() => setPillFilter(null)}
-            />
+          {/* Active filter chips — the pill filter and/or a non-default
+             read state, each with its own clear. The controls themselves
+             live in the filter sheet. */}
+          {(pillFilter || readFilter !== 'unread') && (
+            <View style={activeChipStyles.row}>
+              {pillFilter && (
+                <PillFilterChip filter={pillFilter} onClear={() => setPillFilter(null)} />
+              )}
+              {readFilter !== 'unread' && (
+                <ReadFilterChip value={readFilter} onClear={() => setReadFilter('unread')} />
+              )}
+            </View>
           )}
 
-          {/* Read-state filter */}
-          <View style={styles.readFilterWrap}>
-            <ReadFilterRow value={readFilter} onChange={setReadFilter} t={t} />
-          </View>
+          {/* Breathing room the retired segmented row used to provide
+             between the entry cards and the Continue hero / first row. */}
+          <View style={styles.headerGap} />
 
           {/* Continue hero. Ideas first: a material with some but not all
              ideas absorbed shows "Próxima: <ideia>" and absorbed/total.
@@ -422,16 +431,6 @@ export default function LearningScreen() {
             />
           ) : null}
 
-          {/* "Minhas ideias" — entry to the collection, once the user has
-             absorbed at least one idea. */}
-          {collectedRows.length >= 1 && (
-            <MyIdeasStrip
-              count={collectedRows.length}
-              recent={collectedRows}
-              onPress={() => router.push('/collection')}
-            />
-          )}
-
           {/* Loading */}
           {feed.isLoading && (
             <View style={styles.loading}>
@@ -452,13 +451,44 @@ export default function LearningScreen() {
         />
       </ScreenBackground>
 
-      {/* Floating filter button — opens the filter sheet, matching the
-         Tasks/Rewards FAB vocabulary. A gold dot marks an active filter.
-         Only shown once the feed has content to filter. */}
+      {/* Floating stack, matching the Tasks/Rewards FAB vocabulary. Top:
+         the "Minhas ideias" bulb (always shown — the collection has its own
+         empty state) with a gold count badge once something is absorbed.
+         Bottom: the filter button; a gold dot marks any non-default filter
+         (pill OR read state). Only shown once the feed has content. */}
       {!feed.isLoading && all.length > 0 && (
         <FabStack
           bottomOffset={bottomClearance}
           actions={[
+            {
+              key: 'ideas',
+              icon: 'bulb-outline',
+              tone: 'violet',
+              size: 'lg',
+              accessibilityLabel:
+                collectedCount > 0
+                  ? `${t('learning.ideas.myIdeas')} · ${t('learning.ideas.myIdeasCount', {
+                      count: collectedCount,
+                    })}`
+                  : t('learning.ideas.myIdeas'),
+              onPress: () => {
+                Haptics.selectionAsync().catch(() => {});
+                router.push('/collection');
+              },
+              wrap:
+                collectedCount > 0
+                  ? (node) => (
+                      <View>
+                        {node}
+                        <View style={styles.fabBadge} pointerEvents="none">
+                          <Text style={styles.fabBadgeText}>
+                            {collectedCount > 99 ? '99+' : collectedCount}
+                          </Text>
+                        </View>
+                      </View>
+                    )
+                  : undefined,
+            },
             {
               key: 'filter',
               icon: 'options-outline',
@@ -469,14 +499,15 @@ export default function LearningScreen() {
                 Haptics.selectionAsync().catch(() => {});
                 setFilterOpen(true);
               },
-              wrap: pillFilter
-                ? (node) => (
-                    <View>
-                      {node}
-                      <View style={styles.fabDot} pointerEvents="none" />
-                    </View>
-                  )
-                : undefined,
+              wrap:
+                pillFilter || readFilter !== 'unread'
+                  ? (node) => (
+                      <View>
+                        {node}
+                        <View style={styles.fabDot} pointerEvents="none" />
+                      </View>
+                    )
+                  : undefined,
             },
           ]}
         />
@@ -489,6 +520,8 @@ export default function LearningScreen() {
         readSet={readSet}
         filter={pillFilter}
         onFilterChange={setPillFilter}
+        readFilter={readFilter}
+        onReadFilterChange={setReadFilter}
       />
 
       {/* M6 step 2 lives here (Learn explainer). Step 1 is on Home (Learn
@@ -506,17 +539,54 @@ export default function LearningScreen() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Active-filter chip — surfaces a non-null PillFilter at the top of the feed
-// with the option to clear it. Uses the dim/sub color where applicable so
-// the chip reads as "filtered by Craft" visually, not just textually.
+// Active-filter chips — surface the applied filters at the top of the feed,
+// each with its own clear. The pill chip uses the dim/sub color where
+// applicable so it reads as "filtered by Craft" visually, not just
+// textually; the read-state chip is violet, like the sheet's state pills.
 // ─────────────────────────────────────────────────────────────────────────────
 
-interface ActiveFilterChipProps {
+interface FilterChipProps {
+  label: string;
+  iconName: keyof typeof Ionicons.glyphMap;
+  accent: string;
+  onClear: () => void;
+}
+
+/** Presentational chip: tinted pill + label + round clear button. */
+function FilterChip({ label, iconName, accent, onClear }: FilterChipProps) {
+  return (
+    <View
+      style={[
+        activeChipStyles.chip,
+        { backgroundColor: accent + '22', borderColor: accent },
+      ]}
+    >
+      <Ionicons name={iconName} size={13} color={accent} />
+      <Text style={[activeChipStyles.label, { color: accent }]}>{label}</Text>
+      <Pressable
+        hitSlop={6}
+        onPress={() => {
+          Haptics.selectionAsync().catch(() => {});
+          onClear();
+        }}
+        style={({ pressed }) => [
+          activeChipStyles.clearBtn,
+          { backgroundColor: accent + '33' },
+          pressed && { opacity: 0.7 },
+        ]}
+      >
+        <Ionicons name="close" size={12} color={accent} />
+      </Pressable>
+    </View>
+  );
+}
+
+interface PillFilterChipProps {
   filter: NonNullable<PillFilter>;
   onClear: () => void;
 }
 
-function ActiveFilterChip({ filter, onClear }: ActiveFilterChipProps) {
+function PillFilterChip({ filter, onClear }: PillFilterChipProps) {
   const { t } = useT();
   const meta = useMetaLookup();
 
@@ -541,38 +611,38 @@ function ActiveFilterChip({ filter, onClear }: ActiveFilterChipProps) {
   }
 
   return (
-    <View style={activeChipStyles.wrap}>
-      <View
-        style={[
-          activeChipStyles.chip,
-          { backgroundColor: accent + '22', borderColor: accent },
-        ]}
-      >
-        <Ionicons name={iconName} size={13} color={accent} />
-        <Text style={[activeChipStyles.label, { color: accent }]}>
-          {t('learning.filteringBy', { what: label })}
-        </Text>
-        <Pressable
-          hitSlop={6}
-          onPress={() => {
-            Haptics.selectionAsync().catch(() => {});
-            onClear();
-          }}
-          style={({ pressed }) => [
-            activeChipStyles.clearBtn,
-            { backgroundColor: accent + '33' },
-            pressed && { opacity: 0.7 },
-          ]}
-        >
-          <Ionicons name="close" size={12} color={accent} />
-        </Pressable>
-      </View>
-    </View>
+    <FilterChip
+      label={t('learning.filteringBy', { what: label })}
+      iconName={iconName}
+      accent={accent}
+      onClear={onClear}
+    />
+  );
+}
+
+interface ReadFilterChipProps {
+  /** Only the non-default states get a chip; `unread` is the baseline. */
+  value: Exclude<ReadFilter, 'unread'>;
+  onClear: () => void;
+}
+
+function ReadFilterChip({ value, onClear }: ReadFilterChipProps) {
+  const { t } = useT();
+  return (
+    <FilterChip
+      label={t(`learning.readFilter.${value}`)}
+      iconName={value === 'read' ? 'checkmark-done-outline' : 'layers-outline'}
+      accent={tokens.brand.violet2}
+      onClear={onClear}
+    />
   );
 }
 
 const activeChipStyles = StyleSheet.create({
-  wrap: {
+  row: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
     paddingHorizontal: tokens.space[4],
     paddingTop: tokens.space[3],
   },
@@ -603,119 +673,12 @@ const activeChipStyles = StyleSheet.create({
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Read-state filter — segmented pill control.
-// ─────────────────────────────────────────────────────────────────────────────
-
-interface ReadFilterRowProps {
-  value: ReadFilter;
-  onChange: (v: ReadFilter) => void;
-  t: Translator;
-}
-
-function ReadFilterRow({ value, onChange, t }: ReadFilterRowProps) {
-  const opts: { key: ReadFilter; label: string }[] = [
-    { key: 'unread', label: t('learning.readFilter.unread') },
-    { key: 'read', label: t('learning.readFilter.read') },
-    { key: 'all', label: t('learning.readFilter.all') },
-  ];
-  return (
-    <View style={readFilterStyles.row}>
-      {opts.map((o) => {
-        const active = value === o.key;
-        return (
-          <Pressable
-            key={o.key}
-            onPress={() => {
-              Haptics.selectionAsync().catch(() => {});
-              onChange(o.key);
-            }}
-            style={({ pressed }) => [
-              readFilterStyles.seg,
-              pressed && { opacity: 0.8 },
-            ]}
-          >
-            {/* Active pill: gradient fill + gold rim, clipped to its
-               own rounded box. Sits inside the seg without overflow on
-               the seg itself, so inactive Text is never clipped. */}
-            {active && (
-              <View style={readFilterStyles.activeBg} pointerEvents="none">
-                <LinearGradient
-                  colors={tokens.gradient.coinBtn as [string, string, string]}
-                  locations={[0, 0.6, 1]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 0, y: 1 }}
-                  style={StyleSheet.absoluteFillObject}
-                />
-              </View>
-            )}
-            <Text
-              style={[
-                readFilterStyles.segText,
-                active && readFilterStyles.segTextActive,
-              ]}
-            >
-              {o.label}
-            </Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
-
-const readFilterStyles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    // Glass token — same navy family on dark, porcelain glass on light.
-    backgroundColor: tokens.bg.glass,
-    borderRadius: 999,
-    padding: 3,
-    borderWidth: 1,
-    // Pale-gold rim — mirrors the Vault chip vocabulary.
-    borderColor:
-      ACTIVE_THEME === 'light'
-        ? 'rgba(166, 111, 14, 0.30)'
-        : 'rgba(255, 200, 61, 0.22)',
-  },
-  seg: {
-    flex: 1,
-    paddingVertical: 7,
-    alignItems: 'center',
-    justifyContent: 'center',
-    // No overflow:hidden here — that was clipping inactive Text in some
-    // Android RN builds. The active pill's gradient is clipped via its
-    // own wrapper (activeBg) instead.
-  },
-  /** Absolutely-positioned gradient pill underlay for the active segment. */
-  activeBg: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: tokens.semantic.coinRim,
-    overflow: 'hidden',
-  },
-  segText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    // Bump from text.mid → text.base for higher contrast over the dark
-    // glass background.
-    color: tokens.text.base,
-  },
-  segTextActive: {
-    color: '#3D2A00',
-    fontFamily: 'Manrope_800ExtraBold',
-  },
-});
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Screen styles
 // ─────────────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: tokens.bg.deep },
-  /** Gold dot on the filter FAB when a pill filter is active. */
+  /** Gold dot on the filter FAB when any non-default filter is active. */
   fabDot: {
     position: 'absolute',
     top: 2,
@@ -726,6 +689,29 @@ const styles = StyleSheet.create({
     backgroundColor: tokens.semantic.coin,
     borderWidth: 2,
     borderColor: tokens.bg.deep,
+  },
+  /** Gold count badge on the bulb FAB — absorbed ideas. Same rim as the
+   *  dot so the two read as one family. */
+  fabBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 5,
+    borderRadius: 10,
+    backgroundColor: tokens.semantic.coin,
+    borderWidth: 2,
+    borderColor: tokens.bg.deep,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fabBadgeText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 10,
+    lineHeight: 12,
+    // Dark ink on gold — the same pairing the old active segment used.
+    color: '#3D2A00',
   },
   header: {
     paddingHorizontal: tokens.space[4],
@@ -752,10 +738,8 @@ const styles = StyleSheet.create({
     color: tokens.text.mid,
     marginTop: 2,
   },
-  readFilterWrap: {
-    paddingHorizontal: tokens.space[4],
-    paddingTop: tokens.space[3],
-    paddingBottom: tokens.space[4],
+  headerGap: {
+    height: tokens.space[4],
   },
   loading: {
     paddingVertical: tokens.space[7],

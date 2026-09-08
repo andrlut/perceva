@@ -31,10 +31,13 @@ interface Props {
    */
   subtitle?: string;
   /**
-   * Optional replacement for the "N min restantes" text next to the percent.
-   * Materials with ideas pass "c de N absorvidas": minutes derived from the
-   * reading time would be wrong for a percent that counts absorbed ideas.
-   * Legacy articles leave it undefined and keep the minutes.
+   * Optional replacement for the WHOLE meta row. When given, it renders
+   * alone — no "N% lido", no "N min restantes"; `percent` then only drives
+   * the progress bar. Materials with ideas pass "c de N absorvidas": a
+   * percent derived from absorbed ideas is redundant next to the count, and
+   * minutes derived from the reading time would be plain wrong (the
+   * maintainer read "50% lido · 2 de 4 absorvidas" as saying the same thing
+   * twice). Legacy articles leave it undefined and render exactly as before.
    */
   metaText?: string;
   onPress: () => void;
@@ -85,13 +88,19 @@ export function ContinueLendoCard({ card, percent, subtitle, metaText, onPress }
         ) : null}
 
         <View style={styles.metaRow}>
-          <Text style={styles.percentText}>
-            {t('learning.continueProgress', { percent })}
-          </Text>
-          <Text style={styles.metaSep}>·</Text>
-          <Text style={styles.metaText}>
-            {metaText ?? t('learning.continueMinLeft', { count: minLeft })}
-          </Text>
+          {metaText ? (
+            <Text style={styles.metaText}>{metaText}</Text>
+          ) : (
+            <>
+              <Text style={styles.percentText}>
+                {t('learning.continueProgress', { percent })}
+              </Text>
+              <Text style={styles.metaSep}>·</Text>
+              <Text style={styles.metaText}>
+                {t('learning.continueMinLeft', { count: minLeft })}
+              </Text>
+            </>
+          )}
         </View>
 
         {/* Progress bar — gold 3-stop gradient, mirrors the Reward

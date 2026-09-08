@@ -8,8 +8,9 @@ import { tokens } from '@/theme';
 /**
  * Two-column grid of absorbed idea cards — the body of "Minhas ideias".
  * Every card here is collected (gold rim), the flip is reveal-only (no
- * `onFirstFlip`, so no RPC ever fires from this screen) and the back's
- * "Abrir ideia" pill hands the card to `onOpen`.
+ * `onFirstFlip`, so no RPC ever fires from this screen) and the round arrow
+ * in the top-right corner of the back (`openAffordance="corner"`) hands the
+ * card to `onOpen` — the only surface where a card opens its idea itself.
  *
  * The parent owns filtering and the empty state; this component only lays
  * cards out at `collectionCardWidth(screenWidth)`.
@@ -26,7 +27,7 @@ export function collectionCardWidth(screenWidth: number): number {
 interface Props {
   cards: IdeaCardData[];
   locale: IdeaLocale;
-  /** Fired by the back face's "Abrir ideia" pill. */
+  /** Fired by the corner arrow on the back face. */
   onOpen: (card: IdeaCardData) => void;
   ListEmptyComponent?: ReactElement | null;
   /** Extra bottom padding (safe-area / gesture-bar clearance). */
@@ -46,7 +47,16 @@ interface CellProps {
 /** One cell — binds `onOpen` to its card so `IdeaCard`'s memo keeps paying. */
 const Cell = memo(function Cell({ data, width, locale, onOpen }: CellProps) {
   const open = useCallback(() => onOpen(data), [onOpen, data]);
-  return <IdeaCard data={data} width={width} locale={locale} collected onOpen={open} />;
+  return (
+    <IdeaCard
+      data={data}
+      width={width}
+      locale={locale}
+      collected
+      onOpen={open}
+      openAffordance="corner"
+    />
+  );
 });
 
 export function CollectionGrid({

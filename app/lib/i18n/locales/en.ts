@@ -664,6 +664,7 @@ const en = {
       open: 'Filters',
       title: 'Filter library',
       subtitle: '{{read}}/{{total}} done',
+      state: 'Status',
       clear: 'Clear filter',
     },
     detail: {
