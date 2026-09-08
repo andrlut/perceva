@@ -23,6 +23,20 @@ import { TYPE_META } from './TypeSash';
 export const COVER_WIDTH = 156;
 export const COVER_HEIGHT = Math.round(COVER_WIDTH * 1.5); // 2:3 book aspect
 
+/**
+ * Per-material idea progress, computed by the Learn tab from
+ * `useIdeaCards()` + `useCollectedIdeas()` and handed down — the card itself
+ * stays hook-free for this so the memo keeps paying off.
+ */
+export interface CoverIdeaMeta {
+  /** Ideas the user has absorbed for this material. */
+  collected: number;
+  /** Published ideas of the material (rows of `learning_idea_public`). */
+  total: number;
+  /** Any idea carries a Notebook video, in either language. */
+  hasVideo: boolean;
+}
+
 interface Props {
   card: LearningFeedCard;
   read: boolean;
@@ -35,6 +49,12 @@ interface Props {
    * handler also gets wired to route free users to `/premium?source=learn`.
    */
   isPremiumContent?: boolean;
+  /**
+   * Idea progress for materials with `idea_count > 0`. Drives the gold bar
+   * (collected/total instead of the scroll watermark), the "N ideias · c/N"
+   * meta and the video icon. Legacy materials ignore it and render as before.
+   */
+  ideaMeta?: CoverIdeaMeta;
 }
 
 export const CoverCard = memo(function CoverCard({
@@ -42,6 +62,7 @@ export const CoverCard = memo(function CoverCard({
   read,
   onPress,
   isPremiumContent = false,
+  ideaMeta,
 }: Props) {
   const { t, locale } = useT();
 
@@ -58,15 +79,34 @@ export const CoverCard = memo(function CoverCard({
   // otherwise. Cards transition into the "in-progress" treatment between
   // 1% and 99% — the read-state badge takes over at 100%.
   const scrollPercent = useMaterialProgress(card.slug);
-  const inProgress = !read && scrollPercent > 0 && scrollPercent < 100;
+
+  // Materials with ideas measure progress in absorbed ideas, never in scroll
+  // (the new screen does not touch the readingProgress store). The feed's
+  // `idea_count` is the switch, so the card never flashes the legacy
+  // treatment while the idea queries are still in flight — `ideaMeta` only
+  // refines collected/total/video once it arrives.
+  const hasIdeas = card.idea_count > 0;
+  const ideaTotal = hasIdeas ? Math.max(1, ideaMeta?.total ?? card.idea_count) : 0;
+  const ideaCollected = hasIdeas ? Math.min(ideaMeta?.collected ?? 0, ideaTotal) : 0;
+  const barPercent = hasIdeas ? (ideaCollected / ideaTotal) * 100 : scrollPercent;
+  const inProgress = hasIdeas
+    ? !read && ideaCollected > 0 && ideaCollected < ideaTotal
+    : !read && scrollPercent > 0 && scrollPercent < 100;
 
   // Extra consumption formats beyond text (any language counts — the
-  // detail screen handles the cross-language fallback).
+  // detail screen handles the cross-language fallback). With ideas the video
+  // lives per idea (the material-level one migrated into idea 1) and the
+  // infographic/deck is gone by design.
   const hasAudio = card.media.some((m) => m.kind === 'audio');
-  const hasVideo = card.media.some((m) => m.kind === 'video');
-  const hasVisual = card.media.some(
-    (m) => m.kind === 'infographic' || m.kind === 'deck',
-  );
+  const hasVideo = hasIdeas
+    ? (ideaMeta?.hasVideo ?? false)
+    : card.media.some((m) => m.kind === 'video');
+  const hasVisual =
+    !hasIdeas &&
+    card.media.some((m) => m.kind === 'infographic' || m.kind === 'deck');
+  const ideaCountLabel = hasIdeas
+    ? `${t('learning.ideas.countShort', { count: ideaTotal })} · ${ideaCollected}/${ideaTotal}`
+    : null;
 
   return (
     <Pressable
@@ -115,7 +155,7 @@ export const CoverCard = memo(function CoverCard({
         {inProgress && (
           <View style={styles.progressTrack}>
             <View
-              style={[styles.progressFillWrap, { width: `${scrollPercent}%` }]}
+              style={[styles.progressFillWrap, { width: `${barPercent}%` }]}
             >
               <LinearGradient
                 colors={tokens.gradient.rewardBarFill}
@@ -153,9 +193,24 @@ export const CoverCard = memo(function CoverCard({
           </View>
         )}
         <Text style={styles.metaText}>·</Text>
-        <Text style={styles.metaText}>
-          {t('learning.min', { count: card.reading_minutes })}
-        </Text>
+        {ideaCountLabel ? (
+          <View style={styles.ideaPill}>
+            <Ionicons
+              name="albums-outline"
+              size={10}
+              color={ideaCollected > 0 ? tokens.semantic.coinLight : tokens.text.dim}
+            />
+            <Text
+              style={[styles.metaText, ideaCollected > 0 && styles.ideaPillTextLit]}
+            >
+              {ideaCountLabel}
+            </Text>
+          </View>
+        ) : (
+          <Text style={styles.metaText}>
+            {t('learning.min', { count: card.reading_minutes })}
+          </Text>
+        )}
         {hasAudio && (
           <Ionicons
             name="headset-outline"
@@ -302,5 +357,19 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 10,
     color: tokens.text.dim,
+  },
+  /** "3 ideias · 1/3" — takes the reading-time slot on materials with ideas. */
+  ideaPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: tokens.radius.pill,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  /** Pale gold once at least one idea is absorbed. */
+  ideaPillTextLit: {
+    color: tokens.semantic.coinLight,
   },
 });

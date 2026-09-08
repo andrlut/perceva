@@ -24,10 +24,23 @@ interface Props {
   card: LearningFeedCard;
   /** 0..100 — last scroll percentage we have for this material. */
   percent: number;
+  /**
+   * Optional muted line under the title. Materials with ideas use it for
+   * "Próxima: <título da ideia>" (the lowest ordinal not yet absorbed);
+   * legacy articles leave it undefined and render exactly as before.
+   */
+  subtitle?: string;
+  /**
+   * Optional replacement for the "N min restantes" text next to the percent.
+   * Materials with ideas pass "c de N absorvidas": minutes derived from the
+   * reading time would be wrong for a percent that counts absorbed ideas.
+   * Legacy articles leave it undefined and keep the minutes.
+   */
+  metaText?: string;
   onPress: () => void;
 }
 
-export function ContinueLendoCard({ card, percent, onPress }: Props) {
+export function ContinueLendoCard({ card, percent, subtitle, metaText, onPress }: Props) {
   const { t, locale } = useT();
   const meta = useMetaLookup();
   const title = locale === 'pt' ? card.title_pt : card.title_en;
@@ -65,13 +78,19 @@ export function ContinueLendoCard({ card, percent, onPress }: Props) {
           {title}
         </Text>
 
+        {subtitle ? (
+          <Text style={styles.subtitle} numberOfLines={1}>
+            {subtitle}
+          </Text>
+        ) : null}
+
         <View style={styles.metaRow}>
           <Text style={styles.percentText}>
             {t('learning.continueProgress', { percent })}
           </Text>
           <Text style={styles.metaSep}>·</Text>
           <Text style={styles.metaText}>
-            {t('learning.continueMinLeft', { count: minLeft })}
+            {metaText ?? t('learning.continueMinLeft', { count: minLeft })}
           </Text>
         </View>
 
@@ -167,6 +186,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 18,
     color: tokens.text.hi,
+  },
+  subtitle: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 12,
+    lineHeight: 16,
+    color: tokens.text.mid,
+    marginTop: -2,
   },
   metaRow: {
     flexDirection: 'row',

@@ -213,6 +213,15 @@ export default function RootLayout() {
                 animation: 'fade',
               }}
             />
+            <Stack.Screen
+              name="idea/[slug]"
+              options={{
+                headerShown: false,
+                presentation: 'fullScreenModal',
+                animation: 'slide_from_bottom',
+              }}
+            />
+            <Stack.Screen name="collection" options={{ headerShown: false }} />
             <Stack.Screen name="skills" options={{ headerShown: false }} />
             <Stack.Screen name="tasks" options={{ headerShown: false }} />
             <Stack.Screen name="all-practices" options={{ headerShown: false }} />
