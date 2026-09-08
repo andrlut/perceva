@@ -58,6 +58,7 @@ learning-drops/inbox/
 learning-drops/published/
 # Rendered teaser cards (re-derivable from reels-specs/, which IS versioned)
 learning-drops/reels-out/
+learning-drops/notebook-runs/
 
 # Coverage / testing
 coverage/

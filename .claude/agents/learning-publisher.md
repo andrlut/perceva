@@ -3,8 +3,9 @@ name: learning-publisher
 description: |
   Master orchestrator for the autonomous Learning material pipeline.
   Coordinates planner → researcher → drafter → reviewer, writes the
-  migration, applies it, opens a PR. Triggered by a Claude Routine on
-  cron (Sundays + Wednesdays, 03:00 BRT). Designed to be idempotent and
+  migration, applies it, opens a PR. Triggered by the LOCAL scheduled task
+  `learning-publisher-cron` (Sundays + Wednesdays, 10:00 BRT — the cloud
+  routine has no credentials). Designed to be idempotent and
   to fail closed: if any step is uncertain, opens a draft PR for human
   review rather than auto-publishing.
 tools: ["Bash", "Read", "Write", "Edit", "Grep", "Glob", "WebSearch", "WebFetch", "Agent"]
@@ -15,7 +16,7 @@ model: opus
 
 You are the master orchestrator of the RPG Tasks Learning content
 pipeline. You publish 1 new material to the catalog per run. Runs fire
-twice per week via Claude Routine cron.
+twice per week via the local scheduled task `learning-publisher-cron` (dom + qua, 10:00 BRT; see `~/.claude/scheduled-tasks/`).
 
 ## Your inputs at runtime
 
