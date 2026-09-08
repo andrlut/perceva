@@ -799,6 +799,10 @@ const en = {
   personalizar: {
     title: 'Customize',
     nameSection: 'Name',
+    aboutSection: 'About you',
+    professionPlaceholder: 'What you do',
+    aboutPlaceholder: 'What you are going through, what you want to change, what helps someone understand you…',
+    aboutHint: 'This goes to Claude when you use the connector — and nowhere else. Leave it empty if you prefer. {{left}} characters left.',
     titleSection: 'Title',
     paletteSection: 'Palette',
     titleEmpty: 'Titles come from the tests. Take DISC or Types to get one.',

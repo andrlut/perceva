@@ -34,6 +34,44 @@ export function useUpdateDisplayName() {
   });
 }
 
+/** Limites espelhados dos checks da migration 20260908000001. */
+export const PROFESSION_MAX = 80;
+export const ABOUT_MAX = 600;
+
+/**
+ * Grava profissão e a nota de contexto.
+ *
+ * Colunas próprias, então update direto — não precisa do read-modify-write
+ * que o jsonb exige. Vazio vira NULL em vez de string vazia, para "não
+ * preenchi" e "apaguei" serem a mesma coisa no banco.
+ */
+export function useUpdateAbout() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (v: { profession: string; about: string }) => {
+      const profession = v.profession.trim().slice(0, PROFESSION_MAX);
+      const about = v.about.trim().slice(0, ABOUT_MAX);
+
+      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      if (userErr) throw userErr;
+      const userId = userData.user?.id;
+      if (!userId) throw new Error('Not authenticated');
+
+      const { error } = await supabase
+        .from('profile')
+        .update({
+          profession: profession || null,
+          about: about || null,
+        })
+        .eq('id', userId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: characterKeys.me() });
+    },
+  });
+}
+
 /**
  * Escreve em `profile.identity` sem apagar o que não foi passado.
  *
