@@ -6,6 +6,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -378,10 +379,22 @@ function Footer({
   return (
     <View style={styles.footer}>
       <Text style={styles.footerCancel}>{t('premium.footer.cancel')}</Text>
+      {/* Functional legal links — App Review guideline 3.1.2 requires
+          working ToS/privacy links on subscription paywalls. */}
       <View style={styles.footerLinks}>
-        <Text style={styles.footerLink}>{t('premium.footer.terms')}</Text>
+        <Pressable
+          onPress={() => Linking.openURL('https://perceva.app/terms')}
+          hitSlop={8}
+        >
+          <Text style={styles.footerLink}>{t('premium.footer.terms')}</Text>
+        </Pressable>
         <Text style={styles.footerSep}>{t('premium.footer.separator')}</Text>
-        <Text style={styles.footerLink}>{t('premium.footer.privacy')}</Text>
+        <Pressable
+          onPress={() => Linking.openURL('https://perceva.app/privacy')}
+          hitSlop={8}
+        >
+          <Text style={styles.footerLink}>{t('premium.footer.privacy')}</Text>
+        </Pressable>
       </View>
       {/* "Restaurar compras" only where this binary can actually sell. */}
       {CAN_SELL && (
