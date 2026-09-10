@@ -20,19 +20,29 @@
  * guard that fails the migration when a slug does not exist (a 0-row update
  * would otherwise ship nothing, silently).
  *
+ * With `--with-cover` (a fresh "ideias primeiro" drop, where the cover and the
+ * ideas ship in the same migration) each slug whose manifest carries an asset
+ * with role 'cover' ALSO gets, before its ideas update,
+ *   update … set hero_image_url = '<manifest hero_image_url>' where slug = …
+ * using the URL generate.mjs already computed for the manifest, verbatim. A
+ * slug without a cover asset warns on stderr and is skipped (ideas still
+ * emit) — a backfill of a legacy material keeps the cover it has.
+ *
  * It only writes the .sql file. Applying it is `/db-migration` (or
  * `supabase db push --linked`) — AFTER the images are in the bucket.
  *
  * Usage:
  *   node emit-migration.mjs --slug <slug> [--slug <slug2> …]
  *                           [--out <path>] [--stdout] [--videos <json>]
+ *                           [--with-cover]
  *
  *   default path: supabase/migrations/<YYYYMMDD>NNNNNN_learning_ideas_<slug|batch>.sql
  *   (counter-style, next free NNNNNN for today; always printed)
  *
  * Fails (exit 1) on: missing spec, ideas count outside 1..5, ordinals not
  * exactly 1..n, duplicate or malformed ids, missing bilingual fields, a
- * source without an http(s) url, a bad videos entry, or any `$ideas$` / `$$`
+ * source without an http(s) url, a bad videos entry, a cover asset whose
+ * hero_image_url is not http(s) (with --with-cover), or any `$ideas$` / `$$`
  * / `\u0000` in the payload (the first two would break the dollar quoting,
  * the last is rejected by jsonb).
  */
@@ -60,13 +70,14 @@ const DOLLAR_TAG = '$ideas$';
 
 // ── arg parsing ────────────────────────────────────────────────────────────
 function parseArgs(argv) {
-  const args = { slugs: [], out: null, stdout: false, videos: null };
+  const args = { slugs: [], out: null, stdout: false, videos: null, withCover: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--slug') args.slugs.push(argv[++i]);
     else if (a === '--out') args.out = argv[++i];
     else if (a === '--stdout') args.stdout = true;
     else if (a === '--videos') args.videos = argv[++i];
+    else if (a === '--with-cover') args.withCover = true;
     else if (!a.startsWith('--')) args.slugs.push(a);
     else die(`Unknown option ${a}\n  ${USAGE}`);
   }
@@ -74,7 +85,7 @@ function parseArgs(argv) {
 }
 
 const USAGE =
-  'Usage: node emit-migration.mjs --slug <slug> [--slug <slug2> …] [--out <path>] [--stdout] [--videos <json>]';
+  'Usage: node emit-migration.mjs --slug <slug> [--slug <slug2> …] [--out <path>] [--stdout] [--videos <json>] [--with-cover]';
 
 // Everything diagnostic goes to stderr so `--stdout` yields pure SQL.
 function die(msg) {
@@ -258,6 +269,26 @@ function buildIdeas(slug, spec, manifest, videosForSlug) {
 }
 
 /**
+ * The cover of a fresh drop, from the manifest's `role: 'cover'` asset — the
+ * `hero_image_url` generate.mjs precomputed is reused verbatim, never rebuilt
+ * here (the bucket base URL lives in one place). Returns null, with a warning,
+ * when the manifest has no cover: the ideas still emit and the material keeps
+ * whatever `hero_image_url` it already has.
+ */
+function coverFromManifest(slug, manifest) {
+  const asset = (manifest?.assets ?? []).find((a) => a?.role === 'cover');
+  if (!asset) {
+    warn(`${slug}: --with-cover but the manifest has no asset with role "cover" — hero_image_url not emitted`);
+    return null;
+  }
+  if (!isHttpUrl(asset.hero_image_url)) {
+    die(`${slug}: cover asset ${asset.localPath ?? '?'} has no http(s) hero_image_url in the manifest`);
+  }
+  if (!asset.bucketPath) die(`${slug}: cover asset lacks bucketPath (nothing to upload)`);
+  return { heroImageUrl: asset.hero_image_url, bucketPath: asset.bucketPath };
+}
+
+/**
  * Compact JSON, then the only three things dollar quoting cannot carry.
  * Checking the serialized payload covers every string (keys included).
  */
@@ -289,6 +320,7 @@ function buildSql({ fileName, entries, videoCount }) {
   const today = localDate().iso;
   const slugs = entries.map((e) => e.slug);
   const allImages = entries.flatMap((e) => e.images);
+  const covers = entries.filter((e) => e.cover);
   const missing = entries.flatMap((e) =>
     e.ideas.filter((i) => i.image == null).map((i) => `${e.slug}/${i.id}`),
   );
@@ -296,11 +328,15 @@ function buildSql({ fileName, entries, videoCount }) {
   const lines = [];
   lines.push(`-- migration: ${fileName}`);
   lines.push(
-    `-- purpose: publica as ideias (Recanto em ideias) de ${entries.length} material(is) do Learning:`,
+    `-- purpose: publica as ideias (Recanto em ideias)${covers.length ? ' e a capa' : ''} de ${entries.length} material(is) do Learning:`,
   );
-  for (const e of entries) lines.push(`--          ${e.slug} · ${e.ideas.length} ideia(s)`);
+  for (const e of entries) {
+    lines.push(`--          ${e.slug} · ${e.ideas.length} ideia(s)${e.cover ? ' · capa' : ''}`);
+  }
   lines.push('--');
-  lines.push('-- affected tables: learning_material (ideas), learning_idea_collect (coletas órfãs)');
+  lines.push(
+    `-- affected tables: learning_material (ideas${covers.length ? ', hero_image_url' : ''}), learning_idea_collect (coletas órfãs)`,
+  );
   lines.push('-- new rpcs:        none');
   lines.push('-- breaking?        no — só reescreve `ideas` dos slugs listados; material sem');
   lines.push('--                  `ideas` continua na tela legada, byte a byte');
@@ -317,6 +353,10 @@ function buildSql({ fileName, entries, videoCount }) {
     for (const p of allImages) lines.push(`--     ${p}  (960x1200, gemini-api)`);
   } else {
     lines.push('--   imagens: nenhuma no manifest (todas as ideias com image = null)');
+  }
+  if (covers.length) {
+    lines.push('--   capas no bucket learning-media (subir ANTES de aplicar; vira hero_image_url):');
+    for (const e of covers) lines.push(`--     ${e.cover.bucketPath}  (768x1152, gemini-api)`);
   }
   if (missing.length && allImages.length) lines.push(`--   sem imagem: ${missing.join(', ')}`);
   lines.push(`--   vídeos por ideia: ${videoCount === 0 ? 'nenhum (video = {pt: null, en: null})' : `${videoCount} lado(s) preenchido(s)`}`);
@@ -338,6 +378,14 @@ function buildSql({ fileName, entries, videoCount }) {
   lines.push('$guard$;');
   lines.push('');
   for (const e of entries) {
+    if (e.cover) {
+      lines.push(`-- ${e.slug}: capa (hero_image_url do manifest, --with-cover)`);
+      lines.push('update public.learning_material');
+      lines.push(`set hero_image_url = ${sqlLiteral(e.cover.heroImageUrl)},`);
+      lines.push('    updated_at = now()');
+      lines.push(`where slug = ${sqlLiteral(e.slug)};`);
+      lines.push('');
+    }
     lines.push(`-- ${e.slug} · ${e.ideas.length} ideia(s)`);
     lines.push('update public.learning_material');
     lines.push(`set ideas = ${DOLLAR_TAG}${e.json}${DOLLAR_TAG}::jsonb,`);
@@ -402,7 +450,8 @@ function main() {
 
     const { ideas, images } = buildIdeas(slug, spec, manifest, videos?.[slug]);
     videoCount += ideas.reduce((n, i) => n + (i.video.pt ? 1 : 0) + (i.video.en ? 1 : 0), 0);
-    entries.push({ slug, ideas, images, json: serializeIdeas(slug, ideas) });
+    const cover = args.withCover ? coverFromManifest(slug, manifest) : null;
+    entries.push({ slug, ideas, images, cover, json: serializeIdeas(slug, ideas) });
   }
   if (videos) {
     for (const s of Object.keys(videos)) {
@@ -414,7 +463,11 @@ function main() {
   const outPath = args.out ? resolve(args.out) : join(MIGRATIONS_DIR, nextMigrationName(suffix));
   const sql = buildSql({ fileName: outPath.split(/[\\/]/).pop(), entries, videoCount });
 
-  info(`\n▶ emit-migration · ${entries.map((e) => `${e.slug} (${e.ideas.length})`).join(', ')}`);
+  info(
+    `\n▶ emit-migration · ${entries
+      .map((e) => `${e.slug} (${e.ideas.length}${e.cover ? ' + capa' : ''})`)
+      .join(', ')}`,
+  );
   const shown = relative(REPO_ROOT, outPath);
   info(`  → ${shown && !shown.startsWith('..') ? shown : outPath}`);
 

@@ -4,18 +4,25 @@ import { useRef } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ReelsViewer } from '@/components/reels/ReelsViewer';
-import { useLearningFeed, useReadMaterialIds } from '@/lib/api/learning';
+import {
+  useCollectedIdeas,
+  useIdeaCards,
+  useLearningFeed,
+  useReadMaterialIds,
+} from '@/lib/api/learning';
 import { useT } from '@/lib/i18n';
-import { buildReelDeck, type ReelGroup } from '@/lib/reels';
+import { buildReelDeck, isGroupRead, type ReelGroup } from '@/lib/reels';
 import { useReelsProgressStore, useReelsProgressReady, reelsToday } from '@/lib/reelsProgress';
 import { tokens } from '@/theme';
 
 /**
- * Study Reels — fullscreen story-style pass over the Learning infographics.
+ * Study Reels — fullscreen story-style pass over the Learning catalog:
+ * the legacy materials' infographics plus one native card per idea.
  *
  * The deck is built ONCE per open and frozen in a ref: marking a material
- * read mid-session updates queries, and a reactive deck would reorder under
- * the user's thumb. A fresh open rebuilds with the latest read/seen state.
+ * read (or absorbing an idea) mid-session updates queries, and a reactive
+ * deck would reorder under the user's thumb. A fresh open rebuilds with
+ * the latest read/collected/seen state.
  *
  * Optional `slug` param starts on that material; otherwise a same-day
  * session resumes where it left off.
@@ -27,22 +34,36 @@ export default function ReelsScreen() {
 
   const feed = useLearningFeed();
   const reads = useReadMaterialIds();
+  // Idea cards + the user's collection — both must land before the deck is
+  // built, or the ideas would all sort as unread and the first open would
+  // freeze that order for the session.
+  const ideaCards = useIdeaCards();
+  const collected = useCollectedIdeas();
   const storeReady = useReelsProgressReady();
 
   const deckRef = useRef<ReelGroup[] | null>(null);
   const initialIndexRef = useRef(0);
 
-  const ready = !feed.isLoading && !reads.isLoading && storeReady;
+  const ready =
+    !feed.isLoading &&
+    !reads.isLoading &&
+    !ideaCards.isLoading &&
+    !collected.isLoading &&
+    storeReady;
   if (ready && deckRef.current === null && feed.data) {
     const { entries, session } = useReelsProgressStore.getState();
     const seenAt = Object.fromEntries(
       Object.values(entries).map((e) => [e.slug, e.seenAt]),
     );
+    const readSet = reads.data ?? new Set<string>();
+    const collectedMap = collected.data ?? new Map<string, Set<string>>();
     const deck = buildReelDeck(
       feed.data,
       locale === 'pt' ? 'pt' : 'en',
-      reads.data ?? new Set<string>(),
+      readSet,
       seenAt,
+      ideaCards.data ?? [],
+      collectedMap,
     );
     deckRef.current = deck;
 
@@ -50,11 +71,12 @@ export default function ReelsScreen() {
     if (params.slug) idx = deck.findIndex((g) => g.slug === params.slug);
     if (idx < 0 && session && session.day === reelsToday()) {
       const i = deck.findIndex((g) => g.slug === session.slug);
-      // A concluded material sorts into the read-replay TAIL of the deck;
-      // resuming there would strand the user past every unread group and
-      // unlock the whole deck. Resume only while it's still unread —
-      // otherwise fall through to index 0, the freshest unread material.
-      if (i >= 0 && !(reads.data ?? new Set<string>()).has(deck[i]!.materialId)) {
+      // A concluded material (or an absorbed idea) sorts into the
+      // read-replay TAIL of the deck; resuming there would strand the user
+      // past every unread group and unlock the whole deck. Resume only
+      // while it's still unread — otherwise fall through to index 0, the
+      // freshest unread group.
+      if (i >= 0 && !isGroupRead(deck[i]!, readSet, collectedMap)) {
         idx = i;
       }
     }
@@ -66,7 +88,12 @@ export default function ReelsScreen() {
   if (!deck) {
     // fullScreenModal with no header: this branch must always offer an
     // exit, and a failed query (offline cold open) must not spin forever.
-    const errored = feed.isError || reads.isError || (ready && !feed.data);
+    const errored =
+      feed.isError ||
+      reads.isError ||
+      ideaCards.isError ||
+      collected.isError ||
+      (ready && !feed.data);
     return (
       <View style={styles.fallback}>
         {errored ? (
@@ -77,6 +104,8 @@ export default function ReelsScreen() {
               onPress={() => {
                 void feed.refetch();
                 void reads.refetch();
+                void ideaCards.refetch();
+                void collected.refetch();
               }}
               accessibilityRole="button"
               style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.8 }]}

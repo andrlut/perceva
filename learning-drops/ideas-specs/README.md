@@ -17,8 +17,12 @@ maintainer aprova antes de qualquer imagem ser gerada, e é a fonte que
   deriva as ideias do artigo publicado + `reasoning_log.main_points` +
   manchetes de `learning-drops/reels-specs/<slug>.json`. Nunca um fato que
   não está no artigo.
-- Drops novos: o publisher "ideias primeiro" escreve as ideias antes do
-  artigo e cai no mesmo contrato.
+- Drops novos: o `learning-publisher` escreve este arquivo a partir do
+  payload do drafter (`ideas[]`, escritas antes do artigo), antes de qualquer
+  mídia — mesmo contrato. A aprovação aí é do `learning-reviewer` (regras
+  por ideia) + `lint.mjs --ideas`, sem parada humana: o run é autônomo e o
+  maintainer audita no commit/PR. A parada obrigatória pra aprovar o texto
+  existe só no backfill.
 
 ## Contrato — `<slug>.json`
 
@@ -70,10 +74,18 @@ vêm do manifest de mídia, via `emit-migration.mjs`.
 
 ## Fluxo
 
+Backfill (legado):
+
 1. cutter escreve `<slug>.json` (+ `_review-<lote>.md` com a lista compacta)
 2. maintainer aprova o texto
 3. `generate.mjs --only ideas --slug <slug>` gera as imagens
 4. `emit-migration.mjs` → `/db-migration`
+
+Drop novo (`learning-publisher`): o publisher escreve `<slug>.json` do
+payload do drafter já aprovado pelo reviewer → `lint.mjs --ideas` →
+art-director escreve `media-specs/<slug>.json` → `generate.mjs --slug <slug>`
+(capa + ideias) → upload → `emit-migration.mjs --slug <slug> --with-cover`
+→ `db push`. Passo a passo em `.claude/agents/learning-publisher.md`.
 
 `tools/learning-lint/lint.mjs --ideas` valida a parte mecânica do contrato
 (contagens, limites, ids, fontes). Rode antes de pedir aprovação. Afirmação

@@ -49,7 +49,7 @@ import {
   useContinueReading,
   useReadingProgressReady,
 } from '@/lib/readingProgress';
-import { buildReelDeck } from '@/lib/reels';
+import { buildReelDeck, isGroupRead } from '@/lib/reels';
 import { useReelsProgressReady, useReelsProgressStore } from '@/lib/reelsProgress';
 import { tokens } from '@/theme';
 import { DIMENSION_ORDER, SUB_META } from '@/theme/dimensions';
@@ -215,17 +215,27 @@ export default function LearningScreen() {
 
   // Study Reels deck — drives the entry card (thumbnails + unread count).
   // The viewer builds its own frozen copy when it opens; this one is only
-  // presentation state for the card.
+  // presentation state for the card. Legacy materials and one card per
+  // idea mix in the same deck (`ideaCards` rows + the collection decide
+  // which ideas still count as fresh).
   const reelSeen = useReelsProgressStore((s) => s.entries);
   const reelDeck = useMemo(() => {
     const seenAt = Object.fromEntries(
       Object.values(reelSeen).map((e) => [e.slug, e.seenAt]),
     );
-    return buildReelDeck(all, locale === 'pt' ? 'pt' : 'en', readSet, seenAt);
-  }, [all, locale, readSet, reelSeen]);
+    return buildReelDeck(
+      all,
+      locale === 'pt' ? 'pt' : 'en',
+      readSet,
+      seenAt,
+      ideaCards.data,
+      collectedMap,
+    );
+  }, [all, locale, readSet, reelSeen, ideaCards.data, collectedMap]);
+  // Unread materials + ideas not yet absorbed.
   const reelUnread = useMemo(
-    () => reelDeck.filter((g) => !readSet.has(g.materialId)).length,
-    [reelDeck, readSet],
+    () => reelDeck.filter((g) => !isGroupRead(g, readSet, collectedMap)).length,
+    [reelDeck, readSet, collectedMap],
   );
 
   // Apply both filters (read-state AND pill). Each carousel reads from
@@ -376,19 +386,24 @@ export default function LearningScreen() {
             <Text style={styles.subtitle}>{t('learning.subtitle')}</Text>
           </View>
 
-          {/* Study Reels — story-mode pass over the infographics. Hidden
-             when no material has a story-ready visual. Waits for the reads
-             query too so the unread count never flashes inflated. */}
-          {!feed.isLoading && !reads.isLoading && reelDeck.length > 0 && (
-            <ReelsEntryCard
-              groups={reelDeck}
-              unreadCount={reelUnread}
-              onPress={() => {
-                Haptics.selectionAsync().catch(() => {});
-                router.push('/reels');
-              }}
-            />
-          )}
+          {/* Study Reels — story-mode pass over the infographics and the
+             idea cards. Hidden when nothing is story-ready. Waits for the
+             reads AND the idea/collection queries so the unread count
+             never flashes inflated. */}
+          {!feed.isLoading &&
+            !reads.isLoading &&
+            !ideaCards.isLoading &&
+            !collectedIdeas.isLoading &&
+            reelDeck.length > 0 && (
+              <ReelsEntryCard
+                groups={reelDeck}
+                unreadCount={reelUnread}
+                onPress={() => {
+                  Haptics.selectionAsync().catch(() => {});
+                  router.push('/reels');
+                }}
+              />
+            )}
 
           {/* Active filter chips — the pill filter and/or a non-default
              read state, each with its own clear. The controls themselves

@@ -53,7 +53,7 @@ Depending on `type`:
   or DOI).
 - **The author's central thesis** in their own words (with a quote that
   captures it).
-- **3 load-bearing ideas** that hold up the thesis, each with a
+- **2-5 load-bearing ideas** that hold up the thesis (as many as the work sustains; the planner's `idea_budget` is the ceiling), each with a
   concrete example or stat the author uses.
 - **The evidence the author marshals** + what credible critics say.
 - **An honest assessment**: where the work overreaches or is contested
