@@ -243,6 +243,12 @@ export function PersonalizarSheet({
              campo, porque é o que torna o preenchimento um ato de
              consentimento: nasce vazio e nada é inferido pelo app. */}
           <Text style={styles.section}>{t('personalizar.aboutSection')}</Text>
+          {/* Um rótulo por campo: o placeholder some assim que a pessoa
+             começa a digitar, e sozinho ele deixava "o que você faz" vago
+             demais para alguém saber por onde começar. */}
+          <Text style={styles.fieldLabel}>
+            {t('personalizar.professionLabel')}
+          </Text>
           <TextInput
             value={profession}
             onChangeText={setProfession}
@@ -252,6 +258,7 @@ export function PersonalizarSheet({
             style={styles.input}
             returnKeyType="next"
           />
+          <Text style={styles.fieldLabel}>{t('personalizar.aboutLabel')}</Text>
           <TextInput
             value={about}
             onChangeText={setAbout}
@@ -470,6 +477,12 @@ const styles = StyleSheet.create({
     color: tokens.text.hi,
     fontFamily: 'Manrope_500Medium',
     fontSize: 15,
+  },
+  fieldLabel: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 12,
+    color: tokens.text.mid,
+    marginTop: tokens.space[2],
   },
   inputMultiline: {
     minHeight: 96,
