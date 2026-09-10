@@ -5,7 +5,9 @@
  *
  * Reads a media spec written by the `learning-art-director` agent and produces
  * the media assets for one Learning material, ready for ingestion:
- *   - cover.webp              (Gemini 3.1 Flash Image, 2:3, textless)
+ *   - cover.<sha8>.webp       (Gemini 3.1 Flash Image, 2:3, textless; sha8 of the
+ *                              prompt, so a re-angled cover gets a new bucket path
+ *                              instead of a 409 on the old one)
  *   - infographic.<loc>.webp  (branded SVG -> resvg -> webp, one per locale)
  *   - audio.<loc>.m4a         (Gemini TTS, from audio-script.<loc>.json)
  *   - idea.<n>.<sha8>.webp    (Gemini 3.1 Flash Image, 4:5, one per entry of
@@ -141,9 +143,16 @@ function mergePriorManifest(manifest, inboxDir) {
   const freshIdeas = new Set(
     manifest.assets.filter((a) => a.kind === 'idea').map((a) => a.idea_id),
   );
+  // Same for the cover: its name carries the prompt's sha8, so a re-angled
+  // cover must supersede the previous entry instead of sitting next to it.
+  const freshCover = manifest.assets.some((a) => a.kind === 'cover');
   const carried = [];
   for (const a of prior.assets) {
     if (!a?.bucketPath || !a.localPath || fresh.has(a.bucketPath)) continue;
+    if (a.kind === 'cover' && freshCover) {
+      log(`  · superseded ${a.localPath} (cover regenerated in this run)`);
+      continue;
+    }
     if (a.kind === 'idea' && freshIdeas.has(a.idea_id)) {
       log(`  · superseded ${a.localPath} (idea ${a.idea_id} regenerated in this run)`);
       continue;
@@ -299,7 +308,8 @@ async function main() {
             ` · ${refs.length} ref(s) de estilo${refs.length ? `: ${refs.join(', ')}` : ''}`,
         );
 
-        const outWebp = join(inboxDir, 'cover.webp');
+        const coverFile = 'cover.' + createHash('sha256').update(String(spec.cover.prompt)).digest('hex').slice(0, 8) + '.webp';
+        const outWebp = join(inboxDir, coverFile);
         toWebpCover(rawPath, outWebp, COVER_W, COVER_H, 84);
 
         manifest.assets.push({
@@ -307,15 +317,15 @@ async function main() {
           kind: 'cover',
           locale: null,
           source: 'gemini-api',
-          localPath: 'cover.webp',
-          bucketPath: `${args.slug}/cover.webp`,
-          hero_image_url: `${MEDIA_PUBLIC_BASE}${args.slug}/cover.webp`,
+          localPath: coverFile,
+          bucketPath: `${args.slug}/${coverFile}`,
+          hero_image_url: `${MEDIA_PUBLIC_BASE}${args.slug}/${coverFile}`,
           width: COVER_W,
           height: COVER_H,
           contentType: 'image/webp',
         });
-        manifest.generated.push('cover.webp');
-        log('    ✓ cover.webp');
+        manifest.generated.push(coverFile);
+        log(`    ✓ ${coverFile}`);
       } catch (e) {
         log(`    ✗ cover failed: ${e.message}`);
         log('      (infographic assets, if any, were still produced)');
@@ -392,7 +402,7 @@ async function main() {
       existsSync(join(inboxDir, `audio-script.${loc}.json`)),
     );
     if (audioLocales.length === 0 && args.only === 'audio') {
-      log('  · audio: skipped (no audio-script.<loc>.json — run learning-audio-writer first)');
+      log('  · audio: skipped (no audio-script.<loc>.json — legacy path: deep dives now come from the Notebook runner)');
     }
     for (const locale of audioLocales) {
       log(`  · audio.${locale} (Gemini TTS multi-voz) …`);

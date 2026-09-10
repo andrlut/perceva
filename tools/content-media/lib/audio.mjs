@@ -2,7 +2,7 @@
 /**
  * Two-host podcast audio via the Gemini API multi-speaker TTS
  * (gemini-2.5-flash-preview-tts). Reproduces the "NotebookLM feel" from a
- * dialogue script the learning-audio-writer agent produced — WE write the
+ * dialogue script a script produced upstream (legacy path: the audio-writer agent is retired; deep dives come from the Notebook runner) — WE write the
  * script (brand voice, faithful to the article); Gemini only voices it.
  *
  * Cost: ~$0.15 per 10-min episode (25 audio tokens/sec × $10/1M). Output is

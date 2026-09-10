@@ -62,13 +62,38 @@ Return exactly this JSON (no surrounding prose):
   "preferred_dim": "dim_id or null",
   "angle_pt": "the hook angle in 1-2 sentences, PT",
   "angle_en": "the hook angle in 1-2 sentences, EN",
+  "idea_budget": { "min": 1, "max": 3 },
+  "idea_hints_pt": ["rótulo curto da ideia 1", "rótulo curto da ideia 2"],
   "from_seed_id": "uuid or null",
   "rationale": "why this topic now, plain text, ~3 sentences"
 }
 ```
 
+`idea_budget` is **derived from `type`**, never chosen — the material's
+ideas (the unit of consumption in the Recanto: 1 to 5 per material,
+each ending in a card the reader flips to absorb) must fall inside it:
+
+| `type` | `idea_budget` |
+|---|---|
+| `news` | `{ "min": 1, "max": 1 }` |
+| `explainer` | `{ "min": 1, "max": 3 }` |
+| `summary` | `{ "min": 2, "max": 5 }` |
+
+The hard cap is 5 in every case. The same table lives in
+`learning-drops/ideas-specs/README.md`, in the drafter and reviewer
+agents and in `tools/learning-lint/lint.mjs` — if one changes, all
+change.
+
+`idea_hints_pt` is **optional and non-binding**: include it only when
+the natural cut of the topic is already visible from the brief (a book
+with named tools, a story with one point, a mechanism with two distinct
+consequences). At most 5 short PT labels, a few words each — the drafter
+may merge, drop or replace them, and must never pad up to `max` to match
+the list. Omit the key when you do not see the cut.
+
 If you cannot identify a worthwhile topic, return `{"type": null,
-"rationale": "..."}` and stop. The orchestrator will abort the run.
+"rationale": "..."}` and stop (no `idea_budget` on a null type). The
+orchestrator will abort the run.
 
 ## Hard rules
 
@@ -80,6 +105,14 @@ If you cannot identify a worthwhile topic, return `{"type": null,
   `explainer` or `null`.
 - For `type=summary`, the topic must be a real book/paper/long-form
   piece. The brief should name the work explicitly.
+- `idea_budget` always matches the table above for the returned `type`
+  (`news` 1/1 · `explainer` 1/3 · `summary` 2/5). Never widen it for a
+  "rich" topic or narrow it for a thin one — the budget is a ceiling
+  the drafter cuts inside, not a target it fills.
+- `idea_hints_pt`, when present, has at most 5 entries and is a list of
+  labels, not of claims or titles. Only offer hints you would defend as
+  distinct changes in what the reader knows; when in doubt, omit the
+  key.
 
 ## Quality bar
 
