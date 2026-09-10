@@ -59,7 +59,6 @@
  */
 
 import type { MoodTag } from '@/lib/db/types';
-import { tokens } from '@/theme';
 
 export const MOOD_MIN = 1;
 export const MOOD_MAX = 5;
@@ -85,7 +84,13 @@ export interface MoodLevel {
 // and misses the 4.5 floor by 0.04. This value is a contrast result, not a
 // theme role, which is why it is a literal.
 const INK_LIGHT = '#FFFFFF';
-const INK_DARK = tokens.bg.deep;
+// The measured near-black from the table above, as a LITERAL. It used to be
+// `tokens.bg.deep` — which is #0A0E26 only in the dark theme. In the light
+// theme bg.deep is porcelain #F4F4FB, so every fill from step 2 up got a
+// near-white ink (1.17:1 on step 5): faces, the check-in Save button and the
+// nightly prompt all drew illegible marks. The ramp is theme-invariant by
+// design, so its ink has to be too — a contrast result, not a theme role.
+const INK_DARK = '#0A0E26';
 
 export const MOOD_LEVELS: readonly MoodLevel[] = [
   { value: 1, color: '#3874AD', ink: INK_LIGHT, key: 'terrible' },

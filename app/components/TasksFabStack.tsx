@@ -1,7 +1,15 @@
 import type { ReactNode } from 'react';
 
-import { FabStack } from '@/components/FabStack';
+import { FabStack, fabStackClearance, type FabSize } from '@/components/FabStack';
 import { useT } from '@/lib/i18n';
+
+const CALENDAR_SIZE: FabSize = 'md';
+const SEE_ALL_SIZE: FabSize = 'lg';
+
+/** Height this stack occupies above its `bottomOffset` — the Home scroll
+ *  reserves it. Derived from the SAME sizes the buttons render with, so
+ *  resizing a button can't silently re-open the overlap. */
+export const TASKS_FAB_CLEARANCE = fabStackClearance([CALENDAR_SIZE, SEE_ALL_SIZE]);
 
 interface Props {
   /** Pass the RAW bottom-nav clearance (not the tour-bumped value). */
@@ -42,7 +50,7 @@ export function TasksFabStack({
           icon: 'calendar-outline',
           onPress: onCalendar,
           accessibilityLabel: t('tabs.history'),
-          size: 'md',
+          size: CALENDAR_SIZE,
           tone: 'neutral',
         },
         {
@@ -50,7 +58,7 @@ export function TasksFabStack({
           icon: 'albums-outline',
           onPress: onSeeAll,
           accessibilityLabel: t('allPractices.title'),
-          size: 'lg',
+          size: SEE_ALL_SIZE,
           tone: 'violet',
           wrap: seeAllWrap,
         },

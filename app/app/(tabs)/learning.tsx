@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useBottomNavClearance } from '@/components/BottomNavBar';
-import { FabStack } from '@/components/FabStack';
+import { FabStack, fabStackClearance, type FabSize } from '@/components/FabStack';
 import { TourModule } from '@/components/tour/TourModule';
 import { emitTourEvent } from '@/lib/tour/eventBus';
 import { buildM6Steps, M6_EVENTS } from '@/lib/tour/m6Steps';
@@ -71,6 +71,13 @@ interface IdeaContinuePick {
   /** Localized title of the lowest-ordinal idea not yet absorbed. */
   nextTitle: string;
 }
+
+/** Sizes of the floating stack at the bottom of this screen. The feed
+ *  reserves exactly that stack's height (fabStackClearance), so resize the
+ *  buttons here, not inline. */
+const IDEAS_FAB_SIZE: FabSize = 'lg';
+const FILTER_FAB_SIZE: FabSize = 'lg';
+const LEARNING_FAB_CLEARANCE = fabStackClearance([IDEAS_FAB_SIZE, FILTER_FAB_SIZE]);
 
 export default function LearningScreen() {
   const router = useRouter();
@@ -356,7 +363,7 @@ export default function LearningScreen() {
           data={sections}
           keyExtractor={(s) => s.key}
           renderItem={renderSection}
-          contentContainerStyle={{ paddingBottom: bottomClearance }}
+          contentContainerStyle={{ paddingBottom: bottomClearance + LEARNING_FAB_CLEARANCE }}
           initialNumToRender={2}
           maxToRenderPerBatch={2}
           windowSize={5}
@@ -464,7 +471,7 @@ export default function LearningScreen() {
               key: 'ideas',
               icon: 'bulb-outline',
               tone: 'violet',
-              size: 'lg',
+              size: IDEAS_FAB_SIZE,
               accessibilityLabel:
                 collectedCount > 0
                   ? `${t('learning.ideas.myIdeas')} · ${t('learning.ideas.myIdeasCount', {
@@ -493,7 +500,7 @@ export default function LearningScreen() {
               key: 'filter',
               icon: 'options-outline',
               tone: 'violet',
-              size: 'lg',
+              size: FILTER_FAB_SIZE,
               accessibilityLabel: t('learning.filter.open'),
               onPress: () => {
                 Haptics.selectionAsync().catch(() => {});

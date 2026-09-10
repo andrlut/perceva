@@ -19,7 +19,7 @@ import { BuyCelebrationModal } from '@/components/BuyCelebrationModal';
 import { BuyConfirmModal } from '@/components/BuyConfirmModal';
 import { RewardActionSheet } from '@/components/RewardActionSheet';
 import { RewardCard } from '@/components/RewardCard';
-import { RewardsFabStack } from '@/components/RewardsFabStack';
+import { RewardsFabStack, rewardsFabClearance } from '@/components/RewardsFabStack';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { TemplateCard } from '@/components/TemplateCard';
 import { TrackedRewardCard } from '@/components/TrackedRewardCard';
@@ -125,7 +125,6 @@ export default function RewardsScreen() {
     activeTourStep?.position === 'bottom'
       ? Math.max(160, (tourCardHeight ?? 0) + 24)
       : 0;
-  const bottomClearance = navClearance + tourBottomBump;
 
   // ── M4 tour plumbing ────────────────────────────────────────────────
   const isM4Current = useIsCurrentTourModule('M4');
@@ -180,6 +179,13 @@ export default function RewardsScreen() {
 
   const coins = character.data?.character.coins ?? 0;
   const bankCount = banked.data?.length ?? 0;
+  // Reserve the floating stack's height under the scroll — up to 174px with
+  // the wallet showing, the worst overlap in the app. Same condition that
+  // renders the wallet, and `max` against the tour gap for the reason
+  // documented on fabStackClearance.
+  const scrollBottomPad =
+    navClearance +
+    Math.max(tourBottomBump, rewardsFabClearance(bankCount > 0 || isM4Current));
   const trackedReward = useMemo(
     () =>
       trackedId.data
@@ -417,7 +423,7 @@ export default function RewardsScreen() {
       <ScreenBackground>
       <ScrollView
         ref={scrollRef}
-        contentContainerStyle={[styles.content, { paddingBottom: bottomClearance }]}
+        contentContainerStyle={[styles.content, { paddingBottom: scrollBottomPad }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -708,7 +714,7 @@ export default function RewardsScreen() {
           it just shows the bank's empty state, which is honest. */}
       <RewardsFabStack
         bankCount={bankCount}
-        bottomOffset={bottomClearance}
+        bottomOffset={navClearance}
         onCreate={handleCreateReward}
         onManage={() => router.push('/rewards-manage')}
         onBank={() => {

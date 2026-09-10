@@ -33,8 +33,48 @@ interface Props {
   actions: FabAction[];
 }
 
-const DIAMETER: Record<FabSize, number> = { sm: 38, md: 48, lg: 56 };
+/** Button diameters. Exported because the scroll a stack floats over has
+ *  to reserve the stack's height — see `fabStackClearance`. */
+export const FAB_DIAMETER: Record<FabSize, number> = { sm: 38, md: 48, lg: 56 };
 const DEFAULT_ICON: Record<FabSize, number> = { sm: 18, md: 22, lg: 24 };
+
+/** Space between stacked buttons. */
+export const FAB_GAP = tokens.space[2];
+
+/** Space between `bottomOffset` and the lowest button. */
+export const FAB_BOTTOM_GAP = 16;
+
+/**
+ * How much screen a FAB stack occupies ABOVE its `bottomOffset`. Add it to
+ * the `paddingBottom` of the scroll the stack floats over — otherwise the
+ * scroll's last item ends up under the buttons.
+ *
+ * Why this exists: the stack is `position: 'absolute'`, outside the scroll,
+ * and nothing ever told the scroll how tall it is. The only contract was
+ * `bottomOffset`, which places the stack's BASE; the buttons then grow
+ * upward from there. Screens reserved `bottomOffset` and nothing else, so
+ * the whole stack sat over the end of the content — 128px on Home and 174
+ * on Rewards, with the mood check-in (Home's last card) entirely under it.
+ * History was the only screen that got it right, by a hand-computed `+ 72`
+ * — which is exactly this function for one `lg` button.
+ *
+ * Pure and static on purpose: the sizes are already in the `actions` the
+ * screen writes, so measuring with onLayout would only add a first-frame
+ * jump. It covers the VISUAL stack; each button's `hitSlop={8}` still
+ * reaches a few px above it.
+ *
+ * On screens with a bottom tour tooltip use
+ * `Math.max(tourBottomBump, fabStackClearance(...))`, NEVER the sum — the
+ * tooltip gap already clears the stack, and summing pushes tour targets
+ * that auto-scroll to the end out of their calibrated spot. That only holds
+ * because `bottomOffset` is the RAW nav clearance (see Props): a stack that
+ * rose with the tooltip would need the sum.
+ */
+export function fabStackClearance(sizes: readonly FabSize[]): number {
+  if (sizes.length === 0) return 0;
+  const buttons = sizes.reduce((sum, s) => sum + FAB_DIAMETER[s], 0);
+  return FAB_BOTTOM_GAP + buttons + FAB_GAP * (sizes.length - 1);
+}
 
 const pressedFx = { opacity: 0.85, transform: [{ scale: 0.96 }] };
 
@@ -49,7 +89,7 @@ const pressedFx = { opacity: 0.85, transform: [{ scale: 0.96 }] };
 export function FabStack({ bottomOffset, actions }: Props) {
   return (
     <View
-      style={[styles.wrap, { bottom: bottomOffset + 16 }]}
+      style={[styles.wrap, { bottom: bottomOffset + FAB_BOTTOM_GAP }]}
       pointerEvents="box-none"
     >
       {actions
@@ -57,7 +97,7 @@ export function FabStack({ bottomOffset, actions }: Props) {
         .map((a) => {
           const size = a.size ?? 'md';
           const tone = a.tone ?? 'neutral';
-          const diameter = DIAMETER[size];
+          const diameter = FAB_DIAMETER[size];
           const button = (
             <Pressable
               key={a.key}
@@ -105,7 +145,7 @@ const styles = StyleSheet.create({
     right: 16,
     // bottom is overridden inline per caller offset
     alignItems: 'center',
-    gap: tokens.space[2],
+    gap: FAB_GAP,
   },
   // Shared circle-button base; per-tone styles add color + shadow.
   // Shadows are iOS-only by design — Android elevation looks bad against

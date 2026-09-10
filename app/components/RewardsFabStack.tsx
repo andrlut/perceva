@@ -3,6 +3,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import {
+  FAB_BOTTOM_GAP,
+  FAB_DIAMETER,
+  FAB_GAP,
+  fabStackClearance,
+} from '@/components/FabStack';
 import { useT } from '@/lib/i18n';
 import { ACTIVE_THEME, tokens } from '@/theme';
 
@@ -10,8 +16,10 @@ interface Props {
   /** Number of banked rewards waiting — feeds the accessibility label.
    *  The wallet button only renders when > 0. */
   bankCount: number;
-  /** Distance from the bottom of the screen — caller should pass the
-   *  bottom-nav clearance so the stack doesn't sit underneath the tab bar. */
+  /** Distance from the bottom of the screen. Pass the RAW bottom-nav
+   *  clearance, never a tour-bumped value — same contract as FabStack: a
+   *  stack that rises with a bottom tooltip jumps between tour steps, and
+   *  breaks the `Math.max` in the scroll's reserved space. */
   bottomOffset: number;
   onCreate: () => void;
   onManage: () => void;
@@ -39,6 +47,18 @@ interface Props {
  */
 const pressedFx = { opacity: 0.85, transform: [{ scale: 0.96 }] };
 
+/**
+ * Height this stack occupies above its `bottomOffset`, for the Rewards
+ * scroll to reserve. This stack is a fork of FabStack (the gold wallet
+ * needs a gradient FabStack can't draw), so it takes its sizes from the
+ * same FAB_DIAMETER ladder — manage sm, create md, wallet lg — instead of
+ * its own literals, which is what keeps this number honest. Pass the same
+ * condition that renders the wallet.
+ */
+export function rewardsFabClearance(showBank: boolean): number {
+  return fabStackClearance(showBank ? ['sm', 'md', 'lg'] : ['sm', 'md']);
+}
+
 export function RewardsFabStack({
   bankCount,
   bottomOffset,
@@ -51,7 +71,7 @@ export function RewardsFabStack({
   const { t } = useT();
   return (
     <View
-      style={[styles.wrap, { bottom: bottomOffset + 16 }]}
+      style={[styles.wrap, { bottom: bottomOffset + FAB_BOTTOM_GAP }]}
       pointerEvents="box-none"
     >
       <Pressable
@@ -121,7 +141,7 @@ const styles = StyleSheet.create({
     right: 16,
     // bottom is overridden inline per caller offset
     alignItems: 'center',
-    gap: tokens.space[2],
+    gap: FAB_GAP,
   },
   // Shared circle-button base; per-button styles add size + color.
   // Shadows are iOS-only by design — Android elevation looks bad
@@ -135,25 +155,25 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
   },
   manageFab: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: FAB_DIAMETER.sm,
+    height: FAB_DIAMETER.sm,
+    borderRadius: FAB_DIAMETER.sm / 2,
     backgroundColor: tokens.bg.glassStrong,
     borderColor: tokens.border.base,
     shadowOpacity: 0,
   },
   createFab: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: FAB_DIAMETER.md,
+    height: FAB_DIAMETER.md,
+    borderRadius: FAB_DIAMETER.md / 2,
     backgroundColor: tokens.brand.violet2,
     borderColor: 'rgba(217, 219, 250, 0.45)',
     shadowColor: tokens.brand.violet2,
   },
   bankFab: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: FAB_DIAMETER.lg,
+    height: FAB_DIAMETER.lg,
+    borderRadius: FAB_DIAMETER.lg / 2,
     borderColor: 'rgba(255,224,138,0.6)',
     overflow: 'hidden',
     shadowColor: '#FFC83D',

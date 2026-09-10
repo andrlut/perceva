@@ -34,7 +34,7 @@ import { StoreUpdateCard } from '@/components/StoreUpdateCard';
 import { TaskActionSheet } from '@/components/TaskActionSheet';
 import { TaskCard } from '@/components/TaskCard';
 import { WeekStrip } from '@/components/WeekStrip';
-import { TasksFabStack } from '@/components/TasksFabStack';
+import { TASKS_FAB_CLEARANCE, TasksFabStack } from '@/components/TasksFabStack';
 import { TodayAmbient } from '@/components/TodayAmbient';
 import { TodayHeader } from '@/components/TodayHeader';
 import { XPCoinFloat } from '@/components/XPCoinFloat';
@@ -220,7 +220,12 @@ export default function HomeScreen() {
           (tourCardHeight ?? 0) + 24,
         )
       : 0;
-  const bottomClearance = navClearance + tourBottomBump;
+  // The scroll must end ABOVE the floating stack, or its last card (the mood
+  // check-in) sits under the buttons. `max`, not sum: every bottom tooltip
+  // gap (160/245+) already clears the 128px stack, and summing would push
+  // the M1 step 5 drawer out of the spot its auto-scroll was calibrated to.
+  const bottomClearance =
+    navClearance + Math.max(tourBottomBump, TASKS_FAB_CLEARANCE);
   const isM1Current = useIsCurrentTourModule('M1');
   // M1 step 5 targets the "Concluídas hoje" drawer at the very end of
   // the scroll — track the step index so the auto-scroll effect below

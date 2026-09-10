@@ -112,6 +112,8 @@ export default function MoodCheckinScreen() {
   // `useKeyboardOverlap`; switching this one to match would open a dead gap the
   // size of the navigation bar between the Save button and the keyboard.
   const keyboardHeight = useKeyboardHeight();
+  // True while the note has focus — gates the caret-follow scroll below.
+  const [noteFocused, setNoteFocused] = useState(false);
 
   const savedMood = (day.data?.mood ?? null) as MoodValue | null;
   const savedNote = day.data?.note ?? '';
@@ -266,6 +268,16 @@ export default function MoodCheckinScreen() {
         <View style={[styles.flex, { paddingBottom: keyboardHeight }]}>
           <ScrollView
             ref={scrollRef}
+            // Follow the caret while the note GROWS. The keyboard effect
+            // above runs once, when the keyboard opens; the input then
+            // keeps growing line by line and nothing re-scrolled, so a long
+            // entry was typed off-screen. Gated on focus + open keyboard so
+            // toggling a tag never yanks the scroll.
+            onContentSizeChange={() => {
+              if (noteFocused && keyboardHeight > 0) {
+                scrollRef.current?.scrollToEnd({ animated: false });
+              }
+            }}
             style={styles.flex}
             contentContainerStyle={styles.content}
             showsVerticalScrollIndicator={false}
@@ -359,17 +371,31 @@ export default function MoodCheckinScreen() {
                   </View>
                 )}
 
-                <View style={styles.noteCard}>
-                  <TextInput
-                    value={note}
-                    onChangeText={setNoteDraft}
-                    placeholder={t('mood.notePlaceholder')}
-                    placeholderTextColor={tokens.text.faint}
-                    style={styles.noteInput}
-                    multiline
-                    textAlignVertical="top"
-                    maxLength={2000}
-                  />
+                {/* A label, like every other multiline in the app: without
+                    one the field read as an optional footer, not as the
+                    place to write about the day. */}
+                <View style={styles.tagsSection}>
+                  <Text style={styles.tagsLabel}>
+                    {t('mood.noteLabel')}{' '}
+                    <Text style={styles.tagsOptional}>{t('mood.tagsOptional')}</Text>
+                  </Text>
+                  <View style={styles.noteCard}>
+                    <TextInput
+                      value={note}
+                      onChangeText={setNoteDraft}
+                      onFocus={() => setNoteFocused(true)}
+                      onBlur={() => setNoteFocused(false)}
+                      placeholder={t('mood.notePlaceholder')}
+                      placeholderTextColor={tokens.text.faint}
+                      style={styles.noteInput}
+                      multiline
+                      // Growth goes to the parent scroll, which follows the
+                      // caret (onContentSizeChange) — the two ship together.
+                      scrollEnabled={false}
+                      textAlignVertical="top"
+                      maxLength={2000}
+                    />
+                  </View>
                 </View>
               </Animated.View>
             )}
@@ -527,7 +553,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 21,
     color: tokens.text.hi,
-    minHeight: 96,
+    // ~7 lines. Not more: with the label, 168 overflows the visible band
+    // above an open keyboard on a 640dp phone (220 > 211); 152 fits.
+    minHeight: 152,
   },
   reassureRow: {
     flexDirection: 'row',

@@ -2242,6 +2242,7 @@ const en = {
       great: 'Great',
     },
     notePlaceholder: 'Want to say more? (optional)',
+    noteLabel: 'Write about the day',
     noScore: 'no XP · no streak · no pressure',
     save: 'Save',
     saving: 'Saving…',
@@ -2262,8 +2263,10 @@ const en = {
     tagsOptional: 'optional',
     showAllTags: 'Show all ({{count}})',
     showFewerTags: 'Show less',
-    hub: {
-      addDetails: 'Add details',
+    cta: {
+      full: 'Log with tags and a note',
+      addTagsNote: 'Add tags and a note',
+      editTagsNote: 'Edit tags and note',
     },
     history: {
       title: 'How I felt',
@@ -2277,8 +2280,10 @@ const en = {
     },
     prompt: {
       title: 'How was your day?',
-      writeMore: 'Write more',
       notNow: 'Not now',
+      savedTitle: 'Noted.',
+      savedBody: 'You felt {{level}}. Want to say more?',
+      done: 'Done',
     },
   },
 
