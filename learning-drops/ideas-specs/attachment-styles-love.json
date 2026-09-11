@@ -1,0 +1,91 @@
+{
+  "slug": "attachment-styles-love",
+  "type": "explainer",
+  "material_title": {
+    "pt": "Apego no amor: dois números, não um rótulo",
+    "en": "Attachment in love: two numbers, not a label"
+  },
+  "ideas": [
+    {
+      "id": "dois-numeros-nao-rotulo",
+      "ordinal": 1,
+      "title": {
+        "pt": "Ninguém é 'ansioso'. Nem 'evitativo'.",
+        "en": "Nobody is 'anxious'. Or 'avoidant'."
+      },
+      "claim": {
+        "pt": "O ECR-R devolve dois números contínuos, ansiedade e evitação. Os rótulos são quadrantes desenhados depois.",
+        "en": "The ECR-R hands back two continuous numbers, anxiety and avoidance. The labels are quadrants drawn afterward."
+      },
+      "body": {
+        "pt": "Você responde 36 perguntas sobre como se sente perto de quem ama e recebe dois números. O primeiro é ansiedade de apego: o quanto você fica de olho em sinais de abandono. O segundo é evitação: o quanto intimidade e depender do outro te dão desconforto. Os dois são medidos em grau, não em sim-ou-não.\n\n“Ansioso”, “evitativo”, “seguro”, “temeroso” são quadrantes desenhados depois, cruzando esses dois eixos. **Quem criou a medida deixou claro: são dimensões contínuas, não diagnósticos** (Fraley, Waller & Brennan, 2000). Isso não é detalhe técnico. Tratar o rótulo como identidade fixa te dá uma saída fácil — “sou assim” — justo onde a mudança é possível.\n\nOs números pesam: numa meta-análise de 132 estudos com 71 mil pessoas, ansiedade e evitação previram menos satisfação, a sua e a do seu parceiro (Candel & Turliuc, 2019). Prever não é condenar. Refaça o ECR-R a cada poucos meses e leia os dois números como termômetro, não como sentença.",
+        "en": "You answer 36 questions about how you feel around the people you love, and you get back two numbers. The first is attachment anxiety: how closely you watch for signs of being left. The second is avoidance: how much closeness and depending on someone make you uncomfortable. Both are measured by degree, not yes-or-no.\n\n“Anxious”, “avoidant”, “secure”, “fearful” are quadrants drawn afterward by crossing those two axes. **The people who built the measure said it plainly: these are continuous dimensions, not diagnoses** (Fraley, Waller & Brennan, 2000). That is not a technical footnote. Treating the label as a fixed identity hands you an easy out — “that's just how I am” — at the exact spot where change is possible.\n\nThe numbers do carry weight: in a meta-analysis of 132 studies covering 71,000 people, anxiety and avoidance predicted lower satisfaction, yours and your partner's (Candel & Turliuc, 2019). Predicting isn't sentencing. Retake the ECR-R every few months and read both numbers as a thermometer, not a verdict."
+      },
+      "image_brief": "Uma pessoa de pé no centro de um salão vazio de piso claro, sobre duas longas faixas de luz que se cruzam no chão e se estendem até as paredes; nos quatro cantos do salão, caixas de madeira rígidas e vazias, empurradas para bem longe dela.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Candel & Turliuc, 2019 · Personality and Individual Differences · meta-análise, N=71.011",
+            "en": "Candel & Turliuc, 2019 · Personality and Individual Differences · meta-analysis, N=71,011"
+          },
+          "url": "https://www.sciencedirect.com/science/article/abs/pii/S0191886919302673"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "alarme-e-botao-de-mudo",
+      "ordinal": 2,
+      "title": {
+        "pt": "Apego: um persegue, o outro foge.",
+        "en": "Attachment: one chases, the other flees."
+      },
+      "claim": {
+        "pt": "Cobrar e se fechar são o mesmo alarme: um no volume máximo, o outro no mudo. Num casal, o estrago multiplica.",
+        "en": "Clinging and shutting down are the same alarm: one turned up, one on mute. In a couple, the damage multiplies."
+      },
+      "body": {
+        "pt": "Quando a relação dá sinal de ameaça — uma resposta seca, um silêncio, uma viagem —, cada pessoa faz uma coisa com o próprio alarme. Quem pontua alto em ansiedade hiperativa: sobe o volume. Monitora o clima o tempo todo, cobra reasseguramento, gruda e às vezes protesta — dez mensagens, uma briga provocada, a ameaça de ir embora só pra ver se o outro corre atrás. Quem pontua alto em evitação desativa: aperta o mudo. Engole a necessidade, aumenta a distância, se convence de que não precisa de ninguém. Parece calma, e é o mesmo alarme abafado (Mikulincer & Shaver, 2007).\n\nJunte os dois numa relação e aparece a dança perseguir-recuar. Num estudo com **539 casais recém-casados**, dois parceiros inseguros se saíram pior do que a conta simples previa, com queda mais forte de satisfação ao longo do tempo (Peters, Meltzer & McNulty, 2025). Intercepte o padrão: nomeie o alarme, não o parceiro. “Tô me sentindo inseguro agora” abre conversa; “você nunca me dá atenção” fecha.",
+        "en": "When the relationship signals a threat — a curt reply, a silence, a trip away — each person does one thing with their own alarm. People who score high on anxiety hyperactivate: they turn the volume up. They track the mood constantly, fish for reassurance, cling, and sometimes protest — ten texts, a picked fight, a threat to leave just to see if the other person chases. People who score high on avoidance deactivate: they hit mute. They swallow the need, widen the distance, decide they need nobody. It looks like calm, and it is the same alarm, muffled (Mikulincer & Shaver, 2007).\n\nPut both in one relationship and the pursue-withdraw dance shows up. In a study of **539 newlywed couples**, two insecure partners did worse than simple arithmetic predicted, with a steeper satisfaction decline over time (Peters, Meltzer & McNulty, 2025). Intercept the pattern: name the alarm, not the partner. “I'm feeling insecure right now” opens a conversation; “you never pay attention to me” closes one."
+      },
+      "image_brief": "Um casal sentado nas duas pontas de um sofá comprido numa sala à meia-luz: de um lado, a pessoa inclinada para a frente com a mão estendida e um sino de bronze vibrando no ar acima dela; do outro, a pessoa virada de costas com os joelhos encolhidos, e um sino de bronze idêntico envolto em tecido grosso, imóvel.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Candel & Turliuc, 2019 · Personality and Individual Differences · meta-análise, N=71.011",
+            "en": "Candel & Turliuc, 2019 · Personality and Individual Differences · meta-analysis, N=71,011"
+          },
+          "url": "https://www.sciencedirect.com/science/article/abs/pii/S0191886919302673"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "mudar-o-gesto-nao-o-rotulo",
+      "ordinal": 3,
+      "title": {
+        "pt": "Apego: você não precisa virar seguro.",
+        "en": "Attachment: you don't have to become secure."
+      },
+      "claim": {
+        "pt": "Segurança conquistada existe, mas foi exagerada. O que muda a relação é o gesto na hora, não o rótulo.",
+        "en": "Earned security is real but oversold. What changes a relationship is the move in the moment, not the label."
+      },
+      "body": {
+        "pt": "“Então preciso virar seguro primeiro?” Não. Existe segurança conquistada — gente que teve infância difícil e hoje funciona de forma segura —, mas a história foi vendida maior do que é. Um estudo prospectivo de 23 anos achou que adultos “seguros conquistados”, olhando pra trás, não tinham mais registros de apego inseguro na infância do que os outros (Roisman et al., 2002). O apego muda com a experiência, mas resiste mais que o humor (Fraley, 2002).\n\n**Você não precisa reconstruir sua identidade; precisa mudar o gesto no momento em que o alarme toca.** Se você se fecha, diga a necessidade em voz alta: “preciso de um tempo sozinho e já volto” é distância com aviso, não abandono. E repare depois da briga — o que cura não é nunca brigar, é voltar e reconectar. Terapia entra aqui sem promessa mágica: a EFT tem efeito grande antes-depois (d=0,93) e vantagem só média sobre outras terapias sérias de casal (meta-análise, Journal of Couple & Family Psychology, 2022).",
+        "en": "“So I have to become secure first?” No. Earned security exists — people who had a rough childhood and function securely today — but the story has been sold bigger than it is. A 23-year prospective study found that adults counted as “earned-secure”, looking back, were no more likely to have documented insecure attachment in infancy than anyone else (Roisman et al., 2002). Attachment shifts with experience, yet it resists more than mood does (Fraley, 2002).\n\n**You don't have to rebuild your identity; you have to change the move in the moment the alarm rings.** If you shut down, say the need out loud: “I need some time alone and I'll be back” is distance with a heads-up, not abandonment. And repair after the fight — what heals isn't never fighting, it's coming back and reconnecting. Therapy fits here without the magic: EFT shows a large before-after effect (d=0.93) and only a medium edge over other serious couples therapies (meta-analysis, Journal of Couple & Family Psychology, 2022)."
+      },
+      "image_brief": "Uma trilha de terra ao amanhecer vista de cima: o rastro de pegadas atrás da caminhante repete sempre a mesma curva fechada para a esquerda, e no último passo ela apoia o pé firme para a direita, abrindo uma marca nova na grama — a mesma pessoa, o mesmo corpo, um desvio mínimo.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Candel & Turliuc, 2019 · Personality and Individual Differences · meta-análise, N=71.011",
+            "en": "Candel & Turliuc, 2019 · Personality and Individual Differences · meta-analysis, N=71,011"
+          },
+          "url": "https://www.sciencedirect.com/science/article/abs/pii/S0191886919302673"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

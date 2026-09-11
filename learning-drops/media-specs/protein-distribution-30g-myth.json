@@ -1,0 +1,25 @@
+{
+  "slug": "protein-distribution-30g-myth",
+  "dimension_id": "health",
+  "title": {
+    "pt": "O teto de 30g de proteína não existe",
+    "en": "The 30-Gram Protein Ceiling Doesn't Exist"
+  },
+  "ideas": [
+    {
+      "id": "nao-existe-teto-de-absorcao",
+      "ordinal": 1,
+      "image_prompt": "Uma mesa de churrasco vista de perto e um pouco de cima: no centro do quadro, ocupando o miolo com folga em volta, um prato fundo com fatias grossas de picanha ainda soltando vapor; atrás, desfocada, a churrasqueira acesa com as brasas vivas, e no canto de baixo, no piso de cimento ao lado da mesa, um ralo redondo completamente seco e limpo, sem uma única gota escorrida em volta dele. A única luz quente e dourada da cena vem das brasas e atravessa o vapor até tocar as fatias de carne e a borda do prato; o ralo e o piso ficam numa penumbra fria e seca. Um único acento verde-sálvia discreto no esmalte da borda do prato."
+    },
+    {
+      "id": "gatilho-da-leucina",
+      "ordinal": 2,
+      "image_prompt": "Numa parede lisa de cozinha, dois interruptores idênticos lado a lado no centro do quadro, com duas figuras enquadradas da cintura para cima e folga em volta: à esquerda, um rapaz encosta a ponta de um dedo no seu interruptor, sem esforço nenhum; à direita, um homem de cabelos brancos empurra o dele com as duas mãos espalmadas, ombros e corpo inclinados contra a parede, fazendo força de verdade. A única luz quente e dourada desce de uma lâmpada pendurada bem acima do interruptor do rapaz e cai sobre a mão dele e sobre a parede em volta; o homem de cabelos brancos e o interruptor dele ficam numa penumbra fria, ainda apagados."
+    },
+    {
+      "id": "buraco-do-cafe-da-manha",
+      "ordinal": 3,
+      "image_prompt": "Uma bancada de cozinha vista de cima em ângulo de três quartos, bem de perto, com três pratos iguais em fila diagonal atravessando o centro do quadro com folga em volta: no primeiro, só uma torrada solitária; o segundo quase vazio; o terceiro com uma montanha de comida transbordando pela borda. Duas mãos entram pela direita segurando em concha um punhado dessa montanha e o levam por cima dos outros dois pratos até o primeiro. A única luz quente e dourada vem de uma janela fora do quadro, à direita, e toca as mãos e a comida em trânsito; a bancada e os pratos ficam num cinza frio, com um único acento verde-sálvia no filete da borda dos três pratos."
+    }
+  ]
+}

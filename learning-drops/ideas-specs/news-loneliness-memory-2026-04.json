@@ -1,0 +1,37 @@
+{
+  "slug": "news-loneliness-memory-2026-04",
+  "type": "news",
+  "material_title": {
+    "pt": "Solidão piora memória — mas não acelera a queda",
+    "en": "Loneliness hurts memory — but doesn't speed up its decline"
+  },
+  "ideas": [
+    {
+      "id": "nivel-nao-velocidade",
+      "ordinal": 1,
+      "title": {
+        "pt": "Solidão e memória: a manchete errou o verbo.",
+        "en": "The loneliness headline got one verb wrong."
+      },
+      "claim": {
+        "pt": "Quem é solitário lembra menos agora — mas a memória cai no mesmo ritmo (SHARE, 10.217 idosos).",
+        "en": "Lonely people recall less now — but their memory falls at everyone's pace (SHARE, 10,217 adults)."
+      },
+      "body": {
+        "pt": "Desde 2023 se repete que a solidão empurra você pra demência. Um estudo europeu de abril de 2026 separou duas coisas que essa frase misturava. A primeira é o nível: onde sua memória está hoje. A segunda é a taxa de declínio: a velocidade com que ela cai ano após ano. No levantamento SHARE — 10.217 adultos mais velhos, medidos em três momentos ao longo de seis anos —, quem se dizia mais solitário lembrou um pouco menos de uma lista de palavras. Já a velocidade da queda foi praticamente igual nos dois grupos (Venegas-Sanabria et al., Aging & Mental Health, 2026). **A solidão parece te colocar alguns degraus abaixo, não te fazer descer mais rápido.** É um estudo observacional: mostra associação, não causa. Então não largue a decisão de cuidar dos vínculos — **troque o motivo**. Cobre o retorno nesta semana: marque um contato fixo com alguém de quem você gosta e ligue em vez de mandar mensagem.",
+        "en": "Since 2023 the line has been that loneliness pushes you toward dementia. A European study published in April 2026 pulled apart two things that sentence blurred. One is the level: where your memory sits today. The other is the rate of decline: how fast it drops year over year. In the SHARE survey — 10,217 older adults, tested at three points across six years — people who reported feeling lonelier recalled a bit less of a word list. The speed of the fall, though, came out essentially the same in both groups (Venegas-Sanabria et al., Aging & Mental Health, 2026). **Loneliness seems to start you a few steps lower, not send you down faster.** The design is observational: it shows association, not cause. So keep the habit and **swap the reason**. Collect the payoff this week: lock in one steady weekly contact with someone you like, and call instead of texting."
+      },
+      "image_brief": "Uma escadaria longa de pedra ao entardecer, vista de lado: duas pessoas mais velhas descem com exatamente a mesma passada, mas uma delas está vários degraus abaixo da outra; a distância entre as duas se mantém idêntica degrau após degrau, e uma luz dourada baixa atravessa a cena de lado.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Venegas-Sanabria et al., 2026 · Aging & Mental Health · coorte SHARE n=10.217",
+            "en": "Venegas-Sanabria et al., 2026 · Aging & Mental Health · SHARE cohort n=10,217"
+          },
+          "url": "https://doi.org/10.1080/13607863.2026.2624569"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

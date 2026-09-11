@@ -1,0 +1,91 @@
+{
+  "slug": "ikea-effect",
+  "type": "explainer",
+  "material_title": {
+    "pt": "A estante torta que você não joga fora",
+    "en": "The crooked shelf you can't throw out"
+  },
+  "ideas": [
+    {
+      "id": "apego-no-montador",
+      "ordinal": 1,
+      "title": {
+        "pt": "O apego não está na estante.",
+        "en": "The attachment isn't in the shelf."
+      },
+      "claim": {
+        "pt": "O apego gruda em você, não no objeto: quem dobrou o próprio origami torto cobrou cinco vezes mais por ele.",
+        "en": "The attachment sticks to you, not the object: people who folded their own lopsided origami asked five times more."
+      },
+      "body": {
+        "pt": "Em 2012, Michael Norton, Daniel Mochon e Dan Ariely deram instruções de dobradura a pessoas sem prática nenhuma. Saíram sapos de papel tortos. Depois perguntaram quanto cada uma pagaria pelo próprio bicho e quanto gente de fora pagaria por ele: os construtores pediram cinco vezes mais, perto do que os de fora topavam pagar por origami dobrado por especialista (Journal of Consumer Psychology, 2012).\n\nNão é que gostaram mais do próprio sapo. Eles olharam para um sapo torto e viram trabalho de mestre.\n\n**O que compra o apego é a coisa pronta com o seu nome nela.** Nos estudos 3 e 4, os autores destruíram o objeto recém-montado e interromperam outras montagens no meio — nos dois casos o valor extra sumiu. Ressalva honesta: uma replicação posterior, com kits de artesanato, achou o apego extra mesmo em trabalho não terminado.\n\nEntão termine coisas pequenas de propósito. O projeto parado na garagem não paga nada.",
+        "en": "In 2012, Michael Norton, Daniel Mochon and Dan Ariely handed folding instructions to people with no practice at all. Out came lumpy paper frogs. Then they asked each builder what they would pay for their own animal, and asked outsiders the same: builders wanted five times more, close to what outsiders paid for origami folded by an expert (Journal of Consumer Psychology, 2012).\n\nThey did not simply like their frog more. They looked at a crooked frog and saw a master's work.\n\n**What buys the attachment is a finished thing with your name on it.** In studies 3 and 4, the authors destroyed the object right after assembly and cut other people off midway — both times the premium vanished. Honest caveat: a later replication with craft kits found the extra attachment even on unfinished work.\n\nSo finish small things on purpose. The project parked in your garage pays you nothing."
+      },
+      "image_brief": "Um sapo de origami amassado e torto sobre um pedestal de mármore, sob um facho de luz quente de museu, com uma corda de veludo isolando o pedestal; ao lado, no chão, um sapo de origami impecável largado dentro de uma caixa de papelão aberta.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Norton, Mochon & Ariely, 2012 · Journal of Consumer Psychology 22(3):453-460 · 4 experimentos",
+            "en": "Norton, Mochon & Ariely, 2012 · Journal of Consumer Psychology 22(3):453-460 · 4 experiments"
+          },
+          "url": "https://doi.org/10.1016/j.jcps.2011.08.002"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "tamanho-real",
+      "ordinal": 2,
+      "title": {
+        "pt": "Efeito IKEA: 63% a mais? O número encolheu.",
+        "en": "IKEA effect: 63% more? The number shrank."
+      },
+      "claim": {
+        "pt": "Somando 55 estudos e 5.454 pessoas, o efeito é moderado: em 2 de 3 vezes quem montou valoriza mais que um estranho.",
+        "en": "Pooling 55 studies and 5,454 people, the effect is moderate: 2 times in 3 the builder values it above a stranger."
+      },
+      "body": {
+        "pt": "Os 63% a mais por uma caixa da IKEA montada, e o cinco vezes mais do origami, saíram de um artigo só, em condições de laboratório bem específicas (Norton, Mochon e Ariely, 2012). Catorze anos depois dá pra fazer a conta melhor: juntando 55 estudos e 5.454 pessoas, o efeito fica em **d = 0,57** (Pelled, Psychology & Marketing, 2026). Esse d mede a distância entre dois grupos — 0,57 quer dizer que, sorteando um construtor e um não-construtor, o construtor valoriza mais o objeto em cerca de dois terços das vezes.\n\nOu seja: aparece em quase todo lugar onde procuraram, e é moderado. Não reescreve o seu julgamento, é um dedo no prato da balança — o que já basta pra estragar decisão apertada.\n\nUm aviso sobre o nome na capa: Dan Ariely teve outro artigo de 2012, sobre honestidade, retratado por dados fabricados; ele nega. Assunto diferente, e a meta-análise não depende dele.\n\nPare de citar os 63%.",
+        "en": "That 63% for a self-assembled IKEA box, and the five times more for origami, came out of a single paper under very specific lab conditions (Norton, Mochon and Ariely, 2012). Fourteen years on, the sum can be done better: pooling 55 studies and 5,454 people puts the effect at **d = 0.57** (Pelled, Psychology & Marketing, 2026). That d measures the gap between two groups — 0.57 means that if you draw one builder and one non-builder, the builder values the object more about two times out of three.\n\nSo it turns up almost everywhere researchers looked, and it is moderate. It does not rewrite your judgment, it is a thumb on the scale — which is plenty to ruin a close call.\n\nOne flag about the name on the cover: Dan Ariely had another 2012 paper, on honesty, retracted over fabricated data; he denies it. Different subject, and the meta-analysis does not lean on him.\n\nStop quoting the 63%."
+      },
+      "image_brief": "Uma balança de dois pratos em equilíbrio sobre uma bancada de madeira, com um pote de cerâmica idêntico em cada prato; um único dedo desce do alto e encosta de leve na borda de um dos pratos, que cede só um pouco.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Norton, Mochon & Ariely, 2012 · Journal of Consumer Psychology 22(3):453-460 · origem dos 63%",
+            "en": "Norton, Mochon & Ariely, 2012 · Journal of Consumer Psychology 22(3):453-460 · where the 63% came from"
+          },
+          "url": "https://doi.org/10.1016/j.jcps.2011.08.002"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "preco-em-vez-de-opiniao",
+      "ordinal": 3,
+      "title": {
+        "pt": "Seu projeto: o elogio mente, o preço não.",
+        "en": "Your project: compliments lie, prices don't."
+      },
+      "claim": {
+        "pt": "Você não é juiz confiável do que fez: peça um preço, não uma opinião — elogio é de graça, número não.",
+        "en": "You are not a reliable judge of what you made: ask for a price, not an opinion. Compliments are free; numbers aren't."
+      },
+      "body": {
+        "pt": "O que você construiu virou prova de quem você é. Por isso crítica ao objeto chega como veredito sobre você, e por isso 'o que você achou?' só colhe elogio: ninguém quer te machucar de graça.\n\nO experimento do origami já trazia a pergunta melhor. Em vez de opinião, Norton, Mochon e Ariely pediram preço — aos construtores e a gente de fora (Journal of Consumer Psychology, 2012). Foi aí que a cegueira apareceu: quem dobrou precificou papel amassado perto de trabalho de especialista.\n\nFaça igual em casa. **'Quanto você pagaria por isso?'** força um número, e número é difícil de inflar por educação.\n\nA outra defesa é contra o custo afundado — tempo e dinheiro já gastos, que não voltam e por isso não deveriam pesar na decisão de continuar. Com o apego, a conta se inverte: quanto mais horas você enterrou, mais valiosa a coisa parece. Antes de seguir, pergunte: se eu chegasse hoje nesse projeto do zero, eu começaria?",
+        "en": "The thing you made became evidence about who you are. That is why criticism of it lands as a verdict on you, and why 'what do you think?' only harvests compliments: nobody wants to hurt you for free.\n\nThe origami experiment already carried the better question. Instead of opinions, Norton, Mochon and Ariely asked for prices — from the builders and from outsiders (Journal of Consumer Psychology, 2012). That is where the blindness showed up: the folders priced crumpled paper near expert work.\n\nDo the same at home. **'What would you pay for this?'** forces a number, and a number is hard to inflate out of politeness.\n\nThe other guard is against sunk cost — time and money already spent, which you never get back and which for that reason should not weigh on whether you continue. Attachment flips it: the more hours you have buried, the more valuable the thing feels. Before you carry on, ask: if I walked into this project today from scratch, would I start it?"
+      },
+      "image_brief": "Uma mão estendida sobre uma mesa de cozinha oferece três moedas pequenas ao lado de um vaso de cerâmica torto, feito à mão; na parede atrás, a sombra do vaso é três vezes maior que ele.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Norton, Mochon & Ariely, 2012 · Journal of Consumer Psychology 22(3):453-460 · experimento do origami",
+            "en": "Norton, Mochon & Ariely, 2012 · Journal of Consumer Psychology 22(3):453-460 · the origami experiment"
+          },
+          "url": "https://doi.org/10.1016/j.jcps.2011.08.002"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

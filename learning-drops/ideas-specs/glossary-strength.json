@@ -1,0 +1,91 @@
+{
+  "slug": "glossary-strength",
+  "type": "explainer",
+  "material_title": {
+    "pt": "Força — o corpo como capacidade",
+    "en": "Strength — the body as capability"
+  },
+  "ideas": [
+    {
+      "id": "aperto-de-mao",
+      "ordinal": 1,
+      "title": {
+        "pt": "Seu aperto de mão sabe algo que você não sabe.",
+        "en": "Your handshake knows something you don't."
+      },
+      "claim": {
+        "pt": "Cada 5 quilos a menos no aperto de mão aumentam em 16% o risco de morrer — sinal mais forte que a pressão arterial.",
+        "en": "Every 5 kg lost in grip strength raises death risk by 16% — a stronger signal than blood pressure."
+      },
+      "body": {
+        "pt": "Adultos com baixo preparo cardiovascular têm 5 vezes mais risco de morrer por qualquer causa do que quem está em ótima forma — efeito maior que fumar, ter diabetes ou pressão alta (Mandsager et al., JAMA Network Open, 2018, 122 mil pessoas). E o declínio que leva até lá não dói: você perde um pouco de força por ano e não nota nada.\n\nPor isso um sinal barato ajuda tanto. Um estudo de 17 países com 139 mil adultos mediu a força do aperto de mão e acompanhou todo mundo por anos: **cada 5 quilos perdidos no aperto aumentam o risco de morte em 16%** (Leong et al., Lancet, 2015). A mão não tem nada de especial — ela entrega o corpo inteiro. Quem aperta fraco costuma ter músculo fraco no geral, e junto vão função imune, equilíbrio e a capacidade de se recuperar de uma doença.\n\nTeste em casa, sem aparelho: carregue duas sacolas de 5 quilos por 2 minutos. Se não conseguir, é hora de começar.",
+        "en": "Adults with low cardiovascular fitness carry 5 times the all-cause mortality risk of people in elite shape — a bigger effect than smoking, diabetes or high blood pressure (Mandsager et al., JAMA Network Open, 2018, 122,000 people). And the decline that takes you there never hurts: you lose a little strength each year and notice nothing.\n\nThat is why a cheap signal helps so much. A 17-country study of 139,000 adults measured hand grip strength and followed everyone for years: **every 5 kg lost in grip raises mortality risk by 16%** (Leong et al., Lancet, 2015). The hand is not special — it reports on the whole body. A weak grip usually means weak muscle overall, and immune function, balance and your ability to recover from illness tend to go the same way.\n\nTest yourself at home, no equipment: carry two 5 kg grocery bags for 2 minutes. If you can't, it's time to start."
+      },
+      "image_brief": "Um primeiro plano de uma mão fechada com força nas alças de duas sacolas de mercado cheias, os dedos marcados pelo peso, no primeiro degrau de uma escadaria longa de prédio antigo; a sombra da pessoa projetada na parede vai ficando mais fina e curvada a cada degrau que sobe.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Mandsager et al., 2018 · JAMA Network Open · n=122.007",
+            "en": "Mandsager et al., 2018 · JAMA Network Open · n=122,007"
+          },
+          "url": "https://jamanetwork.com/journals/jamanetworkopen/fullarticle/2707428"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "zona-2-mitocondria",
+      "ordinal": 2,
+      "title": {
+        "pt": "Zone 2: o ritmo leve faz o que o HIIT não faz.",
+        "en": "Zone 2: the easy pace does what HIIT can't."
+      },
+      "claim": {
+        "pt": "Só o ritmo leve do Zone 2 aumenta suas mitocôndrias, as usinas de energia das células. O HIIT não substitui.",
+        "en": "Only Zone 2's easy pace grows your mitochondria, the cells' power plants. HIIT does not replace it."
+      },
+      "body": {
+        "pt": "Quando você se exercita, o corpo escolhe entre dois combustíveis: gordura e açúcar. Em ritmo leve, prefere gordura. Quando você acelera, troca pra açúcar e produz lactato, uma substância que depois precisa limpar. Zone 2 é a faixa em que você ainda queima principalmente gordura e não produz mais lactato do que consegue limpar — tecnicamente, lactato no sangue abaixo de 2 mmol/L.\n\nO que essa faixa constrói é **densidade mitocondrial**: mais e melhores mitocôndrias, as estruturas que produzem energia dentro das células. Elas mexem em quase tudo — recuperação, queima de gordura, controle de inflamação. O HIIT, treino intervalado de alta intensidade, treina outra coisa: potência e tolerância a esforço alto.\n\nPra saber se você está lá, use o teste da conversa: dá pra formar frases inteiras, mas você preferiria não estar falando. Em batimentos, algo entre 60% e 70% do seu máximo. Três horas por semana é o piso em que a literatura converge: caminhada rápida, pedalada leve ou natação confortável contam. Em *Outlive* (2023), Peter Attia aponta a eficiência aeróbica como o exercício mais importante que existe.",
+        "en": "When you exercise, your body picks between two fuels: fat and sugar. At an easy pace it prefers fat. Push harder and it switches to sugar, producing lactate — a substance your body then has to clear. Zone 2 is the range where you still burn mostly fat and never make more lactate than you can clear. Technically: blood lactate below 2 mmol/L.\n\nWhat that range builds is **mitochondrial density**: more and better mitochondria, the structures that make energy inside your cells. They touch almost everything — recovery, fat-burning, inflammation control. HIIT, high-intensity interval training, trains something else: power and tolerance for hard efforts.\n\nTo know you are there, use the talk test: you can still form full sentences, but you'd rather not be talking. In heart rate, roughly 60% to 70% of your max. Three hours a week is the floor the literature converges on: brisk walking, easy cycling or a comfortable swim all count. In *Outlive* (2023), Peter Attia calls aerobic efficiency the single most important type of exercise."
+      },
+      "image_brief": "Uma pessoa caminhando em passo tranquilo por uma estrada de terra ao amanhecer, respirando fácil e rindo de algo que diz a quem caminha ao lado; bem atrás, na mesma estrada, outra pessoa acabou de esprintar e está parada, dobrada com as mãos nos joelhos, ofegante.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Mandsager et al., 2018 · JAMA Network Open · n=122.007",
+            "en": "Mandsager et al., 2018 · JAMA Network Open · n=122,007"
+          },
+          "url": "https://jamanetwork.com/journals/jamanetworkopen/fullarticle/2707428"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "piso-semanal-oms",
+      "ordinal": 3,
+      "title": {
+        "pt": "Treino de força: existe um piso semanal.",
+        "en": "Strength training: there's a weekly floor."
+      },
+      "claim": {
+        "pt": "O piso da OMS é 2 a 3 treinos de força por semana e 10 minutos de mobilidade por dia. Dor no dia seguinte não conta.",
+        "en": "The WHO floor is 2-3 strength sessions a week plus 10 minutes of mobility a day. Next-day soreness doesn't count."
+      },
+      "body": {
+        "pt": "Em 2020 a Organização Mundial da Saúde publicou o piso que um adulto precisa manter — não o ideal, o mínimo abaixo do qual você está perdendo. São quatro linhas: **força 2 a 3 vezes por semana**, perto da falha, cerca de 10 séries por grupo muscular; 150 a 300 minutos de aeróbico moderado; 75 a 150 minutos de vigoroso, se você consegue; e 10 minutos de mobilidade por dia, que rendem mais do que uma hora por mês.\n\nRepare no que não está na lista. Dez mil passos por dia é marketing de um pedômetro japonês dos anos 60: o benefício de mortalidade estabiliza entre 6 e 8 mil passos pra quem tem 60 anos ou mais, e entre 8 e 10 mil pra mais novos. E dor muscular no dia seguinte não prova que o treino foi bom — ela aparece quando você faz algo novo ou excêntrico, como descer escada. Quem progride devagar em carga muitas vezes não fica dolorido.\n\nPegue a sua semana e confira contra as quatro linhas.",
+        "en": "In 2020 the World Health Organization published the floor an adult has to hold — not the ideal, the minimum below which you are losing ground. Four lines: **strength 2 to 3 times a week**, close to failure, about 10 sets per muscle group; 150 to 300 minutes of moderate aerobic work; 75 to 150 minutes of vigorous work on top, if you can; and 10 minutes of mobility a day, which beats an hour once a month.\n\nNotice what is missing from that list. Ten thousand steps a day came from a 1960s Japanese pedometer campaign: the mortality benefit plateaus between 6,000 and 8,000 steps for people aged 60 and over, and between 8,000 and 10,000 for younger adults. And next-day soreness does not prove the session was good — it shows up when you do something new or eccentric, like walking downstairs. People adding load slowly are often not sore at all.\n\nTake your own week and check it against the four lines."
+      },
+      "image_brief": "Uma pessoa agachando com uma barra apoiada nos ombros no chão de uma garagem, postura firme e rosto calmo, sem careta de sofrimento; ao lado dela, um tapete de alongamento desenrolado no piso e um par de halteres pequenos encostados na parede.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Mandsager et al., 2018 · JAMA Network Open · n=122.007",
+            "en": "Mandsager et al., 2018 · JAMA Network Open · n=122,007"
+          },
+          "url": "https://jamanetwork.com/journals/jamanetworkopen/fullarticle/2707428"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

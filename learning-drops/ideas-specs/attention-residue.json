@@ -1,0 +1,91 @@
+{
+  "slug": "attention-residue",
+  "type": "explainer",
+  "material_title": {
+    "pt": "Você fechou a reunião. Sua atenção não.",
+    "en": "You closed the meeting. Your attention didn't."
+  },
+  "ideas": [
+    {
+      "id": "residuo-cobra-da-proxima",
+      "ordinal": 1,
+      "title": {
+        "pt": "A reunião ruim não estraga a reunião.",
+        "en": "The bad meeting doesn't wreck the meeting."
+      },
+      "claim": {
+        "pt": "Parte do foco continua na tarefa anterior e você decide pior na seguinte — mesmo fazendo uma coisa só.",
+        "en": "Part of your focus stays on the last task and you decide worse on the next — even doing one thing at a time."
+      },
+      "body": {
+        "pt": "Sophie Leroy, da Universidade de Washington, montou dois experimentos de laboratório em 2009. Todo mundo começava resolvendo anagramas — embaralhar letras até virar palavra. Uma parte conseguia terminar; a outra era interrompida no meio e mandada pra uma tarefa sem nenhuma relação: ler currículos e decidir quem contratar.\n\nEntre as duas ela encaixou uma tarefa de decisão lexical — a tela pisca sequências de letras e você diz se aquilo é palavra de verdade. Se as palavras do anagrama continuam ativas na sua cabeça, você reconhece elas mais rápido. A velocidade da sua mão entrega onde a atenção ficou.\n\nQuem saiu pela metade carregou mais resíduo e leu os currículos pior. **Não era multitarefa**: na hora dos currículos eles faziam uma coisa só, sem distração nenhuma.\n\nTraduzindo pro seu dia: a reunião ruim das 14h não estraga as 14h, estraga as 15h — e a culpa cai no sono ou na semana pesada. Quando as 15h renderem mal, olhe o que ficou em aberto às 14h. Ressalva: laboratório, amostra universitária, sem replicação independente.",
+        "en": "Sophie Leroy, a researcher at the University of Washington, ran two lab experiments in 2009. Everyone started on anagrams — scrambled letters you rearrange into a word. Some were allowed to finish; the rest were cut off mid-puzzle and pushed into something unrelated: reading résumés and deciding who to hire.\n\nBetween the two she slipped in a lexical decision task — strings of letters flash and you say whether each one is a real word. If the anagram words are still active in your head, you recognize them faster. The speed of your hand gives away where your attention stayed.\n\nThe people cut off mid-puzzle carried more residue, and they read the résumés worse. **This was not multitasking**: during the résumés they were doing one thing, undistracted.\n\nInto your own day: the bad two o'clock meeting doesn't wreck two o'clock, it wrecks three — and you blame the short night. When three goes badly, look at what stayed open at two. Caveat: lab work, university samples, no independent replication."
+      },
+      "image_brief": "Uma pessoa sentada muito ereta diante de uma mesa limpa, segurando uma folha em branco e atenta a ela; da nuca dela sai um fio fino e brilhante que atravessa a sala inteira e volta até uma cadeira vazia numa mesa ao fundo, onde peças soltas de um quebra-cabeça estão espalhadas pela metade.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Leroy, 2009 · Organizational Behavior and Human Decision Processes 109(2):168–181 · dois experimentos de laboratório",
+            "en": "Leroy, 2009 · Organizational Behavior and Human Decision Processes 109(2):168–181 · two laboratory experiments"
+          },
+          "url": "https://doi.org/10.1016/j.obhdp.2009.04.002"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "terminar-nao-e-fechar",
+      "ordinal": 2,
+      "title": {
+        "pt": "Foco: terminar não solta a sua cabeça.",
+        "en": "Focus: finishing doesn't free your head."
+      },
+      "claim": {
+        "pt": "Quem terminou sob pressão soltou melhor a tarefa: o que libera a atenção é o loop fechado, não o trabalho pronto.",
+        "en": "Those who finished under time pressure let go better: what frees attention is a closed loop, not finished work."
+      },
+      "body": {
+        "pt": "A leitura fácil do experimento de Leroy é “termine o que começou”. Mas entre quem terminou o anagrama, o desempenho não foi igual. Um grupo terminou sob pressão de tempo, com o relógio no pescoço; o outro, sem pressa nenhuma. Quem terminou sob pressão soltou melhor a tarefa e foi melhor na tarefa seguinte. Terminar era idêntico nos dois casos — o que mudou foi a sensação de assunto encerrado, sem pontas soltas.\n\nO que prende sua atenção não é a tarefa inacabada. É o **loop aberto**: a pergunta sem resposta, o “depois eu resolvo”. Terminar é só a forma mais cara de fechar o loop.\n\nA mais barata Leroy testou com Theresa Glomb e batizou de plano de retomada: antes de trocar de tarefa, escreva três linhas — onde parou, o que ficou pendente, qual é o próximo passo. Num estudo de campo com 202 profissionais (Leroy e Glomb, Organization Science, 2018), quem escreveu chegou na tarefa seguinte com menos resíduo, decidiu melhor e lembrou mais informação. Custa um minuto.",
+        "en": "The easy reading of Leroy's experiment is “finish what you start.” But among the people who did finish the anagram, performance was not the same. One group finished under time pressure, clock on their neck; the other finished at leisure. The ones under pressure let go of the task better and did better on the next one. Finishing was identical in both cases — what differed was the sense that the matter was settled, no loose ends.\n\nWhat holds your attention hostage isn't the unfinished task. It's the **open loop**: the unanswered question, the “I'll deal with it later.” Finishing is just the most expensive way to close one.\n\nThe cheapest way Leroy tested with Theresa Glomb and called the ready-to-resume plan: before switching, write three lines — where you stopped, what's unresolved, what comes next. In a field study with 202 working professionals (Leroy and Glomb, Organization Science, 2018), the people who wrote them arrived at the next task with less residue, decided better and recalled more. It costs a minute."
+      },
+      "image_brief": "Uma pessoa caminha adiante por um corredor amplo e vazio, puxada para trás por um cordão elástico amarrado à cintura e preso a uma cadeira tombada lá atrás; poucos passos à frente, no chão, um cordão idêntico aparece enrolado e solto, ao lado da cadeira gêmea em pé e intacta.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Leroy, 2009 · Organizational Behavior and Human Decision Processes 109(2):168–181 · dois experimentos de laboratório",
+            "en": "Leroy, 2009 · Organizational Behavior and Human Decision Processes 109(2):168–181 · two laboratory experiments"
+          },
+          "url": "https://doi.org/10.1016/j.obhdp.2009.04.002"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "numeros-sem-artigo",
+      "ordinal": 3,
+      "title": {
+        "pt": "Foco: 23 minutos pra voltar? Sem fonte.",
+        "en": "Focus: 23 minutes to refocus? No paper."
+      },
+      "claim": {
+        "pt": "Ninguém acha os 23 minutos num artigo revisado por pares: o número nasceu em entrevistas e virou fato por repetição.",
+        "en": "Nobody finds the 23 minutes in a peer-reviewed paper: the figure was born in interviews and became fact by repetition."
+      },
+      "body": {
+        "pt": "Três números que circulam sobre foco não se sustentam. Os “23 minutos e 15 segundos pra recuperar o foco” são atribuídos à pesquisadora Gloria Mark, mas quem vasculhou os trabalhos publicados dela não achou o número em nenhum — ele nasceu em entrevistas. O “trocar de tarefa derruba 40% da produtividade” é frase de divulgação da APA sobre o estudo de Rubinstein, Meyer e Evans (2001), não um número do artigo. E o efeito Zeigarnik, a ideia de que a gente lembra o dobro das tarefas inacabadas, não achou vantagem confiável de memória numa revisão sistemática com meta-análise de 2025 (Humanities and Social Sciences Communications). **Dado com precisão de segundos merece desconfiança.**\n\nO que sobra é útil. Custo de troca é o cérebro recarregando regras, em milissegundos. Resíduo é pensamento que continua rodando e estraga minutos inteiros da tarefa seguinte. Se a solução que te ofereceram é bloquear notificação, ela mira o custo de troca. Resíduo se trata na saída da tarefa, não na entrada.",
+        "en": "Three numbers that circulate about focus don't hold up. The “23 minutes and 15 seconds to refocus” gets pinned on researcher Gloria Mark, but people who combed through her published work found it in none of it — it was born in interviews. The “task-switching cuts productivity up to 40%” line comes from APA press coverage of Rubinstein, Meyer and Evans (2001), not from the paper itself. And the Zeigarnik effect, the idea that we remember unfinished tasks twice as well, found no reliable memory advantage in a 2025 systematic review and meta-analysis (Humanities and Social Sciences Communications). **A statistic precise to the second deserves suspicion.**\n\nWhat survives is useful. Switch cost is your brain reloading rules, in milliseconds. Residue is thought content that keeps running and degrades whole minutes of the next task. If the fix you were sold is blocking notifications, it aims at switch cost. Residue is treated on the way out of a task, not on the way in."
+      },
+      "image_brief": "Uma pessoa em pé diante de um arquivo alto de gavetas de madeira, várias gavetas puxadas e completamente vazias; ela segura contra a luz da janela uma folha em branco, e no chão ao redor dezenas de cópias idênticas dessa mesma folha em branco se espalham em montes.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Leroy, 2009 · Organizational Behavior and Human Decision Processes 109(2):168–181 · dois experimentos de laboratório",
+            "en": "Leroy, 2009 · Organizational Behavior and Human Decision Processes 109(2):168–181 · two laboratory experiments"
+          },
+          "url": "https://doi.org/10.1016/j.obhdp.2009.04.002"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

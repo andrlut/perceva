@@ -1,0 +1,25 @@
+{
+  "slug": "glossary-money",
+  "dimension_id": "wealth",
+  "title": {
+    "pt": "A parte chata de ficar rico",
+    "en": "The Boring Part of Getting Rich"
+  },
+  "ideas": [
+    {
+      "id": "compre-o-palheiro",
+      "ordinal": 1,
+      "image_prompt": "Dentro de um celeiro de madeira, uma braçada de palha espalhada pelo chão na faixa de baixo do quadro, e agachada nela uma pessoa de terno caro remexendo os fios com uma pinça minúscula, à procura de uma agulha. Bem atrás dela, no centro do quadro e com folga em volta, uma segunda pessoa de roupa simples ergue o palheiro inteiro num carrinho de mão, visto de lado — apenas essas duas figuras na cena. A única luz quente e dourada entra pela abertura alta do celeiro e cai inteira sobre o palheiro erguido, acendendo cada fio; a pessoa de terno e a palha do chão ficam numa penumbra fria, e a roupa simples de quem empurra o carrinho puxa para um verde-sálvia apagado."
+    },
+    {
+      "id": "duas-goteiras",
+      "ordinal": 2,
+      "image_prompt": "Um balde de metal cheio d'água carregado por uma única pessoa, enquadrada do peito aos joelhos e sem o rosto: o balde ocupa o centro do quadro à altura do quadril, grande, com folga em volta. Pelo fundo do balde escorre um fio fino e constante de água, enquanto a mão que segura a alça treme e entorna uma golada por cima da borda; no chão, em primeiro plano, a poça já formada é visivelmente maior do que o pouco que restou dentro do balde. A única luz quente e dourada vem de cima e de frente, desenhando a borda do metal, o fio que escorre e o brilho da poça; a pessoa e o fundo ficam na penumbra fria."
+    },
+    {
+      "id": "vinte-e-cinco-vezes",
+      "ordinal": 3,
+      "image_prompt": "Um silo estreito e altíssimo atravessando o centro do quadro de alto a baixo, com folga dos dois lados: no topo, uma pessoa em pé numa escada encostada joga um punhado de grãos para dentro, um punhado de cada vez. Do pé do silo sai um filete contínuo de grãos que cai direto num prato fundo sobre uma mesa posta, com uma cadeira puxada e esperando; uma fresta vertical na lateral do silo mostra o nível dos grãos parado, sem baixar. A única luz quente e dourada vem de baixo, de uma lâmpada sobre a mesa, e acende o filete de grãos, o prato e a borda da cadeira; o alto do silo e a pessoa na escada ficam numa penumbra fria e azulada."
+    }
+  ]
+}

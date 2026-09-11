@@ -1,0 +1,91 @@
+{
+  "slug": "glossary-sleep",
+  "type": "explainer",
+  "material_title": {
+    "pt": "Sono — a base de tudo",
+    "en": "Sleep — the foundation under everything"
+  },
+  "ideas": [
+    {
+      "id": "tres-pecas-do-sono",
+      "ordinal": 1,
+      "title": {
+        "pt": "Suas 8 horas podem estar perdendo de 6,5.",
+        "en": "Your 8 hours might be losing to 6.5."
+      },
+      "claim": {
+        "pt": "O sono tem três peças: quantidade, regularidade e qualidade. Horário fixo prediz mortalidade melhor que horas somadas.",
+        "en": "Sleep is three things: quantity, regularity and quality. A fixed schedule predicts mortality better than total hours."
+      },
+      "body": {
+        "pt": "A maioria mede sono em horas — e o número engana. Em 2003, Van Dongen restringiu adultos saudáveis a 6 horas por 14 noites: a atenção e a memória de trabalho caíram tanto quanto as de quem passou uma ou duas noites em claro, enquanto a sensação de sono estabilizava cedo. Eles se achavam adaptados.\n\nSão três peças ao mesmo tempo. Quantidade: de 7 a 9 horas, com o 7 como chão firme — consenso de um painel de 15 especialistas da Academia Americana de Medicina do Sono, em 2015. Regularidade: deitar e acordar perto do mesmo horário, fim de semana incluído. Qualidade: ciclos de cerca de 90 minutos, de 4 a 6 por noite, passando pelo sono profundo e pelo REM; barulho, álcool ou apneia quebram esses ciclos, e o tempo na cama não vira reparo.\n\nA do meio é a mais ignorada. Em quase 61 mil adultos do UK Biobank com sensor no pulso, **os mais regulares morreram de 20% a 48% menos** (Windred et al., Sleep, 2024). Comece pelo horário: o mesmo todo dia, sábado incluído.",
+        "en": "Most people measure sleep in hours — and the number lies. In a 2003 lab study, Van Dongen capped healthy adults at six hours a night for 14 straight nights: attention and working memory fell as far as in people who had gone one or two nights with no sleep at all, while their sense of sleepiness leveled off early. They felt adapted.\n\nIt is three things at once. Quantity: 7 to 9 hours, with 7 as a firm floor — the 2015 consensus of a 15-expert panel from the American Academy of Sleep Medicine. Regularity: going to bed and waking near the same time, weekends included. Quality: cycles of about 90 minutes, 4 to 6 a night, running through deep sleep and REM; noise, alcohol or apnea shatter those cycles, and time in bed stops turning into repair.\n\nThe middle piece gets ignored the most. Among nearly 61,000 UK Biobank adults wearing wrist sensors, **the most regular sleepers died 20% to 48% less often** (Windred et al., Sleep, 2024). Start with the clock: same times every day, Saturday included."
+      },
+      "image_brief": "Duas trilhas de pegadas atravessando a areia lisa de uma praia ao amanhecer: uma delas segue reta, com passos idênticos e igualmente espaçados; a outra, ao lado, tem muito mais pegadas, porém tortas, cruzando a si mesmas e se perdendo pela duna.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Windred et al., 2024 · Sleep 47(1):zsad253 · n=60.977 (UK Biobank)",
+            "en": "Windred et al., 2024 · Sleep 47(1):zsad253 · n=60,977 (UK Biobank)"
+          },
+          "url": "https://academic.oup.com/sleep/article/47/1/zsad253/7280269"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "fome-da-noite-curta",
+      "ordinal": 2,
+      "title": {
+        "pt": "Noite curta: a fome do dia seguinte não é gula.",
+        "en": "Short sleep: next-day hunger isn't willpower."
+      },
+      "claim": {
+        "pt": "Duas noites de 4 horas sobem a grelina 28% e derrubam a leptina 18%. A fome que vem depois é química, não fraqueza.",
+        "en": "Two nights at four hours raise ghrelin 28% and drop leptin 18%. The hunger that follows is chemistry, not weakness."
+      },
+      "body": {
+        "pt": "Bastam duas noites de 4 horas pra bagunçar os hormônios que controlam a fome. Num experimento com homens jovens saudáveis, a grelina — o hormônio que abre o apetite — subiu 28%, e a leptina, que sinaliza saciedade, caiu 18%. O resultado prático: você sente fome mesmo tendo comido o suficiente, e a vontade específica de comida rica em carboidrato salta de 33% a 45%. **Não é falta de disciplina; é química desregulada.**\n\nO corpo cobra rápido em outra frente também. Dawson e Reid mostraram, na Nature em 1997, que 17 horas sem dormir derrubam reflexo e julgamento tanto quanto 0,05% de álcool no sangue. Com 24 horas em claro, chega a 0,10% — acima do limite pra dirigir na maioria dos países.\n\nDepois de uma noite curta, decida a comida antes de sentir fome: deixe o almoço pronto ou comprado logo de manhã. E conte as horas acordado — passou de 17, você não está em condição de pegar o volante.",
+        "en": "Two nights at four hours are enough to scramble the hormones that run hunger. In an experiment with healthy young men, ghrelin — the hormone that opens your appetite — rose 28%, and leptin, which signals fullness, dropped 18%. The practical result: you feel hungry even after eating enough, and the craving specifically for high-carb food jumps 33 to 45%. **That is not weak discipline; it is biochemistry knocked out of tune.**\n\nThe body bills you fast on another front too. Dawson and Reid showed, in Nature in 1997, that 17 hours without sleep drop reflex and judgment as far as 0.05% blood alcohol does. At 24 hours awake, it reaches 0.10% — over the legal driving limit in most countries.\n\nAfter a short night, decide what you eat before hunger decides for you: have lunch cooked or bought first thing in the morning. And count your hours awake — past 17, you are in no shape to take the wheel."
+      },
+      "image_brief": "Uma pessoa de pijama e cara de sono, de pé na cozinha no meio da tarde, com a mão enfiada dentro de um pote de pão; atrás dela, sobre a mesa, um prato de almoço completo e intocado já esfriou.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Windred et al., 2024 · Sleep 47(1):zsad253 · n=60.977 (UK Biobank)",
+            "en": "Windred et al., 2024 · Sleep 47(1):zsad253 · n=60,977 (UK Biobank)"
+          },
+          "url": "https://academic.oup.com/sleep/article/47/1/zsad253/7280269"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "receita-minima-do-sono",
+      "ordinal": 3,
+      "title": {
+        "pt": "Sono: o ajuste que mais rende é de graça.",
+        "en": "Sleep: the upgrade that pays most is free."
+      },
+      "claim": {
+        "pt": "Quatro ajustes carregam o resultado: horário fixo, quarto escuro a 16-19°C, cafeína 8h antes, álcool 3h antes.",
+        "en": "Four adjustments carry the payoff: fixed schedule, dark 16-19°C room, caffeine 8h before, no alcohol 3h before."
+      },
+      "body": {
+        "pt": "Você não precisa otimizar tudo. Deite e acorde no mesmo horário todo dia — a regularidade rende mais que 30 minutos extras na cama, e não custa dinheiro nem tempo a mais. Deixe o quarto escuro e entre 16 e 19°C: o sono começa com uma queda de cerca de 1°C na temperatura do corpo, e o calor trava essa queda. Corte a cafeína 8 horas antes de deitar, porque a meia-vida dela é de 5 a 6 horas: 400mg às 16h ainda cortam mais de uma hora do seu sono. E nada de álcool nas 3 horas antes — ele te faz apagar rápido e depois destrói o REM da segunda metade da noite.\n\nAnel, relógio e aplicativo acertam acima de 90% se você está dormindo ou acordado, mas erram nas fases: o melhor aparelho de consumo já testado, o Oura Gen3, concorda com o exame de laboratório só cerca de 79% das vezes na divisão entre leve, profundo e REM. **Use as horas totais como dado real; a barrinha de sono profundo é estimativa grosseira.**",
+        "en": "You don't have to optimize everything. Go to bed and get up at the same time every day — regularity buys more than 30 extra minutes in bed, and it costs no money and no extra time. Keep the bedroom dark and between 16 and 19°C: sleep starts with a drop of about 1°C in body temperature, and heat blocks that drop. Cut caffeine 8 hours before bed, because its half-life runs 5 to 6 hours: 400mg at 4pm still shaves over an hour off your night. And no alcohol in the 3 hours before bed — it knocks you out fast, then destroys REM in the second half of the night.\n\nA ring, a watch or a phone app get it right above 90% of the time on asleep versus awake, but they miss the stages: the best consumer device tested, the Oura Gen3, matches a lab sleep study only about 79% of the time on the split between light, deep and REM. **Treat total hours as real data; the deep-sleep bar is a rough guess.**"
+      },
+      "image_brief": "Uma pessoa despejando o resto do café pela pia de uma cozinha no fim da tarde, com a luz alaranjada do sol baixo entrando pela janela; num pratinho ao lado da torneira, um anel de metal liso e uma pulseira de silicone repousam esquecidos.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Windred et al., 2024 · Sleep 47(1):zsad253 · n=60.977 (UK Biobank)",
+            "en": "Windred et al., 2024 · Sleep 47(1):zsad253 · n=60,977 (UK Biobank)"
+          },
+          "url": "https://academic.oup.com/sleep/article/47/1/zsad253/7280269"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

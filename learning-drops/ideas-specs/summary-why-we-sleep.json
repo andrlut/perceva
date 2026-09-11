@@ -1,0 +1,118 @@
+{
+  "slug": "summary-why-we-sleep",
+  "type": "summary",
+  "material_title": {
+    "pt": "Why We Sleep — com lápis cético na mão",
+    "en": "Why We Sleep — read with a skeptic's pencil"
+  },
+  "ideas": [
+    {
+      "id": "duas-maquinas",
+      "ordinal": 1,
+      "title": {
+        "pt": "Você passa um terço da vida fora do ar.",
+        "en": "You spend a third of your life offline."
+      },
+      "claim": {
+        "pt": "Sono não é pausa: é manutenção. NREM arquiva a memória e escoa o lixo do cérebro; REM processa emoção.",
+        "en": "Sleep isn't a pause, it's maintenance: NREM files memory and flushes brain waste; REM processes emotion."
+      },
+      "body": {
+        "pt": "Você passa um terço da vida deitado — sem comer, sem se reproduzir, sem se defender. E mesmo assim a evolução manteve o sono em toda espécie animal já estudada. É daí que Matthew Walker, neurocientista de Berkeley, parte em Why We Sleep: sono é manutenção biológica cara demais pra ter sido abandonada.\n\nO turno da noite roda em duas máquinas. O NREM — sono profundo, sem movimento rápido dos olhos — arquiva a memória do dia e liga o sistema glinfático, uma faxina que alarga os espaços entre os neurônios e escoa o lixo metabólico acumulado. O REM — a fase dos sonhos, com movimento rápido dos olhos — processa emoção, fixa aprendizado motor e alimenta a criatividade. **Falta uma, estraga a outra.**\n\nEssa é a parte do livro que é mainstream e que a auditoria de 2019 não derrubou. Raspar uma hora da noite, então, não compra tempo: pula um turno de manutenção que ninguém faz por você. Antes de cortar, pergunte qual das duas máquinas você vai desligar.",
+        "en": "You spend a third of your life lying down — not eating, not reproducing, not defending yourself. Evolution kept sleep anyway, in every animal species ever studied. That is where Berkeley neuroscientist Matthew Walker begins Why We Sleep: sleep is biological maintenance, too expensive for evolution to have dropped.\n\nThe night shift runs on two machines. NREM — deep, non-rapid-eye-movement sleep — files away the day's memories and switches on the glymphatic system, a cleaning crew that widens the gaps between neurons and flushes out accumulated metabolic waste. REM — the dreaming stage, with rapid eye movement — processes emotion, locks in motor learning and feeds creativity. **Lose one and you damage the other.**\n\nThis is the mainstream half of the book, and the 2019 audit never dented it. So shaving an hour off tonight buys you nothing: it skips a maintenance shift nobody else will run for you. Before you cut, ask which of the two machines you are switching off."
+      },
+      "image_brief": "Uma pessoa dormindo numa rede sob o céu noturno; ao redor dela, duas figuras pequenas de macacão trabalham em silêncio — uma empilha caixas em ordem numa prateleira baixa, a outra varre folhas secas para um ralo aberto no chão.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Walker, Why We Sleep · Scribner 2017 · auditoria de Guzey, 2019",
+            "en": "Walker, Why We Sleep · Scribner 2017 · Guzey's 2019 audit"
+          },
+          "url": "https://guzey.com/books/why-we-sleep/"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "epidemia-inexistente",
+      "ordinal": 2,
+      "title": {
+        "pt": "Why We Sleep: auditado linha por linha.",
+        "en": "Why We Sleep: audited line by line."
+      },
+      "claim": {
+        "pt": "A epidemia de sono da OMS não existe — a nota de rodapé levava a um documentário. E o câncer não dobra.",
+        "en": "The WHO sleep epidemic never existed — the footnote led to a documentary. And cancer risk doesn't double."
+      },
+      "body": {
+        "pt": "Em 2019, o pesquisador independente Alexey Guzey publicou uma auditoria linha a linha do livro, com citações. O título não faz rodeio: \"Why We Sleep está cheio de erros científicos e factuais\".\n\nO golpe mais limpo foi uma nota de rodapé. Guzey rastreou a epidemia de sono \"declarada pela OMS\" até um documentário da National Geographic — que nem cita a OMS. A origem provável é uma página do CDC americano, e a própria agência já tinha trocado \"epidemia\" por \"problema\" dois anos antes de o livro sair. O câncer também não dobra: uma meta-análise de 2018 juntou mais de 1,5 milhão de pessoas e não achou associação significativa entre duração do sono e câncer.\n\nAinda tem um gráfico com a barra de 5 horas apagada e um artigo na Neuron retratado a pedido do autor, com uma queda de \"400 a 600%\" — impossível, nada cai mais que 100%. **Berkeley revisou e fechou o caso sem apontar má conduta.** Antes de repetir uma estatística de sono, abra a fonte dela.",
+        "en": "In 2019, independent researcher Alexey Guzey published a line-by-line audit of the book, fully cited. The title is blunt: \"Why We Sleep Is Riddled with Scientific and Factual Errors.\"\n\nThe cleanest hit was a footnote. Guzey traced the \"WHO-declared\" sleep epidemic to a National Geographic documentary that never mentions the WHO. The likely real source is a US CDC web page, and the agency itself had already swapped \"epidemic\" for \"problem\" two years before the book came out. Cancer doesn't double either: a 2018 meta-analysis pooled over 1.5 million people and found no significant link between sleep duration and cancer.\n\nThen there is a chart with the 5-hour bar deleted, and a Neuron paper retracted at the author's request over a drop of \"400 to 600 percent\" — impossible, since nothing falls by more than 100%. **Berkeley reviewed the complaint and closed it with no finding of misconduct.** Before you repeat a sleep statistic, open its source."
+      },
+      "image_brief": "Uma corda de escalada pendurada do alto de um penhasco ao entardecer, com uma pessoa parada na ponta dela olhando para baixo: a corda simplesmente acaba no ar, a muitos metros do chão, presa em nada.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Walker, Why We Sleep · Scribner 2017 · auditoria de Guzey, 2019",
+            "en": "Walker, Why We Sleep · Scribner 2017 · Guzey's 2019 audit"
+          },
+          "url": "https://guzey.com/books/why-we-sleep/"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "sete-ou-mais",
+      "ordinal": 3,
+      "title": {
+        "pt": "Sono: a meta de 8 horas não é consenso.",
+        "en": "Sleep: the 8-hour target isn't consensus."
+      },
+      "claim": {
+        "pt": "O consenso clínico é 7 horas ou mais, não 8 cravadas: a menor mortalidade fica perto de 7h, com risco acima de 8h.",
+        "en": "The clinical consensus is 7 hours or more, not a hard 8: lowest mortality sits near 7h, with risk above 8h too."
+      },
+      "body": {
+        "pt": "O consenso clínico nunca foi \"8 horas cravadas\". A declaração conjunta da Academia Americana de Medicina do Sono e da Sleep Research Society, de 2015, recomenda 7 horas ou mais por noite pra adultos de 18 a 60 anos. Dormir menos que isso de forma crônica aparece ligado a ganho de peso, diabetes, hipertensão e depressão no conjunto dos estudos.\n\nE a mortalidade não é uma ladeira reta pra baixo. O estudo de Kripke, de 2002, acompanhou 1,1 milhão de adultos e achou a menor mortalidade em torno de 7 horas, com risco maior tanto abaixo de 6h quanto acima de 8h: uma curva em U, não a rampa que o livro desenha. Como quase toda pesquisa de sono, é observacional — mostra correlação, não prova de causa.\n\n**Sete-ou-mais, não oito-ou-fracasso.** Se você funciona bem com 7 horas, não está falhando. Mire 7 horas ou mais sempre no mesmo horário: regularidade pesa mais que a meta redonda.",
+        "en": "The clinical consensus was never \"a hard 8 hours.\" The 2015 joint statement from the American Academy of Sleep Medicine and the Sleep Research Society recommends 7 or more hours a night for adults aged 18 to 60. Chronically sleeping less than that shows up linked to weight gain, diabetes, hypertension and depression across the literature.\n\nAnd mortality is not a straight slope down. Kripke's 2002 study followed 1.1 million adults and found the lowest mortality around 7 hours, with higher risk both below 6h and above 8h: a U-shaped curve, not the downhill ramp the book draws. Like almost all sleep research, it is observational — it shows correlation, not proof of cause.\n\n**Seven-or-more, not eight-or-fail.** If you feel fine on 7 hours, you are not falling short. Aim for 7 hours or more at the same time every night: regularity beats the round target."
+      },
+      "image_brief": "Um vale de grama em forma de U visto de lado ao amanhecer: uma pessoa dorme tranquila no ponto mais baixo, enquanto pelas duas encostas que sobem dos lados descem pedras soltas rolando em direção a ela.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Walker, Why We Sleep · Scribner 2017 · auditoria de Guzey, 2019",
+            "en": "Walker, Why We Sleep · Scribner 2017 · Guzey's 2019 audit"
+          },
+          "url": "https://guzey.com/books/why-we-sleep/"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "ortossonia",
+      "ordinal": 4,
+      "title": {
+        "pt": "Ortossonia: ler sobre sono fez dormir pior.",
+        "en": "Orthosomnia: reading about sleep made it worse."
+      },
+      "claim": {
+        "pt": "Clínicos relatam insônia em quem leu o livro com medo: a obsessão pelo sono perfeito estraga o sono.",
+        "en": "Sleep clinicians report insomnia in readers who got scared: chasing perfect sleep wrecks the sleep itself."
+      },
+      "body": {
+        "pt": "O próprio livro tem um efeito colateral. Clínicos do sono relatam pacientes que desenvolveram insônia depois de ler Why We Sleep com medo. O padrão tem nome: **ortossonia** — a obsessão em dormir \"perfeitamente\", muitas vezes alimentada por dado de wearable, que acaba estragando justo o sono que tenta proteger.\n\nDá pra reconhecer em você mesmo. Você mira as 8 horas cravadas, acorda, confere o que o aparelho registrou da sua noite e passa o dia esperando o cansaço chegar. Na noite seguinte, deita já medindo se vai dormir. Vigiar o sono é o oposto de dormir.\n\nA saída é de consenso médico, não invenção do Walker: se ler sobre sono te deixa ansioso, pare de ler — obsessão nunca melhorou noite nenhuma. E se o número do aparelho te assombra de manhã, pare de conferir por algumas semanas. Sem nada pra comparar, a ansiedade fica sem alvo, e o resto da rotina — horário regular, quarto escuro e fresco — segue funcionando sozinho.",
+        "en": "The book comes with a side effect. Sleep clinicians report patients who developed insomnia after reading Why We Sleep scared. The pattern has a name: **orthosomnia** — an obsession with sleeping \"perfectly,\" often fueled by wearable data, that ends up wrecking the very sleep it tries to protect.\n\nYou can spot it in yourself. You aim for a hard 8 hours, wake up, check what the device logged overnight, then spend the day waiting for the tiredness to show up. The next night you lie down already measuring whether you will fall asleep. Watching your sleep is the opposite of sleeping.\n\nThe way out is medical consensus, not a Walker invention: if reading about sleep makes you anxious, stop reading — obsession never improved a single night. And if the device's verdict haunts your mornings, stop checking it for a few weeks. With nothing to compare, the anxiety loses its target, while the rest of the routine — steady hours, a dark cool room — keeps working on its own."
+      },
+      "image_brief": "Uma pessoa de pijama sentada numa cadeira de madeira ao lado da própria cama vazia, no escuro, em vigília, apontando a lanterna acesa para o travesseiro arrumado.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Walker, Why We Sleep · Scribner 2017 · auditoria de Guzey, 2019",
+            "en": "Walker, Why We Sleep · Scribner 2017 · Guzey's 2019 audit"
+          },
+          "url": "https://guzey.com/books/why-we-sleep/"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

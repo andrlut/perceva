@@ -1,0 +1,25 @@
+{
+  "slug": "non-instrumental-play",
+  "dimension_id": "craft",
+  "title": {
+    "pt": "O hobby mais inútil é o que mais descansa",
+    "en": "The Most Useless Hobby Rests You Best"
+  },
+  "ideas": [
+    {
+      "id": "dominio-recarrega",
+      "ordinal": 1,
+      "image_prompt": "Uma pessoa escalando uma parede de boulder num galpão escuro, vista de lado a meia altura da parede, antebraços tensos e rosto sereno, ocupando o centro do quadro; bem abaixo dela, no chão do mesmo galpão, um sofá baixo e vazio com uma manta amassada, com folga em volta dos dois. Um único facho quente e dourado desce do alto e abre um halo que envolve a escaladora e o sofá com exatamente a mesma intensidade, como se fossem a mesma coisa, enquanto o resto do galpão some no breu. As agarras da parede levam um verde-sálvia apagado, único acento de cor."
+    },
+    {
+      "id": "premio-mata-o-prazer",
+      "ordinal": 2,
+      "image_prompt": "Uma folha grande de papel vista de cima, preenchendo o centro do quadro com folga em volta, e as mãos pequenas de uma criança desenhando com canetas coloridas espalhadas pela mesa. No canto de cima da folha alguém pousou uma roseta de fita dourada, lisa e sem nenhuma marca, e ali os traços saem duros, ralos e quase sem cor; no canto oposto, longe da fita, os rabiscos explodem em cor e movimento redondo. Uma única luz quente entra em diagonal pelo lado dos rabiscos vivos e os acende; o canto da fita fica na penumbra, com apenas um brilho metálico frio na seda."
+    },
+    {
+      "id": "espaco-sem-placar",
+      "ordinal": 3,
+      "image_prompt": "Uma pessoa sozinha sovando massa numa bancada de cozinha ao anoitecer, vista de corpo até a cintura e centrada no quadro com folga em volta, ombros soltos e farinha suspensa no ar em volta das mãos. Ao fundo, num corredor escuro e fora do alcance dela, um celular repousa de bruços sobre um banquinho, apenas uma silhueta na sombra. Toda a luz vem de uma única lâmpada pendente baixa sobre a bancada, quente e dourada, que acende a massa, a farinha no ar e os braços dela e deixa o corredor num azul acinzentado frio; um pano verde-sálvia dobrado na borda da bancada é o único outro acento."
+    }
+  ]
+}

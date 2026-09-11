@@ -1,0 +1,91 @@
+{
+  "slug": "glossary-dexterity",
+  "type": "explainer",
+  "material_title": {
+    "pt": "Levantar do chão prediz quanto você vive",
+    "en": "Getting off the floor predicts how long you live"
+  },
+  "ideas": [
+    {
+      "id": "sentar-e-levantar",
+      "ordinal": 1,
+      "title": {
+        "pt": "Um 'truque de festa' prevê quanto você vive.",
+        "en": "A 'party trick' predicts how long you live."
+      },
+      "claim": {
+        "pt": "Levantar do chão precisando de três ou quatro apoios veio com 5 a 6 vezes mais risco de morrer.",
+        "en": "Needing three or four points of support to get off the floor came with 5 to 6 times the risk of dying."
+      },
+      "body": {
+        "pt": "Pesquisadores brasileiros criaram o teste de sentar-e-levantar — sentar no chão de pernas cruzadas e subir sem usar mãos, joelhos ou cotovelo — e acompanharam 2 mil adultos entre 51 e 80 anos (Brito et al., Eur J Prev Cardiol, 2014). Quem subia precisando de três ou quatro apoios tinha **5 a 6 vezes** mais risco de morrer nos anos seguintes do que quem subia limpo. O risco continua ali depois de descontar idade, peso e condição do coração.\n\nNão é força que o teste mede. É o corpo se organizando no espaço: músculo, articulação, ouvido interno e o sentido da própria posição conversando ao mesmo tempo. Quando uma dessas peças começa a falhar, o teste denuncia antes de qualquer sintoma.\n\nOutros gestos bobos preveem a mesma coisa. Num estudo com 1.702 adultos, quem não ficava 10 segundos parado num pé só tinha 84% mais risco de morrer em sete anos — e uma em cada cinco pessoas falhou. Faça esse teste hoje, perto de uma parede.",
+        "en": "Brazilian researchers built the sitting-rising test — sit cross-legged on the floor, then stand back up without pushing off with your hands, knees or an elbow — and followed 2,000 adults aged 51 to 80 (Brito et al., Eur J Prev Cardiol, 2014). People who needed three or four points of support on the way up carried **5 to 6 times** the risk of dying in the years that followed, compared with those who rose clean. The gap survives adjustment for age, weight and heart condition.\n\nThe test isn't reading strength. It reads your body organizing itself in space: muscle, joint, inner ear and the sense of where your limbs are, all talking at once. When one of those parts starts to fail, the test catches it before any symptom does.\n\nOther silly gestures predict the same thing. In a study of 1,702 adults, people who couldn't stand on one leg for 10 seconds had 84% higher risk of dying within seven years — one in five failed. Try that one today, near a wall."
+      },
+      "image_brief": "Uma pessoa de cabelo grisalho no meio do esforço de levantar do chão de madeira de uma sala quase vazia: uma das mãos espalmada no piso, um joelho apoiado, a outra mão agarrada no assento de uma cadeira; a luz âmbar de uma janela alta recorta exatamente esses três pontos de apoio e deixa o resto do cômodo no escuro.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Brito et al., 2014 · Eur J Prev Cardiol · teste de sentar-e-levantar, n=2.002",
+            "en": "Brito et al., 2014 · Eur J Prev Cardiol · sitting-rising test, n=2,002"
+          },
+          "url": "https://doi.org/10.1177/2047487312471759"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "dinapenia",
+      "ordinal": 2,
+      "title": {
+        "pt": "Tropeço: sua força chega tarde demais.",
+        "en": "A stumble: your strength arrives too late."
+      },
+      "claim": {
+        "pt": "O que some primeiro é a velocidade da força, não a força — e segurar um tropeço leva milissegundos.",
+        "en": "What goes first is the speed of your force, not the force — and catching a stumble takes milliseconds."
+      },
+      "body": {
+        "pt": "Em 2023, quedas mataram 41.400 americanos acima de 65 anos, e as mortes por queda subiram 51% em uma década. Uma em cada quatro pessoas idosas cai todo ano.\n\nO que a idade tira primeiro não é a força bruta: é a velocidade com que você produz força. Os cientistas deram nome a isso — **dinapenia**, a perda de potência, diferente da sarcopenia, que é a perda de massa muscular. A potência cai mais rápido que o tamanho do músculo e que a força máxima.\n\nSegurar uma escorregada é um movimento de milissegundos. O tornozelo reage, o quadril corrige, o braço sai na hora certa. Quem perdeu potência ainda tem a força — ela só chega depois que o corpo já foi ao chão. O tornozelo entra nessa conta: um estudo com 372 mulheres achou pouca dorsiflexão — a capacidade de puxar o pé pra cima, em direção à canela — andando junto com mais quedas. Cinco minutos por dia de mobilidade de tornozelo e quadril rendem mais que uma maratona de alongamento por mês.",
+        "en": "In 2023, falls killed 41,400 Americans over 65, and fall deaths rose 51% in a single decade. One in four older adults falls every year.\n\nWhat age takes first isn't raw strength: it's how fast you produce force. Scientists gave it a name — **dynapenia**, the loss of muscle power, distinct from sarcopenia, the loss of muscle mass. Power drops faster than muscle size or peak strength do.\n\nCatching yourself on a slip is a movement of milliseconds. The ankle reacts, the hip corrects, the arm shoots out at the right instant. Someone who has lost power still owns the strength — it just arrives after the body already hit the floor. The ankle belongs in that chain: a study of 372 women found little dorsiflexion — the ability to pull your foot up toward your shin — went hand in hand with more falls. Five minutes a day of ankle and hip mobility beats a monthly stretching marathon."
+      },
+      "image_brief": "Uma pessoa escorregando num tapete solto no corredor de casa: o corpo já inclinado pra trás, um pé saindo do piso, e o braço que deveria alcançar a parede esticado no ar, ainda a um palmo dela — o instante congelado um pouco tarde demais, com a luz âmbar vindo do fundo do corredor.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Brito et al., 2014 · Eur J Prev Cardiol · teste de sentar-e-levantar, n=2.002",
+            "en": "Brito et al., 2014 · Eur J Prev Cardiol · sitting-rising test, n=2,002"
+          },
+          "url": "https://doi.org/10.1177/2047487312471759"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "equilibrio-corta-quedas",
+      "ordinal": 3,
+      "title": {
+        "pt": "Equilíbrio: alongar não é o que te segura.",
+        "en": "Balance: stretching isn't what holds you up."
+      },
+      "claim": {
+        "pt": "Alongar não previne queda. Seis meses de Tai Chi cortaram 55% do risco de cair várias vezes.",
+        "en": "Stretching doesn't prevent falls. Six months of Tai Chi cut the risk of falling repeatedly by 55%."
+      },
+      "body": {
+        "pt": "Uma revisão Cochrane de 108 estudos, com 23 mil pessoas, encontrou evidência forte de que programas de equilíbrio e movimento funcional reduzem quedas. Musculação sozinha, dança sozinha, caminhada sozinha? Evidência incerta. **O que corta queda é desafiar o equilíbrio de propósito.**\n\nO exemplo mais bem replicado é o Tai Chi. Num estudo com 256 adultos entre 70 e 92 anos, seis meses de prática deixaram o grupo com 55% menos risco de cair várias vezes do que o grupo que só alongava. Aquela sequência lenta e aparentemente boba é treino de equilíbrio disfarçado.\n\nAlongamento estático não faz o que a maioria pensa: uma revisão Cochrane não achou redução de dor muscular depois do treino, e outras revisões não acharam menos lesões em quem alonga antes de treinar. Flexibilidade é o quanto a articulação estica de forma passiva; mobilidade é o controle ativo dentro dessa amplitude — e é a segunda que protege. Reserve três sessões por semana de equilíbrio com força funcional moderada, a recomendação da OMS.",
+        "en": "A Cochrane review of 108 trials, covering 23,000 people, found strong evidence that balance and functional-movement programs reduce falls. Strength training alone, dance alone, walking alone? Uncertain. **What cuts falls is challenging your balance on purpose.**\n\nThe best-replicated example is Tai Chi. In a study of 256 adults aged 70 to 92, six months of practice left the group with 55% lower risk of falling repeatedly than the group that only stretched. That slow, seemingly silly sequence is balance training in disguise.\n\nStatic stretching doesn't do what most people think: a Cochrane review found no reduction in post-workout soreness, and other reviews found no drop in injuries among people who stretch before training. Flexibility is how far a joint stretches passively; mobility is active control inside that range — and the second one protects you. Book three sessions a week of balance plus moderate functional strength, the WHO recommendation."
+      },
+      "image_brief": "Num salão de piso de madeira, meia dúzia de pessoas mais velhas em pé num movimento lento de Tai Chi, todas equilibradas sobre um pé só e firmes; no primeiro plano, sentada num banco baixo, outra pessoa estica a perna num alongamento e segura o banco com as duas mãos pra não tombar de lado.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Brito et al., 2014 · Eur J Prev Cardiol · teste de sentar-e-levantar, n=2.002",
+            "en": "Brito et al., 2014 · Eur J Prev Cardiol · sitting-rising test, n=2,002"
+          },
+          "url": "https://doi.org/10.1177/2047487312471759"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

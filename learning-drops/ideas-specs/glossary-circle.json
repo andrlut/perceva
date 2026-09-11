@@ -1,0 +1,91 @@
+{
+  "slug": "glossary-circle",
+  "type": "explainer",
+  "material_title": {
+    "pt": "Quem você vê muda quanto você vive",
+    "en": "Who You See Changes How Long You Live"
+  },
+  "ideas": [
+    {
+      "id": "risco-que-ninguem-mede",
+      "ordinal": 1,
+      "title": {
+        "pt": "O fator de risco que ninguém mede.",
+        "en": "The risk factor nobody measures."
+      },
+      "claim": {
+        "pt": "Laços sociais fortes se associam a 50% mais chance de sobreviver — efeito do tamanho da pressão alta.",
+        "en": "Strong social ties are linked to 50% higher odds of surviving — an effect the size of high blood pressure."
+      },
+      "body": {
+        "pt": "Em 2023, o Surgeon General dos Estados Unidos — o médico-chefe do país — publicou um alerta: estar desconectado pesa na mortalidade tanto quanto fumar quinze cigarros por dia. É uma analogia de magnitude, não uma troca literal.\n\nO número vem de uma meta-análise — um estudo que junta dezenas de pesquisas num sinal só — com 148 estudos e 308 mil pessoas (Holt-Lunstad, 2010). Quem tinha vínculos fortes teve **50% mais chance de sobreviver** ao acompanhamento, efeito do tamanho de pressão alta e obesidade.\n\nEm 1979, um estudo acompanhou quase 7 mil adultos por nove anos: os mais isolados tiveram de duas a três vezes mais risco de morrer, mesmo descontando cigarro, bebida, peso e exercício. Quase tudo aqui é observacional: gente já doente pode se afastar primeiro. Por isso os estudos que descontam a saúde de base valem mais.\n\nFaça a conta que ninguém faz: quantas pessoas te procuraram essa semana sem obrigação nem trabalho? Zero ou um coloca você no grupo de risco, não importa quantos seguidores tenha.",
+        "en": "In 2023 the US Surgeon General — the country's top doctor — issued an official advisory: being socially disconnected weighs on mortality like smoking fifteen cigarettes a day. That is a magnitude analogy, not a literal trade.\n\nThe number behind it comes from a meta-analysis — a study pooling dozens of others into one signal — covering 148 studies and 308,000 people (Holt-Lunstad, 2010). People with strong bonds had **50% higher odds of surviving** the follow-up, an effect the size of high blood pressure and obesity.\n\nBack in 1979, a study followed nearly 7,000 adults for nine years: the most isolated ran two to three times the risk of dying, even after subtracting smoking, drinking, weight and exercise. Almost all of this evidence is observational: sicker people may withdraw first. That is why the studies subtracting baseline health carry more weight.\n\nRun the count nobody runs: how many people reached out to you this week with no obligation and no work reason? Zero or one puts you in the risk group, however many followers you have."
+      },
+      "image_brief": "Uma balança antiga de dois pratos sobre uma mesa de madeira: num prato, um punhado de cigarros acesos soltando fumaça; no outro, três pessoas em miniatura de mãos dadas. Os dois pratos param exatamente no mesmo nível, sob uma luz âmbar baixa.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Holt-Lunstad, Smith & Layton, 2010 · PLOS Medicine · n=308.849 (148 estudos)",
+            "en": "Holt-Lunstad, Smith & Layton, 2010 · PLOS Medicine · n=308,849 (148 studies)"
+          },
+          "url": "https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.1000316"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "isolamento-nao-e-solidao",
+      "ordinal": 2,
+      "title": {
+        "pt": "Solidão e isolamento: só um mexe no relógio.",
+        "en": "Loneliness and isolation: one moves the clock."
+      },
+      "claim": {
+        "pt": "Isolamento é quem você vê; solidão é como você se sente. Em 6.500 ingleses, quem previu a morte foi o isolamento.",
+        "en": "Isolation is who you see; loneliness is how you feel. In 6,500 English adults, isolation predicted death."
+      },
+      "body": {
+        "pt": "As duas palavras viram sinônimos na boca das pessoas, e não são a mesma coisa. **Isolamento é estrutural**: quantas pessoas você vê, com que frequência, quantos círculos diferentes você frequenta — dá pra contar de fora. Solidão é subjetiva: a angústia de se sentir sozinho, que pode aparecer até no meio de uma festa cheia.\n\nA crença popular diz que a solidão é que mata. Em 2013, um estudo acompanhou 6.500 ingleses com mais de 52 anos e separou as duas coisas (Steptoe, 2013): foi o isolamento que previu a mortalidade de forma mais firme. O efeito da solidão sentida quase sumiu depois de descontar isolamento e depressão. Sentir-se sozinho dói e importa — mas quem mexe no relógio é a estrutura da sua vida social, não o humor.\n\nDescubra qual é o seu caso antes de escolher o remédio. Sua agenda social está fina, ou você se sente mal apesar de ver gente? Agenda fina se conserta aparecendo, com gente marcada no calendário. A outra pede outra conversa.",
+        "en": "People use the two words as synonyms. They are not the same thing. **Isolation is structural**: how many people you see, how often, how many different circles you move through — countable from the outside. Loneliness is subjective: the ache of feeling alone, which can hit you in the middle of a crowded party.\n\nPopular belief says loneliness is what kills you. In 2013 a study tracked 6,500 English adults over 52 and pulled the two apart (Steptoe, 2013): isolation was what predicted mortality more firmly. The effect of felt loneliness nearly vanished once isolation and depression were subtracted. Feeling alone hurts and matters — but what moves the clock is the structure of your social life, not your mood.\n\nWork out which one you have before picking a fix. Is your social calendar thin, or do you feel bad in spite of seeing people? A thin calendar gets fixed by showing up, with people booked into the week. The other one is a different conversation."
+      },
+      "image_brief": "Uma cena partida ao meio por uma parede: à esquerda, uma pessoa de braços cruzados parada no meio de uma festa cheia, cercada de gente rindo; à direita, a mesma pessoa sozinha à mesa da cozinha de um apartamento vazio, e ao lado dela uma ampulheta grande com a areia escorrendo depressa.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Holt-Lunstad, Smith & Layton, 2010 · PLOS Medicine · n=308.849 (148 estudos)",
+            "en": "Holt-Lunstad, Smith & Layton, 2010 · PLOS Medicine · n=308,849 (148 studies)"
+          },
+          "url": "https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.1000316"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "variedade-nao-volume",
+      "ordinal": 3,
+      "title": {
+        "pt": "Amigos: não é sobre quantos você tem.",
+        "en": "Friends: it’s not how many you have."
+      },
+      "claim": {
+        "pt": "O que protege é a variedade de tipos de vínculo: com 1 a 3 tipos, 4,2x mais resfriados que com 6 ou mais.",
+        "en": "What protects you is variety of tie types: with 1 to 3 types, 4.2x more colds than with 6 or more."
+      },
+      "body": {
+        "pt": "Em 1997, pesquisadores fizeram o que quase ninguém consegue nessa área: testaram de propósito. 276 voluntários saudáveis receberam gotas no nariz com vírus vivo do resfriado (Cohen, 1997). Quem tinha só um a três tipos de vínculo — digamos, cônjuge e um colega — ficou resfriado 4,2 vezes mais que quem tinha seis tipos ou mais. **Variedade, não volume.** Como o vírus foi dado em condições controladas, esse estudo escapa do problema da causa invertida que assombra o resto da literatura.\n\nIsso desmonta a corrida pelo número. O número de Dunbar — as tais 150 relações estáveis — saiu em 1992 de uma conta comparando cérebros de primatas, com margem entre 100 e 230. É um chute educado, não um teto.\n\nPare de colecionar mais gente do mesmo grupo. Marque um contato recorrente, mesma pessoa e mesmo dia da semana, e entre num grupo com encontro fixo: coral, time, curso, voluntariado. O calendário faz o trabalho por você, e nada disso exige carisma — exige aparecer.",
+        "en": "In 1997 researchers did what almost nobody in this field can: they tested on purpose. 276 healthy volunteers got nasal drops carrying live cold virus (Cohen, 1997). Those with only one to three types of tie — say, a spouse and one coworker — caught a cold 4.2 times more often than those with six types or more. **Variety, not volume.** Because the virus was given under controlled conditions, this study escapes the reverse-cause problem that haunts the rest of the literature.\n\nThat dismantles the race for a number. Dunbar's number — the famous 150 stable relationships — came in 1992 out of a calculation comparing primate brains, carrying a margin between 100 and 230. An educated guess, not a ceiling.\n\nStop collecting more people from the same group. Set one recurring contact, same person and same weekday, and join a group with a standing meeting: choir, team, class, volunteering. The calendar does the work for you, and none of it takes charisma — it takes showing up."
+      },
+      "image_brief": "Uma pessoa abrigada de uma chuva forte sob um guarda-chuva grande sustentado por seis mãos bem diferentes entre si — uma de luva de jardinagem, uma de luva de cozinha, uma suja de graxa, uma com aliança, uma de criança, uma enrugada; ao lado, na mesma chuva, outra pessoa encharcada tenta se cobrir com um guarda-chuva pequeno segurado por duas mãos iguais.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Holt-Lunstad, Smith & Layton, 2010 · PLOS Medicine · n=308.849 (148 estudos)",
+            "en": "Holt-Lunstad, Smith & Layton, 2010 · PLOS Medicine · n=308,849 (148 studies)"
+          },
+          "url": "https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.1000316"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "slug": "explainer-career-capital",
+  "dimension_id": "wealth",
+  "title": {
+    "pt": "Por que \"siga sua paixão\" falha",
+    "en": "Why \"follow your passion\" backfires"
+  },
+  "ideas": [
+    {
+      "id": "capital-de-carreira",
+      "ordinal": 1,
+      "image_prompt": "Vista de perto sobre uma bancada de oficina: no centro do quadro, duas mãos calejadas encaixam no vão de uma máquina antiga de metal escuro uma única engrenagem feita à mão, de dentes irregulares e desiguais, com folga em volta do gesto. Em primeiro plano, à direita e um pouco abaixo, um cesto de vime transborda de engrenagens idênticas de fábrica, todas de dentes perfeitos e todas grandes demais pra aquele vão. Uma única luz quente e dourada vem de baixo, de dentro da máquina, e acende a engrenagem irregular e as mãos; o cesto e as engrenagens iguais ficam numa penumbra fria, com um leve reflexo verde-sálvia na borda do metal."
+    },
+    {
+      "id": "interesse-construido",
+      "ordinal": 2,
+      "image_prompt": "Uma trilha de montanha vista de longe e de lado: na parte de baixo do quadro, o trecho inicial é íngreme e cheio de vegetação cor de outono; no centro, a trilha vira um platô longo, reto e cinzento que se estende até o fundo. Exatamente no primeiro passo do platô, uma pessoa sozinha para e já gira o corpo pro caminho de volta, ocupando o centro do quadro com folga em volta; bem adiante, no platô, outra pessoa é só um pontinho escuro seguindo em frente. A única luz quente e dourada vem de um sol baixo atrás da subida colorida e doura as costas de quem gira e as folhas do trecho inicial; o platô inteiro e a figura distante ficam num cinza-azulado frio."
+    },
+    {
+      "id": "aprofundar-antes-de-trocar",
+      "ordinal": 3,
+      "image_prompt": "Terreno seco e rachado visto de cima em leve diagonal: no centro do quadro, uma pessoa sozinha, de pé dentro de um poço estreito e fundo que ela mesma cavou, apoiada na pá, com água brilhando no fundo estreito abaixo dela. Espalhadas ao redor em primeiro plano e nas laterais, seis covas rasas e abandonadas, cada uma com uma pá largada dentro, todas vazias e poeirentas. A única luz quente e dourada desce em feixe estreito pra dentro do poço fundo e acende a água e os ombros da pessoa; a terra rachada e as covas rasas ficam numa penumbra fria de fim de tarde."
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "slug": "news-oral-glp1-2026-05",
+  "type": "news",
+  "material_title": {
+    "pt": "Pílula oral segura a perda de peso pós-Ozempic",
+    "en": "Oral pill holds weight loss after Ozempic"
+  },
+  "ideas": [
+    {
+      "id": "rampa-de-saida-da-agulha",
+      "ordinal": 1,
+      "title": {
+        "pt": "Parar o Ozempic cobrava um preço. Até agora?",
+        "en": "Stopping Ozempic used to cost you. Until now?"
+      },
+      "claim": {
+        "pt": "Trocar a injeção semanal por um comprimido diário de orforglipron segurou 75-80% do peso perdido; no placebo, 38-49%.",
+        "en": "Swapping the weekly shot for a daily orforglipron pill held 75-80% of the lost weight; on placebo, 38-49%."
+      },
+      "body": {
+        "pt": "Ozempic, Wegovy e Mounjaro imitam o GLP-1 — o hormônio que o intestino solta depois de comer pra avisar o cérebro que você já comeu. Parar a injeção tira esse freio do apetite, e o peso costuma voltar em poucos meses.\n\nNo ensaio ATTAIN-MAINTAIN (Aronne et al., Nature Medicine, 2026), 376 adultos que já tinham emagrecido com semaglutida ou tirzepatida largaram a injeção e passaram a tomar um comprimido diário de orforglipron ou um placebo. Um ano depois, a pílula preservou 75% e 79% do peso perdido, contra 49% e 38% no placebo. **Menos de 1 em cada 5 precisou voltar a um remédio antiobesidade; no placebo, de metade a dois terços.**\n\nCalibre a confiança: o estudo foi bancado pela Eli Lilly, que fabrica o orforglipron, e o comprimido ainda não tem aprovação da FDA. Sozinho, do zero, ele emagrece menos que as duas injeções — segura um platô, não leva você até ele. **Hoje não há o que trocar**: força, proteína e sono seguem movendo o ponteiro.",
+        "en": "Ozempic, Wegovy and Mounjaro copy GLP-1 — the hormone your gut releases after a meal to tell your brain you've eaten. Stop the shot and that brake on appetite comes off, so the weight usually returns within months.\n\nIn ATTAIN-MAINTAIN (Aronne et al., Nature Medicine, 2026), 376 adults who had already lost weight on semaglutide or tirzepatide came off the injection and started either a daily orforglipron pill or a placebo. A year later, the pill preserved 75% and 79% of the lost weight, against 49% and 38% on placebo. **Fewer than 1 in 5 had to restart an anti-obesity drug; on placebo, half to two-thirds did.**\n\nCalibrate your confidence: Eli Lilly, which makes orforglipron, funded the trial, and the pill still has no FDA approval. From a standing start it loses less weight than either shot — it holds a plateau, it doesn't take you there. **Nothing to switch today**: strength, protein and sleep still move the needle."
+      },
+      "image_brief": "Uma pessoa parada num platô de rocha ao amanhecer, mochila nas costas, a mão firmando um pequeno grampo de escalada cravado na pedra; a corda grossa e pesada que a trouxe até ali jaz enrolada no chão, solta e sem tensão.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Aronne et al., 2026 · Nature Medicine · ATTAIN-MAINTAIN · fase 3, n=376",
+            "en": "Aronne et al., 2026 · Nature Medicine · ATTAIN-MAINTAIN · phase 3, n=376"
+          },
+          "url": "https://www.nature.com/articles/s41591-026-04386-7"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "slug": "glossary-money",
+  "type": "explainer",
+  "material_title": {
+    "pt": "A parte chata de ficar rico",
+    "en": "The Boring Part of Getting Rich"
+  },
+  "ideas": [
+    {
+      "id": "compre-o-palheiro",
+      "ordinal": 1,
+      "title": {
+        "pt": "O fundo 'burro' ganha do gestor bem pago.",
+        "en": "The 'dumb' fund beats the well-paid manager."
+      },
+      "claim": {
+        "pt": "Em 20 anos, cerca de 92% dos fundos ativos perdem pro índice. Não é falta de talento: é aritmética.",
+        "en": "Over 20 years, about 92% of active funds lose to the index. It isn't lack of talent: it's arithmetic."
+      },
+      "body": {
+        "pt": "Um fundo de índice compra todas as empresas de um mercado de uma vez, na proporção do tamanho de cada uma. O clássico segue o S&P 500: numa aplicação só, você vira dono de um pedacinho das 500 maiores empresas dos EUA. Do outro lado está o fundo ativo, com um gestor bem pago tentando escolher as ações que vão subir mais.\n\nO placar SPIVA, da S&P, diz quem ganha: em 2025, 79% dos fundos ativos de grandes empresas americanas perderam pro S&P 500 — o quarto pior ano em 25 anos. Em janelas de 20 anos, cerca de 92% ficam pra trás.\n\n**Não é azar, é aritmética.** Em 1991, o Nobel William Sharpe mostrou que o mercado é a soma de todos os investidores: o dólar médio rende o retorno do mercado. Pra um gestor ganhar acima da média, outro precisa perder o mesmo tanto — soma zero antes dos custos. Com a taxa cara por cima, o grupo dos ativos está condenado a render menos.\n\nVeja hoje se o seu dinheiro está num fundo de índice barato.",
+        "en": "An index fund buys every company in a market at once, weighted by each one's size. The classic one tracks the S&P 500: with a single purchase you own a sliver of the 500 largest U.S. companies. On the other side sits the active fund, a well-paid manager trying to pick the stocks that will beat the average.\n\nS&P's own SPIVA scorecard settles it: in 2025, 79% of active U.S. large-cap funds lost to the S&P 500 — the fourth-worst year in 25 years. Over 20-year windows, about 92% fall behind.\n\n**This isn't bad luck, it's arithmetic.** In 1991, Nobel laureate William Sharpe showed the market is the sum of every investor: the average invested dollar earns the market's return. For one manager to beat the average, another has to lose by the same amount — zero-sum before costs. Add the high fee and active investors as a group are doomed to trail.\n\nCheck today whether your money sits in a broad, cheap index fund."
+      },
+      "image_brief": "Dentro de um celeiro, uma pessoa de terno caro remexe com uma pinça uma braçada de palha espalhada no chão, procurando uma agulha; atrás dela, alguém de roupa simples já ergue o palheiro inteiro num carrinho de mão, e toda a luz quente da cena cai sobre o palheiro.",
+      "sources": [
+        {
+          "label": {
+            "pt": "S&P Dow Jones Indices · SPIVA U.S. Scorecard · Fim de 2025",
+            "en": "S&P Dow Jones Indices · SPIVA U.S. Scorecard · Year-End 2025"
+          },
+          "url": "https://www.spglobal.com/spdji/en/research-insights/spiva/"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "duas-goteiras",
+      "ordinal": 2,
+      "title": {
+        "pt": "Investimento: você perde pro seu próprio fundo.",
+        "en": "Investing: you lose to your own fund."
+      },
+      "claim": {
+        "pt": "Duas goteiras drenam o retorno: a taxa, que compõe todo ano, e o seu timing — 1,1 a 1,7 ponto por ano.",
+        "en": "Two leaks drain the return: the fee, which compounds every year, and your timing — 1.1 to 1.7 points a year."
+      },
+      "body": {
+        "pt": "Todo fundo cobra uma taxa anual de administração: a fatia do seu dinheiro que fica com o fundo, você ganhando ou perdendo. Nos EUA, o fundo ativo médio de ações cobrou 0,64% em 2024; o fundo de índice, 0,05%. Meio ponto parece nada, mas não é um pedágio único — compõe ano após ano. Em R$ 100 mil crescendo por 30 anos, a diferença entre render 7% e 6,4% vira dezenas de milhares de reais.\n\n**A taxa é o melhor previsor do desempenho futuro de um fundo**, melhor que o histórico de retorno. Russel Kinnel, da Morningstar, separou os fundos por custo: os 25% mais baratos entregaram o dobro ou o triplo da taxa de sucesso dos 25% mais caros.\n\nA segunda goteira é você. O investidor médio rende de 1,1 a 1,7 ponto por ano a menos que os próprios fundos que tem — compra depois que subiu, vende depois que caiu. A Morningstar chama isso de gap, e numa década ele come de 15% a 22% do retorno.\n\nOlhe a taxa do seu fundo e automatize o aporte.",
+        "en": "Every fund charges an annual expense ratio: the slice of your money the fund keeps each year, win or lose. In the U.S., the average active equity fund charged 0.64% in 2024; the average index fund, 0.05%. Half a point sounds like nothing, but it isn't a one-time toll — it compounds year after year. On $100k growing for 30 years, the gap between earning 7% and 6.4% turns into tens of thousands of dollars.\n\n**The fee is the best predictor of a fund's future performance**, better than its past returns. Morningstar's Russel Kinnel sorted funds by cost: the cheapest 25% delivered double or triple the success rate of the priciest 25%.\n\nThe second leak is you. The average investor earns 1.1 to 1.7 points a year less than the funds they own — buying after a rise, selling after a drop. Morningstar calls it the gap, and over a decade it eats 15% to 22% of the return.\n\nLook up your fund's fee and automate the contribution."
+      },
+      "image_brief": "Um balde de metal cheio d'água carregado por uma pessoa: pelo fundo escorre um fio fino e constante, enquanto a mão que segura a alça treme e entorna uma golada por cima da borda; a poça formada no chão já é maior do que o que restou dentro do balde.",
+      "sources": [
+        {
+          "label": {
+            "pt": "S&P Dow Jones Indices · SPIVA U.S. Scorecard · Fim de 2025",
+            "en": "S&P Dow Jones Indices · SPIVA U.S. Scorecard · Year-End 2025"
+          },
+          "url": "https://www.spglobal.com/spdji/en/research-insights/spiva/"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "vinte-e-cinco-vezes",
+      "ordinal": 3,
+      "title": {
+        "pt": "Independência financeira: existe um número.",
+        "en": "Financial independence: there's a number."
+      },
+      "claim": {
+        "pt": "Junte 25 vezes o seu gasto anual e chegou lá. Quem te leva é a sua taxa de poupança, não o mercado.",
+        "en": "Reach 25 times your annual spending and you've arrived. What gets you there is your savings rate."
+      },
+      "body": {
+        "pt": "Em 1994, o planejador William Bengen testou décadas de história do mercado americano e achou uma regra: tire 4% da carteira no primeiro ano de aposentadoria e depois ajuste pela inflação, que o dinheiro dura pelo menos 30 anos em todos os períodos que ele testou. O Estudo Trinity confirmou em 1998 — uma carteira 75% ações e 25% títulos sacando 4% ao ano sobreviveu em 98% das janelas de 30 anos. (O próprio Bengen depois revisou o número pra 4,7%.)\n\nVire a regra do avesso e ela vira meta: 4% é um vinte e cinco avos. **Junte 25 vezes o seu gasto anual e você atingiu independência financeira.** Gasta R$ 60 mil por ano? São R$ 1,5 milhão investidos.\n\nO que decide se você chega não é a ação que escolheu, é quanto da renda você guarda: poupar 10% leva umas cinco décadas; 25% cai pra uns 32 anos; 50% chega em 17. É aritmética pura, com retorno constante — bússola, não GPS. Multiplique hoje o seu gasto anual por 25.",
+        "en": "In 1994, planner William Bengen tested decades of U.S. market history and found a rule: withdraw 4% of your portfolio in your first year of retirement, then adjust for inflation, and the money lasts at least 30 years across every historical period he tried. The Trinity Study confirmed it in 1998 — a 75%-stock, 25%-bond portfolio pulling 4% a year survived 98% of 30-year windows. (Bengen himself later revised the figure to 4.7%.)\n\nFlip the rule over and it becomes a target: 4% is one twenty-fifth. **Save 25 times your annual spending and you've hit financial independence.** Spend $60k a year? That's $1.5 million invested.\n\nWhat decides whether you get there isn't the stock you picked, it's how much of your income you keep: saving 10% takes roughly five decades; 25% drops it to about 32 years; 50% gets there in 17. Pure arithmetic at a constant return — a compass, not a GPS. Multiply your annual spending by 25 today."
+      },
+      "image_brief": "Uma pessoa no alto de uma escada enche um silo estreito e altíssimo jogando um punhado de grãos por vez; do pé do silo sai um filete contínuo de grãos que cai direto num prato fundo sobre uma mesa posta, com uma cadeira puxada e esperando, sem que o silo baixe de nível.",
+      "sources": [
+        {
+          "label": {
+            "pt": "S&P Dow Jones Indices · SPIVA U.S. Scorecard · Fim de 2025",
+            "en": "S&P Dow Jones Indices · SPIVA U.S. Scorecard · Year-End 2025"
+          },
+          "url": "https://www.spglobal.com/spdji/en/research-insights/spiva/"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

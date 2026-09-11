@@ -1,0 +1,91 @@
+{
+  "slug": "does-money-buy-happiness",
+  "type": "explainer",
+  "material_title": {
+    "pt": "Dinheiro compra felicidade? O acordo de 2023",
+    "en": "Does Money Buy Happiness? Settled in 2023"
+  },
+  "ideas": [
+    {
+      "id": "teto-dos-75-mil",
+      "ordinal": 1,
+      "title": {
+        "pt": "O teto dos 75 mil nunca foi sobre a sua vida.",
+        "en": "The $75k ceiling was never about your life."
+      },
+      "claim": {
+        "pt": "O platô de 2010 era só do humor do dia a dia; a satisfação com a vida seguiu subindo com a renda.",
+        "en": "The 2010 plateau was only day-to-day mood; satisfaction with life as a whole kept rising with income."
+      },
+      "body": {
+        "pt": "Em 2010, Daniel Kahneman — o psicólogo que ganhou o Nobel de Economia — e Angus Deaton analisaram as respostas de quase 450 mil americanos e separaram duas coisas que a gente mistura. Uma é a **felicidade do dia a dia**: o seu humor enquanto a vida acontece, se o dia teve mais alegria do que estresse. A outra é a satisfação com a vida como um todo: o veredito que você dá, de 0 a 10, quando para e faz o balanço.\n\nSó a primeira parou de crescer nos 75 mil dólares por ano. A segunda continuou subindo com a renda, sem freio à vista. O platô que virou frase de jantar nunca foi sobre a sua vida inteira — era sobre o seu humor de terça de manhã.\n\nDa próxima vez que um aumento parecer não ter mudado nada, pergunte qual das duas você está medindo. O humor de hoje e o balanço da vida respondem a coisas diferentes.",
+        "en": "In 2010, Daniel Kahneman — the psychologist who won the Nobel in economics — and Angus Deaton went through the answers of nearly 450,000 Americans and pulled apart two things we blur together. One is **day-to-day happiness**: your mood while life is happening, whether the day held more joy than stress. The other is satisfaction with life as a whole: the verdict you reach on a 0-to-10 ladder when you step back and tally it up.\n\nOnly the first stopped climbing at $75,000 a year. The second kept rising with income, no brakes in sight. The plateau that became a dinner-table line was never about your whole life — it was about your mood on a Tuesday morning.\n\nNext time a raise seems to have changed nothing, ask which of the two you are measuring. Today's mood and the verdict on your life answer to different things."
+      },
+      "image_brief": "Duas torres de moedas empilhadas numa mesa de madeira ao lado de uma xícara de café, de manhã: a torre da frente estanca bem abaixo de uma lâmina de vidro horizontal que a impede de crescer; a de trás atravessa o vão e continua subindo para fora do quadro, banhada pela luz da janela.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Killingsworth, Kahneman & Mellers, 2023 · PNAS 120(10) · n=33.391",
+            "en": "Killingsworth, Kahneman & Mellers, 2023 · PNAS 120(10) · n=33,391"
+          },
+          "url": "https://www.pnas.org/doi/10.1073/pnas.2208661120"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "os-dois-estavam-certos",
+      "ordinal": 2,
+      "title": {
+        "pt": "Felicidade: dois estudos opostos, ambos certos.",
+        "en": "Happiness: two opposite studies, both right."
+      },
+      "claim": {
+        "pt": "Com mais renda, a felicidade de ~80% das pessoas não tem teto; só a minoria menos feliz empaca nos 100 mil dólares.",
+        "en": "As income rises, happiness has no ceiling for ~80% of people; only the least-happy minority stalls at $100k."
+      },
+      "body": {
+        "pt": "Kahneman dizia que a felicidade do dia a dia empacava. Matthew Killingsworth, com um app que cutucava as pessoas em momentos aleatórios — 1,7 milhão de flagras de humor de mais de 33 mil pessoas —, não achou platô nenhum. Em vez de trocar farpas por artigo, os dois fizeram uma **colaboração adversarial**: juntaram os dados e desenharam um teste que qualquer um deles aceitaria, com Barbara Mellers de árbitra neutra.\n\nO veredito de 2023: os dois estavam certos, sobre pessoas diferentes. Pra cerca de 80%, a felicidade continua subindo com a renda, sem teto à vista. Pros 15 a 20% que já pontuavam mais baixo em felicidade, ela sobe até uns 100 mil dólares por ano e aí empaca de verdade (Killingsworth, Kahneman & Mellers, 2023). O artigo nomeia o que trava: luto, coração partido, depressão clínica.\n\nSe um ganho recente não mexeu no seu humor, o freio provavelmente não é financeiro — olhe pra luto, relações ou saúde mental.",
+        "en": "Kahneman said day-to-day happiness flattened out. Matthew Killingsworth, using an app that pinged people at random moments — 1.7 million mood snapshots from more than 33,000 people — found no plateau at all. Instead of trading papers, the two ran an **adversarial collaboration**: they pooled the data and designed a test either side would accept, with Barbara Mellers as neutral referee.\n\nThe 2023 verdict: both were right, about different people. For roughly 80%, happiness keeps climbing with income, no ceiling in view. For the 15-20% who already scored lower on happiness, it rises to about $100,000 a year and then genuinely stalls (Killingsworth, Kahneman & Mellers, 2023). The paper names what jams it: grief, heartbreak, clinical depression.\n\nIf a recent raise didn't lift your mood, the brake probably isn't financial — look at grief, relationships, or mental health."
+      },
+      "image_brief": "Num campo aberto ao amanhecer, dezenas de pessoas sobem devagar suspensas por balões cheios; num canto do primeiro plano, três pessoas continuam com os pés no chão, os mesmos balões presos ao pulso, cada uma carregando uma pedra escura e pesada no colo.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Killingsworth, Kahneman & Mellers, 2023 · PNAS 120(10) · n=33.391",
+            "en": "Killingsworth, Kahneman & Mellers, 2023 · PNAS 120(10) · n=33,391"
+          },
+          "url": "https://www.pnas.org/doi/10.1073/pnas.2208661120"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "renda-logaritmica",
+      "ordinal": 3,
+      "title": {
+        "pt": "A felicidade não conta em reais.",
+        "en": "Happiness doesn't count in dollars."
+      },
+      "claim": {
+        "pt": "A felicidade conta em múltiplos: dobrar de 3 pra 6 mil por mês dá o mesmo salto que dobrar de 30 pra 60 mil.",
+        "en": "Happiness counts in multiples: doubling from $30k to $60k buys the same jump as doubling from $300k to $600k."
+      },
+      "body": {
+        "pt": "Nada disso funciona em reais lineares. Funciona em **renda logarítmica**: o que mexe na felicidade não é quantos reais a mais, é quantas vezes a sua renda multiplica. Dobrar de 3 pra 6 mil por mês dá mais ou menos o mesmo salto que dobrar de 30 pra 60 mil — só que o segundo salto custa dez vezes mais dinheiro. Cada degrau fica exponencialmente mais caro: não existe teto nos dados, mas o seu bolso encontra um bem antes.\n\nDuas honestidades. Os estudos são americanos e correlacionais — ninguém sorteou salários — e os ganhos lá em cima só foram medidos até uns 500 mil por ano (Killingsworth, Kahneman & Mellers, 2023). E tem o paradoxo de Easterlin: dentro de um país os mais ricos são mais felizes, mas décadas de crescimento não deixaram países inteiros mais felizes.\n\nQuando sua renda é baixa, priorize aumentá-la: o salto é maior lá embaixo. Depois, gaste onde o dia dói — menos estresse, menos deslocamento, mais tempo livre.",
+        "en": "None of this runs on linear dollars. It runs on **log income**: what moves happiness isn't how many more dollars, it's how many times your income multiplies. Doubling from $30k to $60k buys about the same jump as doubling from $300k to $600k — except the second jump costs ten times as many dollars. Each step gets exponentially pricier: the data show no ceiling, but your wallet hits one long before.\n\nTwo honest limits. The studies are American and correlational — nobody handed out random salaries — and the gains up top were only measured to about $500k a year (Killingsworth, Kahneman & Mellers, 2023). And there's the Easterlin paradox: within a country the rich are happier, yet decades of growth haven't made whole nations happier.\n\nWhen your income is low, prioritize raising it: the jump is biggest at the bottom. After that, spend where the day hurts — less stress, a shorter commute, more free time."
+      },
+      "image_brief": "Uma escadaria de pedra ao ar livre em que cada degrau tem o dobro da altura do anterior: nos primeiros, baixinhos, uma pessoa sobe leve com um punhado de moedas na mão; mais acima, diante de degraus da altura de um muro, a mesma pessoa arrasta um saco de moedas grande demais para erguer, sob a mesma luz dourada do fim de tarde.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Killingsworth, Kahneman & Mellers, 2023 · PNAS 120(10) · n=33.391",
+            "en": "Killingsworth, Kahneman & Mellers, 2023 · PNAS 120(10) · n=33,391"
+          },
+          "url": "https://www.pnas.org/doi/10.1073/pnas.2208661120"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

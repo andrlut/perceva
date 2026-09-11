@@ -1,0 +1,25 @@
+{
+  "slug": "glossary-sleep",
+  "dimension_id": "health",
+  "title": {
+    "pt": "Sono — a base de tudo",
+    "en": "Sleep — the foundation under everything"
+  },
+  "ideas": [
+    {
+      "id": "tres-pecas-do-sono",
+      "ordinal": 1,
+      "image_prompt": "Duas trilhas de pegadas atravessando a areia lisa de uma praia ao amanhecer, vistas de cima e um pouco de lado, subindo lado a lado pelo centro do quadro com folga em volta: à esquerda, uma trilha reta, de passos idênticos e igualmente espaçados; à direita, muito mais pegadas, porém tortas, cruzando a si mesmas e se perdendo duna acima. A única luz quente vem do sol baixo no horizonte, rasante, e acende a borda dourada de cada pegada da trilha reta; a trilha torta e a duna ficam numa penumbra azulada fria, com um único tufo de capim em verde-sálvia marcando onde ela se perde."
+    },
+    {
+      "id": "fome-da-noite-curta",
+      "ordinal": 2,
+      "image_prompt": "Uma única pessoa de pijama e cara de sono, de pé na cozinha no meio da tarde, ocupando o centro do quadro em três quartos, com a mão enfiada dentro de um pote de cerâmica liso cheio de pão sobre a bancada. Atrás dela, mais ao fundo e desfocado, um prato de almoço completo e intocado esfria sobre a mesa. A única luz quente e dourada entra pela janela lateral e toca o rosto sonolento, o braço estendido e a boca do pote; a mesa e o prato ficam numa penumbra fria, e o pijama carrega o único acento verde-sálvia da cena."
+    },
+    {
+      "id": "receita-minima-do-sono",
+      "ordinal": 3,
+      "image_prompt": "Uma pessoa vista de lado despejando o resto do café pela pia de aço de uma cozinha no fim da tarde: o antebraço, a caneca inclinada e o fio escuro de café caindo ocupam o centro do quadro, com folga em volta. Em primeiro plano, num pratinho ao lado da torneira, um anel de metal liso e uma pulseira de silicone lisa, sem mostrador nem botões, repousam esquecidos. A única luz quente vem do sol baixo que entra pela janela lateral, atravessa o fio de café e doura a mão e a borda da caneca; o pratinho, o anel e a pulseira verde-sálvia ficam na penumbra fria."
+    }
+  ]
+}

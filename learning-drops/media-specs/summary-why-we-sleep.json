@@ -1,0 +1,30 @@
+{
+  "slug": "summary-why-we-sleep",
+  "dimension_id": "health",
+  "title": {
+    "pt": "Why We Sleep — com lápis cético na mão",
+    "en": "Why We Sleep — read with a skeptic's pencil"
+  },
+  "ideas": [
+    {
+      "id": "duas-maquinas",
+      "ordinal": 1,
+      "image_prompt": "Uma pessoa adormecida numa rede pendurada sob o céu noturno, atravessando o centro do quadro com folga em cima e embaixo; no chão, duas figuras pequenas de macacão trabalham em silêncio, uma de cada lado da rede — à esquerda, uma empilha caixas lisas e iguais em ordem numa prateleira baixa; à direita, a outra varre um monte de folhas secas para um ralo aberto no piso. A única luz quente e dourada vem de um lampião baixo pendurado na corda da rede e cai só sobre as duas figurinhas e o que elas manuseiam; a pessoa adormecida fica em penumbra azulada, e os macacões carregam um verde-sálvia apagado."
+    },
+    {
+      "id": "epidemia-inexistente",
+      "ordinal": 2,
+      "image_prompt": "Uma corda grossa de escalada desce do alto de um penhasco ao entardecer e ocupa o eixo central do quadro, com uma pessoa agarrada na ponta de baixo olhando para o vazio embaixo dos próprios pés: a corda simplesmente termina no ar, a muitos metros do chão distante, sem estar presa a nada. O paredão de rocha fica atrás e à esquerda, em sombra azulada e fria; a única luz quente e dourada é o sol baixo que vem da direita e acende a pessoa e o último trecho de corda, deixando o resto da descida no escuro."
+    },
+    {
+      "id": "sete-ou-mais",
+      "ordinal": 3,
+      "image_prompt": "Um vale de grama em forma de U visto de lado, o perfil das duas encostas ocupando toda a largura do quadro com folga em volta; no ponto mais baixo, bem no centro, uma pessoa dorme encolhida e tranquila na grama, pequena diante das ladeiras. Das duas encostas descem pedras soltas rolando em direção a ela, umas no meio do caminho, outras ainda lá em cima. A única luz quente e dourada é o sol do amanhecer rasante que entra pela abertura do vale e pousa só no fundo do U e na pessoa; as encostas e as pedras ficam em sombra azulada, com a grama num verde-sálvia apagado."
+    },
+    {
+      "id": "ortossonia",
+      "ordinal": 4,
+      "image_prompt": "Numa peça escura e nua, uma pessoa de pijama está sentada e desperta numa cadeira de madeira ao lado da própria cama vazia e arrumada, inclinada para a frente, apontando uma lanterna acesa para o travesseiro intacto; câmera baixa e próxima, o par cadeira-e-cama centralizado no quadro com folga em volta e nada mais no cômodo. A única luz é o facho quente e dourado da lanterna, que desenha um círculo nítido no travesseiro e deixa o rosto e as mãos da pessoa apenas no respingo dessa luz; o resto do quarto some num azul-escuro frio."
+    }
+  ]
+}

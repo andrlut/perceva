@@ -1,0 +1,91 @@
+{
+  "slug": "glossary-contemplate",
+  "type": "explainer",
+  "material_title": {
+    "pt": "Contemplar: a mente que foge e volta",
+    "en": "Contemplation: the mind that wanders and returns"
+  },
+  "ideas": [
+    {
+      "id": "mente-vaga-metade",
+      "ordinal": 1,
+      "title": {
+        "pt": "Metade da sua vida acontece sem você.",
+        "en": "Half your life happens without you."
+      },
+      "claim": {
+        "pt": "A mente está em outro lugar 46,9% da vida acordada — e a divagação vem antes do humor cair, não depois.",
+        "en": "Your mind is elsewhere 46.9% of waking life — and the wandering comes before the mood drops, not after."
+      },
+      "body": {
+        "pt": "Em 2010, dois pesquisadores de Harvard puseram um app pra tocar no celular de 2.250 adultos em horas aleatórias e perguntar três coisas: o que você está fazendo, no que está pensando e quão feliz está. Juntaram mais de 250 mil respostas colhidas no dia real das pessoas (Killingsworth & Gilbert, Science, 2010).\n\nA mente estava longe da tarefa em quase toda atividade — no trabalho, no ônibus, até no sexo. **E a divagação vinha antes da queda de humor, não depois.** Não é que você escapa pra dentro da cabeça porque está mal; você fica mal porque escapou. A leitura causal é a melhor inferência dos autores, não uma prova fechada, mas o padrão apareceu forte.\n\nDivagar não é defeito: é a marca de uma mente que ensaia o futuro e remói o passado. Por isso o treino não é impedir a fuga, é encurtá-la. Quando perceber que saiu, volte de propósito pro que está na sua frente — sem se xingar por ter saído. Cada retorno desses é um pedaço daquela metade de volta.",
+        "en": "In 2010, two Harvard researchers built an app that pinged 2,250 adults at random moments and asked three things: what are you doing, what are you thinking about, and how happy are you. They gathered more than 250,000 answers from people's real days (Killingsworth & Gilbert, Science, 2010).\n\nMinds sat somewhere other than the task during almost every activity — at work, on the bus, even during sex. **And the wandering came before the mood dropped, not after.** You don't slip into your head because you feel bad; you feel bad because you slipped. The causal reading is the authors' best inference rather than airtight proof, but the pattern showed up strong.\n\nWandering is no defect: it is the mark of a mind that rehearses the future and chews on the past. So the training isn't to block the exit, it's to shorten it. The moment you notice you left, come back on purpose to what sits in front of you — no scolding yourself for leaving. Each return like that reclaims a piece of that half."
+      },
+      "image_brief": "Uma pessoa sentada à mesa do café da manhã com a xícara na mão: metade do corpo continua sólida na cadeira e a outra metade se desmancha num fio de fumaça clara que sai pela janela aberta e se refaz lá fora como uma silhueta dela indo embora pela rua.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Goyal M, et al., 2014 · JAMA Internal Medicine · n=3.515 (47 ensaios)",
+            "en": "Goyal M, et al., 2014 · JAMA Internal Medicine · n=3,515 (47 trials)"
+          },
+          "url": "https://jamanetwork.com/journals/jamainternalmedicine/fullarticle/1809754"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "meditacao-efeito-modesto",
+      "ordinal": 2,
+      "title": {
+        "pt": "Meditar: funciona menos do que te venderam.",
+        "en": "Meditation: it works less than advertised."
+      },
+      "claim": {
+        "pt": "Em 47 ensaios com 3.515 pessoas, meditar ganha de não fazer nada — mas não ganha de caminhar, remédio ou terapia.",
+        "en": "Across 47 trials and 3,515 people, meditating beats doing nothing — but not a walk, medication or therapy."
+      },
+      "body": {
+        "pt": "A revisão mais cuidadosa juntou 47 ensaios clínicos randomizados, com 3.515 pessoas (Goyal et al., JAMA Internal Medicine, 2014). Programas estruturados de meditação melhoraram ansiedade, depressão e dor, com tamanho de efeito — a régua que os pesquisadores usam pra medir quanto — entre pequeno e moderado. **Nos mesmos dados, não houve evidência clara de que meditar seja melhor que remédio, exercício ou terapia.** Real e mensurável, longe da transformação de antes-e-depois que os apps vendem.\n\nOnde a evidência é mais forte: recaída de depressão. O curso de oito semanas de terapia cognitiva baseada em mindfulness, a MBCT, corta o risco de recair em cerca de um terço frente ao cuidado habitual (Kuyken, JAMA Psychiatry, 2016, com 1.258 pacientes).\n\nE o que o folheto não diz: uma revisão de 83 estudos achou cerca de 1 em cada 12 praticantes relatando efeito adverso — ansiedade, angústia, sensação de desconexão. Prefira um programa guiado com instrutor a um app solto às duas da manhã, e pare se surgir angústia forte.",
+        "en": "The most careful review pooled 47 randomized controlled trials, 3,515 people (Goyal et al., JAMA Internal Medicine, 2014). Structured meditation programs improved anxiety, depression and pain, with an effect size — the ruler researchers use to say how much — between small and moderate. **In that same data, no clear evidence showed meditating to be better than medication, exercise or therapy.** Real and measurable, far from the before-and-after transformation apps sell.\n\nWhere the evidence is strongest: depression relapse. MBCT, the eight-week mindfulness-based cognitive therapy course, cuts the risk of relapsing by about a third versus usual care (Kuyken, JAMA Psychiatry, 2016, 1,258 patients).\n\nAnd what the brochure skips: a review of 83 studies found roughly 1 in 12 practitioners reporting an adverse effect — anxiety, distress, a sense of disconnection. Favour a guided program with a trained instructor over a loose app at 2 a.m., and stop if heavy distress shows up."
+      },
+      "image_brief": "Numa clareira ao amanhecer, uma pessoa medita sentada de pernas cruzadas sobre uma almofada e, na trilha ao lado, outra caminha em passo firme; as duas recebem exatamente a mesma luz dourada, enquanto bem atrás uma terceira figura afundada numa poltrona fica na penumbra fria.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Goyal M, et al., 2014 · JAMA Internal Medicine · n=3.515 (47 ensaios)",
+            "en": "Goyal M, et al., 2014 · JAMA Internal Medicine · n=3,515 (47 trials)"
+          },
+          "url": "https://jamanetwork.com/journals/jamainternalmedicine/fullarticle/1809754"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "portas-da-contemplacao",
+      "ordinal": 3,
+      "title": {
+        "pt": "Contemplar: sentar em silêncio é só uma porta.",
+        "en": "Contemplation: silence is just one door."
+      },
+      "claim": {
+        "pt": "Escrever 15 minutos, falar de si na terceira pessoa e desejar bem a outros têm evidência própria e menos barreira.",
+        "en": "Writing for 15 minutes, third-person self-talk and wishing others well each carry evidence of their own."
+      },
+      "body": {
+        "pt": "Contemplar é voltar a atenção pra dentro de propósito, e sentar em silêncio é só uma das formas testadas.\n\nEscrever é outra. Uma meta-análise de 146 estudos mostrou que colocar no papel o que te incomoda traz um benefício pequeno mas real pra saúde física e mental — maior justamente pra quem está sob muito estresse ou tende ao pessimismo (Frattaroli, 2006). Sessões acima de 15 minutos funcionam melhor que rabiscos rápidos.\n\nFalar consigo de fora é a mais barata da lista. Trocar o eu pelo próprio nome no meio do estresse — por que o André está nervoso, em vez de por que eu estou nervoso — **reduziu a reação emocional em cerca de um segundo**, sem exigir mais esforço mental que o normal (Kross, 2014).\n\nE tem a bondade amorosa: poucos minutos desejando bem, de propósito, a você e a outras pessoas. Num ensaio com 139 adultos, ela aumentou as emoções positivas do dia a dia, que previram mais satisfação com a vida e menos sintomas de depressão (Fredrickson, 2008). Escolha uma e faça amanhã.",
+        "en": "Contemplation means turning attention inward on purpose, and sitting in silence is only one of the tested forms.\n\nWriting is another. A meta-analysis of 146 studies found that putting what troubles you on paper brings a small but real benefit to physical and mental health — bigger precisely for people under heavy stress or prone to pessimism (Frattaroli, 2006). Sessions over 15 minutes beat quick scribbles.\n\nTalking to yourself from the outside is the cheapest one here. Swapping the I for your own name mid-stress — why is Alex nervous, instead of why am I nervous — **cut the emotional reaction within about a second**, with no more mental effort than usual (Kross, 2014).\n\nThen there is loving-kindness: a few minutes deliberately wishing yourself and other people well. In a trial of 139 adults, it raised everyday positive emotions, which in turn predicted more life satisfaction and fewer depressive symptoms (Fredrickson, 2008). Pick one and do it tomorrow."
+      },
+      "image_brief": "Quatro trilhas estreitas cruzam um campo ao amanhecer e desembocam no mesmo círculo de luz quente no centro; em cada trilha, um objeto largado no chão — uma almofada de meditação, um caderno aberto em página em branco com a caneta atravessada, um espelho de mão voltado pra cima e uma vela acesa protegida por duas mãos em concha.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Goyal M, et al., 2014 · JAMA Internal Medicine · n=3.515 (47 ensaios)",
+            "en": "Goyal M, et al., 2014 · JAMA Internal Medicine · n=3,515 (47 trials)"
+          },
+          "url": "https://jamanetwork.com/journals/jamainternalmedicine/fullarticle/1809754"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

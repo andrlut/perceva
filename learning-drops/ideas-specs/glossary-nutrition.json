@@ -1,0 +1,91 @@
+{
+  "slug": "glossary-nutrition",
+  "type": "explainer",
+  "material_title": {
+    "pt": "Comida não é só caloria",
+    "en": "Food isn't just calories"
+  },
+  "ideas": [
+    {
+      "id": "ultraprocessado-come-mais",
+      "ordinal": 1,
+      "title": {
+        "pt": "Mesmas calorias. Fomes diferentes.",
+        "en": "Same calories, different appetites."
+      },
+      "claim": {
+        "pt": "Com calorias e macros igualados, o ultraprocessado fez 20 adultos comerem 508 calorias a mais por dia — sem perceber.",
+        "en": "With calories and macros matched, ultra-processed food had 20 adults eating 508 more calories a day — without noticing."
+      },
+      "body": {
+        "pt": "Em 2019, o pesquisador Kevin Hall internou 20 adultos num centro do NIH e controlou cada garfada por um mês. Duas semanas de ultraprocessado, duas de comida minimamente processada — com as duas dietas igualadas no papel: mesmas calorias oferecidas, mesma proporção de carboidrato, gordura, proteína, açúcar, sódio e fibra. Podiam comer o quanto quisessem. **Comeram 508 calorias a mais por dia na versão ultraprocessada**, sem perceber, e ganharam quase um quilo em duas semanas.\n\nUltraprocessado, na classificação NOVA do pesquisador brasileiro Carlos Monteiro, é comida feita sobretudo de substâncias extraídas de alimentos — óleos, amidos, açúcares, proteínas isoladas — mais aditivos. O mecanismo é mecânico: ela é macia, densa em calorias e some rápido, então você mastiga menos e engole mais antes de o sinal de saciedade chegar.\n\nO estudo é pequeno e curto: prova que você come mais, não que adoece em 20 anos. O teste prático continua servindo — se a lista de ingredientes tem coisas que você não teria na sua cozinha, coma menos daquilo.",
+        "en": "In 2019, researcher Kevin Hall admitted 20 adults to an NIH ward and controlled every bite for a month. Two weeks on ultra-processed food, two weeks on minimally processed food — both menus matched on paper: same calories offered, same ratio of carbs, fat, protein, sugar, sodium and fiber. They could eat as much as they wanted. **They ate 508 more calories a day on the ultra-processed side**, without noticing, and gained nearly a kilo in two weeks.\n\nUltra-processed, in the NOVA classification created by Brazilian researcher Carlos Monteiro, means food built mostly from substances extracted from foods — oils, starches, sugars, isolated proteins — plus additives. The mechanism is mechanical: it is soft, calorie-dense and gone fast, so you chew less and swallow more before the fullness signal arrives.\n\nThe study is small and short: it proves you eat more, not that you get sick in 20 years. The practical test still holds — if the ingredient list has things you would never keep in your kitchen, eat less of it."
+      },
+      "image_brief": "Uma mesa de cozinha vista de cima com dois pratos idênticos já raspados: ao lado do primeiro, uma panela e uma tábua com cascas de legume; ao lado do segundo, uma pilha de embalagens plásticas lisas e amassadas com o dobro do volume, e uma mão ainda rasgando mais uma.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Hall et al., 2019 · Cell Metabolism · n=20 (RCT cruzado)",
+            "en": "Hall et al., 2019 · Cell Metabolism · n=20 (crossover RCT)"
+          },
+          "url": "https://www.cell.com/cell-metabolism/fulltext/S1550-4131%2819%2930248-7"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "guerra-das-dietas",
+      "ordinal": 2,
+      "title": {
+        "pt": "A guerra das dietas: um placar incômodo.",
+        "en": "The diet wars: an awkward scoreboard."
+      },
+      "claim": {
+        "pt": "Stanford sorteou 609 pessoas entre low carb e low fat: empate em um ano. O que decide é quanto tempo você mantém.",
+        "en": "Stanford randomized 609 people to low-carb or low-fat: a tie after a year. What decides is how long you keep it."
+      },
+      "body": {
+        "pt": "Em 2018, o estudo DIETFITS, de Stanford, sorteou 609 pessoas para uma dieta low fat saudável ou low carb saudável e acompanhou todas por um ano (JAMA, 2018). As duas cortaram ultraprocessado e açúcar. Em 12 meses, **a diferença de peso entre os grupos foi estatisticamente zero** — e nem o perfil genético nem a resposta de insulina previram quem se daria melhor em qual dieta.\n\nUma análise de 59 estudos com as dietas de marca, Atkins, Zone e companhia, deu no mesmo (Johnston et al., JAMA, 2014): diferenças pequenas demais pra importar.\n\nCaloria conta, déficit é física. Mas a força do resultado não vem de uma proporção mágica de macronutriente: vem de quanto tempo você sustenta o hábito. Desconfie até da régua de que 3.500 calorias de déficit derretem meio quilo — conforme você emagrece, o corpo fica menor e gasta menos, então o mesmo déficit rende cada vez menos. O platô depois de alguns meses é regra, não fracasso seu. **Escolha a dieta que você consegue manter por um ano**, não a mais radical por três semanas.",
+        "en": "In 2018, Stanford's DIETFITS trial randomized 609 people to a healthy low-fat or a healthy low-carb diet and followed them for a year (JAMA, 2018). Both groups cut ultra-processed food and sugar. After 12 months, **the weight difference between the groups was statistically zero** — and neither genetic profile nor insulin response predicted who would do better on which diet.\n\nAn analysis of 59 trials of the brand-name diets, Atkins, Zone and the rest, landed in the same place (Johnston et al., JAMA, 2014): the gaps were too small to matter.\n\nCalories count; a deficit is physics. But the leverage is not a magic macronutrient ratio, it is how long you keep the habit going. Distrust even the rule that a 3,500-calorie deficit melts a pound of fat — as you slim down, your body gets smaller and burns less, so the same deficit buys less and less. The plateau after a few months is the rule, not your personal failure. **Pick the diet you can hold for a year**, not the most extreme one for three weeks."
+      },
+      "image_brief": "Duas pessoas em pontas opostas de uma longa mesa de jantar, cada uma puxando a ponta de uma corda esticada sobre a toalha; de um lado um prato de folhas e grãos, do outro um prato de carne e ovos, e o nó do meio da corda parado exatamente no centro da mesa.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Hall et al., 2019 · Cell Metabolism · n=20 (RCT cruzado)",
+            "en": "Hall et al., 2019 · Cell Metabolism · n=20 (crossover RCT)"
+          },
+          "url": "https://www.cell.com/cell-metabolism/fulltext/S1550-4131%2819%2930248-7"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "tres-numeros-da-comida",
+      "ordinal": 3,
+      "title": {
+        "pt": "Comida: esqueça a dieta, guarde três números.",
+        "en": "Food: forget the diet, keep three numbers."
+      },
+      "claim": {
+        "pt": "Três números bastam: 25-30 g de fibra por dia, 1,6 g de proteína por quilo se você treina, açúcar livre abaixo de 10%.",
+        "en": "Three numbers are enough: 25-30 g of fiber a day, 1.6 g of protein per kilo if you train, free sugar under 10%."
+      },
+      "body": {
+        "pt": "Fibra é a parte das plantas que você não digere — a casca do feijão, o farelo do grão. Ela alimenta suas bactérias intestinais e te enche com menos caloria. Uma revisão de 185 estudos na The Lancet ligou comer mais fibra a um risco 15% a 30% menor de morrer, com o ganho subindo até 25 a 30 gramas diários; menos de 1 em cada 10 adultos chega perto. São dados populacionais: **uma aposta muito bem apoiada, não lei da física**.\n\nProteína é onde mora a confusão. Os 0,8 g por quilo da RDA, a dose recomendada, são o piso pra não perder músculo num adulto parado, não o alvo. Pra ganhar músculo treinando, o benefício estabiliza perto de 1,6 g por quilo (Morton et al., British Journal of Sports Medicine, 2018) — 112 g pra quem pesa 70 quilos.\n\nAçúcar: a OMS pede açúcares livres abaixo de 10% das calorias — o que foi adicionado, mais suco e mel; a fruta inteira segue liberada. **Corte a caloria líquida primeiro** — refrigerante e suco são o alvo mais fácil.",
+        "en": "Fiber is the part of plants you cannot digest — the skin of a bean, the bran of a grain. It feeds your gut bacteria and fills you up on fewer calories. A review of 185 studies in The Lancet linked eating more fiber to a 15% to 30% lower risk of dying, with the gain climbing up to 25-30 grams a day; fewer than 1 in 10 adults gets close. This comes from population data: **a very well-supported bet, not a law of physics**.\n\nProtein is where the confusion lives. The RDA's 0.8 g per kilo, the recommended allowance, is the floor to avoid losing muscle in a sedentary adult, not a target. For building muscle with training, the benefit plateaus near 1.6 g per kilo (Morton et al., British Journal of Sports Medicine, 2018) — 112 g for someone weighing 70 kilos.\n\nSugar: the WHO asks for free sugars under 10% of your calories — what was added, plus juice and honey; whole fruit stays fine. **Cut liquid calories first** — soda and juice are the easiest target."
+      },
+      "image_brief": "Um prato fundo visto de cima com feijão, grãos integrais e uma posta de peixe grelhado ao lado; encostado na borda da pia atrás do prato, um copo alto de refrigerante virado de boca pra baixo, escorrendo o resto do líquido pelo ralo.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Hall et al., 2019 · Cell Metabolism · n=20 (RCT cruzado)",
+            "en": "Hall et al., 2019 · Cell Metabolism · n=20 (crossover RCT)"
+          },
+          "url": "https://www.cell.com/cell-metabolism/fulltext/S1550-4131%2819%2930248-7"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

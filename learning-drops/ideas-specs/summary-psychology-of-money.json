@@ -1,0 +1,118 @@
+{
+  "slug": "summary-psychology-of-money",
+  "type": "summary",
+  "material_title": {
+    "pt": "Dinheiro é comportamento, não planilha",
+    "en": "Money Is Behavior, Not Math"
+  },
+  "ideas": [
+    {
+      "id": "comportamento-vence-diploma",
+      "ordinal": 1,
+      "title": {
+        "pt": "O diploma era dele. Os milhões, dela.",
+        "en": "He had the diploma. She had the millions."
+      },
+      "claim": {
+        "pt": "O que separa quem enriquece não é diploma nem QI: é comportamento — e ele vem da sua biografia, não da planilha.",
+        "en": "What separates the ones who get rich isn't a diploma or IQ: it's behavior — and behavior comes from biography."
+      },
+      "body": {
+        "pt": "Em 2010, Grace Groner morreu aos 100 anos e deixou cerca de 7 milhões de dólares para caridade. Secretária aposentada, nunca teve carro e morava num apartamento de um cômodo: nos anos 1930 comprou algumas ações modestas e esqueceu delas por mais de sessenta anos. No mesmo ano, Richard Fuscone — formado em Harvard e Chicago, ex-vice-presidente da Merrill Lynch na América Latina — declarou falência pessoal. **Uma sabia menos e ficou rica; o outro sabia tudo e quebrou.**\n\nPara Morgan Housel, dinheiro é habilidade branda, não técnica. O mecanismo aparece em \"Depression Babies\" (2011): os economistas Ulrike Malmendier e Stefan Nagel cruzaram dados domésticos americanos de 1964 a 2004 e acharam algo teimoso — quem viveu anos de bolsa ruim arrisca menos pelo resto da vida, mesmo depois de a economia se recuperar. Seu apetite a risco (o quanto de perda você tolera para perseguir ganho) é em parte um acidente da década em que você cresceu. Pergunte qual susto antigo ainda decide por você hoje.",
+        "en": "In 2010, Grace Groner died at 100 and left roughly $7 million to charity. A retired secretary, she never owned a car and lived in a one-room apartment: in the 1930s she bought a few modest shares and forgot about them for more than sixty years. That same year Richard Fuscone — Harvard- and Chicago-educated, a former vice-chairman of Merrill Lynch Latin America — filed for personal bankruptcy. **She knew less and grew rich; he knew everything and went bust.**\n\nMorgan Housel's point is that money is a soft skill, not a technical one. The mechanism shows up in \"Depression Babies\" (2011): economists Ulrike Malmendier and Stefan Nagel combed US household data from 1964 to 2004 and found something stubborn — people who lived through years of a bad stock market take less risk for the rest of their lives, even after the economy recovers. Your appetite for risk (how much loss you'll stomach to chase a gain) is partly an accident of the decade you grew up in. Ask which old scare still decides for you."
+      },
+      "image_brief": "Uma senhora de casaco simples sentada num banco de praça ao sol, mãos tranquilas sobre um envelope amarelado e fechado no colo; do outro lado da rua, atrás dela, um homem de terno impecável está de pé na calçada diante do portão trancado de uma mansão enorme, com duas malas no chão ao lado dos pés.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Morgan Housel · The Psychology of Money · Harriman House, 2020",
+            "en": "Morgan Housel · The Psychology of Money · Harriman House, 2020"
+          },
+          "url": "https://harriman-house.com/authors/morgan-housel/the-psychology-of-money/9780857197689"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "continuar-rico",
+      "ordinal": 2,
+      "title": {
+        "pt": "Riqueza: ficar rico não ensina a manter.",
+        "en": "Wealth: getting rich won't keep you rich."
+      },
+      "claim": {
+        "pt": "Ficar rico premia otimismo e aposta. Continuar rico premia o oposto: humildade, frugalidade e medo da virada.",
+        "en": "Getting rich rewards optimism and bets. Staying rich rewards the opposite: humility, frugality, a healthy fear."
+      },
+      "body": {
+        "pt": "Housel separa duas habilidades que quase todo mundo confunde. Ficar rico premia otimismo e aposta — colocar dinheiro onde os outros ainda não olharam. Continuar rico premia o contrário: humildade, frugalidade e um medo saudável de que a aposta possa virar. **Uma não treina a outra.**\n\nJesse Livermore é o aviso ambulante. Trader lendário, ganhou o equivalente a cerca de 3 bilhões de dólares num único dia, na quebra de 1929. Continuou apostando cada vez mais alto, com dinheiro emprestado, perdeu tudo mais de uma vez e morreu em 1933. Ficar rico uma vez não provou nada sobre saber segurar.\n\nA defesa que Housel propõe é uma linha de chegada: escreva o seu \"suficiente\", o número em que você para de aumentar a aposta. Sem ele, todo ganho vira só o novo ponto de partida. Duas ressalvas honestas: Livermore é anedota e o \"suficiente\" é aforismo do livro — nenhum dos dois saiu de um experimento.",
+        "en": "Housel separates two skills almost everyone blurs together. Getting rich rewards optimism and bets — putting money where others haven't looked yet. Staying rich rewards the opposite: humility, frugality, a healthy fear that the bet could turn. **One doesn't train the other.**\n\nJesse Livermore is the walking warning. A legendary trader, he made the equivalent of about $3 billion in a single day during the 1929 crash. He kept betting bigger with borrowed money, lost it all more than once, and died in 1933. Getting rich once proved nothing about knowing how to hold it.\n\nHousel's defense is a finish line: write down your \"enough\", the number where you stop raising the bet. Without it, every gain just becomes the new starting line. Two honest caveats: Livermore is an anecdote and \"enough\" is one of the book's aphorisms — neither came out of an experiment."
+      },
+      "image_brief": "Um homem de terno antigo em pé no alto de uma torre estreitíssima de fichas de cassino empilhadas, esticando o braço para encaixar mais uma ficha no topo enquanto a base da pilha já escorrega para o lado sobre o piso encerado.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Morgan Housel · The Psychology of Money · Harriman House, 2020",
+            "en": "Morgan Housel · The Psychology of Money · Harriman House, 2020"
+          },
+          "url": "https://harriman-house.com/authors/morgan-housel/the-psychology-of-money/9780857197689"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "gap-comportamental",
+      "ordinal": 3,
+      "title": {
+        "pt": "Investir: seu fundo rendeu mais que você.",
+        "en": "Investing: your fund earned more than you."
+      },
+      "claim": {
+        "pt": "Comprar na alta e vender na baixa cobra 1,1 ponto ao ano: o fundo médio rendeu 7,3%; o investidor, 6,3% (Morningstar).",
+        "en": "Buying high and selling low costs 1.1 points a year: the average fund returned 7.3%, its investor 6.3% (Morningstar)."
+      },
+      "body": {
+        "pt": "A diferença entre o que um fundo rendeu e o que o investidor daquele fundo levou pra casa tem nome: gap comportamental. Ele nasce de um reflexo — você põe dinheiro depois da alta e tira depois da queda.\n\nA Morningstar mediu isso no relatório \"Mind the Gap 2024\", com mais de 20 mil fundos: nos dez anos até dezembro de 2023, o fundo médio rendeu 7,3% ao ano e o investidor médio daquele mesmo fundo ganhou 6,3%. **Aquele 1,1 ponto, todo ano, é o pedágio de comprar animado e vender assustado.**\n\nComo saber se é com você? Olhe seus três últimos movimentos grandes de dinheiro. Reforçou depois de um ano bom e recuou depois de um ano ruim? O gap está se formando em tempo real. Duas travas simples: espere 72 horas antes de mexer no impulso e mantenha uma margem de erro — dinheiro que você não encosta, pra que o pânico nunca seja obrigado a decidir por você.",
+        "en": "The difference between what a fund returned and what the investor in that fund actually took home has a name: the behavior gap. It grows out of a reflex — you put money in after the rise and pull it out after the fall.\n\nMorningstar measured it in \"Mind the Gap 2024\", across more than 20,000 funds: over the ten years to December 2023, the average fund returned 7.3% a year while the average investor in those same funds earned 6.3%. **That 1.1 point, every year, is the toll for buying excited and selling scared.**\n\nHow do you know if it's you? Look at your last three big money moves. Did you add after a good year and retreat after a bad one? The gap is forming in real time. Two simple brakes: wait 72 hours before acting on an impulse, and keep a room for error — money you don't touch, so panic is never forced to decide for you."
+      },
+      "image_brief": "Uma escada rolante subindo num saguão amplo: perto do topo, uma pessoa parada e imóvel segura o corrimão; bem mais abaixo, na mesma escada, outra pessoa desce alguns degraus na contramão e volta a subir, pisando sempre no mesmo lugar, muito atrás da primeira.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Morgan Housel · The Psychology of Money · Harriman House, 2020",
+            "en": "Morgan Housel · The Psychology of Money · Harriman House, 2020"
+          },
+          "url": "https://harriman-house.com/authors/morgan-housel/the-psychology-of-money/9780857197689"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "educacao-financeira-funciona",
+      "ordinal": 4,
+      "title": {
+        "pt": "Comportamento vence conhecimento? Meia verdade.",
+        "en": "Behavior beats knowledge? Half true."
+      },
+      "claim": {
+        "pt": "Os dois importam: 76 experimentos com 160 mil pessoas mostram que educação financeira muda comportamento mesmo.",
+        "en": "Both matter: 76 randomized trials with 160,000 people show financial education really does change behavior."
+      },
+      "body": {
+        "pt": "Nas entrelinhas, o livro sugere que comportamento importa mais que conhecimento. Isso é meia verdade. Em 2020, os pesquisadores Tim Kaiser, Annamaria Lusardi e colegas juntaram 76 experimentos controlados — estudos em que as pessoas são sorteadas para receber ou não uma formação, o padrão-ouro para provar causa — somando mais de 160 mil participantes. O resultado contraria o mantra: educação financeira muda comportamento de verdade, com efeito pelo menos três vezes maior do que se achava antes. **A síntese justa não é \"comportamento no lugar de conhecimento\", e sim \"os dois importam\".**\n\nTambém é preciso separar ciência de sabedoria. As frases mais amadas do livro — ter um \"suficiente\", \"riqueza é o que você não vê\" — são aforismos, não afirmações testáveis; a resenha da Shortform aponta que às vezes Housel apoia a ideia em pesquisa, às vezes só na própria experiência. Trate educação financeira como treino, não enfeite: um livro ou curso por ano.",
+        "en": "Between the lines, the book implies that behavior matters more than knowledge. That's a half-truth. In 2020, researchers Tim Kaiser, Annamaria Lusardi and colleagues pooled 76 randomized controlled trials — studies where people are randomly assigned to get training or not, the gold standard for proving cause — covering more than 160,000 participants. The result cuts against the mantra: financial education really does change behavior, with an effect at least three times larger than earlier work suggested. **The fair synthesis isn't \"behavior instead of knowledge\". It's \"both matter\".**\n\nSeparate the science from the wisdom, too. The book's most beloved lines — having an \"enough\", \"wealth is what you don't see\" — are aphorisms, not testable claims; Shortform's review notes that Housel sometimes backs an idea with research and other times with only his own experience. Treat financial education as training, not decoration: one book or course a year."
+      },
+      "image_brief": "Uma balança de dois pratos em equilíbrio exato sobre a mesa de madeira de uma cozinha, iluminada de lado por uma janela: num prato, um livro grosso fechado; no outro, um cofre de porcelana em forma de porco; o fiel da balança parado bem no centro.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Morgan Housel · The Psychology of Money · Harriman House, 2020",
+            "en": "Morgan Housel · The Psychology of Money · Harriman House, 2020"
+          },
+          "url": "https://harriman-house.com/authors/morgan-housel/the-psychology-of-money/9780857197689"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

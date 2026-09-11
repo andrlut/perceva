@@ -1,0 +1,91 @@
+{
+  "slug": "glossary-learn",
+  "type": "explainer",
+  "material_title": {
+    "pt": "A sensação de aprender mente",
+    "en": "The feeling of learning lies"
+  },
+  "ideas": [
+    {
+      "id": "dificuldades-desejaveis",
+      "ordinal": 1,
+      "title": {
+        "pt": "Quem estudou 'errado' venceu por 21 pontos.",
+        "en": "The 'wrong' way to study won by 21 points."
+      },
+      "claim": {
+        "pt": "Se testar, espaçar e misturar parecem piores na hora e ganham depois: 61% de retenção contra 40% em uma semana.",
+        "en": "Self-testing, spacing and mixing feel worse in the moment and win later: 61% retention against 40% after a week."
+      },
+      "body": {
+        "pt": "Você relê, grifa, e o capítulo vai ficando familiar — e essa familiaridade é um dos piores termômetros pra saber se você lembra daqui a uma semana. O psicólogo Robert Bjork batizou o paradoxo de **dificuldades desejáveis**: condições que deixam o estudo mais lento agora e gravam mais fundo depois. Quando lembrar custa esforço, o cérebro trata aquilo como digno de guardar.\n\nNum experimento clássico, quem releu o texto quatro vezes se sentiu mais confiante e foi melhor cinco minutos depois. Uma semana depois, virou: quem se testou lembrava de 61% do material; quem releu, 40% (Roediger & Karpicke, 2006).\n\nAs outras duas seguem o mesmo desenho. Espaçar: 317 experimentos mostram que distribuir o estudo ao longo dos dias quase sempre dobra a retenção (Cepeda et al., 2006). Misturar: quem praticou tipos de problema embaralhados foi pior no treino e tirou cerca do dobro da nota num teste dias depois (Rohrer & Taylor, 2007).\n\nFeche o livro e tente puxar da memória o que leu, errando se for o caso. Volte ao tema no dia seguinte, com os assuntos embaralhados.",
+        "en": "You reread, you highlight, the chapter starts to feel familiar — and that familiarity is one of the worst thermometers for whether you will still know it next week. Psychologist Robert Bjork named the paradox **desirable difficulties**: conditions that slow your study down now and lodge the material deeper later. When recall costs effort, your brain treats it as worth keeping.\n\nIn a classic experiment, the students who reread a passage four times felt more confident and did better after five minutes. A week later it flipped: the group that tested itself remembered 61% of the material; the rereaders, 40% (Roediger & Karpicke, 2006).\n\nThe other two work the same way. Spacing: 317 experiments show that spreading study across days often doubles retention (Cepeda et al., 2006). Mixing: students who practiced shuffled problem types did worse during practice and scored about twice as high on a test days later (Rohrer & Taylor, 2007).\n\nClose the book and try to pull back what you read, wrong answers included. Come back to it the next day, with the topics shuffled."
+      },
+      "image_brief": "Uma mesa de estudo comprida com duas pessoas: à esquerda, uma delas debruçada sobre um livro aberto todo coberto de riscos amarelos fluorescentes, relaxada, na penumbra fria; à direita, a outra com o livro fechado debaixo da palma da mão e os olhos apertados de esforço, banhada pelo único facho de luz âmbar da cena.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Roediger & Karpicke, 2006 · Psychological Science · n≈120",
+            "en": "Roediger & Karpicke, 2006 · Psychological Science · n≈120"
+          },
+          "url": "https://doi.org/10.1111/j.1467-9280.2006.01693.x"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "cerebro-cresce-e-desfaz",
+      "ordinal": 2,
+      "title": {
+        "pt": "Aprender: o cérebro cresce e depois encolhe.",
+        "en": "Learning: the brain grows, then shrinks back."
+      },
+      "claim": {
+        "pt": "Prática sustentada muda o cérebro de forma física — e a mudança encolhe de volta poucos meses depois que você para.",
+        "en": "Sustained practice physically changes the brain — and the change shrinks back within months once you stop."
+      },
+      "body": {
+        "pt": "Pesquisadores em Londres escanearam o cérebro de taxistas que passaram anos decorando o labirinto de ruas da cidade. Eles tinham o hipocampo posterior — a estrutura no fundo do cérebro que forma memórias novas — visivelmente maior que o de pessoas comuns, e quanto mais anos de táxi, maior a região (Maguire et al., 2000).\n\nTalvez quem já nasça com hipocampo grande vire taxista? O segundo estudo responde. Voluntários que nunca tinham feito malabarismo treinaram três meses, e a substância cinzenta — a camada do cérebro que processa informação — cresceu nas áreas ligadas ao movimento. **Quando pararam de treinar, o crescimento encolheu de volta em poucos meses.** Era treino, não talento fixo.\n\nRessalva: são estudos antigos e pequenos, de 16 a 24 pessoas; a direção do efeito é sólida, os números exatos são ilustrativos.\n\nBoa parte dessa reconstrução acontece dormindo: o sono profundo cuida das memórias de fatos, e o REM, a fase dos sonhos, das habilidades motoras. Durma depois de estudar — virar a noite corta justamente a fase em que o aprendizado gruda.",
+        "en": "Researchers in London scanned the brains of taxi drivers who had spent years memorizing the city's maze of streets. Their posterior hippocampus — the structure deep in the brain that forms new memories — was visibly larger than in ordinary people, and the more years behind the wheel, the bigger the region (Maguire et al., 2000).\n\nMaybe people born with a big hippocampus become cabbies? A second study answers that. Volunteers who had never juggled trained for three months, and their grey matter — the brain layer that processes information — grew in the regions tied to motion. **When they stopped practicing, the growth shrank back within a few months.** It was training, not fixed talent.\n\nA caveat: these studies are old and small, with 16 to 24 people; the direction of the effect is solid, the exact numbers are illustrative.\n\nMuch of this rebuilding happens while you sleep: deep sleep handles memories of facts, and REM, the dream stage, handles motor skills. Sleep after you study — an all-nighter cuts out the very phase where learning sticks."
+      },
+      "image_brief": "Uma sala vazia de assoalho de madeira dividida ao meio pela luz: de um lado, uma pessoa de pé fazendo malabarismo com três bolas no ar, o corpo tenso, sob um facho âmbar quente; do outro, a mesma pessoa sentada no chão na penumbra azulada, as três bolas paradas e cobertas de poeira a um braço de distância.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Roediger & Karpicke, 2006 · Psychological Science · n≈120",
+            "en": "Roediger & Karpicke, 2006 · Psychological Science · n≈120"
+          },
+          "url": "https://doi.org/10.1111/j.1467-9280.2006.01693.x"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "dez-mil-horas-mito",
+      "ordinal": 3,
+      "title": {
+        "pt": "Aprender: 10 mil horas nunca foram sobre horas.",
+        "en": "Learning: 10,000 hours were never about hours."
+      },
+      "claim": {
+        "pt": "Nem horas acumuladas, nem 'estilo de aprendizagem', nem acreditar: o que move a nota é prática ativa com feedback.",
+        "en": "Not hours piled up, not a 'learning style', not belief: what moves grades is active practice with feedback."
+      },
+      "body": {
+        "pt": "A maior meta-análise da área juntou 225 estudos comparando aula expositiva com métodos ativos, em que o aluno resolve, discute e erra. Nas turmas ativas, a reprovação caiu de 34% pra 22% (Freeman et al., 2014). Ouvir e reler são consumo; aprender é produção.\n\nIsso derruba três mitos. As 10 mil horas: a pesquisa original falava de **prática deliberada** — treino estruturado, com feedback constante, mirando os pontos fracos —, não de horas soltas, e uma meta-análise depois mostrou que ela explica muito em xadrez e música, quase nada em profissões. Os estilos de aprendizagem: preferências existem, mas nenhum estudo sério mostrou que casar a aula com o 'estilo' melhora o resultado. O growth mindset, a crença de que acreditar já melhora o desempenho: com mais de 360 mil pessoas, a relação com nota foi fraca (Sisk et al., 2018); um grande estudo de campo achou efeito real, porém concentrado em alunos em dificuldade (Yeager et al., 2019).\n\nNa próxima sessão, escolha o que você ainda erra e pratique onde alguém (ou algo) possa te corrigir.",
+        "en": "The largest meta-analysis in the field pooled 225 studies comparing lectures with active methods, where the student solves, argues and errs. In the active sections, failure rates fell from 34% to 22% (Freeman et al., 2014). Listening and rereading are consumption; learning is production.\n\nThat topples three myths. The 10,000 hours: the original research was about **deliberate practice** — structured training, constant feedback, aimed at your weak points — not loose hours, and a later meta-analysis showed it explains a lot in chess and music, almost nothing in professions. Learning styles: preferences exist, but no serious study has shown that matching a lesson to your 'style' improves the outcome. Growth mindset, the belief that believing you can improve already improves you: across more than 360,000 people, the link with grades was weak (Sisk et al., 2018); one large field trial found a real effect, though concentrated among struggling students (Yeager et al., 2019).\n\nNext session, pick what you still get wrong and practice it where someone (or something) can correct you."
+      },
+      "image_brief": "Uma pessoa ao piano repetindo um trecho difícil enquanto outra, de pé ao lado, guia a posição dos dedos dela; sobre o tampo do piano, uma ampulheta tombada e coberta de poeira, fora do facho de luz âmbar que cai só sobre as duas mãos.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Roediger & Karpicke, 2006 · Psychological Science · n≈120",
+            "en": "Roediger & Karpicke, 2006 · Psychological Science · n≈120"
+          },
+          "url": "https://doi.org/10.1111/j.1467-9280.2006.01693.x"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

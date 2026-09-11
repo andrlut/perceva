@@ -1,0 +1,25 @@
+{
+  "slug": "glossary-career",
+  "dimension_id": "wealth",
+  "title": {
+    "pt": "Emprego, carreira ou chamado",
+    "en": "Job, Career, or Calling"
+  },
+  "ideas": [
+    {
+      "id": "tres-lentes",
+      "ordinal": 1,
+      "image_prompt": "Três mesas de escritório idênticas lado a lado, vistas de frente e ocupando juntas a faixa central do quadro, com folga em cima e embaixo; sobre cada uma, a mesma pilha de pastas de papel liso. Na primeira mesa a pessoa já está de casaco, virada para a saída; na segunda, a pessoa sobe o primeiro degrau de uma escada estreita de madeira que nasce do tampo da própria mesa e se perde no escuro; na terceira, a pessoa está inclinada sobre o trabalho. A única luz quente e dourada da cena é um facho vertical que cai só sobre a terceira mesa e acende as mãos e o rosto dessa pessoa; as outras duas ficam numa penumbra fria e azulada, com o casaco da primeira num verde-sálvia apagado."
+    },
+    {
+      "id": "autonomia-alavanca",
+      "ordinal": 2,
+      "image_prompt": "Duas pessoas trabalhando na mesma bancada comprida de marcenaria, que atravessa o centro do quadro com folga em volta. À esquerda, de pé, uma pessoa escolhe livremente entre formões, serrotes e goivas espalhados à sua frente, mãos e antebraços cobertos de serragem; à direita, sentada e de ombros caídos, a outra recebe peças de madeira já prontas, uma a uma, por uma esteira estreita que entra por um vão na parede, com uma pilha alta de moedas intocada ao lado do cotovelo. A única luz quente da cena vem de uma lâmpada baixa sobre o lado esquerdo da bancada e doura a serragem no ar e as ferramentas espalhadas; o lado direito, a esteira e a pilha de moedas ficam numa penumbra fria e azulada."
+    },
+    {
+      "id": "job-crafting",
+      "ordinal": 3,
+      "image_prompt": "Um faxineiro parado sozinho no meio de um corredor de hospital, esfregão na mão e balde ao lado, de corpo inteiro no centro do quadro e virado para quem olha, com folga acima e abaixo. À esquerda dele o corredor segue cinzento, vazio e comprido, sumindo numa penumbra fria e azulada; à direita, o mesmo corredor aparece cheio de gente reunida em volta de uma cama, seis figuras de pé com o rosto todo voltado para ele. A única luz quente e dourada nasce desse lado direito, banha o grupo e a cama e alcança só metade do rosto e do ombro do faxineiro, deixando o resto dele na sombra."
+    }
+  ]
+}

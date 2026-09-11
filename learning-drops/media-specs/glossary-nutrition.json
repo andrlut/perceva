@@ -1,0 +1,25 @@
+{
+  "slug": "glossary-nutrition",
+  "dimension_id": "health",
+  "title": {
+    "pt": "Comida não é só caloria",
+    "en": "Food isn't just calories"
+  },
+  "ideas": [
+    {
+      "id": "ultraprocessado-come-mais",
+      "ordinal": 1,
+      "image_prompt": "Uma mesa de cozinha vista de cima, enquadrada de perto e ocupando o centro do quadro com folga nas quatro bordas: dois pratos brancos idênticos, os dois já raspados, lado a lado no meio da mesa. À esquerda do primeiro, uma panela de ferro e uma tábua com cascas de legume e talos; à direita do segundo, uma pilha de embalagens plásticas lisas e amassadas, sem nenhuma impressão na superfície, com o dobro do volume da tábua, e uma mão que entra pela borda direita rasgando mais uma. Uma única luz quente e dourada desce em diagonal sobre os dois pratos e acende o brilho da pilha amassada; a tábua e as cascas ficam num verde-sálvia apagado, meio na penumbra."
+    },
+    {
+      "id": "guerra-das-dietas",
+      "ordinal": 2,
+      "image_prompt": "Duas pessoas sentadas em pontas opostas de uma longa mesa de jantar, vista de lado e levemente de cima, a mesa atravessando o centro do quadro com folga acima e abaixo: cada uma puxa a ponta de uma corda grossa esticada rente à toalha, o corpo inclinado para trás com a mesma força, empate perfeito. Diante da pessoa da esquerda, um prato de folhas e grãos; diante da pessoa da direita, um prato de carne e ovos. O nó do meio da corda está parado exatamente no centro da mesa, e é sobre ele que cai a única luz quente e dourada, de uma lâmpada baixa pendurada um palmo acima; as duas pessoas e os dois pratos ficam na penumbra fria das pontas."
+    },
+    {
+      "id": "tres-numeros-da-comida",
+      "ordinal": 3,
+      "image_prompt": "Um prato fundo cheio de feijão e grãos integrais, com uma posta de peixe grelhado apoiada ao lado, visto de cima num ângulo alto e ocupando o centro do quadro com folga em volta; bem atrás, encostado na borda da pia, um copo alto virado de boca para baixo escorre o resto de um refrigerante escuro pelo ralo. A única luz quente e dourada vem de uma janela à esquerda, fora do quadro, e pousa inteira sobre o prato, acendendo o vapor que sobe e umas folhas verde-sálvia encostadas no peixe; o copo, a pia e o líquido escorrendo ficam numa penumbra fria."
+    }
+  ]
+}

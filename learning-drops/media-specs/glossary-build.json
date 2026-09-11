@@ -1,0 +1,25 @@
+{
+  "slug": "glossary-build",
+  "dimension_id": "craft",
+  "title": {
+    "pt": "Construir muda quem você é",
+    "en": "Building Changes Who You Are"
+  },
+  "ideas": [
+    {
+      "id": "apego-e-prova",
+      "ordinal": 1,
+      "image_prompt": "Uma pessoa sentada de pernas cruzadas no chão da sala à noite, inclinada sobre um banquinho de madeira baixo que acabou de montar, apertando com a chave o último parafuso do assento; a pessoa e o banquinho ocupam o centro do quadro, com folga em volta. Atrás, em segundo plano, o sofá vazio com o controle remoto largado sobre uma almofada amassada, tudo numa penumbra azulada fria. A única luz quente e dourada vem de um abajur baixo no chão, ao lado da pessoa, e toca só as mãos dela, o rosto inclinado e a madeira clara do banquinho; um pano verde-sálvia desbotado sob o banquinho é o único outro tom da cena."
+    },
+    {
+      "id": "tres-condicoes",
+      "ordinal": 2,
+      "image_prompt": "Uma bancada de marcenaria atravessando o quadro na altura do meio: em cima do tampo, no centro e com folga em volta, um banquinho de madeira pronto e lixado passa das mãos de quem o construiu para as mãos de um amigo que estende os dois braços pra receber, entrando pela borda direita. Embaixo da bancada, no chão, um banquinho igual pela metade, com as tábuas soltas, empoeiradas e encostadas umas nas outras. A única luz quente e dourada desce de uma lâmpada suspensa acima da bancada e acende o banquinho pronto e as quatro mãos; o banquinho inacabado do chão fica numa penumbra fria, coberto de serragem."
+    },
+    {
+      "id": "dez-mil-horas-honestas",
+      "ordinal": 3,
+      "image_prompt": "Uma escada de madeira encostada no centro de uma parede altíssima e lisa, vista de frente, ocupando o meio do quadro com folga dos dois lados; um violino e um arco descansam apoiados no último degrau, no ponto exato em que a escada termina, na metade da altura da parede. Acima do último degrau a parede segue nua até o alto, sem mais nenhum degrau, e é lá em cima que nasce a única luz quente e dourada da cena, escorrendo pela parede. Essa luz alcança de raspão o verniz do violino e as quinas dos degraus mais altos; o pé da escada e a base da parede ficam num azul acinzentado frio."
+    }
+  ]
+}

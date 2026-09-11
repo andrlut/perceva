@@ -1,0 +1,30 @@
+{
+  "slug": "summary-atomic-habits",
+  "dimension_id": "craft",
+  "title": {
+    "pt": "Hábitos Atômicos — 66 dias, não 21",
+    "en": "Atomic Habits — 66 days, not 21"
+  },
+  "ideas": [
+    {
+      "id": "66-dias-nao-21",
+      "ordinal": 1,
+      "image_prompt": "Uma trilha de pegadas descalças na areia molhada correndo em diagonal do primeiro plano até o horizonte, ocupando o centro do quadro com folga em volta; na metade do caminho, uma língua de água apagou um único par de pegadas e deixou ali um trecho liso e espelhado, e do outro lado a trilha recomeça exatamente no mesmo compasso e na mesma direção. A única luz quente e dourada vem baixa do horizonte e escorre pela borda de cada pegada, acendendo também a poça lisa do trecho apagado; a areia em volta fica numa penumbra fria."
+    },
+    {
+      "id": "sistemas-vencem-metas",
+      "ordinal": 2,
+      "image_prompt": "Uma escadaria de pedra ao ar livre vista de lado, subindo em degraus regulares desde a base do quadro e, no alto, se abrindo num longo patamar plano que atravessa o centro da cena com folga em volta. Uma única pessoa de perfil está parada junto à quina onde o último degrau vira patamar, mãos na cintura e ombros caídos, recuperando o fôlego, de camiseta num verde-sálvia apagado. A única luz quente e dourada vem de cima e à frente dela, dourando a quina de cada degrau já subido e o corpo parado; o patamar que segue adiante se dissolve numa penumbra fria."
+    },
+    {
+      "id": "ambiente-vence-vontade",
+      "ordinal": 3,
+      "image_prompt": "Um par de tênis de corrida largado em cima do capacho da porta de entrada, em close e visto de cima num ângulo baixo, ocupando o centro do quadro com folga em volta, bem no caminho de quem vai sair. Os cadarços, de um verde-sálvia apagado, estão afrouxados e caídos para os lados, e um molho de chaves de casa descansa dentro de um dos tênis. A única luz quente e dourada é uma faixa estreita que entra pela fresta da porta entreaberta e cai sobre os tênis e as chaves; o resto do corredor fica numa penumbra fria."
+    },
+    {
+      "id": "voto-na-identidade",
+      "ordinal": 4,
+      "image_prompt": "Uma mão vinda de cima solta uma pequena ficha redonda de madeira dentro da boca de um pote de vidro liso e transparente, que ocupa o centro do quadro em close com folga em volta; no fundo do pote, dezenas de fichas iguais já estão acumuladas em camadas, e a ficha recém-solta está suspensa no ar, no meio da queda. A única luz quente e dourada vem de trás e de cima, atravessa o vidro e acende a pilha de fichas e a ficha suspensa; a mão e a mesa em volta ficam numa penumbra fria."
+    }
+  ]
+}

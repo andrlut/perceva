@@ -1,0 +1,91 @@
+{
+  "slug": "explainer-career-capital",
+  "type": "explainer",
+  "material_title": {
+    "pt": "Por que \"siga sua paixão\" falha",
+    "en": "Why \"follow your passion\" backfires"
+  },
+  "ideas": [
+    {
+      "id": "capital-de-carreira",
+      "ordinal": 1,
+      "title": {
+        "pt": "'Siga sua paixão' erra numa coisa: a ordem.",
+        "en": "'Follow your passion' has the order wrong."
+      },
+      "claim": {
+        "pt": "Autonomia e propósito são raros — você só compra com uma habilidade rara. A paixão vem depois dela, não antes.",
+        "en": "Autonomy and meaning are rare — you buy them with a rare skill. Passion shows up after it, not before."
+      },
+      "body": {
+        "pt": "Quase metade dos trabalhadores com diploma nos Estados Unidos diz que interesse pesa mais que salário na hora de escolher um emprego (Cech, 2021). O conselho virou régua. Só que ele inverte a ordem.\n\nCal Newport chama de hipótese da paixão a crença de que existe dentro de você uma paixão pronta esperando ser descoberta. Ele propõe o contrário. **O que torna um trabalho ótimo — autonomia (escolher no que você trabalha), impacto, criatividade — é raro, e raridade só se compra com raridade.** A moeda é o capital de carreira: o conjunto de habilidades difíceis de substituir que você acumula ao longo dos anos e troca, mais tarde, por autonomia e propósito.\n\nUma ressalva honesta: o livro de Newport é síntese jornalística, não ciência revisada por pares. Serve pro vocabulário, não como prova.\n\nAntes de concluir que a área é errada, responda uma coisa: você já ficou bom em alguma coisa? Se ainda não, você não tem o que trocar.",
+        "en": "Nearly half of degree-holding US workers say interest matters more than pay when they choose a job (Cech, 2021). The advice became the yardstick. It just has the order backwards.\n\nCal Newport calls it the passion hypothesis: the belief that a pre-formed passion sits inside you, waiting to be found. He argues the reverse. **What makes work great — autonomy (choosing what you work on), impact, creativity — is rare, and rare things are bought with rare things.** The currency is career capital: the stock of hard-to-replace skills you build over years and later trade for autonomy and meaning.\n\nOne honest caveat: Newport's book is popular synthesis, not peer-reviewed science. Use it for the vocabulary, not as proof.\n\nBefore you decide the field is wrong, answer one question: have you actually gotten good at anything yet? If not, you have nothing to trade."
+      },
+      "image_brief": "Sobre uma bancada de oficina, duas mãos calejadas encaixam numa máquina antiga uma engrenagem de dentes irregulares, feita à mão; ao lado, um cesto transborda de engrenagens idênticas de fábrica, e nenhuma delas cabe naquele vão.",
+      "sources": [
+        {
+          "label": {
+            "pt": "O'Keefe, Dweck & Walton, 2018 · Psychological Science, 29(10) · 5 estudos, ~470 participantes",
+            "en": "O'Keefe, Dweck & Walton, 2018 · Psychological Science, 29(10) · 5 studies, ~470 participants"
+          },
+          "url": "https://doi.org/10.1177/0956797618780643"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "interesse-construido",
+      "ordinal": 2,
+      "title": {
+        "pt": "'Não é minha paixão' esconde outra frase.",
+        "en": "'Not my passion' usually hides another phrase."
+      },
+      "claim": {
+        "pt": "'Não é minha paixão' quase sempre quer dizer 'ficou difícil' — e quem vê paixão como algo pronto desiste bem antes.",
+        "en": "'Not my passion' almost always means 'it got hard' — and people who see passion as ready-made quit much sooner."
+      },
+      "body": {
+        "pt": "Em 2018, O'Keefe, Dweck e Walton testaram duas formas de encarar o interesse, em cinco estudos com cerca de 470 pessoas (Psychological Science). Na teoria fixa do interesse, as paixões já existem prontas e você apenas as descobre. Na teoria de crescimento, os interesses se desenvolvem conforme você se envolve com algo.\n\nO grupo de mentalidade fixa mostrou menos curiosidade por qualquer coisa fora do foco atual. E o achado decisivo: **quando um interesse novo ficava difícil, a vontade dessas pessoas caía muito mais do que a do grupo de crescimento.** O efeito era causal — empurrar alguém pra visão fixa já produzia a queda.\n\nPense em quem largou o violão, a programação ou um idioma exatamente quando o brilho de iniciante passou e o platô começou. A habilidade não sumiu; o conforto sumiu.\n\nDa próxima vez que a vontade despencar, pergunte qual das duas coisas está acontecendo: a área está errada ou você só chegou no platô.",
+        "en": "In 2018, O'Keefe, Dweck and Walton tested two ways of seeing interest, across five studies with around 470 people (Psychological Science). Under a fixed theory of interest, passions already exist, fully formed, and you simply find them. Under a growth theory, interests develop as you engage with something.\n\nThe fixed-mindset group showed less curiosity about anything outside its current focus. And the decisive finding: **when a new interest got hard, their motivation dropped far more than the growth group's.** The effect was causal — nudging people toward the fixed view produced the drop on its own.\n\nThink of anyone who quit guitar, or coding, or a language, right when the beginner glow wore off and the plateau began. The skill didn't disappear; the comfort did.\n\nNext time your drive collapses, ask which of the two is happening: the field is wrong, or you just reached the plateau."
+      },
+      "image_brief": "Numa trilha de montanha, o trecho colorido e inclinado do começo fica pra trás e à frente se abre um platô longo, cinzento e reto; uma pessoa para no primeiro passo do platô e já gira o corpo pro caminho de volta, enquanto outra, bem adiante, segue como um ponto na linha do horizonte.",
+      "sources": [
+        {
+          "label": {
+            "pt": "O'Keefe, Dweck & Walton, 2018 · Psychological Science, 29(10) · 5 estudos, ~470 participantes",
+            "en": "O'Keefe, Dweck & Walton, 2018 · Psychological Science, 29(10) · 5 studies, ~470 participants"
+          },
+          "url": "https://doi.org/10.1177/0956797618780643"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "aprofundar-antes-de-trocar",
+      "ordinal": 3,
+      "title": {
+        "pt": "Carreira: antes de trocar, a pergunta dura.",
+        "en": "Career: before you switch, one harder question."
+      },
+      "claim": {
+        "pt": "Aprofunde uma habilidade por meses antes de trocar de área. Troque só se a insatisfação sobreviver à competência.",
+        "en": "Deepen one skill for months before you switch fields. Switch only if the dissatisfaction survives competence."
+      },
+      "body": {
+        "pt": "O roteiro é chato de propósito. Escolha uma habilidade que o mercado paga e que você já faz razoavelmente bem, em vez de recomeçar do zero. Defina \"excelente\" por fora — um profissional referência, um portfólio, uma métrica —, não pela sua sensação do dia. Treine o ponto específico que você ainda faz mal, com feedback e correção, não a repetição confortável do que já domina. Dê meses antes de julgar. Quando a habilidade ficar rara, use-a pra negociar autonomia e projetos melhores.\n\nDuas ressalvas. **Juntar horas não garante nada**: menos de 1% da variação de desempenho em profissões vem da prática deliberada, contra 26% em jogos e 21% em música (Macnamara, Hambrick e Oswald, 2014). E às vezes o campo é mesmo errado pra você (Chen, Ellsworth e Schwarz, 2015).\n\nO ponto nunca foi não sair. É não tratar o atrito das primeiras semanas como veredito antes de ter competência de verdade.",
+        "en": "The routine is boring on purpose. Pick a skill the market pays for that you already do decently, instead of restarting from zero. Define \"excellent\" from outside — a reference professional, a portfolio, a metric — rather than by how you feel that day. Train the specific thing you still do badly, with feedback and correction, not comfortable repetition of what you already own. Give it months before judging. Once the skill is rare, use it to negotiate autonomy and better projects.\n\nTwo caveats. **Logging hours guarantees nothing**: under 1% of job-performance variance comes from deliberate practice, against 26% in games and 21% in music (Macnamara, Hambrick and Oswald, 2014). And sometimes a field really is wrong for you (Chen, Ellsworth and Schwarz, 2015).\n\nThe point was never to stay forever. It's to not treat the friction of the first weeks as a verdict before you have built real competence."
+      },
+      "image_brief": "Num terreno seco e rachado, uma pessoa cava um único poço fundo o bastante pra água já brilhar lá no fundo; espalhadas ao redor dela, meia dúzia de covas rasas e abandonadas, cada uma com uma pá largada dentro.",
+      "sources": [
+        {
+          "label": {
+            "pt": "O'Keefe, Dweck & Walton, 2018 · Psychological Science, 29(10) · 5 estudos, ~470 participantes",
+            "en": "O'Keefe, Dweck & Walton, 2018 · Psychological Science, 29(10) · 5 studies, ~470 participants"
+          },
+          "url": "https://doi.org/10.1177/0956797618780643"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

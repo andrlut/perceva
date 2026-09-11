@@ -1,0 +1,25 @@
+{
+  "slug": "glossary-contemplate",
+  "dimension_id": "mind",
+  "title": {
+    "pt": "Contemplar: a mente que foge e volta",
+    "en": "Contemplation: the mind that wanders and returns"
+  },
+  "ideas": [
+    {
+      "id": "mente-vaga-metade",
+      "ordinal": 1,
+      "image_prompt": "Uma pessoa sentada de perfil à mesa do café da manhã com a xícara na mão, ocupando o centro do quadro com folga em volta: a metade do corpo apoiada na cadeira continua sólida e inteira, e a outra metade se desmancha num fio de fumaça clara que sobe e escapa pela janela aberta ao lado. Lá fora, bem menor e mais distante na rua, o mesmo fio se refaz numa silhueta dela de costas, indo embora. A única luz quente e dourada entra pela janela de lado e doura só a metade sólida e a xícara; a fumaça e a silhueta distante ficam num azul acinzentado frio."
+    },
+    {
+      "id": "meditacao-efeito-modesto",
+      "ordinal": 2,
+      "image_prompt": "Numa clareira ao amanhecer, duas figuras dividem o centro do quadro, lado a lado e do mesmo tamanho, com folga em volta: à esquerda uma pessoa medita sentada de pernas cruzadas sobre uma almofada baixa, à direita outra caminha em passo firme por uma trilha de terra, braços em movimento. Bem atrás das duas, menor e recuada no fundo, uma terceira pessoa afunda numa poltrona velha. A única luz quente da cena é o sol rasante que nasce atrás da clareira e alcança a meditante e a caminhante exatamente na mesma intensidade, parando antes da poltrona, que fica num azul acinzentado frio."
+    },
+    {
+      "id": "portas-da-contemplacao",
+      "ordinal": 3,
+      "image_prompt": "Vista de cima em leve diagonal, quatro trilhas estreitas de terra cruzam um campo baixo ao amanhecer e desembocam todas num mesmo círculo de luz quente e dourada no centro exato do quadro, com folga de campo aberto em volta. Em cada trilha, a meio caminho do círculo, repousa um objeto largado no chão: uma almofada de meditação redonda em verde-sálvia apagado, um caderno aberto numa página lisa e vazia com a caneta atravessada por cima, um espelho de mão voltado para cima que devolve o clarão, e uma vela acesa protegida por duas mãos em concha. Esse círculo central é a única fonte de luz e toca os quatro objetos por igual; o restante do campo fica num azul acinzentado frio."
+    }
+  ]
+}

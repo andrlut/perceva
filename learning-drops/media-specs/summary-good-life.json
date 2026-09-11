@@ -1,0 +1,25 @@
+{
+  "slug": "summary-good-life",
+  "dimension_id": "bonds",
+  "title": {
+    "pt": "A Vida Boa: o que 85 anos revelam",
+    "en": "The Good Life: what 85 years reveal"
+  },
+  "ideas": [
+    {
+      "id": "relacao-preve-saude",
+      "ordinal": 1,
+      "image_prompt": "Uma trilha de terra corta um campo aberto e se afasta em diagonal até o horizonte, ocupando o centro do quadro com folga em cima e nos lados; em primeiro plano, na metade de baixo, duas pessoas de meia-idade caminham lado a lado pela trilha, viradas uma pra outra, rindo, uma delas de casaco verde-sálvia. Bem ao longe, no fim da mesma trilha, duas figuras idosas seguem de braços dados, pequenas mas de passo firme. A única luz quente é o sol âmbar baixo no fim do caminho: ele doura a poeira, os sulcos da trilha e a borda das quatro silhuetas, e deixa o campo em volta numa penumbra azulada fria."
+    },
+    {
+      "id": "calor-nao-contagem",
+      "ordinal": 2,
+      "image_prompt": "Um casal de idosos sentado bem junto no meio de um sofá de sala à noite, enquadrado de frente e de perto, ocupando o centro do quadro com folga em volta: os dois riem alto, cabeças quase encostadas, ombros colados. Na ponta do sofá, uma bengala apoiada no braço; sob a manta de lã verde-sálvia, um dos joelhos aparece enfaixado, e nenhum dos dois olha pra baixo. A única luz vem de uma luminária âmbar baixa ao lado do sofá, que acende os dois rostos e a manta e deixa o resto da sala num azul escuro."
+    },
+    {
+      "id": "fitness-social",
+      "ordinal": 3,
+      "image_prompt": "Duas pessoas de pé, frente a frente numa sala vazia ao entardecer, cada uma segurando a ponta de uma faixa elástica grossa esticada e firme entre elas; o par e a faixa tensa ocupam o centro do quadro, corpos inteiros, com folga em cima e nos lados. No canto escuro do primeiro plano, a poucos passos, uma segunda faixa idêntica jaz frouxa e empoeirada, enrolada sozinha no chão. A única luz quente entra rasante por uma abertura alta fora do quadro e acende a faixa esticada, os punhos e os antebraços dos dois; a faixa largada fica numa penumbra azulada, sem brilho nenhum."
+    }
+  ]
+}
