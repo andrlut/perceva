@@ -1,0 +1,91 @@
+{
+  "slug": "glossary-career",
+  "type": "explainer",
+  "material_title": {
+    "pt": "Emprego, carreira ou chamado",
+    "en": "Job, Career, or Calling"
+  },
+  "ideas": [
+    {
+      "id": "tres-lentes",
+      "ordinal": 1,
+      "title": {
+        "pt": "24 secretárias, o mesmo cargo, três trabalhos.",
+        "en": "24 assistants, one title, three different jobs."
+      },
+      "claim": {
+        "pt": "Emprego, carreira ou chamado: a lente quase não depende da profissão — e pesa mais que o contracheque.",
+        "en": "Job, career or calling: the lens barely depends on your occupation — and it outweighs the paycheck."
+      },
+      "body": {
+        "pt": "Em 1997, quatro psicólogos entrevistaram 196 pessoas — de faxineiros a médicos — sobre a relação de cada uma com o próprio trabalho (Wrzesniewski, McCauley, Rozin e Schwartz, Journal of Research in Personality). As respostas se dividiram limpo em três. Um terço via o trabalho como emprego: um jeito de pagar as contas, e nada além disso. Um terço via como carreira: um caminho de subida, o próximo nível, o próximo cargo. Um terço via como chamado: algo que faria de qualquer forma, porque dá sentido à vida.\n\n**A divisão quase não dependia da profissão.** Num grupo de 24 secretárias com o mesmo cargo, o mesmo salário e a mesma sala, as três lentes apareceram em partes quase iguais. Entre duas pessoas no mesmo posto, ganhando igual, quem vê o trabalho como chamado relata mais satisfação com o trabalho e com a vida. **A lente pesa mais que o contracheque.**\n\nO estudo é correlacional: a lente anda junto com a satisfação, não prova que a causa sozinha. Descubra a sua completando uma frase: \"eu trabalho principalmente pra...\".",
+        "en": "In 1997, four psychologists interviewed 196 people — from clerical staff to physicians — about how each one related to their own work (Wrzesniewski, McCauley, Rozin and Schwartz, Journal of Research in Personality). The answers sorted cleanly into three. A third saw work as a job: a way to pay the bills, nothing more. A third saw a career: a track upward, the next level, the next title. A third saw a calling: something they would do anyway, because it gives life meaning.\n\n**The split barely depended on the occupation.** Among 24 administrative assistants with the same title, the same pay and the same office, all three lenses showed up in roughly equal parts. Between two people in the same role, earning the same, the one who sees the work as a calling reports more satisfaction with work and with life. **The lens outweighs the paycheck.**\n\nThe study is correlational: the lens travels alongside satisfaction, it doesn't prove it causes it on its own. Find yours by finishing one sentence: \"I mostly work to...\"."
+      },
+      "image_brief": "Três mesas de escritório idênticas lado a lado, com a mesma pilha de pastas em cima de cada uma: na primeira a pessoa já está de casaco, virada para a saída; na segunda, a pessoa sobe o primeiro degrau de uma escada estreita que nasce da própria mesa; na terceira, a pessoa está inclinada sobre o trabalho, banhada por um facho de luz quente que só cai ali.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Wrzesniewski, McCauley, Rozin & Schwartz, 1997 · Journal of Research in Personality · n=196",
+            "en": "Wrzesniewski, McCauley, Rozin & Schwartz, 1997 · Journal of Research in Personality · n=196"
+          },
+          "url": "https://doi.org/10.1006/jrpe.1997.2162"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "autonomia-alavanca",
+      "ordinal": 2,
+      "title": {
+        "pt": "Carreira: o que te move não é o contracheque.",
+        "en": "Career: what moves you isn't the paycheck."
+      },
+      "claim": {
+        "pt": "Trabalho com sentido vem de autonomia, competência e pertencimento — e autonomia é a alavanca mais forte.",
+        "en": "Meaningful work runs on autonomy, competence and relatedness — and autonomy is the strongest lever."
+      },
+      "body": {
+        "pt": "Meio século de pesquisa aponta três ingredientes do trabalho com sentido, e nenhum é salário ou cargo: autonomia, ou seja, controle sobre como e quando você faz o trabalho; competência, a sensação de estar ficando visivelmente melhor em algo difícil; e pertencimento, perceber que o que você entrega importa pra alguém. Os três são a base da Teoria da Autodeterminação, um dos programas mais testados da psicologia (Ryan e Deci, 2000).\n\nUm deles se destaca. Uma meta-análise de quase 200 estudos encontrou que **a autonomia tem a relação mais forte com satisfação**, acima de qualquer outro traço de desenho do trabalho (Fried e Ferris, 1987). Duas pessoas no mesmo cargo e no mesmo salário: quem escolhe como faz relata bem mais satisfação do que quem recebe cada passo mastigado.\n\n**Escolha uma coisa nesta semana que você passa a fazer do seu jeito.** E segure o freio: a literatura é correlacional, ninguém provou que injetar autonomia num cargo, sozinho, causa bem-estar.",
+        "en": "Half a century of research points to three ingredients of meaningful work, and none is salary or title: autonomy, meaning control over how and when you do the work; competence, the felt sense of getting visibly better at something hard; and relatedness, sensing that what you deliver matters to someone. The three anchor Self-Determination Theory, one of the most heavily tested programs in psychology (Ryan and Deci, 2000).\n\nOne of them towers over the rest. A meta-analysis of nearly 200 studies found that **autonomy has the strongest relationship with satisfaction**, above every other job-design trait (Fried and Ferris, 1987). Two people in the same role, same pay: the one who chooses how the work gets done reports far more satisfaction than the one handed every step pre-chewed.\n\n**Pick one thing this week that you start doing your own way.** And hold the brake: this literature is correlational, and nobody has proven that injecting autonomy into a role, by itself, causes well-being."
+      },
+      "image_brief": "Duas pessoas trabalhando na mesma bancada de marcenaria: a da esquerda escolhe livremente entre as ferramentas espalhadas à sua frente, de pé e com as mãos cobertas de serragem; a da direita recebe as peças prontas, uma a uma, por uma esteira que entra pela parede, ombros caídos, com uma pilha alta de moedas intocada ao lado do cotovelo.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Wrzesniewski, McCauley, Rozin & Schwartz, 1997 · Journal of Research in Personality · n=196",
+            "en": "Wrzesniewski, McCauley, Rozin & Schwartz, 1997 · Journal of Research in Personality · n=196"
+          },
+          "url": "https://doi.org/10.1006/jrpe.1997.2162"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "job-crafting",
+      "ordinal": 3,
+      "title": {
+        "pt": "Dá pra trocar de trabalho sem trocar de emprego.",
+        "en": "Career: change your job without quitting it."
+      },
+      "claim": {
+        "pt": "Job crafting: mude o que faz, com quem faz e como enxerga — o trabalho muda sem você trocar de cargo.",
+        "en": "Job crafting: change what you do, who with, and how you frame it. The title stays; the job doesn't."
+      },
+      "body": {
+        "pt": "Você não precisa de um cargo novo pra mudar como o trabalho te afeta. Pesquisadores chamam isso de job crafting — moldar o próprio trabalho por dentro (Wrzesniewski e Dutton, 2001) — e são três alavancas. **O que você faz**: assumir uma tarefa que te dá energia, largar ou automatizar uma que te drena. Com quem você faz: procurar as pessoas que te ensinam algo, reduzir o contato com as que só sugam. E como você enxerga: no estudo clássico, faxineiros de hospital que se viam como parte da recuperação dos pacientes descreviam um trabalho completamente diferente, com a mesma descrição de cargo.\n\nUm aviso antes de aplicar. Num estudo com tratadores de zoológico, quem tinha um chamado forte tolerava mais salário baixo, hora extra não paga e condição ruim, enquadrando o sacrifício como o preço de fazer o que ama (Bunderson e Thompson, 2009). **Chamado que só te faz aceitar menos é armadilha, não sentido.** Escolha uma fronteira e mude-a esta semana.",
+        "en": "You don't need a new title to change how work affects you. Researchers call it job crafting — reshaping your own work from the inside (Wrzesniewski and Dutton, 2001) — and it runs on three levers. **What you do**: take on a task that gives you energy, drop or automate one that drains you. Who you do it with: seek out the people who teach you something, cut contact with the ones who only sap you. And how you see it: in the classic study, hospital cleaners who saw themselves as part of patients' recovery described a completely different job, under the same job description.\n\nOne warning before you try it. In a study of zookeepers, those with a strong calling tolerated more low pay, unpaid overtime and poor conditions, framing the sacrifice as the price of doing what they love (Bunderson and Thompson, 2009). **A calling that only gets you to accept less is a trap, not meaning.** Pick one boundary and reshape it this week."
+      },
+      "image_brief": "Um faxineiro parado no meio de um corredor de hospital, esfregão na mão, olhando para a frente: do lado esquerdo dele o corredor é cinzento, vazio e comprido; do lado direito, o mesmo corredor aparece iluminado por uma luz quente e cheio de gente reunida em volta de uma cama, todos com o rosto voltado para ele.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Wrzesniewski, McCauley, Rozin & Schwartz, 1997 · Journal of Research in Personality · n=196",
+            "en": "Wrzesniewski, McCauley, Rozin & Schwartz, 1997 · Journal of Research in Personality · n=196"
+          },
+          "url": "https://doi.org/10.1006/jrpe.1997.2162"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

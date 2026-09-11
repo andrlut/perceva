@@ -1,0 +1,118 @@
+{
+  "slug": "summary-deep-work",
+  "type": "summary",
+  "material_title": {
+    "pt": "Deep Work — o foco como vantagem",
+    "en": "Deep Work — focus as an edge"
+  },
+  "ideas": [
+    {
+      "id": "residuo-de-atencao",
+      "ordinal": 1,
+      "title": {
+        "pt": "Foco não soma. Multiplica.",
+        "en": "Focus doesn't add. It multiplies."
+      },
+      "claim": {
+        "pt": "Qualidade é tempo vezes intensidade. Cada troca de tarefa deixa resíduo e derruba a intensidade do que vem depois.",
+        "en": "Quality is time times intensity. Every task switch leaves residue that drags down whatever comes next."
+      },
+      "body": {
+        "pt": "Newport resume o livro numa multiplicação: a qualidade do que você entrega é o tempo dedicado vezes a intensidade do foco. Repare que multiplica, não soma — corte a intensidade pela metade e você entrega metade do resultado nas mesmas horas.\n\nO que derruba a intensidade tem nome: **resíduo de atenção**. Quando você troca de tarefa, um pedaço da cabeça fica preso na anterior. Você senta pra escrever, mas metade da atenção ainda está no e-mail de trinta segundos atrás. O termo é de Sophie Leroy (2009): nos experimentos dela, cada troca feita antes de terminar a tarefa anterior derrubava o desempenho.\n\nA conta prática é dura. Um dia recortado em dez interrupções não rende um décimo de um bloco contínuo — rende bem menos, porque cada retomada paga o pedágio do resíduo. **O trabalho raso não só ocupa tempo: ele derruba a intensidade do tempo em volta.** Antes de responder “só uma mensagem”, termine o que já está aberto.",
+        "en": "Newport boils the book down to a multiplication: the quality of what you ship is the time you put in times the intensity of your focus. It multiplies, it doesn't add — halve the intensity and you ship half the result in the same hours.\n\nWhat drags intensity down has a name: **attention residue**. When you switch tasks, part of your head stays stuck on the last one. You sit down to write, but half your attention is still on that email from thirty seconds ago. The term is Sophie Leroy's (2009): in her experiments, every switch made before finishing the previous task dragged performance down.\n\nThe practical math stings. A day chopped into ten interruptions doesn't yield a tenth of one unbroken block — it yields far less, because every restart pays the residue toll. **Shallow work doesn't just take time; it lowers the intensity of the time around it.** Before you answer “just one message”, finish what is already open."
+      },
+      "image_brief": "Uma pessoa curvada sobre uma mesa de trabalho tentando escrever, com fios finos e luminosos saindo da nuca dela e esticados até três mesas vazias atrás, cada fio puxando os ombros dela levemente pra trás.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Deep Work — Cal Newport (Grand Central, 2016)",
+            "en": "Deep Work — Cal Newport (Grand Central, 2016)"
+          },
+          "url": "https://www.hachettebookgroup.com/titles/cal-newport/deep-work/9781455586691/"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "doze-por-cento",
+      "ordinal": 2,
+      "title": {
+        "pt": "Prática deliberada: a alavanca é menor.",
+        "en": "Deliberate practice: a smaller lever."
+      },
+      "claim": {
+        "pt": "Treinar no limite explica só ~12% da variação em performance (Macnamara, 2014): é necessário, não é suficiente.",
+        "en": "Training at your edge explains only ~12% of performance variance (Macnamara, 2014): necessary, not sufficient."
+      },
+      "body": {
+        "pt": "Profundidade não é só conforto: é o mecanismo pelo qual você fica bom em algo. Newport se apoia na **prática deliberada** — treinar de forma esforçada, com feedback, no limite da sua capacidade. É treinar a parte que dói, não a que flui, e ninguém faz isso checando notificação. O conceito é de K. Anders Ericsson (1993).\n\nÉ aqui que o livro força a mão. Uma meta-análise de Macnamara e colegas (2014) atribuiu à prática deliberada só cerca de **12% da variação** na performance entre áreas — em profissões, bem menos. Talento, contexto (nascer numa família de músicos) e timing carregam o resto.\n\nNewport ainda empresta de Daniel Coyle a ideia de que a repetição focada envolve os neurônios em mielina, a bainha que isola o circuito e cimenta a habilidade. A mielinização existe, mas a versão forte é simplificação de divulgação, não mecanismo fechado pela neurociência. Trate a profundidade como a melhor alavanca que você controla — não como promessa de excelência.",
+        "en": "Depth isn't just comfortable: it's the mechanism by which you get good at something. Newport leans on **deliberate practice** — effortful, feedback-driven work at the edge of your ability. You drill the part that hurts, not the part that flows, and nobody does that while checking notifications. The concept is K. Anders Ericsson's (1993).\n\nThis is where the book pushes too far. A meta-analysis by Macnamara and colleagues (2014) credited deliberate practice with only about **12% of the variance** in performance across domains — in professions, far less. Talent, context (being born into a family of musicians) and timing carry the rest.\n\nNewport also borrows from Daniel Coyle the idea that focused repetition wraps neurons in myelin, the sheath that insulates a circuit and cements a skill. Myelination is real, but the strong version is popular-science simplification, not a settled neuroscience mechanism. Treat depth as the best lever you control — not as a promise of excellence."
+      },
+      "image_brief": "Uma pessoa fazendo força numa alavanca curta de madeira encaixada embaixo de um bloco de pedra enorme; do outro lado do bloco, três correntes grossas sobem para fora da cena e sustentam quase todo o peso da pedra no ar.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Deep Work — Cal Newport (Grand Central, 2016)",
+            "en": "Deep Work — Cal Newport (Grand Central, 2016)"
+          },
+          "url": "https://www.hachettebookgroup.com/titles/cal-newport/deep-work/9781455586691/"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "bloco-ritmico",
+      "ordinal": 3,
+      "title": {
+        "pt": "Deep Work: o problema não é sua vontade.",
+        "en": "Deep Work: your focus problem isn't willpower."
+      },
+      "claim": {
+        "pt": "Escolha uma filosofia de agenda: com emprego, a rítmica — 90 minutos de bloco fixo toda manhã, antes do e-mail.",
+        "en": "Pick a scheduling philosophy: with a job, the rhythmic one — a fixed 90-minute block each morning, before email."
+      },
+      "body": {
+        "pt": "“Foque mais” é conselho vazio. Newport troca força de vontade por estrutura e oferece quatro filosofias de agenda. A monástica isola você quase por completo do raso. A bimodal divide o calendário em estações: semanas de reclusão alternadas com períodos abertos. A **rítmica** é um bloco profundo fixo, todo dia, virado hábito. A jornalística mergulha em qualquer brecha, mas exige um músculo de foco já treinado.\n\nPra quem tem emprego, a rítmica vence: não depende de heroísmo nem de agenda vazia, só de um gatilho diário repetido até virar automático. Bloqueie 90 minutos toda manhã antes de abrir o e-mail.\n\nAgendar é metade do trabalho. A outra é a **produtividade de horário fixo**: escolha primeiro a hora de largar e encolha reuniões e e-mail reativo pra caber nesse teto. Sem teto, o raso incha até ocupar o dia inteiro. Um aviso honesto: quase todos os exemplos do livro controlam a própria agenda — num escritório reativo, você começa de outro lugar.",
+        "en": "“Focus more” is empty advice. Newport swaps willpower for structure and offers four scheduling philosophies. The monastic cuts you off from the shallow almost entirely. The bimodal splits the calendar into seasons: weeks of seclusion alternating with open periods. The **rhythmic** is a fixed deep block, every day, turned into habit. The journalistic drops into any gap that opens, but needs an already-trained focus muscle.\n\nFor anyone with a job, rhythmic wins: it needs no heroism and no empty calendar, just a daily trigger repeated until it runs on autopilot. Block 90 minutes every morning before you open email.\n\nScheduling is half the job. The other half is **fixed-schedule productivity**: choose your quitting time first, then shrink meetings and reactive email to fit under that cap. Without a cap, shallow work swells to fill the whole day. One honest warning: almost every example in the book controls his own calendar — in a reactive office, you start somewhere else."
+      },
+      "image_brief": "Uma pessoa sozinha numa sala ampla ao amanhecer, escrevendo concentrada à mesa sob a luz baixa que entra pela janela lateral; atrás dela, a porta fechada segura uma pilha de envelopes lisos que se acumula e escorrega pela fresta rente ao chão.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Deep Work — Cal Newport (Grand Central, 2016)",
+            "en": "Deep Work — Cal Newport (Grand Central, 2016)"
+          },
+          "url": "https://www.hachettebookgroup.com/titles/cal-newport/deep-work/9781455586691/"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "abracar-o-tedio",
+      "ordinal": 4,
+      "title": {
+        "pt": "Tédio: o celular na fila cobra no trabalho.",
+        "en": "Boredom: the phone in line costs you at work."
+      },
+      "claim": {
+        "pt": "Sacar o celular a cada segundo de marasmo treina o cérebro a fugir do desconforto que o foco profundo exige.",
+        "en": "Reaching for your phone at every dull second trains your brain to flee the discomfort deep work demands."
+      },
+      "body": {
+        "pt": "Newport pede pra abraçar o tédio. Se você saca o celular no primeiro segundo de marasmo — fila, elevador, semáforo —, treina o cérebro a fugir de qualquer desconforto. E aí ele não aguenta o mesmo desconforto na hora do trabalho difícil. **O hábito de fora do expediente decide o quanto você aguenta dentro dele.**\n\nA metade restauradora se apoia na Teoria da Restauração da Atenção (Berman, Jonides e Kaplan, 2008): caminhadas na natureza melhoraram tarefas de atenção logo depois. O estudo é pequeno e antigo, e o efeito geral se sustenta em meta-análise para exposições mais longas — direção certa, número impreciso.\n\nPras ferramentas, Newport propõe o **filtro do artesão**: você tende a adotar um app assim que ele oferece qualquer vantagem. Adote só se o ganho pros seus objetivos mais importantes superar de longe o custo à sua concentração. Comece hoje: espere na próxima fila sem tirar o celular do bolso.",
+        "en": "Newport asks you to embrace boredom. Reach for your phone at the first dull second — a queue, a lift, a red light — and you train your brain to flee any discomfort. Then it can't sit with the same discomfort hard work demands. **The habit you keep off the clock decides what you can stand while on it.**\n\nThe restorative half rests on Attention Restoration Theory (Berman, Jonides and Kaplan, 2008): walks in nature improved attention tasks right afterward. That study is small and old, and the broad effect holds up in meta-analysis for longer exposures — right direction, imprecise number.\n\nOn tools, Newport offers the **craftsman's filter**: you tend to adopt an app the moment it offers any upside at all. Adopt one only if its gain to your most important goals clearly outweighs its cost to your concentration. Start today: stand in the next queue without taking the phone out of your pocket."
+      },
+      "image_brief": "Uma pessoa parada numa fila ao ar livre, de mãos vazias e ombros soltos, o rosto virado pra copa de uma árvore acima; as outras pessoas da fila, à frente e atrás, estão todas curvadas sobre as próprias mãos em concha.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Deep Work — Cal Newport (Grand Central, 2016)",
+            "en": "Deep Work — Cal Newport (Grand Central, 2016)"
+          },
+          "url": "https://www.hachettebookgroup.com/titles/cal-newport/deep-work/9781455586691/"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

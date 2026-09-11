@@ -1,0 +1,91 @@
+{
+  "slug": "grip-strength-longevity",
+  "type": "explainer",
+  "material_title": {
+    "pt": "Seu aperto de mão sabe demais",
+    "en": "Your handshake knows too much"
+  },
+  "ideas": [
+    {
+      "id": "aperto-bate-a-pressao",
+      "ordinal": 1,
+      "title": {
+        "pt": "Sua mão prevê melhor que o aparelho de pressão.",
+        "en": "Your hand predicts better than the cuff."
+      },
+      "claim": {
+        "pt": "Em 142.861 adultos, cada 5 quilos a menos de aperto vieram com 16% mais risco de morrer.",
+        "en": "Across 142,861 adults, every 5 kg of missing grip came with a 16% higher risk of dying."
+      },
+      "body": {
+        "pt": "O aparelho é um dinamômetro de mão: um cabo de metal que você aperta com toda a força enquanto o ponteiro registra os quilos. Três apertos por mão, anota o melhor, um minuto. Entre 2003 e 2009 o estudo PURE fez isso com 142.861 adultos de 35 a 70 anos, em 17 países ricos, médios e pobres, e acompanhou quatro anos: 3.379 mortes. Cada 5 quilos a menos de aperto vieram com **16% mais risco de morrer por qualquer causa** (Leong et al., The Lancet, 2015). Para morte cardiovascular, 17%; infarto, 7%; AVC, 9%.\n\nA frase que viajou o mundo perdeu o contorno no caminho. Os autores compararam o aperto com a pressão sistólica sozinha, não com um cálculo completo de risco — pressão, colesterol, idade, cigarro e diabetes. E a coorte tinha 35 a 70 anos: fora dessa faixa, você extrapola. Peça o dinamômetro na sua próxima avaliação física e anote o número.",
+        "en": "The device is a hand dynamometer: a metal grip you squeeze as hard as you can while a needle records the kilos. Three squeezes per hand, keep the best, one minute. Between 2003 and 2009 the PURE study ran that drill on 142,861 adults aged 35 to 70, across 17 rich, middle-income and poor countries, then spent four years counting deaths: 3,379 of them. Every 5 kg of missing grip came with a **16% higher risk of dying from any cause** (Leong et al., The Lancet, 2015). Cardiovascular death, 17%; heart attack, 7%; stroke, 9%.\n\nThe line that traveled the world lost its edges on the way out. The authors matched grip against systolic pressure alone, not against a full risk calculation stacking pressure, cholesterol, age, smoking and diabetes. And the cohort ran 35 to 70: outside that band you are extrapolating. Ask for the dynamometer at your next gym assessment and write the number down."
+      },
+      "image_brief": "Uma mão adulta fechada com toda a força em torno de um cabo de metal grosso, tendões e veias saltados, iluminada de perto por uma luz fria de consultório; na maca ao fundo, fora de foco, um manguito de pressão desinflado com o tubo de borracha caído para o lado.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Leong et al., 2015 · The Lancet 386(9990):266–273 · n=139.691, 17 países",
+            "en": "Leong et al., 2015 · The Lancet 386(9990):266–273 · n=139,691, 17 countries"
+          },
+          "url": "https://pubmed.ncbi.nlm.nih.gov/25982160/"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "mao-nao-e-o-musculo",
+      "ordinal": 2,
+      "title": {
+        "pt": "Preensão: a mão não é o músculo que importa.",
+        "en": "Grip: the hand isn't the muscle that matters."
+      },
+      "claim": {
+        "pt": "Quando o aperto cai, quase nunca é a mão: é o corpo inteiro descendo junto.",
+        "en": "When grip drops it is hardly ever the hand: the whole body slid at once."
+      },
+      "body": {
+        "pt": "Repare na ordem dos números do PURE: o aperto pesa mais sobre morrer de qualquer coisa (16% a cada 5 quilos) do que sobre infartar (7%). Se o mecanismo fosse cardíaco, seria o contrário. Doenças que atacam só o músculo são raras, então uma preensão que cai quase nunca é problema da mão: caíram massa muscular, condução dos nervos, alimentação, a capacidade de se levantar depois de uma pneumonia. Avan Sayer e Tom Kirkwood, no comentário publicado ao lado do PURE na Lancet (2015), chamam a preensão de marcador especialmente bom dos processos de envelhecimento por baixo.\n\nDaí a armadilha: **nenhum ensaio clínico mostrou que aumentar a preensão sozinha faz alguém viver mais**. O aperta-mão de borracha empurra o ponteiro sem tocar no que o ponteiro media. Leia seu número como régua: o corte europeu de 27 quilos (homens) e 16 (mulheres) saiu de uma população britânica, e a mediana sul-americana aos 35-40 anos é 45 e 29 quilos.",
+        "en": "Look at the order of PURE's numbers: grip weighs more on dying of anything (16% per 5 kg) than on having a heart attack (7%). A cardiac mechanism would show the opposite. Diseases that hit muscle and nothing else are rare, so a falling grip is hardly ever a hand problem: muscle mass fell, nerve conduction, nutrition, the ability to get back up after pneumonia. Avan Sayer and Tom Kirkwood, in the comment that ran beside PURE in The Lancet (2015), call grip a particularly good marker of the ageing processes underneath.\n\nHence the trap: **no trial has shown that raising grip on its own makes anyone live longer**. A rubber gripper moves the needle without touching what the needle was reading. Read your number as a ruler: the European cutoff of 27 kg for men and 16 kg for women came out of a British reference group, while PURE's South American medians at 35 to 40 are 45 kg and 29 kg."
+      },
+      "image_brief": "Um homem sentado numa banqueta apertando um aperta-mão de borracha com a direita, a mão e o antebraço nítidos e tensionados sob uma luz dura; do cotovelo para cima o corpo dele vai ficando translúcido e desbotado, ombro e peito quase dissolvidos na penumbra da sala vazia.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Leong et al., 2015 · The Lancet 386(9990):266–273 · com o comentário de Sayer e Kirkwood",
+            "en": "Leong et al., 2015 · The Lancet 386(9990):266–273 · with the Sayer and Kirkwood comment"
+          },
+          "url": "https://pubmed.ncbi.nlm.nih.gov/25982160/"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "dose-minima-de-forca",
+      "ordinal": 3,
+      "title": {
+        "pt": "Musculação: o mínimo que funciona é ridículo.",
+        "en": "Lifting: the minimum that works is embarrassing."
+      },
+      "claim": {
+        "pt": "Treino de força aparece com 10 a 20% menos risco de morte, concentrado em 30 a 60 minutos por semana.",
+        "en": "Strength training shows up with 10 to 20% lower risk of death, concentrated at 30 to 60 minutes a week."
+      },
+      "body": {
+        "pt": "Se a preensão resume o sistema muscular inteiro, é o sistema inteiro que você treina. Uma revisão que juntou 16 estudos ligou o treino de força a 10 a 20% menos risco de morte, com o fundo da curva entre meia hora e uma hora por semana; quem treinava também tinha menos doença cardiovascular, câncer e diabetes (Momma et al., BJSM, 2022). A curva em J sai de apenas quatro estudos com dados suficientes: é pista, não lei.\n\nE o piso é baixo. Uma revisão na Sports Medicine achou ganho de força mensurável em quem nunca treinou com uma série de 6 a 12 repetições, a 70-85% do máximo, levada perto da falha, duas ou três vezes por semana (Androulakis-Korakakis et al., 2020). “Perto da falha” é parar quando a próxima repetição não sairia com técnica. Escolha de 4 a 6 exercícios compostos — agachamento, terra, remada, supino, puxada, desenvolvimento — e anote carga e repetições. **Duas vezes por semana não é o plano B. É o protocolo.**",
+        "en": "If grip summarizes the whole muscular system, the whole system is what you train. A review pooling 16 cohort studies tied strength training to 10 to 20% lower risk of death, with the bottom of the curve between thirty and sixty minutes a week; those people also had less cardiovascular disease, cancer and diabetes (Momma et al., BJSM, 2022). The J-shape rests on only four studies with usable data — a hint, not a law.\n\nAnd the floor is low. A Sports Medicine review found measurable strength gains in people who had never trained from one set of 6 to 12 reps, at 70-85% of max, taken close to failure, two or three times a week (Androulakis-Korakakis et al., 2020). “Close to failure” means stopping when the next rep would not come out clean. Pick 4 to 6 compound lifts — squat, deadlift, row, bench, pulldown, overhead press — and log the load and the reps. **Twice a week is not the fallback. It is the protocol.**"
+      },
+      "image_brief": "Uma mulher de meia-idade no fundo do agachamento com uma barra carregada nas costas, numa garagem simples de piso de cimento, corpo inteiro em tensão e poeira de giz suspensa no facho de sol que entra por uma janela alta; no canto do chão, esquecido, um aperta-mão de borracha.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Leong et al., 2015 · The Lancet 386(9990):266–273 · fonte primária do artigo",
+            "en": "Leong et al., 2015 · The Lancet 386(9990):266–273 · the article's primary source"
+          },
+          "url": "https://pubmed.ncbi.nlm.nih.gov/25982160/"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

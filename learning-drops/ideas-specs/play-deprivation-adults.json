@@ -1,0 +1,91 @@
+{
+  "slug": "play-deprivation-adults",
+  "type": "explainer",
+  "material_title": {
+    "pt": "Brincar não é sobra de tempo",
+    "en": "Play Is Not Leftover Time"
+  },
+  "ideas": [
+    {
+      "id": "instinto-nao-passatempo",
+      "ordinal": 1,
+      "title": {
+        "pt": "Brincar fica na mesma prateleira do medo.",
+        "en": "Play sits on the same shelf as fear."
+      },
+      "claim": {
+        "pt": "Brincar não é escolha de lazer: é um dos sete sistemas emocionais primários, na mesma lista que medo e luto.",
+        "en": "Play is not a leisure preference: it is one of seven primary emotional systems, filed beside fear and grief."
+      },
+      "body": {
+        "pt": "Dois ratos jovens se pegam, rolam e se prendem no chão — e soltam um chiado agudo em 50 quilohertz, muito acima do que o seu ouvido capta. Faça cócegas num rato e ele chia igual, depois vem atrás da sua mão pedindo mais. Jaak Panksepp, que registrou esses chiados, propôs que eles são um ancestral da nossa risada (Panksepp e Burgdorf, Physiology & Behavior, 2000).\n\nO que pesa aqui é onde ele guardou a brincadeira: entre os sete sistemas emocionais primários dos mamíferos — circuitos que já vêm montados de fábrica —, ao lado de MEDO e PÂNICO/LUTO. O circuito de pegar e rolar passa por estruturas fundas do cérebro e depende pouco do neocórtex, a camada externa enrugada que cuida de linguagem e planejamento. **A vontade de brincar não é uma decisão sua. Ela se parece mais com fome.**\n\nPanksepp especulou que a brincadeira funciona como apetite: se você não gasta, ela se acumula. É especulação, tirada de rato. Mesmo assim muda a frase: em vez de \"eu não tenho brincado\", \"eu tenho uma conta aberta\".",
+        "en": "Two young rats chase, tumble and pin each other, and out comes a high chirp at 50 kilohertz, far above anything your ear catches. Tickle a rat and you get the same chirp, then it comes back for your hand, asking for more. Jaak Panksepp, who recorded those chirps, argued they are an ancestor of human laughter (Panksepp and Burgdorf, Physiology & Behavior, 2000).\n\nWhat matters here is the shelf he put play on: among the seven primary emotional systems of the mammal brain — circuits that ship pre-built — right next to FEAR and PANIC/GRIEF. The chase-and-wrestle circuit runs through deep brain structures and barely depends on the neocortex, the wrinkled outer layer handling language and planning. **Wanting to play is not a decision you make. It behaves more like hunger.**\n\nPanksepp speculated that play works like an appetite: unspent, it builds up. That is speculation, and it came from rats. It still changes the sentence — from \"I haven't been playing\" to \"I am carrying a balance\"."
+      },
+      "image_brief": "Um adulto de roupa de trabalho voltando pra casa pela calçada ao entardecer, a pasta numa das mãos, subindo sem pensar na mureta baixa do canteiro e caminhando equilibrado sobre ela por alguns passos.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Bijlsma et al., 2022 · Journal of Neuroscience 42(46) · ratos juvenis privados de brincadeira social",
+            "en": "Bijlsma et al., 2022 · Journal of Neuroscience 42(46) · juvenile rats deprived of social play"
+          },
+          "url": "https://www.jneurosci.org/content/42/46/8716"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "freio-pre-frontal",
+      "ordinal": 2,
+      "title": {
+        "pt": "Ratos sem brincar: o freio do cérebro afrouxa.",
+        "en": "Play-starved rats: the brain's brakes weaken."
+      },
+      "claim": {
+        "pt": "Ratos criados sem brincar viraram adultos menos flexíveis, com freio pré-frontal mais fraco. Em gente, só correlação.",
+        "en": "Rats raised without play became less flexible adults, with weaker prefrontal brakes. In humans, only correlation."
+      },
+      "body": {
+        "pt": "A evidência mais firme saiu em 2022. Bijlsma e colegas criaram ratos jovens sem nenhum companheiro de brincadeira, justamente na fase da vida em que ratos mais brincam, e foram olhar o cérebro deles já adultos (Bijlsma et al., Journal of Neuroscience, 2022).\n\nNo córtex pré-frontal medial — a região atrás da testa que segura impulso e troca de plano — uns neurônios empurram o vizinho a disparar e outros mandam calar. Os que mandam calar são o freio do circuito, e nesses ratos o freio estava mais fraco na vida adulta. O comportamento combinou: menos flexibilidade cognitiva, que é largar uma estratégia que parou de pagar. No labirinto, os pesquisadores invertem a regra e o rato rígido continua indo pra esquerda.\n\n**São filhotes, numa janela de desenvolvimento, privados de toda brincadeira social.** Do rato para o adulto que parou de jogar bola é analogia, não cadeia causal demonstrada. E a versão assustadora — privação vira violência — vem de um piloto com 26 assassinos condenados que nunca passou por revisão por pares.",
+        "en": "The firmest evidence landed in 2022. Bijlsma and colleagues raised young rats with no playmates at all, through the stretch of life when rats play most, then waited for adulthood and looked inside the brain (Bijlsma et al., Journal of Neuroscience, 2022).\n\nIn the medial prefrontal cortex — the patch behind your forehead that holds impulses and switches plans — some neurons push their neighbors to fire and others tell them to go quiet. The ones that say go quiet are the brakes of the circuit, and in these rats those brakes were weaker in adulthood. Behavior matched: less cognitive flexibility, which is dropping a strategy that stopped paying. In the maze, researchers flip the rule and the rigid rat keeps turning left.\n\n**These are pups, inside a developmental window, deprived of all social play.** Going from there to an adult who quit playing is analogy, not a demonstrated causal chain. And the scary version — deprivation breeds violence — rests on a pilot of 26 convicted murderers that never went through peer review."
+      },
+      "image_brief": "Um rato adulto parado no cruzamento de um labirinto de laboratório em forma de T, virando decidido para o braço esquerdo vazio, enquanto no braço direito, atrás dele, há um punhado de ração intocado.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Bijlsma et al., 2022 · Journal of Neuroscience 42(46):8716–8728 · sinapses inibitórias do córtex pré-frontal medial",
+            "en": "Bijlsma et al., 2022 · Journal of Neuroscience 42(46):8716–8728 · medial prefrontal inhibitory synapses"
+          },
+          "url": "https://www.jneurosci.org/content/42/46/8716"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "final-em-aberto",
+      "ordinal": 3,
+      "title": {
+        "pt": "Brincar: dez minutos, sem saber como termina.",
+        "en": "Play: ten minutes, no idea how it ends."
+      },
+      "claim": {
+        "pt": "Brincadeira se define pelo final em aberto, não pelo tamanho do bloco: dez minutos com outra pessoa já contam.",
+        "en": "Play is defined by the open ending, not by the size of the block: ten minutes with someone else counts."
+      },
+      "body": {
+        "pt": "Não existe escala de privação de brincadeira, nem critério no DSM, o manual de diagnóstico psiquiátrico. O que existe é o questionário de René Proyer, validado com 1.796 adultos em duas amostras (Proyer, Personality and Individual Differences, 2017) — e ele mede o quanto você é brincalhão, não o que está faltando. Serve como lente, não como exame.\n\n**Teste caseiro: liste o que você fez no último domingo.** Se cada item tinha finalidade — treinar, adiantar, resolver, descansar pra render na segunda —, o sistema está parado.\n\nA volta não depende de agenda. Amanhã, separe dez minutos pra fazer algo cujo final você não consiga prever, e chame alguém: o que faltou aos ratos foi brincadeira social, não solitária. Uma vez por semana, estrague uma rotina de propósito — outro caminho de volta pra casa, jantar fora de hora. E quando te provocarem de brincadeira, entre no jogo em vez de explicar por que a piada não procede.",
+        "en": "There is no play-deprivation scale and no DSM criteria — the psychiatric diagnostic manual has nothing here. What exists is René Proyer's questionnaire, validated across 1,796 adults in two samples (Proyer, Personality and Individual Differences, 2017), and it measures how playful you are, not what you are missing. It works as a lens, not as a screening.\n\n**Home test: list what you did last Sunday.** If every item had a purpose — train, get ahead, fix something, rest so Monday goes better — the system is idle.\n\nGetting back in does not depend on your calendar. Tomorrow, carve out ten minutes for something whose ending you cannot predict, and bring someone in: what those rats lost was social play, not solitary play. Once a week, wreck a routine on purpose — a different way home, dinner at the wrong hour. And when someone teases you, play along instead of explaining why the joke does not land."
+      },
+      "image_brief": "Dois adultos de roupa de trabalho em pé na cozinha durante o intervalo, disputando uma bolinha de papel amassado sobre a bancada, cada um defendendo uma caneca virada de boca pra baixo, os dois rindo.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Bijlsma et al., 2022 · Journal of Neuroscience 42(46) · ratos juvenis privados de brincadeira social",
+            "en": "Bijlsma et al., 2022 · Journal of Neuroscience 42(46) · juvenile rats deprived of social play"
+          },
+          "url": "https://www.jneurosci.org/content/42/46/8716"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

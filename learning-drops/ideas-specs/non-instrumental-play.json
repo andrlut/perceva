@@ -1,0 +1,105 @@
+{
+  "slug": "non-instrumental-play",
+  "type": "explainer",
+  "material_title": {
+    "pt": "O hobby mais inútil é o que mais descansa",
+    "en": "The Most Useless Hobby Rests You Best"
+  },
+  "ideas": [
+    {
+      "id": "dominio-recarrega",
+      "ordinal": 1,
+      "title": {
+        "pt": "Descansar não é o contrário de esforço.",
+        "en": "Rest isn't the opposite of effort."
+      },
+      "claim": {
+        "pt": "Um desafio difícil fora do trabalho recarrega tanto quanto o sofá — se não carregar meta de trabalho.",
+        "en": "A hard challenge outside work recharges you as much as the couch — if no work goal rides on it."
+      },
+      "body": {
+        "pt": "O Questionário de Experiências de Recuperação (Sonnentag e Fritz, 2007) separou quatro jeitos de recarregar depois do trabalho: desligar mentalmente, relaxar, ter controle sobre o próprio tempo e domínio. **Domínio é se absorver num desafio novo fora do trabalho** — um acorde difícil, uma via de escalada, um prato que nunca dá certo. É esforço, não é sofá, e recarrega tanto quanto relaxar, com uma condição: precisa estar desconectado das metas do seu trabalho.\n\nA maior meta-análise já feita sobre recuperação juntou 316 estudos e 99.329 trabalhadores (Headrick et al., 2023): relaxar e se absorver em algo fora do trabalho é o que mais prevê bem-estar. Só desligar a cabeça reduz o esgotamento, mas não melhora o seu desempenho.\n\nO nome técnico disso é atividade autotélica — do grego auto (em si) e telos (fim): feita pelo prazer de fazer. O teste cabe numa pergunta: você faria isso sem ninguém vendo e sem nada pra ganhar?",
+        "en": "The Recovery Experience Questionnaire (Sonnentag and Fritz, 2007) pulled apart four ways to recharge after work: mentally switching off, relaxing, having control over your own time, and mastery. **Mastery is getting absorbed in a fresh challenge outside work** — a hard chord, a climbing route, a dish that never comes out right. It is effort, not the couch, and it restores you as much as relaxing does, on one condition: it has to sit apart from your work goals.\n\nThe largest meta-analysis ever run on recovery pooled 316 studies and 99,329 workers (Headrick et al., 2023): relaxing and getting absorbed in something outside work is what best predicts well-being. Switching off alone cuts exhaustion, but it does not improve your performance.\n\nThe technical name for this is an autotelic activity — from the Greek auto (self) and telos (end): done for the sheer pleasure of doing it. The test fits in one question: would you still do it with nobody watching and nothing to gain?"
+      },
+      "image_brief": "Uma pessoa escalando uma parede de boulder num galpão escuro, antebraços tensos e rosto sereno, dentro de um halo de luz quente; bem abaixo, no mesmo halo, um sofá vazio com uma manta amassada, os dois igualmente iluminados enquanto o resto do galpão some no breu.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Sonnentag & Fritz, 2007 · Journal of Occupational Health Psychology 12(3) · n=930 · as quatro experiências de recuperação",
+            "en": "Sonnentag & Fritz, 2007 · Journal of Occupational Health Psychology 12(3) · n=930 · the four recovery experiences"
+          },
+          "url": "https://doi.org/10.1037/1076-8998.12.3.204"
+        },
+        {
+          "label": {
+            "pt": "Headrick et al., 2023 · Journal of Business and Psychology · meta-análise, k=316, n=99.329",
+            "en": "Headrick et al., 2023 · Journal of Business and Psychology · meta-analysis, k=316, n=99,329"
+          },
+          "url": "https://doi.org/10.1007/s10869-022-09821-3"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "premio-mata-o-prazer",
+      "ordinal": 2,
+      "title": {
+        "pt": "Prêmio no hobby: a vontade de desenhar sumiu.",
+        "en": "Reward on a hobby: the urge to draw vanished."
+      },
+      "claim": {
+        "pt": "Prêmio ou métrica em cima do que você fazia por prazer reescreve o motivo: você passa a fazer pela recompensa.",
+        "en": "A prize or a metric on something you did for fun rewrites the reason: now you do it for the reward."
+      },
+      "body": {
+        "pt": "Em 1973, três psicólogos deram canetas a crianças que adoravam desenhar e prometeram a um dos grupos um certificado premiado antes de começar. Semanas depois, justamente esse grupo desenhava menos no tempo livre; as outras crianças seguiram iguais. É o efeito de sobrejustificação (Lepper, Greene e Nisbett, 1973): a recompensa externa reescreve o motivo, de “eu faço porque gosto” para “eu faço pela recompensa”.\n\nMétrica faz parecido. Uma pesquisa de 2016 (Etkin) mostrou que, quando as pessoas passam a medir o lazer — contar passos, páginas, quilômetros —, elas fazem mais e gostam menos.\n\n**O trabalho liga sistemas de esforço no corpo — atenção, cortisol, pressão — e a recuperação só termina quando eles voltam ao repouso.** Meta, placar ou plateia mantêm tudo ligado: você trocou de cadeira, mas o corpo continua em modo trabalho. O teste é depois: se você sente que trabalhou em vez de ter descansado, nada desligou.",
+        "en": "In 1973, three psychologists handed markers to kids who loved to draw and promised one group a fancy certificate before they started. Weeks later, that exact group drew less in their free time, while the other kids carried on as before. This is the overjustification effect (Lepper, Greene & Nisbett, 1973): the outside reward rewrites the reason, from “I do this because I enjoy it” to “I do this for the reward”.\n\nMetrics work much the same way. A 2016 study (Etkin) found that once people start measuring their leisure — counting steps, pages, miles — they do more of it and enjoy it less.\n\n**Work switches on effort systems in your body — attention, cortisol, blood pressure — and recovery only finishes when they return to rest.** A target, a scoreboard or an audience keeps them running: you changed chairs, but your body stayed in work mode. The check comes afterwards: if you feel like you worked instead of rested, nothing switched off."
+      },
+      "image_brief": "Uma folha grande vista de cima enquanto uma criança desenha com canetas coloridas: no canto onde alguém pousou uma fita dourada de premiação, os traços ficam duros, ralos e quase sem cor; no lado oposto da folha, longe da fita, os rabiscos explodem em cor e movimento.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Sonnentag & Fritz, 2007 · Journal of Occupational Health Psychology 12(3) · n=930 · recuperação exige demanda desligada",
+            "en": "Sonnentag & Fritz, 2007 · Journal of Occupational Health Psychology 12(3) · n=930 · recovery needs demand switched off"
+          },
+          "url": "https://doi.org/10.1037/1076-8998.12.3.204"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "espaco-sem-placar",
+      "ordinal": 3,
+      "title": {
+        "pt": "Lazer: nem tudo na sua vida precisa render.",
+        "en": "Leisure: not everything has to pay off."
+      },
+      "claim": {
+        "pt": "Não precisa largar o hobby pago: garanta um espaço por semana sem meta, sem métrica e sem plateia.",
+        "en": "You don't have to drop the paid hobby: protect one space a week with no goal, no metric, no audience."
+      },
+      "body": {
+        "pt": "Banir todo hobby remunerado é irreal — nem todo mundo pode gastar tempo sem retorno. E monetizar nem sempre estraga: uma meta-análise de 1999 (Deci, Koestner e Ryan) mostrou que o efeito é forte para recompensas tangíveis e esperadas, enquanto elogio e recompensas inesperadas se comportam diferente. Virar profissional não mata o prazer — só deixa de contar como recuperação.\n\nTambém não é só disciplina. Sonnentag (2018) chama isso de paradoxo da recuperação: quem tem as maiores demandas no trabalho é quem mais precisa recarregar e quem tem menos espaço pra isso.\n\nA meta não é pureza, é um espaço protegido por semana. **Escolha uma atividade sem placar**, em que não dá pra ganhar nem otimizar um número; tire a plateia, deixando o celular em outro cômodo e não postando o resultado; reserve um horário fixo, não as sobras do dia; e crie um ritual de virada — fechar o notebook, trocar de roupa, uma caminhada curta — que avisa o corpo que a demanda acabou.",
+        "en": "Banning every paid hobby is unrealistic — not everyone can spend time with no return. And monetizing does not always ruin it: a 1999 meta-analysis (Deci, Koestner and Ryan) showed the effect is strong for tangible, expected rewards, while praise and unexpected rewards behave differently. Going pro does not kill the joy — it just stops counting as recovery.\n\nNor is it only discipline. Sonnentag (2018) calls it the recovery paradox: the people with the heaviest work demands need to recharge most and have the least room to do it.\n\nThe goal is not purity, it is one protected space a week. **Pick an activity with no scoreboard**, one you cannot win or optimize a number in; remove the audience by leaving the phone in another room and posting nothing; block a fixed time instead of the day's leftovers; and build a transition ritual — closing the laptop, changing clothes, a short walk — that tells your body the demand is over."
+      },
+      "image_brief": "Uma pessoa sozinha sovando massa numa bancada de cozinha ao anoitecer, farinha no ar, ombros soltos, sob a luz quente de uma única lâmpada pendente; ao fundo, no corredor escuro, o celular repousa de bruços sobre um banquinho, longe do alcance dela.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Headrick et al., 2023 · Journal of Business and Psychology · meta-análise, k=316, n=99.329",
+            "en": "Headrick et al., 2023 · Journal of Business and Psychology · meta-analysis, k=316, n=99,329"
+          },
+          "url": "https://doi.org/10.1007/s10869-022-09821-3"
+        },
+        {
+          "label": {
+            "pt": "Sonnentag & Fritz, 2007 · Journal of Occupational Health Psychology 12(3) · n=930 · espaço protegido de recuperação",
+            "en": "Sonnentag & Fritz, 2007 · Journal of Occupational Health Psychology 12(3) · n=930 · protected recovery space"
+          },
+          "url": "https://doi.org/10.1037/1076-8998.12.3.204"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

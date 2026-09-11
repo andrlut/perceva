@@ -1,0 +1,91 @@
+{
+  "slug": "ten-second-balance-test",
+  "type": "explainer",
+  "material_title": {
+    "pt": "Dez segundos num pé só",
+    "en": "Ten seconds on one leg"
+  },
+  "ideas": [
+    {
+      "id": "capacidade-que-some",
+      "ordinal": 1,
+      "title": {
+        "pt": "Equilíbrio: o sistema que a academia não treina.",
+        "en": "Balance: the system your gym never trains."
+      },
+      "claim": {
+        "pt": "Aos 51-55 anos, 4,7% não seguram dez segundos num pé só. Aos 71-75, 53,6% — e musculação não cobre isso.",
+        "en": "At 51 to 55, 4.7% can't hold ten seconds on one leg. At 71 to 75, 53.6% — and lifting doesn't cover it."
+      },
+      "body": {
+        "pt": "Tira os sapatos, fica de pé sem apoio e encosta a frente de um pé na panturrilha da outra perna. Braços soltos, olhar fixo num ponto à frente. Conta até dez. É passa ou não passa: qualquer perna, até três tentativas.\n\nEm 2022, pesquisadores brasileiros acompanharam 1.702 adultos de 51 a 75 anos por sete anos. Entre quem segurou os dez segundos, 4,6% morreram no período; entre quem não segurou, 17,5% (Araújo et al., Br J Sports Med, 2022). E a falha não escorre devagar: 4,7% entre 51 e 55 anos, 36,8% entre 66 e 70, 53,6% entre 71 e 75.\n\n**Agachamento e corrida acontecem em trajetória conhecida e chão firme.** Aqui você sustenta o corpo inteiro sobre uma base do tamanho de um pé, corrigindo desvios de milímetros o tempo todo. Num estudo pequeno da Mayo Clinic com 40 adultos saudáveis (Kaufman et al., 2024), o tempo em pé só foi justamente a capacidade que mais caiu com a idade. Faça o teste hoje: ele é o seu ponto zero.",
+        "en": "Shoes off. Stand with nothing to hold, and rest the front of one foot against the calf of the other leg. Arms loose, eyes on a fixed point ahead. Count to ten. You pass or you don't: either leg, up to three tries.\n\nIn 2022, Brazilian researchers followed 1,702 adults aged 51 to 75 for seven years. Among those who held the ten seconds, 4.6% died over that window; among those who didn't, 17.5% (Araújo et al., Br J Sports Med, 2022). And the failure rate doesn't drift up gently: 4.7% at 51 to 55, 36.8% at 66 to 70, 53.6% at 71 to 75.\n\n**Squats and runs happen on a known path, on solid ground.** Here you hold your whole body over a base the size of one foot, correcting millimeter drifts nonstop. In a small Mayo Clinic study of 40 healthy adults (Kaufman et al., 2024), one-leg stance time was the capacity that fell fastest with age. Run the test today: it is your zero point."
+      },
+      "image_brief": "Um homem descalço em pé sobre um bloco de pedra do tamanho exato de um pé, no piso frio de um banheiro; ao lado, largados no chão e intocados, uma barra de musculação carregada e um par de tênis de corrida; o corpo dele tomba para um lado e os braços se abrem no ar para corrigir.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Araújo et al., 2022 · Br J Sports Med 56(17):975–980 · n=1.702, seguimento mediano de 7 anos",
+            "en": "Araújo et al., 2022 · Br J Sports Med 56(17):975–980 · n=1,702, median 7-year follow-up"
+          },
+          "url": "https://bjsm.bmj.com/content/56/17/975"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "numero-honesto",
+      "ordinal": 2,
+      "title": {
+        "pt": "Teste dos dez segundos: alarme, não sentença.",
+        "en": "The ten-second test: an alarm, not a sentence."
+      },
+      "claim": {
+        "pt": "O ritmo de morte 84% maior vem de um estudo só; a meta-análise de 15 estudos dá 14%. É alarme, não sentença.",
+        "en": "The 84% higher death rate comes from one study; a 15-study meta-analysis lands on 14%. Alarm, not sentence."
+      },
+      "body": {
+        "pt": "Descontando idade, sexo, peso e doenças já diagnosticadas, quem falhou tinha razão de risco de 1,84: a cada momento do acompanhamento, morria num ritmo 84% maior (Araújo et al., Br J Sports Med, 2022). Foi esse número que viralizou.\n\nSó que ele é o teto da literatura, não o consenso. Em 2024, uma meta-análise juntou 15 estudos sobre equilíbrio parado e mortalidade e chegou a 1,14 — 14% a mais (Das et al., Research on Aging, 2024). Os estudos discordavam muito entre si. E a amostra brasileira não foi sorteada: gente que procurou uma clínica de medicina preventiva no Rio, 68% homens, medida uma vez só, sem registro de quedas anteriores nem de remédios que atrapalham o equilíbrio.\n\n**Nada disso torna o teste inútil.** Dez segundos num pé só não são uma causa de morte que dá pra remover: são um resumo barato de vários sistemas trabalhando juntos. Falhar hoje pode ser joelho doendo, labirintite ou uma noite mal dormida. Refaça noutro dia e investigue o que apareceu.",
+        "en": "After adjusting for age, sex, body weight and diagnosed disease, those who failed carried a hazard ratio of 1.84: at any point in the follow-up, they were dying at an 84% higher rate (Araújo et al., Br J Sports Med, 2022). That's the number that travelled.\n\nIt is also the ceiling of the literature, not its consensus. In 2024, a meta-analysis pooled 15 studies on standing balance and death from any cause and landed on 1.14 — 14% higher (Das et al., Research on Aging, 2024). Those studies disagreed sharply with each other. And nobody drew the Brazilian sample at random: it was people who walked into a preventive-medicine clinic in Rio, 68% men, measured once, with no record of past falls or of medications that blunt balance.\n\n**None of that makes the test useless.** Ten seconds on one leg isn't a cause of death you can remove: it's a cheap summary of several systems working together. Failing today can be a sore knee, an inner-ear infection, one bad night. Re-test another day and look at what showed up."
+      },
+      "image_brief": "Uma pessoa parada no meio da cozinha, cabeça erguida para o detector de fumaça que dispara no teto, ondas de som saindo dele; na bancada ao lado, uma panela tampada solta apenas um fio fino de vapor.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Araújo et al., 2022 · Br J Sports Med 56(17):975–980 · n=1.702, seguimento mediano de 7 anos",
+            "en": "Araújo et al., 2022 · Br J Sports Med 56(17):975–980 · n=1,702, median 7-year follow-up"
+          },
+          "url": "https://bjsm.bmj.com/content/56/17/975"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "diferenca-entre-as-pernas",
+      "ordinal": 3,
+      "title": {
+        "pt": "Perna pior: o número que a média apaga.",
+        "en": "Weaker leg: the number the average erases."
+      },
+      "claim": {
+        "pt": "Doze segundos de um lado e quatro do outro não viram oito: o lado pior é o que cede primeiro. Anote os dois.",
+        "en": "Twelve seconds on one side and four on the other don't average to eight. The weak side goes first — log both."
+      },
+      "body": {
+        "pt": "Doze segundos de um lado e quatro do outro não viram oito na média. O lado pior é o que vai encontrar a escada escura primeiro, e é o único que te conta algo novo: anote os dois números e a data.\n\nFicar num pé só parece passivo, mas é um cálculo contínuo. O corpo funde três fontes de informação: o ouvido interno detecta onde a cabeça está, a visão dá o ambiente como referência e a propriocepção — o sentido que informa onde estão suas articulações sem você olhar — reporta o resto de você. Com dois pés no chão sobra folga, porque uma fonte pode piorar e as outras cobrem. Tirar um pé apaga a folga.\n\nPor isso treinar não é repetir a pose: é tirar uma fonte por vez. Olhos fechados apagam a visão, um travesseiro dobrado embaralha a propriocepção, girar a cabeça devagar cobra o ouvido interno. **A perna pior faz uma rodada a mais.** Uma revisão Cochrane com 81 ensaios e 19.684 participantes registra 23% menos quedas com exercício — quedas, não mortes.",
+        "en": "Twelve seconds on one side and four on the other don't average out to eight. The bad side is the one that meets the dark staircase first, and it's the only one telling you something new: write down both numbers and the date.\n\nStanding on one leg looks passive, but it's a running calculation. Your body fuses three streams of information: the inner ear senses where your head is, vision hands you the room as a reference, and proprioception — the sense that tells you where your joints sit without you looking — reports the rest of you. With two feet down you have slack, because one stream can degrade while the others cover. Lifting a foot deletes the slack.\n\nSo training isn't repeating the pose: it's removing one stream at a time. Closed eyes delete vision, a folded pillow scrambles proprioception, slow head turns call on the inner ear. **The worse leg does one extra round.** A Cochrane review of 81 trials and 19,684 participants records 23% fewer falls with exercise — falls, not deaths."
+      },
+      "image_brief": "A mesma pessoa aparece duas vezes lado a lado num piso de madeira clara: à esquerda, firme e imóvel sobre a perna direita; à direita, sobre a perna esquerda, o corpo tombando e os braços girando no ar; entre as duas, um travesseiro dobrado no chão.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Araújo et al., 2022 · Br J Sports Med 56(17):975–980 · n=1.702, seguimento mediano de 7 anos",
+            "en": "Araújo et al., 2022 · Br J Sports Med 56(17):975–980 · n=1,702, median 7-year follow-up"
+          },
+          "url": "https://bjsm.bmj.com/content/56/17/975"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

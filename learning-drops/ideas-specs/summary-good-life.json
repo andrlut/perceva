@@ -1,0 +1,91 @@
+{
+  "slug": "summary-good-life",
+  "type": "summary",
+  "material_title": {
+    "pt": "A Vida Boa: o que 85 anos revelam",
+    "en": "The Good Life: what 85 years reveal"
+  },
+  "ideas": [
+    {
+      "id": "relacao-preve-saude",
+      "ordinal": 1,
+      "title": {
+        "pt": "Aos 50, já dá pra ver quem chega bem aos 80.",
+        "en": "At 50, you can already tell who thrives at 80."
+      },
+      "claim": {
+        "pt": "Quem estava mais satisfeito com as relações aos 50 foi quem chegou mais saudável aos 80. Previu — não causou.",
+        "en": "The men most satisfied with their relationships at 50 were the healthiest at 80. Predicted — not caused."
+      },
+      "body": {
+        "pt": "Em 1938, Harvard começou a acompanhar 724 rapazes e nunca parou: exame de sangue, entrevista na sala de casa, conversa com as esposas, escaneamento de cérebro décadas depois — a cada dois anos, pela vida inteira. Oitenta e cinco anos depois, o que separou quem chegou bem aos 80 não foi dinheiro, fama nem genética. Foi **a satisfação com as relações aos 50**. Waldinger repete em toda entrevista que isso previu saúde melhor que o colesterol; a comparação vem das falas dele, não de uma tabela publicada pondo os dois lado a lado.\n\nA musculatura do achado veio de fora de Harvard. Em 2010, Julianne Holt-Lunstad empilhou 148 estudos numa conta só — uma meta-análise, com **308.849 pessoas** somadas. Quem tinha relações mais fortes teve cerca de 50% mais chance de continuar vivo ao longo do acompanhamento.\n\nNada disso é experimento: ninguém sorteou quem teria casamento feliz e quem teria solidão. Relação prevê saúde; que cause, não está provado. Ainda assim, pare de manter “saúde” e “vida social” como duas listas separadas.",
+        "en": "In 1938, Harvard started following 724 young men and never stopped: blood work, interviews in the living room, conversations with the wives, brain scans decades later — every two years, for the rest of those lives. Eighty-five years on, what separated the men who arrived healthy at 80 wasn't money, fame or genes. It was **how satisfied they were with their relationships at 50**. Waldinger says in every interview that this beat cholesterol as a predictor; that comparison comes from his interviews, not from a published table setting the two side by side.\n\nThe muscle behind the finding came from outside Harvard. In 2010, Julianne Holt-Lunstad pooled 148 studies into one calculation — a meta-analysis covering **308,849 people**. Those with stronger social relationships had roughly 50% higher odds of still being alive across the follow-up.\n\nNone of this is an experiment: nobody assigned who got a happy marriage and who got isolation. Relationships predict health; cause is not proven. Still, stop keeping “health” and “social life” as two separate lists."
+      },
+      "image_brief": "Uma trilha de terra atravessando um campo aberto no fim da tarde: em primeiro plano, duas pessoas de meia-idade caminham lado a lado, viradas uma pra outra, rindo; bem ao fundo, no fim da mesma trilha, duas figuras idosas seguem de braços dados, com passo firme, banhadas pela mesma luz âmbar baixa.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Waldinger & Schulz · The Good Life (Simon & Schuster, 2023) · 724 homens acompanhados desde 1938",
+            "en": "Waldinger & Schulz · The Good Life (Simon & Schuster, 2023) · 724 men followed since 1938"
+          },
+          "url": "https://the-good-life-book.com/"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "calor-nao-contagem",
+      "ordinal": 2,
+      "title": {
+        "pt": "Relações: não é quantas você tem. Nunca foi.",
+        "en": "Relationships: it was never about how many."
+      },
+      "claim": {
+        "pt": "Protege o calor do laço, não a contagem: nos casais de 80 anos, a dor só derrubava o humor nos casamentos ruins.",
+        "en": "Warmth protects, not headcount: in couples in their 80s, pain only sank the mood of the unhappy marriages."
+      },
+      "body": {
+        "pt": "Alguém vive cercado de gente e se sente sozinho; outro tem dois ou três laços profundos e prospera. O que protege é o calor da relação, não o tamanho da lista de contatos.\n\nA evidência veio de um sub-estudo de Waldinger e Schulz com 47 casais na casa dos 80 anos. Cada um anotou, dia após dia, quanta dor física sentia e quão feliz estava. Nos dias de mais dor, o humor despencava — mas só entre quem estava num casamento insatisfeito. Nos casais mais satisfeitos, dor e humor se descolaram: a dor continuava lá, o dia bom também. **Uma relação boa não tira a dor do corpo; tira o poder que a dor tem sobre o resto do seu dia.**\n\nNo mesmo estudo, o vínculo entre passar tempo com os outros e estar feliz naquele dia ficou só marginal, no limite da significância: tempo com quem te esgota não conta. A Psychology Today cobra o que falta — os autores nunca definem o que é uma boa relação. Comece pelo inventário: quem te dá energia, quem te drena.",
+        "en": "One person lives surrounded by people and feels alone; another has two or three deep bonds and thrives. What protects you is the warmth of the relationship, not the size of your contact list.\n\nThe evidence came from a Waldinger-and-Schulz sub-study of 47 couples in their 80s. Each one logged, day after day, how much physical pain they felt and how happy they were. On higher-pain days, mood dropped — but only among those in an unhappy marriage. Among the most satisfied couples, pain and mood came apart: the pain was still there, and so was the good day. **A good relationship doesn't take pain out of your body; it takes away the power pain has over the rest of your day.**\n\nIn the same study, the link between time spent with others and being happy that day was only marginal, right at the edge of significance: time with someone who drains you doesn't count. Psychology Today names the gap — the authors never define a good relationship. Start with the inventory: who gives you energy, who drains it."
+      },
+      "image_brief": "Um casal de idosos sentado bem junto num sofá de sala à noite, rindo alto com as cabeças quase encostadas; uma bengala está apoiada no braço do sofá e um dos joelhos aparece enfaixado sob a manta, mas nenhum dos dois olha pra isso — uma única luminária âmbar ilumina os dois rostos.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Waldinger & Schulz · The Good Life (Simon & Schuster, 2023) · sub-estudo com 47 casais na casa dos 80 anos",
+            "en": "Waldinger & Schulz · The Good Life (Simon & Schuster, 2023) · sub-study of 47 couples in their 80s"
+          },
+          "url": "https://the-good-life-book.com/"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "fitness-social",
+      "ordinal": 3,
+      "title": {
+        "pt": "Vínculos: você treina o corpo. E quem você ama?",
+        "en": "Bonds: you train your body. And your people?"
+      },
+      "claim": {
+        "pt": "Vínculo é músculo: atrofia sem uso e some sem briga nenhuma. Mande hoje a mensagem que você vem adiando.",
+        "en": "A bond is a muscle: it atrophies unused and fades with no fight. Send the message you keep postponing."
+      },
+      "body": {
+        "pt": "A gente trata o corpo como manutenção — treino, comida, sono — e trata as relações como permanentes por natureza: os amigos vão estar lá, a família vai estar lá. Waldinger e Schulz chamam isso de erro e propõem o oposto, o **fitness social**: encarar cada vínculo como músculo. Sem uso, atrofia. O amigo que você “sempre quis ligar” e nunca liga vai sumindo — não por briga, por desuso.\n\nManter um laço é escolha repetida, não estado garantido. Os autores embrulham a prática numa sigla, o W.I.S.E.R.; é um invento didático deles, bom pra lembrar dos passos, mas não um método testado em laboratório com efeito medido.\n\nTrês movimentos pequenos pra esta semana: mande a mensagem que você vem adiando; escolha profundidade em vez de número, porque dois ou três laços de verdade valem mais que cem contatos; e reserve tempo recorrente pra quem importa, do mesmo jeito que você marca um treino. Num estudo de 85 anos, **o que segura uma vida em pé não são os gestos enormes, são os pequenos repetidos por décadas**.",
+        "en": "We treat the body as upkeep — lifting, food, sleep — and treat relationships as permanent by nature: the friends will be there, the family will be there. Waldinger and Schulz call that a mistake and propose the opposite, **social fitness**: treating every bond as a muscle. Leave it unused and it atrophies. The friend you “always meant to call” and never do quietly fades — not from a fight, from disuse.\n\nKeeping a bond alive is a repeated choice, not a guaranteed state. The authors wrap the practice in an acronym, W.I.S.E.R.; it's their teaching device, handy for remembering the steps, but not a lab-tested method with a measured effect.\n\nThree small moves for this week: send the message you keep putting off; choose depth over count, because two or three real bonds beat a hundred contacts; and block recurring time for the people who matter, the way you book a workout. After 85 years of data, **what holds a life up isn't the grand gestures, it's the small ones repeated for decades**."
+      },
+      "image_brief": "Duas pessoas de pé numa sala vazia ao entardecer seguram cada uma a ponta de uma faixa elástica grossa, esticada e firme entre elas; no chão, a poucos passos, uma segunda faixa idêntica jaz frouxa e empoeirada, enrolada sozinha num canto escuro.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Waldinger & Schulz · The Good Life (Simon & Schuster, 2023) · o conceito de fitness social",
+            "en": "Waldinger & Schulz · The Good Life (Simon & Schuster, 2023) · the social fitness idea"
+          },
+          "url": "https://the-good-life-book.com/"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "slug": "glossary-build",
+  "type": "explainer",
+  "material_title": {
+    "pt": "Construir muda quem você é",
+    "en": "Building Changes Who You Are"
+  },
+  "ideas": [
+    {
+      "id": "apego-e-prova",
+      "ordinal": 1,
+      "title": {
+        "pt": "Mil vídeos não valem uma cadeira torta.",
+        "en": "A thousand videos can't beat one wobbly chair."
+      },
+      "claim": {
+        "pt": "Terminar um objeto seu te dá duas coisas que mil horas de tela não dão: apego (+63%) e prova de que você é capaz.",
+        "en": "Finishing your own object gives two things a thousand hours of screen can't: attachment (+63%) and proof you're capable."
+      },
+      "body": {
+        "pt": "Pesquisadores pediram que pessoas montassem uma caixa simples da IKEA, dobrassem um origami ou montassem um Lego. Depois perguntaram quanto cada uma pagaria pelo próprio objeto. Quem montou aceitava pagar cerca de **63% a mais** pela própria caixa do que outra pessoa pagaria por uma idêntica, já pronta (Norton, Mochon e Ariely, 2012). Chamaram de efeito IKEA: o trabalho vira afeto.\n\nCuidado com o que esse número diz. Montar a caixa não te deixou mais habilidoso — te deixou mais apegado. A competência vem de outro lugar. Albert Bandura rastreou quatro fontes da crença \"eu sou capaz\" e uma vence as outras com folga: a experiência de maestria, que é fazer uma coisa e conseguir. Elogio quase não mexe nisso (Bandura, 1977).\n\nUm objeto terminado entrega os dois: apego e prova. **Consumir não entrega nenhum dos dois.** Você pode assistir mil vídeos de marcenaria e não sair nem com uma cadeira que você ama, nem com a prova de que sabe fazer uma. Termine uma coisa pequena hoje.",
+        "en": "Researchers had people assemble a plain IKEA storage box, fold origami, or build with Lego. Then they asked what each person would pay for their own object. The builders would pay about **63% more** for their own box than a stranger would pay for an identical, ready-made one (Norton, Mochon & Ariely, 2012). They called it the IKEA effect: labor turns into love.\n\nBe careful what that number says. Assembling the box didn't make you more skilled — it made you more attached. Competence comes from somewhere else. Albert Bandura traced four sources of the belief \"I'm capable,\" and one beats the rest by a wide margin: mastery experience, which is doing a thing and succeeding. Praise barely moves it (Bandura, 1977).\n\nA finished object hands you both: attachment and proof. **Consuming hands you neither.** You can watch a thousand woodworking videos and walk away with neither a chair you love nor proof you can build one. Finish one small thing tonight."
+      },
+      "image_brief": "Uma pessoa sentada no chão da sala, à noite, apertando o último parafuso de um banquinho de madeira que acabou de montar; atrás dela, o sofá vazio com o controle remoto largado sobre uma almofada amassada.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Norton, Mochon & Ariely, 2012 · Journal of Consumer Psychology · 4 estudos",
+            "en": "Norton, Mochon & Ariely, 2012 · Journal of Consumer Psychology · 4 studies"
+          },
+          "url": "https://doi.org/10.1016/j.jcps.2011.08.002"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "tres-condicoes",
+      "ordinal": 2,
+      "title": {
+        "pt": "Construir só muda você sob três condições.",
+        "en": "Building only changes you on three conditions."
+      },
+      "claim": {
+        "pt": "O efeito só aparece se você escolheu o projeto, levou até o fim e pode mostrar. Faltando uma, ele enfraquece.",
+        "en": "The effect only shows up if you chose the project, finished it and can show it. Miss one and it fades."
+      },
+      "body": {
+        "pt": "Se fazer fosse mágico por si só, qualquer atividade manual mudaria você. Não é assim.\n\n**A primeira condição é terminar.** No mesmo estudo do efeito IKEA, quando o objeto era destruído antes de ficar pronto ou o montador parava no meio, o apego sumia (Norton, Mochon e Ariely, 2012). Projeto largado na garagem não conta: pra sua cabeça, é quase como não ter começado.\n\nA segunda é ser escolha sua. A Teoria da Autodeterminação — um dos modelos mais testados da psicologia da motivação — diz que a vontade que vem de dentro precisa de três coisas: autonomia, competência e vínculo. Sentir que é bom em algo só vira combustível quando a atividade foi escolha sua, não tarefa imposta (Ryan e Deci, 2000).\n\n**A terceira é mostrar.** Seymour Papert chamou de construcionismo a ideia de que o conhecimento gruda melhor quando vira uma coisa pública e compartilhável (Papert e Harel, 1991). Antes de começar o próximo projeto, passe as três pela cabeça.",
+        "en": "If making were magic on its own, any hands-on activity would change you. It doesn't work that way.\n\n**The first condition is finishing.** In the same IKEA-effect study, when the object was destroyed before completion or the builder stopped halfway, the attachment vanished (Norton, Mochon & Ariely, 2012). A project abandoned in the garage doesn't count: to your mind, it's almost as if you never started.\n\nThe second is that you chose it. Self-Determination Theory — one of the most tested models in the psychology of motivation — holds that the drive coming from within needs three things: autonomy, competence and relatedness. Feeling good at something only becomes fuel when the activity was your own choice, not an assigned chore (Ryan & Deci, 2000).\n\n**The third is showing it.** Seymour Papert called it constructionism: knowledge sticks better when it becomes a public, shareable thing (Papert & Harel, 1991). Run those three checks before you start your next project."
+      },
+      "image_brief": "Uma bancada de marcenaria iluminada: embaixo dela, no chão, um banquinho pela metade com as tábuas soltas e empoeiradas; em cima, um banquinho igual, pronto e lixado, sendo entregue às mãos de um amigo que estende os braços pra receber.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Norton, Mochon & Ariely, 2012 · Journal of Consumer Psychology · 4 estudos",
+            "en": "Norton, Mochon & Ariely, 2012 · Journal of Consumer Psychology · 4 studies"
+          },
+          "url": "https://doi.org/10.1016/j.jcps.2011.08.002"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "dez-mil-horas-honestas",
+      "ordinal": 3,
+      "title": {
+        "pt": "Prática: as 10 mil horas nunca foram promessa.",
+        "en": "Practice: 10,000 hours were never a promise."
+      },
+      "claim": {
+        "pt": "Praticar explica de menos de 1% a 26% da distância entre expert e novato. Ajuda muito; não é passe de mágica.",
+        "en": "Practice explains from under 1% to 26% of the expert-novice gap. It helps a lot; it's no magic wand."
+      },
+      "body": {
+        "pt": "O estudo original, com violinistas de uma academia de Berlim, mostrou que os melhores tinham acumulado mais horas de prática solitária que os bons — mas nunca prometeu que horas garantem excelência. Uma meta-análise posterior mediu quanto a prática explica da distância entre expert e novato: **26% em jogos, 21% em música, 18% em esportes, 4% em educação e menos de 1% em profissões** (Macnamara et al., 2014). Talento inicial, idade em que você começou e qualidade do treino explicam a maior parte.\n\nAs outras duas promessas encolhem igual. A meta-análise mais rigorosa sobre uso ativo (postar, criar) contra passivo (rolar o feed) juntou 141 estudos e achou efeitos quase sempre minúsculos — e o uso ativo veio com um pouco mais de bem-estar e um pouco mais de ansiedade ao mesmo tempo (Valkenburg et al., 2024). **Construa porque muda seu apego e sua crença de que é capaz** — não porque promete excelência.",
+        "en": "The original study, of violinists at a Berlin academy, showed the best players had logged more solitary practice than the good ones — but it never promised that hours guarantee excellence. A later meta-analysis measured how much practice explains the gap between expert and novice: **26% in games, 21% in music, 18% in sports, 4% in education and under 1% in professions** (Macnamara et al., 2014). Starting talent, the age you began and coaching quality explain most of the rest.\n\nThe other two promises shrink the same way. The most rigorous meta-analysis on active use (posting, creating) versus passive (scrolling the feed) pooled 141 studies and found mostly tiny effects — active use came with slightly more well-being and slightly more anxiety at the same time (Valkenburg et al., 2024). **Build because it changes your attachment and your belief that you're capable** — not because it promises excellence."
+      },
+      "image_brief": "Uma escada de madeira encostada numa parede muito alta, com um violino e um arco apoiados no último degrau; a escada termina na metade da parede e o resto do caminho até o topo iluminado segue vazio.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Norton, Mochon & Ariely, 2012 · Journal of Consumer Psychology · 4 estudos",
+            "en": "Norton, Mochon & Ariely, 2012 · Journal of Consumer Psychology · 4 studies"
+          },
+          "url": "https://doi.org/10.1016/j.jcps.2011.08.002"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

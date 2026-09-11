@@ -1,0 +1,98 @@
+{
+  "slug": "protein-distribution-30g-myth",
+  "type": "explainer",
+  "material_title": {
+    "pt": "O teto de 30g de proteína não existe",
+    "en": "The 30-Gram Protein Ceiling Doesn't Exist"
+  },
+  "ideas": [
+    {
+      "id": "nao-existe-teto-de-absorcao",
+      "ordinal": 1,
+      "title": {
+        "pt": "O estudo dos 30g nunca olhou o intestino.",
+        "en": "The 30g study never looked at your gut."
+      },
+      "claim": {
+        "pt": "Você absorve tudo. O que satura é o sinal de construção do músculo — e com 100 gramas de uma vez, nem ele mostrou teto.",
+        "en": "You absorb all of it. What saturates is the muscle's building signal — and 100 grams at once showed no ceiling."
+      },
+      "body": {
+        "pt": "Em 2009, Daniel Moore e colegas deram proteína de ovo em doses diferentes a seis rapazes que tinham treinado uma perna só. Vinte gramas dispararam a síntese proteica muscular — a velocidade com que o músculo monta fibra nova. Quarenta gramas não dispararam mais que isso. Repare no que foi medido: a resposta do músculo. **Ninguém contou aminoácido perdido nas fezes, ninguém avaliou digestão.** Do laboratório pro vestiário, \"a resposta satura\" virou \"o corpo só absorve\".\n\nEm 2023, o grupo de Jorn Trommelen foi atrás do teto de propósito: 36 pessoas, treino de corpo inteiro, 25 ou 100 gramas de proteína do leite, com traçadores — aminoácidos marcados que dá pra seguir até dentro do músculo. A dose de 100 gramas rendeu 20% mais aminoácido incorporado nas primeiras quatro horas e 40% mais entre a quarta e a décima segunda, sem teto nenhum (Trommelen et al., Cell Reports Medicine, 2023).\n\nO teste é de vocabulário: se a frase fala em absorver, já está errada.",
+        "en": "In 2009, Daniel Moore and colleagues fed egg protein at different doses to six young men who had trained one leg only. Twenty grams fired up muscle protein synthesis — the rate at which muscle builds new fibre. Forty grams fired it no higher. Look at what got measured: the muscle's response. **Nobody counted amino acids lost in stool, nobody assessed digestion.** Between the lab and the locker room, \"the response saturates\" became \"your body can't absorb it\".\n\nIn 2023, Jorn Trommelen's group went hunting for the ceiling on purpose: 36 people, whole-body training, then 25 or 100 grams of milk protein, plus tracers — tagged amino acids you can follow right into muscle tissue. The 100-gram dose put 20% more amino acid into muscle in the first four hours and 40% more between hour four and hour twelve, with no ceiling anywhere (Trommelen et al., Cell Reports Medicine, 2023).\n\nThe test is vocabulary: if the sentence says absorb, it is already wrong."
+      },
+      "image_brief": "Uma churrasqueira acesa ao fundo e, em primeiro plano, um prato com fatias grossas de picanha; ao lado da mesa, no piso, um ralo completamente seco e limpo, sem uma gota escorrida.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Trommelen et al., 2023 · Cell Reports Medicine 4(12) · ensaio randomizado com traçadores isotópicos",
+            "en": "Trommelen et al., 2023 · Cell Reports Medicine 4(12) · randomized trial with stable-isotope tracers"
+          },
+          "url": "https://doi.org/10.1016/j.xcrm.2023.101324"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "gatilho-da-leucina",
+      "ordinal": 2,
+      "title": {
+        "pt": "Proteína: 30 gramas nunca foi o seu número.",
+        "en": "Protein: 30 grams was never your number."
+      },
+      "claim": {
+        "pt": "O gatilho não é o total do prato: são 2,5 a 3 gramas de leucina por refeição, e ele sobe com a idade.",
+        "en": "The trigger isn't the gram total: it's 2.5 to 3 grams of leucine per meal, and it climbs with age."
+      },
+      "body": {
+        "pt": "Proteína é uma coleção de aminoácidos, e um deles acumula dois empregos. A leucina é tijolo como os outros e também o interruptor. Quando ela sobe rápido no sangue, aciona o mTOR — um sensor dentro da célula muscular que liga a linha de montagem de proteína nova. O gatilho fica entre 2,5 e 3 gramas de leucina, que moram em uns 20 a 30 gramas de proteína animal de boa qualidade: carne, ovo, leite, whey. Fonte vegetal traz menos leucina por grama e precisa de dose maior.\n\nE o número se mexe. **Moore voltou ao assunto em 2015: homens de uns 22 anos saturavam a resposta com 0,24 grama por quilo por refeição, contra 0,40 dos de uns 71** — uns dois terços a mais pro mesmo efeito.\n\nAreta e colegas dividiram os mesmos 80 gramas de whey em 12 horas de três formas (Journal of Physiology, 2013): quatro doses de 20 gramas renderam mais que oito de 10 ou duas de 40. Mire 20 a 30 gramas em quatro refeições — mais por refeição depois dos 60.",
+        "en": "Protein is a set of amino acids, and one of them holds two jobs at once. Leucine is a brick like the others, and also the switch. When it climbs fast enough in your blood it trips mTOR — a sensor inside the muscle cell that starts the assembly line for new protein. The trigger sits between 2.5 and 3 grams of leucine, which live inside roughly 20 to 30 grams of good animal protein: meat, eggs, milk, whey. Plant sources carry less leucine per gram and need a bigger dose.\n\nAnd the number moves. **Moore came back to the question in 2015: men around 22 saturated the response at 0.24 grams per kilo per meal, against 0.40 in men around 71** — about two-thirds more for the same effect.\n\nAreta and colleagues split the same 80 grams of whey over 12 hours three ways (Journal of Physiology, 2013): four doses of 20 grams beat eight of 10 and two of 40. Aim for 20 to 30 grams across four meals — more per meal past 60."
+      },
+      "image_brief": "Numa parede de cozinha, dois interruptores idênticos lado a lado: um rapaz aciona o seu com a ponta de um dedo, enquanto ao lado um homem de cabelos brancos empurra o dele com as duas mãos e o corpo inclinado.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Trommelen et al., 2023 · Cell Reports Medicine 4(12) · ensaio randomizado com traçadores isotópicos",
+            "en": "Trommelen et al., 2023 · Cell Reports Medicine 4(12) · randomized trial with stable-isotope tracers"
+          },
+          "url": "https://doi.org/10.1016/j.xcrm.2023.101324"
+        },
+        {
+          "label": {
+            "pt": "Mamerow et al., 2014 · Journal of Nutrition 144(6) · ensaio cruzado com alimentação controlada",
+            "en": "Mamerow et al., 2014 · Journal of Nutrition 144(6) · controlled-feeding crossover trial"
+          },
+          "url": "https://pubmed.ncbi.nlm.nih.gov/24477298/"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "buraco-do-cafe-da-manha",
+      "ordinal": 3,
+      "title": {
+        "pt": "Proteína: o prato a consertar não é o jantar.",
+        "en": "Protein: the plate to fix isn't dinner."
+      },
+      "claim": {
+        "pt": "A mesma proteína do dia, dividida igual entre as refeições, rendeu 25% mais construção muscular em 24 horas.",
+        "en": "The same daily protein, spread evenly across meals, produced 25% more muscle building over 24 hours."
+      },
+      "body": {
+        "pt": "Em 2014, Mamerow e colegas serviram a oito adultos a mesma proteína por dia, em alimentação controlada, sete dias em cada padrão (Journal of Nutrition). Ou empilhada no jantar — 10, 15 e 65 gramas — ou dividida por igual entre as três refeições. **O padrão dividido rendeu cerca de 25% mais síntese proteica muscular em 24 horas**, com a mesma comida no dia.\n\nRefaça o seu dia de ontem em gramas. Pão na chapa com café com leite: perto de 7. Marmita com duas colheres de frango: uns 20. Jantar com bife, ovo e queijo: passa de 50. O interruptor foi acionado uma vez só, à noite.\n\nColoque 25 a 30 gramas no café da manhã: dois ovos dão 12; um pote de iogurte grego, 16. Seu peso em quilos × 0,4 é a meta por refeição. O total do dia segue sendo a alavanca maior — numa análise de 23 ensaios (Schoenfeld, Aragon e Krieger, 2013), o efeito do horário quase sumiu depois de ajustar pelo total. Doença renal ou dieta restringida: pergunte ao seu médico.",
+        "en": "In 2014, Mamerow and colleagues fed eight adults the same amount of protein every day, under controlled feeding, seven days on each pattern (Journal of Nutrition). Either piled onto dinner — 10, 15 and 65 grams — or spread evenly across the three meals. **The even pattern produced about 25% more muscle protein synthesis over 24 hours**, on identical food.\n\nRebuild yesterday in grams. Toast and coffee with milk: around 7. A lunchbox with two spoonfuls of chicken: about 20. Dinner with steak, egg and cheese: past 50. The switch got flipped once, at night.\n\nPut 25 to 30 grams into breakfast: two eggs give you 12, a pot of Greek yogurt about 16. Your weight in kilos × 0.4 is the per-meal target. Daily total is still the bigger lever — in an analysis of 23 trials (Schoenfeld, Aragon and Krieger, 2013) the timing effect all but vanished once total protein was accounted for. Kidney disease or a restricted diet: ask your doctor."
+      },
+      "image_brief": "Uma bancada de cozinha com três pratos em fila: o primeiro com uma torrada solitária, o segundo quase vazio, o terceiro com uma montanha de comida transbordando; duas mãos transferem parte da montanha para o primeiro prato.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Mamerow et al., 2014 · Journal of Nutrition 144(6) · ensaio cruzado com alimentação controlada",
+            "en": "Mamerow et al., 2014 · Journal of Nutrition 144(6) · controlled-feeding crossover trial"
+          },
+          "url": "https://pubmed.ncbi.nlm.nih.gov/24477298/"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

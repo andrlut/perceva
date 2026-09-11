@@ -1,0 +1,118 @@
+{
+  "slug": "summary-atomic-habits",
+  "type": "summary",
+  "material_title": {
+    "pt": "Hábitos Atômicos — 66 dias, não 21",
+    "en": "Atomic Habits — 66 days, not 21"
+  },
+  "ideas": [
+    {
+      "id": "66-dias-nao-21",
+      "ordinal": 1,
+      "title": {
+        "pt": "Os 21 dias vieram de um cirurgião plástico.",
+        "en": "The 21-day rule came from a plastic surgeon."
+      },
+      "claim": {
+        "pt": "Nos 96 voluntários de Lally, o hábito novo só virou automático aos 66 dias em média — e o intervalo foi de 18 a 254.",
+        "en": "In Lally's 96 volunteers, a new habit went automatic at 66 days on average — and the range ran from 18 to 254."
+      },
+      "body": {
+        "pt": "Em 1960, o cirurgião plástico Maxwell Maltz reparou que seus pacientes levavam \"no mínimo uns 21 dias\" pra se acostumar com o rosto novo. Observação de corredor, nenhum experimento. Meio século depois, alguém finalmente cronometrou.\n\nEm 2010, Phillippa Lally (University College London) acompanhou 96 voluntários repetindo um comportamento novo no mesmo contexto por 12 semanas. **A automaticidade média chegou aos 66 dias, com intervalo real de 18 a 254**, dependendo da pessoa e da tarefa. Beber um copo d'água vira automático rápido; 50 abdominais, não.\n\nO achado mais útil nem é o número. Perder um dia isolado não derrubou a curva de ninguém — o hábito não zera porque você faltou numa terça. **\"Nunca falhe duas vezes seguidas\"** é dos raros conselhos de hábito com respaldo experimental direto.\n\nEntão pare de contar dias e adote a regra: um dia perdido é ruído, dois seguidos viram tendência. E se o hábito que você escolheu é grande, conte com o lado longo do intervalo.",
+        "en": "In 1960, plastic surgeon Maxwell Maltz noticed his patients needed \"a minimum of about 21 days\" to get used to their new face. A hallway observation, not an experiment. Half a century later, someone finally put a stopwatch on it.\n\nIn 2010, Phillippa Lally (University College London) tracked 96 volunteers repeating a new behavior in the same context for 12 weeks. **Automaticity landed at 66 days on average, with a real range of 18 to 254**, depending on the person and the task. A glass of water goes automatic fast; 50 sit-ups, not so much.\n\nThe most useful finding isn't the number. Missing a single day dented nobody's curve — your habit doesn't reset because you skipped a Tuesday. **\"Never miss twice\"** is one of the rare habit tips with direct experimental backing.\n\nSo stop counting days and take the rule instead: one missed day is noise, two in a row is a trend. And if the habit you picked is a big one, plan for the long end of that range."
+      },
+      "image_brief": "Uma trilha de pegadas descalças na areia molhada seguindo até o horizonte; no meio dela, uma onda apagou um único par de pegadas, e a trilha recomeça do outro lado no mesmo compasso.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Hábitos Atômicos — James Clear (Avery, 2018)",
+            "en": "Atomic Habits — James Clear (Avery, 2018)"
+          },
+          "url": "https://jamesclear.com/atomic-habits"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "sistemas-vencem-metas",
+      "ordinal": 2,
+      "title": {
+        "pt": "Hábitos: 1% por dia. A conta fecha. Você, não.",
+        "en": "Habits: 1% daily. The math holds. You won't."
+      },
+      "claim": {
+        "pt": "1% melhor por dia realmente dá 37 vezes em um ano — mas isso é juros compostos, e comportamento tem platô e recaída.",
+        "en": "1% better daily really does come to 37 times in a year — but that's compound interest, and behavior plateaus."
+      },
+      "body": {
+        "pt": "A meta é o resultado que você quer; o sistema é o conjunto de pequenas ações repetidas que te leva (ou não) até lá. Clear ilustra com o ciclismo britânico. Em 2003, a equipe tinha um único ouro olímpico em quase um século. Dave Brailsford, o novo diretor, não perseguiu o pódio: atacou dezenas de variáveis minúsculas, melhorando cada uma cerca de 1% — o modelo do selim, a técnica de lavar as mãos pra não pegar gripe, o travesseiro que cada atleta levava pra viagem. Entre 2007 e 2017 vieram 178 títulos mundiais e cinco Tours em seis anos.\n\nO slogan que Clear extrai daí é que escorrega. A aritmética confere: 1,01 elevado a 365 dá 37,8. Mas isso descreve juros compostos, e **comportamento humano não compõe assim** — tem platô, retorno decrescente, recaída.\n\nFique com a metade que funciona. Escolha duas ou três variáveis pequenas e repetíveis da sua semana e cuide delas. **O 1% é metáfora de consistência, não a conta do seu progresso.**",
+        "en": "The goal is the outcome you want; the system is the set of small, repeated actions that carries you there — or doesn't. Clear's showcase is British Cycling. In 2003 the team had a single Olympic gold in nearly a century. New director Dave Brailsford skipped the podium and attacked dozens of tiny variables, improving each by roughly 1% — the shape of the bike seat, the hand-washing technique that cut colds, the pillow each rider took on the road. Between 2007 and 2017 came 178 world titles and five Tours in six years.\n\nThe slogan Clear pulls from it is where he slips. The arithmetic is right: 1.01 to the 365th power is 37.8. But that describes compound interest, and **human behavior doesn't compound that way** — there are plateaus, diminishing returns, relapses.\n\nKeep the half that works. Pick two or three small, repeatable variables in your week and tend them. **The 1% is a metaphor for consistency, not the math of your progress.**"
+      },
+      "image_brief": "Uma escadaria de pedra ao ar livre que sobe em degraus regulares e, no alto, se transforma num longo patamar plano; um corredor está parado no começo do patamar, mãos na cintura, recuperando o fôlego.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Hábitos Atômicos — James Clear (Avery, 2018)",
+            "en": "Atomic Habits — James Clear (Avery, 2018)"
+          },
+          "url": "https://jamesclear.com/atomic-habits"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "ambiente-vence-vontade",
+      "ordinal": 3,
+      "title": {
+        "pt": "Hábitos: quase metade do dia acontece sem você.",
+        "en": "Habits: nearly half your day runs without you."
+      },
+      "claim": {
+        "pt": "Wood (2019): 43% do seu comportamento diário se repete no mesmo cenário. Por isso ambiente vence força de vontade.",
+        "en": "Wood (2019): about 43% of daily behavior repeats in the same setting. That is why environment beats willpower."
+      },
+      "body": {
+        "pt": "Wendy Wood mostrou que hábito não é decisão: é uma associação contexto → resposta gravada pela repetição. A deixa aparece no ambiente e a resposta vem atrás, quase sempre enquanto você pensa em outra coisa. Cerca de 43% do comportamento diário se repete no mesmo cenário (Wood, 2019). **Por isso ambiente vence força de vontade** — quando a vontade entra em cena, a deixa já disparou.\n\nO loop que Clear usa — deixa, desejo, resposta, recompensa — não é descoberta dele. É o ciclo que Charles Duhigg popularizou em 2012, e a neurociência embaixo foi medida em ratos num labirinto, não em gente formando hábito no dia a dia.\n\nA parte prática não depende disso. Mude o cenário antes de tentar mudar você: **encaixe o hábito novo logo depois de um que já existe** (\"depois do café, dois minutos de leitura\") e encolha ele até caber em dois minutos — \"ler uma página\", não \"ler trinta\".",
+        "en": "Wendy Wood showed a habit isn't a decision: it's a context → response association carved by repetition. The cue shows up in your surroundings and the response follows, usually while you're thinking about something else. About 43% of daily behavior repeats in the same setting (Wood, 2019). **That's why environment beats willpower** — by the time willpower arrives, the cue has already fired.\n\nThe loop Clear uses — cue, craving, response, reward — isn't his discovery. It's the cycle Charles Duhigg popularized in 2012, and the neuroscience under it was measured in rats running a maze, not in people forming habits day to day.\n\nThe practical part doesn't depend on that. Change the setting before you try to change yourself: **bolt the new habit onto one you already do** (\"after coffee, two minutes of reading\") and shrink it until it fits in two minutes — \"read one page\", not \"read thirty\"."
+      },
+      "image_brief": "Um par de tênis de corrida deixado em cima do capacho da entrada, cadarços já afrouxados e as chaves de casa dentro de um deles, bem no caminho de quem vai sair.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Hábitos Atômicos — James Clear (Avery, 2018)",
+            "en": "Atomic Habits — James Clear (Avery, 2018)"
+          },
+          "url": "https://jamesclear.com/atomic-habits"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "voto-na-identidade",
+      "ordinal": 4,
+      "title": {
+        "pt": "Identidade: a mais citada é a menos testada.",
+        "en": "Identity: the most quoted, the least tested."
+      },
+      "claim": {
+        "pt": "Cada ação é um voto em quem você se torna. Bússola poderosa — mas Clear a apoia em teoria de 1977, não em teste.",
+        "en": "Every action is a vote for who you become. A strong compass — but Clear rests it on a 1977 theory, not a test."
+      },
+      "body": {
+        "pt": "O teste do Clear é simples. \"Estou tentando parar de fumar\" preserva a identidade de fumante; \"eu não sou fumante\" troca ela. Cada ação vira um voto na pessoa que você está se tornando, e a mudança deixa de depender de quanto você aguenta.\n\nÉ também o pilar com menos prova. Clear apoia a identidade na teoria de autoeficácia de Albert Bandura, de 1977 — uma teoria geral e respeitada sobre a crença na própria capacidade, **não um estudo que isole a mudança de identidade como causa da durabilidade do hábito**. É a ideia mais citada do livro em conversa de bar e a menos testada em laboratório.\n\nUse como bússola, não como lei. Escreva a frase no presente — \"eu sou alguém que treina\" — e deixe ela escolher o hábito da semana. **Depois meça se o hábito aconteceu**, que é a parte que dá pra provar.",
+        "en": "Clear's test is simple. \"I'm trying to quit smoking\" keeps the smoker's identity; \"I'm not a smoker\" swaps it. Every action becomes a vote for the person you're becoming, and change stops riding on how much strain you can take.\n\nIt's also the pillar with the least proof. Clear rests identity on Albert Bandura's 1977 self-efficacy theory — a respected, general theory about belief in your own capability, **not a study isolating identity change as the cause of a habit's durability**. It's the most-quoted idea from the book in casual talk and the least tested in a lab.\n\nUse it as a compass, not a law. Write the sentence in the present tense — \"I'm someone who trains\" — and let it pick this week's habit. **Then measure whether the habit actually happened**, which is the part you can prove."
+      },
+      "image_brief": "Uma mão depositando uma pequena ficha de madeira dentro de um pote de vidro transparente que já guarda dezenas de fichas iguais empilhadas no fundo.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Hábitos Atômicos — James Clear (Avery, 2018)",
+            "en": "Atomic Habits — James Clear (Avery, 2018)"
+          },
+          "url": "https://jamesclear.com/atomic-habits"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

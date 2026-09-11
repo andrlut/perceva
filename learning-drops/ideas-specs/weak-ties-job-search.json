@@ -1,0 +1,91 @@
+{
+  "slug": "weak-ties-job-search",
+  "type": "explainer",
+  "material_title": {
+    "pt": "O emprego vem do conhecido, não do amigo",
+    "en": "Your Next Job Comes From an Acquaintance"
+  },
+  "ideas": [
+    {
+      "id": "circulo-fechado",
+      "ordinal": 1,
+      "title": {
+        "pt": "Quem mais quer te ajudar é quem menos consegue.",
+        "en": "The ones most eager to help you help the least."
+      },
+      "claim": {
+        "pt": "Seu círculo próximo é fechado e recicla a mesma informação: a vaga que chega neles já tinha chegado em você.",
+        "en": "Your inner circle is a closed loop recycling the same news: the opening that reaches them already reached you."
+      },
+      "body": {
+        "pt": "Em 1973, Mark Granovetter definiu força de laço como a soma de tempo, intensidade emocional, intimidade e favores trocados (American Journal of Sociology). Laço forte é o amigo de dez anos; laço fraco é o ex-colega de dois empregos atrás. A boa vontade nunca foi o problema: seus amigos próximos se conhecem entre si, e uma notícia que entra ali dá a volta em horas, inclusive em você. **Pedir vaga a esse grupo é revirar um armário que você já revirou.** Vinte anos depois, Ronald Burt nomeou o que pesa de verdade: buraco estrutural, a lacuna entre dois grupos que não se falam. A posição vale mais que a intimidade: o conhecido no mesmo prédio dos seus amigos não serve de nada; o de um setor onde você não conhece ninguém vale por dez. Granovetter também contou: num subúrbio de Boston em 1974, cerca de 83% de quem conseguiu vaga por contato pessoal via esse contato só de vez em quando ou raramente — 282 respostas, só de homens, fundação da teoria, não medida do seu mercado.",
+        "en": "In 1973, Mark Granovetter defined tie strength as the sum of time, emotional intensity, intimacy and reciprocal favors (American Journal of Sociology). A strong tie is the friend of ten years; a weak tie is the coworker from two jobs ago. Goodwill is not what fails you: your close friends all know each other, so news landing in that loop reaches everyone within hours, you included. **Asking that group for leads is searching a drawer you emptied last week.** Twenty years later, Ronald Burt named what actually carries the weight: the structural hole, the gap between two groups who never talk. Position beats intimacy — an acquaintance in the same building as your friends is worth nothing; one in an industry where you know nobody is worth ten. Granovetter counted it too, in a Boston suburb in 1974: roughly 83% of people hired through a personal contact saw that contact only occasionally or rarely — 282 answers, men only, foundational rather than a reading of your market."
+      },
+      "image_brief": "Cinco pessoas sentadas muito juntas num círculo apertado, passando de mão em mão a mesma chave gasta que já deu várias voltas ali; atrás delas, separado por um vão escuro e vazio, um sexto homem de pé sob uma réstia de luz quente segura uma chave de formato completamente diferente.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Granovetter, 1973 · American Journal of Sociology 78(6) · artigo teórico fundador",
+            "en": "Granovetter, 1973 · American Journal of Sociology 78(6) · founding theory paper"
+          },
+          "url": "https://www.jstor.org/stable/2776392"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "curva-u-invertido",
+      "ordinal": 2,
+      "title": {
+        "pt": "Emprego: nem o amigo próximo nem o estranho.",
+        "en": "Job leads: neither the friend nor the stranger."
+      },
+      "claim": {
+        "pt": "No sorteio do LinkedIn com 20 milhões de perfis, a chance de emprego foi maior perto de 10 conhecidos em comum.",
+        "en": "In LinkedIn's randomized test on 20 million profiles, job odds peaked near 10 mutual connections."
+      },
+      "body": {
+        "pt": "Entre 2015 e 2019, o LinkedIn sorteou ao acaso quantos laços fortes e quantos fracos cada grupo de usuários via na lista “Pessoas que você talvez conheça”. Vinte milhões de pessoas, 2 bilhões de conexões novas, 70 milhões de candidaturas e 600 mil empregos aceitos (Rajkumar et al., Science, 2022) — a primeira evidência de causa para uma teoria de 1973. O resultado não foi “quanto mais fraco, melhor”. **Foi uma curva em U invertido: a chance sobe conforme o laço enfraquece, chega a um pico perto de 10 conhecidos em comum e desce de novo.** Abaixo disso, o contato mora no seu próprio grupo e repete o que você já sabe; muito acima, você é um estranho, e estranho não mexe um dedo por você. Duas ressalvas. Medida por intensidade de conversa, a curva vira quase uma reta. E o efeito inverte por setor: em indústrias mais digitais os laços fracos ajudaram; em setores menos digitais, os fortes. Abra um perfil, leia o número de conhecidos em comum e cheque o seu setor antes de agir.",
+        "en": "Between 2015 and 2019, LinkedIn randomly varied how many strong and how many weak ties each group of users saw in “People You May Know”. Twenty million people, 2 billion new connections, 70 million applications and 600,000 accepted jobs (Rajkumar et al., Science, 2022) — the first causal evidence for a theory from 1973. The answer was not “weaker is better”. **It was an inverted U: the odds climb as the tie weakens, peak near 10 mutual connections, then fall away.** Below that, the contact lives inside your own circle and repeats what you already know; far above it, you are a stranger, and strangers do not go out of their way. Two caveats. Measured by messaging intensity instead, the curve flattens into a near-straight line. And the effect flips by industry: weak ties raised mobility in more digital fields, strong ties in less digital ones. Open a profile, read the mutual-connections count, and check your own industry before you act."
+      },
+      "image_brief": "Uma ponte de corda em arco sobre um vale de neblina: na ponta de cá, um grupo de pessoas amontoadas ombro a ombro; na ponta de lá, uma multidão indistinta some no branco; no ponto mais alto do arco, sob a única réstia de sol que atravessa a névoa, duas pessoas se cumprimentam com um aperto de mão.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Rajkumar et al., 2022 · Science 377(6612) · experimentos randomizados no LinkedIn, n=20 milhões",
+            "en": "Rajkumar et al., 2022 · Science 377(6612) · randomized experiments inside LinkedIn, n=20 million"
+          },
+          "url": "https://doi.org/10.1126/science.abl4476"
+        }
+      ],
+      "cta": null
+    },
+    {
+      "id": "laco-adormecido",
+      "ordinal": 3,
+      "title": {
+        "pt": "Rede: você não precisa conhecer mais ninguém.",
+        "en": "Network: you do not need to meet anyone new."
+      },
+      "claim": {
+        "pt": "Contatos com quem você não fala há anos deram conselho mais novo e mais útil que os ativos — com a confiança intacta.",
+        "en": "Contacts you had not spoken to in years gave more novel, more useful advice than active ones — trust still intact."
+      },
+      "body": {
+        "pt": "Num estudo da Rutgers (Levin, Walter e Murnighan, Organization Science, 2011), executivos de MBA pediram conselho sobre um problema real de trabalho a contatos com quem não falavam havia anos. O conselho desses **laços adormecidos** voltou mais novo e mais útil que o dos contatos ativos: informação de outro grupo, com a confiança antiga já pronta. Amostra pequena e específica — pista de mecanismo, não lei. A trava costuma ser achar que reativar contato agora é interesse disfarçado. A alternativa não é a pureza, é o silêncio: o conhecido que você não procurou também não ficou sabendo que você estava disponível. Faça assim: liste vinte nomes de gente que trabalhou perto de você e sumiu do seu dia a dia há mais de um ano. Mande uma mensagem por semana, não vinte num domingo. E peça informação, não emprego — “como está montado o time de dados de vocês hoje?” é fácil de responder; “tem vaga aí?” encerra a conversa.",
+        "en": "In a Rutgers study (Levin, Walter and Murnighan, Organization Science, 2011), executive MBA students asked people they had not spoken to in years for advice on a live work problem. Advice from those **dormant ties** came back more novel and more useful than advice from current contacts: information from another circle, with the old trust already in place. Small, unusual sample — a clue about mechanism, not a law. What stalls people here is the fear that reaching out now looks self-serving. The alternative is not purity, it is silence: the acquaintance you never messaged also never learned you were available. Do it like this. Write down twenty names of people you worked near who dropped out of your week more than a year ago. Send one message a week, not twenty on a Sunday. And ask for information, not a job — “how is your data team set up these days?” is easy to answer; “any openings?” ends the conversation."
+      },
+      "image_brief": "Um pátio escuro atravessado de ponta a ponta por um varal comprido de lampiões de papel apagados e empoeirados; uma pessoa em pé numa escada acende o primeiro deles com um fósforo, e a luz quente alcança só os dois lampiões seguintes, enquanto a fila apagada some no fundo da noite.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Levin, Walter e Murnighan, 2011 · Organization Science 22(4) · reconexão de laços adormecidos",
+            "en": "Levin, Walter and Murnighan, 2011 · Organization Science 22(4) · reconnecting dormant ties"
+          },
+          "url": "https://www.jstor.org/stable/20868904"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}
