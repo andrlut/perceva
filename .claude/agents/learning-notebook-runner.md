@@ -773,6 +773,40 @@ Leave the cap at 6 until two runs have finished clean. This is **not** a
 cloud Claude Routine: the token, `gh`, Chrome and ffmpeg only exist on this
 machine.
 
+## Lessons from real runs (keep this list growing)
+
+From the manual test and the first autonomous run (2026-09-10, 1 + 8
+generations, `RESULT: ok`, 53 min for the 8):
+
+- **Click dialog buttons by text, never by coordinate.** Inserir sat at
+  (782,612) twice and at (734,570) the third time; a missed click silently
+  discarded a paste that had already been verified. Locate Inserir / Gerar /
+  the "Texto copiado" chip with `javascript_tool` by `innerText` **regex**
+  (the chip's text is `content_paste Texto copiado`, so `===` never matches)
+  and click the element found — or `find` right before the click; `find`
+  refs go stale as soon as a dialog is reopened.
+- Focus the paste box by placeholder (`/Cole o texto/`), not by coordinate.
+  `ctrl+a` on an empty focused field once leaked a literal "a" into it —
+  check the value with JS before pasting.
+- The language dropdown **resets to English on every reopen** of the
+  customize dialog; pick the language every single time and confirm it in
+  the dialog before Gerar.
+- `studio_position` is **not stable across reloads** (a reload reordered a
+  notebook's Estúdio list). Bind a card by kind + language (+ the
+  "generating" state, which reads *"Volte em alguns minutos"* for audio and
+  *"Isso pode demorar um pouco"* for video), never by position alone.
+- Measured times: Curta videos 1:03–1:33 took 10–15 min each; Padrão deep
+  dives 21–31 min of audio took 10–14 min. Up to 5 generations in flight
+  across notebooks went fine and no quota signal appeared at 9 in a day.
+- One notebook carrying 5 generations at 2 concurrent was the wall-clock
+  bottleneck: spread deep dives across notebooks instead of stacking them
+  on one.
+- `prep-sources` must strip the `icon | ` prefix of `:::list-icon` items
+  (`^\w+ \| `), or the narrator reads "medkit".
+- Poster captions inherit whatever the Notebook was showing at 1 s (once a
+  clipped "A teoria Communicate"); cosmetic, but pick the poster frame at
+  2–3 s if the first second is a title card.
+
 ## Summary you print at the end
 
 Plain text: run status, items by final status (`migrated` / `uploaded` /
