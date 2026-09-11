@@ -54,6 +54,10 @@ export function MoodCheckinPrompt({ enabled = true }: Props) {
   const [visible, setVisible] = useState(false);
   // The value that LANDED — set only in onSuccess, never optimistically.
   const [justLogged, setJustLogged] = useState<MoodValue | null>(null);
+  // Pulled out so the effect depends on the stable function, not the whole
+  // query object — calling `today.refetch()` inside would make `today` itself
+  // a dependency and re-run the effect on every query state change.
+  const refetchToday = today.refetch;
 
   useEffect(() => {
     if (!enabled) return;
@@ -82,7 +86,7 @@ export function MoodCheckinPrompt({ enabled = true }: Props) {
       // through the MCP, or on another device. Opening over it would let one
       // tap wipe that note. Re-read before opening, and trust only the fresh
       // answer.
-      const fresh = await today.refetch();
+      const fresh = await refetchToday();
       if (!active || !fresh.isSuccess || fresh.data) return;
       // Home can stay mounted overnight; yesterday's confirmation must not
       // greet a new day.
@@ -99,7 +103,7 @@ export function MoodCheckinPrompt({ enabled = true }: Props) {
     settings.dayEndMinute,
     today.isSuccess,
     today.data,
-    today.refetch,
+    refetchToday,
   ]);
 
   const stamp = () =>
