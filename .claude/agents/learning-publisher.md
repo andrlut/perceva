@@ -263,8 +263,21 @@ renderer would silently swallow.
 
 ### 7. Text migration
 
-Write `supabase/migrations/<YYYYMMDD>NNNNNN_learning_material_<slug>.sql`
-exactly as today (worked example:
+Save the reviewer-approved payload as `learning-drops/inbox/<slug>/payload.json`
+(Write tool, gitignored folder) and generate the migration — never hand-write
+the dollar quotes:
+
+```bash
+node tools/content-media/emit-material-migration.mjs \
+  --payload learning-drops/inbox/<slug>/payload.json \
+  --reviewer "PASSED, <n> warns, 0 fails"
+```
+
+It writes `supabase/migrations/<YYYYMMDD>NNNNNN_learning_material_<slug>.sql`
+(next free counter for today; `--out` to force a path, `--stdout` to inspect)
+and fails closed on a missing field, takeaways outside 1–5, subs outside 1–2,
+a non-http(s) `source_url` or a text that contains its own dollar-quote tag.
+The shape it emits is exactly the hand-written one (worked example:
 `supabase/migrations/20260906000001_learning_material_protein-distribution-30g-myth.sql`):
 
 - New material: `insert into public.learning_material (...)` +
