@@ -29,7 +29,7 @@ Repo root:       detectado dinâmico — não hardcodar path
 **Portabilidade**: rode tudo via a Bash tool (Windows local + sandbox Linux). Root em runtime:
 
 ```bash
-MAIN=$(git worktree list --porcelain | awk '/^worktree /{print $2; exit}')
+MAIN=$(git worktree list --porcelain | sed -n '1s/^worktree //p')
 cd "$MAIN"
 ```
 
@@ -45,7 +45,7 @@ Na nuvem só existe um checkout (sem worktrees) — o Passo 3 vira no-op, e tudo
 ### Passo 1 — Fetch + main pull
 
 ```bash
-MAIN=$(git worktree list --porcelain | awk '/^worktree /{print $2; exit}')
+MAIN=$(git worktree list --porcelain | sed -n '1s/^worktree //p')
 cd "$MAIN"
 git fetch origin
 git switch main

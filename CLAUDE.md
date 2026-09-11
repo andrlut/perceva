@@ -342,7 +342,7 @@ The publishable key is safe in client (RLS protects). The service_role key has b
 
 | Want to | Do this |
 |---|---|
-| Add a new feature with schema | New file `supabase/migrations/<timestamp>_<name>.sql` → `supabase db push --linked` |
+| Add a new feature with schema | `/db-migration` — counter-style `supabase/migrations/<YYYYMMDD>NNNNNN_<name>.sql` (NNNNNN = highest of today's versions on main ∪ cloud, + 1), dry-run gate, push, commit |
 | Add a new system template entity | Always create a `*_template` catalog + a user-owned table; clone via SECURITY DEFINER RPC. Never auto-seed personal copies. |
 | Add a new screen | File under `app/app/`, register in `app/app/_layout.tsx` `<Stack>` |
 | Add a new API hook | File under `app/lib/api/<domain>.ts`; mirror existing hook patterns |
@@ -351,7 +351,7 @@ The publishable key is safe in client (RLS protects). The service_role key has b
 | Build an APK | `cd app && eas build --platform android --profile preview --non-interactive --no-wait` |
 | Ship JS-only hotfix to the Play Store app | `cd app && eas update --channel production` — prefer this over rebuild whenever no native code changed |
 | Ship JS-only hotfix to the internal test APK | `cd app && eas update --channel preview` |
-| Apply migration to cloud | `cd "C:\Users\André Luthold\Projetos\Perceva"` then `supabase db push --linked` |
+| Apply migration to cloud | Via `/db-migration`, from the main checkout (`C:\Users\André Luthold\Projetos\Perceva`) — never a bare `supabase db push --linked`: its `--dry-run` must first list exactly your new file ("up to date" with a new file = version collision; the SQL would silently not run) |
 
 ---
 

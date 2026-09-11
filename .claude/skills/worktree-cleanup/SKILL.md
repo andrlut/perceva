@@ -33,7 +33,7 @@ Repo root:      detectado dinâmico — não hardcodar path
 **Portabilidade**: rode tudo via a Bash tool. Root em runtime:
 
 ```bash
-MAIN=$(git worktree list --porcelain | awk '/^worktree /{print $2; exit}')
+MAIN=$(git worktree list --porcelain | sed -n '1s/^worktree //p')
 cd "$MAIN"
 ```
 
@@ -47,7 +47,7 @@ cd "$MAIN"
 ### Passo 1 — Inventário
 
 ```bash
-MAIN=$(git worktree list --porcelain | awk '/^worktree /{print $2; exit}')
+MAIN=$(git worktree list --porcelain | sed -n '1s/^worktree //p')
 cd "$MAIN"
 git fetch origin
 mainSha=$(git rev-parse origin/main)

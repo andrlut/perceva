@@ -30,7 +30,7 @@ Repo root:            detectado dinâmico — não hardcodar path
 **Portabilidade**: rode tudo via a Bash tool (Windows local + sandbox Linux). Root em runtime:
 
 ```bash
-MAIN=$(git worktree list --porcelain | awk '/^worktree /{print $2; exit}')
+MAIN=$(git worktree list --porcelain | sed -n '1s/^worktree //p')
 cd "$MAIN"
 ```
 

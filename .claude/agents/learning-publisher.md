@@ -69,7 +69,10 @@ Run `supabase migration list --linked | tail -5` to confirm the latest
 applied timestamp on remote. This run writes **two** migrations
 (`<YYYYMMDD>NNNNNN_learning_material_<slug>.sql` in step 7, then the
 ideas/media one that `emit-migration.mjs` names in step 11); both counters
-must be strictly greater than anything applied.
+must be strictly greater than anything applied. The emit scripts only see
+local files, and the run lasts long enough for another session to apply one
+in between — step 12's dry-run gate is what actually enforces this, right
+before the push.
 
 **Check `GEMINI_API_KEY` before spending any agent time:**
 
@@ -375,13 +378,49 @@ only warns on stderr and emits the ideias alone — the material ships
 without a hero (the card falls back to the dimension colour); the report
 must say so.
 
-### 12. Apply — ONE push for both migrations
+### 12. Apply — ONE push for both migrations, behind the dry-run gate
+
+The emit scripts number from the files in `supabase/migrations/` alone —
+they cannot see a version another session applied to the cloud but has not
+merged — and a lot of time has passed since step 1. The CLI matches
+migrations **by version only**: a file whose version is already applied is
+treated as applied, and `db push` answers "Remote database is up to date"
+without running it — or pushes one of your two files and silently skips the
+other (2026-09-10, `20260910000003`). So the push goes behind the same gate
+as `/db-migration` Passo 4a, expecting exactly your two files:
 
 ```bash
-supabase db push --linked
+out=$(echo "Y" | supabase db push --linked --dry-run 2>&1); rc=$?; printf '%s\n' "$out"
+listed=$(printf '%s' "$out" | grep -o '[0-9]\{14\}_[A-Za-z0-9_.-]*\.sql' | sort -u)
+expected=$(printf '%s\n' <text-migration>.sql <ideas-migration>.sql | sort -u)
+[ "$rc" -eq 0 ] && [ "$listed" = "$expected" ] && echo "GATE OK" || echo "GATE FAILED"
 ```
 
-Verify:
+`GATE FAILED` means nothing was applied. "Up to date", or a list missing one
+of yours, is a version collision; an extra file is someone else's pending
+migration; `Remote migration versions not found in local migrations
+directory` means the cloud has a version this checkout lacks — never run the
+`migration repair --status reverted` / `db pull` the CLI suggests, that file
+has to arrive through git. Delete your two unapplied migration files,
+`git pull --rebase --autostash origin main`, re-run the emit commands of
+steps 7 and 11 (they number from the updated directory; never hand-rename —
+the ideas emitter writes the file name into its header) and run the gate
+**once more**. A second failure is the "`db push` fails" failure mode.
+
+Only after `GATE OK`:
+
+```bash
+echo "Y" | supabase db push --linked
+```
+
+Verify — first that your two versions carry your names (a no-op push leaves
+someone else's name there, or nothing):
+
+```bash
+supabase db query --linked "select version, name from supabase_migrations.schema_migrations where version in ('<v-text>', '<v-ideas>')"
+```
+
+Then the content:
 
 ```bash
 supabase db query --linked "select m.slug, m.version, m.idea_count, m.hero_image_url is not null as has_hero, (select count(*) from jsonb_array_elements(m.ideas) i where jsonb_typeof(i->'image') = 'object') as ideas_with_image, (select string_agg(i->>'id', ', ' order by (i->>'ordinal')::int) from jsonb_array_elements(m.ideas) i) as idea_ids from public.learning_material m where m.slug = '<slug>'"
@@ -459,9 +498,9 @@ the git push did not land).
   it in the report.
 - `emit-migration.mjs` dies → the ideas-spec violates the contract; fix
   the spec (through the drafter if it is text), never the SQL.
-- `db push` fails → nothing is committed; both migrations stay local on
-  the branch; alert via PR comment / report. Uploaded assets are harmless
-  (nothing references them yet).
+- `db push` fails — or the step-12 gate fails twice → nothing is committed;
+  both migrations stay local on the branch; alert via PR comment / report.
+  Uploaded assets are harmless (nothing references them yet).
 - Anything unexpected → open an issue with the full trace.
 
 ## Idempotency
