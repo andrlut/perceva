@@ -27,6 +27,8 @@ interface Props {
   tagLabels: Map<string, string>;
   /** Reward id → title, for the reward facet. */
   rewardTitles: Map<string, string>;
+  /** The filter's XP scope in words, or null — the XP floor is measured in it. */
+  scopeLabel: string | null;
 }
 
 export function CalendarActiveFilters({
@@ -34,6 +36,7 @@ export function CalendarActiveFilters({
   taskTitles,
   tagLabels,
   rewardTitles,
+  scopeLabel,
 }: Props) {
   const { t } = useT();
   const meta = useMetaLookup();
@@ -69,7 +72,12 @@ export function CalendarActiveFilters({
     chips.push({ facet: 'tagIds', label: names.join(' / ') });
   }
   if (filter.minXp > 0) {
-    chips.push({ facet: 'minXp', label: t('calendar.filter.minXpValue', { xp: filter.minXp }) });
+    chips.push({
+      facet: 'minXp',
+      label: scopeLabel
+        ? t('calendar.filter.minXpValueScoped', { xp: filter.minXp, area: scopeLabel })
+        : t('calendar.filter.minXpValue', { xp: filter.minXp }),
+    });
   }
   if (filter.withRedemption) {
     chips.push({ facet: 'withRedemption', label: t('calendar.filter.withRedemption') });

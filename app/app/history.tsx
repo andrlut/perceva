@@ -36,13 +36,20 @@ import {
 import {
   activeFacetCount,
   dayMatchesFilter,
+  EMPTY_FILTER,
+  hasXpScope,
   isFilterActive,
+  scopedXp,
+  scopedXpByDim,
   summarize,
+  xpScopeLabel,
   type CalendarDay,
 } from '@/lib/calendar/filters';
+import { intensityReference, SCOPED_REFERENCE_FLOOR } from '@/lib/calendar/intensity';
 import { applyFilterSeed, useCalendarStore, type CalendarFront, type CalendarView } from '@/lib/calendar/store';
 import type { DimensionId, SubId, TaskSub, TaskWithSubs } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
+import { useMetaLookup } from '@/lib/i18n/meta';
 import { useLoadedSettings } from '@/lib/settings';
 import { formatHeroDate } from '@/lib/time';
 import { confirmAction, showInfo } from '@/lib/util/confirm';
@@ -114,6 +121,10 @@ export default function CalendarScreen() {
   const view = useCalendarStore((s) => s.view);
   const setView = useCalendarStore((s) => s.setView);
   const filter = useCalendarStore((s) => s.filter);
+  // Label captured when a practice was picked — the fallback name for a
+  // practice not logged in the visible range (same chain as the filter chips).
+  const taskLabels = useCalendarStore((s) => s.taskLabels);
+  const meta = useMetaLookup();
 
   const [selected, setSelected] = useState<Date>(() => startOfDay(new Date()));
   const [visibleMonth, setVisibleMonth] = useState<Date>(() => startOfMonth(new Date()));
@@ -264,6 +275,42 @@ export default function CalendarScreen() {
 
   const totals = useMemo(() => summarize(days.values(), filter), [days, filter]);
 
+  // Only the three XP-scope facets, so toggling a mood or a tag can never
+  // re-tint the month or re-label a number. The facet arrays keep their
+  // identity across other toggles (store.ts), so this memo is stable too.
+  const scopeFilter = useMemo(
+    () => ({ ...EMPTY_FILTER, taskIds: filter.taskIds, dims: filter.dims, subs: filter.subs }),
+    [filter.taskIds, filter.dims, filter.subs],
+  );
+
+  // The tint measures the number printed on the cell, so with an XP scope the
+  // reference is recomputed over the SCOPED days, with a lower floor (one area
+  // yields a fraction of a day — see SCOPED_REFERENCE_FLOOR). Without a scope
+  // it is the feed's own reference, untouched.
+  const scopedReference = useMemo(
+    () =>
+      hasXpScope(scopeFilter)
+        ? intensityReference(
+            [...days.values()].map((d) => scopedXp(d, scopeFilter)),
+            SCOPED_REFERENCE_FLOOR,
+          )
+        : reference,
+    [days, reference, scopeFilter],
+  );
+
+  // "Saúde", "Sono", "Treino · Saúde" — every scoped figure names its scope:
+  // a number that changes meaning with the filter has to say so.
+  const scopeLabel = useMemo(
+    () =>
+      xpScopeLabel(scopeFilter, {
+        practice: (id) =>
+          taskTitles.get(id) ?? taskLabels[id] ?? t('calendar.filter.practiceUnknown'),
+        dim: (d) => meta.dim(d).label,
+        sub: (s) => meta.sub(s).label,
+      }),
+    [scopeFilter, taskTitles, taskLabels, meta, t],
+  );
+
   const dimXp = useMemo(() => {
     const acc = Object.fromEntries(DIMENSION_ORDER.map((d) => [d, 0])) as Record<
       DimensionId,
@@ -271,7 +318,10 @@ export default function CalendarScreen() {
     >;
     for (const day of days.values()) {
       if (!dayMatchesFilter(day, filter)) continue;
-      for (const dim of DIMENSION_ORDER) acc[dim] += day.xpByDim[dim] ?? 0;
+      // Scoped, so the breakdown cards add up to the headline instead of
+      // listing the other dimensions of the same days.
+      const byDim = scopedXpByDim(day, filter);
+      for (const dim of DIMENSION_ORDER) acc[dim] += byDim[dim] ?? 0;
     }
     return acc;
   }, [days, filter]);
@@ -520,6 +570,7 @@ export default function CalendarScreen() {
             taskTitles={taskTitles}
             tagLabels={tagLabels}
             rewardTitles={rewardTitles}
+            scopeLabel={scopeLabel}
           />
 
           {source.isLoading ? (
@@ -532,7 +583,7 @@ export default function CalendarScreen() {
                 <CalendarGrid
                   monthDate={visibleMonth}
                   days={days}
-                  reference={reference}
+                  reference={scopedReference}
                   front={front}
                   filter={filter}
                   selectedKey={dayKey}
@@ -542,6 +593,7 @@ export default function CalendarScreen() {
                   canGoNext={canGoNextMonth}
                   weekStart={settings.weekStart}
                   tagEmojis={tagEmojis}
+                  scopeLabel={scopeLabel}
                 />
                 <CalendarSummary
                   totals={totals}
@@ -549,6 +601,7 @@ export default function CalendarScreen() {
                   filtering={filtering}
                   dimXp={dimXp}
                   locale={locale}
+                  scopeLabel={scopeLabel}
                 />
               </View>
 
@@ -605,6 +658,11 @@ export default function CalendarScreen() {
                   router.push({ pathname: '/task-form', params: { id: task.id } })
                 }
                 onUndo={handleUndo}
+                scoped={
+                  scopeLabel
+                    ? { xp: selectedDay ? scopedXp(selectedDay, filter) : 0, label: scopeLabel }
+                    : undefined
+                }
               />
             </>
           ) : (
@@ -620,6 +678,7 @@ export default function CalendarScreen() {
                 setView('month');
               }}
               locale={locale}
+              scopeLabel={scopeLabel}
             />
           )}
         </ScrollView>
@@ -666,6 +725,7 @@ export default function CalendarScreen() {
         onClose={() => setFilterOpen(false)}
         practices={practices}
         rewards={rewards}
+        scopeLabel={scopeLabel}
       />
 
       <CompleteTaskSheet

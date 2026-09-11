@@ -29,7 +29,16 @@ import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useMoodTags } from '@/lib/api/mood';
-import { dayMatchesFilter, type CalendarDay, type CalendarFilter } from '@/lib/calendar/filters';
+import {
+  areaSubs,
+  dayMatchesFilter,
+  dimensionOfSub,
+  hasXpScope,
+  practiceInScope,
+  scopedPracticeXp,
+  type CalendarDay,
+  type CalendarFilter,
+} from '@/lib/calendar/filters';
 import { frontHasContent } from '@/lib/calendar/paint';
 import type { CalendarFront } from '@/lib/calendar/store';
 import { useT } from '@/lib/i18n';
@@ -45,6 +54,8 @@ interface Props {
   /** Opens the day (the parent switches to the month view and selects it). */
   onSelectDay: (dateKey: string) => void;
   locale: 'pt' | 'en';
+  /** The filter's XP scope in words, or null. */
+  scopeLabel: string | null;
 }
 
 /** One rendered line under a day — the three fronts all collapse into this. */
@@ -75,7 +86,7 @@ function localDate(dateKey: string): Date {
   return new Date(y, m - 1, d);
 }
 
-export function CalendarListView({ days, front, filter, onSelectDay, locale }: Props) {
+export function CalendarListView({ days, front, filter, onSelectDay, locale, scopeLabel }: Props) {
   const { t } = useT();
   const catalog = useMoodTags();
 
@@ -143,16 +154,45 @@ export function CalendarListView({ days, front, filter, onSelectDay, locale }: P
         }));
     }
 
+    // With an XP scope, a practice that yielded nothing inside it is a line
+    // that says nothing — hidden, per this view's own rule (top of file) —
+    // and the rest print only their scoped part, so a day's lines add up to
+    // its cell in the month grid.
+    const scoped = hasXpScope(filter);
+    const area = scoped ? areaSubs(filter) : null;
+    // The rail takes the dimension of the practice's OWN sub that yielded the
+    // most XP inside the scope. Picking "the first of its dimensions whose
+    // catalog touches the scope" painted a Força line in Saúde's color when
+    // the practice had Sono (out of scope) and Força (in scope).
+    const railDim = (p: CalendarDay['practices'][number]) => {
+      if (area) {
+        let best: (typeof p.subs)[number] | null = null;
+        let bestXp = -1;
+        for (const s of p.subs) {
+          if (!area.has(s)) continue;
+          const x = p.xpBySub[s] ?? 0;
+          if (x > bestXp) {
+            best = s;
+            bestXp = x;
+          }
+        }
+        const dim = best ? dimensionOfSub(best) : undefined;
+        if (dim) return dim;
+      }
+      return p.dims.length > 0 ? p.dims[0] : null;
+    };
     return [...day.practices]
+      .filter((p) => !scoped || practiceInScope(p, filter, area))
       .sort((a, b) => b.at.localeCompare(a.at))
       .map((p) => {
-        const dim = p.dims.length > 0 ? p.dims[0] : null;
+        const dim = railDim(p);
+        const xp = scoped ? scopedPracticeXp(p, filter, area) : p.xp;
         return {
           key: `${day.dateKey}-${p.taskId}`,
           rail: dim ? DIMENSION_META[dim].color : tokens.brand.violet2,
           label: p.title,
           count: p.count,
-          trailing: p.xp > 0 ? `+${p.xp}` : undefined,
+          trailing: xp > 0 ? `+${xp}` : undefined,
           trailingColor: tokens.semantic.xp,
         };
       });
@@ -232,6 +272,11 @@ export function CalendarListView({ days, front, filter, onSelectDay, locale }: P
   return (
     <View style={styles.root}>
       <Text style={styles.hint}>{t('calendar.list.hint')}</Text>
+      {/* Rotina only: Humor and Vault print no XP, so "counting only XP in X"
+          would describe a number that is not on screen. */}
+      {front === 'rotina' && scopeLabel ? (
+        <Text style={styles.hint}>{t('calendar.list.scopedHint', { area: scopeLabel })}</Text>
+      ) : null}
 
       {groups.length === 0 ? (
         <View style={styles.emptyBox}>

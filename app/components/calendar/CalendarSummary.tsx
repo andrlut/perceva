@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { CalendarTotals } from '@/lib/calendar/filters';
 import { INTENSITY_RAMP } from '@/lib/calendar/intensity';
+import { FILTERED_OUT_OPACITY } from '@/lib/calendar/paint';
 import type { CalendarFront } from '@/lib/calendar/store';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
@@ -27,12 +28,23 @@ interface Props {
   totals: CalendarTotals;
   front: CalendarFront;
   filtering: boolean;
-  /** XP per dimension across the filtered days — the expandable breakdown. */
+  /** XP per dimension across the filtered days — the expandable breakdown.
+   *  Already scoped by the caller, so the cards add up to the headline. */
   dimXp: Record<DimensionId, number>;
   locale: 'pt' | 'en';
+  /** The filter's XP scope in words ("Saúde"), or null. When set, the XP
+   *  headline names it: a number that changes meaning must say so. */
+  scopeLabel: string | null;
 }
 
-export function CalendarSummary({ totals, front, filtering, dimXp, locale }: Props) {
+export function CalendarSummary({
+  totals,
+  front,
+  filtering,
+  dimXp,
+  locale,
+  scopeLabel,
+}: Props) {
   const { t } = useT();
   const router = useRouter();
   const meta = useMetaLookup();
@@ -59,10 +71,10 @@ export function CalendarSummary({ totals, front, filtering, dimXp, locale }: Pro
       coins: totals.spent.toLocaleString(intlTag),
     });
   } else {
-    context = t('calendar.summary.rotina', {
-      days: totals.activeDays,
-      xp: totals.xp.toLocaleString(intlTag),
-    });
+    const xp = totals.xp.toLocaleString(intlTag);
+    context = scopeLabel
+      ? t('calendar.summary.rotinaScoped', { days: totals.activeDays, xp, area: scopeLabel })
+      : t('calendar.summary.rotina', { days: totals.activeDays, xp });
   }
 
   const maxDim = Math.max(...Object.values(dimXp), 1);
@@ -70,7 +82,9 @@ export function CalendarSummary({ totals, front, filtering, dimXp, locale }: Pro
   return (
     <View style={styles.wrap}>
       <View style={styles.contextRow}>
-        <Text style={styles.context} numberOfLines={2}>
+        {/* 3 lines when scoped: a long scope label used to push the
+            'filtrado' marker past the ellipsis. */}
+        <Text style={styles.context} numberOfLines={scopeLabel ? 3 : 2}>
           {context}
           {filtering ? (
             <Text style={styles.filtered}>{` · ${t('calendar.summary.filtered')}`}</Text>
@@ -119,7 +133,15 @@ export function CalendarSummary({ totals, front, filtering, dimXp, locale }: Pro
             {DIMENSION_ORDER.map((dim) => {
               const xp = dimXp[dim] ?? 0;
               return (
-                <View key={dim} style={styles.dimCard}>
+                <View
+                  key={dim}
+                  style={[
+                    styles.dimCard,
+                    // Outside the scope: dimmed like a filtered-out day, never
+                    // removed — the six-card grid keeps its shape.
+                    scopeLabel !== null && xp === 0 && { opacity: FILTERED_OUT_OPACITY },
+                  ]}
+                >
                   <View style={styles.dimName}>
                     <View style={[styles.dimDot, { backgroundColor: DIMENSION_META[dim].color }]} />
                     <Text style={styles.dimLabel} numberOfLines={1}>

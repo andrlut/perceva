@@ -68,6 +68,10 @@ export interface CalendarRange {
    * Intensity reference for this range, frozen at fetch time — see
    * `intensityReference`. Lives here so the grid, the quarter view and any
    * legend all quantize against the same number.
+   *
+   * This is the UNSCOPED reference (whole-day XP). With a practice/dimension/
+   * sub filter the screen derives a scoped one from the same days, so this
+   * cache entry stays filter-agnostic and one fetch still serves every chip.
    */
   reference: number;
 }
@@ -227,6 +231,7 @@ export function useCalendarRange(
             coins: 0,
             subs: [],
             dims: [],
+            xpBySub: {},
             at: raw.completed_at,
           };
           practiceIndex.set(key, practice);
@@ -239,6 +244,10 @@ export function useCalendarRange(
 
         for (const sub of raw.task_completion_sub ?? []) {
           const subId = sub.sub_id as SubId;
+          // Kept BEFORE the dimension lookup below: a sub whose catalog entry
+          // was renamed still counts toward a practice-only scope, even though
+          // it can't be placed in a dimension.
+          practice.xpBySub[subId] = (practice.xpBySub[subId] ?? 0) + sub.xp_granted;
           // dimensionForSub throws on an unknown sub; a row whose catalog entry
           // was renamed should cost that one dimension chip, not the whole
           // month.

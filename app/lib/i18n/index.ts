@@ -22,6 +22,18 @@ export const i18n = new I18n(
 
 i18n.locale = 'en';
 
+/**
+ * Interpolation values and i18n-js OPTIONS travel in this same object, so a
+ * few names are not free as {{variables}}:
+ *   scope           prepended to the key as a namespace — t(k, { scope })
+ *                   looks up "<scope>.<k>" and returns a missing-translation
+ *                   string instead of interpolating
+ *   count           selects the plural form
+ *   defaultValue, defaults, locale, missingBehavior
+ * The type cannot catch it (it is a plain Record), and a wrong name only shows
+ * at runtime — as "xp in" in dev and "[missing ...]" in production. Pick
+ * another name; the calendar's XP scope interpolates as {{area}}.
+ */
 export type TranslateOptions = Record<string, string | number | undefined>;
 
 /**

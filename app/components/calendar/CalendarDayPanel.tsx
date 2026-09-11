@@ -57,6 +57,13 @@ interface Props {
   onLongPress: (task: TaskWithSubs) => void;
   onEdit: (task: TaskWithSubs) => void;
   onUndo: (completionId: string, title: string, xp: number, coins: number) => void;
+  /**
+   * The day's XP inside the calendar filter's scope, with the scope in words.
+   * A labelled SECOND line under the total, never in its place: this panel is
+   * the whole day (the completed list below adds up to the big number), and
+   * DayXpStat is shared with the Home header.
+   */
+  scoped?: { xp: number; label: string };
 }
 
 export function CalendarDayPanel({
@@ -72,6 +79,7 @@ export function CalendarDayPanel({
   onLongPress,
   onEdit,
   onUndo,
+  scoped,
 }: Props) {
   const { t } = useT();
   const router = useRouter();
@@ -100,6 +108,11 @@ export function CalendarDayPanel({
     <View>
       <View style={styles.xpWrap}>
         <DayXpStat xp={day.data?.totalXp ?? 0} isToday={isToday} />
+        {scoped ? (
+          <Text style={styles.scopedXp}>
+            {t('calendar.scope.xpIn', { xp: scoped.xp, area: scoped.label })}
+          </Text>
+        ) : null}
       </View>
 
       <SectionHeader label={t('calendar.day.mood')} active={front === 'humor'} />
@@ -225,6 +238,12 @@ function SectionHeader({ label, active }: { label: string; active: boolean }) {
 }
 
 const styles = StyleSheet.create({
+  scopedXp: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 12,
+    color: tokens.text.mid,
+    marginTop: 4,
+  },
   xpWrap: { marginBottom: tokens.space[2] },
   sectionHeader: {
     flexDirection: 'row',

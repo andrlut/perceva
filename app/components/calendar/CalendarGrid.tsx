@@ -7,6 +7,7 @@ import { dateKeyFromLocal } from '@/lib/api/history';
 import {
   dayMatchesFilter,
   isFilterActive,
+  scopedXp,
   type CalendarDay,
   type CalendarFilter,
 } from '@/lib/calendar/filters';
@@ -64,6 +65,8 @@ interface Props {
   weekStart: WeekStart;
   /** Mood-tag slug → emoji, for the mood front's bottom marks. */
   tagEmojis: Map<string, string>;
+  /** The filter's XP scope in words ("Saúde"), or null — see xpScopeLabel. */
+  scopeLabel: string | null;
 }
 
 const LOCALE_TAG: Record<string, string> = { en: 'en-US', pt: 'pt-BR' };
@@ -81,6 +84,7 @@ export function CalendarGrid({
   canGoNext,
   weekStart,
   tagEmojis,
+  scopeLabel,
 }: Props) {
   const { t, locale } = useT();
   const rows = useMemo(() => buildMonthRows(monthDate, weekStart), [monthDate, weekStart]);
@@ -154,7 +158,10 @@ export function CalendarGrid({
 
             const key = dateKeyFromLocal(cell);
             const day = days.get(key);
-            const paint = paintForFront(day, front, reference);
+            // The Rotina figure AND the tint both measure the XP inside the
+            // filter's scope, so the number and the fill always agree.
+            const xp = day ? scopedXp(day, filter) : 0;
+            const paint = paintForFront(day, front, reference, xp);
             const isFuture = cell.getTime() > now;
             const matched = !filtering || (!!day && dayMatchesFilter(day, filter));
             const isSelected = key === selectedKey;
@@ -163,7 +170,13 @@ export function CalendarGrid({
             const parts: string[] = [dayFmt.format(cell)];
             if (day) {
               if (day.mood !== null) parts.push(t(`mood.levels.${moodLevel(day.mood).key}`));
-              if (day.xp > 0) parts.push(t('a11y.dayCellXp', { xp: day.xp }));
+              if (xp > 0) {
+                parts.push(
+                  scopeLabel
+                    ? t('calendar.scope.xpIn', { xp, area: scopeLabel })
+                    : t('a11y.dayCellXp', { xp }),
+                );
+              }
               if (day.practices.length > 0) {
                 parts.push(t('a11y.dayCellPractices', { count: day.practices.length }));
               }
@@ -204,7 +217,7 @@ export function CalendarGrid({
                   {cell.getDate()}
                 </Text>
 
-                <CellFigure day={day} front={front} paint={paint} isFuture={isFuture} />
+                <CellFigure day={day} xp={xp} front={front} paint={paint} isFuture={isFuture} />
 
                 {!isFuture && (
                   <CellMarks day={day} front={front} paint={paint} tagEmojis={tagEmojis} />
@@ -225,11 +238,14 @@ export function CalendarGrid({
 /** The one centred figure — the front's headline for that day. */
 function CellFigure({
   day,
+  xp,
   front,
   paint,
   isFuture,
 }: {
   day: CalendarDay | undefined;
+  /** The day's XP inside the filter's scope (the whole day without one). */
+  xp: number;
   front: CalendarFront;
   paint: ReturnType<typeof paintForFront>;
   isFuture: boolean;
@@ -237,10 +253,11 @@ function CellFigure({
   if (!day || isFuture) return null;
 
   if (front === 'rotina') {
-    if (day.xp <= 0) return null;
+    // Scoped XP is <= the day's, so it never needs a wider glyph budget.
+    if (xp <= 0) return null;
     return (
       <Text allowFontScaling={false} numberOfLines={1} style={[styles.figure, { color: paint.ink }]}>
-        {formatCellXp(day.xp)}
+        {formatCellXp(xp)}
       </Text>
     );
   }

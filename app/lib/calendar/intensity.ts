@@ -35,7 +35,7 @@
  * The same ramp is deliberately reused by the Vault front (gold) and the mood
  * front (its own validated ramp) only as a *structure* — each front owns its
  * palette, and no two palettes are ever on screen at once. See
- * `components/calendar/CalendarCell.tsx`.
+ * `components/calendar/CalendarGrid.tsx`.
  */
 
 import { tokens } from '@/theme';
@@ -53,7 +53,11 @@ export interface RampStep {
 }
 
 const INK_LIGHT = '#FFFFFF';
-const INK_DARK = tokens.bg.deep;
+// The measured near-black from the table above, as a LITERAL — the same fix as
+// lib/mood.ts. `tokens.bg.deep` is #0A0E26 only in the dark theme; in the light
+// one it is porcelain, which printed N4/N5 day numbers near-white on light
+// violet (~1.35:1 on N5). The ramp is theme-invariant, so its ink must be too.
+const INK_DARK = '#0A0E26';
 
 /**
  * Index 0 is the empty cell: it is the page background showing through, so it
@@ -84,8 +88,10 @@ export function rampStep(level: IntensityLevel): RampStep {
  * Deliberately frozen per calendar month rather than a rolling 60-day window.
  * A rolling reference silently re-tints days the user already looked at — the
  * same Tuesday reads N4 today and N3 next week — which reads as a bug, not as
- * insight. Scoped to the month, a cell's tint is a function of the month you
- * are looking at and nothing else.
+ * insight. A cell's tint is a function of the month you are looking at and of
+ * the XP scope of the filter — nothing else. Only the user touching a
+ * practice/dimension/sub facet re-tints (the tint has to measure the number
+ * printed on it); mood, tags and rewards never do.
  *
  * Note this makes tints comparable WITHIN a month, not across months; that is
  * why the day number (the exact figure) is always printed on top and the
@@ -93,11 +99,24 @@ export function rampStep(level: IntensityLevel): RampStep {
  */
 const REFERENCE_FLOOR = 100;
 
-export function intensityReference(dailyXp: Iterable<number>): number {
+/**
+ * Floor for a SCOPED month (a practice/dimension/sub filter). Lower than the
+ * whole-day floor because one area yields a fraction of a day: 3 stars on a
+ * sub is 35 XP. Against 100, a month of one 3★ Sono practice a day would sit
+ * at N2 and read as "almost nothing"; against 40 that day is N4, and N5 still
+ * needs more than one typical practice. Calibration, not a validated result —
+ * adjust here if scoped months read too strong or too pale.
+ */
+export const SCOPED_REFERENCE_FLOOR = 40;
+
+export function intensityReference(
+  dailyXp: Iterable<number>,
+  floor: number = REFERENCE_FLOOR,
+): number {
   const active = [...dailyXp].filter((xp) => xp > 0).sort((a, b) => a - b);
-  if (active.length === 0) return REFERENCE_FLOOR;
+  if (active.length === 0) return floor;
   const idx = Math.min(active.length - 1, Math.floor(0.9 * active.length));
-  return Math.max(REFERENCE_FLOOR, active[idx]);
+  return Math.max(floor, active[idx]);
 }
 
 /**
