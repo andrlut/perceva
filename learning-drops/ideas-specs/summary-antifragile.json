@@ -37,8 +37,8 @@
       "id": "via-negativa",
       "ordinal": 2,
       "title": {
-        "pt": "E se o próximo passo for tirar, não adicionar?",
-        "en": "What if the next step is removing, not adding?"
+        "pt": "Antifrágil: tirar rende mais que adicionar.",
+        "en": "Antifragile: removing beats adding."
       },
       "claim": {
         "pt": "Remover o que te prejudica rende mais que adicionar a próxima solução — e a intervenção é que precisa provar que é segura, não o seu corpo.",
@@ -64,8 +64,8 @@
       "id": "barbell",
       "ordinal": 3,
       "title": {
-        "pt": "O meio-termo é o lugar mais arriscado.",
-        "en": "The middle ground is the riskiest place."
+        "pt": "Antifrágil: o meio-termo é o mais arriscado.",
+        "en": "Antifragile: the middle is the riskiest spot."
       },
       "claim": {
         "pt": "Quase tudo em segurança extrema, uma fatia pequena em apostas ousadas: a perda fica travada, o ganho fica aberto. Nada no meio.",
@@ -91,8 +91,8 @@
       "id": "pele-em-jogo",
       "ordinal": 4,
       "title": {
-        "pt": "Quem paga quando o conselho dá errado?",
-        "en": "Who pays when your adviser is wrong?"
+        "pt": "Só siga conselho de quem perde se errar.",
+        "en": "Only take advice from those who lose if wrong."
       },
       "claim": {
         "pt": "Opinião só vale se quem a dá tem algo a perder. Antes de seguir um conselho, não meça a confiança: pergunte o que a pessoa perde se errar.",
