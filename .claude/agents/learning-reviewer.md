@@ -201,6 +201,7 @@ have run.
 |---|---|---|
 | `idea_title_len` | `title.pt` / `title.en` longer than 48 characters | **FAIL** |
 | `idea_title_is_topic` | title equals, or merely paraphrases, the material title (`title_pt` / `title_en`) or the topic name — it names the subject instead of opening a gap | WARN |
+| `idea_title_no_context` | `ordinal ≥ 2` and `title.*` reads as a generic statement that only makes sense inside the article: it shares no content word with the material title (`title_pt` / `title_en`), its summary or the brief's topic, and names neither the topic noun nor the mechanism. Cards are read out of context in *Minhas ideias*, Explorar and the MCP. Judgement call, not a string match (the lint's heuristic is "no ≥5-letter word in common with `material_title` and no colon" — you judge the meaning). "O relógio não corre no trabalho." (which clock?) fails, "O relógio da amizade não corre no trabalho." passes; "O meio-termo é o lugar mais arriscado." fails, "Antifrágil: o meio-termo é o mais arriscado." passes. Idea 1 usually carries the topic by construction — there, at most a note. `suggested_fix`: name the subject, or the "topic: claim" shape (≤ 48 chars in total) | WARN |
 | `idea_claim_len` | `claim.*` longer than 140 characters | **FAIL** |
 | `idea_claim_len` | `claim.*` over the 120-character target and up to 140 (121-140 fits the 132px card only with the font shrunk) | WARN |
 | `idea_claim_standalone` | the claim needs the title, another idea or the article to make sense — "as we saw", an undefined term, a pronoun with no referent, a "this"/"isso" pointing outside the sentence, an answer to a question the reader cannot see | **FAIL** |
@@ -235,7 +236,7 @@ Return exactly this JSON, nothing else:
   "passed": true | false,
   "issues": [
     {
-      "rule_id": "ideas_sections_mismatch" | "ideas_over_budget" | "ideas_under_budget" | "card_overload" | "translate_jargon" | "academic_outline" | "abstract_list" | "stat_redundancy" | "sentences_too_long" | "voice_drift" | "unsourced_stat" | "bilingual_drift" | "takeaways_count" | "main_points_mismatch" | "idea_title_len" | "idea_title_is_topic" | "idea_claim_len" | "idea_claim_standalone" | "idea_body_len" | "idea_body_restates_title" | "idea_source_missing" | "idea_source_not_in_dossier" | "idea_brief_text" | "idea_number_unsourced" | "idea_id_shape" | "idea_bilingual_drift" | "<other>",
+      "rule_id": "ideas_sections_mismatch" | "ideas_over_budget" | "ideas_under_budget" | "card_overload" | "translate_jargon" | "academic_outline" | "abstract_list" | "stat_redundancy" | "sentences_too_long" | "voice_drift" | "unsourced_stat" | "bilingual_drift" | "takeaways_count" | "main_points_mismatch" | "idea_title_len" | "idea_title_is_topic" | "idea_title_no_context" | "idea_claim_len" | "idea_claim_standalone" | "idea_body_len" | "idea_body_restates_title" | "idea_source_missing" | "idea_source_not_in_dossier" | "idea_brief_text" | "idea_number_unsourced" | "idea_id_shape" | "idea_bilingual_drift" | "<other>",
       "severity": "fail" | "warn",
       "where": "<which section / idea id + field + locale / line / phrase>",
       "note": "<specific actionable description>",
@@ -296,6 +297,13 @@ immediately after first mention."
 oposto' — 'esse estudo' has no referent on the card. Name it: 'Mesma
 base britânica: 19% menos doença cardíaca num estudo, benefício nenhum
 no outro.'"
+
+**Bad**: "Idea 3's title is vague."
+
+**Good**: "`ideas[barbell].title.pt` 'O meio-termo é o lugar mais
+arriscado.' reads as a generic statement in Minhas ideias — nothing on
+the card names antifragility. Try 'Antifrágil: o meio-termo é o mais
+arriscado.' (44 chars)."
 
 # Reference article
 

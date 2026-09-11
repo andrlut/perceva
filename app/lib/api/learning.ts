@@ -2,12 +2,15 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type {
   CollectIdeaResult,
+  IdeaReview,
+  LearningIdeaCollectRow,
   LearningIdeaPublic,
   LearningMaterial,
   LearningMaterialCard,
   LearningMaterialMedia,
   LearningMaterialSub,
   MarkMaterialReadResult,
+  ReviewIdeaResult,
   SubId,
 } from '@/lib/db/types';
 import { supabase } from '@/lib/supabase';
@@ -23,6 +26,7 @@ export const learningKeys = {
   myFeedback: (slug: string) => [...learningKeys.all, 'myFeedback', slug] as const,
   ideaCards: () => [...learningKeys.all, 'ideaCards'] as const,
   collected: () => [...learningKeys.all, 'collected'] as const,
+  reviews: () => [...learningKeys.all, 'reviews'] as const,
 };
 
 /** Media columns the feed loads — enough for format icons AND the reels
@@ -299,11 +303,147 @@ export function useCollectIdea() {
     },
     onSuccess: (result, input) => {
       queryClient.invalidateQueries({ queryKey: learningKeys.collected() });
+      // A fresh absorption enters the review pile → the bulb badge moves.
+      queryClient.invalidateQueries({ queryKey: learningKeys.reviews() });
       if (result.completed) {
         queryClient.invalidateQueries({ queryKey: characterKeys.me() });
         queryClient.invalidateQueries({ queryKey: learningKeys.views() });
         queryClient.invalidateQueries({ queryKey: learningKeys.detail(input.slug) });
       }
+    },
+  });
+}
+
+// ── Review pile (favorite / release) ───────────────────────────────────────
+
+/** Cache key of one collected idea inside `IdeaReviews.byKey`. */
+export function reviewKey(materialId: string, ideaId: string): string {
+  return `${materialId}:${ideaId}`;
+}
+
+/** The user's collection with review state, pre-shaped for the screens. */
+export interface IdeaReviews {
+  /** Every absorbed idea, keyed by `reviewKey(materialId, ideaId)`. */
+  byKey: Map<string, IdeaReview>;
+  /** Not yet reviewed (`reviewedAt` null), oldest absorbed first — the
+   *  order the review stack deals them. */
+  pending: IdeaReview[];
+  pendingCount: number;
+  /** Reviewed AND kept (`favorite === true`). */
+  favoritesCount: number;
+}
+
+/** Shapes a flat list of reviews into the derived buckets. Shared by the
+ *  query and the optimistic update so both agree on ordering and counts. */
+function buildIdeaReviews(rows: IdeaReview[]): IdeaReviews {
+  const byKey = new Map<string, IdeaReview>();
+  const pending: IdeaReview[] = [];
+  let favoritesCount = 0;
+  for (const r of rows) {
+    byKey.set(reviewKey(r.materialId, r.ideaId), r);
+    if (r.reviewedAt === null) pending.push(r);
+    else if (r.favorite === true) favoritesCount += 1;
+  }
+  pending.sort((a, b) => a.collectedAt.localeCompare(b.collectedAt));
+  return { byKey, pending, pendingCount: pending.length, favoritesCount };
+}
+
+/**
+ * Collection + review state (`learning_idea_collect` with `reviewed_at` /
+ * `favorite`). Separate from `useCollectedIdeas`, whose Map<materialId,
+ * Set<ideaId>> shape is consumed everywhere and stays untouched; this one
+ * feeds the review stack, the favorites grid and the bulb FAB badge.
+ */
+export function useIdeaReviews() {
+  return useQuery({
+    // Same identity discipline as useCollectedIdeas: fresh Map/arrays per
+    // fetch, so the staleTime keeps the consumers' memo chains stable.
+    staleTime: 60_000,
+    queryKey: learningKeys.reviews(),
+    queryFn: async (): Promise<IdeaReviews> => {
+      const { data, error } = await supabase
+        .from('learning_idea_collect')
+        .select('material_id, idea_id, collected_at, reviewed_at, favorite');
+      if (error) throw error;
+      const rows = ((data ?? []) as LearningIdeaCollectRow[]).map<IdeaReview>((r) => ({
+        materialId: r.material_id,
+        ideaId: r.idea_id,
+        collectedAt: r.collected_at,
+        reviewedAt: r.reviewed_at,
+        favorite: r.favorite,
+      }));
+      return buildIdeaReviews(rows);
+    },
+  });
+}
+
+interface ReviewIdeaInput {
+  slug: string;
+  ideaId: string;
+  favorite: boolean;
+  /** Optional shortcut for the optimistic update; otherwise resolved from
+   *  the `ideaCards` cache by (slug, ideaId). */
+  materialId?: string;
+}
+
+/**
+ * Swipe on the review stack: right = favorite (true), left = release (false).
+ * Calls `review_idea`, which is re-callable (a later swipe changes the
+ * decision) and raises if the idea was never collected. The reviews cache
+ * is updated optimistically — the next card must slide in immediately —
+ * and rolled back on error; onSettled reconciles with the server.
+ */
+export function useReviewIdea() {
+  const queryClient = useQueryClient();
+  return useMutation<ReviewIdeaResult, Error, ReviewIdeaInput, { previous?: IdeaReviews }>({
+    mutationFn: async (input) => {
+      const { data, error } = await supabase.rpc('review_idea', {
+        p_slug: input.slug,
+        p_idea_id: input.ideaId,
+        p_favorite: input.favorite,
+      });
+      if (error) throw error;
+      return data as ReviewIdeaResult;
+    },
+    onMutate: async (input) => {
+      await queryClient.cancelQueries({ queryKey: learningKeys.reviews() });
+      const previous = queryClient.getQueryData<IdeaReviews>(learningKeys.reviews());
+      if (!previous) return { previous };
+
+      // The RPC is keyed by slug, the cache by material id. Resolve through
+      // the ideaCards cache (the screens that review always load it); fall
+      // back to an ideaId that matches exactly one collected row.
+      let materialId = input.materialId ?? null;
+      if (!materialId) {
+        const cards = queryClient.getQueryData<LearningIdeaPublic[]>(learningKeys.ideaCards());
+        materialId =
+          cards?.find((c) => c.slug === input.slug && c.idea_id === input.ideaId)?.material_id ??
+          null;
+      }
+      if (!materialId) {
+        const matches = [...previous.byKey.values()].filter((r) => r.ideaId === input.ideaId);
+        if (matches.length === 1) materialId = matches[0].materialId;
+      }
+      const current = materialId ? previous.byKey.get(reviewKey(materialId, input.ideaId)) : null;
+      if (!current) return { previous };
+
+      const updated: IdeaReview = {
+        ...current,
+        reviewedAt: new Date().toISOString(),
+        favorite: input.favorite,
+      };
+      const rows = [...previous.byKey.values()].map((r) => (r === current ? updated : r));
+      queryClient.setQueryData<IdeaReviews>(learningKeys.reviews(), buildIdeaReviews(rows));
+      return { previous };
+    },
+    onError: (_error, _input, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData<IdeaReviews>(learningKeys.reviews(), context.previous);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: learningKeys.reviews() });
+      queryClient.invalidateQueries({ queryKey: learningKeys.collected() });
     },
   });
 }

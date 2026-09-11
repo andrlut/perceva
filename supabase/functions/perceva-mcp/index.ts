@@ -291,7 +291,7 @@ async function rpc(
 
 function buildServer(token: string, userId: string): McpServer {
   const server = new McpServer(
-    { name: 'perceva-mcp', version: '0.4.0' },
+    { name: 'perceva-mcp', version: '0.4.1' },
     {
       instructions: [
         'Perceva is a habit/wellness app organized in 6 dimensions',
@@ -304,10 +304,12 @@ function buildServer(token: string, userId: string): McpServer {
         'their own data.',
         'WHAT YOU CANNOT DO HERE: you cannot complete or skip a practice, create',
         'or edit or archive anything, claim a quest, log a skill value, spend or',
-        'mint coins, mark a Learning material read, nor absorb an idea (that is',
-        'the card flip at the end of the idea screen, in the app). Those stay in',
-        'the app on purpose. Never claim to have done any of them, and when the',
-        'user asks, say plainly that it has to be done in the app.',
+        'mint coins, mark a Learning material read, absorb an idea (that is',
+        'the card flip at the end of the idea screen, in the app), nor favorite',
+        'or release one (that is the swipe in the review pile of Minhas ideias).',
+        'Those stay in the app on purpose. Never claim to have done any of',
+        'them, and when the user asks, say plainly that it has to be done in',
+        'the app.',
         'THE ONE WRITE is log_mood: one day\'s check-in, typically dictated out',
         'loud ("how my day went"). Never infer the 1-5 rating from tone — if the',
         'user did not give one, call it with mood:"unknown" and ask using the',
@@ -330,7 +332,9 @@ function buildServer(token: string, userId: string): McpServer {
         'about the Learning ideas → get_learning_ideas, crossed with get_day_plan',
         '(a practice skipped today names the sub that needs an idea),',
         'get_mood_stats and get_self_knowledge — picking the idea is YOUR job,',
-        'the app has no rule for it; suggest one, say why, hand over open_in_app.',
+        'the app has no rule for it; suggest one, say why, hand over open_in_app;',
+        '"as ideias que eu guardei/favoritei" → the same tool with',
+        'favorites_only:true.',
         'WHO THEY ARE vs WHAT THEY DID: get_self_knowledge carries the six',
         'instrument results and the context they wrote about themselves. Read it',
         'before giving advice with any weight — the same suggestion lands very',
@@ -1213,31 +1217,45 @@ function buildServer(token: string, userId: string): McpServer {
   server.registerTool(
     'get_learning_ideas',
     {
-      title: 'Learning ideas — what is there to absorb, and what already was',
+      title: 'Learning ideas — what is there to absorb, what was, and what was kept',
       description:
         'The ideas of the Recanto (Learning): each published material carries ' +
         '1-5 ideas — a hook title plus a one-sentence claim the user can ' +
         '"absorb" by flipping the card at the end of the idea screen in the ' +
         'app. Returns them per dimension and/or sub (or one material by slug), ' +
-        'each flagged absorbed or not (with when), the material\'s title and ' +
-        'progress (idea_count), whether a Notebook video exists in pt/en, and ' +
-        'an open_in_app deep link that lands on that exact idea. Default ' +
-        'status is "unabsorbed", so a bare call means "what is still there for ' +
-        'me". Titles and claims come in pt and en; the app is pt-BR by default, ' +
-        'so prefer the _pt fields unless the user writes in English.\n' +
+        'with the material\'s title and progress (idea_count), whether a ' +
+        'Notebook video exists in pt/en, and an open_in_app deep link that ' +
+        'lands on that exact idea. Each idea carries three states: ABSORBED ' +
+        '(absorbed:true, absorbed_at) means the user flipped the card — ' +
+        'irreversible, and it counts for XP whatever comes next. PENDING ' +
+        'REVIEW (reviewed:false, favorite:null while absorbed) means it was ' +
+        'absorbed but not yet swiped in Minhas ideias — the lightbulb badge in ' +
+        'the app counts exactly these (summary.pending_reviews). FAVORITE ' +
+        '(favorite:true) means it was reviewed and kept, i.e. the idea the ' +
+        'user chose to remember; favorite:false means reviewed and released — ' +
+        'still absorbed, just out of their grid. Default status is ' +
+        '"unabsorbed", so a bare call means "what is still there for me"; ' +
+        'favorites_only:true returns only the kept ideas, most recently ' +
+        'reviewed first, and implies absorbed (status is then ignored). Titles ' +
+        'and claims come in pt and en; the app is pt-BR by default, so prefer ' +
+        'the _pt fields unless the user writes in English.\n' +
         'Use it for "qual ideia/vídeo pra mim hoje", "o que eu já absorvi ' +
         'sobre sono" (sub_id:"sleep", status:"absorbed"), "me sugere um ' +
-        'conteúdo". Picking the idea for TODAY is this connector\'s job by ' +
-        'design — the app has no rule for it — so cross the result with ' +
-        'get_day_plan (a practice skipped today names the sub that needs an ' +
-        'idea), get_mood_stats (which tags drag the mood down) and ' +
-        'get_self_knowledge (how to pitch it): suggest ONE idea, say why in a ' +
-        'line, and hand over its open_in_app link.\n' +
+        'conteúdo", and for "quais ideias eu favoritei/marquei", "me lembra as ' +
+        'ideias que guardei" (favorites_only:true — read the claim_pt back to ' +
+        'them, that sentence is what they kept). Picking the idea for TODAY is ' +
+        'this connector\'s job by design — the app has no rule for it — so ' +
+        'cross the result with get_day_plan (a practice skipped today names ' +
+        'the sub that needs an idea), get_mood_stats (which tags drag the mood ' +
+        'down) and get_self_knowledge (how to pitch it): suggest ONE idea, say ' +
+        'why in a line, and hand over its open_in_app link. Favorites are the ' +
+        'clearest signal of what resonated — lean on their subs when choosing.\n' +
         'When NOT to use this: legacy materials without ideas are not here ' +
         '(only materials that carry ideas appear); it never marks anything ' +
-        'read or absorbed — that happens only in the app, never claim it did; ' +
-        'and it says nothing about practices or moods (get_day_plan / ' +
-        'get_mood_stats).',
+        'read, absorbed, favorited or released — absorbing is the card flip ' +
+        'and favoriting/releasing is the swipe in Minhas ideias, both only in ' +
+        'the app, never claim it did either; and it says nothing about ' +
+        'practices or moods (get_day_plan / get_mood_stats).',
       inputSchema: {
         dimension_id: z.enum(DIMENSIONS).optional()
           .describe('Only materials whose primary dimension is this one.'),
@@ -1247,7 +1265,15 @@ function buildServer(token: string, userId: string): McpServer {
             'with dimension_id.',
           ),
         status: z.enum(['unabsorbed', 'absorbed', 'all']).optional()
-          .describe('Default "unabsorbed": what is still there to absorb.'),
+          .describe(
+            'Default "unabsorbed": what is still there to absorb. Ignored ' +
+            'when favorites_only is true (a favorite is absorbed by definition).',
+          ),
+        favorites_only: z.boolean().optional()
+          .describe(
+            'Default false. true = only ideas the user kept as favorites in ' +
+            'the review pile (favorite:true), newest review first.',
+          ),
         slug: z.string().optional()
           .describe('One material, by its slug (as in open_in_app links).'),
         limit: z.number().int().min(1).max(50).optional()
@@ -1260,7 +1286,10 @@ function buildServer(token: string, userId: string): McpServer {
     },
     async (args, _extra) => {
       const db = userClient(token);
-      const status = args.status ?? 'unabsorbed';
+      const favoritesOnly = args.favorites_only ?? false;
+      // A favorite is absorbed by definition, so favorites_only fixes the
+      // status itself; the value echoed in `filters` is the effective one.
+      const status = favoritesOnly ? 'absorbed' : (args.status ?? 'unabsorbed');
       const limit = args.limit ?? 20;
 
       // The view is security_invoker and granted to authenticated, so this
@@ -1283,9 +1312,10 @@ function buildServer(token: string, userId: string): McpServer {
       const materialIds = [...new Set(ideas.map((r) => r.material_id))];
       if (materialIds.length > 0) {
         const [collectsRes, viewsRes, subsRes, titlesRes] = await Promise.all([
-          // Self-RLS tables: only this user's rows come back.
+          // Self-RLS tables: only this user's rows come back. reviewed_at /
+          // favorite are the review pile (20260911000001); null = pending.
           db.from('learning_idea_collect')
-            .select('material_id,idea_id,collected_at')
+            .select('material_id,idea_id,collected_at,reviewed_at,favorite')
             .in('material_id', materialIds),
           db.from('learning_view')
             .select('material_id,read_at')
@@ -1310,7 +1340,7 @@ function buildServer(token: string, userId: string): McpServer {
 
       const result = assembleIdeas(
         { ideas, collects, views, subs, titles },
-        { status, sub_id: args.sub_id, limit },
+        { status, sub_id: args.sub_id, limit, favorites_only: favoritesOnly },
       );
 
       return ok({
@@ -1318,13 +1348,16 @@ function buildServer(token: string, userId: string): McpServer {
           dimension_id: args.dimension_id ?? null,
           sub_id: args.sub_id ?? null,
           status,
+          favorites_only: favoritesOnly,
           slug: args.slug ?? null,
         },
         ...result,
         note:
           'Absorbing happens only in the app — flipping the card at the end of ' +
-          'the idea screen. This connector cannot collect an idea or mark a ' +
-          'material read; hand over open_in_app instead.',
+          'the idea screen — and so does reviewing: favoriting or releasing an ' +
+          'absorbed idea is the swipe in Minhas ideias. This connector cannot ' +
+          'collect, favorite or release an idea, nor mark a material read; ' +
+          'hand over open_in_app instead.',
       });
     },
   );

@@ -98,6 +98,13 @@ export interface IdeaCardProps {
   onOpen?: () => void;
   /** `"corner"` shows the round arrow button on the back when `onOpen` is given. Default `"none"`. */
   openAffordance?: IdeaCardOpenAffordance;
+  /**
+   * One muted uppercase line above the headline on the FRONT — the material
+   * title, for cards shown outside their material (review stack, collection
+   * grid) where a secondary idea's title loses its context alone. Empty or
+   * undefined renders nothing; the flip, rim and back are untouched.
+   */
+  kicker?: string;
   /** Disables the tap (no flip, no haptic). */
   disabled?: boolean;
   testID?: string;
@@ -244,6 +251,7 @@ export const IdeaCard = memo(function IdeaCard({
   onFirstFlip,
   onOpen,
   openAffordance = 'none',
+  kicker,
   disabled = false,
   testID,
 }: IdeaCardProps) {
@@ -262,8 +270,10 @@ export const IdeaCard = memo(function IdeaCard({
   // ~20px on a 300px hero card.
   const pad = scaled(width, 10, 18);
   const titleSize = scaled(width, 13, 20);
+  const kickerSize = scaled(width, 10, 11);
   const iconSize = Math.round(width * 0.28);
   const compact = width < 200;
+  const showKicker = kicker != null && kicker.trim().length > 0;
 
   const showOpen = openAffordance === 'corner' && onOpen != null;
   // The claim box: below the top bar (and below the corner button when it is
@@ -373,6 +383,17 @@ export const IdeaCard = memo(function IdeaCard({
           style={styles.overlay}
         />
         <View style={[styles.titleWrap, { padding: pad }]}>
+          {showKicker && (
+            <Text
+              style={[
+                styles.kicker,
+                { fontSize: kickerSize, lineHeight: Math.round(kickerSize * 1.3) },
+              ]}
+              numberOfLines={1}
+            >
+              {kicker}
+            </Text>
+          )}
           <Text
             style={[
               styles.title,
@@ -470,6 +491,17 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+  },
+  /** Material title above the headline — same left inset, one line, muted. */
+  kicker: {
+    fontFamily: 'Manrope_700Bold',
+    color: 'rgba(255, 255, 255, 0.72)',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    marginBottom: 3,
+    textShadowColor: 'rgba(0, 0, 0, 0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   title: {
     fontFamily: 'Manrope_800ExtraBold',

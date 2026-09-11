@@ -32,6 +32,7 @@ import { ScreenBackground } from '@/components/ScreenBackground';
 import {
   useCollectedIdeas,
   useIdeaCards,
+  useIdeaReviews,
   useLearningFeed,
   useReadMaterialIds,
   type LearningFeedCard,
@@ -86,10 +87,14 @@ export default function LearningScreen() {
   const reads = useReadMaterialIds();
   // Ideas: one row per published idea + the user's collection. Both cheap
   // (a view select and a two-column self-only select) and cached 5 min /
-  // 1 min; they feed the cover cards' "N ideias · c/N", the Continue hero
-  // and the count badge on the "Minhas ideias" bulb FAB.
+  // 1 min; they feed the cover cards' "N ideias · c/N" and the Continue
+  // hero. The review state (a third self-only select, cached 1 min) only
+  // drives the badge on the "Minhas ideias" bulb FAB: ideas absorbed but
+  // not yet reviewed. Hidden at 0 and while loading — no flash.
   const ideaCards = useIdeaCards();
   const collectedIdeas = useCollectedIdeas();
+  const ideaReviews = useIdeaReviews();
+  const pendingReviews = ideaReviews.data?.pendingCount ?? 0;
   const meta = useMetaLookup();
   const ideaLocale: IdeaLocale = locale === 'pt' ? 'pt' : 'en';
 
@@ -177,20 +182,6 @@ export default function LearningScreen() {
     }
     return out;
   }, [ideaCards.data, collectedMap]);
-
-  // Absorbed ideas — the bulb FAB's badge. Once the view rows are loaded
-  // the count is clamped to ids still published (the per-material meta
-  // already does that); before that, the raw collection size so the badge
-  // never flashes 0 on a cold start with a cached collection.
-  const collectedCount = useMemo(() => {
-    let n = 0;
-    if (ideaCards.data) {
-      for (const m of ideaMetaByMaterial.values()) n += m.collected;
-    } else {
-      for (const set of collectedMap.values()) n += set.size;
-    }
-    return n;
-  }, [ideaCards.data, ideaMetaByMaterial, collectedMap]);
 
   // Continue hero for ideas: the most recently released material with some
   // but not all ideas absorbed, and the title of its next idea (lowest
@@ -475,9 +466,10 @@ export default function LearningScreen() {
 
       {/* Floating stack, matching the Tasks/Rewards FAB vocabulary. Top:
          the "Minhas ideias" bulb (always shown — the collection has its own
-         empty state) with a gold count badge once something is absorbed.
-         Bottom: the filter button; a gold dot marks any non-default filter
-         (pill OR read state). Only shown once the feed has content. */}
+         empty state) with a gold count badge while ideas wait for review
+         (absorbed, no verdict yet). Bottom: the filter button; a gold dot
+         marks any non-default filter (pill OR read state). Only shown once
+         the feed has content. */}
       {!feed.isLoading && all.length > 0 && (
         <FabStack
           bottomOffset={bottomClearance}
@@ -488,9 +480,9 @@ export default function LearningScreen() {
               tone: 'violet',
               size: IDEAS_FAB_SIZE,
               accessibilityLabel:
-                collectedCount > 0
-                  ? `${t('learning.ideas.myIdeas')} · ${t('learning.ideas.myIdeasCount', {
-                      count: collectedCount,
+                pendingReviews > 0
+                  ? `${t('learning.ideas.myIdeas')} · ${t('learning.ideas.review.fabPending', {
+                      count: pendingReviews,
                     })}`
                   : t('learning.ideas.myIdeas'),
               onPress: () => {
@@ -498,13 +490,13 @@ export default function LearningScreen() {
                 router.push('/collection');
               },
               wrap:
-                collectedCount > 0
+                pendingReviews > 0
                   ? (node) => (
                       <View>
                         {node}
                         <View style={styles.fabBadge} pointerEvents="none">
                           <Text style={styles.fabBadgeText}>
-                            {collectedCount > 99 ? '99+' : collectedCount}
+                            {pendingReviews > 99 ? '99+' : pendingReviews}
                           </Text>
                         </View>
                       </View>
@@ -712,8 +704,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: tokens.bg.deep,
   },
-  /** Gold count badge on the bulb FAB — absorbed ideas. Same rim as the
-   *  dot so the two read as one family. */
+  /** Gold count badge on the bulb FAB — ideas waiting review. Same rim as
+   *  the dot so the two read as one family. */
   fabBadge: {
     position: 'absolute',
     top: -2,

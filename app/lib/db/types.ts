@@ -804,6 +804,36 @@ export interface CollectIdeaResult {
   coins_awarded: number;
 }
 
+/** One row of `learning_idea_collect` with its review state (migration
+ *  20260911000001). `reviewed_at`/`favorite` both null = absorbed but not
+ *  reviewed yet — the idea sits in the review pile. */
+export interface LearningIdeaCollectRow {
+  material_id: string;
+  idea_id: string;
+  collected_at: string;
+  reviewed_at: string | null;
+  favorite: boolean | null;
+}
+
+/** Client shape of a collected idea's review state (camelCase mirror of
+ *  LearningIdeaCollectRow). Keyed by `reviewKey(materialId, ideaId)`. */
+export interface IdeaReview {
+  materialId: string;
+  ideaId: string;
+  collectedAt: string;
+  reviewedAt: string | null;
+  favorite: boolean | null;
+}
+
+/** Return shape of the review_idea RPC. Re-callable: a second call changes
+ *  the decision, so `favorite`/`reviewed_at` are always the latest. */
+export interface ReviewIdeaResult {
+  favorite: boolean;
+  reviewed_at: string;
+  pending_reviews: number;
+  favorites: number;
+}
+
 /** Drafter agent fills `steps` (one entry per reasoning step in the
  *  material_type_template); reviewer agent fills `review` with pass/fail
  *  per editorial rule. Both halves are optional so the structure can
