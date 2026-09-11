@@ -536,19 +536,61 @@ migration is written — the feed never sees a 404.
 ## 8. Migration — `/db-migration`, one file per run
 
 One migration for everything this run uploaded, counter-style name
-`<YYYYMMDD>NNNNNN_learning_notebook_media.sql` (`NNNNNN` = number of
-today's files + 1, zero-padded — never a timestamp), the repo header from
+`<YYYYMMDD>NNNNNN_learning_notebook_media.sql` — `NNNNNN` = the highest of
+today's versions on `main` **or** in the cloud history, + 1, zero-padded
+(never a count of files, never a timestamp) — the repo header from
 `.claude/skills/db-migration/SKILL.md`, and `begin; … commit;`. Written with
 the Write tool. Apply it exactly the way `/db-migration` does (you have no
-`Skill` tool — run the steps yourself, all in the main worktree):
+`Skill` tool — run the steps yourself, all in the main worktree; the skill's
+Passos 2, 4a and 4c are the source of truth for the three numbered checks
+below — keep them in sync). Each Bash call is a fresh shell: re-set `file`
+wherever it is used.
+
+The CLI matches migrations **by version only**: a file whose version another
+session already applied makes `db push` answer "Remote database is up to
+date" and silently skip your SQL — and the commit would then record SQL that
+never ran (2026-09-10, `20260910000003`). So `GATE FAILED` means nothing was
+applied, and the dry-run output says why: "up to date" (your version is
+taken), any other file in the list (someone else's pending migration),
+`Remote migration versions not found in local migrations directory` (the
+cloud has a version this checkout lacks — never run the `migration repair
+--status reverted` / `db pull` the CLI suggests; that file has to arrive
+through git), `Found local migration files to be inserted before the last
+migration on remote database` (your version is below the cloud's head).
+`git pull --rebase`, recompute, rename the file and its `-- migration:`
+header line, and run the gate **once more**. A second failure, or
+`NOT_APPLIED` after the real push, is the `db push` conflict row of §9 — the
+file was not applied, so it goes to the draft PR, never to `main`.
 
 ```bash
 MAIN=$(git worktree list --porcelain | sed -n 's/^worktree //p' | head -1); cd "$MAIN"
 git switch main && git pull --rebase
 git status --porcelain supabase/migrations/            # only YOUR new file may show; any other .sql = orphan → RESULT: failed
-today=$(date +%Y%m%d); n=$(ls supabase/migrations/${today}*.sql 2>/dev/null | wc -l | tr -d ' '); printf '%s%06d_learning_notebook_media.sql\n' "$today" $((n + 1))
-# write the file with the Write tool under that name, then:
+# 1. version = max(today's versions on main ∪ in the cloud) + 1 — the cloud side sees a migration applied but not merged yet
+today=$(date +%Y%m%d)
+local_v=$(ls supabase/migrations/ | grep -o "^${today}[0-9]\{6\}")
+remote_json=$(curl -fsS -X POST "https://api.supabase.com/v1/projects/uneqnpyzevosznwkmvvo/database/query" \
+  -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "Content-Type: application/json" -H "User-Agent: supabase-cli/2.116.0" \
+  -d "{\"query\": \"select version, name from supabase_migrations.schema_migrations where version like '${today}%' order by version\", \"read_only\": true}") \
+  || { echo "CLOUD_HISTORY_UNREADABLE"; exit 1; }      # → RESULT: failed; never fall back to the files alone
+remote_v=$(printf '%s' "$remote_json" | grep -o "${today}[0-9]\{6\}")
+max=$(printf '%s\n' $local_v $remote_v | sort -u | tail -1)
+if [ -n "$max" ]; then n=$((10#${max:8} + 1)); else n=1; fi
+file="${today}$(printf '%06d' "$n")_learning_notebook_media.sql"; echo "$file"; echo "cloud: $remote_json"
+# write the file with the Write tool under that name, then
+# 2. the gate — dry-run right before the push; passes only with exit 0 AND exactly your file listed
+out=$(echo "Y" | supabase db push --linked --dry-run 2>&1); rc=$?; printf '%s\n' "$out"
+listed=$(printf '%s' "$out" | grep -o '[0-9]\{14\}_[A-Za-z0-9_.-]*\.sql' | sort -u)
+[ "$rc" -eq 0 ] && [ "$listed" = "$file" ] && echo "GATE OK" || echo "GATE FAILED"
+# only after GATE OK:
 echo "Y" | supabase db push --linked
+# 3. the cloud row at your version must carry your name — otherwise your SQL did not run
+if got=$(curl -fsS -X POST "https://api.supabase.com/v1/projects/uneqnpyzevosznwkmvvo/database/query" \
+  -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H "Content-Type: application/json" -H "User-Agent: supabase-cli/2.116.0" \
+  -d "{\"query\": \"select name from supabase_migrations.schema_migrations where version = '${file%%_*}'\", \"read_only\": true}"); then
+  printf '%s' "$got" | grep -qF '"name":"learning_notebook_media"' && echo "APPLIED" || echo "NOT_APPLIED"
+else echo "CHECK_UNREADABLE"; fi                       # retry the query; never classify without an answer
+# only after APPLIED:
 git add supabase/migrations/<file>.sql
 git commit -m "feat(learning): notebook media <YYYY-MM-DD> — <n> videos, <m> deep dives" -m "Co-Authored-By: Claude <model> <noreply@anthropic.com>"
 git push origin main && git fetch origin && [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] && echo "committed"
@@ -680,7 +722,7 @@ above writes — keep the two in sync if the contract ever changes.
 | Preflight failed (repo behind or dirty, orphan migration, token, ffmpeg) | Manifest `status: "failed"` with the failing check as `error`; generate nothing; `RESULT: failed`. |
 | Notebook quota hit, or a generation failed / timed out | Download and process what finished; **migrate what reached the bucket before stopping** (§8), so nothing sits uploaded-but-unregistered; write the manifest (`status: "quota"` / `"failed"`, the failing item with `error`); print `NOTEBOOK_QUOTA` / `NOTEBOOK_GENERATION_FAILED: <item> — <reason>`; `RESULT: quota` / `RESULT: failed`. The next run resumes from the DB queue + manifest. |
 | Chrome blocked / not signed in | Manifest `status: "blocked"`, `CHROME_BLOCKED: …`, `RESULT: blocked` (§0). |
-| Upload fails, migration fails, `db push` conflict, unexpected UI, `cutAt` null on a fresh file for more than one item | Do not improvise. Write the manifest (`status: "draft-pr"`), branch `learning/notebook-<YYYY-MM-DD>` from `origin/main`, commit the migration file **only if it was NOT applied** (an applied one goes to `main` as in §8), push, `gh pr create --draft` with the manifest pasted in the body and the exact error, print the PR URL, `RESULT: draft-pr`. |
+| Upload fails, migration fails, `db push` conflict (incl. the §8 gate failing twice, or `NOT_APPLIED` after the push), unexpected UI, `cutAt` null on a fresh file for more than one item | Do not improvise. Write the manifest (`status: "draft-pr"`), branch `learning/notebook-<YYYY-MM-DD>` from `origin/main`, commit the migration file **only if it was NOT applied** (an applied one goes to `main` as in §8), push, `gh pr create --draft` with the manifest pasted in the body and the exact error, print the PR URL, `RESULT: draft-pr`. |
 | Migration applied to the cloud but the git commit/push failed | Report in caps: `DRIFT: <file> applied to the cloud but NOT committed on main — fix by hand`; manifest `status: "drift"`; `RESULT: drift`. Never `migration repair`. |
 
 Never "fix" a bad upload by uploading over it, never delete objects (that
