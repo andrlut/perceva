@@ -1543,11 +1543,11 @@ const pt: Translations = {
       spent: 'moedas gastas',
     },
     scope: {
-      xpIn: '{{xp}} XP em {{scope}}',
+      xpIn: '{{xp}} XP em {{area}}',
     },
     summary: {
       rotina: '{{days}} dias ativos · {{xp}} XP',
-      rotinaScoped: '{{days}} dias ativos · {{xp}} XP em {{scope}}',
+      rotinaScoped: '{{days}} dias ativos · {{xp}} XP em {{area}}',
       humor: 'humor médio {{avg}}',
       humorEmpty: 'nenhum humor registrado',
       vault: '{{days}} dias · {{count}} resgates · {{coins}} moedas',
@@ -1572,7 +1572,7 @@ const pt: Translations = {
       minXp: 'XP mínimo',
       minXpAny: 'sem piso',
       minXpValue: '{{xp}} XP ou mais',
-      minXpValueScoped: '{{xp}} XP ou mais em {{scope}}',
+      minXpValueScoped: '{{xp}} XP ou mais em {{area}}',
       rewards: 'Recompensas',
       withRedemption: 'Só dias com resgate',
       explain:
@@ -1586,7 +1586,7 @@ const pt: Translations = {
     list: {
       empty: 'Nenhum dia bate com este filtro.',
       hint: 'Toque num dia para abri-lo no mês.',
-      scopedHint: 'Contando só o XP em {{scope}}.',
+      scopedHint: 'Contando só o XP em {{area}}.',
     },
     day: {
       practices: 'Práticas',

@@ -32,6 +32,7 @@ import { useMoodTags } from '@/lib/api/mood';
 import {
   areaSubs,
   dayMatchesFilter,
+  dimensionOfSub,
   hasXpScope,
   practiceInScope,
   scopedPracticeXp,
@@ -43,7 +44,7 @@ import type { CalendarFront } from '@/lib/calendar/store';
 import { useT } from '@/lib/i18n';
 import { moodLevel } from '@/lib/mood';
 import { tokens } from '@/theme';
-import { DIMENSION_META, SUBS_BY_DIM } from '@/theme/dimensions';
+import { DIMENSION_META } from '@/theme/dimensions';
 
 interface Props {
   /** Every day of the loaded period, already ordered newest → oldest. */
@@ -159,10 +160,24 @@ export function CalendarListView({ days, front, filter, onSelectDay, locale, sco
     // its cell in the month grid.
     const scoped = hasXpScope(filter);
     const area = scoped ? areaSubs(filter) : null;
+    // The rail takes the dimension of the practice's OWN sub that yielded the
+    // most XP inside the scope. Picking "the first of its dimensions whose
+    // catalog touches the scope" painted a Força line in Saúde's color when
+    // the practice had Sono (out of scope) and Força (in scope).
     const railDim = (p: CalendarDay['practices'][number]) => {
       if (area) {
-        const hit = p.dims.find((d) => SUBS_BY_DIM[d].some((s) => area.has(s)));
-        if (hit) return hit;
+        let best: (typeof p.subs)[number] | null = null;
+        let bestXp = -1;
+        for (const s of p.subs) {
+          if (!area.has(s)) continue;
+          const x = p.xpBySub[s] ?? 0;
+          if (x > bestXp) {
+            best = s;
+            bestXp = x;
+          }
+        }
+        const dim = best ? dimensionOfSub(best) : undefined;
+        if (dim) return dim;
       }
       return p.dims.length > 0 ? p.dims[0] : null;
     };
@@ -257,8 +272,10 @@ export function CalendarListView({ days, front, filter, onSelectDay, locale, sco
   return (
     <View style={styles.root}>
       <Text style={styles.hint}>{t('calendar.list.hint')}</Text>
-      {scopeLabel ? (
-        <Text style={styles.hint}>{t('calendar.list.scopedHint', { scope: scopeLabel })}</Text>
+      {/* Rotina only: Humor and Vault print no XP, so "counting only XP in X"
+          would describe a number that is not on screen. */}
+      {front === 'rotina' && scopeLabel ? (
+        <Text style={styles.hint}>{t('calendar.list.scopedHint', { area: scopeLabel })}</Text>
       ) : null}
 
       {groups.length === 0 ? (

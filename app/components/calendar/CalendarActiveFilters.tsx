@@ -75,7 +75,7 @@ export function CalendarActiveFilters({
     chips.push({
       facet: 'minXp',
       label: scopeLabel
-        ? t('calendar.filter.minXpValueScoped', { xp: filter.minXp, scope: scopeLabel })
+        ? t('calendar.filter.minXpValueScoped', { xp: filter.minXp, area: scopeLabel })
         : t('calendar.filter.minXpValue', { xp: filter.minXp }),
     });
   }

@@ -73,7 +73,7 @@ export function CalendarSummary({
   } else {
     const xp = totals.xp.toLocaleString(intlTag);
     context = scopeLabel
-      ? t('calendar.summary.rotinaScoped', { days: totals.activeDays, xp, scope: scopeLabel })
+      ? t('calendar.summary.rotinaScoped', { days: totals.activeDays, xp, area: scopeLabel })
       : t('calendar.summary.rotina', { days: totals.activeDays, xp });
   }
 
@@ -82,7 +82,9 @@ export function CalendarSummary({
   return (
     <View style={styles.wrap}>
       <View style={styles.contextRow}>
-        <Text style={styles.context} numberOfLines={2}>
+        {/* 3 lines when scoped: a long scope label used to push the
+            'filtrado' marker past the ellipsis. */}
+        <Text style={styles.context} numberOfLines={scopeLabel ? 3 : 2}>
           {context}
           {filtering ? (
             <Text style={styles.filtered}>{` · ${t('calendar.summary.filtered')}`}</Text>

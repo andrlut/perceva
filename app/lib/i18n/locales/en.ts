@@ -1547,11 +1547,11 @@ const en = {
       spent: 'coins spent',
     },
     scope: {
-      xpIn: '{{xp}} XP in {{scope}}',
+      xpIn: '{{xp}} XP in {{area}}',
     },
     summary: {
       rotina: '{{days}} active days · {{xp}} XP',
-      rotinaScoped: '{{days}} active days · {{xp}} XP in {{scope}}',
+      rotinaScoped: '{{days}} active days · {{xp}} XP in {{area}}',
       humor: 'average mood {{avg}}',
       humorEmpty: 'no mood logged yet',
       vault: '{{days}} days · {{count}} redemptions · {{coins}} coins',
@@ -1576,7 +1576,7 @@ const en = {
       minXp: 'Minimum XP',
       minXpAny: 'no floor',
       minXpValue: '{{xp}} XP or more',
-      minXpValueScoped: '{{xp}} XP or more in {{scope}}',
+      minXpValueScoped: '{{xp}} XP or more in {{area}}',
       rewards: 'Rewards',
       withRedemption: 'Only days with a redemption',
       explain:
@@ -1590,7 +1590,7 @@ const en = {
     list: {
       empty: 'No day matches this filter.',
       hint: 'Tap a day to open it in the month.',
-      scopedHint: 'Counting only XP in {{scope}}.',
+      scopedHint: 'Counting only XP in {{area}}.',
     },
     day: {
       practices: 'Practices',

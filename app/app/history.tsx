@@ -725,6 +725,7 @@ export default function CalendarScreen() {
         onClose={() => setFilterOpen(false)}
         practices={practices}
         rewards={rewards}
+        scopeLabel={scopeLabel}
       />
 
       <CompleteTaskSheet

@@ -173,7 +173,7 @@ export function CalendarGrid({
               if (xp > 0) {
                 parts.push(
                   scopeLabel
-                    ? t('calendar.scope.xpIn', { xp, scope: scopeLabel })
+                    ? t('calendar.scope.xpIn', { xp, area: scopeLabel })
                     : t('a11y.dayCellXp', { xp }),
                 );
               }

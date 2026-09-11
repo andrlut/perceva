@@ -110,7 +110,7 @@ export function CalendarDayPanel({
         <DayXpStat xp={day.data?.totalXp ?? 0} isToday={isToday} />
         {scoped ? (
           <Text style={styles.scopedXp}>
-            {t('calendar.scope.xpIn', { xp: scoped.xp, scope: scoped.label })}
+            {t('calendar.scope.xpIn', { xp: scoped.xp, area: scoped.label })}
           </Text>
         ) : null}
       </View>

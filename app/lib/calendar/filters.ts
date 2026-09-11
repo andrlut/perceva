@@ -48,6 +48,11 @@ const DIM_OF_SUB = new Map<SubId, DimensionId>(
   DIMENSION_ORDER.flatMap((d) => SUBS_BY_DIM[d].map((s) => [s, d] as const)),
 );
 
+/** The dimension a sub belongs to; undefined for a sub outside the catalog. */
+export function dimensionOfSub(s: SubId): DimensionId | undefined {
+  return DIM_OF_SUB.get(s);
+}
+
 /** One practice actually completed on a day, collapsed across repetitions. */
 export interface CalendarPractice {
   taskId: string;

@@ -63,6 +63,8 @@ const MOOD_VALUES: MoodValue[] = [1, 2, 3, 4, 5];
 type OpenSection = 'tags' | 'practices' | 'rewards' | null;
 
 interface Props {
+  /** The filter's XP scope in words, or null — the XP floor is measured in it. */
+  scopeLabel: string | null;
   visible: boolean;
   onClose: () => void;
   /** Practices seen in the loaded range, already sorted most-logged first. */
@@ -71,7 +73,13 @@ interface Props {
   rewards: { rewardId: string; title: string; icon: string | null }[];
 }
 
-export function CalendarFilterSheet({ visible, onClose, practices, rewards }: Props) {
+export function CalendarFilterSheet({
+  visible,
+  onClose,
+  practices,
+  rewards,
+  scopeLabel,
+}: Props) {
   const { t, locale } = useT();
   const sheetBottom = useSheetBottomInset();
   const meta = useMetaLookup();
@@ -120,8 +128,15 @@ export function CalendarFilterSheet({ visible, onClose, practices, rewards }: Pr
   // Both stepper buttons would otherwise announce the same "XP mínimo". Naming
   // the value each press LANDS on is the only way to tell them apart without
   // inventing a new i18n key for "increase" / "decrease".
+  // With an XP scope the floor is measured inside it (see CalendarFilter.minXp),
+  // so the stepper names the scope — the same wording as the active chip, or
+  // the sheet and the chip would describe one filter two ways.
   const xpLabel = (xp: number) =>
-    xp > 0 ? t('calendar.filter.minXpValue', { xp }) : t('calendar.filter.minXpAny');
+    xp <= 0
+      ? t('calendar.filter.minXpAny')
+      : scopeLabel
+        ? t('calendar.filter.minXpValueScoped', { xp, area: scopeLabel })
+        : t('calendar.filter.minXpValue', { xp });
 
   // A practice selected in another period is not in `practices` (which only
   // covers the loaded range), and without this it would vanish from the sheet
