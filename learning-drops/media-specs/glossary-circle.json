@@ -1,0 +1,25 @@
+{
+  "slug": "glossary-circle",
+  "dimension_id": "bonds",
+  "title": {
+    "pt": "Quem você vê muda quanto você vive",
+    "en": "Who You See Changes How Long You Live"
+  },
+  "ideas": [
+    {
+      "id": "risco-que-ninguem-mede",
+      "ordinal": 1,
+      "image_prompt": "Uma balança antiga de dois pratos sobre uma mesa de madeira escura, vista quase de frente, ocupando o centro do quadro com folga em volta: no prato da esquerda, um punhado de cigarros acesos soltando fios finos de fumaça que sobem; no prato da direita, três pessoas em miniatura de mãos dadas, do tamanho de dedos. Os dois pratos param exatamente no mesmo nível e o travessão fica perfeitamente horizontal. Uma única luz âmbar baixa entra de fora do quadro pela direita e acende as três figuras minúsculas e a fumaça que atravessa o facho; o pé da balança e a madeira ficam na penumbra fria."
+    },
+    {
+      "id": "isolamento-nao-e-solidao",
+      "ordinal": 2,
+      "image_prompt": "Uma cena partida ao meio por uma parede nua que sobe pelo centro do quadro: à esquerda, uma pessoa de braços cruzados parada no meio de uma festa cheia, cercada por cinco figuras rindo e conversando voltadas umas para as outras; à direita, a mesma pessoa, mesmo rosto e mesma roupa, sentada sozinha à mesa da cozinha de um apartamento vazio, e sobre a mesa uma ampulheta grande, quase da altura dela sentada, com a areia escorrendo depressa num fio grosso. A única luz quente e dourada da cena é uma lâmpada baixa pendurada sobre essa mesa: ela acende a ampulheta e a areia caindo, enquanto o lado da festa fica num azul acinzentado frio, iluminado só de longe."
+    },
+    {
+      "id": "variedade-nao-volume",
+      "ordinal": 3,
+      "image_prompt": "No centro do quadro, com folga em volta, uma pessoa em pé e seca sob um guarda-chuva grande e aberto de tecido verde-sálvia apagado, sustentado por seis braços que entram de fora do quadro e terminam em mãos bem diferentes entre si — uma de luva de jardinagem, uma de luva de cozinha, uma suja de graxa, uma com aliança, uma pequena de criança, uma enrugada —, todas as seis agarradas à mesma haste. Ao lado, um passo atrás e menor, na mesma chuva forte, outra pessoa encharcada se encolhe sob um guarda-chuva pequeno demais segurado por duas mãos iguais entre si. A única luz quente e dourada vem de cima e de trás, acendendo as gotas que escorrem da borda do guarda-chuva grande e a pessoa seca embaixo dele; a figura encharcada fica num cinza-azulado frio."
+    }
+  ]
+}

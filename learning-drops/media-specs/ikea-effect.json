@@ -1,0 +1,25 @@
+{
+  "slug": "ikea-effect",
+  "dimension_id": "craft",
+  "title": {
+    "pt": "A estante torta que você não joga fora",
+    "en": "The crooked shelf you can't throw out"
+  },
+  "ideas": [
+    {
+      "id": "apego-no-montador",
+      "ordinal": 1,
+      "image_prompt": "Um único sapo de origami amassado e torto, de papel branco, sozinho no topo de um alto pedestal de mármore claro que ocupa o centro do quadro, cercado por uma corda de veludo baixa presa a dois postes; o sapo é pequeno e o pedestal o ergue até a altura dos olhos, com bastante ar em volta. Caído no chão de concreto, na faixa inferior do quadro e fora do círculo da corda, um sapo de origami impecável e bem dobrado jaz dentro de uma caixa de papelão aberta. Um único facho de luz quente e dourada desce do alto e toca só o sapo torto e o topo do pedestal; a caixa e o sapo perfeito ficam numa penumbra fria, e a corda de veludo puxa um verde-sálvia apagado."
+    },
+    {
+      "id": "tamanho-real",
+      "ordinal": 2,
+      "image_prompt": "Uma balança antiga de dois pratos, de metal fosco e mostrador liso sem marcação nenhuma, no centro do quadro sobre uma bancada de madeira escura, com um pote de cerâmica idêntico e liso em cada prato e folga em volta dos dois lados. Do alto entra apenas um dedo indicador, que encosta de leve na borda do prato da direita e o faz ceder pouco — o braço inclina uns poucos graus, não despenca. A única luz quente e dourada vem de cima e da direita, desenhando o dedo, as correntes finas e a borda do prato que cedeu; o resto da bancada some na penumbra, e os potes têm um esmalte verde-sálvia apagado."
+    },
+    {
+      "id": "preco-em-vez-de-opiniao",
+      "ordinal": 3,
+      "image_prompt": "Sobre uma mesa de cozinha de madeira, uma mão aberta que entra pela esquerda estende três moedas pequenas e lisas, sem qualquer relevo, ao lado de um vaso de cerâmica torto e feito à mão que ocupa o centro do quadro com folga em volta; a mão e o vaso estão na mesma altura, e as moedas parecem minúsculas perto dele. Na parede bem atrás, a sombra do vaso sobe três vezes maior que ele, alongada e deformada até quase o alto do quadro. A única luz quente e dourada vem de uma luminária baixa à esquerda e doura a mão, as moedas e a barriga do vaso, que carrega um esmalte verde-sálvia apagado; a parede e a sombra ficam num cinza frio."
+    }
+  ]
+}

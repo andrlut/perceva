@@ -1,0 +1,25 @@
+{
+  "slug": "glossary-romance",
+  "dimension_id": "bonds",
+  "title": {
+    "pt": "O que realmente mantém o amor vivo",
+    "en": "What Actually Keeps Love Alive"
+  },
+  "ideas": [
+    {
+      "id": "bids-de-conexao",
+      "ordinal": 1,
+      "image_prompt": "Uma balança de dois pratos de metal pousada na mesa da cozinha, ocupando o centro do quadro com folga em volta e o resto da cozinha no escuro: no prato da esquerda, erguido bem alto, um único jantar caprichado com taça e uma vela acesa; no prato da direita, tão baixo que quase encosta na mesa, uma montanha de umas doze coisas miúdas do dia a dia — xícaras, uma chave, um novelo, um pássaro de papel dobrado — e é esse peso que inclina o braço. A única luz quente da cena é a chama da vela, que atravessa o quadro na diagonal e pousa na montanha de coisas pequenas, dourando cada borda; o prato do jantar fica em contraluz e penumbra fria, e o novelo carrega o único acento verde-sálvia."
+    },
+    {
+      "id": "comemorar-a-vitoria",
+      "ordinal": 2,
+      "image_prompt": "Duas pessoas no centro do quadro, bem próximas uma da outra e com folga em volta, a sala às escuras atrás delas: sentada na beira do sofá, uma largou o livro de bruços no assento, páginas viradas para baixo, e se inclina para a frente com os olhos arregalados e um sorriso aberto; de pé ao lado, ainda de casaco e com a mochila pendurada num ombro, a outra conta algo gesticulando com as duas mãos no ar. A única luz quente vem de uma luminária baixa junto ao sofá e acende o rosto de quem escuta e as mãos erguidas de quem fala; o casaco de quem chegou é o único acento verde-sálvia, e os cantos da sala ficam num azul acinzentado frio."
+    },
+    {
+      "id": "manutencao-e-comportamento",
+      "ordinal": 3,
+      "image_prompt": "Duas pessoas de pijama, ombro contra ombro diante da pia da cozinha, vistas de trás e de lado, ocupando o centro do quadro com folga em volta: uma lava o último prato e a outra enxuga com um pano, as duas com os ombros caídos de sono, o resto da casa completamente escuro atrás. A única luz quente vem da luminária acesa bem acima da pia e cai reta sobre as mãos, sobre o prato molhado que devolve o brilho e sobre os ombros encostados, deixando os rostos meio na sombra; o pano de prato é o único acento verde-sálvia da cena."
+    }
+  ]
+}

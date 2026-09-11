@@ -1,0 +1,25 @@
+{
+  "slug": "cbt-i-vs-sleep-hygiene",
+  "dimension_id": "health",
+  "title": {
+    "pt": "Quarto escuro não cura insônia",
+    "en": "A Dark Room Won't Cure Insomnia"
+  },
+  "ideas": [
+    {
+      "id": "lista-nao-e-tratamento",
+      "ordinal": 1,
+      "image_prompt": "Uma pessoa sozinha sentada muito ereta no meio de um sofá de sala, no meio da madrugada, olhos bem abertos encarando o escuro à frente, ocupando o centro do quadro com folga em volta; ao redor dela tudo está impecável — almofadas perfeitamente alinhadas nas duas pontas, uma manta dobrada em quadrado exato, uma máscara de dormir pousada no braço do sofá e uma xícara de chá intocada no chão, ainda soltando um fio de vapor. A única luz quente e dourada vem de um abajur baixo no canto direito e rasa sobre esses objetos arrumados, acendendo a borda da manta e o aro da xícara; a pessoa fica de fora desse facho, numa penumbra azulada fria, com só um brilho nos olhos abertos. A manta dobrada é de um verde-sálvia apagado."
+    },
+    {
+      "id": "menos-tempo-na-cama",
+      "ordinal": 2,
+      "image_prompt": "Duas vasilhas de vidro lado a lado no centro de uma bancada de cozinha escura, ocupando o meio do quadro com folga em volta: à esquerda uma travessa larga e rasa em que a água some numa película fininha no fundo; à direita um copo estreito e alto, liso e sem marcações, em que a mesma água sobe até quase transbordar. No alto do quadro, uma jarra inclinada deixa cair um fio de água que se divide em dois filetes iguais, um para cada vasilha, deixando claro que a quantidade é a mesma. A única luz quente e dourada entra rasante pela direita e atravessa a coluna de água do copo alto, que brilha âmbar de dentro; a película rasa da travessa mal reflete e fica num cinza frio."
+    },
+    {
+      "id": "filtro-da-apneia",
+      "ordinal": 3,
+      "image_prompt": "Num cômodo abafado e sem cortinas, uma pessoa em cima de um banquinho de madeira, de costas para quem olha, estica os braços e veda com fita adesiva as frestas de uma janela fechada, concentrada na tarefa, ocupando o centro do quadro com folga em volta; acima e atrás dela, no teto, uma grade de ventilação está completamente entupida de poeira e teias, e ela não percebe. A única luz quente e dourada vem de fora, atravessa a vidraça e desenha a silhueta da pessoa, o rolo de fita e a moldura da janela, morrendo pouco antes do teto — a grade entupida fica num escuro frio e empoeirado. O rolo de fita na mão dela é de um verde-sálvia apagado."
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "slug": "summary-deep-work",
+  "dimension_id": "craft",
+  "title": {
+    "pt": "Deep Work — o foco como vantagem",
+    "en": "Deep Work — focus as an edge"
+  },
+  "ideas": [
+    {
+      "id": "residuo-de-atencao",
+      "ordinal": 1,
+      "image_prompt": "Uma pessoa curvada sobre uma mesa de trabalho no centro do quadro, caneta na mão sobre uma folha lisa e vazia, ocupando o meio do enquadramento com folga em cima e embaixo; da nuca dela saem três fios finos e luminosos que se esticam para trás, atravessando a penumbra até três mesas vazias enfileiradas ao fundo, e a tensão de cada fio puxa os ombros dela levemente para trás. A única luz quente e dourada vem de uma luminária baixa sobre a mesa da frente e acende só a pessoa e o brilho dos fios; as mesas do fundo ficam num cinza-azulado frio."
+    },
+    {
+      "id": "doze-por-cento",
+      "ordinal": 2,
+      "image_prompt": "Uma pessoa de perfil fazendo força com o corpo inteiro numa alavanca curta de madeira encaixada embaixo de um bloco de pedra enorme; o bloco ocupa o centro do quadro e a pessoa aparece pequena ao lado dele, com folga em volta. Do lado oposto do bloco, três correntes grossas de ferro sobem na diagonal e saem pelo alto da cena, esticadas, sustentando quase todo o peso da pedra no ar. A única luz quente e dourada vem de baixo à esquerda, rasante, e acende a pessoa, a ponta da alavanca e a face frontal da pedra; os elos das correntes brilham só nos primeiros metros e se perdem no escuro acima."
+    },
+    {
+      "id": "bloco-ritmico",
+      "ordinal": 3,
+      "image_prompt": "Uma pessoa sozinha ao amanhecer numa sala ampla e vazia, sentada à mesa no centro do quadro, curvada e concentrada sobre um caderno de páginas lisas, com folga em volta. Atrás dela, na parede do fundo, uma porta fechada represa uma pilha de envelopes lisos e sem marca alguma, que se acumula do outro lado e escorrega em leque pela fresta rente ao chão. A única luz quente e dourada entra pela janela lateral e desenha a pessoa e o tampo da mesa; a porta e os envelopes ficam numa penumbra fria."
+    },
+    {
+      "id": "abracar-o-tedio",
+      "ordinal": 4,
+      "image_prompt": "Uma pessoa parada no meio de uma fila ao ar livre, de mãos vazias e ombros soltos, o rosto erguido para a copa de uma árvore que se abre acima dela; ela ocupa o centro do quadro, em pé e inteira, com folga em cima e embaixo. As outras cinco pessoas da fila, três à frente e duas atrás, estão todas curvadas sobre as próprias mãos em concha. A única luz quente e dourada atravessa as folhas em feixes e cai no rosto e nos ombros erguidos dela, com um acento verde-sálvia nas folhas imediatamente acima; o resto da fila fica num azul acinzentado frio."
+    }
+  ]
+}

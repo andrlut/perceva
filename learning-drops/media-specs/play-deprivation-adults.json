@@ -1,0 +1,25 @@
+{
+  "slug": "play-deprivation-adults",
+  "dimension_id": "craft",
+  "title": {
+    "pt": "Brincar não é sobra de tempo",
+    "en": "Play Is Not Leftover Time"
+  },
+  "ideas": [
+    {
+      "id": "instinto-nao-passatempo",
+      "ordinal": 1,
+      "image_prompt": "Um único adulto de roupa de trabalho volta pra casa pela calçada ao entardecer e, sem pensar, caminha equilibrado em cima da mureta baixa do canteiro, visto de perfil de corpo inteiro no centro do quadro, com folga em volta: a pasta pesada numa das mãos, o outro braço aberto pro lado pra achar o equilíbrio, um pé à frente do outro sobre a faixa estreita de concreto. A mureta atravessa o primeiro plano na metade de baixo e a rua vazia recua no fundo, em penumbra fria. A única luz quente e dourada vem de um poste adiante, fora do quadro, que doura a figura e risca a borda de cima da mureta; a folhagem do canteiro fica num verde-sálvia apagado."
+    },
+    {
+      "id": "freio-pre-frontal",
+      "ordinal": 2,
+      "image_prompt": "Um único rato adulto parado no cruzamento de um labirinto de laboratório em forma de T, visto de cima em três quartos pra que os três braços de parede lisa se leiam inteiros, o cruzamento bem no centro do quadro e com folga em volta. O corpo do rato já está virado e comprometido com o braço esquerdo, completamente vazio; atrás dele, no braço direito, um punhado de ração continua intocado no chão. A única luz quente e dourada desce sobre o braço direito e acende a ração e o piso ao redor dela; o rato e o corredor que ele escolheu ficam numa penumbra azulada fria."
+    },
+    {
+      "id": "final-em-aberto",
+      "ordinal": 3,
+      "image_prompt": "Dois adultos de roupa de trabalho, em pé na cozinha durante o intervalo, disputam uma bolinha de papel branco amassado em cima da bancada: um de cada lado, inclinados pra frente e espelhados, ocupando juntos o centro do quadro com folga em volta, cada um com a mão espalmada protegendo uma caneca virada de boca pra baixo na sua ponta da bancada, a bolinha parada no meio do lance, os dois rindo. A cozinha atrás fica escura e sem detalhe. A única luz quente e dourada vem de uma lâmpada baixa sobre a bancada e pega os dois rostos, as mãos e a bolinha; uma das canecas é verde-sálvia."
+    }
+  ]
+}

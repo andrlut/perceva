@@ -1,0 +1,30 @@
+{
+  "slug": "summary-psychology-of-money",
+  "dimension_id": "wealth",
+  "title": {
+    "pt": "Dinheiro é comportamento, não planilha",
+    "en": "Money Is Behavior, Not Math"
+  },
+  "ideas": [
+    {
+      "id": "comportamento-vence-diploma",
+      "ordinal": 1,
+      "image_prompt": "Uma senhora de casaco simples sentada num banco de praça, em primeiro plano e ocupando o centro do quadro com folga em volta, mãos tranquilas e soltas sobre um envelope de papel amarelado, liso e fechado, no colo. Atrás dela, bem menor e do outro lado da rua, um único homem de terno impecável está de pé e imóvel diante do portão de ferro fechado de uma mansão enorme, com duas malas no chão ao lado dos pés. A única luz quente da cena é o sol baixo da tarde, que chega de frente e doura o rosto, as mãos e o envelope da senhora; a rua, o homem e o portão ficam num azul acinzentado frio, e o casaco dela é de um verde-sálvia apagado."
+    },
+    {
+      "id": "continuar-rico",
+      "ordinal": 2,
+      "image_prompt": "Um homem de terno antigo em pé, equilibrado no alto de uma torre estreitíssima de fichas de cassino lisas e sem marcação, que sobe do piso encerado até o centro do quadro com folga em volta; ele estica o braço para encaixar mais uma ficha no topo enquanto a base da pilha já escorrega para o lado. Câmera baixa, salão vazio e escuro atrás, uma figura só na cena. Uma única luz quente e dourada desce do alto e toca apenas o homem, a ficha na mão dele e o topo da torre; a base que escapa fica na penumbra fria, e as fichas têm um verde-sálvia apagado."
+    },
+    {
+      "id": "gap-comportamental",
+      "ordinal": 3,
+      "image_prompt": "Uma escada rolante subindo em diagonal por um saguão amplo e vazio, atravessando o centro do quadro com folga em volta. Perto do topo, uma pessoa parada e imóvel segura o corrimão e sobe sem esforço; bem mais abaixo, na mesma escada, uma segunda pessoa desce alguns degraus na contramão e volta a subir, pisando sempre no mesmo lugar, muito atrás da primeira. A única luz quente e dourada vem de uma claraboia acima e cai sobre a pessoa parada no alto, reluzindo no corrimão de metal; a metade de baixo do saguão e a pessoa que se debate ficam num azul acinzentado frio."
+    },
+    {
+      "id": "educacao-financeira-funciona",
+      "ordinal": 4,
+      "image_prompt": "Uma balança de dois pratos em equilíbrio exato sobre a mesa de madeira de uma cozinha, vista quase na altura do tampo e ocupando o centro do quadro com folga em volta: num prato, um livro grosso fechado de capa de tecido lisa; no outro, um cofre de porcelana em forma de porco; o fiel parado bem no meio, os dois pratos na mesma altura. A única luz quente e dourada entra de lado por uma janela fora do quadro e cai igual sobre o livro e sobre o porquinho, acendendo o brilho do braço de metal da balança; o resto da cozinha se dissolve numa penumbra fria, e a capa do livro é de um verde-sálvia apagado."
+    }
+  ]
+}

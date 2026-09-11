@@ -1,0 +1,25 @@
+{
+  "slug": "grip-strength-longevity",
+  "dimension_id": "body",
+  "title": {
+    "pt": "Seu aperto de mão sabe demais",
+    "en": "Your handshake knows too much"
+  },
+  "ideas": [
+    {
+      "id": "aperto-bate-a-pressao",
+      "ordinal": 1,
+      "image_prompt": "Uma mão adulta fechada com toda a força em torno de um cabo de metal grosso, vista de perto e ocupando o centro do quadro com folga em volta, tendões e veias saltados no dorso e no antebraço. Ao fundo, desfocada sobre a maca de um consultório, uma braçadeira de pressão desinflada jaz caída com o tubo de borracha escorrido para o lado, o corpo do aparelho virado para o outro lado. Uma única luz quente e dourada entra rasante pela esquerda e acende só a mão e o metal do cabo; a maca e a braçadeira ficam num cinza-azulado frio, na penumbra."
+    },
+    {
+      "id": "mao-nao-e-o-musculo",
+      "ordinal": 2,
+      "image_prompt": "Um homem sentado de perfil numa banqueta baixa no centro do quadro, com folga em volta, apertando um aperta-mão de borracha com a direita: a mão e o antebraço aparecem nítidos e tensionados, cada tendão desenhado. Do cotovelo para cima o mesmo corpo vai ficando translúcido e desbotado, ombro, peito e cabeça quase dissolvidos na penumbra da sala vazia. Uma única luz quente e dourada, baixa e lateral, alcança apenas a mão, o antebraço e o aperta-mão — que tem um verde-sálvia apagado na borracha — e se apaga antes de chegar ao tronco."
+    },
+    {
+      "id": "dose-minima-de-forca",
+      "ordinal": 3,
+      "image_prompt": "Uma mulher de meia-idade no fundo do agachamento, coxas paralelas ao chão e barra com anilhas grossas e lisas apoiada nas costas, o corpo inteiro em tensão ocupando o centro do quadro numa garagem simples de piso de cimento, com folga em volta. Uma única luz quente e dourada desce em facho de uma janela alta atrás dela, acende a poeira de giz suspensa no ar e contorna os ombros, a barra e as costas, deixando a camiseta dela num verde-sálvia apagado. O resto da garagem fica em penumbra fria, e no canto do piso, quase no escuro, um aperta-mão de borracha esquecido."
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "slug": "glossary-learn",
+  "dimension_id": "mind",
+  "title": {
+    "pt": "A sensação de aprender mente",
+    "en": "The feeling of learning lies"
+  },
+  "ideas": [
+    {
+      "id": "dificuldades-desejaveis",
+      "ordinal": 1,
+      "image_prompt": "Uma mesa de estudo comprida atravessando o meio do quadro, com duas pessoas sentadas nas duas pontas e folga em volta: à esquerda, uma delas debruçada e relaxada sobre um livro aberto de páginas lisas, cobertas de ponta a ponta por faixas largas de marcador amarelo fluorescente; à direita, a outra com o livro fechado debaixo da palma da mão, os olhos apertados de esforço e a testa franzida. Um único facho quente e dourado desce de cima sobre a pessoa da direita e sobre a capa do livro fechado; a pessoa da esquerda e as faixas amarelas ficam numa penumbra fria e azulada."
+    },
+    {
+      "id": "cerebro-cresce-e-desfaz",
+      "ordinal": 2,
+      "image_prompt": "Uma sala vazia de assoalho de madeira, vista de frente e dividida ao meio por uma linha de luz que desce pelo centro do quadro, com folga em cima e embaixo: de um lado, uma pessoa de pé no meio de um malabarismo, três bolas suspensas no ar acima dela, o corpo tenso e os braços abertos; do outro, a mesma pessoa sentada no chão de ombros caídos, as três bolas paradas e cobertas de uma camada de poeira a um braço de distância. O único facho quente e dourado entra por uma janela alta fora do quadro e acende só a figura de pé e as bolas no ar; a metade da pessoa sentada fica num azul acinzentado frio."
+    },
+    {
+      "id": "dez-mil-horas-mito",
+      "ordinal": 3,
+      "image_prompt": "Uma pessoa sentada ao piano repetindo um trecho difícil, as mãos sobre as teclas bem no centro do quadro, enquanto outra, de pé ao lado e inclinada sobre o teclado, guia com os próprios dedos a posição da mão dela; a estante do piano está vazia. Sobre o tampo, mais ao fundo e fora de foco, uma ampulheta tombada de lado e coberta de poeira. O único facho quente e dourado cai estreito sobre as duas mãos no teclado; a ampulheta, os dois rostos e o resto da sala ficam numa penumbra fria."
+    }
+  ]
+}

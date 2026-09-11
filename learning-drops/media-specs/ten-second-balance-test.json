@@ -1,0 +1,25 @@
+{
+  "slug": "ten-second-balance-test",
+  "dimension_id": "body",
+  "title": {
+    "pt": "Dez segundos num pé só",
+    "en": "Ten seconds on one leg"
+  },
+  "ideas": [
+    {
+      "id": "capacidade-que-some",
+      "ordinal": 1,
+      "image_prompt": "Um homem descalço de corpo inteiro no centro do quadro, equilibrado sobre um bloco de pedra retangular do tamanho exato de um pé, no piso frio e liso de um banheiro; o corpo dele tomba para um lado e os dois braços se abrem no ar para corrigir o desvio. Em primeiro plano, largados no chão e intocados, uma barra de musculação com discos lisos e sem marcações e um par de tênis de corrida. A única luz quente e dourada entra baixa pela lateral e toca só o homem e a pedra sob o pé dele; a barra e os tênis ficam numa penumbra fria, e há folga em volta da figura nos quatro lados."
+    },
+    {
+      "id": "numero-honesto",
+      "ordinal": 2,
+      "image_prompt": "Uma pessoa sozinha parada no meio de uma cozinha, de corpo inteiro no centro do quadro, cabeça e olhar erguidos para o detector de fumaça redondo e liso no teto, que dispara: finos anéis de ar vibram no escuro em volta dele. Na bancada ao lado, em segundo plano e mais baixa, uma panela tampada solta apenas um fio fino de vapor, quase nada. A única luz quente e dourada pulsa do próprio detector e desce sobre o rosto e os ombros erguidos da pessoa, que veste um verde-sálvia apagado; o resto da cozinha e a panela ficam na penumbra, com folga em volta da figura."
+    },
+    {
+      "id": "diferenca-entre-as-pernas",
+      "ordinal": 3,
+      "image_prompt": "A mesma pessoa aparece duas vezes, lado a lado e do mesmo tamanho, de corpo inteiro sobre um piso de madeira clara, as duas figuras juntas ocupando o centro do quadro com folga em volta: à esquerda, firme e imóvel sobre a perna direita, a frente do outro pé encostada na panturrilha; à direita, sobre a perna esquerda, o corpo tombando para fora e os braços girando no ar. Entre as duas, no chão, um travesseiro dobrado. A única luz quente e dourada vem do alto à esquerda e desenha com nitidez a figura firme; a figura que tomba recebe só a borda dessa luz e fica numa penumbra mais fria."
+    }
+  ]
+}

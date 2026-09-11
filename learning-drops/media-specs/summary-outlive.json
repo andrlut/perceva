@@ -1,0 +1,30 @@
+{
+  "slug": "summary-outlive",
+  "dimension_id": "health",
+  "title": {
+    "pt": "Outlive: o que sobra depois do ceticismo",
+    "en": "Outlive: What Survives a Skeptic's Read"
+  },
+  "ideas": [
+    {
+      "id": "quatro-cavaleiros",
+      "ordinal": 1,
+      "image_prompt": "Um corte transversal do solo visto de frente: na faixa de cima do quadro, os troncos de quatro árvores diferentes lado a lado; sob eles, dentro da terra, quatro sistemas de raízes descem convergindo para uma mesma raiz grossa e nodosa no centro. A ponta final de cada uma das quatro se desfia e se perde na terra escura pouco antes de encostar na raiz central, deixando quatro vãos abertos bem visíveis. A raiz grossa ocupa o meio do quadro com folga em volta e é a única coisa acesa: uma luz quente e dourada vem de dentro dela e ilumina só o punhado de terra ao redor, enquanto as quatro raízes que descem vão de um verde-sálvia pálido ao cinza frio conforme se afastam."
+    },
+    {
+      "id": "risco-treinavel",
+      "ordinal": 2,
+      "image_prompt": "Uma balança de pratos antiga sobre uma bancada de madeira escura, centralizada e ocupando o meio do quadro com folga em volta, vista quase na altura dos olhos: no prato que subiu, um maço de cigarros amassado de papel liso, pequeno e leve; no prato que desceu, um par de tênis de corrida gastos e cobertos de lama seca, tão pesados que afundam o braço da balança e inclinam a coluna inteira para o lado deles. Uma única luz quente e dourada entra de baixo à esquerda e acende o couro enlameado dos tênis e o prato que os segura; o maço lá em cima fica na penumbra fria, e só a lona verde-sálvia puída dos tênis guarda uma segunda cor."
+    },
+    {
+      "id": "decatlo-centenario",
+      "ordinal": 3,
+      "image_prompt": "Uma pessoa idosa de pé na grama do quintal, joelhos dobrados e pés firmes no chão, levantando uma criança pequena até a altura do peito — apenas essas duas figuras, de corpo inteiro no centro do quadro, com folga em volta por todos os lados. Caída no chão ao lado delas, em primeiro plano e fora de foco, uma mala de viagem grande e pesada fica esquecida. A única luz quente e dourada vem baixa do fim da tarde, por trás e à esquerda, e contorna os braços da pessoa idosa e as costas da criança; o resto do quintal afunda num verde-sálvia escurecido."
+    },
+    {
+      "id": "aposta-cara",
+      "ordinal": 4,
+      "image_prompt": "Um antebraço estendido sobre a maca de uma sala de coleta, atravessando o centro do quadro na diagonal, ainda com o garrote no braço; a mão enluvada da enfermeira entra pela borda e segura junto à pele um tubinho pequeno já cheio de sangue, e é esse tubinho que ocupa o meio do quadro com folga em volta. Bem atrás, desfocado, apagado e sem nenhuma marcação na carcaça, abre-se o túnel circular e vazio de um aparelho de ressonância magnética, um buraco escuro muito maior que tudo. A única luz quente e dourada vem de uma lâmpada baixa à direita e cai só no braço e no vidro do tubinho; a luva verde-sálvia é a única outra cor, e a máquina fica num cinza-azulado frio."
+    }
+  ]
+}

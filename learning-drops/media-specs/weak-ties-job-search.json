@@ -1,0 +1,25 @@
+{
+  "slug": "weak-ties-job-search",
+  "dimension_id": "wealth",
+  "title": {
+    "pt": "O emprego vem do conhecido, não do amigo",
+    "en": "Your Next Job Comes From an Acquaintance"
+  },
+  "ideas": [
+    {
+      "id": "circulo-fechado",
+      "ordinal": 1,
+      "image_prompt": "Cinco pessoas sentadas muito juntas num círculo apertado, vistas de cima e um pouco de trás, passando de mão em mão a mesma chave gasta que já deu várias voltas ali; o círculo fechado ocupa a faixa de baixo do centro do quadro, com folga em volta. Atrás delas, separado por um vão escuro e completamente vazio, um sexto homem está de pé sozinho, no centro do quadro, segurando erguida uma chave de formato totalmente diferente, de haste longa. A única luz quente e dourada da cena é uma réstia que cai do alto sobre esse homem e acende o metal da chave dele; o círculo e a chave gasta ficam numa penumbra fria, azul-acinzentada, e o casaco do homem de pé é de um verde-sálvia apagado."
+    },
+    {
+      "id": "curva-u-invertido",
+      "ordinal": 2,
+      "image_prompt": "Uma ponte de corda em arco atravessando o quadro sobre um vale de neblina, com o ponto mais alto do arco no centro exato da imagem e folga em volta: na ponta de cá, mais baixa e à esquerda, um grupo de sete pessoas amontoadas ombro a ombro; na ponta de lá, à direita, uma multidão indistinta se dissolve no branco da névoa. No alto do arco, duas pessoas de corpo inteiro se cumprimentam com um aperto de mão firme, de perfil, e a única réstia de sol quente que fura a neblina cai exatamente sobre as mãos unidas e os ombros dos dois. O grupo amontoado e a multidão distante ficam num cinza-azulado frio; o casaco de uma das duas figuras do alto é verde-sálvia apagado."
+    },
+    {
+      "id": "laco-adormecido",
+      "ordinal": 3,
+      "image_prompt": "Um pátio escuro atravessado por um varal comprido de lampiões de papel apagados e empoeirados, a fila correndo em diagonal do primeiro plano para o fundo e ocupando o centro do quadro com folga em volta; à esquerda, de perfil, uma pessoa em pé numa escada de madeira acende o primeiro lampião com um fósforo. A única luz quente e dourada vem desse fósforo e do lampião recém-aceso, e alcança só os dois lampiões seguintes, que brilham fracos; do terceiro em diante a fila apagada some no azul escuro da noite, e os muros do pátio ficam em penumbra fria. O papel dos lampiões acesos é de um verde-sálvia apagado."
+    }
+  ]
+}

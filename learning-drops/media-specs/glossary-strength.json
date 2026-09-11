@@ -1,0 +1,25 @@
+{
+  "slug": "glossary-strength",
+  "dimension_id": "body",
+  "title": {
+    "pt": "Força — o corpo como capacidade",
+    "en": "Strength — the body as capability"
+  },
+  "ideas": [
+    {
+      "id": "aperto-de-mao",
+      "ordinal": 1,
+      "image_prompt": "Um primeiro plano de uma mão fechada com força nas alças de duas sacolas de mercado cheias, os dedos marcados pelo peso, ocupando o centro do quadro com folga em volta; a pessoa está no primeiro degrau de uma escadaria longa de prédio antigo, que sobe em diagonal ao fundo e se perde na altura. Na parede lateral, a sombra dela projetada vai ficando mais fina e mais curvada a cada degrau que sobe, até virar quase um fio lá no alto. A única luz quente e dourada vem de uma janela alta do vão da escada e cai sobre os nós dos dedos e as alças tensionadas; as sacolas são de pano liso num tom sage discreto, e a parede das sombras fica numa penumbra fria."
+    },
+    {
+      "id": "zona-2-mitocondria",
+      "ordinal": 2,
+      "image_prompt": "Duas pessoas caminhando lado a lado em passo tranquilo por uma estrada de terra ao amanhecer, ocupando juntas o centro do quadro com folga em volta, uma delas rindo no meio de uma frase, ombros soltos e respiração fácil. Bem atrás, pequena na mesma estrada, uma terceira pessoa acabou de esprintar e está parada, dobrada com as mãos nos joelhos, ofegante dentro da poeira que levantou. A única luz quente e dourada é o sol baixo do amanhecer, que vem da frente e contorna as duas que caminham; a figura dobrada ao fundo fica num azul acinzentado frio."
+    },
+    {
+      "id": "piso-semanal-oms",
+      "ordinal": 3,
+      "image_prompt": "Uma pessoa agachando com uma barra apoiada nos ombros no chão de concreto de uma garagem, joelhos dobrados no ponto mais baixo do agachamento, coluna firme e rosto calmo, sem careta de sofrimento; o corpo inteiro ocupa o centro do quadro, com folga em cima e dos lados. Ao lado dela, um tapete de alongamento desenrolado no piso, num verde sage desbotado, e um par de halteres pequenos encostados na parede; a barra carrega anilhas lisas de borracha preta. A única luz quente e dourada entra pela fresta do portão da garagem e corta o ombro, a barra e as coxas da pessoa; o tapete e os halteres ficam na penumbra fria do fundo."
+    }
+  ]
+}

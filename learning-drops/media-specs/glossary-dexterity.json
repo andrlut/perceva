@@ -1,0 +1,25 @@
+{
+  "slug": "glossary-dexterity",
+  "dimension_id": "body",
+  "title": {
+    "pt": "Levantar do chão prediz quanto você vive",
+    "en": "Getting off the floor predicts how long you live"
+  },
+  "ideas": [
+    {
+      "id": "sentar-e-levantar",
+      "ordinal": 1,
+      "image_prompt": "Uma pessoa de cabelo grisalho no meio do esforço de se levantar do chão de madeira de uma sala quase vazia, o corpo em diagonal ocupando o centro do quadro com folga em volta: uma das mãos espalmada no piso, um joelho apoiado, e a outra mão agarrada no assento de uma cadeira de madeira simples ao lado. A única luz quente e dourada vem de uma janela alta fora do quadro, à esquerda, e recorta exatamente esses três pontos de apoio — a palma no chão, o joelho e os dedos na cadeira; o resto do cômodo e o fundo ficam numa penumbra fria e vazia."
+    },
+    {
+      "id": "dinapenia",
+      "ordinal": 2,
+      "image_prompt": "Uma pessoa escorregando num tapete solto no corredor estreito de casa, o corpo inteiro no centro do quadro e já inclinado pra trás, um pé saindo do piso e o tapete dobrado embaixo dele. O braço que deveria alcançar a parede está esticado no ar, com a mão ainda a um palmo do reboco, o instante congelado um pouco tarde demais. A única luz quente e dourada vem do fundo do corredor e desenha o braço estendido e a mão que não chega; as paredes laterais e o primeiro plano ficam num azul acinzentado frio."
+    },
+    {
+      "id": "equilibrio-corta-quedas",
+      "ordinal": 3,
+      "image_prompt": "Num salão de piso de madeira, meia dúzia de pessoas mais velhas em pé na mesma pose lenta de Tai Chi, todas equilibradas sobre um pé só e firmes, dispostas num semicírculo que ocupa o centro do quadro com folga em volta. Em primeiro plano, mais perto e de três quartos de costas, outra pessoa sentada num banco baixo estica uma perna num alongamento e agarra a borda do banco com as duas mãos pra não tombar de lado. A única luz quente e dourada entra do alto à direita e pousa no grupo equilibrado, acendendo os braços erguidos e o verde acinzentado das roupas; quem está sentado alongando fica na penumbra fria da frente."
+    }
+  ]
+}

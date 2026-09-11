@@ -1,0 +1,25 @@
+{
+  "slug": "attachment-styles-love",
+  "dimension_id": "bonds",
+  "title": {
+    "pt": "Apego no amor: dois números, não um rótulo",
+    "en": "Attachment in love: two numbers, not a label"
+  },
+  "ideas": [
+    {
+      "id": "dois-numeros-nao-rotulo",
+      "ordinal": 1,
+      "image_prompt": "Uma única pessoa de pé exatamente no centro de um salão amplo e vazio, ocupando o meio do quadro com folga em volta, com os pés no ponto em que duas longas faixas de luz se cruzam no piso liso e seguem até as paredes distantes. Nos quatro cantos do salão, quatro caixas de madeira rígidas, de tampa aberta e vazias, foram empurradas para bem longe dela e ficam quase sem detalhe na penumbra fria. A única luz quente e dourada desce de uma claraboia alta fora do quadro e acende só as duas faixas cruzadas e a pessoa em pé no cruzamento; um verde-sálvia discreto aparece apenas no casaco dela."
+    },
+    {
+      "id": "alarme-e-botao-de-mudo",
+      "ordinal": 2,
+      "image_prompt": "Um sofá comprido atravessa o centro do quadro numa sala à meia-luz, com duas pessoas sentadas nas duas pontas e folga em volta de toda a cena. À esquerda, a pessoa se inclina para a frente com a mão estendida no vazio, e acima dela um sino de bronze vibra no ar, de bordas trêmulas; à direita, a outra pessoa está virada de costas, joelhos encolhidos contra o peito, e um sino de bronze idêntico, do mesmo tamanho, paira envolto em tecido grosso, completamente imóvel. A única luz quente e dourada vem de um abajur baixo na ponta esquerda e acende o bronze do sino que vibra e a mão estendida; o sino embrulhado e as costas da outra pessoa ficam num azul acinzentado frio."
+    },
+    {
+      "id": "mudar-o-gesto-nao-o-rotulo",
+      "ordinal": 3,
+      "image_prompt": "Vista de cima, quase a prumo, uma trilha de terra ao amanhecer atravessa o quadro: a caminhante está sozinha no centro, pequena e inteira, com folga em volta, e atrás dela o rastro de pegadas repete sempre a mesma curva fechada para a esquerda, voltando sobre si mesma. No último passo ela apoia o pé firme para a direita e abre uma única marca nova na grama à beira da trilha, a mesma pessoa e o mesmo corpo num desvio mínimo. A única luz quente vem do sol rasante do amanhecer, que doura a caminhante e a marca nova na grama; as pegadas antigas da curva ficam num azul acinzentado frio."
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "slug": "does-money-buy-happiness",
+  "dimension_id": "wealth",
+  "title": {
+    "pt": "Dinheiro compra felicidade? O acordo de 2023",
+    "en": "Does Money Buy Happiness? Settled in 2023"
+  },
+  "ideas": [
+    {
+      "id": "teto-dos-75-mil",
+      "ordinal": 1,
+      "image_prompt": "Duas torres de moedas douradas lisas, sem nenhuma marca no metal, empilhadas no centro de uma mesa de madeira que atravessa a faixa de baixo do quadro, com uma xícara de café fumegante ao lado, de manhã. A torre da frente estanca a poucos centímetros abaixo de uma chapa de vidro horizontal suspensa na altura do peito, que a impede de crescer; a torre de trás, mais fina, atravessa o vão dessa chapa e segue subindo até sair pela borda de cima, único elemento que toca a margem, com ar sobrando dos dois lados. A única luz quente e dourada entra por uma janela à esquerda e sobe pela torre que passou, acendendo moeda por moeda e o vapor da xícara; a torre travada e o vidro ficam numa penumbra fria azulada."
+    },
+    {
+      "id": "os-dois-estavam-certos",
+      "ordinal": 2,
+      "image_prompt": "Um campo aberto ao amanhecer visto de baixo: dezenas de pessoas sobem devagar pelo centro e pela metade de cima do quadro, cada uma suspensa por um balão cheio, formando uma diagonal de corpos com folga em volta. No canto inferior esquerdo, em primeiro plano e bem maiores, exatamente três pessoas continuam agachadas com os pés no chão, os mesmos balões boiando presos ao pulso, cada uma abraçando contra o colo uma pedra escura e pesada. O único foco de luz quente é o sol baixo no horizonte, que doura os balões e as costas de quem sobe; as três figuras do chão ficam num azul-acinzentado frio, com um verde-sálvia apagado na superfície das pedras."
+    },
+    {
+      "id": "renda-logaritmica",
+      "ordinal": 3,
+      "image_prompt": "Uma escadaria de pedra ao ar livre que sobe em diagonal do canto inferior esquerdo ao alto à direita, ocupando o centro do quadro com folga em volta, e em que cada degrau tem exatamente o dobro da altura do anterior — cinco degraus visíveis, do tamanho de um tijolo ao tamanho de um muro. Nos primeiros, baixinhos, uma pessoa sobe leve com um punhado de moedas douradas lisas na mão; mais acima, parada diante do degrau da altura de um muro, a mesma pessoa arrasta com as duas mãos um saco de moedas grande demais para erguer. A única luz quente vem do sol baixo do fim de tarde à direita, rasante, dourando a pedra dos degraus, o punhado de moedas e o saco; o topo da escadaria e o fundo ficam numa penumbra fria."
+    }
+  ]
+}

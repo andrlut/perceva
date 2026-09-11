@@ -1,0 +1,25 @@
+{
+  "slug": "attention-residue",
+  "dimension_id": "mind",
+  "title": {
+    "pt": "Você fechou a reunião. Sua atenção não.",
+    "en": "You closed the meeting. Your attention didn't."
+  },
+  "ideas": [
+    {
+      "id": "residuo-cobra-da-proxima",
+      "ordinal": 1,
+      "image_prompt": "Uma única pessoa sentada muito ereta diante de uma mesa limpa e vazia, ocupando o centro do quadro com folga em volta, segurando à sua frente uma folha de papel lisa e vazia e completamente atenta a ela; da nuca dela sai um fio fino e brilhante que atravessa a sala inteira em diagonal e volta, lá no fundo, até uma cadeira vazia numa segunda mesa, onde peças soltas de um quebra-cabeça estão espalhadas e montadas pela metade. A única luz quente e dourada cai de cima sobre a pessoa e o papel que ela segura, e corre fraca ao longo do fio até se apagar antes de chegar ao fundo; a mesa de trás, a cadeira vazia e as peças ficam numa penumbra fria e azulada. O suéter dela é de um verde-sálvia acinzentado, o único outro tom da cena."
+    },
+    {
+      "id": "terminar-nao-e-fechar",
+      "ordinal": 2,
+      "image_prompt": "Uma única pessoa caminha adiante por um corredor amplo e vazio, de corpo inteiro no centro do quadro com folga em volta, o tronco inclinado à frente porque um cordão elástico amarrado à cintura dela está esticado e tenso para trás, preso a uma cadeira tombada de lado alguns metros atrás; poucos passos adiante dela, no chão, um cordão idêntico aparece enrolado frouxo, ao lado de uma cadeira gêmea em pé e intacta. A única luz quente e dourada vem de uma janela alta lá na frente, fora do quadro, e toca a pessoa, o cordão solto e a cadeira em pé; o cordão esticado e a cadeira tombada afundam numa penumbra fria atrás. Os dois cordões são de um verde-sálvia acinzentado."
+    },
+    {
+      "id": "numeros-sem-artigo",
+      "ordinal": 3,
+      "image_prompt": "Uma única pessoa em pé diante de um arquivo alto de gavetas de madeira que preenche o fundo do quadro, com quatro ou cinco gavetas puxadas e completamente vazias por dentro; ela está no centro, de perfil, erguendo à altura dos olhos uma folha de papel lisa e vazia contra a claridade da janela, e no chão em volta dos pés dela dezenas de cópias idênticas dessa mesma folha vazia se espalham em montes desiguais. A única luz quente e dourada entra pela janela lateral, atravessa o papel erguido e acende as mãos e o rosto dela; as gavetas abertas e os montes no chão ficam numa penumbra fria, com só a borda de algumas folhas pegando o brilho. A camisa dela é de um verde-sálvia acinzentado."
+    }
+  ]
+}
