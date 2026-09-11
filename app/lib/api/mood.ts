@@ -147,10 +147,17 @@ export function useMoodTags() {
 }
 
 /**
- * Log (or revise) a day's mood via the log_mood RPC. Upserts server-side, so
- * calling it again for the same day overwrites the entry. `loggedFor` defaults
- * to today; pass a past day for retroactive logging. Invalidates every mood
- * query so the card + prompt + screen + history all refresh.
+ * Log (or revise) a day's mood via the log_mood RPC, which upserts per day.
+ * Two shapes, and the server tells them apart:
+ *   - `{ mood }` alone is a QUICK log: it updates the mood and KEEPS the day's
+ *     note and tags, so a stale "unlogged" card can't wipe a journal written
+ *     elsewhere (by voice through the MCP, or on another device);
+ *   - anything carrying a note or tags is a FULL edit and replaces both. The
+ *     check-in screen always sends its tags array ([] when cleared) — that is
+ *     what keeps "I cleared the note" distinct from "I didn't touch it".
+ * `loggedFor` defaults to today; pass a past day for retroactive logging.
+ * Invalidates every mood query so the card + prompt + screen + history all
+ * refresh.
  */
 export function useLogMood() {
   const qc = useQueryClient();

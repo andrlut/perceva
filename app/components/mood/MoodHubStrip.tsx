@@ -35,8 +35,9 @@ export function MoodHubStrip() {
 
   // Render only on a SUCCESSFUL fetch: while loading there's nothing to show,
   // and in the error state "no data" does NOT mean "no entry" — showing the
-  // quick-log row there would let one tap upsert {note: null, tags: null}
-  // over an existing entry and silently wipe the day's journal.
+  // quick-log row there would offer to log a day that may already be logged.
+  // (One tap there used to wipe that day's note and tags; log_mood now keeps
+  // them on a mood-only call, so this guard is defense in depth.)
   if (!today.isSuccess) return null;
 
   const entry = today.data ?? null;
