@@ -284,9 +284,13 @@ multi-byte in UTF-8):
 `node -e "process.stdout.write(String(require('fs').readFileSync(process.argv[1],'utf8').length))" <abs path>.txt`.
 Equal, or short by at most the number of line breaks (the textarea
 normalizes `\r\n`), is a good paste; anything else is a bad paste — clear
-the textarea and paste again. Then set the source title (the dialog offers
-a title field; otherwise rename in the Fontes panel) — the title is what you
-will select from later.
+the textarea and paste again. The paste dialog has **no title field**
+(verified 2026-09-10): the Notebook auto-titles the source from its first
+sentence, so an idea document shows up as its title-hook (e.g. *"Mesmos
+dados, dois vereditos opostos."*) and the article as its opening sentence —
+enough to pick it in the Fontes selector of a generation. Renaming through
+the source's ⋮ menu in the Fontes panel is optional; if you do, use the
+titles of the table above.
 
 ## 3. Generating — one item at a time on the download side
 
@@ -323,9 +327,17 @@ top) and `generated_at`, and record the exact `studio_title` as soon as the
 card shows one. Before downloading, check the title against the item: its
 language must be the item's, and for a video its subject must be the idea's
 `title`/`claim`; a mismatch is `needs_review`, never a guess. The serial
-part is downloading (§4). Poll with a `browser_batch` of several
-`computer wait 10` steps followed by a `read_page` of the Estúdio list
-(`wait` is capped at 10 s per action). Time-box each generation at
+part is downloading (§4). Poll with a `browser_batch` of **at most 6**
+`computer wait 10` steps followed by a `zoom` of the Estúdio column
+(`wait` is capped at 10 s per action; a 15-wait batch timed out with *"did
+not respond in time"* on 2026-09-10). The extension can also drop mid-run
+("Claude in Chrome is not connected"): make ONE light call
+(`list_connected_browsers`, then `tabs_context_mcp`) — it reconnected by
+itself the first time — and only if that fails too treat it as `blocked`.
+Measured 2026-09-10: a Curta video of 1:22 took **14 min** to generate; the
+Estúdio title is generic (*"Como o Sono Extra Realmente Funciona"*) — it
+tells the language, not the idea, so binding is by position/time (above),
+never by title alone. Time-box each generation at
 **30 min**; past that, mark it `failed` and move on.
 
 **Quota / failure signals.** A red or grey error on the Estúdio card, a
