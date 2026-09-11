@@ -10,6 +10,11 @@
 // Design notes:
 //   - 8 READ-ONLY tools (annotations.readOnlyHint) delegate to the mcp_* SQL
 //     functions from migration 20260811000003/4 (STABLE, SECURITY INVOKER).
+//   - `get_learning_ideas` (0.4.0) is the Learning read and adds ZERO SQL: the
+//     learning_idea_public view (security_invoker, one row per published
+//     idea) joined in memory with the user's own learning_idea_collect /
+//     learning_view rows — see learning.ts. Read-only on purpose: absorbing
+//     an idea is the card flip in the app (collect_idea) and nothing else.
 //   - ONE write tool, `log_mood` — the day's mood check-in, dictated by voice
 //     ("how was my day") and written straight to mood_log under RLS. Mood is
 //     the only write path in the schema that is safe for an LLM to drive: it
@@ -57,6 +62,14 @@ import {
   deriveValues,
   type Row,
 } from './self-knowledge.ts';
+import {
+  assembleIdeas,
+  type IdeaCollectRow,
+  type IdeaPublicRow,
+  type MaterialSubRow,
+  type MaterialTitleRow,
+  type MaterialViewRow,
+} from './learning.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
@@ -277,7 +290,7 @@ async function rpc(
 
 function buildServer(token: string, userId: string): McpServer {
   const server = new McpServer(
-    { name: 'perceva-mcp', version: '0.3.0' },
+    { name: 'perceva-mcp', version: '0.4.0' },
     {
       instructions: [
         'Perceva is a habit/wellness app organized in 6 dimensions',
@@ -290,9 +303,10 @@ function buildServer(token: string, userId: string): McpServer {
         'their own data.',
         'WHAT YOU CANNOT DO HERE: you cannot complete or skip a practice, create',
         'or edit or archive anything, claim a quest, log a skill value, spend or',
-        'mint coins, or mark a Learning material read. Those stay in the app on',
-        'purpose. Never claim to have done any of them, and when the user asks,',
-        'say plainly that it has to be done in the app.',
+        'mint coins, mark a Learning material read, nor absorb an idea (that is',
+        'the card flip at the end of the idea screen, in the app). Those stay in',
+        'the app on purpose. Never claim to have done any of them, and when the',
+        'user asks, say plainly that it has to be done in the app.',
         'THE ONE WRITE is log_mood: one day\'s check-in, typically dictated out',
         'loud ("how my day went"). Never infer the 1-5 rating from tone — if the',
         'user did not give one, call it with mood:"unknown" and ask using the',
@@ -311,7 +325,11 @@ function buildServer(token: string, userId: string): McpServer {
         'today → get_day_plan; averages and correlations → get_mood_stats; the',
         'words themselves → get_mood_entries; anything about coins spent, or how',
         'many days since something → get_rewards; who they ARE, and how to talk',
-        'to them → get_self_knowledge.',
+        'to them → get_self_knowledge; "qual conteúdo pra mim hoje", or anything',
+        'about the Learning ideas → get_learning_ideas, crossed with get_day_plan',
+        '(a practice skipped today names the sub that needs an idea),',
+        'get_mood_stats and get_self_knowledge — picking the idea is YOUR job,',
+        'the app has no rule for it; suggest one, say why, hand over open_in_app.',
         'WHO THEY ARE vs WHAT THEY DID: get_self_knowledge carries the six',
         'instrument results and the context they wrote about themselves. Read it',
         'before giving advice with any weight — the same suggestion lands very',
@@ -1187,6 +1205,125 @@ function buildServer(token: string, userId: string): McpServer {
         valores: withDate('schwartz_pvq', deriveValues(rows('schwartz_pvq'))),
         apego: withDate('ecr_r', deriveEcr(rows('ecr_r'))),
         big_five: withDate('big_five_120', deriveBigFive(rows('big_five_120'))),
+      });
+    },
+  );
+
+  server.registerTool(
+    'get_learning_ideas',
+    {
+      title: 'Learning ideas — what is there to absorb, and what already was',
+      description:
+        'The ideas of the Recanto (Learning): each published material carries ' +
+        '1-5 ideas — a hook title plus a one-sentence claim the user can ' +
+        '"absorb" by flipping the card at the end of the idea screen in the ' +
+        'app. Returns them per dimension and/or sub (or one material by slug), ' +
+        'each flagged absorbed or not (with when), the material\'s title and ' +
+        'progress (idea_count), whether a Notebook video exists in pt/en, and ' +
+        'an open_in_app deep link that lands on that exact idea. Default ' +
+        'status is "unabsorbed", so a bare call means "what is still there for ' +
+        'me". Titles and claims come in pt and en; the app is pt-BR by default, ' +
+        'so prefer the _pt fields unless the user writes in English.\n' +
+        'Use it for "qual ideia/vídeo pra mim hoje", "o que eu já absorvi ' +
+        'sobre sono" (sub_id:"sleep", status:"absorbed"), "me sugere um ' +
+        'conteúdo". Picking the idea for TODAY is this connector\'s job by ' +
+        'design — the app has no rule for it — so cross the result with ' +
+        'get_day_plan (a practice skipped today names the sub that needs an ' +
+        'idea), get_mood_stats (which tags drag the mood down) and ' +
+        'get_self_knowledge (how to pitch it): suggest ONE idea, say why in a ' +
+        'line, and hand over its open_in_app link.\n' +
+        'When NOT to use this: legacy materials without ideas are not here ' +
+        '(only materials that carry ideas appear); it never marks anything ' +
+        'read or absorbed — that happens only in the app, never claim it did; ' +
+        'and it says nothing about practices or moods (get_day_plan / ' +
+        'get_mood_stats).',
+      inputSchema: {
+        dimension_id: z.enum(DIMENSIONS).optional()
+          .describe('Only materials whose primary dimension is this one.'),
+        sub_id: z.enum(SUBS).optional()
+          .describe(
+            'Only materials tagged with this sub (e.g. "sleep"). Combinable ' +
+            'with dimension_id.',
+          ),
+        status: z.enum(['unabsorbed', 'absorbed', 'all']).optional()
+          .describe('Default "unabsorbed": what is still there to absorb.'),
+        slug: z.string().optional()
+          .describe('One material, by its slug (as in open_in_app links).'),
+        limit: z.number().int().min(1).max(50).optional()
+          .describe(
+            'Max ideas returned (default 20). The summary always counts the ' +
+            'whole scope, not just the page.',
+          ),
+      },
+      annotations: { readOnlyHint: true },
+    },
+    async (args, _extra) => {
+      const db = userClient(token);
+      const status = args.status ?? 'unabsorbed';
+      const limit = args.limit ?? 20;
+
+      // The view is security_invoker and granted to authenticated, so this
+      // runs as the user like everything else here. dimension/slug narrow it
+      // server-side; sub needs learning_material_sub and is applied in memory.
+      let ideasQuery = db.from('learning_idea_public').select(
+        'material_id,slug,type,dimension_id,released_at,idea_id,ordinal,' +
+        'title_pt,title_en,claim_pt,claim_en,image_path,video_pt_path,video_en_path',
+      );
+      if (args.dimension_id) ideasQuery = ideasQuery.eq('dimension_id', args.dimension_id);
+      if (args.slug) ideasQuery = ideasQuery.eq('slug', args.slug);
+      const ideasRes = await ideasQuery;
+      if (ideasRes.error) return fail(`get_learning_ideas: ${ideasRes.error.message}`);
+      const ideas = (ideasRes.data ?? []) as IdeaPublicRow[];
+
+      let collects: IdeaCollectRow[] = [];
+      let views: MaterialViewRow[] = [];
+      let subs: MaterialSubRow[] = [];
+      let titles: MaterialTitleRow[] = [];
+      const materialIds = [...new Set(ideas.map((r) => r.material_id))];
+      if (materialIds.length > 0) {
+        const [collectsRes, viewsRes, subsRes, titlesRes] = await Promise.all([
+          // Self-RLS tables: only this user's rows come back.
+          db.from('learning_idea_collect')
+            .select('material_id,idea_id,collected_at')
+            .in('material_id', materialIds),
+          db.from('learning_view')
+            .select('material_id,read_at')
+            .in('material_id', materialIds),
+          db.from('learning_material_sub')
+            .select('material_id,sub_id')
+            .in('material_id', materialIds),
+          // The view carries no title — the material's name comes from here.
+          db.from('learning_material')
+            .select('id,title_pt,title_en')
+            .in('id', materialIds),
+        ]);
+        if (collectsRes.error) return fail(`get_learning_ideas: ${collectsRes.error.message}`);
+        if (viewsRes.error) return fail(`get_learning_ideas: ${viewsRes.error.message}`);
+        if (subsRes.error) return fail(`get_learning_ideas: ${subsRes.error.message}`);
+        if (titlesRes.error) return fail(`get_learning_ideas: ${titlesRes.error.message}`);
+        collects = (collectsRes.data ?? []) as IdeaCollectRow[];
+        views = (viewsRes.data ?? []) as MaterialViewRow[];
+        subs = (subsRes.data ?? []) as MaterialSubRow[];
+        titles = (titlesRes.data ?? []) as MaterialTitleRow[];
+      }
+
+      const result = assembleIdeas(
+        { ideas, collects, views, subs, titles },
+        { status, sub_id: args.sub_id, limit },
+      );
+
+      return ok({
+        filters: {
+          dimension_id: args.dimension_id ?? null,
+          sub_id: args.sub_id ?? null,
+          status,
+          slug: args.slug ?? null,
+        },
+        ...result,
+        note:
+          'Absorbing happens only in the app — flipping the card at the end of ' +
+          'the idea screen. This connector cannot collect an idea or mark a ' +
+          'material read; hand over open_in_app instead.',
       });
     },
   );

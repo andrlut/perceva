@@ -3,15 +3,19 @@ import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useT } from '@/lib/i18n';
-import type { ReelGroup } from '@/lib/reels';
+import { groupPreviewUri, type ReelGroup } from '@/lib/reels';
 import { tokens } from '@/theme';
+import { DIMENSION_META } from '@/theme/dimensions';
 
 /**
  * The single Study Reels entry point — a full-width card at the top of the
  * Learning tab (the "story ring" slot users know from Instagram). Shows a
- * fanned stack of the next materials' art with a count of what's fresh;
- * flips to a calm "all caught up · replay" state when the unread pile is
- * empty. Hidden entirely by the parent when the deck is empty.
+ * fanned stack of the next groups' art — legacy story cards and idea
+ * illustrations alike (an idea without an image yet gets a tile in its
+ * dimension color) — with a count of what's fresh: unread materials plus
+ * ideas not yet absorbed. Flips to a calm "all caught up · replay" state
+ * when that pile is empty. Hidden entirely by the parent when the deck is
+ * empty.
  */
 
 interface Props {
@@ -33,23 +37,36 @@ export function ReelsEntryCard({ groups, unreadCount, onPress }: Props) {
         style={({ pressed }) => [styles.card, pressed && { opacity: 0.85 }]}
       >
         <View style={styles.thumbRow}>
-          {thumbs.map((g, i) => (
-            <View
-              key={g.key}
-              style={[
-                styles.thumbFrame,
-                { borderColor: g.accent, marginLeft: i === 0 ? 0 : -14, zIndex: 3 - i },
-              ]}
-            >
-              <Image
-                source={{ uri: g.cards[0]!.uri }}
-                style={styles.thumb}
-                contentFit="cover"
-                transition={150}
-                cachePolicy="memory-disk"
-              />
-            </View>
-          ))}
+          {thumbs.map((g, i) => {
+            const uri = groupPreviewUri(g);
+            return (
+              <View
+                key={g.key}
+                style={[
+                  styles.thumbFrame,
+                  { borderColor: g.accent, marginLeft: i === 0 ? 0 : -14, zIndex: 3 - i },
+                ]}
+              >
+                {uri ? (
+                  <Image
+                    source={{ uri }}
+                    style={styles.thumb}
+                    contentFit="cover"
+                    transition={150}
+                    cachePolicy="memory-disk"
+                  />
+                ) : (
+                  <View style={[styles.thumb, styles.thumbTile, { backgroundColor: g.accent + '2E' }]}>
+                    <Ionicons
+                      name={DIMENSION_META[g.dimensionId].iconName as keyof typeof Ionicons.glyphMap}
+                      size={16}
+                      color={g.accent}
+                    />
+                  </View>
+                )}
+              </View>
+            );
+          })}
         </View>
 
         <View style={styles.textCol}>
@@ -99,6 +116,10 @@ const styles = StyleSheet.create({
   thumb: {
     width: '100%',
     height: '100%',
+  },
+  thumbTile: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   textCol: {
     flex: 1,

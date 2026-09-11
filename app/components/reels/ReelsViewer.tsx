@@ -17,9 +17,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ReelChrome } from '@/components/reels/ReelChrome';
 import { ReelGroupPage } from '@/components/reels/ReelGroupPage';
 import { SetEndCard } from '@/components/reels/SetEndCard';
-import { useMarkMaterialRead, useReadMaterialIds } from '@/lib/api/learning';
+import {
+  useCollectedIdeas,
+  useMarkMaterialRead,
+  useReadMaterialIds,
+} from '@/lib/api/learning';
 import { useT } from '@/lib/i18n';
-import { REEL_SET_SIZE, type ReelGroup } from '@/lib/reels';
+import { groupPreviewUri, isGroupRead, REEL_SET_SIZE, type ReelGroup } from '@/lib/reels';
 import { useReadingProgressStore } from '@/lib/readingProgress';
 import { useReelsProgressStore } from '@/lib/reelsProgress';
 import { showInfo } from '@/lib/util/confirm';
@@ -29,13 +33,17 @@ import { tokens } from '@/theme';
  * The Study Reels pager.
  *
  * Two-level navigation: this outer FlatList pages horizontally across
- * MATERIAL groups (native interactive swipe); cards inside a group swap by
- * state in ReelGroupPage (instant cut on tap). The deck is bounded into
- * sets of REEL_SET_SIZE with a SetEndCard between them — never an infinite
- * feed. No timers anywhere: every advance is the user's.
+ * groups (native interactive swipe) — legacy material art and native idea
+ * cards alike; cards inside a legacy group swap by state in ReelGroupPage
+ * (instant cut on tap). The deck is bounded into sets of REEL_SET_SIZE
+ * with a SetEndCard between them — never an infinite feed. No timers
+ * anywhere: every advance is the user's.
  *
  * The deck prop is expected to be FROZEN for the session (the route builds
- * it once) — mid-session reorders would teleport the user.
+ * it once) — mid-session reorders would teleport the user. The read /
+ * collected state shown by the chrome is LIVE though (queries), so
+ * "Concluir" here or absorbing on the idea screen and coming back reflect
+ * immediately.
  */
 
 type ReelItem = { type: 'group'; group: ReelGroup } | { type: 'end' };
@@ -56,6 +64,9 @@ export function ReelsViewer({ groups, initialIndex }: Props) {
 
   const reads = useReadMaterialIds();
   const readSet = reads.data ?? new Set<string>();
+  // Live collection for the idea chip; `isGroupRead` falls back to the
+  // deck's build-time snapshot while this is still loading.
+  const collectedIdeas = useCollectedIdeas();
   const markRead = useMarkMaterialRead();
   const [busySlug, setBusySlug] = useState<string | null>(null);
 
@@ -102,12 +113,14 @@ export function ReelsViewer({ groups, initialIndex }: Props) {
   ).current;
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 60 }).current;
 
-  // ── Prefetch the next two groups' first cards ─────────────────────────
+  // ── Prefetch the next two groups' lead images ─────────────────────────
   useEffect(() => {
     const uris: string[] = [];
     for (const i of [currentIndex + 1, currentIndex + 2]) {
       const item = items[i];
-      if (item?.type === 'group') uris.push(item.group.cards[0]!.uri);
+      if (item?.type !== 'group') continue;
+      const uri = groupPreviewUri(item.group);
+      if (uri) uris.push(uri);
     }
     if (uris.length > 0) {
       Image.prefetch(uris, { cachePolicy: 'memory-disk' }).catch(() => {});
@@ -134,7 +147,11 @@ export function ReelsViewer({ groups, initialIndex }: Props) {
   };
 
   // ── Mark read (same contract as the detail screen's sticky CTA) ───────
+  // Legacy groups only. An idea group never reaches here: absorbing an
+  // idea happens on the idea screen's card, and Explorar must not mark a
+  // material with ideas as read (the chrome offers no such action for it).
   const onMarkRead = async (group: ReelGroup) => {
+    if (group.kind !== 'legacy') return;
     if (readSet.has(group.materialId) || busySlug) return;
     setBusySlug(group.slug);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
@@ -148,6 +165,16 @@ export function ReelsViewer({ groups, initialIndex }: Props) {
     } finally {
       setBusySlug(null);
     }
+  };
+
+  // ── Open idea (the idea group's primary action) ───────────────────────
+  const onOpenIdea = (group: ReelGroup) => {
+    if (group.kind !== 'idea') return;
+    Haptics.selectionAsync().catch(() => {});
+    router.push({
+      pathname: '/idea/[slug]',
+      params: { slug: group.slug, idea: String(group.ordinal) },
+    });
   };
 
   // ── Hold-to-hide chrome ───────────────────────────────────────────────
@@ -254,7 +281,9 @@ export function ReelsViewer({ groups, initialIndex }: Props) {
           >
             <ReelChrome
               group={currentGroup}
-              isRead={currentGroup ? readSet.has(currentGroup.materialId) : false}
+              isRead={
+                currentGroup ? isGroupRead(currentGroup, readSet, collectedIdeas.data) : false
+              }
               busy={currentGroup ? busySlug === currentGroup.slug : false}
               setCount={setLen}
               setActiveIndex={setActiveIndex}
@@ -270,6 +299,9 @@ export function ReelsViewer({ groups, initialIndex }: Props) {
               }}
               onMarkRead={() => {
                 if (currentGroup) void onMarkRead(currentGroup);
+              }}
+              onOpenIdea={() => {
+                if (currentGroup) onOpenIdea(currentGroup);
               }}
             />
           </Animated.View>

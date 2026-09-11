@@ -15,8 +15,14 @@ import { DIMENSION_META } from '@/theme/dimensions';
 
 /**
  * The overlay UI of the reel viewer — progress bar, material strip and the
- * two actions ("Ler completo" / "Concluir"). Positioning, fade-on-hold and
- * pointerEvents live in the parent; this component is plain layout.
+ * two actions. Positioning, fade-on-hold and pointerEvents live in the
+ * parent; this component is plain layout.
+ *
+ * Legacy group:  "Ler completo" / "Concluir" (+XP) → "Concluído" once read.
+ * Idea group:    "Ler completo" / "Abrir ideia" → a gold "Absorvida" chip
+ *                once the idea is in the collection. There is NO mark-read
+ *                path for ideas here: absorbing happens only on the idea
+ *                screen's card (`collect_idea`), never from Explorar.
  *
  * `group` is null while the end-of-set card is on screen — then only the
  * progress bar and the close button render.
@@ -24,6 +30,7 @@ import { DIMENSION_META } from '@/theme/dimensions';
 
 interface Props {
   group: ReelGroup | null;
+  /** Legacy: material read. Idea: idea collected. */
   isRead: boolean;
   busy: boolean;
   setCount: number;
@@ -34,6 +41,7 @@ interface Props {
   onClose: () => void;
   onReadFull: () => void;
   onMarkRead: () => void;
+  onOpenIdea: () => void;
 }
 
 export function ReelChrome({
@@ -48,11 +56,20 @@ export function ReelChrome({
   onClose,
   onReadFull,
   onMarkRead,
+  onOpenIdea,
 }: Props) {
   const { t } = useT();
   const dimIcon = group
     ? (DIMENSION_META[group.dimensionId].iconName as keyof typeof Ionicons.glyphMap)
     : null;
+  const isIdea = group?.kind === 'idea';
+  // The strip names the MATERIAL: for an idea the headline on the page is
+  // already the idea's title, so the strip gives the parent as context.
+  const stripTitle = group
+    ? group.kind === 'idea'
+      ? group.materialTitle || group.title
+      : group.title
+    : '';
 
   return (
     <>
@@ -69,12 +86,15 @@ export function ReelChrome({
                   <Ionicons name={dimIcon} size={13} color={group.accent} />
                 </View>
                 <Text style={styles.title} numberOfLines={1}>
-                  {group.title}
+                  {stripTitle}
                 </Text>
-                {group.langBadge ? (
+                {group.kind === 'legacy' && group.langBadge ? (
                   <View style={styles.langBadge}>
                     <Text style={styles.langBadgeText}>{group.langBadge}</Text>
                   </View>
+                ) : null}
+                {group.kind === 'idea' && group.hasVideo ? (
+                  <Ionicons name="videocam-outline" size={13} color={tokens.text.mid} />
                 ) : null}
               </>
             ) : null}
@@ -106,7 +126,44 @@ export function ReelChrome({
             <Text style={styles.readBtnText}>{t('learning.reels.readFull')}</Text>
           </Pressable>
 
-          {isRead ? (
+          {isIdea ? (
+            isRead ? (
+              // Absorbed ideas stay reachable from the reel: tapping the chip
+              // reopens the idea screen (to rewatch the video) — the RPC is
+              // never called again, so this is a pure navigation.
+              <Pressable
+                onPress={onOpenIdea}
+                accessibilityRole="button"
+                accessibilityLabel={`${t('learning.ideas.absorbed')} · ${t('learning.ideas.openIdea')}`}
+                focusable={false}
+                style={({ pressed }) => [styles.ctaWrap, styles.absorbedSlot, pressed && { opacity: 0.85 }]}
+              >
+                <View style={styles.absorbedChip}>
+                  <Ionicons name="checkmark-circle" size={14} color={tokens.semantic.coin} />
+                  <Text style={styles.absorbedText}>{t('learning.ideas.absorbed')}</Text>
+                  <Ionicons name="arrow-forward" size={12} color={tokens.semantic.coin} />
+                </View>
+              </Pressable>
+            ) : (
+              <Pressable
+                onPress={onOpenIdea}
+                accessibilityRole="button"
+                focusable={false}
+                style={({ pressed }) => [styles.ctaWrap, pressed && { opacity: 0.85 }]}
+              >
+                <LinearGradient
+                  colors={tokens.gradient.completeBtn}
+                  locations={tokens.gradient.completeBtnLocations}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 0, y: 1 }}
+                  style={styles.ctaBtn}
+                >
+                  <Text style={styles.ctaText}>{t('learning.ideas.openIdea')}</Text>
+                  <Ionicons name="arrow-forward" size={15} color={tokens.text.hi} />
+                </LinearGradient>
+              </Pressable>
+            )
+          ) : isRead ? (
             <View style={[styles.ctaWrap, styles.ctaBtn, styles.ctaDone]} pointerEvents="none">
               <Ionicons name="checkmark-done" size={16} color={tokens.semantic.xp} />
               <Text style={[styles.ctaText, { color: tokens.semantic.xp }]}>
@@ -260,5 +317,29 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 11,
     color: 'rgba(255, 255, 255, 0.75)',
+  },
+  /** Same slot as the legacy "Concluído" state, but the chip stays small —
+   *  a state label, not a button. */
+  absorbedSlot: {
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  absorbedChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    height: 32,
+    borderRadius: tokens.radius.pill,
+    backgroundColor: 'rgba(255, 200, 61, 0.12)',
+    borderWidth: 1,
+    borderColor: tokens.semantic.coinRim,
+  },
+  absorbedText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 12,
+    letterSpacing: 0.3,
+    color: tokens.semantic.coin,
   },
 });
