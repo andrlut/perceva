@@ -51,10 +51,16 @@ function emptyPaint(): DayPaint {
   };
 }
 
+/**
+ * `xp` is the figure the Rotina tint measures — the day's XP inside the
+ * filter's scope (`scopedXp`), so the fill always agrees with the number
+ * printed on it. Defaults to the whole day.
+ */
 export function paintForFront(
   day: CalendarDay | undefined,
   front: CalendarFront,
   reference: number,
+  xp: number = day?.xp ?? 0,
 ): DayPaint {
   if (!day) return emptyPaint();
 
@@ -83,7 +89,7 @@ export function paintForFront(
     };
   }
 
-  const level = intensityForXp(day.xp, reference);
+  const level = intensityForXp(xp, reference);
   if (level === 0) return emptyPaint();
   const step = rampStep(level);
   return {
