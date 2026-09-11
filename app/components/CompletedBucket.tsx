@@ -109,6 +109,13 @@ interface Props {
   showWhenEmpty?: boolean;
   /** Fires on every header tap with the next open/closed state. */
   onToggle?: (open: boolean) => void;
+  /**
+   * Controlled open state. The calendar owns it: its day panel remounts this
+   * drawer on every uncached day, which would drop local state. Home and
+   * all-practices omit it and keep the drawer's own state, exactly as before.
+   * A controlled drawer with no rows renders closed.
+   */
+  open?: boolean;
 }
 
 /**
@@ -128,13 +135,16 @@ export function CompletedBucket({
   onExtra,
   showWhenEmpty = false,
   onToggle,
+  open: openProp,
 }: Props) {
   const { t } = useT();
-  const [open, setOpen] = useState(false);
+  const [ownOpen, setOpen] = useState(false);
   const reduceMotion = useReducedMotion();
 
   const isSkipped = variant === 'skipped';
   const empty = items.length === 0;
+  const controlled = openProp !== undefined;
+  const open = controlled ? openProp && !empty : ownOpen;
 
   // Sum what is SHOWN rather than reading the day's total: all-practices
   // filters dailies out of its list, so a day total there would exceed the
@@ -163,6 +173,10 @@ export function CompletedBucket({
 
   const toggle = () => {
     if (empty) return;
+    if (controlled) {
+      onToggle?.(!open);
+      return;
+    }
     setOpen((v) => {
       const next = !v;
       onToggle?.(next);

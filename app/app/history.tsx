@@ -2,13 +2,25 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import {
+  ActivityIndicator,
+  findNodeHandle,
+  Platform,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { useReducedMotion } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useBottomSafeClearance } from '@/components/BottomNavBar';
 import { CalendarActiveFilters } from '@/components/calendar/CalendarActiveFilters';
 import { CalendarDayPanel } from '@/components/calendar/CalendarDayPanel';
+import { CalendarDayPeek, type PeekState } from '@/components/calendar/CalendarDayPeek';
 import { CalendarFilterSheet } from '@/components/calendar/CalendarFilterSheet';
 import { CalendarGrid } from '@/components/calendar/CalendarGrid';
 import { CalendarListView } from '@/components/calendar/CalendarListView';
@@ -33,6 +45,7 @@ import {
   useUndoCompletion,
   useUnskipTaskToday,
 } from '@/lib/api/tasks';
+import { openDayTarget, type DayPanelTarget } from '@/lib/calendar/dayLines';
 import {
   activeFacetCount,
   dayMatchesFilter,
@@ -109,6 +122,17 @@ const VALID_SUBS = new Set<string>(Object.keys(SUB_META));
 const FILTER_FAB_SIZE: FabSize = 'lg';
 const HISTORY_FAB_CLEARANCE = fabStackClearance([FILTER_FAB_SIZE]);
 
+/** How far below the top of the viewport "Abrir o dia completo" lands a
+ *  target that does not fit under the day nav — leaving what comes before it
+ *  (the day's last open practices, say) in view above it. */
+const REVEAL_CONTEXT = 160;
+/** A target counts as fitting under the day nav when this much of it would
+ *  show: its header and a first row or two. The reveal then stops at the day
+ *  nav, and the date he opened stays on screen. */
+const MIN_TARGET_VISIBLE = 200;
+/** How long a reveal keeps following its block after the tap — see `reaim`. */
+const REVEAL_SETTLE_MS = 4000;
+
 export default function CalendarScreen() {
   const { t, locale } = useT();
   const router = useRouter();
@@ -124,7 +148,10 @@ export default function CalendarScreen() {
   // Label captured when a practice was picked — the fallback name for a
   // practice not logged in the visible range (same chain as the filter chips).
   const taskLabels = useCalendarStore((s) => s.taskLabels);
+  const doneOpen = useCalendarStore((s) => s.doneOpen);
+  const setDoneOpen = useCalendarStore((s) => s.setDoneOpen);
   const meta = useMetaLookup();
+  const reduceMotion = useReducedMotion();
 
   const [selected, setSelected] = useState<Date>(() => startOfDay(new Date()));
   const [visibleMonth, setVisibleMonth] = useState<Date>(() => startOfMonth(new Date()));
@@ -132,6 +159,28 @@ export default function CalendarScreen() {
   const [sheetTask, setSheetTask] = useState<TaskWithSubs | null>(null);
   const [actionTask, setActionTask] = useState<TaskWithSubs | null>(null);
   const [floats, setFloats] = useState<{ id: number; xp: number; coins: number }[]>([]);
+
+  // --- "Abrir o dia completo" plumbing (see `reveal` and `reaim` below) -----
+  const scrollRef = useRef<ScrollView>(null);
+  // The day nav's content y (a direct child of the scroll content, so its
+  // layout y IS a content offset) and the viewport's height.
+  const dayNavY = useRef<number | null>(null);
+  const viewportH = useRef(0);
+  const moodAnchor = useRef<View>(null);
+  const practicesAnchor = useRef<View>(null);
+  const doneAnchor = useRef<View>(null);
+  const rewardsAnchor = useRef<View>(null);
+  const panelTargets = useMemo<Record<DayPanelTarget, RefObject<View | null>>>(
+    () => ({
+      mood: moodAnchor,
+      practices: practicesAnchor,
+      done: doneAnchor,
+      rewards: rewardsAnchor,
+    }),
+    [],
+  );
+  // The block a reveal is following, until when.
+  const pendingReveal = useRef<{ target: DayPanelTarget; until: number } | null>(null);
 
   // --- deep-link seed ------------------------------------------------------
   // `/dedicacao-history` redirects here with its old params. Seed once: a link
@@ -489,6 +538,103 @@ export default function CalendarScreen() {
   const filtering = isFilterActive(filter);
   const selectedDay = monthQuery.data?.days.get(dayKey);
 
+  // --- the day peek and "Abrir o dia completo" -----------------------------
+  // Not `isSuccess`: under TanStack v5 a failed BACKGROUND refetch flips the
+  // status to 'error' but keeps the data, and the grid keeps painting it. And
+  // placeholder data (keepPreviousData on a month step) is the PREVIOUS month:
+  // the peek must not read a carried-over day out of it.
+  const peekState: PeekState =
+    monthQuery.data !== undefined && !monthQuery.isPlaceholderData
+      ? 'ready'
+      : monthQuery.isError
+        ? 'error'
+        : 'loading';
+
+  // Another day or another front is another question: a reveal still
+  // following the previous one's block must not fire under the new one.
+  useEffect(() => {
+    pendingReveal.current = null;
+  }, [dayKey, front]);
+
+  /**
+   * Scroll to a block of the day panel. When the block fits under the day nav
+   * (MIN_TARGET_VISIBLE of it showing), stop at the day nav, so the date he
+   * opened stays on screen; otherwise land it REVEAL_CONTEXT below the top,
+   * with what precedes it still in view. Measured against the scroll view
+   * itself, as AvaliacaoPanel does: on Fabric `measureLayout` needs a native
+   * component ref, and nested onLayout values go stale whenever something
+   * above them moves. Returns false when the anchor is not mounted yet.
+   */
+  const reveal = (target: DayPanelTarget): boolean => {
+    const node = panelTargets[target].current;
+    const sv = scrollRef.current;
+    const navY = dayNavY.current;
+    if (!node || !sv || navY === null) return false;
+    const top = navY - tokens.space[2];
+    const landAt = (y: number) => sv.scrollTo({ y, animated: !reduceMotion });
+    if (Platform.OS === 'web') {
+      // No measureLayout there; the day nav is still a sensible place to land.
+      landAt(top);
+      return true;
+    }
+    const host =
+      (sv as unknown as { getNativeScrollRef?: () => unknown }).getNativeScrollRef?.() ??
+      findNodeHandle(sv);
+    if (host == null) return false;
+    (
+      node as unknown as {
+        measureLayout: (
+          rel: never,
+          cb: (x: number, y: number) => void,
+          err: () => void,
+        ) => void;
+      }
+    ).measureLayout(
+      host as never,
+      (_x, y) => {
+        const fits = viewportH.current > 0 && y - top + MIN_TARGET_VISIBLE <= viewportH.current;
+        landAt(fits ? top : Math.max(top, y - REVEAL_CONTEXT));
+      },
+      () => landAt(top),
+    );
+    return true;
+  };
+
+  /**
+   * Re-aim the armed reveal. What sits above a target can still be landing
+   * after the tap — the practices spinner turning into TaskCards, the mood
+   * card, Concluídas opening (which also lifts the scroll's clamp) — and each
+   * of those grows the content or moves the anchor. So for REVEAL_SETTLE_MS
+   * the reveal follows its block. Any touch in the scroll, another day or
+   * another front disarms it, and so does the window closing.
+   */
+  const reaim = () => {
+    const armed = pendingReveal.current;
+    if (!armed) return;
+    if (Date.now() > armed.until) {
+      pendingReveal.current = null;
+      return;
+    }
+    // Uncached day: the drawer's anchor sits behind the panel's spinner, so
+    // head for the Práticas header until it mounts.
+    if (!reveal(armed.target) && armed.target === 'done') reveal('practices');
+  };
+
+  const openDay = () => {
+    const target = openDayTarget(front, selectedDay);
+    Haptics.selectionAsync().catch(() => {});
+    // Opened here, not by the drawer: the peek's lines are the reading, the
+    // drawer is where undo and +1 live — and on Rotina, asking for "the full
+    // day" is asking for that list.
+    if (target === 'done') setDoneOpen(true);
+    pendingReveal.current = { target, until: Date.now() + REVEAL_SETTLE_MS };
+    reaim();
+  };
+
+  const handlePanelTargetLayout = (target: DayPanelTarget) => {
+    if (pendingReveal.current?.target === target) reaim();
+  };
+
   const dayLabel = useMemo(() => {
     const intlTag = locale === 'pt' ? 'pt-BR' : 'en-US';
     const raw = selected.toLocaleDateString(intlTag, {
@@ -503,8 +649,21 @@ export default function CalendarScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <ScreenBackground>
         <ScrollView
+          ref={scrollRef}
           contentContainerStyle={[styles.content, { paddingBottom: bottomClearance + HISTORY_FAB_CLEARANCE }]}
           showsVerticalScrollIndicator={false}
+          onLayout={(e) => {
+            viewportH.current = e.nativeEvent.layout.height;
+          }}
+          // The content grew or shrank — a block above the reveal's target
+          // landed, or Concluídas opened: follow the target (see `reaim`).
+          onContentSizeChange={reaim}
+          // Any touch in the scroll — a drag, a tap on a practice — disarms a
+          // reveal still settling: his hand wins, and a write can never
+          // re-trigger the scroll. The footer's own press arms it after this.
+          onTouchStart={() => {
+            pendingReveal.current = null;
+          }}
           refreshControl={
             <RefreshControl
               refreshing={source.isRefetching || dayQuery.isRefetching}
@@ -595,6 +754,19 @@ export default function CalendarScreen() {
                   tagEmojis={tagEmojis}
                   scopeLabel={scopeLabel}
                 />
+                <CalendarDayPeek
+                  date={selected}
+                  isToday={isToday}
+                  day={selectedDay}
+                  state={peekState}
+                  front={front}
+                  filter={filter}
+                  scopeLabel={scopeLabel}
+                  tagLabels={tagLabels}
+                  tagEmojis={tagEmojis}
+                  onOpenDay={openDay}
+                  onRetry={() => monthQuery.refetch()}
+                />
                 <CalendarSummary
                   totals={totals}
                   front={front}
@@ -605,7 +777,12 @@ export default function CalendarScreen() {
                 />
               </View>
 
-              <View style={styles.dayNav}>
+              <View
+                style={styles.dayNav}
+                onLayout={(e) => {
+                  dayNavY.current = e.nativeEvent.layout.y;
+                }}
+              >
                 <Pressable
                   onPress={() => stepDay(-1)}
                   style={({ pressed }) => [styles.navBtn, pressed && { opacity: 0.6 }]}
@@ -663,6 +840,11 @@ export default function CalendarScreen() {
                     ? { xp: selectedDay ? scopedXp(selectedDay, filter) : 0, label: scopeLabel }
                     : undefined
                 }
+                feedXp={peekState === 'ready' ? (selectedDay?.xp ?? 0) : null}
+                doneOpen={doneOpen}
+                onDoneToggle={setDoneOpen}
+                targets={panelTargets}
+                onTargetLayout={handlePanelTargetLayout}
               />
             </>
           ) : (
