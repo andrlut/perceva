@@ -1101,9 +1101,10 @@ export default function HomeScreen() {
 
             {/* Journal strip — today only (the "close the day" ritual). */}
             {/* Journal. Today: the quick 5-face strip (the "close the day"
-                ritual). Any past day: the same read/edit card the Calendar
-                day view uses, one tap into the check-in scoped to that date —
-                so the two surfaces cannot disagree about the same day.
+                ritual). Any past day: the same card the Calendar day view
+                uses — the same faces (one tap logs THAT date) and the same big
+                button into the check-in scoped to it — so the two surfaces
+                cannot disagree about the same day.
                 Deliberately OUTSIDE the `dayOpen.length === 0` branch: a past
                 day with open cards must still be loggable, and DaySeal is a
                 statement about what was trained, not a place for a control. */}

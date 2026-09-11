@@ -1,8 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 
+import { FullCheckinButton } from '@/components/mood/FullCheckinButton';
 import { MoodFace } from '@/components/mood/MoodFace';
 import { MoodFaceRow } from '@/components/mood/MoodFaceRow';
 import { useLogMood, useTodayMood } from '@/lib/api/mood';
@@ -24,6 +24,9 @@ import { tokens } from '@/theme';
  * row vanishing on log read as "it closed on me", and the only door left to
  * the tags and note was that small text — which, as the last card on Home,
  * also sat under the floating buttons.
+ *
+ * Past days get the same two doors from MoodDayDetail, which shares the
+ * button (FullCheckinButton).
  *
  * Deliberately quiet — no XP, no streak, matching the mood system's rule.
  */
@@ -115,34 +118,6 @@ export function MoodHubStrip() {
   );
 }
 
-/**
- * The way into the full check-in. Full width and 52dp tall on purpose: even
- * while the card scrolls past the floating stack on the right, most of the
- * button stays clear of it — and the Home scroll now reserves the stack's
- * height, so at the end of the list the whole card sits above it.
- */
-function FullCheckinButton({
-  icon,
-  label,
-  onPress,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [styles.fullBtn, pressed && { opacity: 0.75 }]}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-    >
-      <Ionicons name={icon} size={18} color={tokens.brand.violet2} />
-      <Text style={styles.fullBtnText}>{label}</Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   card: {
     marginHorizontal: tokens.space[4],
@@ -180,27 +155,5 @@ const styles = StyleSheet.create({
   loggedStrong: {
     fontFamily: 'Manrope_800ExtraBold',
     color: tokens.text.hi,
-  },
-  // Tinted surface + strong rim + violet label. violet2 on surface2 measures
-  // 4.60:1 in the dark theme and 5.81:1 in the light one — both clear AA for
-  // 14px text. A FILLED violet button was ruled out: brand.violet measures
-  // 4.36:1 with white in the dark theme.
-  fullBtn: {
-    minHeight: 52,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingHorizontal: tokens.space[3],
-    borderRadius: tokens.radius.md,
-    borderWidth: 1,
-    borderColor: tokens.border.strong,
-    backgroundColor: tokens.bg.surface2,
-  },
-  fullBtnText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 14,
-    letterSpacing: 0.2,
-    color: tokens.brand.violet2,
   },
 });
