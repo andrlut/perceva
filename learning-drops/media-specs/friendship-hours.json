@@ -1,0 +1,28 @@
+{
+  "slug": "friendship-hours",
+  "dimension_id": "bonds",
+  "title": {
+    "pt": "A amizade cobra em horas",
+    "en": "Friendship Charges You in Hours"
+  },
+  "cover": {
+    "prompt": "Um relógio de parede antigo e grande, de mostrador liso, sem números nem marcações, pendurado na parte baixa de uma parede alta e vazia; embaixo do mostrador há uma fenda de máquina de moedas, e duas mãos que chegam de lados opostos do quadro empurram juntas uma única moeda dourada e lisa para dentro dela, acendendo o vidro do mostrador por dentro."
+  },
+  "ideas": [
+    {
+      "id": "relogio-da-amizade",
+      "ordinal": 1,
+      "image_prompt": "Uma mesa de madeira comprida vista de lado, atravessando o quadro na metade de baixo: na ponta esquerda, duas xícaras de café vazias, pequenas e sozinhas; da ponta direita sobe uma torre altíssima de dezenas de xícaras iguais empilhadas, que ocupa o centro do quadro e quase toca o alto, com folga em volta. A única luz quente e dourada cai de cima sobre a torre e escorre pela borda de cada xícara empilhada, sem alcançar as duas primeiras, que ficam numa penumbra fria."
+    },
+    {
+      "id": "hora-de-trabalho-nao-conta",
+      "ordinal": 2,
+      "image_prompt": "Em primeiro plano, na faixa de baixo do quadro, duas pessoas sentadas lado a lado numa bancada de escritório nua, cada uma virada para o seu lado, separadas por uma divisória de vidro fosco, ambas na penumbra fria. Atrás delas, no centro do quadro e com folga em volta, as mesmas duas pessoas aparecem de novo, agora rindo em volta de uma mesa de jantar bagunçada de pratos e copos, sem nada entre elas. A única luz quente e dourada da cena vem de uma lâmpada baixa sobre a mesa de jantar e toca só esse segundo par."
+    },
+    {
+      "id": "mudanca-derruba-o-circulo",
+      "ordinal": 3,
+      "image_prompt": "Uma pessoa vista de costas empurra um carrinho carregado de caixas de mudança por uma rua vazia ao anoitecer, ocupando o centro do quadro com folga em volta; duas figuras caminham sólidas e bem próximas ao lado dela. Atrás, recuando na diagonal, uma fila de seis silhuetas de amigos vai ficando cada vez mais translúcida a cada passo, e a última é quase só um contorno no ar. A única luz quente vem de um poste adiante, que doura a pessoa, o carrinho e as duas figuras sólidas; a fila que some fica num azul acinzentado frio."
+    }
+  ]
+}

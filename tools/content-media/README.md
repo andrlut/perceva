@@ -116,6 +116,25 @@ Saída: `learning-drops/inbox/<slug>/` (`cover.<sha8>.webp`, `idea.*.webp`,
 `manifest.json`). A pasta `inbox/` é gitignored — os assets sobem pro Storage,
 não pro git.
 
+### Migration de texto — `emit-material-migration.mjs`
+
+O payload aprovado pelo reviewer (o JSON que o `learning-drafter` devolve,
+salvo em `learning-drops/inbox/<slug>/payload.json`) vira a migration de
+texto sem ninguém escrever dollar-quote à mão:
+
+```bash
+node emit-material-migration.mjs --payload learning-drops/inbox/<slug>/payload.json --reviewer "PASSED, 2 warns, 0 fails"
+# → supabase/migrations/<hoje>NNNNNN_learning_material_<slug>.sql (próximo contador livre)
+node emit-material-migration.mjs --payload … --stdout    # só olhar
+```
+
+Emite o mesmo `insert … on conflict (slug) do update` + `learning_material_sub`
+que o publisher escrevia à mão (a coluna `ideas` fica de fora — é a migration
+irmã, abaixo, que a preenche depois das imagens). Falha (exit 1) com campo
+faltando, takeaways fora de 1..5, subs fora de 1..2, `source_url` sem http(s)
+ou texto que contenha a própria tag de dollar-quote. Write-once: não
+sobrescreve arquivo existente.
+
 ### Migration de mídia — `emit-migration.mjs`
 
 Junta o spec de ideias aprovado (`learning-drops/ideas-specs/<slug>.json`,
