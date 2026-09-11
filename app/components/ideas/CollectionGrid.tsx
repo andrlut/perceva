@@ -12,8 +12,13 @@ import { tokens } from '@/theme';
  * in the top-right corner of the back (`openAffordance="corner"`) hands the
  * card to `onOpen` — the only surface where a card opens its idea itself.
  *
- * The parent owns filtering and the empty state; this component only lays
- * cards out at `collectionCardWidth(screenWidth)`.
+ * Cards live outside their material here, so each front carries a kicker
+ * with the material title (`kickers`: material_id → localized title); a
+ * secondary idea's headline loses its context alone.
+ *
+ * The parent owns filtering, the header (review stack / filter pills) and
+ * the empty state; this component only lays cards out at
+ * `collectionCardWidth(screenWidth)`.
  */
 
 /** Gutter between cards and against the screen edges. */
@@ -29,6 +34,9 @@ interface Props {
   locale: IdeaLocale;
   /** Fired by the corner arrow on the back face. */
   onOpen: (card: IdeaCardData) => void;
+  /** material_id → material title, shown as the kicker above each headline. */
+  kickers?: ReadonlyMap<string, string>;
+  ListHeaderComponent?: ReactElement | null;
   ListEmptyComponent?: ReactElement | null;
   /** Extra bottom padding (safe-area / gesture-bar clearance). */
   paddingBottom?: number;
@@ -41,11 +49,12 @@ interface CellProps {
   data: IdeaCardData;
   width: number;
   locale: IdeaLocale;
+  kicker?: string;
   onOpen: (card: IdeaCardData) => void;
 }
 
 /** One cell — binds `onOpen` to its card so `IdeaCard`'s memo keeps paying. */
-const Cell = memo(function Cell({ data, width, locale, onOpen }: CellProps) {
+const Cell = memo(function Cell({ data, width, locale, kicker, onOpen }: CellProps) {
   const open = useCallback(() => onOpen(data), [onOpen, data]);
   return (
     <IdeaCard
@@ -53,6 +62,7 @@ const Cell = memo(function Cell({ data, width, locale, onOpen }: CellProps) {
       width={width}
       locale={locale}
       collected
+      kicker={kicker}
       onOpen={open}
       openAffordance="corner"
     />
@@ -63,6 +73,8 @@ export function CollectionGrid({
   cards,
   locale,
   onOpen,
+  kickers,
+  ListHeaderComponent = null,
   ListEmptyComponent = null,
   paddingBottom = 0,
 }: Props) {
@@ -71,9 +83,15 @@ export function CollectionGrid({
 
   const renderItem = useCallback(
     ({ item }: { item: IdeaCardData }) => (
-      <Cell data={item} width={cardW} locale={locale} onOpen={onOpen} />
+      <Cell
+        data={item}
+        width={cardW}
+        locale={locale}
+        kicker={kickers?.get(item.materialId) || undefined}
+        onOpen={onOpen}
+      />
     ),
-    [cardW, locale, onOpen],
+    [cardW, locale, kickers, onOpen],
   );
 
   return (
@@ -85,6 +103,7 @@ export function CollectionGrid({
       columnWrapperStyle={styles.row}
       ItemSeparatorComponent={RowSep}
       contentContainerStyle={[styles.content, { paddingBottom: paddingBottom + GAP }]}
+      ListHeaderComponent={ListHeaderComponent}
       ListEmptyComponent={ListEmptyComponent}
       initialNumToRender={6}
       maxToRenderPerBatch={6}

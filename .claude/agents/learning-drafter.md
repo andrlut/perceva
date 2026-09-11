@@ -281,7 +281,8 @@ as `{ slug, type, material_title: {pt: title_pt, en: title_en}, ideas }`
 {
   "id": "acorda-descansado",   // ^[a-z0-9-]{3,40}$ — IMMUTABLE, the collect key; derived from the idea, never positional
   "ordinal": 1,                // 1..n contiguous, same number as the article section
-  "title": { "pt": "…", "en": "…" },   // ≤ 48 chars, curiosity hook, never the topic name
+  "title": { "pt": "…", "en": "…" },   // ≤ 48 chars, curiosity hook, never the topic name;
+                                       // from idea 2 on it names the subject — stands alone OUTSIDE the material ("topic: claim" fits)
   "claim": { "pt": "…", "en": "…" },   // target ≤ 120 chars (hard cap 140): the card's back, read whole on a 132px card;
                                        // 121-140 only fits with the font shrunk — avoid. Answer first, stands alone
   "body":  { "pt": "…", "en": "…" },   // 100-180 words: mechanism + number with named study + what to do;
@@ -314,6 +315,26 @@ them per idea from the media manifest.
   a gap without giving the answer: "O contrário de frágil não é
   resistente." Yes. "A tríade de Taleb" No. **Never the topic name and
   never the material's own title.** No ellipsis "…" (reads as cut text).
+  **From idea 2 onwards the title must stand alone OUTSIDE the
+  material.** In *Minhas ideias*, in Explorar and in the MCP the card
+  sits next to ideas from other materials, with no cover above it — so
+  the title names the subject (the topic noun or the mechanism) and never
+  relies on the reader knowing which article it came from. Idea 1 usually
+  carries the topic by construction; for `ordinal ≥ 2` this is mandatory
+  (rule `idea_title_no_context`: the lint WARNs when the title shares no
+  ≥5-letter word with the material title and has no colon; the reviewer
+  judges the meaning). The cheapest shape that satisfies it is
+  **"topic: claim"**, still ≤ 48 characters in total — the topic anchors
+  the hook, it does not replace it ("Antifrágil: …" is not "A tríade de
+  Taleb").
+  - Bad "O relógio não corre no trabalho." (which clock?) → good "O
+    relógio da amizade não corre no trabalho."
+  - Bad "O meio-termo é o lugar mais arriscado." → good "Antifrágil: o
+    meio-termo é o mais arriscado."
+  - Bad "Mesmos dados, dois vereditos opostos." → good "Sono extra:
+    mesmos dados, vereditos opostos."
+  The article's `##` heading may drop the "topic:" prefix — the reviewer
+  accepts a clear paraphrase there.
 - **`claim`** — one sentence (two very short ones at most) that gives the
   answer the title withheld. Answer first. Carries the number when there
   is one. ≤ 120 characters is what fits whole, at full size, on the
@@ -368,7 +389,12 @@ them per idea from the media manifest.
    number, or different action. If two candidates share the anchor study
    and the action, merge.
 4. **Title = curiosity hook, never the topic name.** ≤ 48 characters.
-   Never the material's own title. Never ellipsis.
+   Never the material's own title. Never ellipsis. **From idea 2 on, the
+   title stands alone outside the material**: it names the subject
+   (topic noun or mechanism) instead of relying on the reader knowing
+   which article it came from — "topic: claim" when nothing shorter does
+   it. Bad "O relógio não corre no trabalho." → good "O relógio da
+   amizade não corre no trabalho."
 5. **Claim ≤ 120 characters target, 140 hard cap, answer-first.** On the
    132px card, shorter beats complete.
 6. **Body 100-180 words per language**, mechanism + number with named
@@ -390,6 +416,9 @@ them per idea from the media manifest.
 - [ ] count within `idea_budget` and ≤ 5; every idea changes what the
       reader knows; no two overlap
 - [ ] every title ≤ 48 chars, a hook, not the topic, not the material title
+- [ ] every title from idea 2 on names its subject and reads whole
+      outside the material (Minhas ideias, Explorar, MCP) — "topic:
+      claim" if nothing shorter does it; idea 1 ideally too
 - [ ] every claim ≤ 120 chars (140 is the hard cap, not the target),
       answer-first, meaningful with nothing else on screen
 - [ ] every body 100-180 words in PT **and** in EN; ≤ 2 bold phrases;
@@ -559,8 +588,10 @@ the maintainer rejected in the pilots:
 9. **Top stat card + same number repeated in prose** (redundancy)
 10. **List-icon with myth-busts** when prose paragraphs would carry them
 11. **Idea title that names the topic** ("A tríade de Taleb") instead of
-    opening a gap; **claim that needs the article** to make sense; **body
-    whose first sentence repeats the title**
+    opening a gap; **title of idea 2+ that only works inside the
+    article** ("O relógio não corre no trabalho." — which clock?);
+    **claim that needs the article** to make sense; **body whose first
+    sentence repeats the title**
 12. **Decorative image brief** — a mood, an abstraction, or a scene with
     text, signs or screens in it
 13. **A number in an idea body with no named study** next to it

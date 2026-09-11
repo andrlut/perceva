@@ -7,7 +7,10 @@
 //   learning_idea_public   — view security_invoker, uma linha por ideia de
 //                            material publicado (herda a leitura pública de
 //                            learning_material)
-//   learning_idea_collect  — as ideias que ESTE usuário absorveu (self RLS)
+//   learning_idea_collect  — as ideias que ESTE usuário absorveu (self RLS),
+//                            com a revisão (20260911000001): reviewed_at null
+//                            = esperando revisão em Minhas ideias; favorite
+//                            true = guardada, false = solta
 //   learning_view          — os materiais que ele fechou (self RLS)
 //   learning_material_sub  — as subs de cada material (catálogo)
 //   learning_material      — só id + título, pro material ter nome
@@ -18,8 +21,9 @@
 // tool, de propósito: o catálogo inteiro cabe em poucas centenas de linhas.
 //
 // O que NÃO acontece aqui: escrita. Absorver uma ideia é virar o card no fim
-// da tela da ideia (RPC collect_idea), e só lá. O conector devolve o deep
-// link e para.
+// da tela da ideia (RPC collect_idea), e só lá; revisar (favoritar/soltar) é
+// o swipe em Minhas ideias (RPC review_idea), e só lá. O conector devolve o
+// deep link e para.
 
 export type IdeaStatus = 'unabsorbed' | 'absorbed' | 'all';
 
@@ -45,6 +49,10 @@ export type IdeaCollectRow = {
   material_id: string;
   idea_id: string;
   collected_at: string;
+  /** null = absorvida mas ainda não revisada (a pilha de Minhas ideias). */
+  reviewed_at: string | null;
+  /** Decisão da revisão: true guardada, false solta; null enquanto pendente. */
+  favorite: boolean | null;
 };
 
 export type MaterialViewRow = { material_id: string; read_at: string };
@@ -74,6 +82,15 @@ export type IdeaOut = {
   claim_en: string | null;
   absorbed: boolean;
   absorbed_at: string | null;
+  /** Passou pela pilha de revisão em Minhas ideias (swipe). */
+  reviewed: boolean;
+  reviewed_at: string | null;
+  /**
+   * true = guardada como favorita (é o que a grade mostra), false = solta
+   * (continua absorvida — XP e contagem não mudam — só saiu da grade),
+   * null = absorvida e esperando revisão, ou nem absorvida.
+   */
+  favorite: boolean | null;
   has_video: { pt: boolean; en: boolean };
   open_in_app: string;
 };
@@ -83,6 +100,10 @@ export type IdeasSummary = {
   total_ideas: number;
   absorbed: number;
   unabsorbed: number;
+  /** Absorvidas com favorite = true, no escopo. */
+  favorites: number;
+  /** Absorvidas ainda sem revisão (reviewed_at null), no escopo — o que a lâmpada do Recanto conta. */
+  pending_reviews: number;
   materials_total: number;
   /** Materiais do escopo com linha em learning_view (fechados). */
   materials_completed: number;
@@ -107,7 +128,8 @@ function isBlank(s: string | null | undefined): boolean {
   return !s || s.trim().length === 0;
 }
 
-function releasedMs(s: string): number {
+function releasedMs(s: string | null): number {
+  if (s === null) return 0;
   const n = Date.parse(s);
   return Number.isNaN(n) ? 0 : n;
 }
@@ -120,7 +142,13 @@ export function assembleIdeas(
     subs: MaterialSubRow[];
     titles: MaterialTitleRow[];
   },
-  opts: { status: IdeaStatus; sub_id?: string | undefined; limit: number },
+  opts: {
+    status: IdeaStatus;
+    sub_id?: string | undefined;
+    limit: number;
+    /** Só favorite === true. Implica absorvida: o status deixa de filtrar. */
+    favorites_only?: boolean | undefined;
+  },
 ): { ideas: IdeaOut[]; summary: IdeasSummary } {
   const subsBy = new Map<string, string[]>();
   for (const s of rows.subs) {
@@ -128,9 +156,9 @@ export function assembleIdeas(
     list.push(s.sub_id);
     subsBy.set(s.material_id, list);
   }
-  const collectedAt = new Map<string, string>();
+  const collectBy = new Map<string, IdeaCollectRow>();
   for (const c of rows.collects) {
-    collectedAt.set(`${c.material_id}|${c.idea_id}`, c.collected_at);
+    collectBy.set(`${c.material_id}|${c.idea_id}`, c);
   }
   const readAt = new Map<string, string>();
   for (const v of rows.views) readAt.set(v.material_id, v.read_at);
@@ -151,7 +179,12 @@ export function assembleIdeas(
     : rows.ideas;
 
   const all: IdeaOut[] = scope.map((r) => {
-    const at = collectedAt.get(`${r.material_id}|${r.idea_id}`) ?? null;
+    const c = collectBy.get(`${r.material_id}|${r.idea_id}`);
+    const at = c?.collected_at ?? null;
+    // A revisão só existe sobre uma ideia absorvida; a RPC review_idea grava
+    // as duas colunas juntas, então reviewed_at nulo é a única leitura de
+    // "pendente" e favorite só vale depois dela.
+    const reviewedAt = c?.reviewed_at ?? null;
     const title = titleBy.get(r.material_id);
     const ordinal = Number(r.ordinal);
     return {
@@ -171,23 +204,44 @@ export function assembleIdeas(
       claim_en: r.claim_en,
       absorbed: at !== null,
       absorbed_at: at,
+      reviewed: reviewedAt !== null,
+      reviewed_at: reviewedAt,
+      favorite: reviewedAt === null ? null : (c?.favorite ?? null),
       has_video: { pt: !isBlank(r.video_pt_path), en: !isBlank(r.video_en_path) },
       open_in_app: ideaDeepLink(r.slug, ordinal),
     };
   });
 
-  // Não absorvidas primeiro (é o que há pra fazer), depois o mais novo, e
-  // dentro do material a ordem de leitura. O slug desempata dois materiais
-  // publicados no mesmo instante, pra não intercalar as ideias deles.
-  all.sort((a, b) => {
-    if (a.absorbed !== b.absorbed) return a.absorbed ? 1 : -1;
-    const dt = releasedMs(b.released_at) - releasedMs(a.released_at);
-    if (dt !== 0) return dt;
-    if (a.slug !== b.slug) return a.slug < b.slug ? -1 : 1;
-    return a.ordinal - b.ordinal;
-  });
+  const favoritesOnly = opts.favorites_only === true;
 
-  const filtered = opts.status === 'all'
+  if (favoritesOnly) {
+    // "As que eu guardei": a mais recentemente revisada primeiro — é a
+    // ordem em que a pessoa tomou a decisão, não a ordem do catálogo.
+    all.sort((a, b) => {
+      const dt = releasedMs(b.reviewed_at) - releasedMs(a.reviewed_at);
+      if (dt !== 0) return dt;
+      if (a.slug !== b.slug) return a.slug < b.slug ? -1 : 1;
+      return a.ordinal - b.ordinal;
+    });
+  } else {
+    // Não absorvidas primeiro (é o que há pra fazer), depois o mais novo, e
+    // dentro do material a ordem de leitura. O slug desempata dois materiais
+    // publicados no mesmo instante, pra não intercalar as ideias deles.
+    all.sort((a, b) => {
+      if (a.absorbed !== b.absorbed) return a.absorbed ? 1 : -1;
+      const dt = releasedMs(b.released_at) - releasedMs(a.released_at);
+      if (dt !== 0) return dt;
+      if (a.slug !== b.slug) return a.slug < b.slug ? -1 : 1;
+      return a.ordinal - b.ordinal;
+    });
+  }
+
+  // Favorita ⇒ absorvida, então favorites_only já decide o status sozinho
+  // (um status "unabsorbed" junto com ele seria contradição, e a favorita
+  // vence — o index.ts ecoa o status efetivo nos filters).
+  const filtered = favoritesOnly
+    ? all.filter((i) => i.favorite === true)
+    : opts.status === 'all'
     ? all
     : all.filter((i) => i.absorbed === (opts.status === 'absorbed'));
   const page = filtered.slice(0, opts.limit);
@@ -198,6 +252,8 @@ export function assembleIdeas(
   // que o app respeita.
   const materials = new Set(scope.map((r) => r.material_id));
   const absorbed = all.filter((i) => i.absorbed).length;
+  const favorites = all.filter((i) => i.favorite === true).length;
+  const pendingReviews = all.filter((i) => i.absorbed && !i.reviewed).length;
 
   return {
     ideas: page,
@@ -205,6 +261,8 @@ export function assembleIdeas(
       total_ideas: all.length,
       absorbed,
       unabsorbed: all.length - absorbed,
+      favorites,
+      pending_reviews: pendingReviews,
       materials_total: materials.size,
       materials_completed: [...materials].filter((m) => readAt.has(m)).length,
       returned: page.length,

@@ -37,8 +37,8 @@
       "id": "mesmos-dados",
       "ordinal": 2,
       "title": {
-        "pt": "Mesmos dados, dois vereditos opostos.",
-        "en": "Same data, two opposite verdicts."
+        "pt": "Sono extra: mesmos dados, vereditos opostos.",
+        "en": "Extra sleep: same data, opposite verdicts."
       },
       "claim": {
         "pt": "Mesma base britânica: 19% menos doença cardíaca num estudo, benefício nenhum no outro. Compensar só ajuda quem dorme pouco na semana.",
@@ -64,8 +64,8 @@
       "id": "tres-fusos",
       "ordinal": 3,
       "title": {
-        "pt": "Três fusos toda sexta, sem sair de casa.",
-        "en": "Three time zones every Friday, no flight."
+        "pt": "Dormir tarde no sábado: três fusos por semana.",
+        "en": "Late Saturday sleep: three time zones a week."
       },
       "claim": {
         "pt": "Meia-noite às 6h na semana, 2h às 11h no sábado: o relógio anda 3h30. Horário regular previu mortalidade melhor que horas dormidas.",

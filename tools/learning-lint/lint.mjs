@@ -317,7 +317,9 @@ function lintReels(spec, name) {
 // o emit-migration preenche a partir do manifest de mídia):
 //   { slug, type: summary|explainer|news, material_title: {pt,en},
 //     ideas: [{ id: /^[a-z0-9-]{3,40}$/ (IMUTÁVEL, chave da coleta), ordinal: 1..,
-//               title: {pt,en} ≤48 (gancho, nunca o nome do tema),
+//               title: {pt,en} ≤48 (gancho, nunca o nome do tema; da ideia 2 em diante nomeia o
+//                      assunto pra valer sozinho FORA do material — heurística WARN
+//                      idea_title_no_context: sem palavra ≥5 letras em comum com material_title e sem ':'),
 //               claim: {pt,en} alvo ≤120 / teto 140 (uma frase que vale sozinha — é o verso do
 //                      card, lido inteiro no menor card (132px, rail + Minhas ideias); 121-140
 //                      só cabe com a fonte encolhida → WARN; >140 → FAIL),
@@ -328,6 +330,12 @@ const IDEA_BUDGET = { news: { min: 1, max: 1 }, explainer: { min: 1, max: 3 }, s
 const IDEA_HARD_CAP = 5;
 const IDEA_ID_RE = /^[a-z0-9-]{3,40}$/;
 const IDEA_TITLE_MAX = 48;
+// Regra editorial idea_title_no_context: da ideia 2 em diante o título é lido FORA do material
+// (Minhas ideias, Explorar, MCP), então precisa nomear o assunto. Heurística, só WARN: sem
+// nenhuma palavra de ≥5 letras em comum com material_title (caixa/acento indiferentes) e sem
+// ":" (a forma "tema: afirmação" já resolve). A ideia 1 costuma carregar o tema por construção.
+const IDEA_TITLE_CONTEXT_FROM = 2;
+const IDEA_TITLE_CONTEXT_WORD_MIN = 5;
 // Claim = verso do card. 120 é o que cabe inteiro, em fonte cheia, no menor card (132px);
 // o app encolhe a fonte até 0.6x, então 140 ainda cabe — mas é teto, não alvo.
 const IDEA_CLAIM_TARGET = 120, IDEA_CLAIM_MAX = 140;
@@ -351,6 +359,17 @@ function wordCount(s) {
   return (t.match(/\S+/g) || []).length;
 }
 function boldRuns(s) { return (String(s ?? '').match(/\*\*[^*\n]+?\*\*/g) || []).length; }
+// Palavras "de conteúdo" de um título: só letras, sem acento, minúsculas, ≥ N letras
+// ("meio-termo" vira "meio" + "termo"; "sábado" e "Sabado" são a mesma palavra).
+function contentWords(s, min = IDEA_TITLE_CONTEXT_WORD_MIN) {
+  const t = String(s ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+  return new Set((t.match(/\p{L}+/gu) || []).filter((w) => w.length >= min));
+}
+function sharesContentWord(a, b) {
+  const wb = contentWords(b);
+  for (const w of contentWords(a)) if (wb.has(w)) return true;
+  return false;
+}
 function fillerHits(s) {
   const t = String(s ?? '').toLowerCase().replace(/[‘’]/g, "'");
   return FILLER_PHRASES.filter((p) => t.includes(p));
@@ -423,6 +442,9 @@ function lintIdeas(spec, name) {
         if (title.length > IDEA_TITLE_MAX) fail(`title.${loc} has ${title.length} chars (max ${IDEA_TITLE_MAX})`, w(`title.${loc}`));
         const mtl = String(mt[loc] ?? '').trim().toLowerCase();
         if (mtl && title.toLowerCase() === mtl) warn(`title.${loc} equals material_title — needs a hook, not the topic name`, w(`title.${loc}`));
+        // idea_title_no_context (heurística, WARN): fora do material o título tem que nomear o assunto.
+        if (mtl && n >= IDEA_TITLE_CONTEXT_FROM && !title.includes(':') && !sharesContentWord(title, mtl))
+          warn(`idea ${n} title may lose context outside the material (rule: idea_title_no_context) — name the subject or use 'topic: claim'`, w(`title.${loc}`));
       }
 
       const claim = String(idea.claim?.[loc] ?? '').trim();

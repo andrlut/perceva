@@ -45,7 +45,7 @@ and the same JSON echoed back in your reply.
 | `takeaways_pt` / `takeaways_en` | Answer-first recaps — often a claim already half-written. |
 | `source_url`, `source_label_pt/en` | The primary source. |
 | `:::source[label](url)` lines in the body | Additional sources. Together with `source_url`, this is the **entire pool** you may cite. |
-| `learning-drops/reels-specs/<slug>.json` | Three approved curiosity hooks (`reels[].headline.pt/en`). **Reuse them as idea titles whenever they fit the idea** — they were already reviewed by the maintainer. Ledes are useful as tone reference, not as text. |
+| `learning-drops/reels-specs/<slug>.json` | Three approved curiosity hooks (`reels[].headline.pt/en`). **Reuse them as idea titles whenever they fit the idea** — they were already reviewed by the maintainer. A reel headline was read under the material's cover; the idea card is not — from idea 2 on it must also pass non-negotiable 4 (name the subject), so prefix the topic when it does not. Ledes are useful as tone reference, not as text. |
 | `learning-drops/ideas-specs/<slug>.json` (if it exists) | A previous cut. **Keep its `id`s** for ideas that survive (see "ids are immutable"). |
 
 ## How to fetch the material (backfill)
@@ -126,7 +126,21 @@ tools, not one). A thin section can be folded into its neighbour.
 4. **Title = curiosity hook, never the topic name.** ≤ 48 characters. It
    opens a gap without giving the answer. "O contrário de frágil não é
    resistente." Yes. "A tríade de Taleb" No. Never the material's own
-   title. Never ellipsis "…".
+   title. Never ellipsis "…". **From idea 2 onwards the title must stand
+   alone OUTSIDE the material** — in *Minhas ideias*, in Explorar and in
+   the MCP the card sits next to ideas from other materials, with no
+   cover above it — so it names the subject (the topic noun or the
+   mechanism) and never relies on the reader knowing which article it
+   came from. Idea 1 usually carries the topic by construction; for
+   `ordinal ≥ 2` it is mandatory (rule `idea_title_no_context`: the lint
+   WARNs when the title shares no ≥5-letter word with the material title
+   and has no colon; the reviewer judges the meaning). The cheapest
+   shape is "topic: claim", ≤ 48 chars in total — the topic anchors the
+   hook, it does not replace it. Bad "O relógio não corre no trabalho."
+   (which clock?) → good "O relógio da amizade não corre no trabalho."
+   Bad "O meio-termo é o lugar mais arriscado." → good "Antifrágil: o
+   meio-termo é o mais arriscado." Bad "Mesmos dados, dois vereditos
+   opostos." → good "Sono extra: mesmos dados, vereditos opostos."
 5. **Claim ≤ 120 characters target, 140 hard cap, answer-first.** 120 is
    what the card back shows whole, at full font size, on the smallest card
    (the 132px rail). Between 121 and 140 the app shrinks the font (down to
@@ -224,6 +238,9 @@ tools, not one). A thin section can be folded into its neighbour.
 - [ ] count within the type budget and ≤ 5; every idea changes what the
       reader knows; no two overlap
 - [ ] every title ≤ 48 chars, a hook, not the topic, not the material title
+- [ ] every title from idea 2 on names its subject and reads whole
+      outside the material (Minhas ideias, Explorar, MCP) — "topic:
+      claim" if nothing shorter does it; idea 1 ideally too
 - [ ] every claim ≤ 120 chars (140 is the hard cap, not the target — 121-140
       only fits the 132px card with the font shrunk), answer-first,
       meaningful with nothing else on screen

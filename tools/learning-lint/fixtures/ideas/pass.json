@@ -34,8 +34,8 @@
       "id": "mesmos-dados-dois-vereditos",
       "ordinal": 2,
       "title": {
-        "pt": "Mesmos dados, dois vereditos opostos.",
-        "en": "Same data, two opposite verdicts."
+        "pt": "Sono extra: mesmos dados, vereditos opostos.",
+        "en": "Extra sleep: same data, opposite verdicts."
       },
       "claim": {
         "pt": "Dormir pouco na semana e compensar no sábado não encurta a vida; dormir pouco todos os dias, sábado incluído, encurta.",
@@ -62,8 +62,8 @@
       "id": "tres-fusos-toda-sexta",
       "ordinal": 3,
       "title": {
-        "pt": "Três fusos toda sexta, sem sair de casa.",
-        "en": "Three time zones every Friday, at home."
+        "pt": "Sábado até meio-dia é jetlag sem viagem.",
+        "en": "Saturday till noon is jet lag without a trip."
       },
       "claim": {
         "pt": "Acordar três horas mais tarde no sábado é um jetlag sem viagem, e cada hora dele vem com mais peso e pior humor.",

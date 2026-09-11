@@ -35,7 +35,8 @@ maintainer aprova antes de qualquer imagem ser gerada, e é a fonte que
     {
       "id": "acorda-descansado",   // ^[a-z0-9-]{3,40}$ — IMUTÁVEL, chave da coleta
       "ordinal": 1,                // 1..n contíguo; só ele renumera
-      "title": { "pt": "…", "en": "…" },   // ≤ 48 chars, gancho de curiosidade, nunca o nome do tema
+      "title": { "pt": "…", "en": "…" },   // ≤ 48 chars, gancho de curiosidade, nunca o nome do tema;
+                                           // da ideia 2 em diante vale sozinho FORA do material (Minhas ideias, Explorar, MCP): nomeia o assunto — "tema: afirmação" cabe
       "claim": { "pt": "…", "en": "…" },   // alvo ≤ 120 chars (teto duro 140): é o verso do card, lido inteiro num card de 132px
                                            // (rail do material e Minhas ideias); 121-140 só cabe com a fonte encolhida — evitar.
                                            // Resposta primeiro, vale sozinha
@@ -90,4 +91,8 @@ art-director escreve `media-specs/<slug>.json` → `generate.mjs --slug <slug>`
 `tools/learning-lint/lint.mjs --ideas` valida a parte mecânica do contrato
 (contagens, limites, ids, fontes). Rode antes de pedir aprovação. Afirmação
 entre 121 e 140 chars sai como WARN, não como erro — mas não é aprovação:
-aperte a frase em vez de contar com a fonte encolhida.
+aperte a frase em vez de contar com a fonte encolhida. Título de ideia 2+
+sem palavra de ≥5 letras em comum com o título do material e sem
+dois-pontos também sai como WARN (`idea_title_no_context`) — é heurística;
+o que vale é o título nomear o assunto quando o card aparece fora do
+material.
