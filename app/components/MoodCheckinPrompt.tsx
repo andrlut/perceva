@@ -64,9 +64,12 @@ export function MoodCheckinPrompt({ enabled = true }: Props) {
     if (!settings.moodCheckinPrompt) return;
     // BOTH guards are required. Only a SUCCESSFUL fetch can say "no entry
     // yet": in the error state `data` is undefined too, and the old
-    // `isLoading` check let the sheet open over an already-logged day — where
-    // one tap upserts {note: null, tags: null} and wipes the day's journal
-    // (the log_mood upsert is blind: note = excluded.note).
+    // `isLoading` check let the sheet open over an already-logged day. One
+    // tap there used to upsert {note: null, tags: null} and wipe the day's
+    // journal; log_mood now keeps the note and tags on a mood-only call
+    // (migration log_mood_quick_log_keeps_journal), so these guards are
+    // defense in depth — and asking "how was your day" about a day already
+    // answered is wrong on its own.
     if (!today.isSuccess) return;
     if (today.data) return; // already logged today
     const now = new Date();
@@ -83,9 +86,10 @@ export function MoodCheckinPrompt({ enabled = true }: Props) {
       if (!active || shown === todayDateKey()) return;
       // The cached "no entry" can be hours old: this client does not refetch
       // on app foreground, and the day may have been logged since — by voice
-      // through the MCP, or on another device. Opening over it would let one
-      // tap wipe that note. Re-read before opening, and trust only the fresh
-      // answer.
+      // through the MCP, or on another device. Opening over it would ask about
+      // a day already answered (and, before log_mood learned to keep the
+      // journal on a mood-only call, one tap there wiped that note). Re-read
+      // before opening, and trust only the fresh answer.
       const fresh = await refetchToday();
       if (!active || !fresh.isSuccess || fresh.data) return;
       // Home can stay mounted overnight; yesterday's confirmation must not

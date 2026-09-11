@@ -24,10 +24,11 @@
 //     model to resolve or hallucinate. Task completion and skill logs are
 //     deliberately NOT exposed: they mint XP/coins, have no idempotency, and
 //     nothing here could undo a mistake.
-//   - The write does NOT call the log_mood RPC. That RPC upserts blind:
-//     `note = excluded.note, tags = excluded.tags` wipes whatever the app
-//     wrote earlier that day when the model sends only some fields, and its
-//     tag filter drops unknown slugs silently. Both are silent data loss, so
+//   - The write does NOT call the log_mood RPC. That RPC keeps the day's note
+//     and tags only on a mood-ONLY call (the app's quick log); any call that
+//     carries a note or tags replaces both, so a model sending just a note
+//     would wipe the day's tags — and its tag filter drops unknown slugs
+//     silently. Both are silent data loss for a partial write, so
 //     the merge happens here (read → merge → upsert) against the table's own
 //     self_insert/self_update policies. Same doctrine as the read side: RLS
 //     is the boundary, never service_role.
