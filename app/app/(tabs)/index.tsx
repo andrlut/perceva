@@ -1108,7 +1108,13 @@ export default function HomeScreen() {
                 day with open cards must still be loggable, and DaySeal is a
                 statement about what was trained, not a place for a control. */}
             {isToday ? (
-              <MoodHubStrip />
+              // Hidden while a tour step is on screen. M1 step 5 auto-scrolls
+              // to the END so the "Concluídas hoje" drawer settles just above
+              // the tooltip — which only works if the drawer IS the end. With
+              // this card below it, the drawer's resting spot moved with the
+              // card's height, and on a short phone it left the screen. No
+              // tour step targets this card; it returns when the step ends.
+              activeTourStep ? null : <MoodHubStrip />
             ) : (
               <View style={styles.moodDayWrap}>
                 <MoodDayDetail dateKey={selectedKey} />

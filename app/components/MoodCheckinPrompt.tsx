@@ -3,7 +3,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  AccessibilityInfo,
+  Alert,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 import { MoodFace } from '@/components/mood/MoodFace';
 import { MoodFaceRow } from '@/components/mood/MoodFaceRow';
@@ -68,12 +76,18 @@ export function MoodCheckinPrompt({ enabled = true }: Props) {
     let active = true;
     (async () => {
       const shown = await AsyncStorage.getItem(PROMPT_SHOWN_KEY);
-      if (active && shown !== todayDateKey()) {
-        // Home can stay mounted overnight; yesterday's confirmation must not
-        // greet a new day.
-        setJustLogged(null);
-        setVisible(true);
-      }
+      if (!active || shown === todayDateKey()) return;
+      // The cached "no entry" can be hours old: this client does not refetch
+      // on app foreground, and the day may have been logged since — by voice
+      // through the MCP, or on another device. Opening over it would let one
+      // tap wipe that note. Re-read before opening, and trust only the fresh
+      // answer.
+      const fresh = await today.refetch();
+      if (!active || !fresh.isSuccess || fresh.data) return;
+      // Home can stay mounted overnight; yesterday's confirmation must not
+      // greet a new day.
+      setJustLogged(null);
+      setVisible(true);
     })();
     return () => {
       active = false;
@@ -85,6 +99,7 @@ export function MoodCheckinPrompt({ enabled = true }: Props) {
     settings.dayEndMinute,
     today.isSuccess,
     today.data,
+    today.refetch,
   ]);
 
   const stamp = () =>
@@ -92,7 +107,9 @@ export function MoodCheckinPrompt({ enabled = true }: Props) {
 
   const close = () => {
     setVisible(false);
-    void stamp();
+    // Mid-save, the stamp belongs to onSuccess: if the save then fails, the
+    // day stays unstamped and tonight's prompt can come back.
+    if (!logMood.isPending) void stamp();
   };
 
   const handleSelect = (v: MoodValue) => {
@@ -110,6 +127,14 @@ export function MoodCheckinPrompt({ enabled = true }: Props) {
           ).catch(() => {});
           void stamp();
           setJustLogged(v);
+          // The face row that held TalkBack focus is swapped out in place;
+          // say what happened, or a screen-reader user only gets the haptic.
+          const logged = moodLevel(v);
+          AccessibilityInfo.announceForAccessibility(
+            `${t('mood.prompt.savedTitle')} ${t('mood.prompt.savedBody', {
+              level: t(`mood.levels.${logged.key}`).toLowerCase(),
+            })}`,
+          );
         },
         onError: (err) => {
           // Failed = the sheet stays on the faces and does NOT stamp the day.
@@ -306,14 +331,16 @@ const styles = StyleSheet.create({
   },
   ghostBtn: {
     alignSelf: 'center',
-    minHeight: 44,
+    minHeight: 48,
     justifyContent: 'center',
     paddingHorizontal: tokens.space[4],
   },
+  // text.mid, not text.dim: dim on bg.surface measures 3.57:1 dark and 2.55:1
+  // light — and "Pronto" is the only explicit way out of the saved state.
   ghostText: {
     fontFamily: 'Manrope_700Bold',
     fontSize: 13,
-    color: tokens.text.dim,
+    color: tokens.text.mid,
     letterSpacing: 0.3,
   },
   reassure: {
