@@ -90,41 +90,44 @@ export function CalendarSummary({
             <Text style={styles.filtered}>{` · ${t('calendar.summary.filtered')}`}</Text>
           ) : null}
         </Text>
-        {front === 'humor' && (
-          // Correlation reads a rolling 90-day window — a different question
-          // from "how was this month", which is why it stayed its own screen
-          // instead of becoming a fourth front.
-          <Pressable
-            onPress={() => router.push('/insights')}
-            hitSlop={8}
-            style={({ pressed }) => [styles.breakdownBtn, pressed && { opacity: 0.7 }]}
-            accessibilityRole="link"
-            accessibilityLabel={t('calendar.summary.patterns')}
-          >
-            <Text style={styles.breakdownLabel}>{t('calendar.summary.patterns')}</Text>
-            <Ionicons name="chevron-forward" size={13} color={tokens.brand.violet2} />
-          </Pressable>
-        )}
-        {front === 'rotina' && (
-          <Pressable
-            onPress={() => setOpen((v) => !v)}
-            hitSlop={8}
-            style={({ pressed }) => [styles.breakdownBtn, pressed && { opacity: 0.7 }]}
-            accessibilityRole="button"
-            accessibilityState={{ expanded: open }}
-            accessibilityLabel={t('calendar.summary.openBreakdown')}
-          >
-            <Text style={styles.breakdownLabel}>{t('calendar.summary.openBreakdown')}</Text>
-            <Ionicons
-              name={open ? 'chevron-up' : 'chevron-down'}
-              size={13}
-              color={tokens.brand.violet2}
-            />
-          </Pressable>
-        )}
       </View>
 
       <Legend front={front} />
+
+      {/* The links get their own left-aligned 44dp row. At the right end of
+          the context line they were ~13dp tall, and once the day peek pushed
+          this summary down they sat in the resting filter FAB's column, where
+          a tap opened the filter sheet instead. */}
+      {front === 'humor' && (
+        // Correlation reads a rolling 90-day window — a different question
+        // from "how was this month", which is why it stayed its own screen
+        // instead of becoming a fourth front.
+        <Pressable
+          onPress={() => router.push('/insights')}
+          style={({ pressed }) => [styles.linkRow, pressed && { opacity: 0.7 }]}
+          accessibilityRole="link"
+          accessibilityLabel={t('calendar.summary.patterns')}
+        >
+          <Text style={styles.breakdownLabel}>{t('calendar.summary.patterns')}</Text>
+          <Ionicons name="chevron-forward" size={13} color={tokens.brand.violet2} />
+        </Pressable>
+      )}
+      {front === 'rotina' && (
+        <Pressable
+          onPress={() => setOpen((v) => !v)}
+          style={({ pressed }) => [styles.linkRow, pressed && { opacity: 0.7 }]}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: open }}
+          accessibilityLabel={t('calendar.summary.openBreakdown')}
+        >
+          <Text style={styles.breakdownLabel}>{t('calendar.summary.openBreakdown')}</Text>
+          <Ionicons
+            name={open ? 'chevron-up' : 'chevron-down'}
+            size={13}
+            color={tokens.brand.violet2}
+          />
+        </Pressable>
+      )}
 
       {front === 'rotina' && open && (
         <View style={styles.breakdown}>
@@ -221,7 +224,14 @@ const styles = StyleSheet.create({
     color: tokens.text.base,
   },
   filtered: { color: tokens.brand.violet2, fontFamily: 'Manrope_700Bold' },
-  breakdownBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  linkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 4,
+    minHeight: 44,
+    paddingRight: tokens.space[3],
+  },
   breakdownLabel: {
     fontFamily: 'Manrope_700Bold',
     fontSize: 11,

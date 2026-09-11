@@ -29,16 +29,8 @@ import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useMoodTags } from '@/lib/api/mood';
-import {
-  areaSubs,
-  dayMatchesFilter,
-  dimensionOfSub,
-  hasXpScope,
-  practiceInScope,
-  scopedPracticeXp,
-  type CalendarDay,
-  type CalendarFilter,
-} from '@/lib/calendar/filters';
+import { practiceLines } from '@/lib/calendar/dayLines';
+import { dayMatchesFilter, type CalendarDay, type CalendarFilter } from '@/lib/calendar/filters';
 import { frontHasContent } from '@/lib/calendar/paint';
 import type { CalendarFront } from '@/lib/calendar/store';
 import { useT } from '@/lib/i18n';
@@ -157,45 +149,16 @@ export function CalendarListView({ days, front, filter, onSelectDay, locale, sco
     // With an XP scope, a practice that yielded nothing inside it is a line
     // that says nothing — hidden, per this view's own rule (top of file) —
     // and the rest print only their scoped part, so a day's lines add up to
-    // its cell in the month grid.
-    const scoped = hasXpScope(filter);
-    const area = scoped ? areaSubs(filter) : null;
-    // The rail takes the dimension of the practice's OWN sub that yielded the
-    // most XP inside the scope. Picking "the first of its dimensions whose
-    // catalog touches the scope" painted a Força line in Saúde's color when
-    // the practice had Sono (out of scope) and Força (in scope).
-    const railDim = (p: CalendarDay['practices'][number]) => {
-      if (area) {
-        let best: (typeof p.subs)[number] | null = null;
-        let bestXp = -1;
-        for (const s of p.subs) {
-          if (!area.has(s)) continue;
-          const x = p.xpBySub[s] ?? 0;
-          if (x > bestXp) {
-            best = s;
-            bestXp = x;
-          }
-        }
-        const dim = best ? dimensionOfSub(best) : undefined;
-        if (dim) return dim;
-      }
-      return p.dims.length > 0 ? p.dims[0] : null;
-    };
-    return [...day.practices]
-      .filter((p) => !scoped || practiceInScope(p, filter, area))
-      .sort((a, b) => b.at.localeCompare(a.at))
-      .map((p) => {
-        const dim = railDim(p);
-        const xp = scoped ? scopedPracticeXp(p, filter, area) : p.xp;
-        return {
-          key: `${day.dateKey}-${p.taskId}`,
-          rail: dim ? DIMENSION_META[dim].color : tokens.brand.violet2,
-          label: p.title,
-          count: p.count,
-          trailing: xp > 0 ? `+${xp}` : undefined,
-          trailingColor: tokens.semantic.xp,
-        };
-      });
+    // its cell in the month grid. The day peek prints the same lines
+    // (lib/calendar/dayLines.ts), so the two readings cannot drift apart.
+    return practiceLines(day, filter).map((l) => ({
+      key: l.key,
+      rail: l.dim ? DIMENSION_META[l.dim].color : tokens.brand.violet2,
+      label: l.title,
+      count: l.count,
+      trailing: l.xp > 0 ? `+${l.xp}` : undefined,
+      trailingColor: tokens.semantic.xp,
+    }));
   };
 
   const renderDay = (day: CalendarDay) => {

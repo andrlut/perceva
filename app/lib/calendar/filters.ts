@@ -111,6 +111,12 @@ export interface CalendarDay {
   mood: MoodValue | null;
   /** The mood entry carries a written note. */
   hasNote: boolean;
+  /**
+   * The note itself, trimmed; null when there is none. It rides on the same
+   * mood_log row the feed already reads (`select('*')`), so it costs no
+   * request — only the day peek's Humor reading prints it.
+   */
+  note: string | null;
   /** Mood tag ids on the entry (emotion + context alike). */
   tagIds: string[];
   practices: CalendarPractice[];
@@ -242,6 +248,20 @@ export function scopedPracticeXp(
 }
 
 /**
+ * XP this practice yielded OUTSIDE the scope — the complement of
+ * `scopedPracticeXp`, so a day's scoped and outside parts add up to its whole
+ * XP exactly (every point lands on one side). The clamp only guards
+ * inconsistent data: per-sub rows summing past their completion's total.
+ */
+export function outsideScopeXp(
+  p: CalendarPractice,
+  f: CalendarFilter,
+  area: Set<SubId> | null = areaSubs(f),
+): number {
+  return Math.max(0, p.xp - scopedPracticeXp(p, f, area));
+}
+
+/**
  * The day's XP inside the scope — what every XP figure on the screen prints.
  * Without a scope this is `day.xp`, bit for bit: no filter, and filters on
  * mood, tags or rewards, render exactly as they always did.
@@ -333,6 +353,17 @@ export function dayMatchesFilter(day: CalendarDay, f: CalendarFilter): boolean {
     return false;
   }
   return true;
+}
+
+/**
+ * The grid's dimming rule, in one place for every surface that marks a day
+ * "outside the filter": with any facet on, a day passes only when the feed has
+ * it AND it matches — a day absent from the feed logged nothing, so it fails an
+ * active filter, the same positive-assertion reading `dayMatchesFilter` gives
+ * every facet. With no facet on, every day passes.
+ */
+export function dayPassesFilter(day: CalendarDay | undefined, f: CalendarFilter): boolean {
+  return !isFilterActive(f) || (!!day && dayMatchesFilter(day, f));
 }
 
 /** Toggle one value inside a facet array — the sheet's only mutation shape. */

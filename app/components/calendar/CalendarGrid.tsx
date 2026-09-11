@@ -5,8 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MoodMouth } from '@/components/mood/MoodMouth';
 import { dateKeyFromLocal } from '@/lib/api/history';
 import {
-  dayMatchesFilter,
-  isFilterActive,
+  dayPassesFilter,
   scopedXp,
   type CalendarDay,
   type CalendarFilter,
@@ -90,7 +89,6 @@ export function CalendarGrid({
   const rows = useMemo(() => buildMonthRows(monthDate, weekStart), [monthDate, weekStart]);
   const todayKey = dateKeyFromLocal(new Date());
   const now = Date.now();
-  const filtering = isFilterActive(filter);
 
   // The catalog stores the seven initials Sunday-first (it also feeds the
   // recurrence day picker); rotate when the user starts weeks on Monday.
@@ -163,7 +161,7 @@ export function CalendarGrid({
             const xp = day ? scopedXp(day, filter) : 0;
             const paint = paintForFront(day, front, reference, xp);
             const isFuture = cell.getTime() > now;
-            const matched = !filtering || (!!day && dayMatchesFilter(day, filter));
+            const matched = dayPassesFilter(day, filter);
             const isSelected = key === selectedKey;
             const isToday = key === todayKey;
 

@@ -13,13 +13,14 @@ import {
   useDayDetail,
 } from '@/lib/api/history';
 import { useActiveTasks } from '@/lib/api/tasks';
+import type { DayPanelTarget } from '@/lib/calendar/dayLines';
 import type { CalendarRedemption } from '@/lib/calendar/filters';
 import type { CalendarFront } from '@/lib/calendar/store';
 import type { TaskSub, TaskWithSubs } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import type { WeekStart } from '@/lib/settings';
 import { tokens } from '@/theme';
-import { useMemo } from 'react';
+import { useMemo, type RefObject } from 'react';
 
 /**
  * The day panel — **the same three blocks on every front.**
@@ -40,6 +41,15 @@ import { useMemo } from 'react';
  * the list of practices still open on a day is an operational one. Hiding an
  * open practice because a chip is set would read as a missing task, not as a
  * filtered view.
+ *
+ * **Two things live outside this panel on purpose.** The Concluídas drawer's
+ * open state belongs to the screen (`useCalendarStore.doneOpen`): this subtree
+ * swaps its practices block for a spinner on every uncached day, which
+ * unmounted the drawer and re-collapsed it on every day he stepped to. And the
+ * big XP number takes the month feed's figure (`feedXp`) while this panel's own
+ * read is in flight, so an uncached day shows its number on the same frame as
+ * the tap; once the read lands it wins, because the Concluídas rows under the
+ * number come from it — after an undo the two always agree.
  */
 
 interface Props {
@@ -64,6 +74,23 @@ interface Props {
    * DayXpStat is shared with the Home header.
    */
   scoped?: { xp: number; label: string };
+  /**
+   * The day's whole XP from the month feed (null while the feed is not ready)
+   * — the stand-in while this panel's own read is in flight. See the note at
+   * the top.
+   */
+  feedXp: number | null;
+  /** Concluídas open or closed — owned by the screen, see the note at the top. */
+  doneOpen: boolean;
+  onDoneToggle: (open: boolean) => void;
+  /**
+   * Scroll anchors for the day peek's "Abrir o dia completo"; the screen
+   * measures them at press time. `done` is the "Ver todas" button: Concluídas
+   * always renders right below it, so the shared drawer never gets wrapped.
+   */
+  targets: Record<DayPanelTarget, RefObject<View | null>>;
+  /** An anchor was laid out — lets a scroll that was waiting on it finish. */
+  onTargetLayout: (target: DayPanelTarget) => void;
 }
 
 export function CalendarDayPanel({
@@ -80,6 +107,11 @@ export function CalendarDayPanel({
   onEdit,
   onUndo,
   scoped,
+  feedXp,
+  doneOpen,
+  onDoneToggle,
+  targets,
+  onTargetLayout,
 }: Props) {
   const { t } = useT();
   const router = useRouter();
@@ -94,6 +126,10 @@ export function CalendarDayPanel({
     [activeTasks.data],
   );
 
+  // The day query wins once it has this day (no placeholder data, so `data` is
+  // this day's or nothing): the number then adds up to the rows below it.
+  const totalXp = day.data ? day.data.totalXp : (feedXp ?? 0);
+
   // useDayDetail already applies the shared isOpenOnDay rule, so this is the
   // only judgement left to this surface: one-shots live behind "all practices".
   const open = (day.data?.openTasks ?? []).filter((task) => task.recurrence.type !== 'one_shot');
@@ -107,7 +143,7 @@ export function CalendarDayPanel({
   return (
     <View>
       <View style={styles.xpWrap}>
-        <DayXpStat xp={day.data?.totalXp ?? 0} isToday={isToday} />
+        <DayXpStat xp={totalXp} isToday={isToday} />
         {scoped ? (
           <Text style={styles.scopedXp}>
             {t('calendar.scope.xpIn', { xp: scoped.xp, area: scoped.label })}
@@ -115,16 +151,23 @@ export function CalendarDayPanel({
         ) : null}
       </View>
 
-      <SectionHeader label={t('calendar.day.mood')} active={front === 'humor'} />
+      <SectionHeader
+        label={t('calendar.day.mood')}
+        active={front === 'humor'}
+        anchorRef={targets.mood}
+        onLayout={() => onTargetLayout('mood')}
+      />
       <MoodDayDetail dateKey={dayKey} />
 
       <SectionHeader
         label={
-          (day.data?.totalXp ?? 0) > 0
-            ? t('calendar.day.practicesXp', { xp: day.data?.totalXp ?? 0 })
+          totalXp > 0
+            ? t('calendar.day.practicesXp', { xp: totalXp })
             : t('calendar.day.practices')
         }
         active={front === 'rotina'}
+        anchorRef={targets.practices}
+        onLayout={() => onTargetLayout('practices')}
       />
       {day.isLoading ? (
         <View style={styles.loading}>
@@ -160,6 +203,9 @@ export function CalendarDayPanel({
           )}
 
           <Pressable
+            ref={targets.done}
+            collapsable={false}
+            onLayout={() => onTargetLayout('done')}
             onPress={() => router.push({ pathname: '/all-practices', params: { date: dayKey } })}
             style={({ pressed }) => [styles.seeAll, pressed && { opacity: 0.7 }]}
             accessibilityRole="button"
@@ -171,6 +217,8 @@ export function CalendarDayPanel({
           <CompletedBucket
             items={doneItems}
             title={isToday ? t('home.completedBucket.today') : t('home.completedBucket.day')}
+            open={doneOpen}
+            onToggle={onDoneToggle}
             onUndo={(completionId) => {
               const c = day.data?.completions.find((x) => x.id === completionId);
               onUndo(completionId, c?.taskTitle ?? '', c?.xpGranted ?? 0, c?.coinsGranted ?? 0);
@@ -186,7 +234,12 @@ export function CalendarDayPanel({
         </View>
       )}
 
-      <SectionHeader label={t('calendar.day.rewards')} active={front === 'vault'} />
+      <SectionHeader
+        label={t('calendar.day.rewards')}
+        active={front === 'vault'}
+        anchorRef={targets.rewards}
+        onLayout={() => onTargetLayout('rewards')}
+      />
       <View style={styles.rewards}>
         {redemptions.length === 0 ? (
           <Text style={styles.empty}>{t('calendar.day.noRewards')}</Text>
@@ -227,10 +280,23 @@ export function CalendarDayPanel({
  * The only thing the active front changes down here. A rail or a tinted card
  * would nest a card inside a card — `MoodDayDetail` and `CompletedBucket` each
  * draw their own — so the accent lives on the header instead.
+ *
+ * It doubles as a scroll anchor for the day peek (`anchorRef`); collapsable is
+ * off so Android keeps a native view there to measure.
  */
-function SectionHeader({ label, active }: { label: string; active: boolean }) {
+function SectionHeader({
+  label,
+  active,
+  anchorRef,
+  onLayout,
+}: {
+  label: string;
+  active: boolean;
+  anchorRef?: RefObject<View | null>;
+  onLayout?: () => void;
+}) {
   return (
-    <View style={styles.sectionHeader}>
+    <View ref={anchorRef} collapsable={false} onLayout={onLayout} style={styles.sectionHeader}>
       {active && <View style={styles.activeDot} />}
       <Text style={[styles.sectionLabel, active && styles.sectionLabelActive]}>{label}</Text>
     </View>

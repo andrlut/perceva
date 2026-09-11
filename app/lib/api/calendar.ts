@@ -128,6 +128,7 @@ function blankDay(dateKey: string): CalendarDay {
     xpByDim: {},
     mood: null,
     hasNote: false,
+    note: null,
     tagIds: [],
     practices: [],
     redemptions: [],
@@ -271,7 +272,11 @@ export function useCalendarRange(
       for (const row of (moods.data ?? []) as MoodLog[]) {
         const day = dayFor(row.logged_for);
         day.mood = row.mood as MoodValue;
-        day.hasNote = !!row.note && row.note.trim().length > 0;
+        // hasNote keeps its meaning (a non-blank note); the text itself now
+        // rides along for the day peek — same row, no extra read.
+        const note = row.note?.trim() ?? '';
+        day.hasNote = note.length > 0;
+        day.note = note.length > 0 ? note : null;
         day.tagIds = row.tags ?? [];
       }
 

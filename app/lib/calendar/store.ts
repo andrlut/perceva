@@ -53,6 +53,18 @@ interface CalendarState {
   taskLabels: Record<string, string>;
   /** Reward id → title, captured on select. Same reasoning as `taskLabels`. */
   rewardLabels: Record<string, string>;
+  /**
+   * The day panel's Concluídas drawer, open or closed, for the session.
+   *
+   * It lives here and not in the drawer because the panel swaps its practices
+   * block for a spinner on every uncached day, which unmounted the drawer and
+   * threw its state away — it re-collapsed on every day he stepped to. Default
+   * closed: the day peek under the grid is the reading surface, and the drawer
+   * is where undo and +1 live. "Abrir o dia completo" opens it, and it stays
+   * open from day to day after that. Same lifetime as the filter; not persisted.
+   */
+  doneOpen: boolean;
+  setDoneOpen: (open: boolean) => void;
   setFront: (front: CalendarFront) => void;
   setView: (view: CalendarView) => void;
   toggleMood: (mood: MoodValue) => void;
@@ -74,6 +86,8 @@ export const useCalendarStore = create<CalendarState>((set) => ({
   filter: EMPTY_FILTER,
   taskLabels: {},
   rewardLabels: {},
+  doneOpen: false,
+  setDoneOpen: (doneOpen) => set({ doneOpen }),
   setFront: (front) => set({ front }),
   setView: (view) => set({ view }),
   toggleMood: (mood) =>
