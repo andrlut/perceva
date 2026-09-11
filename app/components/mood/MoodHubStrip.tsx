@@ -12,10 +12,19 @@ import { tokens } from '@/theme';
 
 /**
  * Journal entry point ON the Today Hub — "marcar e ver onde o dia acontece".
- * Unlogged: the question + the 5-face row; one tap logs instantly (same
- * quick path as the evening prompt). Logged: the day's face + level and an
- * edit affordance; when the entry has no tags/note yet, the subline nudges
- * "adicionar detalhes". Either state opens the full check-in on press.
+ *
+ * Two ways in, and neither may make the other more expensive:
+ *   - QUICK: one tap on a face logs the day. Still one tap.
+ *   - FULL: a real, labelled, full-width button to the check-in screen,
+ *     where the tags and the note live. It never disappears — before the
+ *     log it offers the full check-in, after it offers tags and a note.
+ *
+ * Why the button: the full path used to be a 12px text link in the header
+ * (a ~32dp target) and, once logged, a chevron plus a 12px nudge. The face
+ * row vanishing on log read as "it closed on me", and the only door left to
+ * the tags and note was that small text — which, as the last card on Home,
+ * also sat under the floating buttons.
+ *
  * Deliberately quiet — no XP, no streak, matching the mood system's rule.
  */
 export function MoodHubStrip() {
@@ -57,19 +66,7 @@ export function MoodHubStrip() {
     };
     return (
       <View style={styles.card}>
-        <View style={styles.headerRow}>
-          <Text style={styles.eyebrow}>{t('mood.prompt.title')}</Text>
-          <Pressable
-            onPress={openCheckin}
-            style={({ pressed }) => [styles.linkBtn, pressed && { opacity: 0.6 }]}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel={t('mood.prompt.writeMore')}
-          >
-            <Text style={styles.linkText}>{t('mood.prompt.writeMore')}</Text>
-            <Ionicons name="chevron-forward" size={12} color={tokens.brand.violet2} />
-          </Pressable>
-        </View>
+        <Text style={styles.eyebrow}>{t('mood.prompt.title')}</Text>
         <View style={[logMood.isPending && { opacity: 0.5 }]}>
           <MoodFaceRow
             value={null}
@@ -78,6 +75,11 @@ export function MoodHubStrip() {
             showLabels={false}
           />
         </View>
+        <FullCheckinButton
+          icon="create-outline"
+          label={t('mood.cta.full')}
+          onPress={openCheckin}
+        />
       </View>
     );
   }
@@ -85,21 +87,12 @@ export function MoodHubStrip() {
   const level = moodLevel(entry.mood);
   const hasDetails =
     (entry.tags?.length ?? 0) > 0 || (entry.note?.trim().length ?? 0) > 0;
-  // An explicit label on an accessible container SUPPRESSES the flattened
-  // child text — a bare "Editar" would hide the logged mood from TalkBack,
-  // so the label composes the full state the sighted user sees.
-  const loggedA11yLabel = [
-    `${t('mood.todayCard.eyebrow')}: ${t(`mood.levels.${level.key}`)}`,
-    hasDetails ? t('mood.day.edit') : t('mood.hub.addDetails'),
-  ].join('. ');
 
+  // Plain View, not a Pressable: with a real button inside, a pressable
+  // container with its own accessibilityLabel would flatten the button away
+  // from TalkBack. Here the row is read as text and the button as a button.
   return (
-    <Pressable
-      onPress={openCheckin}
-      style={({ pressed }) => [styles.card, pressed && { opacity: 0.85 }]}
-      accessibilityRole="button"
-      accessibilityLabel={loggedA11yLabel}
-    >
+    <View style={styles.card}>
       <View style={styles.loggedRow}>
         <MoodFace value={level.value} size={38} active />
         <View style={styles.loggedBody}>
@@ -110,12 +103,41 @@ export function MoodHubStrip() {
               {t(`mood.levels.${level.key}`).toLowerCase()}
             </Text>
           </Text>
-          {!hasDetails && (
-            <Text style={styles.detailsNudge}>{t('mood.hub.addDetails')}</Text>
-          )}
         </View>
-        <Ionicons name="chevron-forward" size={16} color={tokens.brand.violet2} />
       </View>
+      <FullCheckinButton
+        icon={hasDetails ? 'create-outline' : 'add-circle-outline'}
+        label={hasDetails ? t('mood.cta.editTagsNote') : t('mood.cta.addTagsNote')}
+        onPress={openCheckin}
+      />
+    </View>
+  );
+}
+
+/**
+ * The way into the full check-in. Full width and 52dp tall on purpose: even
+ * while the card scrolls past the floating stack on the right, most of the
+ * button stays clear of it — and the Home scroll now reserves the stack's
+ * height, so at the end of the list the whole card sits above it.
+ */
+function FullCheckinButton({
+  icon,
+  label,
+  onPress,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.fullBtn, pressed && { opacity: 0.75 }]}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+    >
+      <Ionicons name={icon} size={18} color={tokens.brand.violet2} />
+      <Text style={styles.fullBtnText}>{label}</Text>
     </Pressable>
   );
 }
@@ -131,28 +153,12 @@ const styles = StyleSheet.create({
     borderColor: tokens.border.base,
     gap: tokens.space[3],
   },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
   eyebrow: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 10,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
     color: tokens.text.dim,
-  },
-  linkBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-  },
-  linkText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
-    color: tokens.brand.violet2,
-    letterSpacing: 0.2,
   },
   loggedRow: {
     flexDirection: 'row',
@@ -174,9 +180,26 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_800ExtraBold',
     color: tokens.text.hi,
   },
-  detailsNudge: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
+  // Tinted surface + strong rim + violet label. violet2 on surface2 measures
+  // 4.60:1 in the dark theme and 5.81:1 in the light one — both clear AA for
+  // 14px text. A FILLED violet button was ruled out: brand.violet measures
+  // 4.36:1 with white in the dark theme.
+  fullBtn: {
+    minHeight: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: tokens.space[3],
+    borderRadius: tokens.radius.md,
+    borderWidth: 1,
+    borderColor: tokens.border.strong,
+    backgroundColor: tokens.bg.surface2,
+  },
+  fullBtnText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 14,
+    letterSpacing: 0.2,
     color: tokens.brand.violet2,
   },
 });

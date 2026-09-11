@@ -14,7 +14,7 @@ import { CalendarGrid } from '@/components/calendar/CalendarGrid';
 import { CalendarListView } from '@/components/calendar/CalendarListView';
 import { CalendarSummary } from '@/components/calendar/CalendarSummary';
 import { CompleteTaskSheet } from '@/components/CompleteTaskSheet';
-import { FabStack } from '@/components/FabStack';
+import { FabStack, fabStackClearance, type FabSize } from '@/components/FabStack';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { TaskActionSheet } from '@/components/TaskActionSheet';
@@ -95,6 +95,12 @@ function isSameMonth(a: Date, b: Date): boolean {
 
 const VALID_DIMS = new Set<string>(DIMENSION_ORDER);
 const VALID_SUBS = new Set<string>(Object.keys(SUB_META));
+
+/** The filter FAB's size. The scroll reserves exactly its height
+ *  (fabStackClearance = 72 for one lg) — this screen had that `+ 72` by hand
+ *  long before the helper existed, and was the only one that got it right. */
+const FILTER_FAB_SIZE: FabSize = 'lg';
+const HISTORY_FAB_CLEARANCE = fabStackClearance([FILTER_FAB_SIZE]);
 
 export default function CalendarScreen() {
   const { t, locale } = useT();
@@ -447,7 +453,7 @@ export default function CalendarScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <ScreenBackground>
         <ScrollView
-          contentContainerStyle={[styles.content, { paddingBottom: bottomClearance + 72 }]}
+          contentContainerStyle={[styles.content, { paddingBottom: bottomClearance + HISTORY_FAB_CLEARANCE }]}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
@@ -630,7 +636,7 @@ export default function CalendarScreen() {
               setFilterOpen(true);
             },
             accessibilityLabel: t('calendar.filter.open'),
-            size: 'lg',
+            size: FILTER_FAB_SIZE,
             tone: 'violet',
             wrap: (node) => (
               <View>

@@ -112,6 +112,11 @@ export default function MoodCheckinScreen() {
   // `useKeyboardOverlap`; switching this one to match would open a dead gap the
   // size of the navigation bar between the Save button and the keyboard.
   const keyboardHeight = useKeyboardHeight();
+  // True while the note has focus — gates the caret-follow scroll below.
+  const [noteFocused, setNoteFocused] = useState(false);
+  // Caret position and last measured height of the note, for the same.
+  const noteSelEnd = useRef<number | null>(null);
+  const noteHeight = useRef(0);
 
   const savedMood = (day.data?.mood ?? null) as MoodValue | null;
   const savedNote = day.data?.note ?? '';
@@ -359,17 +364,51 @@ export default function MoodCheckinScreen() {
                   </View>
                 )}
 
-                <View style={styles.noteCard}>
-                  <TextInput
-                    value={note}
-                    onChangeText={setNoteDraft}
-                    placeholder={t('mood.notePlaceholder')}
-                    placeholderTextColor={tokens.text.faint}
-                    style={styles.noteInput}
-                    multiline
-                    textAlignVertical="top"
-                    maxLength={2000}
-                  />
+                {/* A label, like every other multiline in the app: without
+                    one the field read as an optional footer, not as the
+                    place to write about the day. */}
+                <View style={styles.tagsSection}>
+                  <Text style={styles.tagsLabel}>
+                    {t('mood.noteLabel')}{' '}
+                    <Text style={styles.tagsOptional}>{t('mood.tagsOptional')}</Text>
+                  </Text>
+                  <View style={styles.noteCard}>
+                    <TextInput
+                      value={note}
+                      onChangeText={setNoteDraft}
+                      onFocus={() => setNoteFocused(true)}
+                      onBlur={() => setNoteFocused(false)}
+                      onSelectionChange={(e) => {
+                        noteSelEnd.current = e.nativeEvent.selection.end;
+                      }}
+                      // Follow the caret while the note GROWS at its end. The
+                      // keyboard effect above runs once, when the keyboard
+                      // opens; after that nothing re-scrolled as the input grew
+                      // line by line. Scoped to THIS input so chips resizing
+                      // can't trigger it, only when the height grew, and only
+                      // with the caret at the end — a mid-text edit is left to
+                      // the platform, which already keeps its caret on screen
+                      // (following there would yank the view off the caret).
+                      onContentSizeChange={(e) => {
+                        const h = e.nativeEvent.contentSize.height;
+                        const grew = h > noteHeight.current;
+                        noteHeight.current = h;
+                        if (!grew || !noteFocused || keyboardHeight <= 0) return;
+                        const end = noteSelEnd.current;
+                        if (end !== null && end < note.length - 1) return;
+                        scrollRef.current?.scrollToEnd({ animated: false });
+                      }}
+                      placeholder={t('mood.notePlaceholder')}
+                      placeholderTextColor={tokens.text.faint}
+                      style={styles.noteInput}
+                      multiline
+                      // Growth goes to the parent scroll, which follows the
+                      // caret (onContentSizeChange) — the two ship together.
+                      scrollEnabled={false}
+                      textAlignVertical="top"
+                      maxLength={2000}
+                    />
+                  </View>
                 </View>
               </Animated.View>
             )}
@@ -505,15 +544,19 @@ const styles = StyleSheet.create({
   contextGroups: {
     gap: tokens.space[3],
   },
+  // One step up the text ramp for both. The screen's ground is a gradient that
+  // ends on bg.deep, and at the bottom — where the note label sits once the
+  // keyboard opens — text.mid measured 4.31:1 in the light theme and the
+  // text.dim suffix 2.33:1. Shared by the emotion, context and note labels.
   tagsLabel: {
     fontFamily: 'Manrope_700Bold',
     fontSize: 13,
-    color: tokens.text.mid,
+    color: tokens.text.base,
   },
   tagsOptional: {
     fontFamily: 'Manrope_500Medium',
     fontSize: 12,
-    color: tokens.text.dim,
+    color: tokens.text.mid,
   },
   noteCard: {
     borderRadius: tokens.radius.md,
@@ -527,7 +570,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 21,
     color: tokens.text.hi,
-    minHeight: 96,
+    // ~7 lines. Not more: with the label, 168 overflows the visible band
+    // above an open keyboard on a 640dp phone (220 > 211); 152 fits.
+    minHeight: 152,
   },
   reassureRow: {
     flexDirection: 'row',

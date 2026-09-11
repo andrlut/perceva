@@ -2244,6 +2244,7 @@ const pt: Translations = {
       great: 'Ótimo',
     },
     notePlaceholder: 'Quer contar mais? (opcional)',
+    noteLabel: 'Escreva sobre o dia',
     noScore: 'sem XP · sem streak · sem cobrança',
     save: 'Salvar',
     saving: 'Salvando…',
@@ -2264,8 +2265,10 @@ const pt: Translations = {
     tagsOptional: 'opcional',
     showAllTags: 'Ver todos ({{count}})',
     showFewerTags: 'Ver menos',
-    hub: {
-      addDetails: 'Adicionar detalhes',
+    cta: {
+      full: 'Registrar com tags e nota',
+      addTagsNote: 'Adicionar tags e nota',
+      editTagsNote: 'Editar tags e nota',
     },
     history: {
       title: 'Como me senti',
@@ -2279,8 +2282,10 @@ const pt: Translations = {
     },
     prompt: {
       title: 'Como foi seu dia?',
-      writeMore: 'Escrever mais',
       notNow: 'Agora não',
+      savedTitle: 'Anotado.',
+      savedBody: 'Você se sentiu {{level}}. Quer contar mais?',
+      done: 'Pronto',
     },
   },
 

@@ -34,7 +34,7 @@ import { StoreUpdateCard } from '@/components/StoreUpdateCard';
 import { TaskActionSheet } from '@/components/TaskActionSheet';
 import { TaskCard } from '@/components/TaskCard';
 import { WeekStrip } from '@/components/WeekStrip';
-import { TasksFabStack } from '@/components/TasksFabStack';
+import { TASKS_FAB_CLEARANCE, TasksFabStack } from '@/components/TasksFabStack';
 import { TodayAmbient } from '@/components/TodayAmbient';
 import { TodayHeader } from '@/components/TodayHeader';
 import { XPCoinFloat } from '@/components/XPCoinFloat';
@@ -220,7 +220,12 @@ export default function HomeScreen() {
           (tourCardHeight ?? 0) + 24,
         )
       : 0;
-  const bottomClearance = navClearance + tourBottomBump;
+  // The scroll must end ABOVE the floating stack, or its last card (the mood
+  // check-in) sits under the buttons. `max`, not sum: every bottom tooltip
+  // gap (160/245+) already clears the 128px stack, and summing would push
+  // the M1 step 5 drawer out of the spot its auto-scroll was calibrated to.
+  const bottomClearance =
+    navClearance + Math.max(tourBottomBump, TASKS_FAB_CLEARANCE);
   const isM1Current = useIsCurrentTourModule('M1');
   // M1 step 5 targets the "Concluídas hoje" drawer at the very end of
   // the scroll — track the step index so the auto-scroll effect below
@@ -1103,7 +1108,13 @@ export default function HomeScreen() {
                 day with open cards must still be loggable, and DaySeal is a
                 statement about what was trained, not a place for a control. */}
             {isToday ? (
-              <MoodHubStrip />
+              // Hidden while a tour step is on screen. M1 step 5 auto-scrolls
+              // to the END so the "Concluídas hoje" drawer settles just above
+              // the tooltip — which only works if the drawer IS the end. With
+              // this card below it, the drawer's resting spot moved with the
+              // card's height, and on a short phone it left the screen. No
+              // tour step targets this card; it returns when the step ends.
+              activeTourStep ? null : <MoodHubStrip />
             ) : (
               <View style={styles.moodDayWrap}>
                 <MoodDayDetail dateKey={selectedKey} />
