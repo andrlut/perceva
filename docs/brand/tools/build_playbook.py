@@ -126,6 +126,10 @@ RESEARCH_HTML = '\n'.join(
 
 tpl = read(os.path.join(HERE, 'template.html'))
 out = tpl.replace('<!--@SPINE-->', SPINE_HTML).replace('<!--@DOCS-->', DOCS_HTML).replace('<!--@RESEARCH-->', RESEARCH_HTML)
+# Bulletproof against any viewer/server that ignores the charset: everything after the
+# main <style> block becomes ASCII with numeric entities (CSS stays raw so content:"..." works).
+head, sep, rest = out.partition('</style>')
+out = head + sep + rest.encode('ascii', 'xmlcharrefreplace').decode('ascii')
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 with open(OUT, 'w', encoding='utf-8') as f:
     f.write(out)
