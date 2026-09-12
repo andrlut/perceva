@@ -1,0 +1,425 @@
+<title>Playbook Perceva</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@500;600;700;800&display=swap">
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#0A0E26; --bg2:#0D1230; --surface:#141A3C; --surface2:#1A2149; --line:#272E5A; --line2:#343C6E;
+  --text:#ECEAF6; --text2:#C2BFD9; --dim:#918EAD;
+  --violet:#7B5CFF; --violet2:#9B82FF; --violet-text:#AFA0FF; --violet-deep:#4B2FCC; --violet-glow:rgba(123,92,255,.28);
+  --gold:#FFE08A; --gold2:#E8B04B; --gold-deep:#C8881C;
+  --ok:#3FB88C; --warn:#F0973E; --bad:#F06565;
+  --d-health:#F06565; --d-body:#F0973E; --d-mind:#B57BF0; --d-wealth:#E8B04B; --d-bonds:#4BB4E8; --d-craft:#3FB88C;
+  --shadow:0 18px 50px rgba(3,5,20,.55);
+  --display:'Fraunces',Georgia,'Times New Roman',serif;
+  --sans:'Manrope','Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,'Cascadia Code',Consolas,monospace;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    color-scheme:light;
+    --bg:#F4F2FA; --bg2:#ECEAF6; --surface:#FFFFFF; --surface2:#F7F5FC; --line:#DAD6EC; --line2:#C6C1E3;
+    --text:#15142B; --text2:#3D3B5C; --dim:#6B6889;
+    --violet:#5A3FE0; --violet2:#4B2FCC; --violet-text:#4B2FCC; --violet-deep:#3A22A8; --violet-glow:rgba(90,63,224,.16);
+    --gold:#8A5E0A; --gold2:#A56F10; --gold-deep:#8A5E0A;
+    --ok:#1F8F65; --warn:#B8621B; --bad:#C43C3C;
+    --d-health:#D94A4A; --d-body:#C97516; --d-mind:#8A52D6; --d-wealth:#B07A16; --d-bonds:#2D8DBF; --d-craft:#249A72;
+    --shadow:0 14px 40px rgba(40,30,90,.14);
+  }
+}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#F4F2FA; --bg2:#ECEAF6; --surface:#FFFFFF; --surface2:#F7F5FC; --line:#DAD6EC; --line2:#C6C1E3;
+  --text:#15142B; --text2:#3D3B5C; --dim:#6B6889;
+  --violet:#5A3FE0; --violet2:#4B2FCC; --violet-text:#4B2FCC; --violet-deep:#3A22A8; --violet-glow:rgba(90,63,224,.16);
+  --gold:#8A5E0A; --gold2:#A56F10; --gold-deep:#8A5E0A;
+  --ok:#1F8F65; --warn:#B8621B; --bad:#C43C3C;
+  --d-health:#D94A4A; --d-body:#C97516; --d-mind:#8A52D6; --d-wealth:#B07A16; --d-bonds:#2D8DBF; --d-craft:#249A72;
+  --shadow:0 14px 40px rgba(40,30,90,.14);
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0A0E26; --bg2:#0D1230; --surface:#141A3C; --surface2:#1A2149; --line:#272E5A; --line2:#343C6E;
+  --text:#ECEAF6; --text2:#C2BFD9; --dim:#918EAD;
+  --violet:#7B5CFF; --violet2:#9B82FF; --violet-text:#AFA0FF; --violet-deep:#4B2FCC; --violet-glow:rgba(123,92,255,.28);
+  --gold:#FFE08A; --gold2:#E8B04B; --gold-deep:#C8881C;
+  --ok:#3FB88C; --warn:#F0973E; --bad:#F06565;
+  --d-health:#F06565; --d-body:#F0973E; --d-mind:#B57BF0; --d-wealth:#E8B04B; --d-bonds:#4BB4E8; --d-craft:#3FB88C;
+  --shadow:0 18px 50px rgba(3,5,20,.55);
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--text);font:500 16px/1.6 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:var(--violet-text);text-decoration:none;border-bottom:1px solid transparent}
+a:hover,a:focus-visible{border-bottom-color:currentColor}
+:focus-visible{outline:2px solid var(--gold2);outline-offset:3px;border-radius:4px}
+h1,h2,h3,h4,h5,h6{margin:0;text-wrap:balance;line-height:1.15}
+h1{font:600 clamp(40px,5.4vw,64px)/1.02 var(--display);letter-spacing:-.015em}
+h2{font:600 clamp(28px,3.2vw,38px)/1.1 var(--display);letter-spacing:-.01em}
+h3{font:700 20px/1.3 var(--sans);letter-spacing:-.005em}
+h4{font:700 16px/1.35 var(--sans)}
+h5,h6{font:700 14px/1.4 var(--sans);color:var(--text2)}
+p{margin:0 0 1em}
+strong{font-weight:700;color:var(--text)}
+em{font-style:italic}
+code{font:500 .9em var(--mono);background:var(--surface2);border:1px solid var(--line);border-radius:6px;padding:.08em .38em;color:var(--text)}
+pre{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:16px 18px;overflow-x:auto;font:500 13px/1.55 var(--mono)}
+pre code{background:none;border:0;padding:0}
+hr{border:0;border-top:1px solid var(--line);margin:32px 0}
+blockquote{margin:1.2em 0;padding:14px 20px;border-left:3px solid var(--gold2);background:var(--surface);border-radius:0 12px 12px 0;color:var(--text)}
+blockquote p:last-child{margin:0}
+ul,ol{padding-left:1.35em;margin:0 0 1.1em}
+li{margin:.3em 0}
+li::marker{color:var(--gold2);font-weight:700}
+.eyebrow{font:700 11px/1.3 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.muted{color:var(--dim)}
+.small{font-size:14px}
+
+/* ---------- shell ---------- */
+.shell{max-width:1260px;margin:0 auto;padding:0 28px 96px;display:grid;grid-template-columns:236px minmax(0,1fr);gap:56px}
+@media (max-width:1020px){.shell{display:block;padding:0 18px 80px}}
+.nav{position:sticky;top:0;align-self:start;max-height:100vh;overflow:auto;padding:28px 0 40px}
+.nav .brand{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+.nav .brand svg{width:34px;height:34px;flex:0 0 auto}
+.nav .brand b{font:600 20px/1 var(--display);letter-spacing:.02em}
+.nav .grp{margin:18px 0 6px;font:700 10.5px/1.3 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.nav a{display:block;padding:5px 10px;margin:1px 0;border-radius:8px;color:var(--text2);font-size:13.5px;line-height:1.35;border:0}
+.nav a:hover{background:var(--surface);color:var(--text)}
+.nav a .n{display:inline-block;min-width:1.5em;color:var(--gold2);font-weight:800;font-variant-numeric:tabular-nums}
+@media (max-width:1020px){
+  .nav{position:static;max-height:none;padding:18px 0 0}
+  .nav .grp{display:none}
+  .nav .links{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;scrollbar-width:thin}
+  .nav a{white-space:nowrap;border:1px solid var(--line);background:var(--surface);padding:7px 12px;font-size:12.5px}
+}
+main{min-width:0;padding-top:28px}
+
+/* ---------- masthead ---------- */
+.mast{position:relative;padding:34px 0 30px;border-bottom:1px solid var(--line);margin-bottom:34px}
+.mast .row{display:flex;flex-wrap:wrap;gap:8px 22px;align-items:baseline;color:var(--dim);font-size:13.5px;margin-top:14px}
+.mast h1 span.v{color:var(--violet-text)}
+.mast .sub{font:500 20px/1.35 var(--display);color:var(--text2);margin:14px 0 0;max-width:62ch}
+.mast .iris{position:absolute;right:0;top:22px;width:120px;height:120px;opacity:.95}
+@media (max-width:720px){.mast .iris{width:72px;height:72px;top:8px}}
+
+/* ---------- chapters ---------- */
+.chapter{padding:40px 0 8px;border-top:1px solid var(--line);scroll-margin-top:16px}
+.chapter:first-of-type{border-top:0}
+.chapter > h2{display:flex;align-items:baseline;gap:14px;margin-bottom:20px}
+.chapter > h2 .num{font:600 15px/1 var(--display);color:var(--gold2);letter-spacing:.06em;min-width:1.4em;font-variant-numeric:tabular-nums}
+.chapter h3{margin:30px 0 10px}
+.chapter h4{margin:22px 0 8px}
+.prose{max-width:74ch}
+.prose p,.prose li{color:var(--text2)}
+.prose li strong,.prose p strong{color:var(--text)}
+.wide{max-width:none}
+
+/* tables */
+.tbl{overflow-x:auto;margin:14px 0 22px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:680px;font-size:13.5px;line-height:1.45}
+th,td{padding:10px 12px;vertical-align:top;border-bottom:1px solid var(--line);text-align:left}
+th{font-weight:800;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);background:var(--surface2);position:sticky;top:0}
+tr:last-child td{border-bottom:0}
+td strong{color:var(--text)}
+td{color:var(--text2)}
+tbody tr:hover td{background:color-mix(in srgb, var(--surface2) 70%, transparent)}
+td:first-child{color:var(--text)}
+.tbl.compact table{min-width:0}
+
+/* verdict */
+.verdict{background:linear-gradient(160deg,var(--surface) 0%,var(--bg2) 100%);border:1px solid var(--line2);border-radius:20px;padding:30px 32px;box-shadow:var(--shadow);margin:0 0 30px}
+.verdict h2{font-size:clamp(24px,2.6vw,30px);margin-bottom:14px}
+.verdict ol{counter-reset:v;list-style:none;padding:0;margin:0;display:grid;gap:14px}
+.verdict ol li{counter-increment:v;position:relative;padding-left:44px;color:var(--text2)}
+.verdict ol li::before{content:counter(v);position:absolute;left:0;top:1px;width:30px;height:30px;border-radius:50%;background:var(--violet);color:#fff;font:800 14px/30px var(--sans);text-align:center}
+.verdict ol li b{color:var(--text)}
+.verdict .lead{font:500 18px/1.45 var(--display);color:var(--text);margin:0 0 18px;max-width:70ch}
+.verdict .lead q{quotes:"\201C" "\201D";color:var(--gold)}
+
+/* cycle diagram */
+.cycle{margin:26px 0 8px}
+.cycle .pillars{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.cycle .pillars{grid-template-columns:1fr}}
+.pcard{background:var(--surface);border:1px solid var(--line2);border-radius:16px;padding:18px 18px 16px;position:relative;overflow:hidden}
+.pcard::after{content:"";position:absolute;inset:auto -30px -40px auto;width:120px;height:120px;border-radius:50%;background:var(--violet-glow);filter:blur(28px)}
+.pcard .eyebrow{margin-bottom:6px}
+.pcard h3{font-size:22px;margin:0 0 4px}
+.pcard .was{font-size:12.5px;color:var(--dim)}
+.pcard .was s{color:var(--dim)}
+.pcard .was b{color:var(--gold2);font-weight:700}
+.pcard p{margin:10px 0 0;font-size:14px;color:var(--text2)}
+.cycle .arrow{display:flex;align-items:center;gap:10px;justify-content:center;margin:12px 0;color:var(--dim);font-size:13px;letter-spacing:.06em;text-transform:uppercase;font-weight:700}
+.cycle .arrow i{flex:1;height:1px;background:var(--line2);max-width:160px}
+.cycle .motors{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.cycle .motors{grid-template-columns:1fr}}
+.mcard{border:1px dashed var(--line2);border-radius:14px;padding:14px 16px;background:var(--bg2)}
+.mcard h4{font-size:16px;margin:0 0 4px}
+.mcard .was{font-size:12.5px;color:var(--dim)}
+.mcard .was b{color:var(--gold2)}
+.mcard p{margin:8px 0 0;font-size:13.5px;color:var(--text2)}
+.mcard.map{opacity:.85}
+.tag{display:inline-block;font:800 10.5px/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;padding:5px 8px;border-radius:999px;border:1px solid var(--line2);color:var(--text2);vertical-align:middle}
+.tag.ok{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 50%,transparent)}
+.tag.warn{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 50%,transparent)}
+.tag.bad{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 50%,transparent)}
+.tag.gold{color:var(--gold);border-color:color-mix(in srgb,var(--gold2) 60%,transparent)}
+
+/* message house */
+.house{margin:20px 0 10px}
+.house .roof{background:var(--violet);color:#fff;border-radius:16px 16px 6px 6px;padding:18px 22px;font:600 clamp(18px,2.2vw,24px)/1.3 var(--display);text-align:center}
+.house .cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:10px 0}
+@media (max-width:760px){.house .cols{grid-template-columns:1fr}}
+.house .col{background:var(--surface);border:1px solid var(--line2);border-radius:12px;padding:16px}
+.house .col h4{font-size:15.5px;margin:0 0 8px;color:var(--text)}
+.house .col .eyebrow{margin-bottom:6px}
+.house .col ul{margin:0;padding-left:1.1em;font-size:13.5px;color:var(--text2)}
+.house .col .ex{margin:10px 0 0;font:500 14px/1.4 var(--display);color:var(--gold)}
+.house .base{background:var(--bg2);border:1px solid var(--line);border-radius:6px 6px 16px 16px;padding:14px 18px;font-size:13.5px;color:var(--text2);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:760px){.house .base{grid-template-columns:1fr}}
+.house .base b{color:var(--text);display:block;margin-bottom:2px}
+
+/* callouts */
+.callout{border:1px solid var(--line2);border-left:4px solid var(--gold2);background:var(--surface);border-radius:12px;padding:16px 20px;margin:18px 0}
+.callout.decide{border-left-color:var(--violet)}
+.callout h4{margin:0 0 8px}
+.callout p:last-child,.callout ul:last-child{margin-bottom:0}
+
+/* voice matrix and swatches */
+.traits{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0 20px}
+@media (max-width:760px){.traits{grid-template-columns:1fr}}
+.trait{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+.trait h4{margin:0 0 8px;font-size:17px}
+.trait .is,.trait .isnt{font-size:13.5px;margin:4px 0;color:var(--text2)}
+.trait .is::before{content:"é ";color:var(--ok);font-weight:800}
+.trait .isnt::before{content:"não é ";color:var(--bad);font-weight:800}
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:14px 0 20px}
+.sw{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.sw i{display:block;height:54px}
+.sw div{padding:8px 10px;font-size:12.5px;line-height:1.35;color:var(--text2)}
+.sw div b{display:block;color:var(--text);font-size:13px}
+.sw div code{font-size:11.5px;padding:.05em .3em}
+.typo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0 18px}
+@media (max-width:760px){.typo{grid-template-columns:1fr}}
+.typo .t{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+.typo .t .sample{font-size:34px;line-height:1.05;margin:4px 0 8px;color:var(--text)}
+.typo .t .sample.d{font-family:var(--display);font-weight:600}
+.typo .t .sample.s{font-family:var(--sans);font-weight:800;letter-spacing:-.01em}
+.typo .t p{font-size:13.5px;color:var(--text2);margin:0}
+
+/* deliverables (details) */
+.doc{border:1px solid var(--line2);border-radius:16px;background:var(--surface);margin:14px 0;overflow:hidden}
+.doc > summary{cursor:pointer;list-style:none;padding:16px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.doc > summary::-webkit-details-marker{display:none}
+.doc > summary .ttl{font:700 17px/1.3 var(--sans);color:var(--text);flex:1 1 220px}
+.doc > summary .meta{font-size:12.5px;color:var(--dim)}
+.doc > summary .open{font:800 11px/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--violet-text);border:1px solid var(--line2);border-radius:999px;padding:7px 10px}
+.doc[open] > summary{border-bottom:1px solid var(--line);background:var(--surface2)}
+.doc[open] > summary .open::after{content:" ▴"}
+.doc:not([open]) > summary .open::after{content:" ▾"}
+.doc .body{padding:8px 22px 22px;max-width:none}
+.doc .body h3{font:600 26px/1.15 var(--display);margin:30px 0 12px;color:var(--text)}
+.doc .body h4{margin:26px 0 8px;font-size:17px}
+.doc .body h5{margin:20px 0 6px;font-size:14.5px;color:var(--text)}
+.doc .body h6{margin:16px 0 6px}
+.doc .body p,.doc .body li{color:var(--text2);max-width:80ch}
+.doc .body table{font-size:13px}
+.doc .body blockquote{max-width:80ch}
+.doc .missing{color:var(--warn);font-size:14px;padding:6px 0 4px}
+
+/* research list */
+.research{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin:14px 0}
+.research a{display:block;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--text2);font-size:13.5px}
+.research a b{display:block;color:var(--text);margin-bottom:2px}
+.research a:hover{border-color:var(--violet)}
+
+footer{margin-top:60px;padding-top:22px;border-top:1px solid var(--line);color:var(--dim);font-size:13px;max-width:74ch}
+.kbd{font:600 12px var(--mono);background:var(--surface2);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+</style>
+
+<div class="shell">
+<nav class="nav" aria-label="Capítulos">
+  <div class="brand">
+    <svg viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="gA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE08A"/><stop offset="1" stop-color="#C8881C"/></linearGradient></defs><rect width="100" height="100" rx="24" fill="#3A2C8E"/><g fill="none" stroke="#BDB3E6" stroke-opacity=".7" stroke-width="2.4"><circle cx="50" cy="50" r="12"/><circle cx="50" cy="50" r="22"/><circle cx="50" cy="50" r="32"/><circle cx="50" cy="50" r="42"/></g><line x1="20" y1="70" x2="80" y2="30" stroke="url(#gA)" stroke-width="5" stroke-linecap="round"/><circle cx="50" cy="50" r="6" fill="url(#gA)"/></svg>
+    <b>Perceva</b>
+  </div>
+  <div class="links">
+    <div class="grp">Decidir</div>
+    <a href="#veredito">Veredito do editor</a>
+    <a href="#c1"><span class="n">1</span> Tese</a>
+    <a href="#c2"><span class="n">2</span> Metodologia 3×3</a>
+    <a href="#c3"><span class="n">3</span> "All-in-one"</a>
+    <a href="#c4"><span class="n">4</span> Público</a>
+    <a href="#c5"><span class="n">5</span> Posicionamento</a>
+    <a href="#c6"><span class="n">6</span> Message house</a>
+    <a href="#c7"><span class="n">7</span> Vocabulário</a>
+    <div class="grp">Ir pra rua</div>
+    <a href="#c8"><span class="n">8</span> GTM 90 dias</a>
+    <a href="#c9"><span class="n">9</span> Sistema de conteúdo</a>
+    <a href="#entregaveis">Entregáveis prontos</a>
+    <div class="grp">Marca no dia a dia</div>
+    <a href="#voz">Voz e tom</a>
+    <a href="#visual">Identidade visual</a>
+    <div class="grp">Fechar</div>
+    <a href="#c10"><span class="n">10</span> Cortes</a>
+    <a href="#c11"><span class="n">11</span> Decisões do dono</a>
+    <a href="#c12"><span class="n">12</span> Produto</a>
+    <a href="#pesquisa">Pesquisa (13 dossiês)</a>
+  </div>
+</nav>
+
+<main>
+<header class="mast">
+  <svg class="iris" viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="gB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE08A"/><stop offset="1" stop-color="#C8881C"/></linearGradient></defs><g fill="none" stroke="var(--violet2)" stroke-opacity=".55" stroke-width="1.6"><circle cx="50" cy="50" r="12"/><circle cx="50" cy="50" r="22"/><circle cx="50" cy="50" r="32"/><circle cx="50" cy="50" r="42"/></g><line x1="18" y1="72" x2="82" y2="28" stroke="url(#gB)" stroke-width="4" stroke-linecap="round"/><circle cx="50" cy="50" r="5.5" fill="url(#gB)"/></svg>
+  <div class="eyebrow">Playbook de marca · v1 · 12 de setembro de 2026</div>
+  <h1>Playbook <span class="v">Perceva</span></h1>
+  <p class="sub">Perceba quem você está se tornando. — O documento-mãe de onde saem site, loja, vídeos, posts e tudo mais que leva o nome Perceva.</p>
+  <div class="row">
+    <span>Editor-chefe: Claude, a pedido do André</span>
+    <span>Base: 13 dossiês de pesquisa (620 KB, fontes com DOI) + brief de identidade de ago/2026</span>
+    <span>Fonte da verdade: <code>docs/brand/</code> no repositório</span>
+  </div>
+</header>
+
+<section id="veredito" class="verdict">
+  <div class="eyebrow">Resposta ao André</div>
+  <h2>O que eu acho — em seis decisões</h2>
+  <p class="lead">A sua ideia dos <q>3 pilares × 3 métodos</q> está certa como arquitetura do produto e ganhou lastro científico nesta rodada. O que a pesquisa muda são <b>três nomes e um rótulo</b> — e mostra que o que trava downloads hoje não é discurso: é porta fechada e site infiel.</p>
+  <ol>
+    <li><b>A tese de agosto fica, e agora tem prova.</b> "Ele mostra quem os seus hábitos estão treinando você a ser" ganhou um RCT do lado dela: repetir comportamentos muda traços de personalidade de forma confirmada por observadores (Stieger et al., PNAS 2021, n = 1.523), e só muda em quem completa os desafios (Hudson et al. 2019). Hero continua "Perceba quem você está se tornando."</li>
+    <li><b>A metodologia 3×3 vira o "ciclo Perceva", com três correções de nome.</b> <s>Dados</s> → <b>Prática</b> (o gesto é praticar e medir; medir sozinho não move nada). <s>Mentoria</s> → <b>Acompanhamento</b>: "o assistente que te conhece", porque mentor promete quem prescreve, e isso não existe nem pode ser prometido (Illinois já proíbe "terapia por IA"; CFP e APA se posicionaram). <b>Social</b> fica como motor no mapa, com zero presença pública até existir.</li>
+    <li><b>"The all-in-one self-care app" não vai pra rua.</b> "Self care, one day at a time" já é a tagline do Finch; a busca por "self care" e "autocuidado" nas lojas devolve bichinhos de estimação e agendas fofas; em pt-BR a palavra é skincare e farmácia; e "tudo em um" promete o mentor e o social que não existem. A ideia sobrevive como arquitetura interna e como uma frase concreta de completude: <i>"um app que junta três coisas que sempre viveram separadas: o teste que te conhece, o hábito que você mede e a ideia que você lembra."</i></li>
+    <li><b>Público primário decidido: a Marina</b> — 25–40, superior, já fez teste de personalidade ou terapia, largou Fabulous e Habitica, usa IA todo dia. É o único segmento em que a nossa frase é a mensagem principal, o vazio em português está documentado duas vezes, e é quem já paga. O nativo de IA em inglês (o Dan) entra como <b>canal</b> — Show HN do Conector, diretórios MCP — não como público, e não recebe um real antes do iOS.</li>
+    <li><b>O gargalo de downloads é operacional, não criativo.</b> A Play está em teste fechado, o site diz "Em breve", anuncia o Momentum (dormente desde 28/08), vende Missões e Habilidades como padrão (módulos desligados por padrão) e escreve "testes psicológicos" (termo de uso restrito a psicólogos no Brasil). A Fase 0 do GTM corrige tudo isso em duas semanas; só então os vídeos fazem sentido.</li>
+    <li><b>A ciência valida com correções pequenas de produto</b> antes de o marketing usar certas palavras: o card precisa <i>pedir</i> a afirmação antes de virar (aí é prática de recuperação de verdade), a ideia ganha um botão "virar prática" com plano se-então, e quem volta depois de sumir ganha um reconhecimento — o melhor de 54 nudges num megastudo de 61 mil pessoas.</li>
+  </ol>
+</section>
+
+<section class="chapter" id="c-cycle" style="border-top:0;padding-top:8px">
+  <div class="cycle">
+    <div class="pillars">
+      <div class="pcard"><div class="eyebrow">Pilar · o que o app faz</div><h3>Autoconhecimento</h3><div class="was">pedido: Autoconhecimento <span class="tag ok">mantido</span></div><p>Big Five (120 itens), Valores de Schwartz, Apego (ECR-R), Forças — e a autoavaliação nas seis áreas. Promessa: <b>escolha informada</b>, não prescrição pelo seu tipo.</p></div>
+      <div class="pcard"><div class="eyebrow">Pilar · o que o app faz</div><h3>Prática</h3><div class="was">pedido: <s>Dados</s> → <b>Prática (praticar e medir)</b></div><p>Práticas em um toque, humor em uma linha, calendário e Padrões. A ciência recompensa <b>medir + meta + re-olhar</b>; medir sozinho ≈ zero.</p></div>
+      <div class="pcard"><div class="eyebrow">Pilar · o que o app faz</div><h3>Aprendizado</h3><div class="was">pedido: Aprendizado <span class="tag ok">mantido</span></div><p>Recanto: 1–5 ideias por assunto, fonte visível, card que vira, Explorar que acaba. Argumento: <b>ler não é lembrar; lembrar não é fazer</b> — nunca "o feed faz mal".</p></div>
+    </div>
+    <div class="arrow"><i></i><span>três motores fazem a roda girar</span><i></i></div>
+    <div class="motors">
+      <div class="mcard"><h4>Recompensas</h4><div class="was">pedido: Recompensas <span class="tag ok">mantido</span> · "petisco" fica na cozinha</div><p>Você define a recompensa e o preço. Se for um deslize, o app responde <b>há quantos dias</b>. Nunca recompensa aleatória.</p></div>
+      <div class="mcard"><h4>Acompanhamento</h4><div class="was">pedido: <s>Mentoria</s> → <b>o assistente que te conhece</b></div><p>Conecte o Perceva ao seu assistente de IA <b>(hoje, Claude)</b>. Ele lê seus dados reais em vez de adivinhar — e escreve só o humor do dia.</p></div>
+      <div class="mcard map"><h4>Social <span class="tag warn">no mapa</span></h4><div class="was">pedido: Social (ainda não existe)</div><p>Quando vier: 2–5 pessoas, compartilha <b>prática feita, nunca identidade</b>, sem ranking, sem punição compartilhada. Até lá, zero presença pública.</p></div>
+    </div>
+  </div>
+</section>
+
+<!--@SPINE-->
+
+<section class="chapter" id="voz">
+  <h2><span class="num">V</span>Voz e tom</h2>
+  <div class="prose">
+    <p>A voz é constante; o tom muda com a situação da pessoa. Quatro traços, cada um com o que a marca é e o que ela não é — e uma matriz de tom para as oito situações que mais aparecem.</p>
+  </div>
+  <div class="traits">
+    <div class="trait"><h4>Adulta e direta</h4><p class="is">um amigo que estudou o assunto e fala sem rodeio.</p><p class="isnt">coach que grita, nem mascote fofo, nem "internetês".</p></div>
+    <div class="trait"><h4>Concreta</h4><p class="is">toda frase aterrissa num gesto: nota na área, contorno no hexágono, "há quantos dias".</p><p class="isnt">abstração motivacional ("potencial", "jornada de transformação").</p></div>
+    <div class="trait"><h4>Honesta com a ciência</h4><p class="is">nomeia instrumento, autor e ano; diz a força e a ressalva.</p><p class="isnt">"baseado em ciência", gráfico decorativo, "comprovado".</p></div>
+    <div class="trait"><h4>Gentil por arquitetura</h4><p class="is">mostra o dado e devolve a decisão ("pular também é decidir").</p><p class="isnt">culpa, confete, urgência ("não perca!").</p></div>
+  </div>
+  <div class="prose">
+    <p><b>Posição nas quatro dimensões</b> (modelo NN/g): mais casual do que formal, sem gíria de internet · séria com leveza (humor seco, nunca piada com o usuário) · respeitosa, nunca irreverente · factual com calor (entusiasmo só quando o dado justifica). <b>Regras de escrita:</b> frases curtas; verbo no presente; "você"; números sempre com fonte; sem exclamação em série; sem emoji em superfície de marca (permitido, com moderação, em conversa de suporte); en-US escrito nativo, nunca traduzido.</p>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>Situação</th><th>Assim</th><th>Nunca assim</th></tr></thead>
+    <tbody>
+      <tr><td>Prática concluída</td><td>"Sono: terceira semana acima de 7 h."</td><td>"Arrasou! 🔥 Continue assim!"</td></tr>
+      <tr><td>Dia sem prática</td><td>"Hoje não. Fica registrado como decisão."</td><td>"Você quebrou sua sequência de 12 dias."</td></tr>
+      <tr><td>Resultado "baixo" num instrumento</td><td>"Abertura abaixo da média de quem respondeu. É o retrato de setembro; refaça quando quiser."</td><td>"Você é pouco criativo." / qualquer rótulo em título</td></tr>
+      <tr><td>Recompensa-penalidade resgatada</td><td>"Cigarro · 50 moedas. 6 dias desde o último. Melhor intervalo anterior: 9."</td><td>"Aproveite! 🎉" / "Que pena…"</td></tr>
+      <tr><td>Erro ou bug</td><td>"Não conseguimos salvar. O registro de hoje está no aparelho; tente de novo em um minuto."</td><td>"Ops! Algo deu errado 😅"</td></tr>
+      <tr><td>Cobrança de Premium</td><td>"Os instrumentos profundos são Premium. A Avaliação e as práticas continuam grátis."</td><td>"Desbloqueie seu potencial por apenas…"</td></tr>
+      <tr><td>Notificação das 08:00</td><td>"Bom dia. Três práticas pra hoje; humor de ontem: 4."</td><td>"Não esqueça de treinar! 💪"</td></tr>
+      <tr><td>Crítica pública</td><td>Agradece, responde o fato, diz o que muda ou por que não.</td><td>Defesa clínica, culpa no usuário, silêncio.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="chapter" id="visual">
+  <h2><span class="num">IV</span>Identidade visual — o cânone</h2>
+  <div class="prose">
+    <p>Nada aqui é redesenho: é a canonização do que já existe no app, para que site, loja e peças de rede usem <b>uma</b> fonte da verdade. Os tokens do app vencem os do site (a diferença de violeta e de fundo é imperceptível, mas duas verdades geram deriva).</p>
+    <h3>Símbolo</h3>
+    <p>Anéis concêntricos com uma agulha dourada inclinada — a <b>Iris</b>. Os anéis são as áreas da vida; a agulha é o ato de perceber (mirar). Versões: sobre noite (padrão), sobre areia, monocromática. Respiro mínimo: a largura de um anel. Tamanho mínimo: 24 px. Nunca: rotacionar a agulha, trocar a cor da agulha, colocar sobre foto, sombra colorida, mascote.</p>
+    <h3>Paleta canônica</h3>
+  </div>
+  <div class="swatches">
+    <div class="sw"><i style="background:#0A0E26"></i><div><b>Noite</b> <code>#0A0E26</code> fundo</div></div>
+    <div class="sw"><i style="background:#141A3C"></i><div><b>Superfície</b> <code>#141A3C</code> cards</div></div>
+    <div class="sw"><i style="background:#7B5CFF"></i><div><b>Violeta</b> <code>#7B5CFF</code> ação, botões</div></div>
+    <div class="sw"><i style="background:#AFA0FF"></i><div><b>Violeta texto</b> <code>#AFA0FF</code> texto pequeno sobre noite</div></div>
+    <div class="sw"><i style="background:#FFE08A"></i><div><b>Dourado</b> <code>#FFE08A</code> eyebrows, destaque</div></div>
+    <div class="sw"><i style="background:#C8881C"></i><div><b>Dourado escuro</b> <code>#C8881C</code> agulha, gradiente</div></div>
+    <div class="sw"><i style="background:#ECEAF6"></i><div><b>Areia</b> <code>#ECEAF6</code> texto sobre noite</div></div>
+    <div class="sw"><i style="background:#9A98B4"></i><div><b>Névoa</b> <code>#9A98B4</code> texto secundário</div></div>
+  </div>
+  <div class="swatches">
+    <div class="sw"><i style="background:#F06565"></i><div><b>Saúde</b> <code>#F06565</code></div></div>
+    <div class="sw"><i style="background:#F0973E"></i><div><b>Corpo</b> <code>#F0973E</code></div></div>
+    <div class="sw"><i style="background:#B57BF0"></i><div><b>Mente</b> <code>#B57BF0</code></div></div>
+    <div class="sw"><i style="background:#E8B04B"></i><div><b>Prosperidade</b> <code>#E8B04B</code></div></div>
+    <div class="sw"><i style="background:#4BB4E8"></i><div><b>Vínculos</b> <code>#4BB4E8</code></div></div>
+    <div class="sw"><i style="background:#3FB88C"></i><div><b>Ofício</b> <code>#3FB88C</code></div></div>
+  </div>
+  <div class="prose">
+    <p>As seis cores de área <b>só codificam área</b>; nunca decoram. Contraste medido: areia sobre noite ≈ 15:1; violeta texto sobre noite ≈ 8:1; dourado sobre noite ≈ 13:1; branco sobre violeta #7B5CFF ≈ 4,4:1 (serve para botão com texto ≥ 18 px em negrito; para texto pequeno, violeta profundo <code>#4B2FCC</code> sobre claro).</p>
+    <h3>Tipografia — papéis decididos</h3>
+  </div>
+  <div class="typo">
+    <div class="t"><div class="eyebrow">Voz do produto</div><div class="sample s">Manrope</div><p>App, telas, legendas queimadas de vídeo, posts, tabelas. Pesos: 500 corpo · 700 títulos · 800 números. Escala: 12 / 14 / 16 / 20 / 28 / 36 / 56.</p></div>
+    <div class="t"><div class="eyebrow">Display editorial</div><div class="sample d">Fraunces</div><p>Hero do site, capas de reel e carrossel, títulos de playbook e imprensa. Pesos 500–600, sempre em frases curtas. Inter sai do site na v5: o corpo web passa a Manrope.</p></div>
+  </div>
+  <div class="prose">
+    <p><b>Em reels:</b> Manrope 700, mínimo 64 px em 1080×1920, legenda em até duas linhas, zona segura fora dos 250 px do topo e dos 400 px da base (interface do TikTok e do Instagram); fundo noite a 70% só quando a tela clara exigir; palavras-chave da marca em dourado, com parcimônia.</p>
+    <h3>Peças e medidas</h3>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>Peça</th><th>Medida</th><th>Regra</th></tr></thead>
+    <tbody>
+      <tr><td>Post / carrossel de ideia</td><td>1080×1350</td><td>Capa = imagem 4:5 da ideia com moldura noite de 24 px + título-gancho em Fraunces 600, 72 px, areia. Slides: afirmação, mecanismo em duas frases, "o que fazer", fonte (autor, ano). Último: o card virando + CTA.</td></tr>
+      <tr><td>Story</td><td>1080×1920</td><td>Tela do app grande; texto no terço central; um gesto por story.</td></tr>
+      <tr><td>Capa de reel / Shorts</td><td>1080×1920</td><td>Título no terço central (o grid 3:4 corta topo e base); rosto pequeno, tela grande.</td></tr>
+      <tr><td>OG (site)</td><td>1200×630</td><td>Iris + tagline; regenerar com <code>tools/make-og.mjs</code> quando a captura mudar.</td></tr>
+      <tr><td>Screenshot de loja</td><td>1080×2400</td><td>Tema noite, pt-BR, conta populada; legenda de 3–5 palavras em Manrope 800 dourado sobre noite; ordem de história "teste primeiro, hábito depois".</td></tr>
+      <tr><td>Prévia de loja</td><td>886×1920 (Apple) · YouTube não listado (Play)</td><td>Só captura do app, 15–30 s, sem mãos nem pessoas; desenhada para autoplay mudo.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="prose">
+    <h3>Imagem e movimento</h3>
+    <ul>
+      <li><b>Capturas reais</b> do app (build da Play, não Expo Go), sempre em pt-BR no site pt e em en-US no /en/, com dados plausíveis do fundador ou de testador consentido; nunca dado pessoal de usuário.</li>
+      <li><b>Imagens de ideia</b>: 4:5, sem texto, geradas — rotular como ilustração quando puderem ser tomadas por foto.</li>
+      <li><b>Proibido:</b> banco de imagens com gente sorrindo, troféu/fogo/streak, mascote, pessoa ou depoimento sintético apresentado como real.</li>
+      <li><b>Motion:</b> um evento visual a cada 2–4 s; o card vira em 400 ms; a Dedicação sobe em 600 ms; nada de confete.</li>
+    </ul>
+    <p class="small muted">Checklist visual de oito itens: tokens do app · Manrope e Fraunces nos papéis certos · contraste AA nas combinações reais · tela em pt-BR · imagem de ideia sem texto · logo com respiro · cor de área só como código · legenda queimada legível.</p>
+  </div>
+</section>
+
+<section class="chapter" id="entregaveis">
+  <h2><span class="num">E</span>Entregáveis prontos para usar</h2>
+  <div class="prose"><p>Seis documentos derivados da espinha, escritos para copiar e usar. Cada um vive em <code>docs/brand/</code> no repositório; aqui estão na íntegra. Abra o que precisar.</p></div>
+  <!--@DOCS-->
+</section>
+
+<section class="chapter" id="pesquisa">
+  <h2><span class="num">P</span>A pesquisa por trás (13 dossiês)</h2>
+  <div class="prose"><p>Cada dossiê traz tabela de alegações com força (forte, moderada, fraca, contestada), o texto por bloco, a lista de fontes com DOI ou URL e uma seção honesta de "o que não encontrei". Estão em <code>docs/brand/research/</code>.</p></div>
+  <div class="research">
+    <!--@RESEARCH-->
+  </div>
+</section>
+
+<footer>
+  <p><b>Como manter vivo:</b> este playbook é gerado a partir de <code>docs/brand/*.md</code>. Mudou uma decisão, muda o markdown e republica — nunca só a página. Versão 1, 12/09/2026. Próxima revisão: depois da Fase 0 do GTM (listagem pública da Play e site v5 no ar).</p>
+  <p>Toda alegação numérica deste documento tem fonte nomeada no dossiê correspondente. Onde a pesquisa não encontrou fonte, o texto diz "não encontrei" — e a alegação não vai a público.</p>
+</footer>
+</main>
+</div>
