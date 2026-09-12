@@ -3,7 +3,7 @@
 /**
  * video — post-process one Gemini Notebook download before upload.
  *
- *   node video.mjs --in <mp4> --out <mp4> [--poster <webp>] [--no-trim]
+ *   node video.mjs --in <mp4> --out <mp4> [--poster <webp>] [--poster-at <s>] [--no-trim]
  *                  [--window 12] [--threshold 225] [--padding 0.15]
  *       Cuts the near-white end card (or stream-copies when none is found),
  *       optionally writes a first-frame poster, and prints ONE JSON line:
@@ -55,6 +55,7 @@ function parseArgs(argv) {
     if (a === '--in') args.in = next();
     else if (a === '--out') args.out = next();
     else if (a === '--poster') args.poster = next();
+    else if (a === '--poster-at') args.posterAt = num(a, next());
     else if (a === '--probe') args.probe = next();
     else if (a === '--audio') args.audio = true;
     else if (a === '--no-trim') args.trim = false;
@@ -109,7 +110,7 @@ function main() {
 
   let poster = null;
   if (args.poster) {
-    const p = posterWebp(output, resolve(args.poster));
+    const p = posterWebp(output, resolve(args.poster), args.posterAt != null ? { at: args.posterAt } : {});
     poster = p.path;
     console.error(`  ✓ poster ${p.path} (${p.width}x${p.height}, ${(p.bytes / 1024).toFixed(1)} KB, frame at ${p.at}s)`);
   }

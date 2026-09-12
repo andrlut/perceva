@@ -45,6 +45,10 @@ export const OUTRO_DEFAULTS = Object.freeze({
   window: 12,
   /** YAVG at or above this is "end card"; content peaks ~207, the card ~229 */
   threshold: 225,
+  /** the Notebook's OTHER end card (dark "Gemini Notebook" art, seen 2026-09-12): YAVG at or below this */
+  darkThreshold: 60,
+  /** a dark tail only counts as a card when the content right before it was at least this bright (sharp junction) */
+  darkContentMin: 120,
   /** a bright run shorter than this is a flash, not an end card */
   minRun: 0.5,
   /** a bright run longer than this is not the ~2–4 s end card — refuse to cut */
@@ -225,7 +229,7 @@ export function sampleLuma(path, from = 0) {
  * Full diagnostics behind `detectOutroStart` — what the CLI shows on stderr
  * and what the synthetic test asserts on.
  * @param {string} path
- * @param {{window?: number, threshold?: number, minRun?: number, maxRun?: number}} [opts]
+ * @param {{window?: number, threshold?: number, minRun?: number, maxRun?: number, darkThreshold?: number, darkContentMin?: number}} [opts]
  * @returns {TailAnalysis}
  */
 export function analyzeTail(path, opts = {}) {
@@ -233,6 +237,8 @@ export function analyzeTail(path, opts = {}) {
   const threshold = opts.threshold ?? OUTRO_DEFAULTS.threshold;
   const minRun = opts.minRun ?? OUTRO_DEFAULTS.minRun;
   const maxRun = opts.maxRun ?? OUTRO_DEFAULTS.maxRun;
+  const darkThreshold = opts.darkThreshold ?? OUTRO_DEFAULTS.darkThreshold;
+  const darkContentMin = opts.darkContentMin ?? OUTRO_DEFAULTS.darkContentMin;
 
   const { durationSeconds } = probe(path);
   const from = Math.max(0, durationSeconds - window);
@@ -244,6 +250,22 @@ export function analyzeTail(path, opts = {}) {
   }
   const last = samples[samples.length - 1];
   if (last.yavg < threshold) {
+    // Dark variant of the end card: a near-black trailing run right after
+    // bright content. Same run-length rules; the junction must be sharp, so a
+    // video that simply ends on a dim scene is not cut.
+    if (last.yavg <= darkThreshold) {
+      let j = samples.length - 1;
+      while (j > 0 && samples[j - 1].yavg <= darkThreshold) j--;
+      const dStart = samples[j];
+      const dRun = durationSeconds - dStart.t;
+      const dContent = j > 0 ? samples[j - 1].yavg : null;
+      const dCommon = { ...base, runSeconds: dRun, lastYavg: last.yavg, contentYavg: dContent };
+      if (j === 0) return { ...dCommon, cutAt: null, reason: `dark (≤${darkThreshold}) for the whole ${window}s window — no junction seen` };
+      if (dRun < minRun) return { ...dCommon, cutAt: null, reason: `dark run of ${dRun.toFixed(2)}s is shorter than minRun ${minRun}s` };
+      if (dRun > maxRun) return { ...dCommon, cutAt: null, reason: `dark run of ${dRun.toFixed(2)}s is longer than maxRun ${maxRun}s — a dim ending, not a card` };
+      if (dContent < darkContentMin) return { ...dCommon, cutAt: null, reason: `content before the dark run is only YAVG ${dContent.toFixed(1)} (< ${darkContentMin}) — no sharp junction, not cutting` };
+      return { ...dCommon, cutAt: dStart.t, reason: `dark end card from ${dStart.t.toFixed(3)}s (${dRun.toFixed(2)}s, YAVG ${dContent.toFixed(1)} → ${dStart.yavg.toFixed(1)})` };
+    }
     return {
       ...base, cutAt: null, runSeconds: null, lastYavg: last.yavg, contentYavg: null,
       reason: `last frame YAVG ${last.yavg.toFixed(1)} < ${threshold} — no bright tail (already trimmed?)`,

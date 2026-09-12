@@ -337,8 +337,11 @@ itself the first time — and only if that fails too treat it as `blocked`.
 Measured 2026-09-10: a Curta video of 1:22 took **14 min** to generate; the
 Estúdio title is generic (*"Como o Sono Extra Realmente Funciona"*) — it
 tells the language, not the idea, so binding is by position/time (above),
-never by title alone. Time-box each generation at
-**30 min**; past that, mark it `failed` and move on.
+never by title alone. **No time-box kills a generation**: past 30 min
+of "Gerando", stop polling it, leave it `generating` in the manifest with
+its `notebook_url` and a `resume_hint`, and let the NEXT run download it
+(2026-09-12: one Curta took 44 min and finished fine; regenerating it
+would have burned a slot).
 
 **Quota / failure signals.** A red or grey error on the Estúdio card, a
 toast about a daily limit ("limite", "quota", "tente novamente mais tarde"),
@@ -774,6 +777,48 @@ cloud Claude Routine: the token, `gh`, Chrome and ffmpeg only exist on this
 machine.
 
 ## Lessons from real runs (keep this list growing)
+
+From 2026-09-12 (three chained runs, 17 new generations + 2 resumed in
+one day, up to 5 in flight, `RESULT: ok` ×3, **no quota signal at all**):
+
+- **The whole flow works with the Notebook tab HIDDEN** (the maintainer
+  using another Chrome tab) as long as everything goes through
+  `javascript_tool`: create notebook, "Adicionar fontes", the "Texto
+  copiado" chip, Inserir, ⋮/Baixar, the Fontes checkboxes, Confirmar and
+  the language dropdown all respond to `.click()` by DOM. Real mouse
+  clicks and `ctrl+v` silently stop working while `visibilityState` is
+  `hidden` — do not rely on them.
+- **Gerar is the one button `.click()` does not fire.** It needs the full
+  synthetic pointer sequence on the button element: `pointerover`,
+  `mouseover`, `pointerdown`, `mousedown`, `focus()`, `pointerup`,
+  `mouseup`, `click` — works hidden too.
+- **Paste without the clipboard**: ship the source text as base64 inside
+  the JS, decode with `TextDecoder`, set it through the native
+  `HTMLTextAreaElement.value` setter and dispatch `input`. Then verify
+  with a **checksum computed in node over the file and recomputed in the
+  page** — `want == got` compares the string with itself and missed a
+  U+001F that a corrupted base64 injected (1091 vs 1090 chars).
+- Chain steps inside ONE `javascript_tool` with
+  `await new Promise(r => setTimeout(r, ms))` between them (create
+  notebook + open sources + chip = one call). A whole 4-generation run
+  fit in ~25 browser calls and zero screenshots.
+- Drift check with **one grid per video** (`ffmpeg -vf fps=1/8,tile=5x2`)
+  instead of ten PNGs — same coverage, a tenth of the context.
+- Renaming a notebook only sticks when the notebook is IDLE and the
+  synthetic Enter comes in a SEPARATE call from the one that set the
+  input; otherwise it keeps the auto title (record the URL in the
+  manifest and bind by URL, never by title).
+- Coordinates from `getBoundingClientRect` must be scaled by
+  `frameWidth / window.innerWidth` (0.7614 here) when a real click is
+  unavoidable; "português (Brasil)" is born outside the viewport in the
+  72-language list — `scrollIntoView` before reading the rect.
+- **The end card survives the "remove watermark" setting** and comes in
+  TWO arts: the bright one (YAVG ~230, ~3 s — the default detector) and a
+  dark "Gemini Notebook" one (YAVG ~45, ~3 s) — `video.mjs` detects both
+  since 2026-09-12 (`darkThreshold` 60, junction ≥ 120). Curta videos
+  took 5–16 min; the outliers finished at ~44 min.
+- Poster: `--poster-at <s>` picks the poster frame (default 1 s catches
+  a title card sometimes; 2–3 s is safer).
 
 From the manual test and the first autonomous run (2026-09-10, 1 + 8
 generations, `RESULT: ok`, 53 min for the 8):
