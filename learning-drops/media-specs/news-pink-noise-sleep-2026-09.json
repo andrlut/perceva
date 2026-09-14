@@ -1,0 +1,18 @@
+{
+  "slug": "news-pink-noise-sleep-2026-09",
+  "dimension_id": "health",
+  "title": {
+    "pt": "Ruído rosa cronometrado e a limpeza cerebral",
+    "en": "Timed Pink Noise and the Brain's Cleanup"
+  },
+  "cover": {
+    "prompt": "Uma maré noturna lenta subindo numa praia escura e deserta, uma única onda baixa no terço inferior do quadro; no instante exato da crista, um fio de luz dourada toca o topo dela, e a espuma logo atrás sobe um pouco mais alta que as outras ondas, que seguem apagadas até o horizonte."
+  },
+  "ideas": [
+    {
+      "id": "som-cronometrado-cerebro",
+      "ordinal": 1,
+      "image_prompt": "Uma única pessoa deitada de lado numa maca estreita, visto de fora na diagonal, entrando no túnel cilíndrico de um aparelho de ressonância magnética que ocupa o centro do quadro; a cabeça dela, envolta por uma touca de eletrodos com fios finos que descem pela maca, fica no meio da composição, com as paredes curvas do aparelho ao redor e a sala de laboratório de pesquisa do sono em penumbra atrás. As paredes do túnel soltam uma luz azulada e difusa que banha o corpo, e um único brilho dourado quente pousa só na touca e nos fios, o ponto mais claro da cena; os olhos fechados, o corpo relaxado, nenhum painel ou monitor visível."
+    }
+  ]
+}

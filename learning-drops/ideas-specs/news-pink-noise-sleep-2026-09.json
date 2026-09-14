@@ -1,0 +1,23 @@
+{
+  "slug": "news-pink-noise-sleep-2026-09",
+  "type": "news",
+  "material_title": { "pt": "Ruído rosa cronometrado e a limpeza cerebral", "en": "Timed Pink Noise and the Brain's Cleanup" },
+  "ideas": [
+    {
+      "id": "som-cronometrado-cerebro",
+      "ordinal": 1,
+      "title": { "pt": "O som que ouve seu cérebro dormir", "en": "The sound tuned to your sleeping brain" },
+      "claim": { "pt": "Um som de 50ms, cronometrado ao pico da onda cerebral, ampliou o pulso que limpa o cérebro em 14 pessoas dormindo.", "en": "A 50-millisecond sound, timed to a brain wave's peak, boosted the pulse that flushes the sleeping brain in 14 people." },
+      "body": {
+        "pt": "Durante o sono profundo, ondas elétricas lentas varrem o cérebro e, logo atrás delas, sobe um pulso de líquido cefalorraquidiano (LCR) — o fluido que banha o cérebro e ajuda a levar embora resíduos metabólicos. Pesquisadores do MIT testaram se dava pra amplificar essa dupla de propósito: um algoritmo previu, com menos de 100 milissegundos de atraso, o pico exato da onda lenta de 14 voluntários cochilando dentro de um scanner de ressonância, com eletroencefalograma (EEG) e imagem funcional por ressonância (fMRI) simultâneos — a dupla que mede atividade elétrica e fluxo de líquido ao mesmo tempo — e disparou ali uma rajada de **ruído rosa** de 50 milissegundos. Publicado em 9 de setembro de 2026 na Science Translational Medicine, o resultado: a onda elétrica e o pulso de LCR ficaram maiores, sem porcentagem divulgada. Os autores, Laura Lewis e Joshua Levitt, já fundaram uma empresa em cima da tecnologia. **O timing é tudo**: um app comum de ruído rosa tocando a noite inteira não faz esse trabalho, porque nada ali é cronometrado onda a onda.",
+        "en": "During deep sleep, slow electrical waves sweep the brain, and right behind them rises a pulse of cerebrospinal fluid (CSF) — the fluid that bathes the brain and helps carry metabolic waste away. MIT researchers tested whether that pair could be amplified on purpose: an algorithm predicted, with under 100 milliseconds of lag, the exact peak of each slow wave in 14 volunteers napping inside an MRI scanner, with simultaneous electroencephalography (EEG) and functional MRI (fMRI) — the pair that tracks electrical activity and fluid flow at once — and fired a 50-millisecond burst of **pink noise** right at that instant. Published September 9, 2026 in Science Translational Medicine, the result: both the electrical wave and the CSF pulse grew larger, no percentage released. The authors, Laura Lewis and Joshua Levitt, have already founded a company around the technology. **Timing is everything**: an ordinary pink-noise app playing all night doesn't do this work, because nothing in it is timed wave by wave."
+      },
+      "image_brief": "Uma pessoa deitada de lado numa maca estreita dentro do túnel de um aparelho de ressonância magnética, cabeça envolta por uma touca de eletrodos com fios finos, luz azulada e difusa saindo das paredes cilíndricas do aparelho, ambiente de laboratório de pesquisa do sono.",
+      "sources": [
+        { "label": { "pt": "MIT News (9/set/2026)", "en": "MIT News (Sept 9, 2026)" }, "url": "https://news.mit.edu/2026/pink-noise-burst-may-mean-more-restorative-sleep-0909" },
+        { "label": { "pt": "Levitt et al., 2026 · Science Translational Medicine", "en": "Levitt et al., 2026 · Science Translational Medicine" }, "url": "https://www.science.org/doi/10.1126/scitranslmed.aea5469" }
+      ],
+      "cta": null
+    }
+  ]
+}
