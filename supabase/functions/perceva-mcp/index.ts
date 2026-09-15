@@ -898,14 +898,12 @@ function buildServer(token: string, userId: string): McpServer {
         'the evening that just ended). Pass `date` only for a specific past ' +
         'day the user named (up to 30 days back).',
       inputSchema: {
-        // The digits are also accepted as strings on purpose: with a mixed
-        // number|string union, claude.ai serializes the model's 2 as "2", and a
-        // number-only branch rejected every real rating. No .transform() — it
-        // would not survive the JSON Schema conversion; the handler parses.
-        mood: z.union([
-          z.number().int().min(1).max(5),
-          z.enum(['1', '2', '3', '4', '5', 'unknown']),
-        ])
+        // Any string is accepted on purpose and normalized in the handler: with
+        // a mixed number|string union, claude.ai sends the model's 2 as a
+        // string, and a strict schema rejected every real rating at validation
+        // (a raw -32602 the model cannot recover from). No .transform() — it
+        // would not survive the JSON Schema conversion.
+        mood: z.union([z.number().int().min(1).max(5), z.string()])
           .optional()
           .describe(
             '1=terrible .. 5=great, as stated by the user. "unknown" when they ' +
@@ -1004,19 +1002,29 @@ function buildServer(token: string, userId: string): McpServer {
 
       // ── 3. Rating: never fabricated ───────────────────────────────────────
       const keepsExisting = existing !== null && mode === 'merge';
+      const anchors = { 1: 'Péssimo', 2: 'Ruim', 3: 'Neutro', 4: 'Bom', 5: 'Ótimo' };
+      // "2", " 2 " and a double-encoded "\"2\"" all mean 2.
+      const rawMood = typeof args.mood === 'string'
+        ? args.mood.trim().replace(/^["']+|["']+$/g, '').trim().toLowerCase()
+        : args.mood;
+      if (typeof rawMood === 'string' && rawMood !== 'unknown' && !/^[1-5]$/.test(rawMood)) {
+        return fail(JSON.stringify({
+          error: 'invalid_mood', received: args.mood,
+          expected: 'integer 1-5, or "unknown"', anchors,
+        }));
+      }
+      const moodUnknown = rawMood === 'unknown';
       const moodGiven =
-        typeof args.mood === 'number' ? args.mood
-        : args.mood !== undefined && args.mood !== 'unknown' ? Number(args.mood)
+        typeof rawMood === 'number' ? rawMood
+        : typeof rawMood === 'string' && !moodUnknown ? Number(rawMood)
         : null;
       // "unknown" never writes, not even an append on an existing day: the
       // model is meant to ask first and call again with the rating.
-      if (args.mood === 'unknown' || (moodGiven === null && !keepsExisting)) {
+      if (moodUnknown || (moodGiven === null && !keepsExisting)) {
         return fail(JSON.stringify({
           error: 'mood_missing',
           date, date_label_pt: dateLabelPt(date),
-          anchors: {
-            1: 'Péssimo', 2: 'Ruim', 3: 'Neutro', 4: 'Bom', 5: 'Ótimo',
-          },
+          anchors,
         }));
       }
       const mood = moodGiven ?? existing!.mood;
