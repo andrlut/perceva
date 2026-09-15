@@ -291,7 +291,7 @@ async function rpc(
 
 function buildServer(token: string, userId: string): McpServer {
   const server = new McpServer(
-    { name: 'perceva-mcp', version: '0.4.2' },
+    { name: 'perceva-mcp', version: '0.4.3' },
     {
       instructions: [
         'Perceva is a habit/wellness app organized in 6 dimensions',
@@ -898,7 +898,14 @@ function buildServer(token: string, userId: string): McpServer {
         'the evening that just ended). Pass `date` only for a specific past ' +
         'day the user named (up to 30 days back).',
       inputSchema: {
-        mood: z.union([z.number().int().min(1).max(5), z.literal('unknown')])
+        // The digits are also accepted as strings on purpose: with a mixed
+        // number|string union, claude.ai serializes the model's 2 as "2", and a
+        // number-only branch rejected every real rating. No .transform() — it
+        // would not survive the JSON Schema conversion; the handler parses.
+        mood: z.union([
+          z.number().int().min(1).max(5),
+          z.enum(['1', '2', '3', '4', '5', 'unknown']),
+        ])
           .optional()
           .describe(
             '1=terrible .. 5=great, as stated by the user. "unknown" when they ' +
@@ -997,7 +1004,10 @@ function buildServer(token: string, userId: string): McpServer {
 
       // ── 3. Rating: never fabricated ───────────────────────────────────────
       const keepsExisting = existing !== null && mode === 'merge';
-      const moodGiven = typeof args.mood === 'number' ? args.mood : null;
+      const moodGiven =
+        typeof args.mood === 'number' ? args.mood
+        : args.mood !== undefined && args.mood !== 'unknown' ? Number(args.mood)
+        : null;
       // "unknown" never writes, not even an append on an existing day: the
       // model is meant to ask first and call again with the rating.
       if (args.mood === 'unknown' || (moodGiven === null && !keepsExisting)) {
