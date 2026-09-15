@@ -291,7 +291,7 @@ async function rpc(
 
 function buildServer(token: string, userId: string): McpServer {
   const server = new McpServer(
-    { name: 'perceva-mcp', version: '0.4.1' },
+    { name: 'perceva-mcp', version: '0.4.2' },
     {
       instructions: [
         'Perceva is a habit/wellness app organized in 6 dimensions',
@@ -905,9 +905,15 @@ function buildServer(token: string, userId: string): McpServer {
             'gave no rating — nothing is written and the anchors come back. ' +
             'Omit to keep the existing rating (merge on an existing day only).',
           ),
-        note: z.string().max(NOTE_MAX).optional()
-          .describe('The day\'s journal, first person, in the user\'s words.'),
-        tags: z.array(z.string()).max(TAGS_MAX).optional()
+        // No .max() here on purpose: a schema-level limit fails as a raw
+        // validation error on `note` that models read as "field rejected" and
+        // give up on. The handler enforces NOTE_MAX with an actionable error.
+        note: z.string().nullish()
+          .describe(
+            'The day\'s journal, first person, in the user\'s words. Up to ' +
+            `${NOTE_MAX} characters — condense a long dictation.`,
+          ),
+        tags: z.array(z.string()).max(TAGS_MAX).nullish()
           .describe(
             'Mood tags: slug, or the pt-BR/en label ("ansioso", "trabalho"). ' +
             'Unmatched ones are reported back, not silently dropped.',
@@ -992,7 +998,9 @@ function buildServer(token: string, userId: string): McpServer {
       // ── 3. Rating: never fabricated ───────────────────────────────────────
       const keepsExisting = existing !== null && mode === 'merge';
       const moodGiven = typeof args.mood === 'number' ? args.mood : null;
-      if (moodGiven === null && !keepsExisting) {
+      // "unknown" never writes, not even an append on an existing day: the
+      // model is meant to ask first and call again with the rating.
+      if (args.mood === 'unknown' || (moodGiven === null && !keepsExisting)) {
         return fail(JSON.stringify({
           error: 'mood_missing',
           date, date_label_pt: dateLabelPt(date),
@@ -1039,6 +1047,9 @@ function buildServer(token: string, userId: string): McpServer {
       if (incomingNote.length > NOTE_MAX) {
         return fail(JSON.stringify({
           error: 'note_too_long', length: incomingNote.length, max: NOTE_MAX,
+          written: false,
+          hint: `Nothing was saved. Condense the note to at most ${NOTE_MAX} ` +
+            'characters, still first person and in the user\'s words, and call again.',
         }));
       }
 
@@ -1074,7 +1085,11 @@ function buildServer(token: string, userId: string): McpServer {
         return fail(JSON.stringify({
           error: 'note_too_long_after_merge',
           length: note.length, max: NOTE_MAX,
+          written: false,
           hint_code: 'use_mode_replace_or_shorter_note',
+          hint: 'Nothing was saved. The day\'s existing note plus this one exceed ' +
+            `${NOTE_MAX} characters: send a shorter note, or ask the user before ` +
+            'using mode "replace".',
         }));
       }
 
