@@ -8,7 +8,7 @@
  * it ever comes back.
  */
 
-import type { TaskSub } from '@/lib/db/types';
+import type { CoinMultiplier, TaskSub } from '@/lib/db/types';
 
 export type Difficulty = 1 | 2 | 3 | 4 | 5;
 
@@ -59,6 +59,8 @@ export interface TaskRewardBreakdown {
 
 export function rewardForTaskSubs(
   subs: TaskSub[],
+  /** Coins relative to XP for this log (0 / 0.5 / 1 / 2). XP is untouched. */
+  coinMultiplier: number = 1,
 ): TaskRewardBreakdown {
   let totalXp = 0;
   let totalCoins = 0;
@@ -67,7 +69,9 @@ export function rewardForTaskSubs(
   for (const s of subs) {
     const base = REWARD_BY_DIFFICULTY[s.stars];
     const xp = base.xp;
-    const coins = base.coins;
+    // Per sub, rounded half up — the same rule as round() in complete_task,
+    // so the preview matches what the server credits (3 stars at half = 18).
+    const coins = Math.round(base.coins * coinMultiplier);
     perSub.push({ sub_id: s.sub_id, stars: s.stars, xp, coins });
     totalXp += xp;
     totalCoins += coins;
@@ -78,6 +82,35 @@ export function rewardForTaskSubs(
     total: { xp: totalXp, coins: totalCoins },
     totalStars,
   };
+}
+
+/**
+ * How many coins a practice pays relative to its XP — Nada / Metade / Igual /
+ * Dobro. XP stays the stars (the effort spent); coins are what the practice is
+ * worth in the reward economy. Mirrors the closed set of the migration
+ * `coin_multiplier` (CHECK on the columns + validation in complete_task).
+ */
+export const COIN_MULTIPLIER_BY_KEY = {
+  none: 0,
+  half: 0.5,
+  same: 1,
+  double: 2,
+} as const satisfies Record<string, CoinMultiplier>;
+
+export type CoinMultiplierKey = keyof typeof COIN_MULTIPLIER_BY_KEY;
+
+export function coinMultiplierKey(m: number): CoinMultiplierKey {
+  if (m === 0) return 'none';
+  if (m === 0.5) return 'half';
+  if (m === 2) return 'double';
+  return 'same';
+}
+
+/** A row's `numeric` value → the closed set. Anything unexpected reads as 1,
+ *  the old coins == XP rule, never as a bigger payout. */
+export function asCoinMultiplier(v: unknown): CoinMultiplier {
+  const n = Number(v);
+  return (n === 0 || n === 0.5 || n === 2 ? n : 1) as CoinMultiplier;
 }
 
 /**

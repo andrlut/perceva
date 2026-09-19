@@ -332,6 +332,12 @@ export interface TaskSub {
   stars: 1 | 2 | 3 | 4 | 5;
 }
 
+/**
+ * Coins a practice pays relative to its XP: 0 / 0.5 / 1 / 2 (Nada / Metade /
+ * Igual / Dobro). Closed set, enforced by CHECK + complete_task.
+ */
+export type CoinMultiplier = 0 | 0.5 | 1 | 2;
+
 export interface Task {
   id: string;
   character_id: string;
@@ -348,6 +354,13 @@ export interface Task {
   /** Optional Ionicons name overriding the auto-derived primary-sub icon
    *  on the TaskCard tile. Null/undefined falls back to the sub's icon. */
   icon: string | null;
+  /**
+   * The practice's default coins relative to its XP. XP is the stars (the
+   * effort spent); coins are what the practice is worth in the reward
+   * economy. 1 = coins equal to XP, the rule before this column existed.
+   * A completion can override it (CompleteTaskSheet).
+   */
+  coin_multiplier: CoinMultiplier;
 }
 
 export interface TaskTemplate {

@@ -14,7 +14,7 @@ import Animated, {
 
 import { SubColoredPips } from '@/components/SubColoredPips';
 import type { DayCompletion } from '@/lib/api/history';
-import type { TaskSub, TaskWithSubs } from '@/lib/db/types';
+import type { CoinMultiplier, TaskSub, TaskWithSubs } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { formatTimeOfDay } from '@/lib/time';
@@ -48,6 +48,9 @@ export interface CompletedItem {
   subs?: TaskSub[];
   /** ISO timestamp of the completion. Drives the HH:mm stamp. */
   at?: string;
+  /** Coins relative to XP this completion used, so "+1" repeats the coins
+   *  as well as the stars. */
+  coinMultiplier?: CoinMultiplier;
 }
 
 /**
@@ -82,6 +85,7 @@ export function completionsToItems(
       coins: c.coinsGranted,
       subs: c.subs,
       at: c.completedAt,
+      coinMultiplier: c.coinMultiplier,
     });
   }
   return out;
@@ -103,7 +107,7 @@ interface Props {
    * so "+1" repeats *that* rep ("do it again, same as this one") rather
    * than silently falling back to the task's defaults.
    */
-  onExtra?: (task: TaskWithSubs, subs?: TaskSub[]) => void;
+  onExtra?: (task: TaskWithSubs, subs?: TaskSub[], coinMultiplier?: CoinMultiplier) => void;
   /** Render the header even with zero items (keeps a tour anchor mounted
    *  and lets "Feitas hoje · 0" grow into the day's tally). */
   showWhenEmpty?: boolean;
@@ -305,7 +309,7 @@ function CompletedRow({
   item: CompletedItem;
   last: boolean;
   onUndo?: (completionId: string) => void;
-  onExtra?: (task: TaskWithSubs, subs?: TaskSub[]) => void;
+  onExtra?: (task: TaskWithSubs, subs?: TaskSub[], coinMultiplier?: CoinMultiplier) => void;
 }) {
   const { t } = useT();
   const meta = useMetaLookup();
@@ -361,7 +365,7 @@ function CompletedRow({
 
       {canExtra ? (
         <Pressable
-          onPress={() => onExtra!(item.task, item.subs)}
+          onPress={() => onExtra!(item.task, item.subs, item.coinMultiplier)}
           style={({ pressed }) => [
             styles.iconBtn,
             styles.extraBtn,

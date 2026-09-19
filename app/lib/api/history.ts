@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { dimensionForSub } from '@/lib/api/tasks';
-import type { SubId, TaskSub, TaskWithSubs } from '@/lib/db/types';
+import type { CoinMultiplier, SubId, TaskSub, TaskWithSubs } from '@/lib/db/types';
 import { isOpenOnDay, parseRecurrence } from '@/lib/recurrence';
 import type { WeekStart } from '@/lib/settings';
 import { supabase } from '@/lib/supabase';
+import { asCoinMultiplier } from '@/lib/xp';
 
 export const historyKeys = {
   all: ['history'] as const,
@@ -43,6 +44,7 @@ interface DailyCompletionRow {
   xp_granted: number;
   coins_granted: number;
   total_stars: number;
+  coin_multiplier: number | string | null;
   task_completion_sub: CompletionSubJoin[] | null;
   task: CompletionTaskJoin | null;
 }
@@ -154,6 +156,8 @@ export interface DayCompletion {
   totalStars: number;
   xpGranted: number;
   coinsGranted: number;
+  /** Coins relative to XP this log used — what the drawer's "+1" repeats. */
+  coinMultiplier: CoinMultiplier;
   completedAt: string;
 }
 
@@ -183,6 +187,7 @@ export function taskFromCompletionSnapshot(c: DayCompletion): TaskWithSubs {
     updated_at: c.completedAt,
     template_id: null,
     icon: null,
+    coin_multiplier: c.coinMultiplier,
     subs,
     primary_sub_id: primary,
     primary_dimension_id: dimensionForSub(primary),
@@ -225,6 +230,7 @@ interface TaskRowFull {
   updated_at: string;
   template_id: string | null;
   icon: string | null;
+  coin_multiplier: number | string | null;
   task_sub: { sub_id: string; stars: number }[] | null;
 }
 
@@ -250,6 +256,7 @@ function hydrateTask(raw: TaskRowFull, recurrence: TaskWithSubs['recurrence']): 
     updated_at: raw.updated_at,
     template_id: raw.template_id,
     icon: raw.icon,
+    coin_multiplier: asCoinMultiplier(raw.coin_multiplier),
     subs,
     primary_sub_id: primary,
     primary_dimension_id: dimensionForSub(primary),
@@ -272,7 +279,7 @@ export function useDayDetail(date: Date, weekStart: WeekStart = 'monday') {
       const { data: comps, error: compErr } = await supabase
         .from('task_completion')
         .select(
-          'id, task_id, completed_at, xp_granted, coins_granted, total_stars, task_completion_sub(sub_id, stars, xp_granted, coins_granted), task:task_id(id, title)',
+          'id, task_id, completed_at, xp_granted, coins_granted, total_stars, coin_multiplier, task_completion_sub(sub_id, stars, xp_granted, coins_granted), task:task_id(id, title)',
         )
         .eq('completed_local_date', dateKey)
         .order('completed_at', { ascending: true });
@@ -295,6 +302,7 @@ export function useDayDetail(date: Date, weekStart: WeekStart = 'monday') {
           totalStars: c.total_stars ?? subs.reduce((s, x) => s + x.stars, 0),
           xpGranted: c.xp_granted,
           coinsGranted: c.coins_granted,
+          coinMultiplier: asCoinMultiplier(c.coin_multiplier),
           completedAt: c.completed_at,
         };
       });

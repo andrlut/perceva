@@ -76,7 +76,7 @@ import {
 import { confirmAction } from '@/lib/util/confirm';
 import { useQuests } from '@/lib/api/quests';
 import { useModuleEnabled } from '@/lib/modules';
-import type { TaskSub, TaskWithSubs } from '@/lib/db/types';
+import type { CoinMultiplier, TaskSub, TaskWithSubs } from '@/lib/db/types';
 import { isDueOn } from '@/lib/recurrence';
 import { formatHeroDate } from '@/lib/time';
 import { compareOneShotsByFreshness, isInTrophyWindow } from '@/lib/trophy';
@@ -292,12 +292,16 @@ export default function HomeScreen() {
   }, [activeTourStep?.module, m1StepIndex]);
 
   // ── Mutation handlers ─────────────────────────────────────────────────
-  const fireCompletion = (task: TaskWithSubs, subs: TaskSub[]) => {
+  const fireCompletion = (
+    task: TaskWithSubs,
+    subs: TaskSub[],
+    coinMultiplier?: CoinMultiplier,
+  ) => {
     if (completeTask.isPending) return;
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
 
-    const reward = rewardForTaskSubs(subs);
+    const reward = rewardForTaskSubs(subs, coinMultiplier ?? task.coin_multiplier);
     const fid = Date.now();
     setFloats((prev) => [
       ...prev,
@@ -305,7 +309,7 @@ export default function HomeScreen() {
     ]);
 
     completeTask.mutate(
-      { task, subs },
+      { task, subs, coinMultiplier },
       {
         onSuccess: () => {
           emitTourEvent(M1_EVENTS.TASK_COMPLETED);
@@ -327,14 +331,18 @@ export default function HomeScreen() {
   // + M1 tour event). Past day → retro completion filed under that local
   // date ("I forgot to mark it yesterday"); no optimistic removal (the day
   // view refetches on settle), but still float the XP for feedback.
-  const completeForSelectedDay = (task: TaskWithSubs, subs: TaskSub[]) => {
+  const completeForSelectedDay = (
+    task: TaskWithSubs,
+    subs: TaskSub[],
+    coinMultiplier?: CoinMultiplier,
+  ) => {
     if (isToday) {
-      fireCompletion(task, subs);
+      fireCompletion(task, subs, coinMultiplier);
       return;
     }
     if (completeTask.isPending) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    const reward = rewardForTaskSubs(subs);
+    const reward = rewardForTaskSubs(subs, coinMultiplier ?? task.coin_multiplier);
     const fid = Date.now();
     setFloats((prev) => [
       ...prev,
@@ -353,7 +361,13 @@ export default function HomeScreen() {
     hideRetro(task.id);
     actedOnDaysRef.current.add(selectedKey);
     completeTask.mutate(
-      { task, subs, completedAt: at.toISOString(), completedLocalDate: selectedKey },
+      {
+        task,
+        subs,
+        coinMultiplier,
+        completedAt: at.toISOString(),
+        completedLocalDate: selectedKey,
+      },
       {
         onSuccess: () => {
           // A retro completion satisfies M1's "complete a practice" step
@@ -379,9 +393,14 @@ export default function HomeScreen() {
   // `subs` is supplied by the drawer's "+1", which repeats the stars of the
   // row it sits on ("do it again, same as this one"). Without it, undoing a
   // custom-starred rep and pressing "+1" would silently re-log the task's
-  // DEFAULT stars — not a round-trip.
-  const handleQuickComplete = (task: TaskWithSubs, subs?: TaskSub[]) => {
-    completeForSelectedDay(task, subs ?? task.subs);
+  // DEFAULT stars — not a round-trip. The same goes for the coins: "+1"
+  // repeats the row's coin choice; the plain check uses the practice's.
+  const handleQuickComplete = (
+    task: TaskWithSubs,
+    subs?: TaskSub[],
+    coinMultiplier?: CoinMultiplier,
+  ) => {
+    completeForSelectedDay(task, subs ?? task.subs, coinMultiplier);
   };
 
   const handleLongPress = (task: TaskWithSubs) => {
@@ -390,11 +409,11 @@ export default function HomeScreen() {
     emitTourEvent(M1_EVENTS.TASK_LONG_PRESSED);
   };
 
-  const handleSheetConfirm = (subs: TaskSub[]) => {
+  const handleSheetConfirm = (subs: TaskSub[], coinMultiplier: CoinMultiplier) => {
     if (!sheetTask) return;
     const task = sheetTask;
     setSheetTask(null);
-    completeForSelectedDay(task, subs);
+    completeForSelectedDay(task, subs, coinMultiplier);
   };
 
   const handleActionAdjust = () => {

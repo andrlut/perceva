@@ -16,7 +16,7 @@ import { useActiveTasks } from '@/lib/api/tasks';
 import type { DayPanelTarget } from '@/lib/calendar/dayLines';
 import type { CalendarRedemption } from '@/lib/calendar/filters';
 import type { CalendarFront } from '@/lib/calendar/store';
-import type { TaskSub, TaskWithSubs } from '@/lib/db/types';
+import type { CoinMultiplier, TaskSub, TaskWithSubs } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import type { WeekStart } from '@/lib/settings';
 import { tokens } from '@/theme';
@@ -60,7 +60,7 @@ interface Props {
   weekStart: WeekStart;
   /** Blocks the DaySeal from asserting "nothing was scheduled" mid-write. */
   isMutating: boolean;
-  onRetroComplete: (task: TaskWithSubs, subs?: TaskSub[]) => void;
+  onRetroComplete: (task: TaskWithSubs, subs?: TaskSub[], coinMultiplier?: CoinMultiplier) => void;
   onSwipeComplete: (task: TaskWithSubs) => void;
   onSkip: (task: TaskWithSubs) => void;
   onUnskip: (taskId: string) => void;

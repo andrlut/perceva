@@ -34,7 +34,7 @@ import {
   useCompleteTask,
   useUndoCompletion,
 } from '@/lib/api/tasks';
-import type { TaskSub, TaskWithSubs } from '@/lib/db/types';
+import type { CoinMultiplier, TaskSub, TaskWithSubs } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useLimitModalStore, useTaskLimit } from '@/lib/premium';
 import { isEffectivelyDaily } from '@/lib/recurrence';
@@ -112,10 +112,14 @@ export default function AllPracticesScreen() {
     router.push('/task-form');
   };
 
-  const fireCompletion = (task: TaskWithSubs, subs: TaskSub[]) => {
+  const fireCompletion = (
+    task: TaskWithSubs,
+    subs: TaskSub[],
+    coinMultiplier?: CoinMultiplier,
+  ) => {
     if (completeTask.isPending) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    const reward = rewardForTaskSubs(subs);
+    const reward = rewardForTaskSubs(subs, coinMultiplier ?? task.coin_multiplier);
     const fid = Date.now();
     setFloats((prev) => [
       ...prev,
@@ -127,10 +131,11 @@ export default function AllPracticesScreen() {
     at.setHours(12, 0, 0, 0);
     completeTask.mutate(
       isToday
-        ? { task, subs }
+        ? { task, subs, coinMultiplier }
         : {
             task,
             subs,
+            coinMultiplier,
             completedAt: at.toISOString(),
             completedLocalDate: selectedKey,
           },
@@ -158,14 +163,17 @@ export default function AllPracticesScreen() {
   // specific rep. Without the parameter the button would silently re-log
   // the task's DEFAULT stars here while repeating the row's on Home and on
   // the Calendar: same green button, three different meanings.
-  const handleQuickComplete = (task: TaskWithSubs, subs?: TaskSub[]) =>
-    fireCompletion(task, subs ?? task.subs);
+  const handleQuickComplete = (
+    task: TaskWithSubs,
+    subs?: TaskSub[],
+    coinMultiplier?: CoinMultiplier,
+  ) => fireCompletion(task, subs ?? task.subs, coinMultiplier);
 
-  const handleSheetConfirm = (subs: TaskSub[]) => {
+  const handleSheetConfirm = (subs: TaskSub[], coinMultiplier: CoinMultiplier) => {
     if (!sheetTask) return;
     const task = sheetTask;
     setSheetTask(null);
-    fireCompletion(task, subs);
+    fireCompletion(task, subs, coinMultiplier);
   };
 
   const handleUndo = (completionId: string) => {
