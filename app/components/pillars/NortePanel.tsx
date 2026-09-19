@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-na
 
 import { DimensionCards, type DimCardRow } from '@/components/DimensionCards';
 import { HexChart } from '@/components/HexChart';
-import { HexGrainToggle } from '@/components/HexGrainToggle';
+import { HexGrainToggle, useHexGrain } from '@/components/HexGrainToggle';
 import { HexSeriesLegend } from '@/components/HexSeriesLegend';
 import { pickSubScoresDecimal } from '@/lib/api/character';
 import type { CharacterSubScore, SubId } from '@/lib/db/types';
@@ -43,7 +43,7 @@ export function NortePanel({ subScores }: Props) {
   const metaLookup = useMetaLookup();
   const { width: screenWidth } = useWindowDimensions();
   const chartSize = Math.max(240, Math.min((screenWidth || 360) - 16, 360));
-  const [hexMode, setHexMode] = useState<'dims' | 'subs'>('dims');
+  const [hexMode, toggleHexMode] = useHexGrain();
   // A legenda do Norte era inerte — uma View copiada dos outros painéis.
   // Agora ela liga/desliga o contorno "hoje", que é o que ela sempre
   // descreveu sem controlar.
@@ -138,7 +138,7 @@ export function NortePanel({ subScores }: Props) {
       <HexGrainToggle
         mode={hexMode}
         accent={GOLD}
-        onToggle={() => setHexMode((m) => (m === 'dims' ? 'subs' : 'dims'))}
+        onToggle={toggleHexMode}
       />
 
       <HexSeriesLegend

@@ -12,11 +12,16 @@ export const SETTINGS_STORAGE_KEY = KEY;
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type LanguageCode = 'en' | 'pt';
 export type WeekStart = 'sunday' | 'monday';
+/** What a pillar hex plots: the 6 dimensions or the 12 subs. */
+export type HexGrain = 'dims' | 'subs';
 
 export interface AppSettings {
   theme: ThemeMode;
   language: LanguageCode;
   weekStart: WeekStart;
+  /** Which grain the three Eu hexes open on. The pill beside each hex still
+   *  flips it for the visit; this is only where it starts. */
+  hexGrain: HexGrain;
   /** Show a confirm dialog before completing a 4★ or 5★ task. */
   confirmHighDifficultyComplete: boolean;
   /** Master notification switch — gates every scheduled notification. */
@@ -64,6 +69,7 @@ const DEFAULTS: AppSettings = {
   theme: 'system',
   language: 'en',
   weekStart: 'sunday',
+  hexGrain: 'dims',
   confirmHighDifficultyComplete: true,
   notificationsEnabled: false,
   dailyReminder: true,
@@ -117,6 +123,7 @@ export const useSettingsStore = create<Store>((set, get) => ({
           ...DEFAULTS,
           ...parsed,
           language,
+          hexGrain: parsed.hexGrain === 'subs' ? 'subs' : 'dims',
           briefHour: clampInt(parsed.briefHour, 0, 23, DEFAULTS.briefHour),
           briefMinute: clampInt(parsed.briefMinute, 0, 59, DEFAULTS.briefMinute),
           dayEndHour: clampInt(parsed.dayEndHour, 0, 23, DEFAULTS.dayEndHour),

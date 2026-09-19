@@ -929,7 +929,6 @@ const pt: Translations = {
     showDims: 'Ver as 6 dimensões',
     seriesSelf: 'como me vejo',
     seriesQuiz: 'questionário',
-    seriesPracticed: 'o que pratico',
     seriesDesired: 'onde quero chegar',
     seriesToday: 'hoje',
     seriesToggleA11y: 'Mostrar ou ocultar {{series}} no gráfico',
@@ -1934,6 +1933,7 @@ const pt: Translations = {
       theme: 'Tema',
       language: 'Idioma',
       weekStart: 'Início da semana',
+      hexGrain: 'Hexágono abre em',
       confirmHighDifficulty: 'Confirmar práticas difíceis',
       confirmHighDifficultyDescription: 'Pede confirmação antes de concluir práticas de 4★ ou 5★. Evita toques acidentais.',
     },
@@ -1951,6 +1951,11 @@ const pt: Translations = {
     weekStart: {
       sunday: 'Domingo',
       monday: 'Segunda',
+    },
+    hexGrain: {
+      dims: '6 dimensões',
+      subs: '12 subs',
+      note: 'Vale pros hexágonos da aba Eu. O botão 6/12 ao lado de cada um continua trocando na hora.',
     },
     notifications: {
       master: 'Ativar notificações',
@@ -2250,12 +2255,20 @@ const pt: Translations = {
   dedicacao: {
     hexAxisA11y: '{{dim}}: {{xp}} XP nesse período',
     saturation30:
-      'Cada área enche com {{xp}} XP em 30 dias — o mínimo de uma prática de 1★ todo dia. Passou disso, a ponta fica cheia.',
+      'Cada área enche o hex com {{xp}} XP em 30 dias (1★ todo dia). Nas barras, o traço marca esse mínimo e o trecho aceso é o que passou dele.',
     saturationWindow:
-      'Cada área enche com {{xp}} XP neste período — a régua é 300 a cada 30 dias, o mínimo de 1★ todo dia.',
+      'Neste período cada área enche o hex com {{xp}} XP (300 a cada 30 dias). Nas barras, o traço marca esse mínimo e o trecho aceso é o que passou dele.',
+    uncapped30:
+      'Nesta visão cada área enche o hex com {{rim}} XP em 30 dias, o triplo do mínimo — o fim das barras. Dá pra ver quanto cada uma passou.',
+    uncappedWindow:
+      'Nesta visão cada área enche o hex com {{rim}} XP neste período, o triplo do mínimo — o fim das barras. Dá pra ver quanto cada uma passou.',
+    rimLabel: 'Até {{xp}}',
+    rimShow: 'Mostrar o hex até {{xp}} XP',
+    levelTotal: 'Nível {{level}} · {{xp}} XP no total',
+    subA11yOver: '{{sub}}: {{xp}} XP, passou de {{cap}}',
+    subA11yUnder: '{{sub}}: {{xp}} de {{cap}} XP',
     hexEmpty: 'Nenhum XP nesse período',
     deltaNew: '+{{xp}} novo',
-    // O espelho: o contorno da percepção sobre a forma da prática.
   },
 
   errors: {

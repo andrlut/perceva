@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Svg, {
   Defs,
   LinearGradient,
@@ -8,62 +8,54 @@ import Svg, {
   Stop,
 } from 'react-native-svg';
 
+import { BAR_SPAN } from '@/lib/dedicacao/scale';
 import { tokens } from '@/theme';
 
 interface Props {
   /** Cumulative values over the window — must be non-decreasing. */
   cumulative: number[];
   color: string;
-  /** Y-axis ceiling. When provided, the line is drawn relative to this max
-   *  instead of the series' own peak — so multiple sparklines on screen can
-   *  be visually compared. Falls back to the series' last value. */
-  globalMax?: number;
-  width?: number;
-  height?: number;
+  /** The ruler for this series: 300 per sub in 30 days (prorated like the
+   *  bars), twice that for a dimension, which is two subs. Drawn dashed and
+   *  labeled, always at the same third of the height. */
+  reference: number;
+  width: number;
+  height: number;
   /** Stable id for the gradient def — required when multiple sparklines render
    *  on the same screen (SVG defs share a flat namespace). */
   idSuffix: string;
 }
 
+const PAD_Y = 2;
+
 /**
- * Cumulative sparkline — small line chart with no axes/labels. Used inside
- * the per-dimension card on Dedicação to show how XP accumulated across the
- * selected window. Renders a faint baseline + a colored line + a soft area
- * fill under the curve.
- *
- * When `globalMax` is set, the y-axis is fixed at that ceiling so all dims
- * are directly comparable — a sub-leading dim renders short and flat next
- * to the leader's full-height climb.
+ * Cumulative sparkline on the ruler's own geometry — the bars' tick, lying
+ * down. The y-axis runs to BAR_SPAN × the reference, so the dashed line sits
+ * at a third of the height in every chart and every period, and the curve
+ * crosses it on the day that area (or dimension) reached its minimum. Past
+ * the top the curve flattens, like a bar reaching the end of its track.
  */
-export function Sparkline({
-  cumulative,
-  color,
-  globalMax,
-  width = 240,
-  height = 36,
-  idSuffix,
-}: Props) {
+export function Sparkline({ cumulative, color, reference, width, height, idSuffix }: Props) {
+  const usableH = height - PAD_Y * 2;
+  const max = reference * BAR_SPAN;
+  const refY = height - PAD_Y - usableH / BAR_SPAN;
+
   const { linePath, areaPath } = useMemo(() => {
-    if (cumulative.length === 0) return { linePath: null, areaPath: null };
-    const last = cumulative[cumulative.length - 1];
-    if (last <= 0) return { linePath: null, areaPath: null };
-    const max = globalMax && globalMax > 0 ? globalMax : last;
-    const padY = 2;
-    const usableH = height - padY * 2;
-    const stepX =
-      cumulative.length > 1 ? width / (cumulative.length - 1) : 0;
+    const last = cumulative.length ? cumulative[cumulative.length - 1] : 0;
+    if (last <= 0 || max <= 0) return { linePath: null, areaPath: null };
+    const stepX = cumulative.length > 1 ? width / (cumulative.length - 1) : 0;
     let line = '';
     cumulative.forEach((v, i) => {
       const x = i * stepX;
-      const y = height - padY - (Math.min(v, max) / max) * usableH;
+      const y = height - PAD_Y - (Math.min(v, max) / max) * usableH;
       line += i === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`;
     });
     // Close the area down to the baseline at both ends.
-    const area = `${line} L ${(cumulative.length - 1) * stepX} ${height - padY} L 0 ${
-      height - padY
+    const area = `${line} L ${(cumulative.length - 1) * stepX} ${height - PAD_Y} L 0 ${
+      height - PAD_Y
     } Z`;
     return { linePath: line, areaPath: area };
-  }, [cumulative, width, height, globalMax]);
+  }, [cumulative, width, height, max, usableH]);
 
   const gradId = `spark-${idSuffix}`;
 
@@ -85,6 +77,16 @@ export function Sparkline({
           strokeWidth={1}
         />
         {areaPath && <Path d={areaPath} fill={`url(#${gradId})`} stroke="none" />}
+        <Line
+          x1={0}
+          y1={refY}
+          x2={width}
+          y2={refY}
+          stroke={tokens.text.hi}
+          strokeOpacity={0.6}
+          strokeWidth={1}
+          strokeDasharray="4 3"
+        />
         {linePath && (
           <Path
             d={linePath}
@@ -96,6 +98,25 @@ export function Sparkline({
           />
         )}
       </Svg>
+      <Text
+        style={[styles.refLabel, { top: refY - 14 }]}
+        allowFontScaling={false}
+        pointerEvents="none"
+      >
+        {Math.round(reference).toLocaleString()}
+      </Text>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  // Left end: the curves start near zero there, so the label never sits on
+  // a line — at the right end it would, on every area that crossed it.
+  refLabel: {
+    position: 'absolute',
+    left: 0,
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 10,
+    color: tokens.text.dim,
+  },
+});

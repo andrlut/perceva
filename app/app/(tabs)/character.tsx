@@ -203,10 +203,7 @@ export default function CharacterScreen() {
                 />
               )}
               {activePillar === 'praticada' && (
-                <DedicacaoPanel
-                  dimensions={dimensions}
-                  subScores={character.data.subScores}
-                />
+                <DedicacaoPanel dimensions={dimensions} />
               )}
               {activePillar === 'desejada' && (
                 <View style={styles.desejadaStack}>

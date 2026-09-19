@@ -933,7 +933,6 @@ const en = {
     showDims: 'Show the 6 dimensions',
     seriesSelf: 'how I see myself',
     seriesQuiz: 'questionnaire',
-    seriesPracticed: 'what I practice',
     seriesDesired: 'where I want to get',
     seriesToday: 'today',
     seriesToggleA11y: 'Show or hide {{series}} on the chart',
@@ -1934,6 +1933,7 @@ const en = {
       theme: 'Theme',
       language: 'Language',
       weekStart: 'Week starts on',
+      hexGrain: 'Hexagon opens on',
       confirmHighDifficulty: 'Confirm hard practices',
       confirmHighDifficultyDescription: 'Ask before completing a 4★ or 5★ practice. Stops accidental taps.',
     },
@@ -1951,6 +1951,11 @@ const en = {
     weekStart: {
       sunday: 'Sunday',
       monday: 'Monday',
+    },
+    hexGrain: {
+      dims: '6 dimensions',
+      subs: '12 subs',
+      note: 'Applies to the hexagons on the Me tab. The 6/12 button next to each one still switches on the spot.',
     },
     notifications: {
       master: 'Enable notifications',
@@ -2248,12 +2253,20 @@ const en = {
   dedicacao: {
     hexAxisA11y: '{{dim}}: {{xp}} XP this period',
     saturation30:
-      'Each area fills at {{xp}} XP in 30 days — a 1★ practice every day. Past that, the point stays full.',
+      'Each area fills the hex at {{xp}} XP in 30 days (a 1★ practice every day). On the bars, the tick marks that minimum and the bright part is what went past it.',
     saturationWindow:
-      'Each area fills at {{xp}} XP in this period — the rule is 300 per 30 days, a 1★ practice every day.',
+      'In this period each area fills the hex at {{xp}} XP (300 per 30 days). On the bars, the tick marks that minimum and the bright part is what went past it.',
+    uncapped30:
+      'In this view each area fills the hex at {{rim}} XP in 30 days, three times the minimum — the end of the bars. It shows how far past it each one went.',
+    uncappedWindow:
+      'In this view each area fills the hex at {{rim}} XP in this period, three times the minimum — the end of the bars. It shows how far past it each one went.',
+    rimLabel: 'Up to {{xp}}',
+    rimShow: 'Show the hex up to {{xp}} XP',
+    levelTotal: 'Level {{level}} · {{xp}} XP all-time',
+    subA11yOver: '{{sub}}: {{xp}} XP, past {{cap}}',
+    subA11yUnder: '{{sub}}: {{xp}} of {{cap}} XP',
     hexEmpty: 'No XP in this period',
     deltaNew: '+{{xp}} new',
-    // The mirror: the perception outline over the shape of practice.
   },
 
   errors: {
