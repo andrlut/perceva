@@ -2277,8 +2277,6 @@ const pt: Translations = {
     notEnoughGlobal: 'Registre humor por mais uns dias pra revelar padrões — faltam ~{{n}}.',
     notEnoughFeeling: 'Poucos dias assim ainda ({{n}}). Registre mais uns dias pra revelar o padrão.',
     notEnoughSub: 'Poucos dias com {{label}} ainda. Registre mais uns dias pra comparar.',
-    cardBest: 'Humor mais alto nos dias com {{label}} ({{delta}})',
-    cardGeneric: 'Veja como seu humor e suas atividades andam juntos',
   },
 
   timePicker: {

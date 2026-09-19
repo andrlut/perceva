@@ -2275,8 +2275,6 @@ const en = {
     notEnoughGlobal: 'Log your mood a few more days to reveal patterns — about {{n}} to go.',
     notEnoughFeeling: 'Not many days like this yet ({{n}}). Log a few more to reveal the pattern.',
     notEnoughSub: 'Not enough days with {{label}} yet. Log a few more to compare.',
-    cardBest: 'Higher mood on days with {{label}} ({{delta}})',
-    cardGeneric: 'See how your mood and activities move together',
   },
 
   timePicker: {
