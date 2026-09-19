@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { HexRadar, type HexAxis } from '@/components/HexRadar';
 import type { DimensionId, SubId } from '@/lib/db/types';
-import { meanRatio, saturationRatio } from '@/lib/dedicacao/scale';
+import { meanRatio, saturationRatio, spanRatio } from '@/lib/dedicacao/scale';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { tokens } from '@/theme';
@@ -24,7 +24,7 @@ interface Props {
   /** Per-dim XP for this window, any order. Missing dims count as 0. */
   slices: DimSlice[];
   /** 'dims' (default) plots the 6 dimensions; 'subs' plots all 12
-   *  sub-attributes from `subSlices`, normalized against the leading sub. */
+   *  sub-attributes from `subSlices`. */
   variant?: 'dims' | 'subs';
   /** Per-sub XP for the window, 12 entries in dim order. Required when
    *  variant is 'subs'. */
@@ -40,11 +40,11 @@ interface Props {
   /** XP that fills one SUB axis in this window — the saturation ruler
    *  (lib/saturation.ts), prorated to the window's elapsed days. */
   saturation: number;
-  /** Optional comparison outline, ratios already normalized 0..1 and in the
-   *  same axis order as the active grain. Used by the mirror reading: how
-   *  the user SEES themselves, drawn over what they practice. */
-  secondary?: number[];
-  secondaryColor?: string;
+  /** Two views, one rim each. Capped (default): the rim is the ruler (300 in
+   *  30 days). Uncapped: the rim is BAR_SPAN × the ruler (900) — the bars'
+   *  own end — so what went past the minimum shows. Never both lines at
+   *  once. */
+  capped: boolean;
   size?: number;
   onAxisPress?: (dim: DimensionId) => void;
   /** Stable id for the gradient def — required when more than one hex can
@@ -72,10 +72,13 @@ function formatCenterXp(xp: number): string {
  *
  * The scale is ABSOLUTE: each sub axis fills against the window's saturation
  * (lib/saturation.ts — 300 XP per 30 days, the minimum of a 1★ practice every
- * day) and a dimension axis is the mean of its two subs. Past the ruler the
- * vertex stays at the rim, so one heavy area can no longer squash the others
- * toward the center, as the old leader-relative scale did. Exact XP still
- * lives in the total under the hex and in the per-dim cards.
+ * day) and a dimension axis is the mean of its two subs. With the teto (the
+ * default) the vertex stops at the rim once past the ruler, so one heavy area
+ * can no longer squash the others toward the center, as the old
+ * leader-relative scale did. The other view moves the rim to BAR_SPAN × the
+ * ruler — the end of the bars below — to show how far past the minimum each
+ * area went. Exact XP lives in the total under the hex and in the per-dim
+ * cards.
  *
  * Empty window: grid only, no shape, and a caption saying so.
  */
@@ -87,8 +90,7 @@ export function XpHexChart({
   prevTotalXp,
   isLoading = false,
   saturation,
-  secondary,
-  secondaryColor,
+  capped,
   size = 240,
   onAxisPress,
   idSuffix,
@@ -101,6 +103,8 @@ export function XpHexChart({
   // to the mean of its two subs. In 'subs' each axis carries its sub glyph
   // but its parent dim's color, so the dodecagon reads as six lobes.
   const vertices = useMemo(() => {
+    const ratioOf = (xp: number) =>
+      capped ? saturationRatio(xp, saturation) : spanRatio(xp, saturation);
     const subs = subSlices ?? [];
     if (variant === 'subs') {
       return subs.map((s) => ({
@@ -108,7 +112,7 @@ export function XpHexChart({
         iconName: SUB_META[s.subId].iconName as string | undefined,
         label: metaLookup.sub(s.subId).label,
         xp: s.xp,
-        ratio: saturationRatio(s.xp, saturation),
+        ratio: ratioOf(s.xp),
       }));
     }
     const xpById = new Map(slices.map((s) => [s.dimId, s.xp]));
@@ -120,13 +124,11 @@ export function XpHexChart({
         label: metaLookup.dim(dimId).label,
         xp,
         ratio: meanRatio(
-          subs
-            .filter((s) => s.dimId === dimId)
-            .map((s) => saturationRatio(s.xp, saturation)),
+          subs.filter((s) => s.dimId === dimId).map((s) => ratioOf(s.xp)),
         ),
       };
     });
-  }, [variant, slices, subSlices, metaLookup, saturation]);
+  }, [variant, slices, subSlices, metaLookup, saturation, capped]);
 
   const hasData = totalXp > 0 && vertices.some((v) => v.xp > 0);
 
@@ -163,8 +165,6 @@ export function XpHexChart({
           letting the string dictate the geometry. */}
       <HexRadar
         axes={axes}
-        secondary={secondary}
-        secondaryColor={secondaryColor}
         centerValue={formatCenterXp(totalXp)}
         centerUnit="XP"
         centerFontSize={24}

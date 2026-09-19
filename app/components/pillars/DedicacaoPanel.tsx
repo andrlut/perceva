@@ -1,72 +1,69 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import Animated, { LinearTransition, useReducedMotion } from 'react-native-reanimated';
 
-import { HexGrainToggle } from '@/components/HexGrainToggle';
-import { HexSeriesLegend } from '@/components/HexSeriesLegend';
+import { HexGrainToggle, HexPill, useHexGrain } from '@/components/HexGrainToggle';
 import { PeriodSelector } from '@/components/dedicacao/PeriodSelector';
 import { Sparkline } from '@/components/dedicacao/Sparkline';
+import { SubBar } from '@/components/dedicacao/SubBar';
 import { XpHexChart } from '@/components/dedicacao/XpHexChart';
-import { pickSubScoresDecimal } from '@/lib/api/character';
 import { type SubWindow } from '@/lib/api/dedicacao';
-import type {
-  CharacterDimension,
-  CharacterSubScore,
-  DimensionId,
-  SubId,
-} from '@/lib/db/types';
-import { meanRatio, pct, saturationRatio } from '@/lib/dedicacao/scale';
+import { BAR_SPAN } from '@/lib/dedicacao/scale';
+import type { CharacterDimension, DimensionId } from '@/lib/db/types';
 import { elapsedDays, SUB_SATURATION_30D, subSaturationFor } from '@/lib/saturation';
 import { useWindowScrub } from '@/lib/dedicacao/useWindowScrub';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { levelProgress } from '@/lib/xp';
 import { tokens } from '@/theme';
-import {
-  DIMENSION_META,
-  DIMENSION_ORDER,
-  SUB_META,
-  SUBS_BY_DIM,
-} from '@/theme/dimensions';
+import { DIMENSION_META, DIMENSION_ORDER, SUBS_BY_DIM } from '@/theme/dimensions';
 
 interface Props {
   dimensions: CharacterDimension[];
-  /** All character_sub_score rows — feeds the mirror outline on the hex. */
-  subScores: CharacterSubScore[];
 }
 
-const SPARK_HEIGHT = 64;
+interface DimWindow {
+  window: number;
+  cumulative: number[];
+  perSub: SubWindow[];
+}
 
-/** Perception outline tone — Percebida's violet, because that is exactly
- *  what the line is: the Percebida portrait visiting the Praticada hex. */
-const MIRROR_COLOR = tokens.brand.violet2;
+const CHART_HEIGHT = 48;
 
-/** A self-score (0..5) on the same absolute ruler as the XP: 5/5 = full. */
-const scoreRatio = (score: number) => Math.max(0, Math.min(1, score / 5));
+/** Most-trained first; ties keep the fixed order. */
+function byWindowXp(perDimWindow: Map<DimensionId, DimWindow>): DimensionId[] {
+  return [...DIMENSION_ORDER].sort(
+    (a, b) =>
+      (perDimWindow.get(b)?.window ?? 0) - (perDimWindow.get(a)?.window ?? 0) ||
+      DIMENSION_ORDER.indexOf(a) - DIMENSION_ORDER.indexOf(b),
+  );
+}
 
 /**
- * Sub-pillar **Dedicação** (Praticada). Standardized layout: the hex leads,
- * then the period selector (the one input, sitting between the two surfaces
- * it drives), then the six dimension cards in fixed order, then the history
- * link.
+ * Sub-pillar **Dedicação** (Praticada). The hex leads, then the period
+ * selector (the one input, sitting between the two surfaces it drives),
+ * then the six dimension cards, then the history link.
  *
- * Every bar shares the hex's exact ruler (the saturation — lib/saturation.ts,
- * 300 XP per 30 days per sub), so a dim bar's fill equals its hex vertex
- * radius and is the mean of its two sub bars — one scale on the whole screen
- * instead of the four that used to coexist. The leader tops out at 85% of
- * the track (relative scale, not "maxed"), marked by a tick.
+ * One ruler on the whole screen — the saturation (lib/saturation.ts, 300 XP
+ * per 30 days per sub, prorated to the days elapsed):
+ *   - the hex fills against it — or, in its second view, against the bars'
+ *     end (3× it), never both rims at once;
+ *   - each sub bar puts it at a fixed tick a third of the way along, so the
+ *     lit part past the tick is what went past 300 — the one thing the
+ *     capped hex cannot show;
+ *   - each expanded chart draws it dashed (twice it for a dimension).
  *
- * Level and all-time XP stay in the LV pill and on the dim detail screen —
- * only the window bars, sub bars, and the expanded trend sparkline change
- * with the selector. Tapping a hex vertex opens that dimension's detail,
- * matching the Avaliação hex.
+ * The cards read most-trained first. The hex keeps its fixed axis order; a
+ * card finds its vertex by icon and color, not by position.
  */
-export function DedicacaoPanel({ dimensions, subScores }: Props) {
+export function DedicacaoPanel({ dimensions }: Props) {
   const router = useRouter();
   const { t, locale } = useT();
   const metaLookup = useMetaLookup();
   const { width: screenWidth } = useWindowDimensions();
+  const reduceMotion = useReducedMotion();
 
   const {
     spec,
@@ -78,8 +75,11 @@ export function DedicacaoPanel({ dimensions, subScores }: Props) {
     end: windowEnd,
   } = useWindowScrub();
   const [expanded, setExpanded] = useState<Set<DimensionId>>(new Set());
-  const [hexMode, setHexMode] = useState<'dims' | 'subs'>('dims');
-  const [showMirror, setShowMirror] = useState(true);
+  const [hexMode, toggleHexMode] = useHexGrain();
+  // Two views of the hex, one rim each: up to the ruler (300 in 30 days —
+  // "did I cover each area?") or up to the bars' end (900 — "how far past
+  // the minimum did each go?"). Per visit, not saved.
+  const [capped, setCapped] = useState(true);
 
   const dimMap = useMemo(() => {
     const m = new Map<DimensionId, CharacterDimension>();
@@ -99,10 +99,7 @@ export function DedicacaoPanel({ dimensions, subScores }: Props) {
   );
 
   const perDimWindow = useMemo(() => {
-    const m = new Map<
-      DimensionId,
-      { window: number; cumulative: number[]; perSub: SubWindow[] }
-    >();
+    const m = new Map<DimensionId, DimWindow>();
     for (const d of DIMENSION_ORDER) {
       m.set(d, {
         window: 0,
@@ -124,10 +121,9 @@ export function DedicacaoPanel({ dimensions, subScores }: Props) {
     return m;
   }, [windowQuery.data]);
 
-  // One ruler for the hex AND every bar on this panel: the saturation for
-  // this window — 300 XP per 30 days per sub, prorated to the days already
-  // elapsed (lib/saturation.ts). This is what makes the bars agree with the
-  // chart above them.
+  // The ruler for this window: 300 XP per 30 days per sub, prorated to the
+  // days already elapsed (lib/saturation.ts). The hex, the bars and the
+  // charts all read this one number.
   const subCap = useMemo(
     () => subSaturationFor(elapsedDays(windowStart, windowEnd)),
     [windowStart, windowEnd],
@@ -146,71 +142,28 @@ export function DedicacaoPanel({ dimensions, subScores }: Props) {
     [perDimWindow],
   );
 
-  // ── The mirror outline ──────────────────────────────────────────────
-  // How the user SEES themselves, plotted over what they practice. Self
-  // scores lead; a sub the user never rated falls back to the questionnaire
-  // so a quiz-only user still gets a reflection.
-  //
-  // Absolute, like the XP it overlays: a sub's self-score over 5, so 5/5
-  // reaches the rim exactly where a saturated sub does, and a dimension is
-  // the mean of its two subs — the same rule as the filled shape. Both
-  // silhouettes then answer "how full is each area", so where the violet
-  // line reaches past the filled shape the user sees themselves strong in an
-  // area they are not currently feeding — and where it falls short, they are
-  // practicing more than they give themselves credit for.
-  const perception = useMemo(() => {
-    const self = pickSubScoresDecimal(subScores, 'self');
-    const quiz = pickSubScoresDecimal(subScores, 'questionnaire');
-    const perSub = new Map<SubId, number>();
-    for (const dim of DIMENSION_ORDER) {
-      for (const sub of SUBS_BY_DIM[dim]) {
-        const s = self.get(sub) ?? 0;
-        perSub.set(sub, s > 0 ? s : (quiz.get(sub) ?? 0));
-      }
-    }
-    const perDim = new Map<DimensionId, number>();
-    for (const dim of DIMENSION_ORDER) {
-      perDim.set(
-        dim,
-        SUBS_BY_DIM[dim].reduce((sum, sub) => sum + (perSub.get(sub) ?? 0), 0) /
-          SUBS_BY_DIM[dim].length,
-      );
-    }
-    const hasAny = [...perSub.values()].some((v) => v > 0);
-    return { perSub, perDim, hasAny };
-  }, [subScores]);
-
-  // Ratios in the active grain's axis order — 6 dims or 12 subs, matching
-  // whatever the hex is currently plotting.
-  const mirrorSeries = useMemo(() => {
-    if (!perception.hasAny) return undefined;
-    if (hexMode === 'subs') {
-      return DIMENSION_ORDER.flatMap((dim) =>
-        SUBS_BY_DIM[dim].map((sub) => scoreRatio(perception.perSub.get(sub) ?? 0)),
-      );
-    }
-    return DIMENSION_ORDER.map((dim) => scoreRatio(perception.perDim.get(dim) ?? 0));
-  }, [perception, hexMode]);
-
-  // The expanded trend sparkline keeps its own cumulative ceiling so a
-  // sub-leading dim reads short next to the leader's full-height climb.
-  const sparkGlobalMax = useMemo(() => {
-    let max = 0;
-    for (const win of perDimWindow.values()) {
-      const last = win.cumulative.length
-        ? win.cumulative[win.cumulative.length - 1]
-        : 0;
-      if (last > max) max = last;
-    }
-    return max;
-  }, [perDimWindow]);
+  // Card order: most-trained first. While a new period loads there is no
+  // data to sort by, so the last settled order holds — otherwise every scrub
+  // would flash the fixed order before re-sorting.
+  const freshOrder = useMemo(
+    () => (windowQuery.data ? byWindowXp(perDimWindow) : null),
+    [windowQuery.data, perDimWindow],
+  );
+  const [settledOrder, setSettledOrder] = useState<DimensionId[]>(DIMENSION_ORDER);
+  useEffect(() => {
+    if (freshOrder) setSettledOrder(freshOrder);
+  }, [freshOrder]);
+  const order = freshOrder ?? settledOrder;
 
   const isAll = spec.granularity === 'all';
+  const isDays30 = spec.granularity === 'days30';
   const totalWindowXp = windowQuery.data?.totalXp ?? 0;
   const prevTotalXp = windowQuery.data?.prevTotalXp ?? 0;
+  const capLabel = Math.round(subCap).toLocaleString();
+  const rimLabel = Math.round(subCap * BAR_SPAN).toLocaleString();
 
   const hexSize = Math.max(240, Math.min((screenWidth || 360) - 16, 360));
-  const sparkWidth = Math.max(160, (screenWidth || 360) - 64);
+  const chartWidth = Math.max(160, (screenWidth || 360) - 64);
 
   const toggleExpand = (dim: DimensionId) => {
     setExpanded((prev) => {
@@ -233,11 +186,10 @@ export function DedicacaoPanel({ dimensions, subScores }: Props) {
           variant={hexMode}
           subSlices={subSlices}
           saturation={subCap}
+          capped={capped}
           totalXp={totalWindowXp}
           prevTotalXp={isAll ? null : prevTotalXp}
           isLoading={windowQuery.isPending}
-          secondary={showMirror ? mirrorSeries : undefined}
-          secondaryColor={MIRROR_COLOR}
           size={hexSize}
           onAxisPress={openDim}
           idSuffix="dedicacao"
@@ -247,34 +199,17 @@ export function DedicacaoPanel({ dimensions, subScores }: Props) {
       <HexGrainToggle
         mode={hexMode}
         accent={tokens.semantic.xp2}
-        onToggle={() => setHexMode((m) => (m === 'dims' ? 'subs' : 'dims'))}
-      />
-
-      {/* The mirror legend — same shape as Norte's: fill vs outline, named.
-          Tappable so the outline can be dismissed when the user just wants
-          to read the window's XP shape on its own. */}
-      <HexSeriesLegend
-        accent={tokens.semantic.xp2}
-        entries={[
-          {
-            key: 'xp',
-            label: t('hex.seriesPracticed'),
-            shape: 'fill',
-            visible: true,
-          },
-          ...(mirrorSeries
-            ? [
-                {
-                  key: 'mirror',
-                  label: t('hex.seriesSelf'),
-                  shape: 'outline' as const,
-                  color: MIRROR_COLOR,
-                  visible: showMirror,
-                  onToggle: () => setShowMirror((v) => !v),
-                },
-              ]
-            : []),
-        ]}
+        onToggle={toggleHexMode}
+        leading={
+          <HexPill
+            icon={capped ? 'contract-outline' : 'expand-outline'}
+            label={t('dedicacao.rimLabel', { xp: capped ? capLabel : rimLabel })}
+            accent={tokens.semantic.xp2}
+            onPress={() => setCapped((v) => !v)}
+            selected={!capped}
+            a11yLabel={t('dedicacao.rimShow', { xp: capped ? rimLabel : capLabel })}
+          />
+        }
       />
 
       {/* First extra below the hex: the period selector — an input that
@@ -289,185 +224,164 @@ export function DedicacaoPanel({ dimensions, subScores }: Props) {
         labels={chipLabels}
       />
 
-      {/* The ruler in words — the one rule the shape above follows. */}
+      {/* The ruler in words — the one rule the hex and the bars follow. */}
       <Text style={styles.saturationNote}>
-        {spec.granularity === 'days30'
-          ? t('dedicacao.saturation30', { xp: SUB_SATURATION_30D })
-          : t('dedicacao.saturationWindow', { xp: Math.round(subCap).toLocaleString() })}
+        {capped
+          ? isDays30
+            ? t('dedicacao.saturation30', { xp: SUB_SATURATION_30D })
+            : t('dedicacao.saturationWindow', { xp: capLabel })
+          : isDays30
+            ? t('dedicacao.uncapped30', { rim: rimLabel })
+            : t('dedicacao.uncappedWindow', { rim: rimLabel })}
       </Text>
 
-      {/* Six dimension cards, fixed order so the layout is stable while
-          scrubbing periods and each card maps 1:1 to a hex vertex. */}
       <View style={styles.list}>
-        {DIMENSION_ORDER.map((id) => {
+        {order.map((id) => {
           const meta = DIMENSION_META[id];
           const xp = dimMap.get(id)?.xp ?? 0;
           const lp = levelProgress(xp);
           const win = perDimWindow.get(id);
           const winXp = win?.window ?? 0;
-          const cumulative = win?.cumulative ?? [];
-          const perSub = win?.perSub ?? [];
+          const dimLabel = metaLookup.dim(id).label;
+          // The sub that carried the most sits on top, like the cards.
+          const subs = [...(win?.perSub ?? [])].sort(
+            (a, b) =>
+              b.windowXp - a.windowXp ||
+              SUBS_BY_DIM[id].indexOf(a.subId) - SUBS_BY_DIM[id].indexOf(b.subId),
+          );
           const isExpanded = expanded.has(id);
 
           return (
-            <Pressable
+            <Animated.View
               key={id}
-              onPress={() => toggleExpand(id)}
-              style={({ pressed }) => [
-                styles.attribute,
-                pressed && { opacity: 0.85 },
-              ]}
-              accessibilityRole="button"
-              accessibilityState={{ expanded: isExpanded }}
+              layout={reduceMotion ? undefined : LinearTransition.duration(220)}
             >
-              {/* Header: icon + name + all-time total + LV pill + chevron */}
-              <View style={styles.attributeTop}>
-                <View style={[styles.iconHalo, { backgroundColor: meta.bg }]}>
-                  <Ionicons
-                    name={meta.iconName as never}
-                    size={18}
-                    color={meta.color}
-                  />
-                </View>
-                <View style={styles.attributeCopy}>
-                  <Text style={styles.attributeName} numberOfLines={1}>
-                    {metaLookup.dim(id).label}
-                  </Text>
-                  <Text style={styles.xpHint}>
-                    {xp.toLocaleString()} XP total
-                  </Text>
-                </View>
-                <View
-                  style={[styles.levelPill, { borderColor: `${meta.color}55` }]}
-                >
-                  <Text style={[styles.levelLabel, { color: meta.color }]}>
-                    LV
-                  </Text>
-                  <Text style={styles.levelValue}>{lp.level}</Text>
-                </View>
-                <Ionicons
-                  name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                  size={16}
-                  color={tokens.text.dim}
-                />
-              </View>
-
-              {/* Dim window bar — the hex vertex, as a bar: the mean of its
-                  two sub bars against the same ruler. Full = both subs full. */}
-              <View style={styles.dimBarRow}>
-                <View style={[styles.dimBar, { backgroundColor: `${meta.color}1A` }]}>
-                  <View
-                    style={[
-                      styles.dimBarFill,
-                      {
-                        width: pct(
-                          meanRatio(perSub.map((s) => saturationRatio(s.windowXp, subCap))),
-                        ),
-                        backgroundColor: meta.color,
-                      },
-                    ]}
-                  />
-                </View>
-                <Text
-                  style={[
-                    styles.dimWinXp,
-                    { color: winXp > 0 ? meta.color : tokens.text.faint },
-                  ]}
-                >
-                  {winXp > 0 ? `+${winXp.toLocaleString()}` : '0'} XP
-                </Text>
-              </View>
-
-              {/* Two always-visible sub bars, same scale as the dim bar so
-                  they read as a decomposition of it. */}
-              {perSub.map((sub) => {
-                const subMeta = SUB_META[sub.subId];
-                return (
-                  <View key={sub.subId} style={styles.subBarRow}>
-                    <Ionicons
-                      name={subMeta.iconName as never}
-                      size={12}
-                      color={meta.color}
-                    />
-                    <View
-                      style={[styles.subBar, { backgroundColor: `${meta.color}1A` }]}
-                    >
-                      <View
-                        style={[
-                          styles.subBarFill,
-                          {
-                            width: pct(saturationRatio(sub.windowXp, subCap)),
-                            backgroundColor: meta.color,
-                          },
-                        ]}
-                      />
-                    </View>
-                    <Text
-                      style={[
-                        styles.subBarXp,
-                        sub.windowXp === 0 && { color: tokens.text.faint },
-                      ]}
-                      numberOfLines={1}
-                    >
-                      +{sub.windowXp.toLocaleString()}
-                    </Text>
+              <Pressable
+                onPress={() => toggleExpand(id)}
+                style={({ pressed }) => [
+                  styles.attribute,
+                  pressed && { opacity: 0.85 },
+                ]}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: isExpanded }}
+              >
+                {/* Header: icon + name + the period's XP, big and neutral —
+                    a sum of two areas, never read against one area's 300. */}
+                <View style={styles.attributeTop}>
+                  <View style={[styles.iconHalo, { backgroundColor: meta.bg }]}>
+                    <Ionicons name={meta.iconName as never} size={16} color={meta.color} />
                   </View>
-                );
-              })}
+                  <Text style={styles.attributeName} numberOfLines={1}>
+                    {dimLabel}
+                  </Text>
+                  <Text style={[styles.dimTotal, winXp === 0 && styles.faint]}>
+                    {winXp.toLocaleString()}
+                    <Text style={styles.dimTotalUnit}> XP</Text>
+                  </Text>
+                  <Ionicons
+                    name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                    size={14}
+                    color={tokens.text.dim}
+                  />
+                </View>
 
-              {/* Expanded: the cumulative trend the bars can't carry, plus a
-                  deep link to this dimension's full history. */}
-              {isExpanded && (
-                <View style={styles.expandWrap}>
-                  <View style={styles.divider} />
-                  <View style={styles.sparkBlock}>
-                    <Sparkline
-                      cumulative={cumulative}
+                {/* One row per sub: name and XP above, the bar with the
+                    ruler's tick below. The number lights with the same
+                    threshold that fills a hex vertex. */}
+                {subs.map((sub) => {
+                  const subLabel = metaLookup.sub(sub.subId).label;
+                  const reached = sub.windowXp >= subCap && sub.windowXp > 0;
+                  return (
+                    <View
+                      key={sub.subId}
+                      style={styles.subBlock}
+                      accessible
+                      accessibilityLabel={t(
+                        reached ? 'dedicacao.subA11yOver' : 'dedicacao.subA11yUnder',
+                        { sub: subLabel, xp: sub.windowXp.toLocaleString(), cap: capLabel },
+                      )}
+                    >
+                      <View style={styles.subLabelRow}>
+                        <Text style={styles.subName} numberOfLines={1}>
+                          {subLabel}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.subXp,
+                            reached && [styles.subXpReached, { color: meta.color }],
+                            sub.windowXp === 0 && styles.faint,
+                          ]}
+                        >
+                          {sub.windowXp.toLocaleString()}
+                        </Text>
+                      </View>
+                      <SubBar xp={sub.windowXp} cap={subCap} color={meta.color} />
+                    </View>
+                  );
+                })}
+
+                {/* Expanded: when the XP came in — the dimension, then each
+                    sub, each against its dashed ruler — plus the all-time
+                    reading and the calendar link. */}
+                {isExpanded && (
+                  <View style={styles.expandWrap}>
+                    <View style={styles.divider} />
+                    <ChartBlock
+                      label={dimLabel}
+                      strong
+                      cumulative={win?.cumulative ?? []}
+                      reference={subCap * SUBS_BY_DIM[id].length}
                       color={meta.color}
-                      globalMax={sparkGlobalMax}
-                      height={SPARK_HEIGHT}
-                      width={sparkWidth}
+                      width={chartWidth}
                       idSuffix={id}
                     />
-                    <View style={styles.sparkOverlay} pointerEvents="none">
-                      {winXp > 0 ? (
-                        <Text style={[styles.sparkXp, { color: meta.color }]}>
-                          +{winXp.toLocaleString()} XP
+                    {subs.map((sub) => (
+                      <ChartBlock
+                        key={sub.subId}
+                        label={metaLookup.sub(sub.subId).label}
+                        cumulative={sub.cumulative}
+                        reference={subCap}
+                        color={meta.color}
+                        width={chartWidth}
+                        idSuffix={`${id}-${sub.subId}`}
+                      />
+                    ))}
+                    <View style={styles.footerRow}>
+                      <Text style={styles.levelTotal} numberOfLines={1}>
+                        {t('dedicacao.levelTotal', {
+                          level: lp.level,
+                          xp: xp.toLocaleString(),
+                        })}
+                      </Text>
+                      <Pressable
+                        onPress={() =>
+                          // Straight to the calendar, pre-filtered on this
+                          // dimension. Front and view travel too, because the
+                          // calendar's store is session-scoped: without them
+                          // this link could land on the Vault quarter map. The
+                          // window (granularity/offset) does not travel — the
+                          // calendar's period is navigation, not filter state.
+                          router.push({
+                            pathname: '/history',
+                            params: { dims: id, front: 'rotina', view: 'month' },
+                          })
+                        }
+                        style={({ pressed }) => [
+                          styles.detailLink,
+                          pressed && { opacity: 0.7 },
+                        ]}
+                        hitSlop={4}
+                      >
+                        <Text style={[styles.detailLinkText, { color: meta.color }]}>
+                          {locale === 'pt' ? `Histórico de ${dimLabel}` : `${dimLabel} history`}
                         </Text>
-                      ) : (
-                        <Text style={styles.sparkXpDim}>0 XP</Text>
-                      )}
+                        <Ionicons name="arrow-forward" size={12} color={meta.color} />
+                      </Pressable>
                     </View>
                   </View>
-                  <Pressable
-                    onPress={() =>
-                      // Straight to the calendar, pre-filtered on this
-                      // dimension. Front and view travel too, because the
-                      // calendar's store is session-scoped: without them this
-                      // link could land on the Vault quarter map. The window
-                      // (granularity/offset) does not travel — the calendar's
-                      // period is navigation, not filter state.
-                      router.push({
-                        pathname: '/history',
-                        params: { dims: id, front: 'rotina', view: 'month' },
-                      })
-                    }
-                    style={({ pressed }) => [
-                      styles.detailLink,
-                      pressed && { opacity: 0.7 },
-                    ]}
-                    hitSlop={4}
-                  >
-                    <Text style={[styles.detailLinkText, { color: meta.color }]}>
-                      {locale === 'pt'
-                        ? `Histórico de ${metaLookup.dim(id).label}`
-                        : `${metaLookup.dim(id).label} history`}
-                    </Text>
-                    <Ionicons name="arrow-forward" size={12} color={meta.color} />
-                  </Pressable>
-                </View>
-              )}
-            </Pressable>
+                )}
+              </Pressable>
+            </Animated.View>
           );
         })}
       </View>
@@ -491,6 +405,42 @@ export function DedicacaoPanel({ dimensions, subScores }: Props) {
           <Ionicons name="arrow-forward" size={12} color={tokens.text.mid} />
         </Pressable>
       </View>
+    </View>
+  );
+}
+
+/** One cumulative chart in the expanded card, titled. */
+function ChartBlock({
+  label,
+  strong = false,
+  cumulative,
+  reference,
+  color,
+  width,
+  idSuffix,
+}: {
+  label: string;
+  /** The dimension's own chart leads the sub charts under it. */
+  strong?: boolean;
+  cumulative: number[];
+  reference: number;
+  color: string;
+  width: number;
+  idSuffix: string;
+}) {
+  return (
+    <View style={styles.chartBlock}>
+      <Text style={[styles.chartLabel, strong && styles.chartLabelStrong]} numberOfLines={1}>
+        {label}
+      </Text>
+      <Sparkline
+        cumulative={cumulative}
+        color={color}
+        reference={reference}
+        width={width}
+        height={CHART_HEIGHT}
+        idSuffix={idSuffix}
+      />
     </View>
   );
 }
@@ -535,120 +485,56 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: tokens.space[2],
   },
-  attributeCopy: { flex: 1, minWidth: 0 },
   iconHalo: {
-    width: 32,
-    height: 32,
+    width: 28,
+    height: 28,
     borderRadius: tokens.radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
   attributeName: {
+    flex: 1,
+    minWidth: 0,
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 15,
     color: tokens.text.hi,
   },
-  xpHint: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 11,
-    color: tokens.text.dim,
-    letterSpacing: 0.3,
+  dimTotal: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 18,
+    letterSpacing: -0.2,
+    color: tokens.text.hi,
+    fontVariant: ['tabular-nums'],
   },
-  levelPill: {
+  dimTotalUnit: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 11,
+    letterSpacing: 0,
+    color: tokens.text.dim,
+  },
+  faint: { color: tokens.text.faint },
+  subBlock: { gap: 3 },
+  subLabelRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: tokens.radius.pill,
-    borderWidth: 1,
-    backgroundColor: tokens.bg.glass,
+    gap: tokens.space[2],
   },
-  levelLabel: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 9,
-    letterSpacing: 0.8,
+  subName: {
+    flex: 1,
+    minWidth: 0,
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 12,
+    color: tokens.text.mid,
   },
-  levelValue: {
+  subXp: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 12,
+    color: tokens.text.mid,
+    fontVariant: ['tabular-nums'],
+  },
+  subXpReached: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 13,
-    color: tokens.text.hi,
-  },
-  dimBarRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[2],
-    marginTop: 2,
-  },
-  dimBar: {
-    flex: 1,
-    height: 6,
-    borderRadius: 3,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  dimBarFill: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    borderRadius: 3,
-  },
-  dimWinXp: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 12,
-    letterSpacing: -0.1,
-    minWidth: 64,
-    textAlign: 'right',
-  },
-  subBarRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  subBar: {
-    flex: 1,
-    height: 4,
-    borderRadius: 2,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  subBarFill: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    borderRadius: 2,
-    opacity: 0.7,
-  },
-  subBarXp: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 10,
-    color: tokens.text.dim,
-    letterSpacing: -0.1,
-    minWidth: 52,
-    textAlign: 'right',
-  },
-  sparkBlock: {
-    position: 'relative',
-    marginTop: 2,
-  },
-  sparkOverlay: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    paddingHorizontal: 2,
-  },
-  sparkXp: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 20,
-    letterSpacing: -0.2,
-  },
-  sparkXpDim: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 16,
-    color: tokens.text.faint,
-    letterSpacing: -0.1,
   },
   expandWrap: {
     gap: tokens.space[2],
@@ -658,12 +544,33 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: tokens.border.divider,
   },
+  chartBlock: { gap: 2 },
+  chartLabel: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 11,
+    color: tokens.text.dim,
+  },
+  chartLabelStrong: {
+    fontFamily: 'Manrope_800ExtraBold',
+    color: tokens.text.mid,
+  },
+  footerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: tokens.space[2],
+    marginTop: 2,
+  },
+  levelTotal: {
+    flexShrink: 1,
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 11,
+    color: tokens.text.dim,
+  },
   detailLink: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
     gap: 4,
-    marginTop: 2,
   },
   detailLinkText: {
     fontFamily: 'Manrope_700Bold',

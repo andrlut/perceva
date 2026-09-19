@@ -14,7 +14,7 @@ import {
 
 import { DimensionCards, type DimCardRow } from '@/components/DimensionCards';
 import { HexChart } from '@/components/HexChart';
-import { HexGrainToggle } from '@/components/HexGrainToggle';
+import { HexGrainToggle, useHexGrain } from '@/components/HexGrainToggle';
 import { HexSeriesLegend } from '@/components/HexSeriesLegend';
 import { MoodTodayCard } from '@/components/mood/MoodTodayCard';
 import type { CharacterSubScore } from '@/lib/db/types';
@@ -58,9 +58,9 @@ export function AvaliacaoPanel({ subScores, scrollViewRef, onLegendMeasured }: P
   // só quiz), e "ambos" — o mais útil — passou a custar UM toque.
   const [showSelf, setShowSelf] = useState(true);
   const [showQuiz, setShowQuiz] = useState(false);
-  // 'dims' = the 6-dimension hexagon (default); 'subs' = the 12-sub
-  // dodecagon. A small toggle by the hex flips between them.
-  const [hexMode, setHexMode] = useState<'dims' | 'subs'>('dims');
+  // 'dims' = the 6-dimension hexagon; 'subs' = the 12-sub dodecagon. Opens
+  // on the user's default (Ajustes); the small toggle by the hex flips it.
+  const [hexMode, toggleHexMode] = useHexGrain();
   // Match the old (pre-pillars) sizing: bleed slightly beyond page padding
   // for visual presence, capped so it doesn't blow up on tablets.
   const chartSize = Math.max(240, Math.min((screenWidth || 360) - 16, 360));
@@ -172,7 +172,7 @@ export function AvaliacaoPanel({ subScores, scrollViewRef, onLegendMeasured }: P
       <HexGrainToggle
         mode={hexMode}
         accent={tokens.brand.violet2}
-        onToggle={() => setHexMode((m) => (m === 'dims' ? 'subs' : 'dims'))}
+        onToggle={toggleHexMode}
       />
 
       <HexSeriesLegend

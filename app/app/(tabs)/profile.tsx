@@ -22,6 +22,7 @@ import { MODULE_REGISTRY, useModules, useSetModule } from '@/lib/modules';
 import {
   useLoadedSettings,
   useSettingsStore,
+  type HexGrain,
   type LanguageCode,
   type ThemeMode,
   type WeekStart,
@@ -255,6 +256,17 @@ export default function SettingsScreen() {
               { value: 'monday', label: t('profile.weekStart.monday') },
             ]}
             onChange={(v) => setSetting('weekStart', v)}
+          />
+          <Divider />
+          <SegmentedRow<HexGrain>
+            label={t('profile.fields.hexGrain')}
+            value={settings.hexGrain}
+            options={[
+              { value: 'dims', label: t('profile.hexGrain.dims') },
+              { value: 'subs', label: t('profile.hexGrain.subs') },
+            ]}
+            onChange={(v) => setSetting('hexGrain', v)}
+            note={t('profile.hexGrain.note')}
           />
         </Card>
 
