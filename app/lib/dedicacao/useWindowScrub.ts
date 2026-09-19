@@ -20,8 +20,9 @@ const DEFAULT_SPEC: WindowSpec = { granularity: 'days30', offset: 0 };
 /**
  * The full window-scrubbing kit for a Dedicação surface: spec state, the
  * windowed-XP query, the human label between the scrub arrows, the
- * localized chip labels, and the window bounds (the saturation ruler is
- * prorated on them) — everything a PeriodSelector-driven panel needs beyond
+ * localized chip labels, and the window bounds and buckets (the saturation
+ * ruler is prorated on them; the day strips draw one cell per bucket) —
+ * everything a PeriodSelector-driven panel needs beyond
  * its own tone props. Keeps the default granularity and weekStart threading
  * in one place instead of per panel.
  */
@@ -44,5 +45,15 @@ export function useWindowScrub(initial: WindowSpec = DEFAULT_SPEC) {
   // `t` is memoized per language, so this recomputes only on locale flips.
   const chipLabels = useMemo(() => windowChipLabels(t), [t]);
 
-  return { spec, setSpec, query, label, chipLabels, start: range.start, end: range.end };
+  return {
+    spec,
+    setSpec,
+    query,
+    label,
+    chipLabels,
+    start: range.start,
+    end: range.end,
+    bucketStarts: range.bucketStarts,
+    bucketSize: range.bucketSize,
+  };
 }

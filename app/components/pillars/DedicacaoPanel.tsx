@@ -6,7 +6,7 @@ import Animated, { LinearTransition, useReducedMotion } from 'react-native-reani
 
 import { HexGrainToggle, HexPill, useHexGrain } from '@/components/HexGrainToggle';
 import { PeriodSelector } from '@/components/dedicacao/PeriodSelector';
-import { Sparkline } from '@/components/dedicacao/Sparkline';
+import { DayStrip } from '@/components/dedicacao/DayStrip';
 import { SubBar } from '@/components/dedicacao/SubBar';
 import { XpHexChart } from '@/components/dedicacao/XpHexChart';
 import { type SubWindow } from '@/lib/api/dedicacao';
@@ -30,8 +30,6 @@ interface DimWindow {
   perSub: SubWindow[];
 }
 
-const CHART_HEIGHT = 48;
-
 /** Most-trained first; ties keep the fixed order. */
 function byWindowXp(perDimWindow: Map<DimensionId, DimWindow>): DimensionId[] {
   return [...DIMENSION_ORDER].sort(
@@ -53,7 +51,9 @@ function byWindowXp(perDimWindow: Map<DimensionId, DimWindow>): DimensionId[] {
  *   - each sub bar puts it at a fixed tick a third of the way along, so the
  *     lit part past the tick is what went past 300 — the one thing the
  *     capped hex cannot show;
- *   - each expanded chart draws it dashed (twice it for a dimension).
+ *
+ * Opened, a card shows each sub's day strip: one cell per day (week, month),
+ * painted by that day's XP — constancy at a glance, which no total carries.
  *
  * The cards read most-trained first. The hex keeps its fixed axis order; a
  * card finds its vertex by icon and color, not by position.
@@ -73,6 +73,8 @@ export function DedicacaoPanel({ dimensions }: Props) {
     chipLabels,
     start: windowStart,
     end: windowEnd,
+    bucketStarts,
+    bucketSize,
   } = useWindowScrub();
   const [expanded, setExpanded] = useState<Set<DimensionId>>(new Set());
   const [hexMode, toggleHexMode] = useHexGrain();
@@ -163,7 +165,19 @@ export function DedicacaoPanel({ dimensions }: Props) {
   const rimLabel = Math.round(subCap * BAR_SPAN).toLocaleString();
 
   const hexSize = Math.max(240, Math.min((screenWidth || 360) - 16, 360));
-  const chartWidth = Math.max(160, (screenWidth || 360) - 64);
+
+  // Buckets that have started. In a period still running (this week, this
+  // month) the rest are future days: hollow in the strip, out of the count.
+  const elapsedBuckets = useMemo(() => {
+    const now = Date.now();
+    return bucketStarts.filter((b) => b.getTime() <= now).length;
+  }, [bucketStarts]);
+  const activeKey: 'dedicacao.activeDays' | 'dedicacao.activeWeeks' | 'dedicacao.activeMonths' =
+    bucketSize === 'day'
+      ? 'dedicacao.activeDays'
+      : bucketSize === 'week'
+        ? 'dedicacao.activeWeeks'
+        : 'dedicacao.activeMonths';
 
   const toggleExpand = (dim: DimensionId) => {
     setExpanded((prev) => {
@@ -320,32 +334,19 @@ export function DedicacaoPanel({ dimensions }: Props) {
                   );
                 })}
 
-                {/* Expanded: when the XP came in — the dimension, then each
-                    sub, each against its dashed ruler — plus the all-time
-                    reading and the calendar link. */}
+                {/* Expanded: when the XP came in — one strip per sub, one
+                    cell per day, both painted on the same scale — plus the
+                    all-time reading and the calendar link. */}
                 {isExpanded && (
                   <View style={styles.expandWrap}>
                     <View style={styles.divider} />
-                    <ChartBlock
-                      label={dimLabel}
-                      strong
-                      cumulative={win?.cumulative ?? []}
-                      reference={subCap * SUBS_BY_DIM[id].length}
+                    <SubStrips
+                      subs={subs}
+                      bucketCount={bucketStarts.length}
+                      elapsed={elapsedBuckets}
+                      activeKey={activeKey}
                       color={meta.color}
-                      width={chartWidth}
-                      idSuffix={id}
                     />
-                    {subs.map((sub) => (
-                      <ChartBlock
-                        key={sub.subId}
-                        label={metaLookup.sub(sub.subId).label}
-                        cumulative={sub.cumulative}
-                        reference={subCap}
-                        color={meta.color}
-                        width={chartWidth}
-                        idSuffix={`${id}-${sub.subId}`}
-                      />
-                    ))}
                     <View style={styles.footerRow}>
                       <Text style={styles.levelTotal} numberOfLines={1}>
                         {t('dedicacao.levelTotal', {
@@ -409,40 +410,59 @@ export function DedicacaoPanel({ dimensions }: Props) {
   );
 }
 
-/** One cumulative chart in the expanded card, titled. */
-function ChartBlock({
-  label,
-  strong = false,
-  cumulative,
-  reference,
+/**
+ * The expanded card's reading: one day strip per sub, painted on one scale
+ * (the card's busiest bucket), each with its "N de M dias" count. Future
+ * buckets of a running period stay out of both.
+ */
+function SubStrips({
+  subs,
+  bucketCount,
+  elapsed,
+  activeKey,
   color,
-  width,
-  idSuffix,
 }: {
-  label: string;
-  /** The dimension's own chart leads the sub charts under it. */
-  strong?: boolean;
-  cumulative: number[];
-  reference: number;
+  subs: SubWindow[];
+  bucketCount: number;
+  elapsed: number;
+  activeKey: 'dedicacao.activeDays' | 'dedicacao.activeWeeks' | 'dedicacao.activeMonths';
   color: string;
-  width: number;
-  idSuffix: string;
 }) {
-  return (
-    <View style={styles.chartBlock}>
-      <Text style={[styles.chartLabel, strong && styles.chartLabelStrong]} numberOfLines={1}>
-        {label}
-      </Text>
-      <Sparkline
-        cumulative={cumulative}
-        color={color}
-        reference={reference}
-        width={width}
-        height={CHART_HEIGHT}
-        idSuffix={idSuffix}
-      />
-    </View>
+  const { t } = useT();
+  const metaLookup = useMetaLookup();
+  // Cumulative → per bucket.
+  const perBucket = subs.map((sub) =>
+    Array.from(
+      { length: bucketCount },
+      (_, i) => (sub.cumulative[i] ?? 0) - (i > 0 ? (sub.cumulative[i - 1] ?? 0) : 0),
+    ),
   );
+  const max = Math.max(0, ...perBucket.flat());
+
+  return subs.map((sub, j) => {
+    const values = perBucket[j];
+    const active = t(activeKey, {
+      n: values.slice(0, elapsed).filter((v) => v > 0).length,
+      total: elapsed,
+    });
+    const subLabel = metaLookup.sub(sub.subId).label;
+    return (
+      <View
+        key={sub.subId}
+        style={styles.stripBlock}
+        accessible
+        accessibilityLabel={t('dedicacao.stripA11y', { sub: subLabel, active })}
+      >
+        <View style={styles.stripLabelRow}>
+          <Text style={styles.stripLabel} numberOfLines={1}>
+            {subLabel}
+          </Text>
+          <Text style={styles.stripCount}>{active}</Text>
+        </View>
+        <DayStrip values={values} elapsed={elapsed} max={max} color={color} />
+      </View>
+    );
+  });
 }
 
 const styles = StyleSheet.create({
@@ -544,15 +564,24 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: tokens.border.divider,
   },
-  chartBlock: { gap: 2 },
-  chartLabel: {
+  stripBlock: { gap: 4 },
+  stripLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: tokens.space[2],
+  },
+  stripLabel: {
+    flex: 1,
+    minWidth: 0,
     fontFamily: 'Manrope_600SemiBold',
     fontSize: 11,
     color: tokens.text.dim,
   },
-  chartLabelStrong: {
-    fontFamily: 'Manrope_800ExtraBold',
+  stripCount: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 11,
     color: tokens.text.mid,
+    fontVariant: ['tabular-nums'],
   },
   footerRow: {
     flexDirection: 'row',

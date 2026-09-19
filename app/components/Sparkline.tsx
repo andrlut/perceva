@@ -21,7 +21,7 @@ interface SparklineProps {
  * angle — a trick to dodge the react-native-svg native crashes on Android.
  *
  * OBSOLETE CONSTRAINT: those crashes no longer apply — react-native-svg
- * ships in production here, and `dedicacao/Sparkline` is an SVG sparkline.
+ * ships in production here (every hex chart is SVG).
  * Kept as-is because it works; don't cite this as a reason to avoid SVG.
  */
 export function Sparkline({
