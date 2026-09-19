@@ -5,7 +5,6 @@ import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-na
 
 import { HexGrainToggle } from '@/components/HexGrainToggle';
 import { HexSeriesLegend } from '@/components/HexSeriesLegend';
-import { InsightCard } from '@/components/InsightCard';
 import { PeriodSelector } from '@/components/dedicacao/PeriodSelector';
 import { Sparkline } from '@/components/dedicacao/Sparkline';
 import { XpHexChart } from '@/components/dedicacao/XpHexChart';
@@ -46,7 +45,7 @@ const MIRROR_COLOR = tokens.brand.violet2;
  * Sub-pillar **Dedicação** (Praticada). Standardized layout: the hex leads,
  * then the period selector (the one input, sitting between the two surfaces
  * it drives), then the six dimension cards in fixed order, then the history
- * link, and the insight teaser as a footer.
+ * link.
  *
  * Every bar shares the hex's exact normalization (`windowRatio` against the
  * leading dimension's window XP), so a dim bar's fill equals its hex vertex
@@ -481,9 +480,6 @@ export function DedicacaoPanel({ dimensions, subScores }: Props) {
           <Ionicons name="arrow-forward" size={12} color={tokens.text.mid} />
         </Pressable>
       </View>
-
-      {/* Window-independent teaser — a footer, not part of the window block. */}
-      <InsightCard />
     </View>
   );
 }
