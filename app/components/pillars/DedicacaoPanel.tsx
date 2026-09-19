@@ -16,7 +16,8 @@ import type {
   DimensionId,
   SubId,
 } from '@/lib/db/types';
-import { LEADER_RATIO, pct, windowRatio } from '@/lib/dedicacao/scale';
+import { meanRatio, pct, saturationRatio } from '@/lib/dedicacao/scale';
+import { elapsedDays, SUB_SATURATION_30D, subSaturationFor } from '@/lib/saturation';
 import { useWindowScrub } from '@/lib/dedicacao/useWindowScrub';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
@@ -41,15 +42,18 @@ const SPARK_HEIGHT = 64;
  *  what the line is: the Percebida portrait visiting the Praticada hex. */
 const MIRROR_COLOR = tokens.brand.violet2;
 
+/** A self-score (0..5) on the same absolute ruler as the XP: 5/5 = full. */
+const scoreRatio = (score: number) => Math.max(0, Math.min(1, score / 5));
+
 /**
  * Sub-pillar **Dedicação** (Praticada). Standardized layout: the hex leads,
  * then the period selector (the one input, sitting between the two surfaces
  * it drives), then the six dimension cards in fixed order, then the history
  * link.
  *
- * Every bar shares the hex's exact normalization (`windowRatio` against the
- * leading dimension's window XP), so a dim bar's fill equals its hex vertex
- * radius and its two sub bars decompose it — one scale on the whole screen
+ * Every bar shares the hex's exact ruler (the saturation — lib/saturation.ts,
+ * 300 XP per 30 days per sub), so a dim bar's fill equals its hex vertex
+ * radius and is the mean of its two sub bars — one scale on the whole screen
  * instead of the four that used to coexist. The leader tops out at 85% of
  * the track (relative scale, not "maxed"), marked by a tick.
  *
@@ -70,6 +74,8 @@ export function DedicacaoPanel({ dimensions, subScores }: Props) {
     query: windowQuery,
     label,
     chipLabels,
+    start: windowStart,
+    end: windowEnd,
   } = useWindowScrub();
   const [expanded, setExpanded] = useState<Set<DimensionId>>(new Set());
   const [hexMode, setHexMode] = useState<'dims' | 'subs'>('dims');
@@ -118,12 +124,13 @@ export function DedicacaoPanel({ dimensions, subScores }: Props) {
     return m;
   }, [windowQuery.data]);
 
-  // One ceiling for every bar on this panel: the leading dimension's window
-  // XP — identical to the hex's own denominator. This is what makes the dim
-  // bars and sub bars agree with the chart above them.
-  const maxDimWinXp = useMemo(
-    () => slices.reduce((m, s) => Math.max(m, s.xp), 0),
-    [slices],
+  // One ruler for the hex AND every bar on this panel: the saturation for
+  // this window — 300 XP per 30 days per sub, prorated to the days already
+  // elapsed (lib/saturation.ts). This is what makes the bars agree with the
+  // chart above them.
+  const subCap = useMemo(
+    () => subSaturationFor(elapsedDays(windowStart, windowEnd)),
+    [windowStart, windowEnd],
   );
 
   // 12 per-sub window slices in dim order — feeds the hex's 'subs' grain.
@@ -144,14 +151,13 @@ export function DedicacaoPanel({ dimensions, subScores }: Props) {
   // scores lead; a sub the user never rated falls back to the questionnaire
   // so a quiz-only user still gets a reflection.
   //
-  // Normalized the SAME relative way as the XP it overlays (windowRatio
-  // against the leading axis), never as an absolute /5. That is the whole
-  // point: both silhouettes then answer "how is this spread across my six
-  // areas", so where the violet line reaches past the filled shape the user
-  // sees themselves strong in an area they are not currently feeding — and
-  // where it falls short, they are practicing more than they give
-  // themselves credit for. Mixing an absolute scale with a relative one
-  // would make the two outlines uncomparable and the reading a lie.
+  // Absolute, like the XP it overlays: a sub's self-score over 5, so 5/5
+  // reaches the rim exactly where a saturated sub does, and a dimension is
+  // the mean of its two subs — the same rule as the filled shape. Both
+  // silhouettes then answer "how full is each area", so where the violet
+  // line reaches past the filled shape the user sees themselves strong in an
+  // area they are not currently feeding — and where it falls short, they are
+  // practicing more than they give themselves credit for.
   const perception = useMemo(() => {
     const self = pickSubScoresDecimal(subScores, 'self');
     const quiz = pickSubScoresDecimal(subScores, 'questionnaire');
@@ -166,7 +172,8 @@ export function DedicacaoPanel({ dimensions, subScores }: Props) {
     for (const dim of DIMENSION_ORDER) {
       perDim.set(
         dim,
-        SUBS_BY_DIM[dim].reduce((sum, sub) => sum + (perSub.get(sub) ?? 0), 0),
+        SUBS_BY_DIM[dim].reduce((sum, sub) => sum + (perSub.get(sub) ?? 0), 0) /
+          SUBS_BY_DIM[dim].length,
       );
     }
     const hasAny = [...perSub.values()].some((v) => v > 0);
@@ -178,15 +185,11 @@ export function DedicacaoPanel({ dimensions, subScores }: Props) {
   const mirrorSeries = useMemo(() => {
     if (!perception.hasAny) return undefined;
     if (hexMode === 'subs') {
-      const values = DIMENSION_ORDER.flatMap((dim) =>
-        SUBS_BY_DIM[dim].map((sub) => perception.perSub.get(sub) ?? 0),
+      return DIMENSION_ORDER.flatMap((dim) =>
+        SUBS_BY_DIM[dim].map((sub) => scoreRatio(perception.perSub.get(sub) ?? 0)),
       );
-      const max = Math.max(0, ...values);
-      return values.map((v) => windowRatio(v, max));
     }
-    const values = DIMENSION_ORDER.map((dim) => perception.perDim.get(dim) ?? 0);
-    const max = Math.max(0, ...values);
-    return values.map((v) => windowRatio(v, max));
+    return DIMENSION_ORDER.map((dim) => scoreRatio(perception.perDim.get(dim) ?? 0));
   }, [perception, hexMode]);
 
   // The expanded trend sparkline keeps its own cumulative ceiling so a
@@ -229,6 +232,7 @@ export function DedicacaoPanel({ dimensions, subScores }: Props) {
           slices={slices}
           variant={hexMode}
           subSlices={subSlices}
+          saturation={subCap}
           totalXp={totalWindowXp}
           prevTotalXp={isAll ? null : prevTotalXp}
           isLoading={windowQuery.isPending}
@@ -284,6 +288,13 @@ export function DedicacaoPanel({ dimensions, subScores }: Props) {
         border="rgba(61, 214, 140, 0.35)"
         labels={chipLabels}
       />
+
+      {/* The ruler in words — the one rule the shape above follows. */}
+      <Text style={styles.saturationNote}>
+        {spec.granularity === 'days30'
+          ? t('dedicacao.saturation30', { xp: SUB_SATURATION_30D })
+          : t('dedicacao.saturationWindow', { xp: Math.round(subCap).toLocaleString() })}
+      </Text>
 
       {/* Six dimension cards, fixed order so the layout is stable while
           scrubbing periods and each card maps 1:1 to a hex vertex. */}
@@ -341,21 +352,21 @@ export function DedicacaoPanel({ dimensions, subScores }: Props) {
                 />
               </View>
 
-              {/* Dim window bar — the hex vertex, as a bar. Fills to the same
-                  windowRatio; the tick marks the 85% leader ceiling so the
-                  headroom reads as "relative scale", not an unfinished bar. */}
+              {/* Dim window bar — the hex vertex, as a bar: the mean of its
+                  two sub bars against the same ruler. Full = both subs full. */}
               <View style={styles.dimBarRow}>
                 <View style={[styles.dimBar, { backgroundColor: `${meta.color}1A` }]}>
                   <View
                     style={[
                       styles.dimBarFill,
                       {
-                        width: pct(windowRatio(winXp, maxDimWinXp)),
+                        width: pct(
+                          meanRatio(perSub.map((s) => saturationRatio(s.windowXp, subCap))),
+                        ),
                         backgroundColor: meta.color,
                       },
                     ]}
                   />
-                  <View style={[styles.dimTick, { left: pct(LEADER_RATIO) }]} />
                 </View>
                 <Text
                   style={[
@@ -385,7 +396,7 @@ export function DedicacaoPanel({ dimensions, subScores }: Props) {
                         style={[
                           styles.subBarFill,
                           {
-                            width: pct(windowRatio(sub.windowXp, maxDimWinXp)),
+                            width: pct(saturationRatio(sub.windowXp, subCap)),
                             backgroundColor: meta.color,
                           },
                         ]}
@@ -485,6 +496,14 @@ export function DedicacaoPanel({ dimensions, subScores }: Props) {
 }
 
 const styles = StyleSheet.create({
+  saturationNote: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 11.5,
+    lineHeight: 16,
+    color: tokens.text.mid,
+    textAlign: 'center',
+    paddingHorizontal: tokens.space[2],
+  },
   wrap: { gap: tokens.space[3] },
   hexWrap: { alignItems: 'center', gap: tokens.space[2] },
   historyLinkWrap: { alignItems: 'center' },
@@ -574,13 +593,6 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     borderRadius: 3,
-  },
-  dimTick: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    width: 1.5,
-    backgroundColor: 'rgba(255,255,255,0.4)',
   },
   dimWinXp: {
     fontFamily: 'Manrope_800ExtraBold',

@@ -14,12 +14,14 @@ type TranslateFn = (key: string, options?: TranslateOptions) => string;
 
 /** Localized chip labels for the PeriodSelector. */
 export function windowChipLabels(t: TranslateFn): {
+  days30: string;
   week: string;
   month: string;
   quarter: string;
   all: string;
 } {
   return {
+    days30: t('dedicacaoWindow.days30'),
     week: t('dedicacaoWindow.week'),
     month: t('dedicacaoWindow.month'),
     quarter: t('dedicacaoWindow.quarter'),
@@ -61,6 +63,13 @@ export function formatWindowLabel(
   language: LanguageCode,
 ): string {
   const tag = bcp47(language);
+  if (spec.granularity === 'days30') {
+    if (spec.offset === 0) return translate('dedicacaoWindow.last30Days');
+    const day = fmt(tag, 'day');
+    const month = fmt(tag, 'monthShort');
+    const d = (x: Date) => `${day.format(x)} ${month.format(x).replace('.', '')}`;
+    return `${d(start)} – ${d(end)}`;
+  }
   if (spec.granularity === 'all') {
     return translate('dedicacaoWindow.last12Months');
   }
