@@ -796,11 +796,13 @@ const en = {
    * surface that scrubs periods (Dedicação, Espelho, history).
    */
   dedicacaoWindow: {
+    days30: '30 days',
     week: 'Week',
     month: 'Month',
     quarter: 'Quarter',
     all: 'All',
     last12Months: 'last 12 months',
+    last30Days: 'last 30 days',
   },
 
   autoconhecimento: {
@@ -865,7 +867,7 @@ const en = {
       legend: {
         title: 'What the emblem shows',
         effort: 'Effort',
-        effortWhat: 'areas with {{floor}}+ points this month light up on the emblem',
+        effortWhat: 'each area lights up when it fills: {{floor}} XP in 30 days, a 1★ practice every day',
         effortValue: '{{xp}} / {{max}} in 30 days',
         effortValueFull: '{{xp}} XP this month',
         self: 'Self-knowledge',
@@ -2245,6 +2247,10 @@ const en = {
 
   dedicacao: {
     hexAxisA11y: '{{dim}}: {{xp}} XP this period',
+    saturation30:
+      'Each area fills at {{xp}} XP in 30 days — a 1★ practice every day. Past that, the point stays full.',
+    saturationWindow:
+      'Each area fills at {{xp}} XP in this period — the rule is 300 per 30 days, a 1★ practice every day.',
     hexEmpty: 'No XP in this period',
     deltaNew: '+{{xp}} new',
     // The mirror: the perception outline over the shape of practice.

@@ -55,7 +55,9 @@ export default function CharacterScreen() {
   const params = useLocalSearchParams<{ pillar?: PillarKey }>();
 
   const [activePillar, setActivePillar] = useState<PillarKey>(
-    params.pillar ?? 'percebida',
+    // Opens on Praticada: what was practiced lately is the reading that
+    // changes day to day, so it is the one worth landing on.
+    params.pillar ?? 'praticada',
   );
 
   // Honor `?pillar=` changes after mount — e.g. the Home XP card pushes

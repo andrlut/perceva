@@ -42,7 +42,7 @@ export function EmblemaLegend({ state }: { state: EmblemaState }) {
       key: 'effort',
       label: t('perfil.emblema.legend.effort'),
       // O sub-rótulo do esforço não explica o esforço — o número já faz
-      // isso sozinho. Ele carrega a regra dos 100 pontos, que é o que
+      // isso sozinho. Ele carrega a regra dos 300 pontos (a saturação), que é o que
       // acende as doze áreas lá em cima e não teria outro lugar agora que
       // a linha de práticas saiu da legenda.
       what: t('perfil.emblema.legend.effortWhat', {
@@ -51,13 +51,9 @@ export function EmblemaLegend({ state }: { state: EmblemaState }) {
       // O teto é o topo da escada e o mesmo denominador da barra: sem ele
       // "anel 4 de 5" não diz quanto falta pro disco fechar.
       //
-      // Passando do teto, o "de {max}" some: manter 100 XP por dia e ler
-      // "3.235 de 3.000" parece defeito, e capar o número em 3.000
-      // esconderia esforço real. Com o disco cheio o mês fala por si, e o
-      // sub-rótulo já diz "5 de 5 fechados".
-      // Passando do teto o "de {max}" sai: com 3.235 num teto de 3.000,
-      // "3.235 / 3.000" parece defeito, e capar em 3.000 esconderia
-      // esforço real. Com o disco cheio o mês fala por si.
+      // Passando do teto, o "de {max}" some: ler "3.900 de 3.600" parece
+      // defeito, e capar o número em 3.600 esconderia esforço real. Com o
+      // disco cheio o mês fala por si, e o sub-rótulo já diz "5 de 5 fechados".
       value:
         state.xp30 >= LADDER_5[RING_TOTAL - 1]
           ? t('perfil.emblema.legend.effortValueFull', {

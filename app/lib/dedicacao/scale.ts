@@ -1,26 +1,33 @@
 /**
- * Shared window-XP normalization for the Dedicação (Praticada) pillar.
+ * Shared XP → length mapping for the Dedicação (Praticada) pillar. The hex
+ * and every card bar map XP the SAME way, so a bar's fill always equals its
+ * hex vertex.
  *
- * The hex and the dimension-card bars must map XP to length the *same* way,
- * or the bars quietly disagree with the chart above them. This is that one
- * mapping — relative to the leading dimension in the current window:
+ * The scale is ABSOLUTE: each sub fills against the window's saturation
+ * (lib/saturation.ts — 300 XP per 30 days, the minimum of a 1★ practice every
+ * day, prorated to the days elapsed). A full vertex means "trained enough
+ * here"; past it, more XP in one area no longer grows the shape.
  *
- *   - LEADER_RATIO (0.85): the leader stops at 85% of the track, so it reads
- *     "biggest this window", not "maxed out" — the scale is relative, not an
- *     achievement. Every bar therefore has 15% of headroom; mark it with a
- *     tick to explain the gap.
- *   - MIN_RATIO (0.07): any non-zero value keeps a 7% floor so a token amount
- *     stays visible instead of collapsing to nothing. Applies only to xp > 0.
+ *   sub → min(xp, cap) / cap
+ *   dim → the mean of its two subs: a dimension is full only when BOTH of
+ *         its subs are, which is the balance the app is about.
  *
- * Feed every bar (dim and sub) the same `max` — the leading dimension's
- * window XP — so a dim bar's fill equals its hex vertex radius and its two
- * sub bars read as a decomposition of it.
+ * It replaced a leader-relative scale (the leading axis at 85%, everything
+ * else proportional to it), which let one heavy sub squash the other eleven
+ * toward the center.
+ *
+ * MIN_RATIO keeps any non-zero value visible as a sliver.
  */
-export const LEADER_RATIO = 0.85;
-export const MIN_RATIO = 0.07;
+export const MIN_RATIO = 0.05;
 
-export function windowRatio(xp: number, max: number): number {
-  return max > 0 && xp > 0 ? Math.max(MIN_RATIO, (xp / max) * LEADER_RATIO) : 0;
+export function saturationRatio(xp: number, cap: number): number {
+  if (cap <= 0 || xp <= 0) return 0;
+  return Math.max(MIN_RATIO, Math.min(1, xp / cap));
+}
+
+/** A dimension's fill: the mean of its subs' fills. */
+export function meanRatio(ratios: number[]): number {
+  return ratios.length ? ratios.reduce((sum, r) => sum + r, 0) / ratios.length : 0;
 }
 
 /** Ratio (0..1) → clamped CSS percentage width for bar fills. */

@@ -10,7 +10,7 @@ interface CompletionSubRow {
   task_completion_sub: { sub_id: string; xp_granted: number | null }[] | null;
 }
 
-export type Granularity = 'week' | 'month' | 'quarter' | 'all';
+export type Granularity = 'days30' | 'week' | 'month' | 'quarter' | 'all';
 
 export interface WindowSpec {
   granularity: Granularity;
@@ -115,6 +115,9 @@ function addMonths(d: Date, n: number): Date {
  * Compute the date window + bucket layout for a given spec.
  *
  * - week: 7 daily buckets (Mon-Sun or Sun-Sat per weekStart).
+ * - days30: 30 daily buckets ending today — the rolling window the profile's
+ *   Emblema reads (and the saturation ruler is defined on); offset N shifts
+ *   it back 30 days at a time.
  * - month: daily buckets across the calendar month (28-31).
  * - quarter: 12 weekly buckets ending at the current week's start.
  * - all: 12 monthly buckets ending at the current month.
@@ -125,6 +128,16 @@ export function computeWindow(
   now: Date = new Date(),
 ): WindowComputation {
   const { granularity, offset } = spec;
+
+  if (granularity === 'days30') {
+    const today = startOfDay(now);
+    const end = endOfDay(addDays(today, -30 * offset));
+    const start = addDays(today, -30 * offset - 29);
+    const prevStart = addDays(start, -30);
+    const prevEnd = endOfDay(addDays(start, -1));
+    const bucketStarts = Array.from({ length: 30 }, (_, i) => addDays(start, i));
+    return { spec, start, end, prevStart, prevEnd, bucketStarts, bucketSize: 'day' };
+  }
 
   if (granularity === 'week') {
     const curStart = startOfWeek(now, weekStart);

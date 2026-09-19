@@ -792,11 +792,13 @@ const pt: Translations = {
    * pelas superfícies que scrubam períodos (Dedicação, Espelho, histórico).
    */
   dedicacaoWindow: {
+    days30: '30 dias',
     week: 'Semana',
     month: 'Mês',
     quarter: 'Trimestre',
     all: 'Total',
     last12Months: 'últimos 12 meses',
+    last30Days: 'últimos 30 dias',
   },
 
   autoconhecimento: {
@@ -861,7 +863,7 @@ const pt: Translations = {
       legend: {
         title: 'O que o emblema mostra',
         effort: 'Esforço',
-        effortWhat: 'áreas com {{floor}}+ pontos no mês acendem no emblema',
+        effortWhat: 'cada área acende ao encher: {{floor}} XP em 30 dias, o mínimo de 1★ todo dia',
         effortValue: '{{xp}} / {{max}} em 30 dias',
         effortValueFull: '{{xp}} XP no mês',
         self: 'Autoconhecimento',
@@ -2247,6 +2249,10 @@ const pt: Translations = {
 
   dedicacao: {
     hexAxisA11y: '{{dim}}: {{xp}} XP nesse período',
+    saturation30:
+      'Cada área enche com {{xp}} XP em 30 dias — o mínimo de uma prática de 1★ todo dia. Passou disso, a ponta fica cheia.',
+    saturationWindow:
+      'Cada área enche com {{xp}} XP neste período — a régua é 300 a cada 30 dias, o mínimo de 1★ todo dia.',
     hexEmpty: 'Nenhum XP nesse período',
     deltaNew: '+{{xp}} novo',
     // O espelho: o contorno da percepção sobre a forma da prática.

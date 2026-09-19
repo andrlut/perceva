@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { HexRadar, type HexAxis } from '@/components/HexRadar';
 import type { DimensionId, SubId } from '@/lib/db/types';
-import { windowRatio } from '@/lib/dedicacao/scale';
+import { meanRatio, saturationRatio } from '@/lib/dedicacao/scale';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { tokens } from '@/theme';
@@ -37,6 +37,9 @@ interface Props {
    *  caption — `slices` reads all-zero before the data lands, and asserting
    *  an empty period we haven't loaded yet is a lie, not a placeholder. */
   isLoading?: boolean;
+  /** XP that fills one SUB axis in this window — the saturation ruler
+   *  (lib/saturation.ts), prorated to the window's elapsed days. */
+  saturation: number;
   /** Optional comparison outline, ratios already normalized 0..1 and in the
    *  same axis order as the active grain. Used by the mirror reading: how
    *  the user SEES themselves, drawn over what they practice. */
@@ -63,18 +66,18 @@ function formatCenterXp(xp: number): string {
 }
 
 /**
- * Six-axis XP radar — one axis per dimension, in DIMENSION_ORDER, normalized
- * against the largest dimension in the current window. It answers "where did
- * my effort concentrate", and reads shape-first: a balanced window fills the
- * hexagon evenly, a lopsided one spikes.
+ * XP radar — six axes (dimensions) or twelve (subs), in DIMENSION_ORDER. It
+ * answers "how well did I cover my areas in this window", shape-first: a full
+ * hexagon is every area trained enough.
  *
- * The scale is deliberately relative. Nothing here says how much XP is "a
- * lot" — only which dims led. Absolute magnitude lives in the total under
- * the hex and in the per-dim cards.
+ * The scale is ABSOLUTE: each sub axis fills against the window's saturation
+ * (lib/saturation.ts — 300 XP per 30 days, the minimum of a 1★ practice every
+ * day) and a dimension axis is the mean of its two subs. Past the ruler the
+ * vertex stays at the rim, so one heavy area can no longer squash the others
+ * toward the center, as the old leader-relative scale did. Exact XP still
+ * lives in the total under the hex and in the per-dim cards.
  *
  * Empty window: grid only, no shape, and a caption saying so.
- * Single-dominant window: a spike from the center — degenerate but truthful,
- * and the MIN_RATIO floor keeps the other non-zero dims from vanishing.
  */
 export function XpHexChart({
   slices,
@@ -83,6 +86,7 @@ export function XpHexChart({
   totalXp,
   prevTotalXp,
   isLoading = false,
+  saturation,
   secondary,
   secondaryColor,
   size = 240,
@@ -92,27 +96,22 @@ export function XpHexChart({
   const { t } = useT();
   const metaLookup = useMetaLookup();
 
-  // Normalized via the shared `windowRatio` — relative to the leading axis of
-  // the current grain (leading dim in 'dims', leading sub in 'subs'), the same
-  // mapping the dimension-card bars use. In 'subs' each axis carries its sub
-  // glyph but its parent dim's color, so the dodecagon reads as six lobes.
+  // Filled against the window's saturation — the same mapping the
+  // dimension-card bars use: a sub fills to min(xp, cap) / cap, a dimension
+  // to the mean of its two subs. In 'subs' each axis carries its sub glyph
+  // but its parent dim's color, so the dodecagon reads as six lobes.
   const vertices = useMemo(() => {
+    const subs = subSlices ?? [];
     if (variant === 'subs') {
-      const subs = subSlices ?? [];
-      const max = subs.reduce((m, s) => Math.max(m, s.xp), 0);
       return subs.map((s) => ({
         dimId: s.dimId,
         iconName: SUB_META[s.subId].iconName as string | undefined,
         label: metaLookup.sub(s.subId).label,
         xp: s.xp,
-        ratio: windowRatio(s.xp, max),
+        ratio: saturationRatio(s.xp, saturation),
       }));
     }
     const xpById = new Map(slices.map((s) => [s.dimId, s.xp]));
-    const max = DIMENSION_ORDER.reduce(
-      (m, d) => Math.max(m, xpById.get(d) ?? 0),
-      0,
-    );
     return DIMENSION_ORDER.map((dimId) => {
       const xp = xpById.get(dimId) ?? 0;
       return {
@@ -120,10 +119,14 @@ export function XpHexChart({
         iconName: undefined as string | undefined,
         label: metaLookup.dim(dimId).label,
         xp,
-        ratio: windowRatio(xp, max),
+        ratio: meanRatio(
+          subs
+            .filter((s) => s.dimId === dimId)
+            .map((s) => saturationRatio(s.xp, saturation)),
+        ),
       };
     });
-  }, [variant, slices, subSlices, metaLookup]);
+  }, [variant, slices, subSlices, metaLookup, saturation]);
 
   const hasData = totalXp > 0 && vertices.some((v) => v.xp > 0);
 

@@ -4,6 +4,7 @@ import { useDailySummary } from '@/lib/api/history';
 import { useRecentReadCount } from '@/lib/api/learning';
 import { DEEP_INSTRUMENT_IDS, useCompletedInstruments } from '@/lib/api/psych';
 import type { DimensionId, SubId } from '@/lib/db/types';
+import { SUB_SATURATION_30D } from '@/lib/saturation';
 import { DIMENSION_ORDER, SUBS_BY_DIM, SUB_META } from '@/theme/dimensions';
 
 /**
@@ -29,35 +30,37 @@ export const EMBLEMA_WINDOW_DAYS = 30;
 /**
  * A escada dos anéis, em XP acumulado na janela de 30 dias.
  *
- * A escada é uma TAXA DIÁRIA, não um número solto: cada anel vale +20 XP
- * por dia de média, e o disco cheio é ter mantido 100 XP por dia no mês.
- * É o que torna a leitura ensinável — "fechei o disco" quer dizer uma
- * coisa só, e não muda de significado conforme o app cresce.
+ * O teto é o XP de ter enchido as doze áreas: 12 × 300 = 3.600, a mesma
+ * saturação do Eu → Praticada (lib/saturation.ts) — cada área com o mínimo
+ * de uma prática de 1★ por dia. Os degraus dividem o teto em cinco partes
+ * iguais, uma TAXA DIÁRIA ensinável:
  *
- *   anel 1 →  20 XP/dia    anel 4 →  80 XP/dia
- *   anel 2 →  40 XP/dia    anel 5 → 100 XP/dia (disco cheio)
+ *   anel 1 →  24 XP/dia    anel 4 →  96 XP/dia
+ *   anel 2 →  48 XP/dia    anel 5 → 120 XP/dia (disco cheio)
  *
- * O teto é alcançável de propósito: em 30 dias reais o dono fez 3.235 XP,
- * então quem mantém o ritmo fecha o disco em vez de olhar para um anel que
- * nunca enche.
+ * Os anéis somam o XP GERAL da janela, sem cortar pela saturação: são o
+ * esforço do mês, e dá pra fechar o disco concentrado numa área só. É nas
+ * doze áreas, logo abaixo, que a saturação aparece. (Antes o teto era 3.000,
+ * 100 XP/dia; subiu pra casar com a régua das áreas.)
  */
-export const LADDER_5 = [600, 1200, 1800, 2400, 3000] as const;
+export const LADDER_5 = [720, 1440, 2160, 2880, 3600] as const;
 
 /**
- * Versão de 3 degraus pra capa, terminando no mesmo teto: 33, 67 e 100 XP
+ * Versão de 3 degraus pra capa, terminando no mesmo teto: 40, 80 e 120 XP
  * por dia. A posição relativa lê igual nos dois tamanhos.
  */
-export const LADDER_3 = [1000, 2000, 3000] as const;
+export const LADDER_3 = [1200, 2400, 3600] as const;
 
 /**
- * Piso para uma área ACENDER na órbita: menos de 100 XP no mês é ter
- * passado por ali, não é ter treinado.
+ * Uma área ACENDE na órbita quando ENCHE: a saturação do Eu → Praticada,
+ * 300 XP em 30 dias — o mínimo de uma prática de 1★ todo dia
+ * (lib/saturation.ts). Era 100; subiu pra as duas telas lerem a mesma régua.
  *
  * Vale para os doze satélites, que ficam desenhados sempre — apagados
  * dizem o que falta. NÃO vale para o centro, que é o sub de maior volume
  * com ou sem piso: senão o emblema de uma conta nova ficaria sem miolo.
  */
-export const PRACTICE_FLOOR_XP = 100;
+export const PRACTICE_FLOOR_XP = SUB_SATURATION_30D;
 
 /** Materiais lidos em 30 dias que deixam o halo cheio. ~2 drops por semana. */
 export const GLOW_FULL_READS = 8;

@@ -15,14 +15,16 @@ interface Props {
   accent: string;
   halo: string;
   border: string;
-  /** Localized chip labels: week / month / quarter / all. */
-  labels: { week: string; month: string; quarter: string; all: string };
+  /** Localized chip labels: 30 days / week / month / quarter / all. */
+  labels: { days30: string; week: string; month: string; quarter: string; all: string };
 }
 
-const GRANULARITIES: Granularity[] = ['week', 'month', 'quarter', 'all'];
+// "30 dias" leads: it is the default, and the window the saturation ruler
+// (lib/saturation.ts) and the profile's Emblema are defined on.
+const GRANULARITIES: Granularity[] = ['days30', 'week', 'month', 'quarter', 'all'];
 
 /**
- * Period picker for the Dedicação panel. Top row: 4 granularity chips. Bottom
+ * Period picker for the Dedicação panel. Top row: 5 granularity chips. Bottom
  * row: ◀ "label" ▶ to scrub backward/forward through past periods (hidden
  * for "Total" since there's no prev/next). The ▶ arrow is disabled at
  * offset 0 — you can't peek into the future.
@@ -77,6 +79,8 @@ export function PeriodSelector({
                   { color: isActive ? accent : tokens.text.dim },
                 ]}
                 numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.85}
               >
                 {labels[g]}
               </Text>
@@ -132,7 +136,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: tokens.space[2],
-    paddingHorizontal: tokens.space[2],
+    // Five chips share the row now; the side padding gives way first.
+    paddingHorizontal: tokens.space[1],
     borderRadius: tokens.radius.pill,
     backgroundColor: 'transparent',
     borderWidth: 1,
