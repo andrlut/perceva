@@ -34,7 +34,8 @@ import {
   useUpdateTask,
   type TaskFormInput,
 } from '@/lib/api/tasks';
-import type { Recurrence, TaskSub } from '@/lib/db/types';
+import { CoinMultiplierPicker } from '@/components/CoinMultiplierPicker';
+import type { CoinMultiplier, Recurrence, TaskSub } from '@/lib/db/types';
 import { useKeyboardOverlap } from '@/lib/use-keyboard-height';
 import { confirmAction } from '@/lib/util/confirm';
 import { rewardForTaskSubs } from '@/lib/xp';
@@ -176,6 +177,8 @@ export default function TaskFormScreen() {
   // null = auto (use the primary sub's icon at render time). User-picked
   // value sticks even if subs change later — predictable contract.
   const [icon, setIcon] = useState<string | null>(null);
+  // Coins relative to XP. A new practice starts at "Igual" (the old rule).
+  const [coinMultiplier, setCoinMultiplier] = useState<CoinMultiplier>(1);
   const [iconPickerVisible, setIconPickerVisible] = useState(false);
   const [prefillApplied, setPrefillApplied] = useState(false);
   // Keep scroll content reachable while the keyboard is up. `endCoordinates`
@@ -225,6 +228,7 @@ export default function TaskFormScreen() {
       setTargetCount(existing.data.target_count ?? 1);
       setSubs(existing.data.subs);
       setIcon(existing.data.icon ?? null);
+      setCoinMultiplier(existing.data.coin_multiplier);
     }
   }, [existing.data]);
 
@@ -252,7 +256,10 @@ export default function TaskFormScreen() {
     createTask.isPending || updateTask.isPending || archiveTask.isPending;
 
   const totalStars = subs.reduce((s, x) => s + x.stars, 0);
-  const reward = useMemo(() => rewardForTaskSubs(subs), [subs]);
+  const reward = useMemo(
+    () => rewardForTaskSubs(subs, coinMultiplier),
+    [subs, coinMultiplier],
+  );
 
   const formInput = useMemo<TaskFormInput | null>(() => {
     if (subs.length === 0 || totalStars === 0) return null;
@@ -264,8 +271,9 @@ export default function TaskFormScreen() {
       target_count: recurrence.type === 'one_shot' ? 1 : targetCount,
       subs,
       icon,
+      coin_multiplier: coinMultiplier,
     };
-  }, [title, description, recurrence, targetCount, subs, totalStars, icon]);
+  }, [title, description, recurrence, targetCount, subs, totalStars, icon, coinMultiplier]);
 
   /** True when editing a template-adopted task AND the user has changed
    *  any field that triggers the template-link drop (title, description,
@@ -516,6 +524,12 @@ export default function TaskFormScreen() {
                 </Text>
               </View>
             )}
+          </View>
+
+          <View style={styles.field}>
+            <Text style={styles.label}>{t('tasks.coinMultiplier.label')}</Text>
+            <Text style={styles.hint}>{t('tasks.coinMultiplier.hint')}</Text>
+            <CoinMultiplierPicker value={coinMultiplier} onChange={setCoinMultiplier} />
           </View>
 
           <View

@@ -1294,6 +1294,14 @@ const pt: Translations = {
       reset: 'Resetar',
       log: 'Registrar',
     },
+    coinMultiplier: {
+      label: 'Moedas',
+      hint: 'O XP mede o esforço (as estrelas). As moedas são o quanto você quer se recompensar por essa prática.',
+      none: 'Nada',
+      half: 'Metade',
+      same: 'Igual',
+      double: 'Dobro',
+    },
     subPicker: {
       pickAtLeastOne: 'Escolha ao menos um sub',
       countSubs: { one: '{{count}} sub', other: '{{count}} subs' },

@@ -1,6 +1,7 @@
 import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type {
+  CoinMultiplier,
   DimensionId,
   Recurrence,
   SubId,
@@ -12,7 +13,7 @@ import { isOpenOnDay, parseRecurrence } from '@/lib/recurrence';
 import type { WeekStart } from '@/lib/settings';
 import { supabase } from '@/lib/supabase';
 import { SUB_META } from '@/theme/dimensions';
-import { rewardForTaskSubs } from '@/lib/xp';
+import { asCoinMultiplier, rewardForTaskSubs } from '@/lib/xp';
 
 import { characterKeys, type CharacterWithProfile } from './character';
 import { historyKeys } from './history';
@@ -40,6 +41,8 @@ export interface TaskFormInput {
   /** Optional Ionicons name override — null means auto-derive from
    *  primary sub at render time. */
   icon: string | null;
+  /** Coins relative to XP (0 / 0.5 / 1 / 2) — the practice's default. */
+  coin_multiplier: CoinMultiplier;
 }
 
 // ─── Row shapes coming from PostgREST ────────────────────────────────────
@@ -62,6 +65,7 @@ interface TaskRow {
   updated_at: string;
   template_id: string | null;
   icon: string | null;
+  coin_multiplier: number | string | null;
   task_sub: TaskSubRow[] | null;
 }
 
@@ -124,6 +128,7 @@ function mapTaskRow(t: TaskRow): TaskWithSubs {
     updated_at: t.updated_at,
     template_id: t.template_id,
     icon: t.icon,
+    coin_multiplier: asCoinMultiplier(t.coin_multiplier),
     subs,
     primary_sub_id: primarySub,
     primary_dimension_id: dimensionForSub(primarySub),
@@ -473,6 +478,10 @@ export function useCompleteTask() {
       subs: TaskSub[];
       completedAt?: string;
       completedLocalDate?: string;
+      /** Coins for THIS log relative to its XP. Omitted → the practice's
+       *  default, resolved server-side (authoritative even when this
+       *  client's copy of the task is stale). */
+      coinMultiplier?: CoinMultiplier;
     }): Promise<CompleteTaskResult> => {
       const { data, error } = await supabase.rpc('complete_task', {
         p_task_id: params.task.id,
@@ -482,6 +491,9 @@ export function useCompleteTask() {
           sub_id: s.sub_id,
           stars: s.stars,
         })),
+        ...(params.coinMultiplier !== undefined
+          ? { p_coin_multiplier: params.coinMultiplier }
+          : {}),
       });
       if (error) throw error;
       return data as CompleteTaskResult;
@@ -503,7 +515,10 @@ export function useCompleteTask() {
       });
       const prevChar = queryClient.getQueryData<CharacterWithProfile>(characterKeys.me());
 
-      const reward = rewardForTaskSubs(params.subs);
+      const reward = rewardForTaskSubs(
+        params.subs,
+        params.coinMultiplier ?? params.task.coin_multiplier,
+      );
 
       // Optimistic removal from "pending today" on any live tap (no
       // completedAt). The Home open list drops a task after its FIRST
@@ -776,6 +791,7 @@ export function useCreateTask() {
           recurrence: input.recurrence,
           target_count: input.target_count,
           icon: input.icon,
+          coin_multiplier: input.coin_multiplier,
         })
         .select('id')
         .single();
@@ -817,6 +833,7 @@ export function useUpdateTask(taskId: string) {
         recurrence: input.recurrence,
         target_count: input.target_count,
         icon: input.icon,
+        coin_multiplier: input.coin_multiplier,
       };
       if (input.dropTemplateLink) {
         patch.template_id = null;

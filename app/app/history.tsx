@@ -60,7 +60,7 @@ import {
 } from '@/lib/calendar/filters';
 import { intensityReference, SCOPED_REFERENCE_FLOOR } from '@/lib/calendar/intensity';
 import { applyFilterSeed, useCalendarStore, type CalendarFront, type CalendarView } from '@/lib/calendar/store';
-import type { DimensionId, SubId, TaskSub, TaskWithSubs } from '@/lib/db/types';
+import type { CoinMultiplier, DimensionId, SubId, TaskSub, TaskWithSubs } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { useLoadedSettings } from '@/lib/settings';
@@ -404,11 +404,15 @@ export default function CalendarScreen() {
   const dayKey = dateKeyFromLocal(selected);
   const isToday = dayKey === dateKeyFromLocal(new Date());
 
-  const fireRetroCompletion = (task: TaskWithSubs, subs: TaskSub[]) => {
+  const fireRetroCompletion = (
+    task: TaskWithSubs,
+    subs: TaskSub[],
+    coinMultiplier?: CoinMultiplier,
+  ) => {
     if (completeTask.isPending) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
 
-    const reward = rewardForTaskSubs(subs);
+    const reward = rewardForTaskSubs(subs, coinMultiplier ?? task.coin_multiplier);
     const fid = Date.now();
     setFloats((prev) => [...prev, { id: fid, xp: reward.total.xp, coins: reward.total.coins }]);
 
@@ -418,6 +422,7 @@ export default function CalendarScreen() {
       {
         task,
         subs,
+        coinMultiplier,
         completedAt: stamp.toISOString(),
         completedLocalDate: dayKey,
       },
@@ -430,8 +435,12 @@ export default function CalendarScreen() {
     );
   };
 
-  const handleRetroComplete = (task: TaskWithSubs, subs?: TaskSub[]) => {
-    fireRetroCompletion(task, subs ?? task.subs);
+  const handleRetroComplete = (
+    task: TaskWithSubs,
+    subs?: TaskSub[],
+    coinMultiplier?: CoinMultiplier,
+  ) => {
+    fireRetroCompletion(task, subs ?? task.subs, coinMultiplier);
   };
 
   const handleUndo = async (completionId: string, title: string, xp: number, coins: number) => {
@@ -914,10 +923,10 @@ export default function CalendarScreen() {
         visible={sheetTask !== null}
         task={sheetTask}
         onCancel={() => setSheetTask(null)}
-        onConfirm={(subs) => {
+        onConfirm={(subs, coinMultiplier) => {
           const task = sheetTask;
           setSheetTask(null);
-          if (task) fireRetroCompletion(task, subs);
+          if (task) fireRetroCompletion(task, subs, coinMultiplier);
         }}
       />
 

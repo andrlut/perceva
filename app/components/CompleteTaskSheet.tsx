@@ -8,7 +8,8 @@ import {
   View,
 } from 'react-native';
 
-import type { TaskSub, TaskWithSubs } from '@/lib/db/types';
+import { CoinMultiplierPicker } from '@/components/CoinMultiplierPicker';
+import type { CoinMultiplier, TaskSub, TaskWithSubs } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { rewardForTaskSubs } from '@/lib/xp';
@@ -21,7 +22,8 @@ interface Props {
   visible: boolean;
   task: TaskWithSubs | null;
   onCancel: () => void;
-  onConfirm: (subs: TaskSub[]) => void;
+  /** The stars and the coins for THIS log (both start at the practice's). */
+  onConfirm: (subs: TaskSub[], coinMultiplier: CoinMultiplier) => void;
 }
 
 /**
@@ -34,6 +36,9 @@ interface Props {
  *
  * Confirming sends the adjusted (sub_id, stars) array as the override
  * payload to complete_task.
+ *
+ * The coins (Nada / Metade / Igual / Dobro) start at the practice's default
+ * and change this log only; XP stays the stars.
  */
 export function CompleteTaskSheet({
   visible,
@@ -45,11 +50,13 @@ export function CompleteTaskSheet({
   const sheetBottom = useSheetBottomInset();
   const meta = useMetaLookup();
   const [draft, setDraft] = useState<TaskSub[]>([]);
+  const [mult, setMult] = useState<CoinMultiplier>(1);
 
   // Reset draft each time we open with a new task.
   useEffect(() => {
     if (visible && task) {
       setDraft(task.subs.map((s) => ({ sub_id: s.sub_id, stars: s.stars })));
+      setMult(task.coin_multiplier);
     }
   }, [visible, task]);
 
@@ -59,8 +66,8 @@ export function CompleteTaskSheet({
   );
 
   const reward = useMemo(
-    () => rewardForTaskSubs(draft),
-    [draft],
+    () => rewardForTaskSubs(draft, mult),
+    [draft, mult],
   );
 
   if (!task) return null;
@@ -78,15 +85,17 @@ export function CompleteTaskSheet({
 
   const reset = () => {
     setDraft(task.subs.map((s) => ({ sub_id: s.sub_id, stars: s.stars })));
+    setMult(task.coin_multiplier);
   };
 
   const confirm = () => {
-    onConfirm(draft);
+    onConfirm(draft, mult);
   };
 
   const isDirty =
     draft.length !== task.subs.length ||
-    draft.some((d, i) => task.subs[i]?.stars !== d.stars);
+    draft.some((d, i) => task.subs[i]?.stars !== d.stars) ||
+    mult !== task.coin_multiplier;
 
   return (
     <Modal
@@ -185,6 +194,12 @@ export function CompleteTaskSheet({
               </View>
             );
           })}
+
+          <CoinMultiplierPicker
+            label={t('tasks.coinMultiplier.label')}
+            value={mult}
+            onChange={setMult}
+          />
 
           <View style={styles.divider} />
 

@@ -1298,6 +1298,14 @@ const en = {
       reset: 'Reset',
       log: 'Log',
     },
+    coinMultiplier: {
+      label: 'Coins',
+      hint: 'XP measures the effort (the stars). Coins are how much you want to reward yourself for this practice.',
+      none: 'None',
+      half: 'Half',
+      same: 'Same',
+      double: 'Double',
+    },
     subPicker: {
       pickAtLeastOne: 'Pick at least one sub',
       countSubs: { one: '{{count}} sub', other: '{{count}} subs' },

@@ -25,6 +25,7 @@ import { DIMENSION_META } from '@/theme/dimensions';
 import { SubColoredPips } from '@/components/SubColoredPips';
 import { useMetaLookup } from '@/lib/i18n/meta';
 
+import { CoinIcon } from './CoinIcon';
 import { SubStack } from './SubStack';
 
 interface Props {
@@ -91,7 +92,7 @@ export function TaskCard({
 }: Props) {
   const { t } = useT();
   const accent = DIMENSION_META[task.primary_dimension_id].color;
-  const reward = rewardForTaskSubs(task.subs);
+  const reward = rewardForTaskSubs(task.subs, task.coin_multiplier);
 
   const completeScale = useSharedValue(1);
   const tx = useSharedValue(0);
@@ -306,6 +307,14 @@ export function TaskCard({
               )}
               <SubColoredPips subs={task.subs} size={5} />
               <Text style={styles.rewardValue}>+{reward.total.xp}</Text>
+              {/* Coins only when they differ from the XP (the practice is not
+                  on "Igual") — otherwise the XP figure already says it. */}
+              {task.coin_multiplier !== 1 && (
+                <View style={styles.coinTag}>
+                  <CoinIcon size={11} />
+                  <Text style={styles.coinTagText}>{reward.total.coins}</Text>
+                </View>
+              )}
               {showRecurrenceNote && (
                 <Text style={styles.recurrenceNote} numberOfLines={1}>
                   · {describeRecurrence(task.recurrence, task.target_count)}
@@ -474,6 +483,19 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 11,
     color: tokens.semantic.xp,
+    letterSpacing: 0.2,
+  },
+  coinTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  // Neutral text beside the gold coin: the icon carries the colour, and gold
+  // as 11dp text would miss AA on the light theme.
+  coinTagText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 11,
+    color: tokens.text.mid,
     letterSpacing: 0.2,
   },
   recurrenceNote: {
