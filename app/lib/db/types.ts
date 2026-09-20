@@ -452,6 +452,10 @@ export interface Reward {
    *  É escolha de quem cadastrou, não da categoria — ver a migration
    *  20260920000002 pra o porquê. */
   is_one_shot: boolean;
+  /** Template de origem, quando adotada do catálogo. Governa SÓ título e
+   *  descrição, renderizados no idioma do app; vira null quando o usuário
+   *  edita o texto. Ver 20260920000003. */
+  template_id: string | null;
   is_archived: boolean;
   sort_order: number;
   created_at: string;

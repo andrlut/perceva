@@ -31,6 +31,28 @@ function pickNullable(
   return en ?? null;
 }
 
+/**
+ * Variantes que recebem o locale em vez de lê-lo. Existem pra quem precisa
+ * REAGIR à troca de idioma sem estar num componente — um `select` de
+ * TanStack Query, por exemplo. A regra de fallback é a mesma; ela mora
+ * num lugar só de propósito.
+ */
+export function pickWithLocale(
+  locale: LanguageCode,
+  en: string | null | undefined,
+  pt: string | null | undefined,
+): string {
+  return pick(en, pt, locale);
+}
+
+export function pickWithLocaleNullable(
+  locale: LanguageCode,
+  en: string | null | undefined,
+  pt: string | null | undefined,
+): string | null {
+  return pickNullable(en, pt, locale);
+}
+
 export function localized(en: string, pt: string | null | undefined): string {
   return pick(en, pt, getCurrentLocale());
 }
