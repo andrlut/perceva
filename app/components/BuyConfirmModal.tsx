@@ -58,10 +58,12 @@ export function BuyConfirmModal({
   const [qty, setQty] = useState(initialQty);
 
   // Reset qty whenever the modal opens for a new reward so leftover
-  // state from the last purchase doesn't surprise the user.
+  // state from the last purchase doesn't surprise the user. Compra única
+  // trava em 1: o stepper não é renderizado, então um initialQty herdado
+  // do caminho de long-press ficaria preso e sem como voltar.
   useEffect(() => {
-    if (visible) setQty(initialQty);
-  }, [visible, initialQty, reward?.id]);
+    if (visible) setQty(reward?.is_one_shot ? 1 : initialQty);
+  }, [visible, initialQty, reward?.id, reward?.is_one_shot]);
 
   const cardOpacity = useSharedValue(0);
   const cardTranslateY = useSharedValue(20);
@@ -157,7 +159,9 @@ export function BuyConfirmModal({
                 </View>
               </View>
 
-              {/* Qty stepper */}
+              {/* Qty stepper — não existe pra compra única: a pergunta
+                  "quantas?" não se aplica a uma geladeira. */}
+              {!reward.is_one_shot && (
               <View style={styles.qtyRow}>
                 <Text style={styles.qtyLabel}>
                   {t('rewards.buyConfirm.qtyLabel')}
@@ -200,6 +204,7 @@ export function BuyConfirmModal({
                   </Pressable>
                 </View>
               </View>
+              )}
 
               {/* Total line + (conditional) shortfall */}
               <View style={styles.totalRow}>

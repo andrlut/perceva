@@ -991,6 +991,9 @@ const en = {
       descLabel: 'Description (optional)',
       descPlaceholder: 'What it really means…',
       costLabel: 'Cost (coins)',
+      oneShotTitle: 'One-time buy',
+      oneShotSub:
+        'Leaves the Vault once bought — for something you acquire once, not a habit that repeats.',
       iconLabel: 'Icon',
       iconHint: 'The icon shown on the reward card.',
       archiveBtn: 'Archive reward',
