@@ -145,7 +145,15 @@ export default function RewardFormScreen() {
     }
     try {
       if (isEdit && params.id) {
-        await updateReward.mutateAsync(formInput);
+        // Mexeu no TEXTO de uma recompensa adotada? Ela vira própria e o
+        // catálogo para de falar por ela — mesma convenção do task-form.
+        // A comparação é contra o texto JÁ localizado que preencheu o campo,
+        // então só troca de idioma nunca conta como edição.
+        const dropTemplateLink =
+          existing.data?.template_id != null &&
+          (formInput.title !== existing.data.title ||
+            formInput.description !== existing.data.description);
+        await updateReward.mutateAsync({ ...formInput, dropTemplateLink });
       } else {
         await createReward.mutateAsync(formInput);
       }

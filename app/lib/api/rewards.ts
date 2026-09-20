@@ -1,7 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
 
 import type { Reward, RewardCategory, RewardTemplate } from '@/lib/db/types';
-import { getCurrentLocale } from '@/lib/i18n';
+import { getCurrentLocale, useT } from '@/lib/i18n';
+import { pickWithLocale, pickWithLocaleNullable } from '@/lib/i18n/catalog';
+import type { LanguageCode } from '@/lib/settings';
 import { supabase } from '@/lib/supabase';
 
 import { dateKeyFromLocal, daysBetweenKeys } from './history';
@@ -32,45 +35,72 @@ export interface RedemptionEntry {
   reward_category: RewardCategory | null;
 }
 
+interface RedemptionRewardRef {
+  title: string;
+  icon: string;
+  category: RewardCategory | null;
+  reward_template?:
+    | { title: string; title_pt: string | null }
+    | { title: string; title_pt: string | null }[]
+    | null;
+}
+
 interface RedemptionRow {
   id: string;
   reward_id: string;
   redeemed_at: string;
   used_at: string | null;
   cost_paid: number;
-  reward:
-    | { title: string; icon: string; category: RewardCategory | null }
-    | { title: string; icon: string; category: RewardCategory | null }[]
-    | null;
+  reward: RedemptionRewardRef | RedemptionRewardRef[] | null;
 }
 
-function mapRedemption(r: RedemptionRow): RedemptionEntry {
+/** Mesmo join do catálogo que a vitrine usa — o banco e o histórico mostram
+ *  os mesmos nomes, e teriam ficado no idioma da adoção sem isto. */
+const REDEMPTION_SELECT =
+  'id,reward_id,redeemed_at,used_at,cost_paid,' +
+  'reward:reward_id(title,icon,category,reward_template:template_id(title,title_pt))';
+
+function mapRedemption(r: RedemptionRow, locale: LanguageCode): RedemptionEntry {
   const reward = Array.isArray(r.reward) ? r.reward[0] : r.reward;
+  const joined = reward?.reward_template;
+  const tpl = Array.isArray(joined) ? joined[0] : joined;
   return {
     id: r.id,
     reward_id: r.reward_id,
     redeemed_at: r.redeemed_at,
     used_at: r.used_at,
     cost_paid: r.cost_paid,
-    reward_title: reward?.title ?? '(removed reward)',
+    reward_title: tpl
+      ? pickWithLocale(locale, tpl.title, tpl.title_pt)
+      : reward?.title ?? '(removed reward)',
     reward_icon: reward?.icon ?? 'gift',
     reward_category: reward?.category ?? null,
   };
+}
+
+/** Igual ao useLocalizeRewards, pro par banco/histórico. */
+function useLocalizeRedemptions() {
+  const { locale } = useT();
+  return useCallback(
+    (rows: RedemptionRow[]): RedemptionEntry[] => rows.map((r) => mapRedemption(r, locale)),
+    [locale],
+  );
 }
 
 /** Bought-but-not-yet-used. The "bank". Newest first. */
 export function useBankedRewards() {
   return useQuery({
     queryKey: rewardKeys.bank(),
-    queryFn: async (): Promise<RedemptionEntry[]> => {
+    queryFn: async (): Promise<RedemptionRow[]> => {
       const { data, error } = await supabase
         .from('reward_redemption')
-        .select('id, reward_id, redeemed_at, used_at, cost_paid, reward:reward_id ( title, icon, category )')
+        .select(REDEMPTION_SELECT)
         .is('used_at', null)
         .order('redeemed_at', { ascending: false });
       if (error) throw error;
-      return ((data ?? []) as RedemptionRow[]).map(mapRedemption);
+      return (data ?? []) as unknown as RedemptionRow[];
     },
+    select: useLocalizeRedemptions(),
   });
 }
 
@@ -78,16 +108,17 @@ export function useBankedRewards() {
 export function useUsedRewards(limit: number = 50) {
   return useQuery({
     queryKey: rewardKeys.used(),
-    queryFn: async (): Promise<RedemptionEntry[]> => {
+    queryFn: async (): Promise<RedemptionRow[]> => {
       const { data, error } = await supabase
         .from('reward_redemption')
-        .select('id, reward_id, redeemed_at, used_at, cost_paid, reward:reward_id ( title, icon, category )')
+        .select(REDEMPTION_SELECT)
         .not('used_at', 'is', null)
         .order('used_at', { ascending: false })
         .limit(limit);
       if (error) throw error;
-      return ((data ?? []) as RedemptionRow[]).map(mapRedemption);
+      return (data ?? []) as unknown as RedemptionRow[];
     },
+    select: useLocalizeRedemptions(),
   });
 }
 
@@ -100,20 +131,75 @@ export interface RewardFormInput {
   isOneShot: boolean;
 }
 
-async function fetchActiveRewards(): Promise<Reward[]> {
+/** Colunas do catálogo que o join traz junto quando há template_id. */
+// SEM espaços de propósito: o parser do PostgREST aceita espaço num embed
+// simples, mas rejeita (PGRST100, "unexpected ) expecting ,") assim que
+// existe um embed ANINHADO — e o REDEMPTION_SELECT abaixo tem um. As duas
+// ficam no mesmo estilo pra ninguém "arrumar" a formatação de volta.
+const REWARD_SELECT =
+  '*,reward_template:template_id(title,title_pt,description,description_pt)';
+
+interface CatalogText {
+  title: string;
+  title_pt: string | null;
+  description: string | null;
+  description_pt: string | null;
+}
+
+type RewardRow = Reward & {
+  // PostgREST devolve objeto pra to-one, mas já devolveu array em versões
+  // anteriores; o mapRedemption logo acima trata o mesmo caso.
+  reward_template?: CatalogText | CatalogText[] | null;
+};
+
+/**
+ * Texto de uma recompensa adotada vem do CATÁLOGO, no idioma do app.
+ *
+ * Sem isso, o título fica congelado no idioma do dia em que foi adotada — era
+ * por isso que a Vault misturava 'Nice dinner out' com 'Pedir Comida' no mesmo
+ * app em pt-BR. O vínculo governa só título e descrição: custo, ícone,
+ * categoria e is_one_shot continuam sendo escolha do usuário, na linha dele.
+ *
+ * Recompensa própria (template_id null) ou renomeada (o vínculo é cortado no
+ * update) cai no texto guardado, que é o comportamento de sempre.
+ */
+function localizeReward(row: RewardRow, locale: LanguageCode): Reward {
+  const { reward_template: joined, ...reward } = row;
+  const tpl = Array.isArray(joined) ? joined[0] : joined;
+  if (!tpl) return reward as Reward;
+  return {
+    ...(reward as Reward),
+    title: pickWithLocale(locale, tpl.title, tpl.title_pt),
+    description: pickWithLocaleNullable(locale, tpl.description, tpl.description_pt),
+  };
+}
+
+/** `select` do TanStack preso ao locale — troca de idioma re-renderiza sem
+ *  refetch, e a identidade fica estável por idioma (senão todo memo que
+ *  depende de `data` recalcularia a cada render). */
+function useLocalizeRewards() {
+  const { locale } = useT();
+  return useCallback(
+    (rows: RewardRow[]): Reward[] => rows.map((r) => localizeReward(r, locale)),
+    [locale],
+  );
+}
+
+async function fetchActiveRewards(): Promise<RewardRow[]> {
   const { data, error } = await supabase
     .from('reward')
-    .select('*')
+    .select(REWARD_SELECT)
     .eq('is_archived', false)
     .order('sort_order', { ascending: true });
   if (error) throw error;
-  return (data ?? []) as Reward[];
+  return (data ?? []) as unknown as RewardRow[];
 }
 
 export function useRewards() {
   return useQuery({
     queryKey: rewardKeys.active(),
     queryFn: fetchActiveRewards,
+    select: useLocalizeRewards(),
   });
 }
 
@@ -259,34 +345,41 @@ export function useRewardGaps() {
  * first so a just-arquivada reward sits at the top for an obvious undo.
  */
 export function useArchivedRewards() {
+  const localize = useLocalizeRewards();
   return useQuery({
     queryKey: rewardKeys.archived(),
-    queryFn: async (): Promise<Reward[]> => {
+    queryFn: async (): Promise<RewardRow[]> => {
       const { data, error } = await supabase
         .from('reward')
-        .select('*')
+        .select(REWARD_SELECT)
         .eq('is_archived', true)
         .order('updated_at', { ascending: false });
       if (error) throw error;
-      return (data ?? []) as Reward[];
+      return (data ?? []) as unknown as RewardRow[];
     },
+    select: localize,
   });
 }
 
 export function useReward(id: string | null | undefined) {
+  const { locale } = useT();
   return useQuery({
     queryKey: id ? rewardKeys.detail(id) : ['rewards', 'detail', 'none'],
     enabled: !!id,
-    queryFn: async (): Promise<Reward | null> => {
+    queryFn: async (): Promise<RewardRow | null> => {
       if (!id) return null;
       const { data, error } = await supabase
         .from('reward')
-        .select('*')
+        .select(REWARD_SELECT)
         .eq('id', id)
         .single();
       if (error) throw error;
-      return data as Reward;
+      return data as unknown as RewardRow;
     },
+    select: useCallback(
+      (row: RewardRow | null) => (row ? localizeReward(row, locale) : null),
+      [locale],
+    ),
   });
 }
 
@@ -322,20 +415,32 @@ export function useCreateReward() {
   });
 }
 
+/** Editar o TEXTO de uma recompensa adotada corta o vínculo com o catálogo —
+ *  mesma convenção que `task` já usa (o dropTemplateLink em lib/api/tasks.ts).
+ *  Renomeou, virou recompensa própria, e o catálogo para de falar por ela.
+ *  Custo, ícone, categoria e compra única NÃO cortam: nunca vieram de lá. */
+export interface RewardUpdateInput extends RewardFormInput {
+  dropTemplateLink?: boolean;
+}
+
 export function useUpdateReward(rewardId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: RewardFormInput) => {
+    mutationFn: async (input: RewardUpdateInput) => {
+      const patch: Record<string, unknown> = {
+        title: input.title,
+        description: input.description,
+        cost: input.cost,
+        icon: input.icon,
+        category: input.category,
+        is_one_shot: input.isOneShot,
+      };
+      if (input.dropTemplateLink) {
+        patch.template_id = null;
+      }
       const { error } = await supabase
         .from('reward')
-        .update({
-          title: input.title,
-          description: input.description,
-          cost: input.cost,
-          icon: input.icon,
-          category: input.category,
-          is_one_shot: input.isOneShot,
-        })
+        .update(patch)
         .eq('id', rewardId);
       if (error) throw error;
     },
@@ -482,9 +587,10 @@ export function useAddTemplateToShop() {
       const userId = userData.user?.id;
       if (!userId) throw new Error('Not authenticated');
 
-      // Snapshot the catalog text in the user's current locale at adopt
-      // time. Once it lives on `reward`, the user can rename it freely; we
-      // don't keep it bilingual past the catalog boundary.
+      // O texto guardado virou FALLBACK: com template_id setado, quem manda
+      // na tela é o catálogo, no idioma do app (ver localizeReward). Este
+      // snapshot só reaparece se o usuário renomear — aí o vínculo é cortado
+      // e a recompensa passa a ser dele.
       const locale = getCurrentLocale();
       const title = locale === 'pt' && template.title_pt ? template.title_pt : template.title;
       const description =
@@ -502,6 +608,7 @@ export function useAddTemplateToShop() {
           icon: template.icon,
           category: template.category,
           is_one_shot: template.is_one_shot,
+          template_id: template.id,
         })
         .select('id')
         .single();

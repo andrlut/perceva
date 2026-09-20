@@ -32,6 +32,7 @@ import {
   useBankedRewards,
   useRedeemRewardN,
   useRewardTemplates,
+  useArchivedRewards,
   useOwnedOneShotIds,
   useRewards,
   useSetTrackedReward,
@@ -79,6 +80,9 @@ export default function RewardsScreen() {
   // Compras únicas já adquiridas — saem da vitrine, mas continuam existindo
   // (a tela de gerenciar lista, e o item comprado vive no banco).
   const ownedOneShots = useOwnedOneShotIds();
+  // Só pra dedupe de sugestão: uma recompensa arquivada ainda "foi adotada",
+  // e a sugestão dela não deve voltar.
+  const archived = useArchivedRewards();
   const templates = useRewardTemplates();
   const redeem = useRedeemRewardN();
   const useReward = useUseReward();
@@ -244,20 +248,28 @@ export default function RewardsScreen() {
   // Templates we don't already own (case-insensitive title match), filtered
   // by the same selected-categories set. Empty set = no filter.
   const visibleTemplates = useMemo(() => {
-    const owned = new Set(
+    // Deduplicação por template_id, não por título. Casar título tinha dois
+    // furos: comparava só contra as ATIVAS, então arquivar uma adotada
+    // trazia a sugestão de volta e um segundo "adotar" criava cópia; e
+    // quebrava quando o usuário renomeava. O vínculo responde os dois.
+    const ownedTemplates = new Set(
+      [...(rewards.data ?? []), ...(archived.data ?? [])]
+        .map((r) => r.template_id)
+        .filter((id): id is string => id != null),
+    );
+    // Título ainda entra como rede pras adotadas antes do vínculo existir
+    // que o backfill não casou (renomeadas) — elas não têm template_id.
+    const ownedTitles = new Set(
       (rewards.data ?? []).map((r) => r.title.trim().toLowerCase()),
     );
     return (templates.data ?? []).filter(
       (tmpl) =>
         (!filterActive || selectedCategories.has(tmpl.category)) &&
-        // Match BOTH titles: adopting snapshots the catalog text in the
-        // user's locale (lib/api/rewards.ts), so a reward taken in pt-BR
-        // is stored as 'Café especial' and would stop matching the EN
-        // `title` — the suggestion would reappear as if never taken.
-        !owned.has(tmpl.title.trim().toLowerCase()) &&
-        !owned.has((tmpl.title_pt ?? '').trim().toLowerCase()),
+        !ownedTemplates.has(tmpl.id) &&
+        !ownedTitles.has(tmpl.title.trim().toLowerCase()) &&
+        !ownedTitles.has((tmpl.title_pt ?? '').trim().toLowerCase()),
     );
-  }, [templates.data, rewards.data, selectedCategories, filterActive]);
+  }, [templates.data, rewards.data, archived.data, selectedCategories, filterActive]);
 
   // Hero status — only renders meaningful copy when there's NO tracked
   // reward (idle motivator) or when the tracked reward becomes
