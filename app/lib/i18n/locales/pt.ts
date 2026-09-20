@@ -1633,6 +1633,7 @@ const pt: Translations = {
       usedSub: 'estava guardada no Vault',
       stillOpen: 'Ainda dava pra fazer',
       unfiltered: 'O retro-log ignora filtros de propósito.',
+      loadFailed: 'Não deu pra carregar as práticas deste dia.',
       undoTitle: 'Desfazer esta conclusão?',
       undoBody: '{{title}} — você devolve {{xp}} XP e {{coins}} moedas.',
       undoConfirm: 'Desfazer',

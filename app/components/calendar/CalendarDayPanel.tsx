@@ -130,6 +130,12 @@ export function CalendarDayPanel({
   // this day's or nothing): the number then adds up to the rows below it.
   const totalXp = day.data ? day.data.totalXp : (feedXp ?? 0);
 
+  // A read that failed, or one paused offline (status 'pending' + fetchStatus
+  // 'paused' → isLoading false, so no spinner), leaves `data` undefined with
+  // nothing in flight. Without this the fallback above would stand the feed's
+  // big XP number over a sealed, empty day the panel never actually read.
+  const unread = !day.data && (day.isError || day.fetchStatus === 'paused');
+
   // useDayDetail already applies the shared isOpenOnDay rule, so this is the
   // only judgement left to this surface: one-shots live behind "all practices".
   const open = (day.data?.openTasks ?? []).filter((task) => task.recurrence.type !== 'one_shot');
@@ -172,6 +178,19 @@ export function CalendarDayPanel({
       {day.isLoading ? (
         <View style={styles.loading}>
           <ActivityIndicator color={tokens.brand.violet2} />
+        </View>
+      ) : unread ? (
+        <View style={styles.unread}>
+          <Text style={styles.empty}>{t('calendar.day.loadFailed')}</Text>
+          <Pressable
+            onPress={() => day.refetch()}
+            style={({ pressed }) => [styles.retry, pressed && { opacity: 0.7 }]}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.retry')}
+          >
+            <Ionicons name="refresh" size={14} color={tokens.brand.violet2} />
+            <Text style={styles.retryText}>{t('common.retry')}</Text>
+          </Pressable>
         </View>
       ) : (
         <View style={styles.practices}>
@@ -333,6 +352,20 @@ const styles = StyleSheet.create({
   },
   sectionLabelActive: { color: tokens.brand.violet2 },
   loading: { paddingVertical: tokens.space[6], alignItems: 'center' },
+  unread: { gap: 2 },
+  retry: {
+    minHeight: 44,
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingRight: tokens.space[3],
+  },
+  retryText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 13,
+    color: tokens.brand.violet2,
+  },
   practices: { gap: tokens.space[2] },
   seeAll: {
     flexDirection: 'row',

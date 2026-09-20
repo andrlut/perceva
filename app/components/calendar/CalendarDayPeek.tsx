@@ -259,7 +259,11 @@ export function CalendarDayPeek({
         </View>
         {filtering ? (
           <View style={styles.statusRow}>
-            {statusLeft ? (
+            {/* Dropped entirely when the figure is there rather than squeezed
+                to a stray "f…": two labels plus the gap overflow the row on a
+                360dp phone or at fontScale 1.3, and this is the redundant half
+                (headerA11y still reads it in full for TalkBack). */}
+            {statusLeft && !statusRight ? (
               <Text style={styles.statusLeft} numberOfLines={1}>
                 {statusLeft}
               </Text>
@@ -569,9 +573,12 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     color: tokens.text.mid,
   },
+  // Shrinkable too: a long scope name ("Treino · Saúde") has to ellipsize
+  // inside the row rather than push its own end past it.
   statusRight: {
     flexGrow: 1,
-    flexShrink: 0,
+    flexShrink: 1,
+    minWidth: 0,
     maxWidth: '100%',
     textAlign: 'right',
     fontFamily: 'Manrope_600SemiBold',

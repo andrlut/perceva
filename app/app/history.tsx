@@ -4,6 +4,7 @@ import * as Haptics from 'expo-haptics';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import {
+  AccessibilityInfo,
   ActivityIndicator,
   findNodeHandle,
   Platform,
@@ -181,6 +182,19 @@ export default function CalendarScreen() {
   );
   // The block a reveal is following, until when.
   const pendingReveal = useRef<{ target: DayPanelTarget; until: number } | null>(null);
+  // Whether the settle window has a way to end early (see `openDay`).
+  const screenReader = useRef(false);
+  useEffect(() => {
+    AccessibilityInfo.isScreenReaderEnabled()
+      .then((on) => {
+        screenReader.current = on;
+      })
+      .catch(() => {});
+    const sub = AccessibilityInfo.addEventListener('screenReaderChanged', (on) => {
+      screenReader.current = on;
+    });
+    return () => sub.remove();
+  }, []);
 
   // --- deep-link seed ------------------------------------------------------
   // `/dedicacao-history` redirects here with its old params. Seed once: a link
@@ -636,6 +650,13 @@ export default function CalendarScreen() {
     // drawer is where undo and +1 live — and on Rotina, asking for "the full
     // day" is asking for that list.
     if (target === 'done') setDoneOpen(true);
+    // One shot wherever nothing can close the settle window early: on web a
+    // wheel or a mouse drag never fires onTouchStart, and with a screen reader
+    // on, the page must not keep moving under a focus driven by gesture.
+    if (Platform.OS === 'web' || screenReader.current) {
+      if (!reveal(target) && target === 'done') reveal('practices');
+      return;
+    }
     pendingReveal.current = { target, until: Date.now() + REVEAL_SETTLE_MS };
     reaim();
   };
@@ -790,6 +811,13 @@ export default function CalendarScreen() {
                 style={styles.dayNav}
                 onLayout={(e) => {
                   dayNavY.current = e.nativeEvent.layout.y;
+                  // Fabric dispatches onContentSizeChange BEFORE this in the
+                  // same commit, so a reveal that fired from there computed its
+                  // `top` from the PREVIOUS nav position — off by the height of
+                  // whatever appeared above (the filter chips, the peek's status
+                  // row). Re-aim now that the number is current; no-op when
+                  // nothing is armed.
+                  reaim();
                 }}
               >
                 <Pressable
