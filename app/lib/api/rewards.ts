@@ -18,6 +18,7 @@ export const rewardKeys = {
   used: () => [...rewardKeys.all, 'used'] as const,
   tracked: () => [...rewardKeys.all, 'tracked'] as const,
   gaps: () => [...rewardKeys.all, 'gaps'] as const,
+  ownedOneShots: () => [...rewardKeys.all, 'ownedOneShots'] as const,
 };
 
 export interface RedemptionEntry {
@@ -96,6 +97,7 @@ export interface RewardFormInput {
   cost: number;
   icon: string;
   category: RewardCategory;
+  isOneShot: boolean;
 }
 
 async function fetchActiveRewards(): Promise<Reward[]> {
@@ -112,6 +114,40 @@ export function useRewards() {
   return useQuery({
     queryKey: rewardKeys.active(),
     queryFn: fetchActiveRewards,
+  });
+}
+
+/**
+ * Ids das recompensas de compra única que JÁ foram compradas — o que a
+ * vitrine da Vault esconde.
+ *
+ * Derivado de `reward_redemption`, nunca guardado: vender de volta apaga a
+ * linha e a recompensa reaparece sozinha; usar mantém a linha e ela continua
+ * escondida (a geladeira está na sua casa). Ver 20260920000002.
+ *
+ * Deliberadamente NÃO filtrado dentro de `useRewards`: aquele hook também
+ * alimenta a tela de gerenciar (onde a recompensa comprada precisa continuar
+ * editável) e a contagem do limite free (`useEntityLimit`), que tem que bater
+ * com o trigger do servidor, o qual conta linhas de `reward` sem olhar resgate.
+ */
+export function useOwnedOneShotIds() {
+  const rewards = useRewards();
+  // Sem useMemo de propósito: a queryKey compara por VALOR, então recriar o
+  // array a cada render não refaz a busca — só a lista de ids mudando refaz.
+  const oneShotIds = (rewards.data ?? []).filter((r) => r.is_one_shot).map((r) => r.id);
+
+  return useQuery({
+    enabled: rewards.data != null,
+    queryKey: [...rewardKeys.ownedOneShots(), oneShotIds.join(',')],
+    queryFn: async (): Promise<Set<string>> => {
+      if (oneShotIds.length === 0) return new Set<string>();
+      const { data, error } = await supabase
+        .from('reward_redemption')
+        .select('reward_id')
+        .in('reward_id', oneShotIds);
+      if (error) throw error;
+      return new Set((data ?? []).map((row) => (row as { reward_id: string }).reward_id));
+    },
   });
 }
 
@@ -272,6 +308,7 @@ export function useCreateReward() {
           cost: input.cost,
           icon: input.icon,
           category: input.category,
+          is_one_shot: input.isOneShot,
         })
         .select('id')
         .single();
@@ -297,6 +334,7 @@ export function useUpdateReward(rewardId: string) {
           cost: input.cost,
           icon: input.icon,
           category: input.category,
+          is_one_shot: input.isOneShot,
         })
         .eq('id', rewardId);
       if (error) throw error;
@@ -463,6 +501,7 @@ export function useAddTemplateToShop() {
           cost: template.cost,
           icon: template.icon,
           category: template.category,
+          is_one_shot: template.is_one_shot,
         })
         .select('id')
         .single();
@@ -518,6 +557,8 @@ export function useRedeemReward() {
       queryClient.invalidateQueries({ queryKey: characterKeys.me() });
       queryClient.invalidateQueries({ queryKey: rewardKeys.bank() });
       queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
+      // A vitrine de compra única segue a EXISTÊNCIA da linha de resgate.
+      queryClient.invalidateQueries({ queryKey: rewardKeys.ownedOneShots() });
     },
   });
 }
@@ -574,6 +615,8 @@ export function useRedeemRewardN() {
       queryClient.invalidateQueries({ queryKey: characterKeys.me() });
       queryClient.invalidateQueries({ queryKey: rewardKeys.bank() });
       queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
+      // A vitrine de compra única segue a EXISTÊNCIA da linha de resgate.
+      queryClient.invalidateQueries({ queryKey: rewardKeys.ownedOneShots() });
     },
   });
 }
@@ -659,6 +702,8 @@ export function useUseReward() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: rewardKeys.bank() });
       queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
+      // A vitrine de compra única segue a EXISTÊNCIA da linha de resgate.
+      queryClient.invalidateQueries({ queryKey: rewardKeys.ownedOneShots() });
       queryClient.invalidateQueries({ queryKey: rewardKeys.used() });
     },
   });
@@ -716,6 +761,8 @@ export function useSellReward() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: rewardKeys.bank() });
       queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
+      // A vitrine de compra única segue a EXISTÊNCIA da linha de resgate.
+      queryClient.invalidateQueries({ queryKey: rewardKeys.ownedOneShots() });
       queryClient.invalidateQueries({ queryKey: characterKeys.me() });
     },
   });
@@ -771,6 +818,8 @@ export function useUnuseReward() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: rewardKeys.bank() });
       queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
+      // A vitrine de compra única segue a EXISTÊNCIA da linha de resgate.
+      queryClient.invalidateQueries({ queryKey: rewardKeys.ownedOneShots() });
       queryClient.invalidateQueries({ queryKey: rewardKeys.used() });
     },
   });

@@ -987,6 +987,9 @@ const pt: Translations = {
       descLabel: 'Descrição (opcional)',
       descPlaceholder: 'O que ela significa de verdade…',
       costLabel: 'Custo (moedas)',
+      oneShotTitle: 'Compra única',
+      oneShotSub:
+        'Some da Vault depois de comprada — pra algo que se adquire uma vez, não um hábito que repete.',
       iconLabel: 'Ícone',
       iconHint: 'O ícone que aparece no card da recompensa.',
       archiveBtn: 'Arquivar recompensa',

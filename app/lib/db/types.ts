@@ -448,6 +448,10 @@ export interface Reward {
   cost: number;
   icon: string;
   category: RewardCategory;
+  /** Compra única: sai da vitrine da Vault assim que existe um resgate.
+   *  É escolha de quem cadastrou, não da categoria — ver a migration
+   *  20260920000002 pra o porquê. */
+  is_one_shot: boolean;
   is_archived: boolean;
   sort_order: number;
   created_at: string;
@@ -463,6 +467,8 @@ export interface RewardTemplate {
   cost: number;
   icon: string;
   category: RewardCategory;
+  /** Valor inicial do is_one_shot quando o template é adotado. */
+  is_one_shot: boolean;
   sort_order: number;
 }
 

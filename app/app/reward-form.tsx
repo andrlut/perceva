@@ -10,6 +10,7 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   View,
@@ -100,6 +101,7 @@ export default function RewardFormScreen() {
   const [icon, setIcon] = useState<string>('gift');
   const [iconPickerVisible, setIconPickerVisible] = useState(false);
   const [category, setCategory] = useState<RewardCategory>(initialCategory);
+  const [isOneShot, setIsOneShot] = useState(false);
   const keyboardHeight = useKeyboardOverlap();
 
   useEffect(() => {
@@ -109,6 +111,7 @@ export default function RewardFormScreen() {
       setCostStr(String(existing.data.cost));
       setIcon(existing.data.icon);
       setCategory(existing.data.category);
+      setIsOneShot(existing.data.is_one_shot);
     }
   }, [existing.data]);
 
@@ -127,8 +130,9 @@ export default function RewardFormScreen() {
       cost: Number.isFinite(parsedCost) ? parsedCost : 0,
       icon,
       category,
+      isOneShot,
     };
-  }, [title, description, costStr, icon, category]);
+  }, [title, description, costStr, icon, category, isOneShot]);
 
   const handleSave = async () => {
     if (!formInput.title) {
@@ -309,6 +313,25 @@ export default function RewardFormScreen() {
             />
           </View>
 
+          {/* Compra única. Fica colada no custo porque é a mesma pergunta —
+              "quanto custa" e "quantas vezes dá pra comprar". Nasce
+              desligada em qualquer categoria: categoria é proxy ruim pra
+              isto (ver a migration 20260920000002). */}
+          <View style={styles.field}>
+            <View style={styles.oneShotRow}>
+              <View style={styles.oneShotInfo}>
+                <Text style={styles.oneShotTitle}>{t('reward.form.oneShotTitle')}</Text>
+                <Text style={styles.oneShotSub}>{t('reward.form.oneShotSub')}</Text>
+              </View>
+              <Switch
+                value={isOneShot}
+                onValueChange={setIsOneShot}
+                trackColor={{ false: tokens.bg.surface2, true: tokens.brand.violet }}
+                thumbColor={tokens.text.hi}
+              />
+            </View>
+          </View>
+
           <View style={styles.field}>
             <Text style={styles.label}>{t('reward.form.iconLabel')}</Text>
             {/* Compact row that opens the picker sheet — the old inline
@@ -468,6 +491,31 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_700Bold',
     fontSize: 13,
     color: tokens.semantic.coin,
+  },
+  oneShotRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    backgroundColor: tokens.bg.surface,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+    borderRadius: 9,
+  },
+  oneShotInfo: {
+    flex: 1,
+  },
+  oneShotTitle: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 12,
+    color: tokens.text.hi,
+  },
+  oneShotSub: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 10,
+    color: tokens.text.dim,
+    marginTop: 1,
   },
   categoryRow: {
     flexDirection: 'row',

@@ -32,6 +32,7 @@ import {
   useBankedRewards,
   useRedeemRewardN,
   useRewardTemplates,
+  useOwnedOneShotIds,
   useRewards,
   useSetTrackedReward,
   useTrackedRewardId,
@@ -75,6 +76,9 @@ export default function RewardsScreen() {
   const { t } = useT();
   const character = useCharacter();
   const rewards = useRewards();
+  // Compras únicas já adquiridas — saem da vitrine, mas continuam existindo
+  // (a tela de gerenciar lista, e o item comprado vive no banco).
+  const ownedOneShots = useOwnedOneShotIds();
   const templates = useRewardTemplates();
   const redeem = useRedeemRewardN();
   const useReward = useUseReward();
@@ -186,24 +190,31 @@ export default function RewardsScreen() {
   const scrollBottomPad =
     navClearance +
     Math.max(tourBottomBump, rewardsFabClearance(bankCount > 0 || isM4Current));
-  const trackedReward = useMemo(
-    () =>
-      trackedId.data
-        ? (rewards.data ?? []).find((r) => r.id === trackedId.data) ?? null
-        : null,
-    [trackedId.data, rewards.data],
-  );
+  const trackedReward = useMemo(() => {
+    if (!trackedId.data) return null;
+    const found = (rewards.data ?? []).find((r) => r.id === trackedId.data) ?? null;
+    // Perseguir algo que já foi comprado não faz sentido: o arco fechou.
+    // Só some do herói — a linha de tracking fica, e some sozinha quando o
+    // usuário escolhe a próxima.
+    if (found && ownedOneShots.data?.has(found.id)) return null;
+    return found;
+  }, [trackedId.data, rewards.data, ownedOneShots.data]);
 
   // Reward set after applying the category filter, with the tracked
   // reward removed (it gets its own hero card so we don't duplicate).
   // Empty filter set = no filter (everything passes the category gate).
   const filteredRewards = useMemo(() => {
+    const owned = ownedOneShots.data;
     return (rewards.data ?? []).filter(
       (r) =>
         (!filterActive || selectedCategories.has(r.category)) &&
-        r.id !== trackedId.data,
+        r.id !== trackedId.data &&
+        // Compra única já adquirida sai da vitrine. Enquanto o resgate não
+        // carregou, `owned` é undefined e nada é escondido — preferimos um
+        // card a mais por um instante a um piscar de card sumindo.
+        !(r.is_one_shot && owned?.has(r.id)),
     );
-  }, [rewards.data, selectedCategories, filterActive, trackedId.data]);
+  }, [rewards.data, selectedCategories, filterActive, trackedId.data, ownedOneShots.data]);
 
   // Bucket every visible reward into exactly one section so the screen
   // partitions cleanly with no overlap or orphans.
