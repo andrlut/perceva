@@ -1637,6 +1637,7 @@ const en = {
       usedSub: 'was waiting in the Vault',
       stillOpen: 'Still could be done',
       unfiltered: 'The retro-log ignores filters on purpose.',
+      loadFailed: "Couldn't load this day's practices.",
       undoTitle: 'Undo this completion?',
       undoBody: '{{title}} — you give back {{xp}} XP and {{coins}} coins.',
       undoConfirm: 'Undo',
