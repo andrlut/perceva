@@ -1,6 +1,7 @@
-import type { Recurrence } from '@/lib/db/types';
+import type { Recurrence, TaskType } from '@/lib/db/types';
+import type { TranslateOptions } from '@/lib/i18n';
 
-const WEEKDAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+type Translator = (key: string, options?: TranslateOptions) => string;
 
 /**
  * Is the task **scheduled** on the given local date?
@@ -91,36 +92,85 @@ export function isEffectivelyDaily(rec: Recurrence): boolean {
 }
 
 /**
- * Human-readable summary used by cards and forms.
- *   one_shot                     → "One-shot"
- *   daily, n=1                   → "Every day"
- *   daily, n=3                   → "3× every day"
- *   weekly, n=3, no days         → "3× per week"
- *   weekly, n=3, days [1,3,5]    → "3× per week · Mon, Wed, Fri"
- *   weekly, n=7, days all        → "Every day"
- *   monthly, n=1, day=15         → "1× per month · day 15"
- *   monthly, n=2, no day         → "2× per month"
+ * Map a Recurrence to the legacy `task_type` column (kept for compat —
+ * `monthly` has no legacy value and rides as `daily`). Shared by the form
+ * and the manage screen's periodicity sheet so the two can't disagree.
  */
-export function describeRecurrence(rec: Recurrence, targetCount = 1): string {
+export function legacyTaskTypeFor(r: Recurrence): TaskType {
+  if (r.type === 'one_shot') return 'one_shot';
+  if (r.type === 'weekly') return 'weekly';
+  return 'daily';
+}
+
+/**
+ * Human-readable, LOCALIZED summary of a recurrence. Takes the app's `t`
+ * so this module stays free of React; every string lives under the
+ * `recurrence.*` i18n block.
+ *
+ *   short (chip)                          long (card meta line)
+ *   one_shot          → "Uma vez"         "Uma vez só"
+ *   daily, n=1        → "Todo dia"        "Todo dia"
+ *   daily, n=3        → "3× por dia"      "3× por dia"
+ *   weekly, no days   → "3×/sem"          "3× por semana"
+ *   weekly, [1,3,5]   → "Seg · Qua · Sex" "3× por semana · Seg, Qua, Sex"
+ *   weekly, [1,2,4,5] → "4 dias"          "4× por semana · Seg, Ter, Qui, Sex"
+ *   weekly, [1..5]    → "Seg a Sex"       "5× por semana · Seg a Sex"
+ *   weekly, [0,6]     → "Fim de semana"   "2× por semana · Fim de semana"
+ *   weekly, all 7     → "Todo dia"        "Todo dia"
+ *   monthly, day 15   → "Dia 15"          "Uma vez por mês · dia 15"
+ *   monthly, no day   → "2×/mês"          "2× por mês"
+ */
+export function describeRecurrence(
+  rec: Recurrence,
+  targetCount: number,
+  t: Translator,
+  opts: { short?: boolean } = {},
+): string {
+  const short = opts.short === true;
+  const count = Math.max(1, targetCount);
   switch (rec.type) {
     case 'one_shot':
-      return 'One-shot';
+      return short ? t('recurrence.once') : t('recurrence.onceLong');
     case 'daily':
-      return targetCount > 1 ? `${targetCount}× every day` : 'Every day';
+      return count > 1 ? t('recurrence.timesPerDay', { count }) : t('recurrence.everyDay');
     case 'weekly': {
-      const days = rec.days ?? [];
-      if (days.length === 7) return 'Every day';
-      const base = `${targetCount}× per week`;
-      if (days.length === 0) return base;
-      const sorted = [...days].sort((a, b) => a - b);
-      const labels = sorted.map((d) => WEEKDAY_NAMES[d]).filter(Boolean);
-      return `${base} · ${labels.join(', ')}`;
+      const days = [...(rec.days ?? [])].sort((a, b) => a - b);
+      if (days.length === 7) return t('recurrence.everyDay');
+      if (days.length === 0) {
+        return short
+          ? t('recurrence.perWeekShort', { count })
+          : t('recurrence.perWeek', { count });
+      }
+      const daysLabel = describeWeekdays(days, t, short);
+      if (short) return daysLabel;
+      return `${t('recurrence.perWeek', { count })} · ${daysLabel}`;
     }
     case 'monthly': {
-      const base = targetCount === 1 ? 'Once a month' : `${targetCount}× per month`;
-      return rec.day ? `${base} · day ${rec.day}` : base;
+      if (rec.day) {
+        if (short) return t('recurrence.monthDayShort', { day: rec.day });
+        const base =
+          count === 1 ? t('recurrence.onceAMonth') : t('recurrence.perMonth', { count });
+        return `${base} · ${t('recurrence.monthDay', { day: rec.day })}`;
+      }
+      if (short) return t('recurrence.perMonthShort', { count });
+      return count === 1 ? t('recurrence.onceAMonth') : t('recurrence.perMonth', { count });
     }
   }
+}
+
+/** "Seg · Qua · Sex" / "Seg, Qua, Sex", with the two everyday shapes named
+ *  instead of spelled out: Mon–Fri and the weekend. `days` sorted, 0=Sun.
+ *  The short form has ~92px in the manage chip: three names fit, four do
+ *  not, so from four days on it says "4 dias" rather than clipping the
+ *  last one — a chip must always name something true. */
+function describeWeekdays(days: number[], t: Translator, short: boolean): string {
+  const key = days.join(',');
+  if (key === '1,2,3,4,5') return t('recurrence.weekdaysMonFri');
+  if (key === '0,6') return t('recurrence.weekend');
+  if (short && days.length >= 4) return t('recurrence.daysShort', { count: days.length });
+  const names = t('recurrence.weekdaysShort').split(',');
+  const labels = days.map((d) => names[d]).filter(Boolean);
+  return labels.join(short ? ' · ' : ', ');
 }
 
 /** Parse a recurrence value coming from the DB; defaults to daily on garbage. */

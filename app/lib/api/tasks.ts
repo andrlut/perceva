@@ -9,7 +9,7 @@ import type {
   TaskTemplateWithSubs,
   TaskWithSubs,
 } from '@/lib/db/types';
-import { isOpenOnDay, parseRecurrence } from '@/lib/recurrence';
+import { isOpenOnDay, legacyTaskTypeFor, parseRecurrence } from '@/lib/recurrence';
 import type { WeekStart } from '@/lib/settings';
 import { supabase } from '@/lib/supabase';
 import { SUB_META } from '@/theme/dimensions';
@@ -24,6 +24,8 @@ export const taskKeys = {
   pending: () => [...taskKeys.all, 'pending'] as const,
   /** All non-archived tasks the user owns — full list for the Manage hub. */
   active: () => [...taskKeys.all, 'active'] as const,
+  /** Archived tasks — the Manage hub's restore / delete section. */
+  archived: () => [...taskKeys.all, 'archived'] as const,
   detail: (id: string) => [...taskKeys.all, 'detail', id] as const,
   templates: () => [...taskKeys.all, 'templates'] as const,
   templatesBySub: (subId: SubId) =>
@@ -396,6 +398,137 @@ export function useActiveTasks() {
         .order('created_at', { ascending: true });
       if (error) throw error;
       return ((data ?? []) as TaskRow[]).map(mapTaskRow);
+    },
+  });
+}
+
+/** Archived (soft-deleted) tasks, most recently archived first. */
+export function useArchivedTasks() {
+  return useQuery({
+    queryKey: taskKeys.archived(),
+    queryFn: async (): Promise<TaskWithSubs[]> => {
+      const { data, error } = await supabase
+        .from('task')
+        .select('*, task_sub(sub_id, stars)')
+        .eq('is_archived', true)
+        .order('updated_at', { ascending: false });
+      if (error) throw error;
+      return ((data ?? []) as TaskRow[]).map(mapTaskRow);
+    },
+  });
+}
+
+/**
+ * Every cache that renders the task TABLE, busted together. Any task
+ * create / edit / archive / restore / delete / re-schedule must call this:
+ * Home's buckets and the Manage lists are obvious, but the History
+ * day-detail (`historyKeys`) ALSO reads `task` to build a day's open list
+ * — "Todas as práticas" and the Calendar day view pull their one-shots
+ * from it, so a new or re-scheduled practice never showed up there until
+ * something else happened to refetch history.
+ */
+function invalidateTaskSurfaces(queryClient: QueryClient, taskId?: string) {
+  queryClient.invalidateQueries({ queryKey: taskKeys.pending() });
+  queryClient.invalidateQueries({ queryKey: taskKeys.active() });
+  queryClient.invalidateQueries({ queryKey: taskKeys.archived() });
+  queryClient.invalidateQueries({ queryKey: historyKeys.all });
+  if (taskId) queryClient.invalidateQueries({ queryKey: taskKeys.detail(taskId) });
+}
+
+/**
+ * Change only WHEN a practice happens — the Manage screen's periodicity
+ * chip. Periodicity edits keep the template link by product convention
+ * (see task-form's `breaksTemplateLink`), so this touches nothing else.
+ * Optimistic on the active list: the row jumps to its new bucket on the
+ * same frame the sheet closes, instead of one round-trip later.
+ */
+export function useSetTaskRecurrence() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: {
+      taskId: string;
+      recurrence: Recurrence;
+      targetCount: number;
+    }) => {
+      const targetCount =
+        params.recurrence.type === 'one_shot'
+          ? 1
+          : Math.max(1, Math.min(99, params.targetCount));
+      const { error } = await supabase
+        .from('task')
+        .update({
+          task_type: legacyTaskTypeFor(params.recurrence),
+          recurrence: params.recurrence,
+          target_count: targetCount,
+        })
+        .eq('id', params.taskId);
+      if (error) throw error;
+    },
+    onMutate: async (params) => {
+      await queryClient.cancelQueries({ queryKey: taskKeys.active() });
+      const prev = queryClient.getQueryData<TaskWithSubs[]>(taskKeys.active());
+      if (prev) {
+        queryClient.setQueryData<TaskWithSubs[]>(
+          taskKeys.active(),
+          prev.map((t) =>
+            t.id === params.taskId
+              ? {
+                  ...t,
+                  task_type: legacyTaskTypeFor(params.recurrence),
+                  recurrence: params.recurrence,
+                  target_count:
+                    params.recurrence.type === 'one_shot' ? 1 : params.targetCount,
+                }
+              : t,
+          ),
+        );
+      }
+      return { prev };
+    },
+    onError: (_err, _params, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(taskKeys.active(), ctx.prev);
+    },
+    onSettled: (_data, _err, params) => {
+      invalidateTaskSurfaces(queryClient, params.taskId);
+    },
+  });
+}
+
+/** Bring an archived task back. The server re-checks the free-tier cap on
+ *  this transition (same trigger as create), so a free user can't dodge
+ *  the limit by archive → create → restore. */
+export function useRestoreTask() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (taskId: string) => {
+      const { error } = await supabase
+        .from('task')
+        .update({ is_archived: false })
+        .eq('id', taskId);
+      if (error) throw error;
+    },
+    onSuccess: (_data, taskId) => {
+      invalidateTaskSurfaces(queryClient, taskId);
+    },
+  });
+}
+
+/**
+ * Hard delete via RPC. The server refuses when the task has completion
+ * history (archive is the only exit then) — that history carries XP the
+ * character already earned, and a cascade delete would erase the evidence
+ * while keeping the reward. The error message is a stable English phrase
+ * the screen maps to localized copy.
+ */
+export function useDeleteTask() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (taskId: string) => {
+      const { error } = await supabase.rpc('delete_task', { p_task_id: taskId });
+      if (error) throw error;
+    },
+    onSuccess: (_data, taskId) => {
+      invalidateTaskSurfaces(queryClient, taskId);
     },
   });
 }
@@ -806,9 +939,8 @@ export function useCreateTask() {
 
       return taskId;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: taskKeys.pending() });
-      queryClient.invalidateQueries({ queryKey: taskKeys.active() });
+    onSuccess: (taskId) => {
+      invalidateTaskSurfaces(queryClient, taskId);
     },
   });
 }
@@ -851,9 +983,7 @@ export function useUpdateTask(taskId: string) {
       if (subsErr) throw subsErr;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: taskKeys.pending() });
-      queryClient.invalidateQueries({ queryKey: taskKeys.active() });
-      queryClient.invalidateQueries({ queryKey: taskKeys.detail(taskId) });
+      invalidateTaskSurfaces(queryClient, taskId);
     },
   });
 }
@@ -893,9 +1023,7 @@ export function useArchiveTask() {
       if (error) throw error;
     },
     onSuccess: (_data, taskId) => {
-      queryClient.invalidateQueries({ queryKey: taskKeys.pending() });
-      queryClient.invalidateQueries({ queryKey: taskKeys.active() });
-      queryClient.invalidateQueries({ queryKey: taskKeys.detail(taskId) });
+      invalidateTaskSurfaces(queryClient, taskId);
     },
   });
 }
@@ -1002,8 +1130,7 @@ export function useStartTaskFromTemplate() {
       return data as string;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: taskKeys.pending() });
-      queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      invalidateTaskSurfaces(queryClient);
       queryClient.invalidateQueries({ queryKey: characterKeys.me() });
     },
   });

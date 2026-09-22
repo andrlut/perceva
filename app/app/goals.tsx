@@ -26,6 +26,7 @@ import { useT } from '@/lib/i18n';
 import { useModuleEnabled, useRequireModule } from '@/lib/modules';
 import type { QuestTemplate, QuestWithProgress } from '@/lib/db/types';
 import { freeLimitEntity } from '@/lib/premium';
+import { usePullToRefresh } from '@/lib/usePullToRefresh';
 import { showInfo } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 import { QUEST_CATEGORY_ORDER, getQuestCategoryMeta } from '@/theme/quests';
@@ -197,7 +198,11 @@ export default function GoalsBoardScreen() {
 
   // ── Render ─────────────────────────────────────────────────────────────
   const isLoading = quests.isLoading || templates.isLoading;
-  const refreshing = quests.isRefetching || templates.isRefetching;
+  // Pull indicator is local state — isRefetching also flips on background
+  // refetches. refetch() bypasses `enabled`, so keep the module gate.
+  const { refreshing, onRefresh } = usePullToRefresh(() =>
+    gate ? Promise.all([quests.refetch(), templates.refetch()]) : undefined,
+  );
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -233,13 +238,7 @@ export default function GoalsBoardScreen() {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={() => {
-              // refetch() bypasses `enabled` — keep the module gate.
-              if (gate) {
-                quests.refetch();
-                templates.refetch();
-              }
-            }}
+            onRefresh={onRefresh}
             tintColor={tokens.brand.violet2}
           />
         }

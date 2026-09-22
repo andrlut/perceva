@@ -117,6 +117,26 @@ const pt: Translations = {
     monthlyOverflowHelper:
       'Meses sem o dia {{day}} rodam no último dia do mês.',
   },
+  // Descrição legível de uma recorrência (cards, rótulos, catálogo). Duas
+  // formas: `short` cabe num chip ("Seg · Qua · Sex", "3×/sem"); a longa vai
+  // na linha de meta do card ("3× por semana · Seg, Qua, Sex").
+  recurrence: {
+    weekdaysShort: 'Dom,Seg,Ter,Qua,Qui,Sex,Sáb',
+    weekdaysMonFri: 'Seg a Sex',
+    weekend: 'Fim de semana',
+    daysShort: '{{count}} dias',
+    once: 'Uma vez',
+    onceLong: 'Uma vez só',
+    everyDay: 'Todo dia',
+    timesPerDay: '{{count}}× por dia',
+    perWeekShort: '{{count}}×/sem',
+    perWeek: '{{count}}× por semana',
+    perMonthShort: '{{count}}×/mês',
+    perMonth: '{{count}}× por mês',
+    onceAMonth: 'Uma vez por mês',
+    monthDayShort: 'Dia {{day}}',
+    monthDay: 'dia {{day}}',
+  },
 
   usernameModal: {
     title: 'Nome de usuário',
@@ -1344,8 +1364,7 @@ const pt: Translations = {
   tasksHub: {
     title: 'Gerenciar práticas',
     newTask: 'Nova prática',
-    filters: {
-      allocated: 'Alocadas',
+    tabs: {
       mine: 'Minhas',
       suggested: 'Sugeridas',
     },
@@ -1355,25 +1374,53 @@ const pt: Translations = {
       placeholderMine: 'Buscar nas suas práticas…',
       placeholderCatalog: 'Buscar no catálogo…',
     },
+    // Uma linha só, abaixo das abas: os três gestos da lista, na ordem em
+    // que o usuário precisa deles. Concluir mora em Todas as práticas.
+    lead: 'Toque pra editar. Toque no rótulo pra mudar quando acontece. Segure e arraste pra ordenar dentro do grupo.',
     buckets: {
       daily: 'Diárias',
-      dailyDesc: 'Rotinas que você faz todo dia',
+      dailyDesc: 'Todo dia, na tela Hoje',
       weekly: 'Semanais',
-      weeklyDesc: 'Dias específicos ou cadência mensal',
-      oneTime: 'Pontual',
-      oneTimeDesc: 'Pra fazer uma vez só',
+      weeklyDesc: 'Dias escolhidos ou cadência mensal',
+      oneTime: 'Pontuais',
+      oneTimeDesc: 'Uma vez só',
     },
+    bucketEmpty: 'Nenhuma prática aqui. Toque no rótulo de uma prática pra trazer pra cá.',
     customChip: 'PRÓPRIA',
+    row: {
+      editA11y: 'Editar {{title}}',
+      periodicityA11y: 'Mudar quando {{title}} acontece',
+      dragA11y: 'Segure pra reordenar dentro do grupo',
+    },
+    periodicity: {
+      eyebrow: 'Quando acontece',
+      save: 'Salvar',
+      saveFail: 'Não consegui mudar quando ela acontece',
+    },
+    archived: {
+      section: 'Arquivadas',
+      restore: 'Restaurar',
+      restoreA11y: 'Restaurar {{title}}',
+      restoreFail: 'Não consegui restaurar',
+      deleteA11y: 'Apagar {{title}} pra sempre',
+      deleteConfirmTitle: 'Apagar "{{title}}" pra sempre?',
+      deleteConfirmBody:
+        'Vai sumir do app sem volta. Só dá pra apagar práticas sem histórico de conclusão.',
+      deleteOk: 'Apagar',
+      deleteFail: 'Não consegui apagar',
+      deleteBlockedHistory: 'Essa prática já tem conclusões registradas — só dá pra arquivar.',
+      deleteBlockedQuest: 'Essa prática está ligada a uma missão — só dá pra arquivar.',
+    },
     adopt: {
-      adopt: 'Adotar',
+      adoptA11y: 'Adotar {{title}}',
       added: 'Adicionada',
     },
     suggested: {
-      hint: 'Toque numa sugestão pra ajustar do seu jeito antes de adicionar — ou toque em Adotar pra usar como está.',
+      hint: 'Toque numa sugestão pra ajustar do seu jeito antes de adicionar — ou no + pra usar como está.',
       premiumHint: '{{count}}/{{limit}} práticas ativas no plano gratuito · Premium libera ilimitadas',
+      allDims: 'Todas',
+      customizeA11y: 'Ajustar {{title}} antes de adicionar',
     },
-    bucketEmpty: 'Nenhuma prática nesse grupo.',
-    quickCompleteA11y: 'Concluir {{title}}',
     empty: {
       noMatchesTitle: 'Nada encontrado',
       noMatchesBody: 'Nada corresponde a "{{query}}".',
@@ -1383,7 +1430,7 @@ const pt: Translations = {
       cta: 'Nova prática',
     },
     errors: {
-      couldNotAdoptTitle: 'Não foi possível adotar',
+      couldNotAdoptTitle: 'Não consegui adotar',
       unknown: 'Erro desconhecido.',
     },
   },
@@ -2341,7 +2388,6 @@ const pt: Translations = {
     discardBody: 'Você marcou um humor mas não salvou. Descartar?',
     keep: 'Continuar',
     discard: 'Descartar',
-    tasksMenuA11y: 'Registrar como você se sentiu hoje',
     todayCard: {
       eyebrow: 'Humor de hoje',
       promptTitle: 'Como você se sentiu hoje?',

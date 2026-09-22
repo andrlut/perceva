@@ -10,10 +10,16 @@ import {
 } from '@expo-google-fonts/manrope';
 import { PlayfairDisplay_700Bold } from '@expo-google-fonts/playfair-display';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { MutationCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  MutationCache,
+  QueryClient,
+  QueryClientProvider,
+  focusManager,
+} from '@tanstack/react-query';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
+import { AppState, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
@@ -124,6 +130,18 @@ export default function RootLayout() {
         }),
       }),
   );
+  // TanStack only knows about browser focus. On native, tell it when the
+  // app comes back to the foreground so every mounted query that went
+  // stale in the background refetches on its own — that is the "close and
+  // reopen the app" the user was doing by hand to see fresh data. Web
+  // keeps the built-in visibilitychange listener.
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    const sub = AppState.addEventListener('change', (state) => {
+      focusManager.setFocused(state === 'active');
+    });
+    return () => sub.remove();
+  }, []);
   // Push-notification system — installs the foreground handler, reacts
   // to the Settings master switch, and re-stamps the daily "open" on
   // foreground events. No-op until the user toggles notifications on.

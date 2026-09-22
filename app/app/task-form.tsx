@@ -36,18 +36,11 @@ import {
 } from '@/lib/api/tasks';
 import { CoinMultiplierPicker } from '@/components/CoinMultiplierPicker';
 import type { CoinMultiplier, Recurrence, TaskSub } from '@/lib/db/types';
+import { legacyTaskTypeFor } from '@/lib/recurrence';
 import { useKeyboardOverlap } from '@/lib/use-keyboard-height';
 import { confirmAction } from '@/lib/util/confirm';
 import { rewardForTaskSubs } from '@/lib/xp';
 import { tokens } from '@/theme';
-
-/** Map a Recurrence to the legacy task_type column (kept for compat). */
-function legacyTypeFor(r: Recurrence): 'one_shot' | 'daily' | 'weekly' {
-  if (r.type === 'one_shot') return 'one_shot';
-  if (r.type === 'weekly') return 'weekly';
-  // daily and monthly both map to daily for the legacy column
-  return 'daily';
-}
 
 /**
  * Curated Ionicons covering the main task archetypes. First row = the
@@ -266,7 +259,7 @@ export default function TaskFormScreen() {
     return {
       title: title.trim(),
       description: description.trim() === '' ? null : description.trim(),
-      task_type: legacyTypeFor(recurrence),
+      task_type: legacyTaskTypeFor(recurrence),
       recurrence,
       target_count: recurrence.type === 'one_shot' ? 1 : targetCount,
       subs,

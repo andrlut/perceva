@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Stack, useRouter } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -18,68 +18,83 @@ import DraggableFlatList, {
   type RenderItemParams,
   ScaleDecorator,
 } from 'react-native-draggable-flatlist';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSequence,
-  withSpring,
-} from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useIsFocused } from '@react-navigation/native';
 
+import { AddCard } from '@/components/AddCard';
 import {
   AdoptPeriodicitySheet,
   adoptChoiceToOverrides,
   type AdoptPeriodicityChoice,
 } from '@/components/AdoptPeriodicitySheet';
 import { useBottomSafeClearance } from '@/components/BottomNavBar';
+import { BucketTabsV2 } from '@/components/BucketTabsV2';
+import { CoinIcon } from '@/components/CoinIcon';
+import { EmptyHero } from '@/components/EmptyHero';
+import { PeriodicitySheet } from '@/components/PeriodicitySheet';
 import { ScreenBackground } from '@/components/ScreenBackground';
-import { SegmentedControl } from '@/components/SegmentedControl';
+import { SubColoredPips } from '@/components/SubColoredPips';
 import { SubStack } from '@/components/SubStack';
 import { LimitCounterBadge } from '@/components/premium/LimitCounterBadge';
-import { useT } from '@/lib/i18n';
+import { TourModule } from '@/components/tour/TourModule';
+import { TourTarget } from '@/components/tour/TourTarget';
 import {
   useActiveTasks,
-  useCompleteTask,
+  useArchivedTasks,
+  useDeleteTask,
   useReorderTasks,
+  useRestoreTask,
+  useSetTaskRecurrence,
   useStartTaskFromTemplate,
   useTaskTemplates,
 } from '@/lib/api/tasks';
-import { useLimitModalStore, useTaskLimit, type EntityLimit } from '@/lib/premium';
 import type {
+  DimensionId,
   Recurrence,
   SubId,
   TaskTemplateWithSubs,
   TaskWithSubs,
 } from '@/lib/db/types';
+import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
+import {
+  freeLimitEntity,
+  useLimitModalStore,
+  useTaskLimit,
+  type EntityLimit,
+} from '@/lib/premium';
 import { describeRecurrence, isEffectivelyDaily } from '@/lib/recurrence';
-import { TourModule } from '@/components/tour/TourModule';
-import { TourTarget } from '@/components/tour/TourTarget';
 import { emitTourEvent } from '@/lib/tour/eventBus';
 import { buildM2Steps, M2_EVENTS } from '@/lib/tour/m2Steps';
-import { useIsFocused } from '@react-navigation/native';
-
 import { useIsCurrentTourModule, useTourStore } from '@/lib/tour/store';
+import { usePullToRefresh } from '@/lib/usePullToRefresh';
+import { confirmAction, showInfo } from '@/lib/util/confirm';
 import { rewardForTaskSubs } from '@/lib/xp';
-import { tokens } from '@/theme';
-import {
-  DIMENSION_META,
-  DIMENSION_ORDER,
-  SUBS_BY_DIM,
-  SUB_META,
-} from '@/theme/dimensions';
+import { ACTIVE_THEME, tokens } from '@/theme';
+import { DIMENSION_ORDER, SUBS_BY_DIM } from '@/theme/dimensions';
 
-type Tab = 'allocated' | 'mine' | 'suggested';
+type Tab = 'mine' | 'suggested';
 type Bucket = 'daily' | 'weekly' | 'one_time';
+type DimFilter = DimensionId | 'all';
+
+/** Boot-time theme flag — the light palette needs text-grade accents
+ *  (TemplateCard and RewardCard make the same call). */
+const LIGHT = ACTIVE_THEME === 'light';
 
 interface BucketMeta {
   id: Bucket;
   labelKey: string;
   descKey: string;
   iconName: keyof typeof Ionicons.glyphMap;
-  /** Accent color used for the left bar, icon tile, title text and count. */
+  /** Accent for NON-text: section icon, count chip, the periodicity chip's
+   *  border and chevron. 3:1 is enough there. Always a 6-digit hex so the
+   *  `${accent}66` alpha suffix works. */
   accent: string;
-  /** Translucent fill behind the icon tile and accent bar (RGBA). */
+  /** Text-grade accent for the 11px eyebrow. The fill gold misses AA on
+   *  porcelain, so light swaps it for the palette's text gold. */
+  accentText: string;
+  /** Wash behind the icon tile and the chip — theme-swapped tokens, never
+   *  literals (a literal never follows the light theme). */
   accentBg: string;
 }
 
@@ -90,15 +105,17 @@ const BUCKETS: BucketMeta[] = [
     descKey: 'tasksHub.buckets.dailyDesc',
     iconName: 'sunny',
     accent: tokens.brand.violet2,
-    accentBg: 'rgba(157,127,255,0.18)',
+    accentText: tokens.brand.violet2,
+    accentBg: tokens.dimensionBg.mind,
   },
   {
     id: 'weekly',
     labelKey: 'tasksHub.buckets.weekly',
     descKey: 'tasksHub.buckets.weeklyDesc',
     iconName: 'calendar',
-    accent: '#4DD0FF',
-    accentBg: 'rgba(77,208,255,0.18)',
+    accent: tokens.dimension.bonds,
+    accentText: tokens.dimension.bonds,
+    accentBg: tokens.dimensionBg.bonds,
   },
   {
     id: 'one_time',
@@ -106,25 +123,48 @@ const BUCKETS: BucketMeta[] = [
     descKey: 'tasksHub.buckets.oneTimeDesc',
     iconName: 'flag',
     accent: tokens.semantic.coin,
-    accentBg: 'rgba(255,200,61,0.18)',
+    accentText: LIGHT ? tokens.semantic.coinDeep : tokens.semantic.coin,
+    accentBg: tokens.dimensionBg.wealth,
   },
 ];
 
+const BUCKET_BY_ID: Record<Bucket, BucketMeta> = {
+  daily: BUCKETS[0]!,
+  weekly: BUCKETS[1]!,
+  one_time: BUCKETS[2]!,
+};
+
 /**
- * Decide which bucket a task lives in based on its recurrence shape.
- * Daily-with-all-7-days collapses into Daily so the user isn't surprised.
+ * Which group a practice lives in, decided by its recurrence — the
+ * periodicity chip on each row is the ONLY way to move it (the type row
+ * of the sheet maps 1:1 onto these groups). Weekly-all-7-days collapses
+ * into Daily so the user isn't surprised.
  */
 function bucketFor(rec: Recurrence): Bucket {
   if (rec.type === 'one_shot') return 'one_time';
-  if (isEffectivelyDaily(rec)) return 'daily'; // daily OR weekly-all-7-days
-  return 'weekly'; // weekly (any subset or flex) OR monthly
+  if (isEffectivelyDaily(rec)) return 'daily';
+  return 'weekly'; // weekly (subset or flex) OR monthly
 }
+
+/** Subs in display order, grouped under their dim. */
+const ALL_SUBS_IN_ORDER: SubId[] = DIMENSION_ORDER.flatMap((d) => SUBS_BY_DIM[d]);
 
 export default function TasksHubScreen() {
   const router = useRouter();
   const { t } = useT();
   const taskLimit = useTaskLimit();
   const openLimit = useLimitModalStore((s) => s.open);
+  const bottomClearance = useBottomSafeClearance();
+
+  const tasks = useActiveTasks();
+  const archived = useArchivedTasks();
+  const templates = useTaskTemplates();
+  const reorderTasks = useReorderTasks();
+  const startFromTemplate = useStartTaskFromTemplate();
+  const setRecurrence = useSetTaskRecurrence();
+  const restoreTask = useRestoreTask();
+  const deleteTask = useDeleteTask();
+
   // Returns whether navigation actually happened — the M2 tour advance
   // MUST only fire on a real navigation, otherwise the module steps into
   // the form screen that never mounts and jams the whole tour (the
@@ -137,12 +177,7 @@ export default function TasksHubScreen() {
     router.push('/task-form');
     return true;
   };
-  const bottomClearance = useBottomSafeClearance();
-  const reorderTasks = useReorderTasks();
-  const tasks = useActiveTasks();
-  const templates = useTaskTemplates();
-  const startFromTemplate = useStartTaskFromTemplate();
-  const completeTask = useCompleteTask();
+
   const isM2Current = useIsCurrentTourModule('M2');
   const isFocused = useIsFocused();
   const m2StepIndex = useTourStore((s) => s.stepIndices.M2 ?? 0);
@@ -160,7 +195,25 @@ export default function TasksHubScreen() {
     return () => clearTimeout(id);
   }, [isM2Current, isFocused, m2StepIndex, setStepIndex]);
 
-  const [tab, setTab] = useState<Tab>('allocated');
+  // Coming BACK to this screen (from the form, from Home) pulls the lists
+  // again. Mutations already invalidate, and the root layout refetches on
+  // app foreground; this covers the navigation-return case TanStack can't
+  // see. The first focus is the mount — the queries are fetching already.
+  const focusedOnce = useRef(false);
+  const refetchTasks = tasks.refetch;
+  const refetchArchived = archived.refetch;
+  useFocusEffect(
+    useCallback(() => {
+      if (!focusedOnce.current) {
+        focusedOnce.current = true;
+        return;
+      }
+      void refetchTasks();
+      void refetchArchived();
+    }, [refetchTasks, refetchArchived]),
+  );
+
+  const [tab, setTab] = useState<Tab>('mine');
   const [query, setQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [collapsed, setCollapsed] = useState<Record<Bucket, boolean>>({
@@ -168,101 +221,92 @@ export default function TasksHubScreen() {
     weekly: false,
     one_time: false,
   });
+  const [archivedOpen, setArchivedOpen] = useState(false);
+  const [dimFilter, setDimFilter] = useState<DimFilter>('all');
   // Suggested groups start COLLAPSED — 12 open groups × 3 templates read
-  // as a wall (tester feedback). Search force-expands in SuggestedBody.
+  // as a wall (tester feedback). Picking a dimension or searching
+  // force-expands (see SuggestedBody).
   const [collapsedSubs, setCollapsedSubs] = useState<Record<SubId, boolean>>(
     () =>
-      Object.fromEntries(
-        ALL_SUBS_IN_ORDER.map((s) => [s, true]),
-      ) as Record<SubId, boolean>,
+      Object.fromEntries(ALL_SUBS_IN_ORDER.map((s) => [s, true])) as Record<
+        SubId,
+        boolean
+      >,
   );
   const [adoptingId, setAdoptingId] = useState<string | null>(null);
-  /** Template currently sitting in the periodicity picker sheet. */
+  /** Template currently sitting in the adopt periodicity sheet. */
   const [pickerTemplate, setPickerTemplate] = useState<TaskTemplateWithSubs | null>(null);
-  /** Row whose quick-complete mutation is in flight. */
-  const [completingId, setCompletingId] = useState<string | null>(null);
-  /** Synchronous mirror of completingId — the double-tap guard. State
-   *  (and completeTask.isPending) is read from the current render, so
-   *  two taps landing in the same frame would both pass; the ref flips
-   *  before the first mutate() is issued. */
-  const completingIdRef = useRef<string | null>(null);
-  /** Row briefly showing the post-success morph (green check pop). */
-  const [justCompletedId, setJustCompletedId] = useState<string | null>(null);
-  const successTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(
-    () => () => {
-      if (successTimer.current) clearTimeout(successTimer.current);
-    },
-    [],
-  );
+  /** Practice whose periodicity chip opened the re-schedule sheet. */
+  const [periodicityTask, setPeriodicityTask] = useState<TaskWithSubs | null>(null);
+  /** Archived rows with a restore / delete in flight. A Set, not the
+   *  mutation's `variables`: useMutation only reports its LATEST call, so
+   *  two quick taps on two rows would free the first row's buttons early. */
+  const [busyIds, setBusyIds] = useState<Set<string>>(() => new Set());
+  const markBusy = (id: string, busy: boolean) =>
+    setBusyIds((prev) => {
+      const next = new Set(prev);
+      if (busy) next.add(id);
+      else next.delete(id);
+      return next;
+    });
 
-  // ── Counts (drive both filter pills and group counts) ─────────────────
+  // ── Counts (drive the tab chips and the group counts) ─────────────────
   const totalTasks = tasks.data?.length ?? 0;
-  const customCount = (tasks.data ?? []).filter((t) => !t.template_id).length;
 
   const adoptedTemplateIds = useMemo(() => {
     const set = new Set<string>();
-    (tasks.data ?? []).forEach((t) => {
-      if (t.template_id) set.add(t.template_id);
+    (tasks.data ?? []).forEach((tk) => {
+      if (tk.template_id) set.add(tk.template_id);
     });
     return set;
   }, [tasks.data]);
 
   const suggestedCount = useMemo(
-    () =>
-      (templates.data ?? []).filter((t) => !adoptedTemplateIds.has(t.id)).length,
+    () => (templates.data ?? []).filter((tp) => !adoptedTemplateIds.has(tp.id)).length,
     [templates.data, adoptedTemplateIds],
   );
 
-  // ── Filter tasks by tab semantic, then bucket ─────────────────────────
+  // ── Mine: filter by search, then group by bucket ───────────────────────
   const filteredTasks = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const base = (tasks.data ?? []).filter((t) =>
-      q.length === 0 ? true : t.title.toLowerCase().includes(q),
+    return (tasks.data ?? []).filter((tk) =>
+      q.length === 0 ? true : tk.title.toLowerCase().includes(q),
     );
-    if (tab === 'mine') return base.filter((t) => !t.template_id);
-    return base;
-  }, [tasks.data, query, tab]);
+  }, [tasks.data, query]);
 
   const tasksByBucket = useMemo(() => {
-    const map: Record<Bucket, TaskWithSubs[]> = {
-      daily: [],
-      weekly: [],
-      one_time: [],
-    };
-    for (const t of filteredTasks) {
-      map[bucketFor(t.recurrence)].push(t);
-    }
+    const map: Record<Bucket, TaskWithSubs[]> = { daily: [], weekly: [], one_time: [] };
+    for (const tk of filteredTasks) map[bucketFor(tk.recurrence)].push(tk);
     return map;
   }, [filteredTasks]);
 
-  // ── Suggested: filter + group by sub ───────────────────────────────────
+  // ── Suggested: filter by search + dimension, group by sub ─────────────
   const filteredTemplates = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return (templates.data ?? []).filter((t) =>
-      q.length === 0
-        ? true
-        : t.title.toLowerCase().includes(q) ||
-          (t.description?.toLowerCase().includes(q) ?? false),
-    );
-  }, [templates.data, query]);
+    return (templates.data ?? []).filter((tp) => {
+      if (dimFilter !== 'all' && tp.primary_dimension_id !== dimFilter) return false;
+      if (q.length === 0) return true;
+      return (
+        tp.title.toLowerCase().includes(q) ||
+        (tp.description?.toLowerCase().includes(q) ?? false)
+      );
+    });
+  }, [templates.data, query, dimFilter]);
 
   const templatesBySub = useMemo(() => {
     const map = new Map<SubId, TaskTemplateWithSubs[]>();
-    for (const t of filteredTemplates) {
-      const arr = map.get(t.primary_sub_id) ?? [];
-      arr.push(t);
-      map.set(t.primary_sub_id, arr);
+    for (const tp of filteredTemplates) {
+      const arr = map.get(tp.primary_sub_id) ?? [];
+      arr.push(tp);
+      map.set(tp.primary_sub_id, arr);
     }
     return map;
   }, [filteredTemplates]);
 
   // ── Handlers ───────────────────────────────────────────────────────────
-  const toggleBucket = (b: Bucket) =>
-    setCollapsed((prev) => ({ ...prev, [b]: !prev[b] }));
+  const toggleBucket = (b: Bucket) => setCollapsed((prev) => ({ ...prev, [b]: !prev[b] }));
 
-  const toggleSub = (s: SubId) =>
-    setCollapsedSubs((prev) => ({ ...prev, [s]: !prev[s] }));
+  const toggleSub = (s: SubId) => setCollapsedSubs((prev) => ({ ...prev, [s]: !prev[s] }));
 
   const toggleSearch = () => {
     setSearchOpen((open) => {
@@ -271,11 +315,9 @@ export default function TasksHubScreen() {
     });
   };
 
-  const handleAdopt = (templateId: string) => {
+  const handleAdopt = (template: TaskTemplateWithSubs) => {
     if (adoptingId || startFromTemplate.isPending) return;
-    if (adoptedTemplateIds.has(templateId)) return;
-    const template = (templates.data ?? []).find((t) => t.id === templateId);
-    if (!template) return;
+    if (adoptedTemplateIds.has(template.id)) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     setPickerTemplate(template);
   };
@@ -290,10 +332,7 @@ export default function TasksHubScreen() {
       return;
     }
     Haptics.selectionAsync().catch(() => {});
-    router.push({
-      pathname: '/task-form',
-      params: { from_template: template.id },
-    });
+    router.push({ pathname: '/task-form', params: { from_template: template.id } });
   };
 
   const handleAdoptConfirm = (choice: AdoptPeriodicityChoice) => {
@@ -302,10 +341,7 @@ export default function TasksHubScreen() {
     if (!template) return;
 
     if (choice.kind === 'customize') {
-      router.push({
-        pathname: '/task-form',
-        params: { from_template: template.id },
-      });
+      router.push({ pathname: '/task-form', params: { from_template: template.id } });
       return;
     }
 
@@ -316,6 +352,9 @@ export default function TasksHubScreen() {
       {
         onSettled: () => setAdoptingId(null),
         onError: (err) => {
+          // The free cap raises from the insert trigger; the global
+          // mutation handler already opened the limit modal.
+          if (freeLimitEntity(err)) return;
           const e = err as { message?: string };
           Alert.alert(
             t('tasksHub.errors.couldNotAdoptTitle'),
@@ -326,55 +365,94 @@ export default function TasksHubScreen() {
     );
   };
 
-  // Quick-complete straight from the manage list — same mutation Home's
-  // TaskCard fires (task + its default subs). One in flight at a time;
-  // the row shows a spinner while pending and a green check pop on
-  // success (the row stays in place — this list shows ALL active
-  // practices, not just today's pending ones).
-  const handleQuickComplete = (task: TaskWithSubs) => {
-    if (task.is_archived || completingIdRef.current) return;
-    completingIdRef.current = task.id;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    setCompletingId(task.id);
-    completeTask.mutate(
-      { task, subs: task.subs },
+  const handleOpenPeriodicity = (task: TaskWithSubs) => {
+    Haptics.selectionAsync().catch(() => {});
+    setPeriodicityTask(task);
+  };
+
+  // Closes on tap: the mutation is optimistic on the active list, so the
+  // row is already sitting in its new group when the sheet slides away.
+  // A failure rolls the cache back and says so.
+  const handlePeriodicityConfirm = (recurrence: Recurrence, targetCount: number) => {
+    const task = periodicityTask;
+    setPeriodicityTask(null);
+    if (!task) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    setRecurrence.mutate(
+      { taskId: task.id, recurrence, targetCount },
       {
-        onSuccess: () => {
-          if (successTimer.current) clearTimeout(successTimer.current);
-          setJustCompletedId(task.id);
-          successTimer.current = setTimeout(
-            () => setJustCompletedId(null),
-            1200,
-          );
-        },
         onError: (err) => {
-          const e = err as { message?: string; code?: string; details?: string };
-          console.error('[complete_task] failed', e);
+          const e = err as { message?: string };
           Alert.alert(
-            t('home.actionErrors.complete'),
-            [e.message, e.code, e.details].filter(Boolean).join('\n') ||
-              t('home.actionErrors.unknown'),
+            t('tasksHub.periodicity.saveFail'),
+            e.message ?? t('tasksHub.errors.unknown'),
           );
-        },
-        onSettled: () => {
-          completingIdRef.current = null;
-          setCompletingId(null);
         },
       },
     );
   };
 
-  const handleRefresh = async () => {
-    await Promise.all([tasks.refetch(), templates.refetch()]);
+  const handleRestore = async (task: TaskWithSubs) => {
+    if (busyIds.has(task.id)) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    markBusy(task.id, true);
+    try {
+      await restoreTask.mutateAsync(task.id);
+    } catch (e) {
+      // Restoring past the free cap: the server refuses and the global
+      // handler pops the limit modal — no second dialog on top of it.
+      if (freeLimitEntity(e)) return;
+      const msg = e instanceof Error ? e.message : t('tasksHub.errors.unknown');
+      showInfo(t('tasksHub.archived.restoreFail'), msg);
+    } finally {
+      markBusy(task.id, false);
+    }
   };
-  const isRefreshing = tasks.isRefetching || templates.isRefetching;
 
-  // Counts shown inside the SegmentedControl pills
-  const filterCounts: Record<Tab, number> = {
-    allocated: totalTasks,
-    mine: customCount,
-    suggested: suggestedCount,
+  const handleDelete = async (task: TaskWithSubs) => {
+    if (busyIds.has(task.id)) return;
+    const ok = await confirmAction(
+      t('tasksHub.archived.deleteConfirmTitle', { title: task.title }),
+      t('tasksHub.archived.deleteConfirmBody'),
+      {
+        okText: t('tasksHub.archived.deleteOk'),
+        cancelText: t('common.cancel'),
+        destructive: true,
+      },
+    );
+    if (!ok) return;
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
+    markBusy(task.id, true);
+    try {
+      await deleteTask.mutateAsync(task.id);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : t('tasksHub.errors.unknown');
+      // The RPC raises stable English phrases for its two gates (completion
+      // history, quest link). Substring match so the localized copy stays
+      // the source of truth for the UI text.
+      const friendly = msg.includes('completion history')
+        ? t('tasksHub.archived.deleteBlockedHistory')
+        : msg.includes('referenced by a quest')
+          ? t('tasksHub.archived.deleteBlockedQuest')
+          : msg;
+      showInfo(t('tasksHub.archived.deleteFail'), friendly);
+    } finally {
+      markBusy(task.id, false);
+    }
   };
+
+  const selectDim = (d: DimFilter) => {
+    Haptics.selectionAsync().catch(() => {});
+    setDimFilter(d);
+  };
+
+  // Pull indicator is LOCAL state. The queries' isRefetching also flips on
+  // every background refetch — chip change, restore, return from the form,
+  // app foreground — which would pop the spinner right after the core
+  // interaction of this screen.
+  const { refreshing: isRefreshing, onRefresh: handleRefresh } = usePullToRefresh(() =>
+    Promise.all([tasks.refetch(), archived.refetch(), templates.refetch()]),
+  );
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
@@ -386,19 +464,13 @@ export default function TasksHubScreen() {
             onPress={() => router.back()}
             style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
             hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.back')}
           >
             <Ionicons name="chevron-back" size={22} color={tokens.text.hi} />
           </Pressable>
           <Text style={styles.title}>{t('tasksHub.title')}</Text>
           <View style={styles.topActions}>
-            <Pressable
-              onPress={() => router.push('/mood-checkin')}
-              style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
-              hitSlop={8}
-              accessibilityLabel={t('mood.tasksMenuA11y')}
-            >
-              <Ionicons name="happy-outline" size={20} color={tokens.text.hi} />
-            </Pressable>
             <Pressable
               onPress={toggleSearch}
               style={({ pressed }) => [
@@ -407,6 +479,7 @@ export default function TasksHubScreen() {
                 pressed && { opacity: 0.6 },
               ]}
               hitSlop={8}
+              accessibilityRole="button"
               accessibilityLabel={
                 searchOpen ? t('tasksHub.search.close') : t('tasksHub.search.open')
               }
@@ -427,6 +500,7 @@ export default function TasksHubScreen() {
                 }}
                 style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
                 hitSlop={8}
+                accessibilityRole="button"
                 accessibilityLabel={t('tasksHub.newTask')}
               >
                 <Ionicons name="add" size={22} color={tokens.brand.violet2} />
@@ -435,32 +509,17 @@ export default function TasksHubScreen() {
           </View>
         </View>
 
-        {/* Tab + search live outside the ScrollView so they stay
-            visible while the body container swaps between ScrollView
-            (allocated / suggested) and DraggableFlatList (mine). */}
-        <View style={styles.tabsWrap}>
-          <SegmentedControl<Tab>
-            options={[
-              {
-                value: 'allocated',
-                label: t('tasksHub.filters.allocated'),
-                count: filterCounts.allocated,
-              },
-              {
-                value: 'mine',
-                label: t('tasksHub.filters.mine'),
-                count: filterCounts.mine,
-              },
-              {
-                value: 'suggested',
-                label: t('tasksHub.filters.suggested'),
-                count: filterCounts.suggested,
-              },
-            ]}
-            value={tab}
-            onChange={setTab}
-          />
-        </View>
+        {/* Tabs + search live outside the body so they stay put while the
+            body container swaps between DraggableFlatList (Minhas) and
+            ScrollView (Sugeridas). */}
+        <BucketTabsV2<Tab>
+          tabs={[
+            { value: 'mine', label: t('tasksHub.tabs.mine'), count: totalTasks },
+            { value: 'suggested', label: t('tasksHub.tabs.suggested'), count: suggestedCount },
+          ]}
+          value={tab}
+          onChange={setTab}
+        />
 
         {searchOpen && (
           <View style={styles.searchWrap}>
@@ -480,46 +539,45 @@ export default function TasksHubScreen() {
               autoFocus
             />
             {query.length > 0 && (
-              <Pressable onPress={() => setQuery('')} hitSlop={8}>
+              <Pressable
+                onPress={() => setQuery('')}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={t('common.clear')}
+              >
                 <Ionicons name="close-circle" size={16} color={tokens.text.dim} />
               </Pressable>
             )}
           </View>
         )}
 
-        {/* Body — DraggableFlatList for Allocated (per-bucket reorder),
-            ScrollView for Mine + Suggested. Nesting a draggable inside
-            a parent ScrollView breaks the long-press → drag gesture, so
-            we pick the right container per tab. */}
-        {tab === 'allocated' ? (
-          <AllocatedDraggableBody
+        {tab === 'mine' ? (
+          <MineBody
             allActive={tasks.data ?? []}
             tasksByBucket={tasksByBucket}
+            archived={archived.data ?? []}
             loading={tasks.isLoading}
             query={query}
             isRefreshing={isRefreshing}
             collapsed={collapsed}
+            archivedOpen={archivedOpen}
             onToggle={toggleBucket}
+            onToggleArchived={() => setArchivedOpen((v) => !v)}
             onRefresh={handleRefresh}
-            onTaskPress={(id) =>
-              router.push({ pathname: '/task-form', params: { id } })
-            }
+            onTaskPress={(id) => router.push({ pathname: '/task-form', params: { id } })}
+            onPeriodicity={handleOpenPeriodicity}
             onCreate={handleCreateTask}
             onReorder={(ids) => reorderTasks.mutate(ids)}
-            onQuickComplete={handleQuickComplete}
-            completingId={completingId}
-            justCompletedId={justCompletedId}
-            completePending={completeTask.isPending}
-            t={t}
+            onRestore={handleRestore}
+            onDelete={handleDelete}
+            busyIds={busyIds}
+            bottomClearance={bottomClearance}
           />
         ) : (
           <ScrollView
             contentContainerStyle={[
               styles.content,
-              {
-                paddingBottom:
-                  Math.max(tokens.space[10], bottomClearance) + tokens.space[6],
-              },
+              { paddingBottom: Math.max(tokens.space[10], bottomClearance) + tokens.space[6] },
             ]}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
@@ -532,40 +590,20 @@ export default function TasksHubScreen() {
               />
             }
           >
-            <View style={styles.bodyWrap}>
-              {tab === 'suggested' ? (
-                <SuggestedBody
-                  templatesBySub={templatesBySub}
-                  loading={templates.isLoading}
-                  query={query}
-                  adoptedTemplateIds={adoptedTemplateIds}
-                  collapsedSubs={collapsedSubs}
-                  onToggleSub={toggleSub}
-                  onAdopt={handleAdopt}
-                  onCustomize={handleCustomize}
-                  adoptingId={adoptingId}
-                  limit={taskLimit}
-                  t={t}
-                />
-              ) : (
-                <MineBody
-                  tasks={tasksByBucket}
-                  loading={tasks.isLoading}
-                  query={query}
-                  collapsed={collapsed}
-                  onToggle={toggleBucket}
-                  onTaskPress={(id) =>
-                    router.push({ pathname: '/task-form', params: { id } })
-                  }
-                  onCreate={handleCreateTask}
-                  onQuickComplete={handleQuickComplete}
-                  completingId={completingId}
-                  justCompletedId={justCompletedId}
-                  completePending={completeTask.isPending}
-                  t={t}
-                />
-              )}
-            </View>
+            <SuggestedBody
+              templatesBySub={templatesBySub}
+              loading={templates.isLoading}
+              query={query}
+              dimFilter={dimFilter}
+              onSelectDim={selectDim}
+              adoptedTemplateIds={adoptedTemplateIds}
+              collapsedSubs={collapsedSubs}
+              onToggleSub={toggleSub}
+              onAdopt={handleAdopt}
+              onCustomize={handleCustomize}
+              adoptingId={adoptingId}
+              limit={taskLimit}
+            />
           </ScrollView>
         )}
       </ScreenBackground>
@@ -576,6 +614,13 @@ export default function TasksHubScreen() {
         templateDefaultType={pickerTemplate?.task_type}
         onCancel={() => setPickerTemplate(null)}
         onConfirm={handleAdoptConfirm}
+      />
+
+      <PeriodicitySheet
+        visible={periodicityTask !== null}
+        task={periodicityTask}
+        onCancel={() => setPeriodicityTask(null)}
+        onConfirm={handlePeriodicityConfirm}
       />
 
       {/* M2 step 2 lives here — spotlight the `+` icon. The mount on
@@ -600,66 +645,71 @@ export default function TasksHubScreen() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// AllocatedDraggableBody — single DraggableFlatList that mixes bucket
-// headers and draggable task rows. Drag is constrained to within a
-// bucket section: any drag that crosses a header rolls back to the
-// pre-drag order.
+// Minhas — one DraggableFlatList mixing slim group headers and task rows.
 //
-// Why one big list instead of three separate ones: react-native-
-// draggable-flatlist v4 doesn't support nesting inside a parent
-// ScrollView, so we can't render 3 stacked draggables. Mixing item
-// types in a single list is the supported pattern.
+// The periodicity chip on each row is what moves a practice between
+// groups; drag is ONLY for order inside a group (a drag that crosses a
+// header snaps back). One big list instead of three because
+// react-native-draggable-flatlist v4 can't nest inside a parent
+// ScrollView; mixing item kinds in a single list is the supported pattern.
 // ─────────────────────────────────────────────────────────────────────────────
 
-type AllocatedItem =
+type MineItem =
   | { kind: 'header'; bucket: Bucket; count: number }
   | { kind: 'task'; bucket: Bucket; task: TaskWithSubs }
   | { kind: 'empty'; bucket: Bucket };
 
-interface AllocatedDraggableBodyProps {
+interface MineBodyProps {
   allActive: TaskWithSubs[];
   tasksByBucket: Record<Bucket, TaskWithSubs[]>;
+  archived: TaskWithSubs[];
   loading: boolean;
   query: string;
   isRefreshing: boolean;
   collapsed: Record<Bucket, boolean>;
+  archivedOpen: boolean;
   onToggle: (b: Bucket) => void;
+  onToggleArchived: () => void;
   onRefresh: () => void;
   onTaskPress: (id: string) => void;
+  onPeriodicity: (task: TaskWithSubs) => void;
   onCreate: () => void;
   onReorder: (orderedIds: string[]) => void;
-  onQuickComplete: (task: TaskWithSubs) => void;
-  completingId: string | null;
-  justCompletedId: string | null;
-  /** Any quick-complete mutation in flight — disables every button. */
-  completePending: boolean;
-  t: (key: string, opts?: Record<string, string | number | undefined>) => string;
+  onRestore: (task: TaskWithSubs) => void;
+  onDelete: (task: TaskWithSubs) => void;
+  /** Archived rows whose restore / delete is in flight. */
+  busyIds: Set<string>;
+  bottomClearance: number;
 }
 
-function AllocatedDraggableBody({
+function MineBody({
   allActive,
   tasksByBucket,
+  archived,
   loading,
   query,
   isRefreshing,
   collapsed,
+  archivedOpen,
   onToggle,
+  onToggleArchived,
   onRefresh,
   onTaskPress,
+  onPeriodicity,
   onCreate,
   onReorder,
-  onQuickComplete,
-  completingId,
-  justCompletedId,
-  completePending,
-  t,
-}: AllocatedDraggableBodyProps) {
-  const bottomClearance = useBottomSafeClearance();
-  // Build the flat item list every time the inputs shift. Headers
-  // act as section dividers (non-draggable); tasks are draggable
-  // rows. Empty placeholders render only inside open empty buckets.
-  const items = useMemo<AllocatedItem[]>(() => {
-    const out: AllocatedItem[] = [];
+  onRestore,
+  onDelete,
+  busyIds,
+  bottomClearance,
+}: MineBodyProps) {
+  const { t } = useT();
+
+  // Flat item list. Headers are section dividers (non-draggable); tasks
+  // are draggable rows; the empty placeholder renders inside open empty
+  // groups so the user sees where a chip change would land.
+  const items = useMemo<MineItem[]>(() => {
+    const out: MineItem[] = [];
     for (const meta of BUCKETS) {
       const bucketTasks = tasksByBucket[meta.id];
       out.push({ kind: 'header', bucket: meta.id, count: bucketTasks.length });
@@ -668,156 +718,78 @@ function AllocatedDraggableBody({
         out.push({ kind: 'empty', bucket: meta.id });
         continue;
       }
-      for (const task of bucketTasks) {
-        out.push({ kind: 'task', bucket: meta.id, task });
-      }
+      for (const task of bucketTasks) out.push({ kind: 'task', bucket: meta.id, task });
     }
     return out;
   }, [tasksByBucket, collapsed]);
 
-  // Local mirror for optimistic drag — synced back to `items` whenever
-  // the upstream shape changes (refetch, archive, new task, collapse).
-  const [localItems, setLocalItems] = useState<AllocatedItem[]>(items);
-  const itemsKey = items
-    .map((it) => (it.kind === 'task' ? `t:${it.task.id}` : `${it.kind}:${it.bucket}`))
-    .join('|');
+  // Local mirror so the dropped order paints on the release frame. It
+  // follows `items` by IDENTITY — every refetch, edit, archive, collapse
+  // or reschedule rebuilds `items`, so the mirror can never go stale.
+  // (The previous mirror keyed on ids only: a title, stars or weekday edit
+  // inside the same group never re-rendered, not even on pull-to-refresh.)
+  const [localItems, setLocalItems] = useState<MineItem[]>(items);
   useEffect(() => {
     setLocalItems(items);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [itemsKey]);
+  }, [items]);
 
-  const keyExtractor = (item: AllocatedItem, idx: number) => {
-    if (item.kind === 'task') return `t-${item.task.id}`;
-    return `${item.kind}-${item.bucket}-${idx}`;
-  };
+  const keyExtractor = (item: MineItem, idx: number) =>
+    item.kind === 'task' ? `t-${item.task.id}` : `${item.kind}-${item.bucket}-${idx}`;
 
-  /**
-   * Convert the flat localItems (after drag) into a global task-id
-   * ordering and push to the RPC. Tasks not in any bucket section
-   * (shouldn't happen — bucketFor covers all recurrence types) are
-   * appended at the tail to preserve them.
-   */
-  const commitReorder = (next: AllocatedItem[]) => {
-    const orderedTaskIds: string[] = [];
-    const seen = new Set<string>();
+  /** Post-drag list → global ordering → RPC. Only the moved group's VISIBLE
+   *  rows take their new sequence; every other practice (other groups,
+   *  hidden by search or a collapsed group) keeps its exact position — the
+   *  server rewrites sort_order 1..N over this list and Home reads it, so a
+   *  reorder inside Semanais must never reshuffle Hoje's Diárias. */
+  const commitReorder = (next: MineItem[], bucket: Bucket) => {
+    const newSequence: string[] = [];
     for (const it of next) {
-      if (it.kind !== 'task') continue;
-      orderedTaskIds.push(it.task.id);
-      seen.add(it.task.id);
+      if (it.kind === 'task' && it.bucket === bucket) newSequence.push(it.task.id);
     }
-    // Anything not in the visible buckets (filtered by search, hidden
-    // by collapse) keeps its existing relative order — append at the
-    // tail of the new ordering so its sort_order stays larger but
-    // monotonic.
-    for (const t of allActive) {
-      if (!seen.has(t.id)) orderedTaskIds.push(t.id);
-    }
+    const moving = new Set(newSequence);
+    let cursor = 0;
+    const orderedTaskIds = allActive.map((tk) =>
+      moving.has(tk.id) ? (newSequence[cursor++] ?? tk.id) : tk.id,
+    );
     onReorder(orderedTaskIds);
   };
 
-  /** Bucket of an item at index `i` based on the nearest preceding header. */
-  const sectionOf = (data: AllocatedItem[], i: number): Bucket | null => {
+  /** Bucket of the item at index `i`, from the nearest preceding header. */
+  const sectionOf = (data: MineItem[], i: number): Bucket | null => {
     for (let j = i; j >= 0; j--) {
-      if (data[j].kind === 'header') return data[j].bucket;
+      const it = data[j];
+      if (it && it.kind === 'header') return it.bucket;
     }
     return null;
   };
 
-  const renderItem = ({ item, drag, isActive }: RenderItemParams<AllocatedItem>) => {
+  const renderItem = ({ item, drag, isActive }: RenderItemParams<MineItem>) => {
     if (item.kind === 'header') {
-      const meta = BUCKETS.find((b) => b.id === item.bucket)!;
-      const isCollapsed = collapsed[item.bucket];
       return (
-        <View
-          style={[
-            styles.groupCard,
-            { borderColor: `${meta.accent}33`, marginTop: tokens.space[3] },
-          ]}
-        >
-          <View style={[styles.bucketAccentBar, { backgroundColor: meta.accent }]} />
-          <Pressable
-            onPress={() => onToggle(meta.id)}
-            style={({ pressed }) => [
-              styles.groupHeader,
-              styles.bucketHeader,
-              pressed && { opacity: 0.7 },
-            ]}
-          >
-            <View
-              style={[
-                styles.bucketIcon,
-                { backgroundColor: meta.accentBg, borderColor: `${meta.accent}55` },
-              ]}
-            >
-              <Ionicons name={meta.iconName} size={20} color={meta.accent} />
-            </View>
-            <View style={styles.bucketTitleCol}>
-              <Text style={[styles.bucketEyebrow, { color: meta.accent }]}>
-                {t(meta.labelKey).toUpperCase()}
-              </Text>
-              <Text style={styles.bucketDesc} numberOfLines={1}>
-                {t(meta.descKey)}
-              </Text>
-            </View>
-            <View
-              style={[
-                styles.bucketCountChip,
-                { backgroundColor: meta.accentBg, borderColor: `${meta.accent}55` },
-              ]}
-            >
-              <Text style={[styles.bucketCountText, { color: meta.accent }]}>
-                {item.count}
-              </Text>
-            </View>
-            <Ionicons
-              name={isCollapsed ? 'chevron-down' : 'chevron-up'}
-              size={16}
-              color={tokens.text.dim}
-            />
-          </Pressable>
-        </View>
+        <BucketHeader
+          meta={BUCKET_BY_ID[item.bucket]}
+          count={item.count}
+          collapsed={collapsed[item.bucket]}
+          onToggle={() => onToggle(item.bucket)}
+        />
       );
     }
     if (item.kind === 'empty') {
       return (
-        <View style={styles.allocatedBucketBody}>
-          <Text style={styles.bucketEmpty}>{t('tasksHub.bucketEmpty')}</Text>
+        <View style={styles.bucketEmptyCard}>
+          <Text style={styles.bucketEmptyText}>{t('tasksHub.bucketEmpty')}</Text>
         </View>
       );
     }
-    // Task row. The quick-complete button is hosted by the row (NOT by
-    // DragRowInner) so the drag-mode inner content stays untouched; it
-    // goes inert while the row is being dragged.
     return (
-      <ScaleDecorator>
-        <View style={styles.allocatedRowWrap}>
-          <Pressable
-            onPress={() => onTaskPress(item.task.id)}
-            onLongPress={drag}
-            delayLongPress={400}
-            disabled={isActive}
-            style={({ pressed }) => [
-              styles.dragRow,
-              isActive && styles.dragRowActive,
-              pressed && { opacity: 0.85 },
-            ]}
-            // Surface the bucket via accessibility hint so screen readers
-            // can announce context during the drag.
-            accessibilityHint={`In ${item.bucket} bucket. Long-press to reorder.`}
-          >
-            <Ionicons name="reorder-three" size={20} color={tokens.text.dim} />
-            <DragRowInner task={item.task} />
-            <QuickCompleteButton
-              title={item.task.title}
-              pending={completingId === item.task.id}
-              success={justCompletedId === item.task.id}
-              disabled={isActive || completePending || item.task.is_archived}
-              onPress={() => onQuickComplete(item.task)}
-            />
-            <Ionicons name="chevron-forward" size={16} color={tokens.text.dim} />
-          </Pressable>
-        </View>
-      </ScaleDecorator>
+      <ManageRow
+        task={item.task}
+        meta={BUCKET_BY_ID[item.bucket]}
+        drag={drag}
+        isActive={isActive}
+        onEdit={() => onTaskPress(item.task.id)}
+        onPeriodicity={() => onPeriodicity(item.task)}
+      />
     );
   };
 
@@ -829,78 +801,91 @@ function AllocatedDraggableBody({
     );
   }
 
-  // Empty entire allocated bucket — show the same hero empty state as Mine.
-  if (allActive.length === 0) {
-    return (
-      <View style={styles.emptyBox}>
-        <Ionicons
-          name={query ? 'search' : 'list'}
-          size={32}
-          color={tokens.text.dim}
+  const nothingActive = allActive.length === 0;
+  // From the filtered DATA, not the rendered items: a match inside a
+  // collapsed group is still a match.
+  const nothingMatches =
+    !nothingActive &&
+    query.trim().length > 0 &&
+    BUCKETS.every((b) => tasksByBucket[b.id].length === 0);
+
+  const Footer = (
+    <View style={styles.footer}>
+      {archived.length > 0 && (
+        <ArchivedSection
+          tasks={archived}
+          open={archivedOpen}
+          onToggle={onToggleArchived}
+          onRestore={onRestore}
+          onDelete={onDelete}
+          busyIds={busyIds}
         />
-        <Text style={styles.emptyTitle}>
-          {query ? t('tasksHub.empty.noMatchesTitle') : t('tasksHub.empty.noTasksTitle')}
-        </Text>
-        <Text style={styles.emptySub}>
-          {query
-            ? t('tasksHub.empty.noMatchesBody', { query })
-            : t('tasksHub.empty.noTasksBody')}
-        </Text>
-        {!query && (
-          <Pressable
-            onPress={onCreate}
-            style={({ pressed }) => [
-              styles.emptyCta,
-              pressed && { opacity: 0.7 },
-            ]}
-          >
-            <Ionicons name="add" size={18} color={tokens.text.hi} />
-            <Text style={styles.emptyCtaText}>{t('tasksHub.empty.cta')}</Text>
-          </Pressable>
-        )}
-      </View>
-    );
-  }
+      )}
+      {!nothingActive && <AddCard label={t('tasksHub.newTask')} onPress={onCreate} />}
+    </View>
+  );
 
   return (
     <DraggableFlatList
-      data={localItems}
+      data={nothingActive || nothingMatches ? [] : localItems}
       keyExtractor={keyExtractor}
       renderItem={renderItem}
-      onDragEnd={({ data, to }) => {
-        // Constrain drag to within a single bucket section. Compute the
-        // bucket the moved task started in vs ended in; if they differ,
-        // reject the drop and snap back.
+      onDragEnd={({ data, from, to }) => {
+        // A long-press released in place also ends here — nothing moved,
+        // so no RPC and no invalidation storm.
+        if (from === to) return;
         const moved = data[to];
-        if (moved.kind !== 'task') {
-          // Dragged a non-task item (shouldn't happen since headers
-          // don't expose drag) — bail.
+        if (!moved || moved.kind !== 'task') {
           setLocalItems(localItems);
           return;
         }
-        const originalSection = moved.bucket;
-        const newSection = sectionOf(data, to);
-        if (newSection !== originalSection) {
-          // Reject — restore previous order. Slight haptic in onDragBegin
-          // already fired, no further bell needed.
+        // Constrain to the section the row started in — a drop across a
+        // header snaps back, with a warning buzz so the snap reads as
+        // "not here" and not as a glitch. Groups are changed by the chip.
+        if (sectionOf(data, to) !== moved.bucket) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
           setLocalItems(localItems);
           return;
         }
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
         setLocalItems(data);
-        commitReorder(data);
+        commitReorder(data, moved.bucket);
       }}
       activationDistance={20}
-      // Rows must re-render when a quick-complete starts/finishes even
-      // though `localItems` itself didn't change.
-      extraData={[completingId, justCompletedId, completePending]}
+      ListHeaderComponent={
+        nothingActive ? null : (
+          <Text style={styles.lead}>{t('tasksHub.lead')}</Text>
+        )
+      }
+      ListEmptyComponent={
+        nothingMatches ? (
+          <View style={styles.emptyBox}>
+            <Ionicons name="search" size={32} color={tokens.text.dim} />
+            <Text style={styles.emptyTitle}>{t('tasksHub.empty.noMatchesTitle')}</Text>
+            <Text style={styles.emptySub}>{t('tasksHub.empty.noMatchesBody', { query })}</Text>
+          </View>
+        ) : (
+          <View style={styles.emptyBox}>
+            <EmptyHero tone="violet" iconName="list" size={120} />
+            <Text style={styles.emptyTitle}>{t('tasksHub.empty.noTasksTitle')}</Text>
+            <Text style={styles.emptySub}>{t('tasksHub.empty.noTasksBody')}</Text>
+            <Pressable
+              onPress={onCreate}
+              style={({ pressed }) => [styles.emptyCta, pressed && { opacity: 0.7 }]}
+              accessibilityRole="button"
+            >
+              <Ionicons name="add" size={18} color={tokens.text.hi} />
+              <Text style={styles.emptyCtaText}>{t('tasksHub.empty.cta')}</Text>
+            </Pressable>
+          </View>
+        )
+      }
+      ListFooterComponent={Footer}
       contentContainerStyle={[
-        styles.dragListContent,
-        {
-          // Generous bottom padding so the ONE-TIME bucket pill clears the
-          // OS nav comfortably even when the safe-area inset under-reports.
-          paddingBottom:
-            Math.max(tokens.space[10], bottomClearance) + tokens.space[6] + 28,
-        },
+        styles.listContent,
+        // Generous bottom padding so the last card clears the OS nav
+        // comfortably even when the safe-area inset under-reports.
+        { paddingBottom: Math.max(tokens.space[10], bottomClearance) + tokens.space[6] },
       ]}
       refreshControl={
         <RefreshControl
@@ -914,470 +899,300 @@ function AllocatedDraggableBody({
   );
 }
 
-/**
- * Body of a drag row — title + small meta line. Replicates the most
- * compact bits of the existing TaskRow (sub icon, pips, +XP, recurrence)
- * minus the chevron / drag handle which the parent draws.
- */
-function DragRowInner({ task }: { task: TaskWithSubs }) {
+/** Slim section header — accent icon, eyebrow, one-line description,
+ *  count chip and the collapse chevron. No card: the rows below carry
+ *  the surface, the header just names the group. */
+function BucketHeader({
+  meta,
+  count,
+  collapsed,
+  onToggle,
+}: {
+  meta: BucketMeta;
+  count: number;
+  collapsed: boolean;
+  onToggle: () => void;
+}) {
   const { t } = useT();
-  const meta = useMetaLookup();
-  const primarySubMeta = meta.sub(task.primary_sub_id);
-  const dimMeta = meta.dim(task.primary_dimension_id);
-  const reward = rewardForTaskSubs(task.subs);
-  const pips: string[] = [];
-  for (const s of task.subs) {
-    const sm = SUB_META[s.sub_id];
-    const color = sm ? DIMENSION_META[sm.dimensionId].color : tokens.brand.violet2;
-    for (let i = 0; i < s.stars; i++) pips.push(color);
-  }
-  const isCustom = !task.template_id;
   return (
-    <>
-      <View style={[styles.subDot, { backgroundColor: dimMeta.bg }]}>
-        {primarySubMeta && (
-          <Ionicons
-            name={(task.icon ?? primarySubMeta.iconName) as never}
-            size={14}
-            color={dimMeta.color}
-          />
-        )}
+    <Pressable
+      onPress={onToggle}
+      style={({ pressed }) => [styles.bucketHeader, pressed && { opacity: 0.7 }]}
+      accessibilityRole="button"
+      accessibilityState={{ expanded: !collapsed }}
+    >
+      <View style={[styles.bucketIcon, { backgroundColor: meta.accentBg }]}>
+        <Ionicons name={meta.iconName} size={16} color={meta.accent} />
       </View>
-      <View style={styles.taskBody}>
-        <View style={styles.taskTitleRow}>
-          <Text style={styles.taskTitle} numberOfLines={1}>
-            {task.title}
-          </Text>
-          <Text style={styles.rewardValue}>+{reward.total.xp}</Text>
-          {isCustom && (
-            <View style={styles.customChip}>
-              <Text style={styles.customChipText}>{t('tasksHub.customChip')}</Text>
-            </View>
-          )}
-        </View>
-        <View style={styles.taskMetaRow}>
-          {pips.length > 0 && (
-            <View style={styles.pipsRow}>
-              {pips.map((color, i) => (
-                <View
-                  key={i}
-                  style={[styles.pip, { backgroundColor: color }]}
-                />
-              ))}
-            </View>
-          )}
-          <Text style={styles.taskRecurrence} numberOfLines={1}>
-            {describeRecurrence(task.recurrence, task.target_count)}
-          </Text>
-        </View>
+      <View style={styles.bucketTitleCol}>
+        <Text style={[styles.bucketEyebrow, { color: meta.accentText }]}>
+          {t(meta.labelKey).toUpperCase()}
+        </Text>
+        <Text style={styles.bucketDesc} numberOfLines={1}>
+          {t(meta.descKey)}
+        </Text>
       </View>
-    </>
+      <View style={[styles.countChip, { backgroundColor: meta.accentBg }]}>
+        <Text style={[styles.countChipText, { color: meta.accentText }]}>{count}</Text>
+      </View>
+      <Ionicons
+        name={collapsed ? 'chevron-down' : 'chevron-up'}
+        size={16}
+        color={tokens.text.dim}
+      />
+    </Pressable>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Mine: 3 collapsible buckets of the user's active tasks
-// ─────────────────────────────────────────────────────────────────────────────
-
-interface MineBodyProps {
-  tasks: Record<Bucket, TaskWithSubs[]>;
-  loading: boolean;
-  query: string;
-  collapsed: Record<Bucket, boolean>;
-  onToggle: (b: Bucket) => void;
-  onTaskPress: (id: string) => void;
-  onCreate: () => void;
-  onQuickComplete: (task: TaskWithSubs) => void;
-  completingId: string | null;
-  justCompletedId: string | null;
-  /** Any quick-complete mutation in flight — disables every button. */
-  completePending: boolean;
-  t: (key: string, opts?: Record<string, string | number | undefined>) => string;
+interface ManageRowProps {
+  task: TaskWithSubs;
+  meta: BucketMeta;
+  drag: () => void;
+  isActive: boolean;
+  onEdit: () => void;
+  onPeriodicity: () => void;
 }
 
-function MineBody({
-  tasks,
-  loading,
-  query,
-  collapsed,
-  onToggle,
-  onTaskPress,
-  onCreate,
-  onQuickComplete,
-  completingId,
-  justCompletedId,
-  completePending,
-  t,
-}: MineBodyProps) {
-  if (loading) {
-    return (
-      <View style={styles.loadingBox}>
-        <ActivityIndicator color={tokens.brand.violet2} />
-      </View>
-    );
-  }
+/**
+ * Manage row — the Home TaskCard's vocabulary (gradient surface, dim-
+ * tinted icon tile, sub stack + colored pips + XP) minus the check
+ * button, plus the periodicity chip. Tap → edit form. Long-press →
+ * drag (order within the group). Chip → re-schedule sheet.
+ *
+ * No drag handle glyph: the whole row long-presses, the lead line and the
+ * a11y hint say so, and on a 360dp phone those 28px are the difference
+ * between a readable title and five characters next to the chip.
+ */
+function ManageRow({ task, meta, drag, isActive, onEdit, onPeriodicity }: ManageRowProps) {
+  const { t } = useT();
+  const lookup = useMetaLookup();
+  const sub = lookup.sub(task.primary_sub_id);
+  const dim = lookup.dim(task.primary_dimension_id);
+  const reward = rewardForTaskSubs(task.subs, task.coin_multiplier);
+  const isCustom = !task.template_id;
+  const chipLabel = describeRecurrence(task.recurrence, task.target_count, t, { short: true });
 
-  const totalShown = tasks.daily.length + tasks.weekly.length + tasks.one_time.length;
-  if (totalShown === 0) {
-    return (
-      <View style={styles.emptyBox}>
-        <Ionicons
-          name={query ? 'search' : 'list'}
-          size={32}
-          color={tokens.text.dim}
-        />
-        <Text style={styles.emptyTitle}>
-          {query ? t('tasksHub.empty.noMatchesTitle') : t('tasksHub.empty.noTasksTitle')}
-        </Text>
-        <Text style={styles.emptySub}>
-          {query
-            ? t('tasksHub.empty.noMatchesBody', { query })
-            : t('tasksHub.empty.noTasksBody')}
-        </Text>
-        {!query && (
+  return (
+    <ScaleDecorator>
+      <View style={styles.rowWrap}>
+        <Pressable
+          onPress={onEdit}
+          onLongPress={drag}
+          delayLongPress={400}
+          disabled={isActive}
+          style={({ pressed }) => [
+            styles.row,
+            { borderLeftColor: dim.color },
+            isActive && styles.rowActive,
+            pressed && { opacity: 0.85 },
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel={t('tasksHub.row.editA11y', { title: task.title })}
+          accessibilityHint={t('tasksHub.row.dragA11y')}
+        >
+          <LinearGradient
+            colors={tokens.gradient.taskCard}
+            locations={tokens.gradient.taskCardLocations}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={StyleSheet.absoluteFill}
+            pointerEvents="none"
+          />
+          <View style={[styles.subTile, { backgroundColor: dim.bg }]}>
+            <Ionicons
+              name={(task.icon ?? sub.iconName) as never}
+              size={17}
+              color={dim.color}
+            />
+          </View>
+          <View style={styles.rowBody}>
+            <Text style={styles.rowTitle} numberOfLines={2}>
+              {task.title}
+            </Text>
+            <View style={styles.metaRow}>
+              {task.subs.length > 0 && (
+                <SubStack subIds={task.subs.map((s) => s.sub_id)} max={3} size={16} />
+              )}
+              <SubColoredPips subs={task.subs} size={5} />
+              <Text style={styles.rewardValue}>+{reward.total.xp}</Text>
+              {task.coin_multiplier !== 1 && (
+                <View style={styles.coinTag}>
+                  <CoinIcon size={10} />
+                  <Text style={styles.coinTagText}>{reward.total.coins}</Text>
+                </View>
+              )}
+              {isCustom && (
+                <View style={styles.customChip}>
+                  <Text style={styles.customChipText}>{t('tasksHub.customChip')}</Text>
+                </View>
+              )}
+            </View>
+          </View>
+          {/* Label stays neutral (AA in both palettes); the accent carries
+              border, wash and chevron — TaskCard's rule for its coin figure.
+              accessibilityValue: the label replaces the child text for screen
+              readers, so the current schedule must travel separately. */}
           <Pressable
-            onPress={onCreate}
+            onPress={onPeriodicity}
+            disabled={isActive}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('tasksHub.row.periodicityA11y', { title: task.title })}
+            accessibilityValue={{ text: chipLabel }}
             style={({ pressed }) => [
-              styles.emptyCta,
+              styles.periodChip,
+              { borderColor: `${meta.accent}66`, backgroundColor: meta.accentBg },
               pressed && { opacity: 0.7 },
             ]}
           >
-            <Ionicons name="add" size={18} color={tokens.text.hi} />
-            <Text style={styles.emptyCtaText}>{t('tasksHub.empty.cta')}</Text>
+            <Text style={styles.periodChipText} numberOfLines={1}>
+              {chipLabel}
+            </Text>
+            <Ionicons name="chevron-down" size={12} color={meta.accent} />
           </Pressable>
-        )}
+        </Pressable>
       </View>
-    );
-  }
-
-  return (
-    <View style={{ gap: tokens.space[3] }}>
-      {BUCKETS.map((b) => (
-        <BucketSection
-          key={b.id}
-          meta={b}
-          tasks={tasks[b.id]}
-          collapsed={collapsed[b.id]}
-          onToggle={() => onToggle(b.id)}
-          onTaskPress={onTaskPress}
-          onQuickComplete={onQuickComplete}
-          completingId={completingId}
-          justCompletedId={justCompletedId}
-          completePending={completePending}
-          t={t}
-        />
-      ))}
-    </View>
+    </ScaleDecorator>
   );
 }
 
-interface BucketSectionProps {
-  meta: BucketMeta;
+// ─────────────────────────────────────────────────────────────────────────────
+// Arquivadas — collapsed footer with restore + (guarded) delete
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface ArchivedSectionProps {
   tasks: TaskWithSubs[];
-  collapsed: boolean;
+  open: boolean;
   onToggle: () => void;
-  onTaskPress: (id: string) => void;
-  onQuickComplete: (task: TaskWithSubs) => void;
-  completingId: string | null;
-  justCompletedId: string | null;
-  completePending: boolean;
-  t: (key: string, opts?: Record<string, string | number | undefined>) => string;
+  onRestore: (task: TaskWithSubs) => void;
+  onDelete: (task: TaskWithSubs) => void;
+  busyIds: Set<string>;
 }
 
-function BucketSection({
-  meta,
-  tasks,
-  collapsed,
-  onToggle,
-  onTaskPress,
-  onQuickComplete,
-  completingId,
-  justCompletedId,
-  completePending,
-  t,
-}: BucketSectionProps) {
-  // Per-bucket accent: a left accent bar (full-height), a tinted tile
-  // behind the icon, the title in accent color, and a count chip that
-  // picks up the same tint. The bucket card itself keeps the standard
-  // surface — only the header carries the accent so groups read as
-  // distinct without screaming.
+function ArchivedSection({ tasks, open, onToggle, onRestore, onDelete, busyIds }: ArchivedSectionProps) {
+  const { t } = useT();
   return (
-    <View
-      style={[
-        styles.groupCard,
-        { borderColor: `${meta.accent}33` },
-      ]}
-    >
-      <View style={[styles.bucketAccentBar, { backgroundColor: meta.accent }]} />
+    <View style={styles.archivedBlock}>
       <Pressable
         onPress={onToggle}
-        style={({ pressed }) => [
-          styles.groupHeader,
-          styles.bucketHeader,
-          pressed && { opacity: 0.7 },
-        ]}
+        style={({ pressed }) => [styles.bucketHeader, pressed && { opacity: 0.7 }]}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
       >
-        <View
-          style={[
-            styles.bucketIcon,
-            { backgroundColor: meta.accentBg, borderColor: `${meta.accent}55` },
-          ]}
-        >
-          <Ionicons name={meta.iconName} size={20} color={meta.accent} />
+        <View style={[styles.bucketIcon, { backgroundColor: 'rgba(255,255,255,0.05)' }]}>
+          <Ionicons name="archive-outline" size={16} color={tokens.text.dim} />
         </View>
         <View style={styles.bucketTitleCol}>
-          <Text style={[styles.bucketEyebrow, { color: meta.accent }]}>
-            {t(meta.labelKey).toUpperCase()}
-          </Text>
-          <Text style={styles.bucketDesc} numberOfLines={1}>
-            {t(meta.descKey)}
+          <Text style={[styles.bucketEyebrow, { color: tokens.text.mid }]}>
+            {t('tasksHub.archived.section').toUpperCase()}
           </Text>
         </View>
-        <View
-          style={[
-            styles.bucketCountChip,
-            { backgroundColor: meta.accentBg, borderColor: `${meta.accent}55` },
-          ]}
-        >
-          <Text style={[styles.bucketCountText, { color: meta.accent }]}>
-            {tasks.length}
-          </Text>
+        <View style={[styles.countChip, { backgroundColor: 'rgba(255,255,255,0.06)' }]}>
+          <Text style={[styles.countChipText, { color: tokens.text.mid }]}>{tasks.length}</Text>
         </View>
-        <Ionicons
-          name={collapsed ? 'chevron-down' : 'chevron-up'}
-          size={16}
-          color={tokens.text.dim}
-        />
+        <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={16} color={tokens.text.dim} />
       </Pressable>
 
-      {!collapsed && (
-        <View style={styles.groupBody}>
-          {tasks.length === 0 ? (
-            <Text style={styles.bucketEmpty}>{t('tasksHub.bucketEmpty')}</Text>
-          ) : (
-            tasks.map((task, i) => (
-              <TaskRow
-                key={task.id}
-                task={task}
-                divider={i > 0}
-                onPress={() => onTaskPress(task.id)}
-                onQuickComplete={() => onQuickComplete(task)}
-                completing={completingId === task.id}
-                justCompleted={justCompletedId === task.id}
-                completeDisabled={completePending || task.is_archived}
-              />
-            ))
-          )}
+      {open && (
+        <View style={styles.archivedList}>
+          {tasks.map((task) => (
+            <ArchivedRow
+              key={task.id}
+              task={task}
+              busy={busyIds.has(task.id)}
+              onRestore={() => onRestore(task)}
+              onDelete={() => onDelete(task)}
+            />
+          ))}
         </View>
       )}
     </View>
   );
 }
 
-interface TaskRowProps {
-  task: TaskWithSubs;
-  divider: boolean;
-  onPress: () => void;
-  onQuickComplete: () => void;
-  /** Quick-complete mutation in flight for THIS row. */
-  completing: boolean;
-  /** Brief post-success window — row tint + green check pop. */
-  justCompleted: boolean;
-  /** Blocks the button (archived task or another row mid-mutation). */
-  completeDisabled: boolean;
-}
-
-function TaskRow({
+function ArchivedRow({
   task,
-  divider,
-  onPress,
-  onQuickComplete,
-  completing,
-  justCompleted,
-  completeDisabled,
-}: TaskRowProps) {
+  busy,
+  onRestore,
+  onDelete,
+}: {
+  task: TaskWithSubs;
+  busy: boolean;
+  onRestore: () => void;
+  onDelete: () => void;
+}) {
   const { t } = useT();
-  const meta = useMetaLookup();
-  const isCustom = !task.template_id;
-  const primarySubMeta = meta.sub(task.primary_sub_id);
-  const dimMeta = meta.dim(task.primary_dimension_id);
-  const reward = rewardForTaskSubs(task.subs);
-  const pips: string[] = [];
-  for (const s of task.subs) {
-    const sm = SUB_META[s.sub_id];
-    const color = sm ? DIMENSION_META[sm.dimensionId].color : tokens.brand.violet2;
-    for (let i = 0; i < s.stars; i++) pips.push(color);
-  }
+  const lookup = useMetaLookup();
+  const sub = lookup.sub(task.primary_sub_id);
   return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.taskRow,
-        divider && styles.taskRowDivider,
-        justCompleted && styles.taskRowSuccess,
-        pressed && { opacity: 0.7 },
-      ]}
-    >
-      <View style={[styles.subDot, { backgroundColor: dimMeta.bg }]}>
-        {primarySubMeta && (
-          <Ionicons
-            name={(task.icon ?? primarySubMeta.iconName) as never}
-            size={14}
-            color={dimMeta.color}
-          />
-        )}
+    <View style={styles.archivedRow}>
+      <View style={[styles.subTile, styles.subTileArchived]}>
+        <Ionicons name={(task.icon ?? sub.iconName) as never} size={16} color={tokens.text.dim} />
       </View>
-      <View style={styles.taskBody}>
-        <View style={styles.taskTitleRow}>
-          <Text style={styles.taskTitle} numberOfLines={1}>
-            {task.title}
-          </Text>
-          <Text style={styles.rewardValue}>+{reward.total.xp}</Text>
-          {isCustom && (
-            <View style={styles.customChip}>
-              <Text style={styles.customChipText}>
-                {t('tasksHub.customChip')}
-              </Text>
-            </View>
-          )}
-        </View>
-        <View style={styles.taskMetaRow}>
-          {pips.length > 0 && (
-            <View style={styles.pipsRow}>
-              {pips.map((color, i) => (
-                <View
-                  key={i}
-                  style={[styles.pip, { backgroundColor: color }]}
-                />
-              ))}
-            </View>
-          )}
-          <Text style={styles.taskRecurrence} numberOfLines={1}>
-            {describeRecurrence(task.recurrence, task.target_count)}
-          </Text>
-          <View style={styles.coinChip}>
-            <Ionicons name="ellipse" size={8} color={tokens.semantic.coin} />
-            <Text style={styles.coinChipText}>+{reward.total.coins}</Text>
-          </View>
-        </View>
+      <View style={styles.rowBody}>
+        <Text style={[styles.rowTitle, { color: tokens.text.mid }]} numberOfLines={1}>
+          {task.title}
+        </Text>
+        <Text style={styles.archivedMeta} numberOfLines={1}>
+          {describeRecurrence(task.recurrence, task.target_count, t)}
+        </Text>
       </View>
-      <QuickCompleteButton
-        title={task.title}
-        pending={completing}
-        success={justCompleted}
-        disabled={completeDisabled}
-        onPress={onQuickComplete}
-      />
-      <Ionicons name="chevron-forward" size={16} color={tokens.text.dim} />
-    </Pressable>
-  );
-}
-
-interface QuickCompleteButtonProps {
-  /** Practice title — makes each button's a11y label unique so screen
-   *  readers can tell the rows apart. */
-  title: string;
-  /** Mutation in flight for this row — spinner + no taps. */
-  pending: boolean;
-  /** Brief post-success morph: green fill + check pop. */
-  success: boolean;
-  /** Archived task, active drag, or another row mid-mutation. */
-  disabled: boolean;
-  onPress: () => void;
-}
-
-/**
- * Compact circular check — TaskCard's violet check-button visual
- * language sized down for management rows. Lets the user log a
- * practice straight from the manage screen, including ones that
- * aren't scheduled for today. On success it morphs green and pops
- * for a beat before reverting.
- */
-function QuickCompleteButton({
-  title,
-  pending,
-  success,
-  disabled,
-  onPress,
-}: QuickCompleteButtonProps) {
-  const { t } = useT();
-  const scale = useSharedValue(1);
-
-  useEffect(() => {
-    if (success) {
-      scale.value = withSequence(
-        withSpring(1.18, tokens.motion.springBouncy),
-        withSpring(1, tokens.motion.springSnappy),
-      );
-    }
-  }, [success, scale]);
-
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  return (
-    <Animated.View style={animStyle}>
-      <Pressable
-        onPress={onPress}
-        disabled={disabled || pending}
-        hitSlop={8}
-        accessibilityRole="button"
-        accessibilityLabel={t('tasksHub.quickCompleteA11y', { title })}
-        style={({ pressed }) => [
-          styles.quickCompleteBtn,
-          success && styles.quickCompleteBtnSuccess,
-          pressed && styles.quickCompleteBtnPressed,
-        ]}
-      >
-        {!success && (
-          <LinearGradient
-            colors={tokens.gradient.taskCheckBtn}
-            locations={tokens.gradient.taskCheckBtnLocations}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-        )}
-        {pending ? (
-          <ActivityIndicator size="small" color="#fff" />
-        ) : (
-          <Ionicons name="checkmark" size={16} color="#fff" />
-        )}
-      </Pressable>
-    </Animated.View>
+      {busy ? (
+        <ActivityIndicator size="small" color={tokens.brand.violet2} />
+      ) : (
+        <>
+          <Pressable
+            onPress={onRestore}
+            hitSlop={8}
+            style={({ pressed }) => [styles.restoreBtn, pressed && { opacity: 0.7 }]}
+            accessibilityRole="button"
+            accessibilityLabel={t('tasksHub.archived.restoreA11y', { title: task.title })}
+          >
+            <Ionicons name="refresh" size={14} color={tokens.brand.violet2} />
+            <Text style={styles.restoreText}>{t('tasksHub.archived.restore')}</Text>
+          </Pressable>
+          <Pressable
+            onPress={onDelete}
+            hitSlop={8}
+            style={({ pressed }) => [styles.trashBtn, pressed && { opacity: 0.6 }]}
+            accessibilityRole="button"
+            accessibilityLabel={t('tasksHub.archived.deleteA11y', { title: task.title })}
+          >
+            <Ionicons name="trash-outline" size={18} color={tokens.semantic.danger} />
+          </Pressable>
+        </>
+      )}
+    </View>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Suggested: catalog browse, grouped by sub
+// Sugeridas — catalog browse: dimension chips → sub groups → template cards
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface SuggestedBodyProps {
   templatesBySub: Map<SubId, TaskTemplateWithSubs[]>;
   loading: boolean;
   query: string;
+  dimFilter: DimFilter;
+  onSelectDim: (d: DimFilter) => void;
   adoptedTemplateIds: Set<string>;
   collapsedSubs: Record<SubId, boolean>;
   onToggleSub: (s: SubId) => void;
-  onAdopt: (templateId: string) => void;
+  onAdopt: (template: TaskTemplateWithSubs) => void;
   /** Tap on the card body → task-form prefilled (adjust-then-add). */
   onCustomize: (template: TaskTemplateWithSubs) => void;
   adoptingId: string | null;
   /** Free-tier task slots — drives the Premium reinforcement line. */
   limit: EntityLimit;
-  t: (key: string, opts?: Record<string, string | number | undefined>) => string;
 }
-
-/** Subs in display order, grouped under their dim. */
-const ALL_SUBS_IN_ORDER: SubId[] = DIMENSION_ORDER.flatMap(
-  (d) => SUBS_BY_DIM[d],
-);
 
 function SuggestedBody({
   templatesBySub,
   loading,
   query,
+  dimFilter,
+  onSelectDim,
   adoptedTemplateIds,
   collapsedSubs,
   onToggleSub,
@@ -1385,9 +1200,10 @@ function SuggestedBody({
   onCustomize,
   adoptingId,
   limit,
-  t,
 }: SuggestedBodyProps) {
-  const meta = useMetaLookup();
+  const { t } = useT();
+  const lookup = useMetaLookup();
+
   if (loading) {
     return (
       <View style={styles.loadingBox}>
@@ -1395,161 +1211,225 @@ function SuggestedBody({
       </View>
     );
   }
+
   const subsWithTemplates = ALL_SUBS_IN_ORDER.filter(
     (s) => (templatesBySub.get(s)?.length ?? 0) > 0,
   );
-  if (subsWithTemplates.length === 0) {
-    return (
-      <View style={styles.emptyBox}>
-        <Ionicons name="search" size={32} color={tokens.text.dim} />
-        <Text style={styles.emptyTitle}>{t('tasksHub.empty.noMatchesTitle')}</Text>
-        <Text style={styles.emptySub}>
-          {t('tasksHub.empty.noMatchesCatalog', { query })}
-        </Text>
-      </View>
-    );
-  }
-
   const searching = query.trim().length > 0;
 
   return (
-    <View style={{ gap: tokens.space[3] }}>
+    <View style={styles.suggestedWrap}>
       {/* How-to hint + Premium reinforcement. Adjusting a suggestion
          forks it into the user's own task, which consumes the free-tier
          slots — surfacing that here is the (soft) Premium funnel. */}
       <View style={styles.suggestedHint}>
-        <Ionicons
-          name="color-wand-outline"
-          size={14}
-          color={tokens.text.mid}
-          style={{ marginTop: 1 }}
-        />
+        <Ionicons name="color-wand-outline" size={14} color={tokens.text.mid} style={{ marginTop: 1 }} />
         <View style={{ flex: 1, gap: 2 }}>
-          <Text style={styles.suggestedHintText}>
-            {t('tasksHub.suggested.hint')}
-          </Text>
+          <Text style={styles.suggestedHintText}>{t('tasksHub.suggested.hint')}</Text>
           {!limit.unlimited && (
             <Text style={styles.suggestedPremiumText}>
-              {t('tasksHub.suggested.premiumHint', {
-                count: limit.count,
-                limit: limit.limit,
-              })}
+              {t('tasksHub.suggested.premiumHint', { count: limit.count, limit: limit.limit })}
             </Text>
           )}
         </View>
       </View>
 
-      {subsWithTemplates.map((subId) => {
-        const subMeta = meta.sub(subId);
-        const dimMeta = meta.dim(subMeta.dimensionId);
-        const templates = templatesBySub.get(subId) ?? [];
-        // Search force-expands: collapsed groups would hide the matches
-        // the user just typed for.
-        const isCollapsed = searching ? false : !!collapsedSubs[subId];
-        return (
-          <View
-            key={subId}
-            style={[styles.groupCard, { borderColor: `${dimMeta.color}33` }]}
-          >
-            <Pressable
-              onPress={() => onToggleSub(subId)}
-              style={({ pressed }) => [
-                styles.groupHeader,
-                pressed && { opacity: 0.7 },
-              ]}
-            >
-              <View style={[styles.groupIcon, { backgroundColor: dimMeta.bg }]}>
-                <Ionicons
-                  name={subMeta.iconName as never}
-                  size={18}
-                  color={dimMeta.color}
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.groupTitle, { color: dimMeta.color }]}>
-                  {subMeta.label}
-                </Text>
-                <Text style={styles.groupSub}>
-                  {dimMeta.label.toUpperCase()}
-                </Text>
-              </View>
-              <Text style={styles.groupCount}>{templates.length}</Text>
-              <Ionicons
-                name={isCollapsed ? 'chevron-down' : 'chevron-up'}
-                size={16}
-                color={tokens.text.dim}
-              />
-            </Pressable>
+      {/* Dimension filter — "Todas" + the 6 dims in catalog order. Bleeds
+          to the screen edge (negative margin + inner padding) so chips
+          scroll out under the gutter instead of clipping at it. */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.dimChipsScroll}
+        contentContainerStyle={styles.dimChipsRow}
+        keyboardShouldPersistTaps="handled"
+      >
+        <DimChip
+          label={t('tasksHub.suggested.allDims')}
+          color={tokens.brand.violet2}
+          bg="rgba(155,130,255,0.16)"
+          selected={dimFilter === 'all'}
+          onPress={() => onSelectDim('all')}
+        />
+        {DIMENSION_ORDER.map((d) => {
+          const dm = lookup.dim(d);
+          return (
+            <DimChip
+              key={d}
+              label={dm.label}
+              color={dm.color}
+              bg={dm.bg}
+              selected={dimFilter === d}
+              onPress={() => onSelectDim(d)}
+            />
+          );
+        })}
+      </ScrollView>
 
-            {!isCollapsed && (
-              <View style={styles.groupBody}>
-                {templates.map((tmpl) => (
-                  <TemplateRow
-                    key={tmpl.id}
-                    template={tmpl}
-                    dimColor={dimMeta.color}
-                    isAdopted={adoptedTemplateIds.has(tmpl.id)}
-                    isAdopting={adoptingId === tmpl.id}
-                    onAdopt={() => onAdopt(tmpl.id)}
-                    onPress={() => onCustomize(tmpl)}
-                    t={t}
+      {subsWithTemplates.length === 0 ? (
+        <View style={styles.emptyBox}>
+          <Ionicons name="search" size={32} color={tokens.text.dim} />
+          <Text style={styles.emptyTitle}>{t('tasksHub.empty.noMatchesTitle')}</Text>
+          <Text style={styles.emptySub}>{t('tasksHub.empty.noMatchesCatalog', { query })}</Text>
+        </View>
+      ) : (
+        subsWithTemplates.map((subId) => {
+          const subMeta = lookup.sub(subId);
+          const dimMeta = lookup.dim(subMeta.dimensionId);
+          const list = templatesBySub.get(subId) ?? [];
+          // Same count the tab chip shows: what is still there to adopt.
+          const openCount = list.filter((tp) => !adoptedTemplateIds.has(tp.id)).length;
+          // A picked dimension or an active search force-expands: collapsed
+          // groups would hide exactly what the user just asked for. The
+          // header is then a plain label — toggling hidden state behind a
+          // forced-open group would only desync it for later.
+          const forcedOpen = searching || dimFilter !== 'all';
+          const isCollapsed = forcedOpen ? false : !!collapsedSubs[subId];
+          return (
+            <View key={subId} style={styles.subGroup}>
+              {/* No `disabled` on the forced-open case: RN folds it into the
+                  a11y state and screen readers would announce a "disabled
+                  header". onPress undefined + the opacity guard is enough. */}
+              <Pressable
+                onPress={forcedOpen ? undefined : () => onToggleSub(subId)}
+                style={({ pressed }) => [
+                  styles.bucketHeader,
+                  pressed && !forcedOpen && { opacity: 0.7 },
+                ]}
+                accessibilityRole={forcedOpen ? 'header' : 'button'}
+                accessibilityState={forcedOpen ? undefined : { expanded: !isCollapsed }}
+              >
+                <View style={[styles.bucketIcon, { backgroundColor: dimMeta.bg }]}>
+                  <Ionicons name={subMeta.iconName as never} size={16} color={dimMeta.color} />
+                </View>
+                <View style={styles.bucketTitleCol}>
+                  <Text style={[styles.bucketEyebrow, { color: dimMeta.color }]}>
+                    {subMeta.label.toUpperCase()}
+                  </Text>
+                  <Text style={styles.bucketDesc} numberOfLines={1}>
+                    {dimMeta.label}
+                  </Text>
+                </View>
+                <View style={[styles.countChip, { backgroundColor: dimMeta.bg }]}>
+                  <Text style={[styles.countChipText, { color: dimMeta.color }]}>{openCount}</Text>
+                </View>
+                {!forcedOpen && (
+                  <Ionicons
+                    name={isCollapsed ? 'chevron-down' : 'chevron-up'}
+                    size={16}
+                    color={tokens.text.dim}
                   />
-                ))}
-              </View>
-            )}
-          </View>
-        );
-      })}
+                )}
+              </Pressable>
+
+              {!isCollapsed && (
+                <View style={styles.subGroupBody}>
+                  {list.map((tmpl) => (
+                    <TemplateRow
+                      key={tmpl.id}
+                      template={tmpl}
+                      dimColor={dimMeta.color}
+                      dimBg={dimMeta.bg}
+                      iconName={subMeta.iconName}
+                      isAdopted={adoptedTemplateIds.has(tmpl.id)}
+                      isAdopting={adoptingId === tmpl.id}
+                      onAdopt={() => onAdopt(tmpl)}
+                      onPress={() => onCustomize(tmpl)}
+                    />
+                  ))}
+                </View>
+              )}
+            </View>
+          );
+        })
+      )}
     </View>
+  );
+}
+
+function DimChip({
+  label,
+  color,
+  bg,
+  selected,
+  onPress,
+}: {
+  label: string;
+  color: string;
+  bg: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      hitSlop={6}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      style={({ pressed }) => [
+        styles.dimChip,
+        selected
+          ? { backgroundColor: bg, borderColor: `${color}80` }
+          : { backgroundColor: 'transparent', borderColor: tokens.border.base },
+        pressed && { opacity: 0.7 },
+      ]}
+    >
+      <View style={[styles.dimChipDot, { backgroundColor: color, opacity: selected ? 1 : 0.6 }]} />
+      <Text
+        style={[
+          styles.dimChipText,
+          { color: selected ? color : tokens.text.mid },
+          selected && { fontFamily: 'Manrope_800ExtraBold' },
+        ]}
+      >
+        {label}
+      </Text>
+    </Pressable>
   );
 }
 
 interface TemplateRowProps {
   template: TaskTemplateWithSubs;
   dimColor: string;
+  dimBg: string;
+  iconName: string;
   isAdopted: boolean;
   isAdopting: boolean;
   onAdopt: () => void;
   /** Tap on the card body — open the prefilled form (adjust-then-add). */
   onPress: () => void;
-  t: (key: string, opts?: Record<string, string | number | undefined>) => string;
 }
 
 /**
- * Suggestion card in the Home TaskCard's visual vocabulary (icon tile,
- * accent left bar, SubStack + colored pips + reward), so a template
- * reads as "a task you don't have yet" instead of a distinct species.
- * The whole body is pressable → prefilled form; "Adotar" on the right
- * mirrors the Home card's check-button slot.
+ * Suggestion card in the TaskCard vocabulary (icon tile, accent left bar,
+ * SubStack + colored pips + reward), so a template reads as "a practice
+ * you don't have yet" instead of a distinct species. The whole body is
+ * pressable → prefilled form; the violet "+" on the right mirrors the
+ * Home card's check-button slot and adopts as-is.
  */
 function TemplateRow({
   template,
   dimColor,
+  dimBg,
+  iconName,
   isAdopted,
   isAdopting,
   onAdopt,
   onPress,
-  t,
 }: TemplateRowProps) {
+  const { t } = useT();
   const reward = rewardForTaskSubs(template.subs);
-  const primarySub = SUB_META[template.primary_sub_id];
-  const primaryDim = primarySub ? DIMENSION_META[primarySub.dimensionId] : null;
-  const pips: string[] = [];
-  for (const s of template.subs) {
-    const sm = SUB_META[s.sub_id];
-    const color = sm ? DIMENSION_META[sm.dimensionId].color : tokens.brand.violet2;
-    for (let i = 0; i < s.stars; i++) pips.push(color);
-  }
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [
         styles.templateCard,
         { borderLeftColor: dimColor },
+        isAdopted && styles.templateCardAdopted,
         pressed && { opacity: 0.85 },
       ]}
       accessibilityRole="button"
-      accessibilityHint={t('tasksHub.suggested.hint')}
+      accessibilityLabel={t('tasksHub.suggested.customizeA11y', { title: template.title })}
     >
       <LinearGradient
         colors={tokens.gradient.taskCard}
@@ -1560,81 +1440,59 @@ function TemplateRow({
         pointerEvents="none"
       />
 
-      <View
-        style={[
-          styles.templateIconTile,
-          { backgroundColor: primaryDim?.bg ?? tokens.bg.surface2 },
-        ]}
-      >
-        <Ionicons
-          name={(primarySub?.iconName ?? 'sparkles') as never}
-          size={18}
-          color={primaryDim?.color ?? tokens.brand.violet2}
-        />
+      <View style={[styles.subTile, { backgroundColor: dimBg }]}>
+        <Ionicons name={(template.icon ?? iconName) as never} size={17} color={dimColor} />
       </View>
 
-      <View style={styles.templateBody}>
-        <Text style={styles.taskTitle} numberOfLines={2}>
+      <View style={styles.rowBody}>
+        <Text style={styles.rowTitle} numberOfLines={2}>
           {template.title}
         </Text>
-        <View style={styles.taskMetaRow}>
+        {template.description ? (
+          <Text style={styles.templateDesc} numberOfLines={2}>
+            {template.description}
+          </Text>
+        ) : null}
+        <View style={styles.metaRow}>
           {template.subs.length > 0 && (
-            <SubStack
-              subIds={template.subs.map((s) => s.sub_id)}
-              max={3}
-              size={18}
-            />
+            <SubStack subIds={template.subs.map((s) => s.sub_id)} max={3} size={16} />
           )}
-          {pips.length > 0 && (
-            <View style={styles.pipsRow}>
-              {pips.map((color, i) => (
-                <View
-                  key={i}
-                  style={[styles.pip, { backgroundColor: color }]}
-                />
-              ))}
-            </View>
-          )}
+          <SubColoredPips subs={template.subs} size={5} />
           <Text style={styles.rewardValue}>+{reward.total.xp}</Text>
-          <View style={styles.coinChip}>
-            <Ionicons name="ellipse" size={8} color={tokens.semantic.coin} />
-            <Text style={styles.coinChipText}>+{reward.total.coins}</Text>
-          </View>
-          <Text style={styles.taskRecurrence} numberOfLines={1}>
-            {describeRecurrence(template.recurrence, template.target_count)}
+          <Text style={styles.templateRecurrence} numberOfLines={1}>
+            · {describeRecurrence(template.recurrence, template.target_count, t)}
           </Text>
         </View>
       </View>
 
-      <Pressable
-        onPress={isAdopted || isAdopting ? undefined : onAdopt}
-        disabled={isAdopted || isAdopting}
-        style={({ pressed }) => [
-          styles.adoptBtn,
-          isAdopted && styles.adoptBtnDone,
-          !isAdopted && { borderColor: dimColor },
-          pressed && !isAdopted && { opacity: 0.7 },
-        ]}
-        hitSlop={6}
-      >
-        {isAdopting ? (
-          <ActivityIndicator size="small" color={dimColor} />
-        ) : isAdopted ? (
-          <>
-            <Ionicons name="checkmark" size={14} color={tokens.text.dim} />
-            <Text style={styles.adoptBtnTextDone}>
-              {t('tasksHub.adopt.added')}
-            </Text>
-          </>
-        ) : (
-          <>
-            <Ionicons name="add" size={14} color={dimColor} />
-            <Text style={[styles.adoptBtnText, { color: dimColor }]}>
-              {t('tasksHub.adopt.adopt')}
-            </Text>
-          </>
-        )}
-      </Pressable>
+      {isAdopted ? (
+        <View style={styles.adoptedPill}>
+          <Ionicons name="checkmark" size={13} color={tokens.semantic.xp} />
+          <Text style={styles.adoptedPillText}>{t('tasksHub.adopt.added')}</Text>
+        </View>
+      ) : (
+        <Pressable
+          onPress={isAdopting ? undefined : onAdopt}
+          disabled={isAdopting}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={t('tasksHub.adopt.adoptA11y', { title: template.title })}
+          style={({ pressed }) => [styles.adoptBtn, pressed && styles.adoptBtnPressed]}
+        >
+          <LinearGradient
+            colors={tokens.gradient.taskCheckBtn}
+            locations={tokens.gradient.taskCheckBtnLocations}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+          {isAdopting ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Ionicons name="add" size={20} color="#fff" />
+          )}
+        </Pressable>
+      )}
     </Pressable>
   );
 }
@@ -1674,14 +1532,6 @@ const styles = StyleSheet.create({
     ...tokens.type.h3,
     color: tokens.text.hi,
   },
-  content: {
-    paddingHorizontal: tokens.space[4],
-    paddingBottom: tokens.space[10],
-  },
-  tabsWrap: {
-    marginTop: tokens.space[2],
-    paddingHorizontal: tokens.space[4],
-  },
   searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1698,326 +1548,291 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     color: tokens.text.hi,
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 14,
+    ...tokens.type.body,
+    paddingVertical: 0,
   },
-  bodyWrap: {
-    marginTop: tokens.space[4],
-  },
-  dragListContent: {
+  content: {
     paddingHorizontal: tokens.space[4],
-    paddingBottom: tokens.space[10],
-    gap: 4,
+    paddingTop: tokens.space[3],
   },
-  // Wrap the draggable row in a small left-indent so it sits visually
-  // INSIDE the bucket section above. Without this the row is flush
-  // with the bucket header which makes them look detached.
-  allocatedRowWrap: {
-    paddingLeft: 4,
+  listContent: {
+    paddingHorizontal: tokens.space[4],
+    paddingTop: tokens.space[3],
   },
-  allocatedBucketBody: {
-    paddingHorizontal: tokens.space[3],
-    paddingVertical: tokens.space[2],
-  },
-  dragRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[2],
-    paddingVertical: tokens.space[3],
-    paddingHorizontal: tokens.space[3],
-    backgroundColor: tokens.bg.surface,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-    borderRadius: tokens.radius.lg,
-  },
-  dragRowActive: {
-    backgroundColor: tokens.bg.surface2,
-    borderColor: tokens.brand.violetGlow,
-    transform: [{ scale: 1.02 }],
+  lead: {
+    ...tokens.type.caption,
+    color: tokens.text.dim,
+    paddingBottom: tokens.space[1],
   },
   loadingBox: {
-    paddingVertical: tokens.space[8],
+    paddingVertical: tokens.space[10],
     alignItems: 'center',
   },
-  emptyBox: {
-    paddingVertical: tokens.space[8],
-    alignItems: 'center',
-    gap: tokens.space[2],
-  },
-  emptyTitle: {
-    ...tokens.type.h3,
-    color: tokens.text.hi,
-    marginTop: tokens.space[2],
-  },
-  emptySub: {
-    ...tokens.type.body,
-    color: tokens.text.mid,
-    textAlign: 'center',
-    paddingHorizontal: tokens.space[6],
-  },
-  emptyCta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: tokens.space[4],
-    paddingVertical: tokens.space[3],
-    borderRadius: tokens.radius.md,
-    backgroundColor: tokens.brand.violet,
-    marginTop: tokens.space[3],
-  },
-  emptyCtaText: {
-    ...tokens.type.body,
-    color: tokens.text.hi,
-    fontFamily: 'Manrope_700Bold',
-  },
-  groupCard: {
-    backgroundColor: tokens.bg.surface,
-    borderRadius: tokens.radius.lg,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  bucketAccentBar: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 4,
-    borderTopLeftRadius: tokens.radius.lg,
-    borderBottomLeftRadius: tokens.radius.lg,
-  },
-  groupHeader: {
+
+  // ── Group headers (Minhas buckets · Arquivadas · Sugeridas subs) ──────
+  bucketHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[3],
-    paddingHorizontal: tokens.space[4],
-    paddingVertical: tokens.space[3],
-  },
-  bucketHeader: {
-    paddingLeft: tokens.space[4] + 8,
-    paddingVertical: tokens.space[4],
-  },
-  groupIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: tokens.radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(123,92,255,0.18)',
+    paddingTop: tokens.space[4],
+    paddingBottom: tokens.space[2],
   },
   bucketIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: tokens.radius.md,
+    width: 30,
+    height: 30,
+    borderRadius: 9,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
   },
   bucketTitleCol: {
     flex: 1,
-    gap: 2,
+    minWidth: 0,
+    gap: 1,
   },
   bucketEyebrow: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 18,
-    letterSpacing: 0.6,
+    fontSize: 11,
+    letterSpacing: 1.2,
   },
   bucketDesc: {
     fontFamily: 'Manrope_500Medium',
     fontSize: 11,
     color: tokens.text.dim,
-    letterSpacing: 0.2,
   },
-  bucketCountChip: {
-    minWidth: 30,
-    paddingHorizontal: 9,
-    paddingVertical: 3,
-    borderRadius: 999,
-    borderWidth: 1,
+  countChip: {
+    minWidth: 24,
+    height: 20,
+    paddingHorizontal: 7,
+    borderRadius: tokens.radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  bucketCountText: {
+  countChipText: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 13,
+    fontSize: 10,
     letterSpacing: 0.3,
   },
-  groupTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 17,
-    color: tokens.text.hi,
-    letterSpacing: 0.2,
+  bucketEmptyCard: {
+    borderRadius: 14,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: tokens.border.strong,
+    paddingVertical: tokens.space[3],
+    paddingHorizontal: tokens.space[4],
+    marginBottom: tokens.space[2],
   },
-  groupSub: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 11,
-    color: tokens.text.dim,
-    marginTop: 2,
-    letterSpacing: 0.3,
-  },
-  groupCount: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 13,
-    color: tokens.text.dim,
-  },
-  groupBody: {
-    paddingHorizontal: tokens.space[3],
-    paddingTop: tokens.space[3],
-    paddingBottom: tokens.space[3],
-    gap: tokens.space[2],
-    borderTopWidth: 1,
-    borderTopColor: tokens.border.divider,
-  },
-  bucketEmpty: {
+  bucketEmptyText: {
     ...tokens.type.caption,
     color: tokens.text.dim,
-    fontStyle: 'italic',
-    paddingVertical: tokens.space[3],
     textAlign: 'center',
   },
-  taskRow: {
+
+  // ── Manage row ────────────────────────────────────────────────────────
+  rowWrap: {
+    marginBottom: tokens.space[2],
+  },
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: tokens.space[3],
-    paddingVertical: tokens.space[3],
-  },
-  taskRowDivider: {
-    borderTopWidth: 1,
-    borderTopColor: tokens.border.divider,
-  },
-  taskRowSuccess: {
-    backgroundColor: 'rgba(61,214,140,0.08)',
-    borderRadius: tokens.radius.sm,
-  },
-  quickCompleteBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(155,130,255,0.55)',
-  },
-  quickCompleteBtnSuccess: {
-    backgroundColor: tokens.semantic.xp,
-    borderColor: 'rgba(61,214,140,0.7)',
-  },
-  quickCompleteBtnPressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.9 }],
-  },
-  subDot: {
-    width: 32,
-    height: 32,
-    borderRadius: tokens.radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  taskBody: {
-    flex: 1,
-    minWidth: 0,
-    gap: 4,
-  },
-  taskTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    flexWrap: 'wrap',
-  },
-  taskTitle: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 14,
-    color: tokens.text.hi,
-    flexShrink: 1,
-  },
-  customChip: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: tokens.radius.pill,
-    backgroundColor: 'rgba(123,92,255,0.18)',
-    borderWidth: 1,
-    borderColor: 'rgba(123,92,255,0.4)',
-  },
-  customChipText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 8,
-    color: tokens.brand.violet2,
-    letterSpacing: 0.6,
-  },
-  taskMetaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[3],
-    flexWrap: 'wrap',
-  },
-  taskRecurrence: {
-    ...tokens.type.caption,
-    color: tokens.text.dim,
-    fontStyle: 'italic',
-    flexShrink: 1,
-  },
-  pipsRow: {
-    flexDirection: 'row',
-    gap: 2,
-  },
-  pip: {
-    width: 5,
-    height: 5,
-    borderRadius: 1,
-  },
-  rewardValue: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 13,
-    color: tokens.semantic.xp,
-    letterSpacing: 0.2,
-  },
-  coinChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  coinChipText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 11,
-    color: tokens.semantic.coin,
-    letterSpacing: 0.2,
-  },
-  // Suggestion card — mirrors the Home TaskCard container (gradient bg,
-  // dim accent bar, icon tile) so templates read as tasks-to-be.
-  templateCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[3],
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    paddingLeft: 16,
+    gap: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    paddingLeft: 10,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: tokens.border.base,
     borderTopColor: 'rgba(255,255,255,0.04)',
     borderLeftWidth: 3,
     overflow: 'hidden',
-    position: 'relative',
   },
-  templateIconTile: {
-    width: 36,
-    height: 36,
+  rowActive: {
+    borderColor: tokens.brand.violet2,
+    backgroundColor: 'rgba(155,130,255,0.10)',
+  },
+  subTile: {
+    width: 34,
+    height: 34,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
-  templateBody: {
+  subTileArchived: {
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  rowBody: {
     flex: 1,
     minWidth: 0,
-    gap: 5,
+    gap: 4,
+  },
+  rowTitle: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 14,
+    lineHeight: 18,
+    color: tokens.text.hi,
+    flexShrink: 1,
+  },
+  customChip: {
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+  },
+  customChipText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 8,
+    letterSpacing: 0.8,
+    color: tokens.text.dim,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    flexWrap: 'wrap',
+  },
+  rewardValue: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 11,
+    color: tokens.semantic.xp,
+    letterSpacing: 0.2,
+  },
+  coinTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  coinTagText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 11,
+    color: tokens.text.mid,
+    letterSpacing: 0.2,
+  },
+  // 32 + hitSlop 8 = 48dp, the adopt "+" / rewards-manage icon-button size.
+  periodChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    maxWidth: 124,
+    minHeight: 32,
+    paddingLeft: 9,
+    paddingRight: 6,
+    borderRadius: tokens.radius.pill,
+    borderWidth: 1,
+    flexShrink: 0,
+  },
+  periodChipText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 11,
+    letterSpacing: 0.2,
+    color: tokens.text.hi,
+    flexShrink: 1,
+  },
+
+  // ── Footer: archived + add ────────────────────────────────────────────
+  footer: {
+    gap: tokens.space[3],
+    marginTop: tokens.space[2],
+  },
+  archivedBlock: {
+    gap: 0,
+  },
+  archivedList: {
+    gap: tokens.space[2],
+  },
+  archivedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+    backgroundColor: 'rgba(255,255,255,0.02)',
+  },
+  archivedMeta: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 11,
+    color: tokens.text.dim,
+  },
+  restoreBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: tokens.radius.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(155,130,255,0.35)',
+    backgroundColor: 'rgba(155,130,255,0.1)',
+  },
+  restoreText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 11,
+    color: tokens.brand.violet2,
+    letterSpacing: 0.3,
+  },
+  trashBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // ── Empty states ──────────────────────────────────────────────────────
+  emptyBox: {
+    paddingVertical: tokens.space[8],
+    alignItems: 'center',
+    gap: tokens.space[3],
+    paddingHorizontal: tokens.space[5],
+  },
+  emptyTitle: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 16,
+    color: tokens.text.hi,
+    textAlign: 'center',
+  },
+  emptySub: {
+    ...tokens.type.body,
+    color: tokens.text.mid,
+    textAlign: 'center',
+  },
+  emptyCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[2],
+    paddingHorizontal: tokens.space[4],
+    paddingVertical: tokens.space[3],
+    backgroundColor: tokens.bg.surface,
+    borderRadius: tokens.radius.lg,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+    marginTop: tokens.space[2],
+  },
+  emptyCtaText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 14,
+    color: tokens.text.hi,
+  },
+
+  // ── Sugeridas ─────────────────────────────────────────────────────────
+  suggestedWrap: {
+    gap: tokens.space[1],
   },
   suggestedHint: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 8,
-    paddingHorizontal: tokens.space[1],
+    paddingHorizontal: tokens.space[3],
+    paddingVertical: tokens.space[3],
+    borderRadius: tokens.radius.md,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+    marginBottom: tokens.space[2],
   },
   suggestedHintText: {
     ...tokens.type.caption,
@@ -2026,33 +1841,103 @@ const styles = StyleSheet.create({
   suggestedPremiumText: {
     fontFamily: 'Manrope_700Bold',
     fontSize: 11,
-    color: tokens.semantic.coinLight,
+    lineHeight: 15,
+    color: tokens.brand.violet2,
+  },
+  dimChipsScroll: {
+    marginHorizontal: -tokens.space[4],
+    flexGrow: 0,
+  },
+  dimChipsRow: {
+    flexDirection: 'row',
+    gap: tokens.space[2],
+    paddingVertical: tokens.space[1],
+    paddingHorizontal: tokens.space[4],
+  },
+  dimChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    height: 32,
+    borderRadius: tokens.radius.pill,
+    borderWidth: 1,
+  },
+  dimChipDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  dimChipText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 12,
     letterSpacing: 0.2,
   },
+  subGroup: {
+    gap: 0,
+  },
+  subGroupBody: {
+    gap: tokens.space[2],
+  },
+  templateCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+    borderTopColor: 'rgba(255,255,255,0.04)',
+    borderLeftWidth: 3,
+    overflow: 'hidden',
+  },
+  templateCardAdopted: {
+    opacity: 0.6,
+  },
+  templateDesc: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 11,
+    lineHeight: 15,
+    color: tokens.text.mid,
+  },
+  templateRecurrence: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 10,
+    color: tokens.text.faint,
+    fontStyle: 'italic',
+    flexShrink: 1,
+  },
   adoptBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(155,130,255,0.55)',
+    flexShrink: 0,
+  },
+  adoptBtnPressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.92 }],
+  },
+  adoptedPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: tokens.space[3],
-    paddingVertical: tokens.space[2],
+    paddingHorizontal: 9,
+    height: 28,
     borderRadius: tokens.radius.pill,
     borderWidth: 1,
-    minWidth: 78,
-    justifyContent: 'center',
+    borderColor: 'rgba(61,214,140,0.35)',
+    backgroundColor: 'rgba(61,214,140,0.10)',
+    flexShrink: 0,
   },
-  adoptBtnDone: {
-    borderColor: tokens.border.base,
-    backgroundColor: tokens.bg.base,
-  },
-  adoptBtnText: {
+  adoptedPillText: {
     fontFamily: 'Manrope_700Bold',
     fontSize: 11,
-    letterSpacing: 0.4,
-  },
-  adoptBtnTextDone: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
-    color: tokens.text.dim,
-    letterSpacing: 0.4,
+    color: tokens.semantic.xp,
   },
 });

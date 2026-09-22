@@ -41,6 +41,7 @@ import { isEffectivelyDaily } from '@/lib/recurrence';
 import { useLoadedSettings } from '@/lib/settings';
 import { formatLongDate } from '@/lib/time';
 import { compareOneShotsByFreshness, isInTrophyWindow } from '@/lib/trophy';
+import { usePullToRefresh } from '@/lib/usePullToRefresh';
 import { rewardForTaskSubs } from '@/lib/xp';
 import { tokens } from '@/theme';
 
@@ -189,10 +190,11 @@ export default function AllPracticesScreen() {
     });
   };
 
-  const handleRefresh = async () => {
-    await Promise.all([tasks.refetch(), dayDetail.refetch()]);
-  };
-  const isRefreshing = tasks.isRefetching || dayDetail.isRefetching;
+  // Pull indicator is local state — the queries' isRefetching also flips on
+  // every background refetch (completions, app foreground).
+  const { refreshing: isRefreshing, onRefresh: handleRefresh } = usePullToRefresh(() =>
+    Promise.all([tasks.refetch(), dayDetail.refetch()]),
+  );
 
   // Completed on the SELECTED day — hide from the active lists (they move
   // to the drawer).

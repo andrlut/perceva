@@ -30,6 +30,7 @@ import {
   useIsCurrentTourModule,
   useTourStore,
 } from '@/lib/tour/store';
+import { usePullToRefresh } from '@/lib/usePullToRefresh';
 import { tokens } from '@/theme';
 
 /**
@@ -52,6 +53,16 @@ export default function CharacterScreen() {
   // while the module is off (CaminhoPanel hides the section too).
   const skillsOn = useModuleEnabled('skills');
   const skillStates = useSkillStates({ enabled: skillsOn });
+  // Pull indicator is local state — the queries' isRefetching also flips on
+  // every background refetch (mutations, app foreground). Declared up here,
+  // before the loading / error early returns below.
+  const pull = usePullToRefresh(() =>
+    Promise.all([
+      character.refetch(),
+      // refetch() bypasses `enabled` — keep the module gate.
+      ...(skillsOn ? [skillStates.refetch()] : []),
+    ]),
+  );
   const params = useLocalSearchParams<{ pillar?: PillarKey }>();
 
   const [activePillar, setActivePillar] = useState<PillarKey>(
@@ -172,12 +183,8 @@ export default function CharacterScreen() {
           }}
           refreshControl={
             <RefreshControl
-              refreshing={character.isRefetching || skillStates.isRefetching}
-              onRefresh={() => {
-                character.refetch();
-                // refetch() bypasses `enabled` — keep the module gate.
-                if (skillsOn) skillStates.refetch();
-              }}
+              refreshing={pull.refreshing}
+              onRefresh={pull.onRefresh}
               tintColor={tokens.brand.violet2}
             />
           }
