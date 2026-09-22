@@ -90,13 +90,19 @@ título e verso que se explicam sozinhos, imagem que não engana, e o trio
 entregando o assunto junto):
 
 > **Vídeos e deep dives ficam.** São caros de gerar (fora daqui, no
-> Notebook) e o mantenedor decidiu mantê-los mesmo quando o texto muda —
-> marcados como gerados antes da revisão. **Pendente antes do primeiro
-> re-corte:** o `emit-migration.mjs` hoje grava `video: {pt: null, en:
-> null}` quando não recebe `--videos`, o que APAGARIA os vídeos das ideias
-> que sobrevivem. Até o merge que preserva e marca (`video.<loc>` herdado
-> por `id` + marca de texto revisado; `learning_material_media.meta` do
-> deep dive idem), não rode o passo 6 num material que já tem vídeo.
+> Notebook) e o mantenedor decidiu mantê-los mesmo quando o texto muda.
+> O `emit-migration.mjs` herda o `video` de cada ideia que sobrevive
+> (mesmo `id`) direto da linha atual do banco e, se título, verso ou texto
+> mudaram, marca cada lado herdado com `text_revised_at` — o vídeo foi
+> gerado antes da revisão. O deep dive é do material inteiro e não é
+> tocado. Primeiro uso: 2026-09-22 (30g, solidão, bids, deep work).
+>
+> **Imagens que não mudaram ficam.** O nome do arquivo é o hash de id +
+> `image_prompt`: se o art-director mantiver o prompt palavra por palavra,
+> a imagem aprovada continua. Pra gerar só as que mudaram, use
+> `generate.mjs --only ideas --idea <id>` — mas o manifest precisa ter as
+> que ficaram, com o arquivo na pasta do drop (baixe do bucket), senão o
+> merge do manifest descarta e a migration publica essa ideia sem imagem.
 
 1. **Cortar**: dispare `learning-idea-cutter` com o slug. Ele lê o material do
    banco (Management API, User-Agent de CLI), deriva 1–5 ideias sem fato novo
