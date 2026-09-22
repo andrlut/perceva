@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useMemo } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import type { LearningFeedCard } from '@/lib/api/learning';
 import type { DimensionId, LearningMaterialCategory, SubId } from '@/lib/db/types';
@@ -53,6 +53,9 @@ interface Props {
   onFilterChange: (next: PillFilter) => void;
   readFilter: ReadFilter;
   onReadFilterChange: (next: ReadFilter) => void;
+  /** Free-text search, applied by the tab over titles, summaries and ideas. */
+  query: string;
+  onQueryChange: (next: string) => void;
 }
 
 function categoryLabel(category: LearningMaterialCategory, t: Translator): string {
@@ -72,6 +75,8 @@ export function LearningFilterSheet({
   onFilterChange,
   readFilter,
   onReadFilterChange,
+  query,
+  onQueryChange,
 }: Props) {
   const { t } = useT();
   const meta = useMetaLookup();
@@ -154,6 +159,37 @@ export function LearningFilterSheet({
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.body}>
+            {/* Search — first, because it is how you find a material you
+               already know by name; the counters below are for browsing. */}
+            <Text style={styles.section}>{t('learning.search.section')}</Text>
+            <View style={styles.searchRow}>
+              <Ionicons name="search" size={16} color={tokens.text.mid} />
+              <TextInput
+                id="learning-search"
+                style={styles.searchInput}
+                value={query}
+                onChangeText={onQueryChange}
+                placeholder={t('learning.search.placeholder')}
+                placeholderTextColor={tokens.text.mid}
+                autoCorrect={false}
+                autoCapitalize="none"
+                returnKeyType="search"
+                onSubmitEditing={onClose}
+                accessibilityLabel={t('learning.search.section')}
+              />
+              {query.length > 0 && (
+                <Pressable
+                  onPress={() => onQueryChange('')}
+                  hitSlop={10}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('learning.search.clear')}
+                  style={({ pressed }) => pressed && { opacity: 0.6 }}
+                >
+                  <Ionicons name="close-circle" size={18} color={tokens.text.mid} />
+                </Pressable>
+              )}
+            </View>
+
             {/* Read-state row — same pill vocabulary as the type row */}
             <Text style={styles.section}>{t('learning.filter.state')}</Text>
             <View style={styles.typeRow}>
@@ -358,6 +394,25 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: tokens.space[3],
     marginBottom: tokens.space[3],
+  },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[2],
+    paddingHorizontal: tokens.space[3],
+    paddingVertical: tokens.space[2],
+    borderRadius: tokens.radius.md,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+    backgroundColor: tokens.bg.surface2,
+  },
+  searchInput: {
+    flex: 1,
+    minHeight: 24,
+    paddingVertical: 0,
+    color: tokens.text.hi,
+    fontFamily: tokens.type.body.fontFamily,
+    fontSize: tokens.type.body.fontSize,
   },
   title: {
     ...tokens.type.h2,

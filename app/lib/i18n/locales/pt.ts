@@ -708,6 +708,13 @@ const pt: Translations = {
       state: 'Estado',
       clear: 'Limpar filtro',
     },
+    search: {
+      section: 'Buscar',
+      placeholder: 'Palavra do título, do tema ou de uma ideia',
+      clear: 'Limpar busca',
+      chip: 'Busca: {{q}}',
+      empty: 'Nada encontrado para “{{q}}”.',
+    },
     detail: {
       source: 'Fonte',
       takeaways: 'O que levar daqui',
