@@ -149,7 +149,6 @@ const en = {
   // side), not here.
   iconPicker: {
     searchPlaceholder: 'Search icons… cigarette, phone, balance',
-    suggested: 'Suggested',
     all: 'All',
     auto: 'Automatic',
     noResults: 'No icon for "{{query}}".',

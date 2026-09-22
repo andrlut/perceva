@@ -26,7 +26,7 @@ import {
 } from '@/lib/icons/catalog';
 import { tokens } from '@/theme';
 
-type Chip = 'suggested' | 'all' | IconCategoryId;
+type Chip = 'all' | IconCategoryId;
 
 interface Props {
   visible: boolean;
@@ -40,15 +40,9 @@ interface Props {
   accentColor: string;
   accentBg: string;
   /**
-   * Context shortlist, shown under the first chip ("Sugeridos"): the sub
-   * defaults for a practice, the classic reward set, and so on. Optional;
-   * the catalog is the same everywhere.
-   */
-  suggested?: readonly string[];
-  /**
-   * When set, an "Auto" cell leads the Suggested section rendering this
-   * icon; tapping it maps to `onSelect(null)` (clear the override,
-   * inherit at render time).
+   * When set, an "Auto" cell sits above the grid rendering this icon;
+   * tapping it maps to `onSelect(null)` (clear the override, inherit at
+   * render time).
    */
   autoIcon?: string;
   autoA11yLabel?: string;
@@ -57,9 +51,9 @@ interface Props {
 /**
  * The ONE icon picker — práticas, recompensas and habilidades all open
  * this. Search across two families (Ionicons + MaterialCommunityIcons,
- * see lib/icons), category chips, and a context "Sugeridos" shortlist so
- * the common case is still one tap. One tap = select + close; scrim tap
- * or Android back closes without changing the selection.
+ * see lib/icons) and category chips; opens on "Todos" with the whole
+ * catalog in sections. One tap = select + close; scrim tap or Android
+ * back closes without changing the selection.
  */
 export function IconPickerModal({
   visible,
@@ -69,7 +63,6 @@ export function IconPickerModal({
   onClose,
   accentColor,
   accentBg,
-  suggested,
   autoIcon,
   autoA11yLabel,
 }: Props) {
@@ -81,17 +74,16 @@ export function IconPickerModal({
   // (CalendarFilterSheet learned this first). Lift the sheet by the overlap
   // and keep it from growing past the top.
   const lift = useKeyboardOverlap();
-  const hasSuggested = (suggested?.length ?? 0) > 0 || autoIcon != null;
-  const [chip, setChip] = useState<Chip>(hasSuggested ? 'suggested' : 'all');
+  const [chip, setChip] = useState<Chip>('all');
   const [query, setQuery] = useState('');
 
   // Fresh sheet every time it opens: the search cleared, the chip back on
-  // the shortlist. Half-typed searches never leak into the next open.
+  // "Todos". Half-typed searches never leak into the next open.
   useEffect(() => {
     if (!visible) return;
     setQuery('');
-    setChip(hasSuggested ? 'suggested' : 'all');
-  }, [visible, hasSuggested]);
+    setChip('all');
+  }, [visible]);
 
   const q = normalizeSearch(query);
   const results = useMemo<IconEntry[] | null>(
@@ -126,33 +118,9 @@ export function IconPickerModal({
       );
     };
 
-    const autoCell =
-      autoIcon != null ? (
-        <Pressable
-          key="__auto"
-          onPress={() => pick(null)}
-          style={[styles.cell, styles.cellAuto, value === null && selectedStyle]}
-          accessibilityRole="button"
-          accessibilityState={{ selected: value === null }}
-          accessibilityLabel={autoA11yLabel ?? t('iconPicker.auto')}
-        >
-          <AppIcon name={autoIcon} size={22} color={value === null ? accentColor : tokens.text.mid} />
-          {/* Label stays neutral text: the accent over its own wash misses AA
-              on the violet domain (4.1:1); the border + icon carry the state. */}
-          <Text style={[styles.cellAutoText, value === null && { color: tokens.text.hi }]}>
-            {t('iconPicker.auto')}
-          </Text>
-        </Pressable>
-      ) : null;
-
     const out: { key: string; label?: string; nodes: ReactNode[] }[] = [];
     if (results) {
       out.push({ key: 'search', nodes: results.map((e) => renderCell(e.id)) });
-    } else if (chip === 'suggested') {
-      const nodes: ReactNode[] = [];
-      if (autoCell) nodes.push(autoCell);
-      (suggested ?? []).forEach((id) => nodes.push(renderCell(id)));
-      out.push({ key: 'suggested', nodes });
     } else if (chip === 'all') {
       for (const cat of ICON_CATEGORIES) {
         out.push({
@@ -168,10 +136,29 @@ export function IconPickerModal({
     return out;
     // `pick` closes over onSelect/onClose props; listing those is enough.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [results, chip, suggested, autoIcon, autoA11yLabel, value, locale, accentColor, accentBg, t, onSelect, onClose]);
+  }, [results, chip, value, locale, accentColor, accentBg, t, onSelect, onClose]);
+
+  // "Automático" sits above the grid, whatever chip is on, so clearing the
+  // override is always one tap away; it steps aside while searching.
+  const autoCell =
+    autoIcon != null && !results ? (
+      <Pressable
+        onPress={() => pick(null)}
+        style={[styles.cell, styles.cellAuto, value === null && selectedStyle]}
+        accessibilityRole="button"
+        accessibilityState={{ selected: value === null }}
+        accessibilityLabel={autoA11yLabel ?? t('iconPicker.auto')}
+      >
+        <AppIcon name={autoIcon} size={22} color={value === null ? accentColor : tokens.text.mid} />
+        {/* Label stays neutral text: the accent over its own wash misses AA
+            on the violet domain (4.1:1); the border + icon carry the state. */}
+        <Text style={[styles.cellAutoText, value === null && { color: tokens.text.hi }]}>
+          {t('iconPicker.auto')}
+        </Text>
+      </Pressable>
+    ) : null;
 
   const chips: { id: Chip; label: string; icon?: string }[] = [
-    ...(hasSuggested ? [{ id: 'suggested' as const, label: t('iconPicker.suggested'), icon: 'sparkles' }] : []),
     { id: 'all', label: t('iconPicker.all') },
     ...ICON_CATEGORIES.map((c) => ({
       id: c.id,
@@ -299,6 +286,7 @@ export function IconPickerModal({
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"
           >
+            {autoCell ? <View style={styles.grid}>{autoCell}</View> : null}
             {results && results.length === 0 ? (
               <Text style={styles.empty}>{t('iconPicker.noResults', { query: query.trim() })}</Text>
             ) : (
@@ -388,8 +376,14 @@ const styles = StyleSheet.create({
     ...tokens.type.body,
     paddingVertical: 0,
   },
+  // A ScrollView defaults to flexShrink 1; with the whole catalog below,
+  // the sheet's column would take the overflow out of THIS row too and
+  // clip the chips. Fixed height + no shrink: the body is the only thing
+  // that gives.
   chipsScroll: {
     flexGrow: 0,
+    flexShrink: 0,
+    height: 36,
     marginHorizontal: -tokens.space[4],
     marginTop: tokens.space[3],
   },
@@ -414,6 +408,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   body: {
+    flexGrow: 0,
+    flexShrink: 1,
     marginTop: tokens.space[3],
   },
   bodyContent: {
