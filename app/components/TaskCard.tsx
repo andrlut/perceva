@@ -45,13 +45,6 @@ interface Props {
    * button continues to fire `onComplete` (quick-complete with defaults).
    */
   onSwipeComplete?: () => void;
-  /**
-   * Trophy state — render the card dimmed and with a check overlay on
-   * the icon tile. Used for one-shots that have been completed in the
-   * recent past but stay visible in the Pontual bucket as a "marco".
-   * Tapping a dimmed card still works (logs another completion).
-   */
-  dimmed?: boolean;
   isCompleting?: boolean;
 }
 
@@ -87,7 +80,6 @@ export function TaskCard({
   onEdit,
   onSkip,
   onSwipeComplete,
-  dimmed = false,
   isCompleting,
 }: Props) {
   const { t } = useT();
@@ -255,7 +247,6 @@ export function TaskCard({
             styles.container,
             cardAnimStyle,
             { borderLeftColor: accent },
-            dimmed && styles.containerDimmed,
           ]}
         >
           {/* Gradient surface fill — sits under all content. */}
@@ -268,17 +259,8 @@ export function TaskCard({
             pointerEvents="none"
           />
 
-          {/* Sub icon tile — colored by the task's primary dimension.
-              When dimmed, overlay a small check badge in the corner
-              so the user reads "done recently" at a glance. */}
-          <View>
-            <SubIconTile task={task} />
-            {dimmed && (
-              <View style={styles.trophyBadge}>
-                <Ionicons name="checkmark" size={10} color="#fff" />
-              </View>
-            )}
-          </View>
+          {/* Sub icon tile — colored by the task's primary dimension. */}
+          <SubIconTile task={task} />
 
           <Pressable
             style={({ pressed }) => [
@@ -440,25 +422,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  containerDimmed: {
-    opacity: 0.55,
-  },
-  // Tiny green check badge anchored to the icon tile when the card is
-  // in trophy state — visual cue that "this one-shot was completed
-  // recently, but it's still tappable if you want to log it again".
-  trophyBadge: {
-    position: 'absolute',
-    top: -3,
-    right: -3,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: tokens.semantic.xp,
-    borderWidth: 2,
-    borderColor: tokens.bg.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },

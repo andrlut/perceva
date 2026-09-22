@@ -173,7 +173,6 @@ const TAGS_MAX = 12;
 //
 // target_count plays no part: ONE completion closes the practice for the day.
 type Recurrence =
-  | { type: 'one_shot' }
   | { type: 'daily' }
   | { type: 'weekly'; days?: number[] }
   | { type: 'monthly'; day?: number };
@@ -181,7 +180,9 @@ type Recurrence =
 function parseRecurrence(raw: unknown): Recurrence {
   if (raw && typeof raw === 'object' && 'type' in raw) {
     const r = raw as { type: string; days?: number[]; day?: number };
-    if (r.type === 'one_shot') return { type: 'one_shot' };
+    // The one_shot type was retired on 2026-09-22 (migration 20260922000005
+    // rewrote every row); a stray value reads as flex weekly, like the app.
+    if (r.type === 'one_shot') return { type: 'weekly' };
     if (r.type === 'weekly') {
       const days = Array.isArray(r.days)
         ? r.days.filter((d) => d >= 0 && d <= 6)
@@ -202,7 +203,6 @@ function parseRecurrence(raw: unknown): Recurrence {
 function isScheduledOn(rec: Recurrence, date: string): boolean {
   const [y, m, d] = date.split('-').map(Number);
   switch (rec.type) {
-    case 'one_shot':
     case 'daily':
       return true;
     case 'weekly':
@@ -225,8 +225,6 @@ function isScheduledOn(rec: Recurrence, date: string): boolean {
 function describeRecurrence(rec: Recurrence, targetCount = 1): string {
   const DAYS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
   switch (rec.type) {
-    case 'one_shot':
-      return 'uma vez';
     case 'daily':
       return targetCount > 1 ? `${targetCount}× por dia` : 'todo dia';
     case 'weekly': {
@@ -291,7 +289,7 @@ async function rpc(
 
 function buildServer(token: string, userId: string): McpServer {
   const server = new McpServer(
-    { name: 'perceva-mcp', version: '0.4.4' },
+    { name: 'perceva-mcp', version: '0.4.5' },
     {
       instructions: [
         'Perceva is a habit/wellness app organized in 6 dimensions',

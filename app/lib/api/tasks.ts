@@ -7,6 +7,7 @@ import type {
   SubId,
   TaskSub,
   TaskTemplateWithSubs,
+  TaskType,
   TaskWithSubs,
 } from '@/lib/db/types';
 import { isOpenOnDay, legacyTaskTypeFor, parseRecurrence } from '@/lib/recurrence';
@@ -35,7 +36,7 @@ export const taskKeys = {
 export interface TaskFormInput {
   title: string;
   description: string | null;
-  task_type: 'one_shot' | 'daily' | 'weekly';
+  task_type: TaskType;
   recurrence: Recurrence;
   target_count: number;
   /** N sub allocations, sum of stars 1..5 (DB-enforced via set_task_subs). */
@@ -59,7 +60,7 @@ interface TaskRow {
   character_id: string;
   title: string;
   description: string | null;
-  task_type: 'one_shot' | 'daily' | 'weekly';
+  task_type: TaskType;
   recurrence: unknown;
   target_count: number;
   is_archived: boolean;
@@ -75,7 +76,7 @@ interface TaskTemplateRow {
   id: string;
   title: string;
   description: string | null;
-  task_type: 'one_shot' | 'daily' | 'weekly';
+  task_type: TaskType;
   recurrence: unknown;
   target_count: number;
   sort_order: number;
@@ -195,10 +196,6 @@ export interface HomeBuckets {
    * it was already done.
    */
   today: TaskWithSubs[];
-  /** One-shots: never completed, or completed on an earlier day (trophy
-   *  retention — the UI dims recently-done ones). Currently unrendered on
-   *  Home; one-shots live on "Todas as práticas". */
-  oneTime: TaskWithSubs[];
   /** Roll-up of "what happened today" — feeds the drawer at the bottom. */
   todayActivity: TodayActivity;
 }
@@ -273,33 +270,6 @@ async function fetchHomeBuckets(): Promise<HomeBuckets> {
     }
   });
 
-  const oneShotIds = allTasks
-    .filter((t) => t.recurrence.type === 'one_shot')
-    .map((t) => t.id);
-  /** Latest completion per one-shot task — drives the trophy dim
-   *  behavior in the Pontual bucket (one-shots stay visible after
-   *  completion, dimmed for ~7 days, then back to normal weight). */
-  const oneShotCompletionData = new Map<
-    string,
-    { latestId: string; latestAt: string }
-  >();
-  if (oneShotIds.length > 0) {
-    const { data: anyComp, error: anyErr } = await supabase
-      .from('task_completion')
-      .select('id, task_id, completed_at')
-      .in('task_id', oneShotIds)
-      .order('completed_at', { ascending: false });
-    if (anyErr) throw anyErr;
-    (anyComp ?? []).forEach((c) => {
-      if (!oneShotCompletionData.has(c.task_id)) {
-        oneShotCompletionData.set(c.task_id, {
-          latestId: c.id,
-          latestAt: c.completed_at,
-        });
-      }
-    });
-  }
-
   // Today's explicit skips — used to hide tasks the user opted out of.
   // Skips no longer shrink a period target: they remove the practice from
   // that ONE day, exactly as they do on every other day in useDayDetail.
@@ -312,7 +282,6 @@ async function fetchHomeBuckets(): Promise<HomeBuckets> {
 
   const buckets: HomeBuckets = {
     today: [],
-    oneTime: [],
     todayActivity: { completed: [], skipped: [] },
   };
 
@@ -353,18 +322,7 @@ async function fetchHomeBuckets(): Promise<HomeBuckets> {
     ) {
       continue;
     }
-
-    if (t.recurrence.type === 'one_shot') {
-      // Trophy retention: a one-shot completed on an EARLIER day stays
-      // visible (dimmed by the UI); only today's completion moves it into
-      // todayActivity.completed.
-      buckets.oneTime.push({
-        ...t,
-        lastCompletedAt: oneShotCompletionData.get(t.id)?.latestAt ?? null,
-      });
-    } else {
-      buckets.today.push(t);
-    }
+    buckets.today.push(t);
   }
 
   return buckets;
@@ -423,7 +381,7 @@ export function useArchivedTasks() {
  * create / edit / archive / restore / delete / re-schedule must call this:
  * Home's buckets and the Manage lists are obvious, but the History
  * day-detail (`historyKeys`) ALSO reads `task` to build a day's open list
- * — "Todas as práticas" and the Calendar day view pull their one-shots
+ * — "Todas as práticas" and the Calendar day view pull their open lists
  * from it, so a new or re-scheduled practice never showed up there until
  * something else happened to refetch history.
  */
@@ -435,12 +393,35 @@ function invalidateTaskSurfaces(queryClient: QueryClient, taskId?: string) {
   if (taskId) queryClient.invalidateQueries({ queryKey: taskKeys.detail(taskId) });
 }
 
+/** Same floor/ceiling the form applies (1..99 per period). */
+function clampTargetCount(n: number): number {
+  return Math.max(1, Math.min(99, Math.round(n) || 1));
+}
+
+/** The list in `orderedIds` order; anything the caller left out keeps
+ *  its previous relative order at the tail. */
+function reorderById(list: TaskWithSubs[], orderedIds: string[]): TaskWithSubs[] {
+  const byId = new Map(list.map((t) => [t.id, t]));
+  const next = orderedIds
+    .map((id) => byId.get(id))
+    .filter((t): t is TaskWithSubs => !!t);
+  const seen = new Set(orderedIds);
+  for (const t of list) {
+    if (!seen.has(t.id)) next.push(t);
+  }
+  return next;
+}
+
 /**
- * Change only WHEN a practice happens — the Manage screen's periodicity
- * chip. Periodicity edits keep the template link by product convention
+ * Change only WHEN a practice happens — the Manage screen's drag across
+ * groups. Periodicity edits keep the template link by product convention
  * (see task-form's `breaksTemplateLink`), so this touches nothing else.
- * Optimistic on the active list: the row jumps to its new bucket on the
- * same frame the sheet closes, instead of one round-trip later.
+ *
+ * `orderedIds` (optional) is the global order the drop implied; it is
+ * written by `reorder_tasks` right after the update, and applied in the
+ * SAME optimistic frame: the row lands in its new group at the slot the
+ * finger left it, once, instead of first at its old sort position and
+ * then hopping one round-trip later. One rollback covers both.
  */
 export function useSetTaskRecurrence() {
   const queryClient = useQueryClient();
@@ -449,11 +430,9 @@ export function useSetTaskRecurrence() {
       taskId: string;
       recurrence: Recurrence;
       targetCount: number;
+      orderedIds?: string[];
     }) => {
-      const targetCount =
-        params.recurrence.type === 'one_shot'
-          ? 1
-          : Math.max(1, Math.min(99, params.targetCount));
+      const targetCount = clampTargetCount(params.targetCount);
       const { error } = await supabase
         .from('task')
         .update({
@@ -463,24 +442,34 @@ export function useSetTaskRecurrence() {
         })
         .eq('id', params.taskId);
       if (error) throw error;
+      if (params.orderedIds && params.orderedIds.length > 0) {
+        // The reschedule is the change that matters and it has committed;
+        // a failed order write must not roll it back in the cache and tell
+        // the user the save failed. onSettled's refetch converges the
+        // order to whatever the server holds.
+        const { error: orderErr } = await supabase.rpc('reorder_tasks', {
+          p_ids: params.orderedIds,
+        });
+        if (orderErr) console.warn('[reorder_tasks] after reschedule failed', orderErr);
+      }
     },
     onMutate: async (params) => {
       await queryClient.cancelQueries({ queryKey: taskKeys.active() });
       const prev = queryClient.getQueryData<TaskWithSubs[]>(taskKeys.active());
       if (prev) {
+        const patched = prev.map((t) =>
+          t.id === params.taskId
+            ? {
+                ...t,
+                task_type: legacyTaskTypeFor(params.recurrence),
+                recurrence: params.recurrence,
+                target_count: clampTargetCount(params.targetCount),
+              }
+            : t,
+        );
         queryClient.setQueryData<TaskWithSubs[]>(
           taskKeys.active(),
-          prev.map((t) =>
-            t.id === params.taskId
-              ? {
-                  ...t,
-                  task_type: legacyTaskTypeFor(params.recurrence),
-                  recurrence: params.recurrence,
-                  target_count:
-                    params.recurrence.type === 'one_shot' ? 1 : params.targetCount,
-                }
-              : t,
-          ),
+          params.orderedIds ? reorderById(patched, params.orderedIds) : patched,
         );
       }
       return { prev };
@@ -555,17 +544,10 @@ export function useReorderTasks() {
       await queryClient.cancelQueries({ queryKey: taskKeys.active() });
       const prev = queryClient.getQueryData<TaskWithSubs[]>(taskKeys.active());
       if (prev) {
-        const byId = new Map(prev.map((t) => [t.id, t]));
-        const next = orderedIds
-          .map((id) => byId.get(id))
-          .filter((t): t is TaskWithSubs => !!t);
-        // Append any tasks the caller didn't include (e.g. tasks outside
-        // the drag scope — adopted ones not in the Mine tab). Preserves
-        // their previous relative order.
-        for (const t of prev) {
-          if (!orderedIds.includes(t.id)) next.push(t);
-        }
-        queryClient.setQueryData<TaskWithSubs[]>(taskKeys.active(), next);
+        queryClient.setQueryData<TaskWithSubs[]>(
+          taskKeys.active(),
+          reorderById(prev, orderedIds),
+        );
       }
       return { prev };
     },
@@ -676,7 +658,6 @@ export function useCompleteTask() {
             old
               ? {
                   today: removeFrom(old.today),
-                  oneTime: removeFrom(old.oneTime),
                   todayActivity: old.todayActivity,
                 }
               : old,
@@ -733,7 +714,7 @@ export function useCompleteTask() {
 
 /**
  * Optimistically drop the given task ids from the live "pending" buckets
- * (today / oneTime) across every keyed cache entry. Crucially LEAVES
+ * (today) across every keyed cache entry. Crucially LEAVES
  * todayActivity untouched so ringDone stays server-truth until the refetch
  * frame — the same invariant useCompleteTask relies on for the once-per-day
  * day-cleared celebration. Shared by the single + bulk skip mutations.
@@ -751,7 +732,6 @@ function dropTasksFromPendingBuckets(
         ? {
             ...old,
             today: removeFrom(old.today),
-            oneTime: removeFrom(old.oneTime),
           }
         : old,
   );
@@ -1101,8 +1081,9 @@ export function useCompleteTemplate() {
  */
 export interface StartTaskFromTemplateInput {
   templateId: string;
-  /** Optional: override the template's default task_type. */
-  taskTypeOverride?: 'daily' | 'weekly' | 'monthly' | 'one_shot';
+  /** Optional: override the template's default task_type (the server
+   *  allowlist is the same pair — `monthly` rides as 'daily'). */
+  taskTypeOverride?: TaskType;
   /** Optional: explicit recurrence object override (e.g. {type:'weekly', days:[1,3,5]}). */
   recurrenceOverride?: Record<string, unknown> | null;
   /** Optional: override per-period target count (e.g. 3 for "3x/week"). */

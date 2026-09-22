@@ -24,14 +24,14 @@ export type SubId =
   | 'circle' | 'romance'
   | 'play' | 'build';
 
-export type TaskType = 'one_shot' | 'daily' | 'weekly';
+/** Legacy column hint — `monthly` recurrences ride as 'daily' here. */
+export type TaskType = 'daily' | 'weekly';
 
 /**
  * Source of truth for cadence. `task_type` is preserved as a legacy hint
  * but `recurrence` is what queries should consult.
  *
  * Semantics (target_count = N times PER PERIOD):
- *   - one_shot: 1 time, ever. Disappears from One-time after first completion.
  *   - daily: N times per day. Cleared from Today once doneToday >= N.
  *   - weekly: N times per week. ALWAYS shows in This Week until met.
  *             Optional `days` schedule promotes the task into Today on
@@ -47,7 +47,6 @@ export type TaskType = 'one_shot' | 'daily' | 'weekly';
  * day and it counts toward the period target.
  */
 export type Recurrence =
-  | { type: 'one_shot' }
   | { type: 'daily' }
   | { type: 'weekly'; days?: number[] }
   | { type: 'monthly'; day?: number };
@@ -389,14 +388,6 @@ export interface TaskWithSubs extends Task {
   primary_sub_id: SubId;
   primary_dimension_id: DimensionId;
   total_stars: number;
-  /**
-   * Most recent completion timestamp for this task — only populated for
-   * one-shots (where it drives the "trophy" dimming after completion).
-   * Null when the one-shot has never been completed, or when the row
-   * comes from a query that doesn't track this. Daily/weekly tasks
-   * leave it as `undefined`.
-   */
-  lastCompletedAt?: string | null;
 }
 
 /** A TaskTemplate hydrated with its sub allocations + derived conveniences. */

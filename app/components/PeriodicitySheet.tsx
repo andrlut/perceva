@@ -21,6 +21,10 @@ interface Props {
   visible: boolean;
   /** The practice being re-scheduled. Null while closed. */
   task: TaskWithSubs | null;
+  /** Seed the picker with this shape instead of the task's own — a drop
+   *  into the periodic group opens the sheet already on Semanal. */
+  initialRecurrence?: Recurrence;
+  initialTargetCount?: number;
   /** Mutation in flight — the Save button spins and the sheet stays. */
   saving?: boolean;
   onCancel: () => void;
@@ -28,27 +32,33 @@ interface Props {
 }
 
 /**
- * Bottom sheet that changes only WHEN a practice happens — opened from
- * the periodicity chip on the Manage screen. Wraps the very same
- * RecurrencePicker the form uses (type · times per period · optional
- * weekday / month-day schedule), so the type row doubles as the bucket
- * picker: Diária → Diárias, Semanal / Mensal → Semanais, Única → Pontuais.
- * One tap on a type + Save moves the row; nothing else about the practice
- * is touched.
+ * Bottom sheet that changes only WHEN a practice happens — opened when a
+ * row is dropped into the periodic group on the Manage screen. Wraps the
+ * very same RecurrencePicker the form uses (type · times per period ·
+ * optional weekday / month-day schedule). Save moves the row; nothing
+ * else about the practice is touched.
  */
-export function PeriodicitySheet({ visible, task, saving = false, onCancel, onConfirm }: Props) {
+export function PeriodicitySheet({
+  visible,
+  task,
+  initialRecurrence,
+  initialTargetCount,
+  saving = false,
+  onCancel,
+  onConfirm,
+}: Props) {
   const { t } = useT();
   const sheetBottom = useSheetBottomInset();
   const [recurrence, setRecurrence] = useState<Recurrence>({ type: 'daily' });
   const [targetCount, setTargetCount] = useState(1);
 
-  // Re-seed from the task every time the sheet opens — the picker is
-  // local state so half-made edits never leak into the next practice.
+  // Re-seed every time the sheet opens — the picker is local state so
+  // half-made edits never leak into the next practice.
   useEffect(() => {
     if (!visible || !task) return;
-    setRecurrence(task.recurrence);
-    setTargetCount(task.target_count ?? 1);
-  }, [visible, task]);
+    setRecurrence(initialRecurrence ?? task.recurrence);
+    setTargetCount(initialTargetCount ?? task.target_count ?? 1);
+  }, [visible, task, initialRecurrence, initialTargetCount]);
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel}>

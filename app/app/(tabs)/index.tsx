@@ -79,7 +79,6 @@ import { useModuleEnabled } from '@/lib/modules';
 import type { CoinMultiplier, TaskSub, TaskWithSubs } from '@/lib/db/types';
 import { isDueOn } from '@/lib/recurrence';
 import { formatHeroDate } from '@/lib/time';
-import { compareOneShotsByFreshness, isInTrophyWindow } from '@/lib/trophy';
 import { usePullToRefresh } from '@/lib/usePullToRefresh';
 import { rewardForTaskSubs } from '@/lib/xp';
 import { tokens } from '@/theme';
@@ -121,7 +120,6 @@ interface DayClearedStats {
  *   │  ┌── TaskCard list (gradient + sub tile) ─┐ │
  *   │  │ 🧘 Meditar 10 min       [✓]            │ │
  *   │  └────────────────────────────────────────┘ │
- *   │  PONTUAIS — one-shots (secondary header)     │
  *   └──────────────────────────────────────────────┘
  *
  * Three principles preserved from the user's brief:
@@ -554,13 +552,13 @@ export default function HomeScreen() {
   const data = buckets.data;
 
   // ── "Hoje" model lists ────────────────────────────────────────────────
-  // ONE schedule-driven today list (buckets.today) + the one-shots. The
-  // query layer already excludes acted-today weekly/monthly promotions;
+  // ONE schedule-driven today list (buckets.today). The query layer
+  // already excludes acted-today weekly/monthly promotions;
   // filterActedToday additionally drops multi-target dailies after their
   // FIRST completion of the day (extras happen via the completed drawer).
   const lists = useMemo(() => {
     if (!data) {
-      return { today: [] as TaskWithSubs[], oneshot: [] as TaskWithSubs[] };
+      return { today: [] as TaskWithSubs[] };
     }
     const completedTodayIds = new Set(
       data.todayActivity.completed.map((c) => c.task.id),
@@ -572,15 +570,7 @@ export default function HomeScreen() {
       !completedTodayIds.has(t.id) && !skippedTodayIds.has(t.id);
 
     const today = data.today.filter(filterActedToday);
-
-    // One-shots are pre-filtered by useHomeBuckets to skip
-    // completed-today / skipped-today. Sort trophies (recently-
-    // completed one-shots that linger as "marcos") to the bottom.
-    const oneshot = [...data.oneTime].sort((a, b) =>
-      compareOneShotsByFreshness(a, b),
-    );
-
-    return { today, oneshot };
+    return { today };
   }, [data]);
 
   const skippedTodayItems = useMemo<CompletedItem[]>(
@@ -601,18 +591,13 @@ export default function HomeScreen() {
     [allActiveTasks.data],
   );
 
-  // Past-day open list: daily + scheduled-on-that-day recurring, no
-  // one-shots (they live in "Todas as práticas") — same filter as today.
-  // dayDetail.openTasks already drops what was completed/skipped that day.
+  // Past-day open list: daily + scheduled-on-that-day recurring.
+  // dayDetail.openTasks already drops what was completed/skipped that day
+  // (the schedule + completed + skipped rules all live in useDayDetail,
+  // isOpenOnDay); all that is left here is the retro optimistic hide.
   const pastOpen = useMemo<TaskWithSubs[]>(() => {
     if (isToday || !dayDetail.data) return [];
-    // The schedule + completed + skipped rules all live in useDayDetail now
-    // (isOpenOnDay). All that is left here is the presentation choice Home
-    // makes on EVERY day: one-shots belong to "Todas as práticas", not to a
-    // specific day's list.
-    return dayDetail.data.openTasks.filter(
-      (task) => task.recurrence.type !== 'one_shot' && !retroHidden.has(task.id),
-    );
+    return dayDetail.data.openTasks.filter((task) => !retroHidden.has(task.id));
   }, [isToday, dayDetail.data, retroHidden]);
 
   // Every completion the day's XP hero counts must also appear here, so the
@@ -687,7 +672,6 @@ export default function HomeScreen() {
     // last-day or missed-day catch-ups).
     const wasDueToday = (task: TaskWithSubs): boolean => {
       const rec = task.recurrence;
-      if (rec.type === 'one_shot') return false;
       if (rec.type === 'daily') return true;
       // Unscheduled recurring (no weekday / no day-of-month marked) no
       // longer promotes to Hoje (see fetchHomeBuckets), so it must not
@@ -714,8 +698,8 @@ export default function HomeScreen() {
   }, [data]);
 
   // "Fechar o dia" — skip everything still waiting in the Hoje list in one
-  // deliberate act (confirm first). Scoped to lists.today ONLY, so Pontuais
-  // (one-shots) are never nuked. The optimistic bulk-skip empties the list
+  // deliberate act (confirm first). Scoped to lists.today. The optimistic
+  // bulk-skip empties the list
   // → the EXISTING day-cleared celebration fires (remaining → 0); because
   // the skipped tasks were due today, ringDone increments so the muted
   // all-skipped variant (not the gold fanfare) is what a zero-done clear
@@ -926,14 +910,11 @@ export default function HomeScreen() {
     hero.monthDay,
   ]);
 
-  // First rendered card overall carries the M1 tour anchor — normally
-  // the first Hoje item, falling back to the first one-shot when the
-  // Hoje list is empty.
+  // First rendered card (the first Hoje item) carries the M1 tour anchor.
   const renderTaskCard = (task: TaskWithSubs, isTourAnchor: boolean) => {
     const card = (
       <TaskCard
         task={task}
-        dimmed={isInTrophyWindow(task)}
         onComplete={() => handleQuickComplete(task)}
         onLongPress={() => handleLongPress(task)}
         onSkip={() => handleSwipeSkip(task)}
@@ -1305,20 +1286,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: tokens.space[4],
     paddingTop: tokens.space[2],
     gap: tokens.space[2],
-  },
-  // "Hoje" / "Pontuais" section headers replacing the old bucket tabs.
-  sectionHeader: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 15,
-    color: tokens.text.hi,
-    letterSpacing: 0.4,
-    paddingTop: tokens.space[1],
-  },
-  // One-shots read as a lighter, secondary block under the day's list.
-  sectionHeaderSecondary: {
-    fontSize: 13,
-    color: tokens.text.mid,
-    marginTop: tokens.space[3],
   },
   // MoodDayDetail's own card carries no horizontal margin (it relies on its
   // History container), so this matches MoodHubStrip's outer box.

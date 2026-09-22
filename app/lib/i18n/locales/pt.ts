@@ -98,7 +98,6 @@ const pt: Translations = {
 
   recurrencePicker: {
     types: {
-      one_shot: 'Única',
       daily: 'Diária',
       weekly: 'Semanal',
       monthly: 'Mensal',
@@ -107,7 +106,6 @@ const pt: Translations = {
     timesPerDay: 'Vezes por dia',
     timesPerWeek: 'Vezes por semana',
     timesPerMonth: 'Vezes por mês',
-    times: 'Vezes',
     specificDays: 'Dias específicos (opcional)',
     specificDay: 'Dia específico (opcional)',
     weeklyHelper:
@@ -125,8 +123,6 @@ const pt: Translations = {
     weekdaysMonFri: 'Seg a Sex',
     weekend: 'Fim de semana',
     daysShort: '{{count}} dias',
-    once: 'Uma vez',
-    onceLong: 'Uma vez só',
     everyDay: 'Todo dia',
     timesPerDay: '{{count}}× por dia',
     perWeekShort: '{{count}}×/sem',
@@ -457,7 +453,7 @@ const pt: Translations = {
       },
       step4: {
         title: 'Com qual frequência',
-        body: 'Uma vez só, todo dia ou em dias da semana — você decide a cadência.',
+        body: 'Todo dia, em dias da semana ou algumas vezes por mês — você decide a cadência.',
       },
       step5: {
         title: 'Sem pressa pra salvar',
@@ -969,7 +965,6 @@ const pt: Translations = {
     daily: 'Diário · 1x por dia',
     weekly3x: 'Semanal · 3x por semana',
     weekly1x: 'Semanal · 1x por semana',
-    oneShot: 'Pontual · uma vez só',
     customize: 'Customizar',
     customizeHint: 'editar tudo antes de criar',
   },
@@ -1090,34 +1085,28 @@ const pt: Translations = {
     },
     sections: {
       today: 'Hoje',
-      oneshot: 'Pontuais',
     },
     buckets: {
       today: 'Hoje',
       thisWeek: 'Esta Semana',
       thisMonth: 'Este Mês',
-      oneTime: 'Único',
       emptyToday: 'Nada pra hoje.',
     },
     typeTabs: {
       daily: 'Diárias',
       weekly: 'Recorrente',
-      oneShot: 'Pontual',
       general: 'Geral',
       emptyDaily: 'Nada de daily pendente.',
       emptyWeekly: 'Nada de recorrente pendente.',
-      emptyOneShot: 'Nada de pontual pendente.',
       emptyGeneral: 'Nenhum template disponível.',
       generalLead: 'Marque qualquer template aqui sem precisar adotar ele na sua rotina.',
     },
     bucketTabs: {
       daily: 'Diárias',
       weekly: 'Semanais',
-      oneshot: 'Pontuais',
       all: 'Tudo',
       emptyDaily: 'Nada diário pendente.',
       emptyWeekly: 'Nada semanal pendente.',
-      emptyOneshot: 'Nada pontual pendente.',
       emptyAll: 'Nada pendente.',
       nextUp: 'Próximas · toque pra completar',
       // Legacy keys still referenced by some components — kept until those
@@ -1129,12 +1118,10 @@ const pt: Translations = {
       emptyWeek: 'Nada pendente esta semana.',
       emptyRecurring: 'Você ainda não tem cadências.',
       recurringLead: 'Cadências ativas',
-      oneshotLead: 'Faça quando quiser',
     },
     completedBucket: {
       daily: 'Feitas hoje',
       weekly: 'Feitas nesta semana',
-      oneshot: 'Concluídas',
       all: 'Feitas hoje',
       day: 'Concluídas',
       // Legacy compat
@@ -1290,7 +1277,6 @@ const pt: Translations = {
       targetHint: 'Quantas vezes por período esta prática conta pra sua meta.',
     },
     schedule: {
-      oneShot: 'Único',
       daily: 'Diária',
       weekly: 'Semanal',
       monthly: 'Mensal',
@@ -1359,13 +1345,9 @@ const pt: Translations = {
     eyebrow: 'PRÁTICAS',
     lead: 'Tudo que dá pra fazer além da rotina diária.',
     loggingFor: 'Registrando em {{date}}',
-    sections: {
-      recurring: 'Recorrentes',
-      oneshot: 'Pontuais',
-    },
     emptyTitle: 'Só as diárias, por enquanto',
     emptyBody:
-      'Suas diárias moram na tela Hoje. Crie uma prática semanal ou pontual pra ela aparecer aqui.',
+      'Suas diárias moram na tela Hoje. Crie uma prática semanal ou mensal pra ela aparecer aqui.',
     emptyCta: 'Criar prática',
   },
   tasksHub: {
@@ -1381,23 +1363,24 @@ const pt: Translations = {
       placeholderMine: 'Buscar nas suas práticas…',
       placeholderCatalog: 'Buscar no catálogo…',
     },
-    // Uma linha só, abaixo das abas: os três gestos da lista, na ordem em
-    // que o usuário precisa deles. Concluir mora em Todas as práticas.
-    lead: 'Toque pra editar. Toque no rótulo pra mudar quando acontece. Segure e arraste pra ordenar dentro do grupo.',
+    // Uma linha só, abaixo das abas: os dois gestos da lista. Concluir mora
+    // em Todas as práticas; mudar detalhe é abrir a prática.
+    lead: 'Toque pra editar. Pela alça, arraste pra ordenar; solte no outro grupo pra mudar quando acontece.',
     buckets: {
       daily: 'Diárias',
       dailyDesc: 'Todo dia, na tela Hoje',
-      weekly: 'Semanais',
-      weeklyDesc: 'Dias escolhidos ou cadência mensal',
-      oneTime: 'Pontuais',
-      oneTimeDesc: 'Uma vez só',
+      periodic: 'Periódicas',
+      periodicDesc: 'Dias marcados, algumas vezes por semana ou por mês',
     },
-    bucketEmpty: 'Nenhuma prática aqui. Toque no rótulo de uma prática pra trazer pra cá.',
+    bucketEmpty: 'Nenhuma prática aqui. Arraste uma pra cá pela alça.',
     customChip: 'PRÓPRIA',
     row: {
       editA11y: 'Editar {{title}}',
-      periodicityA11y: 'Mudar quando {{title}} acontece',
-      dragA11y: 'Segure pra reordenar dentro do grupo',
+      // Ações de leitor de tela — a alça é só toque, então subir/descer/
+      // trocar de grupo existem como ações na própria linha.
+      a11yMoveUp: 'Mover pra cima',
+      a11yMoveDown: 'Mover pra baixo',
+      a11ySwitchGroup: 'Trocar de grupo',
     },
     periodicity: {
       eyebrow: 'Quando acontece',

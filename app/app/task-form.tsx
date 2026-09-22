@@ -261,7 +261,7 @@ export default function TaskFormScreen() {
       description: description.trim() === '' ? null : description.trim(),
       task_type: legacyTaskTypeFor(recurrence),
       recurrence,
-      target_count: recurrence.type === 'one_shot' ? 1 : targetCount,
+      target_count: targetCount,
       subs,
       icon,
       coin_multiplier: coinMultiplier,

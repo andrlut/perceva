@@ -8,13 +8,9 @@ type Translator = (key: string, options?: TranslateOptions) => string;
  *
  * Scheduling = "show in Today as a reminder". For weekly/monthly with no
  * days/day set, this returns false (no schedule hint, only This Week/Month).
- * For one_shot, it returns true (the One-time bucket handles the
- * "completed already?" filter on top).
  */
 export function isScheduledOn(rec: Recurrence, date: Date): boolean {
   switch (rec.type) {
-    case 'one_shot':
-      return true;
     case 'daily':
       return true;
     case 'weekly':
@@ -59,8 +55,8 @@ export const isDueOn = isScheduledOn;
  * retro completion — and, in the other direction, hid a `weekly [1,3,5]
  * target 1` on Wednesday just because Monday was already logged.
  *
- * isScheduledOn returns true for daily and one_shot, so this is one
- * expression. Keep it one expression.
+ * isScheduledOn returns true for daily, so this is one expression. Keep it
+ * one expression.
  */
 export function isOpenOnDay(args: {
   recurrence: Recurrence;
@@ -97,7 +93,6 @@ export function isEffectivelyDaily(rec: Recurrence): boolean {
  * and the manage screen's periodicity sheet so the two can't disagree.
  */
 export function legacyTaskTypeFor(r: Recurrence): TaskType {
-  if (r.type === 'one_shot') return 'one_shot';
   if (r.type === 'weekly') return 'weekly';
   return 'daily';
 }
@@ -108,11 +103,11 @@ export function legacyTaskTypeFor(r: Recurrence): TaskType {
  * `recurrence.*` i18n block.
  *
  *   short (chip)                          long (card meta line)
- *   one_shot          → "Uma vez"         "Uma vez só"
  *   daily, n=1        → "Todo dia"        "Todo dia"
  *   daily, n=3        → "3× por dia"      "3× por dia"
  *   weekly, no days   → "3×/sem"          "3× por semana"
- *   weekly, [1,3,5]   → "Seg · Qua · Sex" "3× por semana · Seg, Qua, Sex"
+ *   weekly, [1,3,5]   → "Seg · Qua · Sex" "Seg, Qua, Sex" (n=1) ·
+ *                                          "3× por semana · Seg, Qua, Sex" (n=3)
  *   weekly, [1,2,4,5] → "4 dias"          "4× por semana · Seg, Ter, Qui, Sex"
  *   weekly, [1..5]    → "Seg a Sex"       "5× por semana · Seg a Sex"
  *   weekly, [0,6]     → "Fim de semana"   "2× por semana · Fim de semana"
@@ -129,8 +124,6 @@ export function describeRecurrence(
   const short = opts.short === true;
   const count = Math.max(1, targetCount);
   switch (rec.type) {
-    case 'one_shot':
-      return short ? t('recurrence.once') : t('recurrence.onceLong');
     case 'daily':
       return count > 1 ? t('recurrence.timesPerDay', { count }) : t('recurrence.everyDay');
     case 'weekly': {
@@ -143,6 +136,10 @@ export function describeRecurrence(
       }
       const daysLabel = describeWeekdays(days, t, short);
       if (short) return daysLabel;
+      // The days already say how many; "1× por semana · Seg, Qua, Sex"
+      // (the shape a drop into Periódicas produces) would read as a
+      // contradiction. The count only earns its place above 1.
+      if (count <= 1) return daysLabel;
       return `${t('recurrence.perWeek', { count })} · ${daysLabel}`;
     }
     case 'monthly': {
@@ -173,11 +170,17 @@ function describeWeekdays(days: number[], t: Translator, short: boolean): string
   return labels.join(short ? ' · ' : ', ');
 }
 
-/** Parse a recurrence value coming from the DB; defaults to daily on garbage. */
+/**
+ * Parse a recurrence value coming from the DB; defaults to daily on garbage.
+ * A legacy `one_shot` (the type retired on 2026-09-22; migration
+ * 20260922000005 rewrote every row) reads as flex weekly: "do it once,
+ * whenever" never sat on Hoje, and flex weekly is the shape that keeps it
+ * off Hoje — a stale bundle must not turn an old one-off into a daily.
+ */
 export function parseRecurrence(raw: unknown): Recurrence {
   if (raw && typeof raw === 'object' && 'type' in raw) {
     const r = raw as { type: string; days?: number[]; day?: number };
-    if (r.type === 'one_shot') return { type: 'one_shot' };
+    if (r.type === 'one_shot') return { type: 'weekly' };
     if (r.type === 'daily') return { type: 'daily' };
     if (r.type === 'weekly') {
       const days = Array.isArray(r.days)

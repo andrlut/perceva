@@ -40,7 +40,6 @@ import { useLimitModalStore, useTaskLimit } from '@/lib/premium';
 import { isEffectivelyDaily } from '@/lib/recurrence';
 import { useLoadedSettings } from '@/lib/settings';
 import { formatLongDate } from '@/lib/time';
-import { compareOneShotsByFreshness, isInTrophyWindow } from '@/lib/trophy';
 import { usePullToRefresh } from '@/lib/usePullToRefresh';
 import { rewardForTaskSubs } from '@/lib/xp';
 import { tokens } from '@/theme';
@@ -54,7 +53,7 @@ interface FloatItem {
 /**
  * "Todas as práticas" — the see-all DOING surface. Every active practice
  * EXCEPT the dailies (those live on Hoje), in the Home card vocabulary so
- * the user can knock out or work ahead on any weekly / monthly / one-shot
+ * the user can knock out or work ahead on any weekly / monthly practice
  * on any day. Reuses TaskCard for complete / quick-complete / adjust-then-
  * complete / edit — but deliberately NOT swipe-to-skip: skipping is a
  * Hoje-contract concept, meaningless here, and would pollute the day ring.
@@ -86,9 +85,8 @@ export default function AllPracticesScreen() {
   }, [date]);
   const selectedKey = dateKeyFromLocal(selectedDate);
   const isToday = selectedKey === dateKeyFromLocal(new Date());
-  // Selected day's detail — completions (drawer + hiding done items) and the
-  // one-shot list (with lastCompletedAt for trophy dimming). Works for today
-  // and any past day.
+  // Selected day's detail — completions (drawer + hiding done items) and
+  // the day's skips. Works for today and any past day.
   const dayDetail = useDayDetail(selectedDate, settings.weekStart);
   const completeTask = useCompleteTask();
   const undoCompletion = useUndoCompletion();
@@ -203,10 +201,9 @@ export default function AllPracticesScreen() {
     [dayDetail.data],
   );
 
-  // Skipped on the SELECTED day. The one-shot list gets this for free (it
-  // comes from openTasks, which the shared predicate already filters); the
-  // recurring list is built from useActiveTasks, so it has to honor skips
-  // itself or a practice skipped on that day still shows up here.
+  // Skipped on the SELECTED day. The recurring list is built from
+  // useActiveTasks, so it has to honor skips itself or a practice skipped
+  // on that day still shows up here.
   const skippedThatDayIds = useMemo(
     () => new Set((dayDetail.data?.skipped ?? []).map((task) => task.id)),
     [dayDetail.data],
@@ -249,20 +246,6 @@ export default function AllPracticesScreen() {
     [recurringOwned, completedThatDayIds, skippedThatDayIds, pendingDone],
   );
 
-  // Pontuais — from the selected day's openTasks (carries lastCompletedAt
-  // for trophy dimming + already excludes done/skipped-that-day), minus
-  // what's optimistically hidden this frame.
-  const oneshot = useMemo(
-    () =>
-      (dayDetail.data?.openTasks ?? [])
-        .filter(
-          (task) =>
-            task.recurrence.type === 'one_shot' && !pendingDone.has(task.id),
-        )
-        .sort((a, b) => compareOneShotsByFreshness(a, b, selectedDate)),
-    [dayDetail.data, pendingDone, selectedDate],
-  );
-
   // Prune the optimistic-hide set once the server reflects the completion
   // (the id shows up in the day's completions). Pruning only AFTER the
   // server reflects it keeps the card hidden through the handoff (no
@@ -294,16 +277,15 @@ export default function AllPracticesScreen() {
   const isLoading = tasks.isLoading || dayDetail.isLoading;
   const hasAny =
     // Deliberately counts OWNED practices, not the day-filtered list: the
-    // empty state below says "create your first weekly or one-time practice",
+    // empty state below says "create your first weekly or monthly practice",
     // which would be a lie to a user whose whole catalog just happens to be
     // done or skipped on this particular day.
-    recurringOwned.length + oneshot.length > 0 || completedItems.length > 0;
+    recurringOwned.length > 0 || completedItems.length > 0;
 
   const renderCard = (task: TaskWithSubs) => (
     <TaskCard
       key={task.id}
       task={task}
-      dimmed={isInTrophyWindow(task, selectedDate)}
       onComplete={() => handleQuickComplete(task)}
       onLongPress={() => setSheetTask(task)}
       onSwipeComplete={() => setSheetTask(task)}
@@ -393,22 +375,7 @@ export default function AllPracticesScreen() {
             </View>
           ) : (
             <View style={styles.lists}>
-              {recurring.length > 0 && (
-                <>
-                  <Text style={styles.sectionHeader}>
-                    {t('allPractices.sections.recurring')}
-                  </Text>
-                  {recurring.map(renderCard)}
-                </>
-              )}
-              {oneshot.length > 0 && (
-                <>
-                  <Text style={[styles.sectionHeader, styles.sectionHeaderSecondary]}>
-                    {t('allPractices.sections.oneshot')}
-                  </Text>
-                  {oneshot.map(renderCard)}
-                </>
-              )}
+              {recurring.map(renderCard)}
               {completedItems.length > 0 && (
                 <CompletedBucket
                   items={completedItems}
@@ -481,18 +448,6 @@ const styles = StyleSheet.create({
   },
   lists: {
     gap: tokens.space[2],
-  },
-  sectionHeader: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 15,
-    color: tokens.text.hi,
-    letterSpacing: 0.4,
-    paddingTop: tokens.space[1],
-  },
-  sectionHeaderSecondary: {
-    fontSize: 13,
-    color: tokens.text.mid,
-    marginTop: tokens.space[3],
   },
   loadingBox: {
     paddingVertical: tokens.space[10],
