@@ -113,6 +113,7 @@ export function legacyTaskTypeFor(r: Recurrence): TaskType {
  *   daily, n=3        → "3× por dia"      "3× por dia"
  *   weekly, no days   → "3×/sem"          "3× por semana"
  *   weekly, [1,3,5]   → "Seg · Qua · Sex" "3× por semana · Seg, Qua, Sex"
+ *   weekly, [1,2,4,5] → "4 dias"          "4× por semana · Seg, Ter, Qui, Sex"
  *   weekly, [1..5]    → "Seg a Sex"       "5× por semana · Seg a Sex"
  *   weekly, [0,6]     → "Fim de semana"   "2× por semana · Fim de semana"
  *   weekly, all 7     → "Todo dia"        "Todo dia"
@@ -158,11 +159,15 @@ export function describeRecurrence(
 }
 
 /** "Seg · Qua · Sex" / "Seg, Qua, Sex", with the two everyday shapes named
- *  instead of spelled out: Mon–Fri and the weekend. `days` sorted, 0=Sun. */
+ *  instead of spelled out: Mon–Fri and the weekend. `days` sorted, 0=Sun.
+ *  The short form has ~92px in the manage chip: three names fit, four do
+ *  not, so from four days on it says "4 dias" rather than clipping the
+ *  last one — a chip must always name something true. */
 function describeWeekdays(days: number[], t: Translator, short: boolean): string {
   const key = days.join(',');
   if (key === '1,2,3,4,5') return t('recurrence.weekdaysMonFri');
   if (key === '0,6') return t('recurrence.weekend');
+  if (short && days.length >= 4) return t('recurrence.daysShort', { count: days.length });
   const names = t('recurrence.weekdaysShort').split(',');
   const labels = days.map((d) => names[d]).filter(Boolean);
   return labels.join(short ? ' · ' : ', ');

@@ -66,6 +66,7 @@ import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { useLoadedSettings } from '@/lib/settings';
 import { formatHeroDate } from '@/lib/time';
+import { usePullToRefresh } from '@/lib/usePullToRefresh';
 import { confirmAction, showInfo } from '@/lib/util/confirm';
 import { rewardForTaskSubs } from '@/lib/xp';
 import { tokens } from '@/theme';
@@ -398,6 +399,9 @@ export default function CalendarScreen() {
   // see it. `CalendarDayPanel` asks for the same key, so React Query dedupes:
   // no extra request, and no prop drilling of a refetch handle.
   const dayQuery = useDayDetail(selected, settings.weekStart);
+  // Pull indicator is local state — the queries' isRefetching also flips on
+  // every background refetch (writes on the day, app foreground).
+  const pull = usePullToRefresh(() => Promise.all([source.refetch(), dayQuery.refetch()]));
 
   // Invalidating `historyKeys.all` rather than `calendarKeys.all`: the latter is
   // a child of the former, so it would miss the day query
@@ -696,11 +700,8 @@ export default function CalendarScreen() {
           }}
           refreshControl={
             <RefreshControl
-              refreshing={source.isRefetching || dayQuery.isRefetching}
-              onRefresh={() => {
-                source.refetch();
-                dayQuery.refetch();
-              }}
+              refreshing={pull.refreshing}
+              onRefresh={pull.onRefresh}
               tintColor={tokens.brand.violet2}
             />
           }

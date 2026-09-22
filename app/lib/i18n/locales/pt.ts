@@ -124,6 +124,7 @@ const pt: Translations = {
     weekdaysShort: 'Dom,Seg,Ter,Qua,Qui,Sex,Sáb',
     weekdaysMonFri: 'Seg a Sex',
     weekend: 'Fim de semana',
+    daysShort: '{{count}} dias',
     once: 'Uma vez',
     onceLong: 'Uma vez só',
     everyDay: 'Todo dia',
@@ -1375,16 +1376,16 @@ const pt: Translations = {
     },
     // Uma linha só, abaixo das abas: os três gestos da lista, na ordem em
     // que o usuário precisa deles. Concluir mora em Todas as práticas.
-    lead: 'Toque pra editar. O rótulo muda quando ela acontece. Segure e arraste pra ordenar.',
+    lead: 'Toque pra editar. Toque no rótulo pra mudar quando acontece. Segure e arraste pra ordenar dentro do grupo.',
     buckets: {
       daily: 'Diárias',
       dailyDesc: 'Todo dia, na tela Hoje',
       weekly: 'Semanais',
-      weeklyDesc: 'Dias da semana ou cadência mensal',
+      weeklyDesc: 'Dias escolhidos ou cadência mensal',
       oneTime: 'Pontuais',
       oneTimeDesc: 'Uma vez só',
     },
-    bucketEmpty: 'Nenhuma prática aqui. Toque no rótulo de uma prática pra trazer ela pra cá.',
+    bucketEmpty: 'Nenhuma prática aqui. Toque no rótulo de uma prática pra trazer pra cá.',
     customChip: 'PRÓPRIA',
     row: {
       editA11y: 'Editar {{title}}',
@@ -1394,7 +1395,7 @@ const pt: Translations = {
     periodicity: {
       eyebrow: 'Quando acontece',
       save: 'Salvar',
-      saveFail: 'Não consegui mudar a periodicidade',
+      saveFail: 'Não consegui mudar quando ela acontece',
     },
     archived: {
       section: 'Arquivadas',
@@ -1407,9 +1408,9 @@ const pt: Translations = {
       deleteOk: 'Apagar',
       deleteFail: 'Não consegui apagar',
       deleteBlockedHistory: 'Essa prática já tem conclusões registradas — só dá pra arquivar.',
+      deleteBlockedQuest: 'Essa prática está ligada a uma missão — só dá pra arquivar.',
     },
     adopt: {
-      adopt: 'Adotar',
       adoptA11y: 'Adotar {{title}}',
       added: 'Adicionada',
     },
@@ -1428,7 +1429,7 @@ const pt: Translations = {
       cta: 'Nova prática',
     },
     errors: {
-      couldNotAdoptTitle: 'Não foi possível adotar',
+      couldNotAdoptTitle: 'Não consegui adotar',
       unknown: 'Erro desconhecido.',
     },
   },
@@ -2386,7 +2387,6 @@ const pt: Translations = {
     discardBody: 'Você marcou um humor mas não salvou. Descartar?',
     keep: 'Continuar',
     discard: 'Descartar',
-    tasksMenuA11y: 'Registrar como você se sentiu hoje',
     todayCard: {
       eyebrow: 'Humor de hoje',
       promptTitle: 'Como você se sentiu hoje?',

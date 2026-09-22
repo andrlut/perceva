@@ -52,6 +52,7 @@ import {
 } from '@/lib/readingProgress';
 import { buildReelDeck, isGroupRead } from '@/lib/reels';
 import { useReelsProgressReady, useReelsProgressStore } from '@/lib/reelsProgress';
+import { usePullToRefresh } from '@/lib/usePullToRefresh';
 import { tokens } from '@/theme';
 import { DIMENSION_ORDER, SUB_META } from '@/theme/dimensions';
 
@@ -84,6 +85,10 @@ export default function LearningScreen() {
   const router = useRouter();
   const { t, locale } = useT();
   const feed = useLearningFeed();
+  // Pull indicator is local state — the feed's isFetching also flips on
+  // background refetches (app foreground), which would show the spinner
+  // without a pull.
+  const pull = usePullToRefresh(() => feed.refetch());
   const reads = useReadMaterialIds();
   // Ideas: one row per published idea + the user's collection. Both cheap
   // (a view select and a two-column self-only select) and cached 5 min /
@@ -370,8 +375,8 @@ export default function LearningScreen() {
           windowSize={5}
           refreshControl={
             <RefreshControl
-              refreshing={feed.isFetching && !feed.isLoading}
-              onRefresh={() => feed.refetch()}
+              refreshing={pull.refreshing}
+              onRefresh={pull.onRefresh}
               tintColor={tokens.text.mid}
             />
           }

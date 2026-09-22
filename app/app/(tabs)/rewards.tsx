@@ -56,6 +56,7 @@ import {
   useIsCurrentTourModule,
   useTourStore,
 } from '@/lib/tour/store';
+import { usePullToRefresh } from '@/lib/usePullToRefresh';
 import { confirmAction, showInfo } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 import { REWARD_CATEGORY_META, REWARD_CATEGORY_ORDER } from '@/theme/rewards';
@@ -441,6 +442,17 @@ export default function RewardsScreen() {
 
   const noRewardsAtAll = (rewards.data ?? []).length === 0;
 
+  // Pull indicator is local state — the queries' isRefetching also flips on
+  // every background refetch (mutations, app foreground).
+  const pull = usePullToRefresh(() =>
+    Promise.all([
+      rewards.refetch(),
+      character.refetch(),
+      templates.refetch(),
+      banked.refetch(),
+    ]),
+  );
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScreenBackground>
@@ -450,18 +462,8 @@ export default function RewardsScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={
-              rewards.isRefetching ||
-              character.isRefetching ||
-              templates.isRefetching ||
-              banked.isRefetching
-            }
-            onRefresh={() => {
-              rewards.refetch();
-              character.refetch();
-              templates.refetch();
-              banked.refetch();
-            }}
+            refreshing={pull.refreshing}
+            onRefresh={pull.onRefresh}
             tintColor={tokens.brand.violet2}
           />
         }

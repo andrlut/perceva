@@ -80,6 +80,7 @@ import type { CoinMultiplier, TaskSub, TaskWithSubs } from '@/lib/db/types';
 import { isDueOn } from '@/lib/recurrence';
 import { formatHeroDate } from '@/lib/time';
 import { compareOneShotsByFreshness, isInTrophyWindow } from '@/lib/trophy';
+import { usePullToRefresh } from '@/lib/usePullToRefresh';
 import { rewardForTaskSubs } from '@/lib/xp';
 import { tokens } from '@/theme';
 
@@ -544,12 +545,11 @@ export default function HomeScreen() {
       ...(questsEnabled ? [quests.refetch()] : []),
     ]);
   };
-  const isRefreshing =
-    character.isRefetching ||
-    buckets.isRefetching ||
-    allActiveTasks.isRefetching ||
-    dayDetail.isRefetching ||
-    quests.isRefetching;
+  // Pull indicator is local state — the queries' isRefetching also flips on
+  // every background refetch (mutations, app foreground), which would show
+  // the spinner without a pull.
+  const { refreshing: isRefreshing, onRefresh: onPullRefresh } =
+    usePullToRefresh(handleRefresh);
 
   const data = buckets.data;
 
@@ -971,7 +971,7 @@ export default function HomeScreen() {
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
-            onRefresh={handleRefresh}
+            onRefresh={onPullRefresh}
             tintColor={tokens.brand.violet2}
             colors={[tokens.brand.violet2]}
           />

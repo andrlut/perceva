@@ -134,6 +134,7 @@ const en = {
     weekdaysShort: 'Sun,Mon,Tue,Wed,Thu,Fri,Sat',
     weekdaysMonFri: 'Mon–Fri',
     weekend: 'Weekends',
+    daysShort: '{{count}} days',
     once: 'Once',
     onceLong: 'Just once',
     everyDay: 'Every day',
@@ -1379,12 +1380,12 @@ const en = {
     },
     // One line under the tabs: the three list gestures, in the order the
     // user needs them. Completing lives on All practices.
-    lead: 'Tap to edit. The label changes when it happens. Hold and drag to reorder.',
+    lead: 'Tap to edit. Tap the label to change when it happens. Hold and drag to reorder within the group.',
     buckets: {
       daily: 'Daily',
       dailyDesc: 'Every day, on the Today screen',
       weekly: 'Weekly',
-      weeklyDesc: 'Weekdays or a monthly cadence',
+      weeklyDesc: 'Set days or a monthly cadence',
       oneTime: 'One-time',
       oneTimeDesc: 'Just once',
     },
@@ -1398,7 +1399,7 @@ const en = {
     periodicity: {
       eyebrow: 'When it happens',
       save: 'Save',
-      saveFail: 'Could not change the schedule',
+      saveFail: 'Could not change when it happens',
     },
     archived: {
       section: 'Archived',
@@ -1411,9 +1412,9 @@ const en = {
       deleteOk: 'Delete',
       deleteFail: 'Could not delete',
       deleteBlockedHistory: 'This practice already has completions logged — it can only be archived.',
+      deleteBlockedQuest: 'This practice is tied to a quest — it can only be archived.',
     },
     adopt: {
-      adopt: 'Adopt',
       adoptA11y: 'Adopt {{title}}',
       added: 'Added',
     },
@@ -2384,7 +2385,6 @@ const en = {
     discardBody: "You picked a mood but didn't save it. Discard?",
     keep: 'Keep editing',
     discard: 'Discard',
-    tasksMenuA11y: 'Log how you felt today',
     todayCard: {
       eyebrow: "Today's mood",
       promptTitle: 'How did you feel today?',

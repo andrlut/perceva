@@ -67,23 +67,34 @@ import { describeRecurrence, isEffectivelyDaily } from '@/lib/recurrence';
 import { emitTourEvent } from '@/lib/tour/eventBus';
 import { buildM2Steps, M2_EVENTS } from '@/lib/tour/m2Steps';
 import { useIsCurrentTourModule, useTourStore } from '@/lib/tour/store';
+import { usePullToRefresh } from '@/lib/usePullToRefresh';
 import { confirmAction, showInfo } from '@/lib/util/confirm';
 import { rewardForTaskSubs } from '@/lib/xp';
-import { tokens } from '@/theme';
+import { ACTIVE_THEME, tokens } from '@/theme';
 import { DIMENSION_ORDER, SUBS_BY_DIM } from '@/theme/dimensions';
 
 type Tab = 'mine' | 'suggested';
 type Bucket = 'daily' | 'weekly' | 'one_time';
 type DimFilter = DimensionId | 'all';
 
+/** Boot-time theme flag — the light palette needs text-grade accents
+ *  (TaskCard makes the same call for its coin figure). */
+const LIGHT = ACTIVE_THEME === 'light';
+
 interface BucketMeta {
   id: Bucket;
   labelKey: string;
   descKey: string;
   iconName: keyof typeof Ionicons.glyphMap;
-  /** Accent color — section eyebrow, icon and every row's periodicity chip. */
+  /** Accent for NON-text: section icon, count chip, the periodicity chip's
+   *  border and chevron. 3:1 is enough there. Always a 6-digit hex so the
+   *  `${accent}66` alpha suffix works. */
   accent: string;
-  /** Translucent fill behind the icon tile and the chip (RGBA). */
+  /** Text-grade accent for the 11px eyebrow. The fill gold misses AA on
+   *  porcelain, so light swaps it for the palette's text gold. */
+  accentText: string;
+  /** Wash behind the icon tile and the chip — theme-swapped tokens, never
+   *  literals (a literal never follows the light theme). */
   accentBg: string;
 }
 
@@ -94,15 +105,17 @@ const BUCKETS: BucketMeta[] = [
     descKey: 'tasksHub.buckets.dailyDesc',
     iconName: 'sunny',
     accent: tokens.brand.violet2,
-    accentBg: 'rgba(157,127,255,0.16)',
+    accentText: tokens.brand.violet2,
+    accentBg: tokens.dimensionBg.mind,
   },
   {
     id: 'weekly',
     labelKey: 'tasksHub.buckets.weekly',
     descKey: 'tasksHub.buckets.weeklyDesc',
     iconName: 'calendar',
-    accent: '#4DD0FF',
-    accentBg: 'rgba(77,208,255,0.16)',
+    accent: tokens.dimension.bonds,
+    accentText: tokens.dimension.bonds,
+    accentBg: tokens.dimensionBg.bonds,
   },
   {
     id: 'one_time',
@@ -110,7 +123,8 @@ const BUCKETS: BucketMeta[] = [
     descKey: 'tasksHub.buckets.oneTimeDesc',
     iconName: 'flag',
     accent: tokens.semantic.coin,
-    accentBg: 'rgba(255,200,61,0.16)',
+    accentText: LIGHT ? tokens.semantic.coinDeep : tokens.semantic.coin,
+    accentBg: tokens.dimensionBg.wealth,
   },
 ];
 
@@ -224,6 +238,17 @@ export default function TasksHubScreen() {
   const [pickerTemplate, setPickerTemplate] = useState<TaskTemplateWithSubs | null>(null);
   /** Practice whose periodicity chip opened the re-schedule sheet. */
   const [periodicityTask, setPeriodicityTask] = useState<TaskWithSubs | null>(null);
+  /** Archived rows with a restore / delete in flight. A Set, not the
+   *  mutation's `variables`: useMutation only reports its LATEST call, so
+   *  two quick taps on two rows would free the first row's buttons early. */
+  const [busyIds, setBusyIds] = useState<Set<string>>(() => new Set());
+  const markBusy = (id: string, busy: boolean) =>
+    setBusyIds((prev) => {
+      const next = new Set(prev);
+      if (busy) next.add(id);
+      else next.delete(id);
+      return next;
+    });
 
   // ── Counts (drive the tab chips and the group counts) ─────────────────
   const totalTasks = tasks.data?.length ?? 0;
@@ -368,7 +393,9 @@ export default function TasksHubScreen() {
   };
 
   const handleRestore = async (task: TaskWithSubs) => {
+    if (busyIds.has(task.id)) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    markBusy(task.id, true);
     try {
       await restoreTask.mutateAsync(task.id);
     } catch (e) {
@@ -377,10 +404,13 @@ export default function TasksHubScreen() {
       if (freeLimitEntity(e)) return;
       const msg = e instanceof Error ? e.message : t('tasksHub.errors.unknown');
       showInfo(t('tasksHub.archived.restoreFail'), msg);
+    } finally {
+      markBusy(task.id, false);
     }
   };
 
   const handleDelete = async (task: TaskWithSubs) => {
+    if (busyIds.has(task.id)) return;
     const ok = await confirmAction(
       t('tasksHub.archived.deleteConfirmTitle', { title: task.title }),
       t('tasksHub.archived.deleteConfirmBody'),
@@ -392,17 +422,22 @@ export default function TasksHubScreen() {
     );
     if (!ok) return;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
+    markBusy(task.id, true);
     try {
       await deleteTask.mutateAsync(task.id);
     } catch (e) {
       const msg = e instanceof Error ? e.message : t('tasksHub.errors.unknown');
-      // The RPC raises a stable English phrase when completion history
-      // blocks the delete. Substring match so the localized copy stays
+      // The RPC raises stable English phrases for its two gates (completion
+      // history, quest link). Substring match so the localized copy stays
       // the source of truth for the UI text.
       const friendly = msg.includes('completion history')
         ? t('tasksHub.archived.deleteBlockedHistory')
-        : msg;
+        : msg.includes('referenced by a quest')
+          ? t('tasksHub.archived.deleteBlockedQuest')
+          : msg;
       showInfo(t('tasksHub.archived.deleteFail'), friendly);
+    } finally {
+      markBusy(task.id, false);
     }
   };
 
@@ -411,10 +446,13 @@ export default function TasksHubScreen() {
     setDimFilter(d);
   };
 
-  const handleRefresh = async () => {
-    await Promise.all([tasks.refetch(), archived.refetch(), templates.refetch()]);
-  };
-  const isRefreshing = tasks.isRefetching || archived.isRefetching || templates.isRefetching;
+  // Pull indicator is LOCAL state. The queries' isRefetching also flips on
+  // every background refetch — chip change, restore, return from the form,
+  // app foreground — which would pop the spinner right after the core
+  // interaction of this screen.
+  const { refreshing: isRefreshing, onRefresh: handleRefresh } = usePullToRefresh(() =>
+    Promise.all([tasks.refetch(), archived.refetch(), templates.refetch()]),
+  );
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
@@ -501,7 +539,12 @@ export default function TasksHubScreen() {
               autoFocus
             />
             {query.length > 0 && (
-              <Pressable onPress={() => setQuery('')} hitSlop={8}>
+              <Pressable
+                onPress={() => setQuery('')}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={t('common.clear')}
+              >
                 <Ionicons name="close-circle" size={16} color={tokens.text.dim} />
               </Pressable>
             )}
@@ -527,13 +570,7 @@ export default function TasksHubScreen() {
             onReorder={(ids) => reorderTasks.mutate(ids)}
             onRestore={handleRestore}
             onDelete={handleDelete}
-            busyId={
-              restoreTask.isPending
-                ? restoreTask.variables ?? null
-                : deleteTask.isPending
-                  ? deleteTask.variables ?? null
-                  : null
-            }
+            busyIds={busyIds}
             bottomClearance={bottomClearance}
           />
         ) : (
@@ -640,8 +677,8 @@ interface MineBodyProps {
   onReorder: (orderedIds: string[]) => void;
   onRestore: (task: TaskWithSubs) => void;
   onDelete: (task: TaskWithSubs) => void;
-  /** Archived row whose restore / delete is in flight. */
-  busyId: string | null;
+  /** Archived rows whose restore / delete is in flight. */
+  busyIds: Set<string>;
   bottomClearance: number;
 }
 
@@ -663,7 +700,7 @@ function MineBody({
   onReorder,
   onRestore,
   onDelete,
-  busyId,
+  busyIds,
   bottomClearance,
 }: MineBodyProps) {
   const { t } = useT();
@@ -699,19 +736,21 @@ function MineBody({
   const keyExtractor = (item: MineItem, idx: number) =>
     item.kind === 'task' ? `t-${item.task.id}` : `${item.kind}-${item.bucket}-${idx}`;
 
-  /** Flat post-drag list → global task-id ordering → RPC. Tasks hidden by
-   *  search or collapse keep their relative order at the tail. */
-  const commitReorder = (next: MineItem[]) => {
-    const orderedTaskIds: string[] = [];
-    const seen = new Set<string>();
+  /** Post-drag list → global ordering → RPC. Only the moved group's VISIBLE
+   *  rows take their new sequence; every other practice (other groups,
+   *  hidden by search or a collapsed group) keeps its exact position — the
+   *  server rewrites sort_order 1..N over this list and Home reads it, so a
+   *  reorder inside Semanais must never reshuffle Hoje's Diárias. */
+  const commitReorder = (next: MineItem[], bucket: Bucket) => {
+    const newSequence: string[] = [];
     for (const it of next) {
-      if (it.kind !== 'task') continue;
-      orderedTaskIds.push(it.task.id);
-      seen.add(it.task.id);
+      if (it.kind === 'task' && it.bucket === bucket) newSequence.push(it.task.id);
     }
-    for (const tk of allActive) {
-      if (!seen.has(tk.id)) orderedTaskIds.push(tk.id);
-    }
+    const moving = new Set(newSequence);
+    let cursor = 0;
+    const orderedTaskIds = allActive.map((tk) =>
+      moving.has(tk.id) ? (newSequence[cursor++] ?? tk.id) : tk.id,
+    );
     onReorder(orderedTaskIds);
   };
 
@@ -763,7 +802,12 @@ function MineBody({
   }
 
   const nothingActive = allActive.length === 0;
-  const nothingMatches = !nothingActive && query.trim().length > 0 && items.every((it) => it.kind !== 'task');
+  // From the filtered DATA, not the rendered items: a match inside a
+  // collapsed group is still a match.
+  const nothingMatches =
+    !nothingActive &&
+    query.trim().length > 0 &&
+    BUCKETS.every((b) => tasksByBucket[b.id].length === 0);
 
   const Footer = (
     <View style={styles.footer}>
@@ -774,7 +818,7 @@ function MineBody({
           onToggle={onToggleArchived}
           onRestore={onRestore}
           onDelete={onDelete}
-          busyId={busyId}
+          busyIds={busyIds}
         />
       )}
       {!nothingActive && <AddCard label={t('tasksHub.newTask')} onPress={onCreate} />}
@@ -786,21 +830,26 @@ function MineBody({
       data={nothingActive || nothingMatches ? [] : localItems}
       keyExtractor={keyExtractor}
       renderItem={renderItem}
-      onDragEnd={({ data, to }) => {
+      onDragEnd={({ data, from, to }) => {
+        // A long-press released in place also ends here — nothing moved,
+        // so no RPC and no invalidation storm.
+        if (from === to) return;
         const moved = data[to];
         if (!moved || moved.kind !== 'task') {
           setLocalItems(localItems);
           return;
         }
         // Constrain to the section the row started in — a drop across a
-        // header snaps back. Groups are changed by the chip, not by drag.
+        // header snaps back, with a warning buzz so the snap reads as
+        // "not here" and not as a glitch. Groups are changed by the chip.
         if (sectionOf(data, to) !== moved.bucket) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
           setLocalItems(localItems);
           return;
         }
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
         setLocalItems(data);
-        commitReorder(data);
+        commitReorder(data, moved.bucket);
       }}
       activationDistance={20}
       ListHeaderComponent={
@@ -876,7 +925,7 @@ function BucketHeader({
         <Ionicons name={meta.iconName} size={16} color={meta.accent} />
       </View>
       <View style={styles.bucketTitleCol}>
-        <Text style={[styles.bucketEyebrow, { color: meta.accent }]}>
+        <Text style={[styles.bucketEyebrow, { color: meta.accentText }]}>
           {t(meta.labelKey).toUpperCase()}
         </Text>
         <Text style={styles.bucketDesc} numberOfLines={1}>
@@ -884,7 +933,7 @@ function BucketHeader({
         </Text>
       </View>
       <View style={[styles.countChip, { backgroundColor: meta.accentBg }]}>
-        <Text style={[styles.countChipText, { color: meta.accent }]}>{count}</Text>
+        <Text style={[styles.countChipText, { color: meta.accentText }]}>{count}</Text>
       </View>
       <Ionicons
         name={collapsed ? 'chevron-down' : 'chevron-up'}
@@ -909,6 +958,10 @@ interface ManageRowProps {
  * tinted icon tile, sub stack + colored pips + XP) minus the check
  * button, plus the periodicity chip. Tap → edit form. Long-press →
  * drag (order within the group). Chip → re-schedule sheet.
+ *
+ * No drag handle glyph: the whole row long-presses, the lead line and the
+ * a11y hint say so, and on a 360dp phone those 28px are the difference
+ * between a readable title and five characters next to the chip.
  */
 function ManageRow({ task, meta, drag, isActive, onEdit, onPeriodicity }: ManageRowProps) {
   const { t } = useT();
@@ -945,7 +998,6 @@ function ManageRow({ task, meta, drag, isActive, onEdit, onPeriodicity }: Manage
             style={StyleSheet.absoluteFill}
             pointerEvents="none"
           />
-          <Ionicons name="reorder-three" size={18} color={tokens.text.faint} />
           <View style={[styles.subTile, { backgroundColor: dim.bg }]}>
             <Ionicons
               name={(task.icon ?? sub.iconName) as never}
@@ -954,16 +1006,9 @@ function ManageRow({ task, meta, drag, isActive, onEdit, onPeriodicity }: Manage
             />
           </View>
           <View style={styles.rowBody}>
-            <View style={styles.rowTitleLine}>
-              <Text style={styles.rowTitle} numberOfLines={1}>
-                {task.title}
-              </Text>
-              {isCustom && (
-                <View style={styles.customChip}>
-                  <Text style={styles.customChipText}>{t('tasksHub.customChip')}</Text>
-                </View>
-              )}
-            </View>
+            <Text style={styles.rowTitle} numberOfLines={2}>
+              {task.title}
+            </Text>
             <View style={styles.metaRow}>
               {task.subs.length > 0 && (
                 <SubStack subIds={task.subs.map((s) => s.sub_id)} max={3} size={16} />
@@ -976,21 +1021,31 @@ function ManageRow({ task, meta, drag, isActive, onEdit, onPeriodicity }: Manage
                   <Text style={styles.coinTagText}>{reward.total.coins}</Text>
                 </View>
               )}
+              {isCustom && (
+                <View style={styles.customChip}>
+                  <Text style={styles.customChipText}>{t('tasksHub.customChip')}</Text>
+                </View>
+              )}
             </View>
           </View>
+          {/* Label stays neutral (AA in both palettes); the accent carries
+              border, wash and chevron — TaskCard's rule for its coin figure.
+              accessibilityValue: the label replaces the child text for screen
+              readers, so the current schedule must travel separately. */}
           <Pressable
             onPress={onPeriodicity}
             disabled={isActive}
-            hitSlop={6}
+            hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel={t('tasksHub.row.periodicityA11y', { title: task.title })}
+            accessibilityValue={{ text: chipLabel }}
             style={({ pressed }) => [
               styles.periodChip,
               { borderColor: `${meta.accent}66`, backgroundColor: meta.accentBg },
               pressed && { opacity: 0.7 },
             ]}
           >
-            <Text style={[styles.periodChipText, { color: meta.accent }]} numberOfLines={1}>
+            <Text style={styles.periodChipText} numberOfLines={1}>
               {chipLabel}
             </Text>
             <Ionicons name="chevron-down" size={12} color={meta.accent} />
@@ -1011,10 +1066,10 @@ interface ArchivedSectionProps {
   onToggle: () => void;
   onRestore: (task: TaskWithSubs) => void;
   onDelete: (task: TaskWithSubs) => void;
-  busyId: string | null;
+  busyIds: Set<string>;
 }
 
-function ArchivedSection({ tasks, open, onToggle, onRestore, onDelete, busyId }: ArchivedSectionProps) {
+function ArchivedSection({ tasks, open, onToggle, onRestore, onDelete, busyIds }: ArchivedSectionProps) {
   const { t } = useT();
   return (
     <View style={styles.archivedBlock}>
@@ -1044,7 +1099,7 @@ function ArchivedSection({ tasks, open, onToggle, onRestore, onDelete, busyId }:
             <ArchivedRow
               key={task.id}
               task={task}
-              busy={busyId === task.id}
+              busy={busyIds.has(task.id)}
               onRestore={() => onRestore(task)}
               onDelete={() => onDelete(task)}
             />
@@ -1179,10 +1234,13 @@ function SuggestedBody({
         </View>
       </View>
 
-      {/* Dimension filter — "Todas" + the 6 dims in catalog order. */}
+      {/* Dimension filter — "Todas" + the 6 dims in catalog order. Bleeds
+          to the screen edge (negative margin + inner padding) so chips
+          scroll out under the gutter instead of clipping at it. */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={styles.dimChipsScroll}
         contentContainerStyle={styles.dimChipsRow}
         keyboardShouldPersistTaps="handled"
       >
@@ -1219,17 +1277,22 @@ function SuggestedBody({
           const subMeta = lookup.sub(subId);
           const dimMeta = lookup.dim(subMeta.dimensionId);
           const list = templatesBySub.get(subId) ?? [];
+          // Same count the tab chip shows: what is still there to adopt.
+          const openCount = list.filter((tp) => !adoptedTemplateIds.has(tp.id)).length;
           // A picked dimension or an active search force-expands: collapsed
-          // groups would hide exactly what the user just asked for.
-          const isCollapsed =
-            searching || dimFilter !== 'all' ? false : !!collapsedSubs[subId];
+          // groups would hide exactly what the user just asked for. The
+          // header is then a plain label — toggling hidden state behind a
+          // forced-open group would only desync it for later.
+          const forcedOpen = searching || dimFilter !== 'all';
+          const isCollapsed = forcedOpen ? false : !!collapsedSubs[subId];
           return (
             <View key={subId} style={styles.subGroup}>
               <Pressable
-                onPress={() => onToggleSub(subId)}
+                onPress={forcedOpen ? undefined : () => onToggleSub(subId)}
+                disabled={forcedOpen}
                 style={({ pressed }) => [styles.bucketHeader, pressed && { opacity: 0.7 }]}
-                accessibilityRole="button"
-                accessibilityState={{ expanded: !isCollapsed }}
+                accessibilityRole={forcedOpen ? 'header' : 'button'}
+                accessibilityState={forcedOpen ? undefined : { expanded: !isCollapsed }}
               >
                 <View style={[styles.bucketIcon, { backgroundColor: dimMeta.bg }]}>
                   <Ionicons name={subMeta.iconName as never} size={16} color={dimMeta.color} />
@@ -1243,13 +1306,15 @@ function SuggestedBody({
                   </Text>
                 </View>
                 <View style={[styles.countChip, { backgroundColor: dimMeta.bg }]}>
-                  <Text style={[styles.countChipText, { color: dimMeta.color }]}>{list.length}</Text>
+                  <Text style={[styles.countChipText, { color: dimMeta.color }]}>{openCount}</Text>
                 </View>
-                <Ionicons
-                  name={isCollapsed ? 'chevron-down' : 'chevron-up'}
-                  size={16}
-                  color={tokens.text.dim}
-                />
+                {!forcedOpen && (
+                  <Ionicons
+                    name={isCollapsed ? 'chevron-down' : 'chevron-up'}
+                    size={16}
+                    color={tokens.text.dim}
+                  />
+                )}
               </Pressable>
 
               {!isCollapsed && (
@@ -1293,6 +1358,7 @@ function DimChip({
   return (
     <Pressable
       onPress={onPress}
+      hitSlop={6}
       accessibilityRole="button"
       accessibilityState={{ selected }}
       style={({ pressed }) => [
@@ -1594,11 +1660,6 @@ const styles = StyleSheet.create({
     minWidth: 0,
     gap: 4,
   },
-  rowTitleLine: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
   rowTitle: {
     fontFamily: 'Manrope_700Bold',
     fontSize: 14,
@@ -1643,12 +1704,13 @@ const styles = StyleSheet.create({
     color: tokens.text.mid,
     letterSpacing: 0.2,
   },
+  // 32 + hitSlop 8 = 48dp, the adopt "+" / rewards-manage icon-button size.
   periodChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
     maxWidth: 124,
-    minHeight: 30,
+    minHeight: 32,
     paddingLeft: 9,
     paddingRight: 6,
     borderRadius: tokens.radius.pill,
@@ -1659,6 +1721,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 11,
     letterSpacing: 0.2,
+    color: tokens.text.hi,
     flexShrink: 1,
   },
 
@@ -1776,10 +1839,15 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     color: tokens.brand.violet2,
   },
+  dimChipsScroll: {
+    marginHorizontal: -tokens.space[4],
+    flexGrow: 0,
+  },
   dimChipsRow: {
     flexDirection: 'row',
     gap: tokens.space[2],
     paddingVertical: tokens.space[1],
+    paddingHorizontal: tokens.space[4],
   },
   dimChip: {
     flexDirection: 'row',
