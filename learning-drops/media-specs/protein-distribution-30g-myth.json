@@ -5,6 +5,9 @@
     "pt": "O teto de 30g de proteína não existe",
     "en": "The 30-Gram Protein Ceiling Doesn't Exist"
   },
+  "cover": {
+    "prompt": "Uma mesa posta de jantar vista de cima em ângulo de três quartos, ocupando a metade de baixo do quadro: quatro pratos dispostos em curva em volta da quina da mesa, cada um com uma porção farta de proteína — filés de frango grelhado, ovos, fatias grossas de carne, feijão —, e duas mãos com garfo e faca já começando a comer do prato mais próximo, que é o maior e mais nítido do quadro. A única luz quente e dourada desce de uma luminária baixa e cai inteira sobre a comida e os antebraços, tocando os quatro pratos com a mesma força; acima da mesa a parede fica lisa e vazia, numa penumbra fria, com um único acento verde-sálvia no pano que cobre a mesa."
+  },
   "ideas": [
     {
       "id": "nao-existe-teto-de-absorcao",

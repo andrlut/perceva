@@ -5,6 +5,9 @@
     "pt": "Descanso é uma habilidade, não um prêmio",
     "en": "Rest Is a Skill, Not a Prize"
   },
+  "cover": {
+    "prompt": "Uma pessoa afundada no sofá da sala numa tarde de domingo, vista de lado e de perto, ocupando a metade de baixo do quadro: sapatos largados no chão, pés apoiados na mesinha, braços caídos, a cabeça encostada para trás no encosto e o corpo inteiro solto; ao lado dela, no assento, o celular caído de bruços e esquecido, e uma manta de tricô num verde-sálvia desbotado escorregando do braço do sofá. A única luz quente e dourada é o sol baixo do fim de tarde entrando pela janela lateral e atravessando o peito e o rosto dela; a parede acima do sofá fica vazia e em penumbra fria."
+  },
   "ideas": [
     {
       "id": "sofa-um-pedaco",
