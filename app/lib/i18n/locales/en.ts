@@ -711,6 +711,13 @@ const en = {
       state: 'Status',
       clear: 'Clear filter',
     },
+    search: {
+      section: 'Search',
+      placeholder: 'A word from the title, the topic or an idea',
+      clear: 'Clear search',
+      chip: 'Search: {{q}}',
+      empty: 'Nothing found for “{{q}}”.',
+    },
     detail: {
       source: 'Source',
       takeaways: 'Walk away with this',

@@ -47,6 +47,7 @@ import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { pickLocalized, type IdeaLocale } from '@/lib/ideas';
 import { categoryOf } from '@/lib/learningCategory';
+import { buildHaystack, matchesQuery } from '@/lib/learningSearch';
 import {
   useContinueReading,
   useReadingProgressReady,
@@ -106,6 +107,7 @@ export default function LearningScreen() {
 
   const [readFilter, setReadFilter] = useState<ReadFilter>('unread');
   const [pillFilter, setPillFilter] = useState<PillFilter>(null);
+  const [query, setQuery] = useState('');
   const [filterOpen, setFilterOpen] = useState(false);
   const bottomClearance = useBottomNavClearance();
 
@@ -189,6 +191,37 @@ export default function LearningScreen() {
     return out;
   }, [ideaCards.data, collectedMap]);
 
+  // material_id → everything a reader might type from memory. Both locales
+  // go in (people remember the title they read, whichever it was), and so do
+  // the ideas' titles and claims: an idea ("25 vezes o gasto") sticks more
+  // than the material it sits in.
+  const haystacks = useMemo(() => {
+    const byMaterial = new Map<string, string[]>();
+    for (const row of ideaCards.data ?? []) {
+      const parts = byMaterial.get(row.material_id) ?? [];
+      parts.push(row.title_pt, row.title_en, row.claim_pt, row.claim_en);
+      byMaterial.set(row.material_id, parts);
+    }
+    const out = new Map<string, string>();
+    for (const c of all) {
+      out.set(
+        c.id,
+        buildHaystack([
+          c.title_pt,
+          c.title_en,
+          c.summary_pt,
+          c.summary_en,
+          c.topic,
+          c.slug.replace(/-/g, ' '),
+          meta.dim(c.dimension_id).label,
+          ...c.subs.map((s) => meta.sub(s).label),
+          ...(byMaterial.get(c.id) ?? []),
+        ]),
+      );
+    }
+    return out;
+  }, [all, ideaCards.data, meta]);
+
   // Continue hero for ideas: the most recently released material with some
   // but not all ideas absorbed, and the title of its next idea (lowest
   // ordinal not yet collected). Wins over the legacy scroll candidate.
@@ -258,9 +291,11 @@ export default function LearningScreen() {
         if (pillFilter.kind === 'category' && categoryOf(c) !== pillFilter.value) return false;
         if (pillFilter.kind === 'sub' && !c.subs.includes(pillFilter.value as SubId)) return false;
       }
+      // Free-text search — stacks on top of the pill and read filters
+      if (query.trim() && !matchesQuery(haystacks.get(c.id) ?? '', query)) return false;
       return true;
     });
-  }, [all, readFilter, readSet, pillFilter]);
+  }, [all, readFilter, readSet, pillFilter, query, haystacks]);
 
   // Group buckets for the carousel rows. We compute against `filtered`
   // so empty groups drop out naturally.
@@ -412,8 +447,11 @@ export default function LearningScreen() {
           {/* Active filter chips — the pill filter and/or a non-default
              read state, each with its own clear. The controls themselves
              live in the filter sheet. */}
-          {(pillFilter || readFilter !== 'unread') && (
+          {(pillFilter || readFilter !== 'unread' || query.trim().length > 0) && (
             <View style={activeChipStyles.row}>
+              {query.trim().length > 0 && (
+                <SearchChip query={query.trim()} onClear={() => setQuery('')} />
+              )}
               {pillFilter && (
                 <PillFilterChip filter={pillFilter} onClear={() => setPillFilter(null)} />
               )}
@@ -460,8 +498,16 @@ export default function LearningScreen() {
           {/* Empty (after filtering) */}
           {!feed.isLoading && filtered.length === 0 && (
             <View style={styles.empty}>
-              <Ionicons name="book-outline" size={36} color={tokens.text.dim} />
-              <Text style={styles.emptyText}>{t('learning.empty')}</Text>
+              <Ionicons
+                name={query.trim() ? 'search-outline' : 'book-outline'}
+                size={36}
+                color={tokens.text.dim}
+              />
+              <Text style={styles.emptyText}>
+                {query.trim()
+                  ? t('learning.search.empty', { q: query.trim() })
+                  : t('learning.empty')}
+              </Text>
             </View>
           )}
 
@@ -542,6 +588,8 @@ export default function LearningScreen() {
         onFilterChange={setPillFilter}
         readFilter={readFilter}
         onReadFilterChange={setReadFilter}
+        query={query}
+        onQueryChange={setQuery}
       />
 
       {/* M6 step 2 lives here (Learn explainer). Step 1 is on Home (Learn
@@ -652,6 +700,25 @@ function ReadFilterChip({ value, onClear }: ReadFilterChipProps) {
     <FilterChip
       label={t(`learning.readFilter.${value}`)}
       iconName={value === 'read' ? 'checkmark-done-outline' : 'layers-outline'}
+      accent={tokens.brand.violet2}
+      onClear={onClear}
+    />
+  );
+}
+
+interface SearchChipProps {
+  query: string;
+  onClear: () => void;
+}
+
+/** The active search, with its own clear — the field itself lives in the
+ *  filter sheet, so this is what tells you the feed is narrowed. */
+function SearchChip({ query, onClear }: SearchChipProps) {
+  const { t } = useT();
+  return (
+    <FilterChip
+      label={t('learning.search.chip', { q: query })}
+      iconName="search"
       accent={tokens.brand.violet2}
       onClear={onClear}
     />
