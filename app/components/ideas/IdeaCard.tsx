@@ -28,8 +28,14 @@ import { DIMENSION_META } from '@/theme/dimensions';
  * THE idea card — a 4:5 portrait tile that flips on tap.
  *
  * FRONT: the idea illustration (or a dimension-tinted placeholder with the
- * dimension's Ionicon), a dimension-tinted gradient at the bottom and the
- * hook title over it, inside a thin frame in the dimension color.
+ * dimension's Ionicon), a dimension-tinted gradient at the TOP and the hook
+ * title over it, inside a thin frame in the dimension color. Top, not bottom,
+ * for the same reason the material cover puts its title there: the art is
+ * composed with the subject low — measured over a 40-image sample of the
+ * catalog, the bottom 38% of an idea image carries ~2.4× the edge energy of
+ * the top 38%, and only 4 of 40 are the other way around. Text at the bottom
+ * sat on the subject; at the top it sits on wall, sky or penumbra. The
+ * collected badge moved to the bottom corner for the same reason.
  * BACK: dark glass, a thin top bar in the dimension color and the claim in
  * bold — nothing else. The claim owns the whole face (vertically centered,
  * left-aligned) and ALWAYS fits whole: the size is pre-fitted from the
@@ -115,7 +121,8 @@ const FLIP_MS = 420;
 const LARGE_WIDTH = 300;
 /** Collection cell on a 390-pt phone (`collectionCardWidth(390)`) — the mid stop of the claim size. */
 const COLLECTION_CELL_WIDTH = 171;
-const OVERLAY_LOCATIONS = [0, 0.45, 1] as const;
+/** Mirror of the old bottom ramp: opaque at the top edge, gone by the end of the band. */
+const OVERLAY_LOCATIONS = [0, 0.55, 1] as const;
 
 /** Height of the dimension-colored bar at the top of the back face. */
 const TOP_BAR_H = 3;
@@ -134,6 +141,24 @@ const CLAIM_LINE_HEIGHT = 1.3;
 const CLAIM_MIN_SCALE = 0.6;
 /** Manrope 700 average glyph advance as a fraction of the font size. */
 const CLAIM_AVG_ADVANCE_EM = 0.56;
+
+/**
+ * Title type: lines the hook gets, how far it may shrink to earn them, and
+ * the glyph model used to decide.
+ *
+ * The editorial cap is 48 characters. On the 132px rail that is four lines,
+ * never three — with a hard `numberOfLines={3}` half the catalog's titles
+ * (109 of the 220 PT+EN titles published) ended in an ellipsis. Four lines
+ * plus a shrink of at most 20% fits every one of them: in the pessimistic
+ * glyph model below, 26 of 220 shrink, by 2px at the very worst, and none
+ * truncates. `TITLE_AVG_ADVANCE_EM` is deliberately wider than Manrope
+ * 800's real advance (~0.58em) — overestimating costs half a pixel of type,
+ * underestimating costs a cut word.
+ */
+const TITLE_MAX_LINES = 4;
+const TITLE_MIN_SCALE = 0.8;
+const TITLE_LINE_HEIGHT = 1.18;
+const TITLE_AVG_ADVANCE_EM = 0.6;
 
 /** Linear size between the rail width and the large width, clamped. */
 function scaled(width: number, atRail: number, atLarge: number): number {
@@ -224,6 +249,26 @@ function fitClaim(claim: string, base: number, innerW: number, innerH: number): 
   return { fontSize: size, lineHeight: box.lineHeight, maxLines: box.maxLines };
 }
 
+/**
+ * Largest size in [0.8·base, base] (0.5px steps) at which the title's
+ * estimated line count fits `TITLE_MAX_LINES`; font and line height shrink
+ * together. `adjustsFontSizeToFit` stays on as the net for the cases the
+ * estimate gets wrong.
+ */
+function fitTitle(title: string, base: number, innerW: number): ClaimFit {
+  const floor = Math.ceil(base * TITLE_MIN_SCALE * 2) / 2;
+  let size = base;
+  const cplAt = (s: number) => Math.max(1, Math.floor(innerW / (s * TITLE_AVG_ADVANCE_EM)));
+  while (size - 0.5 >= floor && estimateLines(title, cplAt(size)) > TITLE_MAX_LINES) {
+    size -= 0.5;
+  }
+  return {
+    fontSize: size,
+    lineHeight: Math.round(size * TITLE_LINE_HEIGHT),
+    maxLines: TITLE_MAX_LINES,
+  };
+}
+
 /** `#RRGGBB` (or `#RGB`) → `rgba(r, g, b, alpha)`; non-hex colors pass through. */
 function withAlpha(color: string, alpha: number): string {
   if (!color.startsWith('#')) return color;
@@ -272,8 +317,11 @@ export const IdeaCard = memo(function IdeaCard({
   const titleSize = scaled(width, 13, 20);
   const kickerSize = scaled(width, 10, 11);
   const iconSize = Math.round(width * 0.28);
-  const compact = width < 200;
   const showKicker = kicker != null && kicker.trim().length > 0;
+  const titleFit = useMemo(
+    () => fitTitle(title, titleSize, width - 2 * pad),
+    [title, titleSize, width, pad],
+  );
 
   const showOpen = openAffordance === 'corner' && onOpen != null;
   // The claim box: below the top bar (and below the corner button when it is
@@ -286,9 +334,10 @@ export const IdeaCard = memo(function IdeaCard({
     [claim, width, pad, height, claimTop],
   );
 
+  // Top-down: opaque where the title sits, dissolving into the art below.
   const overlayColors = useMemo(
     () =>
-      ['rgba(0, 0, 0, 0)', withAlpha(dimColor, 0.35), 'rgba(6, 8, 30, 0.92)'] as const,
+      ['rgba(6, 8, 30, 0.92)', withAlpha(dimColor, 0.35), 'rgba(0, 0, 0, 0)'] as const,
     [dimColor],
   );
   const frameStyle = useMemo(
@@ -397,15 +446,17 @@ export const IdeaCard = memo(function IdeaCard({
           <Text
             style={[
               styles.title,
-              { fontSize: titleSize, lineHeight: Math.round(titleSize * 1.18) },
+              { fontSize: titleFit.fontSize, lineHeight: titleFit.lineHeight },
             ]}
-            numberOfLines={compact ? 3 : 4}
+            numberOfLines={titleFit.maxLines}
+            adjustsFontSizeToFit
+            minimumFontScale={TITLE_MIN_SCALE}
           >
             {title}
           </Text>
         </View>
         {collected && (
-          <View style={[styles.badge, { top: pad - 2, right: pad - 2 }]}>
+          <View style={[styles.badge, { bottom: pad - 2, right: pad - 2 }]}>
             <Ionicons name="checkmark" size={13} color={tokens.bg.deep} />
           </View>
         )}
@@ -483,14 +534,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: 0,
+    top: 0,
     height: '62%',
   },
   titleWrap: {
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: 0,
+    top: 0,
   },
   /** Material title above the headline — same left inset, one line, muted. */
   kicker: {

@@ -5,6 +5,9 @@
     "pt": "A sensação de aprender mente",
     "en": "The feeling of learning lies"
   },
+  "cover": {
+    "prompt": "Uma pessoa à escrivaninha de dia, vista de perto e um pouco por cima do ombro, ocupando a metade de baixo do quadro: um livro grosso aberto sobre a mesa com as páginas lisas cobertas de ponta a ponta por faixas largas de marcador amarelo fluorescente, uma das mãos arrastando o marcador sobre mais uma linha e a outra segurando a página aberta; ao lado, fichas de estudo soltas e uma pilha de cadernos. A única luz quente e dourada entra por uma janela lateral e cai sobre as páginas amarelas e as duas mãos; a parede acima da mesa fica vazia, numa penumbra fria."
+  },
   "ideas": [
     {
       "id": "dificuldades-desejaveis",
