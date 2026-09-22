@@ -10,6 +10,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { AppIcon } from '@/components/AppIcon';
 import type { Reward } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { tokens } from '@/theme';
@@ -143,11 +144,7 @@ export function BuyConfirmModal({
                     },
                   ]}
                 >
-                  <Ionicons
-                    name={reward.icon as never}
-                    size={28}
-                    color={cat.color}
-                  />
+                  <AppIcon name={reward.icon} size={28} color={cat.color} />
                 </View>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Text style={[styles.category, { color: cat.color }]}>

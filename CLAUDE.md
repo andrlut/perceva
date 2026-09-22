@@ -378,6 +378,7 @@ The publishable key is safe in client (RLS protects). The service_role key has b
 - **`*.supabase.co` NUNCA serve HTML**: a plataforma reescreve respostas HTML (Edge Functions E Storage) para `text/plain` + CSP `sandbox` (anti-phishing). Qualquer página web (ex.: consent do OAuth) precisa de origem externa — a nossa vive no GitHub Pages do próprio repo (branch `gh-pages`).
 - **`character.locale` NÃO existe** (apesar de mencionado em docs antigas) — ver migration `20260518000005`. Locale é conceito client-side.
 - **Bilingual catalogs**: every new user-facing catalog column should ship as `*_pt` (and optionally `*_en`). Client picks the column by the app locale (`useT()`).
+- **User-chosen icons (`task.icon`, `reward.icon`, `skill.icon`)** are free text in TWO families since 2026-09-22: a bare name is Ionicons (`'pizza'`, every pre-existing row), `mdi:<glyph>` is MaterialCommunityIcons (`'mdi:smoking'` — 7k glyphs Ionicons lacks). **Always render them with `<AppIcon name={…}>`** (`app/components/AppIcon.tsx`), never `<Ionicons name={x.icon}>` — a bare `Ionicons` draws nothing for an `mdi:` id. The categorized, bilingual catalog + search live in `app/lib/icons/catalog.ts`; the one picker is `IconPickerModal` (search + category chips + a context `suggested` shortlist), used by the task, reward and skill forms. Both icon fonts are preloaded in `_layout.tsx`.
 - **Migrations are write-once**: never edit a merged migration; add a new one. Existing migrations use `IF EXISTS` / idempotent guards where possible.
 
 ---

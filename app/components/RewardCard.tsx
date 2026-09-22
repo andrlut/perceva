@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { AppIcon } from '@/components/AppIcon';
 import type { Reward } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { ACTIVE_THEME, tokens } from '@/theme';
@@ -162,11 +163,7 @@ export function RewardCard({
                 },
               ]}
             >
-              <Ionicons
-                name={reward.icon as never}
-                size={20}
-                color={cat.color}
-              />
+              <AppIcon name={reward.icon} size={20} color={cat.color} />
             </View>
             {/* Discrete category glyph — same iconography as the filter
                 chips so the link is obvious. ~70% opacity keeps it as a

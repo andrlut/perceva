@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMemo, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
+import { AppIcon } from '@/components/AppIcon';
 import { MoodFace } from '@/components/mood/MoodFace';
 import {
   byXpDesc,
@@ -485,11 +486,7 @@ function VaultReading({
                 <Ionicons name="checkmark" size={14} color={tokens.semantic.xp} />
               </View>
             )}
-            <Ionicons
-              name={(r.icon ?? 'gift') as keyof typeof Ionicons.glyphMap}
-              size={13}
-              color={tokens.semantic.coin}
-            />
+            <AppIcon name={r.icon ?? 'gift'} size={13} color={tokens.semantic.coin} />
             <Text style={styles.title} numberOfLines={1}>
               {label}
             </Text>

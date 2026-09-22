@@ -134,6 +134,32 @@ const pt: Translations = {
     monthDay: 'dia {{day}}',
   },
 
+  // Seletor de ícone compartilhado (prática, recompensa, habilidade):
+  // busca + categorias. Os rótulos de cada ícone vivem no catálogo
+  // (lib/icons/catalog.ts, pt/en lado a lado), não aqui.
+  iconPicker: {
+    searchPlaceholder: 'Buscar ícone… cigarro, celular, equilíbrio',
+    suggested: 'Sugeridos',
+    all: 'Todos',
+    auto: 'Automático',
+    noResults: 'Nenhum ícone pra "{{query}}".',
+    categories: {
+      health: 'Saúde',
+      food: 'Comida',
+      sport: 'Esporte',
+      mind: 'Mente',
+      work: 'Trabalho e dinheiro',
+      tech: 'Tech',
+      home: 'Casa',
+      people: 'Pessoas',
+      fun: 'Lazer',
+      outdoors: 'Natureza e viagem',
+      quit: 'Largar',
+      time: 'Tempo e rotina',
+      symbols: 'Símbolos',
+    },
+  },
+
   usernameModal: {
     title: 'Nome de usuário',
     label: 'Como podemos te chamar?',

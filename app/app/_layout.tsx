@@ -9,6 +9,7 @@ import {
   useFonts,
 } from '@expo-google-fonts/manrope';
 import { PlayfairDisplay_700Bold } from '@expo-google-fonts/playfair-display';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import {
   MutationCache,
@@ -173,6 +174,12 @@ export default function RootLayout() {
     BebasNeue_400Regular,
     AbrilFatface_400Regular,
     DMSerifDisplay_400Regular,
+    // Icon fonts up front. User-chosen icons (task / reward / skill) can be
+    // MaterialCommunityIcons since 2026-09-22 (`mdi:` ids, see lib/icons);
+    // preloading both families means a card never paints an empty tile
+    // while the glyph font streams in.
+    ...Ionicons.font,
+    ...MaterialCommunityIcons.font,
   });
 
   if (!fontsLoaded && !fontError) {

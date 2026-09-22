@@ -21,6 +21,7 @@ import DraggableFlatList, {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useIsFocused } from '@react-navigation/native';
 
+import { AppIcon } from '@/components/AppIcon';
 import { AddCard } from '@/components/AddCard';
 import {
   AdoptPeriodicitySheet,
@@ -1197,11 +1198,7 @@ function ManageRow({
             }}
           >
             <View style={[styles.subTile, { backgroundColor: dim.bg }]}>
-              <Ionicons
-                name={(task.icon ?? sub.iconName) as never}
-                size={17}
-                color={dim.color}
-              />
+              <AppIcon name={task.icon ?? sub.iconName} size={17} color={dim.color} />
             </View>
             <View style={styles.rowBody}>
               <Text style={styles.rowTitle} numberOfLines={2}>
@@ -1326,7 +1323,7 @@ function ArchivedRow({
   return (
     <View style={styles.archivedRow}>
       <View style={[styles.subTile, styles.subTileArchived]}>
-        <Ionicons name={(task.icon ?? sub.iconName) as never} size={16} color={tokens.text.dim} />
+        <AppIcon name={task.icon ?? sub.iconName} size={16} color={tokens.text.dim} />
       </View>
       <View style={styles.rowBody}>
         <Text style={[styles.rowTitle, { color: tokens.text.mid }]} numberOfLines={1}>
@@ -1640,7 +1637,7 @@ function TemplateRow({
       />
 
       <View style={[styles.subTile, { backgroundColor: dimBg }]}>
-        <Ionicons name={(template.icon ?? iconName) as never} size={17} color={dimColor} />
+        <AppIcon name={template.icon ?? iconName} size={17} color={dimColor} />
       </View>
 
       <View style={styles.rowBody}>

@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { AppIcon } from '@/components/AppIcon';
 import type { RewardTemplate } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useLocalizedPick } from '@/lib/i18n/catalog';
@@ -79,7 +80,7 @@ export function TemplateCard({ template, onAdd, isAdding }: Props) {
           },
         ]}
       >
-        <Ionicons name={template.icon as never} size={22} color={cat.color} />
+        <AppIcon name={template.icon} size={22} color={cat.color} />
       </View>
 
       {/* Body */}

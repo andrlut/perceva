@@ -15,6 +15,7 @@ import DraggableFlatList, {
 } from 'react-native-draggable-flatlist';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppIcon } from '@/components/AppIcon';
 import { CoinIcon } from '@/components/CoinIcon';
 import { EmptyHero } from '@/components/EmptyHero';
 import { LimitCounterBadge } from '@/components/premium/LimitCounterBadge';
@@ -167,7 +168,7 @@ export default function RewardsManageScreen() {
               { borderColor: `${cat.color}50`, backgroundColor: `${cat.color}26` },
             ]}
           >
-            <Ionicons name={item.icon as never} size={16} color={cat.color} />
+            <AppIcon name={item.icon} size={16} color={cat.color} />
           </View>
           <View style={{ flex: 1, minWidth: 0 }}>
             <Text style={styles.rowTitle} numberOfLines={1}>
@@ -222,7 +223,7 @@ export default function RewardsManageScreen() {
             },
           ]}
         >
-          <Ionicons name={reward.icon as never} size={16} color={tokens.text.dim} />
+          <AppIcon name={reward.icon} size={16} color={tokens.text.dim} />
         </View>
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text

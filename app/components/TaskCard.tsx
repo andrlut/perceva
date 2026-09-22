@@ -15,6 +15,7 @@ import Animated, {
   Extrapolation,
 } from 'react-native-reanimated';
 
+import { AppIcon } from '@/components/AppIcon';
 import { useT } from '@/lib/i18n';
 import type { TaskWithSubs } from '@/lib/db/types';
 import { describeRecurrence } from '@/lib/recurrence';
@@ -350,10 +351,10 @@ function SubIconTile({ task }: { task: TaskWithSubs }) {
   // Custom icon picked in the task form overrides the auto-derived
   // primary-sub icon. Tile color/border stays tied to the primary
   // sub's dim so the identity still reads.
-  const iconName = (task.icon ?? sub.iconName) as never;
+  const iconName = task.icon ?? sub.iconName;
   return (
     <View style={[styles.subTile, { backgroundColor: dim.bg }]}>
-      <Ionicons name={iconName} size={18} color={dim.color} />
+      <AppIcon name={iconName} size={18} color={dim.color} />
     </View>
   );
 }
