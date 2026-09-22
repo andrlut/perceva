@@ -43,64 +43,6 @@ import { confirmAction } from '@/lib/util/confirm';
 import { rewardForTaskSubs } from '@/lib/xp';
 import { tokens } from '@/theme';
 
-/**
- * Curated Ionicons covering the main task archetypes. First row = the
- * sub-aligned icons (same defaults the SubIconTile uses) so picking
- * "default-y" stays one tap. Rest = expressive choices grouped by
- * domain. Same shape as `ICON_CHOICES` in reward-form.
- */
-const TASK_ICON_CHOICES = [
-  // Sub defaults (mirror SUB_META.iconName — keeps the auto-derived
-  // look one tap away even after the user opens the picker)
-  'moon',
-  'restaurant',
-  'barbell',
-  'walk',
-  'book',
-  'flower',
-  'cash',
-  'briefcase',
-  'people',
-  'heart',
-  'game-controller',
-  'hammer',
-  // Body / movement
-  'bicycle',
-  'fitness',
-  'basketball',
-  'football',
-  'tennisball',
-  // Mind / focus
-  'library',
-  'school',
-  'pencil',
-  'language',
-  'bulb',
-  'compass',
-  // Wealth / craft
-  'card',
-  'wallet',
-  'trending-up',
-  'build',
-  'color-palette',
-  'brush',
-  'camera',
-  'musical-notes',
-  // Bonds / social
-  'call',
-  'chatbubbles',
-  'gift',
-  // Misc daily
-  'water',
-  'sunny',
-  'bed',
-  'cafe',
-  'leaf',
-  'medkit',
-  'time',
-  'checkbox',
-] as const;
-
 export default function TaskFormScreen() {
   const router = useRouter();
   const { t } = useT();
@@ -564,7 +506,6 @@ export default function TaskFormScreen() {
       <IconPickerModal
         visible={iconPickerVisible}
         title={t('taskForm.iconLabel')}
-        suggested={TASK_ICON_CHOICES}
         value={icon}
         onSelect={setIcon}
         onClose={() => setIconPickerVisible(false)}

@@ -34,55 +34,6 @@ import { confirmAction } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 import { REWARD_CATEGORY_META, REWARD_CATEGORY_ORDER } from '@/theme/rewards';
 
-// Curated Ionicons covering the main reward archetypes a single user
-// is likely to set up. Grouped here by domain for ease of editing; on
-// screen they render as a flex grid inside the IconPickerModal sheet
-// so the user just scans for the closest match.
-const ICON_CHOICES = [
-  // Food & drink
-  'pizza',
-  'fast-food',
-  'restaurant',
-  'ice-cream',
-  'cafe',
-  'beer',
-  'wine',
-  // Entertainment
-  'game-controller',
-  'tv',
-  'film',
-  'musical-notes',
-  'headset',
-  'book',
-  'library',
-  // Active & sports
-  'walk',
-  'bicycle',
-  'barbell',
-  'basketball',
-  'football',
-  'fitness',
-  // Travel & out
-  'airplane',
-  'car',
-  'train',
-  'balloon',
-  // Creative
-  'camera',
-  'image',
-  'color-palette',
-  'brush',
-  // Self-care & life
-  'bed',
-  'leaf',
-  'flower',
-  'shirt',
-  'watch',
-  // Generic / fallback
-  'gift',
-  'cart',
-] as const;
-
 export default function RewardFormScreen() {
   const router = useRouter();
   const { t } = useT();
@@ -388,7 +339,6 @@ export default function RewardFormScreen() {
       <IconPickerModal
         visible={iconPickerVisible}
         title={t('reward.form.iconLabel')}
-        suggested={ICON_CHOICES}
         value={icon}
         // No Auto cell here — rewards always carry a concrete icon
         // ('gift' default), so null never reaches setIcon.

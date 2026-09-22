@@ -139,7 +139,6 @@ const pt: Translations = {
   // (lib/icons/catalog.ts, pt/en lado a lado), não aqui.
   iconPicker: {
     searchPlaceholder: 'Buscar ícone… cigarro, celular, equilíbrio',
-    suggested: 'Sugeridos',
     all: 'Todos',
     auto: 'Automático',
     noResults: 'Nenhum ícone pra "{{query}}".',

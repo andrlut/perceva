@@ -32,27 +32,6 @@ import { tokens } from '@/theme';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { DIMENSION_ORDER, SUBS_BY_DIM, SUB_META } from '@/theme/dimensions';
 
-const ICON_CHOICES = [
-  'flash',
-  'fitness',
-  'walk',
-  'bicycle',
-  'barbell',
-  'leaf',
-  'book',
-  'bulb',
-  'cash',
-  'people',
-  'heart',
-  'pulse',
-  'water',
-  'moon',
-  'restaurant',
-  'sparkles',
-  'school',
-  'briefcase',
-] as const;
-
 const TIER_NAMES: TierName[] = ['beginner', 'bronze', 'silver', 'gold', 'master'];
 
 interface TierFormState {
@@ -291,8 +270,7 @@ export default function SkillFormScreen() {
             })}
 
             {/* Icon — the shared picker (search + categories), same row
-                the practice and reward forms use. ICON_CHOICES is only the
-                "Sugeridos" shortlist now. */}
+                the practice and reward forms use. */}
             <Text style={styles.label}>{t('skill.form.iconLabel')}</Text>
             <Pressable
               onPress={() => {
@@ -375,7 +353,6 @@ export default function SkillFormScreen() {
       <IconPickerModal
         visible={iconPickerVisible}
         title={t('skill.form.iconLabel')}
-        suggested={ICON_CHOICES}
         value={icon}
         // A skill always carries a concrete icon ('flash' default), so
         // null never reaches setIcon.
