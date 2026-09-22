@@ -317,7 +317,7 @@ export function TaskCard({
               )}
               {showRecurrenceNote && (
                 <Text style={styles.recurrenceNote} numberOfLines={1}>
-                  · {describeRecurrence(task.recurrence, task.target_count)}
+                  · {describeRecurrence(task.recurrence, task.target_count, t)}
                 </Text>
               )}
             </View>

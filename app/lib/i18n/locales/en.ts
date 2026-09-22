@@ -127,6 +127,25 @@ const en = {
     monthlyOverflowHelper:
       'Months without day {{day}} run on the last day of the month instead.',
   },
+  // Human-readable recurrence (cards, labels, catalog). Two forms: `short`
+  // fits a chip ("Mon · Wed · Fri", "3×/wk"); the long one goes on the
+  // card's meta line ("3× a week · Mon, Wed, Fri").
+  recurrence: {
+    weekdaysShort: 'Sun,Mon,Tue,Wed,Thu,Fri,Sat',
+    weekdaysMonFri: 'Mon–Fri',
+    weekend: 'Weekends',
+    once: 'Once',
+    onceLong: 'Just once',
+    everyDay: 'Every day',
+    timesPerDay: '{{count}}× a day',
+    perWeekShort: '{{count}}×/wk',
+    perWeek: '{{count}}× a week',
+    perMonthShort: '{{count}}×/mo',
+    perMonth: '{{count}}× a month',
+    onceAMonth: 'Once a month',
+    monthDayShort: 'Day {{day}}',
+    monthDay: 'day {{day}}',
+  },
 
   usernameModal: {
     title: 'Username',
@@ -1348,8 +1367,7 @@ const en = {
   tasksHub: {
     title: 'Manage practices',
     newTask: 'New practice',
-    filters: {
-      allocated: 'Allocated',
+    tabs: {
       mine: 'Mine',
       suggested: 'Suggested',
     },
@@ -1359,25 +1377,52 @@ const en = {
       placeholderMine: 'Search your practices…',
       placeholderCatalog: 'Search catalog…',
     },
+    // One line under the tabs: the three list gestures, in the order the
+    // user needs them. Completing lives on All practices.
+    lead: 'Tap to edit. The label changes when it happens. Hold and drag to reorder.',
     buckets: {
       daily: 'Daily',
-      dailyDesc: 'Routines you do every day',
+      dailyDesc: 'Every day, on the Today screen',
       weekly: 'Weekly',
-      weeklyDesc: 'Specific days or monthly cadence',
+      weeklyDesc: 'Weekdays or a monthly cadence',
       oneTime: 'One-time',
-      oneTimeDesc: 'Done once',
+      oneTimeDesc: 'Just once',
     },
+    bucketEmpty: 'Nothing here yet. Tap a practice’s label to bring it into this group.',
     customChip: 'CUSTOM',
+    row: {
+      editA11y: 'Edit {{title}}',
+      periodicityA11y: 'Change when {{title}} happens',
+      dragA11y: 'Hold to reorder within the group',
+    },
+    periodicity: {
+      eyebrow: 'When it happens',
+      save: 'Save',
+      saveFail: 'Could not change the schedule',
+    },
+    archived: {
+      section: 'Archived',
+      restore: 'Restore',
+      restoreFail: 'Could not restore',
+      deleteA11y: 'Delete {{title}} permanently',
+      deleteConfirmTitle: 'Delete "{{title}}" forever?',
+      deleteConfirmBody:
+        'It disappears from the app for good. Only practices with no completion history can be deleted.',
+      deleteOk: 'Delete',
+      deleteFail: 'Could not delete',
+      deleteBlockedHistory: 'This practice already has completions logged — it can only be archived.',
+    },
     adopt: {
       adopt: 'Adopt',
+      adoptA11y: 'Adopt {{title}}',
       added: 'Added',
     },
     suggested: {
-      hint: 'Tap a suggestion to tweak it your way before adding — or tap Adopt to use it as is.',
+      hint: 'Tap a suggestion to tweak it your way before adding — or the + to use it as is.',
       premiumHint: '{{count}}/{{limit}} active practices on the free plan · Premium unlocks unlimited',
+      allDims: 'All',
+      customizeA11y: 'Adjust {{title}} before adding',
     },
-    bucketEmpty: 'No practices in this bucket.',
-    quickCompleteA11y: 'Complete {{title}}',
     empty: {
       noMatchesTitle: 'No matches',
       noMatchesBody: 'Nothing matches "{{query}}".',

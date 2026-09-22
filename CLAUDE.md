@@ -216,6 +216,7 @@ Generic schema seeded with 4 scales: **Avaliação v1** (24-item wellbeing), **B
 | `expire_overdue_quests()` | Bulk-mark overdue active quests as expired. Cheap + idempotent. |
 | `create_custom_skill(jsonb)` | Insert a user-owned skill row. |
 | `redeem_reward(uuid)` / `use_reward(uuid)` | Buy → redemption row → coin debit (bank or instant). |
+| `delete_task(uuid)` | Hard delete of an archived practice; refuses when it has completion history (archive is the only exit then). Table-level DELETE on `task` is revoked from clients — this RPC is the only path. Restoring an archived task re-runs the free-tier cap trigger. |
 
 ### Trigger: `handle_new_user()` on `auth.users` insert
 - Creates `profile` + `character`
