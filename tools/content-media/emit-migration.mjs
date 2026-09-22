@@ -61,9 +61,13 @@ const MAX_IDEAS = 5;
 const SLUG_RE = /^[a-z0-9_-]+$/; // `_` only for smoke/meta files, never a real slug
 const IDEA_ID_RE = /^[a-z0-9-]{3,40}$/;
 const LOCALES = ['pt', 'en'];
-// Soft budget per material type (the hard cap is 1..5). Lint owns the rule;
-// here it is only a warning so a deliberate exception still emits.
-const TYPE_BUDGET = { news: [1, 1], explainer: [1, 3], summary: [2, 5] };
+// Soft budget per material category (the hard cap is 1..5). Lint owns the rule;
+// here it is only a warning so a deliberate exception still emits. Ceilings only — every
+// category floors at 1, so there is no "below minimum" check.
+const CATEGORY_BUDGET = { research: [1, 3], book: [1, 5], foundation: [1, 3] };
+// Legacy specs (pre "categoria do material") carried `type: explainer|summary|news` instead of
+// `category`. Mapped once here so an older spec still emits with a budget check.
+const LEGACY_TYPE_TO_CATEGORY = { summary: 'book', explainer: 'research', news: 'research' };
 // Dollar-quote tag for the JSON payload. Anything in the payload that could
 // close it (or open a plain `$$` block) must fail before it reaches SQL.
 const DOLLAR_TAG = '$ideas$';
@@ -183,10 +187,15 @@ function buildIdeas(slug, spec, manifest, videosForSlug) {
   }
   if (errors.length) die(`${slug}: ${errors.join('\n  ')}`);
 
-  const budget = TYPE_BUDGET[spec.type];
-  if (spec.type && !budget) warn(`${slug}: unknown type "${spec.type}" (no budget check)`);
-  if (budget && (ideas.length < budget[0] || ideas.length > budget[1])) {
-    warn(`${slug}: ${ideas.length} idea(s) for type "${spec.type}" (budget ${budget[0]}–${budget[1]})`);
+  let category = spec.category;
+  const usedLegacyType = !category && spec.type != null;
+  if (usedLegacyType) category = LEGACY_TYPE_TO_CATEGORY[spec.type];
+  if (usedLegacyType) warn(`${slug}: legacy "type" field — use "category"${category ? ` (mapped to "${category}")` : ''}`);
+  const budget = CATEGORY_BUDGET[category];
+  if (category && !budget) warn(`${slug}: unknown category "${category}" (no budget check)`);
+  else if (!category) warn(`${slug}: no category (or mappable legacy type) — no budget check`);
+  if (budget && ideas.length > budget[1]) {
+    warn(`${slug}: ${ideas.length} idea(s) for category "${category}" (budget max ${budget[1]})`);
   }
 
   // Ordinals must be exactly 1..n — the app pages by them and the file names

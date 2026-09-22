@@ -68,7 +68,7 @@ export function useLearningFeed() {
       const { data, error } = await supabase
         .from('learning_material')
         .select(
-          `id, slug, type, dimension_id, topic, reading_minutes,
+          `id, slug, type, category, dimension_id, topic, reading_minutes,
            title_pt, title_en, summary_pt, summary_en,
            hero_image_url, source_url, source_label_pt, source_label_en,
            cta_action, released_at, version, is_archived, idea_count,

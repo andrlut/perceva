@@ -1,6 +1,6 @@
 {
   "slug": "catch-up-sleep-weekend",
-  "type": "explainer",
+  "category": "research",
   "material_title": {
     "pt": "O sábado paga a dívida de sono?",
     "en": "Does Saturday pay off the sleep debt?"
@@ -10,8 +10,8 @@
       "id": "acorda-descansado",
       "ordinal": 1,
       "title": {
-        "pt": "Você acorda descansado. Seu corpo, não.",
-        "en": "You wake up rested. Your body doesn't."
+        "pt": "Você acorda leve. A dívida, não.",
+        "en": "You feel rested. Sleep debt doesn't."
       },
       "claim": {
         "pt": "Dormir até tarde no sábado devolve a disposição, mas não desfaz o que cinco noites curtas fizeram no seu metabolismo.",
@@ -34,12 +34,12 @@
       "id": "mesmos-dados-dois-vereditos",
       "ordinal": 2,
       "title": {
-        "pt": "Sono extra: mesmos dados, vereditos opostos.",
-        "en": "Extra sleep: same data, opposite verdicts."
+        "pt": "Compensar no sábado encurta a sua vida?",
+        "en": "Does catching up on Saturday shorten your life?"
       },
       "claim": {
-        "pt": "Dormir pouco na semana e compensar no sábado não encurta a vida; dormir pouco todos os dias, sábado incluído, encurta.",
-        "en": "Short weeknights plus long weekends don't shorten your life; short nights every day, weekends included, do."
+        "pt": "Dormir cinco horas todo dia encurta a vida, mas compensar no fim de semana evita esse custo.",
+        "en": "Sleeping five hours every day shortens your life, but catching up on weekends prevents that cost."
       },
       "body": {
         "pt": "Se o laboratório diz que o sábado não conserta o metabolismo, a vida real diz outra coisa sobre longevidade. [Åkerstedt et al. (2019)](https://doi.org/10.1111/jsr.12712) acompanharam 43.880 adultos suecos por treze anos, perguntando separadamente quanto dormiam em dias úteis e em dias de folga. Entre os menores de 65 anos, quem dormia cinco horas ou menos **nos dois tipos de dia** teve mortalidade 52% maior do que quem dormia seis ou sete horas de forma constante. Já quem dormia pouco na semana e esticava no fim de semana não se diferenciou em nada do grupo de referência. As duas leituras não se contradizem: uma mede glicose em duas semanas de laboratório, a outra mede sobrevivência em treze anos de rotina. O que sobra de prático é uma hierarquia. Dormir o suficiente todo dia é o melhor; compensar no fim de semana é um remendo que funciona; não compensar nunca é o cenário que custa caro.",

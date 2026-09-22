@@ -31,7 +31,7 @@ export type IdeaStatus = 'unabsorbed' | 'absorbed' | 'all';
 export type IdeaPublicRow = {
   material_id: string;
   slug: string;
-  type: string;
+  category: string;
   dimension_id: string;
   released_at: string;
   idea_id: string;
@@ -71,7 +71,8 @@ export type IdeaOut = {
   material_title_en: string | null;
   dimension_id: string;
   subs: string[];
-  type: string;
+  /** research (Pesquisa) | book (Livro) | foundation (Fundamentos). */
+  category: string;
   released_at: string;
   idea_id: string;
   ordinal: number;
@@ -193,7 +194,7 @@ export function assembleIdeas(
       material_title_en: title?.title_en ?? null,
       dimension_id: r.dimension_id,
       subs: subsBy.get(r.material_id) ?? [],
-      type: r.type,
+      category: r.category,
       released_at: r.released_at,
       idea_id: r.idea_id,
       ordinal,

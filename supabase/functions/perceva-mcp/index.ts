@@ -291,7 +291,7 @@ async function rpc(
 
 function buildServer(token: string, userId: string): McpServer {
   const server = new McpServer(
-    { name: 'perceva-mcp', version: '0.4.3' },
+    { name: 'perceva-mcp', version: '0.4.4' },
     {
       instructions: [
         'Perceva is a habit/wellness app organized in 6 dimensions',
@@ -1329,7 +1329,7 @@ function buildServer(token: string, userId: string): McpServer {
       // runs as the user like everything else here. dimension/slug narrow it
       // server-side; sub needs learning_material_sub and is applied in memory.
       let ideasQuery = db.from('learning_idea_public').select(
-        'material_id,slug,type,dimension_id,released_at,idea_id,ordinal,' +
+        'material_id,slug,category,dimension_id,released_at,idea_id,ordinal,' +
         'title_pt,title_en,claim_pt,claim_en,image_path,video_pt_path,video_en_path',
       );
       if (args.dimension_id) ideasQuery = ideasQuery.eq('dimension_id', args.dimension_id);

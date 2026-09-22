@@ -35,7 +35,10 @@ const SUBS = [
   'sleep', 'nutrition', 'strength', 'dexterity', 'learn', 'contemplate',
   'money', 'career', 'circle', 'romance', 'play', 'build',
 ];
-const TYPES = ['explainer', 'summary', 'news'];
+const CATEGORIES = ['research', 'book', 'foundation'];
+// Legacy payloads (pre "categoria do material") carried `type: explainer|summary|news`. Mapped
+// once here so an older payload still emits; new payloads should set `category` directly.
+const LEGACY_TYPE_TO_CATEGORY = { summary: 'book', explainer: 'research', news: 'research' };
 
 function die(msg) {
   process.stderr.write(`✗ ${msg}\n`);
@@ -92,8 +95,14 @@ function nextCounterPath(slug) {
 function buildSql(p, reviewerLine) {
   const slug = requireString(p, 'slug');
   if (!/^[a-z0-9-]{3,80}$/.test(slug)) die(`payload.slug "${slug}" must match ^[a-z0-9-]{3,80}$`);
-  const type = requireString(p, 'type');
-  if (!TYPES.includes(type)) die(`payload.type "${type}" not in ${TYPES.join('|')}`);
+  let category = typeof p.category === 'string' ? p.category.trim() : p.category;
+  if (!category && p.type) {
+    category = LEGACY_TYPE_TO_CATEGORY[p.type];
+    if (category) info(`! payload.type "${p.type}" is legacy — mapped to category "${category}"`);
+  }
+  if (!category || !CATEGORIES.includes(category)) {
+    die(`payload.category ${JSON.stringify(p.category ?? null)} invalid — must be ${CATEGORIES.join('|')} (payload.type ${JSON.stringify(p.type ?? null)} did not resolve either)`);
+  }
   const dimension = requireString(p, 'dimension_id');
   if (!DIMENSIONS.includes(dimension)) die(`payload.dimension_id "${dimension}" not in ${DIMENSIONS.join('|')}`);
   const topic = requireString(p, 'topic');
@@ -122,7 +131,7 @@ function buildSql(p, reviewerLine) {
   const takeaways = (arr, tagBase) => `array[${arr.map((t, i) => dq(`${tagBase}${i}`, t, `takeaways[${i}]`)).join(', ')}]`;
 
   const lines = [];
-  lines.push(`-- Learning material: ${slug} (${type})`);
+  lines.push(`-- Learning material: ${slug} (${category})`);
   lines.push(`-- Topic: ${topic.replace(/\r?\n/g, ' ')} | dimension: ${dimension} | subs: ${subs.join(', ')}`);
   lines.push(`-- Pipeline: planner -> researcher -> drafter (ideias primeiro) -> reviewer${reviewerLine ? ` (${reviewerLine})` : ''}`);
   lines.push(`-- Primary source: ${sourceUrl}`);
@@ -130,7 +139,7 @@ function buildSql(p, reviewerLine) {
   lines.push(`-- The \`ideas\` column is set by the sibling migration from emit-migration.mjs (after the images exist).`);
   lines.push('');
   lines.push('insert into public.learning_material (');
-  lines.push('  slug, type, dimension_id, topic, reading_minutes,');
+  lines.push('  slug, category, dimension_id, topic, reading_minutes,');
   lines.push('  title_pt, title_en, summary_pt, summary_en,');
   lines.push('  body_pt, body_en,');
   lines.push('  takeaways_pt, takeaways_en,');
@@ -138,7 +147,7 @@ function buildSql(p, reviewerLine) {
   lines.push('  source_url, source_label_pt, source_label_en,');
   lines.push('  reasoning_log');
   lines.push(') values (');
-  lines.push(`  ${dq('slug', slug, 'slug')}, ${dq('ty', type, 'type')}, ${dq('dim', dimension, 'dimension_id')}, ${dq('top', topic, 'topic')}, ${minutes},`);
+  lines.push(`  ${dq('slug', slug, 'slug')}, ${dq('cat', category, 'category')}, ${dq('dim', dimension, 'dimension_id')}, ${dq('top', topic, 'topic')}, ${minutes},`);
   lines.push(`  ${dq('tpt', p.title_pt, 'title_pt')}, ${dq('ten', p.title_en, 'title_en')},`);
   lines.push(`  ${dq('spt', p.summary_pt, 'summary_pt')}, ${dq('sen', p.summary_en, 'summary_en')},`);
   lines.push(`  ${dq('bpt', p.body_pt, 'body_pt')},`);
@@ -149,7 +158,7 @@ function buildSql(p, reviewerLine) {
   lines.push(`  ${dq('rlog', rlog, 'reasoning_log')}::jsonb`);
   lines.push(')');
   lines.push('on conflict (slug) do update set');
-  lines.push('  type            = excluded.type,');
+  lines.push('  category        = excluded.category,');
   lines.push('  dimension_id    = excluded.dimension_id,');
   lines.push('  topic           = excluded.topic,');
   lines.push('  reading_minutes = excluded.reading_minutes,');

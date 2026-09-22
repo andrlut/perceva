@@ -6,13 +6,12 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { LearningFeedCard } from '@/lib/api/learning';
 import { useT } from '@/lib/i18n';
+import { CATEGORY_META, categoryOf } from '@/lib/learningCategory';
 import { useMaterialProgress } from '@/lib/readingProgress';
 import { tokens } from '@/theme';
 import { DIMENSION_META, SUB_META } from '@/theme/dimensions';
 
 import { MaterialCover } from '../MaterialCover';
-
-import { TYPE_META } from './TypeSash';
 
 /**
  * Book-cover-style tile for the Learn carousel. 2:3 aspect ratio, title
@@ -72,6 +71,7 @@ export const CoverCard = memo(function CoverCard({
   // resolvia 4 chaves i18n mais um array de exemplos por card, e daqui só
   // sai a cor — que é estática. Idem meta.sub(), do qual só usamos o label.
   const dimColor = DIMENSION_META[card.dimension_id].color;
+  const category = categoryOf(card);
   const primarySub = card.subs[0];
   const subLabel = primarySub ? t(`subs.${primarySub}.label`) : null;
 
@@ -174,13 +174,13 @@ export const CoverCard = memo(function CoverCard({
         {summary}
       </Text>
       <View style={styles.metaRow}>
-        {/* Material type — now a small colored icon here instead of a badge on
-           the cover, so the cover top is left entirely to the title. */}
+        {/* Material category — a small colored icon here instead of a badge
+           on the cover, so the cover top is left entirely to the title. */}
         <Ionicons
-          name={TYPE_META[card.type].glyph}
+          name={CATEGORY_META[category].glyph}
           size={11}
-          color={TYPE_META[card.type].color}
-          accessibilityLabel={t(`learning.type.${card.type}`)}
+          color={CATEGORY_META[category].color}
+          accessibilityLabel={t(`learning.category.${category}`)}
         />
         {subLabel && (
           <View style={styles.metaPill}>

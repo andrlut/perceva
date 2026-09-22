@@ -585,10 +585,10 @@ const pt: Translations = {
     continueReading: 'Continue lendo',
     continueProgress: '{{percent}}% lido',
     continueMinLeft: { one: '~{{count}} min restante', other: '~{{count}} min restantes' },
-    type: {
-      explainer: 'Explicação',
-      summary: 'Resumo',
-      news: 'Notícia',
+    category: {
+      research: 'Pesquisa',
+      book: 'Livro',
+      foundation: 'Fundamentos',
     },
     mode: {
       read: 'Ler',

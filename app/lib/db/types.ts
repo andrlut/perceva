@@ -700,7 +700,18 @@ export interface QuestRequirementWithProgress {
 // No personal counterpart; XP is awarded by mark_material_read() RPC.
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** Legacy mirror of `category`, kept in sync by a DB trigger for bundles
+ *  that predate it (they index a glyph map by `type` with no fallback).
+ *  New code reads `category` through `categoryOf()`. */
 export type LearningMaterialType = 'summary' | 'news' | 'explainer';
+
+/**
+ * What a material is FOR — the taxonomy the reader sees (sash, filter,
+ * hero pill). `research` Pesquisa: a question answered by science.
+ * `book` Livro: the ideas of one work. `foundation` Fundamentos: Perceva
+ * from the inside — the subs, the screens, the philosophy.
+ */
+export type LearningMaterialCategory = 'research' | 'book' | 'foundation';
 
 /** Action emitted from a material body via the `:::cta` directive. */
 export type LearningCtaAction =
@@ -710,7 +721,9 @@ export type LearningCtaAction =
 export interface LearningMaterial {
   id: string;
   slug: string;
+  /** Legacy mirror — read `category` instead. */
   type: LearningMaterialType;
+  category: LearningMaterialCategory;
   dimension_id: DimensionId;
   topic: string;
   reading_minutes: number;
@@ -803,7 +816,9 @@ export interface LearningIdea {
 export interface LearningIdeaPublic {
   material_id: string;
   slug: string;
+  /** Legacy mirror — read `category` instead. */
   type: LearningMaterialType;
+  category: LearningMaterialCategory;
   dimension_id: DimensionId;
   released_at: string;
   idea_id: string;

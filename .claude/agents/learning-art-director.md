@@ -28,7 +28,8 @@ You receive the drafter payload for one material:
 - `source_label_pt` / `source_label_en`, `source_url`
 - **`ideas[]`** — 1 to 5 entries, each with `id`, `ordinal`, `title.{pt,en}`,
   `claim.{pt,en}`, `body.{pt,en}`, **`image_brief`** (PT, one concrete textless
-  scene that depicts the claim) and `sources[]`
+  scene that pulls toward no wrong subject — subject-first is the preference,
+  not the bar) and `sources[]`
 - `body_pt` / `body_en` (context only — the article's `##` sections ARE the
   ideas, in the same order)
 
@@ -77,9 +78,47 @@ idea without an image.
 
 Each `image_prompt` is the **art-directed version of that idea's
 `image_brief`**: the same scene, the same subject, the same metaphor. The
-drafter (and the reviewer) already chose what the picture depicts — the claim.
-You decide how it is composed and lit. Never swap in a metaphor of your own,
-never "improve" the subject, never merge two ideas into one picture.
+drafter (and the reviewer) already chose what the picture depicts. You decide
+how it is composed and lit. Never swap in a metaphor of your own, never
+"improve" the subject, never merge two ideas into one picture.
+
+**Subject first — and never the wrong subject.** The image never travels
+alone: it reaches the reader beside the idea's **title** and its **card back**,
+always laid out together. So the trio is judged together — at least one of the
+three names the subject, and none of them contradicts the others. Your part of
+that deal is to aim for an image a quick viewer can read by itself (protein on
+a plate, a couple at the dinner table, a person asleep): make the subject the
+most legible thing in the frame, the largest, the lit one, unmistakable at
+thumbnail size. That is the **preference**, not the pass mark.
+
+The pass mark is narrower, because a textless picture rarely names a subject on
+its own: **an image fails when it MISLEADS** — when it pulls a viewer toward a
+different subject than the idea's.
+- Light switches on a protein idea — the reader took it for "connection
+  between generations".
+- A barbell on an idea about risk — read as "gym".
+- A scale with coins on a sleep idea — read as "finance".
+A quiet or neutral image a viewer cannot name still passes; a confident image
+pointing the wrong way does not.
+
+If a brief would lead to a scene that misleads this way, do not compose it and
+do not write the spec: return `{"blocked": [{"id": "<idea id>", "reason":
+"idea_brief_misleads", "note": "<the subject it would pull toward
+instead>"}]}` so the drafter rewrites that brief. A brief that is merely
+abstract or quiet is **not** blocked — art-direct it back toward the subject
+instead. The maintainer checks this with the `learning-card-tester` agent (a
+quick Haiku reader): it says which subject your prompt pulls it toward and,
+after rendering, which subject the image itself pulls toward. A divergence
+from the idea's real subject is the failure. The publisher runs it on your
+prompts before any image is generated (step 8b) and on the rendered images
+(step 9b); a failure comes back to you once to re-brief that idea's prompt.
+
+Subject first, worked example (protein idea "the 30g ceiling was the
+muscle's, not the gut's"):
+- Bad: "Um prato com carne ao lado de um ralo de pia." (a drain? of what?)
+- Good: "Um prato farto de frango grelhado, ovos e feijão no centro do quadro;
+  ao lado, um braço forte apoiado na mesa sob a única luz quente — a comida
+  e o músculo lado a lado, o resto da cozinha na penumbra."
 
 What you add to the brief, in PT, ~2–3 sentences total:
 - **Composition for 4:5** — what sits at the centre and fills the frame, what

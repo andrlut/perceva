@@ -25,7 +25,12 @@
  *
  * Usage:
  *   node generate.mjs --slug <slug> [--only cover|infographic|audio|ideas]
- *                     [--locales pt,en] [--dry-run]
+ *                     [--idea <id>[,<id>…]] [--locales pt,en] [--dry-run]
+ *
+ * `--idea` (only with `--only ideas`) regenerates just those ideas — the
+ * publisher's re-render after a blind-reader image check fails. The file name
+ * hashes id + image_prompt, so re-running an unchanged prompt lands on the same
+ * name the bucket already holds (409): re-brief the prompt first, then re-run.
  *
  * `--only` is an ALLOWLIST: one step, nothing else runs; any other value is an
  * error. Without it, cover + infographic + audio run as before, plus ideas
@@ -82,11 +87,12 @@ const TOKENS_BG = 'rgba(10, 14, 38, 1)';
 
 // ── arg parsing ────────────────────────────────────────────────────────────
 function parseArgs(argv) {
-  const args = { only: null, locales: null, dryRun: false, slug: null };
+  const args = { only: null, locales: null, dryRun: false, slug: null, ideaIds: null };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--slug') args.slug = argv[++i];
     else if (a === '--only') args.only = argv[++i];
+    else if (a === '--idea') args.ideaIds = (argv[++i] ?? '').split(',').map((s) => s.trim()).filter(Boolean);
     else if (a === '--locales') args.locales = argv[++i].split(',').map((s) => s.trim());
     else if (a === '--dry-run') args.dryRun = true;
     else if (!a.startsWith('--') && !args.slug) args.slug = a;
@@ -179,12 +185,16 @@ function mergePriorManifest(manifest, inboxDir) {
 // ── main ────────────────────────────────────────────────────────────────────
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const usage = `Usage: node generate.mjs --slug <slug> [--only ${ONLY_STEPS.join('|')}] [--locales pt,en] [--dry-run]`;
+  const usage = `Usage: node generate.mjs --slug <slug> [--only ${ONLY_STEPS.join('|')}] [--idea <id>[,<id>…]] [--locales pt,en] [--dry-run]`;
   if (!args.slug) die(`Missing --slug. ${usage}`);
   // Validated before the spec lookup so a typo fails the same way whether or
   // not the drop folder exists.
   if (args.only != null && !ONLY_STEPS.includes(args.only)) {
     die(`Unknown --only value "${args.only}". Allowed: ${ONLY_STEPS.join(' | ')}\n  ${usage}`);
+  }
+  if (args.ideaIds != null) {
+    if (args.only !== 'ideas') die(`--idea only works with --only ideas (it would otherwise re-render the cover too).\n  ${usage}`);
+    if (args.ideaIds.length === 0) die(`--idea needs at least one idea id.\n  ${usage}`);
   }
 
   const inboxDir = join(REPO_ROOT, 'learning-drops', 'inbox', args.slug);
@@ -341,8 +351,15 @@ async function main() {
   // failing over one refused prompt would not.
   if (wantIdeas) {
     if (ideas.length === 0) log('  · ideas: skipped (no "ideas" array in spec)');
+    if (args.ideaIds) {
+      const known = new Set(ideas.map((i) => i?.id));
+      const unknown = args.ideaIds.filter((id) => !known.has(id));
+      if (unknown.length) die(`--idea names id(s) not in the spec: ${unknown.join(', ')}`);
+      log(`  · ideas: only ${args.ideaIds.join(', ')}`);
+    }
     for (const idea of ideas) {
       const id = idea?.id;
+      if (args.ideaIds && !args.ideaIds.includes(id)) continue;
       const ordinal = idea?.ordinal;
       const imagePrompt = typeof idea?.image_prompt === 'string' ? idea.image_prompt.trim() : '';
       if (!id || !Number.isInteger(ordinal) || ordinal < 1 || !imagePrompt) {

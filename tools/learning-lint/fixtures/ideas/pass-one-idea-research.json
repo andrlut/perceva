@@ -1,0 +1,28 @@
+{
+  "slug": "nap-length-alertness",
+  "category": "research",
+  "material_title": {
+    "pt": "Cochilo de vinte minutos: o que a ciência realmente diz",
+    "en": "Nap for twenty minutes: what science actually says"
+  },
+  "ideas": [
+    {
+      "id": "vinte-minutos-e-o-ponto-certo",
+      "ordinal": 1,
+      "title": { "pt": "Vinte minutos bastam; mais tempo atrapalha.", "en": "Twenty minutes works; more time backfires." },
+      "claim": {
+        "pt": "Ponha o alarme entre 10 e 20 minutos de cochilo, porque acima de 30 você acorda pior do que deitou.",
+        "en": "Set your nap alarm between 10 and 20 minutes, because past 30 you wake up worse than you lay down."
+      },
+      "body": {
+        "pt": "O cochilo curto entra na rotina de quem dorme mal à noite, mas o tamanho certo não é intuitivo. [Brooks e Lack (2006)](https://doi.org/10.1093/sleep/29.6.831) compararam cochilos de 5, 10, 20 e 30 minutos com uma condição sem cochilo, medindo alerta e desempenho cognitivo nos minutos seguintes. O cochilo de **10 minutos produziu a melhora mais rápida e mais consistente**, mantida por até 155 minutos; o de 5 minutos quase não teve efeito, e os de 20 e 30 minutos trouxeram um período inicial de inércia do sono — alerta pior, não melhor, nos primeiros minutos após acordar. A inércia aparece porque cochilos mais longos aumentam a chance de entrar em sono profundo, do qual é mais difícil emergir rápido. Na prática, um alarme entre 10 e 20 minutos captura o ganho sem pagar o pedágio da inércia; passar dos 30 minutos custa mais do que ajuda.",
+        "en": "Short naps fit naturally into the routine of anyone sleeping badly at night, but the right length isn't intuitive. [Brooks and Lack (2006)](https://doi.org/10.1093/sleep/29.6.831) compared naps of 5, 10, 20 and 30 minutes against a no-nap condition, measuring alertness and cognitive performance in the minutes that followed. The **10-minute nap produced the fastest and most consistent improvement**, holding for up to 155 minutes; the 5-minute nap barely moved anything, and the 20- and 30-minute naps brought an initial window of sleep inertia — worse alertness, not better, right after waking. Inertia shows up because longer naps raise the odds of reaching deep sleep, which is harder to snap out of quickly. In practice, an alarm set between 10 and 20 minutes captures the gain without paying the inertia toll; going past 30 minutes costs more than it helps."
+      },
+      "image_brief": "Um relógio de mesa redondo ao lado de um sofá, com um cobertor dobrado e uma almofada amassada, e a luz da janela projetando uma sombra curta e nítida no chão, sinal de que passou pouco tempo.",
+      "sources": [
+        { "label": { "pt": "Brooks & Lack, 2006 · Sleep", "en": "Brooks & Lack, 2006 · Sleep" }, "url": "https://doi.org/10.1093/sleep/29.6.831" }
+      ],
+      "cta": null
+    }
+  ]
+}

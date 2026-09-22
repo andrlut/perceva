@@ -1,6 +1,6 @@
 {
   "slug": "ikea-effect",
-  "type": "news",
+  "category": "research",
   "material_title": {
     "pt": "O efeito IKEA: por que o que você monta vale mais",
     "en": "The IKEA effect: why what you build is worth more"
@@ -37,6 +37,42 @@
         "en": "The same study by [Norton, Mochon and Ariely (2012)](https://doi.org/10.1016/j.jcps.2011.08.002) tested the effect's limit. When participants were interrupted before finishing the assembly, or when they built and then took the piece apart, willingness to pay fell to the level of people who had built nothing. Attachment doesn't come from effort itself, but from **effort that ends in something finished**. For habits, the reading is direct: a practice you start and drop halfway builds no identity, only fatigue. Better a tiny habit that closes every day than an ambitious one left half-done. Finish small; the owner's pride comes from the full stop, not the size."
       },
       "image_brief": "Duas mesinhas de madeira lado a lado num quarto: uma completa e firme com um vaso em cima, a outra com metade das peças ainda espalhadas pelo chão e um parafuso solto na mão de alguém.",
+      "sources": [
+        { "label": { "pt": "Norton, Mochon & Ariely, 2012 · Journal of Consumer Psychology", "en": "Norton, Mochon & Ariely, 2012 · Journal of Consumer Psychology" }, "url": "https://doi.org/10.1016/j.jcps.2011.08.002" }
+      ],
+      "cta": null
+    },
+    {
+      "id": "esforco-alheio-tambem-vale",
+      "ordinal": 3,
+      "title": { "pt": "O efeito nasce até com esforço alheio.", "en": "The effect shows up in borrowed effort too." },
+      "claim": {
+        "pt": "Um site que mostra 'buscando por você' antes do resultado parece mais caprichado, mesmo sem mudar em nada a resposta final.",
+        "en": "A site that shows 'searching for you' before the result feels more worked-for, even though the answer never changes."
+      },
+      "body": {
+        "pt": "O efeito IKEA precisa das suas próprias mãos, mas existe uma versão em que o esforço é alheio e o efeito aparece do mesmo jeito. Buell e Norton (2011) testaram sites de busca de viagem que respondiam na hora contra versões idênticas que mostravam uma barra de progresso **'buscando entre centenas de opções'** por alguns segundos antes do mesmo resultado. Quem viu a barra confiou mais no resultado, achou o site mais caprichado e voltou a usá-lo com mais frequência — mesmo sabendo, quando perguntado, que a resposta pronta já existia antes da barra aparecer. Os autores chamam isso de ilusão do trabalho: ver o esforço, mesmo que não seja o seu, já muda o quanto você valoriza o que recebe. A aplicação prática é dupla. Para quem constrói produtos, esconder o trabalho de bastidores custa confiança. Para quem consome, vale perguntar se o apreço vem do resultado ou só da encenação do esforço.",
+        "en": "The IKEA effect needs your own hands, but there is a version where the effort belongs to someone else and the effect still shows up. Buell and Norton (2011) tested travel-search sites that answered instantly against identical versions that showed a progress bar reading **'searching hundreds of options'** for a few seconds before the same result. People who saw the bar trusted the result more, rated the site as more thorough and came back to it more often — even though, when asked directly, they knew the answer had been ready before the bar appeared. The authors call this the labor illusion: watching effort, even effort that isn't yours, already changes how much you value what you get. The practical reading cuts two ways. If you build products, hiding the backstage work costs you trust. If you're the one consuming, it's worth asking whether the appreciation comes from the result or just from the performance of effort."
+      },
+      "image_brief": "Uma vitrine de loja com um relojoeiro visível trabalhando atrás do vidro, ferramentas espalhadas sob uma luz forte, enquanto do lado de fora um cliente observa parado, sem tocar na porta.",
+      "sources": [
+        { "label": { "pt": "Buell & Norton, 2011 · Management Science", "en": "Buell & Norton, 2011 · Management Science" }, "url": "https://doi.org/10.1287/mnsc.1110.1378" }
+      ],
+      "cta": null
+    },
+    {
+      "id": "hack-de-habito-proprio",
+      "ordinal": 4,
+      "title": { "pt": "Desenhe o próprio hábito; o efeito ajuda.", "en": "Design it yourself; the effect helps it stick." },
+      "claim": {
+        "pt": "Um hábito desenhado por você mesmo tende a grudar mais do que uma rotina idêntica só copiada de outra pessoa.",
+        "en": "A habit you design yourself tends to stick more than an identical routine simply copied from someone else."
+      },
+      "body": {
+        "pt": "Junte as duas ideias anteriores e sobra uma sugestão prática para hábitos. Se terminar gera apego e o esforço, mesmo alheio, já eleva o valor percebido, então um hábito que você mesmo desenha — escolhendo o gatilho, o tamanho do passo, o horário — deveria grudar mais do que um copiado pronto de um livro ou de um app. Norton, Mochon e Ariely (2012) apontam exatamente essa leitura na discussão do próprio estudo: o objeto vale mais não pela qualidade, mas por carregar um pedaço de quem o fez. Aplicado a comportamento, o hábito carrega um pedaço de quem o desenhou. Isso não significa ignorar modelo pronto — a regra dos dois minutos, o empilhamento, a distribuição de proteína: continuam valendo, testados em outros estudos. Significa adaptar cada um deles com uma escolha sua antes de começar: o horário exato, o lugar, a versão mínima. **A cópia funciona menos porque falta a mão que constrói.**",
+        "en": "Put the two previous ideas together and a practical suggestion falls out for habits. If finishing creates attachment, and effort — even someone else's — already raises perceived value, then a habit you design yourself, choosing the cue, the step size, the time of day, should stick more than an identical one copied straight from a book or an app. Norton, Mochon and Ariely (2012) point to exactly this reading in their own discussion: the object is worth more not for its quality, but for carrying a piece of whoever made it. Applied to behavior, the habit carries a piece of whoever designed it. That doesn't mean ignoring proven templates — the two-minute rule, habit stacking, spreading protein across meals: they still hold, tested in other studies. It means adapting each one with a choice of your own before you start: the exact time, the place, the minimal version. **The copy works less because it's missing the hand that built it.**"
+      },
+      "image_brief": "Duas plantas idênticas em vasos de barro numa varanda: uma tem um barbante colorido amarrado no caule à mão, a outra tem uma etiqueta de fábrica plástica ainda presa, intocada.",
       "sources": [
         { "label": { "pt": "Norton, Mochon & Ariely, 2012 · Journal of Consumer Psychology", "en": "Norton, Mochon & Ariely, 2012 · Journal of Consumer Psychology" }, "url": "https://doi.org/10.1016/j.jcps.2011.08.002" }
       ],

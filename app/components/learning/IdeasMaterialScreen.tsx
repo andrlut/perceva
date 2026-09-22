@@ -28,9 +28,9 @@ import {
   useRateMaterial,
   useReadMaterialIds,
 } from '@/lib/api/learning';
-import type { LearningMaterialType } from '@/lib/db/types';
 import { useT, type TranslateOptions } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
+import { categoryOf } from '@/lib/learningCategory';
 import type { IdeaLocale } from '@/lib/ideas';
 import { ideaProgress, localizedIdea, nextIdea, sortedIdeas } from '@/lib/ideas';
 import { learningMediaUrl, pickMedia } from '@/lib/learningMedia';
@@ -84,8 +84,11 @@ const HERO_FADE = 0.35;
 
 type Translator = (key: string, options?: TranslateOptions) => string;
 
-function typeLabel(type: LearningMaterialType, t: Translator): string {
-  return t(`learning.type.${type}`);
+function categoryLabel(
+  m: { category?: string | null; type?: string | null },
+  t: Translator,
+): string {
+  return t(`learning.category.${categoryOf(m)}`);
 }
 
 interface Props {
@@ -256,7 +259,7 @@ export function IdeasMaterialScreen({ detail: m }: Props) {
               <Ionicons name="chevron-back" size={22} color={tokens.text.hi} />
             </Pressable>
             <View style={styles.heroTypePill}>
-              <Text style={styles.heroTypeText}>{typeLabel(m.type, t)}</Text>
+              <Text style={styles.heroTypeText}>{categoryLabel(m, t)}</Text>
             </View>
           </View>
 

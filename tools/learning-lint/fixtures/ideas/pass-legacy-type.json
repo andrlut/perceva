@@ -1,0 +1,28 @@
+{
+  "slug": "ten-thousand-steps-origin",
+  "type": "explainer",
+  "material_title": {
+    "pt": "10 mil passos: de onde veio esse número",
+    "en": "10,000 steps: where that number came from"
+  },
+  "ideas": [
+    {
+      "id": "manpo-kei-marketing-nao-medicina",
+      "ordinal": 1,
+      "title": { "pt": "Ninguém testou 10 mil passos antes de vender.", "en": "Nobody tested 10,000 steps before selling it." },
+      "claim": {
+        "pt": "O número 10 mil passos vem de um nome de produto de 1965, não de uma pesquisa que testou esse valor.",
+        "en": "The 10,000-steps figure traces to a 1965 product name, not to research that actually tested that number."
+      },
+      "body": {
+        "pt": "O número mais citado sobre caminhada não nasceu em laboratório. Em 1965, uma empresa japonesa lançou o pedômetro **Manpo-kei**, que significa literalmente 'medidor de 10 mil passos', escolhido porque o caractere do número lembra uma pessoa andando — uma jogada de marketing, não uma dose clínica. [Tudor-Locke et al. (2011)](https://doi.org/10.1123/jpah.8.s2.s126) revisaram décadas de estudos posteriores e não encontraram evidência de que 10 mil fosse um limiar especial de saúde: os ganhos de mortalidade e função cardiovascular aparecem de forma contínua já a partir de 4 mil passos, crescendo até um platô por volta de 7 a 8 mil em adultos mais velhos. Isso não torna a meta inútil — é redonda, fácil de lembrar e motiva quem começa do zero — só não é o número que a ciência escolheria se partisse do zero.",
+        "en": "The most quoted number in walking advice wasn't born in a lab. In 1965, a Japanese company launched the **Manpo-kei** pedometer, whose name literally means '10,000-step meter', chosen because the number's character resembles a person walking — a marketing hook, not a clinical dose. [Tudor-Locke et al. (2011)](https://doi.org/10.1123/jpah.8.s2.s126) reviewed decades of later research and found no evidence that 10,000 was a special health threshold: gains in mortality and cardiovascular function show up continuously from around 4,000 steps, climbing toward a plateau near 7,000 to 8,000 in older adults. That doesn't make the goal useless — it's round, easy to remember, and motivates people starting from zero — it just isn't the number science would have picked from scratch."
+      },
+      "image_brief": "Um pedômetro antigo e mecânico sobre o balcão de uma loja japonesa dos anos 1960, ao lado de uma vitrine com tênis simples, enquanto uma pessoa caminha visível através da janela atrás.",
+      "sources": [
+        { "label": { "pt": "Tudor-Locke et al., 2011 · Journal of Physical Activity and Health", "en": "Tudor-Locke et al., 2011 · Journal of Physical Activity and Health" }, "url": "https://doi.org/10.1123/jpah.8.s2.s126" }
+      ],
+      "cta": null
+    }
+  ]
+}

@@ -1,25 +1,34 @@
 ---
 name: content-drop
-description: Roda o pipeline de conteúdo do Learning sob demanda (agora), no modelo "ideias primeiro" — 1 a 5 ideias + artigo (Claude) + capa e uma imagem 4:5 por ideia (Gemini image API). Use quando o user pedir "gera um conteúdo agora", "novo material do learning", "faz um drop", "corta X em ideias", "backfill das ideias de X", ou invocar `/content-drop`. É a versão on-demand do cron `learning-publisher`. NÃO use pra outros repos.
+description: Roda o pipeline de conteúdo do Learning sob demanda (agora), no modelo "ideias primeiro" — ideias (uma por padrão, cada extra justificada; verso = a resposta que dá pra usar, imagem que não engana) + artigo (Claude) + capa e uma imagem 4:5 por ideia (Gemini image API). Categorias Pesquisa / Livro / Fundamentos; Fundamentos (o Perceva por dentro — subs, telas, filosofia) só sai por aqui, pedido pelo mantenedor. Use quando o user pedir "gera um conteúdo agora", "novo material do learning", "faz um drop", "escreve o fundamento de X", "corta X em ideias", "re-corta as ideias de X", ou invocar `/content-drop`. É a versão on-demand do cron `learning-publisher`. NÃO use pra outros repos.
 ---
 
 # /content-drop
 
 Dispara o pipeline de conteúdo do Learning **agora**, na sua máquina (onde as
 credenciais existem). É a versão manual do cron `learning-publisher`
-(dom+qua). Um material = **ideias** (1–5: título-gancho, afirmação, texto de
-100–180 palavras, imagem 4:5 sem texto, fontes) + **artigo** (seção "Ler o
-texto completo"; os `##` são as ideias) + **capa** 2:3. Infográfico, reels e
-áudio TTS estão aposentados pra drops novos — vídeo por ideia e deep dive
-vêm da rotina do Notebook (`.claude/agents/learning-notebook-runner.md`).
+(dom+qua). Um material = **ideias** (uma por padrão, cada extra justificada
+por estudo, mecanismo ou ação próprios: título assertivo que nomeia o assunto,
+verso com a resposta que dá pra usar — a instrução com o número que se aplica
+ou a conclusão seca, nunca a maquinaria do estudo —, texto de 100–180
+palavras, imagem 4:5 sem texto que não engane o leitor, fontes) + **artigo** (seção "Ler o texto completo";
+os `##` são as ideias) + **capa** 2:3. Infográfico, reels e áudio TTS estão
+aposentados pra drops novos — vídeo por ideia e deep dive vêm da rotina do
+Notebook (`.claude/agents/learning-notebook-runner.md`).
+
+**Categorias:** `research` (Pesquisa — uma pergunta respondida pela
+ciência, escrita pra durar), `book` (Livro — as ideias de uma obra),
+`foundation` (Fundamentos — o Perceva por dentro). O cron só sorteia
+Pesquisa e Livro; **Fundamentos só sai daqui, quando o mantenedor pede**.
 
 ## Modos
 
 | Invocação | O que faz |
 |---|---|
-| `/content-drop` | Material novo do zero: planner → researcher → drafter (ideias + artigo) → reviewer → ideas-spec + lint → migration de texto → art-director → imagens → upload → migration de ideias → `db push` → commit. |
+| `/content-drop` | Material novo do zero (Pesquisa ou Livro, o planner decide): planner → researcher → drafter (ideias + artigo) → reviewer → ideas-spec + lint → migration de texto → art-director → imagens → upload → migration de ideias → `db push` → commit. |
 | `/content-drop <tema livre>` | Igual, mas semeia o planner com o tema (ex. `/content-drop sono e luz azul`). |
-| `/content-drop --slug <slug>` | **Backfill**: corta um material LEGADO que já existe em ideias (cutter lê o banco) — com parada obrigatória pra você aprovar o texto antes de gastar API. |
+| `/content-drop fundamento <parte do app>` | **Fundamentos**: pula o planner e monta o brief com `category: foundation` e a parte do app (uma sub, uma tela, um princípio — ex. `fundamento recompensas`, `fundamento sub sono`). O resto do fluxo é igual. |
+| `/content-drop --slug <slug>` | **Re-corte**: corta de novo em ideias um material que já existe (cutter lê o banco) — com parada obrigatória pra você aprovar o texto antes de gastar API. |
 
 ## Pré-requisitos
 
@@ -40,11 +49,13 @@ Siga o agente `learning-publisher` (`.claude/agents/learning-publisher.md`) na
    `project-learning-publisher-trigger`). Cheque `GEMINI_API_KEY` e o último
    timestamp aplicado (`supabase migration list --linked | tail -5`).
 2. **Texto**: `learning-planner` (passe o `[tema]` como dica; o brief traz
-   `idea_budget`) → `learning-researcher` → `learning-drafter` (devolve
-   `ideas[]` + artigo) → `learning-reviewer`. Fail closed: sem tema, pesquisa
-   rala ou 2 reprovações → aborta limpo.
+   `category`, `idea_budget` — teto — e `main_finding_pt`; em
+   `fundamento <parte>` o brief é montado sem planner) →
+   `learning-researcher` (conta os achados independentes) →
+   `learning-drafter` (devolve `ideas[]` + artigo) → `learning-reviewer`.
+   Fail closed: sem tema, pesquisa rala ou 2 reprovações → aborta limpo.
 3. **Ideas-spec**: escreva `learning-drops/ideas-specs/<slug>.json` VERBATIM
-   do `payload.ideas` (+ `slug`, `type`, `material_title`) e rode
+   do `payload.ideas` (+ `slug`, `category`, `material_title`) e rode
    `node tools/learning-lint/lint.mjs --ideas learning-drops/ideas-specs/<slug>.json`.
    FAIL volta pro drafter uma vez (mesmo orçamento de retries do reviewer).
 4. **Migration de texto**: `supabase/migrations/<YYYYMMDD>NNNNNN_learning_material_<slug>.sql`
@@ -68,12 +79,24 @@ Siga o agente `learning-publisher` (`.claude/agents/learning-publisher.md`) na
    `idea_count`, imagens não nulas e `hero_image_url` (query no passo 12 do
    playbook).
 8. **Commit**: `git add -A` (ideas-spec + media-spec + as duas migrations;
-   `inbox/` é gitignored) → `feat(learning): publish <tipo> — <tema> (<n> ideias)`.
+   `inbox/` é gitignored) → `feat(learning): publish <categoria> — <tema> (<n> ideias)`.
    Modo commit-direto no `main` OU PR, conforme a preferência atual do user.
 
-## Processo — backfill de um legado (`/content-drop --slug <slug>`)
+## Processo — re-corte de um material publicado (`/content-drop --slug <slug>`)
 
-Pra um material que já está no ar sem `ideas` (os 31 do catálogo antigo):
+Pra um material que já está no ar (desde 2026-09-11 o catálogo inteiro já
+tem `ideas`; o re-corte aplica as regras novas — uma ideia por padrão,
+título e verso que se explicam sozinhos, imagem que não engana, e o trio
+entregando o assunto junto):
+
+> **Vídeos e deep dives ficam.** São caros de gerar (fora daqui, no
+> Notebook) e o mantenedor decidiu mantê-los mesmo quando o texto muda —
+> marcados como gerados antes da revisão. **Pendente antes do primeiro
+> re-corte:** o `emit-migration.mjs` hoje grava `video: {pt: null, en:
+> null}` quando não recebe `--videos`, o que APAGARIA os vídeos das ideias
+> que sobrevivem. Até o merge que preserva e marca (`video.<loc>` herdado
+> por `id` + marca de texto revisado; `learning_material_media.meta` do
+> deep dive idem), não rode o passo 6 num material que já tem vídeo.
 
 1. **Cortar**: dispare `learning-idea-cutter` com o slug. Ele lê o material do
    banco (Management API, User-Agent de CLI), deriva 1–5 ideias sem fato novo

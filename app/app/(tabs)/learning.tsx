@@ -40,12 +40,13 @@ import {
 import type {
   DimensionId,
   LearningIdeaPublic,
-  LearningMaterialType,
+  LearningMaterialCategory,
   SubId,
 } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { pickLocalized, type IdeaLocale } from '@/lib/ideas';
+import { categoryOf } from '@/lib/learningCategory';
 import {
   useContinueReading,
   useReadingProgressReady,
@@ -254,7 +255,7 @@ export default function LearningScreen() {
       // Pill filter — exclusive (only one active at a time)
       if (pillFilter) {
         if (pillFilter.kind === 'dim' && c.dimension_id !== pillFilter.value) return false;
-        if (pillFilter.kind === 'type' && c.type !== pillFilter.value) return false;
+        if (pillFilter.kind === 'category' && categoryOf(c) !== pillFilter.value) return false;
         if (pillFilter.kind === 'sub' && !c.subs.includes(pillFilter.value as SubId)) return false;
       }
       return true;
@@ -626,7 +627,7 @@ function PillFilterChip({ filter, onClear }: PillFilterChipProps) {
     iconName = SUB_META[subId].iconName as keyof typeof Ionicons.glyphMap;
     accent = dim.color;
   } else {
-    label = t(`learning.type.${filter.value as LearningMaterialType}`);
+    label = t(`learning.category.${filter.value as LearningMaterialCategory}`);
   }
 
   return (

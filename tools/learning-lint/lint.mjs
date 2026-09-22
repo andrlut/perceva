@@ -45,7 +45,25 @@ const FENCE_NAMES = new Set(['stat', 'quote', 'callout', 'compare', 'list-icon',
 const CALLOUT_KINDS = new Set(['warn', 'info', 'tip', 'love']);
 
 const WORD_FAIL_LO = 800, WORD_FAIL_HI = 1500;
-const WORD_WARN_LO = 950, WORD_WARN_HI = 1250;
+// Preferred range scales with idea count n (the article is n "## " sections, one per idea):
+// lo = 200 + 250n, hi = 350 + 400n. Falls back to n=3 when the caller has no ideas[] to count
+// (e.g. --body on a raw .md), which reproduces the old fixed 950-1250 band.
+function preferredWordRange(n) {
+  const count = Number.isInteger(n) && n >= 1 ? n : 3;
+  return { lo: 200 + 250 * count, hi: 350 + 400 * count, count };
+}
+// dated_framing — só o gancho (texto antes do primeiro "## ") importa; data de estudo dentro
+// de uma citação mais abaixo no corpo é normal e não deve disparar isto.
+const DATED_FRAMING_PT = [
+  /\bacaba(m)? de (sair|ser publicad)/i,
+  /\b(neste|este) m[eê]s\b/i,
+  /\bpublicad[oa]s? (em|no|na) (janeiro|fevereiro|março|marco|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro) de 20\d\d/i,
+];
+const DATED_FRAMING_EN = [
+  /\bjust (out|published)\b/i,
+  /\bthis (week|month)\b/i,
+  /\bpublished (in|on) (January|February|March|April|May|June|July|August|September|October|November|December) 20\d\d/i,
+];
 
 // ─── core body linter ────────────────────────────────────────────────────────
 function lintBody(body, ctx) {
@@ -61,6 +79,17 @@ function lintBody(body, ctx) {
   // SQL dollar-quote safety — a body containing the quote tag breaks the migration.
   for (const tag of ['$body_pt$', '$body_en$', '$$']) {
     if (body.includes(tag)) fail(`body contains SQL dollar-quote tag "${tag}" — will break the migration`);
+  }
+
+  // dated_framing — o gancho (antes do primeiro "## ") não pode prender o material a um momento.
+  {
+    const firstH2 = body.match(/^##[ \t]/m);
+    const hook = firstH2 ? body.slice(0, firstH2.index) : body;
+    const patterns = ctx?.loc === 'en' ? DATED_FRAMING_EN : ctx?.loc === 'pt' ? DATED_FRAMING_PT : [...DATED_FRAMING_PT, ...DATED_FRAMING_EN];
+    for (const re of patterns) {
+      const m = hook.match(re);
+      if (m) { warn(`dated_framing: hook reads as dated ("${m[0]}") — research is written to last, drop the date-bound framing`); break; }
+    }
   }
 
   const lines = body.split(/\r?\n/);
@@ -179,7 +208,10 @@ function lintBody(body, ctx) {
   const words = (body.match(/\S+/g) || []).length;
   if (words < 300) fail(`word count ${words} — body is far too short / likely broken`);
   else if (words < WORD_FAIL_LO || words > WORD_FAIL_HI) warn(`word count ${words} outside typical ${WORD_FAIL_LO}-${WORD_FAIL_HI}`);
-  else if (words < WORD_WARN_LO || words > WORD_WARN_HI) warn(`word count ${words} outside preferred ${WORD_WARN_LO}-${WORD_WARN_HI}`);
+  else {
+    const { lo, hi, count } = preferredWordRange(ctx?.n);
+    if (words < lo || words > hi) warn(`word count ${words} outside preferred ${lo}-${hi} (n=${count} ideas)`);
+  }
 
   // academic-outline artifacts the drafter is told to fold into prose
   if (/\*\*(Claim|Evidência|Evidence|Contestado|Contested|Nuance)\*\*\s*:/.test(body)) {
@@ -194,9 +226,10 @@ function lintDraft(draft, name) {
   const out = [];
   const push = (loc, probs) => probs.forEach((p) => out.push({ ...p, where: `${name}:${loc}` }));
 
+  const ideaCount = Array.isArray(draft.ideas) ? draft.ideas.length : undefined;
   for (const loc of ['pt', 'en']) {
     const body = draft[`body_${loc}`];
-    push(`body_${loc}`, lintBody(body, { name, loc }));
+    push(`body_${loc}`, lintBody(body, { name, loc, n: ideaCount }));
   }
 
   // bilingual parity
@@ -315,30 +348,102 @@ function lintReels(spec, name) {
 // ─── ideas-spec linter (learning-drops/ideas-specs/<slug>.json) ──────────────
 // Contrato (o que o cutter/drafter escreve; image/video por ideia NÃO ficam aqui —
 // o emit-migration preenche a partir do manifest de mídia):
-//   { slug, type: summary|explainer|news, material_title: {pt,en},
+//   { slug, category: research|book|foundation, material_title: {pt,en},
 //     ideas: [{ id: /^[a-z0-9-]{3,40}$/ (IMUTÁVEL, chave da coleta), ordinal: 1..,
-//               title: {pt,en} ≤48 (gancho, nunca o nome do tema; da ideia 2 em diante nomeia o
-//                      assunto pra valer sozinho FORA do material — heurística WARN
-//                      idea_title_no_context: sem palavra ≥5 letras em comum com material_title e sem ':'),
-//               claim: {pt,en} alvo ≤120 / teto 140 (uma frase que vale sozinha — é o verso do
-//                      card, lido inteiro no menor card (132px, rail + Minhas ideias); 121-140
-//                      só cabe com a fonte encolhida → WARN; >140 → FAIL),
+//               title: {pt,en} ≤48 — TÓPICO ASSERTIVO ou pergunta direta, nunca charada. Nomeia o
+//                      assunto e dá vontade de ler; TODA ideia, a 1 inclusive, é lida FORA do
+//                      material (heurística WARN idea_title_no_subject: sem palavra ≥5 letras em
+//                      comum com material_title). A forma "Tema: frase enigmática" é desencorajada
+//                      (WARN idea_title_riddle) e vira FAIL quando duas ideias repetem o
+//                      prefixo (idea_titles_shared_prefix) — livro não fala por dois-pontos,
+//               claim: {pt,en} alvo ≤120 / teto 140 — é o verso do card: a RESPOSTA QUE DÁ PRA
+//                      USAR, não o resumo do estudo. Em ordem: (1) a instrução com o número que se
+//                      aplica ("Coma 25 a 30 g de proteína em cada refeição", "Junte 25 vezes o seu
+//                      gasto anual"); (2) quando o achado não pede ação, a conclusão seca ("Pessoas
+//                      solitárias têm memória pior, mas a queda ao longo do tempo é a mesma").
+//                      NUNCA a maquinaria da pesquisa — autor, nome do estudo, amostra, "no
+//                      estudo", "os pesquisadores", "n=" — que vive no body (FAIL
+//                      idea_claim_cites_study). Sem charada: uma afirmação por card, dita direto.
+//                      Travessão / ponto e vírgula / vírgulas em série não são proibidos, mas são
+//                      sinal de frase fazendo dois trabalhos (WARN idea_claim_two_jobs).
+//                      Lido inteiro no menor card (132px, rail + Minhas ideias); 121-140 só cabe
+//                      com a fonte encolhida → WARN; >140 → FAIL,
 //               body:  {pt,en} 100–180 palavras, **negrito** em até 2 trechos, [link](https://…),
-//               image_brief: cena em PT que RETRATA a afirmação, sem texto/placa/logo/UI,
+//               image_brief: uma cena concreta do ASSUNTO da ideia, em PT, que não puxe pro
+//                      assunto errado (reprova = engana; não nomear o assunto é só preferência
+//                      de direção de arte). Sem texto/placa/logo/UI,
 //               sources: [{label:{pt,en}, url:https://…}] (1..3), cta: null }] }
-const IDEA_BUDGET = { news: { min: 1, max: 1 }, explainer: { min: 1, max: 3 }, summary: { min: 2, max: 5 } };
+// `category` é o campo atual; `type: summary|explainer|news` é aceito como legado (WARN) e
+// mapeado summary→book, explainer|news→research — ver LEGACY_TYPE_TO_CATEGORY.
+const IDEA_BUDGET = { research: { min: 1, max: 3 }, book: { min: 1, max: 5 }, foundation: { min: 1, max: 3 } };
+const LEGACY_TYPE_TO_CATEGORY = { summary: 'book', explainer: 'research', news: 'research' };
 const IDEA_HARD_CAP = 5;
 const IDEA_ID_RE = /^[a-z0-9-]{3,40}$/;
 const IDEA_TITLE_MAX = 48;
-// Regra editorial idea_title_no_context: da ideia 2 em diante o título é lido FORA do material
-// (Minhas ideias, Explorar, MCP), então precisa nomear o assunto. Heurística, só WARN: sem
-// nenhuma palavra de ≥5 letras em comum com material_title (caixa/acento indiferentes) e sem
-// ":" (a forma "tema: afirmação" já resolve). A ideia 1 costuma carregar o tema por construção.
-const IDEA_TITLE_CONTEXT_FROM = 2;
-const IDEA_TITLE_CONTEXT_WORD_MIN = 5;
+// Regra editorial idea_title_no_subject: todo título de ideia é lido FORA do material (Minhas
+// ideias, Explorar, MCP) — inclusive o da ideia 1 — então precisa nomear o assunto dentro da
+// própria frase. Heurística, só WARN: sem nenhuma palavra de ≥5 letras em comum com
+// material_title (caixa/acento indiferentes). ":" NÃO isenta mais — a forma "tema: afirmação"
+// é banida (idea_titles_shared_prefix) e não conta como "nomear o assunto" por si só.
+// (Nome canônico do reviewer, que julga o SENTIDO e reprova; aqui é sobreposição de palavras,
+// logo WARN. Aposentou o antigo idea_title_no_context, que só olhava da ideia 2 em diante.)
+const IDEA_TITLE_SUBJECT_WORD_MIN = 5;
+// Regra editorial idea_titles_shared_prefix: um "tema:" repetido entre ideias ("Bids: …",
+// "Bids: …") faz o prefixo carregar o trabalho que cada título deveria fazer sozinho. FAIL
+// quando 2+ títulos (mesmo idioma) têm o mesmo texto antes do primeiro ':' (caixa/acento
+// indiferentes); sem ':', o mesmo sintoma vira WARN quando 2+ títulos abrem com a mesma
+// palavra de ≥5 letras (pode ser coincidência de vocabulário, não é formulaico por definição).
 // Claim = verso do card. 120 é o que cabe inteiro, em fonte cheia, no menor card (132px);
 // o app encolhe a fonte até 0.6x, então 140 ainda cabe — mas é teto, não alvo.
 const IDEA_CLAIM_TARGET = 120, IDEA_CLAIM_MAX = 140;
+// Regra editorial idea_claim_cites_study (FAIL): o verso é a resposta que o leitor USA — a
+// instrução com o número que se aplica (gramas, horas, refeições, múltiplos) ou, quando o achado
+// não pede ação, a conclusão seca. A maquinaria da pesquisa (autor, ano, nome do estudo, tamanho
+// de amostra, "no estudo", "os pesquisadores") vive no body, que segue exigindo número com estudo
+// nomeado. O alvo aqui é a CITAÇÃO, não qualquer número: "25 a 30 g" passa, "(Hall, 2018)" não.
+const CLAIM_CITATION_RES = [
+  /\([^)]*\b(?:19|20)\d{2}\b[^)]*\)/u,                     // "(Hall, 2018)", "(Leong et al., 2015)"
+  /\(\s*\p{Lu}[\p{L}.&\- ]{1,28},\s*\d[^)]*\)?/u,          // "(SHARE, 10.217 idosos)"
+  /\b\p{Lu}\p{L}+\s+et\s+al\b/u,                           // "Leong et al."
+  /\bn\s*=\s*\d/i,                                         // "n=36", "n = 36"
+  /\bn(?:o|um|esse|este|aquele)\s+estudo\b/i,              // "no estudo", "num estudo"
+  /\bem\s+um\s+estudo\b/i,
+  /\bnos\s+estudos\b/i,
+  /\bsegundo\s+[oa]\s+(?:estudo|pesquisa|artigo)\b/i,
+  /\bnos\s+dados\s+d[eoa]s?\b/i,                           // "Nos dados de Hall"
+  /\b(?:os|as)\s+pesquisadores?\b/i,
+  /\bn?a\s+pesquisa\b/i,                                   // "a pesquisa" / "na pesquisa" (≠ "uma pesquisa")
+  /\bmeta-?an[aá]lise\b/i,
+  /\bamostra\s+d[eoa]\b/i,
+  /\bin\s+(?:the|one|a|another)\s+stud(?:y|ies)\b/i,
+  /\bresearchers?\b/i,
+  /\baccording\s+to\s+the\s+(?:study|research|paper|data)\b/i,
+  /\bmeta-?analysis\b/i,
+  /\bsample\s+of\b/i,
+  /\b[Ii]n\s+\p{Lu}\p{L}+(?:['’]s)?\s+(?:data|dataset|study|sample|experiment|trial|paper)\b/u, // "In Hall's data"
+];
+function citationHit(s) {
+  const t = String(s ?? '');
+  for (const re of CLAIM_CITATION_RES) { const m = t.match(re); if (m) return m[0].trim(); }
+  return null;
+}
+// Regra editorial idea_claim_two_jobs (WARN, nunca FAIL): pontuação simples por consequência.
+// Travessão, ponto e vírgula e vírgulas em série não são proibidos — são o sintoma de uma frase
+// carregando duas afirmações. Uma por card.
+// O gatilho de FRASES é 3+, não 2: o drafter autoriza "uma frase (duas bem curtas no máximo)",
+// então duas frases são contrato cumprido e não podem acender aviso.
+const CLAIM_SENTENCES_WARN = 3;
+function claimTwoJobs(s) {
+  const t = String(s ?? '');
+  const reasons = [];
+  if (/[—–]/.test(t)) reasons.push('an em/en dash');
+  if (t.includes(';')) reasons.push('a semicolon');
+  const commas = (t.match(/,/g) || []).length;
+  if (commas >= 3) reasons.push(`${commas} commas`);
+  const sentences = (t.match(/[.!?](?=\s|$)/g) || []).length;
+  if (sentences >= CLAIM_SENTENCES_WARN) reasons.push(`${sentences} sentences`);
+  return reasons;
+}
 const IDEA_WORDS = { failLo: 60, failHi: 220, warnLo: 100, warnHi: 180 };
 const IDEA_BOLD_MAX = 2;
 const IDEA_PARITY_MAX = 0.25; // PT vs EN word-count divergence
@@ -361,7 +466,7 @@ function wordCount(s) {
 function boldRuns(s) { return (String(s ?? '').match(/\*\*[^*\n]+?\*\*/g) || []).length; }
 // Palavras "de conteúdo" de um título: só letras, sem acento, minúsculas, ≥ N letras
 // ("meio-termo" vira "meio" + "termo"; "sábado" e "Sabado" são a mesma palavra).
-function contentWords(s, min = IDEA_TITLE_CONTEXT_WORD_MIN) {
+function contentWords(s, min = IDEA_TITLE_SUBJECT_WORD_MIN) {
   const t = String(s ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
   return new Set((t.match(/\p{L}+/gu) || []).filter((w) => w.length >= min));
 }
@@ -369,6 +474,44 @@ function sharesContentWord(a, b) {
   const wb = contentWords(b);
   for (const w of contentWords(a)) if (wb.has(w)) return true;
   return false;
+}
+function normalizeForCompare(s) {
+  return String(s ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().trim();
+}
+// idea_titles_shared_prefix — ver nota junto de IDEA_BUDGET. Roda por locale: uma série pode
+// colidir só em PT (ou só em EN), então os dois casos são checados independentemente.
+function checkSharedTitlePrefix(ideas, name, fail, warn) {
+  for (const loc of LOCALES) {
+    const colonGroups = new Map(); // prefixo normalizado → { display, ns }
+    const wordGroups = new Map();  // primeira palavra normalizada → { display, ns }
+    ideas.forEach((idea, idx) => {
+      const n = idx + 1;
+      const title = String(idea?.title?.[loc] ?? '').trim();
+      if (!title) return;
+      const colonIdx = title.indexOf(':');
+      if (colonIdx !== -1) {
+        const rawPrefix = title.slice(0, colonIdx).trim();
+        const key = normalizeForCompare(rawPrefix);
+        if (!key) return;
+        if (!colonGroups.has(key)) colonGroups.set(key, { display: rawPrefix, ns: [] });
+        colonGroups.get(key).ns.push(n);
+      } else {
+        const words = normalizeForCompare(title).match(/\p{L}+/gu) || [];
+        const first = words[0];
+        if (!first || first.length < IDEA_TITLE_SUBJECT_WORD_MIN) return;
+        if (!wordGroups.has(first)) wordGroups.set(first, { display: first, ns: [] });
+        wordGroups.get(first).ns.push(n);
+      }
+    });
+    for (const { display, ns } of colonGroups.values()) {
+      if (ns.length >= 2)
+        fail(`titles.${loc} share the prefix "${display}:" — name the subject naturally in each title, no formula prefix (rule: idea_titles_shared_prefix; ideas ${ns.join(', ')})`, `${name}:ideas`);
+    }
+    for (const { display, ns } of wordGroups.values()) {
+      if (ns.length >= 2)
+        warn(`titles.${loc} all open with "${display}" — vary the opening so each idea reads on its own (rule: idea_titles_shared_prefix; ideas ${ns.join(', ')})`, `${name}:ideas`);
+    }
+  }
 }
 function fillerHits(s) {
   const t = String(s ?? '').toLowerCase().replace(/[‘’]/g, "'");
@@ -393,9 +536,16 @@ function lintIdeas(spec, name) {
 
   // envelope
   if (!String(spec.slug ?? '').trim()) fail('slug missing', `${name}:slug`);
-  const type = spec.type;
-  const budget = IDEA_BUDGET[type];
-  if (!budget) fail(`type ${JSON.stringify(type ?? null)} invalid — must be news|explainer|summary (budget can't be applied)`, `${name}:type`);
+  if (/-\d{4}-\d{2}$/.test(String(spec.slug ?? '').trim()))
+    warn('slug carries a date — research is written to last; drop the date from new slugs', `${name}:slug`);
+  const usedLegacyType = spec.category == null && spec.type != null;
+  const category = spec.category ?? (spec.type != null ? LEGACY_TYPE_TO_CATEGORY[spec.type] : undefined);
+  const budget = IDEA_BUDGET[category];
+  if (!budget) {
+    fail(`category ${JSON.stringify(spec.category ?? null)} invalid — must be research|book|foundation (budget can't be applied)`, `${name}:category`);
+  } else if (usedLegacyType) {
+    warn('legacy "type" field — use "category"', `${name}:type`);
+  }
   const mt = spec.material_title && typeof spec.material_title === 'object' ? spec.material_title : {};
   for (const loc of LOCALES) {
     if (!String(mt[loc] ?? '').trim()) warn(`material_title.${loc} missing (title ≠ material title check skipped)`, `${name}:material_title.${loc}`);
@@ -416,8 +566,7 @@ function lintIdeas(spec, name) {
   if (ideas.length < 1 || ideas.length > IDEA_HARD_CAP) {
     fail(`ideas has ${ideas.length} entries (hard cap: 1..${IDEA_HARD_CAP})`, `${name}:ideas`);
   } else if (budget) {
-    if (ideas.length > budget.max) fail(`${ideas.length} ideas above the ${type} budget (max ${budget.max}) — cut, don't stretch`, `${name}:ideas`);
-    else if (ideas.length < budget.min) warn(`${ideas.length} ideas below the ${type} minimum (${budget.min})`, `${name}:ideas`);
+    if (ideas.length > budget.max) fail(`${ideas.length} ideas above the ${category} budget (max ${budget.max}) — cut, don't stretch`, `${name}:ideas`);
   }
 
   const seenIds = new Map();    // id → idea number
@@ -442,9 +591,13 @@ function lintIdeas(spec, name) {
         if (title.length > IDEA_TITLE_MAX) fail(`title.${loc} has ${title.length} chars (max ${IDEA_TITLE_MAX})`, w(`title.${loc}`));
         const mtl = String(mt[loc] ?? '').trim().toLowerCase();
         if (mtl && title.toLowerCase() === mtl) warn(`title.${loc} equals material_title — needs a hook, not the topic name`, w(`title.${loc}`));
-        // idea_title_no_context (heurística, WARN): fora do material o título tem que nomear o assunto.
-        if (mtl && n >= IDEA_TITLE_CONTEXT_FROM && !title.includes(':') && !sharesContentWord(title, mtl))
-          warn(`idea ${n} title may lose context outside the material (rule: idea_title_no_context) — name the subject or use 'topic: claim'`, w(`title.${loc}`));
+        // idea_title_no_subject (heurística, WARN): TODA ideia é lida fora do material, ":" não isenta.
+        if (mtl && !sharesContentWord(title, mtl))
+          warn(`title.${loc} doesn't name the subject — a quick reader can't tell what it's about ("30g de quê?"); name it inside the sentence, no "Topic:" prefix (rule: idea_title_no_subject)`, w(`title.${loc}`));
+        // idea_title_riddle: aqui é WARN de propósito. O dois-pontos é SINTOMA, não prova — um
+        // caso ou outro precisa dele. Quem reprova a charada é o reviewer, que lê o sentido.
+        if (title.includes(':'))
+          warn(`title.${loc} uses a colon ("Topic: phrase") — the maintainer asked for an assertive topic or a direct question, not a riddle with the answer tucked behind the colon (rule: idea_title_riddle). WARN on purpose: the colon is the mechanical symptom, not the proof — the odd title does need one. The FAIL for an actual riddle is the reviewer's, reading the meaning; sharing that prefix across ideas is a FAIL here, see idea_titles_shared_prefix`, w(`title.${loc}`));
       }
 
       const claim = String(idea.claim?.[loc] ?? '').trim();
@@ -452,6 +605,16 @@ function lintIdeas(spec, name) {
       else if (claim.length > IDEA_CLAIM_MAX) fail(`claim.${loc} has ${claim.length} chars (max ${IDEA_CLAIM_MAX})`, w(`claim.${loc}`));
       else if (claim.length > IDEA_CLAIM_TARGET)
         warn(`claim.${loc} has ${claim.length} chars — above the ${IDEA_CLAIM_TARGET}-char card budget (fits only with font shrink; max ${IDEA_CLAIM_MAX})`, w(`claim.${loc}`));
+      if (claim) {
+        // idea_claim_cites_study (FAIL): o verso é a resposta que dá pra usar, não o resumo do estudo.
+        const cite = citationHit(claim);
+        if (cite)
+          fail(`claim.${loc} cites the study's machinery ("${cite}") — the card's back is the answer the reader USES (the instruction with its number, or the dry conclusion); author, year, sample size and "no estudo" belong in body.${loc} (rule: idea_claim_cites_study)`, w(`claim.${loc}`));
+        // idea_claim_two_jobs (WARN): pontuação como sintoma, não como proibição.
+        const jobs = claimTwoJobs(claim);
+        if (jobs.length)
+          warn(`claim.${loc} has ${jobs.join(' + ')} — not forbidden, but almost always the sign of a sentence doing two jobs: cut one, one assertion per card (rule: idea_claim_two_jobs)`, w(`claim.${loc}`));
+      }
 
       const body = String(idea.body?.[loc] ?? '');
       if (!body.trim()) {
@@ -507,7 +670,7 @@ function lintIdeas(spec, name) {
     // image_brief
     const brief = String(idea.image_brief ?? '').trim();
     if (!brief) {
-      fail('image_brief missing — the image must depict the claim', w('image_brief'));
+      fail('image_brief missing — the image must be one concrete scene of the idea\'s subject, one that does not pull toward the wrong subject', w('image_brief'));
     } else {
       const m = brief.match(NO_TEXT_PT_RE);
       if (m) fail(`image_brief mentions "${m[0]}" — no text, signs, logos, captions or UI inside the image`, w('image_brief'));
@@ -521,6 +684,9 @@ function lintIdeas(spec, name) {
     if (!('cta' in idea) || !(cta === null || (typeof cta === 'object' && !Array.isArray(cta))))
       fail(`cta must be null or an object (got ${'cta' in idea ? JSON.stringify(cta) : 'missing'})`, w('cta'));
   });
+
+  checkSharedTitlePrefix(ideas, name, fail, warn);
+
   return out;
 }
 
