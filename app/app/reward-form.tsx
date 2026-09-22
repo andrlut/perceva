@@ -80,7 +80,6 @@ const ICON_CHOICES = [
   'watch',
   // Generic / fallback
   'gift',
-  'gift-outline',
   'cart',
 ] as const;
 

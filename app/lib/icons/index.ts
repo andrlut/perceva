@@ -23,6 +23,10 @@ const MDI_PREFIX = 'mdi:';
 
 const ION_GLYPHS = Ionicons.glyphMap as Record<string, number>;
 const MDI_GLYPHS = MaterialCommunityIcons.glyphMap as Record<string, number>;
+// Own-property check: the glyph maps are plain objects, so a bare `in`
+// would accept 'constructor' / '__proto__' as glyphs.
+const hasGlyph = (map: Record<string, number>, glyph: string) =>
+  Object.prototype.hasOwnProperty.call(map, glyph);
 
 /** Shown when an id resolves to nothing. Neutral, never misleading. */
 export const FALLBACK_ICON: ResolvedIcon = { family: 'ion', glyph: 'ellipse-outline' };
@@ -36,9 +40,9 @@ export function parseIcon(id: string | null | undefined): ResolvedIcon | null {
   if (!id) return null;
   if (id.startsWith(MDI_PREFIX)) {
     const glyph = id.slice(MDI_PREFIX.length);
-    return glyph in MDI_GLYPHS ? { family: 'mdi', glyph } : null;
+    return hasGlyph(MDI_GLYPHS, glyph) ? { family: 'mdi', glyph } : null;
   }
-  return id in ION_GLYPHS ? { family: 'ion', glyph: id } : null;
+  return hasGlyph(ION_GLYPHS, id) ? { family: 'ion', glyph: id } : null;
 }
 
 export function isKnownIcon(id: string | null | undefined): boolean {

@@ -16,6 +16,7 @@ import { AppIcon } from '@/components/AppIcon';
 import { useSheetBottomInset } from '@/components/useSheetBottomInset';
 import { useT } from '@/lib/i18n';
 import { normalizeSearch } from '@/lib/icons';
+import { useKeyboardOverlap } from '@/lib/use-keyboard-height';
 import {
   ICON_CATEGORIES,
   iconLabel,
@@ -75,6 +76,11 @@ export function IconPickerModal({
   const { t, locale } = useT();
   const { height: windowHeight } = useWindowDimensions();
   const sheetBottom = useSheetBottomInset();
+  // A Modal is its own window: the form's KeyboardAvoidingView cannot reach
+  // it, and with edge-to-edge on Android the IME simply overlays the sheet
+  // (CalendarFilterSheet learned this first). Lift the sheet by the overlap
+  // and keep it from growing past the top.
+  const lift = useKeyboardOverlap();
   const hasSuggested = (suggested?.length ?? 0) > 0 || autoIcon != null;
   const [chip, setChip] = useState<Chip>(hasSuggested ? 'suggested' : 'all');
   const [query, setQuery] = useState('');
@@ -101,59 +107,68 @@ export function IconPickerModal({
 
   const selectedStyle = { borderColor: accentColor, backgroundColor: accentBg };
 
-  const renderCell = (id: string, key?: string) => {
-    const selected = id === value;
-    return (
-      <Pressable
-        key={key ?? id}
-        onPress={() => pick(id)}
-        style={[styles.cell, selected && selectedStyle]}
-        accessibilityRole="button"
-        accessibilityState={{ selected }}
-        accessibilityLabel={iconLabel(id, locale)}
-      >
-        <AppIcon name={id} size={22} color={selected ? accentColor : tokens.text.mid} />
-      </Pressable>
-    );
-  };
+  // "Todos" is 300+ cells in one ScrollView; build the section nodes once
+  // per (chip, query, selection) instead of on every keystroke re-render.
+  const sections = useMemo(() => {
+    const renderCell = (id: string, key?: string) => {
+      const selected = id === value;
+      return (
+        <Pressable
+          key={key ?? id}
+          onPress={() => pick(id)}
+          style={[styles.cell, selected && selectedStyle]}
+          accessibilityRole="button"
+          accessibilityState={{ selected }}
+          accessibilityLabel={iconLabel(id, locale)}
+        >
+          <AppIcon name={id} size={22} color={selected ? accentColor : tokens.text.mid} />
+        </Pressable>
+      );
+    };
 
-  const autoCell =
-    autoIcon != null ? (
-      <Pressable
-        key="__auto"
-        onPress={() => pick(null)}
-        style={[styles.cell, styles.cellAuto, value === null && selectedStyle]}
-        accessibilityRole="button"
-        accessibilityState={{ selected: value === null }}
-        accessibilityLabel={autoA11yLabel ?? t('iconPicker.auto')}
-      >
-        <AppIcon name={autoIcon} size={22} color={value === null ? accentColor : tokens.text.mid} />
-        <Text style={[styles.cellAutoText, value === null && { color: accentColor }]}>
-          {t('iconPicker.auto')}
-        </Text>
-      </Pressable>
-    ) : null;
+    const autoCell =
+      autoIcon != null ? (
+        <Pressable
+          key="__auto"
+          onPress={() => pick(null)}
+          style={[styles.cell, styles.cellAuto, value === null && selectedStyle]}
+          accessibilityRole="button"
+          accessibilityState={{ selected: value === null }}
+          accessibilityLabel={autoA11yLabel ?? t('iconPicker.auto')}
+        >
+          <AppIcon name={autoIcon} size={22} color={value === null ? accentColor : tokens.text.mid} />
+          {/* Label stays neutral text: the accent over its own wash misses AA
+              on the violet domain (4.1:1); the border + icon carry the state. */}
+          <Text style={[styles.cellAutoText, value === null && { color: tokens.text.hi }]}>
+            {t('iconPicker.auto')}
+          </Text>
+        </Pressable>
+      ) : null;
 
-  const sections: { key: string; label?: string; nodes: ReactNode[] }[] = [];
-  if (results) {
-    sections.push({ key: 'search', nodes: results.map((e) => renderCell(e.id)) });
-  } else if (chip === 'suggested') {
-    const nodes: ReactNode[] = [];
-    if (autoCell) nodes.push(autoCell);
-    (suggested ?? []).forEach((id) => nodes.push(renderCell(id)));
-    sections.push({ key: 'suggested', nodes });
-  } else if (chip === 'all') {
-    for (const cat of ICON_CATEGORIES) {
-      sections.push({
-        key: cat.id,
-        label: t(`iconPicker.categories.${cat.id}`),
-        nodes: cat.entries.map((e) => renderCell(e.id, `${cat.id}:${e.id}`)),
-      });
+    const out: { key: string; label?: string; nodes: ReactNode[] }[] = [];
+    if (results) {
+      out.push({ key: 'search', nodes: results.map((e) => renderCell(e.id)) });
+    } else if (chip === 'suggested') {
+      const nodes: ReactNode[] = [];
+      if (autoCell) nodes.push(autoCell);
+      (suggested ?? []).forEach((id) => nodes.push(renderCell(id)));
+      out.push({ key: 'suggested', nodes });
+    } else if (chip === 'all') {
+      for (const cat of ICON_CATEGORIES) {
+        out.push({
+          key: cat.id,
+          label: t(`iconPicker.categories.${cat.id}`),
+          nodes: cat.entries.map((e) => renderCell(e.id, `${cat.id}:${e.id}`)),
+        });
+      }
+    } else {
+      const cat = ICON_CATEGORIES.find((c) => c.id === chip);
+      if (cat) out.push({ key: cat.id, nodes: cat.entries.map((e) => renderCell(e.id)) });
     }
-  } else {
-    const cat = ICON_CATEGORIES.find((c) => c.id === chip);
-    if (cat) sections.push({ key: cat.id, nodes: cat.entries.map((e) => renderCell(e.id)) });
-  }
+    return out;
+    // `pick` closes over onSelect/onClose props; listing those is enough.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [results, chip, suggested, autoIcon, autoA11yLabel, value, locale, accentColor, accentBg, t, onSelect, onClose]);
 
   const chips: { id: Chip; label: string; icon?: string }[] = [
     ...(hasSuggested ? [{ id: 'suggested' as const, label: t('iconPicker.suggested'), icon: 'sparkles' }] : []),
@@ -174,13 +189,19 @@ export function IconPickerModal({
       // Android back closes only the picker, never the form behind it.
       onRequestClose={onClose}
     >
-      <Pressable style={styles.scrim} onPress={onClose}>
+      <Pressable style={[styles.scrim, { paddingBottom: lift }]} onPress={onClose}>
         {/* stopPropagation so taps inside the sheet don't bubble to the
             scrim's close handler. */}
         <Pressable
           style={[
             styles.sheet,
-            { paddingBottom: sheetBottom, maxHeight: Math.round(windowHeight * 0.88) },
+            {
+              paddingBottom: sheetBottom,
+              maxHeight: Math.min(
+                Math.round(windowHeight * 0.88),
+                windowHeight - lift - tokens.space[10],
+              ),
+            },
           ]}
           onPress={(e) => e.stopPropagation()}
         >
@@ -190,7 +211,7 @@ export function IconPickerModal({
             {value != null && (
               <View style={[styles.previewPill, { borderColor: accentColor, backgroundColor: accentBg }]}>
                 <AppIcon name={value} size={16} color={accentColor} />
-                <Text style={[styles.previewText, { color: accentColor }]} numberOfLines={1}>
+                <Text style={styles.previewText} numberOfLines={1}>
                   {iconLabel(value, locale)}
                 </Text>
               </View>
@@ -212,7 +233,7 @@ export function IconPickerModal({
             {query.length > 0 && (
               <Pressable
                 onPress={() => setQuery('')}
-                hitSlop={8}
+                hitSlop={14}
                 accessibilityRole="button"
                 accessibilityLabel={t('common.clear')}
               >
@@ -252,10 +273,13 @@ export function IconPickerModal({
                     {c.icon ? (
                       <AppIcon name={c.icon} size={13} color={on ? accentColor : tokens.text.dim} />
                     ) : null}
+                    {/* Selected label in neutral hi text: the accent over its
+                        own wash is 4.1:1 on the violet domain. Border + icon
+                        carry the accent. */}
                     <Text
                       style={[
                         styles.chipText,
-                        { color: on ? accentColor : tokens.text.mid },
+                        { color: on ? tokens.text.hi : tokens.text.mid },
                         on && { fontFamily: 'Manrope_800ExtraBold' },
                       ]}
                     >
@@ -342,6 +366,7 @@ const styles = StyleSheet.create({
   previewText: {
     fontFamily: 'Manrope_700Bold',
     fontSize: 11,
+    color: tokens.text.hi,
     flexShrink: 1,
   },
   searchWrap: {

@@ -3,6 +3,7 @@ import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   Alert,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -294,7 +295,12 @@ export default function SkillFormScreen() {
                 "Sugeridos" shortlist now. */}
             <Text style={styles.label}>{t('skill.form.iconLabel')}</Text>
             <Pressable
-              onPress={() => setIconPickerVisible(true)}
+              onPress={() => {
+                // Drop the keyboard so it can't float over the modal (iOS
+                // keeps the form's input as first responder otherwise).
+                Keyboard.dismiss();
+                setIconPickerVisible(true);
+              }}
               style={({ pressed }) => [styles.iconRow, pressed && { opacity: 0.7 }]}
               accessibilityRole="button"
               accessibilityLabel={t('common.changeIconA11y')}

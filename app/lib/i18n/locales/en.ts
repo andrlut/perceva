@@ -148,7 +148,7 @@ const en = {
   // icon labels live in the catalog (lib/icons/catalog.ts, pt/en side by
   // side), not here.
   iconPicker: {
-    searchPlaceholder: 'Search icons… (cigarette, phone, balance)',
+    searchPlaceholder: 'Search icons… cigarette, phone, balance',
     suggested: 'Suggested',
     all: 'All',
     auto: 'Automatic',
@@ -158,14 +158,14 @@ const en = {
       food: 'Food',
       sport: 'Sport',
       mind: 'Mind',
-      work: 'Work',
+      work: 'Work & money',
       tech: 'Tech',
       home: 'Home',
       people: 'People',
       fun: 'Fun',
-      outdoors: 'Outdoors',
-      quit: 'Quit',
-      time: 'Time',
+      outdoors: 'Outdoors & travel',
+      quit: 'Cut back',
+      time: 'Time & planning',
       symbols: 'Symbols',
     },
   },
