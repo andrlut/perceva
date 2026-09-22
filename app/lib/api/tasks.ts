@@ -443,10 +443,14 @@ export function useSetTaskRecurrence() {
         .eq('id', params.taskId);
       if (error) throw error;
       if (params.orderedIds && params.orderedIds.length > 0) {
+        // The reschedule is the change that matters and it has committed;
+        // a failed order write must not roll it back in the cache and tell
+        // the user the save failed. onSettled's refetch converges the
+        // order to whatever the server holds.
         const { error: orderErr } = await supabase.rpc('reorder_tasks', {
           p_ids: params.orderedIds,
         });
-        if (orderErr) throw orderErr;
+        if (orderErr) console.warn('[reorder_tasks] after reschedule failed', orderErr);
       }
     },
     onMutate: async (params) => {

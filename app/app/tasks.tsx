@@ -699,6 +699,16 @@ type MineItem =
   | { kind: 'task'; bucket: Bucket; task: TaskWithSubs }
   | { kind: 'empty'; bucket: Bucket };
 
+/** The slice of the drag library's shared-value bundle that its own
+ *  reset() zeroes (see react-native-draggable-flatlist DraggableFlatList.tsx). */
+interface DragAnimVals {
+  activeIndexAnim: { value: number };
+  spacerIndexAnim: { value: number };
+  touchTranslate: { value: number };
+  activeCellSize: { value: number };
+  activeCellOffset: { value: number };
+}
+
 interface MineBodyProps {
   allActive: TaskWithSubs[];
   tasksByBucket: Record<Bucket, TaskWithSubs[]>;
@@ -779,30 +789,38 @@ function MineBody({
     setLocalItems(items);
   }, [items]);
 
-  // The drag library zeroes its shared values (active index, held
-  // translate) ONLY when the row keys change. A release that changes no
-  // data — a tap on the handle, a drop the screen rejects, an abandoned
-  // cross-drop — would leave a stale translate behind: the row stays
-  // painted where it was dropped, the next press lifts it displaced, and a
-  // press without movement freezes the list. Mixing this epoch into every
-  // key forces the reset on those paths.
-  const [epoch, setEpoch] = useState(0);
-  const forceReset = () => setEpoch((n) => n + 1);
+  // The drag library zeroes its shared values (active index, spacer, held
+  // translate) ONLY when the row SEQUENCE changes — and it re-keys both the
+  // previous and the next data with the same extractor, so no key trick
+  // can force it. A release that changes no data (a tap on the handle, a
+  // drop the screen rejects, an abandoned cross-drop) would leave a stale
+  // translate behind: the next press lifts the row displaced, and a press
+  // without movement freezes the whole list. On those paths we zero the
+  // values ourselves, mirroring the library's own reset(). The library
+  // hands the bundle over once, through onAnimValInit.
+  const animVals = useRef<DragAnimVals | null>(null);
+  const resetDrag = () => {
+    const v = animVals.current;
+    if (!v) return;
+    v.activeIndexAnim.value = -1;
+    v.spacerIndexAnim.value = -1;
+    v.touchTranslate.value = 0;
+    v.activeCellSize.value = -1;
+    v.activeCellOffset.value = -1;
+  };
 
   // Abandoned cross-drop (parent bumped the token): back to the real
-  // layout, keys changed, library reset.
+  // layout, drag state cleared.
   const lastReset = useRef(resetToken);
   useEffect(() => {
     if (lastReset.current === resetToken) return;
     lastReset.current = resetToken;
     setLocalItems(items);
-    forceReset();
+    resetDrag();
   }, [resetToken, items]);
 
   const keyExtractor = (item: MineItem, idx: number) =>
-    item.kind === 'task'
-      ? `t-${item.task.id}-${epoch}`
-      : `${item.kind}-${item.bucket}-${idx}-${epoch}`;
+    item.kind === 'task' ? `t-${item.task.id}` : `${item.kind}-${item.bucket}-${idx}`;
 
   /** Bucket of the item at index `i`, from the nearest preceding header. */
   const sectionOf = (data: MineItem[], i: number): Bucket | null => {
@@ -953,44 +971,55 @@ function MineBody({
       data={nothingActive || nothingMatches ? [] : localItems}
       keyExtractor={keyExtractor}
       renderItem={renderItem}
+      onAnimValInit={(v) => {
+        animVals.current = v;
+      }}
       onDragEnd={({ data, from, to }) => {
         // Released in place — nothing moved, no RPC; the library still
-        // needs its reset (see `epoch`).
+        // needs its shared values cleared (see resetDrag).
         if (from === to) {
-          forceReset();
+          resetDrag();
           return;
         }
         const moved = data[to];
         if (!moved || moved.kind !== 'task') {
-          forceReset();
+          resetDrag();
           return;
         }
         let layout = data;
         let target = sectionOf(data, to);
         if (target === null) {
           // Released above the first header: read it as "top of the first
-          // group". This can reproduce the current key order (the row was
-          // already first), so the reset is forced here too.
+          // group".
           layout = [...data];
           layout.splice(to, 1);
           layout.splice(1, 0, moved);
           target = BUCKETS[0]!.id;
-          forceReset();
         }
         if (target === moved.bucket) {
           const order = orderAfterDrop(layout, target);
-          setLocalItems(layout);
-          if (sameAsCurrent(order)) return;
+          if (sameAsCurrent(order)) {
+            // Same sequence as before (the row was already first): the
+            // library sees no change and keeps a non-zero translate.
+            setLocalItems(layout);
+            resetDrag();
+            return;
+          }
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+          setLocalItems(layout);
           onReorder(order);
           return;
         }
-        // Crossed a header. The dropped layout STAYS on screen (a real key
-        // change, so the library resets; the row sits where the user put
-        // it) while the parent applies the reschedule, or asks which
-        // periodicity first. An abandoned drop comes back via resetToken.
-        setLocalItems(layout);
-        onCrossDrop(moved.task, target, orderAfterDrop(layout, target));
+        // Crossed a header. The dropped layout STAYS on screen (a real
+        // sequence change, so the library resets; the row sits where the
+        // user put it) while the parent applies the reschedule, or asks
+        // which periodicity first. An abandoned drop comes back via
+        // resetToken. The target's dashed placeholder goes — the row is
+        // filling it.
+        const dropTarget = target;
+        const shown = layout.filter((it) => !(it.kind === 'empty' && it.bucket === dropTarget));
+        setLocalItems(shown);
+        onCrossDrop(moved.task, dropTarget, orderAfterDrop(shown, dropTarget));
       }}
       activationDistance={DRAG_ACTIVATION_DISTANCE}
       // The pan only exists over the rightmost handle column (44dp + the
