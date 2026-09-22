@@ -1404,6 +1404,7 @@ const en = {
     archived: {
       section: 'Archived',
       restore: 'Restore',
+      restoreA11y: 'Restore {{title}}',
       restoreFail: 'Could not restore',
       deleteA11y: 'Delete {{title}} permanently',
       deleteConfirmTitle: 'Delete "{{title}}" forever?',

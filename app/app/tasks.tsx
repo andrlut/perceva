@@ -78,7 +78,7 @@ type Bucket = 'daily' | 'weekly' | 'one_time';
 type DimFilter = DimensionId | 'all';
 
 /** Boot-time theme flag — the light palette needs text-grade accents
- *  (TaskCard makes the same call for its coin figure). */
+ *  (TemplateCard and RewardCard make the same call). */
 const LIGHT = ACTIVE_THEME === 'light';
 
 interface BucketMeta {
@@ -1146,7 +1146,7 @@ function ArchivedRow({
             hitSlop={8}
             style={({ pressed }) => [styles.restoreBtn, pressed && { opacity: 0.7 }]}
             accessibilityRole="button"
-            accessibilityLabel={`${t('tasksHub.archived.restore')} ${task.title}`}
+            accessibilityLabel={t('tasksHub.archived.restoreA11y', { title: task.title })}
           >
             <Ionicons name="refresh" size={14} color={tokens.brand.violet2} />
             <Text style={styles.restoreText}>{t('tasksHub.archived.restore')}</Text>
@@ -1287,10 +1287,15 @@ function SuggestedBody({
           const isCollapsed = forcedOpen ? false : !!collapsedSubs[subId];
           return (
             <View key={subId} style={styles.subGroup}>
+              {/* No `disabled` on the forced-open case: RN folds it into the
+                  a11y state and screen readers would announce a "disabled
+                  header". onPress undefined + the opacity guard is enough. */}
               <Pressable
                 onPress={forcedOpen ? undefined : () => onToggleSub(subId)}
-                disabled={forcedOpen}
-                style={({ pressed }) => [styles.bucketHeader, pressed && { opacity: 0.7 }]}
+                style={({ pressed }) => [
+                  styles.bucketHeader,
+                  pressed && !forcedOpen && { opacity: 0.7 },
+                ]}
                 accessibilityRole={forcedOpen ? 'header' : 'button'}
                 accessibilityState={forcedOpen ? undefined : { expanded: !isCollapsed }}
               >

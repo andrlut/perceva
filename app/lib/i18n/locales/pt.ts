@@ -1400,6 +1400,7 @@ const pt: Translations = {
     archived: {
       section: 'Arquivadas',
       restore: 'Restaurar',
+      restoreA11y: 'Restaurar {{title}}',
       restoreFail: 'Não consegui restaurar',
       deleteA11y: 'Apagar {{title}} pra sempre',
       deleteConfirmTitle: 'Apagar "{{title}}" pra sempre?',
