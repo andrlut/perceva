@@ -1,0 +1,8 @@
+{
+  "name": "perceva-social-tools",
+  "private": true,
+  "description": "Gerador de posts da série 'Uma ideia com fonte' — ver EDITORIAL.md",
+  "dependencies": {
+    "sharp": "^0.34.0"
+  }
+}
