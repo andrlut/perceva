@@ -398,12 +398,30 @@ function clampTargetCount(n: number): number {
   return Math.max(1, Math.min(99, Math.round(n) || 1));
 }
 
+/** The list in `orderedIds` order; anything the caller left out keeps
+ *  its previous relative order at the tail. */
+function reorderById(list: TaskWithSubs[], orderedIds: string[]): TaskWithSubs[] {
+  const byId = new Map(list.map((t) => [t.id, t]));
+  const next = orderedIds
+    .map((id) => byId.get(id))
+    .filter((t): t is TaskWithSubs => !!t);
+  const seen = new Set(orderedIds);
+  for (const t of list) {
+    if (!seen.has(t.id)) next.push(t);
+  }
+  return next;
+}
+
 /**
  * Change only WHEN a practice happens — the Manage screen's drag across
  * groups. Periodicity edits keep the template link by product convention
  * (see task-form's `breaksTemplateLink`), so this touches nothing else.
- * Optimistic on the active list: the row jumps to its new bucket on the
- * same frame the sheet closes, instead of one round-trip later.
+ *
+ * `orderedIds` (optional) is the global order the drop implied; it is
+ * written by `reorder_tasks` right after the update, and applied in the
+ * SAME optimistic frame: the row lands in its new group at the slot the
+ * finger left it, once, instead of first at its old sort position and
+ * then hopping one round-trip later. One rollback covers both.
  */
 export function useSetTaskRecurrence() {
   const queryClient = useQueryClient();
@@ -412,6 +430,7 @@ export function useSetTaskRecurrence() {
       taskId: string;
       recurrence: Recurrence;
       targetCount: number;
+      orderedIds?: string[];
     }) => {
       const targetCount = clampTargetCount(params.targetCount);
       const { error } = await supabase
@@ -423,23 +442,30 @@ export function useSetTaskRecurrence() {
         })
         .eq('id', params.taskId);
       if (error) throw error;
+      if (params.orderedIds && params.orderedIds.length > 0) {
+        const { error: orderErr } = await supabase.rpc('reorder_tasks', {
+          p_ids: params.orderedIds,
+        });
+        if (orderErr) throw orderErr;
+      }
     },
     onMutate: async (params) => {
       await queryClient.cancelQueries({ queryKey: taskKeys.active() });
       const prev = queryClient.getQueryData<TaskWithSubs[]>(taskKeys.active());
       if (prev) {
+        const patched = prev.map((t) =>
+          t.id === params.taskId
+            ? {
+                ...t,
+                task_type: legacyTaskTypeFor(params.recurrence),
+                recurrence: params.recurrence,
+                target_count: clampTargetCount(params.targetCount),
+              }
+            : t,
+        );
         queryClient.setQueryData<TaskWithSubs[]>(
           taskKeys.active(),
-          prev.map((t) =>
-            t.id === params.taskId
-              ? {
-                  ...t,
-                  task_type: legacyTaskTypeFor(params.recurrence),
-                  recurrence: params.recurrence,
-                  target_count: clampTargetCount(params.targetCount),
-                }
-              : t,
-          ),
+          params.orderedIds ? reorderById(patched, params.orderedIds) : patched,
         );
       }
       return { prev };
@@ -514,17 +540,10 @@ export function useReorderTasks() {
       await queryClient.cancelQueries({ queryKey: taskKeys.active() });
       const prev = queryClient.getQueryData<TaskWithSubs[]>(taskKeys.active());
       if (prev) {
-        const byId = new Map(prev.map((t) => [t.id, t]));
-        const next = orderedIds
-          .map((id) => byId.get(id))
-          .filter((t): t is TaskWithSubs => !!t);
-        // Append any tasks the caller didn't include (e.g. tasks outside
-        // the drag scope — adopted ones not in the Mine tab). Preserves
-        // their previous relative order.
-        for (const t of prev) {
-          if (!orderedIds.includes(t.id)) next.push(t);
-        }
-        queryClient.setQueryData<TaskWithSubs[]>(taskKeys.active(), next);
+        queryClient.setQueryData<TaskWithSubs[]>(
+          taskKeys.active(),
+          reorderById(prev, orderedIds),
+        );
       }
       return { prev };
     },

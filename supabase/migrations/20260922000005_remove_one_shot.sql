@@ -1,4 +1,4 @@
--- migration: 20260922000004_remove_one_shot.sql
+-- migration: 20260922000005_remove_one_shot.sql
 -- purpose: retire the one_shot recurrence type. A practice is now daily or
 --          periodic (weekly with/without days, monthly with/without day).
 --          Existing one_shot rows are rewritten, the two task_type CHECKs
@@ -17,16 +17,17 @@
 --
 -- notes:
 --   migrations are write-once; never edit after applying
---   * User rows: none of the 3 read as a finished one-off (two never
---     completed, one completed 4×), so they become flex weekly 1× — "do it
---     once, whenever" never sat on Hoje, and flex weekly is the shape that
---     keeps them off Hoje (weekly without days is not scheduled on any
---     day). The client's parseRecurrence maps a stray one_shot the same way.
 --   * Catalog: build_ship_one_thing ("ship one thing") reads as weekly;
 --     money_review_budget ("Revisar orçamento mensal") and money_invest_10pct
 --     ("Investir 10% da renda") are monthly by nature. A monthly template
 --     carries task_type = 'daily' — the legacy column has no 'monthly' value
 --     (legacyTaskTypeFor maps monthly → 'daily'; 7 user rows already do).
+--   * User rows: all 3 are adopted copies of those templates, so they follow
+--     the template's new shape (the two money ones monthly, the build one
+--     weekly). Any other one_shot row becomes flex weekly 1× — "do it once,
+--     whenever" never sat on Hoje, and flex weekly is the shape that keeps
+--     it off Hoje (weekly without days is not scheduled on any day). The
+--     client's parseRecurrence maps a stray one_shot the same way.
 --   * Row updates run BEFORE the CHECKs are tightened, or ADD CONSTRAINT
 --     fails on the very rows being retired.
 --   * start_task_from_template body is the 20260602000002 one byte for byte
@@ -39,6 +40,15 @@
 begin;
 
 -- ─── 1. User rows ──────────────────────────────────────────────────────────
+-- 1a. Adopted copies of the two money templates follow their template.
+update public.task
+   set task_type    = 'daily',
+       recurrence   = '{"type":"monthly"}'::jsonb,
+       target_count = 1
+ where (task_type = 'one_shot' or recurrence->>'type' = 'one_shot')
+   and template_id in ('money_review_budget', 'money_invest_10pct');
+
+-- 1b. Everything else that was one_shot → flex weekly 1×.
 update public.task
    set task_type    = 'weekly',
        recurrence   = '{"type":"weekly"}'::jsonb,

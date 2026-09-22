@@ -456,7 +456,7 @@ const en = {
       },
       step4: {
         title: 'How often',
-        body: 'Every day, specific days of the week, or once a month — you choose the cadence.',
+        body: 'Every day, on set weekdays, or a few times a month — you choose the cadence.',
       },
       step5: {
         title: 'No rush to save',
@@ -1374,14 +1374,17 @@ const en = {
       daily: 'Daily',
       dailyDesc: 'Every day, on the Today screen',
       periodic: 'Periodic',
-      periodicDesc: 'Set days, N× a week or a month',
+      periodicDesc: 'Set days, a few times a week or month',
     },
     bucketEmpty: 'Nothing here yet. Drag a practice here by its handle.',
     customChip: 'CUSTOM',
     row: {
       editA11y: 'Edit {{title}}',
-      dragA11y: 'Drag {{title}}',
-      dragHint: 'Hold and drag to reorder or switch group',
+      // Screen-reader actions — the handle is touch-only, so move up/down/
+      // switch group exist as actions on the row itself.
+      a11yMoveUp: 'Move up',
+      a11yMoveDown: 'Move down',
+      a11ySwitchGroup: 'Switch group',
     },
     periodicity: {
       eyebrow: 'When it happens',

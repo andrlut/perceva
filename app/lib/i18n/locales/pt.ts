@@ -453,7 +453,7 @@ const pt: Translations = {
       },
       step4: {
         title: 'Com qual frequência',
-        body: 'Todo dia, em dias da semana ou uma vez por mês — você decide a cadência.',
+        body: 'Todo dia, em dias da semana ou algumas vezes por mês — você decide a cadência.',
       },
       step5: {
         title: 'Sem pressa pra salvar',
@@ -1370,14 +1370,17 @@ const pt: Translations = {
       daily: 'Diárias',
       dailyDesc: 'Todo dia, na tela Hoje',
       periodic: 'Periódicas',
-      periodicDesc: 'Dias marcados, N× por semana ou por mês',
+      periodicDesc: 'Dias marcados, algumas vezes por semana ou por mês',
     },
     bucketEmpty: 'Nenhuma prática aqui. Arraste uma pra cá pela alça.',
     customChip: 'PRÓPRIA',
     row: {
       editA11y: 'Editar {{title}}',
-      dragA11y: 'Arrastar {{title}}',
-      dragHint: 'Segure e arraste pra ordenar ou trocar de grupo',
+      // Ações de leitor de tela — a alça é só toque, então subir/descer/
+      // trocar de grupo existem como ações na própria linha.
+      a11yMoveUp: 'Mover pra cima',
+      a11yMoveDown: 'Mover pra baixo',
+      a11ySwitchGroup: 'Trocar de grupo',
     },
     periodicity: {
       eyebrow: 'Quando acontece',

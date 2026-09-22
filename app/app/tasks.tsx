@@ -126,9 +126,12 @@ function bucketFor(rec: Recurrence): Bucket {
 
 /** How far the finger travels after grabbing the handle before the row
  *  starts following it. Small: the handle is the only thing that calls
- *  `drag`, so this no longer has to keep a long-press from stealing the
- *  scroll (the 20 the rewards list needs). */
+ *  `drag`, and the list's pan gesture is confined to the handle column
+ *  (`dragHitSlop`), so this no longer has to keep a long-press from
+ *  stealing the scroll (the 20 the rewards list needs). */
 const DRAG_ACTIVATION_DISTANCE = 6;
+/** The handle column: 44dp, the row's full height. */
+const DRAG_HANDLE_WIDTH = 44;
 
 /** Subs in display order, grouped under their dim. */
 const ALL_SUBS_IN_ORDER: SubId[] = DIMENSION_ORDER.flatMap((d) => SUBS_BY_DIM[d]);
@@ -220,11 +223,17 @@ export default function TasksHubScreen() {
   /** Template currently sitting in the adopt periodicity sheet. */
   const [pickerTemplate, setPickerTemplate] = useState<TaskTemplateWithSubs | null>(null);
   /** A row dropped into Periódicas, waiting for the sheet to say WHICH
-   *  periodicity. `order` is the dropped layout, applied after the save. */
+   *  periodicity. `order` is the dropped layout, applied with the save. */
   const [pendingDrop, setPendingDrop] = useState<{
     task: TaskWithSubs;
     order: string[];
   } | null>(null);
+  /** Bumped whenever a drop is abandoned (sheet cancelled, save failed).
+   *  MineBody restores its layout AND forces the drag library to reset —
+   *  the library only resets when the row keys change, and an abandoned
+   *  drop changes no data. */
+  const [resetToken, setResetToken] = useState(0);
+  const abandonDrop = () => setResetToken((n) => n + 1);
   /** Archived rows with a restore / delete in flight. A Set, not the
    *  mutation's `variables`: useMutation only reports its LATEST call, so
    *  two quick taps on two rows would free the first row's buttons early. */
@@ -353,29 +362,41 @@ export default function TasksHubScreen() {
   };
 
   /**
-   * A row released in the OTHER group. The periodicity change goes first
-   * (optimistic: the row is already sitting in its new group on the next
-   * frame), then the dropped layout is written as the new order — awaited
-   * in sequence so the reschedule's own refetch can't overwrite the order
-   * mid-flight. Into Diárias there is nothing to ask; into Periódicas the
-   * sheet asks WHICH periodicity and `pendingDrop` carries the layout.
+   * A row released in the OTHER group. One mutation writes the periodicity
+   * and the dropped order together (optimistic: the row sits in its new
+   * group, at the slot the finger left it, on the next frame). Into Diárias
+   * there is nothing to ask; into Periódicas the sheet asks WHICH
+   * periodicity and `pendingDrop` carries the layout. A reschedule feels
+   * different from a reorder: success buzz, not the light tap.
    */
-  const applyCrossDrop = async (task: TaskWithSubs, recurrence: Recurrence, targetCount: number, order: string[]) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+  const applyCrossDrop = async (
+    task: TaskWithSubs,
+    recurrence: Recurrence,
+    targetCount: number,
+    order: string[] | undefined,
+  ) => {
     try {
-      await setRecurrence.mutateAsync({ taskId: task.id, recurrence, targetCount });
+      await setRecurrence.mutateAsync({
+        taskId: task.id,
+        recurrence,
+        targetCount,
+        orderedIds: order,
+      });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } catch (err) {
+      abandonDrop();
       const e = err as { message?: string };
       Alert.alert(
         t('tasksHub.periodicity.saveFail'),
         e.message ?? t('tasksHub.errors.unknown'),
       );
-      return;
     }
-    reorderTasks.mutate(order);
   };
 
   const handleCrossDrop = (task: TaskWithSubs, target: Bucket, order: string[]) => {
+    // The row lands where the finger left it — never into a closed group,
+    // or it would vanish behind a header with only the count changing.
+    setCollapsed((prev) => (prev[target] ? { ...prev, [target]: false } : prev));
     if (target === 'daily') {
       void applyCrossDrop(task, { type: 'daily' }, 1, order);
       return;
@@ -388,7 +409,16 @@ export default function TasksHubScreen() {
     const drop = pendingDrop;
     setPendingDrop(null);
     if (!drop) return;
-    void applyCrossDrop(drop.task, recurrence, targetCount, drop.order);
+    // The dropped order was computed for Periódicas. If the sheet ended on
+    // a daily shape the row stays in Diárias and that order must not apply:
+    // it would hand a daily's slot to a periodic id and reshuffle Hoje.
+    const order = bucketFor(recurrence) === 'periodic' ? drop.order : undefined;
+    void applyCrossDrop(drop.task, recurrence, targetCount, order);
+  };
+
+  const handlePeriodicityCancel = () => {
+    setPendingDrop(null);
+    abandonDrop();
   };
 
   const handleRestore = async (task: TaskWithSubs) => {
@@ -567,6 +597,7 @@ export default function TasksHubScreen() {
             onCreate={handleCreateTask}
             onReorder={(ids) => reorderTasks.mutate(ids)}
             onCrossDrop={handleCrossDrop}
+            resetToken={resetToken}
             onRestore={handleRestore}
             onDelete={handleDelete}
             busyIds={busyIds}
@@ -622,7 +653,7 @@ export default function TasksHubScreen() {
         task={pendingDrop?.task ?? null}
         initialRecurrence={PERIODIC_SEED}
         initialTargetCount={1}
-        onCancel={() => setPendingDrop(null)}
+        onCancel={handlePeriodicityCancel}
         onConfirm={handlePeriodicityConfirm}
       />
 
@@ -684,8 +715,11 @@ interface MineBodyProps {
   onCreate: () => void;
   onReorder: (orderedIds: string[]) => void;
   /** Row released in the other group: the task, the target group and the
-   *  global order the drop implies (applied after the reschedule). */
+   *  global order the drop implies (written with the reschedule). */
   onCrossDrop: (task: TaskWithSubs, target: Bucket, order: string[]) => void;
+  /** Bumped by the parent when a cross-drop is abandoned: restore the
+   *  layout and force the drag library to reset. */
+  resetToken: number;
   onRestore: (task: TaskWithSubs) => void;
   onDelete: (task: TaskWithSubs) => void;
   /** Archived rows whose restore / delete is in flight. */
@@ -709,6 +743,7 @@ function MineBody({
   onCreate,
   onReorder,
   onCrossDrop,
+  resetToken,
   onRestore,
   onDelete,
   busyIds,
@@ -744,8 +779,30 @@ function MineBody({
     setLocalItems(items);
   }, [items]);
 
+  // The drag library zeroes its shared values (active index, held
+  // translate) ONLY when the row keys change. A release that changes no
+  // data — a tap on the handle, a drop the screen rejects, an abandoned
+  // cross-drop — would leave a stale translate behind: the row stays
+  // painted where it was dropped, the next press lifts it displaced, and a
+  // press without movement freezes the list. Mixing this epoch into every
+  // key forces the reset on those paths.
+  const [epoch, setEpoch] = useState(0);
+  const forceReset = () => setEpoch((n) => n + 1);
+
+  // Abandoned cross-drop (parent bumped the token): back to the real
+  // layout, keys changed, library reset.
+  const lastReset = useRef(resetToken);
+  useEffect(() => {
+    if (lastReset.current === resetToken) return;
+    lastReset.current = resetToken;
+    setLocalItems(items);
+    forceReset();
+  }, [resetToken, items]);
+
   const keyExtractor = (item: MineItem, idx: number) =>
-    item.kind === 'task' ? `t-${item.task.id}` : `${item.kind}-${item.bucket}-${idx}`;
+    item.kind === 'task'
+      ? `t-${item.task.id}-${epoch}`
+      : `${item.kind}-${item.bucket}-${idx}-${epoch}`;
 
   /** Bucket of the item at index `i`, from the nearest preceding header. */
   const sectionOf = (data: MineItem[], i: number): Bucket | null => {
@@ -775,6 +832,59 @@ function MineBody({
     return allActive.map((tk) => (moving.has(tk.id) ? (newSequence[cursor++] ?? tk.id) : tk.id));
   };
 
+  const sameAsCurrent = (order: string[]) =>
+    order.length === allActive.length && order.every((id, i) => allActive[i]?.id === id);
+
+  /** Index of the row for `taskId` in the live layout, or -1. */
+  const rowIndex = (taskId: string) =>
+    localItems.findIndex((it) => it.kind === 'task' && it.task.id === taskId);
+
+  // ── Screen-reader paths. The handle is touch-only (a press-in never
+  // reaches assistive tech), so reorder and regroup exist as actions on
+  // the row itself, through the exact code the drop takes. ───────────
+  const moveWithin = (taskId: string, delta: -1 | 1) => {
+    const idx = rowIndex(taskId);
+    if (idx < 0) return;
+    const bucket = sectionOf(localItems, idx);
+    if (!bucket) return;
+    const j = idx + delta;
+    const neighbour = localItems[j];
+    // Only swap with a task of the same group — a header is the edge.
+    if (!neighbour || neighbour.kind !== 'task') return;
+    const next = [...localItems];
+    next[idx] = neighbour;
+    next[j] = localItems[idx]!;
+    setLocalItems(next);
+    onReorder(orderAfterDrop(next, bucket));
+  };
+
+  const switchGroup = (taskId: string) => {
+    const idx = rowIndex(taskId);
+    if (idx < 0) return;
+    const current = sectionOf(localItems, idx);
+    if (!current) return;
+    const target: Bucket = current === 'daily' ? 'periodic' : 'daily';
+    const moved = localItems[idx];
+    if (!moved || moved.kind !== 'task') return;
+    // Drop the target's empty placeholder (the row is about to fill it),
+    // then append after the target's last task, or right under its header.
+    const base = localItems.filter(
+      (it, i) => i !== idx && !(it.kind === 'empty' && it.bucket === target),
+    );
+    const headerIdx = base.findIndex((it) => it.kind === 'header' && it.bucket === target);
+    if (headerIdx < 0) return;
+    let insertAt = headerIdx + 1;
+    for (let i = headerIdx + 1; i < base.length; i++) {
+      const it = base[i]!;
+      if (it.kind === 'header') break;
+      if (it.kind === 'task') insertAt = i + 1;
+    }
+    const next = [...base];
+    next.splice(insertAt, 0, moved);
+    setLocalItems(next);
+    onCrossDrop(moved.task, target, orderAfterDrop(next, target));
+  };
+
   const renderItem = ({ item, drag, isActive }: RenderItemParams<MineItem>) => {
     if (item.kind === 'header') {
       return (
@@ -799,6 +909,9 @@ function MineBody({
         drag={drag}
         isActive={isActive}
         onEdit={() => onTaskPress(item.task.id)}
+        onMoveUp={() => moveWithin(item.task.id, -1)}
+        onMoveDown={() => moveWithin(item.task.id, 1)}
+        onSwitchGroup={() => switchGroup(item.task.id)}
       />
     );
   };
@@ -841,32 +954,50 @@ function MineBody({
       keyExtractor={keyExtractor}
       renderItem={renderItem}
       onDragEnd={({ data, from, to }) => {
-        // Released in place — nothing moved, no RPC.
-        if (from === to) return;
+        // Released in place — nothing moved, no RPC; the library still
+        // needs its reset (see `epoch`).
+        if (from === to) {
+          forceReset();
+          return;
+        }
         const moved = data[to];
         if (!moved || moved.kind !== 'task') {
-          setLocalItems(localItems);
+          forceReset();
           return;
         }
-        const target = sectionOf(data, to);
+        let layout = data;
+        let target = sectionOf(data, to);
         if (target === null) {
-          setLocalItems(localItems);
-          return;
+          // Released above the first header: read it as "top of the first
+          // group". This can reproduce the current key order (the row was
+          // already first), so the reset is forced here too.
+          layout = [...data];
+          layout.splice(to, 1);
+          layout.splice(1, 0, moved);
+          target = BUCKETS[0]!.id;
+          forceReset();
         }
         if (target === moved.bucket) {
+          const order = orderAfterDrop(layout, target);
+          setLocalItems(layout);
+          if (sameAsCurrent(order)) return;
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-          setLocalItems(data);
-          onReorder(orderAfterDrop(data, target));
+          onReorder(order);
           return;
         }
-        // Crossed a header: the row snaps back for now (into Periódicas
-        // the sheet still has to ask which periodicity; into Diárias the
-        // optimistic reschedule moves it on the next frame anyway) and
-        // the parent applies the change + the dropped order.
-        setLocalItems(localItems);
-        onCrossDrop(moved.task, target, orderAfterDrop(data, target));
+        // Crossed a header. The dropped layout STAYS on screen (a real key
+        // change, so the library resets; the row sits where the user put
+        // it) while the parent applies the reschedule, or asks which
+        // periodicity first. An abandoned drop comes back via resetToken.
+        setLocalItems(layout);
+        onCrossDrop(moved.task, target, orderAfterDrop(layout, target));
       }}
       activationDistance={DRAG_ACTIVATION_DISTANCE}
+      // The pan only exists over the rightmost handle column (44dp + the
+      // 16dp gutter). Body swipes then have no competing gesture and scroll
+      // natively — on Android a 6dp activation would otherwise beat the
+      // 8dp scroll slop and eat slow-starting scrolls.
+      dragHitSlop={{ right: 0, width: DRAG_HANDLE_WIDTH + tokens.space[4] }}
       ListHeaderComponent={
         nothingActive ? null : (
           <Text style={styles.lead}>{t('tasksHub.lead')}</Text>
@@ -964,6 +1095,9 @@ interface ManageRowProps {
   drag: () => void;
   isActive: boolean;
   onEdit: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onSwitchGroup: () => void;
 }
 
 /**
@@ -972,13 +1106,22 @@ interface ManageRowProps {
  * the check button, plus the drag handle. Tap the row → edit form. Touch
  * the handle → the row lifts at once (`onPressIn`, no long-press wait).
  */
-function ManageRow({ task, drag, isActive, onEdit }: ManageRowProps) {
+function ManageRow({
+  task,
+  drag,
+  isActive,
+  onEdit,
+  onMoveUp,
+  onMoveDown,
+  onSwitchGroup,
+}: ManageRowProps) {
   const { t } = useT();
   const lookup = useMetaLookup();
   const sub = lookup.sub(task.primary_sub_id);
   const dim = lookup.dim(task.primary_dimension_id);
   const reward = rewardForTaskSubs(task.subs, task.coin_multiplier);
   const isCustom = !task.template_id;
+  const recurrenceLabel = describeRecurrence(task.recurrence, task.target_count, t);
   // Same rule as TaskCard: the note only when it says something the group
   // does not — a plain daily is already "todo dia" by being in Diárias.
   const showRecurrence = task.recurrence.type !== 'daily' || task.target_count > 1;
@@ -995,12 +1138,34 @@ function ManageRow({ task, drag, isActive, onEdit }: ManageRowProps) {
             style={StyleSheet.absoluteFill}
             pointerEvents="none"
           />
+          {/* The label replaces the children for screen readers, so the
+              schedule travels as the value; reorder / regroup are custom
+              actions here because the handle is touch-only. */}
           <Pressable
             onPress={onEdit}
             disabled={isActive}
             style={({ pressed }) => [styles.rowMain, pressed && { opacity: 0.85 }]}
             accessibilityRole="button"
             accessibilityLabel={t('tasksHub.row.editA11y', { title: task.title })}
+            accessibilityValue={{ text: recurrenceLabel }}
+            accessibilityActions={[
+              { name: 'moveUp', label: t('tasksHub.row.a11yMoveUp') },
+              { name: 'moveDown', label: t('tasksHub.row.a11yMoveDown') },
+              { name: 'switchGroup', label: t('tasksHub.row.a11ySwitchGroup') },
+            ]}
+            onAccessibilityAction={(e) => {
+              switch (e.nativeEvent.actionName) {
+                case 'moveUp':
+                  onMoveUp();
+                  break;
+                case 'moveDown':
+                  onMoveDown();
+                  break;
+                case 'switchGroup':
+                  onSwitchGroup();
+                  break;
+              }
+            }}
           >
             <View style={[styles.subTile, { backgroundColor: dim.bg }]}>
               <Ionicons
@@ -1027,7 +1192,7 @@ function ManageRow({ task, drag, isActive, onEdit }: ManageRowProps) {
                 )}
                 {showRecurrence && (
                   <Text style={styles.recurrenceNote} numberOfLines={1}>
-                    · {describeRecurrence(task.recurrence, task.target_count, t)}
+                    · {recurrenceLabel}
                   </Text>
                 )}
                 {isCustom && (
@@ -1038,19 +1203,21 @@ function ManageRow({ task, drag, isActive, onEdit }: ManageRowProps) {
               </View>
             </View>
           </Pressable>
-          {/* The handle: 44dp wide, full row height, drag starts on touch. */}
+          {/* The handle: 44dp wide, full row height, drag starts on touch.
+              Hidden from assistive tech — a press-in never reaches it; the
+              row's custom actions are the accessible path. */}
           <Pressable
             onPressIn={drag}
             disabled={isActive}
             style={({ pressed }) => [styles.dragHandle, pressed && styles.dragHandlePressed]}
-            accessibilityRole="button"
-            accessibilityLabel={t('tasksHub.row.dragA11y', { title: task.title })}
-            accessibilityHint={t('tasksHub.row.dragHint')}
+            accessible={false}
+            importantForAccessibility="no-hide-descendants"
+            accessibilityElementsHidden
           >
             <Ionicons
               name="reorder-three"
               size={22}
-              color={isActive ? tokens.brand.violet2 : tokens.text.dim}
+              color={isActive ? tokens.brand.violet2 : tokens.text.mid}
             />
           </Pressable>
         </View>
@@ -1660,14 +1827,16 @@ const styles = StyleSheet.create({
   },
   // 44dp wide, the row's full height: a thumb lands on it without aiming.
   dragHandle: {
-    width: 44,
+    width: DRAG_HANDLE_WIDTH,
     alignItems: 'center',
     justifyContent: 'center',
     borderLeftWidth: 1,
     borderLeftColor: tokens.border.divider,
   },
+  // Sits ABOVE the card gradient (the handle is a sibling of it), so the
+  // wash actually shows — violetGlow is 0.45 dark / 0.22 light.
   dragHandlePressed: {
-    backgroundColor: 'rgba(155,130,255,0.12)',
+    backgroundColor: tokens.brand.violetGlow,
   },
   subTile: {
     width: 34,
@@ -1729,11 +1898,13 @@ const styles = StyleSheet.create({
     color: tokens.text.mid,
     letterSpacing: 0.2,
   },
+  // The row's only statement of WHEN inside Periódicas — text.mid (AA on
+  // both palettes), not the faint italic the Home card can afford because
+  // Hoje already says "today".
   recurrenceNote: {
     fontFamily: 'Manrope_500Medium',
-    fontSize: 10,
-    color: tokens.text.faint,
-    fontStyle: 'italic',
+    fontSize: 11,
+    color: tokens.text.mid,
     flexShrink: 1,
   },
 

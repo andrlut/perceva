@@ -180,7 +180,7 @@ type Recurrence =
 function parseRecurrence(raw: unknown): Recurrence {
   if (raw && typeof raw === 'object' && 'type' in raw) {
     const r = raw as { type: string; days?: number[]; day?: number };
-    // The one_shot type was retired on 2026-09-22 (migration 20260922000004
+    // The one_shot type was retired on 2026-09-22 (migration 20260922000005
     // rewrote every row); a stray value reads as flex weekly, like the app.
     if (r.type === 'one_shot') return { type: 'weekly' };
     if (r.type === 'weekly') {

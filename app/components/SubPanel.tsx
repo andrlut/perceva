@@ -16,7 +16,7 @@ import type {
   TaskTemplateWithSubs,
 } from '@/lib/db/types';
 import { useStartTaskFromTemplate } from '@/lib/api/tasks';
-import { useT } from '@/lib/i18n';
+import { translate, useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { tokens } from '@/theme';
 
@@ -330,13 +330,10 @@ export function SubPanel({
   );
 }
 
+// `translate` (not the hook's `t`): the template list maps over a variable
+// named `t`, and the legacy column only ever says daily / weekly.
 function recurrenceLabel(taskType: 'daily' | 'weekly'): string {
-  switch (taskType) {
-    case 'daily':
-      return 'Diária';
-    case 'weekly':
-      return 'Semanal';
-  }
+  return translate(`tasks.schedule.${taskType}`);
 }
 
 const styles = StyleSheet.create({
