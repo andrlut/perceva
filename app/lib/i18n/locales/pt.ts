@@ -138,7 +138,7 @@ const pt: Translations = {
   // busca + categorias. Os rótulos de cada ícone vivem no catálogo
   // (lib/icons/catalog.ts, pt/en lado a lado), não aqui.
   iconPicker: {
-    searchPlaceholder: 'Buscar ícone… (cigarro, celular, equilíbrio)',
+    searchPlaceholder: 'Buscar ícone… cigarro, celular, equilíbrio',
     suggested: 'Sugeridos',
     all: 'Todos',
     auto: 'Automático',

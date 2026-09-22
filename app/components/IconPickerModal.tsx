@@ -196,7 +196,9 @@ export function IconPickerModal({
           style={[
             styles.sheet,
             {
-              paddingBottom: sheetBottom,
+              // Lifted above the keyboard, the nav-bar inset is dead space
+              // (the sheet's bottom sits on the IME, not on the bar).
+              paddingBottom: lift > 0 ? tokens.space[6] : sheetBottom,
               maxHeight: Math.min(
                 Math.round(windowHeight * 0.88),
                 windowHeight - lift - tokens.space[10],
