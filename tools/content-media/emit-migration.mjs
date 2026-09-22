@@ -368,7 +368,7 @@ function buildSql({ fileName, entries, videoCount }) {
     for (const e of covers) lines.push(`--     ${e.cover.bucketPath}  (768x1152, gemini-api)`);
   }
   if (missing.length && allImages.length) lines.push(`--   sem imagem: ${missing.join(', ')}`);
-  lines.push(`--   vídeos por ideia: ${videoCount === 0 ? 'nenhum (video = {pt: null, en: null})' : `${videoCount} lado(s) preenchido(s)`}`);
+  lines.push(`--   vídeos por ideia: ${videoCount === 0 ? 'nenhum novo — os já publicados são herdados por id (ver o update)' : `${videoCount} lado(s) preenchido(s) pelo --videos; o resto é herdado por id`}`);
   lines.push('');
   lines.push('begin;');
   lines.push('');
@@ -396,10 +396,43 @@ function buildSql({ fileName, entries, videoCount }) {
       lines.push('');
     }
     lines.push(`-- ${e.slug} · ${e.ideas.length} ideia(s)`);
-    lines.push('update public.learning_material');
-    lines.push(`set ideas = ${DOLLAR_TAG}${e.json}${DOLLAR_TAG}::jsonb,`);
+    lines.push('-- Vídeo de ideia que sobrevive (mesmo id) é HERDADO da linha atual quando o');
+    lines.push('-- spec não traz vídeo: são caros de gerar (Notebook) e o mantenedor decidiu');
+    lines.push('-- mantê-los. Se título, verso ou texto mudaram, cada lado herdado ganha');
+    lines.push('-- "text_revised_at": o vídeo foi gerado antes da revisão do texto.');
+    lines.push('update public.learning_material m');
+    lines.push('set ideas = (');
+    lines.push('  select jsonb_agg(');
+    lines.push('    case');
+    lines.push("      when coalesce(n->'video'->'pt', 'null'::jsonb) = 'null'::jsonb");
+    lines.push("       and coalesce(n->'video'->'en', 'null'::jsonb) = 'null'::jsonb");
+    lines.push("       and (coalesce(o.old->'video'->'pt', 'null'::jsonb) <> 'null'::jsonb");
+    lines.push("         or coalesce(o.old->'video'->'en', 'null'::jsonb) <> 'null'::jsonb)");
+    lines.push("      then jsonb_set(n, '{video}', jsonb_build_object(");
+    for (const loc of ['pt', 'en']) {
+      lines.push(`        '${loc}', case`);
+      lines.push(`          when coalesce(o.old->'video'->'${loc}', 'null'::jsonb) = 'null'::jsonb then 'null'::jsonb`);
+      lines.push(`          when o.changed then (o.old->'video'->'${loc}')`);
+      lines.push("            || jsonb_build_object('text_revised_at', to_char(now() at time zone 'America/Sao_Paulo', 'YYYY-MM-DD'))");
+      lines.push(`          else o.old->'video'->'${loc}' end${loc === 'pt' ? ',' : ''}`);
+    }
+    lines.push('      ))');
+    lines.push('      else n');
+    lines.push('    end');
+    lines.push("    order by (n->>'ordinal')::int)");
+    lines.push(`  from jsonb_array_elements(${DOLLAR_TAG}${e.json}${DOLLAR_TAG}::jsonb) n`);
+    lines.push('  left join lateral (');
+    lines.push('    select oi as old,');
+    lines.push("           (oi->'title' is distinct from n->'title'");
+    lines.push("            or oi->'claim' is distinct from n->'claim'");
+    lines.push("            or oi->'body' is distinct from n->'body') as changed");
+    lines.push("    from jsonb_array_elements(coalesce(m.ideas, '[]'::jsonb)) oi");
+    lines.push("    where oi->>'id' = n->>'id'");
+    lines.push('    limit 1');
+    lines.push('  ) o on true');
+    lines.push('),');
     lines.push('    updated_at = now()');
-    lines.push(`where slug = ${sqlLiteral(e.slug)};`);
+    lines.push(`where m.slug = ${sqlLiteral(e.slug)};`);
     lines.push('');
   }
   for (const e of entries) {

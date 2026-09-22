@@ -5,9 +5,6 @@
     "pt": "Bids: o pedido de atenção que passa batido",
     "en": "Bids: the small ask you tend to miss"
   },
-  "cover": {
-    "prompt": "Uma mesa de cozinha vista de cima e de lado à noite, no terço inferior do quadro: uma mão desliza devagar uma xícara fumegante pela madeira na direção de outra mão pousada do lado oposto, que começa a se abrir para recebê-la. A única luz quente e dourada cai sobre a xícara e o pequeno espaço entre as duas mãos."
-  },
   "ideas": [
     {
       "id": "bid-pedido-de-atencao",
@@ -17,12 +14,7 @@
     {
       "id": "numero-do-divorcio-sem-fonte",
       "ordinal": 2,
-      "image_prompt": "Um andaime alto e imponente, de tábuas e escadas de madeira, ocupa o centro do quadro, visto de frente e um pouco de baixo, e se equilibra inteiro sobre um único livro fino e fechado, de capa lisa, pousado no chão; o andaime pende de leve para a direita. Ao lado, à esquerda e mais baixa, uma pilha de pastas de laboratório lisas e sem etiquetas fica encostada numa parede, sem sustentar nada. A única luz quente e dourada vem de cima e desce pela estrutura até pousar no livro fino sob ela; as pastas ficam numa penumbra fria, com folga em volta de tudo."
-    },
-    {
-      "id": "jantar-atento-briga-branda",
-      "ordinal": 3,
-      "image_prompt": "Um casal jovem numa mesa de jantar comum, os dois de meio corpo no centro do quadro, pratos simples entre eles: à esquerda, uma mulher inclina-se para a frente, animada, contando algo com as mãos no ar; à direita, o parceiro baixa o celular, virado para baixo, até a toalha e ergue o rosto para ela, e os dois começam a rir baixinho. A única luz quente e dourada vem de uma luminária pendente acima da mesa e toca os dois rostos e o espaço entre eles; o celular deitado fica na sombra, e a camisa dele tem um verde-sálvia apagado."
+      "image_prompt": "Um casal sentado lado a lado num banco de praça ao entardecer, os dois de corpo inteiro no centro do quadro, vistos de frente e um pouco de lado, com folga em volta: à esquerda, ela ergue o braço e aponta, sorrindo, para um pássaro pequeno pousado num galho baixo no alto do quadro; à direita, ele segue de cabeça baixa olhando o celular no colo, o aparelho de costas para quem olha, sem perceber o pássaro. Mesmo assim, os ombros dos dois continuam encostados, os corpos soltos e levemente inclinados um para o outro, à vontade como quem divide aquele banco há anos. A única luz quente e dourada do sol baixo vem de trás, à esquerda, e desenha o contorno dos dois ombros que se tocam e do braço estendido dela; o celular e o colo dele ficam na penumbra, e o casaco dele tem um verde-sálvia apagado."
     }
   ]
 }

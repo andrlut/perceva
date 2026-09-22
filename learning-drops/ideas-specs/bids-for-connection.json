@@ -1,6 +1,6 @@
 {
   "slug": "bids-for-connection",
-  "type": "explainer",
+  "category": "research",
   "material_title": {
     "pt": "Bids: o pedido de atenção que passa batido",
     "en": "Bids: the small ask you tend to miss"
@@ -10,23 +10,23 @@
       "id": "bid-pedido-de-atencao",
       "ordinal": 1,
       "title": {
-        "pt": "Bids: o “olha isso” não é sobre a paisagem",
-        "en": "Bids: “look at this” isn’t about the view"
+        "pt": "O “olha isso” do parceiro é um pedido de quê?",
+        "en": "What’s your partner’s “look at this” asking for?"
       },
       "claim": {
-        "pt": "Bid é qualquer tentativa de puxar o outro pra interação. A resposta se volta pra ele, ignora ou ataca.",
-        "en": "A bid is any attempt to draw your partner in. The reply turns toward it, turns away, or turns against it."
+        "pt": "Todo “olha isso” do parceiro é um pedido de atenção: tire os olhos da tela e responda.",
+        "en": "Every “look at this” from your partner asks for your attention: put the screen down and answer."
       },
       "body": {
-        "pt": "Janice Driver e John Gottman filmaram recém-casados jantando e codificaram cada tentativa de interação, o que eles chamam de bid: um pedido de atenção. O manual do estudo (Driver & Gottman, Family Process, 2004) separa sete tipos de pedido, seis neutros ou positivos e um negativo. Um comentário solto pode ser um. Uma brincadeira também: os pesquisadores codificaram os pedidos brincalhões à parte. A resposta cai em três famílias. **Voltar-se para** é acolher o pedido. Afastar-se é ignorar. Voltar-se contra é responder com hostilidade. O exemplo do próprio artigo: no meio de uma discussão, a esposa pergunta “o que aconteceu com as suas meias?”, e o marido ri. Pelo manual, isso é voltar-se para, mesmo em plena briga. Os autores sugerem que os bids podem ser as unidades básicas com que um casal constrói a amizade. Nesta semana, repare nos pedidos que chegam até você no jantar, principalmente os disfarçados de comentário jogado no ar. **Você só responde melhor ao pedido que enxerga.**",
-        "en": "Janice Driver and John Gottman filmed newlyweds over dinner and coded every attempt to interact, which they call a bid: a request for attention. The study’s manual (Driver & Gottman, Family Process, 2004) sorts bids into seven types, six neutral or positive and one negative. A stray remark can be one. So can a joke; the researchers coded playful bids separately. Replies fall into three families. **Turning toward** means taking the bid up. Turning away means ignoring it. Turning against means answering with hostility. The paper’s own example: mid-argument, the wife asks, “What happened to your socks?” and the husband laughs. By the manual, that counts as turning toward, fight and all. The authors suggest bids may be the basic units couples use to build their friendship. This week, watch for the bids that reach you at dinner, especially the ones disguised as an offhand comment. **You can only answer the bids you notice.**"
+        "pt": "Seu parceiro solta “nossa, olha isso” e você está no meio de um e-mail. O psicólogo John Gottman chama esse momento de bid: qualquer tentativa de puxar o outro pra interação, seja uma pergunta, um comentário solto ou uma brincadeira. O conteúdo pesa pouco. O “olha isso” não é sobre o vídeo no celular. É uma pergunta miúda sobre se você está ali. Janice Driver e John Gottman filmaram 49 casais recém-casados num jantar comum e, em separado, numa discussão de 15 minutos sobre um conflito (Driver & Gottman, Family Process, 2004). **Quem fazia mais pedidos brincalhões e respondia com entusiasmo à mesa mostrou mais humor e carinho na briga.** Os autores falam em inferência cautelosa: o mais provável é que as duas coisas se alimentem, e só uma intervenção provaria causa. Então trate como aposta barata. No próximo “olha isso”, tire os olhos da tela e pergunte “mostra, o que foi?”. Seguir digitando em silêncio é o que o manual do estudo chama de afastar-se. **O pior cenário é um jantar mais atento.**",
+        "en": "Your partner says “oh wow, look at this” while you’re halfway through an email. Psychologist John Gottman calls that a bid: any attempt to draw the other person into interaction, whether a question, a stray remark or a joke. The content barely matters. “Look at this” isn’t about the video on the phone. It’s a tiny check on whether you’re there. Janice Driver and John Gottman filmed 49 newlywed couples over an ordinary dinner and, separately, in a 15-minute discussion of a conflict (Driver & Gottman, Family Process, 2004). **Couples who made more playful bids and answered with enthusiasm at the table showed more humor and affection when they argued.** The authors call it a cautious inference: most likely each feeds the other, and only an intervention could prove cause. So treat it as a cheap bet. Next time you hear “look at this,” take your eyes off the screen and ask, “Show me, what happened?” Carrying on in silence is what the study’s manual calls turning away. **The worst case is a more attentive dinner.**"
       },
       "image_brief": "Num sofá, uma pessoa estica o braço oferecendo ao parceiro uma pedra lisa que achou; ele empurra o notebook para o lado e vira o corpo inteiro na direção dela, com os olhos na pedra.",
       "sources": [
         {
           "label": {
-            "pt": "Driver & Gottman, 2004 · Family Process · n=49 (texto completo)",
-            "en": "Driver & Gottman, 2004 · Family Process · n=49 (full text)"
+            "pt": "Driver & Gottman, 2004 · Family Process 43(3) · recém-casados, n=49 (texto completo)",
+            "en": "Driver & Gottman, 2004 · Family Process 43(3) · newlyweds, n=49 (full text)"
           },
           "url": "https://www.johngottman.net/wp-content/uploads/2011/05/Daily-Marital-Interations-and-Positive-Affect-During-Marital-Conflict-Among-Newlywed-Couples.pdf"
         }
@@ -37,73 +37,39 @@
       "id": "numero-do-divorcio-sem-fonte",
       "ordinal": 2,
       "title": {
-        "pt": "Bids e divórcio: o número famoso não tem fonte",
-        "en": "Bids and divorce: the famous stat has no source"
+        "pt": "Ignorar um pedido de atenção prevê divórcio?",
+        "en": "Does a missed “look at this” predict divorce?"
       },
       "claim": {
-        "pt": "Os 86% contra 33% vêm de um livro de autoajuda de 2001. Os 90% de acerto são de outros estudos, e contestados.",
-        "en": "The 86% vs 33% stat traces to a 2001 self-help book. The 90% accuracy comes from other, contested studies."
+        "pt": "Nada comprova que ignorar o “olha isso” do parceiro preveja divórcio. Não trate seus deslizes como veredito.",
+        "en": "There’s no proof that ignoring your partner’s “look at this” predicts divorce. Don’t treat your slips as a verdict."
       },
       "body": {
-        "pt": "A frase circula em todo lugar: casais que seguiam casados seis anos depois atendiam os pedidos de atenção 86% das vezes, e os que se separaram, 33%. Quem segue a trilha dessa dupla de números chega a um livro de autoajuda, The Relationship Cure (Gottman & DeClaire, 2001). A frase não aparece no estudo revisado sobre bids, que nem mediu divórcio. Os famosos 90% de acerto vêm de outras pesquisas: 93,6% com entrevistas sobre a história do casal (Buehlman, Gottman & Katz, 1992) e a codificação de brigas de Gottman & Levenson (1992), de onde também sai a proporção de cinco interações positivas pra cada negativa. Heyman & Slep (2001) apontaram a falha: os modelos foram avaliados nos mesmos casais que serviram pra construí-los, o que infla o acerto. Faltou **validação cruzada**, ou seja, testar a fórmula em casais novos. Quando ler que um hábito “prevê o divórcio com X%”, pergunte o que foi medido e se o teste usou gente nova.",
-        "en": "The line is everywhere: couples still married six years on turned toward bids 86% of the time, and couples who divorced only 33%. Follow that pair of numbers back and you land in a self-help book, The Relationship Cure (Gottman & DeClaire, 2001). It isn’t in the peer-reviewed bids study, which never measured divorce. The famous 90% accuracy comes from other research: 93.6% from interviews about a couple’s shared history (Buehlman, Gottman & Katz, 1992), and Gottman & Levenson’s 1992 coding of arguments, which is also where the five-positives-per-negative ratio comes from. Heyman & Slep (2001) named the flaw: models were scored on the same couples used to build them, which inflates accuracy. What was missing is **cross-validation**, testing the formula on couples it has never seen. Next time a headline says a habit “predicts divorce with X% accuracy,” ask what was measured and whether the test used fresh couples."
+        "pt": "A frase circula por toda parte, até no [blog do Gottman Institute](https://www.gottman.com/blog/want-to-improve-your-relationship-start-paying-more-attention-to-bids/). Casais que seguiam casados seis anos depois atendiam os pedidos de atenção do parceiro 86% das vezes, e os que se separaram, só 33%. A trilha desse número termina num livro de autoajuda, The Relationship Cure (Gottman & DeClaire, 2001). Ele não está no estudo revisado sobre esses pedidos, que nunca mediu divórcio, nem em nenhum artigo de periódico. Pode até ser verdade. Só não há como conferir. Já os famosos 90% de acerto vêm de outras pesquisas, com outros instrumentos: Buehlman, Gottman e Katz (1992) chegaram a 93,6% com entrevistas em que recém-casados contavam a história do casal. Heyman e Slep (2001) apontaram o perigo de prever divórcio sem **validação cruzada**, ou seja, sem testar a fórmula em casais que não ajudaram a construí-la. Sem ela, o acerto sai inflado. O próprio Gottman Institute diz que esse acerto mede o quanto um casal se parece com o grupo que se separou. **Não transforme os pedidos que você deixou passar num veredito sobre o seu casamento.**",
+        "en": "The line is everywhere, even on the [Gottman Institute’s blog](https://www.gottman.com/blog/want-to-improve-your-relationship-start-paying-more-attention-to-bids/). Couples still married six years later answered their partner’s requests for attention 86% of the time, and couples who divorced only 33%. Follow that figure back and it stops at a self-help book, The Relationship Cure (Gottman & DeClaire, 2001). It isn’t in the peer-reviewed study of those requests, which never measured divorce, and it never turned up in a journal article. It might be true. There’s just no way to check. The famous 90% accuracy comes from other research, using other tools: Buehlman, Gottman and Katz (1992) reported 93.6% from interviews in which newlyweds told the story of their relationship. Heyman and Slep (2001) warned about predicting divorce without **cross-validation**, meaning testing a formula on couples who played no part in building it. Skip that step and accuracy comes out inflated. The Gottman Institute itself says the figure describes how closely a couple resembles the group that split up. **Don’t turn the requests you missed into a verdict on your marriage.**"
       },
-      "image_brief": "Um andaime alto e imponente, cheio de tábuas e escadas, equilibrado inteiro sobre um único livro fino e fechado no chão, enquanto ao lado uma pilha de pastas de laboratório fica encostada sem sustentar nada.",
+      "image_brief": "Um casal sentado lado a lado num banco de praça ao entardecer: ela aponta para um pássaro pousado num galho baixo, ele segue de cabeça baixa no celular sem perceber; mesmo assim, os ombros dos dois continuam encostados, relaxados.",
       "sources": [
         {
           "label": {
-            "pt": "Gottman Institute · blog que repete os 86% × 33% (fonte secundária)",
-            "en": "Gottman Institute · blog restating 86% vs 33% (secondary source)"
+            "pt": "The Gottman Institute · blog que repete os 86% × 33% · fonte secundária",
+            "en": "The Gottman Institute · blog restating 86% vs 33% · secondary source"
           },
           "url": "https://www.gottman.com/blog/want-to-improve-your-relationship-start-paying-more-attention-to-bids/"
         },
         {
           "label": {
-            "pt": "Gottman & Levenson, 1992 · J. Pers. Soc. Psychol. · PubMed",
-            "en": "Gottman & Levenson, 1992 · J. Pers. Soc. Psychol. · PubMed"
+            "pt": "The Gottman Institute · FAQ de pesquisa",
+            "en": "The Gottman Institute · research FAQ"
           },
-          "url": "https://pubmed.ncbi.nlm.nih.gov/1403613/"
+          "url": "https://www.gottman.com/about/research/faq/"
         },
         {
           "label": {
-            "pt": "Andrew Gelman · crítica estatística aos “90%”",
-            "en": "Andrew Gelman · statistical critique of the “90%” claims"
+            "pt": "Andrew Gelman · Statistical Modeling · crítica aos “90% de acerto”",
+            "en": "Andrew Gelman · Statistical Modeling · critique of the “90% accuracy” claims"
           },
           "url": "https://statmodeling.stat.columbia.edu/2010/06/04/a_wikipedia_whi/"
-        }
-      ],
-      "cta": null
-    },
-    {
-      "id": "jantar-atento-briga-branda",
-      "ordinal": 3,
-      "title": {
-        "pt": "Bids: resposta no jantar, briga mais branda",
-        "en": "Bids: dinner-table replies, softer fights"
-      },
-      "claim": {
-        "pt": "Em 49 recém-casados, atender pedidos de atenção no jantar andou junto com mais humor na briga. Correlação, não prova.",
-        "en": "In 49 newlywed couples, answering bids at dinner went with more humor and affection in fights. Correlation, not proof."
-      },
-      "body": {
-        "pt": "Driver & Gottman (Family Process, 2004) filmaram 49 casais recém-casados em dois momentos do mesmo ano: um jantar comum e uma discussão de 15 minutos sobre um conflito. Quem mais fazia pedidos brincalhões e respondia com entusiasmo à mesa mostrou mais humor e carinho na hora de discutir. A análise achou a seta do jantar pra briga um pouco mais forte do que a contrária, mas os autores falam em inferência cautelosa e em provável mão dupla. Por que isso importa: no grupo maior, de 130 recém-casados, o afeto positivo durante a briga foi a única variável que previu estabilidade e satisfação seis anos depois (Gottman e colegas, 1998). Os próprios autores chamam o achado de preliminar e dizem que só uma intervenção provaria causa. **Atender o pedido é uma aposta barata, não uma garantia.** No próximo “olha isso”, tire os olhos da tela e pergunte o que é.",
-        "en": "Driver & Gottman (Family Process, 2004) filmed 49 newlywed couples twice in the same year: at an ordinary dinner and in a 15-minute talk about a conflict. Couples who made more playful bids and answered with enthusiasm at the table showed more humor and affection when they argued. The analysis found the arrow from dinner to fight slightly stronger than the reverse, but the authors call it a cautious inference and expect it runs both ways. Why it matters: in the larger group of 130 newlyweds, positive affect during conflict was the only variable that predicted both stability and satisfaction six years later (Gottman and colleagues, 1998). The authors call their result preliminary and say only an intervention could prove cause. **Answering a bid is a cheap bet, not a guarantee.** Next time you hear “look at this,” take your eyes off the screen and ask what it is."
-      },
-      "image_brief": "Um casal jovem sentado à mesa em meio a uma discussão, braços cruzados, quando um deles repara nas meias descombinadas do outro e os dois começam a rir, a tensão se desfazendo no rosto.",
-      "sources": [
-        {
-          "label": {
-            "pt": "Driver & Gottman, 2004 · Family Process · n=49 (texto completo)",
-            "en": "Driver & Gottman, 2004 · Family Process · n=49 (full text)"
-          },
-          "url": "https://www.johngottman.net/wp-content/uploads/2011/05/Daily-Marital-Interations-and-Positive-Affect-During-Marital-Conflict-Among-Newlywed-Couples.pdf"
-        },
-        {
-          "label": {
-            "pt": "Driver & Gottman, 2004 · resumo na editora (Wiley)",
-            "en": "Driver & Gottman, 2004 · publisher abstract (Wiley)"
-          },
-          "url": "https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1545-5300.2004.00024.x"
         }
       ],
       "cta": null
