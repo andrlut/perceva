@@ -6,11 +6,15 @@
 import fs from 'node:fs';
 
 import { createRequire } from 'node:module';
+import path from 'node:path';
 // Glyph maps come from the installed @expo/vector-icons. Run from a checkout
 // with node_modules (the root checkout), or point PERCEVA_NODE_MODULES at one.
+// <…>/node_modules/@expo/vector-icons/package.json → three dirnames up is the
+// node_modules that holds the package (also right under pnpm's .pnpm realpath).
 const require = createRequire(import.meta.url);
-const NM = process.env.PERCEVA_NODE_MODULES
-  ?? require.resolve('@expo/vector-icons/package.json').replace(/[\/]@expo[\/]vector-icons[\/]package\.json$/, '');
+const NM =
+  process.env.PERCEVA_NODE_MODULES ??
+  path.dirname(path.dirname(path.dirname(require.resolve('@expo/vector-icons/package.json'))));
 const ION = JSON.parse(fs.readFileSync(`${NM}/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/Ionicons.json`, 'utf8'));
 const MDI = JSON.parse(fs.readFileSync(`${NM}/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/MaterialCommunityIcons.json`, 'utf8'));
 const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
