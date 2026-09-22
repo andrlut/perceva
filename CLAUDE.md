@@ -147,7 +147,7 @@ RLS enabled on every table. "Self-only" by `auth.uid()` for personal tables; cat
 ### Tasks (multi-sub model)
 | Table | Purpose |
 |---|---|
-| `task` | user-owned. title, description, task_type ('one_shot'\|'daily'\|'weekly'), recurrence jsonb, target_count, is_archived, optional `template_id` |
+| `task` | user-owned. title, description, task_type ('daily'\|'weekly' — legacy hint; `monthly` recurrences ride as 'daily'), recurrence jsonb (source of truth: daily / weekly{days?} / monthly{day?} — **`one_shot` was retired 2026-09-22**, migration `20260922000004` rewrote the rows and tightened the CHECK), target_count, is_archived, optional `template_id` |
 | `task_sub` | per-task sub allocations: (task_id, sub_id) → stars (1..5). Total stars per task capped at 5 (DB-enforced) |
 | `task_template` | **catalog (36 rows)** — 3 templates × 12 subs |
 | `task_template_sub` | sub allocations for templates |

@@ -330,10 +330,8 @@ export function SubPanel({
   );
 }
 
-function recurrenceLabel(taskType: 'one_shot' | 'daily' | 'weekly'): string {
+function recurrenceLabel(taskType: 'daily' | 'weekly'): string {
   switch (taskType) {
-    case 'one_shot':
-      return 'Uma vez';
     case 'daily':
       return 'Diária';
     case 'weekly':

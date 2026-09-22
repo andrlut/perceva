@@ -70,7 +70,7 @@ Esse pilar **não pode ser viciante**. Não tem streak, não tem badge, não tem
 Pergunta: "**o que eu estou fazendo, hoje e essa semana, sobre cada dimensão da minha vida?**". É o pilar do *agir* — onde a vida vira ação concreta. Honesto sobre uma coisa: ele mede **esforço, não resultado**. Você ganha XP por aparecer, não por colher.
 
 ### Mecânica em duas escalas
-**Tasks** (curto prazo): unidade atômica do esforço. Daily/weekly/monthly/one-shot. Granularidade fina, recompensa imediata (XP + coins na hora).
+**Tasks** (curto prazo): unidade atômica do esforço. Daily/weekly/monthly. Granularidade fina, recompensa imediata (XP + coins na hora).
 
 **Quests** (médio prazo): conjunto de tasks com deadline e recompensa em bloco. Granularidade grossa, recompensa diferida. É onde ambição entra. "Correr 50km esse mês" não é uma task — é uma quest que se nutre de tasks.
 

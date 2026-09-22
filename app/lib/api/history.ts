@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { dimensionForSub } from '@/lib/api/tasks';
-import type { CoinMultiplier, SubId, TaskSub, TaskWithSubs } from '@/lib/db/types';
+import type { CoinMultiplier, SubId, TaskSub, TaskType, TaskWithSubs } from '@/lib/db/types';
 import { isOpenOnDay, parseRecurrence } from '@/lib/recurrence';
 import type { WeekStart } from '@/lib/settings';
 import { supabase } from '@/lib/supabase';
@@ -179,8 +179,8 @@ export function taskFromCompletionSnapshot(c: DayCompletion): TaskWithSubs {
     character_id: '',
     title: c.taskTitle,
     description: null,
-    task_type: 'one_shot',
-    recurrence: { type: 'one_shot' },
+    task_type: 'daily',
+    recurrence: { type: 'daily' },
     target_count: 1,
     is_archived: true,
     created_at: c.completedAt,
@@ -204,8 +204,7 @@ export interface DayDetail {
    * Decided by the single shared predicate `isOpenOnDay`: scheduled on the
    * day AND zero completions on the day AND not skipped on the day. The
    * schedule filter lives HERE (it used to be re-applied, identically, by
-   * every consumer) so this list is directly renderable; consumers only
-   * strip one-shots when their surface doesn't show them.
+   * every consumer) so this list is directly renderable.
    */
   openTasks: TaskWithSubs[];
   /** Tasks skipped on this specific day (task_skip rows). Each entry is
@@ -222,7 +221,7 @@ interface TaskRowFull {
   character_id: string;
   title: string;
   description: string | null;
-  task_type: 'one_shot' | 'daily' | 'weekly';
+  task_type: TaskType;
   recurrence: unknown;
   target_count: number;
   is_archived: boolean;
@@ -329,25 +328,6 @@ export function useDayDetail(date: Date, weekStart: WeekStart = 'monday') {
       if (taskErr) throw taskErr;
 
       const taskRows = (tasks ?? []) as TaskRowFull[];
-      const oneShotIds = taskRows
-        .filter((t) => parseRecurrence(t.recurrence).type === 'one_shot')
-        .map((t) => t.id);
-      /** Latest completion per one-shot — used for the trophy dim
-       *  behavior (matches useHomeBuckets). */
-      const oneShotLatest = new Map<string, string>();
-      if (oneShotIds.length > 0) {
-        const { data: anyComp, error: anyErr } = await supabase
-          .from('task_completion')
-          .select('task_id, completed_at')
-          .in('task_id', oneShotIds)
-          .order('completed_at', { ascending: false });
-        if (anyErr) throw anyErr;
-        (anyComp ?? []).forEach((c) => {
-          if (!oneShotLatest.has(c.task_id)) {
-            oneShotLatest.set(c.task_id, c.completed_at);
-          }
-        });
-      }
 
       // Skips for the selected day — tasks the user explicitly opted
       // out of go to the Skipped drawer, not the open list.
@@ -376,13 +356,7 @@ export function useDayDetail(date: Date, weekStart: WeekStart = 'monday') {
             skippedOnDay: skippedThisDayIds.has(raw.id),
           }),
         )
-        .map(({ raw, recurrence }) => {
-          const task = hydrateTask(raw, recurrence);
-          if (recurrence.type === 'one_shot') {
-            task.lastCompletedAt = oneShotLatest.get(raw.id) ?? null;
-          }
-          return task;
-        });
+        .map(({ raw, recurrence }) => hydrateTask(raw, recurrence));
 
       // Hydrate skip rows for the Skipped drawer — reuses the same
       // skippedThisDayIds set already fetched for the openTasks filter.

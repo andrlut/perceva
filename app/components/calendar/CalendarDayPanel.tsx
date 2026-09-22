@@ -136,9 +136,8 @@ export function CalendarDayPanel({
   // big XP number over a sealed, empty day the panel never actually read.
   const unread = !day.data && (day.isError || day.fetchStatus === 'paused');
 
-  // useDayDetail already applies the shared isOpenOnDay rule, so this is the
-  // only judgement left to this surface: one-shots live behind "all practices".
-  const open = (day.data?.openTasks ?? []).filter((task) => task.recurrence.type !== 'one_shot');
+  // useDayDetail already applies the shared isOpenOnDay rule.
+  const open = day.data?.openTasks ?? [];
   const doneItems: CompletedItem[] = completionsToItems(
     day.data?.completions ?? [],
     (id) => activeById.get(id),

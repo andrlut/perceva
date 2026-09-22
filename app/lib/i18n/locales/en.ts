@@ -108,7 +108,6 @@ const en = {
 
   recurrencePicker: {
     types: {
-      one_shot: 'One-time',
       daily: 'Daily',
       weekly: 'Weekly',
       monthly: 'Monthly',
@@ -117,7 +116,6 @@ const en = {
     timesPerDay: 'Times per day',
     timesPerWeek: 'Times per week',
     timesPerMonth: 'Times per month',
-    times: 'Times',
     specificDays: 'Specific days (optional)',
     specificDay: 'Specific day (optional)',
     weeklyHelper:
@@ -135,8 +133,6 @@ const en = {
     weekdaysMonFri: 'Mon–Fri',
     weekend: 'Weekends',
     daysShort: '{{count}} days',
-    once: 'Once',
-    onceLong: 'Just once',
     everyDay: 'Every day',
     timesPerDay: '{{count}}× a day',
     perWeekShort: '{{count}}×/wk',
@@ -460,7 +456,7 @@ const en = {
       },
       step4: {
         title: 'How often',
-        body: 'Once, every day, or specific days of the week — you choose the cadence.',
+        body: 'Every day, specific days of the week, or once a month — you choose the cadence.',
       },
       step5: {
         title: 'No rush to save',
@@ -973,7 +969,6 @@ const en = {
     daily: 'Daily · once a day',
     weekly3x: 'Weekly · 3x per week',
     weekly1x: 'Weekly · 1x per week',
-    oneShot: 'One-shot · just once',
     customize: 'Customize',
     customizeHint: 'edit everything before creating',
   },
@@ -1094,34 +1089,28 @@ const en = {
     },
     sections: {
       today: 'Today',
-      oneshot: 'One-time',
     },
     buckets: {
       today: 'Today',
       thisWeek: 'This Week',
       thisMonth: 'This Month',
-      oneTime: 'One-time',
       emptyToday: 'All clear for today.',
     },
     typeTabs: {
       daily: 'Daily',
       weekly: 'Recurring',
-      oneShot: 'One-shot',
       general: 'All',
       emptyDaily: 'Nothing daily pending.',
       emptyWeekly: 'Nothing recurring pending.',
-      emptyOneShot: 'Nothing one-shot pending.',
       emptyGeneral: 'No templates available.',
       generalLead: 'Mark any template here without adopting it into your routine.',
     },
     bucketTabs: {
       daily: 'Daily',
       weekly: 'Weekly',
-      oneshot: 'One-time',
       all: 'All',
       emptyDaily: 'No daily practices pending.',
       emptyWeekly: 'No weekly practices pending.',
-      emptyOneshot: 'No one-time practices pending.',
       emptyAll: 'Nothing pending.',
       nextUp: 'Next up · tap to complete',
       // Legacy keys still referenced by some components — kept until those
@@ -1133,12 +1122,10 @@ const en = {
       emptyWeek: 'Nothing pending this week.',
       emptyRecurring: 'No cadences set up yet.',
       recurringLead: 'Active cadences',
-      oneshotLead: 'Whenever you want',
     },
     completedBucket: {
       daily: 'Done today',
       weekly: 'Done this week',
-      oneshot: 'Completed',
       all: 'Done today',
       day: 'Completed',
       // Legacy compat
@@ -1294,7 +1281,6 @@ const en = {
       targetHint: 'How many times per period this practice counts toward your goal.',
     },
     schedule: {
-      oneShot: 'One-time',
       daily: 'Daily',
       weekly: 'Weekly',
       monthly: 'Monthly',
@@ -1363,13 +1349,9 @@ const en = {
     eyebrow: 'PRACTICES',
     lead: 'Everything you can do beyond your daily routine.',
     loggingFor: 'Logging on {{date}}',
-    sections: {
-      recurring: 'Recurring',
-      oneshot: 'One-time',
-    },
     emptyTitle: 'Just your dailies, for now',
     emptyBody:
-      'Your dailies live on the Today screen. Create a weekly or one-time practice to see it here.',
+      'Your dailies live on the Today screen. Create a weekly or monthly practice to see it here.',
     emptyCta: 'Create practice',
   },
   tasksHub: {
@@ -1385,23 +1367,21 @@ const en = {
       placeholderMine: 'Search your practices…',
       placeholderCatalog: 'Search catalog…',
     },
-    // One line under the tabs: the three list gestures, in the order the
-    // user needs them. Completing lives on All practices.
-    lead: 'Tap to edit. Tap the label to change when it happens. Hold and drag to reorder within the group.',
+    // One line under the tabs: the two list gestures. Completing lives on
+    // All practices; changing details means opening the practice.
+    lead: 'Tap to edit. Use the handle to drag and reorder; drop in the other group to change when it happens.',
     buckets: {
       daily: 'Daily',
       dailyDesc: 'Every day, on the Today screen',
-      weekly: 'Weekly',
-      weeklyDesc: 'Set days or a monthly cadence',
-      oneTime: 'One-time',
-      oneTimeDesc: 'Just once',
+      periodic: 'Periodic',
+      periodicDesc: 'Set days, N× a week or a month',
     },
-    bucketEmpty: 'Nothing here yet. Tap a practice’s label to bring it into this group.',
+    bucketEmpty: 'Nothing here yet. Drag a practice here by its handle.',
     customChip: 'CUSTOM',
     row: {
       editA11y: 'Edit {{title}}',
-      periodicityA11y: 'Change when {{title}} happens',
-      dragA11y: 'Hold to reorder within the group',
+      dragA11y: 'Drag {{title}}',
+      dragHint: 'Hold and drag to reorder or switch group',
     },
     periodicity: {
       eyebrow: 'When it happens',

@@ -16,7 +16,6 @@ const TYPE_OPTIONS: {
   type: RecurrenceType;
   icon: keyof typeof import('@expo/vector-icons').Ionicons.glyphMap;
 }[] = [
-  { type: 'one_shot', icon: 'flag' },
   { type: 'daily', icon: 'sunny' },
   { type: 'weekly', icon: 'calendar' },
   { type: 'monthly', icon: 'calendar-outline' },
@@ -26,8 +25,6 @@ const WEEKDAY_IDX = [0, 1, 2, 3, 4, 5, 6];
 
 function defaultFor(type: RecurrenceType): Recurrence {
   switch (type) {
-    case 'one_shot':
-      return { type: 'one_shot' };
     case 'daily':
       return { type: 'daily' };
     case 'weekly':
@@ -47,15 +44,13 @@ function targetLabelFor(type: RecurrenceType, t: Translator): string {
       return t('recurrencePicker.timesPerWeek');
     case 'monthly':
       return t('recurrencePicker.timesPerMonth');
-    default:
-      return t('recurrencePicker.times');
   }
 }
 
 /**
  * Picks how often a task runs. Three concepts:
- *   - Type: one_shot / daily / weekly / monthly
- *   - Target count: how many times per period (always shown except one_shot)
+ *   - Type: daily / weekly / monthly
+ *   - Target count: how many times per period
  *   - Optional schedule: for weekly/monthly, OPTIONAL day(s) that promote
  *     the task into Today. Without schedule, task lives only in This Week
  *     / This Month — pure cadence.
@@ -70,7 +65,6 @@ export function RecurrencePicker({
   const weekdayLabels = t('recurrencePicker.weekdays').split(',');
   const handleTypeChange = (type: RecurrenceType) => {
     onChange(defaultFor(type));
-    if (type === 'one_shot') onChangeTargetCount(1);
   };
 
   const toggleDay = (idx: number) => {
@@ -137,9 +131,8 @@ export function RecurrencePicker({
         })}
       </View>
 
-      {/* target count — for any non-one_shot */}
-      {recurrence.type !== 'one_shot' && (
-        <View style={styles.subBlock}>
+      {/* target count */}
+      <View style={styles.subBlock}>
           <Text style={styles.subLabel}>{targetLabelFor(recurrence.type, t)}</Text>
           <View style={styles.stepperRow}>
             <Pressable
@@ -167,7 +160,6 @@ export function RecurrencePicker({
             </Pressable>
           </View>
         </View>
-      )}
 
       {/* weekly schedule (optional) */}
       {recurrence.type === 'weekly' && (

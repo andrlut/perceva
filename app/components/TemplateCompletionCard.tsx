@@ -15,7 +15,6 @@ interface Props {
 const TYPE_BADGE: Record<string, { label: string; color: string }> = {
   daily: { label: 'D', color: tokens.brand.violet2 },
   weekly: { label: 'W', color: '#4DD0FF' },
-  one_shot: { label: '1', color: tokens.semantic.coin },
   monthly: { label: 'M', color: '#4DD0FF' },
 };
 

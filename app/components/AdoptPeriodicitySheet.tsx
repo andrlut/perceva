@@ -10,7 +10,6 @@ export type AdoptPeriodicityChoice =
   | { kind: 'daily' }
   | { kind: 'weekly_3x' }
   | { kind: 'weekly_1x' }
-  | { kind: 'one_shot' }
   | { kind: 'customize' };
 
 interface Props {
@@ -33,7 +32,6 @@ const OPTIONS: Option[] = [
   { choice: { kind: 'daily' }, labelKey: 'adoptSheet.daily' },
   { choice: { kind: 'weekly_3x' }, labelKey: 'adoptSheet.weekly3x' },
   { choice: { kind: 'weekly_1x' }, labelKey: 'adoptSheet.weekly1x' },
-  { choice: { kind: 'one_shot' }, labelKey: 'adoptSheet.oneShot' },
   { choice: { kind: 'customize' }, labelKey: 'adoptSheet.customize', hintKey: 'adoptSheet.customizeHint' },
 ];
 
@@ -106,7 +104,7 @@ export function AdoptPeriodicitySheet({
  *  signals the caller to navigate to task-form with the template's
  *  fields pre-filled instead. */
 export function adoptChoiceToOverrides(choice: AdoptPeriodicityChoice): {
-  taskTypeOverride?: 'daily' | 'weekly' | 'one_shot';
+  taskTypeOverride?: 'daily' | 'weekly';
   recurrenceOverride?: Record<string, unknown> | null;
   targetCountOverride?: number;
 } {
@@ -130,12 +128,6 @@ export function adoptChoiceToOverrides(choice: AdoptPeriodicityChoice): {
       return {
         taskTypeOverride: 'weekly',
         recurrenceOverride: { type: 'weekly' },
-        targetCountOverride: 1,
-      };
-    case 'one_shot':
-      return {
-        taskTypeOverride: 'one_shot',
-        recurrenceOverride: { type: 'one_shot' },
         targetCountOverride: 1,
       };
   }
