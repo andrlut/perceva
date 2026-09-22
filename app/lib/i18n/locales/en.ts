@@ -144,6 +144,32 @@ const en = {
     monthDay: 'day {{day}}',
   },
 
+  // Shared icon picker (practice, reward, skill): search + categories. Per-
+  // icon labels live in the catalog (lib/icons/catalog.ts, pt/en side by
+  // side), not here.
+  iconPicker: {
+    searchPlaceholder: 'Search icons… (cigarette, phone, balance)',
+    suggested: 'Suggested',
+    all: 'All',
+    auto: 'Automatic',
+    noResults: 'No icon for "{{query}}".',
+    categories: {
+      health: 'Health',
+      food: 'Food',
+      sport: 'Sport',
+      mind: 'Mind',
+      work: 'Work',
+      tech: 'Tech',
+      home: 'Home',
+      people: 'People',
+      fun: 'Fun',
+      outdoors: 'Outdoors',
+      quit: 'Quit',
+      time: 'Time',
+      symbols: 'Symbols',
+    },
+  },
+
   usernameModal: {
     title: 'Username',
     label: 'What should we call you?',

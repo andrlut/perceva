@@ -13,6 +13,7 @@ import {
   View,
 } from 'react-native';
 
+import { AppIcon } from '@/components/AppIcon';
 import { MoodFace } from '@/components/mood/MoodFace';
 import { useMoodTags } from '@/lib/api/mood';
 import { useKeyboardOverlap } from '@/lib/use-keyboard-height';
@@ -370,11 +371,7 @@ export function CalendarFilterSheet({
                     active={filter.rewardIds.includes(reward.rewardId)}
                     onPress={() => toggleReward(reward.rewardId, reward.title)}
                     leading={
-                      <Ionicons
-                        name={(reward.icon ?? 'gift') as keyof typeof Ionicons.glyphMap}
-                        size={12}
-                        color={tokens.semantic.coin}
-                      />
+                      <AppIcon name={reward.icon ?? 'gift'} size={12} color={tokens.semantic.coin} />
                     }
                   />
                 ))}

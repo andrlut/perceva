@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { AppIcon } from '@/components/AppIcon';
 import type { Reward } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { tokens } from '@/theme';
@@ -97,7 +98,7 @@ export function TrackPickerSheet({
                     ]}
                   >
                     <View style={[styles.iconWrap, { backgroundColor: cat.bg }]}>
-                      <Ionicons name={r.icon as never} size={20} color={cat.color} />
+                      <AppIcon name={r.icon} size={20} color={cat.color} />
                     </View>
                     <Text style={styles.cardTitle} numberOfLines={2}>
                       {r.title}

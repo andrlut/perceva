@@ -14,6 +14,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppIcon } from '@/components/AppIcon';
+import { IconPickerModal } from '@/components/IconPickerModal';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { SkillMedallionOrbital } from '@/components/SkillMedallionOrbital';
 import {
@@ -81,6 +83,7 @@ export default function SkillFormScreen() {
   // on submit from SUB_META.
   const [subId, setSubId] = useState<SubId>(SUBS_BY_DIM[DIMENSION_ORDER[0]][0]);
   const [icon, setIcon] = useState<string>('flash');
+  const [iconPickerVisible, setIconPickerVisible] = useState(false);
   const [tiers, setTiers] = useState<TierFormState[]>(DEFAULT_TIERS);
   const keyboardHeight = useKeyboardOverlap();
 
@@ -286,32 +289,22 @@ export default function SkillFormScreen() {
               );
             })}
 
-            {/* Icon */}
+            {/* Icon — the shared picker (search + categories), same row
+                the practice and reward forms use. ICON_CHOICES is only the
+                "Sugeridos" shortlist now. */}
             <Text style={styles.label}>{t('skill.form.iconLabel')}</Text>
-            <View style={styles.iconGrid}>
-              {ICON_CHOICES.map((ic) => {
-                const active = icon === ic;
-                return (
-                  <Pressable
-                    key={ic}
-                    onPress={() => setIcon(ic)}
-                    style={[
-                      styles.iconCell,
-                      active && {
-                        backgroundColor: 'rgba(123,92,255,0.18)',
-                        borderColor: tokens.brand.violet2,
-                      },
-                    ]}
-                  >
-                    <Ionicons
-                      name={ic as never}
-                      size={20}
-                      color={active ? tokens.brand.violet2 : tokens.text.mid}
-                    />
-                  </Pressable>
-                );
-              })}
-            </View>
+            <Pressable
+              onPress={() => setIconPickerVisible(true)}
+              style={({ pressed }) => [styles.iconRow, pressed && { opacity: 0.7 }]}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.changeIconA11y')}
+            >
+              <View style={styles.iconRowTile}>
+                <AppIcon name={icon} size={22} color={tokens.brand.violet2} />
+              </View>
+              <Text style={styles.iconRowChange}>{t('common.changeIcon')}</Text>
+              <Ionicons name="chevron-forward" size={16} color={tokens.brand.violet2} />
+            </Pressable>
 
             {/* Tiers */}
             <Text style={styles.label}>{t('skill.form.tierLabel')}</Text>
@@ -372,6 +365,21 @@ export default function SkillFormScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </ScreenBackground>
+
+      <IconPickerModal
+        visible={iconPickerVisible}
+        title={t('skill.form.iconLabel')}
+        suggested={ICON_CHOICES}
+        value={icon}
+        // A skill always carries a concrete icon ('flash' default), so
+        // null never reaches setIcon.
+        onSelect={(id) => {
+          if (id) setIcon(id);
+        }}
+        onClose={() => setIconPickerVisible(false)}
+        accentColor={tokens.brand.violet2}
+        accentBg="rgba(155, 130, 255, 0.16)"
+      />
     </SafeAreaView>
   );
 }
@@ -474,20 +482,33 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 0.3,
   },
-  iconGrid: {
+  iconRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: tokens.space[2],
+    alignItems: 'center',
+    gap: tokens.space[3],
+    backgroundColor: tokens.bg.surface,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+    borderRadius: tokens.radius.md,
+    paddingVertical: tokens.space[2],
+    paddingHorizontal: tokens.space[3],
   },
-  iconCell: {
+  iconRowTile: {
     width: 44,
     height: 44,
     borderRadius: tokens.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: tokens.bg.surface,
     borderWidth: 1,
-    borderColor: tokens.border.base,
+    borderColor: tokens.brand.violet2,
+    backgroundColor: 'rgba(155, 130, 255, 0.16)',
+  },
+  iconRowChange: {
+    flex: 1,
+    textAlign: 'right',
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 13,
+    color: tokens.brand.violet2,
   },
   tierCard: {
     backgroundColor: tokens.bg.surface,

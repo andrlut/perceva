@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppIcon } from '@/components/AppIcon';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { SkillMedallionOrbital } from '@/components/SkillMedallionOrbital';
 import {
@@ -523,11 +524,7 @@ export default function SkillDetailScreen() {
           {/* CTA bar — sticky at bottom, respects safe-area gesture bar */}
           <View style={[styles.ctaBar, { bottom: ctaOffset }]}>
             <View style={styles.inputPill}>
-              <Ionicons
-                name={state.skill.icon as never}
-                size={16}
-                color={currentMeta.c1}
-              />
+              <AppIcon name={state.skill.icon} size={16} color={currentMeta.c1} />
               <TextInput
                 value={valueStr}
                 onChangeText={(v) => setValueStr(v.replace(/[^0-9]/g, ''))}

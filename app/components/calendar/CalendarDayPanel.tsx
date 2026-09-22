@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { AppIcon } from '@/components/AppIcon';
 import { CompletedBucket, completionsToItems, type CompletedItem } from '@/components/CompletedBucket';
 import { DaySeal } from '@/components/DaySeal';
 import { DayXpStat } from '@/components/DayXpStat';
@@ -265,11 +266,7 @@ export function CalendarDayPanel({
           redemptions.map((r) => (
             <View key={r.id} style={styles.rewardRow}>
               <View style={styles.rewardIcon}>
-                <Ionicons
-                  name={(r.icon ?? 'gift') as keyof typeof Ionicons.glyphMap}
-                  size={15}
-                  color={tokens.semantic.coin}
-                />
+                <AppIcon name={r.icon ?? 'gift'} size={15} color={tokens.semantic.coin} />
               </View>
               <View style={styles.rewardText}>
                 <Text style={styles.rewardTitle} numberOfLines={1}>

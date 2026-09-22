@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppIcon } from '@/components/AppIcon';
 import { AddCard } from '@/components/AddCard';
 import { useBottomNavClearance } from '@/components/BottomNavBar';
 import { BuyCelebrationModal } from '@/components/BuyCelebrationModal';
@@ -555,11 +556,7 @@ export default function RewardsScreen() {
                     accessibilityRole="button"
                     accessibilityState={{ selected }}
                   >
-                    <Ionicons
-                      name={m.icon as never}
-                      size={14}
-                      color={iconColor}
-                    />
+                    <AppIcon name={m.icon} size={14} color={iconColor} />
                     <Text style={[styles.chipText, { color: textColor }]}>
                       {t(`rewards.categories.${cat}` as const)}
                     </Text>

@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { AppIcon } from '@/components/AppIcon';
 import type { Reward } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { ACTIVE_THEME, tokens } from '@/theme';
@@ -120,11 +121,7 @@ export function TrackedRewardCard({
               },
             ]}
           >
-            <Ionicons
-              name={reward.icon as never}
-              size={28}
-              color={cat.color}
-            />
+            <AppIcon name={reward.icon} size={28} color={cat.color} />
           </View>
           <View style={styles.titleCol}>
             <Text style={styles.title} numberOfLines={2}>

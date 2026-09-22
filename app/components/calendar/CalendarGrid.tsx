@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { AppIcon } from '@/components/AppIcon';
 import { MoodMouth } from '@/components/mood/MoodMouth';
 import { dateKeyFromLocal } from '@/lib/api/history';
 import {
@@ -315,12 +316,7 @@ function CellMarks({
     return (
       <View style={styles.markRow}>
         {icons.map((r) => (
-          <Ionicons
-            key={r.id}
-            name={(r.icon ?? 'gift') as keyof typeof Ionicons.glyphMap}
-            size={9}
-            color={paint.ink}
-          />
+          <AppIcon key={r.id} name={r.icon ?? 'gift'} size={9} color={paint.ink} />
         ))}
       </View>
     );

@@ -11,6 +11,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { AppIcon } from '@/components/AppIcon';
 import type { Reward } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { tokens } from '@/theme';
@@ -166,11 +167,7 @@ export function BuyCelebrationModal({
                   },
                 ]}
               >
-                <Ionicons
-                  name={reward.icon as never}
-                  size={48}
-                  color={cat.color}
-                />
+                <AppIcon name={reward.icon} size={48} color={cat.color} />
               </Animated.View>
 
               {/* Title */}

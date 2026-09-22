@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppIcon } from '@/components/AppIcon';
 import { IconPickerModal } from '@/components/IconPickerModal';
 import {
   useArchiveReward,
@@ -359,7 +360,7 @@ export default function RewardFormScreen() {
               accessibilityLabel={t('common.changeIconA11y')}
             >
               <View style={styles.iconRowTile}>
-                <Ionicons name={icon as never} size={22} color={tokens.semantic.coin} />
+                <AppIcon name={icon} size={22} color={tokens.semantic.coin} />
               </View>
               <Text style={styles.iconRowHint} numberOfLines={2}>
                 {t('reward.form.iconHint')}
@@ -388,7 +389,7 @@ export default function RewardFormScreen() {
       <IconPickerModal
         visible={iconPickerVisible}
         title={t('reward.form.iconLabel')}
-        icons={ICON_CHOICES}
+        suggested={ICON_CHOICES}
         value={icon}
         // No Auto cell here — rewards always carry a concrete icon
         // ('gift' default), so null never reaches setIcon.

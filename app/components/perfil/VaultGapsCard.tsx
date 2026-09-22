@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { AppIcon } from '@/components/AppIcon';
 import { useRewardGaps, type RewardGap } from '@/lib/api/rewards';
 import { useT } from '@/lib/i18n';
 import { tokens } from '@/theme';
@@ -91,11 +92,7 @@ function GapRow({ gap }: { gap: RewardGap }) {
   return (
     <View style={styles.row}>
       <View style={[styles.icon, { backgroundColor: meta.bg }]}>
-        <Ionicons
-          name={(gap.icon ?? meta.icon) as never}
-          size={13}
-          color={meta.color}
-        />
+        <AppIcon name={gap.icon ?? meta.icon} size={13} color={meta.color} />
       </View>
       <View style={styles.rowText}>
         <Text style={styles.rowTitle} numberOfLines={1}>

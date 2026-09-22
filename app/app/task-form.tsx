@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppIcon } from '@/components/AppIcon';
 import { IconPickerModal } from '@/components/IconPickerModal';
 import { RecurrencePicker } from '@/components/RecurrencePicker';
 import { SubPicker } from '@/components/SubPicker';
@@ -461,11 +462,11 @@ export default function TaskFormScreen() {
                 {(() => {
                   const primarySubId = subs[0]?.sub_id;
                   const autoIcon = primarySubId
-                    ? (SUB_META[primarySubId]?.iconName as never)
-                    : ('ellipse-outline' as never);
+                    ? SUB_META[primarySubId]?.iconName ?? 'ellipse-outline'
+                    : 'ellipse-outline';
                   return (
-                    <Ionicons
-                      name={icon === null ? autoIcon : (icon as never)}
+                    <AppIcon
+                      name={icon === null ? autoIcon : icon}
                       size={22}
                       color={tokens.brand.violet2}
                     />
@@ -563,7 +564,7 @@ export default function TaskFormScreen() {
       <IconPickerModal
         visible={iconPickerVisible}
         title={t('taskForm.iconLabel')}
-        icons={TASK_ICON_CHOICES}
+        suggested={TASK_ICON_CHOICES}
         value={icon}
         onSelect={setIcon}
         onClose={() => setIconPickerVisible(false)}
