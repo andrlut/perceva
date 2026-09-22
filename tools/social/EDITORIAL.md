@@ -60,6 +60,18 @@ gerador não consegue checar sozinho + as lições aprendidas em produção.
 - Hashtags estáveis, sempre as mesmas: `#autoconhecimento #habitos #psicologia #bemestar #perceva`
 - Cadência: 2 carrosséis/semana, dimensões alternadas.
 
+## Reels reaproveitados do Recanto
+
+- ~38 das ideias têm vídeo pt pronto (`ideas[].video.pt.path` no jsonb; mp4 vertical
+  60–90 s no bucket `learning-media`, com poster). São os vídeos do Explorar do app —
+  já nascem no cânone visual; publicar como estão, sem reeditar.
+- Ao montar um lote: se a ideia escolhida tem `video.pt`, baixar o mp4 pra pasta do
+  post como `reel.mp4` e adicionar bloco de legenda de reel no legendas.md (IG/TikTok
+  + título de Shorts). O mesmo arquivo serve em Reels, TikTok e Shorts.
+- Preferir ideias COM vídeo no critério de seleção quando o gancho for equivalente —
+  um tema com carrossel + reel rende dois posts na semana sem produção extra.
+- Cadência sugerida: reel 2–3 dias depois do carrossel do mesmo tema.
+
 ## Saída
 
 - PNG RGB **sem canal alpha** (o gerador já remove).
