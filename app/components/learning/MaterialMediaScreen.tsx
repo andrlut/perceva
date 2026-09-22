@@ -29,9 +29,9 @@ import {
   useRateMaterial,
   useReadMaterialIds,
 } from '@/lib/api/learning';
-import type { LearningMaterialType } from '@/lib/db/types';
 import { useT, type TranslateOptions } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
+import { categoryOf } from '@/lib/learningCategory';
 import { learningMediaUrl, pickMedia } from '@/lib/learningMedia';
 import { xpForMaterial } from '@/lib/learningXp';
 import { useReadingProgressStore } from '@/lib/readingProgress';
@@ -58,8 +58,11 @@ type Mode = 'read' | 'listen' | 'view';
 // shape of the material (and the roadmap) instead of a lonely single mode.
 const ALL_MODES: Mode[] = ['read', 'listen', 'view'];
 
-function typeLabel(type: LearningMaterialType, t: Translator): string {
-  return t(`learning.type.${type}`);
+function categoryLabel(
+  m: { category?: string | null; type?: string | null },
+  t: Translator,
+): string {
+  return t(`learning.category.${categoryOf(m)}`);
 }
 
 interface Props {
@@ -268,7 +271,7 @@ export function MaterialMediaScreen({ detail: m }: Props) {
               <Ionicons name="chevron-back" size={22} color={tokens.text.hi} />
             </Pressable>
             <View style={styles.heroTypePill}>
-              <Text style={styles.heroTypeText}>{typeLabel(m.type, t)}</Text>
+              <Text style={styles.heroTypeText}>{categoryLabel(m, t)}</Text>
             </View>
           </View>
 

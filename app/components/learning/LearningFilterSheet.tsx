@@ -4,9 +4,10 @@ import { useMemo } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { LearningFeedCard } from '@/lib/api/learning';
-import type { DimensionId, LearningMaterialType, SubId } from '@/lib/db/types';
+import type { DimensionId, LearningMaterialCategory, SubId } from '@/lib/db/types';
 import { useT, type TranslateOptions } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
+import { CATEGORY_ORDER, categoryOf } from '@/lib/learningCategory';
 import { tokens } from '@/theme';
 import { DIMENSION_ORDER, SUB_META, SUBS_BY_DIM } from '@/theme/dimensions';
 
@@ -19,7 +20,7 @@ type Translator = (key: string, options?: TranslateOptions) => string;
  */
 export type PillFilter =
   | { kind: 'dim'; value: DimensionId }
-  | { kind: 'type'; value: LearningMaterialType }
+  | { kind: 'category'; value: LearningMaterialCategory }
   | { kind: 'sub'; value: SubId }
   | null;
 
@@ -54,13 +55,11 @@ interface Props {
   onReadFilterChange: (next: ReadFilter) => void;
 }
 
-const TYPES: LearningMaterialType[] = ['explainer', 'summary', 'news'];
-
-function typeLabel(type: LearningMaterialType, t: Translator): string {
-  return t(`learning.type.${type}`);
+function categoryLabel(category: LearningMaterialCategory, t: Translator): string {
+  return t(`learning.category.${category}`);
 }
 
-function isActive(filter: PillFilter, kind: 'dim' | 'type' | 'sub', value: string): boolean {
+function isActive(filter: PillFilter, kind: 'dim' | 'category' | 'sub', value: string): boolean {
   return !!filter && filter.kind === kind && filter.value === value;
 }
 
@@ -91,15 +90,16 @@ export function LearningFilterSheet({
       }
     }
 
-    const perType = new Map<LearningMaterialType, { read: number; total: number }>();
+    const perCategory = new Map<LearningMaterialCategory, { read: number; total: number }>();
     for (const c of cards) {
-      const slot = perType.get(c.type) ?? { read: 0, total: 0 };
+      const category = categoryOf(c);
+      const slot = perCategory.get(category) ?? { read: 0, total: 0 };
       slot.total += 1;
       if (readSet.has(c.id)) slot.read += 1;
-      perType.set(c.type, slot);
+      perCategory.set(category, slot);
     }
 
-    return { total, read, perSub, perType };
+    return { total, read, perSub, perCategory };
   }, [cards, readSet]);
 
   // Tap a filter → apply (or clear if re-tapping the active one) → close.
@@ -235,15 +235,15 @@ export function LearningFilterSheet({
             {/* Per-type row */}
             <Text style={styles.section}>{t('learning.stats.byType')}</Text>
             <View style={styles.typeRow}>
-              {TYPES.map((type) => {
-                const slot = stats.perType.get(type) ?? { read: 0, total: 0 };
-                const active = isActive(filter, 'type', type);
+              {CATEGORY_ORDER.map((category) => {
+                const slot = stats.perCategory.get(category) ?? { read: 0, total: 0 };
+                const active = isActive(filter, 'category', category);
                 const disabled = slot.total === 0;
                 return (
                   <Pressable
-                    key={type}
+                    key={category}
                     disabled={disabled}
-                    onPress={() => pick({ kind: 'type', value: type })}
+                    onPress={() => pick({ kind: 'category', value: category })}
                     style={({ pressed }) => [
                       styles.typePill,
                       active && styles.typePillActive,
@@ -252,7 +252,7 @@ export function LearningFilterSheet({
                     ]}
                   >
                     <Text style={[styles.typeLabel, active && styles.typeLabelActive]}>
-                      {typeLabel(type, t)}
+                      {categoryLabel(category, t)}
                     </Text>
                     <Text style={styles.typeRatio}>
                       <Text style={{ color: tokens.brand.violet2 }}>{slot.read}</Text>

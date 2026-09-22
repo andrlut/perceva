@@ -24,10 +24,24 @@ local scheduled task `learning-publisher-cron` (dom + qua, 10:00 BRT; see
 
 Since the "ideias primeiro" redesign (2026-09-07) a material is:
 
-- **1 to 5 ideias** — the unit of consumption in the Recanto (title-hook,
-  claim, 100–180-word body, one textless 4:5 image, 1–3 sources). Budget by
-  type: `news` 1 · `explainer` 1–3 · `summary` 2–5 · hard cap 5. Cut, don't
+- **Its ideias — one by default, each extra one justified** — the unit of
+  consumption in the Recanto (a title that names the subject; a claim that
+  is the answer the reader can use — the instruction with the number that
+  applies, or, when the finding asks for no action, the dry conclusion,
+  never the machinery of the study (author, study name, sample, "n=", % of
+  respondents), which lives in the body; a 100–180-word body; one textless
+  4:5 image that does not pull toward the wrong subject (a recognisable
+  subject is the preference, not the bar); 1–3 sources). The count comes from the
+  dossier's independent findings; the category only sets a ceiling:
+  `research` 1–3 · `book` 1–5 · `foundation` 1–3 · hard cap 5. Cut, don't
   stretch.
+- **A category** — `research` (Pesquisa: a question answered by science,
+  written to last), `book` (Livro: the ideas of one work) or `foundation`
+  (Fundamentos: Perceva from the inside). **A scheduled run only ever
+  publishes research or book.** Foundation materials are written only
+  when the maintainer asks, through `/content-drop` with the category and
+  the part of the app named — then you skip the planner and build the
+  brief from that request. `news` is retired.
 - **The article** — still written; the app shows it under "Ler o texto
   completo". Its `##` sections ARE the ideias, same order.
 - **The cover** (2:3, Gemini 3.1 Flash Image + style refs) and **one 4:5
@@ -99,41 +113,54 @@ Expected return: a brief in this shape:
 
 ```json
 {
-  "type": "explainer" | "summary" | "news",
+  "category": "research" | "book",
   "topic": "short topic label, e.g. 'sleep apnea diagnostics'",
   "preferred_sub": "sub_id or null",
   "preferred_dim": "dim_id or null",
   "angle_pt": "the hook angle in PT",
   "angle_en": "the hook angle in EN",
   "idea_budget": { "min": 1, "max": 3 },
-  "idea_hints_pt": ["rótulo curto da ideia 1", "rótulo curto da ideia 2"],
+  "main_finding_pt": "the one finding the material should stand on",
   "from_seed_id": "uuid or null",
   "rationale": "why this topic now, in plain text"
 }
 ```
 
-`idea_budget` follows the type (`news` 1–1, `explainer` 1–3, `summary`
-2–5). `idea_hints_pt` is optional and **non-binding** (≤ 5 PT labels; the
-planner omits the key when it does not see the cut). Pass the brief
+`idea_budget` follows the category and is a ceiling (`research` 1–3,
+`book` 1–5, `foundation` 1–3). `main_finding_pt` is the planner's guess at
+idea 1 — one finding, never a list of idea labels. Pass the brief
 **whole** to the researcher (step 3), the drafter (step 4) and the reviewer
 (step 5) — the reviewer reads `idea_budget` from it. If the planner returns
-nothing useful (`type: null`), abort the run cleanly. Don't force-publish.
+nothing useful (`category: null`), abort the run cleanly. Don't
+force-publish. If the planner ever returns `foundation`, abort: those
+come only from the maintainer.
+
+**Foundation (maintainer request only).** When `/content-drop` hands you
+`category: foundation` plus the part of the app (a sub, a screen, a
+principle), skip the planner and build the brief yourself: `category`,
+`topic` = that part of the app, `preferred_sub` if it is a sub,
+`idea_budget` `{min: 1, max: 3}`, `angle_pt/en` = the user's question
+about it ("Por que ganhar moedas?"), `main_finding_pt` = null. Everything
+from step 3 on is the same.
 
 ### 3. Spawn the researcher
 
-Dispatch `learning-researcher` with the planner's brief. It uses
-WebSearch + WebFetch to assemble a dossier of facts, quotes, and source
-URLs.
+Dispatch `learning-researcher` with the brief. It uses WebSearch +
+WebFetch to assemble a dossier of facts, quotes, and source URLs — and an
+**"Independent findings"** section with a count, the first evidence of
+how many ideias the material should have.
 
-Expected return: a structured research dossier (facts with peer-reviewed
-citations, quotes with attribution, source URLs, nuance/caveat notes).
+Expected return: a structured research dossier (independent findings,
+facts with peer-reviewed citations, quotes with attribution, source URLs,
+nuance/caveat notes).
 
 ### 4. Spawn the drafter
 
-Dispatch `learning-drafter` with: (planner brief, including `idea_budget`)
-+ (research dossier) + (reasoning template for the chosen `type`, fetched
-via `supabase db query --linked "select * from material_type_template where
-type = '<type>'"`). In rewrite mode also pass the existing
+Dispatch `learning-drafter` with: (brief, including `idea_budget` and
+`main_finding_pt`) + (research dossier) + (reasoning template for the
+material's category, fetched via `supabase db query --linked "select *
+from material_type_template where type = '<category>'"` — the table's
+`type` column holds the category key). In rewrite mode also pass the existing
 `learning-drops/ideas-specs/<slug>.json` and tell the drafter to keep the
 `id` of every ideia that survives (see Idempotency).
 
@@ -144,6 +171,7 @@ material payload in this shape:
 ```json
 {
   "slug": "kebab-case-unique",
+  "category": "research|book|foundation",
   "title_pt": "...", "title_en": "...",
   "summary_pt": "...", "summary_en": "...",
   "body_pt": "<markdown with directives, 1..5 ## sections>",
@@ -160,17 +188,19 @@ material payload in this shape:
     {
       "id": "kebab-3-to-40-chars",
       "ordinal": 1,
-      "title": { "pt": "≤48 chars", "en": "..." },
-      "claim": { "pt": "≤120 target, 140 hard cap", "en": "..." },
+      "title": { "pt": "≤48 chars, names the subject", "en": "..." },
+      "claim": { "pt": "≤120 target, 140 hard cap; the answer the reader can use — the instruction with its number, or the dry conclusion; never author, study, sample or % of respondents", "en": "..." },
       "body": { "pt": "100–180 words", "en": "..." },
-      "image_brief": "PT — one concrete textless scene that DEPICTS the claim",
+      "image_brief": "PT — one concrete textless scene that pulls toward no wrong subject (subject-first is the art-direction preference)",
       "sources": [{ "label": { "pt": "...", "en": "..." }, "url": "https://..." }],
       "cta": null
     }
   ],
   "reasoning_log": {
-    "template_type": "...", "template_version": 2,
+    "template_category": "...", "template_version": 3,
     "idea_budget": { "min": 1, "max": 3 },
+    "findings_in_dossier": 1,
+    "idea_cut": [{ "id": "<idea id>", "distinct_by": null, "why_pt": "..." }],
     "voice_principles_applied": ["..."],
     "steps": [...],
     "main_points": [
@@ -181,8 +211,9 @@ material payload in this shape:
 ```
 
 `ideas[]` is exactly the ideas-spec entry contract
-(`learning-drops/ideas-specs/README.md`); `reasoning_log.main_points` has
-one entry per ideia with `id` = the ideia's `id`;
+(`learning-drops/ideas-specs/README.md`); `reasoning_log.main_points` and
+`reasoning_log.idea_cut` have one entry per ideia with `id` = the ideia's
+`id` (every `idea_cut` entry after the first names `distinct_by`);
 `reasoning_log.idea_budget` echoes the brief; `takeaways_*` carry one
 bullet per ideia, in order (1–5).
 
@@ -196,8 +227,10 @@ editorial rules from `material_type_template`. Without the brief it falls
 back to deriving the budget from `type`; without the dossier it cannot run
 `idea_source_not_in_dossier` — so always pass both. It runs the editorial
 checklist — article rules plus the per-ideia rules (claim stands alone,
-body does not restate the title, ≥1 http(s) source, brief depicts the
-claim, every number has a named study, sections mirror the ideias).
+body does not restate the title, ≥1 http(s) source, the brief does not
+mislead (right subject or neutral; the grave error is pulling toward the
+wrong subject), every number has a named study, sections mirror the
+ideias).
 
 Expected return:
 
@@ -231,6 +264,41 @@ drafter verbatim (`rule_id`, `where`, `note`, `suggested_fix`).
 - **2 drafter round-trips max per run**, shared with the lint round-trip
   in step 6 — if the second draft also fails, abort.
 
+### 5b. Blind reader — title and card back
+
+The reviewer read the whole draft, so it cannot tell whether a card makes
+sense to someone who sees only the card. Dispatch the `learning-card-tester`
+agent (Haiku, Read-only) — **one call per idea per surface**, never two
+surfaces of the same idea, nor two ideas of the same material, in one call:
+each call must be blind to everything else.
+
+- task `title` with only `ideas[k].title.pt`;
+- task `claim` with only `ideas[k].claim.pt`.
+
+PT only — the maintainer reads PT and the EN mirror is written from the same
+idea. Run the calls in parallel. Then **you** judge each answer against the
+idea; the tester never grades itself:
+
+| Surface | Fails when |
+|---|---|
+| Title | `assunto` does not name the idea's subject (or is "não dá pra saber"), or `charada: true` |
+| Card back | `assunto` misses the subject, or `da_pra_usar` is "nada" while the idea asks for an action — a no-action conclusion ("Pessoas solitárias têm memória pior, mas a queda ao longo do tempo é a mesma") legitimately returns "nada" |
+| Set | title and card back both miss the subject — the image cannot rescue it, it only has to not mislead |
+
+`certeza` is never a pass mark: in calibration the reader was confidently
+wrong on images. A failed surface goes back to the drafter as a FAIL
+(`idea_title_no_subject`, `idea_title_riddle`, `idea_claim_no_subject`,
+`idea_claim_not_usable` or `idea_set_incomplete`) with the reader's answer
+quoted as evidence ("a quick reader took this title for 'impacto de
+reuniões ruins'"). This shares the drafter round-trip budget of steps 5 and
+6: re-review, re-test only the ideas that changed; still failing on the
+second pass → abort like a failed review.
+
+The pass marks were calibrated with the maintainer on 20 published cards
+(2026-09-20) and on the first cards written under the new rules; the
+multiple-choice task was dropped then because it scored 20 of 20 and told
+nothing apart. Keep it out.
+
 ### 6. Write the ideas-spec + lint
 
 Write `learning-drops/ideas-specs/<slug>.json` **verbatim** from
@@ -240,7 +308,7 @@ approved that text — wrapped in the envelope:
 ```json
 {
   "slug": "<slug>",
-  "type": "<type>",
+  "category": "<category>",
   "material_title": { "pt": "<title_pt>", "en": "<title_en>" },
   "ideas": [ ...payload.ideas, untouched... ]
 }
@@ -311,6 +379,28 @@ node tools/learning-lint/lint.mjs --spec learning-drops/media-specs/<slug>.json
 
 FAIL → send it back to the art-director once; still failing → abort.
 
+**If the art-director returns `{"blocked": [{id, reason:
+"idea_brief_misleads", note}]}`** it wrote no spec — an `image_brief` would
+lead to a scene that pulls the reader toward the wrong subject (light
+switches for a protein idea), and composing it is not the fix. Don't lint a
+file that does not exist: send each `{id, note}` back to the **drafter** as
+a `idea_brief_misleads` FAIL so it rewrites that idea's `image_brief`, then
+dispatch the art-director again. This shares the drafter round-trip budget
+of steps 5 and 6 — on the second block, abort like a failed review.
+
+### 8b. Blind reader — image prompts (before paying for images)
+
+For each `ideas[].image_prompt` in the media spec, one `learning-card-tester`
+call, task `image`, with the prompt text as the image description — one idea
+per call. It **fails when `puxa_pra` names a different subject than the
+idea's**: the reader was pulled somewhere else ("conexão entre gerações" for
+a protein idea, "academia" for a risk idea, "finanças" for a sleep idea). A
+vague or neutral answer passes — the image does not have to name the
+subject on its own, it only must not mislead. A failure goes back to the
+art-director once, with the reader's `puxa_pra` quoted; still failing →
+treat it as `blocked` (back to the drafter, same budget). It runs before any
+image is generated, so it costs almost nothing.
+
 ### 9. Render cover + ideia images
 
 ```bash
@@ -330,13 +420,31 @@ merges across partial runs). Output: assets + `manifest.json` in
 
 Read the log: a failed ideia image is logged and skipped (the run
 continues); a failed cover is logged too. Retry once: `--only cover` for a
-failed cover; `--only ideas` for failed ideias — knowing it regenerates
-EVERY ideia (~US$0,05 each; an unchanged prompt keeps the same `sha8`
-path, and the manifest merge keeps one entry per `idea_id`), so for one
-failure out of several it is cheaper to ship that ideia with `image: null`
-and let a later run fill it in. Then read `manifest.json` and note which
-`idea_id`s have an asset of `kind: 'idea'` and whether a `kind: 'cover'`
-entry exists.
+failed cover; `--only ideas --idea <id>` for a failed ideia (only that one
+re-renders, ~US$0,05; the manifest merge keeps one entry per `idea_id`).
+Then read `manifest.json` and note which `idea_id`s have an asset of
+`kind: 'idea'` and whether a `kind: 'cover'` entry exists.
+
+### 9b. Blind reader — rendered images
+
+One `learning-card-tester` call per rendered ideia image, task `image`,
+giving it the absolute path of `learning-drops/inbox/<slug>/<localPath>`
+(it opens the file with Read) — one image per call. Same pass mark as 8b:
+fails only when `puxa_pra` names a different subject than the idea's.
+
+On a failure, ask the art-director to re-brief **only that idea's**
+`image_prompt`, quoting what the reader saw. A new prompt gives a new
+`sha8` and so a new file — an unchanged prompt would land on the path the
+bucket already holds (409). Then:
+
+```bash
+node tools/content-media/generate.mjs --slug <slug> --only ideas --idea <id>
+```
+
+and test that image once more. **At most one re-render per idea**: a second
+failure ships the image as it is and goes into the report and the commit/PR
+body as "revisar imagem: `<id>` (o leitor leu '<puxa_pra>')". No loop —
+every render costs money, and the maintainer judges the image in the app.
 
 ### 10. Upload every manifest asset
 
@@ -440,7 +548,7 @@ as UTF-8 explicitly.
 
 ```bash
 git add -A
-git commit -m "feat(learning): publish <type> — <topic> (<n> ideias)"
+git commit -m "feat(learning): publish <category> — <topic> (<n> ideias)"
 ```
 
 `git add -A` picks up exactly: `learning-drops/ideas-specs/<slug>.json`,
@@ -452,14 +560,15 @@ PR mode:
 
 ```bash
 git push -u origin <branch>
-gh pr create --title "feat(learning): <type> — <title>" --body "$(cat <<'EOF'
+gh pr create --title "feat(learning): <category> — <title>" --body "$(cat <<'EOF'
 ## Summary
-- Type: <type>
+- Category: <category> (Pesquisa | Livro | Fundamentos)
 - Topic: <topic>
 - Slug: <slug>
 - Ideias: <n> (<id-1>, <id-2>, …) — images <generated>/<n>
 - Cover: yes | FAILED (shipped without hero)
 - Reviewer: PASSED (or PASSED with N warnings)
+- Leitor cego: títulos <x>/<n>, versos <x>/<n>, imagens <x>/<n> — e, se houver, "revisar imagem: <id> (o leitor leu '<puxa_pra>')"
 
 ## Reasoning log
 <paste the drafter's reasoning_log here for audit>

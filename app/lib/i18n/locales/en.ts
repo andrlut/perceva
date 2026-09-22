@@ -588,10 +588,10 @@ const en = {
     continueReading: 'Continue reading',
     continueProgress: '{{percent}}% read',
     continueMinLeft: { one: '~{{count}} min left', other: '~{{count}} min left' },
-    type: {
-      explainer: 'Explainer',
-      summary: 'Summary',
-      news: 'News',
+    category: {
+      research: 'Research',
+      book: 'Book',
+      foundation: 'Foundations',
     },
     mode: {
       read: 'Read',
