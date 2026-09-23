@@ -518,7 +518,7 @@ const pt: Translations = {
       },
       step3: {
         title: 'Resgate quando quiser',
-        body: 'Um filme, um jantar, um descanso. Resgate com moedas e aproveite na hora. O registro fica em Resgates, o botão dourado aí embaixo — e no calendário dá pra desfazer.',
+        body: 'Um filme, um jantar, um descanso. Resgate com moedas e aproveite na hora. O botão dourado aí embaixo abre Gerenciar — criar, ordenar e ver os resgates; no calendário dá pra desfazer.',
       },
     },
     m5: {
@@ -1486,10 +1486,6 @@ const pt: Translations = {
       // Os chips são só visuais; isto vai no valor falado da linha.
       a11yOneShot: 'compra única',
       a11yBought: 'já comprada',
-    },
-    history: {
-      link: 'Resgates',
-      sub: 'O que você já resgatou — segure pra desfazer',
     },
     archived: {
       section: 'Arquivadas',

@@ -304,13 +304,13 @@ export default function RewardsHubScreen() {
             <Ionicons name="chevron-back" size={22} color={tokens.text.hi} />
           </Pressable>
           {/* "Gerenciar recompensas" is ~190px at h3; a 360dp phone leaves
-              ~185 next to three 40dp actions, less with the limit badge.
+              ~135 next to four 40dp actions, less with the limit badge.
               Shrinks instead of ellipsizing to "Gerenciar recompens…". */}
           <Text
             style={styles.title}
             numberOfLines={1}
             adjustsFontSizeToFit
-            minimumFontScale={0.75}
+            minimumFontScale={0.7}
           >
             {t('rewardsHub.title')}
           </Text>
@@ -333,6 +333,18 @@ export default function RewardsHubScreen() {
                 size={20}
                 color={searchOpen ? tokens.brand.violet2 : tokens.text.hi}
               />
+            </Pressable>
+            {/* Resgates — the ledger (hold to undo). The Vault's primary
+                button lands here, so the history's little door is this
+                clock and the calendar. */}
+            <Pressable
+              onPress={() => router.push('/rewards-history')}
+              style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={t('rewards.history.title')}
+            >
+              <Ionicons name="time-outline" size={20} color={tokens.text.hi} />
             </Pressable>
             <LimitCounterBadge limit={rewardLimit} />
             <Pressable
@@ -403,7 +415,6 @@ export default function RewardsHubScreen() {
             onRefresh={handleRefresh}
             onRewardPress={(id) => router.push({ pathname: '/reward-form', params: { id } })}
             onCreate={handleCreate}
-            onHistory={() => router.push('/rewards-history')}
             onReorder={(ids) => reorderRewards.mutate(ids)}
             onRestore={handleRestore}
             onDelete={handleDelete}
@@ -481,9 +492,6 @@ interface MineBodyProps {
   onRefresh: () => void;
   onRewardPress: (id: string) => void;
   onCreate: () => void;
-  /** Open the used-rewards log. The Vault's top bar has no room for a
-   *  third action, and Banco is the only other door to it. */
-  onHistory: () => void;
   onReorder: (orderedIds: string[]) => void;
   onRestore: (reward: Reward) => void;
   onDelete: (reward: Reward) => void;
@@ -505,7 +513,6 @@ function MineBody({
   onRefresh,
   onRewardPress,
   onCreate,
-  onHistory,
   onReorder,
   onRestore,
   onDelete,
@@ -606,23 +613,6 @@ function MineBody({
           busyIds={busyIds}
         />
       )}
-      <Pressable
-        onPress={onHistory}
-        style={({ pressed }) => [styles.linkRow, pressed && { opacity: 0.7 }]}
-        accessibilityRole="button"
-        accessibilityLabel={t('rewardsHub.history.link')}
-      >
-        <View style={[styles.groupIcon, { backgroundColor: 'rgba(255,255,255,0.05)' }]}>
-          <Ionicons name="time-outline" size={16} color={tokens.text.mid} />
-        </View>
-        <View style={styles.groupTitleCol}>
-          <Text style={styles.linkRowTitle}>{t('rewardsHub.history.link')}</Text>
-          <Text style={styles.linkRowSub} numberOfLines={1}>
-            {t('rewardsHub.history.sub')}
-          </Text>
-        </View>
-        <Ionicons name="chevron-forward" size={16} color={tokens.text.dim} />
-      </Pressable>
       {!nothingActive && <AddCard label={t('rewardsHub.newReward')} onPress={onCreate} />}
     </View>
   );
@@ -1512,27 +1502,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.02)',
   },
   archivedMeta: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 11,
-    color: tokens.text.mid,
-  },
-  linkRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[3],
-    paddingVertical: tokens.space[3],
-    paddingHorizontal: 12,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-    backgroundColor: 'rgba(255,255,255,0.02)',
-  },
-  linkRowTitle: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 13,
-    color: tokens.text.hi,
-  },
-  linkRowSub: {
     fontFamily: 'Manrope_500Medium',
     fontSize: 11,
     color: tokens.text.mid,
