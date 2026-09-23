@@ -10,16 +10,16 @@
       "id": "capacidade-que-some",
       "ordinal": 1,
       "title": {
-        "pt": "Musculação não treina o seu equilíbrio",
-        "en": "Lifting weights won't train your balance"
+        "pt": "Musculação não te dá dez segundos num pé só",
+        "en": "Lifting won't give you ten seconds on one leg"
       },
       "claim": {
         "pt": "Tire os sapatos e segure dez segundos num pé só, sem apoio. Até três tentativas, passa ou não passa.",
         "en": "Shoes off, hold ten seconds on one leg with nothing to grab. Up to three tries, you pass or you don't."
       },
       "body": {
-        "pt": "Tire os sapatos, fique de pé sem apoio e encoste a frente de um pé na panturrilha da outra perna. Braços soltos, olhar num ponto fixo à frente. Conte até dez. Qualquer perna, até três tentativas, e o resultado é binário: passou ou não passou.\n\nPesquisadores brasileiros acompanharam 1.702 adultos de 51 a 75 anos por sete anos. Entre quem segurou os dez segundos, 4,6% morreram no período; entre quem não segurou, 17,5% (Araújo et al., Br J Sports Med, 2022). **Esse é o teto da literatura, não o consenso**: uma meta-análise de 15 estudos chegou a uma diferença bem menor (Das et al., Research on Aging, 2024). Alarme pra investigar, não prognóstico.\n\nAgachamento e corrida acontecem em trajetória conhecida e chão firme. **Num pé só você sustenta o corpo inteiro sobre uma base do tamanho de um pé**, corrigindo desvios de milímetros o tempo todo. Num estudo da Mayo Clinic com 40 adultos saudáveis (Kaufman et al., 2024), o tempo em pé só foi a capacidade que mais caiu com a idade. Faça o teste hoje: ele é o seu ponto zero.",
-        "en": "Shoes off. Stand with nothing to hold and rest the front of one foot against the calf of your other leg. Arms loose, eyes on a fixed point ahead. Count to ten. Either leg, up to three tries, and the result is binary: you held it or you didn't.\n\nBrazilian researchers followed 1,702 adults aged 51 to 75 for seven years. Among those who held the ten seconds, 4.6% died in that window; among those who didn't, 17.5% (Araújo et al., Br J Sports Med, 2022). **That is the ceiling of the literature, not its consensus**: a meta-analysis of 15 studies landed on a far smaller gap (Das et al., Research on Aging, 2024). Treat a miss as an alarm worth investigating, not a forecast.\n\nSquats and runs happen on a known path, on solid ground. **On one leg you hold your whole body over a base the size of a foot**, correcting millimeter drifts nonstop. In a small Mayo Clinic study of 40 healthy adults (Kaufman et al., 2024), one-leg stance time fell faster with age than anything else they measured. Test yourself today: it is your zero point."
+        "pt": "Tire os sapatos, fique de pé sem apoio e encoste a frente de um pé na panturrilha da outra perna. Braços soltos, olhar num ponto fixo à frente. Conte até dez. Qualquer perna, até três tentativas.\n\nPesquisadores brasileiros acompanharam 1.702 adultos de 51 a 75 anos por sete anos. Entre quem segurou os dez segundos, 4,6% morreram no período; entre quem não segurou, 17,5% (Araújo et al., Br J Sports Med, 2022). **Esse é o teto da literatura, não o consenso**: uma meta-análise de 15 estudos chegou a uma diferença bem menor (Das et al., Research on Aging, 2024). Alarme pra investigar, não prognóstico.\n\nAgachamento e corrida acontecem em trajetória conhecida e chão firme. **Num pé só você sustenta o corpo inteiro sobre uma base do tamanho de um pé**, corrigindo desvios de milímetros o tempo todo. Num estudo da Mayo Clinic com 40 adultos saudáveis (Kaufman et al., 2024), o tempo em pé só foi a capacidade que mais caiu com a idade. Faça o teste hoje: ele é o seu ponto zero.",
+        "en": "Shoes off. Stand with nothing to hold and rest the front of one foot against the calf of your other leg. Arms loose, eyes on a fixed point ahead. Count to ten. Either leg, up to three tries.\n\nBrazilian researchers followed 1,702 adults aged 51 to 75 for seven years. Among those who held the ten seconds, 4.6% died in that window; among those who didn't, 17.5% (Araújo et al., Br J Sports Med, 2022). **That is the ceiling of the literature, not its consensus**: a meta-analysis of 15 studies landed on a far smaller gap (Das et al., Research on Aging, 2024). Treat a miss as an alarm worth investigating, not a forecast.\n\nSquats and runs happen on a known path, on solid ground. **On one leg you hold your whole body over a base the size of a foot**, correcting millimeter drifts nonstop. In a small Mayo Clinic study of 40 healthy adults (Kaufman et al., 2024), one-leg stance time fell faster with age than anything else they measured. Test yourself today: it is your zero point."
       },
       "image_brief": "Um homem descalço em pé sobre um bloco de pedra do tamanho exato de um pé, no piso frio de um banheiro; ao lado, largados no chão e intocados, uma barra de musculação carregada e um par de tênis de corrida; o corpo dele tomba para um lado e os braços se abrem no ar para corrigir.",
       "sources": [
@@ -37,8 +37,8 @@
       "id": "diferenca-entre-as-pernas",
       "ordinal": 2,
       "title": {
-        "pt": "Ficar num pé só não treina equilíbrio",
-        "en": "Standing on one leg isn't balance training"
+        "pt": "Segurar dez segundos não é treino de equilíbrio",
+        "en": "Holding ten seconds isn't balance training"
       },
       "claim": {
         "pt": "Treine tirando um sentido por vez: feche os olhos, suba num travesseiro dobrado, gire a cabeça devagar.",
