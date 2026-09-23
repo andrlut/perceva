@@ -595,7 +595,7 @@ const en = {
         M1: { name: 'Practices', desc: 'Complete, adjust and undo practices.' },
         M2: { name: 'Create a practice', desc: 'Build your own practices.' },
         M3: { name: 'Quests', desc: 'Bigger journeys with a deadline.' },
-        M4: { name: 'Rewards', desc: 'Redeem and bank rewards.' },
+        M4: { name: 'Rewards', desc: 'Redeem rewards and look back at the history.' },
         M5: { name: 'Me', desc: 'The three portraits of your identity.' },
         M6: { name: 'Learn', desc: 'Studies to understand the why.' },
       },

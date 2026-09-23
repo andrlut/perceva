@@ -593,7 +593,7 @@ const pt: Translations = {
         M1: { name: 'Práticas', desc: 'Concluir, ajustar e desfazer práticas.' },
         M2: { name: 'Criar prática', desc: 'Montar suas próprias práticas.' },
         M3: { name: 'Missões', desc: 'Jornadas maiores com prazo.' },
-        M4: { name: 'Recompensas', desc: 'Resgatar e bancar recompensas.' },
+        M4: { name: 'Recompensas', desc: 'Resgatar recompensas e olhar o histórico.' },
         M5: { name: 'Eu', desc: 'Os três retratos da sua identidade.' },
         M6: { name: 'Aprender', desc: 'Estudos pra entender o porquê.' },
       },
