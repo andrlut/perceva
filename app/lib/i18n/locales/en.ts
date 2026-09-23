@@ -520,7 +520,7 @@ const en = {
       },
       step3: {
         title: 'Redeem when you want',
-        body: 'A movie, a dinner, some rest. Redeem with coins and enjoy it right away. The record lives in Redemptions, the gold button down there — and the calendar lets you undo.',
+        body: 'A movie, a dinner, some rest. Redeem with coins and enjoy it right away. The gold button down there opens Manage — create, reorder and see your redemptions; the calendar lets you undo.',
       },
     },
     m5: {
@@ -1480,10 +1480,6 @@ const en = {
       a11yMoveDown: 'Move down',
       a11yOneShot: 'one-time purchase',
       a11yBought: 'already bought',
-    },
-    history: {
-      link: 'Redemptions',
-      sub: 'What you have redeemed — hold to undo',
     },
     archived: {
       section: 'Archived',

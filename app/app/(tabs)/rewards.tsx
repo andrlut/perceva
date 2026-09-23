@@ -66,11 +66,12 @@ import { REWARD_CATEGORY_META, REWARD_CATEGORY_ORDER } from '@/theme/rewards';
 const ALMOST_RATIO = 0.3;
 
 /** The floating stack mirrors the Home's: a neutral calendar on top and the
- *  gold primary below — Resgates, the ledger where Gerenciar also lives. */
+ *  gold primary below — Gerenciar recompensas (create, adopt, order, edit;
+ *  Resgates hangs off its header). */
 const CALENDAR_FAB_SIZE: FabSize = 'md';
-const LOG_FAB_SIZE: FabSize = 'lg';
+const MANAGE_FAB_SIZE: FabSize = 'lg';
 /** Height the stack occupies above the nav — the scroll reserves it. */
-const REWARDS_FAB_CLEARANCE = fabStackClearance([CALENDAR_FAB_SIZE, LOG_FAB_SIZE]);
+const REWARDS_FAB_CLEARANCE = fabStackClearance([CALENDAR_FAB_SIZE, MANAGE_FAB_SIZE]);
 
 export default function RewardsScreen() {
   const router = useRouter();
@@ -146,28 +147,28 @@ export default function RewardsScreen() {
     }, [isM4Current]),
   );
 
-  // M4 step 3 completes by OPENING Resgates: the FAB sets the flag, and when
-  // this screen regains focus (Resgates closed) we emit — the event advance
-  // finishes the module, and we hand the user back to Home so M5's
+  // M4 step 3 completes by OPENING Gerenciar: the FAB sets the flag, and
+  // when this screen regains focus (Gerenciar closed) we emit — the event
+  // advance finishes the module, and we hand the user back to Home so M5's
   // Home-anchored step 1 can show (the event path never fires
   // onExitScreen; only the tooltip's button does).
-  const logVisitedInTour = useRef(false);
+  const manageVisitedInTour = useRef(false);
   useFocusEffect(
     useCallback(() => {
-      if (!logVisitedInTour.current) return;
-      logVisitedInTour.current = false;
+      if (!manageVisitedInTour.current) return;
+      manageVisitedInTour.current = false;
       const idx = useTourStore.getState().stepIndices.M4 ?? 0;
       if (isM4Current && idx === 2) {
-        emitTourEvent(M4_EVENTS.LOG_VISITED);
+        emitTourEvent(M4_EVENTS.MANAGE_VISITED);
         router.navigate('/(tabs)');
       }
     }, [isM4Current, router]),
   );
 
   // Auto-scroll as the M4 steps open: step 2 (balance) → top. Step 3
-  // spotlights the Resgates FAB, which doesn't scroll — the old scrollToEnd
-  // chased the "Inspiração" block, which has since moved to Gerenciar ›
-  // Sugeridas.
+  // spotlights the Gerenciar FAB, which doesn't scroll — the old
+  // scrollToEnd chased the "Inspiração" block, which has since moved to
+  // Gerenciar › Sugeridas.
   useEffect(() => {
     if (!isM4Current || m4Status !== 'in_progress') return;
     const id = setTimeout(() => {
@@ -270,14 +271,14 @@ export default function RewardsScreen() {
   const handleCreateReward = () =>
     guardCreate(() => router.push('/reward-form'));
 
-  // Opening Resgates during M4 step 3 sets the flag; the focus effect
+  // Opening Gerenciar during M4 step 3 sets the flag; the focus effect
   // above completes the module when the user comes back.
-  const handleOpenLog = () => {
+  const handleOpenManage = () => {
     Haptics.selectionAsync().catch(() => {});
     if (isM4Current && (useTourStore.getState().stepIndices.M4 ?? 0) === 2) {
-      logVisitedInTour.current = true;
+      manageVisitedInTour.current = true;
     }
-    router.push('/rewards-history');
+    router.push('/rewards-manage');
   };
 
   const handleEditReward = (reward: Reward) => {
@@ -682,9 +683,12 @@ export default function RewardsScreen() {
       />
 
       {/* Floating stack, same shape as the Home's: the calendar (Vault front)
-          on top, Resgates — the ledger, which hosts Gerenciar — as the gold
-          primary. RAW navClearance so it doesn't leap under a bottom tour
-          tooltip. M4 step 3 spotlights the Resgates button. */}
+          on top, Gerenciar recompensas as the gold primary — the Home's
+          primary is Todas as práticas, which hosts Gerenciar; here the shop
+          IS the doing surface, so the primary goes straight to curating.
+          Resgates (the ledger) is the clock in Gerenciar's header, and the
+          calendar. RAW navClearance so it doesn't leap under a bottom tour
+          tooltip. M4 step 3 spotlights this button. */}
       <FabStack
         bottomOffset={navClearance}
         actions={[
@@ -697,14 +701,14 @@ export default function RewardsScreen() {
             tone: 'neutral',
           },
           {
-            key: 'log',
-            icon: 'receipt',
-            onPress: handleOpenLog,
-            accessibilityLabel: t('rewards.history.title'),
-            size: LOG_FAB_SIZE,
+            key: 'manage',
+            icon: 'options-outline',
+            onPress: handleOpenManage,
+            accessibilityLabel: t('rewardsHub.title'),
+            size: MANAGE_FAB_SIZE,
             tone: 'gold',
             wrap: (node) => (
-              <TourTarget id="rewards.log" radius={999}>
+              <TourTarget id="rewards.manage" radius={999}>
                 {node}
               </TourTarget>
             ),
@@ -712,7 +716,7 @@ export default function RewardsScreen() {
         ]}
       />
 
-      {/* M4 steps 2-3 live here (balance + Resgates FAB). Step 1 is on
+      {/* M4 steps 2-3 live here (balance + Gerenciar FAB). Step 1 is on
          Home (Rewards tab spotlight). Finishing returns the user to the
          Tasks home so the next module's Home-anchored step 1 can show.
          No `flatNav` — this is a tab screen WITH the floating BottomNavBar. */}

@@ -33,11 +33,10 @@ import { tokens } from '@/theme';
 import { REWARD_CATEGORY_META } from '@/theme/rewards';
 
 /**
- * Resgates — the flat ledger of what the user redeemed, newest first. The
- * Vault's primary floating button lands here, the way Todas as práticas is
- * the Home's. Hold a row → undo (refund). Gerenciar sits in the header, so
- * this screen is the door to editing too. Day-by-day (and logging a day
- * that passed) lives in the calendar.
+ * Resgates — the flat ledger of what the user redeemed, newest first.
+ * Reached from the clock in Gerenciar recompensas' header. Hold a row →
+ * undo (refund). Day-by-day (and logging a day that passed) lives in the
+ * calendar, which is the better place to read this history.
  */
 export default function RewardsHistoryScreen() {
   const router = useRouter();
@@ -81,19 +80,9 @@ export default function RewardsHistoryScreen() {
             <Ionicons name="chevron-back" size={22} color={tokens.text.hi} />
           </Pressable>
           <Text style={styles.title}>{t('rewards.history.title')}</Text>
-          <View style={styles.topActions}>
-            {/* Gerenciar recompensas lives here (moved off the Vault's
-                floating stack) — order, adopt, edit, archive. */}
-            <Pressable
-              onPress={() => router.push('/rewards-manage')}
-              style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel={t('rewardsHub.title')}
-            >
-              <Ionicons name="options-outline" size={20} color={tokens.text.mid} />
-            </Pressable>
-          </View>
+          {/* Reached from Gerenciar's clock (and the calendar) — no action
+              up here; the spacer keeps the title centred. */}
+          <View style={styles.iconButtonSpacer} />
         </View>
 
         {log.isLoading ? (
@@ -216,10 +205,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: tokens.space[4],
     paddingVertical: tokens.space[2],
   },
-  topActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[2],
+  iconButtonSpacer: {
+    width: 40,
+    height: 40,
   },
   iconButton: {
     width: 40,
