@@ -1,0 +1,28 @@
+{
+  "slug": "job-crafting-additive",
+  "dimension_id": "wealth",
+  "title": {
+    "pt": "O cargo é do RH, o trabalho é seu",
+    "en": "Your Job Is Yours to Change"
+  },
+  "cover": {
+    "prompt": "Uma pessoa sozinha num escritório no fim do expediente empurrando a própria mesa de trabalho — cadeira, teclado e luminária acesa em cima dela — para um lugar novo junto à janela, marcas fundas no carpete mostrando onde a mesa ficava antes; a pessoa e a mesa ocupam a faixa de baixo do quadro, a sala ampla e vazia sobe acima delas, e a única luz quente vem da luminária sobre a mesa."
+  },
+  "ideas": [
+    {
+      "id": "mudar-sem-pedir",
+      "ordinal": 1,
+      "image_prompt": "Uma mesa de escritório vista de cima, bem no centro do quadro: teclado, caneca e um crachá de trabalho liso, sem nada escrito, preso a um cordão. Uma folha de organograma — só retângulos vazios ligados por linhas finas — está empurrada pra fora do centro, meio pendurada na borda da mesa, e no lugar dela as duas mãos de uma pessoa reorganizam cartões lisos, sem nada impresso, em colunas novas. A luz de fim de tarde entra de lado e toca só as mãos e os cartões, com um cartão em verde-sálvia entre os demais; o resto da mesa fica na penumbra."
+    },
+    {
+      "id": "somar-em-vez-de-cortar",
+      "ordinal": 2,
+      "image_prompt": "Uma pessoa sentada na própria mesa de escritório, vista de frente e ocupando o centro do quadro, firme na cadeira e debruçada sobre o tampo, sem sair do lugar: com a lateral de uma das mãos ela afasta pra beirada uma bandeja rasa de papéis, e com o outro braço e o tronco inclinado pra frente puxa pra perto do peito uma pilha alta de pastas grossas de capa lisa e vazia, recém-apoiada no tampo e pesada o bastante pra marcar os ombros — cotovelo travado, queixo erguido, cara de quem aceita a carga e não de quem desiste. A pilha pesada e o tronco da pessoa enchem o meio do quadro com folga em volta, a bandeja afastada fica pequena num canto do tampo, e o monitor apagado e as mesas vazias do escritório somem desfocados no escuro atrás. Uma única luz quente da luminária de mesa vem de cima e à frente, acendendo o rosto, os antebraços e as capas da pilha — uma delas em verde-sálvia — e deixando todo o resto na penumbra."
+    },
+    {
+      "id": "faca-o-mapa-voce-mesmo",
+      "ordinal": 3,
+      "image_prompt": "Uma pessoa sozinha na própria estação de trabalho depois do expediente, vista de cima e um pouco de lado, debruçada sobre a mesa e ocupando o centro do quadro: teclado e caneca empurrados pro canto, crachá liso e vazio ainda pendurado no pescoço, cadeira de escritório girada de lado. À frente dela, grande no meio do quadro, uma única tira comprida e vertical de blocos de hora vazios — um só dia de trabalho, de cima a baixo, sem nenhuma outra coluna ao lado — com cartõezinhos de papel em branco encaixados nos blocos; um deles está pinçado entre os dedos, no meio do caminho de um bloco pra outro. A luminária da mesa é a única luz, entrando de lado e acendendo o rosto, as mãos, a tira de blocos e o cartão suspenso, esse em verde-sálvia; as outras mesas do escritório ficam escuras e desfocadas atrás."
+    }
+  ]
+}
