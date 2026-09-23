@@ -53,7 +53,7 @@
       },
       "body": {
         "pt": "A restrição de sono, criada por Arthur Spielman em 1987, manda o contrário do óbvio. Oito horas e meia deitado e cinco e meia dormindo? A janela permitida encolhe pra perto dessas cinco e meia. O alvo é a pressão homeostática do sono — a fome de sono, que cresce a cada hora acordado e só é saciada dormindo. Cama com sobra de tempo dilui essa fome e devolve sono leve. Cama apertada concentra. Quando você volta a dormir quase todo o tempo em que está deitado, alargue quinze minutos por vez, sempre ancorando a hora de acordar.\n\n**O preço vem antes do prêmio:** na primeira ou segunda semana você fica mais mole de dia. Numa meta-análise de ensaios randomizados, a terapia tirou 26 minutos de vigília no meio da noite, e o ganho seguia no seguimento longo (Trauer et al., Annals of Internal Medicine, 2015).\n\nFaça duas semanas de diário de sono antes de encolher nada. E se você ronca alto ou acorda cansado depois de oito horas na cama, procure médico primeiro: restringir sono não trata apneia.",
-        "en": "Sleep restriction, built by Arthur Spielman in 1987, asks for the opposite of the obvious. Eight and a half hours lying there, five and a half of them asleep? Your allowed window shrinks toward that five and a half. The target is homeostatic sleep pressure — sleep hunger, which builds with every waking hour and is only fed by sleeping. A roomy schedule dilutes that hunger and hands back light sleep. A tight one concentrates it. Once you sleep through almost all the time you spend in bed, widen the window fifteen minutes at a time, always anchoring your wake-up hour.\n\n**The price arrives before the payoff:** the first week or two you feel duller during the day. In a meta-analysis of randomized trials, the therapy cut 26 minutes of wake time in the middle of the night, and the gain held at long-term follow-up (Trauer et al., Annals of Internal Medicine, 2015).\n\nKeep a sleep diary for two weeks before shrinking anything. And if you snore loudly or wake up exhausted after eight hours in bed, see a doctor first: restricting sleep does not treat apnea."
+        "en": "Sleep restriction, built by Arthur Spielman in 1987, asks for the opposite of the obvious. Eight and a half hours in bed, five and a half asleep? Your allowed window shrinks toward that five and a half. The target is homeostatic sleep pressure — sleep hunger, which builds with every waking hour and is only fed by sleeping. A roomy schedule dilutes that hunger and hands back light sleep. A tight one concentrates it. Once you sleep through almost all your time in bed, widen the window fifteen minutes at a time, always anchoring your wake-up hour.\n\n**The price arrives before the payoff:** the first week or two you feel duller during the day. In a meta-analysis of randomized trials, the therapy cut 26 minutes of night-time wakefulness, and the gain held at long-term follow-up (Trauer et al., Annals of Internal Medicine, 2015).\n\nKeep a sleep diary for two weeks before shrinking anything. And if you snore loudly or wake up exhausted after eight hours in bed, see a doctor first: restricting sleep does not treat apnea."
       },
       "image_brief": "Duas vasilhas lado a lado numa bancada de cozinha recebendo a mesma quantidade de água de uma jarra: numa travessa larga e rasa a água some numa película fina; num copo estreito e alto ela sobe até quase transbordar.",
       "sources": [
@@ -78,8 +78,8 @@
       "id": "levante-em-20-minutos",
       "ordinal": 3,
       "title": {
-        "pt": "Rolar na cama treina o cérebro a ficar acordado",
-        "en": "Tossing in bed trains your brain to stay awake"
+        "pt": "Ficar acordado na cama alimenta a insônia",
+        "en": "Lying awake in bed feeds your insomnia"
       },
       "claim": {
         "pt": "Não pegou no sono em uns 20 minutos, levante e vá pra outro cômodo. Volte só quando estiver com sono.",
