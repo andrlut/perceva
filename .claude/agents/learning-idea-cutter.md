@@ -145,8 +145,15 @@ is a map of the article, not of its ideas:
    *and* make you want to read — in ≤ 48 characters, **every idea, idea 1
    included**, because in *Minhas ideias*, in Explorar and in the MCP the
    card sits next to ideas from other materials, with no cover above it.
-   A book does not use colons to say things: write an assertive topic or a
-   direct question. The **"Tema: frase enigmática" shape is discouraged**
+   A book does not use colons to say things. **Write the assertive form by
+   default**; a direct question is the exception, allowed **at most once
+   per material** and only when the question IS how a reader would name the
+   subject ("Dormir mais no sábado paga a dívida de sono?"). A question
+   whose answer the card's back does not give is a riddle wearing a
+   question mark — and a material whose titles are all questions reads as
+   a quiz, which is the opposite of a shelf of things you know. When in
+   doubt, state it: "Um hábito novo não se fixa em 21 dias" beats "Quanto
+   tempo leva pra fixar um hábito?". The **"Tema: frase enigmática" shape is discouraged**
    — and it is outright **FORBIDDEN when two ideas of one material share
    the text before the colon** ("Bids: …", "Bids: …" — the lint FAILs it).
    The curiosity lives in the answer, never in the subject; never gives the
@@ -325,8 +332,9 @@ other. Check the trio for every idea before you write the file.
 - [ ] started from one idea; every extra idea differs from each sibling in
       study, mechanism or action (said in the reply); count ≤ the
       category ceiling and ≤ 5; no idea bundles several claims
-- [ ] every title ≤ 48 chars, is an assertive topic or a direct question
-      (never a riddle, "Tema: frase" discouraged), names the subject, makes
+- [ ] every title ≤ 48 chars, is an assertive topic (a direct question at
+      most once per material, and only when the card's back answers it),
+      never a riddle, "Tema: frase" discouraged, names the subject, makes
       you want to read, does not give the answer, is not the material
       title; no two titles share a prefix before a colon
 - [ ] every claim is the answer the reader can use — the instruction with

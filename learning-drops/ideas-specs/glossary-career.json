@@ -1,6 +1,6 @@
 {
   "slug": "glossary-career",
-  "type": "explainer",
+  "category": "foundation",
   "material_title": {
     "pt": "Emprego, carreira ou chamado",
     "en": "Job, Career, or Calling"
@@ -10,16 +10,16 @@
       "id": "tres-lentes",
       "ordinal": 1,
       "title": {
-        "pt": "24 secretárias, o mesmo cargo, três trabalhos.",
-        "en": "24 assistants, one title, three different jobs."
+        "pt": "Mesmo cargo, mesmo salário, três trabalhos.",
+        "en": "Same title, same pay, three different jobs."
       },
       "claim": {
-        "pt": "Emprego, carreira ou chamado: a lente quase não depende da profissão — e pesa mais que o contracheque.",
-        "en": "Job, career or calling: the lens barely depends on your occupation — and it outweighs the paycheck."
+        "pt": "Quem vê o trabalho como um chamado é mais satisfeito que o colega de mesmo cargo e mesmo salário.",
+        "en": "Whoever sees work as a calling is more satisfied than the colleague in the same role and pay."
       },
       "body": {
-        "pt": "Em 1997, quatro psicólogos entrevistaram 196 pessoas — de faxineiros a médicos — sobre a relação de cada uma com o próprio trabalho (Wrzesniewski, McCauley, Rozin e Schwartz, Journal of Research in Personality). As respostas se dividiram limpo em três. Um terço via o trabalho como emprego: um jeito de pagar as contas, e nada além disso. Um terço via como carreira: um caminho de subida, o próximo nível, o próximo cargo. Um terço via como chamado: algo que faria de qualquer forma, porque dá sentido à vida.\n\n**A divisão quase não dependia da profissão.** Num grupo de 24 secretárias com o mesmo cargo, o mesmo salário e a mesma sala, as três lentes apareceram em partes quase iguais. Entre duas pessoas no mesmo posto, ganhando igual, quem vê o trabalho como chamado relata mais satisfação com o trabalho e com a vida. **A lente pesa mais que o contracheque.**\n\nO estudo é correlacional: a lente anda junto com a satisfação, não prova que a causa sozinha. Descubra a sua completando uma frase: \"eu trabalho principalmente pra...\".",
-        "en": "In 1997, four psychologists interviewed 196 people — from clerical staff to physicians — about how each one related to their own work (Wrzesniewski, McCauley, Rozin and Schwartz, Journal of Research in Personality). The answers sorted cleanly into three. A third saw work as a job: a way to pay the bills, nothing more. A third saw a career: a track upward, the next level, the next title. A third saw a calling: something they would do anyway, because it gives life meaning.\n\n**The split barely depended on the occupation.** Among 24 administrative assistants with the same title, the same pay and the same office, all three lenses showed up in roughly equal parts. Between two people in the same role, earning the same, the one who sees the work as a calling reports more satisfaction with work and with life. **The lens outweighs the paycheck.**\n\nThe study is correlational: the lens travels alongside satisfaction, it doesn't prove it causes it on its own. Find yours by finishing one sentence: \"I mostly work to...\"."
+        "pt": "Em 1997, quatro psicólogos entrevistaram 196 pessoas — de faxineiros a médicos — sobre a relação de cada uma com o próprio trabalho (Wrzesniewski, McCauley, Rozin e Schwartz, Journal of Research in Personality). As respostas se dividiram limpo em três. Um terço via o trabalho como emprego: um jeito de pagar as contas, e nada além disso. Um terço via como carreira: um caminho de subida, o próximo nível, o próximo cargo. Um terço via como chamado: algo que faria de qualquer forma, porque dá sentido à vida.\n\n**A divisão quase não dependia da profissão.** Num grupo de 24 secretárias com o mesmo cargo, o mesmo salário e a mesma sala, as três lentes apareceram em partes quase iguais. Entre duas pessoas no mesmo posto, ganhando igual, quem vê o trabalho como chamado relata mais satisfação com o trabalho e com a vida.\n\nO estudo é correlacional: a lente anda junto com a satisfação, não prova que a causa sozinha. **Descubra a sua completando uma frase: \"eu trabalho principalmente pra...\".**",
+        "en": "In 1997, four psychologists interviewed 196 people — from cleaners to physicians — about how each one related to their own work (Wrzesniewski, McCauley, Rozin and Schwartz, Journal of Research in Personality). The answers sorted cleanly into three. A third saw work as a job: a way to pay the bills, nothing more. A third saw a career: a track upward, the next level, the next title. A third saw a calling: something they would do anyway, because it gives life meaning.\n\n**The split barely depended on the occupation.** Among 24 administrative assistants with the same title, the same pay and the same office, all three lenses showed up in roughly equal parts. Between two people in the same role, earning the same, the one who sees work as a calling reports more satisfaction with work and with life.\n\nThe study is correlational: the lens travels alongside satisfaction, it doesn't prove it causes it on its own. **Find yours by finishing one sentence: \"I mostly work to...\".**"
       },
       "image_brief": "Três mesas de escritório idênticas lado a lado, com a mesma pilha de pastas em cima de cada uma: na primeira a pessoa já está de casaco, virada para a saída; na segunda, a pessoa sobe o primeiro degrau de uma escada estreita que nasce da própria mesa; na terceira, a pessoa está inclinada sobre o trabalho, banhada por um facho de luz quente que só cai ali.",
       "sources": [
@@ -37,12 +37,12 @@
       "id": "autonomia-alavanca",
       "ordinal": 2,
       "title": {
-        "pt": "Carreira: o que te move não é o contracheque.",
-        "en": "Career: what moves you isn't the paycheck."
+        "pt": "O que mais aumenta a satisfação no trabalho",
+        "en": "What actually raises your satisfaction at work"
       },
       "claim": {
-        "pt": "Trabalho com sentido vem de autonomia, competência e pertencimento — e autonomia é a alavanca mais forte.",
-        "en": "Meaningful work runs on autonomy, competence and relatedness — and autonomy is the strongest lever."
+        "pt": "Escolha uma tarefa do seu trabalho nesta semana e passe a fazer do seu jeito.",
+        "en": "Pick one task at work this week and start doing it your own way."
       },
       "body": {
         "pt": "Meio século de pesquisa aponta três ingredientes do trabalho com sentido, e nenhum é salário ou cargo: autonomia, ou seja, controle sobre como e quando você faz o trabalho; competência, a sensação de estar ficando visivelmente melhor em algo difícil; e pertencimento, perceber que o que você entrega importa pra alguém. Os três são a base da Teoria da Autodeterminação, um dos programas mais testados da psicologia (Ryan e Deci, 2000).\n\nUm deles se destaca. Uma meta-análise de quase 200 estudos encontrou que **a autonomia tem a relação mais forte com satisfação**, acima de qualquer outro traço de desenho do trabalho (Fried e Ferris, 1987). Duas pessoas no mesmo cargo e no mesmo salário: quem escolhe como faz relata bem mais satisfação do que quem recebe cada passo mastigado.\n\n**Escolha uma coisa nesta semana que você passa a fazer do seu jeito.** E segure o freio: a literatura é correlacional, ninguém provou que injetar autonomia num cargo, sozinho, causa bem-estar.",
@@ -61,21 +61,21 @@
       "cta": null
     },
     {
-      "id": "job-crafting",
+      "id": "chamado-armadilha",
       "ordinal": 3,
       "title": {
-        "pt": "Dá pra trocar de trabalho sem trocar de emprego.",
-        "en": "Career: change your job without quitting it."
+        "pt": "O lado escuro de amar o que você faz",
+        "en": "The dark side of loving what you do"
       },
       "claim": {
-        "pt": "Job crafting: mude o que faz, com quem faz e como enxerga — o trabalho muda sem você trocar de cargo.",
-        "en": "Job crafting: change what you do, who with, and how you frame it. The title stays; the job doesn't."
+        "pt": "Se amar o trabalho só serve pra você aceitar salário baixo e hora extra, renegocie.",
+        "en": "If loving the work only gets you to accept low pay and unpaid overtime, renegotiate."
       },
       "body": {
-        "pt": "Você não precisa de um cargo novo pra mudar como o trabalho te afeta. Pesquisadores chamam isso de job crafting — moldar o próprio trabalho por dentro (Wrzesniewski e Dutton, 2001) — e são três alavancas. **O que você faz**: assumir uma tarefa que te dá energia, largar ou automatizar uma que te drena. Com quem você faz: procurar as pessoas que te ensinam algo, reduzir o contato com as que só sugam. E como você enxerga: no estudo clássico, faxineiros de hospital que se viam como parte da recuperação dos pacientes descreviam um trabalho completamente diferente, com a mesma descrição de cargo.\n\nUm aviso antes de aplicar. Num estudo com tratadores de zoológico, quem tinha um chamado forte tolerava mais salário baixo, hora extra não paga e condição ruim, enquadrando o sacrifício como o preço de fazer o que ama (Bunderson e Thompson, 2009). **Chamado que só te faz aceitar menos é armadilha, não sentido.** Escolha uma fronteira e mude-a esta semana.",
-        "en": "You don't need a new title to change how work affects you. Researchers call it job crafting — reshaping your own work from the inside (Wrzesniewski and Dutton, 2001) — and it runs on three levers. **What you do**: take on a task that gives you energy, drop or automate one that drains you. Who you do it with: seek out the people who teach you something, cut contact with the ones who only sap you. And how you see it: in the classic study, hospital cleaners who saw themselves as part of patients' recovery described a completely different job, under the same job description.\n\nOne warning before you try it. In a study of zookeepers, those with a strong calling tolerated more low pay, unpaid overtime and poor conditions, framing the sacrifice as the price of doing what they love (Bunderson and Thompson, 2009). **A calling that only gets you to accept less is a trap, not meaning.** Pick one boundary and reshape it this week."
+        "pt": "Chamado é enxergar o trabalho como algo que você faria de qualquer jeito, porque dá sentido à vida. Um terço das 196 pessoas entrevistadas em 1997 descreveu assim a própria relação com o trabalho, e esse grupo relatou mais satisfação com o trabalho e com a vida (Wrzesniewski, McCauley, Rozin e Schwartz, Journal of Research in Personality). Daí o conselho padrão: siga seu chamado.\n\nSó que ele tem um lado escuro. Num estudo com tratadores de zoológico, quem tinha um chamado forte tolerava mais salário baixo, mais hora extra não paga e condição de trabalho pior (Bunderson e Thompson, 2009). **O sacrifício era enquadrado como o preço de fazer o que se ama.**\n\nO teste é simples: repare no que o seu amor pelo trabalho está sustentando. Se ele só serve pra engolir condição ruim sem reclamar, não é sentido, é armadilha. **Escolha uma dessas condições e leve pra mesa esta semana.**",
+        "en": "A calling means seeing work as something you would do anyway, because it gives life meaning. A third of the 196 people interviewed in 1997 described their own relationship with work that way, and that group reported more satisfaction with work and with life (Wrzesniewski, McCauley, Rozin and Schwartz, Journal of Research in Personality). Hence the standard advice: follow your calling.\n\nIt has a dark side. In a study of zookeepers, those with a strong calling tolerated more low pay, more unpaid overtime and worse working conditions (Bunderson and Thompson, 2009). **The sacrifice got framed as the price of doing what you love.**\n\nThe test is simple: notice what your love for the work is propping up. If it only makes you swallow bad conditions without complaining, that is not meaning, it is a trap. **Pick one of those conditions and put it on the table this week.**"
       },
-      "image_brief": "Um faxineiro parado no meio de um corredor de hospital, esfregão na mão, olhando para a frente: do lado esquerdo dele o corredor é cinzento, vazio e comprido; do lado direito, o mesmo corredor aparece iluminado por uma luz quente e cheio de gente reunida em volta de uma cama, todos com o rosto voltado para ele.",
+      "image_brief": "Uma pessoa de avental sozinha numa cozinha profissional no fim da noite, sorrindo de cansaço enquanto esfrega a última panela; as outras bancadas já estão limpas e vazias, os aventais dos colegas pendurados na parede, e a janela atrás dela mostra a rua escura.",
       "sources": [
         {
           "label": {
