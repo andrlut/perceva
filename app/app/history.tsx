@@ -19,6 +19,7 @@ import { useReducedMotion } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useBottomSafeClearance } from '@/components/BottomNavBar';
+import { BuyConfirmModal } from '@/components/BuyConfirmModal';
 import { CalendarActiveFilters } from '@/components/calendar/CalendarActiveFilters';
 import { CalendarDayPanel } from '@/components/calendar/CalendarDayPanel';
 import { CalendarDayPeek, type PeekState } from '@/components/calendar/CalendarDayPeek';
@@ -28,9 +29,11 @@ import { CalendarListView } from '@/components/calendar/CalendarListView';
 import { CalendarSummary } from '@/components/calendar/CalendarSummary';
 import { CompleteTaskSheet } from '@/components/CompleteTaskSheet';
 import { FabStack, fabStackClearance, type FabSize } from '@/components/FabStack';
+import { RedeemPickerSheet } from '@/components/RedeemPickerSheet';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { TaskActionSheet } from '@/components/TaskActionSheet';
+import { UndoRedemptionModal } from '@/components/UndoRedemptionModal';
 import { XPCoinFloat } from '@/components/XPCoinFloat';
 import {
   endOfMonth,
@@ -38,8 +41,15 @@ import {
   useCalendarMonth,
   useCalendarRange,
 } from '@/lib/api/calendar';
+import { useCharacter } from '@/lib/api/character';
 import { dateKeyFromLocal, historyKeys, useDayDetail } from '@/lib/api/history';
 import { useMoodTags } from '@/lib/api/mood';
+import {
+  useOwnedOneShotIds,
+  useRedeemRewardN,
+  useRewards,
+  useUndoRedemption,
+} from '@/lib/api/rewards';
 import {
   useCompleteTask,
   useSkipTaskToday,
@@ -58,10 +68,18 @@ import {
   summarize,
   xpScopeLabel,
   type CalendarDay,
+  type CalendarRedemption,
 } from '@/lib/calendar/filters';
 import { intensityReference, SCOPED_REFERENCE_FLOOR } from '@/lib/calendar/intensity';
 import { applyFilterSeed, useCalendarStore, type CalendarFront, type CalendarView } from '@/lib/calendar/store';
-import type { CoinMultiplier, DimensionId, SubId, TaskSub, TaskWithSubs } from '@/lib/db/types';
+import type {
+  CoinMultiplier,
+  DimensionId,
+  Reward,
+  SubId,
+  TaskSub,
+  TaskWithSubs,
+} from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { useLoadedSettings } from '@/lib/settings';
@@ -311,10 +329,7 @@ export default function CalendarScreen() {
     for (const day of days.values()) {
       for (const r of day.redemptions) {
         if (!r.title) continue;
-        // Only purchases rank a reward, but any event puts it in the list: a
-        // reward bought last month and consumed this one still belongs in the
-        // menu, it just has not been paid for inside this range.
-        const weight = r.kind === 'redeem' ? 1 : 0;
+        const weight = 1;
         const seen = counts.get(r.rewardId);
         if (seen) seen.count += weight;
         else {
@@ -418,6 +433,17 @@ export default function CalendarScreen() {
   const skipTask = useSkipTaskToday();
   const unskipTask = useUnskipTaskToday();
   const undoCompletion = useUndoCompletion();
+  // Rewards follow the practices pattern here: log one on the selected day,
+  // or take one back. The Vault only ever logs today.
+  const redeemReward = useRedeemRewardN();
+  const undoRedemption = useUndoRedemption();
+  const character = useCharacter();
+  const activeRewards = useRewards();
+  const ownedOneShots = useOwnedOneShotIds();
+  const [redeemPickerOpen, setRedeemPickerOpen] = useState(false);
+  /** Reward picked in the sheet, waiting on the quantity / cost confirm. */
+  const [retroReward, setRetroReward] = useState<Reward | null>(null);
+  const [undoingRedemption, setUndoingRedemption] = useState<CalendarRedemption | null>(null);
 
   const dayKey = dateKeyFromLocal(selected);
   const isToday = dayKey === dateKeyFromLocal(new Date());
@@ -479,6 +505,45 @@ export default function CalendarScreen() {
         showInfo(t('historyScreen.errUndo'), e.message ?? t('common.unknownError'));
       },
     });
+  };
+
+  // --- rewards: log a day that passed, or take one back --------------------
+  const coins = character.data?.character.coins ?? 0;
+  // A one-shot already bought is out of the Vault; out of the retro-log too.
+  const redeemableRewards = useMemo(() => {
+    const owned = ownedOneShots.data;
+    return (activeRewards.data ?? []).filter((r) => !(r.is_one_shot && owned?.has(r.id)));
+  }, [activeRewards.data, ownedOneShots.data]);
+
+  const handleRetroRedeemConfirm = async (reward: Reward, qty: number) => {
+    setRetroReward(null);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    // Noon local on a past day (same stamp as a retro completion); today logs
+    // now, so the ledger keeps its real order.
+    const stamp = new Date(selected);
+    stamp.setHours(12, 0, 0, 0);
+    try {
+      await redeemReward.mutateAsync({
+        rewardId: reward.id,
+        cost: reward.cost,
+        qty,
+        at: isToday ? undefined : stamp.toISOString(),
+      });
+    } catch (err) {
+      const e = err as { message?: string };
+      showInfo(t('reward.shop.buyFail'), e.message ?? t('common.unknownError'));
+    }
+  };
+
+  const handleUndoRedemptionConfirm = async (r: CalendarRedemption) => {
+    setUndoingRedemption(null);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    try {
+      await undoRedemption.mutateAsync(r.id);
+    } catch (err) {
+      const e = err as { message?: string };
+      showInfo(t('rewards.undoConfirm.failTitle'), e.message ?? t('common.unknownError'));
+    }
   };
 
   const handleSkip = (task: TaskWithSubs) => {
@@ -873,6 +938,11 @@ export default function CalendarScreen() {
                   router.push({ pathname: '/task-form', params: { id: task.id } })
                 }
                 onUndo={handleUndo}
+                onUndoRedemption={setUndoingRedemption}
+                onRetroRedeem={() => {
+                  Haptics.selectionAsync().catch(() => {});
+                  setRedeemPickerOpen(true);
+                }}
                 scoped={
                   scopeLabel
                     ? { xp: selectedDay ? scopedXp(selectedDay, filter) : 0, label: scopeLabel }
@@ -978,6 +1048,43 @@ export default function CalendarScreen() {
           const task = actionTask;
           setActionTask(null);
           if (task) router.push({ pathname: '/task-form', params: { id: task.id } });
+        }}
+      />
+
+      {/* Retro-log for the Vault: pick a reward, confirm quantity and cost,
+          and it lands on the selected day — paid with today's coins. */}
+      <RedeemPickerSheet
+        visible={redeemPickerOpen}
+        onClose={() => setRedeemPickerOpen(false)}
+        rewards={redeemableRewards}
+        coins={coins}
+        dayLabel={dayLabel}
+        onPick={setRetroReward}
+      />
+
+      <BuyConfirmModal
+        visible={retroReward !== null}
+        reward={retroReward}
+        coins={coins}
+        onCancel={() => setRetroReward(null)}
+        onConfirm={(qty) => {
+          const r = retroReward;
+          if (r) void handleRetroRedeemConfirm(r, qty);
+        }}
+      />
+
+      <UndoRedemptionModal
+        visible={undoingRedemption !== null}
+        rewardTitle={undoingRedemption?.title ?? ''}
+        rewardIcon={undoingRedemption?.icon ?? 'gift'}
+        category={
+          activeRewards.data?.find((r) => r.id === undoingRedemption?.rewardId)?.category ?? null
+        }
+        refund={undoingRedemption?.cost ?? 0}
+        onCancel={() => setUndoingRedemption(null)}
+        onConfirm={() => {
+          const r = undoingRedemption;
+          if (r) void handleUndoRedemptionConfirm(r);
         }}
       />
     </SafeAreaView>

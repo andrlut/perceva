@@ -68,6 +68,10 @@ interface Props {
   onLongPress: (task: TaskWithSubs) => void;
   onEdit: (task: TaskWithSubs) => void;
   onUndo: (completionId: string, title: string, xp: number, coins: number) => void;
+  /** Take a redemption back — the screen confirms and refunds. */
+  onUndoRedemption: (redemption: CalendarRedemption) => void;
+  /** Log a reward on this day — the screen opens the picker. */
+  onRetroRedeem: () => void;
   /**
    * The day's XP inside the calendar filter's scope, with the scope in words.
    * A labelled SECOND line under the total, never in its place: this panel is
@@ -107,6 +111,8 @@ export function CalendarDayPanel({
   onLongPress,
   onEdit,
   onUndo,
+  onUndoRedemption,
+  onRetroRedeem,
   scoped,
   feedXp,
   doneOpen,
@@ -119,6 +125,9 @@ export function CalendarDayPanel({
   const dayKey = dateKeyFromLocal(date);
   const todayKey = dateKeyFromLocal(new Date());
   const isToday = dayKey === todayKey;
+  // Keys are YYYY-MM-DD, so string order is date order. The server refuses a
+  // future stamp anyway; hiding the button says so before the tap.
+  const isFuture = dayKey > todayKey;
 
   const day = useDayDetail(date, weekStart);
   const activeTasks = useActiveTasks();
@@ -264,27 +273,48 @@ export function CalendarDayPanel({
           <Text style={styles.empty}>{t('calendar.day.noRewards')}</Text>
         ) : (
           redemptions.map((r) => (
-            <View key={r.id} style={styles.rewardRow}>
+            <View
+              key={r.id}
+              style={styles.rewardRow}
+              accessible
+              accessibilityLabel={`${t('calendar.day.redeemed', { title: r.title })}, ${t('rewards.coins', { count: r.cost })}`}
+            >
               <View style={styles.rewardIcon}>
                 <AppIcon name={r.icon ?? 'gift'} size={15} color={tokens.semantic.coin} />
               </View>
               <View style={styles.rewardText}>
                 <Text style={styles.rewardTitle} numberOfLines={1}>
-                  {r.kind === 'redeem'
-                    ? t('calendar.day.redeemed', { title: r.title })
-                    : t('calendar.day.used', { title: r.title })}
-                </Text>
-                <Text style={styles.rewardSub} numberOfLines={1}>
-                  {r.kind === 'redeem' ? t('calendar.day.redeemedSub') : t('calendar.day.usedSub')}
+                  {t('calendar.day.redeemed', { title: r.title })}
                 </Text>
               </View>
-              {r.kind === 'redeem' ? (
-                <Text style={styles.rewardCost}>{`−${r.cost}`}</Text>
-              ) : (
-                <Ionicons name="checkmark" size={16} color={tokens.semantic.xp} />
-              )}
+              <Text style={styles.rewardCost}>{`−${r.cost}`}</Text>
+              {/* Undo lives on the row, like the Concluídas drawer's: the
+                  screen confirms and refunds. */}
+              <Pressable
+                onPress={() => onUndoRedemption(r)}
+                hitSlop={8}
+                style={({ pressed }) => [styles.undoBtn, pressed && { opacity: 0.6 }]}
+                accessibilityRole="button"
+                accessibilityLabel={t('calendar.day.undoRedeemA11y', { title: r.title })}
+              >
+                <Ionicons name="arrow-undo" size={16} color={tokens.brand.violet2} />
+              </Pressable>
             </View>
           ))
+        )}
+        {/* The Vault's retro-log — same slot Todas as práticas takes in the
+            block above. Today included: it is one more door to the Vault. */}
+        {!isFuture && (
+          <Pressable
+            onPress={onRetroRedeem}
+            style={({ pressed }) => [styles.seeAll, pressed && { opacity: 0.7 }]}
+            accessibilityRole="button"
+          >
+            <Ionicons name="gift-outline" size={16} color={tokens.semantic.coin} />
+            <Text style={[styles.seeAllText, { color: tokens.semantic.coinLight }]}>
+              {t('calendar.day.retroRedeem')}
+            </Text>
+          </Pressable>
         )}
       </View>
     </View>
@@ -412,15 +442,17 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     color: tokens.semantic.coinLight,
   },
-  rewardSub: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 10,
-    color: tokens.text.dim,
-    marginTop: 1,
-  },
   rewardCost: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 12.5,
     color: tokens.semantic.coin,
+  },
+  undoBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 2,
   },
 });

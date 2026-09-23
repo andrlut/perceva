@@ -28,23 +28,19 @@ interface Props {
   qty?: number;
   /** Total coins debited (sum across the qty units). */
   costPaid: number;
-  /** When true, show the "enjoy now" primary CTA (consume one unit
-   *  immediately). False on old servers that don't return redemption ids. */
-  canEnjoyNow?: boolean;
-  /** Consume one just-purchased unit right away, then close. */
-  onEnjoyNow?: () => void;
   onClose: () => void;
-  onGoToBank: () => void;
+  /** Take the whole purchase back (refund) and close — the one-tap regret. */
+  onUndo: () => void;
 }
 
 /**
- * Celebration modal that fires after a successful reward purchase.
+ * Celebration modal that fires after a redemption. A redemption is a use,
+ * so there is nothing left to do but enjoy it: the gold primary closes,
+ * the ghost "Desfazer" takes it back.
  *
- * Replaces the default `Alert.alert` success path (ugly system dialog
- * that breaks the gold/vault aesthetic) with an in-aesthetic celebration:
- * dark scrim, gold-rimmed card centered, the reward icon scales in with
- * a spring, the title fades up, and two CTAs sit below ("Go to bank"
- * primary, "Close" ghost).
+ * Replaces the default `Alert.alert` success path (ugly system dialog that
+ * breaks the gold/vault aesthetic): dark scrim, gold-rimmed card centered,
+ * the reward icon scales in with a spring, the title fades up.
  *
  * The reward icon and category accent use the reward's category color so
  * the celebration carries the same identity as the card the user tapped.
@@ -56,10 +52,8 @@ export function BuyCelebrationModal({
   reward,
   qty = 1,
   costPaid,
-  canEnjoyNow = false,
-  onEnjoyNow,
   onClose,
-  onGoToBank,
+  onUndo,
 }: Props) {
   const { t } = useT();
 
@@ -185,71 +179,31 @@ export function BuyCelebrationModal({
                 </Text>
               </View>
 
-              {/* CTAs. When "enjoy now" is available it's the gold
-                  primary (the delightful path — consume it right away);
-                  "go to bank" drops to a secondary outline. Otherwise
-                  "go to bank" keeps the gold primary. */}
+              {/* CTAs: the gold primary just closes (it is done — enjoy);
+                  the ghost takes the purchase back. */}
               <View style={styles.actions}>
-                {canEnjoyNow && onEnjoyNow ? (
-                  <>
-                    <Pressable
-                      onPress={onEnjoyNow}
-                      style={({ pressed }) => [
-                        styles.primaryBtn,
-                        pressed && { opacity: 0.85 },
-                      ]}
-                      accessibilityRole="button"
-                    >
-                      <LinearGradient
-                        colors={tokens.gradient.coinBtn as [string, string, string]}
-                        locations={[0, 0.5, 1]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 0, y: 1 }}
-                        style={StyleSheet.absoluteFill}
-                      />
-                      <Ionicons name="sparkles" size={14} color="#3D2A00" />
-                      <Text style={styles.primaryText}>
-                        {t('rewards.celebration.enjoyNow').toUpperCase()}
-                      </Text>
-                    </Pressable>
-                    <Pressable
-                      onPress={onGoToBank}
-                      style={({ pressed }) => [
-                        styles.secondaryBtn,
-                        pressed && { opacity: 0.75 },
-                      ]}
-                      accessibilityRole="button"
-                    >
-                      <Ionicons name="wallet-outline" size={14} color={tokens.semantic.coinLight} />
-                      <Text style={styles.secondaryText}>
-                        {t('rewards.celebration.saveForLater').toUpperCase()}
-                      </Text>
-                    </Pressable>
-                  </>
-                ) : (
-                  <Pressable
-                    onPress={onGoToBank}
-                    style={({ pressed }) => [
-                      styles.primaryBtn,
-                      pressed && { opacity: 0.85 },
-                    ]}
-                    accessibilityRole="button"
-                  >
-                    <LinearGradient
-                      colors={tokens.gradient.coinBtn as [string, string, string]}
-                      locations={[0, 0.5, 1]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 0, y: 1 }}
-                      style={StyleSheet.absoluteFill}
-                    />
-                    <Ionicons name="wallet" size={14} color="#3D2A00" />
-                    <Text style={styles.primaryText}>
-                      {t('rewards.celebration.goToBank').toUpperCase()}
-                    </Text>
-                  </Pressable>
-                )}
                 <Pressable
                   onPress={onClose}
+                  style={({ pressed }) => [
+                    styles.primaryBtn,
+                    pressed && { opacity: 0.85 },
+                  ]}
+                  accessibilityRole="button"
+                >
+                  <LinearGradient
+                    colors={tokens.gradient.coinBtn as [string, string, string]}
+                    locations={[0, 0.5, 1]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                  />
+                  <Ionicons name="sparkles" size={14} color="#3D2A00" />
+                  <Text style={styles.primaryText}>
+                    {t('rewards.celebration.enjoy').toUpperCase()}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={onUndo}
                   style={({ pressed }) => [
                     styles.ghostBtn,
                     pressed && { opacity: 0.6 },
@@ -257,7 +211,7 @@ export function BuyCelebrationModal({
                   accessibilityRole="button"
                 >
                   <Text style={styles.ghostText}>
-                    {t('rewards.celebration.dismiss')}
+                    {t('rewards.celebration.undo')}
                   </Text>
                 </Pressable>
               </View>
@@ -355,23 +309,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 0.7,
     color: '#3D2A00',
-  },
-  secondaryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: tokens.space[3],
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: 'rgba(255,200,61,0.35)',
-    backgroundColor: 'rgba(255,200,61,0.08)',
-  },
-  secondaryText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 12,
-    letterSpacing: 0.7,
-    color: tokens.semantic.coinLight,
   },
   ghostBtn: {
     paddingVertical: tokens.space[2],

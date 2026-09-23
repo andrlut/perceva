@@ -289,7 +289,7 @@ async function rpc(
 
 function buildServer(token: string, userId: string): McpServer {
   const server = new McpServer(
-    { name: 'perceva-mcp', version: '0.4.5' },
+    { name: 'perceva-mcp', version: '0.4.6' },
     {
       instructions: [
         'Perceva is a habit/wellness app organized in 6 dimensions',
@@ -555,8 +555,9 @@ function buildServer(token: string, userId: string): McpServer {
         'The reward side of the economy, which no other tool covers: each ' +
         'reward with its cost and category, how many coins were spent on it in ' +
         'the window, how many DAYS since it was last redeemed, and the longest ' +
-        'stretch ever without redeeming it. Also the current coin balance and ' +
-        'what is banked (paid for but not consumed yet).\n' +
+        'stretch ever without redeeming it. Also the current coin balance. A ' +
+        'redemption is a use: paid for and enjoyed in one act, on the day it ' +
+        'happened (there is no bank of unused purchases).\n' +
         'Rewards are not always treats: this user also uses them as a penalty ' +
         'ledger, paying coins when they do something they want to stop. For ' +
         'those, days_since_last IS the streak they care about, ' +
@@ -591,20 +592,19 @@ function buildServer(token: string, userId: string): McpServer {
         // Full history: "days since" and the record gap are lifetime facts, not
         // window facts. One user's ledger is hundreds of rows.
         db.from('reward_redemption')
-          .select('reward_id,redeemed_at,cost_paid,used_at')
+          .select('reward_id,redeemed_at,cost_paid')
           .order('redeemed_at', { ascending: true }).limit(2000),
         db.from('character').select('coins').limit(1),
       ]);
       if (rewardsRes.error) return fail(`get_rewards: ${rewardsRes.error.message}`);
       if (redRes.error) return fail(`get_rewards: ${redRes.error.message}`);
 
-      const byReward = new Map<string, Array<{ day: string; paid: number; used: boolean }>>();
+      const byReward = new Map<string, Array<{ day: string; paid: number }>>();
       for (const r of redRes.data ?? []) {
         const list = byReward.get(r.reward_id as string) ?? [];
         list.push({
           day: localDate(new Date(r.redeemed_at as string)),
           paid: Number(r.cost_paid ?? 0),
-          used: r.used_at !== null,
         });
         byReward.set(r.reward_id as string, list);
       }
@@ -643,7 +643,6 @@ function buildServer(token: string, userId: string): McpServer {
           redemptions_total: hist.length,
           redemptions_in_window: win.length,
           coins_paid_in_window: win.reduce((a, h) => a + h.paid, 0),
-          banked: hist.filter((h) => !h.used).length,
         };
       }).sort((a, b) => b.redemptions_in_window - a.redemptions_in_window);
 
@@ -657,7 +656,6 @@ function buildServer(token: string, userId: string): McpServer {
           coins_paid_in_window: all.filter((h) => inWindow(h.day))
             .reduce((a, h) => a + h.paid, 0),
           redemptions_in_window: all.filter((h) => inWindow(h.day)).length,
-          banked_total: all.filter((h) => !h.used).length,
         },
         previous_window: {
           from: prevFrom, to: prevTo,

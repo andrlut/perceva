@@ -9,20 +9,19 @@ interface Props {
   visible: boolean;
   rewardTitle: string;
   onCancel: () => void;
-  onUnuse: () => void;
+  onUndo: () => void;
 }
 
 /**
- * Long-press menu for a row in the history. Single useful action:
- * "Devolver pro banco" — undoes a use by sending the redemption back
- * to the bank. Cancel sits below in the same sheet shape used across
- * the app (mirrors VaultBankActionSheet / RewardActionSheet).
+ * Long-press menu for a row in Resgates. Single useful action: "Desfazer
+ * resgate" — the row goes away and the coins come back. Cancel sits below
+ * in the same sheet shape used across the app (mirrors RewardActionSheet).
  */
 export function HistoryActionSheet({
   visible,
   rewardTitle,
   onCancel,
-  onUnuse,
+  onUndo,
 }: Props) {
   const { t } = useT();
   const sheetBottom = useSheetBottomInset();
@@ -41,11 +40,12 @@ export function HistoryActionSheet({
           </Text>
 
           <Pressable
-            onPress={onUnuse}
+            onPress={onUndo}
             style={({ pressed }) => [
               styles.action,
               pressed && { opacity: 0.7 },
             ]}
+            accessibilityRole="button"
           >
             <View style={styles.actionIcon}>
               <Ionicons
@@ -56,10 +56,10 @@ export function HistoryActionSheet({
             </View>
             <View style={styles.actionBody}>
               <Text style={styles.actionTitle}>
-                {t('rewards.historyActionSheet.unuse')}
+                {t('rewards.historyActionSheet.undo')}
               </Text>
               <Text style={styles.actionSub}>
-                {t('rewards.historyActionSheet.unuseSub')}
+                {t('rewards.historyActionSheet.undoSub')}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={16} color={tokens.text.dim} />

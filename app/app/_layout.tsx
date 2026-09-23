@@ -217,14 +217,7 @@ export default function RootLayout() {
               options={{ presentation: 'modal', headerShown: false }}
             />
             <Stack.Screen name="rewards-manage" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="rewards-bank"
-              options={{ presentation: 'modal', headerShown: false }}
-            />
-            <Stack.Screen
-              name="rewards-history"
-              options={{ presentation: 'modal', headerShown: false }}
-            />
+            <Stack.Screen name="rewards-history" options={{ headerShown: false }} />
             <Stack.Screen name="skill/[id]" options={{ headerShown: false }} />
             <Stack.Screen name="material/[slug]" options={{ headerShown: false }} />
             <Stack.Screen

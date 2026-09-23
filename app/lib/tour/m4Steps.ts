@@ -8,22 +8,22 @@ type Translator = (key: string, options?: TranslateOptions) => string;
  *
  *   1. (home)    Rewards bottom-nav tab      — awaitEvent REWARDS_NAVIGATED
  *   2. (rewards) balance + your rewards      — Next (auto-scroll to top)
- *   3. (rewards) redeem + the Banco pill     — Next (spotlights the gold
- *                Banco pill in the top bar; it renders with or without a
- *                banked reward, so the anchor always exists)
+ *   3. (rewards) redeem + the Resgates FAB   — Next (spotlights the gold
+ *                floating button at the bottom corner; it always renders,
+ *                so the anchor always exists)
  *
  * Step 3 used to auto-scroll to the "Inspiração" block, which disappears
- * once the user owns every template — the Banco pill is a stable anchor
- * and matches the copy about where purchases wait.
+ * once the user owns every template — the FAB is a stable anchor and
+ * matches the copy about where redemptions are kept.
  *
  * No commitment: we never ask the user to redeem or add anything.
  */
 export const M4_EVENTS = {
   REWARDS_NAVIGATED: 'rewards:navigated',
   /** Fired by the Rewards screen when it regains focus after the user
-   *  opened the wallet during step 3 — visiting the bank completes the
+   *  opened Resgates during step 3 — visiting the ledger completes the
    *  module without needing an extra "Próximo" tap. */
-  BANK_VISITED: 'rewards-bank:visited',
+  LOG_VISITED: 'rewards-log:visited',
 } as const;
 
 export function buildM4Steps(t: Translator): ScreenedStep[] {
@@ -47,12 +47,12 @@ export function buildM4Steps(t: Translator): ScreenedStep[] {
       screen: 'rewards',
       title: t('tour.m4.step3.title'),
       body: t('tour.m4.step3.body'),
-      // The pill sits in the top bar, so the card opens below it.
-      position: 'bottom',
-      target: 'rewards.bank',
-      // Opening the bank (and coming back) completes the module; the
+      // The FAB sits at the bottom corner, so the card opens above it.
+      position: 'top',
+      target: 'rewards.log',
+      // Opening Resgates (and coming back) completes the module; the
       // assist stays for whoever prefers not to tap.
-      awaitEvent: M4_EVENTS.BANK_VISITED,
+      awaitEvent: M4_EVENTS.LOG_VISITED,
       awaitCtaLabel: t('tour.common.next'),
     },
   ];
