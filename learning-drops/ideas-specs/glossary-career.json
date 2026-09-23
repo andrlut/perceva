@@ -10,12 +10,12 @@
       "id": "tres-lentes",
       "ordinal": 1,
       "title": {
-        "pt": "Mesmo cargo, mesmo salário, três trabalhos.",
-        "en": "Same title, same pay, three different jobs."
+        "pt": "Mesmo emprego, mesmo salário, três trabalhos.",
+        "en": "Same job, same pay, three ways to see a career."
       },
       "claim": {
-        "pt": "Quem vê o trabalho como um chamado é mais satisfeito que o colega de mesmo cargo e mesmo salário.",
-        "en": "Whoever sees work as a calling is more satisfied than the colleague in the same role and pay."
+        "pt": "Quem enxerga o trabalho como um chamado é mais satisfeito com o trabalho e com a vida.",
+        "en": "People who see their work as a calling are more satisfied with work and with life."
       },
       "body": {
         "pt": "Em 1997, quatro psicólogos entrevistaram 196 pessoas — de faxineiros a médicos — sobre a relação de cada uma com o próprio trabalho (Wrzesniewski, McCauley, Rozin e Schwartz, Journal of Research in Personality). As respostas se dividiram limpo em três. Um terço via o trabalho como emprego: um jeito de pagar as contas, e nada além disso. Um terço via como carreira: um caminho de subida, o próximo nível, o próximo cargo. Um terço via como chamado: algo que faria de qualquer forma, porque dá sentido à vida.\n\n**A divisão quase não dependia da profissão.** Num grupo de 24 secretárias com o mesmo cargo, o mesmo salário e a mesma sala, as três lentes apareceram em partes quase iguais. Entre duas pessoas no mesmo posto, ganhando igual, quem vê o trabalho como chamado relata mais satisfação com o trabalho e com a vida.\n\nO estudo é correlacional: a lente anda junto com a satisfação, não prova que a causa sozinha. **Descubra a sua completando uma frase: \"eu trabalho principalmente pra...\".**",
@@ -37,8 +37,8 @@
       "id": "autonomia-alavanca",
       "ordinal": 2,
       "title": {
-        "pt": "O que mais aumenta a satisfação no trabalho",
-        "en": "What actually raises your satisfaction at work"
+        "pt": "O que mais pesa na satisfação com o emprego",
+        "en": "What weighs most on your career satisfaction"
       },
       "claim": {
         "pt": "Escolha uma tarefa do seu trabalho nesta semana e passe a fazer do seu jeito.",
@@ -64,8 +64,8 @@
       "id": "chamado-armadilha",
       "ordinal": 3,
       "title": {
-        "pt": "O lado escuro de amar o que você faz",
-        "en": "The dark side of loving what you do"
+        "pt": "O lado escuro de amar o próprio emprego",
+        "en": "The dark side of loving your career"
       },
       "claim": {
         "pt": "Se amar o trabalho só serve pra você aceitar salário baixo e hora extra, renegocie.",

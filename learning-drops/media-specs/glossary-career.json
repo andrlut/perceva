@@ -20,6 +20,11 @@
       "id": "job-crafting",
       "ordinal": 3,
       "image_prompt": "Um faxineiro parado sozinho no meio de um corredor de hospital, esfregão na mão e balde ao lado, de corpo inteiro no centro do quadro e virado para quem olha, com folga acima e abaixo. À esquerda dele o corredor segue cinzento, vazio e comprido, sumindo numa penumbra fria e azulada; à direita, o mesmo corredor aparece cheio de gente reunida em volta de uma cama, seis figuras de pé com o rosto todo voltado para ele. A única luz quente e dourada nasce desse lado direito, banha o grupo e a cama e alcança só metade do rosto e do ombro do faxineiro, deixando o resto dele na sombra."
+    },
+    {
+      "id": "chamado-armadilha",
+      "ordinal": 4,
+      "image_prompt": "Uma pessoa de avental sozinha numa cozinha profissional no fim da noite, vista de perto e um pouco de lado, no centro do quadro: ela esfrega a última panela grande na pia sorrindo de cansaço, ombros caídos. Atrás dela, as outras bancadas de inox já estão limpas e vazias e os aventais dos colegas pendurados em fila na parede. A única luz quente e dourada é a luminária baixa acesa sobre a pia dela; o resto da cozinha e a janela que dá pra rua escura ficam numa penumbra fria."
     }
   ]
 }
