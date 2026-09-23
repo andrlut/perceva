@@ -1,10 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ACTIVE_THEME, tokens } from '@/theme';
 
-export type FabTone = 'neutral' | 'violet';
+/** `gold` is the Vault's coin gradient — its primary button, like violet
+ *  is the practices'. */
+export type FabTone = 'neutral' | 'violet' | 'gold';
 export type FabSize = 'sm' | 'md' | 'lg';
 
 export interface FabAction {
@@ -82,10 +85,8 @@ const pressedFx = { opacity: 0.85, transform: [{ scale: 0.96 }] };
  * Generic floating action stack — bottom-right thumb zone. The shared
  * primitive behind the app's FAB clusters: a column of circular buttons
  * that grows/shrinks with its `actions` and lets taps fall through the
- * empty gaps (`box-none`). One spec (38/48/56 diameters, violet primary,
- * neutral utilities) so every stack in the app reads the same. The
- * Rewards tab no longer floats anything — Banco and Gerenciar live in
- * its top bar.
+ * empty gaps (`box-none`). One spec (38/48/56 diameters, violet or gold
+ * primary, neutral utilities) so every stack in the app reads the same.
  */
 export function FabStack({ bottomOffset, actions }: Props) {
   return (
@@ -109,10 +110,20 @@ export function FabStack({ bottomOffset, actions }: Props) {
               style={({ pressed }) => [
                 styles.fab,
                 { width: diameter, height: diameter, borderRadius: diameter / 2 },
-                tone === 'violet' ? styles.violet : styles.neutral,
+                tone === 'violet' ? styles.violet : tone === 'gold' ? styles.gold : styles.neutral,
                 pressed && pressedFx,
               ]}
             >
+              {tone === 'gold' && (
+                <LinearGradient
+                  colors={tokens.gradient.coinBtn as [string, string, string]}
+                  locations={tokens.gradient.coinBtnLocations as [number, number, number]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 0, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+                  pointerEvents="none"
+                />
+              )}
               <Ionicons
                 name={a.icon}
                 size={a.iconSize ?? DEFAULT_ICON[size]}
@@ -123,7 +134,9 @@ export function FabStack({ bottomOffset, actions }: Props) {
                       ACTIVE_THEME === 'light'
                       ? '#FFFFFF'
                       : '#1E1348'
-                    : tokens.text.mid
+                    : tone === 'gold'
+                      ? '#3D2A00'
+                      : tokens.text.mid
                 }
               />
             </Pressable>
@@ -170,5 +183,10 @@ const styles = StyleSheet.create({
     backgroundColor: tokens.brand.violet2,
     borderColor: 'rgba(217, 219, 250, 0.45)',
     shadowColor: tokens.brand.violet2,
+  },
+  gold: {
+    borderColor: 'rgba(255,224,138,0.6)',
+    overflow: 'hidden',
+    shadowColor: '#FFC83D',
   },
 });

@@ -136,13 +136,9 @@ export function CalendarListView({ days, front, filter, onSelectDay, locale, sco
         .map((r) => ({
           key: r.id,
           rail: tokens.semantic.coin,
-          label:
-            r.kind === 'redeem'
-              ? t('calendar.day.redeemed', { title: r.title })
-              : t('calendar.day.used', { title: r.title }),
-          trailing: r.kind === 'redeem' ? `−${r.cost}` : undefined,
+          label: t('calendar.day.redeemed', { title: r.title }),
+          trailing: `−${r.cost}`,
           trailingColor: tokens.semantic.coin,
-          check: r.kind === 'use',
         }));
     }
 

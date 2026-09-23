@@ -479,7 +479,8 @@ export interface RewardRedemption {
   character_id: string;
   redeemed_at: string;
   cost_paid: number;
-  /** NULL = banked (available to "Use"). Non-null = consumed at this time. */
+  /** Always equal to `redeemed_at` since 20260923000001 — a redemption IS a
+   *  use. Kept for older readers; never read to tell "banked" from "used". */
   used_at: string | null;
 }
 

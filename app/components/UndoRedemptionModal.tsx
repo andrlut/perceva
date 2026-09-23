@@ -9,30 +9,36 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { AppIcon } from '@/components/AppIcon';
 import type { RewardCategory } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { tokens } from '@/theme';
 import { REWARD_CATEGORY_META } from '@/theme/rewards';
+
+import { CoinIcon } from './CoinIcon';
 
 interface Props {
   visible: boolean;
   rewardTitle: string;
   rewardIcon: string;
   category: RewardCategory | null;
+  /** Coins that come back — cost_paid at the time, never today's price. */
+  refund: number;
   onCancel: () => void;
   onConfirm: () => void;
 }
 
 /**
- * Confirm modal for sending a used redemption back to the bank.
- * Same violet palette as SellConfirmModal — both signal "undo /
- * reverse direction" semantically, so they share the visual language.
+ * Confirm modal for undoing a redemption: the row is deleted and the coins
+ * paid come back. Violet "reverse direction" palette, same as the undo of
+ * a practice completion.
  */
-export function UnuseConfirmModal({
+export function UndoRedemptionModal({
   visible,
   rewardTitle,
   rewardIcon,
   category,
+  refund,
   onCancel,
   onConfirm,
 }: Props) {
@@ -67,9 +73,15 @@ export function UnuseConfirmModal({
       onRequestClose={onCancel}
       statusBarTranslucent
     >
-      <Pressable style={styles.scrim} onPress={onCancel}>
+      <View style={styles.scrim}>
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={onCancel}
+          accessibilityRole="button"
+          accessibilityLabel={t('common.close')}
+        />
         <Animated.View style={[styles.cardWrap, cardStyle]}>
-          <Pressable onPress={(e) => e.stopPropagation()} style={styles.card}>
+          <View style={styles.card}>
             <LinearGradient
               colors={tokens.gradient.confirmCardCool}
               start={{ x: 0, y: 0 }}
@@ -89,58 +101,49 @@ export function UnuseConfirmModal({
             <View style={styles.content}>
               <View style={styles.eyebrowRow}>
                 <Ionicons name="arrow-undo" size={12} color="#C2A1FF" />
-                <Text style={styles.eyebrow}>
-                  {t('rewards.unuseConfirm.eyebrow')}
-                </Text>
+                <Text style={styles.eyebrow}>{t('rewards.undoConfirm.eyebrow')}</Text>
               </View>
 
               <View
                 style={[
                   styles.iconTile,
-                  {
-                    borderColor: `${accent}60`,
-                    backgroundColor: `${accent}26`,
-                  },
+                  { borderColor: `${accent}60`, backgroundColor: `${accent}26` },
                 ]}
               >
-                <Ionicons name={rewardIcon as never} size={36} color={accent} />
+                <AppIcon name={rewardIcon} size={36} color={accent} />
               </View>
 
               <Text style={styles.title} numberOfLines={2}>
                 {rewardTitle}
               </Text>
-              <Text style={styles.sub}>{t('rewards.unuseConfirm.sub')}</Text>
+              <View style={styles.refundRow}>
+                <Text style={styles.sub}>{t('rewards.undoConfirm.refundLabel')}</Text>
+                <CoinIcon size={14} />
+                <Text style={styles.refund}>+{refund.toLocaleString()}</Text>
+              </View>
 
               <View style={styles.actions}>
                 <Pressable
                   onPress={onConfirm}
-                  style={({ pressed }) => [
-                    styles.primaryBtn,
-                    pressed && { opacity: 0.85 },
-                  ]}
+                  style={({ pressed }) => [styles.primaryBtn, pressed && { opacity: 0.85 }]}
                   accessibilityRole="button"
                 >
                   <Text style={styles.primaryText}>
-                    {t('rewards.unuseConfirm.confirm').toUpperCase()}
+                    {t('rewards.undoConfirm.confirm').toUpperCase()}
                   </Text>
                 </Pressable>
                 <Pressable
                   onPress={onCancel}
-                  style={({ pressed }) => [
-                    styles.ghostBtn,
-                    pressed && { opacity: 0.6 },
-                  ]}
+                  style={({ pressed }) => [styles.ghostBtn, pressed && { opacity: 0.6 }]}
                   accessibilityRole="button"
                 >
-                  <Text style={styles.ghostText}>
-                    {t('rewards.unuseConfirm.cancel')}
-                  </Text>
+                  <Text style={styles.ghostText}>{t('rewards.undoConfirm.cancel')}</Text>
                 </Pressable>
               </View>
             </View>
-          </Pressable>
+          </View>
         </Animated.View>
-      </Pressable>
+      </View>
     </Modal>
   );
 }
@@ -197,13 +200,22 @@ const styles = StyleSheet.create({
     color: tokens.text.hi,
     paddingHorizontal: tokens.space[2],
   },
+  refundRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
   sub: {
     fontFamily: 'Manrope_500Medium',
     fontSize: 12,
     lineHeight: 17,
     textAlign: 'center',
     color: tokens.text.mid,
-    paddingHorizontal: tokens.space[3],
+  },
+  refund: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 14,
+    color: tokens.semantic.coinLight,
   },
   actions: {
     width: '100%',

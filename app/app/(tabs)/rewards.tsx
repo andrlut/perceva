@@ -18,6 +18,7 @@ import { AddCard } from '@/components/AddCard';
 import { useBottomNavClearance } from '@/components/BottomNavBar';
 import { BuyCelebrationModal } from '@/components/BuyCelebrationModal';
 import { BuyConfirmModal } from '@/components/BuyConfirmModal';
+import { FabStack, fabStackClearance, type FabSize } from '@/components/FabStack';
 import { RewardActionSheet } from '@/components/RewardActionSheet';
 import { RewardCard } from '@/components/RewardCard';
 import { ScreenBackground } from '@/components/ScreenBackground';
@@ -27,13 +28,12 @@ import { VaultHero } from '@/components/VaultHero';
 import { useCharacter } from '@/lib/api/character';
 import {
   useArchiveReward,
-  useBankedRewards,
   useRedeemRewardN,
   useOwnedOneShotIds,
   useRewards,
   useSetTrackedReward,
   useTrackedRewardId,
-  useUseReward,
+  useUndoRedemption,
 } from '@/lib/api/rewards';
 import type { Reward, RewardCategory } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
@@ -65,20 +65,24 @@ import { REWARD_CATEGORY_META, REWARD_CATEGORY_ORDER } from '@/theme/rewards';
  */
 const ALMOST_RATIO = 0.3;
 
+/** The floating stack mirrors the Home's: a neutral calendar on top and the
+ *  gold primary below — Resgates, the ledger where Gerenciar also lives. */
+const CALENDAR_FAB_SIZE: FabSize = 'md';
+const LOG_FAB_SIZE: FabSize = 'lg';
+/** Height the stack occupies above the nav — the scroll reserves it. */
+const REWARDS_FAB_CLEARANCE = fabStackClearance([CALENDAR_FAB_SIZE, LOG_FAB_SIZE]);
+
 export default function RewardsScreen() {
   const router = useRouter();
   const { t } = useT();
   const character = useCharacter();
   const rewards = useRewards();
   // Compras únicas já adquiridas — saem da vitrine, mas continuam existindo
-  // (a tela de gerenciar lista, e o item comprado vive no banco).
+  // (a tela de gerenciar lista; o resgate fica em Resgates).
   const ownedOneShots = useOwnedOneShotIds();
   const redeem = useRedeemRewardN();
-  const useReward = useUseReward();
+  const undoRedemption = useUndoRedemption();
   const archiveReward = useArchiveReward();
-  // The bank query only drives the count on the Banco pill; the actual
-  // bank surface lives at /rewards-bank.
-  const banked = useBankedRewards();
   const trackedId = useTrackedRewardId();
   const setTracked = useSetTrackedReward();
   const rewardLimit = useRewardLimit();
@@ -107,7 +111,7 @@ export default function RewardsScreen() {
     reward: Reward;
     qty: number;
     costPaid: number;
-    /** Redemption ids created by this purchase — feeds "enjoy now". */
+    /** Redemption ids created by this purchase — "Desfazer" undoes exactly these. */
     redemptionIds: string[];
   } | null>(null);
   const navClearance = useBottomNavClearance();
@@ -142,28 +146,28 @@ export default function RewardsScreen() {
     }, [isM4Current]),
   );
 
-  // M4 step 3 completes by USING the wallet: opening the bank sets the
-  // flag, and when this screen regains focus (bank closed) we emit —
-  // the event advance finishes the module, and we hand the user back to
-  // Home so M5's Home-anchored step 1 can show (the event path never
-  // fires onExitScreen; only the tooltip's button does).
-  const bankVisitedInTour = useRef(false);
+  // M4 step 3 completes by OPENING Resgates: the FAB sets the flag, and when
+  // this screen regains focus (Resgates closed) we emit — the event advance
+  // finishes the module, and we hand the user back to Home so M5's
+  // Home-anchored step 1 can show (the event path never fires
+  // onExitScreen; only the tooltip's button does).
+  const logVisitedInTour = useRef(false);
   useFocusEffect(
     useCallback(() => {
-      if (!bankVisitedInTour.current) return;
-      bankVisitedInTour.current = false;
+      if (!logVisitedInTour.current) return;
+      logVisitedInTour.current = false;
       const idx = useTourStore.getState().stepIndices.M4 ?? 0;
       if (isM4Current && idx === 2) {
-        emitTourEvent(M4_EVENTS.BANK_VISITED);
+        emitTourEvent(M4_EVENTS.LOG_VISITED);
         router.navigate('/(tabs)');
       }
     }, [isM4Current, router]),
   );
 
   // Auto-scroll as the M4 steps open: step 2 (balance) → top. Step 3
-  // spotlights the Banco pill in the top bar, which doesn't scroll — the
-  // old scrollToEnd chased the "Inspiração" block, which has since moved
-  // to Gerenciar › Sugeridas.
+  // spotlights the Resgates FAB, which doesn't scroll — the old scrollToEnd
+  // chased the "Inspiração" block, which has since moved to Gerenciar ›
+  // Sugeridas.
   useEffect(() => {
     if (!isM4Current || m4Status !== 'in_progress') return;
     const id = setTimeout(() => {
@@ -173,10 +177,9 @@ export default function RewardsScreen() {
   }, [isM4Current, m4Status, m4StepIndex]);
 
   const coins = character.data?.character.coins ?? 0;
-  const bankCount = banked.data?.length ?? 0;
-  // No floating stack any more: the scroll only has to clear the nav bar,
-  // or the bottom tour tooltip when one is up.
-  const scrollBottomPad = navClearance + Math.max(tourBottomBump, tokens.space[4]);
+  // Reserve the floating stack's height under the scroll, `max` against the
+  // tour gap for the reason documented on fabStackClearance.
+  const scrollBottomPad = navClearance + Math.max(tourBottomBump, REWARDS_FAB_CLEARANCE);
   const trackedReward = useMemo(() => {
     if (!trackedId.data) return null;
     const found = (rewards.data ?? []).find((r) => r.id === trackedId.data) ?? null;
@@ -267,14 +270,14 @@ export default function RewardsScreen() {
   const handleCreateReward = () =>
     guardCreate(() => router.push('/reward-form'));
 
-  // Opening the bank during M4 step 3 sets the flag; the focus effect
+  // Opening Resgates during M4 step 3 sets the flag; the focus effect
   // above completes the module when the user comes back.
-  const handleOpenBank = () => {
+  const handleOpenLog = () => {
     Haptics.selectionAsync().catch(() => {});
     if (isM4Current && (useTourStore.getState().stepIndices.M4 ?? 0) === 2) {
-      bankVisitedInTour.current = true;
+      logVisitedInTour.current = true;
     }
-    router.push('/rewards-bank');
+    router.push('/rewards-history');
   };
 
   const handleEditReward = (reward: Reward) => {
@@ -334,21 +337,21 @@ export default function RewardsScreen() {
   };
 
   /**
-   * "Enjoy now" from the celebration modal — consume ONE just-purchased
-   * unit immediately (marks the first redemption used) and close. Any
-   * remaining units of a multi-buy stay banked. Falls back gracefully
-   * if the RPC didn't return ids (old server): just closes.
+   * "Desfazer" on the celebration — takes back exactly the rows this
+   * purchase created (refund included). One at a time: parallel calls on
+   * the same optimistic mutation would read the same balance snapshot.
    */
-  const handleEnjoyNow = async (redemptionIds: string[]) => {
+  const handleUndoCelebration = async (redemptionIds: string[]) => {
     setCelebration(null);
-    const first = redemptionIds[0];
-    if (!first) return;
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    if (redemptionIds.length === 0) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     try {
-      await useReward.mutateAsync(first);
+      for (const id of redemptionIds) {
+        await undoRedemption.mutateAsync(id);
+      }
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Unknown error';
-      showInfo(t('reward.shop.useFail'), msg);
+      const msg = e instanceof Error ? e.message : t('common.unknownError');
+      showInfo(t('rewards.undoConfirm.failTitle'), msg);
     }
   };
 
@@ -397,52 +400,12 @@ export default function RewardsScreen() {
   // Pull indicator is local state — the queries' isRefetching also flips on
   // every background refetch (mutations, app foreground).
   const pull = usePullToRefresh(() =>
-    Promise.all([rewards.refetch(), character.refetch(), banked.refetch()]),
+    Promise.all([rewards.refetch(), character.refetch()]),
   );
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScreenBackground>
-      {/* Top bar — Banco (the purchase journey's next step, so it keeps a
-          labelled pill with the count) and Gerenciar (options icon, the
-          same entry Todas as práticas uses). Replaces the floating stack
-          that sat over the grid; create lives inside Gerenciar and on the
-          AddCard at the end of the list. */}
-      <View style={styles.topBar}>
-        <Text style={styles.topTitle}>{t('rewards.title')}</Text>
-        <View style={styles.topActions}>
-          <TourTarget id="rewards.bank" radius={999}>
-            <Pressable
-              onPress={handleOpenBank}
-              style={({ pressed }) => [styles.bankPill, pressed && { opacity: 0.8 }]}
-              hitSlop={6}
-              accessibilityRole="button"
-              // Spoken form — the visual "Banco · 3" reads the dot aloud.
-              accessibilityLabel={
-                bankCount > 0
-                  ? t('rewards.bank.pillA11y', { count: bankCount })
-                  : t('rewards.bank.title')
-              }
-            >
-              <Ionicons name="wallet" size={16} color={tokens.semantic.coin} />
-              <Text style={styles.bankPillText}>
-                {bankCount > 0
-                  ? t('rewards.vault.tabs.bank', { count: bankCount })
-                  : t('rewards.bank.title')}
-              </Text>
-            </Pressable>
-          </TourTarget>
-          <Pressable
-            onPress={() => router.push('/rewards-manage')}
-            style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel={t('rewardsHub.title')}
-          >
-            <Ionicons name="options-outline" size={20} color={tokens.text.mid} />
-          </Pressable>
-        </View>
-      </View>
       <ScrollView
         ref={scrollRef}
         contentContainerStyle={[styles.content, { paddingBottom: scrollBottomPad }]}
@@ -714,18 +677,42 @@ export default function RewardsScreen() {
         reward={celebration?.reward ?? null}
         qty={celebration?.qty ?? 1}
         costPaid={celebration?.costPaid ?? 0}
-        canEnjoyNow={(celebration?.redemptionIds.length ?? 0) > 0}
-        onEnjoyNow={() =>
-          handleEnjoyNow(celebration?.redemptionIds ?? [])
-        }
         onClose={() => setCelebration(null)}
-        onGoToBank={() => {
-          setCelebration(null);
-          router.push('/rewards-bank');
-        }}
+        onUndo={() => handleUndoCelebration(celebration?.redemptionIds ?? [])}
       />
 
-      {/* M4 steps 2-3 live here (balance + Banco pill). Step 1 is on
+      {/* Floating stack, same shape as the Home's: the calendar (Vault front)
+          on top, Resgates — the ledger, which hosts Gerenciar — as the gold
+          primary. RAW navClearance so it doesn't leap under a bottom tour
+          tooltip. M4 step 3 spotlights the Resgates button. */}
+      <FabStack
+        bottomOffset={navClearance}
+        actions={[
+          {
+            key: 'calendar',
+            icon: 'calendar-outline',
+            onPress: () => router.push({ pathname: '/history', params: { front: 'vault' } }),
+            accessibilityLabel: t('tabs.history'),
+            size: CALENDAR_FAB_SIZE,
+            tone: 'neutral',
+          },
+          {
+            key: 'log',
+            icon: 'receipt',
+            onPress: handleOpenLog,
+            accessibilityLabel: t('rewards.history.title'),
+            size: LOG_FAB_SIZE,
+            tone: 'gold',
+            wrap: (node) => (
+              <TourTarget id="rewards.log" radius={999}>
+                {node}
+              </TourTarget>
+            ),
+          },
+        ]}
+      />
+
+      {/* M4 steps 2-3 live here (balance + Resgates FAB). Step 1 is on
          Home (Rewards tab spotlight). Finishing returns the user to the
          Tasks home so the next module's Home-anchored step 1 can show.
          No `flatNav` — this is a tab screen WITH the floating BottomNavBar. */}
@@ -742,54 +729,8 @@ export default function RewardsScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: tokens.bg.deep },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: tokens.space[2],
-    paddingHorizontal: tokens.space[4],
-    paddingVertical: tokens.space[2],
-  },
-  topTitle: {
-    ...tokens.type.h3,
-    color: tokens.text.hi,
-    flexShrink: 1,
-  },
-  topActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[2],
-  },
-  iconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: tokens.bg.surface,
-  },
-  // Gold pill — the bank is the purchase journey's next step, so it keeps
-  // the coin palette the old wallet FAB had, at header scale.
-  bankPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    height: 40,
-    paddingHorizontal: 14,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: 'rgba(255,200,61,0.38)',
-    backgroundColor: 'rgba(255,200,61,0.12)',
-  },
-  bankPillText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 12,
-    letterSpacing: 0.3,
-    color: tokens.semantic.coinLight,
-  },
   content: {
-    paddingHorizontal: tokens.space[4],
-    paddingTop: tokens.space[1],
+    padding: tokens.space[4],
   },
   chipsRow: {
     flexDirection: 'row',

@@ -7,21 +7,16 @@
  * front has a feed of its own, so a chip tap re-renders from cache instead of
  * firing a request.
  *
- * Four reads run in parallel per range:
+ * Three reads run in parallel per range:
  *   1. `task_completion` (+ per-sub rows and the task title) — practices & XP
  *   2. `mood_log` — the mood front, and the mood facet of the filter
- *   3. `reward_redemption` by `redeemed_at` — "bought on this day"
- *   4. `reward_redemption` by `used_at`     — "consumed on this day"
+ *   3. `reward_redemption` by `redeemed_at` — "redeemed on this day"
  *
- * Reads 3 and 4 are separate on purpose. `reward_redemption` has no local-date
- * column — only two `timestamptz` columns — and one row legitimately produces
- * two events on two different days (redeemed in March, used in April). A single
- * `.or()` over both columns would need a compound PostgREST filter and would
- * still have to be split apart client-side; two plain range queries in the same
- * `Promise.all` cost one round trip together and are obviously correct.
- *
- * Because those two columns are timestamps, their range is built from
- * `startOfLocalDay`/`endOfLocalDay` — comparing them against a 'YYYY-MM-DD' key
+ * A redemption is one event on one day: since 20260923000001 a reward is
+ * paid for and used in the same act (`used_at` always equals `redeemed_at`),
+ * so the old fourth read — "consumed on this day" — would only duplicate
+ * every row. `redeemed_at` is a timestamp, so its range is built from
+ * `startOfLocalDay`/`endOfLocalDay` — comparing it against a 'YYYY-MM-DD' key
  * the way `task_completion.completed_local_date` and `mood_log.logged_for`
  * allow would silently drop the edge days.
  */
@@ -111,13 +106,12 @@ interface RedemptionRow {
   id: string;
   reward_id: string;
   redeemed_at: string;
-  used_at: string | null;
   cost_paid: number;
   reward: Embedded<{ title: string; icon: string | null }>;
 }
 
 const REDEMPTION_SELECT =
-  'id, reward_id, redeemed_at, used_at, cost_paid, reward:reward_id ( title, icon )';
+  'id, reward_id, redeemed_at, cost_paid, reward:reward_id ( title, icon )';
 
 /** Empty day skeleton — every mutator below assumes these arrays exist. */
 function blankDay(dateKey: string): CalendarDay {
@@ -138,7 +132,7 @@ function blankDay(dateKey: string): CalendarDay {
 
 /**
  * Every local day in [from, to] that carries anything, plus the intensity
- * reference for the span. Days are built from four parallel reads and merged
+ * reference for the span. Days are built from three parallel reads and merged
  * client-side; nothing here depends on the caller's front or filter, which is
  * why one cache entry serves all three chips.
  */
@@ -165,7 +159,7 @@ export function useCalendarRange(
       const fromIso = startOfLocalDay(from).toISOString();
       const toIso = endOfLocalDay(to).toISOString();
 
-      const [completions, moods, redeemed, used] = await Promise.all([
+      const [completions, moods, redeemed] = await Promise.all([
         supabase
           .from('task_completion')
           .select(
@@ -184,18 +178,11 @@ export function useCalendarRange(
           .select(REDEMPTION_SELECT)
           .gte('redeemed_at', fromIso)
           .lte('redeemed_at', toIso),
-        supabase
-          .from('reward_redemption')
-          .select(REDEMPTION_SELECT)
-          .not('used_at', 'is', null)
-          .gte('used_at', fromIso)
-          .lte('used_at', toIso),
       ]);
 
       if (completions.error) throw completions.error;
       if (moods.error) throw moods.error;
       if (redeemed.error) throw redeemed.error;
-      if (used.error) throw used.error;
 
       const days = new Map<string, CalendarDay>();
       const dayFor = (key: string): CalendarDay => {
@@ -281,31 +268,21 @@ export function useCalendarRange(
       }
 
       // --- rewards ---------------------------------------------------------
-      const pushRedemption = (
-        row: RedemptionRow,
-        kind: CalendarRedemption['kind'],
-        stamp: string,
-      ) => {
-        const day = dayFor(dateKeyFromLocal(new Date(stamp)));
+      // The id is the row's own: the day panel's undo hands it straight to
+      // undo_reward_redemption.
+      for (const row of (redeemed.data ?? []) as unknown as RedemptionRow[]) {
+        const day = dayFor(dateKeyFromLocal(new Date(row.redeemed_at)));
         const reward = unwrap(row.reward);
-        const cost = kind === 'redeem' ? row.cost_paid : 0;
-        day.redemptions.push({
-          id: `${row.id}:${kind}`,
+        const entry: CalendarRedemption = {
+          id: row.id,
           rewardId: row.reward_id,
           title: reward?.title ?? '',
           icon: reward?.icon ?? null,
-          cost,
-          kind,
-          at: stamp,
-        });
-        day.spent += cost;
-      };
-
-      for (const row of (redeemed.data ?? []) as unknown as RedemptionRow[]) {
-        pushRedemption(row, 'redeem', row.redeemed_at);
-      }
-      for (const row of (used.data ?? []) as unknown as RedemptionRow[]) {
-        if (row.used_at) pushRedemption(row, 'use', row.used_at);
+          cost: row.cost_paid,
+          at: row.redeemed_at,
+        };
+        day.redemptions.push(entry);
+        day.spent += entry.cost;
       }
 
       for (const day of days.values()) {

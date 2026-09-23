@@ -439,7 +439,7 @@ function MoodReading({
   );
 }
 
-/** Vault: the day's reward events, bought and used, in the order they happened. */
+/** Vault: the day's redemptions, in the order they happened. */
 function VaultReading({
   day,
   fmt,
@@ -462,30 +462,15 @@ function VaultReading({
   return (
     <>
       {shown.map((r) => {
-        const label =
-          r.kind === 'redeem'
-            ? t('calendar.day.redeemed', { title: r.title })
-            : t('calendar.day.used', { title: r.title });
+        const label = t('calendar.day.redeemed', { title: r.title });
         return (
           <View
             key={r.id}
             style={styles.line}
             accessible
-            accessibilityLabel={
-              r.kind === 'redeem'
-                ? `${label}, ${t('calendar.peek.spent', { coins: fmt(r.cost) })}`
-                : label
-            }
+            accessibilityLabel={`${label}, ${t('calendar.peek.spent', { coins: fmt(r.cost) })}`}
           >
-            {r.kind === 'redeem' ? (
-              <Text style={styles.num} numberOfLines={1}>{`−${fmt(r.cost)}`}</Text>
-            ) : (
-              // A use costs nothing — the coins left when it was bought — so it
-              // gets a check, never a "−0".
-              <View style={styles.numGlyph}>
-                <Ionicons name="checkmark" size={14} color={tokens.semantic.xp} />
-              </View>
-            )}
+            <Text style={styles.num} numberOfLines={1}>{`−${fmt(r.cost)}`}</Text>
             <AppIcon name={r.icon ?? 'gift'} size={13} color={tokens.semantic.coin} />
             <Text style={styles.title} numberOfLines={1}>
               {label}

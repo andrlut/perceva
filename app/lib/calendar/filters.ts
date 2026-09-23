@@ -79,15 +79,16 @@ export interface CalendarPractice {
 }
 
 /** A reward event on a day. `use` rows carry no cost (the coins left earlier). */
+/** One redemption = one use on one day (20260923000001); `id` is the row's,
+ *  so the day panel's undo can hand it to `undo_reward_redemption`. */
 export interface CalendarRedemption {
   id: string;
   /** The reward this came from — the identity the filter facet selects on. */
   rewardId: string;
   title: string;
   icon: string | null;
-  /** Coins debited. Always 0 for `kind: 'use'`. */
+  /** Coins paid at the time. */
   cost: number;
-  kind: 'redeem' | 'use';
   at: string;
 }
 
@@ -399,15 +400,10 @@ export interface CalendarTotals {
   moodAvg: number | null;
   redemptionCount: number;
   /**
-   * Surviving days on which at least one counted reward was **paid for**. With
-   * a reward facet active this is the answer to "how many days did I do that" —
+   * Surviving days on which at least one counted reward was redeemed. With a
+   * reward facet active this is the answer to "how many days did I do that" —
    * a different number from `redemptionCount` whenever it happened twice in one
    * day, but never larger than it.
-   *
-   * Purchases only, deliberately: consuming something banked earlier is a
-   * separate event on a separate day (`use_reward` stamps `used_at` whenever it
-   * happens), and counting those here would report days you did not do the
-   * thing — the exact number this field exists to get right.
    */
   redemptionDays: number;
   spent: number;
@@ -443,13 +439,9 @@ export function summarize(days: Iterable<CalendarDay>, f: CalendarFilter): Calen
       f.rewardIds.length > 0
         ? day.redemptions.filter((r) => f.rewardIds.includes(r.rewardId))
         : day.redemptions;
-    const redeems = counted.filter((r) => r.kind === 'redeem');
-    totals.redemptionCount += redeems.length;
-    totals.spent += redeems.reduce((sum, r) => sum + r.cost, 0);
-    // `redeems`, not `counted`: all three figures on the Vault line have to sit
-    // on one base, or a month spent consuming the bank reads "4 days · 0
-    // redemptions · 0 coins".
-    if (redeems.length > 0) totals.redemptionDays += 1;
+    totals.redemptionCount += counted.length;
+    totals.spent += counted.reduce((sum, r) => sum + r.cost, 0);
+    if (counted.length > 0) totals.redemptionDays += 1;
     const reps = day.practices.reduce((sum, p) => sum + p.count, 0);
     totals.practiceCount += reps;
     if (reps > 0) totals.activeDays += 1;

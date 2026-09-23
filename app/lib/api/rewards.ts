@@ -12,7 +12,7 @@ import { pickWithLocale, pickWithLocaleNullable } from '@/lib/i18n/catalog';
 import type { LanguageCode } from '@/lib/settings';
 import { supabase } from '@/lib/supabase';
 
-import { dateKeyFromLocal, daysBetweenKeys } from './history';
+import { dateKeyFromLocal, daysBetweenKeys, historyKeys } from './history';
 
 import { characterKeys, type CharacterWithProfile } from './character';
 
@@ -22,8 +22,8 @@ export const rewardKeys = {
   archived: () => [...rewardKeys.all, 'archived'] as const,
   detail: (id: string) => [...rewardKeys.all, 'detail', id] as const,
   templates: () => [...rewardKeys.all, 'templates'] as const,
-  bank: () => [...rewardKeys.all, 'bank'] as const,
-  used: () => [...rewardKeys.all, 'used'] as const,
+  /** The flat redemption ledger (Resgates). */
+  log: () => [...rewardKeys.all, 'log'] as const,
   tracked: () => [...rewardKeys.all, 'tracked'] as const,
   gaps: () => [...rewardKeys.all, 'gaps'] as const,
   ownedOneShots: () => [...rewardKeys.all, 'ownedOneShots'] as const,
@@ -45,11 +45,11 @@ export function invalidateRewardSurfaces(qc: QueryClient, rewardId?: string) {
   if (rewardId) void qc.invalidateQueries({ queryKey: rewardKeys.detail(rewardId) });
 }
 
+/** One redemption = one use, stamped once. No banked state exists any more. */
 export interface RedemptionEntry {
   id: string;
   reward_id: string;
   redeemed_at: string;
-  used_at: string | null;
   cost_paid: number;
   reward_title: string;
   reward_icon: string;
@@ -70,15 +70,14 @@ interface RedemptionRow {
   id: string;
   reward_id: string;
   redeemed_at: string;
-  used_at: string | null;
   cost_paid: number;
   reward: RedemptionRewardRef | RedemptionRewardRef[] | null;
 }
 
-/** Mesmo join do catálogo que a vitrine usa — o banco e o histórico mostram
- *  os mesmos nomes, e teriam ficado no idioma da adoção sem isto. */
+/** Mesmo join do catálogo que a vitrine usa — o histórico mostra os mesmos
+ *  nomes, e teria ficado no idioma da adoção sem isto. */
 const REDEMPTION_SELECT =
-  'id,reward_id,redeemed_at,used_at,cost_paid,' +
+  'id,reward_id,redeemed_at,cost_paid,' +
   'reward:reward_id(title,icon,category,reward_template:template_id(title,title_pt))';
 
 function mapRedemption(r: RedemptionRow, locale: LanguageCode): RedemptionEntry {
@@ -89,7 +88,6 @@ function mapRedemption(r: RedemptionRow, locale: LanguageCode): RedemptionEntry 
     id: r.id,
     reward_id: r.reward_id,
     redeemed_at: r.redeemed_at,
-    used_at: r.used_at,
     cost_paid: r.cost_paid,
     reward_title: tpl
       ? pickWithLocale(locale, tpl.title, tpl.title_pt)
@@ -99,7 +97,7 @@ function mapRedemption(r: RedemptionRow, locale: LanguageCode): RedemptionEntry 
   };
 }
 
-/** Igual ao useLocalizeRewards, pro par banco/histórico. */
+/** Igual ao useLocalizeRewards, pro histórico. */
 function useLocalizeRedemptions() {
   const { locale } = useT();
   return useCallback(
@@ -108,33 +106,15 @@ function useLocalizeRedemptions() {
   );
 }
 
-/** Bought-but-not-yet-used. The "bank". Newest first. */
-export function useBankedRewards() {
+/** The redemption ledger (Resgates): newest first, capped. */
+export function useRedemptionLog(limit: number = 100) {
   return useQuery({
-    queryKey: rewardKeys.bank(),
+    queryKey: rewardKeys.log(),
     queryFn: async (): Promise<RedemptionRow[]> => {
       const { data, error } = await supabase
         .from('reward_redemption')
         .select(REDEMPTION_SELECT)
-        .is('used_at', null)
-        .order('redeemed_at', { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as unknown as RedemptionRow[];
-    },
-    select: useLocalizeRedemptions(),
-  });
-}
-
-/** Already-used redemptions. The "history". Newest first, capped. */
-export function useUsedRewards(limit: number = 50) {
-  return useQuery({
-    queryKey: rewardKeys.used(),
-    queryFn: async (): Promise<RedemptionRow[]> => {
-      const { data, error } = await supabase
-        .from('reward_redemption')
-        .select(REDEMPTION_SELECT)
-        .not('used_at', 'is', null)
-        .order('used_at', { ascending: false })
+        .order('redeemed_at', { ascending: false })
         .limit(limit);
       if (error) throw error;
       return (data ?? []) as unknown as RedemptionRow[];
@@ -228,8 +208,8 @@ export function useRewards() {
  * Ids das recompensas de compra única que JÁ foram compradas — o que a
  * vitrine da Vault esconde.
  *
- * Derivado de `reward_redemption`, nunca guardado: vender de volta apaga a
- * linha e a recompensa reaparece sozinha; usar mantém a linha e ela continua
+ * Derivado de `reward_redemption`, nunca guardado: desfazer o resgate apaga a
+ * linha e a recompensa reaparece sozinha; enquanto a linha existir ela fica
  * escondida (a geladeira está na sua casa). Ver 20260920000002.
  *
  * Deliberadamente NÃO filtrado dentro de `useRewards`: aquele hook também
@@ -618,69 +598,37 @@ export function useAddTemplateToShop() {
   });
 }
 
-export interface RedeemResult {
-  cost_paid: number;
-}
-
 /**
- * Calls redeem_reward() RPC. Optimistically deducts coins from the cached
- * character; rolls back on error. Single-unit only — for multi-buy use
- * useRedeemRewardN.
+ * Every read a redemption write can stale: the balance, the ledger, the
+ * days-since metric, the one-shot vitrine (which follows the EXISTENCE of
+ * a redemption row) and the calendar (`historyKeys.all` is the prefix the
+ * month feed and the day read both hang under).
  */
-export function useRedeemReward() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (params: { rewardId: string; cost: number }): Promise<RedeemResult> => {
-      const { data, error } = await supabase.rpc('redeem_reward', {
-        p_reward_id: params.rewardId,
-      });
-      if (error) throw error;
-      return data as RedeemResult;
-    },
-    onMutate: async (params) => {
-      await queryClient.cancelQueries({ queryKey: characterKeys.me() });
-      const prevChar = queryClient.getQueryData<CharacterWithProfile>(characterKeys.me());
-      if (prevChar) {
-        queryClient.setQueryData<CharacterWithProfile>(characterKeys.me(), {
-          ...prevChar,
-          character: {
-            ...prevChar.character,
-            // Allow optimistic balance to go negative — mirrors server behaviour
-            // since migration 0011 removed the >= 0 clamp on coins.
-            coins: prevChar.character.coins - params.cost,
-          },
-        });
-      }
-      return { prevChar };
-    },
-    onError: (_err, _params, ctx) => {
-      if (ctx?.prevChar) queryClient.setQueryData(characterKeys.me(), ctx.prevChar);
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: characterKeys.me() });
-      queryClient.invalidateQueries({ queryKey: rewardKeys.bank() });
-      queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
-      // A vitrine de compra única segue a EXISTÊNCIA da linha de resgate.
-      queryClient.invalidateQueries({ queryKey: rewardKeys.ownedOneShots() });
-    },
-  });
+function invalidateRedemptionSurfaces(qc: QueryClient) {
+  void qc.invalidateQueries({ queryKey: characterKeys.me() });
+  void qc.invalidateQueries({ queryKey: rewardKeys.log() });
+  void qc.invalidateQueries({ queryKey: rewardKeys.gaps() });
+  void qc.invalidateQueries({ queryKey: rewardKeys.ownedOneShots() });
+  void qc.invalidateQueries({ queryKey: historyKeys.all });
 }
 
 export interface RedeemBatchResult {
   qty: number;
   unit_cost: number;
   total_paid: number;
+  /** When the rows were stamped — `at` echoed back, or the server's now. */
+  redeemed_at?: string;
   /** Ids of the redemption rows created, in insert order (oldest first).
-   *  The buy celebration uses the first for "enjoy now". Older RPC
-   *  versions omit this, hence optional. */
+   *  The celebration's "Desfazer" undoes exactly these. */
   redemption_ids?: string[];
 }
 
 /**
- * Multi-buy via the redeem_reward_n() RPC. Atomic — either all qty
- * units land in the bank or nothing does. Optimistic coin debit
- * mirrors the single-buy hook: drops balance by qty * cost up-front,
- * rolls back on error.
+ * Redeem (= pay for and use, in one act) `qty` units of a reward via the
+ * redeem_reward_n() RPC. Atomic — all units or nothing. `at` logs a past
+ * day from the calendar (the server refuses the future); omitted = now.
+ * Optimistic coin debit: the balance drops by qty × cost up-front and rolls
+ * back on error.
  */
 export function useRedeemRewardN() {
   const queryClient = useQueryClient();
@@ -689,10 +637,13 @@ export function useRedeemRewardN() {
       rewardId: string;
       cost: number;
       qty: number;
+      /** ISO timestamp for a retro-log; undefined = now. */
+      at?: string;
     }): Promise<RedeemBatchResult> => {
       const { data, error } = await supabase.rpc('redeem_reward_n', {
         p_reward_id: params.rewardId,
         p_qty: params.qty,
+        ...(params.at ? { p_at: params.at } : {}),
       });
       if (error) throw error;
       return data as RedeemBatchResult;
@@ -714,13 +665,55 @@ export function useRedeemRewardN() {
     onError: (_err, _params, ctx) => {
       if (ctx?.prevChar) queryClient.setQueryData(characterKeys.me(), ctx.prevChar);
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: characterKeys.me() });
-      queryClient.invalidateQueries({ queryKey: rewardKeys.bank() });
-      queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
-      // A vitrine de compra única segue a EXISTÊNCIA da linha de resgate.
-      queryClient.invalidateQueries({ queryKey: rewardKeys.ownedOneShots() });
+    onSettled: () => invalidateRedemptionSurfaces(queryClient),
+  });
+}
+
+/**
+ * Undo a redemption via undo_reward_redemption(): the row is deleted and
+ * the coins paid at the time come back. Optimistic on both the ledger and
+ * the balance; rolls back on error.
+ */
+export function useUndoRedemption() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (redemptionId: string): Promise<{ refund: number }> => {
+      const { data, error } = await supabase.rpc('undo_reward_redemption', {
+        p_redemption_id: redemptionId,
+      });
+      if (error) throw error;
+      return data as { refund: number };
     },
+    onMutate: async (redemptionId) => {
+      await queryClient.cancelQueries({ queryKey: rewardKeys.log() });
+      await queryClient.cancelQueries({ queryKey: characterKeys.me() });
+      const prevLog = queryClient.getQueryData<RedemptionEntry[]>(rewardKeys.log());
+      const prevChar = queryClient.getQueryData<CharacterWithProfile>(characterKeys.me());
+      const entry = prevLog?.find((r) => r.id === redemptionId);
+      if (prevLog) {
+        queryClient.setQueryData<RedemptionEntry[]>(
+          rewardKeys.log(),
+          prevLog.filter((r) => r.id !== redemptionId),
+        );
+      }
+      // The refund is only known up-front when the ledger holds the row (the
+      // calendar's undo may not have it cached) — the settle fixes the rest.
+      if (prevChar && entry) {
+        queryClient.setQueryData<CharacterWithProfile>(characterKeys.me(), {
+          ...prevChar,
+          character: {
+            ...prevChar.character,
+            coins: prevChar.character.coins + entry.cost_paid,
+          },
+        });
+      }
+      return { prevLog, prevChar };
+    },
+    onError: (_err, _id, ctx) => {
+      if (ctx?.prevLog) queryClient.setQueryData(rewardKeys.log(), ctx.prevLog);
+      if (ctx?.prevChar) queryClient.setQueryData(characterKeys.me(), ctx.prevChar);
+    },
+    onSettled: () => invalidateRedemptionSurfaces(queryClient),
   });
 }
 
@@ -791,139 +784,3 @@ export function useSetTrackedReward() {
   });
 }
 
-/** Mark a banked redemption as used (consumed). */
-export function useUseReward() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (redemptionId: string) => {
-      const { data, error } = await supabase.rpc('use_reward', {
-        p_redemption_id: redemptionId,
-      });
-      if (error) throw error;
-      return data as { used_at: string };
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: rewardKeys.bank() });
-      queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
-      // A vitrine de compra única segue a EXISTÊNCIA da linha de resgate.
-      queryClient.invalidateQueries({ queryKey: rewardKeys.ownedOneShots() });
-      queryClient.invalidateQueries({ queryKey: rewardKeys.used() });
-    },
-  });
-}
-
-/**
- * Sell a banked redemption back for a full coin refund. The redemption
- * row is deleted; consumed (used_at != null) ones are rejected by the
- * RPC. Optimistically removes the row from the bank cache and bumps
- * coins; rolls back the cache on error.
- */
-export function useSellReward() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (params: {
-      redemptionId: string;
-      refund: number;
-    }): Promise<{ refund: number }> => {
-      const { data, error } = await supabase.rpc('sell_reward', {
-        p_redemption_id: params.redemptionId,
-      });
-      if (error) throw error;
-      return data as { refund: number };
-    },
-    onMutate: async (params) => {
-      await queryClient.cancelQueries({ queryKey: rewardKeys.bank() });
-      await queryClient.cancelQueries({ queryKey: characterKeys.me() });
-      const prevBank = queryClient.getQueryData<RedemptionEntry[]>(
-        rewardKeys.bank(),
-      );
-      const prevChar = queryClient.getQueryData<CharacterWithProfile>(
-        characterKeys.me(),
-      );
-      if (prevBank) {
-        queryClient.setQueryData<RedemptionEntry[]>(
-          rewardKeys.bank(),
-          prevBank.filter((b) => b.id !== params.redemptionId),
-        );
-      }
-      if (prevChar) {
-        queryClient.setQueryData<CharacterWithProfile>(characterKeys.me(), {
-          ...prevChar,
-          character: {
-            ...prevChar.character,
-            coins: prevChar.character.coins + params.refund,
-          },
-        });
-      }
-      return { prevBank, prevChar };
-    },
-    onError: (_err, _params, ctx) => {
-      if (ctx?.prevBank) queryClient.setQueryData(rewardKeys.bank(), ctx.prevBank);
-      if (ctx?.prevChar) queryClient.setQueryData(characterKeys.me(), ctx.prevChar);
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: rewardKeys.bank() });
-      queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
-      // A vitrine de compra única segue a EXISTÊNCIA da linha de resgate.
-      queryClient.invalidateQueries({ queryKey: rewardKeys.ownedOneShots() });
-      queryClient.invalidateQueries({ queryKey: characterKeys.me() });
-    },
-  });
-}
-
-/**
- * Move a used redemption back into the bank. Server-side flips
- * used_at to null on the same row (preserving cost_paid and the
- * original redeemed_at). Optimistically removes from the used cache
- * and adds back to the bank cache.
- */
-export function useUnuseReward() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (redemptionId: string) => {
-      const { data, error } = await supabase.rpc('unuse_reward', {
-        p_redemption_id: redemptionId,
-      });
-      if (error) throw error;
-      return data as { id: string };
-    },
-    onMutate: async (redemptionId) => {
-      await queryClient.cancelQueries({ queryKey: rewardKeys.bank() });
-      await queryClient.cancelQueries({ queryKey: rewardKeys.used() });
-      const prevUsed = queryClient.getQueryData<RedemptionEntry[]>(
-        rewardKeys.used(),
-      );
-      const prevBank = queryClient.getQueryData<RedemptionEntry[]>(
-        rewardKeys.bank(),
-      );
-      const moved = prevUsed?.find((r) => r.id === redemptionId);
-      if (prevUsed) {
-        queryClient.setQueryData<RedemptionEntry[]>(
-          rewardKeys.used(),
-          prevUsed.filter((r) => r.id !== redemptionId),
-        );
-      }
-      if (prevBank && moved) {
-        // Front-load it so the user sees it pop up at the top of the
-        // bank immediately. Server-side ordering (by redeemed_at desc)
-        // may shuffle on the next refetch — that's fine.
-        queryClient.setQueryData<RedemptionEntry[]>(
-          rewardKeys.bank(),
-          [{ ...moved, used_at: null }, ...prevBank],
-        );
-      }
-      return { prevUsed, prevBank };
-    },
-    onError: (_err, _id, ctx) => {
-      if (ctx?.prevUsed) queryClient.setQueryData(rewardKeys.used(), ctx.prevUsed);
-      if (ctx?.prevBank) queryClient.setQueryData(rewardKeys.bank(), ctx.prevBank);
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: rewardKeys.bank() });
-      queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
-      // A vitrine de compra única segue a EXISTÊNCIA da linha de resgate.
-      queryClient.invalidateQueries({ queryKey: rewardKeys.ownedOneShots() });
-      queryClient.invalidateQueries({ queryKey: rewardKeys.used() });
-    },
-  });
-}
