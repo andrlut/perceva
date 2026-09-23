@@ -1,21 +1,42 @@
 {
   "slug": "news-pink-noise-sleep-2026-09",
-  "type": "news",
-  "material_title": { "pt": "Ruído rosa cronometrado e a limpeza cerebral", "en": "Timed Pink Noise and the Brain's Cleanup" },
+  "category": "research",
+  "material_title": {
+    "pt": "Ruído rosa cronometrado e a limpeza cerebral",
+    "en": "Timed Pink Noise and the Brain's Cleanup"
+  },
   "ideas": [
     {
       "id": "som-cronometrado-cerebro",
       "ordinal": 1,
-      "title": { "pt": "O som que ouve seu cérebro dormir", "en": "The sound tuned to your sleeping brain" },
-      "claim": { "pt": "Um som de 50ms, cronometrado ao pico da onda cerebral, ampliou o pulso que limpa o cérebro em 14 pessoas dormindo.", "en": "A 50-millisecond sound, timed to a brain wave's peak, boosted the pulse that flushes the sleeping brain in 14 people." },
+      "title": {
+        "pt": "Um som pode turbinar a limpeza cerebral do sono",
+        "en": "A sound can boost the brain's cleanup in sleep"
+      },
+      "claim": {
+        "pt": "Evidência ainda inicial: o som só amplia a faxina do cérebro no pico da onda lenta, e app nenhum acerta esse tempo.",
+        "en": "Still early evidence: a sound only boosts the brain's cleanup at a slow wave's peak, and no app hits that timing."
+      },
       "body": {
-        "pt": "Durante o sono profundo, ondas elétricas lentas varrem o cérebro e, logo atrás delas, sobe um pulso de líquido cefalorraquidiano (LCR) — o fluido que banha o cérebro e ajuda a levar embora resíduos metabólicos. Pesquisadores do MIT testaram se dava pra amplificar essa dupla de propósito: um algoritmo previu, com menos de 100 milissegundos de atraso, o pico exato da onda lenta de 14 voluntários cochilando dentro de um scanner de ressonância, com eletroencefalograma (EEG) e imagem funcional por ressonância (fMRI) simultâneos — a dupla que mede atividade elétrica e fluxo de líquido ao mesmo tempo — e disparou ali uma rajada de **ruído rosa** de 50 milissegundos. Publicado em 9 de setembro de 2026 na Science Translational Medicine, o resultado: a onda elétrica e o pulso de LCR ficaram maiores, sem porcentagem divulgada. Os autores, Laura Lewis e Joshua Levitt, já fundaram uma empresa em cima da tecnologia. **O timing é tudo**: um app comum de ruído rosa tocando a noite inteira não faz esse trabalho, porque nada ali é cronometrado onda a onda.",
-        "en": "During deep sleep, slow electrical waves sweep the brain, and right behind them rises a pulse of cerebrospinal fluid (CSF) — the fluid that bathes the brain and helps carry metabolic waste away. MIT researchers tested whether that pair could be amplified on purpose: an algorithm predicted, with under 100 milliseconds of lag, the exact peak of each slow wave in 14 volunteers napping inside an MRI scanner, with simultaneous electroencephalography (EEG) and functional MRI (fMRI) — the pair that tracks electrical activity and fluid flow at once — and fired a 50-millisecond burst of **pink noise** right at that instant. Published September 9, 2026 in Science Translational Medicine, the result: both the electrical wave and the CSF pulse grew larger, no percentage released. The authors, Laura Lewis and Joshua Levitt, have already founded a company around the technology. **Timing is everything**: an ordinary pink-noise app playing all night doesn't do this work, because nothing in it is timed wave by wave."
+        "pt": "No sono profundo, ondas elétricas lentas varrem o córtex e, logo atrás delas, sobe um pulso de líquido cefalorraquidiano — o fluido que banha o cérebro e ajuda a levar embora resíduos. Um grupo do MIT tentou empurrar essa maré de propósito: catorze voluntários cochilaram dentro de um scanner de ressonância enquanto um algoritmo previa, com menos de 100 milissegundos de atraso, o pico da onda lenta de cada um e disparava ali uma **rajada de ruído rosa de 50 milissegundos**, curta demais pra acordar alguém.\n\nNo trabalho de Levitt e colegas, publicado em 2026 na Science Translational Medicine, a onda elétrica e o pulso de líquido ficaram maiores. Sem porcentagem divulgada, num cochilo só, sem nenhum desfecho de saúde ou memória medido — e os autores já abriram empresa em cima da técnica.\n\n**O timing é tudo**: os próprios pesquisadores dizem que nada indica que ruído contínuo, fora de sincronia, faça o mesmo trabalho. Enquanto não existir produto testado fora do laboratório, seu horário de sono rende mais do que qualquer som no quarto.",
+        "en": "In deep sleep, slow electrical waves sweep the cortex, and right behind them rises a pulse of cerebrospinal fluid — the fluid that bathes the brain and helps carry metabolic waste away. An MIT group tried to push that tide on purpose: fourteen volunteers napped inside an MRI scanner while an algorithm predicted, with under 100 milliseconds of lag, each slow wave's peak and fired a **50-millisecond burst of pink noise** right at it, too short to wake anyone.\n\nIn the work by Levitt and colleagues, published in 2026 in Science Translational Medicine, both the electrical wave and the fluid pulse grew larger. No percentage released, from a single nap, with no health or memory outcome measured — and the authors have already founded a company around the technique.\n\n**Timing is everything**: the researchers themselves say nothing suggests that continuous, out-of-sync noise does the same job. Until a real product is tested outside the lab, your sleep schedule buys you more than any sound in the bedroom."
       },
       "image_brief": "Uma pessoa deitada de lado numa maca estreita dentro do túnel de um aparelho de ressonância magnética, cabeça envolta por uma touca de eletrodos com fios finos, luz azulada e difusa saindo das paredes cilíndricas do aparelho, ambiente de laboratório de pesquisa do sono.",
       "sources": [
-        { "label": { "pt": "MIT News (9/set/2026)", "en": "MIT News (Sept 9, 2026)" }, "url": "https://news.mit.edu/2026/pink-noise-burst-may-mean-more-restorative-sleep-0909" },
-        { "label": { "pt": "Levitt et al., 2026 · Science Translational Medicine", "en": "Levitt et al., 2026 · Science Translational Medicine" }, "url": "https://www.science.org/doi/10.1126/scitranslmed.aea5469" }
+        {
+          "label": {
+            "pt": "MIT News (9/set/2026)",
+            "en": "MIT News (Sept 9, 2026)"
+          },
+          "url": "https://news.mit.edu/2026/pink-noise-burst-may-mean-more-restorative-sleep-0909"
+        },
+        {
+          "label": {
+            "pt": "Levitt et al., 2026 · Science Translational Medicine",
+            "en": "Levitt et al., 2026 · Science Translational Medicine"
+          },
+          "url": "https://www.science.org/doi/10.1126/scitranslmed.aea5469"
+        }
       ],
       "cta": null
     }

@@ -20,6 +20,11 @@
       "id": "receita-minima-do-sono",
       "ordinal": 3,
       "image_prompt": "Uma pessoa vista de lado despejando o resto do café pela pia de aço de uma cozinha no fim da tarde: o antebraço, a caneca inclinada e o fio escuro de café caindo ocupam o centro do quadro, com folga em volta. Em primeiro plano, num pratinho ao lado da torneira, um anel de metal liso e uma pulseira de silicone lisa, sem mostrador nem botões, repousam esquecidos. A única luz quente vem do sol baixo que entra pela janela lateral, atravessa o fio de café e doura a mão e a borda da caneca; o pratinho, o anel e a pulseira verde-sálvia ficam na penumbra fria."
+    },
+    {
+      "id": "dirigir-com-sono",
+      "ordinal": 4,
+      "image_prompt": "Uma pessoa ao volante de um carro à noite, vista do banco do passageiro, ocupando o centro do quadro com folga em volta: as pálpebras caindo, a cabeça começando a tombar para o ombro, as duas mãos ainda apoiadas no volante. Além do para-brisa, a estrada vazia se dissolve num borrão escuro. A única luz quente e dourada vem do painel do carro e sobe pelo rosto e pelas mãos dela; o resto do interior fica numa penumbra fria e azulada, com um único acento verde-sálvia no encosto do banco."
     }
   ]
 }
