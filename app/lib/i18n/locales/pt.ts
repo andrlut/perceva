@@ -1461,13 +1461,16 @@ const pt: Translations = {
       open: 'Buscar',
       close: 'Fechar busca',
       placeholderMine: 'Buscar nas suas recompensas…',
-      placeholderCatalog: 'Buscar nas sugestões…',
+      placeholderCatalog: 'Buscar no catálogo…',
     },
     // Uma linha só, abaixo das abas: os dois gestos da lista. Comprar mora
-    // na Loja; mudar detalhe é abrir a recompensa.
-    lead: 'Toque pra editar. Pela alça, arraste pra ordenar — a Loja segue essa ordem.',
+    // na Loja; mudar detalhe é abrir a recompensa. Só "Disponíveis agora"
+    // segue a ordem — Quase lá e Grandes metas ordenam por distância.
+    lead: 'Toque pra editar. Pela alça, arraste pra ordenar as disponíveis na Loja.',
     customChip: 'PRÓPRIA',
-    oneShotChip: 'ÚNICA',
+    // Mesmo nome do formulário ("Compra única") — "ÚNICA" sozinha lia como
+    // "exclusiva".
+    oneShotChip: 'COMPRA ÚNICA',
     // Compra única já comprada: some da Loja, continua aqui pra editar.
     boughtChip: 'COMPRADA',
     row: {
@@ -1476,6 +1479,13 @@ const pt: Translations = {
       // existem como ações na própria linha.
       a11yMoveUp: 'Mover pra cima',
       a11yMoveDown: 'Mover pra baixo',
+      // Os chips são só visuais; isto vai no valor falado da linha.
+      a11yOneShot: 'compra única',
+      a11yBought: 'já comprada',
+    },
+    history: {
+      link: 'Histórico de uso',
+      sub: 'O que você já usou',
     },
     archived: {
       section: 'Arquivadas',
@@ -1503,7 +1513,7 @@ const pt: Translations = {
     empty: {
       noMatchesTitle: 'Nada encontrado',
       noMatchesBody: 'Nada corresponde a "{{query}}".',
-      noMatchesCatalog: 'Nada nas sugestões corresponde a "{{query}}".',
+      noMatchesCatalog: 'Nada no catálogo corresponde a "{{query}}".',
       noRewardsTitle: 'Sem recompensas ainda',
       noRewardsBody: 'Crie sua primeira recompensa ou navegue pela aba Sugeridas.',
       cta: 'Nova recompensa',
@@ -1543,12 +1553,17 @@ const pt: Translations = {
     history: {
       title: 'Histórico',
       emptyTitle: 'Nada usado ainda',
-      emptySub: 'Quando você usa uma reward do Banco, ela aparece aqui.',
+      emptySub: 'Quando você usa uma recompensa do Banco, ela aparece aqui.',
     },
     bank: {
       title: 'Banco',
       emptyTitle: 'Seu banco está vazio',
-      emptySub: 'Compre uma reward na Loja. Ela cai aqui pra quando você quiser usar.',
+      emptySub: 'Compre uma recompensa na Loja. Ela cai aqui pra quando você quiser usar.',
+      // Forma falada do pill "Banco · N" da Vault (o ponto seria lido).
+      pillA11y: {
+        one: 'Banco, {{count}} recompensa guardada',
+        other: 'Banco, {{count}} recompensas guardadas',
+      },
     },
     vault: {
       eyebrow: 'RECOMPENSAS',

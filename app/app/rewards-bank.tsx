@@ -102,10 +102,10 @@ export default function RewardsBankScreen() {
           <Ionicons name="close" size={24} color={tokens.text.hi} />
         </Pressable>
         <Text style={styles.headerTitle}>{t('rewards.bank.title')}</Text>
-        {/* Shortcut to /rewards-history — saves the user from closing
-            the bank, going back to Shop, and reopening from the gear
-            row. router.push (not replace) so the back gesture still
-            lands the user back in the bank. */}
+        {/* Shortcut to /rewards-history — the other door is the
+            "Histórico de uso" row in Gerenciar recompensas. router.push
+            (not replace) so the back gesture still lands the user back
+            in the bank. */}
         <Pressable
           onPress={() => router.push('/rewards-history')}
           style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}

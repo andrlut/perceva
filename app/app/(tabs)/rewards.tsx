@@ -417,9 +417,10 @@ export default function RewardsScreen() {
               style={({ pressed }) => [styles.bankPill, pressed && { opacity: 0.8 }]}
               hitSlop={6}
               accessibilityRole="button"
+              // Spoken form — the visual "Banco · 3" reads the dot aloud.
               accessibilityLabel={
                 bankCount > 0
-                  ? t('rewards.vault.tabs.bank', { count: bankCount })
+                  ? t('rewards.bank.pillA11y', { count: bankCount })
                   : t('rewards.bank.title')
               }
             >
@@ -648,14 +649,18 @@ export default function RewardsScreen() {
               </>
             )}
 
-            <View style={styles.addCardWrap}>
-              <AddCard
-                label={t('rewards.vault.addReward')}
-                sublabel={t('rewards.vault.addRewardSub')}
-                tint={tokens.brand.violet2}
-                onPress={handleCreateReward}
-              />
-            </View>
+            {/* The empty state above already offers "Criar a minha";
+                a second create card right under it read as a duplicate. */}
+            {!noRewardsAtAll && (
+              <View style={styles.addCardWrap}>
+                <AddCard
+                  label={t('rewards.vault.addReward')}
+                  sublabel={t('rewards.vault.addRewardSub')}
+                  tint={tokens.brand.violet2}
+                  onPress={handleCreateReward}
+                />
+              </View>
+            )}
 
       </ScrollView>
       </ScreenBackground>
@@ -873,6 +878,7 @@ const styles = StyleSheet.create({
   },
   emptyCta: {
     flex: 1,
+    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

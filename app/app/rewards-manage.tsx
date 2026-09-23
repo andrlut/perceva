@@ -303,7 +303,15 @@ export default function RewardsHubScreen() {
           >
             <Ionicons name="chevron-back" size={22} color={tokens.text.hi} />
           </Pressable>
-          <Text style={styles.title} numberOfLines={1}>
+          {/* "Gerenciar recompensas" is ~190px at h3; a 360dp phone leaves
+              ~185 next to three 40dp actions, less with the limit badge.
+              Shrinks instead of ellipsizing to "Gerenciar recompens…". */}
+          <Text
+            style={styles.title}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.75}
+          >
             {t('rewardsHub.title')}
           </Text>
           <View style={styles.topActions}>
@@ -395,6 +403,7 @@ export default function RewardsHubScreen() {
             onRefresh={handleRefresh}
             onRewardPress={(id) => router.push({ pathname: '/reward-form', params: { id } })}
             onCreate={handleCreate}
+            onHistory={() => router.push('/rewards-history')}
             onReorder={(ids) => reorderRewards.mutate(ids)}
             onRestore={handleRestore}
             onDelete={handleDelete}
@@ -472,6 +481,9 @@ interface MineBodyProps {
   onRefresh: () => void;
   onRewardPress: (id: string) => void;
   onCreate: () => void;
+  /** Open the used-rewards log. The Vault's top bar has no room for a
+   *  third action, and Banco is the only other door to it. */
+  onHistory: () => void;
   onReorder: (orderedIds: string[]) => void;
   onRestore: (reward: Reward) => void;
   onDelete: (reward: Reward) => void;
@@ -493,6 +505,7 @@ function MineBody({
   onRefresh,
   onRewardPress,
   onCreate,
+  onHistory,
   onReorder,
   onRestore,
   onDelete,
@@ -593,6 +606,23 @@ function MineBody({
           busyIds={busyIds}
         />
       )}
+      <Pressable
+        onPress={onHistory}
+        style={({ pressed }) => [styles.linkRow, pressed && { opacity: 0.7 }]}
+        accessibilityRole="button"
+        accessibilityLabel={t('rewardsHub.history.link')}
+      >
+        <View style={[styles.groupIcon, { backgroundColor: 'rgba(255,255,255,0.05)' }]}>
+          <Ionicons name="time-outline" size={16} color={tokens.text.mid} />
+        </View>
+        <View style={styles.groupTitleCol}>
+          <Text style={styles.linkRowTitle}>{t('rewardsHub.history.link')}</Text>
+          <Text style={styles.linkRowSub} numberOfLines={1}>
+            {t('rewardsHub.history.sub')}
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={16} color={tokens.text.dim} />
+      </Pressable>
       {!nothingActive && <AddCard label={t('rewardsHub.newReward')} onPress={onCreate} />}
     </View>
   );
@@ -703,6 +733,20 @@ function ManageRow({
   const cat = REWARD_CATEGORY_META[reward.category];
   const categoryLabel = t(`rewards.categories.${reward.category}` as const);
   const isCustom = !reward.template_id;
+  // Spoken value — the chips are visual only, so a screen reader would
+  // otherwise never learn that a one-shot is already bought (and hidden
+  // from the Shop).
+  const a11yValue = [
+    t('rewards.coins', { count: reward.cost }),
+    categoryLabel,
+    reward.is_one_shot
+      ? bought
+        ? t('rewardsHub.row.a11yBought')
+        : t('rewardsHub.row.a11yOneShot')
+      : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
   return (
     <ScaleDecorator>
@@ -725,9 +769,7 @@ function ManageRow({
             style={({ pressed }) => [styles.rowMain, pressed && { opacity: 0.85 }]}
             accessibilityRole="button"
             accessibilityLabel={t('rewardsHub.row.editA11y', { title: reward.title })}
-            accessibilityValue={{
-              text: `${t('rewards.coins', { count: reward.cost })} · ${categoryLabel}`,
-            }}
+            accessibilityValue={{ text: a11yValue }}
             accessibilityActions={[
               { name: 'moveUp', label: t('rewardsHub.row.a11yMoveUp') },
               { name: 'moveDown', label: t('rewardsHub.row.a11yMoveDown') },
@@ -1148,6 +1190,14 @@ function TemplateRow({ template, isAdopted, isAdopting, onAdopt, onPress }: Temp
       ]}
       accessibilityRole="button"
       accessibilityLabel={t('rewardsHub.suggested.customizeA11y', { title })}
+      // The label replaces the children, so cost and the adopted state
+      // travel as the value.
+      accessibilityValue={{
+        text: [t('rewards.coins', { count: template.cost }), isAdopted ? t('rewardsHub.adopt.added') : null]
+          .filter(Boolean)
+          .join(' · '),
+      }}
+      accessibilityState={isAdopted ? { selected: true } : undefined}
     >
       <LinearGradient
         colors={tokens.gradient.taskCard}
@@ -1431,11 +1481,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: tokens.border.base,
   },
+  // 9px text.mid — 8px text.dim on the 6% wash sat around 3.3:1.
   chipText: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 8,
+    fontSize: 9,
     letterSpacing: 0.8,
-    color: tokens.text.dim,
+    color: tokens.text.mid,
   },
 
   // ── Footer: archived + add ────────────────────────────────────────────
@@ -1463,7 +1514,28 @@ const styles = StyleSheet.create({
   archivedMeta: {
     fontFamily: 'Manrope_500Medium',
     fontSize: 11,
-    color: tokens.text.dim,
+    color: tokens.text.mid,
+  },
+  linkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[3],
+    paddingVertical: tokens.space[3],
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+    backgroundColor: 'rgba(255,255,255,0.02)',
+  },
+  linkRowTitle: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 13,
+    color: tokens.text.hi,
+  },
+  linkRowSub: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 11,
+    color: tokens.text.mid,
   },
   restoreBtn: {
     flexDirection: 'row',
