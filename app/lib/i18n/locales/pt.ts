@@ -510,7 +510,7 @@ const pt: Translations = {
       },
       step3: {
         title: 'Resgate quando quiser',
-        body: 'Um filme, um jantar, um descanso. Resgate com moedas — o que você compra fica na carteira dourada, no canto de baixo, pra usar na hora certa.',
+        body: 'Um filme, um jantar, um descanso. Resgate com moedas — o que você compra fica no Banco, ali em cima, pra usar na hora certa.',
       },
     },
     m5: {
@@ -1450,6 +1450,80 @@ const pt: Translations = {
     },
   },
 
+  rewardsHub: {
+    title: 'Gerenciar recompensas',
+    newReward: 'Nova recompensa',
+    tabs: {
+      mine: 'Minhas',
+      suggested: 'Sugeridas',
+    },
+    search: {
+      open: 'Buscar',
+      close: 'Fechar busca',
+      placeholderMine: 'Buscar nas suas recompensas…',
+      placeholderCatalog: 'Buscar no catálogo…',
+    },
+    // Uma linha só, abaixo das abas: os dois gestos da lista. Comprar mora
+    // na Loja; mudar detalhe é abrir a recompensa. Só "Disponíveis agora"
+    // segue a ordem — Quase lá e Grandes metas ordenam por distância.
+    lead: 'Toque pra editar. Pela alça, arraste pra ordenar as disponíveis na Loja.',
+    customChip: 'PRÓPRIA',
+    // Mesmo nome do formulário ("Compra única") — "ÚNICA" sozinha lia como
+    // "exclusiva".
+    oneShotChip: 'COMPRA ÚNICA',
+    // Compra única já comprada: some da Loja, continua aqui pra editar.
+    boughtChip: 'COMPRADA',
+    row: {
+      editA11y: 'Editar {{title}}',
+      // Ações de leitor de tela — a alça é só toque, então subir/descer
+      // existem como ações na própria linha.
+      a11yMoveUp: 'Mover pra cima',
+      a11yMoveDown: 'Mover pra baixo',
+      // Os chips são só visuais; isto vai no valor falado da linha.
+      a11yOneShot: 'compra única',
+      a11yBought: 'já comprada',
+    },
+    history: {
+      link: 'Histórico de uso',
+      sub: 'O que você já usou',
+    },
+    archived: {
+      section: 'Arquivadas',
+      restore: 'Restaurar',
+      restoreA11y: 'Restaurar {{title}}',
+      restoreFail: 'Não consegui restaurar',
+      deleteA11y: 'Apagar {{title}} pra sempre',
+      deleteConfirmTitle: 'Apagar "{{title}}" pra sempre?',
+      deleteConfirmBody:
+        'Vai sumir do app sem volta. Só dá pra apagar recompensas sem histórico de compra.',
+      deleteOk: 'Apagar',
+      deleteFail: 'Não consegui apagar',
+      deleteBlockedRedemptions: 'Você já comprou essa recompensa antes — só dá pra arquivar.',
+    },
+    adopt: {
+      adoptA11y: 'Adicionar {{title}}',
+      added: 'Adicionada',
+    },
+    suggested: {
+      hint: 'Toque numa sugestão pra ajustar do seu jeito antes de adicionar — ou no + pra usar como está.',
+      premiumHint: '{{count}}/{{limit}} recompensas ativas no plano gratuito · Premium libera ilimitadas',
+      allCategories: 'Todas',
+      customizeA11y: 'Ajustar {{title}} antes de adicionar',
+    },
+    empty: {
+      noMatchesTitle: 'Nada encontrado',
+      noMatchesBody: 'Nada corresponde a "{{query}}".',
+      noMatchesCatalog: 'Nada no catálogo corresponde a "{{query}}".',
+      noRewardsTitle: 'Sem recompensas ainda',
+      noRewardsBody: 'Crie sua primeira recompensa ou navegue pela aba Sugeridas.',
+      cta: 'Nova recompensa',
+    },
+    errors: {
+      couldNotAdoptTitle: 'Não consegui adicionar',
+      unknown: 'Erro desconhecido.',
+    },
+  },
+
   rewards: {
     title: 'Recompensas',
     new: 'Nova recompensa',
@@ -1479,12 +1553,17 @@ const pt: Translations = {
     history: {
       title: 'Histórico',
       emptyTitle: 'Nada usado ainda',
-      emptySub: 'Quando você usa uma reward do Banco, ela aparece aqui.',
+      emptySub: 'Quando você usa uma recompensa do Banco, ela aparece aqui.',
     },
     bank: {
       title: 'Banco',
       emptyTitle: 'Seu banco está vazio',
-      emptySub: 'Compre uma reward na Loja. Ela cai aqui pra quando você quiser usar.',
+      emptySub: 'Compre uma recompensa na Loja. Ela cai aqui pra quando você quiser usar.',
+      // Forma falada do pill "Banco · N" da Vault (o ponto seria lido).
+      pillA11y: {
+        one: 'Banco, {{count}} recompensa guardada',
+        other: 'Banco, {{count}} recompensas guardadas',
+      },
     },
     vault: {
       eyebrow: 'RECOMPENSAS',
@@ -1523,12 +1602,11 @@ const pt: Translations = {
       trackCtaTitle: 'Mirar uma recompensa',
       trackCtaSub: 'Fixe uma pra acompanhar o progresso de perto.',
       emptyTitle: 'Sua loja está vazia',
-      emptyBody: 'Toque numa sugestão abaixo pra adicionar, ou crie a sua.',
-      inspiration: 'Inspiração',
-      inspirationHint: 'toque pra adicionar',
+      emptyBody: 'Comece pelas sugestões ou crie uma recompensa sua.',
+      seeSuggestions: 'Ver sugestões',
+      createOwn: 'Criar a minha',
       addReward: 'Nova recompensa',
       addRewardSub: 'Adicionar uma sua',
-      couldNotAdd: 'Não foi possível adicionar',
     },
     celebration: {
       eyebrow: 'NA SACOLA',
@@ -1583,22 +1661,6 @@ const pt: Translations = {
       archiveSub: 'Some da Loja. Dá pra restaurar em Gerenciar',
       buyQuantity: 'Comprar quantidade',
       buyQuantitySub: 'Escolha quantas pra comprar de uma vez',
-    },
-    manage: {
-      title: 'Gerenciar recompensas',
-      reorderHint: 'Segure e arraste pra reordenar',
-      sectionActive: 'Ativas',
-      sectionArchived: 'Arquivadas',
-      emptyActive: 'Nenhuma recompensa ativa. Crie uma na Loja.',
-      emptyArchived: 'Nada arquivado.',
-      restore: 'Restaurar',
-      restoreFail: 'Não consegui restaurar',
-      delete: 'Apagar',
-      deleteConfirmTitle: 'Apagar "{{title}}" pra sempre?',
-      deleteConfirmBody: 'Vai sumir do app sem volta. Só dá pra apagar recompensas sem histórico de compra.',
-      deleteOk: 'Apagar',
-      deleteFail: 'Não consegui apagar',
-      deleteBlockedRedemptions: 'Você já comprou essa recompensa antes — só dá pra arquivar.',
     },
   },
 

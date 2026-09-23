@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -23,11 +23,13 @@ import {
   useArchiveReward,
   useCreateReward,
   useReward,
+  useRewardTemplates,
   useUpdateReward,
   type RewardFormInput,
 } from '@/lib/api/rewards';
 import type { RewardCategory } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
+import { useLocalizedPick } from '@/lib/i18n/catalog';
 import { freeLimitEntity, useLimitModalStore } from '@/lib/premium';
 import { useKeyboardOverlap } from '@/lib/use-keyboard-height';
 import { confirmAction } from '@/lib/util/confirm';
@@ -37,7 +39,11 @@ import { REWARD_CATEGORY_META, REWARD_CATEGORY_ORDER } from '@/theme/rewards';
 export default function RewardFormScreen() {
   const router = useRouter();
   const { t } = useT();
-  const params = useLocalSearchParams<{ id?: string; category?: string }>();
+  const params = useLocalSearchParams<{
+    id?: string;
+    category?: string;
+    from_template?: string;
+  }>();
   const isEdit = !!params.id;
   const initialCategory: RewardCategory =
     params.category === 'good' || params.category === 'experience'
@@ -65,6 +71,31 @@ export default function RewardFormScreen() {
       setIsOneShot(existing.data.is_one_shot);
     }
   }, [existing.data]);
+
+  // Sugestão aberta pra ajustar (Gerenciar › Sugeridas): o formulário nasce
+  // preenchido com o catálogo, no idioma do app, e o que sai daqui é uma
+  // recompensa PRÓPRIA (template_id null) — mesma convenção do task-form.
+  // Semeia UMA vez por template: o usuário edita em cima.
+  const templates = useRewardTemplates();
+  const { pick, pickNullable } = useLocalizedPick();
+  const fromTemplate = useMemo(
+    () =>
+      params.from_template
+        ? (templates.data?.find((tp) => tp.id === params.from_template) ?? null)
+        : null,
+    [params.from_template, templates.data],
+  );
+  const seededFrom = useRef<string | null>(null);
+  useEffect(() => {
+    if (isEdit || !fromTemplate || seededFrom.current === fromTemplate.id) return;
+    seededFrom.current = fromTemplate.id;
+    setTitle(pick(fromTemplate.title, fromTemplate.title_pt));
+    setDescription(pickNullable(fromTemplate.description, fromTemplate.description_pt) ?? '');
+    setCostStr(String(fromTemplate.cost));
+    setIcon(fromTemplate.icon);
+    setCategory(fromTemplate.category);
+    setIsOneShot(fromTemplate.is_one_shot);
+  }, [fromTemplate, isEdit, pick, pickNullable]);
 
   const createReward = useCreateReward();
   const updateReward = useUpdateReward(params.id ?? '');
@@ -142,7 +173,8 @@ export default function RewardFormScreen() {
     }
   };
 
-  if (isEdit && existing.isLoading) {
+  const seedingFromTemplate = !!params.from_template && !isEdit && templates.data == null;
+  if ((isEdit && existing.isLoading) || seedingFromTemplate) {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.loadingBox}>

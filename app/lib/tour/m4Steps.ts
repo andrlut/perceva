@@ -8,13 +8,13 @@ type Translator = (key: string, options?: TranslateOptions) => string;
  *
  *   1. (home)    Rewards bottom-nav tab      — awaitEvent REWARDS_NAVIGATED
  *   2. (rewards) balance + your rewards      — Next (auto-scroll to top)
- *   3. (rewards) redeem + the wallet FAB     — Next (spotlights the golden
- *                wallet; the screen forces it visible during M4 even with
- *                an empty bank, so the anchor always exists)
+ *   3. (rewards) redeem + the Banco pill     — Next (spotlights the gold
+ *                Banco pill in the top bar; it renders with or without a
+ *                banked reward, so the anchor always exists)
  *
  * Step 3 used to auto-scroll to the "Inspiração" block, which disappears
- * once the user owns every template — the wallet is a stable anchor and
- * matches the copy about where purchases wait.
+ * once the user owns every template — the Banco pill is a stable anchor
+ * and matches the copy about where purchases wait.
  *
  * No commitment: we never ask the user to redeem or add anything.
  */
@@ -47,9 +47,10 @@ export function buildM4Steps(t: Translator): ScreenedStep[] {
       screen: 'rewards',
       title: t('tour.m4.step3.title'),
       body: t('tour.m4.step3.body'),
-      position: 'top',
+      // The pill sits in the top bar, so the card opens below it.
+      position: 'bottom',
       target: 'rewards.bank',
-      // Opening the wallet (and coming back) completes the module; the
+      // Opening the bank (and coming back) completes the module; the
       // assist stays for whoever prefers not to tap.
       awaitEvent: M4_EVENTS.BANK_VISITED,
       awaitCtaLabel: t('tour.common.next'),

@@ -1895,11 +1895,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: tokens.border.base,
   },
+  // 9px text.mid — 8px text.dim on the 6% wash sat around 3.3:1.
   customChipText: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 8,
+    fontSize: 9,
     letterSpacing: 0.8,
-    color: tokens.text.dim,
+    color: tokens.text.mid,
   },
   metaRow: {
     flexDirection: 'row',
@@ -1959,7 +1960,7 @@ const styles = StyleSheet.create({
   archivedMeta: {
     fontFamily: 'Manrope_500Medium',
     fontSize: 11,
-    color: tokens.text.dim,
+    color: tokens.text.mid,
   },
   restoreBtn: {
     flexDirection: 'row',
