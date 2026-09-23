@@ -513,7 +513,7 @@ const en = {
       },
       step3: {
         title: 'Redeem when you want',
-        body: 'A movie, a dinner, some rest. Redeem with coins — what you buy waits in the golden wallet at the bottom corner until the right moment.',
+        body: 'A movie, a dinner, some rest. Redeem with coins — what you buy waits in the Bank, up top, until the right moment.',
       },
     },
     m5: {
@@ -1454,6 +1454,65 @@ const en = {
     },
   },
 
+  rewardsHub: {
+    title: 'Manage rewards',
+    newReward: 'New reward',
+    tabs: {
+      mine: 'Mine',
+      suggested: 'Suggested',
+    },
+    search: {
+      open: 'Search',
+      close: 'Close search',
+      placeholderMine: 'Search your rewards…',
+      placeholderCatalog: 'Search suggestions…',
+    },
+    lead: 'Tap to edit. Drag by the handle to reorder — the Shop follows this order.',
+    customChip: 'CUSTOM',
+    oneShotChip: 'ONE-TIME',
+    boughtChip: 'BOUGHT',
+    row: {
+      editA11y: 'Edit {{title}}',
+      a11yMoveUp: 'Move up',
+      a11yMoveDown: 'Move down',
+    },
+    archived: {
+      section: 'Archived',
+      restore: 'Restore',
+      restoreA11y: 'Restore {{title}}',
+      restoreFail: 'Could not restore',
+      deleteA11y: 'Delete {{title}} forever',
+      deleteConfirmTitle: 'Delete "{{title}}" forever?',
+      deleteConfirmBody:
+        'It will disappear from the app for good. Only rewards with no purchase history can be deleted.',
+      deleteOk: 'Delete',
+      deleteFail: 'Could not delete',
+      deleteBlockedRedemptions: 'You have bought this reward before — only archive is allowed.',
+    },
+    adopt: {
+      adoptA11y: 'Add {{title}}',
+      added: 'Added',
+    },
+    suggested: {
+      hint: 'Tap a suggestion to adjust it your way before adding — or the + to use it as is.',
+      premiumHint: '{{count}}/{{limit}} active rewards on the free plan · Premium unlocks unlimited',
+      allCategories: 'All',
+      customizeA11y: 'Adjust {{title}} before adding',
+    },
+    empty: {
+      noMatchesTitle: 'Nothing found',
+      noMatchesBody: 'Nothing matches "{{query}}".',
+      noMatchesCatalog: 'No suggestion matches "{{query}}".',
+      noRewardsTitle: 'No rewards yet',
+      noRewardsBody: 'Create your first reward or browse the Suggested tab.',
+      cta: 'New reward',
+    },
+    errors: {
+      couldNotAdoptTitle: 'Could not add',
+      unknown: 'Unknown error.',
+    },
+  },
+
   rewards: {
     title: 'Rewards',
     new: 'New reward',
@@ -1527,12 +1586,11 @@ const en = {
       trackCtaTitle: 'Track a reward',
       trackCtaSub: 'Pin one to keep its progress close.',
       emptyTitle: 'Your shop is empty',
-      emptyBody: 'Tap a suggestion below to add it, or create your own.',
-      inspiration: 'Inspiration',
-      inspirationHint: 'tap to add',
+      emptyBody: 'Start from the suggestions or create a reward of your own.',
+      seeSuggestions: 'See suggestions',
+      createOwn: 'Create my own',
       addReward: 'New reward',
       addRewardSub: 'Add a custom one',
-      couldNotAdd: 'Could not add',
     },
     celebration: {
       eyebrow: 'IN THE BAG',
@@ -1587,22 +1645,6 @@ const en = {
       archiveSub: 'Stops showing in the Shop. Restore anytime from Manage',
       buyQuantity: 'Buy multiple',
       buyQuantitySub: 'Pick how many to grab at once',
-    },
-    manage: {
-      title: 'Manage rewards',
-      reorderHint: 'Hold and drag to reorder',
-      sectionActive: 'Active',
-      sectionArchived: 'Archived',
-      emptyActive: 'No active rewards. Create one from the Shop.',
-      emptyArchived: 'Nothing archived.',
-      restore: 'Restore',
-      restoreFail: 'Could not restore',
-      delete: 'Delete',
-      deleteConfirmTitle: 'Delete "{{title}}" forever?',
-      deleteConfirmBody: 'It will disappear from the app for good. Only rewards with no purchase history can be deleted.',
-      deleteOk: 'Delete',
-      deleteFail: 'Could not delete',
-      deleteBlockedRedemptions: 'You have bought this reward before — only archive is allowed.',
     },
   },
 

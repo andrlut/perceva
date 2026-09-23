@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from '@tanstack/react-query';
 import { useCallback } from 'react';
 
 import type { Reward, RewardCategory, RewardTemplate } from '@/lib/db/types';
@@ -23,6 +28,22 @@ export const rewardKeys = {
   gaps: () => [...rewardKeys.all, 'gaps'] as const,
   ownedOneShots: () => [...rewardKeys.all, 'ownedOneShots'] as const,
 };
+
+/**
+ * Every read a reward mutation can stale: the Vault list, the archived
+ * bin, the days-since metric, the tracked pointer (the archived one may
+ * be the tracked one), the bought one-shots and, when known, the form's
+ * detail row. One call per mutation, so no surface is forgotten — the
+ * Manage screen and the Vault read different slices of the same table.
+ */
+export function invalidateRewardSurfaces(qc: QueryClient, rewardId?: string) {
+  void qc.invalidateQueries({ queryKey: rewardKeys.active() });
+  void qc.invalidateQueries({ queryKey: rewardKeys.archived() });
+  void qc.invalidateQueries({ queryKey: rewardKeys.gaps() });
+  void qc.invalidateQueries({ queryKey: rewardKeys.tracked() });
+  void qc.invalidateQueries({ queryKey: rewardKeys.ownedOneShots() });
+  if (rewardId) void qc.invalidateQueries({ queryKey: rewardKeys.detail(rewardId) });
+}
 
 export interface RedemptionEntry {
   id: string;
@@ -408,10 +429,7 @@ export function useCreateReward() {
       if (error) throw error;
       return (data as { id: string }).id;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: rewardKeys.active() });
-      queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
-    },
+    onSuccess: () => invalidateRewardSurfaces(queryClient),
   });
 }
 
@@ -444,11 +462,7 @@ export function useUpdateReward(rewardId: string) {
         .eq('id', rewardId);
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: rewardKeys.active() });
-      queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
-      queryClient.invalidateQueries({ queryKey: rewardKeys.detail(rewardId) });
-    },
+    onSuccess: () => invalidateRewardSurfaces(queryClient, rewardId),
   });
 }
 
@@ -462,21 +476,15 @@ export function useArchiveReward() {
         .eq('id', rewardId);
       if (error) throw error;
     },
-    onSuccess: (_data, rewardId) => {
-      queryClient.invalidateQueries({ queryKey: rewardKeys.active() });
-      queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
-      queryClient.invalidateQueries({ queryKey: rewardKeys.archived() });
-      queryClient.invalidateQueries({ queryKey: rewardKeys.detail(rewardId) });
-      // Tracked row may have pointed at this reward; clearing UX is the
-      // caller's job but we re-fetch so the tracked card disappears.
-      queryClient.invalidateQueries({ queryKey: rewardKeys.tracked() });
-    },
+    onSuccess: (_data, rewardId) => invalidateRewardSurfaces(queryClient, rewardId),
   });
 }
 
 /**
  * Move an archived reward back to the active set. Bumps updated_at so
- * the Archived list re-sorts on the next fetch.
+ * the Archived list re-sorts on the next fetch. A free user at the cap
+ * gets `free_limit_reached` from the server (the restore trigger of
+ * 20260922000007) — the global mutation handler opens the limit modal.
  */
 export function useRestoreReward() {
   const queryClient = useQueryClient();
@@ -488,20 +496,15 @@ export function useRestoreReward() {
         .eq('id', rewardId);
       if (error) throw error;
     },
-    onSuccess: (_data, rewardId) => {
-      queryClient.invalidateQueries({ queryKey: rewardKeys.active() });
-      queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
-      queryClient.invalidateQueries({ queryKey: rewardKeys.archived() });
-      queryClient.invalidateQueries({ queryKey: rewardKeys.detail(rewardId) });
-    },
+    onSuccess: (_data, rewardId) => invalidateRewardSurfaces(queryClient, rewardId),
   });
 }
 
 /**
- * Hard delete via RPC. Server-side gates block adopted-from-template
- * rewards and any reward with redemption history (caller should surface
- * the error message — it's safe to display verbatim, it's English-only
- * for now since the gates are intentional dead-ends, not edge cases).
+ * Hard delete via RPC — the only delete path (table-level DELETE is
+ * revoked from clients). The server refuses any reward with redemption
+ * history; the Manage screen maps that stable English phrase to the
+ * localized "archive instead" copy.
  */
 export function useDeleteReward() {
   const queryClient = useQueryClient();
@@ -512,11 +515,7 @@ export function useDeleteReward() {
       });
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: rewardKeys.active() });
-      queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
-      queryClient.invalidateQueries({ queryKey: rewardKeys.archived() });
-    },
+    onSuccess: () => invalidateRewardSurfaces(queryClient),
   });
 }
 
@@ -615,10 +614,7 @@ export function useAddTemplateToShop() {
       if (error) throw error;
       return (data as { id: string }).id;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: rewardKeys.active() });
-      queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
-    },
+    onSuccess: () => invalidateRewardSurfaces(queryClient),
   });
 }
 

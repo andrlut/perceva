@@ -20,33 +20,24 @@ import { BuyCelebrationModal } from '@/components/BuyCelebrationModal';
 import { BuyConfirmModal } from '@/components/BuyConfirmModal';
 import { RewardActionSheet } from '@/components/RewardActionSheet';
 import { RewardCard } from '@/components/RewardCard';
-import { RewardsFabStack, rewardsFabClearance } from '@/components/RewardsFabStack';
 import { ScreenBackground } from '@/components/ScreenBackground';
-import { TemplateCard } from '@/components/TemplateCard';
 import { TrackedRewardCard } from '@/components/TrackedRewardCard';
 import { TrackPickerSheet } from '@/components/TrackPickerSheet';
 import { VaultHero } from '@/components/VaultHero';
 import { useCharacter } from '@/lib/api/character';
 import {
-  useAddTemplateToShop,
   useArchiveReward,
   useBankedRewards,
   useRedeemRewardN,
-  useRewardTemplates,
-  useArchivedRewards,
   useOwnedOneShotIds,
   useRewards,
   useSetTrackedReward,
   useTrackedRewardId,
   useUseReward,
 } from '@/lib/api/rewards';
-import type { Reward, RewardCategory, RewardTemplate } from '@/lib/db/types';
+import type { Reward, RewardCategory } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
-import {
-  freeLimitEntity,
-  useLimitGuard,
-  useRewardLimit,
-} from '@/lib/premium';
+import { useLimitGuard, useRewardLimit } from '@/lib/premium';
 import { TourModule } from '@/components/tour/TourModule';
 import { TourTarget } from '@/components/tour/TourTarget';
 import { emitTourEvent } from '@/lib/tour/eventBus';
@@ -82,16 +73,11 @@ export default function RewardsScreen() {
   // Compras únicas já adquiridas — saem da vitrine, mas continuam existindo
   // (a tela de gerenciar lista, e o item comprado vive no banco).
   const ownedOneShots = useOwnedOneShotIds();
-  // Só pra dedupe de sugestão: uma recompensa arquivada ainda "foi adotada",
-  // e a sugestão dela não deve voltar.
-  const archived = useArchivedRewards();
-  const templates = useRewardTemplates();
   const redeem = useRedeemRewardN();
   const useReward = useUseReward();
-  const addTemplate = useAddTemplateToShop();
   const archiveReward = useArchiveReward();
-  // bank query stays only to drive the FAB visibility/count; the actual
-  // bank surface lives at /rewards-bank now.
+  // The bank query only drives the count on the Banco pill; the actual
+  // bank surface lives at /rewards-bank.
   const banked = useBankedRewards();
   const trackedId = useTrackedRewardId();
   const setTracked = useSetTrackedReward();
@@ -99,7 +85,6 @@ export default function RewardsScreen() {
   const guardCreate = useLimitGuard(rewardLimit, 'reward');
 
   const [redeemingId, setRedeemingId] = useState<string | null>(null);
-  const [addingTemplateId, setAddingTemplateId] = useState<string | null>(null);
   // Additive category filter. Empty set = no filter active (everything
   // shows). Tapping a chip adds it to the filter; tapping it again
   // removes it. When the user empties the set back out, they're "back to
@@ -176,9 +161,9 @@ export default function RewardsScreen() {
   );
 
   // Auto-scroll as the M4 steps open: step 2 (balance) → top. Step 3
-  // spotlights the floating wallet FAB, which doesn't scroll — the old
-  // scrollToEnd chased the "Inspiração" block, which disappears once
-  // the user owns every template.
+  // spotlights the Banco pill in the top bar, which doesn't scroll — the
+  // old scrollToEnd chased the "Inspiração" block, which has since moved
+  // to Gerenciar › Sugeridas.
   useEffect(() => {
     if (!isM4Current || m4Status !== 'in_progress') return;
     const id = setTimeout(() => {
@@ -189,13 +174,9 @@ export default function RewardsScreen() {
 
   const coins = character.data?.character.coins ?? 0;
   const bankCount = banked.data?.length ?? 0;
-  // Reserve the floating stack's height under the scroll — up to 174px with
-  // the wallet showing, the worst overlap in the app. Same condition that
-  // renders the wallet, and `max` against the tour gap for the reason
-  // documented on fabStackClearance.
-  const scrollBottomPad =
-    navClearance +
-    Math.max(tourBottomBump, rewardsFabClearance(bankCount > 0 || isM4Current));
+  // No floating stack any more: the scroll only has to clear the nav bar,
+  // or the bottom tour tooltip when one is up.
+  const scrollBottomPad = navClearance + Math.max(tourBottomBump, tokens.space[4]);
   const trackedReward = useMemo(() => {
     if (!trackedId.data) return null;
     const found = (rewards.data ?? []).find((r) => r.id === trackedId.data) ?? null;
@@ -247,32 +228,6 @@ export default function RewardsScreen() {
     return { available, almost, bigGoals };
   }, [filteredRewards, coins]);
 
-  // Templates we don't already own (case-insensitive title match), filtered
-  // by the same selected-categories set. Empty set = no filter.
-  const visibleTemplates = useMemo(() => {
-    // Deduplicação por template_id, não por título. Casar título tinha dois
-    // furos: comparava só contra as ATIVAS, então arquivar uma adotada
-    // trazia a sugestão de volta e um segundo "adotar" criava cópia; e
-    // quebrava quando o usuário renomeava. O vínculo responde os dois.
-    const ownedTemplates = new Set(
-      [...(rewards.data ?? []), ...(archived.data ?? [])]
-        .map((r) => r.template_id)
-        .filter((id): id is string => id != null),
-    );
-    // Título ainda entra como rede pras adotadas antes do vínculo existir
-    // que o backfill não casou (renomeadas) — elas não têm template_id.
-    const ownedTitles = new Set(
-      (rewards.data ?? []).map((r) => r.title.trim().toLowerCase()),
-    );
-    return (templates.data ?? []).filter(
-      (tmpl) =>
-        (!filterActive || selectedCategories.has(tmpl.category)) &&
-        !ownedTemplates.has(tmpl.id) &&
-        !ownedTitles.has(tmpl.title.trim().toLowerCase()) &&
-        !ownedTitles.has((tmpl.title_pt ?? '').trim().toLowerCase()),
-    );
-  }, [templates.data, rewards.data, archived.data, selectedCategories, filterActive]);
-
   // Hero status — only renders meaningful copy when there's NO tracked
   // reward (idle motivator) or when the tracked reward becomes
   // affordable (celebratory beat). When the user has a tracked reward
@@ -311,6 +266,16 @@ export default function RewardsScreen() {
 
   const handleCreateReward = () =>
     guardCreate(() => router.push('/reward-form'));
+
+  // Opening the bank during M4 step 3 sets the flag; the focus effect
+  // above completes the module when the user comes back.
+  const handleOpenBank = () => {
+    Haptics.selectionAsync().catch(() => {});
+    if (isM4Current && (useTourStore.getState().stepIndices.M4 ?? 0) === 2) {
+      bankVisitedInTour.current = true;
+    }
+    router.push('/rewards-bank');
+  };
 
   const handleEditReward = (reward: Reward) => {
     router.push({ pathname: '/reward-form', params: { id: reward.id } });
@@ -396,20 +361,6 @@ export default function RewardsScreen() {
     setTracked.mutate(null);
   };
 
-  const handleAddTemplate = async (template: RewardTemplate) => {
-    setAddingTemplateId(template.id);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    try {
-      await addTemplate.mutateAsync(template);
-    } catch (e) {
-      if (freeLimitEntity(e)) return; // limit modal handled globally
-      const msg = e instanceof Error ? e.message : t('common.unknownError');
-      showInfo(t('rewards.vault.couldNotAdd'), msg);
-    } finally {
-      setAddingTemplateId(null);
-    }
-  };
-
   /**
    * `wide` flips the grid from 2-col to 1-col. Used by the "Big goals"
    * section so big-ticket items get more breathing room — they're
@@ -446,17 +397,51 @@ export default function RewardsScreen() {
   // Pull indicator is local state — the queries' isRefetching also flips on
   // every background refetch (mutations, app foreground).
   const pull = usePullToRefresh(() =>
-    Promise.all([
-      rewards.refetch(),
-      character.refetch(),
-      templates.refetch(),
-      banked.refetch(),
-    ]),
+    Promise.all([rewards.refetch(), character.refetch(), banked.refetch()]),
   );
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScreenBackground>
+      {/* Top bar — Banco (the purchase journey's next step, so it keeps a
+          labelled pill with the count) and Gerenciar (options icon, the
+          same entry Todas as práticas uses). Replaces the floating stack
+          that sat over the grid; create lives inside Gerenciar and on the
+          AddCard at the end of the list. */}
+      <View style={styles.topBar}>
+        <Text style={styles.topTitle}>{t('rewards.title')}</Text>
+        <View style={styles.topActions}>
+          <TourTarget id="rewards.bank" radius={999}>
+            <Pressable
+              onPress={handleOpenBank}
+              style={({ pressed }) => [styles.bankPill, pressed && { opacity: 0.8 }]}
+              hitSlop={6}
+              accessibilityRole="button"
+              accessibilityLabel={
+                bankCount > 0
+                  ? t('rewards.vault.tabs.bank', { count: bankCount })
+                  : t('rewards.bank.title')
+              }
+            >
+              <Ionicons name="wallet" size={16} color={tokens.semantic.coin} />
+              <Text style={styles.bankPillText}>
+                {bankCount > 0
+                  ? t('rewards.vault.tabs.bank', { count: bankCount })
+                  : t('rewards.bank.title')}
+              </Text>
+            </Pressable>
+          </TourTarget>
+          <Pressable
+            onPress={() => router.push('/rewards-manage')}
+            style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('rewardsHub.title')}
+          >
+            <Ionicons name="options-outline" size={20} color={tokens.text.mid} />
+          </Pressable>
+        </View>
+      </View>
       <ScrollView
         ref={scrollRef}
         contentContainerStyle={[styles.content, { paddingBottom: scrollBottomPad }]}
@@ -576,6 +561,34 @@ export default function RewardsScreen() {
                 <Text style={styles.emptySub}>
                   {t('rewards.vault.emptyBody')}
                 </Text>
+                {/* The catalog moved to Gerenciar › Sugeridas; a fresh
+                    user needs the door right here. */}
+                <View style={styles.emptyCtas}>
+                  <Pressable
+                    onPress={() =>
+                      router.push({ pathname: '/rewards-manage', params: { tab: 'suggested' } })
+                    }
+                    style={({ pressed }) => [
+                      styles.emptyCta,
+                      styles.emptyCtaPrimary,
+                      pressed && { opacity: 0.8 },
+                    ]}
+                    accessibilityRole="button"
+                  >
+                    <Ionicons name="bulb" size={16} color={tokens.semantic.coin} />
+                    <Text style={[styles.emptyCtaText, { color: tokens.semantic.coin }]}>
+                      {t('rewards.vault.seeSuggestions')}
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={handleCreateReward}
+                    style={({ pressed }) => [styles.emptyCta, pressed && { opacity: 0.8 }]}
+                    accessibilityRole="button"
+                  >
+                    <Ionicons name="add" size={16} color={tokens.text.hi} />
+                    <Text style={styles.emptyCtaText}>{t('rewards.vault.createOwn')}</Text>
+                  </Pressable>
+                </View>
               </View>
             ) : (
               <>
@@ -644,27 +657,6 @@ export default function RewardsScreen() {
               />
             </View>
 
-            {visibleTemplates.length > 0 && (
-              <View style={[styles.section, { marginTop: tokens.space[6] }]}>
-                <View style={styles.sectionHeader}>
-                  <View style={styles.inspirationLabel}>
-                    <Ionicons name="bulb" size={14} color={tokens.text.mid} />
-                    <Text style={styles.sectionTitle}>{t('rewards.vault.inspiration')}</Text>
-                  </View>
-                  <Text style={styles.sectionMeta}>{t('rewards.vault.inspirationHint')}</Text>
-                </View>
-                <View style={styles.list}>
-                  {visibleTemplates.map((tmpl) => (
-                    <TemplateCard
-                      key={tmpl.id}
-                      template={tmpl}
-                      onAdd={() => handleAddTemplate(tmpl)}
-                      isAdding={addingTemplateId === tmpl.id}
-                    />
-                  ))}
-                </View>
-              </View>
-            )}
       </ScrollView>
       </ScreenBackground>
 
@@ -728,33 +720,7 @@ export default function RewardsScreen() {
         }}
       />
 
-      {/* Floating action stack — manage / create / bank, bottom-right
-          where the thumb naturally lands. Replaces the old top-right
-          header icons; history now lives inside manage and bank.
-          During M4 the wallet renders even with an empty bank (forceBank)
-          so step 3's spotlight has the real thing to anchor on — tapping
-          it just shows the bank's empty state, which is honest. */}
-      <RewardsFabStack
-        bankCount={bankCount}
-        bottomOffset={navClearance}
-        onCreate={handleCreateReward}
-        onManage={() => router.push('/rewards-manage')}
-        onBank={() => {
-          Haptics.selectionAsync().catch(() => {});
-          if (isM4Current && (useTourStore.getState().stepIndices.M4 ?? 0) === 2) {
-            bankVisitedInTour.current = true;
-          }
-          router.push('/rewards-bank');
-        }}
-        forceBank={isM4Current}
-        bankWrap={(node) => (
-          <TourTarget id="rewards.bank" radius={999}>
-            {node}
-          </TourTarget>
-        )}
-      />
-
-      {/* M4 steps 2-3 live here (balance + wallet). Step 1 is on
+      {/* M4 steps 2-3 live here (balance + Banco pill). Step 1 is on
          Home (Rewards tab spotlight). Finishing returns the user to the
          Tasks home so the next module's Home-anchored step 1 can show.
          No `flatNav` — this is a tab screen WITH the floating BottomNavBar. */}
@@ -771,8 +737,54 @@ export default function RewardsScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: tokens.bg.deep },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: tokens.space[2],
+    paddingHorizontal: tokens.space[4],
+    paddingVertical: tokens.space[2],
+  },
+  topTitle: {
+    ...tokens.type.h3,
+    color: tokens.text.hi,
+    flexShrink: 1,
+  },
+  topActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[2],
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: tokens.bg.surface,
+  },
+  // Gold pill — the bank is the purchase journey's next step, so it keeps
+  // the coin palette the old wallet FAB had, at header scale.
+  bankPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    height: 40,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(255,200,61,0.38)',
+    backgroundColor: 'rgba(255,200,61,0.12)',
+  },
+  bankPillText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 12,
+    letterSpacing: 0.3,
+    color: tokens.semantic.coinLight,
+  },
   content: {
-    padding: tokens.space[4],
+    paddingHorizontal: tokens.space[4],
+    paddingTop: tokens.space[1],
   },
   chipsRow: {
     flexDirection: 'row',
@@ -828,11 +840,6 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  inspirationLabel: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
   loadingBox: {
     paddingVertical: tokens.space[8],
     alignItems: 'center',
@@ -858,8 +865,32 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: tokens.space[6],
   },
-  list: {
-    gap: tokens.space[3],
+  emptyCtas: {
+    flexDirection: 'row',
+    gap: tokens.space[2],
+    marginTop: tokens.space[2],
+    paddingHorizontal: tokens.space[4],
+  },
+  emptyCta: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: tokens.space[3],
+    borderRadius: tokens.radius.md,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+    backgroundColor: tokens.bg.surface2,
+  },
+  emptyCtaPrimary: {
+    borderColor: 'rgba(255,200,61,0.38)',
+    backgroundColor: 'rgba(255,200,61,0.10)',
+  },
+  emptyCtaText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 13,
+    color: tokens.text.hi,
   },
   grid: {
     flexDirection: 'row',

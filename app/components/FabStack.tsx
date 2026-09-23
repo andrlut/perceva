@@ -12,7 +12,7 @@ export interface FabAction {
   icon: keyof typeof Ionicons.glyphMap;
   onPress: () => void;
   accessibilityLabel: string;
-  /** sm 38 / md 48 / lg 56 — matches the RewardsFabStack size ladder. */
+  /** sm 38 / md 48 / lg 56 — the app's one size ladder. */
   size?: FabSize;
   tone?: FabTone;
   /** Override the size-derived icon glyph size. */
@@ -82,9 +82,10 @@ const pressedFx = { opacity: 0.85, transform: [{ scale: 0.96 }] };
  * Generic floating action stack — bottom-right thumb zone. The shared
  * primitive behind the app's FAB clusters: a column of circular buttons
  * that grows/shrinks with its `actions` and lets taps fall through the
- * empty gaps (`box-none`). Visually matches the RewardsFabStack spec
- * (38/48/56 diameters, violet primary, neutral utilities) so the Rewards
- * and Tasks stacks read as cousins.
+ * empty gaps (`box-none`). One spec (38/48/56 diameters, violet primary,
+ * neutral utilities) so every stack in the app reads the same. The
+ * Rewards tab no longer floats anything — Banco and Gerenciar live in
+ * its top bar.
  */
 export function FabStack({ bottomOffset, actions }: Props) {
   return (
