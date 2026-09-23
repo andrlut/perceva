@@ -20,6 +20,11 @@
       "id": "filtro-da-apneia",
       "ordinal": 3,
       "image_prompt": "Num cômodo abafado e sem cortinas, uma pessoa em cima de um banquinho de madeira, de costas para quem olha, estica os braços e veda com fita adesiva as frestas de uma janela fechada, concentrada na tarefa, ocupando o centro do quadro com folga em volta; acima e atrás dela, no teto, uma grade de ventilação está completamente entupida de poeira e teias, e ela não percebe. A única luz quente e dourada vem de fora, atravessa a vidraça e desenha a silhueta da pessoa, o rolo de fita e a moldura da janela, morrendo pouco antes do teto — a grade entupida fica num escuro frio e empoeirado. O rolo de fita na mão dela é de um verde-sálvia apagado."
+    },
+    {
+      "id": "levante-em-20-minutos",
+      "ordinal": 4,
+      "image_prompt": "Uma pessoa de roupão sentada numa poltrona da sala de madrugada, vista de lado e de perto, no centro do quadro: ela dobra devagar um pano de prato no colo, sem pressa e sem nenhuma tela por perto; ao fundo, pela porta aberta do quarto, dá pra ver a cama vazia com o lençol jogado de lado. A única luz quente e dourada vem de um abajur baixo ao lado da poltrona e cai sobre as mãos e o roupão; o quarto ao fundo e o resto da sala ficam numa penumbra fria e azulada."
     }
   ]
 }
