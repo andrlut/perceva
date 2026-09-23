@@ -7,60 +7,26 @@
   },
   "ideas": [
     {
-      "id": "mudar-sem-pedir",
+      "id": "somar-em-vez-de-cortar",
       "ordinal": 1,
       "title": {
-        "pt": "Redesenhe seu cargo sem pedir permissão",
-        "en": "Change your job without asking HR"
-      },
-      "claim": {
-        "pt": "Mude uma coisa esta semana no que você faz, com quem você trabalha ou no sentido que dá ao trabalho.",
-        "en": "Change one thing this week in what you do, who you work with or what the work is for."
-      },
-      "body": {
-        "pt": "Em 2001, Wrzesniewski e Dutton deram nome a um comportamento comum e invisível: **job crafting são as mudanças que o próprio funcionário faz nas bordas do trabalho**, sem que ninguém reescreva a descrição do cargo. São três alavancas. Tarefa: você puxa pra si a análise que ninguém quer e vai soltando o que só ocupa agenda. Relação: você troca o almoço de sempre por um café com quem destrava as coisas em outra área. Sentido: você para de se descrever como quem responde e-mails e passa a se ver como quem tira o obstáculo do caminho dos outros. Rudolph, Katz, Lavigne e Zacher juntaram 122 amostras e 35.670 trabalhadores em 2017 e acharam **correlação de .45 entre job crafting e engajamento** — alta pra área, onde a maioria dos números fica entre .10 e .30. É correlação, não prova de causa: quem já está engajado provavelmente mexe mais no próprio trabalho. Mesmo assim, testar custa uma mudança pequena, escolhida por você.",
-        "en": "Wrzesniewski and Dutton named the behaviour in 2001: **job crafting is the change an employee makes to the edges of their own work**, with nobody rewriting the job description. Three levers. Tasks: you pull in the messy analysis nobody wants and quietly let go of the thing that only fills your calendar. Relationships: you swap the usual lunch table for a coffee with the person two floors down who unblocks things. Meaning: you stop describing yourself as the one who answers email and start seeing yourself as the one who clears the path for everyone else. Rudolph, Katz, Lavigne and Zacher pooled 122 samples and 35,670 workers in 2017 and found job crafting **correlating .45 with work engagement** — large in this field, where most numbers land between .10 and .30. It is correlation, not proof: engaged people probably craft more. Testing it still costs you one small change."
-      },
-      "image_brief": "Uma mesa de escritório vista de cima, com teclado, caneca e um crachá de trabalho sem nada escrito preso a um cordão: uma folha impressa de organograma, com retângulos vazios ligados por linhas, está empurrada pra fora do centro, e no lugar dela as mãos de uma pessoa reorganizam cartões coloridos e lisos em colunas novas, com luz de fim de tarde entrando de lado.",
-      "sources": [
-        {
-          "label": {
-            "pt": "Wrzesniewski & Dutton, 2001 · Academy of Management Review",
-            "en": "Wrzesniewski & Dutton, 2001 · Academy of Management Review"
-          },
-          "url": "https://doi.org/10.5465/amr.2001.4378011"
-        },
-        {
-          "label": {
-            "pt": "Rudolph et al., 2017 · Journal of Vocational Behavior",
-            "en": "Rudolph et al., 2017 · Journal of Vocational Behavior"
-          },
-          "url": "https://www.sciencedirect.com/science/article/abs/pii/S0001879117300477"
-        }
-      ],
-      "cta": null
-    },
-    {
-      "id": "somar-em-vez-de-cortar",
-      "ordinal": 2,
-      "title": {
         "pt": "Cortar as tarefas chatas piora o trabalho",
-        "en": "Cutting the bad parts is the wrong change"
+        "en": "Cutting the boring tasks is the wrong change"
       },
       "claim": {
-        "pt": "Adicione um desafio novo em vez de cortar o que incomoda, porque cortar te deixa mais perto de pedir demissão.",
-        "en": "Add a harder demand instead of dropping the one you hate, because dropping it leaves you closer to quitting."
+        "pt": "Em vez de cortar a tarefa que te irrita, puxe pra você um projeto mais difícil neste mês.",
+        "en": "Instead of dropping the task you hate, pull a harder project toward you this month."
       },
       "body": {
-        "pt": "Tims, Bakker e Derks validaram com 1.181 trabalhadores holandeses uma escala que separa o comportamento em quatro movimentos: aumentar recursos estruturais (autonomia, chance de aprender), aumentar recursos sociais (feedback, apoio do chefe), assumir demandas mais desafiadoras e diminuir as demandas que atrapalham. Na meta-análise de Rudolph e colegas, os três primeiros puxam pra cima e o quarto puxa pra baixo. **Assumir desafio a mais teve correlação de .42 com desempenho avaliado por chefe e colegas** — não por autoavaliação, o que deixa o número bem mais confiável. Já diminuir o que atrapalha anda junto de menos satisfação e mais intenção de pedir demissão. A explicação provável é desconfortável: **quem está no limite é justamente quem mais tenta fugir da tarefa pesada**, e desviar dela não resolve o cansaço, só mantém ela viva na cabeça. Antes de tirar a reunião do calendário, pergunte que projeto você pode puxar pra você neste mês.",
-        "en": "Tims, Bakker and Derks validated a scale with 1,181 Dutch workers that splits the behaviour into four moves: adding structural resources (autonomy, room to learn), adding social resources (feedback, backing from your boss), taking on harder demands, and shrinking the demands that get in the way. In Rudolph and colleagues' pooled data the first three point one way and the fourth points the other. **Taking on harder demands correlated .42 with performance rated by bosses and peers** — not self-rated, which is exactly what makes that number worth something. Shrinking the annoying demands travelled with lower job satisfaction and a stronger intention to quit. The likely mechanism stings: **the people who dodge a heavy demand are usually the ones already running on empty**, and dodging never touches the exhaustion, it just keeps the task alive in your head. Before you drop the meeting, ask which project you could pull toward you this month."
+        "pt": "Tims, Bakker e Derks separaram o job crafting — as mudanças que você mesmo faz nas bordas do trabalho, sem ninguém reescrever seu cargo — em quatro movimentos: mais autonomia e chance de aprender, mais feedback e apoio do chefe, assumir demandas mais desafiadoras, e diminuir as demandas que atrapalham. Na meta-análise de Rudolph e colegas, em 2017, os três primeiros andam junto com engajamento e desempenho, e o quarto anda na direção contrária. **Assumir desafio a mais teve correlação de .42 com desempenho avaliado por chefe e colegas**, não por autoavaliação, o que deixa o número bem mais confiável. Encolher o que atrapalha aparece junto de menos satisfação e mais vontade de pedir demissão. O motivo provável incomoda: **quem está no limite é justamente quem mais tenta fugir da tarefa pesada**, e desviar dela não resolve o cansaço que motivou a fuga. Devolver uma tarefa mal alocada continua valendo. Só não espere que subtrair seja o motor. Antes de tirar a reunião do calendário, escolha um projeto maior do que o seu tamanho atual e puxe pra você.",
+        "en": "Tims, Bakker and Derks split job crafting — the changes you make to the edges of your own job, with nobody rewriting your title — into four moves: adding autonomy and room to learn, adding feedback and backing from your boss, taking on harder demands, and shrinking the demands that get in the way. In the 2017 meta-analysis by Rudolph and colleagues, the first three travel with engagement and performance, and the fourth travels the opposite way. **Taking on harder demands correlated .42 with performance rated by bosses and peers**, not by the worker, which makes the number harder to wave away. Shrinking the hindering part came with lower satisfaction and a stronger urge to quit. The likely reason stings: **the people most tempted to dodge the heavy task are the ones already at their limit**, and dodging never touches the exhaustion that drove it. Handing back a badly assigned task is still fine. Subtraction just isn't the engine. Before you drop the meeting, pick a project slightly bigger than you are and pull it toward you."
       },
-      "image_brief": "Num escritório, uma pessoa de pé empurra pra longe com o pé uma caixa pequena de papéis enquanto puxa pra perto do corpo, com as duas mãos, uma caixa de arquivos bem maior e mais pesada.",
+      "image_brief": "Uma pessoa sentada na própria mesa de escritório, vista de frente e ocupando o centro do quadro, firme na cadeira e debruçada sobre o tampo, sem sair do lugar: com a lateral de uma das mãos ela afasta pra beirada uma bandeja rasa de papéis, e com o outro braço e o tronco inclinado pra frente puxa pra perto do peito uma pilha alta de pastas grossas de capa lisa e vazia, recém-apoiada no tampo e pesada o bastante pra marcar os ombros — cotovelo travado, queixo erguido, cara de quem aceita a carga e não de quem desiste. A pilha pesada e o tronco da pessoa enchem o meio do quadro com folga em volta, a bandeja afastada fica pequena num canto do tampo, e o monitor apagado e as mesas vazias do escritório somem desfocados no escuro atrás. Uma única luz quente da luminária de mesa vem de cima e à frente, acendendo o rosto, os antebraços e as capas da pilha — uma delas em verde-sálvia — e deixando todo o resto na penumbra.",
       "sources": [
         {
           "label": {
-            "pt": "Rudolph et al., 2017 · Journal of Vocational Behavior",
-            "en": "Rudolph et al., 2017 · Journal of Vocational Behavior"
+            "pt": "Rudolph et al., 2017 · Journal of Vocational Behavior · 122 amostras, 35.670 trabalhadores",
+            "en": "Rudolph et al., 2017 · Journal of Vocational Behavior · 122 samples, 35,670 workers"
           },
           "url": "https://www.sciencedirect.com/science/article/abs/pii/S0001879117300477"
         },
@@ -76,20 +42,20 @@
     },
     {
       "id": "faca-o-mapa-voce-mesmo",
-      "ordinal": 3,
+      "ordinal": 2,
       "title": {
-        "pt": "Ninguém vai redesenhar seu cargo por você",
-        "en": "Nobody else will change your workday"
+        "pt": "O treinamento da empresa não muda seu trabalho",
+        "en": "Company training won't change your workday"
       },
       "claim": {
-        "pt": "Reserve duas manhãs pra mapear pra onde vão seu tempo e sua energia no trabalho e redesenhar o próprio dia.",
-        "en": "Block two mornings to map where your time and energy go at work, then redraw your own workday."
+        "pt": "Passe uma semana anotando pra onde vão de fato seu tempo e sua energia, e só então redesenhe seu dia.",
+        "en": "Spend a week writing down where your time and energy actually go, then redraw your own workday."
       },
       "body": {
-        "pt": "Duas formas de rodar o mesmo exercício já foram testadas, e só uma mexeu o ponteiro. Van Wingerden e colegas aplicaram o caderno de job crafting — o exercício de redesenhar o próprio trabalho — da Universidade de Michigan com 32 professores holandeses: ao longo de vários dias, cada um mapeou pra onde iam de fato seu tempo e sua energia e só então redesenhou o próprio dia em direção ao que faz bem. **O redesenho aumentou com efeito moderado (d = 0,42, uma diferença que dá pra ver sem estatística) e o engajamento subiu junto (0,36)** — em 32 pessoas, então é pista, não prova. Sakuraya e colegas testaram o formato que empresa compra: dois encontros de 120 minutos, em aula, com 281 funcionários japoneses sorteados em seis unidades. Nada se moveu, nem aos três nem aos seis meses. **A leitura mais provável é que o ganho está em quem olha pro próprio dia** — leitura, não comparação direta: nenhum dos dois estudos testou os dois formatos na mesma amostra.",
-        "en": "Two ways of running the same exercise have been tested, and only one moved anything. Van Wingerden and colleagues used the University of Michigan job crafting workbook — the exercise for redesigning your own job — with 32 Dutch teachers: over several days each one mapped where their time and energy actually went, then redrew their own day toward what they are good at. **Crafting rose with a moderate effect (d = 0.42, a shift you can see without statistics) and engagement followed at 0.36** — in 32 people, so treat it as a lead rather than proof. Sakuraya and colleagues tested the version companies buy: two 120-minute classroom sessions, 281 Japanese employees, six worksites randomised. Nothing moved at three months or at six. **The likeliest reading is that the gain belongs to whoever does the looking** — a reading, not a head-to-head test: neither study ran the solo and the group version in the same sample."
+        "pt": "Empresas leem essa literatura e marcam um treinamento. Sakuraya e colegas testaram esse formato com 281 funcionários japoneses em seis unidades sorteadas entre treinar e não treinar: dois encontros de 120 minutos, em formato de aula. **Não mexeu nada** — nem o engajamento nem o próprio comportamento de redesenhar o trabalho, aos três ou aos seis meses. O caderno de job crafting da Universidade de Michigan pede outra coisa. Ao longo de vários dias, você anota pra onde vão de fato seu tempo e sua energia, tarefa por tarefa, e só então redesenha o dia em direção ao que você faz bem. Van Wingerden e colegas aplicaram o caderno com 32 professores holandeses, e o comportamento de redesenho subiu com efeito moderado (d = 0,42). São 32 pessoas, então é pista, não prova, e nenhum dos dois estudos comparou os dois formatos na mesma amostra. **A diferença provável está em quem faz o trabalho de olhar pro próprio dia**: a aula entrega o conceito, o caderno obriga você a desenhar. Ele cabe em duas manhãs, e dá pra fazer sozinho.",
+        "en": "Companies read this literature and book a training session. Sakuraya and colleagues tested that format with 281 Japanese employees across six worksites, randomised into trained and untrained: two 120-minute sessions, classroom style. **Nothing moved** — not engagement, not the crafting behaviour itself, at three months or at six. The University of Michigan job crafting workbook asks for something else. Over several days you write down where your time and energy actually go, task by task, and only then redraw the day toward what you are good at. Van Wingerden and colleagues ran the workbook with 32 Dutch teachers, and crafting behaviour rose with a moderate effect (d = 0.42). That is 32 people, so treat it as a lead rather than proof, and neither study pitted the two formats against each other in the same sample. **The likely difference is who does the work of looking at their own day**: the class hands you the concept, the workbook makes you draw it. It fits in two mornings, and you can run it alone."
       },
-      "image_brief": "Uma pessoa sentada no chão da sala numa manhã de sábado, com o notebook de trabalho fechado e um crachá de escritório sem nada escrito em cima dele, ao lado do joelho; à frente dela, uma folha grande impressa com a grade vazia de uma semana e cartões de papel em branco espalhados em fileiras sobre a folha, um deles sendo movido de uma fileira pra outra.",
+      "image_brief": "Uma pessoa sozinha na própria estação de trabalho depois do expediente, vista de cima e um pouco de lado, debruçada sobre a mesa e ocupando o centro do quadro: teclado e caneca empurrados pro canto, crachá liso e vazio ainda pendurado no pescoço, cadeira de escritório girada de lado. À frente dela, grande no meio do quadro, uma única tira comprida e vertical de blocos de hora vazios — um só dia de trabalho, de cima a baixo, sem nenhuma outra coluna ao lado — com cartõezinhos de papel em branco encaixados nos blocos; um deles está pinçado entre os dedos, no meio do caminho de um bloco pra outro. A luminária da mesa é a única luz, entrando de lado e acendendo o rosto, as mãos, a tira de blocos e o cartão suspenso, esse em verde-sálvia; as outras mesas do escritório ficam escuras e desfocadas atrás.",
       "sources": [
         {
           "label": {

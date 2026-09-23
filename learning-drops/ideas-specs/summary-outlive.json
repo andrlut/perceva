@@ -1,6 +1,6 @@
 {
   "slug": "summary-outlive",
-  "type": "summary",
+  "category": "book",
   "material_title": {
     "pt": "Outlive: o que sobra depois do ceticismo",
     "en": "Outlive: What Survives a Skeptic's Read"
@@ -10,16 +10,16 @@
       "id": "quatro-cavaleiros",
       "ordinal": 1,
       "title": {
-        "pt": "Quatro doenças. E talvez uma raiz comum.",
-        "en": "Four diseases. And maybe one common root."
+        "pt": "Quatro doenças matam a maioria depois dos 50",
+        "en": "Four diseases kill most people after 50"
       },
       "claim": {
-        "pt": "Quatro famílias de doença dominam a morte adulta. A resistência à insulina liga as quatro — como suspeita, não consenso.",
-        "en": "Four disease families dominate death after 50. Insulin resistance links all four — as a suspicion, not consensus."
+        "pt": "Quatro doenças matam a maioria dos adultos, e a resistência à insulina liga as quatro.",
+        "en": "Four diseases kill most adults after 50, and insulin resistance links all four."
       },
       "body": {
-        "pt": "Attia organiza a mortalidade adulta depois dos 50 em quatro famílias de doença: cardiovascular ateroesclerótica (infarto, AVC), câncer, neurodegenerativa (Alzheimer) e diabetes tipo 2. Juntas, respondem por cerca de 80% das mortes não-acidentais nos países ricos — pelos números de mortalidade que ele cita. São os Quatro Cavaleiros, e o cardiologista Eric Topol chamou essa apresentação para o leigo de melhor que já viu.\n\nA jogada vem depois: a resistência à insulina — a condição metabólica que precede o diabetes tipo 2 — também aparece como fator de risco nas outras três. Daí o apelido “Diabetes Tipo 3” para o Alzheimer, proposto antes dele e popularizado por ele. **Uma raiz única é poderosa como didática e reducionista como mecanismo**: o papel da insulina em câncer e Alzheimer segue hipótese.\n\nO pedaço que já é consenso é o cardiovascular. Attia mede apoB — a proteína que carrega o “colesterol ruim” e prediz risco cardíaco melhor que o LDL clássico — e quer esse marcador o mais baixo e o mais cedo possível.",
-        "en": "Attia sorts adult mortality after 50 into four disease families: atherosclerotic cardiovascular disease (heart attack, stroke), cancer, neurodegenerative disease (Alzheimer's) and type 2 diabetes. Together they account for about 80% of non-accidental deaths in wealthy countries — by the mortality figures he cites. He calls them the Four Horsemen, and cardiologist Eric Topol called that lay presentation the best he has ever seen.\n\nThe move comes next: insulin resistance — the metabolic condition that precedes type 2 diabetes — also shows up as a risk factor in the other three. Hence the “Type 3 Diabetes” label for Alzheimer's, coined before him and popularized by him. **A single root is powerful teaching and reductive mechanism**: insulin's role in cancer and Alzheimer's is still hypothesis, not consensus.\n\nThe piece that is already consensus is the cardiovascular one. Attia measures apoB — the protein that carries “bad cholesterol” and predicts cardiac risk better than classic LDL — and wants that marker as low and as early as possible."
+        "pt": "Attia organiza a mortalidade adulta depois dos 50 em quatro famílias de doença: cardiovascular ateroesclerótica (infarto, AVC), câncer, neurodegenerativa (Alzheimer) e diabetes tipo 2. Juntas, respondem por cerca de 80% das mortes não-acidentais nos países ricos — pelos números de mortalidade que ele cita em Outlive. São os Quatro Cavaleiros, e o cardiologista Eric Topol chamou essa apresentação para o leigo de melhor que já viu.\n\nA jogada vem depois: a resistência à insulina — a condição metabólica que precede o diabetes tipo 2 — também aparece como fator de risco nas outras três. Daí o apelido “Diabetes Tipo 3” para o Alzheimer, proposto antes dele e popularizado por ele. **Uma raiz única é poderosa como didática e reducionista como mecanismo**: o papel da insulina em câncer e Alzheimer segue hipótese, não consenso.\n\nTrate a saúde metabólica como o terreno comum das quatro doenças, e a raiz única como uma suspeita ainda em aberto. O pedaço que já é consenso é o cardiovascular.",
+        "en": "Attia sorts adult mortality after 50 into four disease families: atherosclerotic cardiovascular disease (heart attack, stroke), cancer, neurodegenerative disease (Alzheimer's) and type 2 diabetes. Together they account for about 80% of non-accidental deaths in wealthy countries — by the mortality figures he cites in Outlive. He calls them the Four Horsemen, and cardiologist Eric Topol called that lay presentation the best he has ever seen.\n\nThe move comes next: insulin resistance — the metabolic condition that precedes type 2 diabetes — also shows up as a risk factor in the other three. Hence the “Type 3 Diabetes” label for Alzheimer's, coined before him and popularized by him. **A single root is powerful teaching and reductive mechanism**: insulin's role in cancer and Alzheimer's is still hypothesis, not consensus.\n\nTreat metabolic health as the common ground of all four diseases, and the single root as a suspicion still open. The piece that is already consensus is the cardiovascular one."
       },
       "image_brief": "Um corte transversal do solo sob quatro árvores diferentes vistas lado a lado: as raízes das quatro descem na direção de uma mesma raiz grossa no centro, mas o último trecho de cada uma se perde na terra escura sem encostar nela.",
       "sources": [
@@ -37,12 +37,12 @@
       "id": "risco-treinavel",
       "ordinal": 2,
       "title": {
-        "pt": "Fora de forma: risco maior que o cigarro.",
-        "en": "Out of shape: a bigger risk than smoking."
+        "pt": "Sedentarismo pesa mais que cigarro",
+        "en": "Being unfit weighs more than smoking"
       },
       "claim": {
-        "pt": "Sair dos 25% piores de condicionamento para os 25% melhores corta o risco de morte em ~5x — mais que parar de fumar.",
-        "en": "Moving from the bottom 25% of fitness to the top 25% cuts death risk about 5x — more than quitting smoking."
+        "pt": "Sair do fundo do condicionamento aeróbico reduz mais o seu risco de morrer do que parar de fumar.",
+        "en": "Climbing out of the bottom of aerobic fitness cuts your risk of dying more than quitting smoking."
       },
       "body": {
         "pt": "Se você fosse mudar uma coisa só, seria essa. Attia diz que, se pudesse prescrever um único medicamento para saúde e longevidade, seria exercício. O número por trás disso: sair dos 25% piores de capacidade cardiorrespiratória — o seu condicionamento aeróbico — para os 25% melhores corresponde a aproximadamente 5 vezes menos risco de morte, **efeito maior que parar de fumar**. São 122 mil pessoas, no JAMA Network Open, 2018 (Mandsager et al.).\n\nA receita que ele defende: cerca de 80% do volume em Zone 2 — a faixa aeróbica em que o corpo ainda queima principalmente gordura como combustível — e 20% em trabalho de VO2 max, a capacidade máxima de consumir oxigênio sob esforço, treinada em intervalos intensos. Mais força pesada, estabilidade e mobilidade.\n\nA direção é boa ciência; a proporção exata, não. O 80/20 vem do treino de elite de endurance, e a evidência de ensaios randomizados para o adulto comum é fina — o médico Brad Stanfield aponta isso. Fique com a forma: quase todo o volume fácil, uma fatia curta e intensa.",
@@ -64,16 +64,16 @@
       "id": "decatlo-centenario",
       "ordinal": 3,
       "title": {
-        "pt": "Treino: chegue aos 50 com o dobro da forma.",
-        "en": "Training: reach 50 twice as fit as you need."
+        "pt": "Treine hoje para o corpo dos seus 80 anos",
+        "en": "Train today for the body you will have at 80"
       },
       "claim": {
-        "pt": "A função cai 10 a 15% por década depois dos 50: chegue aos 50 com o dobro da forma que vai precisar aos 80.",
-        "en": "Function drops 10-15% per decade after 50: reach 50 with twice the fitness you will need at 80."
+        "pt": "Chegue aos 50 com o dobro da forma que você vai precisar aos 80.",
+        "en": "Reach 50 with twice the capacity you will need at 80."
       },
       "body": {
-        "pt": "Attia propõe um exercício de planejamento que chama de Decatlo Centenário. A pergunta é simples: que tarefas físicas você quer ainda conseguir fazer na sua Década Marginal, os últimos 10 anos de vida? Carregar uma mala de 30 libras, levantar do chão sem ajuda, pegar um neto no colo. A lista é sua, e é ela que vira o alvo do treino.\n\nA conta que sustenta o método: a função decai de 10 a 15% por década depois dos 50 — número que Attia cita para justificar o Decatlo. **Para levantar do chão sem ajuda aos 80, você precisa chegar aos 50 com o dobro da forma que vai precisar lá.** Treinar para o que você aguenta hoje é treinar para perder.\n\nO ganho aqui é direção concreta. Em vez de “ficar em forma”, você treina para uma tarefa com data marcada. Escreva cinco coisas que quer poder fazer aos 80 e deixe que elas escolham o seu treino.",
-        "en": "Attia proposes a planning exercise he calls the Centenarian Decathlon. The question is simple: which physical tasks do you want to still perform in your Marginal Decade, the last 10 years of your life? Carry a 30-lb suitcase, get off the floor unaided, lift a grandchild. The list is yours, and it becomes the target your training aims at.\n\nThe arithmetic behind the method: function declines 10 to 15% per decade after 50 — a figure Attia cites to justify the Decathlon. **To get off the floor unaided at 80, you have to arrive at 50 twice as fit as you will need to be then.** Training for what you can handle today is training to fall short.\n\nThe gain here is concrete direction. Instead of “getting in shape,” you train for a task with a date on it. Write down five things you want to still do at 80 and let them pick your workouts."
+        "pt": "Attia propõe um exercício de planejamento que chama de Decatlo Centenário. A pergunta é simples: que tarefas físicas você quer ainda conseguir fazer na sua Década Marginal, os últimos 10 anos de vida? Carregar uma mala de 30 libras, levantar do chão sem ajuda, pegar um neto no colo. A lista é sua, e é ela que vira o alvo do treino.\n\nA conta que sustenta o método: a função decai de 10 a 15% por década depois dos 50 — número que Attia cita em Outlive para justificar o Decatlo. **Para levantar do chão sem ajuda aos 80, você precisa chegar aos 50 com o dobro da forma que vai precisar lá.** Treinar para o que você aguenta hoje é treinar para perder.\n\nO ganho aqui é direção concreta. Em vez de “ficar em forma”, você treina para uma tarefa com data marcada. Escreva cinco coisas que quer poder fazer aos 80 e deixe que elas escolham o seu treino.",
+        "en": "Attia proposes a planning exercise he calls the Centenarian Decathlon. The question is simple: which physical tasks do you want to still perform in your Marginal Decade, the last 10 years of your life? Carry a 30-lb suitcase, get off the floor unaided, lift a grandchild. The list is yours, and it becomes the target your training aims at.\n\nThe arithmetic behind the method: function declines 10 to 15% per decade after 50 — a figure Attia cites in Outlive to justify the Decathlon. **To get off the floor unaided at 80, you have to arrive at 50 twice as fit as you will need to be then.** Training for what you can handle today is training to fall short.\n\nThe gain here is concrete direction. Instead of “getting in shape,” you train for a task with a date on it. Write down five things you want to still do at 80 and let them pick your workouts."
       },
       "image_brief": "Uma pessoa idosa de pé no quintal levantando uma criança pequena do chão até a altura do peito, joelhos dobrados e pés firmes na grama, enquanto uma mala pesada fica esquecida ao lado dos dois.",
       "sources": [
@@ -91,16 +91,16 @@
       "id": "aposta-cara",
       "ordinal": 4,
       "title": {
-        "pt": "Longevidade: o caro é a parte mais frágil.",
-        "en": "Longevity: the priciest part is the shakiest."
+        "pt": "Dois exames que o check-up comum não pede",
+        "en": "Two blood tests your check-up skips"
       },
       "claim": {
-        "pt": "A camada cara — ressonância de corpo inteiro e rapamicina — é a menos sustentada. O que funciona custa quase nada.",
-        "en": "The expensive layer — whole-body MRI and rapamycin — is the least supported. What works costs almost nothing."
+        "pt": "Peça apoB no próximo exame de sangue e Lp(a) uma vez na vida.",
+        "en": "Ask for apoB at your next blood test, and Lp(a) once in your life."
       },
       "body": {
-        "pt": "O capítulo de screening é o mais contestado do livro. Attia defende ressonância de corpo inteiro de rotina para achar câncer cedo, e Eric Topol criticou isso explicitamente: cascata de biópsias por achados acidentais, ansiedade do paciente e zero ganho de mortalidade comprovado em quem não tem fator de risco específico.\n\nA farmacologia é ainda mais especulativa. Attia toma rapamicina off-label. Em outras espécies, camundongos principalmente, o sinal de extensão de vida é o mais forte de qualquer droga já testada — mas em humanos não há dados de desfecho de longo prazo, e **o ensaio PEARL, de 2024, foi largamente nulo nos desfechos funcionais que mediu**. Bryan Johnson parou a rapamicina citando efeitos colaterais.\n\nSome a clínica dele, que cobra, segundo relatos, entre cinco e seis dígitos por ano e atende menos de 100 pessoas. Mas o que sobra é barato: peça Lp(a) uma vez na vida — é uma partícula de colesterol herdada geneticamente, cujo valor quase não muda com dieta. Testou uma vez, resolveu.",
-        "en": "The screening chapter is the most contested part of the book. Attia advocates routine whole-body MRI to catch cancer early, and Eric Topol criticized that explicitly: a cascade of biopsies from incidental findings, patient anxiety, and zero proven mortality benefit in people without a specific risk factor.\n\nPharmacology is more speculative still. Attia takes rapamycin off-label. In other species, mice above all, the lifespan extension signal is the strongest of any drug ever tested — but in humans there is no long-term outcome data, and **the 2024 PEARL trial came out largely null on the functional endpoints it measured**. Bryan Johnson stopped rapamycin citing side effects.\n\nAdd the clinic, which reportedly charges five to six figures a year and serves fewer than 100 people. Yet what is left costs almost nothing: test Lp(a) once in your life — a genetically inherited cholesterol particle whose value barely moves with diet. Test once, done."
+        "pt": "O capítulo de rastreamento é o mais contestado do livro. Attia defende ressonância de corpo inteiro de rotina para achar câncer cedo, e Eric Topol criticou isso explicitamente: cascata de biópsias por achados acidentais, ansiedade do paciente e zero ganho de mortalidade comprovado em quem não tem fator de risco específico.\n\nA farmacologia é ainda mais especulativa. Attia toma rapamicina off-label. Em camundongos, o sinal de extensão de vida é o mais forte de qualquer droga já testada — mas em humanos não há dados de desfecho de longo prazo, e **o ensaio PEARL, de 2024, foi largamente nulo nos desfechos funcionais que mediu**. Some a clínica dele, que cobra, segundo relatos, entre cinco e seis dígitos por ano.\n\nO que sobra é barato. Peça apoB — a proteína que carrega o colesterol ruim e prediz risco cardíaco melhor que o LDL clássico — no próximo exame de rotina. E peça Lp(a), uma partícula de colesterol herdada geneticamente, uma vez: o valor quase não muda com dieta, então testou uma vez, resolveu.",
+        "en": "The screening chapter is the most contested part of the book. Attia advocates routine whole-body MRI to catch cancer early, and Eric Topol criticized that explicitly: a cascade of biopsies from incidental findings, patient anxiety, and zero proven mortality benefit in people without a specific risk factor.\n\nPharmacology is more speculative still. Attia takes rapamycin off-label. In mice, the lifespan extension signal is the strongest of any drug ever tested — but in humans there is no long-term outcome data, and **the 2024 PEARL trial came out largely null on the functional endpoints it measured**. Add his clinic, which reportedly charges five to six figures a year.\n\nWhat is left costs almost nothing. Ask for apoB — the protein that carries bad cholesterol and predicts cardiac risk better than classic LDL — at your next routine blood draw. And ask for Lp(a), a cholesterol particle you inherit, once: the value barely moves with diet, so test once and you are done."
       },
       "image_brief": "Um braço estendido sobre a maca durante uma coleta de sangue de rotina, com o tubinho já cheio na mão da enfermeira; ao fundo, desfocado e apagado, o túnel vazio de um aparelho de ressonância magnética.",
       "sources": [

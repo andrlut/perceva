@@ -466,6 +466,53 @@ bare `ffmpeg` is not on PATH) and Read it, and leave it for the maintainer
 `width × height = 720 × 1280`; the pilots' posters weigh ~40–50 KB, and one
 of a few KB is a black or white frame — Read it before uploading.
 
+### 6b. Fidelity gate — the video must agree with the idea's TEXT
+
+**Run this on every fresh video, before the upload. A video that
+contradicts the idea is worse than a missing one**: the reader trusts the
+card, and the card is the thing we tested.
+
+The gate exists because of a real miss. The PT video of `glossary-play`
+idea 1 says a demanding hobby delivers **4 of the 4** ingredients of rest;
+the idea's own text says **3**. It passed every check we had, because the
+only question asked was "did the video leave the idea's subject?" — it had
+not. Same source, same prompt, one minute apart, and the EN video got it
+right: the model rolls the dice, so the gate has to be on the OUTPUT.
+
+1. One grid per video, never ten PNGs:
+
+```bash
+"$FF" -i learning-drops/inbox/<slug>/idea.<n>.<lang>.mp4 \
+  -vf "fps=1/8,tile=5x2" -frames:v 1 \
+  learning-drops/inbox/<slug>/idea.<n>.<lang>.grid.png
+```
+
+2. Dispatch **`learning-card-tester`** (Haiku) with the grid and
+   **nothing else** — no idea text, no title, no claim. Ask it to
+   transcribe, literally, every number, unit and factual assertion it can
+   read on screen, and to say in one line what the video is about. It is
+   blind on purpose: a reader who already knows the answer reads the
+   answer into the frames.
+
+3. **You** do the comparison, with the idea's `claim` and `body` in hand:
+   - a number that appears in both, with **different values** (3 vs 4, 30 g
+     vs 40 g, 66 days vs 21), is a contradiction — **stop**;
+   - an assertion the idea's text does not support, even a flattering one,
+     is a contradiction — the video may not add findings;
+   - a subject that is not the idea's is the old drift case, unchanged.
+
+4. On a contradiction: do **not** upload and do **not** write a migration
+   for that item. Mark it `needs_review` in the manifest with the two
+   readings quoted side by side (`video: "4 de 4"` vs `texto: "3"`), and
+   regenerate it at most **once** in the same run; the counter still spends
+   against the cap. If the second take also contradicts, leave it for the
+   maintainer — the fix is editorial (the idea's own text may be the vague
+   one), not another roll.
+
+The gate costs one Haiku call per video (~US$ 0.01) against a generation
+that costs minutes of Notebook time, so it is never skipped "to save a
+step". Record `fidelity: "ok" | "needs_review"` per item in the manifest.
+
 Deep dives:
 
 ```bash
