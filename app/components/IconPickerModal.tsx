@@ -176,10 +176,20 @@ export function IconPickerModal({
       // Android back closes only the picker, never the form behind it.
       onRequestClose={onClose}
     >
-      <Pressable style={[styles.scrim, { paddingBottom: lift }]} onPress={onClose}>
-        {/* stopPropagation so taps inside the sheet don't bubble to the
-            scrim's close handler. */}
+      {/* The scrim is a SIBLING behind the sheet, never its parent, and the
+          sheet is a plain View: a Pressable ancestor becomes the touch
+          responder when the finger lands on empty space (a gap between
+          cells, a section label) and the native ScrollView can no longer
+          take the gesture — only touches that start ON a cell would scroll.
+          Same structure as AdoptPeriodicitySheet / PeriodicitySheet. */}
+      <View style={[styles.root, { paddingBottom: lift }]}>
         <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={onClose}
+          accessibilityRole="button"
+          accessibilityLabel={t('common.close')}
+        />
+        <View
           style={[
             styles.sheet,
             {
@@ -192,7 +202,6 @@ export function IconPickerModal({
               ),
             },
           ]}
-          onPress={(e) => e.stopPropagation()}
         >
           <View style={styles.handle} />
           <View style={styles.titleRow}>
@@ -298,8 +307,8 @@ export function IconPickerModal({
               ))
             )}
           </ScrollView>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }
@@ -308,7 +317,7 @@ export function IconPickerModal({
 const CELL = 48;
 
 const styles = StyleSheet.create({
-  scrim: {
+  root: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.55)',
     justifyContent: 'flex-end',
