@@ -20,6 +20,11 @@
       "id": "manutencao-e-comportamento",
       "ordinal": 3,
       "image_prompt": "Duas pessoas de pijama, ombro contra ombro diante da pia da cozinha, vistas de trás e de lado, ocupando o centro do quadro com folga em volta: uma lava o último prato e a outra enxuga com um pano, as duas com os ombros caídos de sono, o resto da casa completamente escuro atrás. A única luz quente vem da luminária acesa bem acima da pia e cai reta sobre as mãos, sobre o prato molhado que devolve o brilho e sobre os ombros encostados, deixando os rostos meio na sombra; o pano de prato é o único acento verde-sálvia da cena."
+    },
+    {
+      "id": "coisa-nova-junto",
+      "ordinal": 4,
+      "image_prompt": "Um casal numa aula de cerâmica à noite, visto de perto e de frente, no centro do quadro: os dois com as mãos sujas de barro sobre o mesmo torno, o vaso saindo torto entre elas, os dois se olhando e rindo do estrago; atrás, prateleiras de peças cruas fora de foco. A única luz quente e dourada vem de uma lâmpada baixa sobre o torno e cai nas mãos e nos dois rostos; o resto do ateliê fica numa penumbra fria, com um único acento verde-sálvia no avental de um deles."
     }
   ]
 }

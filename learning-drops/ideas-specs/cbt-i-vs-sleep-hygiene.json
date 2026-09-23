@@ -1,6 +1,6 @@
 {
   "slug": "cbt-i-vs-sleep-hygiene",
-  "type": "explainer",
+  "category": "research",
   "material_title": {
     "pt": "Quarto escuro não cura insônia",
     "en": "A Dark Room Won't Cure Insomnia"
@@ -14,12 +14,12 @@
         "en": "You kept the sleep checklist. Still awake."
       },
       "claim": {
-        "pt": "A lista de higiene do sono não trata insônia crônica. Desde 2016 a primeira linha é a terapia cognitivo-comportamental.",
-        "en": "The sleep hygiene checklist doesn't treat chronic insomnia. First line, since 2016, is cognitive behavioral therapy."
+        "pt": "Se você dorme mal há mais de três meses, procure terapia cognitivo-comportamental, não outra lista de hábitos.",
+        "en": "If you've slept badly for over three months, look for cognitive behavioral therapy, not another habit checklist."
       },
       "body": {
-        "pt": "Em 2016, o American College of Physicians revisou os ensaios randomizados e cravou: todo adulto com insônia crônica deve começar pela terapia cognitivo-comportamental para insônia, a TCC-I, um protocolo comportamental de quatro a oito semanas. Recomendação forte, evidência de alta qualidade. Cinco anos depois, a Academia Americana de Medicina do Sono sugeriu que clínicos **não usem higiene do sono como terapia isolada**.\n\nIsolada é a palavra que carrega tudo. Café às onze da noite continua má ideia, e a higiene segue como ingrediente dentro da TCC-I. Uma revisão de 2015 liderada por Leah Irish, na Sleep Medicine Reviews, mostrou o buraco: cafeína e álcool são bem estudados, horário de exercício e ruído bem menos, e empilhar componentes fracos não vira efeito de tratamento.\n\nIsso vale se você tem insônia crônica: dificuldade de dormir em três noites por semana, por três meses, com custo no dia seguinte. No Estudo Epidemiológico do Sono de São Paulo, com polissonografia, Castro e colegas acharam o transtorno completo em 15% das pessoas (Annals of Neurology, 2013). Pra noite ruim ocasional, a lista basta.",
-        "en": "In 2016 the American College of Physicians reviewed the randomized trials and said it plainly: every adult with chronic insomnia should start with cognitive behavioral therapy for insomnia, CBT-I, a four-to-eight week behavioral protocol. Strong recommendation, high-quality evidence. Five years later the American Academy of Sleep Medicine suggested clinicians **not use sleep hygiene as a stand-alone therapy**.\n\nStand-alone is the word carrying everything. Coffee at eleven at night is still a bad idea, and hygiene stays as one ingredient inside CBT-I. A 2015 review led by Leah Irish in Sleep Medicine Reviews showed the hole: caffeine and alcohol are well studied, exercise timing and noise much less so, and stacking weak components doesn't add up to a treatment effect.\n\nThis applies if you have chronic insomnia: trouble sleeping three nights a week, for three months, with a cost the next day. In the São Paulo Epidemiologic Sleep Study, using polysomnography, Castro and colleagues found the full disorder in 15% of people (Annals of Neurology, 2013). For the occasional rough night, the checklist is enough."
+        "pt": "Higiene do sono é a lista que você já conhece: quarto escuro, nada de café à tarde, celular fora da cama. Em 2016, o American College of Physicians revisou os ensaios randomizados e cravou que todo adulto com insônia crônica deve começar pela terapia cognitivo-comportamental para insônia, a TCC-I — um protocolo de quatro a oito semanas, com diário e tarefa de casa. Recomendação forte, evidência de alta qualidade. Cinco anos depois, a Academia Americana de Medicina do Sono sugeriu que clínicos **não usem higiene do sono como terapia isolada**.\n\nIsolada carrega tudo. Café às onze da noite continua má ideia, e a higiene segue como ingrediente dentro da TCC-I. Uma revisão de 2015 liderada por Leah Irish, na Sleep Medicine Reviews, mostrou o buraco: cafeína e álcool são bem estudados, horário de exercício e ruído bem menos, e empilhar itens fracos não vira efeito de tratamento.\n\nInsônia crônica tem endereço: dificuldade de dormir em três noites por semana, por três meses, com custo no dia seguinte. Pra noite ruim ocasional, a lista basta.",
+        "en": "Sleep hygiene is the checklist you already know: dark room, no coffee after lunch, phone out of the bedroom. In 2016 the American College of Physicians reviewed the randomized trials and said it plainly — every adult with chronic insomnia should start with cognitive behavioral therapy for insomnia, CBT-I, a four-to-eight week protocol with a diary and homework. Strong recommendation, high-quality evidence. Five years later the American Academy of Sleep Medicine suggested clinicians **not use sleep hygiene as a stand-alone therapy**.\n\nStand-alone carries the whole sentence. Coffee at eleven at night is still a bad idea, and hygiene stays an ingredient inside CBT-I. A 2015 review led by Leah Irish in Sleep Medicine Reviews showed the hole: caffeine and alcohol are well studied, exercise timing and noise much less, and stacking weak items never adds up to a treatment.\n\nChronic insomnia has an address: trouble sleeping three nights a week, for three months, with a cost the next day. For the occasional rough night, the checklist is enough."
       },
       "image_brief": "Uma pessoa sentada muito ereta no sofá no meio da madrugada, olhos bem abertos no escuro, cercada por almofadas perfeitamente alinhadas, uma manta dobrada em quadrado, uma máscara de dormir no braço do sofá e uma xícara de chá intocada no chão.",
       "sources": [
@@ -44,16 +44,16 @@
       "id": "menos-tempo-na-cama",
       "ordinal": 2,
       "title": {
-        "pt": "Insônia: menos tempo na cama, não mais.",
-        "en": "Insomnia: less time in bed, not more."
+        "pt": "Contra a insônia, fique menos tempo na cama",
+        "en": "For insomnia, spend less time in bed"
       },
       "claim": {
-        "pt": "Encolher o tempo na cama até o sono que você realmente tem cortou 26 minutos de vigília no meio da noite.",
-        "en": "Shrinking your time in bed toward the sleep you actually get cut 26 minutes of wake time in the middle of the night."
+        "pt": "Fique na cama só as horas em que você realmente dorme e aumente esse tempo 15 minutos por vez.",
+        "en": "Stay in bed only for the hours you actually sleep, then add fifteen minutes at a time."
       },
       "body": {
-        "pt": "A restrição de sono, criada por Arthur Spielman em 1987, manda o contrário do óbvio: menos tempo deitado, não mais. Oito horas e meia na cama, cinco e meia dormindo? A janela permitida encolhe pra perto dessas cinco e meia.\n\nO alvo é a pressão homeostática do sono — a fome de sono, que cresce a cada hora acordado e só é saciada dormindo. Cama com sobra de tempo dilui essa fome e devolve sono leve; cama apertada concentra. Quando você volta a dormir quase todo o tempo em que está deitado, a janela alarga quinze minutos por vez.\n\nNuma meta-análise de ensaios randomizados, o tratamento tirou 26 minutos de vigília no meio da noite, 19 minutos pra pegar no sono e somou 10 pontos percentuais de eficiência, com ganho mantido no seguimento longo (Trauer et al., Annals of Internal Medicine, 2015).\n\n**O preço vem antes do prêmio:** nas primeiras uma ou duas semanas você fica mais mole de dia. Faça duas semanas de diário de sono antes de encolher nada e ancore a hora de acordar.",
-        "en": "Sleep restriction, developed by Arthur Spielman in 1987, tells you the opposite of the obvious: less time in bed, not more. Eight and a half hours lying there, five and a half asleep? Your allowed window shrinks toward that five and a half.\n\nThe target is homeostatic sleep pressure — sleep hunger, which builds with every waking hour and is only fed by sleeping. A roomy schedule dilutes that hunger and hands back light sleep; a tight one concentrates it. Once you're asleep almost the whole time you're in bed, the window widens again, fifteen minutes at a time.\n\nIn a meta-analysis of randomized trials, the treatment cut 26 minutes of wake time in the middle of the night and 19 minutes to fall asleep, and added 10 percentage points of sleep efficiency, with gains held at long-term follow-up (Trauer et al., Annals of Internal Medicine, 2015).\n\n**The price arrives before the payoff:** for the first week or two you feel worse during the day. Keep a sleep diary for two weeks before shrinking anything, and anchor your wake time."
+        "pt": "A restrição de sono, criada por Arthur Spielman em 1987, manda o contrário do óbvio. Oito horas e meia deitado e cinco e meia dormindo? A janela permitida encolhe pra perto dessas cinco e meia. O alvo é a pressão homeostática do sono — a fome de sono, que cresce a cada hora acordado e só é saciada dormindo. Cama com sobra de tempo dilui essa fome e devolve sono leve. Cama apertada concentra. Quando você volta a dormir quase todo o tempo em que está deitado, alargue quinze minutos por vez, sempre ancorando a hora de acordar.\n\n**O preço vem antes do prêmio:** na primeira ou segunda semana você fica mais mole de dia. Numa meta-análise de ensaios randomizados, a terapia tirou 26 minutos de vigília no meio da noite, e o ganho seguia no seguimento longo (Trauer et al., Annals of Internal Medicine, 2015).\n\nFaça duas semanas de diário de sono antes de encolher nada. E se você ronca alto ou acorda cansado depois de oito horas na cama, procure médico primeiro: restringir sono não trata apneia.",
+        "en": "Sleep restriction, built by Arthur Spielman in 1987, asks for the opposite of the obvious. Eight and a half hours lying there, five and a half of them asleep? Your allowed window shrinks toward that five and a half. The target is homeostatic sleep pressure — sleep hunger, which builds with every waking hour and is only fed by sleeping. A roomy schedule dilutes that hunger and hands back light sleep. A tight one concentrates it. Once you sleep through almost all the time you spend in bed, widen the window fifteen minutes at a time, always anchoring your wake-up hour.\n\n**The price arrives before the payoff:** the first week or two you feel duller during the day. In a meta-analysis of randomized trials, the therapy cut 26 minutes of wake time in the middle of the night, and the gain held at long-term follow-up (Trauer et al., Annals of Internal Medicine, 2015).\n\nKeep a sleep diary for two weeks before shrinking anything. And if you snore loudly or wake up exhausted after eight hours in bed, see a doctor first: restricting sleep does not treat apnea."
       },
       "image_brief": "Duas vasilhas lado a lado numa bancada de cozinha recebendo a mesma quantidade de água de uma jarra: numa travessa larga e rasa a água some numa película fina; num copo estreito e alto ela sobe até quase transbordar.",
       "sources": [
@@ -75,21 +75,21 @@
       "cta": null
     },
     {
-      "id": "filtro-da-apneia",
+      "id": "levante-em-20-minutos",
       "ordinal": 3,
       "title": {
-        "pt": "Antes de encurtar o sono: um filtro médico.",
-        "en": "Before you shorten sleep: a medical filter."
+        "pt": "Rolar na cama treina o cérebro a ficar acordado",
+        "en": "Tossing in bed trains your brain to stay awake"
       },
       "claim": {
-        "pt": "Ronco alto ou cansaço depois de oito horas na cama pedem médico antes: restringir sono não trata apneia.",
-        "en": "Loud snoring or waking exhausted after eight hours in bed means a doctor first: restricting sleep won't treat apnea."
+        "pt": "Não pegou no sono em uns 20 minutos, levante e vá pra outro cômodo. Volte só quando estiver com sono.",
+        "en": "If sleep hasn't come in 20 minutes, get up and go to another room. Come back only when you feel sleepy."
       },
       "body": {
-        "pt": "A restrição de sono trata insônia. Ela não trata apneia obstrutiva do sono, a condição em que a respiração para dezenas de vezes por noite. Se você ronca alto, se alguém já te viu parar de respirar dormindo, ou se acorda cansado mesmo depois de oito horas na cama, investigue isso primeiro, com médico. **Restringir o sono de quem tem apneia não tratada é resolver o problema errado.**\n\nE há casos em que a restrição não se faz por conta própria, justamente porque o mecanismo dela é sono curto controlado: transtorno bipolar, porque privação de sono pode disparar mania; epilepsia não controlada, porque baixa o limiar pra crises; idoso com risco alto de queda; e trabalho em que cochilar mata alguém, como motorista profissional ou operador de máquina pesada. Nesses casos a terapia cognitivo-comportamental continua indicada. O que muda é que ela precisa de acompanhamento clínico, não de um artigo.\n\nFaltam terapeutas treinados. As versões digitais têm ensaios randomizados atrás, costumam render menos que o profissional, e são a porta que a maioria consegue abrir.",
-        "en": "Sleep restriction treats insomnia. It does not treat obstructive sleep apnea, the condition where breathing stops dozens of times a night. If you snore loudly, if anyone has watched you stop breathing in your sleep, or if you wake up exhausted after eight hours in bed, get that checked by a doctor first. **Restricting sleep in someone with untreated apnea solves the wrong problem.**\n\nSome situations also mean you don't run restriction on your own, precisely because controlled short sleep is its mechanism: bipolar disorder, where sleep deprivation can trigger mania; uncontrolled seizure disorders, where it lowers the seizure threshold; older adults at high risk of falls; and jobs where dozing off kills someone, like professional drivers or heavy-machinery operators. Cognitive behavioral therapy is still the right treatment there. What changes is that it needs a clinician alongside it, not an article.\n\nTrained therapists are scarce. Digital versions have randomized trials behind them, tend to work less well than a clinician, and are the door most people can actually open."
+        "pt": "O controle de estímulo, desenhado por Richard Bootzin em 1972, parte de uma coisa banal: o cérebro aprende por associação. Se você passa duas horas por noite deitado acordado, rolando, planejando, olhando o teto, a cama deixa de ser um sinal de sono e vira um sinal de vigília. Você treinou isso sem querer, noite após noite.\n\nDesfazer o treino tem duas regras. **A cama serve pra dormir e pra sexo, mais nada** — sem ler, sem telefone, sem TV, sem esperar o sono chegar deitado. E se o sono não veio em uns 20 minutos, você levanta, vai pra outro cômodo, faz algo chato com luz fraca e só volta quando estiver com sono de novo. Sem olhar o relógio. Quantas vezes forem necessárias: nas primeiras noites, podem ser cinco.\n\nIsso não é dica de conforto. É uma das peças que fazem o trabalho pesado da terapia cognitivo-comportamental para insônia, o tratamento de primeira linha pra insônia crônica.",
+        "en": "Stimulus control, designed by Richard Bootzin in 1972, starts from something ordinary: your brain learns by association. Spend two hours a night lying awake, turning over, planning, staring at the ceiling, and the bed stops being a signal for sleep and becomes a signal for being awake. You trained that without meaning to, night after night.\n\nUndoing the training takes two rules. **The bed is for sleep and for sex, nothing else** — no reading, no phone, no TV, no lying there waiting for sleep to arrive. And if sleep hasn't come in about 20 minutes, you get up, move to another room, do something boring under dim light, and come back only when you feel sleepy again. Without checking the clock. As many times as it takes: the first nights, it can be five.\n\nThis is not a comfort tip. It is one of the pieces doing the heavy lifting in cognitive behavioral therapy for insomnia, the first-line treatment for chronic insomnia."
       },
-      "image_brief": "Uma pessoa em cima de um banquinho vedando com fita adesiva as frestas de uma janela num cômodo abafado, sem notar que, atrás dela, a grade de ventilação no teto está completamente entupida de poeira e teias.",
+      "image_brief": "Uma pessoa de roupão sentada numa poltrona da sala de madrugada, sob a luz fraca de um abajur, dobrando devagar um pano de prato; ao fundo, pela porta aberta, a cama vazia com o lençol jogado de lado.",
       "sources": [
         {
           "label": {
@@ -97,6 +97,13 @@
             "en": "Edinger et al., 2021 · Journal of Clinical Sleep Medicine 17(2) · American Academy of Sleep Medicine guideline"
           },
           "url": "https://pubmed.ncbi.nlm.nih.gov/33164742/"
+        },
+        {
+          "label": {
+            "pt": "Qaseem et al., 2016 · Annals of Internal Medicine 165(2) · guideline do American College of Physicians",
+            "en": "Qaseem et al., 2016 · Annals of Internal Medicine 165(2) · American College of Physicians guideline"
+          },
+          "url": "https://www.acpjournals.org/doi/10.7326/M15-2175"
         }
       ],
       "cta": null
