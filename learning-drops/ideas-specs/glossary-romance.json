@@ -1,27 +1,27 @@
 {
   "slug": "glossary-romance",
-  "type": "explainer",
+  "category": "foundation",
   "material_title": {
     "pt": "O que realmente mantém o amor vivo",
     "en": "What Actually Keeps Love Alive"
   },
   "ideas": [
     {
-      "id": "bids-de-conexao",
+      "id": "comemorar-a-vitoria",
       "ordinal": 1,
       "title": {
-        "pt": "No casal, meio segundo vale mais que o jantar.",
-        "en": "In a couple, half a second beats a big dinner."
+        "pt": "No casal, comemorar pesa mais que consolar",
+        "en": "For couples, celebrating beats consoling"
       },
       "claim": {
-        "pt": "Vale a frequência das respostas pequenas, não o tamanho do gesto: casais estáveis ficam em 5 positivos pra 1 negativo.",
-        "en": "How often you answer beats how big the gesture: stable couples run 5 positive moves to every 1 negative."
+        "pt": "Quando seu parceiro chegar com uma boa notícia, largue o que estiver fazendo e pergunte como foi.",
+        "en": "When your partner walks in with good news, drop what you're doing and ask how it went."
       },
       "body": {
-        "pt": "Gottman deu nome ao micro-momento: **bid de conexão** — qualquer tentativa pequena de puxar a atenção do outro, um comentário, um olhar, um vídeo mostrado. Todo bid é uma pergunta silenciosa: “você está aqui comigo?”. Há três respostas possíveis: virar-se para (olhar, responder, perguntar mais), virar-se para longe (ignorar, seguir no celular) ou virar-se contra (“agora não”). Quem se sente atendido nas coisas pequenas acumula uma reserva emocional, e é dela que o casal saca quando vem o conflito de verdade.\n\nNum laboratório em Seattle, Gottman filmou casais discutindo por 15 minutos e contou cada gesto positivo e negativo: os que seguiram juntos e felizes mantinham cerca de 5 positivos pra cada 1 negativo; os que se separariam anos depois ficavam perto de 1 pra 1 (Gottman & Levenson, 1992). **Um jantar caro de aniversário não compensa 300 “hã” distraídos ao longo do mês.** Amanhã, quando ele apontar o passarinho na janela, largue o celular e olhe.",
-        "en": "Gottman named the micro-moment: a **bid for connection** — any small attempt to pull your partner's attention, a comment, a glance, a video held up. Every bid is a silent question: “are you here with me?” You have three answers: turn toward (look up, reply, ask more), turn away (ignore, stay on the phone), or turn against (“not now”). The partner who feels answered on the small stuff builds an emotional reserve, and that's the account the couple draws on when real conflict hits.\n\nIn a Seattle lab, Gottman filmed couples arguing for 15 minutes and counted every positive and negative move: the ones who stayed together and happy kept about 5 positives for every 1 negative, while the ones who would split years later hovered near 1 to 1 (Gottman & Levenson, 1992). **One expensive anniversary dinner doesn't cancel 300 distracted grunts over a month.** Tomorrow, when they point at the bird, put the phone down and look up."
+        "pt": "Qualquer pessoa decente aparece na tragédia. A psicóloga Shelly Gable virou a lente pro momento oposto: a hora em que alguém chega em casa com uma boa notícia — passou na prova, fechou o cliente, recebeu um elogio. A resposta do parceiro tem quatro formas, e só uma constrói o vínculo: a **resposta ativa-construtiva**, quando você larga o que está fazendo, faz perguntas e se anima junto de verdade (“sério? conta tudo, como foi?”). As outras três corroem em silêncio: o “que bom, amor” dito sem levantar a cabeça, o “será que você dá conta dessa responsabilidade?” e o assunto trocado na hora. Em quatro estudos com casais, Gable viu que comemorar junto as boas notícias previu mais intimidade e satisfação do que o apoio nos momentos ruins. Faz sentido: segurar a barra na queda é o mínimo. Aparecer na alegria, sem competir e sem inveja disfarçada, é raro — e o outro sente a diferença. Hoje, quando vier a boa notícia, pare tudo e peça detalhes.",
+        "en": "Anyone decent shows up for the disaster. Psychologist Shelly Gable turned the lens on the opposite moment: when someone walks in with good news — passed the exam, closed the client, got the compliment. Your partner's answer takes one of four shapes, and only one builds the bond: the **active-constructive response**, where you drop what you are doing, ask questions and light up with them for real (“seriously? tell me everything”). The other three erode it quietly: the “nice, honey” said without looking up, the “are you sure you can handle that?”, and the quick change of subject. Across four studies of couples, Gable found that celebrating good news together predicted more intimacy and satisfaction than support during the hard times did. It tracks: holding someone up after a fall is the floor. Showing up for the joy, with no competing and no disguised envy, is rare — and your partner feels the difference. Today, when the good news lands, stop everything and ask for details."
       },
-      "image_brief": "Uma balança de dois pratos sobre a mesa da cozinha: de um lado, um único jantar caprichado, com taça e vela acesa; do outro, uma montanha de coisas miúdas do dia a dia — xícaras, uma chave, um novelo, um pássaro de papel dobrado — e é esse lado que desce e inclina a balança.",
+      "image_brief": "Na sala, uma pessoa larga o livro aberto de bruços no sofá e se inclina para a frente, de olhos arregalados e sorriso aberto, enquanto a outra, ainda de casaco e com a mochila no ombro, conta algo gesticulando com as duas mãos no ar.",
       "sources": [
         {
           "label": {
@@ -34,21 +34,21 @@
       "cta": null
     },
     {
-      "id": "comemorar-a-vitoria",
+      "id": "coisa-nova-junto",
       "ordinal": 2,
       "title": {
-        "pt": "Casal: o verdadeiro teste não é a queda.",
-        "en": "Couples: the real test isn't the fall."
+        "pt": "Conforto não é o que segura um casal",
+        "en": "Comfort isn't what holds a couple together"
       },
       "claim": {
-        "pt": "Nos estudos de Gable, comemorar junto a boa notícia previu mais intimidade que o apoio na hora ruim.",
-        "en": "In Gable's studies, celebrating good news together predicted more intimacy than support in the bad times."
+        "pt": "Marquem uma coisa que vocês dois não fazem sempre: uma aula, um bairro novo, uma receita difícil.",
+        "en": "Book one thing the two of you don't do often: a class, a new neighborhood, a hard recipe."
       },
       "body": {
-        "pt": "Todo mundo aparece na tragédia. A psicóloga Shelly Gable mostrou que o momento mais revelador é o oposto: a hora em que você chega em casa com uma boa notícia. A resposta do parceiro tem quatro formas, e só uma constrói o vínculo — a **resposta ativa-construtiva**, quando o outro larga o que está fazendo, faz perguntas e se anima junto de verdade. As outras três corroem em silêncio, inclusive o inofensivo “que bom, amor” dito sem levantar a cabeça. Em quatro estudos com casais, comemorar junto as boas notícias previu mais intimidade e satisfação do que o apoio nos momentos ruins.\n\nTem uma segunda mecânica, essa contra o tédio: Arthur Aron sorteou casais para uma tarefa nova e estimulante, e eles saíam avaliando a relação como melhor do que os que fizeram uma tarefa morna. É a **autoexpansão** — a gente se junta a alguém em parte pra virar uma versão maior de si. Marque uma coisa que vocês dois não fazem sempre: uma aula, um bairro novo, uma receita difícil.",
-        "en": "Anyone decent shows up for the tragedy. Psychologist Shelly Gable found that the revealing moment is the opposite one: when you walk in with good news. Your partner's answer takes one of four shapes, and only one builds the bond — the **active-constructive response**, where they drop what they are doing, ask questions and light up with you for real. The other three erode it quietly, including the harmless-sounding “nice, honey” said without looking up. Across four studies of couples, celebrating good news together predicted more intimacy and satisfaction than support during the bad times did.\n\nA second mechanic works against boredom: Arthur Aron randomly assigned couples to a novel, stimulating task, and they rated the relationship better afterward than couples given a dull one. That is **self-expansion** — we pair up partly to become a bigger version of ourselves. Book one thing the two of you don't do all the time: a class, a new neighborhood, a hard recipe."
+        "pt": "O tédio não avisa que chegou. O psicólogo Arthur Aron testou o que acontece quando um casal faz junto algo novo e um pouco excitante — repare: não confortável, novo. Os casais sorteados para uma tarefa nova e estimulante saíam avaliando a relação como melhor do que os que fizeram uma tarefa morna. O mecanismo tem nome: **autoexpansão** — a gente entra numa relação em parte pra crescer, pra virar uma versão maior de si mesmo através do outro. Quando vocês param de viver coisas novas juntos, essa expansão trava, e o que ocupa o lugar dela é o tédio, que come a satisfação por dentro. Não precisa ser paraquedismo, nem precisa ser caro. Precisa ser algo que vocês dois não fazem sempre: uma aula, um bairro que nenhum dos dois conhece, um jogo, uma receita difícil. **O ingrediente ativo é o friozinho de “não sei como isso vai sair”**, não o preço nem o esforço. Escolha uma e marque data essa semana.",
+        "en": "Boredom doesn't announce itself. Psychologist Arthur Aron tested what happens when a couple does something new and a little exciting together — note the wording: not comfortable, new. Couples randomly assigned to a novel, stimulating task rated the relationship better afterward than couples given a dull one. The mechanism has a name: **self-expansion** — we pair up partly to grow, to become a bigger version of ourselves through someone else. When you stop living new things together, that expansion stalls, and what moves into the empty space is boredom, which eats satisfaction from the inside. It doesn't have to be skydiving, and it doesn't have to be expensive. It has to be something the two of you don't do all the time: a class, a neighborhood neither of you knows, a game, a hard recipe. **The active ingredient is the small thrill of “I don't know how this will turn out”**, not the price or the effort. Pick one and set a date this week."
       },
-      "image_brief": "Na sala, uma pessoa larga o livro aberto de bruços no sofá e se inclina para a frente, de olhos arregalados e sorriso aberto, enquanto a outra, ainda de casaco e com a mochila no ombro, conta algo gesticulando com as duas mãos no ar.",
+      "image_brief": "Um casal numa aula de cerâmica à noite, visto de perto e de frente, no centro do quadro: os dois com as mãos sujas de barro sobre o mesmo torno, o vaso saindo torto entre elas, os dois se olhando e rindo do estrago; atrás, prateleiras de peças cruas fora de foco. A única luz quente e dourada vem de uma lâmpada baixa sobre o torno e cai nas mãos e nos dois rostos; o resto do ateliê fica numa penumbra fria, com um único acento verde-sálvia no avental de um deles.",
       "sources": [
         {
           "label": {
@@ -64,16 +64,16 @@
       "id": "manutencao-e-comportamento",
       "ordinal": 3,
       "title": {
-        "pt": "Amor: o sentimento é invisível pro parceiro.",
-        "en": "Love: your partner can't see what you feel."
+        "pt": "Amor é comportamento, não sentimento",
+        "en": "Love is behavior, not a feeling"
       },
       "claim": {
-        "pt": "Sustentar uma relação é um conjunto de cinco comportamentos, não um sentimento — e todos dão pra fazer cansado.",
-        "en": "Keeping a relationship alive is five behaviors, not a feeling — and every one of them can be done tired."
+        "pt": "Não espere a inspiração voltar: puxe sua parte da casa sem ser cobrado e diga “a gente resolve isso junto”.",
+        "en": "Don't wait to feel it: carry your share at home without being asked and say “we'll figure this out together”."
       },
       "body": {
-        "pt": "Manter uma relação não é um sentimento que você tem ou não tem; é um conjunto de ações. As pesquisadoras Laura Stafford e Daniel Canary perguntaram a centenas de pessoas o que elas de fato fazem pra sustentar a relação, e cinco coisas apareceram de novo e de novo: **ser leve no dia a dia, dizer o que sente, deixar claro que há um futuro (“a gente resolve isso junto”), puxar sua parte da casa sem ser cobrado e cultivar amigos que são dos dois.** Nenhuma delas é traço de personalidade. Todas dão pra fazer amanhã, cansado, sem inspiração nenhuma.\n\nE se você está numa fase morna, um dado pra tirar o peso da culpa: juntando 165 estudos e 165 mil pessoas, a satisfação do casal cai por volta dos 10 anos de relação, chega ao fundo e volta a subir para muitos casais. O vale dos 10 anos é comum, não é sentença. Escolha uma das cinco e faça hoje.",
-        "en": "Keeping a relationship alive isn't a feeling you either have or don't; it's a set of actions. Researchers Laura Stafford and Daniel Canary asked hundreds of people what they actually do to sustain their relationship, and five things kept coming up: **be light day to day, say what you feel, make the future explicit (“we'll figure this out together”), carry your share of the house without being asked, and build friends who belong to both of you.** None of them is a personality trait. Every one can be done tomorrow, tired, with no inspiration at all.\n\nAnd if you're in a flat stretch, one finding to lift the guilt: pooling 165 studies and 165,000 people, couple satisfaction dips around year 10, bottoms out, then climbs again for many couples. The 10-year valley is common, not a verdict. Pick one of the five and do it today."
+        "pt": "Manter uma relação não é um sentimento que você tem ou não tem; é um conjunto de ações. As pesquisadoras Laura Stafford e Daniel Canary perguntaram a centenas de pessoas o que elas de fato fazem pra sustentar a relação, e cinco estratégias apareceram de novo e de novo: **ser leve no dia a dia, falar do que sente, deixar claro que há um futuro, puxar sua parte da casa sem ser cobrado e cultivar amigos que são dos dois.** Nenhuma delas é traço de personalidade. Todas dão pra fazer amanhã, cansado, sem inspiração nenhuma.\n\nSe vocês estão numa fase morna, um dado pra tirar o peso da culpa: uma revisão que juntou 165 estudos e 165 mil pessoas achou que a satisfação do casal cai por volta dos 10 anos de relação, chega ao fundo e volta a subir para muitos casais. O vale dos 10 anos é comum, não é sentença. O que o outro enxerga não é o que você sente, é o que você faz. Escolha uma das cinco e faça hoje.",
+        "en": "Keeping a relationship alive isn't a feeling you either have or don't; it's a set of actions. Researchers Laura Stafford and Daniel Canary asked hundreds of people what they actually do to sustain their relationship, and five strategies came up again and again: **be light day to day, say what you feel, make the future explicit, carry your share of the house without being asked, and grow friends who belong to both of you.** None of them is a personality trait. Every one can be done tomorrow, tired, with no inspiration at all — which is exactly why they work.\n\nIf you're in a flat stretch, one finding to lift the guilt: a review pooling 165 studies and 165,000 people found that couple satisfaction dips around year 10, bottoms out, and climbs again for many couples. The 10-year valley is common, not a verdict. What your partner sees isn't what you feel, it's what you do. Pick one of the five and do it today."
       },
       "image_brief": "Fim de noite numa cozinha, só a luminária sobre a pia acesa: duas pessoas de pijama e cara de sono lavam e enxugam a última louça lado a lado, os ombros encostados, com o resto da casa no escuro.",
       "sources": [
