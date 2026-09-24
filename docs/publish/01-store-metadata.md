@@ -71,40 +71,37 @@ habito,rotina,metas,autoconhecimento,personalidade,bem-estar,produtividade,foco,
 ```
 `[99/100]` — no spaces, no repetition of words already in the name/subtitle where avoidable. Notes: "habito" without accent (Apple matches accent-insensitively in pt; saves chars). Avoid "saúde mental" as a keyword — it invites the medical read and the term is high-competition/low-relevance for our framing.
 
-### Description `[4000 max]`
-```
-Perceva é um app de hábitos e desenvolvimento pessoal construído sobre uma ideia simples: as ações que você repete hoje moldam a pessoa que você se torna amanhã.
+### Description [4000 max]\n
+\\nNão é uma lista de tarefas. É um espelho de quem você está virando.
 
-Em vez de mais uma lista de tarefas, o Perceva organiza sua evolução em três pilares de identidade.
+O Perceva é um app de hábitos e autoconhecimento com uma diferença: ele não conta só o que você faz — ele mostra quem os seus hábitos estão treinando você a ser. Cada prática é um voto na pessoa que você está construindo.
 
-PERCEBIDA — como você se vê hoje
-Faça uma autoavaliação nas seis áreas da sua vida — saúde, corpo, mente, finanças, vínculos e ofício — e conheça-se melhor com quatro inventários de autorreflexão: os cinco grandes traços de personalidade, valores pessoais, estilo de vínculo afetivo e um panorama de bem-estar. São ferramentas de introspecção, não de diagnóstico: servem pra você enxergar seus padrões com mais clareza.
+PERCEBA
+Comece por onde você está. Uma autoavaliação gratuita nas seis áreas da vida — Saúde, Corpo, Mente, Prosperidade, Vínculos e Ofício — e testes de personalidade com nome e sobrenome: Big Five (120 itens), Valores de Schwartz, Apego (escala baseada no ECR-R) e Forças de caráter. Pra começar leve, DISC e Tipos. Sem rótulo, sem veredito: é o seu retrato de agora, e você refaz quando quiser.
 
-PRATICADA — o que suas ações treinam em você
-Crie hábitos e distribua estrelas entre as áreas que cada um fortalece. Ao concluir, você ganha Dedicação (XP) e moedas. Sua constância vira Momentum: quanto mais consistente, maior o bônus. Aceite Jornadas (quests) com prazo pra dar foco a uma meta por vez.
+PRATIQUE
+Práticas em um toque, humor do dia em uma linha — registro em segundos, não minutos. O Calendário guarda o que você fez e o Padrões mostra o que anda junto. Pular um dia também é decidir: nada zera, ninguém te cobra.
 
-DESEJADA — quem você quer se tornar
-Acompanhe Habilidades com faixas de progressão (do iniciante ao mestre) e registre sua evolução ao longo do tempo. Veja, em números, a distância entre onde você está e onde quer chegar.
+TORNE-SE
+No Eu, três retratos se cruzam no mesmo hexágono: como você se vê, o que os testes dizem e o que você pratica de verdade. A diferença entre o que você acha e o que você faz — visível, semana a semana.
 
-O CICLO QUE FUNCIONA
-1. Treine — conclua hábitos e Jornadas.
-2. Ganhe — acumule Dedicação e moedas.
-3. Resgate — troque moedas por recompensas que VOCÊ mesmo define. Sem punição, sem culpa: você decide o que merece comemorar.
+DO SEU JEITO
+- Recompensas que você define: seu esforço vira moedas, e moedas viram prêmios que você mesmo escolhe e precifica.
+- Recanto: ideias curtas com fonte (autor e ano), ligadas ao que você cultiva. O Explorar acaba — não é um feed infinito.
+- Missões, Metas e Habilidades: módulos opcionais pra quem quer mais estrutura. Liga se quiser.
+- Conecte o Perceva ao seu assistente de IA (hoje, Claude): ele passa a ler o que você praticou, como esteve e há quantos dias — em vez de adivinhar.
 
-APRENDA NO SEU RITMO
-Uma biblioteca de leituras curtas e visuais, ligadas ao que você está cultivando. Sem enrolação, direto ao ponto.
+SEUS DADOS SÃO SEUS
+Suas respostas servem só pra mostrar os resultados a você. Nada é vendido, compartilhado ou usado pra publicidade. Sem anúncios, sem rastreamento.
 
-PENSADO PRA VOCÊ
-• Português e inglês, com troca instantânea.
-• Notificações locais opcionais: um resumo de manhã e um checkpoint no meio do dia. Você escolhe os horários — nada de spam.
-• Seus dados são seus. Autenticação segura e a opção de excluir sua conta e todos os seus dados a qualquer momento, direto no app.
+O Perceva é uma ferramenta de reflexão e autoconhecimento — não realiza diagnóstico nem substitui acompanhamento profissional.
 
-Perceva não promete resultados nem substitui acompanhamento profissional. Ele te dá clareza, constância e um jeito leve de transformar intenção em hábito — e hábito em identidade.
+Comece de graça: a autoavaliação, as práticas e as recompensas são gratuitas. O Perceva Premium libera os instrumentos completos e tira os limites.
 
-Comece no Nível 1. O resto a gente cuida.
-```
-`[~1980/4000]`
-
+—
+Termos de Uso: https://perceva.app/terms
+Política de Privacidade: https://perceva.app/privacy
+\\n
 ### What's New (v1.0.0) `[4000 max]`
 ```
 Bem-vindo ao Perceva 1.0.
