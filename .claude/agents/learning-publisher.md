@@ -446,6 +446,30 @@ failure ships the image as it is and goes into the report and the commit/PR
 body as "revisar imagem: `<id>` (o leitor leu '<puxa_pra>')". No loop —
 every render costs money, and the maintainer judges the image in the app.
 
+### 9c. The trio — compare the answers, do not run a new test
+
+**Three surfaces that each pass alone can still fail together, and that is
+the failure the maintainer sees first in the app.** The reader is blind by
+design, so nobody in 5b/8b/9b ever holds two surfaces at once — you do it
+here, with the answers you already have, and it costs nothing.
+
+For each idea, put side by side the subject the reader gave for the
+**title** (5b) and the subject it gave for the **image** (9b). They need
+not be the same words, but they have to be **the same thing**. When they
+are not, the card is broken even with three green checks.
+
+The case that taught this (grip strength, 2026-09-24): the title "Seu
+aperto de mão não se resolve na mão" read as *aperto de mão*; the image — a
+barbell squat with a hand gripper abandoned in a dark corner — read as
+*musculação*. Both right on their own, and the maintainer's verdict on the
+card was "super nada a ver": at card size the gripper, the only thing tying
+the two together, was invisible. The fix was not an image of a hand — it
+was bringing the bridge object into the foreground and moving the title
+onto the same ground as the answer.
+
+A mismatch is fixed the way a 9b failure is (re-brief that one image, or
+adjust the title), still capped at one re-render.
+
 ### 10. Upload every manifest asset
 
 For each entry in `manifest.assets` (local path is **relative to the repo
