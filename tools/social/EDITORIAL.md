@@ -60,6 +60,24 @@ gerador não consegue checar sozinho + as lições aprendidas em produção.
 - Hashtags estáveis, sempre as mesmas: `#autoconhecimento #habitos #psicologia #bemestar #perceva`
 - Cadência: 2 carrosséis/semana, dimensões alternadas.
 
+## Inglês (contas EN separadas)
+
+- Cada post do batch aceita `"lang": "en"` — o gerador troca as strings fixas
+  (série "One idea, with a source", eyebrows, CTA "Perceva's library", tagline
+  "See who you're becoming.", dimensões EN).
+- **EN é escrito nativo a partir do body.en do banco — NUNCA traduzido do PT.**
+  Todas as ideias têm title/claim/body em EN; ~29 têm vídeo EN (`video.en.path`).
+- O lote EN acompanha as MESMAS ideias do lote PT da semana (produção única),
+  mas cada idioma pode divergir se a ideia foi revisada/removida num deles.
+- Legendas EN: mesmo formato; hashtags estáveis EN
+  `#habits #selfknowledge #psychology #wellbeing #perceva`.
+- Publicação nas contas EN próprias (nunca misturar idiomas num perfil só).
+- Ledger: entradas têm `lang` ("pt"/"en", ausente = pt) — a mesma ideia pode
+  ser usada uma vez em cada idioma.
+- Atenção: ideias são revisadas — o `image_path` (hash) pode mudar entre
+  semanas. Se uma busca por hash não achar, procurar pelo slug do material +
+  `idea_id`.
+
 ## Reels reaproveitados do Recanto
 
 - ~38 das ideias têm vídeo pt pronto (`ideas[].video.pt.path` no jsonb; mp4 vertical

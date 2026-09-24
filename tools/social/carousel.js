@@ -34,7 +34,17 @@ fs.writeFileSync(FONTS_CONF, `<?xml version="1.0"?>
 <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
 <fontconfig><dir>${FONT_DIR}</dir><cachedir>${CACHE_DIR}</cachedir></fontconfig>
 `);
-process.env.FONTCONFIG_FILE = FONTS_CONF;
+// Setar process.env aqui NÃO chega ao fontconfig nativo (ele lê a env real
+// na carga da DLL) — os textos caem em fonte de fallback silenciosamente.
+// Solução: se o processo não nasceu com a env certa, re-executa a si mesmo.
+if (process.env.FONTCONFIG_FILE !== FONTS_CONF) {
+  const { spawnSync } = require('child_process');
+  const r = spawnSync(process.execPath, process.argv.slice(1), {
+    env: { ...process.env, FONTCONFIG_FILE: FONTS_CONF },
+    stdio: 'inherit',
+  });
+  process.exit(r.status ?? 1);
+}
 
 const sharp = require('sharp');
 
@@ -46,6 +56,25 @@ const C = {
   dim: { health: '#F06565', body: '#F0973E', mind: '#B57BF0', wealth: '#E8B04B', bonds: '#4BB4E8', craft: '#3FB88C' },
 };
 const DIM_PT = { health: 'Saúde', body: 'Corpo', mind: 'Mente', wealth: 'Prosperidade', bonds: 'Vínculos', craft: 'Ofício' };
+const DIM_EN = { health: 'Health', body: 'Body', mind: 'Mind', wealth: 'Wealth', bonds: 'Bonds', craft: 'Craft' };
+
+// Strings fixas por idioma. EN nativo (Playbook: nunca traduzido); o lugar
+// "Recanto" não tem nome EN canônico — o CTA contorna com "Perceva's library".
+const STR = {
+  pt: {
+    serie: 'Uma ideia com fonte', claimEyebrow: 'A afirmação', mechEyebrow: 'O mecanismo',
+    doEyebrow: 'O que fazer', srcEyebrow: 'A fonte',
+    cta: 'Essa ideia vive no Recanto — a biblioteca do Perceva, onde toda ideia tem fonte.',
+    tagline: 'Perceba quem você está se tornando.', dims: DIM_PT,
+  },
+  en: {
+    serie: 'One idea, with a source', claimEyebrow: 'The claim', mechEyebrow: 'The mechanism',
+    doEyebrow: 'What to do', srcEyebrow: 'The source',
+    cta: "This idea lives in Perceva's library — where every idea comes with a source.",
+    tagline: "See who you're becoming.", dims: DIM_EN,
+  },
+};
+const langOf = (post) => (post.lang === 'en' ? 'en' : 'pt');
 
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -93,6 +122,7 @@ async function fetchImage(imagePath) {
 }
 
 async function slideCapa(post, imgBuf, outDir) {
+  const S = STR[langOf(post)];
   const inner = 24; // moldura noite (cânone)
   const img = await sharp(imgBuf)
     .resize({ width: W - inner * 2, height: H - inner * 2, fit: 'cover' })
@@ -112,9 +142,9 @@ async function slideCapa(post, imgBuf, outDir) {
     <stop offset="1" stop-color="${C.noite}" stop-opacity="0.97"/>
   </linearGradient></defs>
   <rect x="${inner}" y="${H - scrimH}" width="${W - inner * 2}" height="${scrimH - inner}" fill="url(#s)"/>
-  ${eyebrow('Uma ideia com fonte', titleY0 - 78)}
+  ${eyebrow(S.serie, titleY0 - 78)}
   <text font-family="Fraunces" font-weight="600" font-size="${titleSize}" fill="${C.areia}">${tspans(titleLines, 88, titleY0, titleLh)}</text>
-  <text x="88" y="${H - 96}" font-family="Manrope" font-weight="700" font-size="28" fill="${C.dim[post.dim]}">${esc(DIM_PT[post.dim])}</text>
+  <text x="88" y="${H - 96}" font-family="Manrope" font-weight="700" font-size="28" fill="${C.dim[post.dim]}">${esc(S.dims[post.dim])}</text>
   <text x="${W - 88}" y="${H - 96}" text-anchor="end" font-family="Manrope" font-weight="700" font-size="28" fill="${C.nevoa}">Perceva</text>
 </svg>`);
   await sharp(baseSvg(''))
@@ -141,6 +171,7 @@ async function slideTexto(outFile, dimColor, eyebrowText, bodyText, opts = {}) {
 }
 
 async function slideFonte(post, outDir) {
+  const S = STR[langOf(post)];
   const cardX = 88, cardW = W - 176, cardY = 290, pad = 48;
   // Claim longo é cortado na fronteira de frase pra caber no card-resumo.
   let claim = post.claim;
@@ -159,14 +190,14 @@ async function slideFonte(post, outDir) {
   const ctaY = cardY + cardH + 110;
   const tagY = ctaY + 2 * 56 + 66;
   const inner = `
-  ${eyebrow('A fonte', 200)}
+  ${eyebrow(S.srcEyebrow, 200)}
   <rect x="88" y="230" width="72" height="8" rx="4" fill="${C.dim[post.dim]}"/>
   <rect x="${cardX}" y="${cardY}" width="${cardW}" height="${cardH}" rx="28" fill="${C.superficie}" stroke="${C.dim[post.dim]}" stroke-opacity="0.55" stroke-width="3"/>
   <text font-family="Manrope" font-weight="700" font-size="40" fill="${C.areia}">${tspans(titleLines, cardX + pad, titleY, 52)}</text>
   <text font-family="Manrope" font-weight="500" font-size="31" fill="${C.nevoa}">${tspans(claimLines, cardX + pad, claimY, 43)}</text>
   <text font-family="Manrope" font-weight="700" font-size="29" fill="${C.dourado}">${tspans(fonteLines, cardX + pad, fonteY, 40)}</text>
-  <text font-family="Manrope" font-weight="500" font-size="40" fill="${C.areia}">${tspans(wrap('Essa ideia vive no Recanto — a biblioteca do Perceva, onde toda ideia tem fonte.', 42), 88, ctaY, 56)}</text>
-  <text x="88" y="${tagY}" font-family="Fraunces" font-weight="600" font-size="46" fill="${C.dourado}">Perceba quem você está se tornando.</text>
+  <text font-family="Manrope" font-weight="500" font-size="40" fill="${C.areia}">${tspans(wrap(S.cta, 42), 88, ctaY, 56)}</text>
+  <text x="88" y="${tagY}" font-family="Fraunces" font-weight="600" font-size="46" fill="${C.dourado}">${esc(S.tagline)}</text>
   ${footer('perceva.app', C.dim[post.dim])}`;
   await sharp(baseSvg(inner)).removeAlpha().png().toFile(path.join(outDir, 'slide-5-fonte.png'));
 }
@@ -200,7 +231,7 @@ function validate(post) {
   for (const post of batch) {
     const errs = validate(post);
     if (errs.length) { console.error(`REPROVADO ${post.slug || '?'}:\n  - ` + errs.join('\n  - ')); process.exit(1); }
-    if (used.some((u) => u.image_path === post.image_path))
+    if (used.some((u) => u.image_path === post.image_path && (u.lang || 'pt') === langOf(post)))
       console.warn(`AVISO ${post.slug}: ideia já usada antes (${post.image_path})`);
   }
 
@@ -210,14 +241,14 @@ function validate(post) {
     const imgBuf = await fetchImage(post.image_path);
     await slideCapa(post, imgBuf, outDir);
     await slideTexto(path.join(outDir, 'slide-2-afirmacao.png'), C.dim[post.dim],
-      post.eyebrow2 || 'A afirmação', post.claim, { display: true, size: post.eyebrow2 ? 54 : 62, page: '2 · 5' });
+      post.eyebrow2 || STR[langOf(post)].claimEyebrow, post.claim, { display: true, size: post.eyebrow2 ? 54 : 62, page: '2 · 5' });
     await slideTexto(path.join(outDir, 'slide-3-mecanismo.png'), C.dim[post.dim],
-      post.eyebrow3 || 'O mecanismo', post.mecanismo, { size: 47, page: '3 · 5' });
+      post.eyebrow3 || STR[langOf(post)].mechEyebrow, post.mecanismo, { size: 47, page: '3 · 5' });
     await slideTexto(path.join(outDir, 'slide-4-o-que-fazer.png'), C.dim[post.dim],
-      'O que fazer', post.fazer, { size: 50, page: '4 · 5' });
+      STR[langOf(post)].doEyebrow, post.fazer, { size: 50, page: '4 · 5' });
     await slideFonte(post, outDir);
-    if (!used.some((u) => u.image_path === post.image_path))
-      used.push({ image_path: post.image_path, slug: post.slug, date: new Date().toISOString().slice(0, 10) });
+    if (!used.some((u) => u.image_path === post.image_path && (u.lang || 'pt') === langOf(post)))
+      used.push({ image_path: post.image_path, slug: post.slug, date: new Date().toISOString().slice(0, 10), lang: langOf(post) });
     console.log('ok', post.slug);
   }
 
