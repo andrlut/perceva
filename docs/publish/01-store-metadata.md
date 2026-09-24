@@ -155,40 +155,37 @@ habit,routine,goals,self-improvement,personality,wellbeing,productivity,focus,di
 ```
 `[98/100]`
 
-### Description `[4000 max]`
-```
-Perceva is a habit and personal-growth app built on one simple idea: the actions you repeat today shape the person you become tomorrow.
+### Description [4000 max]\n
+\\nNot a to-do list. A mirror of who you're becoming.
 
-Instead of yet another to-do list, Perceva organizes your growth around three pillars of identity.
+Perceva is a habits and self-knowledge app with one difference: it doesn't just count what you do — it shows who your habits are training you to become. Every practice is a vote for the person you're building.
 
-PERCEIVED — how you see yourself today
-Rate yourself across the six areas of your life — health, body, mind, wealth, bonds, and craft — and get to know yourself better with four self-reflection inventories: the big five personality traits, personal values, attachment style, and a wellbeing snapshot. These are tools for introspection, not diagnosis: they help you see your own patterns more clearly.
+SEE
+Start where you are. A free self-assessment across six life areas — Health, Body, Mind, Wealth, Bonds and Craft — plus personality tests with real names: Big Five (120 items), Schwartz Values, Attachment (an ECR-R-based scale) and Character Strengths. For a lighter start, DISC and Types. No labels, no verdicts: it's your portrait right now, and you can retake it anytime.
 
-PRACTICED — what your actions train in you
-Create habits and spread stars across the areas each one strengthens. When you complete one, you earn Dedication (XP) and coins. Your consistency becomes Momentum: the steadier you are, the bigger the bonus. Take on Quests with a deadline to focus on one goal at a time.
+PRACTICE
+One-tap practices, your mood in one line — logging takes seconds, not minutes. The Calendar keeps what you did and Insights shows what moves together. Skipping a day is also a decision: nothing resets, nothing nags.
 
-DESIRED — who you want to become
-Track Skills with progression tiers (from beginner to master) and log your growth over time. See, in real numbers, the gap between where you are and where you want to be.
+BECOME
+In Me, three portraits cross on the same hexagon: how you see yourself, what the tests say, and what you actually practice. The gap between what you think and what you do — visible, week by week.
 
-THE LOOP THAT WORKS
-1. Train — complete habits and Quests.
-2. Earn — stack up Dedication and coins.
-3. Redeem — spend coins on rewards YOU set for yourself. No punishment, no guilt: you decide what's worth celebrating.
+YOUR WAY
+- Rewards you define: effort becomes coins, and coins become prizes you choose and price yourself.
+- A library of short ideas with sources (author and year), tied to what you're cultivating. The Explore feed ends — it's not infinite.
+- Quests, Goals and Skills: optional modules for when you want more structure. Turn them on if you like.
+- Connect Perceva to your AI assistant (today, Claude): it reads what you practiced, how you've been and how many days it's been — instead of guessing.
 
-LEARN AT YOUR OWN PACE
-A library of short, visual reads tied to what you're cultivating. No fluff, straight to the point.
+YOUR DATA IS YOURS
+Your answers exist only to show you your results. Nothing is sold, shared or used for advertising. No ads, no tracking.
 
-BUILT FOR YOU
-• English and Portuguese, with instant switching.
-• Optional local notifications: a morning brief and a midday checkpoint. You pick the times — no spam.
-• Your data is yours. Secure sign-in and the option to delete your account and all your data anytime, right in the app.
+Perceva is a tool for reflection and self-knowledge — it does not diagnose and it does not replace professional care.
 
-Perceva makes no promises of results and is not a substitute for professional care. It gives you clarity, consistency, and a light way to turn intention into habit — and habit into identity.
+Start free: the self-assessment, practices and rewards cost nothing. Perceva Premium unlocks the full instruments and removes the limits.
 
-Start at Level 1. We'll handle the leveling.
-```
-`[~1900/4000]`
-
+—
+Terms of Use: https://perceva.app/terms
+Privacy Policy: https://perceva.app/privacy
+\\n
 ### What's New (v1.0.0) `[4000 max]`
 ```
 Welcome to Perceva 1.0.
