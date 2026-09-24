@@ -67,7 +67,7 @@ Cada hábito concluído é um passo rumo a quem você quer se tornar. Treine, ga
 
 ### Keywords `[100 max, comma-separated, no spaces]`
 ```
-habito,rotina,metas,autoconhecimento,personalidade,bem-estar,produtividade,foco,disciplina,diario,rpg,evoluir
+hábitos,autoconhecimento,metas,rotina,desenvolvimento,personalidade,foco,disciplina,diário,bem-estar
 ```
 `[99/100]` — no spaces, no repetition of words already in the name/subtitle where avoidable. Notes: "habito" without accent (Apple matches accent-insensitively in pt; saves chars). Avoid "saúde mental" as a keyword — it invites the medical read and the term is high-competition/low-relevance for our framing.
 
@@ -151,7 +151,7 @@ Every habit you finish is a step toward who you want to become. Train, earn coin
 
 ### Keywords `[100 max, comma-separated, no spaces]`
 ```
-habit,routine,goals,self-improvement,personality,wellbeing,productivity,focus,discipline,journal,rpg,growth
+tracker,personality,test,big,five,quiz,mood,journal,goals,routine,discipline,focus,self,improvement
 ```
 `[98/100]`
 
