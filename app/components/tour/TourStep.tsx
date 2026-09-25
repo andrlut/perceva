@@ -77,7 +77,7 @@ interface Props extends TourStepData {
    */
   flatNav?: boolean;
   onNext: () => void;
-  /** Called by both the X button and the "Pular este módulo" link. */
+  /** Called by the "Pular este módulo" control — skips the whole module. */
   onSkip: () => void;
   /**
    * Called when the user uses the inline "Pular este passo" escape
@@ -159,23 +159,13 @@ export function TourStep({
           style={styles.card}
           onLayout={(e) => setCardHeight(e.nativeEvent.layout.height)}
         >
-          <View style={styles.cardHeader}>
-            <Text style={styles.progress}>
-              {stepIndex} / {totalSteps}
-            </Text>
-            <Pressable
-              onPress={handleSkip}
-              hitSlop={8}
-              style={({ pressed }) => [
-                styles.closeBtn,
-                pressed && { opacity: 0.6 },
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel={t('tour.common.skipModule')}
-            >
-              <Ionicons name="close" size={18} color={tokens.text.mid} />
-            </Pressable>
-          </View>
+          {/* Progress only. The old header X skipped the WHOLE module while
+             sitting next to "4 / 5", so it read as "close this card" (2026-09
+             audit). Leaving a module now has exactly one control, labelled,
+             at the foot of the card. */}
+          <Text style={styles.progress}>
+            {t('tour.common.progress', { current: stepIndex, total: totalSteps })}
+          </Text>
 
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.body}>{body}</Text>
@@ -210,8 +200,12 @@ export function TourStep({
               ) : (
                 <Pressable
                   onPress={handleSkipStep}
-                  hitSlop={6}
-                  style={({ pressed }) => [pressed && { opacity: 0.6 }]}
+                  hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
+                  style={({ pressed }) => [
+                    styles.linkBtn,
+                    pressed && { opacity: 0.6 },
+                  ]}
+                  accessibilityRole="button"
                 >
                   <Text style={styles.skipLink}>
                     {t('tour.common.skipStep')}
@@ -236,16 +230,31 @@ export function TourStep({
             </Pressable>
           )}
 
-          <Pressable
-            onPress={handleSkip}
-            hitSlop={6}
-            style={({ pressed }) => [pressed && { opacity: 0.6 }]}
-            accessibilityRole="button"
-          >
-            <Text style={styles.skipModule}>
-              {t('tour.common.skipModule')}
-            </Text>
-          </Pressable>
+          {/* The ONE way out of the whole module — behind a hairline so it
+             never reads as part of the step's own action. */}
+          <View style={styles.footer}>
+            <Pressable
+              onPress={handleSkip}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              style={({ pressed }) => [
+                styles.linkBtn,
+                styles.skipModuleBtn,
+                pressed && { opacity: 0.6 },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={t('tour.common.skipModule')}
+              accessibilityHint={t('tour.common.skipModuleHint')}
+            >
+              <Ionicons
+                name="play-skip-forward-outline"
+                size={15}
+                color={tokens.text.mid}
+              />
+              <Text style={styles.skipModule}>
+                {t('tour.common.skipModule')}
+              </Text>
+            </Pressable>
+          </View>
         </View>
       </View>
     </View>
@@ -290,25 +299,12 @@ const styles = StyleSheet.create({
     shadowRadius: 24,
     elevation: 14,
   },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
   progress: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 11,
-    letterSpacing: 1.6,
+    fontSize: 12,
+    letterSpacing: 1.4,
     color: tokens.semantic.coinLight,
     textTransform: 'uppercase',
-  },
-  closeBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 999,
-    backgroundColor: tokens.bg.surface2,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   // Tester feedback (1.1.0): the old 17/13px card read as ignorable
   // noise. Bigger type + brighter body so the tour actually registers.
@@ -380,18 +376,36 @@ const styles = StyleSheet.create({
     color: tokens.semantic.coinLight,
     letterSpacing: 0.3,
   },
+  /** 28px box + 8px hitSlop each side = a 44px target, instead of a 12px
+   *  underline the thumb has to aim for. */
+  linkBtn: {
+    alignSelf: 'flex-start',
+    minHeight: 28,
+    justifyContent: 'center',
+  },
+  // Escapes use text.mid, not text.dim: dim on the card surface measures
+  // ~3.5:1, under the 4.5:1 that 13px text needs.
   skipLink: {
     fontFamily: 'Manrope_600SemiBold',
-    fontSize: 12,
-    color: tokens.text.dim,
+    fontSize: 13,
+    lineHeight: 18,
+    color: tokens.text.mid,
     textDecorationLine: 'underline',
+  },
+  footer: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: tokens.border.strong,
+    paddingTop: tokens.space[2],
+  },
+  skipModuleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   skipModule: {
     fontFamily: 'Manrope_600SemiBold',
-    fontSize: 12,
-    color: tokens.text.dim,
-    textDecorationLine: 'underline',
-    alignSelf: 'flex-start',
-    marginTop: 2,
+    fontSize: 13,
+    lineHeight: 18,
+    color: tokens.text.mid,
   },
 });

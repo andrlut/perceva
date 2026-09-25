@@ -14,6 +14,10 @@ import { tokens } from '@/theme';
  *
  * Used twice: in the practice form, where it sets the default, and in the
  * completion sheet, where it overrides that default for one log only.
+ *
+ * Under the control, one concrete line spells out the SELECTED option with
+ * numbers ("+20 de Dedicação, +10 moedas") — the four words alone didn't say
+ * what they multiply (first-user feedback, 2026-09).
  */
 export function CoinMultiplierPicker({
   value,
@@ -26,6 +30,7 @@ export function CoinMultiplierPicker({
   label?: string;
 }) {
   const { t } = useT();
+  const key = coinMultiplierKey(value);
   return (
     <View style={styles.wrap}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
@@ -36,9 +41,12 @@ export function CoinMultiplierPicker({
           { value: 'same', label: t('tasks.coinMultiplier.same') },
           { value: 'double', label: t('tasks.coinMultiplier.double') },
         ]}
-        value={coinMultiplierKey(value)}
-        onChange={(key) => onChange(COIN_MULTIPLIER_BY_KEY[key])}
+        value={key}
+        onChange={(k) => onChange(COIN_MULTIPLIER_BY_KEY[k])}
       />
+      <Text style={styles.explain} accessibilityLiveRegion="polite">
+        {t(`tasks.coinMultiplier.explain.${key}`)}
+      </Text>
     </View>
   );
 }
@@ -47,9 +55,16 @@ const styles = StyleSheet.create({
   wrap: { gap: tokens.space[2] },
   label: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 10,
-    letterSpacing: 1.4,
+    fontSize: 13,
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
+    color: tokens.text.mid,
+  },
+  // 13px in text.mid — readable on both the form and the sheet surface.
+  explain: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 13,
+    lineHeight: 18,
     color: tokens.text.mid,
   },
 });

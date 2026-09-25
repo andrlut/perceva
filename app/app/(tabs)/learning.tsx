@@ -16,9 +16,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBottomNavClearance } from '@/components/BottomNavBar';
 import { FabStack, fabStackClearance, type FabSize } from '@/components/FabStack';
 import { TourModule } from '@/components/tour/TourModule';
+import { TourTarget } from '@/components/tour/TourTarget';
 import { emitTourEvent } from '@/lib/tour/eventBus';
 import { buildM6Steps, M6_EVENTS } from '@/lib/tour/m6Steps';
-import { useIsCurrentTourModule, useTourStore } from '@/lib/tour/store';
+import { isWrapPending, useIsCurrentTourModule, useTourStore } from '@/lib/tour/store';
 import { CarouselRow } from '@/components/learning/CarouselRow';
 import { ContinueLendoCard } from '@/components/learning/ContinueLendoCard';
 import type { CoverIdeaMeta } from '@/components/learning/CoverCard';
@@ -126,12 +127,11 @@ export default function LearningScreen() {
       }
     }, [isM6Current]),
   );
-  // M6 step 2 (Next) ends the module → Wrap-up. Guard on wrap still being
-  // pending so an isolated M6 replay returns Home instead.
+  // M6 step 2 (Next) ends the module → Wrap-up. Same rule as Home: only
+  // while the closer is still unfinished and nothing is being replayed, so
+  // an isolated M6 replay returns Home instead.
   const finishM6 = () => {
-    const wrapPending =
-      (useTourStore.getState().modules.wrap?.status ?? 'pending') === 'pending';
-    if (wrapPending) router.push('/tour/wrap');
+    if (isWrapPending()) router.push('/tour/wrap');
     else router.navigate('/(tabs)');
   };
 
@@ -541,19 +541,23 @@ export default function LearningScreen() {
                 Haptics.selectionAsync().catch(() => {});
                 router.push('/collection');
               },
-              wrap:
-                pendingReviews > 0
-                  ? (node) => (
-                      <View>
-                        {node}
-                        <View style={styles.fabBadge} pointerEvents="none">
-                          <Text style={styles.fabBadgeText}>
-                            {pendingReviews > 99 ? '99+' : pendingReviews}
-                          </Text>
-                        </View>
+              // M6 step 2 spotlights this bulb: where absorbed ideas go.
+              wrap: (node) => (
+                <TourTarget id="learn.my-ideas" radius={999}>
+                  {pendingReviews > 0 ? (
+                    <View>
+                      {node}
+                      <View style={styles.fabBadge} pointerEvents="none">
+                        <Text style={styles.fabBadgeText}>
+                          {pendingReviews > 99 ? '99+' : pendingReviews}
+                        </Text>
                       </View>
-                    )
-                  : undefined,
+                    </View>
+                  ) : (
+                    node
+                  )}
+                </TourTarget>
+              ),
             },
             {
               key: 'filter',
@@ -592,9 +596,9 @@ export default function LearningScreen() {
         onQueryChange={setQuery}
       />
 
-      {/* M6 step 2 lives here (Learn explainer). Step 1 is on Home (Learn
-         tab spotlight). Next ends the module → Wrap-up. Tab screen, so no
-         `flatNav`. */}
+      {/* M6 step 2 lives here (the ideas model, spotlighting the Minhas
+         ideias bulb). Step 1 is on Home (Learn tab spotlight). Next ends the
+         module → Wrap-up. Tab screen, so no `flatNav`. */}
       <TourModule
         module="M6"
         screen="learn"

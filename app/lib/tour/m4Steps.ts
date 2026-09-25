@@ -4,19 +4,26 @@ import type { TranslateOptions } from '@/lib/i18n';
 type Translator = (key: string, options?: TranslateOptions) => string;
 
 /**
- * M4 — Rewards.
+ * M4 — Recompensas. Answers the two questions first users could not
+ * ("what do coins do?", "where do rewards come from?") against the Vault
+ * as it is since "resgate = uso" (#444/#445): no Banco any more — buying a
+ * reward uses it on the spot, and curation lives behind the Vault's gold
+ * primary button (Gerenciar recompensas).
  *
- *   1. (home)    Rewards bottom-nav tab      — awaitEvent REWARDS_NAVIGATED
- *   2. (rewards) balance + your rewards      — Next (auto-scroll to top)
- *   3. (rewards) redeem + the Gerenciar FAB  — Next (spotlights the gold
- *                floating button at the bottom corner; it always renders,
- *                so the anchor always exists)
+ *   1. (home)    Rewards bottom-nav tab        — awaitEvent REWARDS_NAVIGATED
+ *   2. (rewards) the coin balance: coins come
+ *                from practices done           — Next (spotlights the hero)
+ *   3. (rewards) create / adopt in Gerenciar,
+ *                redeem when you want          — awaitEvent MANAGE_VISITED
+ *                (spotlights the gold FAB; opening Gerenciar and coming
+ *                back completes the module, the assist is for whoever
+ *                prefers not to tap)
  *
- * Step 3 used to auto-scroll to the "Inspiração" block, which disappears
- * once the user owns every template — the FAB is a stable anchor and
- * matches the copy about where the rewards are curated.
+ * Step 3 names the card's button through `rewards.vault.cta.buy` so the
+ * verb the tour teaches is, by construction, the verb on screen. The copy
+ * is neutral on purpose: a price can be a treat or the cost of a slip.
  *
- * No commitment: we never ask the user to redeem or add anything.
+ * No commitment: we never ask the user to redeem or create anything.
  */
 export const M4_EVENTS = {
   REWARDS_NAVIGATED: 'rewards:navigated',
@@ -25,6 +32,9 @@ export const M4_EVENTS = {
    *  without needing an extra "Próximo" tap. */
   MANAGE_VISITED: 'rewards-manage:visited',
 } as const;
+
+/** Index of the step that completes on the Gerenciar visit. */
+export const M4_MANAGE_STEP = 2;
 
 export function buildM4Steps(t: Translator): ScreenedStep[] {
   return [
@@ -41,17 +51,17 @@ export function buildM4Steps(t: Translator): ScreenedStep[] {
       screen: 'rewards',
       title: t('tour.m4.step2.title'),
       body: t('tour.m4.step2.body'),
+      // The balance sits at the top of the Vault; the card goes below it.
       position: 'bottom',
+      target: 'rewards.balance',
     },
     {
       screen: 'rewards',
       title: t('tour.m4.step3.title'),
-      body: t('tour.m4.step3.body'),
-      // The FAB sits at the bottom corner, so the card opens above it.
+      body: t('tour.m4.step3.body', { verb: t('rewards.vault.cta.buy') }),
+      // The gold FAB sits at the bottom corner, so the card opens above it.
       position: 'top',
       target: 'rewards.manage',
-      // Opening Gerenciar (and coming back) completes the module; the
-      // assist stays for whoever prefers not to tap.
       awaitEvent: M4_EVENTS.MANAGE_VISITED,
       awaitCtaLabel: t('tour.common.next'),
     },

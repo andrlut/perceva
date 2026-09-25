@@ -23,6 +23,8 @@ import {
 import { CompleteTaskSheet } from '@/components/CompleteTaskSheet';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { TaskCard } from '@/components/TaskCard';
+import { TourModule } from '@/components/tour/TourModule';
+import { TourTarget } from '@/components/tour/TourTarget';
 import { XPCoinFloat } from '@/components/XPCoinFloat';
 import {
   dateKeyFromLocal,
@@ -40,6 +42,9 @@ import { useLimitModalStore, useTaskLimit } from '@/lib/premium';
 import { isEffectivelyDaily } from '@/lib/recurrence';
 import { useLoadedSettings } from '@/lib/settings';
 import { formatLongDate } from '@/lib/time';
+import { emitTourEvent } from '@/lib/tour/eventBus';
+import { buildM2Steps, M2_EVENTS } from '@/lib/tour/m2Steps';
+import { useIsCurrentTourModule } from '@/lib/tour/store';
 import { usePullToRefresh } from '@/lib/usePullToRefresh';
 import { rewardForTaskSubs } from '@/lib/xp';
 import { tokens } from '@/theme';
@@ -62,6 +67,10 @@ interface FloatItem {
  * the Hoje ring when the practice was actually DUE today (see wasDueToday
  * in index.tsx), so doing a non-scheduled practice here never misfires the
  * day-cleared celebration.
+ *
+ * Tour: M2 step 2 lives here — it spotlights the "Gerenciar" entry, the
+ * permanent door to the curation screen (/tasks), so the path the tour
+ * teaches is the path that exists after it.
  */
 export default function AllPracticesScreen() {
   const router = useRouter();
@@ -92,6 +101,7 @@ export default function AllPracticesScreen() {
   const undoCompletion = useUndoCompletion();
   const taskLimit = useTaskLimit();
   const openLimit = useLimitModalStore((s) => s.open);
+  const isM2Current = useIsCurrentTourModule('M2');
 
   const [floats, setFloats] = useState<FloatItem[]>([]);
   const [sheetTask, setSheetTask] = useState<TaskWithSubs | null>(null);
@@ -109,6 +119,12 @@ export default function AllPracticesScreen() {
       return;
     }
     router.push('/task-form');
+  };
+
+  // Gerenciar práticas — also M2 step 2's real gesture.
+  const openManage = () => {
+    emitTourEvent(M2_EVENTS.MANAGE_OPENED);
+    router.push('/tasks');
   };
 
   const fireCompletion = (
@@ -310,19 +326,23 @@ export default function AllPracticesScreen() {
           <Text style={styles.title}>{t('allPractices.title')}</Text>
           <View style={styles.topActions}>
             {/* Gerenciar práticas lives here (moved off the Home FAB) —
-                buckets, drag-reorder, adopt, edit. */}
-            <Pressable
-              onPress={() => router.push('/tasks')}
-              style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
-              hitSlop={8}
-              accessibilityLabel={t('tasksHub.title')}
-            >
-              <Ionicons name="options-outline" size={20} color={tokens.text.mid} />
-            </Pressable>
+                buckets, drag-reorder, adopt, edit. M2 spotlights it. */}
+            <TourTarget id="all.manage" radius={12}>
+              <Pressable
+                onPress={openManage}
+                style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={t('tasksHub.title')}
+              >
+                <Ionicons name="options-outline" size={20} color={tokens.text.mid} />
+              </Pressable>
+            </TourTarget>
             <Pressable
               onPress={handleCreate}
               style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
               hitSlop={8}
+              accessibilityRole="button"
               accessibilityLabel={t('tasksHub.newTask')}
             >
               <Ionicons name="add" size={22} color={tokens.brand.violet2} />
@@ -407,6 +427,25 @@ export default function AllPracticesScreen() {
         task={sheetTask}
         onCancel={() => setSheetTask(null)}
         onConfirm={handleSheetConfirm}
+      />
+
+      {/* M2 step 2 — the "Gerenciar" entry. Its real press fires
+         MANAGE_OPENED; the assist walks to /tasks the same way. flatNav:
+         this Stack screen has no floating BottomNavBar. rewindOnFocus:
+         backing out of /tasks mid-M2 lands here with the tooltip back on
+         its own step instead of a silent screen. Skipping the module from
+         here goes Home, where the next module starts. */}
+      <TourModule
+        module="M2"
+        screen="all"
+        steps={buildM2Steps(t)}
+        enabled={isM2Current}
+        flatNav
+        rewindOnFocus
+        onAdvanceToNextScreen={() => router.push('/tasks')}
+        onComplete={(outcome) => {
+          if (outcome === 'skipped') router.dismissTo('/(tabs)');
+        }}
       />
     </SafeAreaView>
   );

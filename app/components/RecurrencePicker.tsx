@@ -52,8 +52,12 @@ function targetLabelFor(type: RecurrenceType, t: Translator): string {
  *   - Type: daily / weekly / monthly
  *   - Target count: how many times per period
  *   - Optional schedule: for weekly/monthly, OPTIONAL day(s) that promote
- *     the task into Today. Without schedule, task lives only in This Week
- *     / This Month — pure cadence.
+ *     the task into Today. Without schedule, the practice never reaches
+ *     Hoje and lives in Todas as práticas — pure cadence.
+ *
+ * Every type carries one plain helper line saying WHERE the practice will
+ * show up, because that is the consequence of the choice (first-user
+ * feedback 2026-09: the old 12px dim helpers were tiny and abstract).
  */
 export function RecurrencePicker({
   recurrence,
@@ -112,6 +116,8 @@ export function RecurrencePicker({
               key={opt.type}
               onPress={() => handleTypeChange(opt.type)}
               style={[styles.typeCell, selected && styles.typeCellSelected]}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
             >
               <Ionicons
                 name={opt.icon}
@@ -139,6 +145,8 @@ export function RecurrencePicker({
               onPress={() => adjustTarget(-1)}
               style={styles.stepperBtn}
               hitSlop={6}
+              accessibilityRole="button"
+              accessibilityLabel={t('recurrencePicker.decreaseA11y')}
             >
               <Ionicons name="remove" size={20} color={tokens.text.hi} />
             </Pressable>
@@ -150,15 +158,25 @@ export function RecurrencePicker({
               }}
               keyboardType="number-pad"
               style={styles.stepperInput}
+              accessibilityLabel={targetLabelFor(recurrence.type, t)}
             />
             <Pressable
               onPress={() => adjustTarget(1)}
               style={styles.stepperBtn}
               hitSlop={6}
+              accessibilityRole="button"
+              accessibilityLabel={t('recurrencePicker.increaseA11y')}
             >
               <Ionicons name="add" size={20} color={tokens.text.hi} />
             </Pressable>
           </View>
+          {recurrence.type === 'daily' && (
+            <Text style={styles.helperText}>
+              {targetCount > 1
+                ? t('recurrencePicker.dailyMultiHelper')
+                : t('recurrencePicker.dailyHelper')}
+            </Text>
+          )}
         </View>
 
       {/* weekly schedule (optional) */}
@@ -169,7 +187,8 @@ export function RecurrencePicker({
             {weeklyDays.length > 0 && (
               <Pressable
                 onPress={() => onChange({ type: 'weekly' })}
-                hitSlop={6}
+                hitSlop={12}
+                accessibilityRole="button"
               >
                 <Text style={styles.clearBtn}>{t('common.clear')}</Text>
               </Pressable>
@@ -186,6 +205,8 @@ export function RecurrencePicker({
                   key={idx}
                   onPress={() => toggleDay(idx)}
                   style={[styles.dowCell, selected && styles.dowCellSelected]}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
                 >
                   <Text
                     style={[
@@ -208,11 +229,18 @@ export function RecurrencePicker({
           <View style={styles.scheduleHeader}>
             <Text style={styles.subLabel}>{t('recurrencePicker.specificDay')}</Text>
             {monthlyDay !== undefined && (
-              <Pressable onPress={() => setMonthlyDay(null)} hitSlop={6}>
+              <Pressable
+                onPress={() => setMonthlyDay(null)}
+                hitSlop={12}
+                accessibilityRole="button"
+              >
                 <Text style={styles.clearBtn}>{t('common.clear')}</Text>
               </Pressable>
             )}
           </View>
+          <Text style={styles.helperText}>
+            {t('recurrencePicker.monthlyHelper', { count: targetCount })}
+          </Text>
           {monthlyDay === undefined ? (
             <Pressable
               onPress={() => setMonthlyDay(1)}
@@ -228,6 +256,8 @@ export function RecurrencePicker({
                   onPress={() => adjustMonthDay(-1)}
                   style={styles.stepperBtn}
                   hitSlop={6}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('recurrencePicker.decreaseA11y')}
                 >
                   <Ionicons name="remove" size={20} color={tokens.text.hi} />
                 </Pressable>
@@ -247,12 +277,15 @@ export function RecurrencePicker({
                     selectTextOnFocus
                     maxLength={2}
                     style={styles.monthDayInput}
+                    accessibilityLabel={t('recurrencePicker.specificDay')}
                   />
                 </View>
                 <Pressable
                   onPress={() => adjustMonthDay(1)}
                   style={styles.stepperBtn}
                   hitSlop={6}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('recurrencePicker.increaseA11y')}
                 >
                   <Ionicons name="add" size={20} color={tokens.text.hi} />
                 </Pressable>
@@ -286,6 +319,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
+    minHeight: 44,
     paddingVertical: tokens.space[3],
     borderRadius: tokens.radius.md,
     borderWidth: 1,
@@ -297,8 +331,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(123, 92, 255, 0.16)',
   },
   typeLabel: {
-    ...tokens.type.caption,
     fontFamily: 'Manrope_700Bold',
+    fontSize: 13,
+    lineHeight: 17,
   },
   subBlock: {
     gap: tokens.space[2],
@@ -316,9 +351,9 @@ const styles = StyleSheet.create({
   },
   clearBtn: {
     fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
+    fontSize: 13,
     color: tokens.brand.violet2,
-    letterSpacing: 0.4,
+    letterSpacing: 0.3,
   },
   setDayBtn: {
     flexDirection: 'row',
@@ -343,7 +378,7 @@ const styles = StyleSheet.create({
   },
   dowCell: {
     flex: 1,
-    height: 40,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: tokens.radius.md,
@@ -421,8 +456,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     ...tokens.type.h3,
   },
+  // 13px in text.mid: the old 12px text.dim measured ~3.5:1 on the form
+  // background, under the 4.5:1 small text needs.
   helperText: {
-    ...tokens.type.caption,
-    color: tokens.text.dim,
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 13,
+    lineHeight: 18,
+    color: tokens.text.mid,
   },
 });

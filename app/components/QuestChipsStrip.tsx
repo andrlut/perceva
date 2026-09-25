@@ -7,8 +7,6 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useQuests } from '@/lib/api/quests';
 import { useT } from '@/lib/i18n';
 import { useModuleEnabled } from '@/lib/modules';
-import { emitTourEvent } from '@/lib/tour/eventBus';
-import { M3_EVENTS } from '@/lib/tour/m3Steps';
 import type { QuestWithProgress } from '@/lib/db/types';
 import { questProgressRatio } from '@/lib/quests/progress';
 import { tokens } from '@/theme';
@@ -79,10 +77,7 @@ export function QuestChipsStrip() {
           <BrowsePill
             variant="violet"
             label={t('home.quests.browseChip')}
-            onPress={() => {
-              emitTourEvent(M3_EVENTS.QUESTS_NAVIGATED);
-              router.push('/quests');
-            }}
+            onPress={() => router.push('/quests')}
           />
         </>
       )}

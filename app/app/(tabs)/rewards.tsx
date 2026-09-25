@@ -41,7 +41,7 @@ import { useLimitGuard, useRewardLimit } from '@/lib/premium';
 import { TourModule } from '@/components/tour/TourModule';
 import { TourTarget } from '@/components/tour/TourTarget';
 import { emitTourEvent } from '@/lib/tour/eventBus';
-import { buildM4Steps, M4_EVENTS } from '@/lib/tour/m4Steps';
+import { buildM4Steps, M4_EVENTS, M4_MANAGE_STEP } from '@/lib/tour/m4Steps';
 import {
   useActiveTourStep,
   useActiveTourStepStore,
@@ -147,28 +147,41 @@ export default function RewardsScreen() {
     }, [isM4Current]),
   );
 
-  // M4 step 3 completes by OPENING Gerenciar: the FAB sets the flag, and
-  // when this screen regains focus (Gerenciar closed) we emit — the event
-  // advance finishes the module, and we hand the user back to Home so M5's
-  // Home-anchored step 1 can show (the event path never fires
-  // onExitScreen; only the tooltip's button does).
+  // M4 step 3 completes by OPENING Gerenciar: every door into it (the gold
+  // FAB, the empty state's "Ver sugestões") sets the flag, and when this
+  // screen regains focus (Gerenciar closed) we finish the module and hand
+  // the user back to Home so M5's Home-anchored step 1 can show.
+  //
+  // The finish is synchronous and happens BEFORE navigating: Home rewinds
+  // any module still mid-flight on another screen when it regains focus
+  // (`rewindOnFocus`), and the event path alone would only finish M4 on
+  // the next render — racing that rewind back to step 1. The emit stays so
+  // the step's `awaitEvent` keeps its meaning; once M4 is completed the
+  // runner has no step left to advance, so it cannot double-fire.
   const manageVisitedInTour = useRef(false);
+  const noteManageVisit = () => {
+    if (isM4Current && (useTourStore.getState().stepIndices.M4 ?? 0) === M4_MANAGE_STEP) {
+      manageVisitedInTour.current = true;
+    }
+  };
   useFocusEffect(
     useCallback(() => {
       if (!manageVisitedInTour.current) return;
       manageVisitedInTour.current = false;
-      const idx = useTourStore.getState().stepIndices.M4 ?? 0;
-      if (isM4Current && idx === 2) {
+      const state = useTourStore.getState();
+      const idx = state.stepIndices.M4 ?? 0;
+      if (isM4Current && idx === M4_MANAGE_STEP) {
         emitTourEvent(M4_EVENTS.MANAGE_VISITED);
+        void state.setStatus('M4', 'completed');
+        state.setStepIndex('M4', 0);
         router.navigate('/(tabs)');
       }
     }, [isM4Current, router]),
   );
 
-  // Auto-scroll as the M4 steps open: step 2 (balance) → top. Step 3
-  // spotlights the Gerenciar FAB, which doesn't scroll — the old
-  // scrollToEnd chased the "Inspiração" block, which has since moved to
-  // Gerenciar › Sugeridas.
+  // Auto-scroll as the M4 steps open: step 2 spotlights the balance at the
+  // top of the scroll → back to the top. Step 3 spotlights the Gerenciar
+  // FAB, which floats, so it needs no scroll.
   useEffect(() => {
     if (!isM4Current || m4Status !== 'in_progress') return;
     const id = setTimeout(() => {
@@ -275,9 +288,7 @@ export default function RewardsScreen() {
   // above completes the module when the user comes back.
   const handleOpenManage = () => {
     Haptics.selectionAsync().catch(() => {});
-    if (isM4Current && (useTourStore.getState().stepIndices.M4 ?? 0) === 2) {
-      manageVisitedInTour.current = true;
-    }
+    noteManageVisit();
     router.push('/rewards-manage');
   };
 
@@ -419,7 +430,10 @@ export default function RewardsScreen() {
           />
         }
       >
-        <VaultHero balanceLabel={coins.toLocaleString()} status={headline} />
+        {/* M4 step 2 spotlights the balance: where coins come from. */}
+        <TourTarget id="rewards.balance" radius={tokens.radius.lg}>
+          <VaultHero balanceLabel={coins.toLocaleString()} status={headline} />
+        </TourTarget>
 
         {/* Tracked reward sits right under the coin balance so the user
             sees what they're saving for at a glance. */}
@@ -530,9 +544,10 @@ export default function RewardsScreen() {
                     user needs the door right here. */}
                 <View style={styles.emptyCtas}>
                   <Pressable
-                    onPress={() =>
-                      router.push({ pathname: '/rewards-manage', params: { tab: 'suggested' } })
-                    }
+                    onPress={() => {
+                      noteManageVisit();
+                      router.push({ pathname: '/rewards-manage', params: { tab: 'suggested' } });
+                    }}
                     style={({ pressed }) => [
                       styles.emptyCta,
                       styles.emptyCtaPrimary,
@@ -688,7 +703,7 @@ export default function RewardsScreen() {
           IS the doing surface, so the primary goes straight to curating.
           Resgates (the ledger) is the clock in Gerenciar's header, and the
           calendar. RAW navClearance so it doesn't leap under a bottom tour
-          tooltip. M4 step 3 spotlights this button. */}
+          tooltip. M4 step 3 spotlights the gold button. */}
       <FabStack
         bottomOffset={navClearance}
         actions={[
@@ -716,10 +731,11 @@ export default function RewardsScreen() {
         ]}
       />
 
-      {/* M4 steps 2-3 live here (balance + Gerenciar FAB). Step 1 is on
-         Home (Rewards tab spotlight). Finishing returns the user to the
-         Tasks home so the next module's Home-anchored step 1 can show.
-         No `flatNav` — this is a tab screen WITH the floating BottomNavBar. */}
+      {/* M4 steps 2-3 live here (balance, then Gerenciar + the redeem verb).
+         Step 1 is on Home (Rewards tab spotlight). Finishing returns the
+         user to the Tasks home so the next module's Home-anchored step 1
+         can show. No `flatNav` — this is a tab screen WITH the floating
+         BottomNavBar. */}
       <TourModule
         module="M4"
         screen="rewards"

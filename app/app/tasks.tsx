@@ -19,7 +19,6 @@ import DraggableFlatList, {
   ScaleDecorator,
 } from 'react-native-draggable-flatlist';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useIsFocused } from '@react-navigation/native';
 
 import { AppIcon } from '@/components/AppIcon';
 import { AddCard } from '@/components/AddCard';
@@ -66,8 +65,13 @@ import {
 } from '@/lib/premium';
 import { describeRecurrence, isEffectivelyDaily } from '@/lib/recurrence';
 import { emitTourEvent } from '@/lib/tour/eventBus';
-import { buildM2Steps, M2_EVENTS } from '@/lib/tour/m2Steps';
-import { useIsCurrentTourModule, useTourStore } from '@/lib/tour/store';
+import {
+  buildM2Steps,
+  finishM2AtHome,
+  isM2StepOn,
+  M2_EVENTS,
+} from '@/lib/tour/m2Steps';
+import { useIsCurrentTourModule } from '@/lib/tour/store';
 import { usePullToRefresh } from '@/lib/usePullToRefresh';
 import { confirmAction, showInfo } from '@/lib/util/confirm';
 import { rewardForTaskSubs } from '@/lib/xp';
@@ -153,10 +157,9 @@ export default function TasksHubScreen() {
   const restoreTask = useRestoreTask();
   const deleteTask = useDeleteTask();
 
-  // Returns whether navigation actually happened — the M2 tour advance
-  // MUST only fire on a real navigation, otherwise the module steps into
-  // the form screen that never mounts and jams the whole tour (the
-  // sequential current-module gate then hides M3+ forever).
+  // Returns whether navigation actually happened. Custom practices still
+  // count toward the free plan's cap (catalog adoptions do not), so the
+  // gate stays — also for the tour.
   const handleCreateTask = (): boolean => {
     if (taskLimit.atLimit) {
       openLimit('task');
@@ -167,21 +170,26 @@ export default function TasksHubScreen() {
   };
 
   const isM2Current = useIsCurrentTourModule('M2');
-  const isFocused = useIsFocused();
-  const m2StepIndex = useTourStore((s) => s.stepIndices.M2 ?? 0);
-  const setStepIndex = useTourStore((s) => s.setStepIndex);
 
-  // M2 self-heal: the step-2 "Me leva lá" CTA advances the index BEFORE
-  // the navigation callback runs, and the free-limit gate may refuse to
-  // open the form. If the index points at form steps (2+) while this
-  // screen still holds focus after a grace period, the form never
-  // mounted — walk back to the "+" step instead of stranding the module
-  // (a stuck M2 hides every later module via the current-module gate).
-  useEffect(() => {
-    if (!isM2Current || !isFocused || m2StepIndex < 2) return;
-    const id = setTimeout(() => setStepIndex('M2', 1), 1200);
-    return () => clearTimeout(id);
-  }, [isM2Current, isFocused, m2StepIndex, setStepIndex]);
+  // M2's `+` step, by gesture or by the assist. When the gate refuses (a
+  // free account at the cap), the form — where every remaining M2 step
+  // lives — can't open: M2 ends and the user goes Home, where the next
+  // module picks up, with the limit sheet explaining why. Decided on the
+  // spot from the gate's return value, so there is nothing to heal later:
+  // the old 1200 ms self-heal on this screen is gone. Back-outs are healed
+  // by rewindOnFocus on /all-practices and Home, and every exit from the
+  // form ends M2 on Home (task-form).
+  const handleCreatePress = () => {
+    // Read first: a refused gate ends M2 below.
+    const onTourStep = isM2StepOn('tasks');
+    if (handleCreateTask()) emitTourEvent(M2_EVENTS.CREATE_TASK_TAPPED);
+    else if (onTourStep) finishM2AtHome();
+  };
+  // The assist has already advanced the shared index when this runs, so
+  // the step check no longer applies — the gate alone decides.
+  const openCreateFromAssist = () => {
+    if (!handleCreateTask()) finishM2AtHome();
+  };
 
   // Coming BACK to this screen (from the form, from Home) pulls the lists
   // again. Mutations already invalidate, and the root layout refetches on
@@ -523,11 +531,7 @@ export default function TasksHubScreen() {
             <LimitCounterBadge limit={taskLimit} />
             <TourTarget id="tasks.create" radius={999}>
               <Pressable
-                onPress={() => {
-                  if (handleCreateTask()) {
-                    emitTourEvent(M2_EVENTS.CREATE_TASK_TAPPED);
-                  }
-                }}
+                onPress={handleCreatePress}
                 style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
                 hitSlop={8}
                 accessibilityRole="button"
@@ -658,21 +662,21 @@ export default function TasksHubScreen() {
         onConfirm={handlePeriodicityConfirm}
       />
 
-      {/* M2 step 2 lives here — spotlight the `+` icon. The mount on
-         Home covers step 1; the mount on task-form covers steps 3-5.
-         `flatNav` because this Stack screen has no floating BottomNavBar.
-         Tapping `+` fires CREATE_TASK_TAPPED + navigates; tapping the
-         tooltip's Próximo / skip walks the user to the form instead —
-         through the same limit gate, so the tour never advances into a
-         form that refused to open. */}
+      {/* M2 step 3 lives here — spotlight the `+`. Home covers step 1,
+         /all-practices step 2, the form steps 4-6. `flatNav` because this
+         Stack screen has no floating BottomNavBar. Tapping `+` fires
+         CREATE_TASK_TAPPED + opens the form; the assist opens it the same
+         way, through the same limit gate. Skipping the module here goes
+         Home, where the next module starts. */}
       <TourModule
         module="M2"
         screen="tasks"
         steps={buildM2Steps(t)}
         enabled={isM2Current}
         flatNav
-        onAdvanceToNextScreen={() => {
-          handleCreateTask();
+        onAdvanceToNextScreen={openCreateFromAssist}
+        onComplete={(outcome) => {
+          if (outcome === 'skipped') router.dismissTo('/(tabs)');
         }}
       />
     </SafeAreaView>

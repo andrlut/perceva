@@ -1,3 +1,4 @@
+import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef } from 'react';
 
 import { TourStep, type TourStepData } from './TourStep';
@@ -8,7 +9,7 @@ import {
   useTourStore,
 } from '@/lib/tour/store';
 import { useTourEvent } from '@/lib/tour/eventBus';
-import type { TourModule as TourModuleId } from '@/lib/tour/constants';
+import { isTerminal, type TourModule as TourModuleId } from '@/lib/tour/constants';
 
 /** Identifier for which screen a tour step belongs on. Each
  *  `<TourModule>` mount carries a matching `screen` prop and only
@@ -16,11 +17,9 @@ import type { TourModule as TourModuleId } from '@/lib/tour/constants';
  *  'home' when omitted. */
 export type TourScreen =
   | 'home'
-  | 'detail'
+  | 'all'
   | 'tasks'
   | 'create'
-  | 'quests'
-  | 'quest-detail'
   | 'rewards'
   | 'me'
   | 'learn';
@@ -81,6 +80,14 @@ interface Props {
    * the card floats with a phantom gap where the nav bar would be.
    */
   flatNav?: boolean;
+  /**
+   * Back-out healing for hub screens (Home). When THIS screen regains focus
+   * while the module is mid-flight on a step that lives on another screen,
+   * the user left that screen without finishing the step (hardware back,
+   * tab switch). Rewind to the latest step that lives here, so the tooltip
+   * reappears instead of the whole tour going silent behind the gate.
+   */
+  rewindOnFocus?: boolean;
   onComplete?: (outcome: 'completed' | 'skipped') => void;
 }
 
@@ -103,6 +110,7 @@ export function TourModule({
   onExitScreen,
   onAdvanceToNextScreen,
   flatNav = false,
+  rewindOnFocus = false,
   onComplete,
 }: Props) {
   const status = useModuleStatus(module);
@@ -141,6 +149,27 @@ export function TourModule({
     }
     setStepIndex(module, stepIndex + 1);
   }, [status, stepIndex, steps.length, setStatus, module, setStepIndex, finish]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!rewindOnFocus || !enabled) return;
+      const state = useTourStore.getState();
+      if (isTerminal(state.modules[module]?.status)) return;
+      const idx = state.stepIndices[module] ?? 0;
+      if ((steps[idx]?.screen ?? 'home') === screen) return;
+      let back = -1;
+      for (let i = Math.min(idx, steps.length - 1); i >= 0; i--) {
+        if ((steps[i]?.screen ?? 'home') === screen) {
+          back = i;
+          break;
+        }
+      }
+      if (back === -1) back = steps.findIndex((s) => (s.screen ?? 'home') === screen);
+      if (back !== -1) state.setStepIndex(module, back);
+      // `steps` is rebuilt every render, but a module's screen layout is static.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [rewindOnFocus, enabled, module, screen]),
+  );
 
   // Broadcast the visible step so layout consumers (Home scroll bump,
   // etc) can reserve space. Cleared on unmount.

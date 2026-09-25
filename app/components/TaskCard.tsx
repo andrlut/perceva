@@ -73,6 +73,11 @@ const SWIPE_MAX = 160;
  *
  * Tap on the body opens edit. Tap on the violet check button (or swipe
  * right) completes. Long-press opens the per-sub adjust popup.
+ *
+ * Legibility (first-user feedback 2026-09, "tiny and confusing"): the meta
+ * line — the green reward number the tour points at, the coin tag and the
+ * cadence note — is 13px, and the cadence note moved from text.faint italic
+ * (~2.3:1 on the card) to text.mid.
  */
 export function TaskCard({
   task,
@@ -294,7 +299,7 @@ export function TaskCard({
                   on "Igual") — otherwise the XP figure already says it. */}
               {task.coin_multiplier !== 1 && (
                 <View style={styles.coinTag}>
-                  <CoinIcon size={11} />
+                  <CoinIcon size={13} />
                   <Text style={styles.coinTagText}>{reward.total.coins}</Text>
                 </View>
               )}
@@ -319,9 +324,9 @@ export function TaskCard({
                 styles.completeButton,
                 pressed && styles.completeButtonPressed,
               ]}
-              accessibilityHint={
-                onLongPress ? 'Long-press to adjust per-sub stars' : undefined
-              }
+              accessibilityRole="button"
+              accessibilityLabel={t('tasks.card.completeA11y', { title: task.title })}
+              accessibilityHint={onLongPress ? t('tasks.card.holdHintA11y') : undefined}
             >
               <LinearGradient
                 colors={tokens.gradient.taskCheckBtn}
@@ -445,7 +450,7 @@ const styles = StyleSheet.create({
   },
   rewardValue: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 11,
+    fontSize: 13,
     color: tokens.semantic.xp,
     letterSpacing: 0.2,
   },
@@ -458,15 +463,14 @@ const styles = StyleSheet.create({
   // as 11dp text would miss AA on the light theme.
   coinTagText: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 11,
+    fontSize: 13,
     color: tokens.text.mid,
     letterSpacing: 0.2,
   },
   recurrenceNote: {
     fontFamily: 'Manrope_500Medium',
-    fontSize: 10,
-    color: tokens.text.faint,
-    fontStyle: 'italic',
+    fontSize: 13,
+    color: tokens.text.mid,
     flexShrink: 1,
   },
   completeShadow: {

@@ -539,9 +539,11 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: tokens.radius.lg,
     overflow: 'hidden',
   },
+  // Helper line — 13px, like every helper since the 2026-09 legibility pass.
   emptyText: {
     fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
+    fontSize: 13,
+    lineHeight: 18,
     color: tokens.text.mid,
     textAlign: 'center',
     paddingVertical: tokens.space[4],

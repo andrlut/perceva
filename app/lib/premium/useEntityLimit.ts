@@ -15,7 +15,11 @@ import { useIsPremium } from './useIsPremium';
 export function useTaskLimit(): EntityLimit {
   const isPremium = useIsPremium();
   const { data } = useActiveTasks();
-  return computeEntityLimit('task', data?.length ?? 0, isPremium);
+  // Catalog practices are unlimited on the free plan; only the user's own
+  // (template_id null) count — mirror of enforce_free_creation_limit
+  // (migration 20260925000001).
+  const custom = (data ?? []).filter((task) => task.template_id == null).length;
+  return computeEntityLimit('task', custom, isPremium);
 }
 
 export function useRewardLimit(): EntityLimit {

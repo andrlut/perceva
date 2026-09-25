@@ -1,27 +1,21 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useCallback, useMemo, useRef, useState } from 'react';
-import {
-  findNodeHandle,
-  Platform,
-  Pressable,
-  type ScrollView as ScrollViewType,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { useMemo, useState } from 'react';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { DimensionCards, type DimCardRow } from '@/components/DimensionCards';
 import { HexChart } from '@/components/HexChart';
 import { HexGrainToggle, useHexGrain } from '@/components/HexGrainToggle';
 import { HexSeriesLegend } from '@/components/HexSeriesLegend';
 import { MoodTodayCard } from '@/components/mood/MoodTodayCard';
+import { TourTarget } from '@/components/tour/TourTarget';
 import type { CharacterSubScore } from '@/lib/db/types';
 import { pickSubScores, pickSubScoresDecimal } from '@/lib/api/character';
 import { useLastWellbeingSession } from '@/lib/api/psych';
 import { daysSince } from '@/lib/api/questionnaire';
 import { useT } from '@/lib/i18n';
+import { emitTourEvent } from '@/lib/tour/eventBus';
+import { M5_EVENTS } from '@/lib/tour/m5Steps';
 import { formatScore } from '@/lib/util/formatScore';
 import { tokens } from '@/theme';
 import { DIMENSION_ORDER, SUBS_BY_DIM } from '@/theme/dimensions';
@@ -32,12 +26,9 @@ const QUESTIONNAIRE_COLOR = tokens.dimension.bonds;
 
 interface Props {
   subScores: CharacterSubScore[];
-  /** ScrollView wrapping the Eu tab — lets the M5 tour scroll the legend
-   *  cards into view by their measured position (robust to reordering). */
-  scrollViewRef?: React.RefObject<ScrollViewType | null>;
-  /** Reports the legend's absolute Y within the scroll view, so the tour
-   *  can scroll to the sub-score cards without a hand-tuned magic number. */
-  onLegendMeasured?: (y: number) => void;
+  /** Attached to the "Fazer autoavaliação" CTA's wrapper, so the Eu tab can
+   *  scroll it clear of the M5 tooltip that spotlights it. */
+  selfAssessmentAnchorRef?: React.RefObject<View | null>;
 }
 
 /**
@@ -48,7 +39,7 @@ interface Props {
  *
  * Quiet by design: no XP, no Momentum, no confetti.
  */
-export function AvaliacaoPanel({ subScores, scrollViewRef, onLegendMeasured }: Props) {
+export function AvaliacaoPanel({ subScores, selfAssessmentAnchorRef }: Props) {
   const router = useRouter();
   const { t } = useT();
   const { width: screenWidth } = useWindowDimensions();
@@ -64,8 +55,6 @@ export function AvaliacaoPanel({ subScores, scrollViewRef, onLegendMeasured }: P
   // Match the old (pre-pillars) sizing: bleed slightly beyond page padding
   // for visual presence, capped so it doesn't blow up on tablets.
   const chartSize = Math.max(240, Math.min((screenWidth || 360) - 16, 360));
-
-  const legendRef = useRef<View>(null);
 
   const selfScores = useMemo(
     () => pickSubScores(subScores, 'self'),
@@ -114,36 +103,13 @@ export function AvaliacaoPanel({ subScores, scrollViewRef, onLegendMeasured }: P
     [primary],
   );
 
-  // Measure the legend's absolute position within the scroll view whenever
-  // it lays out, so the tour can scroll to it by real coordinates instead
-  // of a fraction of the total scroll range (which shifts when the panel
-  // reorders). measureLayout isn't available on web — the tour degrades to
-  // no auto-scroll there.
-  const measureLegend = useCallback(() => {
-    if (Platform.OS === 'web' || !onLegendMeasured) return;
-    const node = legendRef.current;
-    const sv = scrollViewRef?.current;
-    if (!node || !sv) return;
-    // Fabric (new arch) requires `measureLayout` to receive a ref to a
-    // native component — a findNodeHandle number throws "must be called
-    // with a ref to a native component". getNativeScrollRef() hands us
-    // the host ScrollView; the node-handle path stays as an old-arch
-    // fallback.
-    const target =
-      (
-        sv as unknown as { getNativeScrollRef?: () => unknown }
-      ).getNativeScrollRef?.() ?? findNodeHandle(sv);
-    if (target == null) return;
-    (
-      node as unknown as {
-        measureLayout: (
-          rel: never,
-          cb: (x: number, y: number) => void,
-          err: () => void,
-        ) => void;
-      }
-    ).measureLayout(target as never, (_x, y) => onLegendMeasured(y), () => {});
-  }, [onLegendMeasured, scrollViewRef]);
+  // Never self-assessed = every "self" score still at the seed 0. The CTA
+  // then reads as a first step ("Fazer autoavaliação · 1 min") instead of
+  // an update — it is where the M5 tour starts the Percebida portrait.
+  const hasSelfAssessment = useMemo(
+    () => [...selfScores.values()].some((v) => v > 0),
+    [selfScores],
+  );
 
   const lastTaken = lastSession.data?.taken_at ?? null;
   const sinceDays = daysSince(lastTaken);
@@ -202,28 +168,42 @@ export function AvaliacaoPanel({ subScores, scrollViewRef, onLegendMeasured }: P
         ]}
       />
 
-      <View ref={legendRef} onLayout={measureLegend} collapsable={false}>
-        <DimensionCards
-          rows={rows}
-          onDimPress={(dim) =>
-            router.push({ pathname: '/dimension/[id]', params: { id: dim } })
-          }
-        />
-      </View>
+      <DimensionCards
+        rows={rows}
+        onDimPress={(dim) =>
+          router.push({ pathname: '/dimension/[id]', params: { id: dim } })
+        }
+      />
 
-      <Pressable
-        onPress={() => router.push('/self-assessment')}
-        style={({ pressed }) => [styles.cta, pressed && { opacity: 0.85 }]}
-        hitSlop={4}
-      >
-        <Text style={styles.ctaText}>{t('avaliacao.selfAssessmentCta')}</Text>
-        <Ionicons name="arrow-forward" size={14} color={tokens.brand.violet2} />
-      </Pressable>
+      {/* M5 step 3 spotlights this CTA and advances when it is tapped
+          (the emit is inert outside that step — the tour only counts
+          emissions made while a step waits on them). */}
+      <View ref={selfAssessmentAnchorRef} collapsable={false}>
+        <TourTarget id="me.self-assessment" radius={tokens.radius.md}>
+          <Pressable
+            onPress={() => {
+              emitTourEvent(M5_EVENTS.SELF_ASSESSMENT_OPENED);
+              router.push('/self-assessment');
+            }}
+            style={({ pressed }) => [styles.cta, pressed && { opacity: 0.85 }]}
+            hitSlop={4}
+            accessibilityRole="button"
+          >
+            <Text style={styles.ctaText}>
+              {hasSelfAssessment
+                ? t('avaliacao.selfAssessmentCta')
+                : t('avaliacao.selfAssessmentCtaFirst')}
+            </Text>
+            <Ionicons name="arrow-forward" size={14} color={tokens.brand.violet2} />
+          </Pressable>
+        </TourTarget>
+      </View>
 
       <Pressable
         onPress={() => router.push('/questionnaire')}
         style={({ pressed }) => [styles.ctaSecondary, pressed && { opacity: 0.85 }]}
         hitSlop={4}
+        accessibilityRole="button"
       >
         <Ionicons name="clipboard" size={14} color={tokens.brand.violet2} />
         <Text style={styles.ctaSecondaryText}>{questionnaireLabel}</Text>
@@ -234,6 +214,7 @@ export function AvaliacaoPanel({ subScores, scrollViewRef, onLegendMeasured }: P
           onPress={() => router.push('/profile-mirror')}
           style={({ pressed }) => [styles.ctaSecondary, pressed && { opacity: 0.85 }]}
           hitSlop={4}
+          accessibilityRole="button"
         >
           <Ionicons name="person-circle" size={14} color={tokens.brand.violet2} />
           <Text style={styles.ctaSecondaryText}>{t('avaliacao.mirrorCta')}</Text>
@@ -255,6 +236,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cta: {
+    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -272,6 +254,7 @@ const styles = StyleSheet.create({
     color: tokens.brand.violet2,
   },
   ctaSecondary: {
+    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -285,7 +268,7 @@ const styles = StyleSheet.create({
   },
   ctaSecondaryText: {
     fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
+    fontSize: 13,
     color: tokens.brand.violet2,
     letterSpacing: 0.3,
   },
