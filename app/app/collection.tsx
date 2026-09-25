@@ -8,164 +8,108 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useBottomSafeClearance } from '@/components/BottomNavBar';
-import { CollectionGrid } from '@/components/ideas/CollectionGrid';
-import { ReviewStack, type ReviewStackItem } from '@/components/ideas/ReviewStack';
+import { IdeaShelf, shelfCardWidth } from '@/components/ideas/IdeaShelf';
 import { ScreenBackground } from '@/components/ScreenBackground';
-import {
-  reviewKey,
-  useIdeaCards,
-  useIdeaReviews,
-  useLearningFeed,
-  useReviewIdea,
-} from '@/lib/api/learning';
-import type { DimensionId, IdeaReview, LearningIdeaPublic } from '@/lib/db/types';
+import type { DimensionId } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
-import { showInfo } from '@/lib/util/confirm';
 import { useMetaLookup } from '@/lib/i18n/meta';
+import { compareAbsorbed, useIdeaCollection } from '@/lib/ideaCollection';
 import { toCardDataFromPublic, type IdeaCardData, type IdeaLocale } from '@/lib/ideas';
+import { buildHaystack, matchesQuery } from '@/lib/learningSearch';
 import { tokens } from '@/theme';
-import { DIMENSION_META, DIMENSION_ORDER } from '@/theme/dimensions';
+import { DIMENSION_ORDER } from '@/theme/dimensions';
 
 /**
- * "Minhas ideias" — the review pile, then the favorites.
+ * "Minhas ideias" — the reader's shelf of absorbed ideas.
  *
- * Absorbing (the flip at the end of the idea screen) is irreversible and
- * stays where it is. What this screen adds is the REVIEW: every absorbed
- * idea waits here once (`reviewed_at IS NULL`) and the reader decides, one
- * card at a time, whether it is a favorite (swipe right) or gets released
- * (swipe left — still absorbed, still counts for XP and the MCP, just not in
- * the grid). While the pile has cards the `ReviewStack` sits at the top of
- * the list; when it empties on this visit a small "Revisão em dia" card
- * takes its place until the reader leaves.
+ * Top to bottom: a search box, the "N pra revisar" strip (only while the
+ * review pile has cards; it opens `/idea-review` — the pile no longer sits
+ * in front of the collection), the Favoritas / Ver todas toggle, then one
+ * horizontal shelf per dimension (`IdeaShelf`), in the app's dimension
+ * order, each holding that dimension's cards newest decision first. The
+ * shelves are the organization; there are no dimension pills any more.
  *
- * Data: every published idea (`useIdeaCards()`, the `learning_idea_public`
- * view) joined with the user's review rows (`useIdeaReviews()`, one per
- * absorbed idea); material titles come from the feed cards, for the line
- * under the review pile's counter (cards themselves carry no material name). The grid shows favorites by default, newest decision
- * first; "Ver todas" widens it to everything absorbed. Dimension pills
- * narrow whatever is shown. Nothing here ever calls `collect_idea`; the
- * only write is `review_idea` through `useReviewIdea()` (optimistic, so
- * the stack advances the moment the card flies off).
+ * Search runs in memory over each idea's title and claim (both languages),
+ * its material's title, and its dimension and sub labels — per word,
+ * accent-blind, one typo tolerated (`lib/learningSearch`). It narrows the
+ * shelves in place and ignores the Favoritas toggle: someone looking for
+ * an idea by name wants it wherever it is.
+ *
+ * Nothing here writes: the flip is reveal-only and the round arrow on the
+ * back of a card opens its idea.
  */
 
-const EMPTY_REVIEWS: ReadonlyMap<string, IdeaReview> = new Map();
-const EMPTY_PENDING: readonly IdeaReview[] = [];
-
-interface AbsorbedRow {
-  row: LearningIdeaPublic;
-  review: IdeaReview;
-}
-
-/**
- * Grid order: most recently reviewed first (unreviewed last), then newest
- * release, then reading order inside the material.
- */
-function compareAbsorbed(a: AbsorbedRow, b: AbsorbedRow): number {
-  const ra = a.review.reviewedAt ? Date.parse(a.review.reviewedAt) : Number.NEGATIVE_INFINITY;
-  const rb = b.review.reviewedAt ? Date.parse(b.review.reviewedAt) : Number.NEGATIVE_INFINITY;
-  if (ra !== rb) return rb > ra ? 1 : -1;
-  const byRelease = Date.parse(b.row.released_at) - Date.parse(a.row.released_at);
-  if (byRelease !== 0) return byRelease;
-  return a.row.ordinal - b.row.ordinal;
-}
+type Card = IdeaCardData & { haystack: string; favorite: boolean };
 
 export default function CollectionScreen() {
   const router = useRouter();
   const { t, locale } = useT();
   const meta = useMetaLookup();
   const bottomClearance = useBottomSafeClearance();
-  const ideaCards = useIdeaCards();
-  const reviews = useIdeaReviews();
-  const feed = useLearningFeed();
-  const { mutate: reviewIdea } = useReviewIdea();
-
-  const [dimFilter, setDimFilter] = useState<DimensionId | null>(null);
-  const [onlyFavorites, setOnlyFavorites] = useState(true);
-  // Flips on the first decision of this visit — once the pile is empty the
-  // "Revisão em dia" card shows instead of the stack, until the screen
-  // unmounts. A reader arriving with nothing pending sees the grid straight
-  // away, no ceremony.
-  const [reviewedThisVisit, setReviewedThisVisit] = useState(false);
+  const { width: screenW } = useWindowDimensions();
+  const cardWidth = shelfCardWidth(screenW);
 
   const ideaLocale: IdeaLocale = locale === 'pt' ? 'pt' : 'en';
-  const byKey = reviews.data?.byKey ?? EMPTY_REVIEWS;
-  const pendingReviews = reviews.data?.pending ?? EMPTY_PENDING;
+  const { absorbed, pending, materials, loading, failed, retry } = useIdeaCollection(ideaLocale);
 
-  // material_id → title in the app locale (other language as fallback) —
-  // the review pile shows the top card's material under its counter.
-  const titles = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const card of feed.data ?? []) {
-      const title =
-        ideaLocale === 'pt' ? card.title_pt || card.title_en : card.title_en || card.title_pt;
-      map.set(card.id, title ?? '');
-    }
-    return map;
-  }, [feed.data, ideaLocale]);
+  const [onlyFavorites, setOnlyFavorites] = useState(true);
+  const [query, setQuery] = useState('');
+  const searching = query.trim().length > 0;
 
-  // Published ideas the user absorbed, each with its review row.
-  const absorbed = useMemo<AbsorbedRow[]>(() => {
-    const out: AbsorbedRow[] = [];
-    for (const row of ideaCards.data ?? []) {
-      const review = byKey.get(reviewKey(row.material_id, row.idea_id));
-      if (review) out.push({ row, review });
-    }
-    return out;
-  }, [ideaCards.data, byKey]);
-
-  // The pile, oldest absorbed first. A pending row whose idea is no longer
-  // published (a re-cut) has no card to show and is skipped.
-  const pendingItems = useMemo<ReviewStackItem[]>(() => {
-    const rowsByKey = new Map<string, LearningIdeaPublic>();
-    for (const a of absorbed) rowsByKey.set(reviewKey(a.row.material_id, a.row.idea_id), a.row);
-    const out: ReviewStackItem[] = [];
-    for (const r of pendingReviews) {
-      const row = rowsByKey.get(reviewKey(r.materialId, r.ideaId));
-      if (!row) continue;
-      out.push({
-        card: toCardDataFromPublic(row),
-        kicker: titles.get(row.material_id) ?? '',
-        slug: row.slug,
-      });
-    }
-    return out;
-  }, [absorbed, pendingReviews, titles]);
-
-  const favorites = useMemo<IdeaCardData[]>(
+  // Every absorbed idea, in collection order, with its search haystack.
+  const cards = useMemo<Card[]>(
     () =>
-      absorbed
-        .filter((a) => a.review.favorite === true)
-        .sort(compareAbsorbed)
-        .map((a) => toCardDataFromPublic(a.row)),
-    [absorbed],
+      [...absorbed].sort(compareAbsorbed).map(({ row, review }) => {
+        const material = materials.get(row.material_id);
+        return {
+          ...toCardDataFromPublic(row),
+          favorite: review.favorite === true,
+          haystack: buildHaystack([
+            row.title_pt,
+            row.title_en,
+            row.claim_pt,
+            row.claim_en,
+            material?.title_pt,
+            material?.title_en,
+            meta.dim(row.dimension_id).label,
+            ...(material?.subs ?? []).map((s) => meta.sub(s).label),
+          ]),
+        };
+      }),
+    [absorbed, materials, meta],
   );
-  const everything = useMemo<IdeaCardData[]>(
-    () => [...absorbed].sort(compareAbsorbed).map((a) => toCardDataFromPublic(a.row)),
-    [absorbed],
-  );
-  const shown = onlyFavorites ? favorites : everything;
 
-  // Only dimensions that actually hold a shown card get a pill.
-  const dims = useMemo(() => {
-    const present = new Set(shown.map((c) => c.dimensionId));
-    return DIMENSION_ORDER.filter((d) => present.has(d));
-  }, [shown]);
+  const favoriteCount = useMemo(() => cards.filter((c) => c.favorite).length, [cards]);
 
-  // A filter pointing at a dimension with no cards (toggled to favorites,
-  // or a re-cut dropped its last idea) silently falls back to "Todas".
-  const activeDim = dimFilter && dims.includes(dimFilter) ? dimFilter : null;
   const visible = useMemo(
-    () => (activeDim ? shown.filter((c) => c.dimensionId === activeDim) : shown),
-    [shown, activeDim],
+    () =>
+      searching
+        ? cards.filter((c) => matchesQuery(c.haystack, query))
+        : onlyFavorites
+          ? cards.filter((c) => c.favorite)
+          : cards,
+    [cards, searching, query, onlyFavorites],
   );
 
-  const stackActive = pendingItems.length > 0;
-  const showDone = !stackActive && reviewedThisVisit;
+  const shelves = useMemo(() => {
+    const byDim = new Map<DimensionId, IdeaCardData[]>();
+    for (const c of visible) {
+      const list = byDim.get(c.dimensionId);
+      if (list) list.push(c);
+      else byDim.set(c.dimensionId, [c]);
+    }
+    return DIMENSION_ORDER.filter((d) => byDim.has(d)).map((d) => ({
+      dimensionId: d,
+      cards: byDim.get(d) as IdeaCardData[],
+    }));
+  }, [visible]);
 
   const openIdea = useCallback(
     (card: IdeaCardData) => {
@@ -177,143 +121,36 @@ export default function CollectionScreen() {
     },
     [router],
   );
-  const openStackItem = useCallback(
-    (item: ReviewStackItem) => openIdea(item.card),
-    [openIdea],
-  );
 
-  // Optimistic: the reviews cache drops the item at once and the stack shows
-  // the next card; a failed RPC rolls it back and the card returns to the pile.
-  const onDecision = useCallback(
-    (item: ReviewStackItem, favorite: boolean) => {
-      setReviewedThisVisit(true);
-      reviewIdea(
-        {
-          slug: item.slug,
-          ideaId: item.card.id,
-          favorite,
-          // Lets the optimistic update hit the cache row directly instead of
-          // resolving the material through the ideaCards cache.
-          materialId: item.card.materialId,
-        },
-        {
-          // The optimistic rollback already puts the card back in the pile;
-          // say why, or the reader thinks the swipe did not register.
-          onError: (e) =>
-            showInfo(t('learning.ideas.review.fail'), e instanceof Error ? e.message : ''),
-        },
-      );
-    },
-    [reviewIdea, t],
-  );
-
-  const selectDim = (dim: DimensionId | null) => {
+  const openReview = () => {
     Haptics.selectionAsync().catch(() => {});
-    setDimFilter(dim);
+    router.push('/idea-review');
   };
+
   const selectOnlyFavorites = (value: boolean) => {
     if (value === onlyFavorites) return;
     Haptics.selectionAsync().catch(() => {});
     setOnlyFavorites(value);
   };
 
-  // The feed only feeds the kickers; waiting for it avoids the titles
-  // popping in a beat after the cards, but its failure never blocks the grid.
-  const loading = ideaCards.isLoading || reviews.isLoading || feed.isLoading;
-  const failed = ideaCards.isError || reviews.isError;
-
-  const subtitle = stackActive
-    ? t('learning.ideas.review.pending', { count: pendingItems.length })
-    : `${t('learning.ideas.review.favoritesTitle')} · ${favorites.length}`;
-
-  const header = (
-    <View>
-      {stackActive ? (
-        <ReviewStack
-          items={pendingItems}
-          locale={ideaLocale}
-          onDecision={onDecision}
-          onOpen={openStackItem}
-        />
-      ) : showDone ? (
-        <View style={styles.doneCard}>
-          <View style={styles.doneIcon}>
-            <Ionicons name="checkmark" size={18} color={tokens.bg.deep} />
-          </View>
-          <View style={styles.doneText}>
-            <Text style={styles.doneTitle}>{t('learning.ideas.review.done')}</Text>
-            <Text style={styles.doneBody}>{t('learning.ideas.review.doneBody')}</Text>
-          </View>
-        </View>
-      ) : null}
-
-      {/* Pills — favorites toggle, then "Todas" + one per dimension with a card. */}
-      {absorbed.length > 0 && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.pillScroll}
-          contentContainerStyle={styles.pillRow}
-        >
-          <FilterPill
-            label={t('learning.ideas.review.onlyFavorites')}
-            iconName="star"
-            accent={tokens.semantic.coin}
-            active={onlyFavorites}
-            onPress={() => selectOnlyFavorites(true)}
-          />
-          <FilterPill
-            label={t('learning.ideas.review.showAll')}
-            accent={tokens.semantic.coin}
-            active={!onlyFavorites}
-            onPress={() => selectOnlyFavorites(false)}
-          />
-          {dims.length > 0 && (
-            <>
-              <View style={styles.pillDivider} />
-              <FilterPill
-                label={t('learning.ideas.allDims')}
-                accent={tokens.brand.violet2}
-                active={activeDim === null}
-                onPress={() => selectDim(null)}
-              />
-              {dims.map((dimId) => {
-                const dim = meta.dim(dimId);
-                return (
-                  <FilterPill
-                    key={dimId}
-                    label={dim.label}
-                    iconName={dim.iconName as keyof typeof Ionicons.glyphMap}
-                    accent={DIMENSION_META[dimId].color}
-                    active={activeDim === dimId}
-                    onPress={() => selectDim(dimId)}
-                  />
-                );
-              })}
-            </>
-          )}
-        </ScrollView>
-      )}
-    </View>
-  );
+  const subtitle = t('learning.ideas.review.countSummary', {
+    favorites: favoriteCount,
+    total: cards.length,
+  });
 
   const empty =
     absorbed.length === 0 ? (
-      <View style={styles.centerBox}>
-        <Ionicons name="albums-outline" size={36} color={tokens.text.dim} />
-        <Text style={styles.emptyText}>{t('learning.ideas.myIdeasEmpty')}</Text>
-      </View>
-    ) : onlyFavorites && favorites.length === 0 ? (
-      <View style={styles.centerBox}>
-        <Ionicons name="star-outline" size={36} color={tokens.text.dim} />
-        <Text style={styles.emptyText}>{t('learning.ideas.review.emptyFavorites')}</Text>
-      </View>
+      <EmptyState icon="albums-outline" text={t('learning.ideas.myIdeasEmpty')} />
+    ) : searching ? (
+      <EmptyState icon="search" text={t('learning.ideas.searchEmpty', { query: query.trim() })} />
+    ) : onlyFavorites && favoriteCount === 0 ? (
+      <EmptyState icon="star-outline" text={t('learning.ideas.review.emptyFavorites')} />
     ) : null;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScreenBackground withGoldHalo>
-        {/* Header — back chevron + title with the count underneath. */}
+      <ScreenBackground>
+        {/* Header — back chevron + title with the counts underneath. */}
         <View style={styles.topBar}>
           <Pressable
             onPress={() => router.back()}
@@ -343,11 +180,7 @@ export default function CollectionScreen() {
             <Ionicons name="cloud-offline-outline" size={36} color={tokens.text.dim} />
             <Text style={styles.emptyText}>{t('learning.reels.loadError')}</Text>
             <Pressable
-              onPress={() => {
-                ideaCards.refetch();
-                reviews.refetch();
-                if (feed.isError) feed.refetch();
-              }}
+              onPress={retry}
               style={({ pressed }) => [styles.retryBtn, pressed && { opacity: 0.8 }]}
               accessibilityRole="button"
             >
@@ -355,34 +188,121 @@ export default function CollectionScreen() {
             </Pressable>
           </View>
         ) : (
-          <CollectionGrid
-            cards={visible}
-            locale={ideaLocale}
-            onOpen={openIdea}
-            paddingBottom={bottomClearance}
-            ListHeaderComponent={header}
-            ListEmptyComponent={empty}
-          />
+          <ScrollView
+            contentContainerStyle={[styles.content, { paddingBottom: bottomClearance + 16 }]}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            showsVerticalScrollIndicator={false}
+          >
+            {absorbed.length > 0 && (
+              <View style={styles.searchWrap}>
+                <Ionicons name="search" size={16} color={tokens.text.dim} />
+                <TextInput
+                  value={query}
+                  onChangeText={setQuery}
+                  placeholder={t('learning.ideas.searchPlaceholder')}
+                  placeholderTextColor={tokens.text.faint}
+                  style={styles.searchInput}
+                  autoCorrect={false}
+                  autoCapitalize="none"
+                  returnKeyType="search"
+                />
+                {query.length > 0 && (
+                  <Pressable
+                    onPress={() => setQuery('')}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('common.clear')}
+                  >
+                    <Ionicons name="close-circle" size={16} color={tokens.text.dim} />
+                  </Pressable>
+                )}
+              </View>
+            )}
+
+            {pending.length > 0 && !searching && (
+              <Pressable
+                onPress={openReview}
+                accessibilityRole="button"
+                style={({ pressed }) => [styles.reviewStrip, pressed && { opacity: 0.8 }]}
+              >
+                <View style={styles.reviewIcon}>
+                  <Ionicons name="layers-outline" size={17} color={tokens.brand.violet2} />
+                </View>
+                <View style={styles.reviewText}>
+                  <Text style={styles.reviewTitle}>
+                    {t('learning.ideas.review.fabPending', { count: pending.length })}
+                  </Text>
+                  <Text style={styles.reviewBody} numberOfLines={1}>
+                    {t('learning.ideas.review.stripBody')}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={tokens.text.mid} />
+              </Pressable>
+            )}
+
+            {absorbed.length > 0 && !searching && (
+              <View style={styles.pillRow}>
+                <FilterPill
+                  label={t('learning.ideas.review.onlyFavorites')}
+                  iconName="star"
+                  active={onlyFavorites}
+                  onPress={() => selectOnlyFavorites(true)}
+                />
+                <FilterPill
+                  label={t('learning.ideas.review.showAll')}
+                  active={!onlyFavorites}
+                  onPress={() => selectOnlyFavorites(false)}
+                />
+              </View>
+            )}
+
+            {shelves.length > 0 ? (
+              <View style={styles.shelves}>
+                {shelves.map((s) => (
+                  <IdeaShelf
+                    key={s.dimensionId}
+                    dimensionId={s.dimensionId}
+                    label={meta.dim(s.dimensionId).label}
+                    cards={s.cards}
+                    cardWidth={cardWidth}
+                    locale={ideaLocale}
+                    onOpen={openIdea}
+                  />
+                ))}
+              </View>
+            ) : (
+              empty
+            )}
+          </ScrollView>
         )}
       </ScreenBackground>
     </SafeAreaView>
   );
 }
 
+function EmptyState({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: string }) {
+  return (
+    <View style={styles.centerBox}>
+      <Ionicons name={icon} size={36} color={tokens.text.dim} />
+      <Text style={styles.emptyText}>{text}</Text>
+    </View>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
-// Filter pill — same vocabulary as the Learn tab's active-filter chip:
-// tinted fill + solid rim in the accent color when selected.
+// Filter pill — tinted fill + solid rim in violet when selected.
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface FilterPillProps {
   label: string;
   iconName?: keyof typeof Ionicons.glyphMap;
-  accent: string;
   active: boolean;
   onPress: () => void;
 }
 
-function FilterPill({ label, iconName, accent, active, onPress }: FilterPillProps) {
+function FilterPill({ label, iconName, active, onPress }: FilterPillProps) {
+  const accent = tokens.brand.violet2;
   return (
     <Pressable
       onPress={onPress}
@@ -429,66 +349,73 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     ...tokens.type.caption,
-    color: tokens.semantic.coinLight,
+    color: tokens.text.mid,
     marginTop: 1,
   },
-  /** "Revisão em dia" — takes the stack's place after the last decision. */
-  doneCard: {
+  content: {
+    flexGrow: 1,
+    paddingTop: tokens.space[2],
+  },
+  searchWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[2],
+    backgroundColor: tokens.bg.surface,
+    borderRadius: tokens.radius.md,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+    paddingHorizontal: tokens.space[3],
+    marginHorizontal: tokens.space[4],
+    height: 40,
+  },
+  searchInput: {
+    flex: 1,
+    color: tokens.text.hi,
+    ...tokens.type.body,
+    paddingVertical: 0,
+  },
+  /** "N pra revisar" — opens the review pile. */
+  reviewStrip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[3],
-    padding: tokens.space[4],
+    marginHorizontal: tokens.space[4],
+    marginTop: tokens.space[3],
+    paddingVertical: tokens.space[3],
+    paddingHorizontal: tokens.space[3],
     borderRadius: tokens.radius.lg,
     borderWidth: 1,
-    borderColor: tokens.semantic.coinRim,
-    backgroundColor: tokens.bg.glass,
-    marginBottom: tokens.space[2],
+    borderColor: 'rgba(123, 92, 255, 0.35)',
+    backgroundColor: 'rgba(123, 92, 255, 0.10)',
   },
-  doneIcon: {
-    width: 32,
-    height: 32,
+  reviewIcon: {
+    width: 34,
+    height: 34,
     borderRadius: tokens.radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: tokens.semantic.coin,
+    backgroundColor: 'rgba(123, 92, 255, 0.18)',
   },
-  doneText: {
+  reviewText: {
     flex: 1,
     minWidth: 0,
-    gap: 2,
+    gap: 1,
   },
-  doneTitle: {
+  reviewTitle: {
     fontFamily: 'Manrope_700Bold',
     fontSize: 14,
     color: tokens.text.hi,
   },
-  doneBody: {
+  reviewBody: {
     fontFamily: 'Manrope_500Medium',
-    fontSize: 12.5,
-    lineHeight: 17,
+    fontSize: 12,
     color: tokens.text.mid,
-  },
-  pillScroll: {
-    // flexGrow 0: a ScrollView defaults to flexGrow 1 and would otherwise
-    // stretch inside the list header. The negative margin lets the row bleed
-    // to the screen edges past the grid's own inset.
-    flexGrow: 0,
-    marginHorizontal: -tokens.space[4],
-    marginBottom: tokens.space[1],
   },
   pillRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: 8,
     paddingHorizontal: tokens.space[4],
-    paddingTop: tokens.space[1],
-    paddingBottom: tokens.space[2],
-  },
-  pillDivider: {
-    width: 1,
-    height: 18,
-    marginHorizontal: 2,
-    backgroundColor: tokens.border.strong,
+    marginTop: tokens.space[3],
   },
   pill: {
     flexDirection: 'row',
@@ -506,6 +433,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 0.2,
     color: tokens.text.mid,
+  },
+  shelves: {
+    gap: tokens.space[6],
+    marginTop: tokens.space[5],
   },
   centerBox: {
     flex: 1,

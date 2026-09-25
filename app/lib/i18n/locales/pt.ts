@@ -680,8 +680,9 @@ const pt: Translations = {
       collectFail: 'Não foi possível absorver a ideia',
       myIdeas: 'Minhas ideias',
       myIdeasEmpty: 'Vire o card no fim de uma ideia pra guardá-la aqui.',
+      searchPlaceholder: 'Buscar nas suas ideias',
+      searchEmpty: 'Nenhuma ideia sua bate com “{{query}}”.',
       openIdea: 'Abrir ideia',
-      allDims: 'Todas',
       nextIdeaLabel: 'Próxima: {{title}}',
       a11yCardFront: 'Card da ideia {{title}}. Toque pra virar.',
       a11yCardBack: 'Afirmação: {{claim}}',
@@ -689,10 +690,6 @@ const pt: Translations = {
        *  favoritar (direita) ou soltar (esquerda). */
       review: {
         title: 'Revisar ideias',
-        pending: {
-          one: '{{count}} ideia esperando revisão',
-          other: '{{count}} ideias esperando revisão',
-        },
         hint: 'Arraste pra direita pra guardar como favorita, pra esquerda pra soltar.',
         keep: 'Favoritar',
         release: 'Soltar',
@@ -700,7 +697,6 @@ const pt: Translations = {
         released: 'Solta',
         done: 'Revisão em dia',
         doneBody: 'Tudo que você absorveu já foi revisado.',
-        favoritesTitle: 'Favoritas',
         showAll: 'Ver todas',
         onlyFavorites: 'Só favoritas',
         emptyFavorites: 'Nenhuma favorita ainda. Revise as ideias absorvidas pra escolher.',
@@ -712,6 +708,9 @@ const pt: Translations = {
         },
         progress: '{{n}} de {{total}}',
         fail: 'Não deu pra salvar a revisão. A ideia voltou pra pilha — tente de novo.',
+        stripBody: 'Favorite ou solte o que você absorveu',
+        backToCollection: 'Voltar pras minhas ideias',
+        countSummary: '{{favorites}} favoritas · {{total}} absorvidas',
       },
     },
     readFilter: {

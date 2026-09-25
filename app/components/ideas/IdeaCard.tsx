@@ -130,7 +130,7 @@ export interface IdeaCardProps {
 const FLIP_MS = 420;
 /** Width at which the "large" type sizes apply (rail → large is linear). */
 const LARGE_WIDTH = 300;
-/** Collection cell on a 390-pt phone (`collectionCardWidth(390)`) — the mid stop of the claim size. */
+/** Old collection grid cell on a 390-pt phone — the mid stop of the claim size (shelf cards, `shelfCardWidth(390)` = 150, interpolate below it). */
 const COLLECTION_CELL_WIDTH = 171;
 /** Mirror of the old bottom ramp: opaque at the top edge, gone by the end of the band. */
 const OVERLAY_LOCATIONS = [0, 0.55, 1] as const;

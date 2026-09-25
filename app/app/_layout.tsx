@@ -237,6 +237,7 @@ export default function RootLayout() {
               }}
             />
             <Stack.Screen name="collection" options={{ headerShown: false }} />
+            <Stack.Screen name="idea-review" options={{ headerShown: false }} />
             <Stack.Screen name="skills" options={{ headerShown: false }} />
             <Stack.Screen name="tasks" options={{ headerShown: false }} />
             <Stack.Screen name="all-practices" options={{ headerShown: false }} />
