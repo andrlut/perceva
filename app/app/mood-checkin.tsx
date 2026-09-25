@@ -35,6 +35,8 @@ import {
   splitMoodTags,
   type MoodValue,
 } from '@/lib/mood';
+import { emitTourEvent } from '@/lib/tour/eventBus';
+import { M1_EVENTS } from '@/lib/tour/m1Steps';
 import { useKeyboardHeight } from '@/lib/use-keyboard-height';
 import { tokens } from '@/theme';
 
@@ -191,6 +193,9 @@ export default function MoodCheckinScreen() {
       { mood, note: note.trim() || null, loggedFor: targetDate, tags },
       {
         onSuccess: () => {
+          // The full check-in counts for the tour's mood step too, not only
+          // the quick face row on Home. Inert outside the tour.
+          emitTourEvent(M1_EVENTS.MOOD_LOGGED);
           Haptics.notificationAsync(
             Haptics.NotificationFeedbackType.Success,
           ).catch(() => {});

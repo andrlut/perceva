@@ -26,10 +26,6 @@ import {
 import { useT } from '@/lib/i18n';
 import { useRequireModule } from '@/lib/modules';
 import { freeLimitEntity, useLimitModalStore, useQuestLimit } from '@/lib/premium';
-import { TourModule } from '@/components/tour/TourModule';
-import { emitTourEvent } from '@/lib/tour/eventBus';
-import { buildM3Steps, M3_EVENTS } from '@/lib/tour/m3Steps';
-import { useIsCurrentTourModule } from '@/lib/tour/store';
 import type { QuestTemplate, QuestWithProgress } from '@/lib/db/types';
 import { usePullToRefresh } from '@/lib/usePullToRefresh';
 import { showInfo } from '@/lib/util/confirm';
@@ -57,7 +53,6 @@ export default function QuestBoardScreen() {
   const completeQuest = useCompleteQuest();
   const bottomClearance = useBottomNavClearance();
   const [busyId, setBusyId] = useState<string | null>(null);
-  const isM3Current = useIsCurrentTourModule('M3');
 
   // ── Sub_stars filter ──────────────────────────────────────────────────
   // Missões = quests/templates whose requirements include accumulate_sub_stars.
@@ -178,7 +173,6 @@ export default function QuestBoardScreen() {
 
   const handleInactiveLongPress = (templateId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    emitTourEvent(M3_EVENTS.QUEST_DETAIL_OPENED);
     router.push({
       pathname: '/quest-detail/[id]',
       params: { id: templateId, kind: 'template' },
@@ -187,7 +181,6 @@ export default function QuestBoardScreen() {
 
   const handleActiveLongPress = (q: QuestWithProgress) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    emitTourEvent(M3_EVENTS.QUEST_DETAIL_OPENED);
     router.push({
       pathname: '/quest-detail/[id]',
       params: { id: q.quest.id, kind: 'quest' },
@@ -316,10 +309,6 @@ export default function QuestBoardScreen() {
                             onStart={() => handleStart(tmpl.id)}
                             onLongPress={() => handleInactiveLongPress(tmpl.id)}
                             isStarting={busyId === tmpl.id}
-                            // Surface the "press and hold" hint during the
-                            // M3 tour so the user knows the gesture that
-                            // opens the detail (a plain tap would start it).
-                            showLongPressHint={isM3Current}
                           />
                         ))}
                       </View>
@@ -350,30 +339,6 @@ export default function QuestBoardScreen() {
           </Pressable>
         )}
       </ScrollView>
-
-      {/* M3 step 2 lives here — board + available templates. Long-press
-         a template fires QUEST_DETAIL_OPENED + opens its detail; tapping
-         the tooltip's Próximo / skip opens the first available template
-         instead so step 3 has its surface. `flatNav` because this Stack
-         screen has no floating BottomNavBar. */}
-      <TourModule
-        module="M3"
-        screen="quests"
-        steps={buildM3Steps(t)}
-        enabled={isM3Current}
-        flatNav
-        onAdvanceToNextScreen={() => {
-          // handleNext already advanced the step index — this is pure
-          // navigation to the surface step 3 lives on.
-          const first = inactiveTemplates[0];
-          if (first) {
-            router.push({
-              pathname: '/quest-detail/[id]',
-              params: { id: first.id, kind: 'template' },
-            });
-          }
-        }}
-      />
     </SafeAreaView>
   );
 }

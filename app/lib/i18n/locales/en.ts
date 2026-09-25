@@ -77,6 +77,8 @@ const en = {
   },
 
   taskForm: {
+    descPlaceholderOwn: 'A note of your own, if you like',
+    whyItMatters: 'Why it matters',
     newTitle: 'New practice',
     editTitle: 'Edit practice',
     titleLabel: 'Title',
@@ -86,20 +88,17 @@ const en = {
     iconLabel: 'Icon',
     // Row-sized (renders at numberOfLines={2} in the compact icon row);
     // the picker sheet's Auto cell carries the inherit explanation.
-    iconHint: 'The icon shown on the practice card.',
+    iconHint: 'Shown on the card. Default: the sub-area\'s.',
     iconAutoA11y: 'Use primary sub icon',
-    subsLabel: 'Sub-dimensions + stars',
-    subsHint:
-      'Pick which subs this practice contributes to and how heavy each effort is. Per-sub stars cap at 5 — distribute honestly.',
+    subsLabel: 'What it trains',
+    subsHint: 'Tap the sub-areas this practice trains. Each one gets its own stars, from 1 to 5.',
     recurrenceLabel: 'How often',
     archiveBtn: 'Archive practice',
-    breakWarning:
-      'Editing the title, description or subs unlinks this practice from the template — it becomes your own creation. Changing only the periodicity keeps the link.',
+    breakWarning: 'Changing the title, description or sub-areas unlinks this practice from the catalog — it becomes your own. Changing only how often keeps the link. On the free plan it then counts toward your 10 own practices.',
     titleRequired: 'Title required',
     titleRequiredBody: 'Give your practice a title.',
-    subRequired: 'Pick at least one sub',
-    subRequiredBody:
-      'Practices contribute to one or more sub-dimensions. Pick the ones this practice touches and how many stars each gets.',
+    subRequired: 'Pick at least one sub-area',
+    subRequiredBody: 'Every practice trains at least one sub-area. Pick the ones it trains and the stars for each.',
     saveFailed: 'Save failed',
     archiveConfirmTitle: 'Archive practice?',
     archiveConfirmBody: 'Archived practices stop appearing on Home.',
@@ -107,6 +106,11 @@ const en = {
   },
 
   recurrencePicker: {
+    increaseA11y: 'Increase',
+    decreaseA11y: 'Decrease',
+    monthlyHelper: 'Pick a day and the practice shows up in Today on that day. Pick none and it waits in All practices — do it {{count}}× a month, whenever it fits.',
+    dailyMultiHelper: 'Shows up in Today every day. Once you check it off it leaves the list; add the other times with the +1 in Done today.',
+    dailyHelper: 'Shows up in Today every day.',
     types: {
       daily: 'Daily',
       weekly: 'Weekly',
@@ -118,12 +122,10 @@ const en = {
     timesPerMonth: 'Times per month',
     specificDays: 'Specific days (optional)',
     specificDay: 'Specific day (optional)',
-    weeklyHelper:
-      'Picked days surface in Today as a reminder. Leave empty for pure {{count}}×/week with no day preference.',
+    weeklyHelper: 'Pick days and the practice shows up in Today on those days. Pick none and it waits in All practices — do it {{count}}× a week, whenever it fits.',
     pickDay: 'Pick a day',
     dayPrefix: 'Day',
-    monthlyOverflowHelper:
-      'Months without day {{day}} run on the last day of the month instead.',
+    monthlyOverflowHelper: 'In months without day {{day}}, it shows up on the last day of the month.',
   },
   // Human-readable recurrence (cards, labels, catalog). Two forms: `short`
   // fits a chip ("Mon · Wed · Fri", "3×/wk"); the long one goes on the
@@ -303,27 +305,6 @@ const en = {
     signOut: 'Sign out',
   },
 
-  onboarding: {
-    brand: 'Perceva',
-    skip: 'Skip',
-    continue: 'Continue',
-    start: 'Start your journey',
-    slide1: {
-      eyebrow: 'WELCOME',
-      title: 'Perceive. Practice. Become.',
-      body: 'The actions you take today build the person you want to become.',
-    },
-    slide2: {
-      eyebrow: 'THE LOOP',
-      title: 'Train. Earn. Redeem.',
-      body: 'Complete habits to gain progress and coins. Spend coins on rewards you set yourself.',
-    },
-    slide3: {
-      eyebrow: 'READY?',
-      title: 'Your journey starts at Level 1.',
-      body: 'Pick a few starter quests. We will handle the leveling.',
-    },
-  },
 
   tabs: {
     tasks: 'Practices',
@@ -432,7 +413,7 @@ const en = {
     },
     // Limit modal (P1.1) — recognition per entity before the pitch.
     limit: {
-      taskLine1: 'Your 10 active practices are all in use — your system is full.',
+      taskLine1: 'Your 10 own practices are in use. Catalog practices stay unlimited.',
       rewardLine1: 'Your 5 active rewards are all in use.',
       skillLine1: 'Your 3 skills are all in progress.',
       questLine1: 'Your 3 active quests are underway.',
@@ -443,165 +424,298 @@ const en = {
   },
 
   tour: {
-    common: {
-      next: 'Next',
-      skipModule: 'Skip this module',
-      skipStep: 'Skip this step',
-      tryIt: 'Try it to continue',
-      takeMe: 'Take me there',
+    intro: {
+      skip: 'Skip intro',
+      next: 'Continue',
+      pageOf: 'Page {{n}} of {{total}}',
+      hero: {
+        eyebrow: 'See. Practice. Become.',
+        title: 'See who you\'re becoming.',
+        body: 'One app for three things that have always lived apart: the test that knows you, the habit you measure, and the idea you remember.',
+        pillarSelf: 'Self-knowledge',
+        pillarPractice: 'Practice',
+        pillarLearning: 'Learning',
+        loop: 'measure → practice → look again',
+        artA11y: 'Perceva\'s three pillars, Self-knowledge, Practice and Learning, joined in a loop: measure, practice, look again.',
+      },
+      self: {
+        eyebrow: 'Pillar 1 · Self-knowledge',
+        title: 'The test that knows you',
+        body: 'You start with the Assessment: a one-minute self-rating across the 6 areas of your life, plus the free well-being questionnaire. When you want to go deeper, there are named tests in Premium: Big Five, Schwartz Values and Attachment (ECR-R). They live in your profile — tap your character.',
+        payoff: 'What matters is the gap between how you see yourself and what you actually do.',
+        legendSelf: 'How you see yourself',
+        legendQuestionnaire: 'What the questionnaire shows',
+        artA11y: 'A hexagon of the 6 life areas: the filled shape is how you see yourself; the dashed outline is what the questionnaire shows. They don\'t match.',
+      },
+      practice: {
+        eyebrow: 'Pillar 2 · Practice',
+        title: 'The habit you measure',
+        body: 'Practices in one tap, mood in one line, and a calendar that shows what the feeling hides.',
+        payoff: 'Skipping is a decision too. Nothing resets.',
+        example1: 'In bed before midnight',
+        example2: 'Walk for 20 minutes',
+        example3: 'Read 10 pages',
+        skipped: 'Skipped today',
+        mood: 'Today\'s mood',
+        artA11y: 'A sample day: two practices done, one skipped today, and the mood logged.',
+      },
+      learning: {
+        eyebrow: 'Pillar 3 · Learning',
+        title: 'The idea you remember',
+        body: 'In the Learn tab, short ideas with sources. At the end of each one, you flip the card to absorb it.',
+        payoff: 'Explore has an end. On purpose.',
+        cardTitle: 'Rereading feels like knowing',
+        cardHint: 'Flip the card',
+        cardBack: 'Close the text and try to recall the main points. That effort is what makes it stick; rereading only feels like it works.',
+        cardSource: 'Roediger & Karpicke, 2006',
+        absorbed: 'Absorbed',
+        artA11y: 'An idea card turning over: the hook on the front, a usable answer with its source on the back.',
+      },
+      dedication: {
+        eyebrow: 'Dedication',
+        title: 'Stars become Dedication',
+        body: 'Each practice trains one or more sub-areas. For each one, you give 1 to 5 stars: the effort it takes. Every star earns Dedication in that area.',
+        cellA11y: '{{stars}} of 5 stars: +{{xp}} Dedication',
+        exampleLabel: 'Example',
+        exampleTitle: 'Meditate for 10 minutes',
+        exampleGain: '+{{xp}} in {{area}}',
+        after: 'Dedication draws your Practiced portrait and raises your level every 100. It never decays: skipping a day takes nothing away.',
+        bridge: 'You\'ll see these stars on the practices you pick next.',
+      },
+      coins: {
+        eyebrow: 'Coins',
+        title: 'Coins become rewards you define',
+        body: 'Every practice you complete also pays coins: by default, the same number as its Dedication. For each practice, you choose what it\'s worth: {{none}}, {{half}}, {{same}} or {{double}}.',
+        exampleDedication: '+{{xp}} Dedication',
+        default: 'default',
+        dialA11y: '{{label}}: {{coins}} coins',
+        dialA11yDefault: '{{label}}, the default: {{coins}} coins',
+        rewardsBody: 'You create the rewards and set their price: a movie, a dinner out, a free afternoon. Spend your coins whenever you like. Redeem it, and it\'s used on the spot.',
+        reward1: 'A movie',
+        reward2: 'Dinner out',
+        reward3: 'Free afternoon',
+        penalty: 'A price can also be charged for a slip. Then the app shows how many days it\'s been since the last one.',
+      },
+      choice: {
+        eyebrow: 'Guided tour',
+        title: 'Want me to show you around?',
+        body: 'A few minutes, doing it for real:',
+        item1: 'check off a practice',
+        item2: 'log your mood',
+        item3: 'set up a practice of your own',
+        item4: 'see where coins turn into rewards',
+        item5: 'see your portraits',
+        safeTitle: 'Skipping is safe',
+        safeBody: 'You can redo the tour and this intro any time, in:',
+        safePath: 'Settings › Redo onboarding',
+        primary: 'Take the guided tour',
+        secondary: 'Skip for now',
+      },
+    },
+    pack: {
+      eyebrow: 'WHERE TO START',
+      title: 'Your starter pack',
+      body: 'We picked one practice for each of the 12 sub-areas. Drop what doesn\'t fit you, add whatever you like. You can change all of it later.',
+      legend: 'Stars measure effort: the more stars, the more Dedication the practice earns in the area it trains.',
+      existing: {
+        one: 'You already have 1 practice on your list. You can keep just that one if you like.',
+        other: 'You already have {{count}} practices on your list. You can keep just those if you like.',
+      },
+      clearAll: 'Clear all',
+      restorePack: 'Select the pack again',
+      adopted: 'On your list',
+      alsoTrains: 'Also trains {{subs}}',
+      cadence: {
+        daily: 'Daily',
+        weekly: 'Weekly',
+        monthly: 'Monthly',
+      },
+      total: {
+        one: '1 practice · +{{xp}} Dedication when you do it once',
+        other: '{{count}} practices · +{{xp}} Dedication if you do each one once',
+      },
+      totalExisting: {
+        one: 'Nothing new: you\'ll continue with the practice you already have.',
+        other: 'Nothing new: you\'ll continue with the {{count}} practices you already have.',
+      },
+      emptyHint: 'None selected. You can adopt some later, in All practices.',
+      primary: {
+        one: 'Start with 1 practice',
+        other: 'Start with {{count}} practices',
+      },
+      primaryExisting: 'Continue with the ones I have',
+      primaryEmpty: 'Start with no practices',
+      adding: 'Adding {{current}} of {{total}}…',
+      loadError: 'Couldn\'t load the practices.',
+      retry: 'Try again',
+      a11yStars: {
+        one: '1 star',
+        other: '{{count}} stars',
+      },
+      a11yCard: '{{title}}. {{stars}}, +{{xp}} Dedication, {{cadence}}',
+      a11yAdopted: '{{title}}. Already on your list',
     },
     m1: {
-      step1: {
-        title: 'Your practices for today',
-        body: 'Tap a practice to explore — then come back here.',
+      complete: {
+        title: 'Mark it done',
+        body: 'Did it? Tap the check. The practice becomes Dedication in the areas it trains (that\'s the green number on the card) and earns coins you trade for the rewards you set.',
       },
-      step2: {
-        title: 'Why it counts',
-        body: 'On the detail screen you can see which areas the practice trains and how much Dedication it pays.',
-      },
-      step3: {
-        title: 'Press and hold',
-        body: 'Long-press a practice to open the menu: adjust stars, skip today, or edit.',
-      },
-      step4: {
-        title: 'Mark as done',
-        body: 'Tap the check to log a completion. This is the gesture that drives everything here.',
-      },
-      step6: {
+      drawer: {
         title: 'Done today',
-        body: 'What you finished today lives here. Tap to open — you can undo anything.',
+        body: 'Everything you did today lands here, with what each one earned. Tap to open it — you can undo one or log it again.',
+      },
+      mood: {
+        title: 'Mood in one line',
+        body: 'One face logs how the day went, from 1 to 5 — plus a line if you like. On the calendar, your mood sits next to your practices. No points, no pressure.',
+      },
+      hold: {
+        title: 'Press and hold',
+        body: 'Hold a practice to see its options: skip it today (nothing is lost), adjust its stars just this once, or edit it.',
+        cta: 'Got it',
       },
     },
     m2: {
-      step1: {
-        title: 'Make your own',
-        // 'best practices' is a corporate idiom — phrased around it.
-        body: 'The practices that stick are the ones you make. Tap the highlighted button — or let me take you there.',
+      seeAll: {
+        title: 'All practices',
+        body: 'This button opens every practice you have, including the ones that aren\'t daily. That\'s where you make your own.',
       },
-      step2: {
+      manage: {
+        title: 'Manage',
+        body: 'This icon opens Manage practices: create, adopt from the catalog, edit, reorder and archive.',
+      },
+      create: {
         title: 'Tap the +',
-        body: 'Opens the creation form — no rush to fill it in.',
+        body: 'The + makes a practice your way. The Suggested tab has a ready-made catalog to adopt.',
       },
-      step3: {
+      trains: {
         title: 'What it trains',
-        body: 'Spread up to 5 stars across the areas this practice trains. More stars, more Dedication.',
+        body: 'Pick the sub-areas it trains and give each one 1 to 5 stars. More stars, more Dedication in that area: 1★ is worth +10, 5★ is worth +80.',
       },
-      step4: {
+      often: {
         title: 'How often',
-        body: 'Every day, on set weekdays, or a few times a month — you choose the cadence.',
+        body: 'Every day, on some weekdays, or a few times a month. With set days, it shows up on the Today screen on those days; without them, it waits in All practices.',
       },
-      step5: {
-        title: 'No rush to save',
-        body: 'Close without creating — come back when you actually want to build one.',
-      },
-    },
-    m3: {
-      step1: {
-        title: 'Quests and Goals',
-        body: 'Shortcuts to your journeys live here. Tap + Quests.',
-      },
-      step2: {
-        title: 'Bigger journeys',
-        body: 'Objectives spanning days or weeks, with a prize at the end. Long-press one to see its details.',
-      },
-      step3: {
-        title: 'The criteria',
-        body: 'See what it asks. Once accepted, progress moves on its own with your practices. For now, you can head back without accepting.',
+      coins: {
+        title: 'What it\'s worth in coins',
+        body: 'Dedication comes from the stars; coins are up to you: None, Half, Same (the default) or Double. You can close without saving — this is just the tour.',
+        cta: 'Close and continue',
       },
     },
     m4: {
       step1: {
         title: 'Rewards',
-        body: 'Real prizes you define to celebrate your practice. Tap the Rewards tab.',
+        body: 'You set the reward and its price in coins. Tap the Rewards tab.',
       },
       step2: {
         title: 'Your coins',
-        body: "Your balance, earned by completing practices. It's what you redeem rewards with here.",
+        body: 'Every practice you do earns Dedication and pays coins — by default, the same amount of each. You can tune that practice by practice. Your balance lives here.',
       },
       step3: {
-        title: 'Redeem when you want',
-        body: 'A movie, a dinner, some rest. Redeem with coins and enjoy it right away. The gold button down there opens Manage — create, reorder and see your redemptions; the calendar lets you undo.',
+        title: 'Where rewards come from',
+        body: 'The gold button is where you create your own or adopt one of the suggestions. When you want one, tap {{verb}}: the coins come out and it\'s used on the spot. A treat or the price of a slip — your call.',
       },
     },
     m5: {
       step1: {
-        title: 'Who you are',
-        body: 'This tab is the picture of who you are. Tap Me to open it.',
+        title: 'Who you\'re becoming',
+        body: 'Your portrait lives here — and it shifts with what you practice. Tap the Me tab.',
       },
       step2: {
         title: 'Three portraits',
-        body: 'How you perceive yourself, what you practice, and who you want to become. Switch up here.',
+        body: 'Perceived: how you see yourself. Practiced: what your actions are training. Desired: who you want to become. Switch portraits here.',
       },
       step3: {
-        title: 'Perceived identity',
-        body: 'How you see yourself today: your map of areas. The full profile opens by tapping your character up top.',
+        title: 'Perceived: start here',
+        body: 'Rate yourself in each of the 6 areas as you are today — it takes about a minute. When you have 10 minutes, the well-being questionnaire just below fills in the picture. Together, they\'re your starting point.',
+        later: 'Later',
       },
       step4: {
-        title: 'Practiced identity',
-        body: 'What your actions train: the Dedication each area earns.',
+        title: 'Practiced: what you train',
+        body: 'Every practice you do adds Dedication to the areas it trains: this is where you see who your habits are training you to be. Skipping a day resets nothing.',
       },
       step5: {
-        title: 'Desired identity',
-        body: 'Who you want to become: your North — the target you set for each area, over the outline of where you are today.',
+        title: 'Desired: your north',
+        body: 'Who you want to become. Set a target for each area, over the outline of where you see yourself today. The gap between the two is what you\'ll practice.',
       },
     },
     m6: {
       step1: {
         title: 'Learn',
-        body: 'Short studies — read, listen, or watch — on habits, identity, and every area of your life. Tap the Learn tab.',
+        body: 'Short ideas, with sources, on habits and every area of your life. Tap the Learn tab.',
       },
       step2: {
-        title: 'Always something new',
-        body: 'Short, visual explainers, with fresh material every week. At your own pace.',
+        title: 'Made of ideas',
+        body: 'Each material becomes 1 to 5 short ideas, with sources. At the end of each one, flip the card to absorb it — absorbing a whole material earns Dedication and coins. What you absorb waits in My ideas, under the bulb, for review.',
       },
     },
-    m0: {
-      eyebrow: 'TOUR',
-      title: 'Welcome, {{name}}.',
-      body: "Let's run a quick tour through the main parts of the app. You can skip anything and revisit it later from Settings.",
-      primary: 'Start',
-      secondary: 'Skip',
-    },
-    m0_5: {
-      eyebrow: 'WHERE TO START',
-      title: 'Pick 3 practices to begin',
-      body: 'Choose 3 practices to cultivate over the next few weeks. You can swap or add more whenever you want.',
-      counter: '{{count}} of {{target}} selected',
-      primary: 'Continue',
-      secondary: 'Skip this step',
-      skipFallbackHint: "We'll add 3 default practices so you have something to start with.",
+    common: {
+      next: 'Next',
+      skipModule: 'Skip this module',
+      skipModuleHint: 'Skips the rest of this part of the tour. You can redo it in Settings › Redo onboarding.',
+      skipStep: 'Skip this step',
+      tryIt: 'Do it to continue',
+      takeMe: 'Take me there',
+      progress: 'Step {{current}} of {{total}}',
     },
     wrap: {
-      eyebrow: 'READY',
-      title: 'All set.',
-      body: 'The tour is just the start. What makes a difference is what you practice. Every practice you check off is a vote for who you want to become. You can revisit any module from Settings.',
+      eyebrow: 'See. Practice. Become.',
+      title: 'The rest is practice.',
+      body: 'What changes you is what you practice. Every practice you check off is a vote for who you want to become.',
+      modulesNote: '{{list}} are optional modules. They start off — turn them on in {{path}}.',
+      redoNote: 'Want to see the tour or the intro again? It lives in {{path}}.',
+      listAnd: 'and',
       primary: 'Start practicing',
     },
     replay: {
-      title: 'Replay tutorial',
-      subtitle: 'Revisit any tour module. Replaying one takes you straight to it.',
-      replayBtn: 'Replay',
-      allTitle: 'Replay the whole tour',
-      allDesc: 'Starts over from the welcome screen.',
+      title: 'Redo onboarding',
+      subtitle: 'Start over from the top, or redo just the part you want to see again.',
+      allTitle: 'Redo the full onboarding',
+      allDesc: 'Intro, starter pack and guided tour, from the very first screen.',
+      allCta: 'Start over',
+      sectionOpening: 'Opening',
+      sectionGuided: 'Guided tour',
+      replayBtn: 'Redo',
+      rowA11y: '{{name}}. {{status}}. Tap to redo.',
+      footnote: 'Redoing never deletes anything: your practices, rewards and history stay as they are.',
       status: {
-        pending: 'Not seen',
+        pending: 'Not seen yet',
         in_progress: 'In progress',
         completed: 'Done',
         skipped: 'Skipped',
       },
       modules: {
-        M0: { name: 'Welcome', desc: "The tour's opening screen." },
-        M0_5: { name: 'Starter practices', desc: 'Pick 3 practices to begin.' },
-        M1: { name: 'Practices', desc: 'Complete, adjust and undo practices.' },
-        M2: { name: 'Create a practice', desc: 'Build your own practices.' },
-        M3: { name: 'Quests', desc: 'Bigger journeys with a deadline.' },
-        M4: { name: 'Rewards', desc: 'Redeem rewards and look back at the history.' },
-        M5: { name: 'Me', desc: 'The three portraits of your identity.' },
-        M6: { name: 'Learn', desc: 'Studies to understand the why.' },
+        intro: {
+          name: 'Intro',
+          desc: 'The opening screens: how Perceva works.',
+        },
+        pack: {
+          name: 'Starter pack',
+          desc: 'Pick your first practices.',
+        },
+        M1: {
+          name: 'Practices',
+          desc: 'Check off, adjust and undo practices for the day.',
+        },
+        M2: {
+          name: 'Create a practice',
+          desc: 'Build your own: sub-areas, stars and coins.',
+        },
+        M4: {
+          name: 'Rewards',
+          desc: 'Trade coins for rewards you set yourself.',
+        },
+        M5: {
+          name: 'Me',
+          desc: 'The three portraits: Perceived, Practiced and Desired.',
+        },
+        M6: {
+          name: 'Learn',
+          desc: 'Short ideas with sources, to read and absorb.',
+        },
       },
     },
     errors: {
-      adopt: "Couldn't add the practices. Try again.",
+      adopt: 'Couldn\'t add the practices. Try again.',
     },
   },
 
@@ -836,6 +950,7 @@ const en = {
   },
 
   avaliacao: {
+    selfAssessmentCtaFirst: 'Take the self-assessment · 1 min',
     selfAssessmentCta: 'Update self-assessment',
     questionnaireFirst: 'Take the questionnaire (5-10 min)',
     questionnaireToday: 'Retake questionnaire · done today',
@@ -1295,6 +1410,10 @@ const en = {
   },
 
   tasks: {
+    card: {
+      holdHintA11y: 'Hold for more options',
+      completeA11y: 'Mark {{title}} as done',
+    },
     new: 'New practice',
     edit: 'Edit practice',
     fields: {
@@ -1329,13 +1448,13 @@ const en = {
     },
     actionSheet: {
       adjustStars: 'Adjust stars',
-      adjustStarsSub: 'Change how heavy this completion was per sub',
+      adjustStarsSub: 'Change the weight just this once, per sub-area',
       skipToday: 'Skip today',
       /** Past-day variant — the sheet also opens from a day you navigated back to. */
       skipDay: 'Skip on {{date}}',
       skipTodaySub: 'Hide from the day without completing — you lose nothing',
       editTask: 'Edit practice',
-      editTaskSub: 'Change title, subs, recurrence, etc',
+      editTaskSub: 'Title, sub-areas, how often…',
     },
     completeSheet: {
       totalStars: 'Total stars',
@@ -1343,17 +1462,30 @@ const en = {
       log: 'Log',
     },
     coinMultiplier: {
+      explain: {
+        double: 'Pays double its Dedication in coins.',
+        same: 'Pays in coins what it earns in Dedication.',
+        half: 'Pays in coins half of what it earns in Dedication.',
+        none: 'Earns no coins. Your Dedication counts just the same.',
+      },
       label: 'Coins',
-      hint: 'XP measures the effort (the stars). Coins are how much you want to reward yourself for this practice.',
+      hint: 'Stars set the Dedication. Here you decide how many coins it earns.',
       none: 'None',
       half: 'Half',
       same: 'Same',
       double: 'Double',
     },
     subPicker: {
-      pickAtLeastOne: 'Pick at least one sub',
-      countSubs: { one: '{{count}} sub', other: '{{count}} subs' },
-      total: 'total',
+      fewerStarsA11y: 'One star fewer for {{sub}}',
+      moreStarsA11y: 'One more star for {{sub}}',
+      starsScale: 'Dedication per sub-area, each time you check it off:',
+      starsHelp: 'Stars say how hard the practice pushes you in each sub-area: 1★ is light, 5★ is demanding.',
+      countSubs: {
+        other: '{{count}} sub-areas',
+        one: '{{count}} sub-area',
+      },
+      pickAtLeastOne: 'No sub-area picked yet.',
+      total: 'in total',
     },
     difficultyLabel: {
       1: 'Trivial',
@@ -1438,7 +1570,7 @@ const en = {
     },
     suggested: {
       hint: 'Tap a suggestion to tweak it your way before adding — or the + to use it as is.',
-      premiumHint: '{{count}}/{{limit}} active practices on the free plan · Premium unlocks unlimited',
+      premiumHint: '{{count}}/{{limit}} practices you created on the free plan · catalog ones are unlimited',
       allDims: 'All',
       customizeA11y: 'Adjust {{title}} before adding',
     },
@@ -1754,7 +1886,7 @@ const en = {
     level: 'Level',
     xp: 'XP',
     coins: 'Coins',
-    failedToLoad: 'Failed to load character.',
+    failedToLoad: 'Couldn\'t load your portrait. Pull down to try again.',
     sections: {
       stats: 'Stats',
       pillars: 'Pillars',
@@ -1993,7 +2125,7 @@ const en = {
       sub: 'Ask about your days, mood and rewards',
     },
     modules: {
-      missoes: 'Missions',
+      missoes: 'Quests',
       missoesDesc:
         'Deadline challenges: collect stars from your practices and claim the reward.',
       metas: 'Goals',
@@ -2056,7 +2188,7 @@ const en = {
         "Times follow your phone's clock. Android may hold a reminder back a few minutes to save battery.",
     },
     actions: {
-      replayOnboarding: 'Replay tutorial',
+      replayOnboarding: 'Redo onboarding',
       checkForUpdates: 'Check for updates',
       checking: 'Checking…',
       signOut: 'Sign out',
@@ -2256,7 +2388,7 @@ const en = {
     title: 'Self-assessment',
     subtitle: 'Where do you feel each pillar is right now?',
     pillarPrompt: 'How is your {{pillar}}?',
-    subAttribute: 'sub-attribute',
+    subAttribute: 'sub-area',
     recommendedTasks: 'Recommended practices',
     scale: {
       0: 'Not at all',

@@ -44,20 +44,27 @@ import {
   taskFromCompletionSnapshot,
   useDayDetail,
 } from '@/lib/api/history';
-import { todayDateKey } from '@/lib/api/mood';
+import { todayDateKey, useTodayMood } from '@/lib/api/mood';
 import { useT } from '@/lib/i18n';
 import { useLoadedSettings } from '@/lib/settings';
 import { TourModule } from '@/components/tour/TourModule';
 import { TourTarget } from '@/components/tour/TourTarget';
 import { emitTourEvent } from '@/lib/tour/eventBus';
 import { remeasureActiveTourTarget } from '@/lib/tour/targets';
-import { buildM1Steps, M1_EVENTS } from '@/lib/tour/m1Steps';
+import {
+  buildM1Steps,
+  M1_EVENTS,
+  M1_TARGETS,
+  useM1PlanStore,
+  type M1Options,
+} from '@/lib/tour/m1Steps';
 import { buildM2Steps, M2_EVENTS } from '@/lib/tour/m2Steps';
-import { buildM3Steps } from '@/lib/tour/m3Steps';
 import { buildM4Steps } from '@/lib/tour/m4Steps';
 import { buildM5Steps } from '@/lib/tour/m5Steps';
 import { buildM6Steps } from '@/lib/tour/m6Steps';
 import {
+  getCurrentTourModule,
+  isWrapPending,
   useActiveTourStep,
   useActiveTourStepStore,
   useIsCurrentTourModule,
@@ -136,9 +143,12 @@ export default function HomeScreen() {
   const character = useCharacter();
   const buckets = useHomeBuckets(settings.weekStart);
   const allActiveTasks = useActiveTasks();
-  // Home only holds this query for pull-to-refresh + the M3 tour handoff —
-  // QuestChipsStrip shares the key. With both quest modules off there is
-  // nothing to keep fresh, so the fetch is gated too.
+  // Same query key as MoodHubStrip — read here only to know whether the
+  // mood card is on screen, which decides M1's mood step.
+  const todayMood = useTodayMood();
+  // Home only holds this query for pull-to-refresh — QuestChipsStrip shares
+  // the key. With both quest modules off there is nothing to keep fresh, so
+  // the fetch is gated too.
   const missoesOn = useModuleEnabled('missoes');
   const metasOn = useModuleEnabled('metas');
   const questsEnabled = missoesOn || metasOn;
@@ -192,103 +202,59 @@ export default function HomeScreen() {
   // while the user is looking at another screen entirely.
   const isFocused = useIsFocused();
   // While a bottom-positioned tour tooltip is visible, the Home scroll
-  // needs extra room so the user can scroll content above the overlay
-  // — but only just enough that the relevant section (e.g. M1 step 5
-  // "Concluídas hoje" drawer) settles in the open space JUST above
-  // the tooltip card. 160px ≈ card height minus the navbar already
-  // baked into navClearance; matches the visible gap users expected
-  // when testing M1 step 5.
+  // needs extra room so content can be lifted above the overlay — exactly
+  // enough that the spotlighted element settles in the open space JUST
+  // above the tooltip card (see the M1 auto-scroll below).
   const activeTourStep = useActiveTourStep();
   // Whole-tour gate for the mood prompt: `!activeTourStep` alone only
-  // covers inline spotlight steps — during the dedicated M0/M0.5 route
-  // screens Home is still mounted underneath with no active step, and
-  // the prompt's Modal would pop OVER the tour on first open.
+  // covers inline spotlight steps — during the full-screen intro / pack
+  // routes there is no active step, and the prompt's Modal would pop OVER
+  // the onboarding on first open.
   const tourFinished = useTourFinished();
-  // M2 step 1 spotlights the "Todas as práticas" FAB in the bottom
-  // stack. It needs more bottom room than the M1 drawer (which is
-  // mid-list) so the FAB clears the full tooltip card height once we
-  // scroll to the end.
-  // Floor at the historical constants, but grow with the REAL measured
-  // card height (reported by TourStep on layout) so restyles that make
-  // the card taller can't silently eat the gap the target settles into.
+  // Floor at the historical constant, but grow with the REAL measured card
+  // height (reported by TourStep on layout) so restyles that make the card
+  // taller can't silently eat the gap the target settles into.
   const tourCardHeight = useActiveTourStepStore((s) => s.cardHeight);
   const tourBottomBump =
     activeTourStep?.position === 'bottom'
-      ? Math.max(
-          activeTourStep.module === 'M2' ? 245 : 160,
-          (tourCardHeight ?? 0) + 24,
-        )
+      ? Math.max(160, (tourCardHeight ?? 0) + 24)
       : 0;
   // The scroll must end ABOVE the floating stack, or its last card (the mood
   // check-in) sits under the buttons. `max`, not sum: every bottom tooltip
-  // gap (160/245+) already clears the 128px stack, and summing would push
-  // the M1 step 5 drawer out of the spot its auto-scroll was calibrated to.
+  // gap (160+) already clears the 128px stack.
   const bottomClearance =
     navClearance + Math.max(tourBottomBump, TASKS_FAB_CLEARANCE);
   const isM1Current = useIsCurrentTourModule('M1');
-  // M1 step 5 targets the "Concluídas hoje" drawer at the very end of
-  // the scroll — track the step index so the auto-scroll effect below
-  // can bring it into view (mirrors the M4/M5 per-step pattern).
   const m1StepIndex = useTourStore((s) => s.stepIndices.M1 ?? 0);
   const isM2Current = useIsCurrentTourModule('M2');
-  const isM3Current = useIsCurrentTourModule('M3');
   const isM4Current = useIsCurrentTourModule('M4');
   const isM5Current = useIsCurrentTourModule('M5');
   const isM6Current = useIsCurrentTourModule('M6');
 
-  // M3 (Missões) is module-gated: when its turn comes and the missoes key
-  // is off, mark it skipped so the M0–M6 sequence flows on instead of
-  // stranding on a tooltip whose surface doesn't render. Waits for the
-  // profile (source of profile.modules) — MODULE_DEFAULTS reads false
-  // before the fetch lands, and skipping on that would eat M3 for a user
-  // who actually has Missões on.
-  const setTourStatus = useTourStore((s) => s.setStatus);
-  useEffect(() => {
-    if (character.data != null && isM3Current && !missoesOn) {
-      void setTourStatus('M3', 'skipped');
-    }
-  }, [character.data, isM3Current, missoesOn, setTourStatus]);
-
-  // M6 completes (or is skipped) → the always-runs Wrap-up. Guard on the
-  // wrap module still being pending so an isolated M6 replay (which marks
-  // wrap completed) just returns Home instead of replaying the closer.
+  // M6 completes (or is skipped) → the closing screen, unless it already
+  // ran (an isolated M6 replay just returns Home instead of replaying it).
   const finishM6 = () => {
-    const wrapPending =
-      (useTourStore.getState().modules.wrap?.status ?? 'pending') === 'pending';
-    if (wrapPending) router.push('/tour/wrap');
+    if (isWrapPending()) router.push('/tour/wrap');
     else router.navigate('/(tabs)');
   };
 
-  // Tour auto-scroll on Home:
-  //   - M2 step 1 targets the bottom-most "Gerenciar práticas" button →
-  //     scroll to the END so it settles in the gap above the tooltip.
-  //   - M3 step 1 targets the quest chips strip near the TOP → scroll to
-  //     the top so the strip is in view (the user may be scrolled down
-  //     after finishing M2 on the create form).
   const scrollRef = useRef<ScrollView>(null);
-  useEffect(() => {
-    // M1 step 5 (index 4) points at the "Concluídas hoje" drawer at the
-    // very end of the scroll. Without auto-scroll the drawer toggle sits
-    // BEHIND the bottom-anchored tooltip card and can't be tapped —
-    // scrolling to the end settles it in the tourBottomBump gap just
-    // above the card (tester-reported bug).
-    if (activeTourStep?.module === 'M1' && m1StepIndex === 4) {
-      const id = setTimeout(
-        () => scrollRef.current?.scrollToEnd({ animated: true }),
-        120,
-      );
-      return () => clearTimeout(id);
-    }
-    // M2 step 1 now spotlights the fixed bottom-right Gerenciar FAB (always
-    // on screen) with a top-anchored tooltip — no scroll needed.
-    if (activeTourStep?.module === 'M3') {
-      const id = setTimeout(
-        () => scrollRef.current?.scrollTo({ y: 0, animated: true }),
-        120,
-      );
-      return () => clearTimeout(id);
-    }
-  }, [activeTourStep?.module, m1StepIndex]);
+  // Scroll geometry for the M1 auto-scroll — kept in refs, read only when a
+  // step asks to be brought into view. Offsets are tracked at scroll END
+  // (plus our own programmatic scrolls), never per frame.
+  const contentTopRef = useRef<View>(null);
+  const scrollYRef = useRef(0);
+  const viewportHRef = useRef(0);
+  const contentHRef = useRef(0);
+  const firstCardRef = useRef<View>(null);
+  const drawerRef = useRef<View>(null);
+  const moodRef = useRef<View>(null);
+  const handleScrollSettled = (e: { nativeEvent: { contentOffset: { y: number } } }) => {
+    scrollYRef.current = e.nativeEvent.contentOffset.y;
+    // Manual scrolls move spotlighted targets — refresh the measured rect
+    // (no-op outside the tour).
+    remeasureActiveTourTarget();
+  };
 
   // ── Mutation handlers ─────────────────────────────────────────────────
   const fireCompletion = (
@@ -311,6 +277,12 @@ export default function HomeScreen() {
       { task, subs, coinMultiplier },
       {
         onSuccess: () => {
+          // Same tick as the emit, on purpose: M1 gains its "Feitas hoje"
+          // step in the very render that advances off step 1 (see
+          // useM1PlanStore).
+          if (getCurrentTourModule() === 'M1') {
+            useM1PlanStore.getState().noteCompletion();
+          }
           emitTourEvent(M1_EVENTS.TASK_COMPLETED);
         },
         onError: (err) => {
@@ -327,7 +299,8 @@ export default function HomeScreen() {
   };
 
   // Complete for the currently-selected day. Today → live path (optimistic
-  // + M1 tour event). Past day → retro completion filed under that local
+  // + M1 tour event; M1 runs on today only). Past day → retro completion
+  // filed under that local
   // date ("I forgot to mark it yesterday"); no optimistic removal (the day
   // view refetches on settle), but still float the XP for feedback.
   const completeForSelectedDay = (
@@ -368,13 +341,6 @@ export default function HomeScreen() {
         completedLocalDate: selectedKey,
       },
       {
-        onSuccess: () => {
-          // A retro completion satisfies M1's "complete a practice" step
-          // too — without this emit, a user who arrowed to yesterday
-          // mid-tour left the step waiting on an event that could never
-          // fire from this path.
-          emitTourEvent(M1_EVENTS.TASK_COMPLETED);
-        },
         onError: (err) => {
           unhideRetro(task.id);
           const e = err as { message?: string; code?: string; details?: string };
@@ -910,6 +876,168 @@ export default function HomeScreen() {
     hero.monthDay,
   ]);
 
+  // ── Post-login tour: M1 (Práticas) ────────────────────────────────────
+  // M1 teaches on today's real cards, so it runs on today only: arrowing to
+  // a past day hides it, coming back restores it at the same step.
+  //
+  // Its step list depends on the day (see buildM1Steps). The plan is LIVE
+  // while step 1 is up and FROZEN once the module moves past it, so the
+  // shared index never slides onto another step when a completion, an undo
+  // or a mood refetch lands mid-module.
+  const m1CompletedThisRun = useM1PlanStore((s) => s.completedThisRun);
+  const m1Frozen = useM1PlanStore((s) => s.frozen);
+  const m1LiveHasCompleted =
+    (data?.todayActivity.completed.length ?? 0) > 0 || m1CompletedThisRun;
+  // MoodHubStrip renders on today exactly when its query succeeded.
+  const m1LiveMood = todayMood.isSuccess;
+  const m1Plan: M1Options =
+    m1StepIndex > 0 && m1Frozen
+      ? m1Frozen
+      : { hasCompletedToday: m1LiveHasCompleted, moodCardVisible: m1LiveMood };
+  const m1Steps = buildM1Steps(t, m1Plan);
+  const m1Step = m1Steps[m1StepIndex];
+  const m1StepNeedsCard = m1Step?.target === M1_TARGETS.CARD;
+  const m1NextWithoutCard = m1Steps.findIndex(
+    (s, i) => i > m1StepIndex && s.target !== M1_TARGETS.CARD,
+  );
+
+  useEffect(() => {
+    const plan = useM1PlanStore.getState();
+    if (!isM1Current) {
+      plan.reset();
+      return;
+    }
+    if (m1StepIndex === 0) {
+      plan.unfreeze();
+      return;
+    }
+    // First render past step 1: freeze exactly what that render used.
+    if (!plan.frozen) {
+      plan.freeze({ hasCompletedToday: m1LiveHasCompleted, moodCardVisible: m1LiveMood });
+    }
+  }, [isM1Current, m1StepIndex, m1LiveHasCompleted, m1LiveMood]);
+
+  // Safety net for the steps that spotlight a card, on a day with no open
+  // card (all done, all skipped, only weekly practices…):
+  //   - step 1 with nothing done today → nothing to practise on: mark M1
+  //     skipped so the tour flows on (same idea as the old M3 auto-skip);
+  //   - otherwise → jump to the next step that needs no card, or finish M1
+  //     when none is left (the long-press step is last).
+  // Acts on SETTLED data only. An optimistic complete empties the list a
+  // full round-trip before the server agrees; acting on that frame would
+  // skip M1 under a user who just did exactly what step 1 asked.
+  const setTourStatus = useTourStore((s) => s.setStatus);
+  const setTourStepIndex = useTourStore((s) => s.setStepIndex);
+  useEffect(() => {
+    if (!isM1Current || !isToday || !isFocused || !m1StepNeedsCard) return;
+    if (!buckets.isSuccess || buckets.isFetching) return;
+    if (completeTask.isPending || skipTask.isPending || skipTasksBulk.isPending) return;
+    if (dayOpen.length > 0) return;
+    if (m1StepIndex === 0 && !m1Plan.hasCompletedToday) {
+      void setTourStatus('M1', 'skipped');
+      setTourStepIndex('M1', 0);
+      return;
+    }
+    if (m1NextWithoutCard === -1) {
+      void setTourStatus('M1', 'completed');
+      setTourStepIndex('M1', 0);
+      return;
+    }
+    void setTourStatus('M1', 'in_progress');
+    setTourStepIndex('M1', m1NextWithoutCard);
+  }, [
+    isM1Current,
+    isToday,
+    isFocused,
+    m1StepNeedsCard,
+    m1StepIndex,
+    m1Plan.hasCompletedToday,
+    m1NextWithoutCard,
+    buckets.isSuccess,
+    buckets.isFetching,
+    completeTask.isPending,
+    skipTask.isPending,
+    skipTasksBulk.isPending,
+    dayOpen.length,
+    setTourStatus,
+    setTourStepIndex,
+  ]);
+
+  // Bring the spotlighted element into the open band above the tooltip.
+  // Keyed to the step's TARGET, not to an index — the old effect hardcoded
+  // index 4 and broke as soon as the list changed shape. Scrolls only when
+  // the element is not already fully in that band. Content Y comes from the
+  // window-coordinate difference against the content-top marker (the
+  // pattern character.tsx uses — independent of how measureLayout treats
+  // scroll views on each architecture).
+  const m1ActiveTarget =
+    activeTourStep?.module === 'M1' ? m1Step?.target : undefined;
+  useEffect(() => {
+    const ref =
+      m1ActiveTarget === M1_TARGETS.CARD
+        ? firstCardRef
+        : m1ActiveTarget === M1_TARGETS.DRAWER
+          ? drawerRef
+          : m1ActiveTarget === M1_TARGETS.MOOD
+            ? moodRef
+            : null;
+    if (!ref) return;
+    let cancelled = false;
+    let settle: ReturnType<typeof setTimeout> | undefined;
+    const timer = setTimeout(() => {
+      const node = ref.current;
+      const top = contentTopRef.current;
+      if (!node || !top) return;
+      top.measureInWindow((_tx, topY) => {
+        node.measureInWindow((_nx, nodeY, _nw, nodeH) => {
+          if (cancelled || nodeH <= 0) return;
+          const y = nodeY - topY;
+          const cardH = useActiveTourStepStore.getState().cardHeight ?? 260;
+          // The tooltip card floats navClearance + 8 above the screen
+          // bottom, which is also the scroll viewport's bottom.
+          const room = viewportHRef.current - (navClearance + tokens.space[2] + cardH);
+          const margin = tokens.space[3];
+          const from = scrollYRef.current;
+          if (y >= from + margin && y + nodeH <= from + room - margin) return;
+          const range = Math.max(0, contentHRef.current - viewportHRef.current);
+          const next = Math.min(
+            range,
+            Math.max(0, y - Math.max(margin, (room - nodeH) / 2)),
+          );
+          scrollRef.current?.scrollTo({ y: next, animated: true });
+          scrollYRef.current = next;
+          settle = setTimeout(remeasureActiveTourTarget, 450);
+        });
+      });
+    }, 160);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      if (settle) clearTimeout(settle);
+    };
+  }, [m1ActiveTarget, navClearance]);
+
+  // M1 renders only when its surface is really there: today, data loaded,
+  // and — for the card steps — a card to point at (the safety net above
+  // moves the index on; this keeps the tooltip from flashing meanwhile).
+  const m1Enabled =
+    isM1Current &&
+    isToday &&
+    !isLoading &&
+    !hasError &&
+    !(m1StepNeedsCard && dayOpen.length === 0);
+
+  // "Todas as práticas" — the FAB's one and only behaviour. It also tells
+  // M2 its step 1 gesture happened; the tour never reroutes it.
+  const openAllPractices = () => {
+    emitTourEvent(M2_EVENTS.ALL_OPENED);
+    router.push(
+      isToday
+        ? '/all-practices'
+        : { pathname: '/all-practices', params: { date: selectedKey } },
+    );
+  };
+
   // First rendered card (the first Hoje item) carries the M1 tour anchor.
   const renderTaskCard = (task: TaskWithSubs, isTourAnchor: boolean) => {
     const card = (
@@ -919,18 +1047,20 @@ export default function HomeScreen() {
         onLongPress={() => handleLongPress(task)}
         onSkip={() => handleSwipeSkip(task)}
         onSwipeComplete={() => setSheetTask(task)}
-        onEdit={() => {
-          emitTourEvent(M1_EVENTS.TASK_TAPPED);
-          router.push({ pathname: '/task-form', params: { id: task.id } });
-        }}
+        onEdit={() =>
+          router.push({ pathname: '/task-form', params: { id: task.id } })
+        }
       />
     );
-    // M1 steps 1/3/4 spotlight the first card — wrapping only the anchor
-    // keeps the gap flow identical for the rest. Tour is today-only.
+    // M1's card steps spotlight the first card — wrapping only the anchor
+    // keeps the gap flow identical for the rest. Tour is today-only. The
+    // outer View is the scroll anchor the M1 auto-scroll measures.
     return isTourAnchor && isToday ? (
-      <TourTarget key={task.id} id="home.task-first" radius={20}>
-        {card}
-      </TourTarget>
+      <View key={task.id} ref={firstCardRef} collapsable={false}>
+        <TourTarget id={M1_TARGETS.CARD} radius={20}>
+          {card}
+        </TourTarget>
+      </View>
     ) : (
       <Fragment key={task.id}>{card}</Fragment>
     );
@@ -942,10 +1072,14 @@ export default function HomeScreen() {
 
       <ScrollView
         ref={scrollRef}
-        // Manual scrolls move spotlighted targets — refresh the measured
-        // rect once the scroll settles (no-op outside the tour).
-        onScrollEndDrag={remeasureActiveTourTarget}
-        onMomentumScrollEnd={remeasureActiveTourTarget}
+        onScrollEndDrag={handleScrollSettled}
+        onMomentumScrollEnd={handleScrollSettled}
+        onLayout={(e) => {
+          viewportHRef.current = e.nativeEvent.layout.height;
+        }}
+        onContentSizeChange={(_w, h) => {
+          contentHRef.current = h;
+        }}
         style={styles.scroll}
         contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomClearance }]}
         showsVerticalScrollIndicator={false}
@@ -958,8 +1092,18 @@ export default function HomeScreen() {
           />
         }
       >
+        {/* Zero-height content-top marker: the M1 auto-scroll measures
+            anchors against it to get their content Y. */}
+        <View ref={contentTopRef} collapsable={false} />
         <TodayHeader
-          displayName={character.data?.profile.display_name ?? t('home.defaultName')}
+          // Blank (not the "aventureiro" fallback) until the profile lands,
+          // so the eyebrow never flashes a placeholder and then swaps to the
+          // real name — the same flash first users reported on the welcome.
+          displayName={
+            character.data
+              ? (character.data.profile.display_name ?? t('home.defaultName'))
+              : ' '
+          }
           weekdayLabel={hero.weekday}
           monthDayLabel={hero.monthDay}
           // XP earned that day is now a standalone glowing stat inside the
@@ -993,9 +1137,7 @@ export default function HomeScreen() {
                 {/* A newer native build on the Play Store — the one update
                     an OTA can't deliver; renders only when truly outdated. */}
                 <StoreUpdateCard />
-                <TourTarget id="home.quests" radius={18}>
-                  <QuestChipsStrip />
-                </TourTarget>
+                <QuestChipsStrip />
                 <NotificationOptInCard enabled={!activeTourStep} />
                 {/* Minha Semana — module-gated; renders nothing when off. */}
                 <WeekStrip />
@@ -1061,21 +1203,23 @@ export default function HomeScreen() {
                   keeps the tour's home.completed anchor a real, measurable
                   box on a fresh day (it used to measure a zero-size view),
                   and "Feitas hoje · 0" growing into the day's tally is the
-                  momentum arc in one line. A past day shows it only when
-                  there is something to show. */}
+                  day's arc in one line. A past day shows it only when there
+                  is something to show. The outer View is M1's scroll anchor. */}
               {isToday ? (
-                <TourTarget id="home.completed" radius={18}>
-                  <CompletedBucket
-                    items={dayCompletedItems}
-                    title={t('home.completedBucket.today')}
-                    showWhenEmpty
-                    onUndo={handleUndo}
-                    onExtra={handleQuickComplete}
-                    onToggle={(open) => {
-                      if (open) emitTourEvent(M1_EVENTS.DRAWER_EXPANDED);
-                    }}
-                  />
-                </TourTarget>
+                <View ref={drawerRef} collapsable={false}>
+                  <TourTarget id={M1_TARGETS.DRAWER} radius={18}>
+                    <CompletedBucket
+                      items={dayCompletedItems}
+                      title={t('home.completedBucket.today')}
+                      showWhenEmpty
+                      onUndo={handleUndo}
+                      onExtra={handleQuickComplete}
+                      onToggle={(open) => {
+                        if (open) emitTourEvent(M1_EVENTS.DRAWER_EXPANDED);
+                      }}
+                    />
+                  </TourTarget>
+                </View>
               ) : (
                 <CompletedBucket
                   items={dayCompletedItems}
@@ -1099,7 +1243,6 @@ export default function HomeScreen() {
               )}
             </View>
 
-            {/* Journal strip — today only (the "close the day" ritual). */}
             {/* Journal. Today: the quick 5-face strip (the "close the day"
                 ritual). Any past day: the same card the Calendar day view
                 uses — the same faces (one tap logs THAT date) and the same big
@@ -1109,13 +1252,13 @@ export default function HomeScreen() {
                 day with open cards must still be loggable, and DaySeal is a
                 statement about what was trained, not a place for a control. */}
             {isToday ? (
-              // Hidden while a tour step is on screen. M1 step 5 auto-scrolls
-              // to the END so the "Concluídas hoje" drawer settles just above
-              // the tooltip — which only works if the drawer IS the end. With
-              // this card below it, the drawer's resting spot moved with the
-              // card's height, and on a short phone it left the screen. No
-              // tour step targets this card; it returns when the step ends.
-              activeTourStep ? null : <MoodHubStrip />
+              // Stays up during the tour: M1 teaches it (home.mood lives
+              // inside MoodHubStrip), and the auto-scroll brings each target
+              // into view by measuring it, so no element has to be the END
+              // of the scroll any more. The View is M1's scroll anchor.
+              <View ref={moodRef} collapsable={false}>
+                <MoodHubStrip />
+              </View>
             ) : (
               <View style={styles.moodDayWrap}>
                 <MoodDayDetail dateKey={selectedKey} />
@@ -1130,28 +1273,11 @@ export default function HomeScreen() {
           screen) and Todas as práticas (primary — the see-all doing surface,
           which also hosts the "Gerenciar" entry inside it). RAW navClearance
           (not the tour-bumped bottomClearance) so it doesn't leap up under a
-          bottom tour tooltip. The M2 tour spotlights the Todas button (its
-          "Me leva lá" jumps straight to /tasks). */}
+          bottom tour tooltip. M2 step 1 spotlights the Todas button; tapping
+          it does what it always does (see openAllPractices). */}
       <TasksFabStack
         bottomOffset={navClearance}
-        onSeeAll={() => {
-          // While M2 step 1 spotlights this FAB, tapping it advances the
-          // tour and lands on /tasks (where step 2 lives) instead of
-          // /all-practices, which hosts no tour mount — otherwise the
-          // most natural gesture (tapping the highlighted button) strands
-          // the user on a screen the tour can't follow. Event-driven
-          // advance never navigates by itself, so we push here.
-          if (isM2Current && (useTourStore.getState().stepIndices.M2 ?? 0) === 0) {
-            emitTourEvent(M2_EVENTS.PRACTICES_OPENED);
-            router.push('/tasks');
-            return;
-          }
-          router.push(
-            isToday
-              ? '/all-practices'
-              : { pathname: '/all-practices', params: { date: selectedKey } },
-          );
-        }}
+        onSeeAll={openAllPractices}
         onCalendar={() => router.push('/history')}
         seeAllWrap={(node) => (
           <TourTarget id="home.manage" radius={28}>
@@ -1195,38 +1321,26 @@ export default function HomeScreen() {
         onClose={() => setDayClearedStats(null)}
       />
 
-      <MoodCheckinPrompt enabled={tourFinished && !activeTourStep} />
+      <MoodCheckinPrompt enabled={tourFinished && !activeTourStep && isFocused} />
 
-      {/* Post-login tour — M1 (Tasks). Only renders when the user has
-         tasks visible behind the spotlight and M1 is the current
-         (first-unfinished) module — keeps later modules from leaking
-         their tooltips onto Home before their turn. */}
-      <TourModule
-        module="M1"
-        steps={buildM1Steps(t)}
-        enabled={isM1Current && (allActiveTasks.data?.length ?? 0) > 0}
-      />
+      {/* Post-login tour — M1 (Práticas), every step on Home. Gated on the
+         current-module check like every mount, plus m1Enabled (today,
+         loaded, and a card to point at for the card steps). */}
+      <TourModule module="M1" steps={m1Steps} enabled={m1Enabled} />
 
-      {/* M2 step 1 spotlights the "Todas as práticas" FAB (via seeAllWrap's
-         'home.manage' target). It has no awaitEvent — the tooltip's "Me
-         leva lá" primary button advances and onAdvanceToNextScreen walks
-         the user to /tasks, where step 2 (the create +) lives. */}
+      {/* M2 step 1 spotlights the "Todas as práticas" FAB (seeAllWrap's
+         'home.manage' target) and advances on the FAB's own press; the
+         assist "Me leva lá" opens the same screen. Steps 2-6 live on
+         /all-practices, /tasks and the form. rewindOnFocus (here and on the
+         M4-M6 mounts below): coming back to Home mid-module — hardware
+         back, a tab switch — rewinds to this screen's step, so the tooltip
+         reappears instead of the tour going silent. */}
       <TourModule
         module="M2"
         steps={buildM2Steps(t)}
         enabled={isM2Current}
-        onAdvanceToNextScreen={() => router.push('/tasks')}
-      />
-
-      {/* M3 step 1 lives here (quest chips strip). Tapping "+ Missões"
-         fires QUESTS_NAVIGATED + navigates; Próximo / skip walks the
-         user to /quests so step 2 has its surface. `missoesOn` keeps the
-         tooltip from flashing while the auto-skip effect above resolves. */}
-      <TourModule
-        module="M3"
-        steps={buildM3Steps(t)}
-        enabled={isM3Current && missoesOn}
-        onAdvanceToNextScreen={() => router.push('/quests')}
+        rewindOnFocus
+        onAdvanceToNextScreen={openAllPractices}
       />
 
       {/* M4 step 1 lives here (Rewards bottom-nav tab). Switching to the
@@ -1236,6 +1350,7 @@ export default function HomeScreen() {
         module="M4"
         steps={buildM4Steps(t)}
         enabled={isM4Current}
+        rewindOnFocus
         onAdvanceToNextScreen={() => router.navigate('/(tabs)/rewards')}
       />
 
@@ -1246,16 +1361,18 @@ export default function HomeScreen() {
         module="M5"
         steps={buildM5Steps(t)}
         enabled={isM5Current}
+        rewindOnFocus
         onAdvanceToNextScreen={() => router.navigate('/(tabs)/character')}
       />
 
       {/* M6 step 1 lives here (Learn bottom-nav tab). Switching to the
          Learn tab fires LEARN_NAVIGATED from that screen. Skipping at
-         this step ends M6 → Wrap-up (finishM6). */}
+         this step ends M6 → the closing screen (finishM6). */}
       <TourModule
         module="M6"
         steps={buildM6Steps(t)}
         enabled={isM6Current}
+        rewindOnFocus
         onAdvanceToNextScreen={() => router.navigate('/(tabs)/learning')}
         onComplete={finishM6}
       />

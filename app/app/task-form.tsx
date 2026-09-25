@@ -21,9 +21,17 @@ import { IconPickerModal } from '@/components/IconPickerModal';
 import { RecurrencePicker } from '@/components/RecurrencePicker';
 import { SubPicker } from '@/components/SubPicker';
 import { TourModule } from '@/components/tour/TourModule';
-import { buildM1Steps } from '@/lib/tour/m1Steps';
-import { buildM2Steps } from '@/lib/tour/m2Steps';
-import { useIsCurrentTourModule, useTourStore } from '@/lib/tour/store';
+import {
+  buildM2Steps,
+  finishM2AtHome,
+  isM2StepOn,
+  M2_STEP_KEYS,
+} from '@/lib/tour/m2Steps';
+import {
+  useActiveTourStepStore,
+  useIsCurrentTourModule,
+  useTourStore,
+} from '@/lib/tour/store';
 import { useT } from '@/lib/i18n';
 import { freeLimitEntity, useLimitModalStore } from '@/lib/premium';
 import { SUB_META } from '@/theme/dimensions';
@@ -45,7 +53,7 @@ import { tokens } from '@/theme';
 
 export default function TaskFormScreen() {
   const router = useRouter();
-  const { t } = useT();
+  const { t, locale } = useT();
   const params = useLocalSearchParams<{ id?: string; from_template?: string }>();
 
   const isEdit = !!params.id;
@@ -53,41 +61,25 @@ export default function TaskFormScreen() {
   const isCreateMode = !isEdit && !fromTemplateId;
   const isM2Current = useIsCurrentTourModule('M2');
 
-  // Auto-advance M1 / M2 when the user leaves this screen without
-  // acting on the active tooltip. Covers the screen's own X, save,
-  // archive, hardware back — any path that closes the form while a
-  // step that lives on this screen is still current. Without this the
-  // tour gets stranded: state stays at "step N on form" but no form is
-  // mounted, so nothing renders and the user reads it as "tour ended".
-  //
-  //   M1 step 2 (detail mode)            → idx 1
-  //   M2 steps 3, 4, 5 (create mode)     → idx 2, 3, 4 — last one
-  //                                         finishes the module
+  // M2's last three steps live on this form (create mode). The form is
+  // passive — nothing has to be filled — so LEAVING it in any way while one
+  // of them is up completes M2 and lands on Home, where the next module
+  // starts (the 2026-09 audit found the old M2 ending stranded on /tasks):
+  //   - the X, Salvar, a refused save → `leaveForm` below, one transition;
+  //   - hardware back / the modal's swipe-down → this blur cleanup, which
+  //     runs once the form is already gone and walks /tasks back to Home.
+  // Both no-op outside the tour: isM2StepOn is false.
   useFocusEffect(
     useCallback(() => {
       return () => {
-        const state = useTourStore.getState();
-
-        const m1Status = state.modules.M1?.status;
-        const m1Idx = state.stepIndices.M1 ?? 0;
-        if (m1Status === 'in_progress' && m1Idx === 1) {
-          state.setStepIndex('M1', m1Idx + 1);
-        }
-
-        // M2 steps 3-5 all live on this form (subs / recurrence /
-        // wrap-up). If the user closes the form via the screen's own
-        // X (or hardware back) while any of those is active, the
-        // remaining steps have nowhere to render — so just mark M2
-        // completed instead of stranding the tour state.
-        const m2Status = state.modules.M2?.status;
-        const m2Idx = state.stepIndices.M2 ?? 0;
-        if (m2Status === 'in_progress' && m2Idx >= 2 && m2Idx <= 4) {
-          void state.setStatus('M2', 'completed');
-          state.setStepIndex('M2', 0);
-        }
+        if (isCreateMode && isM2StepOn('create')) finishM2AtHome();
       };
-    }, []),
+    }, [isCreateMode]),
   );
+  const leaveForm = () => {
+    if (isCreateMode && isM2StepOn('create')) finishM2AtHome();
+    else router.back();
+  };
 
   const existing = useTask(params.id);
   const templates = useTaskTemplates();
@@ -117,43 +109,62 @@ export default function TaskFormScreen() {
   const [coinMultiplier, setCoinMultiplier] = useState<CoinMultiplier>(1);
   const [iconPickerVisible, setIconPickerVisible] = useState(false);
   const [prefillApplied, setPrefillApplied] = useState(false);
+  // Has the user typed in the description field? See `catalogBlurb`.
+  const [descriptionTouched, setDescriptionTouched] = useState(false);
   // Keep scroll content reachable while the keyboard is up. `endCoordinates`
   // doesn't always include the keyboard's tool/suggestion bar, so we add a
   // generous buffer below.
   const keyboardHeight = useKeyboardOverlap();
 
-  // M2 tour auto-scroll: steps 3 (subs) and 4 (recurrence) live below
-  // the title/description/icon fold, so the tour scrolls them into view
-  // as each step opens instead of leaving the user staring at a tooltip
-  // that points at off-screen content.
+  // M2 tour auto-scroll: each form step brings its own section to the top
+  // of the form, clear of the bottom tooltip. Section Ys come from onLayout
+  // (they are direct children of the scroll content, so the Y is the
+  // content offset); `sectionsMeasured` re-runs the effect once they exist,
+  // since the first form step is already current when the form mounts.
   const scrollRef = useRef<ScrollView>(null);
-  const subsY = useRef(0);
-  const recurrenceY = useRef(0);
+  const subsY = useRef<number | null>(null);
+  const recurrenceY = useRef<number | null>(null);
+  const coinsY = useRef<number | null>(null);
+  const [sectionsMeasured, setSectionsMeasured] = useState(false);
+  const noteSectionY = (ref: { current: number | null }, y: number) => {
+    ref.current = y;
+    if (
+      !sectionsMeasured &&
+      subsY.current != null &&
+      recurrenceY.current != null &&
+      coinsY.current != null
+    ) {
+      setSectionsMeasured(true);
+    }
+  };
   const m2StepIndex = useTourStore((s) => s.stepIndices.M2 ?? 0);
-  const m2Status = useTourStore((s) => s.modules.M2?.status);
-  // Steps 3 (subs, idx 2) and 4 (recurrence, idx 3) sit low in the form
-  // and use a bottom tooltip. Without extra scroll room the auto-scroll
-  // can't lift the recurrence picker above the card (the list is too
-  // short to scroll that far). This bump adds the room.
-  const m2FormBump =
-    isCreateMode &&
-    isM2Current &&
-    m2Status === 'in_progress' &&
-    (m2StepIndex === 2 || m2StepIndex === 3)
-      ? 245
-      : 0;
+  const m2StepKey = isCreateMode && isM2Current ? M2_STEP_KEYS[m2StepIndex] : undefined;
+  const m2FormStep =
+    m2StepKey === 'trains' || m2StepKey === 'often' || m2StepKey === 'coins';
+  // The last section (coins) sits at the end of the form; without extra
+  // room the scroll can't lift it above the tooltip. Sized off the card's
+  // REAL measured height, so a taller card can't eat the gap.
+  const tourCardHeight = useActiveTourStepStore((s) => s.cardHeight);
+  const m2FormBump = m2FormStep ? (tourCardHeight ?? 280) + tokens.space[6] : 0;
   useEffect(() => {
-    if (!isCreateMode || !isM2Current || m2Status !== 'in_progress') return;
-    // step index 2 == M2 step 3 (subs); 3 == step 4 (recurrence)
+    if (!m2FormStep) return;
     const targetY =
-      m2StepIndex === 2 ? subsY.current : m2StepIndex === 3 ? recurrenceY.current : null;
+      m2StepKey === 'trains'
+        ? subsY.current
+        : m2StepKey === 'often'
+          ? recurrenceY.current
+          : coinsY.current;
     if (targetY == null) return;
     const id = setTimeout(
-      () => scrollRef.current?.scrollTo({ y: Math.max(targetY - 72, 0), animated: true }),
-      150,
+      () =>
+        scrollRef.current?.scrollTo({
+          y: Math.max(targetY - tokens.space[4], 0),
+          animated: true,
+        }),
+      160,
     );
     return () => clearTimeout(id);
-  }, [isCreateMode, isM2Current, m2Status, m2StepIndex]);
+  }, [m2FormStep, m2StepKey, sectionsMeasured]);
 
   // Hydrate from server when editing
   useEffect(() => {
@@ -184,6 +195,38 @@ export default function TaskFormScreen() {
     setPrefillApplied(true);
   }, [isEdit, prefillApplied, templateSource]);
 
+  // Catalog blurb (first-user feedback: "the generic descriptions feel
+  // strange"). Adopting a template copies its one-line catalog blurb into
+  // the practice's description, and this form then showed it inside the
+  // user's own "Descrição" field, as if they had written it. When the
+  // stored text IS a catalog blurb it is shown as a quiet "why it matters"
+  // note above the field, and the field starts empty for the user's own
+  // words. Nothing changes in the data: an empty field saves the blurb back
+  // unchanged (so the template link and its warning stay put); the user's
+  // own text replaces it, exactly as editing the old field did — which is
+  // why the note steps aside while that text is non-empty.
+  const catalogBlurb = useMemo(() => {
+    const original = (isEdit ? existing.data?.description : templateSource?.description)?.trim();
+    if (!original) return null;
+    // A from_template prefill is the catalog text by definition; an edit is
+    // matched against the catalog, which also catches practices that were
+    // customised from a template and kept its blurb.
+    if (!isEdit) return original;
+    return (templates.data ?? []).some((tp) => (tp.description ?? '').trim() === original)
+      ? original
+      : null;
+  }, [isEdit, existing.data?.description, templateSource?.description, templates.data]);
+  // With a blurb, the field holds only the user's own words (empty until
+  // they type — `description` still carries the hydrated blurb till then).
+  const ownDescription =
+    catalogBlurb != null && !descriptionTouched ? '' : description;
+  // Catalog blurbs are pt-only until task_template gains *_en columns — an
+  // en user would read a Portuguese note, so it only shows in pt.
+  const showBlurbNote =
+    locale === 'pt' && catalogBlurb != null && ownDescription.trim() === '';
+  const descriptionForSave =
+    ownDescription.trim() !== '' ? ownDescription.trim() : catalogBlurb;
+
   const createTask = useCreateTask();
   const updateTask = useUpdateTask(params.id ?? '');
   const archiveTask = useArchiveTask();
@@ -201,7 +244,7 @@ export default function TaskFormScreen() {
     if (subs.length === 0 || totalStars === 0) return null;
     return {
       title: title.trim(),
-      description: description.trim() === '' ? null : description.trim(),
+      description: descriptionForSave,
       task_type: legacyTaskTypeFor(recurrence),
       recurrence,
       target_count: targetCount,
@@ -209,7 +252,16 @@ export default function TaskFormScreen() {
       icon,
       coin_multiplier: coinMultiplier,
     };
-  }, [title, description, recurrence, targetCount, subs, totalStars, icon, coinMultiplier]);
+  }, [
+    title,
+    descriptionForSave,
+    recurrence,
+    targetCount,
+    subs,
+    totalStars,
+    icon,
+    coinMultiplier,
+  ]);
 
   /** True when editing a template-adopted task AND the user has changed
    *  any field that triggers the template-link drop (title, description,
@@ -224,7 +276,7 @@ export default function TaskFormScreen() {
     if (!orig || !orig.template_id) return false;
     if (title.trim() !== orig.title) return true;
     const origDesc = (orig.description ?? '').trim();
-    const curDesc = description.trim();
+    const curDesc = descriptionForSave ?? '';
     if (origDesc !== curDesc) return true;
     // Subs: compare order-independently by (sub_id, stars).
     if (orig.subs.length !== subs.length) return true;
@@ -233,7 +285,7 @@ export default function TaskFormScreen() {
     const origKey = orig.subs.map(sortKey).sort().join('|');
     const curKey = subs.map(sortKey).sort().join('|');
     return origKey !== curKey;
-  }, [isEdit, existing.data, title, description, subs]);
+  }, [isEdit, existing.data, title, descriptionForSave, subs]);
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -256,11 +308,14 @@ export default function TaskFormScreen() {
       } else {
         await createTask.mutateAsync(formInput);
       }
-      router.back();
+      leaveForm();
     } catch (e) {
       const limited = freeLimitEntity(e);
       if (limited) {
-        router.back();
+        // An edit that unlinks a catalog practice at the free cap is refused
+        // server-side (migration 20260925000001). Keep the form open so the
+        // user's edits survive; only a refused CREATE leaves.
+        if (!isEdit) leaveForm();
         useLimitModalStore.getState().open(limited);
         return;
       }
@@ -286,7 +341,13 @@ export default function TaskFormScreen() {
     }
   };
 
-  if (isEdit && existing.isLoading) {
+  // Edit mode also waits for the catalog when the practice has a
+  // description: until it lands, a catalog blurb can't be told apart from
+  // the user's own text and would flash inside the field first.
+  if (
+    isEdit &&
+    (existing.isLoading || (templates.isLoading && !!existing.data?.description))
+  ) {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.loadingBox}>
@@ -302,9 +363,11 @@ export default function TaskFormScreen() {
 
       <View style={styles.header}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={leaveForm}
           style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
           hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={t('common.close')}
         >
           <Ionicons name="close" size={24} color={tokens.text.hi} />
         </Pressable>
@@ -369,11 +432,32 @@ export default function TaskFormScreen() {
 
           <View style={styles.field}>
             <Text style={styles.label}>{t('taskForm.descLabel')}</Text>
+            {showBlurbNote && (
+              <View style={styles.blurbNote}>
+                <Ionicons
+                  name="bulb-outline"
+                  size={16}
+                  color={tokens.text.mid}
+                  style={styles.blurbIcon}
+                />
+                <View style={styles.blurbBody}>
+                  <Text style={styles.blurbLabel}>{t('taskForm.whyItMatters')}</Text>
+                  <Text style={styles.blurbText}>{catalogBlurb}</Text>
+                </View>
+              </View>
+            )}
             <TextInput
-              value={description}
-              onChangeText={setDescription}
+              value={ownDescription}
+              onChangeText={(text) => {
+                setDescriptionTouched(true);
+                setDescription(text);
+              }}
               style={[styles.input, styles.inputMultiline]}
-              placeholder={t('taskForm.descPlaceholder')}
+              placeholder={
+                showBlurbNote
+                  ? t('taskForm.descPlaceholderOwn')
+                  : t('taskForm.descPlaceholder')
+              }
               placeholderTextColor={tokens.text.faint}
               multiline
               numberOfLines={3}
@@ -429,9 +513,7 @@ export default function TaskFormScreen() {
 
           <View
             style={styles.field}
-            onLayout={(e) => {
-              subsY.current = e.nativeEvent.layout.y;
-            }}
+            onLayout={(e) => noteSectionY(subsY, e.nativeEvent.layout.y)}
           >
             <Text style={styles.label}>{t('taskForm.subsLabel')}</Text>
             <Text style={styles.hint}>{t('taskForm.subsHint')}</Text>
@@ -462,17 +544,11 @@ export default function TaskFormScreen() {
             )}
           </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>{t('tasks.coinMultiplier.label')}</Text>
-            <Text style={styles.hint}>{t('tasks.coinMultiplier.hint')}</Text>
-            <CoinMultiplierPicker value={coinMultiplier} onChange={setCoinMultiplier} />
-          </View>
-
+          {/* Order = the tour's order and the questions the user answers:
+              what it trains → how often → what it's worth in coins. */}
           <View
             style={styles.field}
-            onLayout={(e) => {
-              recurrenceY.current = e.nativeEvent.layout.y;
-            }}
+            onLayout={(e) => noteSectionY(recurrenceY, e.nativeEvent.layout.y)}
           >
             <Text style={styles.label}>{t('taskForm.recurrenceLabel')}</Text>
             <RecurrencePicker
@@ -481,6 +557,15 @@ export default function TaskFormScreen() {
               targetCount={targetCount}
               onChangeTargetCount={setTargetCount}
             />
+          </View>
+
+          <View
+            style={styles.field}
+            onLayout={(e) => noteSectionY(coinsY, e.nativeEvent.layout.y)}
+          >
+            <Text style={styles.label}>{t('tasks.coinMultiplier.label')}</Text>
+            <Text style={styles.hint}>{t('tasks.coinMultiplier.hint')}</Text>
+            <CoinMultiplierPicker value={coinMultiplier} onChange={setCoinMultiplier} />
           </View>
 
           {isEdit && (
@@ -520,24 +605,10 @@ export default function TaskFormScreen() {
         autoA11yLabel={t('taskForm.iconAutoA11y')}
       />
 
-      {/* Post-login tour — M1 step 2 lives here (detail screen). The
-         module is also mounted on Home for steps 1, 3, 4, 5; the
-         shared step index in the tour store routes each step to the
-         right surface. Tapping Próximo OR X closes the detail screen
-         so the next step (which lives on Home) is reachable without
-         the user manually backing out. */}
-      <TourModule
-        module="M1"
-        screen="detail"
-        steps={buildM1Steps(t)}
-        flatNav
-        onExitScreen={() => router.back()}
-      />
-
-      {/* M2 steps 3-5 (subs / recurrence / wrap) live here when the
-         form is in CREATE mode (no id, no template prefill). Step 5's
-         Next closes the form to send the user back to Home where
-         the next module would pick up. */}
+      {/* M2 steps 4-6 (what it trains / how often / coins) live here when
+         the form is in CREATE mode (no id, no template prefill). The last
+         Próximo, and "Pular este módulo", end M2 on Home (finishM2AtHome
+         keeps a skip a skip). */}
       {isCreateMode && (
         <TourModule
           module="M2"
@@ -545,7 +616,7 @@ export default function TaskFormScreen() {
           steps={buildM2Steps(t)}
           enabled={isM2Current}
           flatNav
-          onExitScreen={() => router.back()}
+          onExitScreen={finishM2AtHome}
         />
       )}
     </SafeAreaView>
@@ -609,8 +680,8 @@ const styles = StyleSheet.create({
   breakWarningText: {
     flex: 1,
     fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 13,
+    lineHeight: 18,
     color: tokens.text.base,
   },
   field: {
@@ -622,10 +693,15 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
+  // Helper lines (first-user feedback: "tiny and confusing"): 13px in
+  // text.mid. The old 12px text.dim measured ~3.5:1 on this background,
+  // under the 4.5:1 small text needs.
   hint: {
-    ...tokens.type.caption,
-    color: tokens.text.dim,
-    marginTop: -4,
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 13,
+    lineHeight: 18,
+    color: tokens.text.mid,
+    marginTop: -2,
   },
   input: {
     backgroundColor: tokens.bg.surface,
@@ -662,9 +738,41 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'right',
     fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
-    color: tokens.text.dim,
-    letterSpacing: 0.4,
+    fontSize: 13,
+    color: tokens.text.mid,
+    letterSpacing: 0.2,
+  },
+  // Catalog blurb, shown as context rather than as the user's own text:
+  // no input chrome, a label saying where it comes from, readable size.
+  blurbNote: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: tokens.space[2],
+    paddingVertical: tokens.space[3],
+    paddingHorizontal: tokens.space[3],
+    borderRadius: tokens.radius.md,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: tokens.border.strong,
+  },
+  blurbIcon: {
+    marginTop: 1,
+  },
+  blurbBody: {
+    flex: 1,
+    gap: 2,
+  },
+  blurbLabel: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 13,
+    lineHeight: 18,
+    color: tokens.text.mid,
+  },
+  blurbText: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 14,
+    lineHeight: 20,
+    color: tokens.text.base,
   },
   iconRow: {
     flexDirection: 'row',
@@ -691,8 +799,10 @@ const styles = StyleSheet.create({
   },
   iconRowHint: {
     flex: 1,
-    ...tokens.type.caption,
-    color: tokens.text.dim,
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 13,
+    lineHeight: 18,
+    color: tokens.text.mid,
   },
   iconRowChange: {
     fontFamily: 'Manrope_700Bold',

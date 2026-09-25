@@ -30,9 +30,9 @@ import { InstrumentTeaserHost } from '@/components/premium/InstrumentTeaserHost'
 import { LimitReachedHost } from '@/components/premium/LimitReachedHost';
 import { useRecoveryStore, useRegisterRecoveryListener, useSession } from '@/lib/auth';
 import { useNotificationsSetup } from '@/lib/notifications/useNotificationsSetup';
-import { useLoadOnboarding } from '@/lib/onboarding';
 import { usePurchasesSetup } from '@/lib/purchases';
-import { useModuleStatus, useTourReady } from '@/lib/tour/store';
+import { ROUTE_MODULE_PATH } from '@/lib/tour/constants';
+import { useNextRouteModule, useTourReady } from '@/lib/tour/store';
 import { freeLimitEntity, useLimitModalStore } from '@/lib/premium';
 import { ACTIVE_THEME } from '@/theme';
 import {
@@ -49,19 +49,16 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   const isRecovering = useRecoveryStore((s) => s.isRecovering);
   const segments = useSegments();
   const router = useRouter();
-  const onboardingStatus = useLoadOnboarding();
   // Hydrate the post-login tour store keyed on the current user id —
-  // status reads default to `pending` until ready, so the redirect
-  // never fires with stale data from a previous account.
+  // nothing below reads it until it holds THIS user's data.
   const tourReady = useTourReady(user?.id ?? null);
-  const m0Status = useModuleStatus('M0');
+  const nextRouteModule = useNextRouteModule();
   useRegisterRecoveryListener();
 
   useEffect(() => {
-    if (isLoading || onboardingStatus === 'unknown') return;
+    if (isLoading) return;
     const top = segments[0];
     const onLogin = top === 'login';
-    const onOnboarding = top === 'onboarding';
     const onForgot = top === 'forgot-password';
     const onReset = top === 'reset-password';
     const onTour = top === 'tour';
@@ -75,41 +72,30 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     }
 
     if (isAuthenticated) {
-      if (onLogin || onForgot || onReset) router.replace('/');
-      // Allow deliberate replay: if onboardingStatus was reset to 'unseen',
-      // an authenticated user can sit on /onboarding until they finish it.
-      if (onOnboarding && onboardingStatus === 'seen') router.replace('/');
-      // Post-login product tour — gate on first M0 status only. Once
-      // the user finishes or skips M0, we never auto-redirect again.
-      // tourReady prevents flashing /tour on cold start before the
-      // store hydrates from AsyncStorage.
-      if (
-        tourReady &&
-        m0Status === 'pending' &&
-        !onTour &&
-        !onOnboarding &&
-        onboardingStatus === 'seen'
-      ) {
-        router.replace('/tour/m0');
+      // Post-login onboarding. The first unanswered full-screen module
+      // (intro → pack) is re-opened on EVERY boot until it is answered, so
+      // killing the app mid-onboarding resumes it instead of stranding the
+      // guided tour behind a module nothing mounts. tourReady keeps a cold
+      // start from flashing /tour before the store hydrates.
+      if (tourReady && nextRouteModule && !onTour) {
+        router.replace(ROUTE_MODULE_PATH[nextRouteModule]);
+        return;
       }
+      if (onLogin || onForgot || onReset) router.replace('/');
       return;
     }
 
-    // not authenticated
-    if (onboardingStatus === 'unseen') {
-      if (!onOnboarding && !onForgot) router.replace('/onboarding');
-    } else {
-      if (!onLogin && !onForgot) router.replace('/login');
-    }
+    // Not authenticated. The method intro lives AFTER login now, so a new
+    // install lands straight on the login screen.
+    if (!onLogin && !onForgot) router.replace('/login');
   }, [
     isAuthenticated,
     isRecovering,
     isLoading,
-    onboardingStatus,
     segments,
     router,
     tourReady,
-    m0Status,
+    nextRouteModule,
   ]);
 
   return <>{children}</>;
@@ -199,13 +185,12 @@ export default function RootLayout() {
         >
           <AuthGate>
             <Stack>
-            <Stack.Screen name="onboarding" options={{ headerShown: false }} />
             <Stack.Screen name="login" options={{ headerShown: false }} />
             <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
             <Stack.Screen name="reset-password" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="tour/m0" options={{ headerShown: false }} />
-            <Stack.Screen name="tour/m0-5" options={{ headerShown: false }} />
+            <Stack.Screen name="tour/intro" options={{ headerShown: false, gestureEnabled: false }} />
+            <Stack.Screen name="tour/pack" options={{ headerShown: false, gestureEnabled: false }} />
             <Stack.Screen name="tour/wrap" options={{ headerShown: false }} />
             <Stack.Screen name="tour-replay" options={{ headerShown: false }} />
             <Stack.Screen

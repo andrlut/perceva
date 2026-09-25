@@ -121,9 +121,9 @@ export default function SettingsScreen() {
   };
 
   const handleReplayOnboarding = () => {
-    // Opens the per-module replay screen (M0…M6 + "Refazer tour
-    // completo"). Each module's reset + navigation is handled there, so
-    // this no longer wipes onboarding/tour state up front.
+    // Opens /tour-replay: "Refazer onboarding completo" on top, then each
+    // part (intro, pack, guided modules) on its own. The reset + navigation
+    // happen there, so nothing is wiped by just opening the screen.
     router.push('/tour-replay');
   };
 
@@ -187,6 +187,17 @@ export default function SettingsScreen() {
             label={t('profile.fields.username')}
             value={profile?.display_name ?? '—'}
             onPress={() => setUsernameOpen(true)}
+            chevron
+          />
+          <Divider />
+          {/* Refazer onboarding sits up here, with the account actions, on
+              purpose: the owner re-runs it constantly while the onboarding is
+              being built, and "Sobre" at the bottom of the screen was where
+              nobody looked. It only resets tour state — never data. */}
+          <ButtonRow
+            icon="refresh-circle-outline"
+            label={t('profile.actions.replayOnboarding')}
+            onPress={handleReplayOnboarding}
             chevron
           />
           <Divider />
@@ -366,12 +377,6 @@ export default function SettingsScreen() {
         {/* ───── ABOUT ───── */}
         <SectionHeader icon="information-circle-outline" label={t('profile.sections.about')} />
         <Card>
-          <ButtonRow
-            icon="play-circle-outline"
-            label={t('profile.actions.replayOnboarding')}
-            onPress={handleReplayOnboarding}
-          />
-          <Divider />
           <ButtonRow
             icon={isCheckingUpdate ? 'sync' : 'cloud-download-outline'}
             label={

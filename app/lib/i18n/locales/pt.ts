@@ -67,6 +67,8 @@ const pt: Translations = {
   },
 
   taskForm: {
+    descPlaceholderOwn: 'Uma nota sua, se quiser',
+    whyItMatters: 'Por que ela importa',
     newTitle: 'Nova prática',
     editTitle: 'Editar prática',
     titleLabel: 'Título',
@@ -76,20 +78,17 @@ const pt: Translations = {
     iconLabel: 'Ícone',
     // Tamanho de linha (renderiza com numberOfLines={2} na linha compacta
     // de ícone); a célula Auto do picker carrega a explicação de herança.
-    iconHint: 'O ícone que aparece no card da prática.',
+    iconHint: 'Aparece no card. Padrão: o da sub-área.',
     iconAutoA11y: 'Usar ícone do sub principal',
-    subsLabel: 'Subatributos + estrelas',
-    subsHint:
-      'Escolha quais subs esta prática fortalece e o peso de cada esforço. As estrelas por sub vão até 5 — distribua com sinceridade.',
+    subsLabel: 'O que ela treina',
+    subsHint: 'Toque nas sub-áreas que esta prática treina. Cada uma recebe as próprias estrelas, de 1 a 5.',
     recurrenceLabel: 'Com que frequência',
     archiveBtn: 'Arquivar prática',
-    breakWarning:
-      'Editar título, descrição ou subs vai desvincular esta prática do template — ela vira uma criação sua. Só mudar a periodicidade preserva o vínculo.',
+    breakWarning: 'Mudar o título, a descrição ou as sub-áreas desvincula esta prática do catálogo: ela passa a ser sua. Mudar só a frequência mantém o vínculo. No plano gratuito, ela passa a contar no limite de 10 práticas próprias.',
     titleRequired: 'Título obrigatório',
     titleRequiredBody: 'Dê um título à sua prática.',
-    subRequired: 'Escolha ao menos um sub',
-    subRequiredBody:
-      'Práticas fortalecem um ou mais subatributos. Escolha os que esta prática toca e quantas estrelas cada um recebe.',
+    subRequired: 'Escolha ao menos uma sub-área',
+    subRequiredBody: 'Toda prática treina ao menos uma sub-área. Escolha as que ela treina e as estrelas de cada uma.',
     saveFailed: 'Falha ao salvar',
     archiveConfirmTitle: 'Arquivar prática?',
     archiveConfirmBody: 'Práticas arquivadas deixam de aparecer na Home.',
@@ -97,6 +96,11 @@ const pt: Translations = {
   },
 
   recurrencePicker: {
+    increaseA11y: 'Aumentar',
+    decreaseA11y: 'Diminuir',
+    monthlyHelper: 'Com um dia marcado, a prática aparece em Hoje nesse dia. Sem dia, ela fica em Todas as práticas pra você fazer {{count}}× no mês, quando der.',
+    dailyMultiHelper: 'Aparece em Hoje todo dia. Marcou uma vez, ela sai da lista; as outras vezes você soma no +1 de Feitas hoje.',
+    dailyHelper: 'Aparece em Hoje todo dia.',
     types: {
       daily: 'Diária',
       weekly: 'Semanal',
@@ -108,12 +112,10 @@ const pt: Translations = {
     timesPerMonth: 'Vezes por mês',
     specificDays: 'Dias específicos (opcional)',
     specificDay: 'Dia específico (opcional)',
-    weeklyHelper:
-      'Os dias escolhidos aparecem em Hoje como lembrete. Deixe vazio pra {{count}}×/semana sem preferência de dia.',
+    weeklyHelper: 'Com dias marcados, a prática aparece em Hoje nesses dias. Sem dia marcado, ela fica em Todas as práticas pra você fazer {{count}}× na semana, quando der.',
     pickDay: 'Escolher um dia',
     dayPrefix: 'Dia',
-    monthlyOverflowHelper:
-      'Meses sem o dia {{day}} rodam no último dia do mês.',
+    monthlyOverflowHelper: 'Em meses sem o dia {{day}}, ela aparece no último dia do mês.',
   },
   // Descrição legível de uma recorrência (cards, rótulos, catálogo). Duas
   // formas: `short` cabe num chip ("Seg · Qua · Sex", "3×/sem"); a longa vai
@@ -294,27 +296,6 @@ const pt: Translations = {
     signOut: 'Sair',
   },
 
-  onboarding: {
-    brand: 'Perceva',
-    skip: 'Pular',
-    continue: 'Continuar',
-    start: 'Começar a jornada',
-    slide1: {
-      eyebrow: 'BEM-VINDO',
-      title: 'Perceba. Pratique. Torne-se.',
-      body: 'Suas ações de hoje constroem a pessoa que você quer ser.',
-    },
-    slide2: {
-      eyebrow: 'O CICLO',
-      title: 'Treine. Ganhe. Resgate.',
-      body: 'Conclua hábitos pra ganhar progresso e moedas. Gaste as moedas em recompensas que você mesmo define.',
-    },
-    slide3: {
-      eyebrow: 'PRONTO?',
-      title: 'Sua jornada começa no Nível 1.',
-      body: 'Escolha algumas quests iniciais. A gente cuida da subida de nível.',
-    },
-  },
 
   tabs: {
     tasks: 'Práticas',
@@ -427,7 +408,7 @@ const pt: Translations = {
     },
     // Modal de limite (P1.1) — reconhecimento por entidade antes do pitch.
     limit: {
-      taskLine1: 'Suas 10 práticas ativas estão em uso — seu sistema está cheio.',
+      taskLine1: 'Suas 10 práticas próprias estão em uso. As do catálogo continuam ilimitadas.',
       rewardLine1: 'Suas 5 recompensas ativas estão em uso.',
       skillLine1: 'Suas 3 habilidades estão em desenvolvimento.',
       questLine1: 'Suas 3 missões ativas estão em andamento.',
@@ -441,165 +422,298 @@ const pt: Translations = {
   // under `onboarding`. Keep the namespaces separate — same shape, two
   // different gating concerns.
   tour: {
-    common: {
-      next: 'Próximo',
-      skipModule: 'Pular este módulo',
-      skipStep: 'Pular este passo',
-      tryIt: 'Faça isso pra continuar',
-      takeMe: 'Me leva lá',
+    intro: {
+      skip: 'Pular introdução',
+      next: 'Continuar',
+      pageOf: 'Página {{n}} de {{total}}',
+      hero: {
+        eyebrow: 'Perceba. Pratique. Torne-se.',
+        title: 'Perceba quem você está se tornando.',
+        body: 'Um app que junta três coisas que sempre viveram separadas: o teste que te conhece, o hábito que você mede e a ideia que você lembra.',
+        pillarSelf: 'Autoconhecimento',
+        pillarPractice: 'Prática',
+        pillarLearning: 'Aprendizado',
+        loop: 'medir → praticar → re-olhar',
+        artA11y: 'Os três pilares do Perceva, Autoconhecimento, Prática e Aprendizado, ligados num ciclo: medir, praticar, re-olhar.',
+      },
+      self: {
+        eyebrow: 'Pilar 1 · Autoconhecimento',
+        title: 'O teste que te conhece',
+        body: 'Você começa pela Avaliação: uma autoavaliação nas 6 áreas da vida, que leva um minuto, e o questionário de bem-estar, grátis. Depois, se quiser ir fundo, vêm os testes com nome no Premium: Big Five, Valores de Schwartz e Apego (ECR-R). Eles ficam no seu perfil, tocando no seu personagem.',
+        payoff: 'O que interessa é a diferença entre como você se vê e o que você faz.',
+        legendSelf: 'Como você se vê',
+        legendQuestionnaire: 'O que o questionário mostra',
+        artA11y: 'Hexágono das 6 áreas: a forma preenchida é como você se vê; o contorno tracejado é o que o questionário mostra. As duas não coincidem.',
+      },
+      practice: {
+        eyebrow: 'Pilar 2 · Prática',
+        title: 'O hábito que você mede',
+        body: 'Práticas em um toque, humor em uma linha e um calendário que mostra o que a sensação esconde.',
+        payoff: 'Pular também é decidir. Nada zera.',
+        example1: 'Dormir antes da meia-noite',
+        example2: 'Caminhar 20 minutos',
+        example3: 'Ler 10 páginas',
+        skipped: 'Pulada hoje',
+        mood: 'Humor de hoje',
+        artA11y: 'Exemplo de um dia: duas práticas feitas, uma pulada hoje e o humor registrado.',
+      },
+      learning: {
+        eyebrow: 'Pilar 3 · Aprendizado',
+        title: 'A ideia que você lembra',
+        body: 'No Recanto, ideias curtas e com fonte. No fim de cada uma, você vira o card pra absorver a ideia.',
+        payoff: 'O Explorar acaba. De propósito.',
+        cardTitle: 'Reler dá a sensação de saber',
+        cardHint: 'Vire o card',
+        cardBack: 'Feche o texto e tente lembrar os pontos principais. É esse esforço que fixa; reler só parece funcionar.',
+        cardSource: 'Roediger & Karpicke, 2006',
+        absorbed: 'Absorvida',
+        artA11y: 'Um card de ideia virando: na frente, o gancho; no verso, a resposta que dá pra usar, com a fonte.',
+      },
+      dedication: {
+        eyebrow: 'Dedicação',
+        title: 'Estrelas viram Dedicação',
+        body: 'Cada prática treina uma ou mais sub-áreas. Em cada uma, você dá de 1 a 5 estrelas: o esforço que ela pede. Cada estrela rende Dedicação naquela área.',
+        cellA11y: 'Com {{stars}} de 5 estrelas, +{{xp}} de Dedicação',
+        exampleLabel: 'Exemplo',
+        exampleTitle: 'Meditar 10 minutos',
+        exampleGain: '+{{xp}} em {{area}}',
+        after: 'A Dedicação desenha o retrato da sua identidade Praticada e sobe o seu nível a cada 100. Ela não cai com o tempo: pular um dia não tira nada.',
+        bridge: 'Você vai ver essas estrelas nas práticas que escolher logo em seguida.',
+      },
+      coins: {
+        eyebrow: 'Moedas',
+        title: 'Moedas viram recompensas que você define',
+        body: 'Toda prática feita também paga moedas: por padrão, o mesmo número da Dedicação. Em cada prática você escolhe quanto ela vale: {{none}}, {{half}}, {{same}} ou {{double}}.',
+        exampleDedication: '+{{xp}} de Dedicação',
+        default: 'padrão',
+        dialA11y: '{{label}}: {{coins}} moedas',
+        dialA11yDefault: '{{label}}, o padrão: {{coins}} moedas',
+        rewardsBody: 'As recompensas é você quem cria, com o preço que quiser: um filme, um jantar, uma tarde livre. Gaste as moedas quando quiser. Resgatou, usou na hora.',
+        reward1: 'Um filme',
+        reward2: 'Jantar fora',
+        reward3: 'Tarde livre',
+        penalty: 'O preço também pode ser cobrado por um deslize. Aí o app mostra há quantos dias foi o último.',
+      },
+      choice: {
+        eyebrow: 'Tour guiado',
+        title: 'Quer que eu te mostre o app?',
+        body: 'Um tour de poucos minutos, fazendo de verdade:',
+        item1: 'marcar uma prática',
+        item2: 'registrar seu humor',
+        item3: 'montar uma prática sua',
+        item4: 'ver onde as moedas viram recompensas',
+        item5: 'ver seus retratos',
+        safeTitle: 'Pode pular sem medo',
+        safeBody: 'Dá pra refazer o tour e esta introdução quando quiser, em:',
+        safePath: 'Ajustes › Refazer onboarding',
+        primary: 'Fazer o tour guiado',
+        secondary: 'Pular por agora',
+      },
+    },
+    pack: {
+      eyebrow: 'POR ONDE COMEÇAR',
+      title: 'Seu pacote inicial',
+      body: 'Separamos uma prática pra cada uma das 12 sub-áreas. Tire o que não combina com você, junte o que quiser. Dá pra mudar tudo depois.',
+      legend: 'As estrelas medem o esforço: quanto mais estrelas, mais Dedicação a prática rende na área que ela treina.',
+      existing: {
+        one: 'Você já tem 1 prática na sua lista. Se preferir, siga só com ela.',
+        other: 'Você já tem {{count}} práticas na sua lista. Se preferir, siga só com elas.',
+      },
+      clearAll: 'Desmarcar todas',
+      restorePack: 'Marcar o pacote de novo',
+      adopted: 'Já na lista',
+      alsoTrains: 'Também treina {{subs}}',
+      cadence: {
+        daily: 'Diária',
+        weekly: 'Semanal',
+        monthly: 'Mensal',
+      },
+      total: {
+        one: '1 prática · +{{xp}} de Dedicação ao fazer uma vez',
+        other: '{{count}} práticas · +{{xp}} de Dedicação se fizer cada uma uma vez',
+      },
+      totalExisting: {
+        one: 'Nada novo: você segue com a prática que já tem.',
+        other: 'Nada novo: você segue com as {{count}} práticas que já tem.',
+      },
+      emptyHint: 'Nenhuma marcada. Dá pra adotar depois, em Todas as práticas.',
+      primary: {
+        one: 'Começar com 1 prática',
+        other: 'Começar com {{count}} práticas',
+      },
+      primaryExisting: 'Seguir com as que já tenho',
+      primaryEmpty: 'Começar sem práticas',
+      adding: 'Adicionando {{current}} de {{total}}…',
+      loadError: 'Não deu pra carregar as práticas.',
+      retry: 'Tentar de novo',
+      a11yStars: {
+        one: '1 estrela',
+        other: '{{count}} estrelas',
+      },
+      a11yCard: '{{title}}. {{stars}}, +{{xp}} de Dedicação, {{cadence}}',
+      a11yAdopted: '{{title}}. Já está na sua lista',
     },
     m1: {
-      step1: {
-        title: 'Suas práticas do dia',
-        body: 'Toque numa prática pra explorar — depois volte aqui.',
+      complete: {
+        title: 'Marque como feita',
+        body: 'Fez? Toque no check. A prática vira Dedicação nas áreas que ela treina (é o número verde no card) e rende moedas, que você troca pelas recompensas que definir.',
       },
-      step2: {
-        title: 'Por que vale',
-        body: 'No detalhe você vê quais áreas a prática treina e quanta Dedicação ela rende.',
+      drawer: {
+        title: 'Feitas hoje',
+        body: 'Tudo o que você fez hoje fica aqui, com quanto cada uma rendeu. Toque pra abrir: dá pra desfazer ou registrar de novo.',
       },
-      step3: {
+      mood: {
+        title: 'Humor em uma linha',
+        body: 'Uma carinha registra como foi o dia, de 1 a 5 — e uma linha, se quiser. No calendário, o humor aparece ao lado das suas práticas. Sem pontos, sem cobrança.',
+      },
+      hold: {
         title: 'Pressione e segure',
-        body: 'Segure o dedo numa prática: abre o menu de ajustar, pular ou editar.',
-      },
-      step4: {
-        title: 'Marcar como feita',
-        body: 'Toque no check pra registrar a prática. É o gesto que move tudo aqui.',
-      },
-      step6: {
-        title: 'Concluídas hoje',
-        body: 'Aqui ficam as feitas de hoje. Toque pra abrir — dá pra desfazer qualquer uma.',
+        body: 'Segure uma prática pra ver as opções: pular hoje (nada se perde), ajustar as estrelas só desta vez ou editar.',
+        cta: 'Entendi',
       },
     },
     m2: {
-      step1: {
-        title: 'Crie as suas próprias',
-        // 'melhores práticas' é jargão corporativo — refraseado pra escapar.
-        body: 'As práticas que mais transformam são as que você cria. Toca no botão destacado — ou deixa que eu te levo.',
+      seeAll: {
+        title: 'Todas as práticas',
+        body: 'Este botão abre todas as suas práticas, inclusive as que não são de todo dia. É por lá que você cria as suas.',
       },
-      step2: {
+      manage: {
+        title: 'Gerenciar',
+        body: 'Este ícone abre Gerenciar práticas: criar, adotar do catálogo, editar, ordenar e arquivar.',
+      },
+      create: {
         title: 'Toque no +',
-        body: 'Abre o formulário de criação — sem pressa pra preencher.',
+        body: 'O + cria uma prática do seu jeito. Na aba Sugeridas tem um catálogo pronto pra adotar.',
       },
-      step3: {
+      trains: {
         title: 'O que ela treina',
-        body: 'Distribua até 5 estrelas entre as áreas que a prática treina. Mais estrelas, mais Dedicação.',
+        body: 'Escolha as sub-áreas que ela treina e dê de 1 a 5 estrelas pra cada uma. Mais estrelas, mais Dedicação naquela área: 1★ vale +10, 5★ vale +80.',
       },
-      step4: {
-        title: 'Com qual frequência',
-        body: 'Todo dia, em dias da semana ou algumas vezes por mês — você decide a cadência.',
+      often: {
+        title: 'Com que frequência',
+        body: 'Todo dia, em alguns dias da semana ou umas vezes por mês. Com dia marcado, ela aparece na tela Hoje nesse dia; sem dia marcado, fica em Todas as práticas.',
       },
-      step5: {
-        title: 'Sem pressa pra salvar',
-        body: 'Pode fechar sem criar — volte quando quiser criar de verdade.',
-      },
-    },
-    m3: {
-      step1: {
-        title: 'Missões e Metas',
-        body: 'Atalhos pras suas jornadas ficam aqui. Toque em + Missões.',
-      },
-      step2: {
-        title: 'Jornadas maiores',
-        body: 'Objetivos de dias ou semanas, com prêmio no fim. Segure uma pra ver os detalhes.',
-      },
-      step3: {
-        title: 'Os critérios',
-        body: 'Veja o que ela pede. Aceitando, o progresso anda sozinho com suas práticas. Por ora, pode voltar sem aceitar.',
+      coins: {
+        title: 'Quanto vale em moedas',
+        body: 'A Dedicação vem das estrelas; as moedas, você decide: Nada, Metade, Igual (o padrão) ou Dobro. Pode fechar sem salvar — isso é só o tour.',
+        cta: 'Fechar e seguir',
       },
     },
     m4: {
       step1: {
         title: 'Recompensas',
-        body: 'Prêmios reais que você define pra celebrar a prática. Toque na aba Recompensas.',
+        body: 'Você define a recompensa e o preço dela em moedas. Toque na aba Recompensas.',
       },
       step2: {
         title: 'Suas moedas',
-        body: 'Seu saldo, ganho completando práticas. É com ele que você resgata as recompensas daqui.',
+        body: 'Cada prática feita rende Dedicação e paga moedas — por padrão, o mesmo valor nas duas. Dá pra ajustar isso prática a prática. Seu saldo fica aqui.',
       },
       step3: {
-        title: 'Resgate quando quiser',
-        body: 'Um filme, um jantar, um descanso. Resgate com moedas e aproveite na hora. O botão dourado aí embaixo abre Gerenciar — criar, ordenar e ver os resgates; no calendário dá pra desfazer.',
+        title: 'De onde vêm as recompensas',
+        body: 'No botão dourado você cria as suas ou adota uma das sugestões. Quando quiser uma, toque em {{verb}}: as moedas saem e ela é usada na hora. Pode ser um agrado ou o preço de um deslize — quem decide é você.',
       },
     },
     m5: {
       step1: {
-        title: 'Quem você é',
-        body: 'Essa aba é o retrato de quem você é. Toque em Eu pra abrir.',
+        title: 'Quem você está se tornando',
+        body: 'Aqui mora o seu retrato — e ele muda com o que você pratica. Toque na aba Eu.',
       },
       step2: {
         title: 'Três retratos',
-        body: 'Como você se percebe, o que pratica e quem quer se tornar. Alterne aqui em cima.',
+        body: 'Percebida: como você se vê. Praticada: o que suas ações treinam. Desejada: quem você quer se tornar. Troque de retrato por aqui.',
       },
       step3: {
-        title: 'Identidade Percebida',
-        body: 'Como você se vê hoje: o mapa das suas áreas. O perfil completo abre tocando no seu personagem, lá em cima.',
+        title: 'Percebida: comece por aqui',
+        body: 'Diga como você está hoje em cada uma das 6 áreas — leva cerca de um minuto. Quando tiver uns 10 minutos, o questionário de bem-estar, logo abaixo, completa o retrato. Os dois juntos são o seu ponto de partida.',
+        later: 'Depois',
       },
       step4: {
-        title: 'Identidade Praticada',
-        body: 'O que suas ações treinam: a Dedicação que cada área recebe.',
+        title: 'Praticada: o que você treina',
+        body: 'Cada prática feita soma Dedicação nas áreas que ela treina: é aqui que você vê quem seus hábitos estão te treinando a ser. Pular um dia não zera nada.',
       },
       step5: {
-        title: 'Identidade Desejada',
-        body: 'Quem você quer se tornar: seu Norte — a meta que você traça pra cada área, sobre o contorno de onde está hoje.',
+        title: 'Desejada: seu norte',
+        body: 'Quem você quer se tornar. Trace uma meta pra cada área, sobre o contorno de onde você se vê hoje. A distância entre os dois é o que você vai praticar.',
       },
     },
     m6: {
       step1: {
         title: 'Aprender',
-        body: 'Estudos curtos — pra ler, ouvir ou ver — sobre hábitos, identidade e cada área da sua vida. Toque na aba Aprender.',
+        body: 'Ideias curtas, com fonte, sobre hábitos e cada área da sua vida. Toque na aba Aprender.',
       },
       step2: {
-        title: 'Sempre tem novidade',
-        body: 'Explicações curtas e visuais, com material novo toda semana. No seu ritmo.',
+        title: 'O Recanto é feito de ideias',
+        body: 'Cada material vira de 1 a 5 ideias curtas, com fonte. No fim de cada uma, vire o card pra absorver — absorver um material inteiro rende Dedicação e moedas. O que você absorve fica em Minhas ideias, na lâmpada, pra revisar.',
       },
     },
-    m0: {
-      eyebrow: 'TOUR',
-      title: 'Bem-vindo, {{name}}.',
-      body: 'Vamos fazer um tour rápido pelas partes principais do app. Se quiser pular algo, pode revisitar depois em Ajustes.',
-      primary: 'Começar',
-      secondary: 'Pular',
-    },
-    m0_5: {
-      eyebrow: 'POR ONDE COMEÇAR',
-      title: 'Escolha 3 práticas pra começar',
-      body: 'Pegue 3 práticas pra cultivar nas próximas semanas. Você pode trocar e adicionar mais quando quiser.',
-      counter: '{{count}} de {{target}} selecionadas',
-      primary: 'Continuar',
-      secondary: 'Pular esta etapa',
-      skipFallbackHint: 'Vamos adicionar 3 práticas padrão pra você começar.',
+    common: {
+      next: 'Próximo',
+      skipModule: 'Pular este módulo',
+      skipModuleHint: 'Pula o resto desta parte do tour. Dá pra refazer em Ajustes › Refazer onboarding.',
+      skipStep: 'Pular este passo',
+      tryIt: 'Faça isso pra continuar',
+      takeMe: 'Me leva lá',
+      progress: 'Passo {{current}} de {{total}}',
     },
     wrap: {
-      eyebrow: 'PRONTO',
-      title: 'Tudo certo.',
-      body: 'O tour é só o começo. O que faz diferença é o que você pratica. Cada prática marcada é um voto em quem você quer se tornar. Pode revisitar qualquer módulo em Ajustes.',
+      eyebrow: 'Perceba. Pratique. Torne-se.',
+      title: 'O resto é prática.',
+      body: 'O que muda você é o que você pratica. Cada prática marcada é um voto em quem você quer se tornar.',
+      modulesNote: '{{list}} são módulos opcionais. Começam desligados — você liga em {{path}}.',
+      redoNote: 'Quer rever o tour ou a introdução? Está em {{path}}.',
+      listAnd: 'e',
       primary: 'Começar a praticar',
     },
     replay: {
-      title: 'Refazer tutorial',
-      subtitle: 'Revisite qualquer módulo do tour. Refazer um leva você direto pra ele.',
+      title: 'Refazer onboarding',
+      subtitle: 'Refaça tudo desde o começo, ou só a parte que quer rever.',
+      allTitle: 'Refazer onboarding completo',
+      allDesc: 'Introdução, pacote inicial e tour guiado, desde a primeira tela.',
+      allCta: 'Começar do zero',
+      sectionOpening: 'Abertura',
+      sectionGuided: 'Tour guiado',
       replayBtn: 'Refazer',
-      allTitle: 'Refazer o tour completo',
-      allDesc: 'Começa do zero, da tela de boas-vindas.',
+      rowA11y: '{{name}}. {{status}}. Toque pra refazer.',
+      footnote: 'Refazer não apaga nada: suas práticas, recompensas e registros continuam como estão.',
       status: {
-        pending: 'Não visto',
+        pending: 'Ainda não visto',
         in_progress: 'Em andamento',
         completed: 'Concluído',
         skipped: 'Pulado',
       },
       modules: {
-        M0: { name: 'Boas-vindas', desc: 'A tela de abertura do tour.' },
-        M0_5: { name: 'Práticas iniciais', desc: 'Escolher 3 práticas pra começar.' },
-        M1: { name: 'Práticas', desc: 'Concluir, ajustar e desfazer práticas.' },
-        M2: { name: 'Criar prática', desc: 'Montar suas próprias práticas.' },
-        M3: { name: 'Missões', desc: 'Jornadas maiores com prazo.' },
-        M4: { name: 'Recompensas', desc: 'Resgatar recompensas e olhar o histórico.' },
-        M5: { name: 'Eu', desc: 'Os três retratos da sua identidade.' },
-        M6: { name: 'Aprender', desc: 'Estudos pra entender o porquê.' },
+        intro: {
+          name: 'Introdução',
+          desc: 'As telas de abertura: como o Perceva funciona.',
+        },
+        pack: {
+          name: 'Pacote inicial',
+          desc: 'Escolher as primeiras práticas.',
+        },
+        M1: {
+          name: 'Práticas',
+          desc: 'Marcar, ajustar e desfazer práticas no dia.',
+        },
+        M2: {
+          name: 'Criar prática',
+          desc: 'Montar uma prática sua: sub-áreas, estrelas e moedas.',
+        },
+        M4: {
+          name: 'Recompensas',
+          desc: 'Trocar moedas por recompensas que você mesmo define.',
+        },
+        M5: {
+          name: 'Eu',
+          desc: 'Os três retratos: Percebida, Praticada e Desejada.',
+        },
+        M6: {
+          name: 'Aprender',
+          desc: 'Ideias curtas, com fonte, pra ler e absorver.',
+        },
       },
     },
     errors: {
-      adopt: 'Não foi possível adicionar as práticas. Tente de novo.',
+      adopt: 'Não deu pra adicionar as práticas. Tente de novo.',
     },
   },
 
@@ -833,7 +947,8 @@ const pt: Translations = {
   },
 
   avaliacao: {
-    selfAssessmentCta: 'Atualizar self-assessment',
+    selfAssessmentCtaFirst: 'Fazer autoavaliação · 1 min',
+    selfAssessmentCta: 'Atualizar autoavaliação',
     questionnaireFirst: 'Fazer questionário (5-10 min)',
     questionnaireToday: 'Refazer questionário · feito hoje',
     questionnaireDaysAgo: 'Refazer questionário · {{count}}d atrás',
@@ -1292,6 +1407,10 @@ const pt: Translations = {
   },
 
   tasks: {
+    card: {
+      holdHintA11y: 'Segure pra ver mais opções',
+      completeA11y: 'Marcar {{title}} como feita',
+    },
     new: 'Nova prática',
     edit: 'Editar prática',
     fields: {
@@ -1326,13 +1445,13 @@ const pt: Translations = {
     },
     actionSheet: {
       adjustStars: 'Ajustar estrelas',
-      adjustStarsSub: 'Mude o peso dessa conclusão por sub',
+      adjustStarsSub: 'Mude o peso só desta vez, por sub-área',
       skipToday: 'Pular hoje',
       /** Variante de dia passado — a folha também abre de um dia anterior. */
       skipDay: 'Pular em {{date}}',
       skipTodaySub: 'Esconde do dia sem concluir — sem perder nada',
       editTask: 'Editar prática',
-      editTaskSub: 'Mudar título, subs, recorrência, etc',
+      editTaskSub: 'Título, sub-áreas, frequência…',
     },
     completeSheet: {
       totalStars: 'Estrelas totais',
@@ -1340,17 +1459,30 @@ const pt: Translations = {
       log: 'Registrar',
     },
     coinMultiplier: {
+      explain: {
+        double: 'Paga o dobro da Dedicação em moedas.',
+        same: 'Paga em moedas o mesmo que rende de Dedicação.',
+        half: 'Paga em moedas metade do que rende de Dedicação.',
+        none: 'Não rende moedas. A Dedicação conta do mesmo jeito.',
+      },
       label: 'Moedas',
-      hint: 'O XP mede o esforço (as estrelas). As moedas são o quanto você quer se recompensar por essa prática.',
+      hint: 'As estrelas dão a Dedicação. Aqui você decide quantas moedas ela rende.',
       none: 'Nada',
       half: 'Metade',
       same: 'Igual',
       double: 'Dobro',
     },
     subPicker: {
-      pickAtLeastOne: 'Escolha ao menos um sub',
-      countSubs: { one: '{{count}} sub', other: '{{count}} subs' },
-      total: 'total',
+      fewerStarsA11y: 'Uma estrela a menos em {{sub}}',
+      moreStarsA11y: 'Mais uma estrela em {{sub}}',
+      starsScale: 'Dedicação por sub-área, a cada vez que você marca:',
+      starsHelp: 'As estrelas dizem o quanto a prática puxa de você em cada sub-área: 1★ é leve, 5★ é puxado.',
+      countSubs: {
+        other: '{{count}} sub-áreas',
+        one: '{{count}} sub-área',
+      },
+      pickAtLeastOne: 'Nenhuma sub-área escolhida ainda.',
+      total: 'no total',
     },
     difficultyLabel: {
       1: 'Trivial',
@@ -1435,7 +1567,7 @@ const pt: Translations = {
     },
     suggested: {
       hint: 'Toque numa sugestão pra ajustar do seu jeito antes de adicionar — ou no + pra usar como está.',
-      premiumHint: '{{count}}/{{limit}} práticas ativas no plano gratuito · Premium libera ilimitadas',
+      premiumHint: '{{count}}/{{limit}} práticas criadas por você no plano gratuito · as do catálogo são ilimitadas',
       allDims: 'Todas',
       customizeA11y: 'Ajustar {{title}} antes de adicionar',
     },
@@ -1761,7 +1893,7 @@ const pt: Translations = {
     level: 'Nível',
     xp: 'XP',
     coins: 'Moedas',
-    failedToLoad: 'Falha ao carregar personagem.',
+    failedToLoad: 'Não deu pra carregar o seu retrato. Puxe a tela pra baixo pra tentar de novo.',
     sections: {
       stats: 'Estatísticas',
       pillars: 'Pilares',
@@ -1774,7 +1906,7 @@ const pt: Translations = {
       hint: 'O quanto este pilar importa pra você, de 1 a 5 estrelas.',
     },
     selfAssessment: {
-      title: 'Auto-avaliação',
+      title: 'Autoavaliação',
       subtitle: 'Toque pra atualizar sua percepção.',
       cta: 'Atualizar auto-avaliação',
       lastUpdated: 'Atualizado {{when}}',
@@ -2069,7 +2201,7 @@ const pt: Translations = {
         'Os horários seguem o relógio do seu celular. O Android pode segurar um lembrete alguns minutos pra economizar bateria.',
     },
     actions: {
-      replayOnboarding: 'Refazer tutorial',
+      replayOnboarding: 'Refazer onboarding',
       checkForUpdates: 'Buscar atualizações',
       checking: 'Verificando…',
       signOut: 'Sair',
@@ -2266,10 +2398,10 @@ const pt: Translations = {
   },
 
   selfAssessment: {
-    title: 'Auto-avaliação',
+    title: 'Autoavaliação',
     subtitle: 'Como você sente cada pilar agora?',
     pillarPrompt: 'Como está {{pillar}}?',
-    subAttribute: 'sub-atributo',
+    subAttribute: 'sub-área',
     recommendedTasks: 'Práticas recomendadas',
     scale: {
       0: 'Nada',
@@ -2288,7 +2420,7 @@ const pt: Translations = {
       5: 'Mastery. Expanda os limites com quests longas.',
     },
     save: 'Salvar auto-avaliação',
-    saved: 'Auto-avaliação atualizada',
+    saved: 'Autoavaliação atualizada',
   },
 
   questionnaire: {
