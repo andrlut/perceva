@@ -58,7 +58,9 @@ import { DIMENSION_META } from '@/theme/dimensions';
  * `collected` is already true). The idea screen wires that to the
  * `collect_idea` RPC; the rail and the collection leave it undefined so the
  * flip is reveal-only. A collected card renders front-side with a gold rim
- * + a gold check badge and flips freely. The one exception to "once": when
+ * + a gold check badge and flips freely — except with `quiet` (the
+ * collection's own surfaces), where everything is collected and the mark
+ * would only be noise. The one exception to "once": when
  * `collected` goes true → false (the screen rolled back an optimistic
  * collect after a failed RPC) the guard re-arms so the next flip to the
  * back can retry instead of needing a remount.
@@ -111,6 +113,15 @@ export interface IdeaCardProps {
    * undefined renders nothing; the flip, rim and back are untouched.
    */
   kicker?: string;
+  /**
+   * The card lives inside the collection (grid, review pile), where every
+   * card is collected by definition: no gold rim, check badge or glow — the
+   * mark would repeat on every tile and say nothing — and a neutral hairline
+   * instead of the dimension rim, so a grid of mixed dimensions reads as one
+   * calm surface. The dimension still shows in the front gradient and the
+   * back's top bar. Default false.
+   */
+  quiet?: boolean;
   /** Disables the tap (no flip, no haptic). */
   disabled?: boolean;
   testID?: string;
@@ -119,7 +130,7 @@ export interface IdeaCardProps {
 const FLIP_MS = 420;
 /** Width at which the "large" type sizes apply (rail → large is linear). */
 const LARGE_WIDTH = 300;
-/** Collection cell on a 390-pt phone (`collectionCardWidth(390)`) — the mid stop of the claim size. */
+/** Old collection grid cell on a 390-pt phone — the mid stop of the claim size (shelf cards, `shelfCardWidth(390)` = 150, interpolate below it). */
 const COLLECTION_CELL_WIDTH = 171;
 /** Mirror of the old bottom ramp: opaque at the top edge, gone by the end of the band. */
 const OVERLAY_LOCATIONS = [0, 0.55, 1] as const;
@@ -297,6 +308,7 @@ export const IdeaCard = memo(function IdeaCard({
   onOpen,
   openAffordance = 'none',
   kicker,
+  quiet = false,
   disabled = false,
   testID,
 }: IdeaCardProps) {
@@ -340,12 +352,17 @@ export const IdeaCard = memo(function IdeaCard({
       ['rgba(6, 8, 30, 0.92)', withAlpha(dimColor, 0.35), 'rgba(0, 0, 0, 0)'] as const,
     [dimColor],
   );
+  // The gold mark only means something where collected and uncollected cards
+  // sit side by side (material rail, idea screen) — never in the collection.
+  const showCollectedMark = collected && !quiet;
   const frameStyle = useMemo(
     () =>
-      collected
-        ? { borderWidth: 2, borderColor: tokens.semantic.coin }
-        : { borderWidth: 1.5, borderColor: withAlpha(dimColor, 0.7) },
-    [collected, dimColor],
+      quiet
+        ? { borderWidth: 1, borderColor: tokens.border.strong }
+        : showCollectedMark
+          ? { borderWidth: 2, borderColor: tokens.semantic.coin }
+          : { borderWidth: 1.5, borderColor: withAlpha(dimColor, 0.7) },
+    [quiet, showCollectedMark, dimColor],
   );
 
   // ── Flip ──────────────────────────────────────────────────────────────────
@@ -401,7 +418,7 @@ export const IdeaCard = memo(function IdeaCard({
       accessibilityRole="button"
       accessibilityLabel={a11yLabel}
       accessibilityState={{ selected: collected, disabled }}
-      style={[styles.root, { width, height }, collected && styles.rootCollected]}
+      style={[styles.root, { width, height }, showCollectedMark && styles.rootCollected]}
     >
       {/* FRONT — image + tinted gradient + title. Non-interactive: the outer
          Pressable owns the tap. */}
@@ -455,7 +472,7 @@ export const IdeaCard = memo(function IdeaCard({
             {title}
           </Text>
         </View>
-        {collected && (
+        {showCollectedMark && (
           <View style={[styles.badge, { bottom: pad - 2, right: pad - 2 }]}>
             <Ionicons name="checkmark" size={13} color={tokens.bg.deep} />
           </View>

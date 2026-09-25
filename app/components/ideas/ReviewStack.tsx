@@ -55,7 +55,7 @@ import { tokens } from '@/theme';
 
 export interface ReviewStackItem {
   card: IdeaCardData;
-  /** Material title shown above the headline (may be empty). */
+  /** Material title, shown muted under the counter — never on the card (may be empty). */
   kicker: string;
   slug: string;
 }
@@ -230,7 +230,7 @@ function TopCard({
           width={width}
           locale={locale}
           collected
-          kicker={item.kicker || undefined}
+          quiet
           onOpen={open}
           openAffordance="corner"
         />
@@ -291,7 +291,7 @@ const PeekCard = memo(function PeekCard({
         width={width}
         locale={locale}
         collected
-        kicker={item.kicker || undefined}
+        quiet
         disabled
       />
     </Animated.View>
@@ -333,7 +333,14 @@ export function ReviewStack({ items, locale, onDecision, onOpen }: Props) {
 
   return (
     <View style={styles.root}>
-      <Text style={styles.counter}>{t('learning.ideas.review.progress', { n, total })}</Text>
+      <View style={styles.heading}>
+        <Text style={styles.counter}>{t('learning.ideas.review.progress', { n, total })}</Text>
+        {top.kicker ? (
+          <Text style={styles.source} numberOfLines={1}>
+            {top.kicker}
+          </Text>
+        ) : null}
+      </View>
 
       <View style={[styles.deck, { width, height: height + PEEK_OFFSET_Y }]}>
         {peek && (
@@ -400,6 +407,17 @@ const styles = StyleSheet.create({
     gap: tokens.space[3],
     paddingTop: tokens.space[1],
     paddingBottom: tokens.space[2],
+  },
+  heading: {
+    alignItems: 'center',
+    gap: 2,
+    paddingHorizontal: tokens.space[6],
+  },
+  /** The top card's material — context lives outside the card. */
+  source: {
+    ...tokens.type.caption,
+    color: tokens.text.dim,
+    textAlign: 'center',
   },
   counter: {
     ...tokens.type.eyebrow,

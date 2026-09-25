@@ -682,8 +682,9 @@ const en = {
       collectFail: "Couldn't absorb the idea",
       myIdeas: 'My ideas',
       myIdeasEmpty: 'Flip the card at the end of an idea to keep it here.',
+      searchPlaceholder: 'Search your ideas',
+      searchEmpty: 'None of your ideas match “{{query}}”.',
       openIdea: 'Open idea',
-      allDims: 'All',
       nextIdeaLabel: 'Next: {{title}}',
       a11yCardFront: 'Idea card: {{title}}. Tap to flip.',
       a11yCardBack: 'Claim: {{claim}}',
@@ -691,10 +692,6 @@ const en = {
        *  favorite (right) or let it go (left). */
       review: {
         title: 'Review ideas',
-        pending: {
-          one: '{{count}} idea waiting for review',
-          other: '{{count}} ideas waiting for review',
-        },
         hint: 'Swipe right to keep it as a favorite, left to let it go.',
         keep: 'Favorite',
         release: 'Let go',
@@ -702,7 +699,6 @@ const en = {
         released: 'Released',
         done: 'All reviewed',
         doneBody: 'Everything you absorbed has already been reviewed.',
-        favoritesTitle: 'Favorites',
         showAll: 'Show all',
         onlyFavorites: 'Favorites only',
         emptyFavorites: 'No favorites yet. Review your absorbed ideas to pick some.',
@@ -714,6 +710,9 @@ const en = {
         },
         progress: '{{n}} of {{total}}',
         fail: "Couldn't save the review. The idea is back in the pile — try again.",
+        stripBody: 'Favorite or let go of what you absorbed',
+        backToCollection: 'Back to my ideas',
+        countSummary: '{{favorites}} favorites · {{total}} absorbed',
       },
     },
     readFilter: {
