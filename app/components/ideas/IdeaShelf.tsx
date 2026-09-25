@@ -17,8 +17,9 @@ import { DIMENSION_META } from '@/theme/dimensions';
  * Every card here is collected, so they render `quiet` (no gold rim or
  * check: being on the shelf already says it) and carry only their own
  * content — no material kicker. The flip is reveal-only (no `onFirstFlip`,
- * so no RPC ever fires from here) and the round arrow on the back
- * (`openAffordance="corner"`) hands the card to `onOpen`.
+ * so no RPC ever fires from here); press-and-hold hands the card to
+ * `onLongPress` (the screen's menu: open the idea, favorite/unfavorite).
+ * No corner arrow on the back — the claim gets the whole face.
  *
  * Cards are sized so ~2⅓ fit across the screen: the cut-off third is the
  * cue that the row scrolls.
@@ -43,7 +44,7 @@ interface Props {
   cards: IdeaCardData[];
   cardWidth: number;
   locale: IdeaLocale;
-  onOpen: (card: IdeaCardData) => void;
+  onLongPress: (card: IdeaCardData) => void;
 }
 
 const keyExtractor = (c: IdeaCardData) => `${c.materialId}:${c.id}`;
@@ -52,12 +53,12 @@ interface CellProps {
   data: IdeaCardData;
   width: number;
   locale: IdeaLocale;
-  onOpen: (card: IdeaCardData) => void;
+  onLongPress: (card: IdeaCardData) => void;
 }
 
-/** One card — binds `onOpen` to its data so `IdeaCard`'s memo keeps paying. */
-const Cell = memo(function Cell({ data, width, locale, onOpen }: CellProps) {
-  const open = useCallback(() => onOpen(data), [onOpen, data]);
+/** One card — binds `onLongPress` to its data so `IdeaCard`'s memo keeps paying. */
+const Cell = memo(function Cell({ data, width, locale, onLongPress }: CellProps) {
+  const hold = useCallback(() => onLongPress(data), [onLongPress, data]);
   return (
     <IdeaCard
       data={data}
@@ -65,8 +66,7 @@ const Cell = memo(function Cell({ data, width, locale, onOpen }: CellProps) {
       locale={locale}
       collected
       quiet
-      onOpen={open}
-      openAffordance="corner"
+      onLongPress={hold}
     />
   );
 });
@@ -77,15 +77,15 @@ export const IdeaShelf = memo(function IdeaShelf({
   cards,
   cardWidth,
   locale,
-  onOpen,
+  onLongPress,
 }: Props) {
   const dim = DIMENSION_META[dimensionId];
 
   const renderItem = useCallback(
     ({ item }: { item: IdeaCardData }) => (
-      <Cell data={item} width={cardWidth} locale={locale} onOpen={onOpen} />
+      <Cell data={item} width={cardWidth} locale={locale} onLongPress={onLongPress} />
     ),
-    [cardWidth, locale, onOpen],
+    [cardWidth, locale, onLongPress],
   );
 
   return (
