@@ -127,8 +127,31 @@ function iris(id, x, y, size, opacity = 1) {
   </g>`;
 }
 
-const baseSvg = (inner) => Buffer.from(
-  `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg"><rect width="${W}" height="${H}" fill="${C.noite}"/>${inner}</svg>`);
+// Fundo "ambiente" — a linguagem das telas do app (screenAmbient + radar
+// sutil), no lugar do chapado: gradiente vertical, brilho suave na cor da
+// dimensão atrás do texto e anéis do radar sangrando na borda direita.
+// Anéis SEM agulha = textura, não elemento de marca (regra do André intacta).
+const baseSvg = (inner, dimColor = C.violeta) => {
+  const rings = [210, 330, 450, 570, 690].map((r) =>
+    `<circle cx="${W + 40}" cy="430" r="${r}" fill="none" stroke="#BDB3E6" stroke-opacity="0.055" stroke-width="2.5"/>`).join('');
+  return Buffer.from(
+    `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="amb" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#171B3E"/>
+      <stop offset="0.5" stop-color="#0E1230"/>
+      <stop offset="1" stop-color="#0A0E26"/>
+    </linearGradient>
+    <radialGradient id="dimglow" cx="0.22" cy="0.3" r="0.75">
+      <stop offset="0" stop-color="${dimColor}" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="${dimColor}" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="${W}" height="${H}" fill="url(#amb)"/>
+  <rect width="${W}" height="${H}" fill="url(#dimglow)"/>
+  ${rings}
+  ${inner}</svg>`);
+};
 
 function footer(pageLabel, dimColor) {
   return `${iris('foot', 46, H - 122, 76, 0.95)}
@@ -200,7 +223,7 @@ async function slideTexto(outFile, dimColor, eyebrowText, bodyText, opts = {}) {
   <rect x="88" y="238" width="72" height="8" rx="4" fill="${dimColor}"/>
   <text font-family="${fontFam}" font-weight="${weight}" font-size="${size}" fill="${C.areia}">${tspans(lines, 88, y0, lh)}</text>
   ${footer(opts.page, dimColor)}`;
-  await sharp(baseSvg(inner)).removeAlpha().png().toFile(outFile);
+  await sharp(baseSvg(inner, dimColor)).removeAlpha().png().toFile(outFile);
 }
 
 // Slide final v3 (feedback do André): SEMPRE a fonte em destaque + print da
@@ -234,7 +257,7 @@ async function slideCTA(post, imgBuf, outDir) {
   <text x="${W / 2}" y="${btnY + 50}" text-anchor="middle" font-family="Manrope" font-weight="800" font-size="32" fill="#FFFFFF">perceva.app</text>
   ${footer('5 · 5', C.dim[post.dim])}`;
   // Thumb entra como composite raster (o SVG traz o resto por cima/baixo).
-  const base = await sharp(baseSvg('')).toBuffer();
+  const base = await sharp(baseSvg('', C.dim[post.dim])).toBuffer();
   await sharp(base)
     .composite([
       { input: thumb, left: tx, top: ty },
