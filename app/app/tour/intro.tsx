@@ -1,3 +1,5 @@
+import type { ErrorBoundaryProps } from 'expo-router';
+import { TourErrorBoundary } from '@/components/tour/TourErrorBoundary';
 import { Stack } from 'expo-router';
 
 import { IntroPager } from '@/components/tour/intro/IntroPager';
@@ -18,4 +20,9 @@ export default function TourIntroScreen() {
       <IntroPager />
     </>
   );
+}
+
+/** A render error here must never lock the app on every launch. */
+export function ErrorBoundary(props: ErrorBoundaryProps) {
+  return <TourErrorBoundary module="intro" {...props} />;
 }

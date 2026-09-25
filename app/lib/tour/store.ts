@@ -180,7 +180,9 @@ export const useTourStore = create<TourState>((set, get) => ({
     for (const m of [...GUIDED_MODULES, 'wrap'] as const) {
       if (!isTerminal(next[m]?.status)) next[m] = stamp('skipped');
     }
-    set({ modules: next });
+    // A replay in flight ends too — otherwise the replayed (now skipped)
+    // module would stay "current" and keep the tour unfinished.
+    set({ modules: next, replaying: null });
     await persistModules(get().characterId, next);
   },
 }));
