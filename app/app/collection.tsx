@@ -15,14 +15,22 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useBottomSafeClearance } from '@/components/BottomNavBar';
+import { IdeaActionSheet } from '@/components/ideas/IdeaActionSheet';
 import { IdeaShelf, shelfCardWidth } from '@/components/ideas/IdeaShelf';
 import { ScreenBackground } from '@/components/ScreenBackground';
+import { useReviewIdea } from '@/lib/api/learning';
 import type { DimensionId } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { compareAbsorbed, useIdeaCollection } from '@/lib/ideaCollection';
-import { toCardDataFromPublic, type IdeaCardData, type IdeaLocale } from '@/lib/ideas';
+import {
+  pickLocalized,
+  toCardDataFromPublic,
+  type IdeaCardData,
+  type IdeaLocale,
+} from '@/lib/ideas';
 import { buildHaystack, matchesQuery } from '@/lib/learningSearch';
+import { showInfo } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 import { DIMENSION_ORDER } from '@/theme/dimensions';
 
@@ -42,11 +50,15 @@ import { DIMENSION_ORDER } from '@/theme/dimensions';
  * shelves in place and ignores the Favoritas toggle: someone looking for
  * an idea by name wants it wherever it is.
  *
- * Nothing here writes: the flip is reveal-only and the round arrow on the
- * back of a card opens its idea.
+ * Tap flips a card (reveal-only). Press-and-hold opens `IdeaActionSheet`:
+ * open the whole idea, or add/remove it from the favorites — the one write
+ * here, `review_idea` (re-reviewable; on a still-pending idea it also takes
+ * it out of the pile).
  */
 
 type Card = IdeaCardData & { haystack: string; favorite: boolean };
+
+const cardKey = (c: IdeaCardData) => `${c.materialId}:${c.id}`;
 
 export default function CollectionScreen() {
   const router = useRouter();
@@ -61,6 +73,8 @@ export default function CollectionScreen() {
 
   const [onlyFavorites, setOnlyFavorites] = useState(true);
   const [query, setQuery] = useState('');
+  const [menuKey, setMenuKey] = useState<string | null>(null);
+  const { mutate: reviewIdea } = useReviewIdea();
   const searching = query.trim().length > 0;
 
   // Every absorbed idea, in collection order, with its search haystack.
@@ -84,6 +98,12 @@ export default function CollectionScreen() {
         };
       }),
     [absorbed, materials, meta],
+  );
+
+  // Resolved from the live list, so the menu shows the current decision.
+  const menuCard = useMemo(
+    () => (menuKey ? (cards.find((c) => cardKey(c) === menuKey) ?? null) : null),
+    [cards, menuKey],
   );
 
   const favoriteCount = useMemo(() => cards.filter((c) => c.favorite).length, [cards]);
@@ -121,6 +141,35 @@ export default function CollectionScreen() {
     },
     [router],
   );
+
+  const openMenu = useCallback((card: IdeaCardData) => setMenuKey(cardKey(card)), []);
+  const closeMenu = () => setMenuKey(null);
+
+  const openFromMenu = () => {
+    if (!menuCard) return;
+    setMenuKey(null);
+    openIdea(menuCard);
+  };
+
+  // Optimistic like the review pile: the card moves at once, a failed RPC
+  // puts it back and says why.
+  const toggleFavorite = () => {
+    if (!menuCard) return;
+    setMenuKey(null);
+    Haptics.selectionAsync().catch(() => {});
+    reviewIdea(
+      {
+        slug: menuCard.slug,
+        ideaId: menuCard.id,
+        favorite: !menuCard.favorite,
+        materialId: menuCard.materialId,
+      },
+      {
+        onError: (e) =>
+          showInfo(t('learning.ideas.menu.fail'), e instanceof Error ? e.message : ''),
+      },
+    );
+  };
 
   const openReview = () => {
     Haptics.selectionAsync().catch(() => {});
@@ -267,7 +316,7 @@ export default function CollectionScreen() {
                     cards={s.cards}
                     cardWidth={cardWidth}
                     locale={ideaLocale}
-                    onOpen={openIdea}
+                    onLongPress={openMenu}
                   />
                 ))}
               </View>
@@ -276,6 +325,15 @@ export default function CollectionScreen() {
             )}
           </ScrollView>
         )}
+
+        <IdeaActionSheet
+          visible={menuCard != null}
+          ideaTitle={menuCard ? pickLocalized(menuCard.title, ideaLocale) : ''}
+          favorite={menuCard?.favorite ?? false}
+          onCancel={closeMenu}
+          onOpen={openFromMenu}
+          onToggleFavorite={toggleFavorite}
+        />
       </ScreenBackground>
     </SafeAreaView>
   );

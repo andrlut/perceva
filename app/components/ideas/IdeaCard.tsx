@@ -122,6 +122,11 @@ export interface IdeaCardProps {
    * back's top bar. Default false.
    */
   quiet?: boolean;
+  /**
+   * Press-and-hold (the collection opens its menu with it). A haptic marks
+   * the hold; the tap that would flip the card does not fire.
+   */
+  onLongPress?: () => void;
   /** Disables the tap (no flip, no haptic). */
   disabled?: boolean;
   testID?: string;
@@ -309,6 +314,7 @@ export const IdeaCard = memo(function IdeaCard({
   openAffordance = 'none',
   kicker,
   quiet = false,
+  onLongPress,
   disabled = false,
   testID,
 }: IdeaCardProps) {
@@ -406,6 +412,17 @@ export const IdeaCard = memo(function IdeaCard({
     }
   }, [flipped, onFirstFlip, progress, reduceMotion]);
 
+  const onLongPressWithHaptic = useMemo(
+    () =>
+      onLongPress
+        ? () => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+            onLongPress();
+          }
+        : undefined,
+    [onLongPress],
+  );
+
   const a11yLabel = flipped
     ? t('learning.ideas.a11yCardBack', { claim })
     : t('learning.ideas.a11yCardFront', { title });
@@ -413,6 +430,7 @@ export const IdeaCard = memo(function IdeaCard({
   return (
     <Pressable
       onPress={toggle}
+      onLongPress={onLongPressWithHaptic}
       disabled={disabled}
       testID={testID}
       accessibilityRole="button"
