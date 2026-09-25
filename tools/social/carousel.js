@@ -64,13 +64,13 @@ const STR = {
   pt: {
     serie: 'Uma ideia com fonte', claimEyebrow: 'A afirmação', mechEyebrow: 'O mecanismo',
     doEyebrow: 'O que fazer', srcEyebrow: 'A fonte',
-    cta: 'Essa ideia vive no Recanto — a biblioteca do Perceva, onde toda ideia tem fonte.',
+    cta: 'Gostou? Essa ideia vive completa no Perceva — pra ler, ver e ouvir, junto de mais de 100 ideias com fonte.',
     tagline: 'Perceba quem você está se tornando.', dims: DIM_PT,
   },
   en: {
     serie: 'One idea, with a source', claimEyebrow: 'The claim', mechEyebrow: 'The mechanism',
     doEyebrow: 'What to do', srcEyebrow: 'The source',
-    cta: "This idea lives in Perceva's library — where every idea comes with a source.",
+    cta: "Like this? The full idea lives in Perceva — to read, watch and listen, with 100+ sourced ideas.",
     tagline: "See who you're becoming.", dims: DIM_EN,
   },
 };
@@ -89,6 +89,9 @@ function wrap(text, maxChars) {
   if (cur) lines.push(cur);
   return lines;
 }
+
+const roundedMask = (w, h, rx) => Buffer.from(
+  `<svg width="${w}" height="${h}"><rect width="${w}" height="${h}" rx="${rx}" fill="#fff"/></svg>`);
 
 const tspans = (lines, x, y0, lh) =>
   lines.map((l, i) => `<tspan x="${x}" y="${y0 + i * lh}">${esc(l)}</tspan>`).join('');
@@ -188,39 +191,56 @@ async function slideTexto(outFile, dimColor, eyebrowText, bodyText, opts = {}) {
   const y0 = Math.max(330, Math.round((H - blockH) / 2) + 40);
   const fontFam = opts.display ? 'Fraunces' : 'Manrope';
   const weight = opts.display ? 600 : 500;
-  // Referência completa (autor, ano, periódico) — vive no slide "O que fazer"
-  // desde que a capa passou a levar só a forma curta.
-  const fonteBlock = opts.fonteLine
-    ? `<text font-family="Manrope" font-weight="700" font-size="27" fill="${C.dourado}">${tspans(wrap(opts.fonteLine, 62), 88, H - 212, 38)}</text>`
-    : '';
+  // Rótulo de seção só quando o post fornece (estrutura de mito) — os rótulos
+  // genéricos repetidos em todo post saíram no feedback do André. Um elemento
+  // de marca por slide: só o glifo do rodapé.
+  const label = eyebrowText ? `${eyebrow(eyebrowText, 208)}` : '';
   const inner = `
-  ${iris('deco', W - 255, 85, 210, 0.34)}
-  ${eyebrow(eyebrowText, 208)}
+  ${label}
   <rect x="88" y="238" width="72" height="8" rx="4" fill="${dimColor}"/>
   <text font-family="${fontFam}" font-weight="${weight}" font-size="${size}" fill="${C.areia}">${tspans(lines, 88, y0, lh)}</text>
-  ${fonteBlock}
   ${footer(opts.page, dimColor)}`;
   await sharp(baseSvg(inner)).removeAlpha().png().toFile(outFile);
 }
 
-// Slide final PADRÃO (feedback do André): idêntico em todos os posts do idioma —
-// o convite pro app. Glifo grande centrado + CTA + tagline + perceva.app.
-async function slideCTA(post, outDir) {
+// Slide final v3 (feedback do André): SEMPRE a fonte em destaque + print da
+// ideia (play quando post.video=true) + chamada padrão dos formatos do app.
+// Um elemento de marca só: o glifo do rodapé.
+async function slideCTA(post, imgBuf, outDir) {
   const S = STR[langOf(post)];
-  const gsz = 300;
-  const ctaLines = wrap(S.cta, 40);
-  const ctaY = 700;
-  const tagY = ctaY + ctaLines.length * 58 + 82;
+  const fonteLines = wrap(post.fonte, 44);
+  const fonteY = 258;
+  // Thumb 4:5 da ideia com cantos arredondados; play sobreposto se houver vídeo.
+  const tw = 400, th = 500;
+  const tx = (W - tw) / 2, ty = fonteY + fonteLines.length * 52 + 46;
+  const thumb = await sharp(imgBuf).resize({ width: tw, height: th, fit: 'cover' })
+    .composite([{ input: roundedMask(tw, th, 28), blend: 'dest-in' }]).png().toBuffer();
+  const play = post.video
+    ? `<circle cx="${W / 2}" cy="${ty + th / 2}" r="62" fill="rgba(10,14,38,0.62)" stroke="${C.dourado}" stroke-width="3"/>
+       <path d="M ${W / 2 - 18} ${ty + th / 2 - 30} L ${W / 2 + 34} ${ty + th / 2} L ${W / 2 - 18} ${ty + th / 2 + 30} Z" fill="${C.dourado}"/>`
+    : '';
+  const ctaLines = wrap(S.cta, 42);
+  const ctaY = ty + th + 92;
+  const btnY = ctaY + ctaLines.length * 56 + 40;
   const centered = (lines, y0, lh) =>
     lines.map((l, i) => `<tspan x="${W / 2}" y="${y0 + i * lh}">${esc(l)}</tspan>`).join('');
   const inner = `
-  ${iris('cta', (W - gsz) / 2, 240, gsz, 1)}
-  <text text-anchor="middle" font-family="Manrope" font-weight="500" font-size="42" fill="${C.areia}">${centered(ctaLines, ctaY, 58)}</text>
-  <text x="${W / 2}" y="${tagY}" text-anchor="middle" font-family="Fraunces" font-weight="600" font-size="52" fill="${C.dourado}">${esc(S.tagline)}</text>
-  <rect x="${W / 2 - 170}" y="${tagY + 70}" width="340" height="78" rx="39" fill="${C.violeta}"/>
-  <text x="${W / 2}" y="${tagY + 120}" text-anchor="middle" font-family="Manrope" font-weight="800" font-size="32" fill="#FFFFFF">perceva.app</text>
-  ${footer('5 · 5', C.violeta)}`;
-  await sharp(baseSvg(inner)).removeAlpha().png().toFile(path.join(outDir, 'slide-5-perceva.png'));
+  ${eyebrow(S.srcEyebrow, 196)}
+  <rect x="88" y="222" width="72" height="8" rx="4" fill="${C.dim[post.dim]}"/>
+  <text font-family="Manrope" font-weight="700" font-size="38" fill="${C.dourado}">${tspans(fonteLines, 88, fonteY + 44, 52)}</text>
+  ${play}
+  <text text-anchor="middle" font-family="Manrope" font-weight="500" font-size="40" fill="${C.areia}">${centered(ctaLines, ctaY, 56)}</text>
+  <rect x="${W / 2 - 170}" y="${btnY}" width="340" height="78" rx="39" fill="${C.violeta}"/>
+  <text x="${W / 2}" y="${btnY + 50}" text-anchor="middle" font-family="Manrope" font-weight="800" font-size="32" fill="#FFFFFF">perceva.app</text>
+  ${footer('5 · 5', C.dim[post.dim])}`;
+  // Thumb entra como composite raster (o SVG traz o resto por cima/baixo).
+  const base = await sharp(baseSvg('')).toBuffer();
+  await sharp(base)
+    .composite([
+      { input: thumb, left: tx, top: ty },
+      { input: Buffer.from(`<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`), left: 0, top: 0 },
+    ])
+    .removeAlpha().png().toFile(path.join(outDir, 'slide-5-fonte-perceva.png'));
 }
 
 function validate(post) {
@@ -262,12 +282,12 @@ function validate(post) {
     const imgBuf = await fetchImage(post.image_path);
     await slideCapa(post, imgBuf, outDir);
     await slideTexto(path.join(outDir, 'slide-2-afirmacao.png'), C.dim[post.dim],
-      post.eyebrow2 || STR[langOf(post)].claimEyebrow, post.claim, { display: true, size: post.eyebrow2 ? 54 : 62, page: '2 · 5' });
+      post.eyebrow2 || null, post.claim, { display: true, size: post.eyebrow2 ? 54 : 62, page: '2 · 5' });
     await slideTexto(path.join(outDir, 'slide-3-mecanismo.png'), C.dim[post.dim],
-      post.eyebrow3 || STR[langOf(post)].mechEyebrow, post.mecanismo, { size: 47, page: '3 · 5' });
+      post.eyebrow3 || null, post.mecanismo, { size: 47, page: '3 · 5' });
     await slideTexto(path.join(outDir, 'slide-4-o-que-fazer.png'), C.dim[post.dim],
-      STR[langOf(post)].doEyebrow, post.fazer, { size: 50, page: '4 · 5', fonteLine: post.fonte });
-    await slideCTA(post, outDir);
+      null, post.fazer, { size: 50, page: '4 · 5' });
+    await slideCTA(post, imgBuf, outDir);
     if (!used.some((u) => u.image_path === post.image_path && (u.lang || 'pt') === langOf(post)))
       used.push({ image_path: post.image_path, slug: post.slug, date: new Date().toISOString().slice(0, 10), lang: langOf(post) });
     console.log('ok', post.slug);

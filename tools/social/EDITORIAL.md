@@ -5,18 +5,21 @@ Fonte da verdade maior: **Playbook Perceva** (artifact `29ceffd6…`, cap. 7 Voc
 cap. 9 Sistema de conteúdo, Voz e tom, Identidade visual). Este arquivo resume o que o
 gerador não consegue checar sozinho + as lições aprendidas em produção.
 
-## Estrutura do carrossel (5 slides, 1080×1350) — v2, feedback do André (set/2026)
+## Estrutura do carrossel (5 slides, 1080×1350) — v3, feedback do André (set/2026)
 
 1. **Capa** — imagem 4:5 da ideia (bucket `learning-media`) + moldura noite 24px +
    título em Fraunces (SEM selo de série) + **pill com a fonte curta ("Autor, ano")
    no canto superior direito** + dimensão e wordmark.
-2. **A afirmação** (claim) — Fraunces, o dado/tese em uma ou duas frases.
-3. **O mecanismo** — Manrope, como funciona, em até 3 frases.
-4. **O que fazer** — o gesto concreto + **a referência completa** (autor, ano,
-   periódico) em dourado no rodapé do slide.
-5. **Encerramento PADRÃO** — idêntico em todos os posts do idioma: glifo Topo Iris,
-   convite pro Recanto/app, tagline e botão perceva.app. O gerador monta sozinho;
-   nenhum campo do batch alimenta esse slide.
+2. **Claim** — Fraunces, o dado/tese em uma ou duas frases. **Sem rótulo de seção**
+   (rótulos genéricos repetidos saíram); post de mito usa eyebrow2 "O que dizem
+   por aí" — aí sim, é narrativa.
+3. **Mecanismo** — Manrope, como funciona, até 3 frases. Sem rótulo (mito:
+   eyebrow3 "O que a trilha mostra").
+4. **O que fazer** — o gesto concreto. Sem rótulo.
+5. **Fonte + chamada padrão** — SEMPRE: referência completa em destaque (dourado),
+   **print 4:5 da ideia** (com play sobreposto quando o batch marca `"video": true`),
+   chamada padrão dos formatos ("pra ler, ver e ouvir…") e botão perceva.app.
+   Um elemento de marca por slide: só o glifo do rodapé (regra do André).
 
 ## Lições de produção (obrigatórias)
 
