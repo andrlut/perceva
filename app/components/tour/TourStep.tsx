@@ -79,6 +79,8 @@ interface Props extends TourStepData {
   onNext: () => void;
   /** Called by the "Pular este módulo" control — skips the whole module. */
   onSkip: () => void;
+  /** Called by "Sair do tour" — skips every guided module still to come. */
+  onExitTour: () => void;
   /**
    * Called when the user uses the inline "Pular este passo" escape
    * inside an awaitEvent step. Same effect as onNext (advance) but
@@ -102,6 +104,7 @@ export function TourStep({
   flatNav = false,
   onNext,
   onSkip,
+  onExitTour,
   onSkipStep,
 }: Props) {
   const { t } = useT();
@@ -126,6 +129,10 @@ export function TourStep({
   const handleSkip = () => {
     Haptics.selectionAsync().catch(() => {});
     onSkip();
+  };
+  const handleExitTour = () => {
+    Haptics.selectionAsync().catch(() => {});
+    onExitTour();
   };
   const handleSkipStep = () => {
     Haptics.selectionAsync().catch(() => {});
@@ -230,8 +237,8 @@ export function TourStep({
             </Pressable>
           )}
 
-          {/* The ONE way out of the whole module — behind a hairline so it
-             never reads as part of the step's own action. */}
+          {/* The ways out — this module, or the whole tour — behind a hairline
+             so they never read as part of the step's own action. */}
           <View style={styles.footer}>
             <Pressable
               onPress={handleSkip}
@@ -253,6 +260,20 @@ export function TourStep({
               <Text style={styles.skipModule}>
                 {t('tour.common.skipModule')}
               </Text>
+            </Pressable>
+            <Pressable
+              onPress={handleExitTour}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              style={({ pressed }) => [
+                styles.linkBtn,
+                styles.skipModuleBtn,
+                pressed && { opacity: 0.6 },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={t('tour.common.exitTour')}
+            >
+              <Ionicons name="close-circle-outline" size={15} color={tokens.text.mid} />
+              <Text style={styles.skipModule}>{t('tour.common.exitTour')}</Text>
             </Pressable>
           </View>
         </View>
@@ -393,6 +414,10 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
   footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    columnGap: tokens.space[3],
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: tokens.border.strong,
     paddingTop: tokens.space[2],

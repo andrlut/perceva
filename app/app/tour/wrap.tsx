@@ -1,3 +1,5 @@
+import type { ErrorBoundaryProps } from 'expo-router';
+import { TourErrorBoundary } from '@/components/tour/TourErrorBoundary';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
 import { useEffect } from 'react';
@@ -123,3 +125,8 @@ const styles = StyleSheet.create({
     backgroundColor: tokens.border.base,
   },
 });
+
+/** A render error here must never lock the app on every launch. */
+export function ErrorBoundary(props: ErrorBoundaryProps) {
+  return <TourErrorBoundary module="wrap" {...props} />;
+}

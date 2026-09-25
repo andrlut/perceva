@@ -231,6 +231,17 @@ export function TourModule({
       onExitScreen?.();
     });
   };
+  // "Sair do tour": every guided module still to come (and the closing
+  // screen) is skipped at once; the user stays where they are.
+  const handleExitTour = () => {
+    void useTourStore
+      .getState()
+      .skipGuidedTour()
+      .then(() => {
+        setStepIndex(module, 0);
+        onExitScreen?.();
+      });
+  };
   // Fallback advance for `assistSkipsToSameScreen` steps: land on the
   // next step of THIS screen, or finish the module when none is left.
   const handleAssistSkip = () => {
@@ -252,6 +263,7 @@ export function TourModule({
       totalSteps={steps.length}
       onNext={handleNext}
       onSkip={handleSkip}
+      onExitTour={handleExitTour}
       onSkipStep={step.assistSkipsToSameScreen ? handleAssistSkip : undefined}
     />
   );
