@@ -5,15 +5,18 @@ Fonte da verdade maior: **Playbook Perceva** (artifact `29ceffd6…`, cap. 7 Voc
 cap. 9 Sistema de conteúdo, Voz e tom, Identidade visual). Este arquivo resume o que o
 gerador não consegue checar sozinho + as lições aprendidas em produção.
 
-## Estrutura do carrossel (5 slides, 1080×1350)
+## Estrutura do carrossel (5 slides, 1080×1350) — v2, feedback do André (set/2026)
 
 1. **Capa** — imagem 4:5 da ideia (bucket `learning-media`) + moldura noite 24px +
-   eyebrow "UMA IDEIA COM FONTE" + título em Fraunces + dimensão e wordmark.
+   título em Fraunces (SEM selo de série) + **pill com a fonte curta ("Autor, ano")
+   no canto superior direito** + dimensão e wordmark.
 2. **A afirmação** (claim) — Fraunces, o dado/tese em uma ou duas frases.
 3. **O mecanismo** — Manrope, como funciona, em até 3 frases.
-4. **O que fazer** — o gesto concreto que a pessoa executa hoje.
-5. **A fonte** — card-resumo + fonte (autor, ano, periódico) em dourado + CTA Recanto +
-   tagline "Perceba quem você está se tornando."
+4. **O que fazer** — o gesto concreto + **a referência completa** (autor, ano,
+   periódico) em dourado no rodapé do slide.
+5. **Encerramento PADRÃO** — idêntico em todos os posts do idioma: glifo Topo Iris,
+   convite pro Recanto/app, tagline e botão perceva.app. O gerador monta sozinho;
+   nenhum campo do batch alimenta esse slide.
 
 ## Lições de produção (obrigatórias)
 

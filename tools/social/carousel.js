@@ -157,6 +157,10 @@ async function slideCapa(post, imgBuf, outDir) {
   const titleBottom = H - 96 - 44;
   const titleY0 = titleBottom - (titleLines.length - 1) * titleLh - 40;
   const scrimH = Math.max(560, H - titleY0 + 260);
+  // Referência curta ("Autor, ano") no canto superior direito da capa —
+  // feedback do André: o selo de série saiu, a fonte ganha presença na chamada.
+  const fonteCurta = post.fonte.split('·')[0].trim();
+  const pillW = Math.round(fonteCurta.length * 14.5) + 56;
   const overlay = Buffer.from(`<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
   <defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0" stop-color="${C.noite}" stop-opacity="0"/>
@@ -164,7 +168,8 @@ async function slideCapa(post, imgBuf, outDir) {
     <stop offset="1" stop-color="${C.noite}" stop-opacity="0.97"/>
   </linearGradient></defs>
   <rect x="${inner}" y="${H - scrimH}" width="${W - inner * 2}" height="${scrimH - inner}" fill="url(#s)"/>
-  ${eyebrow(S.serie, titleY0 - 78)}
+  <rect x="${W - 52 - pillW}" y="60" width="${pillW}" height="56" rx="28" fill="rgba(10,14,38,0.62)" stroke="rgba(255,220,143,0.35)" stroke-width="1.5"/>
+  <text x="${W - 52 - pillW / 2}" y="97" text-anchor="middle" font-family="Manrope" font-weight="700" font-size="27" fill="${C.dourado}">${esc(fonteCurta)}</text>
   <text font-family="Fraunces" font-weight="600" font-size="${titleSize}" fill="${C.areia}">${tspans(titleLines, 88, titleY0, titleLh)}</text>
   <text x="88" y="${H - 96}" font-family="Manrope" font-weight="700" font-size="28" fill="${C.dim[post.dim]}">${esc(S.dims[post.dim])}</text>
   <text x="${W - 88}" y="${H - 96}" text-anchor="end" font-family="Manrope" font-weight="700" font-size="28" fill="${C.nevoa}">Perceva</text>
@@ -183,45 +188,39 @@ async function slideTexto(outFile, dimColor, eyebrowText, bodyText, opts = {}) {
   const y0 = Math.max(330, Math.round((H - blockH) / 2) + 40);
   const fontFam = opts.display ? 'Fraunces' : 'Manrope';
   const weight = opts.display ? 600 : 500;
+  // Referência completa (autor, ano, periódico) — vive no slide "O que fazer"
+  // desde que a capa passou a levar só a forma curta.
+  const fonteBlock = opts.fonteLine
+    ? `<text font-family="Manrope" font-weight="700" font-size="27" fill="${C.dourado}">${tspans(wrap(opts.fonteLine, 62), 88, H - 212, 38)}</text>`
+    : '';
   const inner = `
   ${iris('deco', W - 255, 85, 210, 0.34)}
   ${eyebrow(eyebrowText, 208)}
   <rect x="88" y="238" width="72" height="8" rx="4" fill="${dimColor}"/>
   <text font-family="${fontFam}" font-weight="${weight}" font-size="${size}" fill="${C.areia}">${tspans(lines, 88, y0, lh)}</text>
+  ${fonteBlock}
   ${footer(opts.page, dimColor)}`;
   await sharp(baseSvg(inner)).removeAlpha().png().toFile(outFile);
 }
 
-async function slideFonte(post, outDir) {
+// Slide final PADRÃO (feedback do André): idêntico em todos os posts do idioma —
+// o convite pro app. Glifo grande centrado + CTA + tagline + perceva.app.
+async function slideCTA(post, outDir) {
   const S = STR[langOf(post)];
-  const cardX = 88, cardW = W - 176, cardY = 290, pad = 48;
-  // Claim longo é cortado na fronteira de frase pra caber no card-resumo.
-  let claim = post.claim;
-  if (claim.length > 150) {
-    const cut = claim.slice(0, 150).lastIndexOf('. ');
-    if (cut > 60) claim = claim.slice(0, cut + 1);
-  }
-  const titleLines = wrap(post.titulo, 34);
-  const claimLines = wrap(claim, 46);
-  const fonteLines = wrap(post.fonte, 48);
-  // Card cresce com o conteúdo — nunca sobrepõe (bug corrigido no lote 01).
-  const titleY = cardY + pad + 40;
-  const claimY = titleY + titleLines.length * 52 - 52 + 74;
-  const fonteY = claimY + claimLines.length * 43 - 43 + 66;
-  const cardH = fonteY + fonteLines.length * 40 - 40 + pad - cardY + 8;
-  const ctaY = cardY + cardH + 110;
-  const tagY = ctaY + 2 * 56 + 66;
+  const gsz = 300;
+  const ctaLines = wrap(S.cta, 40);
+  const ctaY = 700;
+  const tagY = ctaY + ctaLines.length * 58 + 82;
+  const centered = (lines, y0, lh) =>
+    lines.map((l, i) => `<tspan x="${W / 2}" y="${y0 + i * lh}">${esc(l)}</tspan>`).join('');
   const inner = `
-  ${eyebrow(S.srcEyebrow, 200)}
-  <rect x="88" y="230" width="72" height="8" rx="4" fill="${C.dim[post.dim]}"/>
-  <rect x="${cardX}" y="${cardY}" width="${cardW}" height="${cardH}" rx="28" fill="${C.superficie}" stroke="${C.dim[post.dim]}" stroke-opacity="0.55" stroke-width="3"/>
-  <text font-family="Manrope" font-weight="700" font-size="40" fill="${C.areia}">${tspans(titleLines, cardX + pad, titleY, 52)}</text>
-  <text font-family="Manrope" font-weight="500" font-size="31" fill="${C.nevoa}">${tspans(claimLines, cardX + pad, claimY, 43)}</text>
-  <text font-family="Manrope" font-weight="700" font-size="29" fill="${C.dourado}">${tspans(fonteLines, cardX + pad, fonteY, 40)}</text>
-  <text font-family="Manrope" font-weight="500" font-size="40" fill="${C.areia}">${tspans(wrap(S.cta, 42), 88, ctaY, 56)}</text>
-  <text x="88" y="${tagY}" font-family="Fraunces" font-weight="600" font-size="46" fill="${C.dourado}">${esc(S.tagline)}</text>
-  ${footer('perceva.app', C.dim[post.dim])}`;
-  await sharp(baseSvg(inner)).removeAlpha().png().toFile(path.join(outDir, 'slide-5-fonte.png'));
+  ${iris('cta', (W - gsz) / 2, 240, gsz, 1)}
+  <text text-anchor="middle" font-family="Manrope" font-weight="500" font-size="42" fill="${C.areia}">${centered(ctaLines, ctaY, 58)}</text>
+  <text x="${W / 2}" y="${tagY}" text-anchor="middle" font-family="Fraunces" font-weight="600" font-size="52" fill="${C.dourado}">${esc(S.tagline)}</text>
+  <rect x="${W / 2 - 170}" y="${tagY + 70}" width="340" height="78" rx="39" fill="${C.violeta}"/>
+  <text x="${W / 2}" y="${tagY + 120}" text-anchor="middle" font-family="Manrope" font-weight="800" font-size="32" fill="#FFFFFF">perceva.app</text>
+  ${footer('5 · 5', C.violeta)}`;
+  await sharp(baseSvg(inner)).removeAlpha().png().toFile(path.join(outDir, 'slide-5-perceva.png'));
 }
 
 function validate(post) {
@@ -267,8 +266,8 @@ function validate(post) {
     await slideTexto(path.join(outDir, 'slide-3-mecanismo.png'), C.dim[post.dim],
       post.eyebrow3 || STR[langOf(post)].mechEyebrow, post.mecanismo, { size: 47, page: '3 · 5' });
     await slideTexto(path.join(outDir, 'slide-4-o-que-fazer.png'), C.dim[post.dim],
-      STR[langOf(post)].doEyebrow, post.fazer, { size: 50, page: '4 · 5' });
-    await slideFonte(post, outDir);
+      STR[langOf(post)].doEyebrow, post.fazer, { size: 50, page: '4 · 5', fonteLine: post.fonte });
+    await slideCTA(post, outDir);
     if (!used.some((u) => u.image_path === post.image_path && (u.lang || 'pt') === langOf(post)))
       used.push({ image_path: post.image_path, slug: post.slug, date: new Date().toISOString().slice(0, 10), lang: langOf(post) });
     console.log('ok', post.slug);
