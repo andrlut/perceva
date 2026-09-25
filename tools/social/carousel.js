@@ -93,20 +93,42 @@ function wrap(text, maxChars) {
 const tspans = (lines, x, y0, lh) =>
   lines.map((l, i) => `<tspan x="${x}" y="${y0 + i * lh}">${esc(l)}</tspan>`).join('');
 
-function iris(cx, cy, r, ringColor, ringOp) {
-  const rings = [0.28, 0.52, 0.76, 1].map((f) =>
-    `<circle cx="${cx}" cy="${cy}" r="${r * f}" fill="none" stroke="${ringColor}" stroke-opacity="${ringOp}" stroke-width="${r * 0.045}"/>`).join('');
-  const dx = r * 0.72, dy = r * 0.48;
-  return `${rings}
-  <line x1="${cx - dx}" y1="${cy + dy}" x2="${cx + dx}" y2="${cy - dy}" stroke="${C.douradoEscuro}" stroke-width="${r * 0.1}" stroke-linecap="round"/>
-  <circle cx="${cx}" cy="${cy}" r="${r * 0.13}" fill="${C.dourado}"/>`;
+// Glifo CANÔNICO "Topo Iris" — mesma spec de app/scripts/export-perceva-icons.mjs
+// (agulha curva com pontas em bolinha, canal recortado nos anéis, pupila-esfera).
+// `id` precisa ser único dentro do MESMO SVG (mask/gradient não podem colidir).
+const GLYPH_PATH = 'M 180 720 Q 380 600 512 512 Q 644 424 844 304';
+function iris(id, x, y, size, opacity = 1) {
+  const s = size / 1024;
+  return `
+  <defs>
+    <radialGradient id="pupil-${id}" cx="0.4" cy="0.4" r="0.7">
+      <stop offset="0" stop-color="#FFDC8F"/><stop offset="1" stop-color="#8A5C0F"/>
+    </radialGradient>
+    <mask id="rings-${id}">
+      <rect x="0" y="0" width="1024" height="1024" fill="white"/>
+      <path d="${GLYPH_PATH}" fill="none" stroke="black" stroke-width="60" stroke-linecap="round"/>
+    </mask>
+  </defs>
+  <g transform="translate(${x},${y}) scale(${s})" opacity="${opacity}">
+    <g mask="url(#rings-${id})" stroke="#FFE3A6" fill="none" stroke-width="14">
+      <circle cx="512" cy="512" r="320" opacity="0.45"/>
+      <circle cx="512" cy="512" r="260" opacity="0.55"/>
+      <circle cx="512" cy="512" r="200" opacity="0.7"/>
+      <circle cx="512" cy="512" r="140" opacity="0.85"/>
+      <circle cx="512" cy="512" r="80" opacity="1"/>
+    </g>
+    <path d="${GLYPH_PATH}" fill="none" stroke="#FFDC8F" stroke-width="22" stroke-linecap="round"/>
+    <circle cx="180" cy="720" r="18" fill="#FFDC8F"/>
+    <circle cx="844" cy="304" r="22" fill="#FFDC8F"/>
+    <circle cx="512" cy="512" r="38" fill="url(#pupil-${id})"/>
+  </g>`;
 }
 
 const baseSvg = (inner) => Buffer.from(
   `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg"><rect width="${W}" height="${H}" fill="${C.noite}"/>${inner}</svg>`);
 
 function footer(pageLabel, dimColor) {
-  return `${iris(84, H - 84, 34, '#BDB3E6', 0.45)}
+  return `${iris('foot', 46, H - 122, 76, 0.95)}
   <text x="140" y="${H - 76}" font-family="Manrope" font-weight="700" font-size="28" fill="${C.areia}">Perceva</text>
   <text x="${W - 64}" y="${H - 76}" text-anchor="end" font-family="Manrope" font-weight="700" font-size="26" fill="${C.nevoa}">${esc(pageLabel)}</text>
   <rect x="0" y="0" width="12" height="${H}" fill="${dimColor}"/>`;
@@ -162,7 +184,7 @@ async function slideTexto(outFile, dimColor, eyebrowText, bodyText, opts = {}) {
   const fontFam = opts.display ? 'Fraunces' : 'Manrope';
   const weight = opts.display ? 600 : 500;
   const inner = `
-  ${iris(W - 150, 190, 95, '#BDB3E6', 0.16)}
+  ${iris('deco', W - 255, 85, 210, 0.34)}
   ${eyebrow(eyebrowText, 208)}
   <rect x="88" y="238" width="72" height="8" rx="4" fill="${dimColor}"/>
   <text font-family="${fontFam}" font-weight="${weight}" font-size="${size}" fill="${C.areia}">${tspans(lines, 88, y0, lh)}</text>
