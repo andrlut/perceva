@@ -45,8 +45,8 @@ import { DIMENSION_META, DIMENSION_ORDER } from '@/theme/dimensions';
  *
  * Data: every published idea (`useIdeaCards()`, the `learning_idea_public`
  * view) joined with the user's review rows (`useIdeaReviews()`, one per
- * absorbed idea); material titles come from the feed cards for the kicker
- * above each headline. The grid shows favorites by default, newest decision
+ * absorbed idea); material titles come from the feed cards, for the line
+ * under the review pile's counter (cards themselves carry no material name). The grid shows favorites by default, newest decision
  * first; "Ver todas" widens it to everything absorbed. Dimension pills
  * narrow whatever is shown. Nothing here ever calls `collect_idea`; the
  * only write is `review_idea` through `useReviewIdea()` (optimistic, so
@@ -97,7 +97,7 @@ export default function CollectionScreen() {
   const pendingReviews = reviews.data?.pending ?? EMPTY_PENDING;
 
   // material_id → title in the app locale (other language as fallback) —
-  // the kicker above every headline shown outside its material.
+  // the review pile shows the top card's material under its counter.
   const titles = useMemo(() => {
     const map = new Map<string, string>();
     for (const card of feed.data ?? []) {
@@ -358,7 +358,6 @@ export default function CollectionScreen() {
           <CollectionGrid
             cards={visible}
             locale={ideaLocale}
-            kickers={titles}
             onOpen={openIdea}
             paddingBottom={bottomClearance}
             ListHeaderComponent={header}

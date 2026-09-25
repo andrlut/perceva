@@ -7,14 +7,14 @@ import { tokens } from '@/theme';
 
 /**
  * Two-column grid of absorbed idea cards — the body of "Minhas ideias".
- * Every card here is collected (gold rim), the flip is reveal-only (no
+ * Every card here is collected, so they render `quiet` (no gold rim or
+ * check: being here already says it), the flip is reveal-only (no
  * `onFirstFlip`, so no RPC ever fires from this screen) and the round arrow
  * in the top-right corner of the back (`openAffordance="corner"`) hands the
  * card to `onOpen` — the only surface where a card opens its idea itself.
  *
- * Cards live outside their material here, so each front carries a kicker
- * with the material title (`kickers`: material_id → localized title); a
- * secondary idea's headline loses its context alone.
+ * The front carries only the card's own content — no material kicker; the
+ * titles name their subject on their own (editorial rule since 2026-09-11).
  *
  * The parent owns filtering, the header (review stack / filter pills) and
  * the empty state; this component only lays cards out at
@@ -34,8 +34,6 @@ interface Props {
   locale: IdeaLocale;
   /** Fired by the corner arrow on the back face. */
   onOpen: (card: IdeaCardData) => void;
-  /** material_id → material title, shown as the kicker above each headline. */
-  kickers?: ReadonlyMap<string, string>;
   ListHeaderComponent?: ReactElement | null;
   ListEmptyComponent?: ReactElement | null;
   /** Extra bottom padding (safe-area / gesture-bar clearance). */
@@ -49,12 +47,11 @@ interface CellProps {
   data: IdeaCardData;
   width: number;
   locale: IdeaLocale;
-  kicker?: string;
   onOpen: (card: IdeaCardData) => void;
 }
 
 /** One cell — binds `onOpen` to its card so `IdeaCard`'s memo keeps paying. */
-const Cell = memo(function Cell({ data, width, locale, kicker, onOpen }: CellProps) {
+const Cell = memo(function Cell({ data, width, locale, onOpen }: CellProps) {
   const open = useCallback(() => onOpen(data), [onOpen, data]);
   return (
     <IdeaCard
@@ -62,7 +59,7 @@ const Cell = memo(function Cell({ data, width, locale, kicker, onOpen }: CellPro
       width={width}
       locale={locale}
       collected
-      kicker={kicker}
+      quiet
       onOpen={open}
       openAffordance="corner"
     />
@@ -73,7 +70,6 @@ export function CollectionGrid({
   cards,
   locale,
   onOpen,
-  kickers,
   ListHeaderComponent = null,
   ListEmptyComponent = null,
   paddingBottom = 0,
@@ -87,11 +83,10 @@ export function CollectionGrid({
         data={item}
         width={cardW}
         locale={locale}
-        kicker={kickers?.get(item.materialId) || undefined}
         onOpen={onOpen}
       />
     ),
-    [cardW, locale, kickers, onOpen],
+    [cardW, locale, onOpen],
   );
 
   return (
