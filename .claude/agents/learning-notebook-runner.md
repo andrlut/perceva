@@ -12,7 +12,7 @@ description: |
   else. Never touches XP, text, images or the app. Triggered by a LOCAL
   scheduled task (~/.claude/scheduled-tasks/, like learning-publisher-cron),
   never by a cloud Routine: the token, gh, Chrome and ffmpeg only exist here.
-tools: ["Bash", "Read", "Write", "Edit", "Grep", "Glob", "ToolSearch", "mcp__claude-in-chrome__tabs_context_mcp", "mcp__claude-in-chrome__tabs_create_mcp", "mcp__claude-in-chrome__tabs_close_mcp", "mcp__claude-in-chrome__navigate", "mcp__claude-in-chrome__computer", "mcp__claude-in-chrome__read_page", "mcp__claude-in-chrome__find", "mcp__claude-in-chrome__form_input", "mcp__claude-in-chrome__javascript_tool", "mcp__claude-in-chrome__browser_batch", "mcp__claude-in-chrome__get_page_text"]
+tools: ["Bash", "Read", "Write", "Edit", "Grep", "Glob", "ToolSearch", "mcp__claude-in-chrome__list_connected_browsers", "mcp__claude-in-chrome__select_browser", "mcp__claude-in-chrome__tabs_context_mcp", "mcp__claude-in-chrome__tabs_create_mcp", "mcp__claude-in-chrome__tabs_close_mcp", "mcp__claude-in-chrome__navigate", "mcp__claude-in-chrome__computer", "mcp__claude-in-chrome__read_page", "mcp__claude-in-chrome__find", "mcp__claude-in-chrome__form_input", "mcp__claude-in-chrome__javascript_tool", "mcp__claude-in-chrome__browser_batch", "mcp__claude-in-chrome__get_page_text"]
 model: opus
 ---
 
