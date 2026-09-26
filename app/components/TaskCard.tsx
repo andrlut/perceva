@@ -26,7 +26,7 @@ import { DIMENSION_META } from '@/theme/dimensions';
 import { SubColoredPips } from '@/components/SubColoredPips';
 import { useMetaLookup } from '@/lib/i18n/meta';
 
-import { CoinIcon } from './CoinIcon';
+import { CoinMultiplierBadge } from './CoinMultiplierBadge';
 import { SubStack } from './SubStack';
 
 interface Props {
@@ -75,7 +75,7 @@ const SWIPE_MAX = 160;
  * right) completes. Long-press opens the per-sub adjust popup.
  *
  * Legibility (first-user feedback 2026-09, "tiny and confusing"): the meta
- * line — the green reward number the tour points at, the coin tag and the
+ * line — the green reward number the tour points at, the coin-multiplier badge and the
  * cadence note — is 13px, and the cadence note moved from text.faint italic
  * (~2.3:1 on the card) to text.mid.
  */
@@ -295,14 +295,9 @@ export function TaskCard({
               )}
               <SubColoredPips subs={task.subs} size={5} />
               <Text style={styles.rewardValue}>+{reward.total.xp}</Text>
-              {/* Coins only when they differ from the XP (the practice is not
-                  on "Igual") — otherwise the XP figure already says it. */}
-              {task.coin_multiplier !== 1 && (
-                <View style={styles.coinTag}>
-                  <CoinIcon size={13} />
-                  <Text style={styles.coinTagText}>{reward.total.coins}</Text>
-                </View>
-              )}
+              {/* Coins only speak when they differ from the XP (not on
+                  "Igual"): a quiet nada / ½ / 2× beside the number. */}
+              <CoinMultiplierBadge multiplier={task.coin_multiplier} />
               {showRecurrenceNote && (
                 <Text style={styles.recurrenceNote} numberOfLines={1}>
                   · {describeRecurrence(task.recurrence, task.target_count, t)}
@@ -452,19 +447,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 13,
     color: tokens.semantic.xp,
-    letterSpacing: 0.2,
-  },
-  coinTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-  },
-  // Neutral text beside the gold coin: the icon carries the colour, and gold
-  // as 11dp text would miss AA on the light theme.
-  coinTagText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 13,
-    color: tokens.text.mid,
     letterSpacing: 0.2,
   },
   recurrenceNote: {

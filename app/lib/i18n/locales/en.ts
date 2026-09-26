@@ -1459,6 +1459,11 @@ const en = {
         half: 'Pays in coins half of what it earns in Dedication.',
         none: 'Earns no coins. Your Dedication counts just the same.',
       },
+      badge: {
+        none: 'none',
+        half: '½',
+        double: '2×',
+      },
       label: 'Coins',
       hint: 'Stars set the Dedication. Here you decide how many coins it earns.',
       none: 'None',

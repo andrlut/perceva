@@ -29,7 +29,7 @@ import {
 } from '@/components/AdoptPeriodicitySheet';
 import { useBottomSafeClearance } from '@/components/BottomNavBar';
 import { BucketTabsV2 } from '@/components/BucketTabsV2';
-import { CoinIcon } from '@/components/CoinIcon';
+import { CoinMultiplierBadge } from '@/components/CoinMultiplierBadge';
 import { EmptyHero } from '@/components/EmptyHero';
 import { PeriodicitySheet } from '@/components/PeriodicitySheet';
 import { ScreenBackground } from '@/components/ScreenBackground';
@@ -1214,12 +1214,7 @@ function ManageRow({
                 )}
                 <SubColoredPips subs={task.subs} size={5} />
                 <Text style={styles.rewardValue}>+{reward.total.xp}</Text>
-                {task.coin_multiplier !== 1 && (
-                  <View style={styles.coinTag}>
-                    <CoinIcon size={10} />
-                    <Text style={styles.coinTagText}>{reward.total.coins}</Text>
-                  </View>
-                )}
+                <CoinMultiplierBadge multiplier={task.coin_multiplier} />
                 {showRecurrence && (
                   <Text style={styles.recurrenceNote} numberOfLines={1}>
                     · {recurrenceLabel}
@@ -1916,17 +1911,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 11,
     color: tokens.semantic.xp,
-    letterSpacing: 0.2,
-  },
-  coinTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-  },
-  coinTagText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 11,
-    color: tokens.text.mid,
     letterSpacing: 0.2,
   },
   // The row's only statement of WHEN inside Periódicas — text.mid (AA on
