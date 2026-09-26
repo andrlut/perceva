@@ -67,7 +67,27 @@ write the manifest, print the marker, print the `RESULT:` line, stop —
 ## 0. Preflight — fail fast, never hang
 
 1. **Load the Chrome tools in ONE `ToolSearch` call:**
-   `select:mcp__claude-in-chrome__tabs_context_mcp,mcp__claude-in-chrome__navigate,mcp__claude-in-chrome__computer,mcp__claude-in-chrome__read_page,mcp__claude-in-chrome__find,mcp__claude-in-chrome__form_input,mcp__claude-in-chrome__javascript_tool,mcp__claude-in-chrome__browser_batch,mcp__claude-in-chrome__tabs_create_mcp,mcp__claude-in-chrome__tabs_close_mcp`
+   `select:mcp__claude-in-chrome__list_connected_browsers,mcp__claude-in-chrome__select_browser,mcp__claude-in-chrome__tabs_context_mcp,mcp__claude-in-chrome__navigate,mcp__claude-in-chrome__computer,mcp__claude-in-chrome__read_page,mcp__claude-in-chrome__find,mcp__claude-in-chrome__form_input,mcp__claude-in-chrome__javascript_tool,mcp__claude-in-chrome__browser_batch,mcp__claude-in-chrome__tabs_create_mcp,mcp__claude-in-chrome__tabs_close_mcp`
+1b. **Pick the right Chrome — by account, never by name.** More than one
+   Chrome has the extension connected on this machine (one is Artur's:
+   artur.luthold@gmail.com default, plus login@/admin@perceva.app), and the
+   `inUse` pick and the "Browser N" names are not stable. The "perceva · …"
+   notebooks belong to **andre.luthold@gmail.com**, and Gemini Notebook
+   always uses the Chrome's **default (index 0) account** — `?authuser=` loops
+   into ERR_TOO_MANY_REDIRECTS and `accounts.google.com` is blocked for the
+   extension, so the account cannot be switched from here. For each browser
+   in `list_connected_browsers`: `select_browser`, open a tab on a **known
+   perceva notebook URL from a manifest** (never the `notebook.google.com/`
+   root — under an account with no notebooks it auto-creates an empty one),
+   then in that tab run
+   `fetch('https://accounts.google.com/ListAccounts?gpsia=1&source=ogb&json=standard',{credentials:'include'})`,
+   replace `\x22` with `"`, and read the emails in order from the
+   `"gaia.l.a",1,"<name>","<email>"` tuples. Keep the browser whose index 0
+   is `andre.luthold@gmail.com` **and** whose notebook tab did not land on
+   `/accessrequest/`; close the probe tabs you opened in the others. None
+   qualifies → manifest `status: "blocked"`,
+   `CHROME_BLOCKED: no connected Chrome has andre.luthold@gmail.com as default account`,
+   `RESULT: blocked`, generate nothing.
 2. `tabs_context_mcp`. The two ways the extension blocks, and both look like
    the misleading error *"site blocked"* even on `tabs_context`:
    - the tab **in focus** in the user's Chrome is on a domain outside the
