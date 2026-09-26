@@ -1456,6 +1456,11 @@ const pt: Translations = {
         half: 'Paga em moedas metade do que rende de Dedicação.',
         none: 'Não rende moedas. A Dedicação conta do mesmo jeito.',
       },
+      badge: {
+        none: 'nada',
+        half: '½',
+        double: '2×',
+      },
       label: 'Moedas',
       hint: 'As estrelas dão a Dedicação. Aqui você decide quantas moedas ela rende.',
       none: 'Nada',
