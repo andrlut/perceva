@@ -80,6 +80,7 @@ const pt: Translations = {
     // de ícone); a célula Auto do picker carrega a explicação de herança.
     iconHint: 'Aparece no card. Padrão: o da sub-área.',
     iconAutoA11y: 'Usar ícone do sub principal',
+    infoA11y: 'Sobre: {{section}}',
     subsLabel: 'O que ela treina',
     subsHint: 'Toque nas sub-áreas que esta prática treina. Cada uma recebe as próprias estrelas, de 1 a 5.',
     recurrenceLabel: 'Com que frequência',

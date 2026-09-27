@@ -90,6 +90,7 @@ const en = {
     // the picker sheet's Auto cell carries the inherit explanation.
     iconHint: 'Shown on the card. Default: the sub-area\'s.',
     iconAutoA11y: 'Use primary sub icon',
+    infoA11y: 'About: {{section}}',
     subsLabel: 'What it trains',
     subsHint: 'Tap the sub-areas this practice trains. Each one gets its own stars, from 1 to 5.',
     recurrenceLabel: 'How often',

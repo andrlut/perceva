@@ -17,9 +17,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppIcon } from '@/components/AppIcon';
+import { CoinIcon } from '@/components/CoinIcon';
+import { InfoSheet } from '@/components/InfoSheet';
 import { IconPickerModal } from '@/components/IconPickerModal';
 import { RecurrencePicker } from '@/components/RecurrencePicker';
-import { SubPicker } from '@/components/SubPicker';
+import { STAR_SCALE_LINES, SubPicker } from '@/components/SubPicker';
 import { TourModule } from '@/components/tour/TourModule';
 import {
   buildM2Steps,
@@ -99,6 +101,11 @@ export default function TaskFormScreen() {
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  // The (i) beside a section title: the explanations that used to sit as
+  // helper paragraphs under each label (first-user feedback: too much text).
+  const [info, setInfo] = useState<{ title: string; body: string; accent?: string } | null>(
+    null,
+  );
   const [recurrence, setRecurrence] = useState<Recurrence>({ type: 'daily' });
   const [targetCount, setTargetCount] = useState<number>(1);
   const [subs, setSubs] = useState<TaskSub[]>([]);
@@ -415,7 +422,7 @@ export default function TaskFormScreen() {
           )}
 
           <View style={styles.field}>
-            <Text style={styles.label}>{t('taskForm.titleLabel')}</Text>
+            <SectionLabel icon="create-outline" label={t('taskForm.titleLabel')} />
             <TextInput
               value={title}
               onChangeText={setTitle}
@@ -431,7 +438,7 @@ export default function TaskFormScreen() {
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>{t('taskForm.descLabel')}</Text>
+            <SectionLabel icon="document-text-outline" label={t('taskForm.descLabel')} />
             {showBlurbNote && (
               <View style={styles.blurbNote}>
                 <Ionicons
@@ -466,7 +473,13 @@ export default function TaskFormScreen() {
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>{t('taskForm.iconLabel')}</Text>
+            <SectionLabel
+              icon="shapes-outline"
+              label={t('taskForm.iconLabel')}
+              onInfo={() =>
+                setInfo({ title: t('taskForm.iconLabel'), body: t('taskForm.iconHint') })
+              }
+            />
             {/* Compact row that opens the picker sheet — the old inline
                 43-cell grid buried the required subs/recurrence sections
                 ~500px down the form. */}
@@ -499,9 +512,7 @@ export default function TaskFormScreen() {
                   );
                 })()}
               </View>
-              <Text style={styles.iconRowHint} numberOfLines={2}>
-                {t('taskForm.iconHint')}
-              </Text>
+              <View style={styles.iconRowSpacer} />
               <Text style={styles.iconRowChange}>{t('common.changeIcon')}</Text>
               <Ionicons
                 name="chevron-forward"
@@ -515,31 +526,35 @@ export default function TaskFormScreen() {
             style={styles.field}
             onLayout={(e) => noteSectionY(subsY, e.nativeEvent.layout.y)}
           >
-            <Text style={styles.label}>{t('taskForm.subsLabel')}</Text>
-            <Text style={styles.hint}>{t('taskForm.subsHint')}</Text>
+            <SectionLabel
+              icon="star-outline"
+              label={t('taskForm.subsLabel')}
+              onInfo={() =>
+                setInfo({
+                  title: t('taskForm.subsLabel'),
+                  body: [
+                    t('taskForm.subsHint'),
+                    '',
+                    t('tasks.subPicker.starsHelp'),
+                    '',
+                    t('tasks.subPicker.starsScale'),
+                    STAR_SCALE_LINES,
+                  ].join('\n'),
+                })
+              }
+            />
             <SubPicker value={subs} onChange={setSubs} />
             {subs.length > 0 && (
               <View style={styles.rewardPreview}>
-                <Ionicons name="flag" size={13} color={tokens.semantic.xp} />
                 <Text style={[styles.rewardText, { color: tokens.semantic.xp }]}>
                   +{reward.total.xp} XP
                 </Text>
-                <Ionicons
-                  name="cash"
-                  size={13}
-                  color={tokens.semantic.coin}
-                />
-                <Text
-                  style={[styles.rewardText, { color: tokens.semantic.coin }]}
-                >
-                  +{reward.total.coins}
-                </Text>
-                <Text style={styles.rewardSplit}>
-                  {reward.perSub
-                    .map((p) => `${p.stars}★`)
-                    .join(' + ')}{' '}
-                  = {reward.totalStars}★
-                </Text>
+                <View style={styles.rewardCoins}>
+                  <CoinIcon size={14} />
+                  <Text style={[styles.rewardText, { color: tokens.semantic.coinLight }]}>
+                    +{reward.total.coins}
+                  </Text>
+                </View>
               </View>
             )}
           </View>
@@ -550,7 +565,7 @@ export default function TaskFormScreen() {
             style={styles.field}
             onLayout={(e) => noteSectionY(recurrenceY, e.nativeEvent.layout.y)}
           >
-            <Text style={styles.label}>{t('taskForm.recurrenceLabel')}</Text>
+            <SectionLabel icon="repeat" label={t('taskForm.recurrenceLabel')} />
             <RecurrencePicker
               recurrence={recurrence}
               onChange={setRecurrence}
@@ -563,8 +578,24 @@ export default function TaskFormScreen() {
             style={styles.field}
             onLayout={(e) => noteSectionY(coinsY, e.nativeEvent.layout.y)}
           >
-            <Text style={styles.label}>{t('tasks.coinMultiplier.label')}</Text>
-            <Text style={styles.hint}>{t('tasks.coinMultiplier.hint')}</Text>
+            <SectionLabel
+              coin
+              label={t('tasks.coinMultiplier.label')}
+              onInfo={() =>
+                setInfo({
+                  title: t('tasks.coinMultiplier.label'),
+                  accent: tokens.semantic.coinLight,
+                  body: [
+                    t('tasks.coinMultiplier.hint'),
+                    '',
+                    ...(['none', 'half', 'same', 'double'] as const).map(
+                      (k) =>
+                        `${t(`tasks.coinMultiplier.${k}`)}: ${t(`tasks.coinMultiplier.explain.${k}`)}`,
+                    ),
+                  ].join('\n'),
+                })
+              }
+            />
             <CoinMultiplierPicker value={coinMultiplier} onChange={setCoinMultiplier} />
           </View>
 
@@ -587,6 +618,14 @@ export default function TaskFormScreen() {
           )}
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <InfoSheet
+        visible={info != null}
+        onClose={() => setInfo(null)}
+        title={info?.title ?? ''}
+        body={info?.body ?? ''}
+        accent={info?.accent}
+      />
 
       <IconPickerModal
         visible={iconPickerVisible}
@@ -620,6 +659,51 @@ export default function TaskFormScreen() {
         />
       )}
     </SafeAreaView>
+  );
+}
+
+/**
+ * Section title of the form: a small icon, the uppercase label and, when the
+ * section has an explanation, an (i) that opens it in an InfoSheet. The coin
+ * section wears the Vault's gold (coin icon + gold label) so "Moedas" reads
+ * as money at a glance.
+ */
+function SectionLabel({
+  icon,
+  coin = false,
+  label,
+  onInfo,
+}: {
+  icon?: keyof typeof Ionicons.glyphMap;
+  coin?: boolean;
+  label: string;
+  onInfo?: () => void;
+}) {
+  const { t } = useT();
+  return (
+    <View style={styles.labelRow}>
+      {coin ? (
+        <CoinIcon size={15} />
+      ) : icon ? (
+        <Ionicons name={icon} size={14} color={tokens.brand.violet2} />
+      ) : null}
+      <Text style={[styles.label, coin && { color: tokens.semantic.coinLight }]}>{label}</Text>
+      {onInfo && (
+        <Pressable
+          onPress={onInfo}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel={t('taskForm.infoA11y', { section: label })}
+          style={({ pressed }) => [styles.infoBtn, pressed && { opacity: 0.6 }]}
+        >
+          <Ionicons
+            name="information-circle-outline"
+            size={17}
+            color={coin ? tokens.semantic.coinLight : tokens.text.dim}
+          />
+        </Pressable>
+      )}
+    </View>
   );
 }
 
@@ -687,21 +771,19 @@ const styles = StyleSheet.create({
   field: {
     gap: tokens.space[2],
   },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  infoBtn: {
+    marginLeft: 'auto',
+  },
   label: {
     ...tokens.type.eyebrow,
     color: tokens.text.mid,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-  },
-  // Helper lines (first-user feedback: "tiny and confusing"): 13px in
-  // text.mid. The old 12px text.dim measured ~3.5:1 on this background,
-  // under the 4.5:1 small text needs.
-  hint: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 13,
-    lineHeight: 18,
-    color: tokens.text.mid,
-    marginTop: -2,
   },
   input: {
     backgroundColor: tokens.bg.surface,
@@ -734,13 +816,11 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 13,
   },
-  rewardSplit: {
-    flex: 1,
-    textAlign: 'right',
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 13,
-    color: tokens.text.mid,
-    letterSpacing: 0.2,
+  rewardCoins: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginLeft: tokens.space[2],
   },
   // Catalog blurb, shown as context rather than as the user's own text:
   // no input chrome, a label saying where it comes from, readable size.
@@ -797,12 +877,8 @@ const styles = StyleSheet.create({
     borderColor: tokens.brand.violet2,
     backgroundColor: 'rgba(155, 130, 255, 0.16)',
   },
-  iconRowHint: {
+  iconRowSpacer: {
     flex: 1,
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 13,
-    lineHeight: 18,
-    color: tokens.text.mid,
   },
   iconRowChange: {
     fontFamily: 'Manrope_700Bold',
