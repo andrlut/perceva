@@ -209,12 +209,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // One column, left-aligned, the block itself centred: the swatches line up
+  // however the two labels wrap (side by side they broke onto two ragged
+  // centred rows — owner feedback).
   legend: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    columnGap: tokens.space[4],
-    rowGap: tokens.space[1],
+    alignSelf: 'center',
+    alignItems: 'flex-start',
+    gap: tokens.space[1],
   },
   legendRow: {
     flexDirection: 'row',

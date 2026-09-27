@@ -77,6 +77,87 @@ export function IntroPayoff({
 }
 
 /**
+ * Top of each pillar page: the three pillars as a 1-2-3 row with THIS one lit,
+ * then "Pilar N" and its name. The owner wanted the first thing on the screen
+ * to say which pillar this is (2026-09-26), before any drawing or text.
+ */
+export function PillarHeader({
+  n,
+  label,
+  name,
+  a11y,
+}: {
+  n: 1 | 2 | 3;
+  /** "Pilar 1" */
+  label: string;
+  /** "Autoconhecimento" */
+  name: string;
+  /** "Pilar 1 de 3: Autoconhecimento" */
+  a11y: string;
+}) {
+  const palette = pillarPalette();
+  const hues = [palette.self, palette.practice, palette.learning];
+  const current = hues[n - 1]!;
+  return (
+    <View style={styles.pillarHeader} accessible accessibilityRole="header" accessibilityLabel={a11y}>
+      <View style={styles.stepper} importantForAccessibility="no-hide-descendants">
+        {hues.map((hue, i) => {
+          const on = i === n - 1;
+          return (
+            <View key={i} style={styles.stepCell}>
+              {i > 0 && <View style={[styles.stepLine, { backgroundColor: tokens.border.strong }]} />}
+              <View
+                style={[
+                  styles.stepDot,
+                  on
+                    ? { backgroundColor: hue.fill, borderColor: hue.fill, width: 34, height: 34 }
+                    : { borderColor: hue.fill, opacity: 0.45 },
+                ]}
+              >
+                <Text style={[styles.stepNum, { color: on ? tokens.bg.deep : hue.fill }]}>
+                  {i + 1}
+                </Text>
+              </View>
+            </View>
+          );
+        })}
+      </View>
+      <Text style={[styles.pillarLabel, { color: current.ink }]}>{label}</Text>
+      <Text style={styles.pillarName}>{name}</Text>
+    </View>
+  );
+}
+
+/**
+ * What the pillar gives you, as a card: icon, a few words, one short line.
+ * Two per pillar page — direct about what to do and what is in the app,
+ * no philosophy (owner feedback, 2026-09-26).
+ */
+export function PillarCard({
+  icon,
+  title,
+  body,
+  color,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  body: string;
+  color: string;
+}) {
+  return (
+    <View style={[styles.card, { borderColor: `${color}66`, backgroundColor: `${color}14` }]}>
+      <View style={[styles.cardIcon, { backgroundColor: `${color}29` }]}>
+        <Ionicons name={icon} size={22} color={color} />
+      </View>
+      <View style={styles.cardBody}>
+        <Text style={styles.cardTitle}>{title}</Text>
+        <Text style={styles.cardText}>{body}</Text>
+      </View>
+    </View>
+  );
+}
+
+/**
  * The three pillar hues. Fills are the brand's own (violet / green / gold);
  * inks are what a LABEL in that hue may use — in the light palette the green
  * and gold fills fall under 4.5:1 on porcelain, so labels drop to the
@@ -93,6 +174,83 @@ export function pillarPalette() {
 }
 
 const styles = StyleSheet.create({
+  pillarHeader: {
+    alignItems: 'center',
+    gap: tokens.space[1],
+  },
+  stepper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: tokens.space[2],
+  },
+  stepCell: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  stepLine: {
+    width: 28,
+    height: 2,
+    borderRadius: 1,
+    marginHorizontal: 6,
+  },
+  stepDot: {
+    width: 26,
+    height: 26,
+    borderRadius: 999,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepNum: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 14,
+  },
+  pillarLabel: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 13,
+    letterSpacing: 1.6,
+    textTransform: 'uppercase',
+  },
+  pillarName: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 28,
+    lineHeight: 33,
+    color: tokens.text.hi,
+    textAlign: 'center',
+  },
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'stretch',
+    gap: tokens.space[3],
+    paddingVertical: tokens.space[3],
+    paddingHorizontal: tokens.space[3],
+    borderRadius: tokens.radius.lg,
+    borderWidth: 1,
+  },
+  cardIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardBody: {
+    flex: 1,
+    gap: 2,
+  },
+  cardTitle: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 16,
+    lineHeight: 21,
+    color: tokens.text.hi,
+  },
+  cardText: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 14,
+    lineHeight: 19,
+    color: tokens.text.base,
+  },
   content: {
     flexGrow: 1,
     justifyContent: 'center',
