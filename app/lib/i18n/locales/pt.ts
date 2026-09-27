@@ -80,6 +80,11 @@ const pt: Translations = {
     // de ícone); a célula Auto do picker carrega a explicação de herança.
     iconHint: 'Aparece no card. Padrão: o da sub-área.',
     iconAutoA11y: 'Usar ícone do sub principal',
+    info: {
+      title: 'O nome que aparece no card da prática. Curto e direto funciona melhor: "Meditar 10 min", "Ler antes de dormir".',
+      description: 'Opcional. Um lembrete pra você: por que essa prática importa, ou como você quer fazer. Fica guardada junto com a prática.',
+      recurrence: 'Diária: aparece em Hoje todo dia.\n\nSemanal: você escolhe quantas vezes por semana. Marcando dias (ex.: Seg e Qua), ela aparece em Hoje nesses dias. Sem dia marcado, fica em Todas as práticas pra você fazer quando der, até completar as vezes da semana.\n\nMensal: igual à semanal, mas no mês. Com um dia marcado, aparece em Hoje nesse dia; em meses sem ele (ex.: dia 31), cai no último dia do mês.\n\nVezes por período: quantas marcações fecham o dia, a semana ou o mês. Numa diária com mais de 1 vez, a primeira marcação tira ela da lista e as outras você soma no +1 de Feitas hoje.',
+    },
     infoA11y: 'Sobre: {{section}}',
     subsLabel: 'O que ela treina',
     subsHint: 'Toque nas sub-áreas que esta prática treina. Cada uma recebe as próprias estrelas, de 1 a 5.',

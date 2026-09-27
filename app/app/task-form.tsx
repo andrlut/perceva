@@ -422,7 +422,13 @@ export default function TaskFormScreen() {
           )}
 
           <View style={styles.field}>
-            <SectionLabel icon="create-outline" label={t('taskForm.titleLabel')} />
+            <SectionLabel
+              icon="create-outline"
+              label={t('taskForm.titleLabel')}
+              onInfo={() =>
+                setInfo({ title: t('taskForm.titleLabel'), body: t('taskForm.info.title') })
+              }
+            />
             <TextInput
               value={title}
               onChangeText={setTitle}
@@ -438,7 +444,13 @@ export default function TaskFormScreen() {
           </View>
 
           <View style={styles.field}>
-            <SectionLabel icon="document-text-outline" label={t('taskForm.descLabel')} />
+            <SectionLabel
+              icon="document-text-outline"
+              label={t('taskForm.descLabel')}
+              onInfo={() =>
+                setInfo({ title: t('taskForm.descLabel'), body: t('taskForm.info.description') })
+              }
+            />
             {showBlurbNote && (
               <View style={styles.blurbNote}>
                 <Ionicons
@@ -565,7 +577,13 @@ export default function TaskFormScreen() {
             style={styles.field}
             onLayout={(e) => noteSectionY(recurrenceY, e.nativeEvent.layout.y)}
           >
-            <SectionLabel icon="repeat" label={t('taskForm.recurrenceLabel')} />
+            <SectionLabel
+              icon="repeat"
+              label={t('taskForm.recurrenceLabel')}
+              onInfo={() =>
+                setInfo({ title: t('taskForm.recurrenceLabel'), body: t('taskForm.info.recurrence') })
+              }
+            />
             <RecurrencePicker
               recurrence={recurrence}
               onChange={setRecurrence}
@@ -683,22 +701,22 @@ function SectionLabel({
   return (
     <View style={styles.labelRow}>
       {coin ? (
-        <CoinIcon size={15} />
+        <CoinIcon size={17} />
       ) : icon ? (
-        <Ionicons name={icon} size={14} color={tokens.brand.violet2} />
+        <Ionicons name={icon} size={16} color={tokens.brand.violet2} />
       ) : null}
       <Text style={[styles.label, coin && { color: tokens.semantic.coinLight }]}>{label}</Text>
       {onInfo && (
         <Pressable
           onPress={onInfo}
-          hitSlop={10}
+          hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel={t('taskForm.infoA11y', { section: label })}
           style={({ pressed }) => [styles.infoBtn, pressed && { opacity: 0.6 }]}
         >
           <Ionicons
             name="information-circle-outline"
-            size={17}
+            size={22}
             color={coin ? tokens.semantic.coinLight : tokens.text.dim}
           />
         </Pressable>
@@ -768,22 +786,38 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     color: tokens.text.base,
   },
+  // Each section is its own card, so where "what it trains" ends and "how
+  // often" begins is a border, not a guess (feedback 2026-09-27). bg.deep is
+  // a recessed well on both palettes; the controls inside are bg.surface.
   field: {
-    gap: tokens.space[2],
+    gap: tokens.space[3],
+    padding: tokens.space[4],
+    borderRadius: tokens.radius.lg,
+    borderWidth: 1,
+    borderColor: tokens.border.strong,
+    backgroundColor: tokens.bg.deep,
   },
   labelRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
   infoBtn: {
     marginLeft: 'auto',
+    width: 36,
+    height: 36,
+    marginVertical: -8,
+    marginRight: -8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   label: {
-    ...tokens.type.eyebrow,
-    color: tokens.text.mid,
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 13,
+    lineHeight: 16,
+    color: tokens.text.base,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.6,
   },
   input: {
     backgroundColor: tokens.bg.surface,
