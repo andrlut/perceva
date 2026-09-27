@@ -6,6 +6,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import type { LearningFeedCard } from '@/lib/api/learning';
 import type { DimensionId, LearningMaterialCategory, SubId } from '@/lib/db/types';
 import { useT, type TranslateOptions } from '@/lib/i18n';
+import { useKeyboardOverlap } from '@/lib/use-keyboard-height';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { CATEGORY_ORDER, categoryOf } from '@/lib/learningCategory';
 import { tokens } from '@/theme';
@@ -79,6 +80,8 @@ export function LearningFilterSheet({
   onQueryChange,
 }: Props) {
   const { t } = useT();
+  // A busca mora nesta folha: sem isto o teclado cobre os filtros e o botão.
+  const lift = useKeyboardOverlap();
   const meta = useMetaLookup();
 
   const stats = useMemo(() => {
@@ -136,7 +139,7 @@ export function LearningFilterSheet({
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      <Pressable style={styles.backdrop} onPress={onClose}>
+      <Pressable style={[styles.backdrop, { paddingBottom: lift }]} onPress={onClose}>
         <Pressable style={styles.sheet} onPress={() => {}}>
           <View style={styles.handle} />
           <View style={styles.header}>

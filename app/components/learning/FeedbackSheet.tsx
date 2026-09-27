@@ -2,9 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useEffect, useState } from 'react';
 import {
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -12,6 +10,7 @@ import {
   View,
 } from 'react-native';
 
+import { SheetKeyboardView } from '@/components/SheetKeyboardView';
 import { FEEDBACK_TAGS } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { tokens } from '@/theme';
@@ -82,10 +81,7 @@ export function FeedbackSheet({
       animationType="slide"
       onRequestClose={onClose}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.backdrop}
-      >
+      <SheetKeyboardView style={styles.backdrop}>
         <Pressable style={styles.backdropPress} onPress={onClose} />
         <View style={styles.sheet}>
           <View style={styles.handle} />
@@ -170,7 +166,7 @@ export function FeedbackSheet({
             </Pressable>
           </View>
         </View>
-      </KeyboardAvoidingView>
+      </SheetKeyboardView>
     </Modal>
   );
 }

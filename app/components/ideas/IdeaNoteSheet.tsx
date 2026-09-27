@@ -1,17 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { SheetKeyboardView } from '@/components/SheetKeyboardView';
+import { useSheetBottomInset } from '@/components/useSheetBottomInset';
 import { useT } from '@/lib/i18n';
+import { useKeyboardOverlap } from '@/lib/use-keyboard-height';
 import { tokens } from '@/theme';
 
 /** Server guard (`learning_idea_collect_note_len`); the field stops here too. */
@@ -41,6 +35,8 @@ interface Props {
  */
 export function IdeaNoteSheet({ visible, ideaTitle, note, onCancel, onSave }: Props) {
   const { t } = useT();
+  const sheetBottom = useSheetBottomInset();
+  const keyboard = useKeyboardOverlap();
   const [draft, setDraft] = useState(note ?? '');
 
   // Re-seed whenever the sheet opens for a (possibly different) idea; the
@@ -56,12 +52,11 @@ export function IdeaNoteSheet({ visible, ideaTitle, note, onCancel, onSave }: Pr
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.backdrop}
-      >
+      <SheetKeyboardView style={styles.backdrop}>
         <Pressable style={styles.backdropPress} onPress={onCancel} />
-        <View style={styles.sheet}>
+        {/* Com o teclado em pé o inset da barra do sistema não existe mais:
+            somar os dois deixaria uma faixa morta entre a folha e o teclado. */}
+        <View style={[styles.sheet, { paddingBottom: keyboard > 0 ? tokens.space[4] : sheetBottom }]}>
           <View style={styles.handle} />
 
           <View style={styles.header}>
@@ -124,7 +119,7 @@ export function IdeaNoteSheet({ visible, ideaTitle, note, onCancel, onSave }: Pr
             </Pressable>
           </View>
         </View>
-      </KeyboardAvoidingView>
+      </SheetKeyboardView>
     </Modal>
   );
 }
@@ -143,7 +138,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: tokens.space[4],
-    paddingBottom: tokens.space[6],
     gap: tokens.space[3],
   },
   handle: {
