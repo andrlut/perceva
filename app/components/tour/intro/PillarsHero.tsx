@@ -51,10 +51,14 @@ import { pillarPalette } from './IntroPageLayout';
 
 /** Geometry lives in a 300-wide viewBox and scales with `size`. */
 const VB_W = 300;
-const VB_H = 252;
+// Extra height below the loop: the bottom labels sit UNDER the circle, clear
+// of every line (inside the arc they covered the triangle — owner feedback).
+const VB_H = 280;
 const CX = 150;
 const CY = 142;
 const R = 100;
+/** Top of the bottom labels: just below the loop's lowest point. */
+const BOTTOM_LABEL_Y = CY + R + 10;
 /** Node tile (viewBox units) — wide enough for the ambient glow. */
 const NODE = 60;
 /** Rotating layer: the loop plus room for the comet's halo. */
@@ -324,13 +328,8 @@ export function PillarsHero({ size, active }: { size: number; active: boolean })
       {NODES.map((n, i) => {
         const p = pos[i]!;
         const isTop = n.angle < 0;
-        const labelW = (isTop ? 220 : 140) * k;
-        // Bottom labels lean outward, away from where the loop curves in.
-        const nudge = isTop ? 0 : p.x < CX ? -12 : 12;
-        const left = Math.min(
-          Math.max(0, (p.x + nudge) * k - labelW / 2),
-          size - labelW,
-        );
+        const labelW = (isTop ? 220 : 150) * k;
+        const left = Math.min(Math.max(0, p.x * k - labelW / 2), size - labelW);
         return (
           <Animated.View
             key={n.key}
@@ -341,14 +340,13 @@ export function PillarsHero({ size, active }: { size: number; active: boolean })
               {
                 width: labelW,
                 left,
-                top: isTop ? undefined : (p.y + 20) * k,
+                top: isTop ? undefined : BOTTOM_LABEL_Y * k,
                 bottom: isTop ? height - (p.y - 19) * k : undefined,
               },
             ]}
             pointerEvents="none"
           >
-            {/* Backed chip: the loop passes behind the bottom labels. */}
-            <View style={[styles.labelChip, { backgroundColor: `${tokens.bg.deep}D1` }]}>
+            <View style={styles.labelChip}>
               <Text
                 style={[styles.label, { color: nodeInk[n.key] }]}
                 numberOfLines={1}

@@ -429,14 +429,12 @@ const en = {
       next: 'Continue',
       pageOf: 'Page {{n}} of {{total}}',
       hero: {
-        eyebrow: 'See. Practice. Become.',
         title: 'See who you\'re becoming.',
-        body: 'The test that knows you, the habit you measure, the idea you keep.',
+        body: 'Three pillars: the philosophy behind the app.',
         pillarSelf: 'Self-knowledge',
         pillarPractice: 'Practice',
-        pillarLearning: 'Learning',
-        loop: 'measure → practice → look again',
-        artA11y: 'Perceva\'s three pillars, Self-knowledge, Practice and Learning, joined in a loop: measure, practice, look again.',
+        pillarLearning: 'Learn',
+        artA11y: 'Perceva\'s three pillars: Self-knowledge, Practice and Learn.',
       },
       self: {
         eyebrow: 'Pillar 1 · Self-knowledge',
@@ -460,7 +458,7 @@ const en = {
         artA11y: 'A sample day: two practices done, one skipped today, and the mood logged.',
       },
       learning: {
-        eyebrow: 'Pillar 3 · Learning',
+        eyebrow: 'Pillar 3 · Learn',
         title: 'The idea you remember',
         body: 'Short ideas, with sources. Flip the card to absorb.',
         payoff: 'Explore has an end. On purpose.',

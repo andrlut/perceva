@@ -427,14 +427,12 @@ const pt: Translations = {
       next: 'Continuar',
       pageOf: 'Página {{n}} de {{total}}',
       hero: {
-        eyebrow: 'Perceba. Pratique. Torne-se.',
         title: 'Perceba quem você está se tornando.',
-        body: 'O teste que te conhece, o hábito que você mede e a ideia que você lembra.',
+        body: 'Três pilares: a filosofia do app.',
         pillarSelf: 'Autoconhecimento',
         pillarPractice: 'Prática',
         pillarLearning: 'Aprendizado',
-        loop: 'medir → praticar → re-olhar',
-        artA11y: 'Os três pilares do Perceva, Autoconhecimento, Prática e Aprendizado, ligados num ciclo: medir, praticar, re-olhar.',
+        artA11y: 'Os três pilares do Perceva: Autoconhecimento, Prática e Aprendizado.',
       },
       self: {
         eyebrow: 'Pilar 1 · Autoconhecimento',

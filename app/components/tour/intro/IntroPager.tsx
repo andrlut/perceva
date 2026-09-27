@@ -227,11 +227,11 @@ export function IntroPager() {
   const contentW = pageW - tokens.space[6] * 2;
   // Visual sizes follow the measured page height, so a 640dp phone still
   // gets the hero and its text on one screen. ~250px is the hero's text
-  // block (eyebrow, two-line title, body) plus the loop caption; the art
-  // is 300×252, hence the ratio. Before the first layout, a safe default.
+  // block (two-line title + one line); the art is 300×280, hence the
+  // ratio. Before the first layout, a safe default.
   const heroSize = Math.round(
     pageH > 0
-      ? Math.min(contentW, 330, Math.max(190, (pageH - padFor(0) - 262) * (300 / 252)))
+      ? Math.min(contentW, 330, Math.max(190, (pageH - padFor(0) - 170) * (300 / 280)))
       : Math.min(contentW, 280),
   );
   const hexSize = Math.round(Math.min(contentW * 0.72, 210, Math.max(150, pageH * 0.27)));
@@ -280,9 +280,7 @@ export function IntroPager() {
             <IntroPage width={pageW} height={pageH} bottomPad={padFor(0)}>
               <View style={styles.heroArt}>
                 <PillarsHero size={heroSize} active={index === 0} />
-                <Text style={styles.loop}>{t('tour.intro.hero.loop')}</Text>
               </View>
-              <IntroEyebrow>{t('tour.intro.hero.eyebrow')}</IntroEyebrow>
               <IntroTitle hero>{t('tour.intro.hero.title')}</IntroTitle>
               <IntroBody>{t('tour.intro.hero.body')}</IntroBody>
             </IntroPage>
@@ -566,14 +564,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: tokens.space[2],
     marginBottom: tokens.space[2],
-  },
-  loop: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 13,
-    lineHeight: 17,
-    letterSpacing: 0.6,
-    color: tokens.text.dim,
-    textAlign: 'center',
   },
   neutralNote: {
     flexDirection: 'row',
