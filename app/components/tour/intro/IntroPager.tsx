@@ -28,13 +28,16 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppIcon } from '@/components/AppIcon';
 import { PercevaGlyph } from '@/components/PercevaGlyph';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { useT } from '@/lib/i18n';
+import { useMetaLookup } from '@/lib/i18n/meta';
 import { isTerminal } from '@/lib/tour/constants';
 import { useTourStore } from '@/lib/tour/store';
 import { exitTourToHome } from '@/lib/tour/navigation';
 import { tokens } from '@/theme';
+import { DIMENSION_ORDER } from '@/theme/dimensions';
 
 import {
   CoinDial,
@@ -102,6 +105,7 @@ type Choice = 'tour' | 'skip';
 export function IntroPager() {
   const router = useRouter();
   const { t } = useT();
+  const meta = useMetaLookup();
   const insets = useSafeAreaInsets();
   const reduceMotion = useReducedMotion();
   const window = useWindowDimensions();
@@ -230,16 +234,23 @@ export function IntroPager() {
   // Visual sizes follow the measured page height, so a 640dp phone still
   // gets the hero and its text on one screen. ~250px is the hero's text
   // block (two-line title + one line); the art is 300×280, hence the
-  // ratio. Before the first layout, a safe default.
+  // ratio. It may bleed into the page's side padding (heroArt's negative
+  // margin) — the triangle is the page (owner: "dá pra aumentar?").
   const heroSize = Math.round(
     pageH > 0
-      ? Math.min(contentW, 330, Math.max(190, (pageH - padFor(0) - 170) * (300 / 280)))
-      : Math.min(contentW, 280),
+      ? Math.min(pageW - tokens.space[3] * 2, 420, Math.max(200, (pageH - padFor(0) - 150) * (300 / 280)))
+      : Math.min(pageW - tokens.space[3] * 2, 300),
   );
   // Pillar pages stack header + drawing + two cards, so the drawing gives up
   // some height to keep a 640dp phone on one screen.
   const hexSize = Math.round(Math.min(contentW * 0.62, 190, Math.max(140, pageH * 0.24)));
-  const cardW = Math.round(Math.min(contentW, 220, Math.max(180, pageH * 0.28)));
+  // The idea card is the Learn page's showpiece: as large as the page allows
+  // once the header and the two cards (~290dp) have their room.
+  const cardW = Math.round(
+    pageH > 0
+      ? Math.min(contentW, 250, Math.max(180, (pageH - padFor(3) - 290) / 1.18))
+      : 220,
+  );
   const onLast = index === LAST;
   const palette = pillarPalette();
 
@@ -294,7 +305,6 @@ export function IntroPager() {
             <IntroPage width={pageW} height={pageH} bottomPad={padFor(1)}>
               <PillarHeader
                 n={1}
-                label={t('tour.intro.pillarN', { n: 1 })}
                 name={t('tour.intro.hero.pillarSelf')}
                 a11y={t('tour.intro.pillarA11y', { n: 1, name: t('tour.intro.hero.pillarSelf') })}
               />
@@ -303,8 +313,20 @@ export function IntroPager() {
                 icon="speedometer-outline"
                 color={palette.self.fill}
                 title={t('tour.intro.self.card1Title')}
-                body={t('tour.intro.self.card1Body')}
-              />
+              >
+                {/* The six life areas, shown instead of named in prose. */}
+                <View style={styles.areaChips}>
+                  {DIMENSION_ORDER.map((id) => {
+                    const dim = meta.dim(id);
+                    return (
+                      <View key={id} style={[styles.areaChip, { backgroundColor: dim.bg }]}>
+                        <AppIcon name={dim.iconName} size={12} color={dim.color} />
+                        <Text style={[styles.areaChipText, { color: dim.color }]}>{dim.label}</Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              </PillarCard>
               <PillarCard
                 icon="clipboard-outline"
                 color={palette.self.fill}
@@ -316,7 +338,6 @@ export function IntroPager() {
             <IntroPage width={pageW} height={pageH} bottomPad={padFor(2)}>
               <PillarHeader
                 n={2}
-                label={t('tour.intro.pillarN', { n: 2 })}
                 name={t('tour.intro.hero.pillarPractice')}
                 a11y={t('tour.intro.pillarA11y', { n: 2, name: t('tour.intro.hero.pillarPractice') })}
               />
@@ -338,7 +359,6 @@ export function IntroPager() {
             <IntroPage width={pageW} height={pageH} bottomPad={padFor(3)}>
               <PillarHeader
                 n={3}
-                label={t('tour.intro.pillarN', { n: 3 })}
                 name={t('tour.intro.hero.pillarLearning')}
                 a11y={t('tour.intro.pillarA11y', { n: 3, name: t('tour.intro.hero.pillarLearning') })}
               />
@@ -597,8 +617,26 @@ const styles = StyleSheet.create({
   },
   heroArt: {
     alignItems: 'center',
-    gap: tokens.space[2],
+    marginHorizontal: -(tokens.space[6] - tokens.space[3]),
     marginBottom: tokens.space[2],
+  },
+  areaChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 6,
+  },
+  areaChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  areaChipText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 12,
   },
   neutralNote: {
     flexDirection: 'row',

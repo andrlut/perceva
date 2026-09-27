@@ -432,13 +432,12 @@ const en = {
   tour: {
     intro: {
       pillarA11y: 'Pillar {{n}} of 3: {{name}}',
-      pillarN: 'Pillar {{n}}',
       skip: 'Skip intro',
       next: 'Continue',
       pageOf: 'Page {{n}} of {{total}}',
       hero: {
         title: 'See who you\'re becoming.',
-        body: 'Three pillars: the philosophy behind the app.',
+        body: 'Three pillars. Everything in the app grows from them.',
         pillarSelf: 'Self-knowledge',
         pillarPractice: 'Practice',
         pillarLearning: 'Learn',
@@ -447,8 +446,7 @@ const en = {
       self: {
         card2Body: 'Then go deeper: well-being (free), Big Five, Values and Attachment (Premium).',
         card2Title: 'Questionnaires',
-        card1Body: 'Rate the 6 areas. Start here.',
-        card1Title: 'Self-assessment · 1 min',
+        card1Title: '6-area self-assessment · 1 min',
         legendSelf: 'How you see yourself',
         legendQuestionnaire: 'What the questionnaire shows',
         artA11y: 'A hexagon of the 6 life areas: the filled shape is how you see yourself; the dashed outline is what the questionnaire shows. They don\'t match.',
@@ -466,10 +464,10 @@ const en = {
         artA11y: 'A sample day: two practices done, one skipped today, and the mood logged.',
       },
       learning: {
-        card2Body: 'What you absorb is kept for review.',
+        card2Body: 'Favorite the ones you like and revisit them anytime.',
         card2Title: 'My ideas',
-        card1Body: 'A minute each, with sources. Flip the card to absorb.',
-        card1Title: 'Short ideas',
+        card1Body: 'Short and sourced. Flip the card to absorb.',
+        card1Title: 'Ideas, materials and videos',
         cardTitle: 'Rereading feels like knowing',
         cardHint: 'Flip the card',
         cardBack: 'Close the text and try to recall. Rereading only feels like it works.',

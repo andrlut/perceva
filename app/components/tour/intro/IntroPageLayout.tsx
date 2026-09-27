@@ -78,18 +78,15 @@ export function IntroPayoff({
 
 /**
  * Top of each pillar page: the three pillars as a 1-2-3 row with THIS one lit,
- * then "Pilar N" and its name. The owner wanted the first thing on the screen
- * to say which pillar this is (2026-09-26), before any drawing or text.
+ * then its name. The first thing on the screen says which pillar this is; no
+ * "Pilar 1" caption — the lit number already says it (owner, 2026-09-27).
  */
 export function PillarHeader({
   n,
-  label,
   name,
   a11y,
 }: {
   n: 1 | 2 | 3;
-  /** "Pilar 1" */
-  label: string;
   /** "Autoconhecimento" */
   name: string;
   /** "Pilar 1 de 3: Autoconhecimento" */
@@ -122,8 +119,7 @@ export function PillarHeader({
           );
         })}
       </View>
-      <Text style={[styles.pillarLabel, { color: current.ink }]}>{label}</Text>
-      <Text style={styles.pillarName}>{name}</Text>
+      <Text style={[styles.pillarName, { color: current.ink }]}>{name}</Text>
     </View>
   );
 }
@@ -138,11 +134,14 @@ export function PillarCard({
   title,
   body,
   color,
+  children,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   title: string;
-  body: string;
+  body?: string;
   color: string;
+  /** Visual content under the title (e.g. the six area chips). */
+  children?: ReactNode;
 }) {
   return (
     <View style={[styles.card, { borderColor: `${color}66`, backgroundColor: `${color}14` }]}>
@@ -151,7 +150,8 @@ export function PillarCard({
       </View>
       <View style={styles.cardBody}>
         <Text style={styles.cardTitle}>{title}</Text>
-        <Text style={styles.cardText}>{body}</Text>
+        {body ? <Text style={styles.cardText}>{body}</Text> : null}
+        {children}
       </View>
     </View>
   );
@@ -204,12 +204,6 @@ const styles = StyleSheet.create({
   stepNum: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 14,
-  },
-  pillarLabel: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 13,
-    letterSpacing: 1.6,
-    textTransform: 'uppercase',
   },
   pillarName: {
     fontFamily: 'Manrope_800ExtraBold',
