@@ -90,6 +90,11 @@ const en = {
     // the picker sheet's Auto cell carries the inherit explanation.
     iconHint: 'Shown on the card. Default: the sub-area\'s.',
     iconAutoA11y: 'Use primary sub icon',
+    info: {
+      title: 'The name on the practice card. Short and direct works best: "Meditate 10 min", "Read before bed".',
+      description: 'Optional. A note to yourself: why this practice matters, or how you want to do it. It stays saved with the practice.',
+      recurrence: 'Daily: shows up in Today every day.\n\nWeekly: you pick how many times a week. With days marked (e.g. Mon and Wed), it shows up in Today on those days. With no day marked, it waits in All practices for you to do whenever, until the week\'s count is done.\n\nMonthly: like weekly, but per month. With a day marked, it shows up in Today on that day; in months without it (e.g. the 31st), it lands on the last day of the month.\n\nTimes per period: how many check-offs close the day, week or month. On a daily practice with more than 1, the first check-off takes it off the list and the rest go on the +1 in Done today.',
+    },
     infoA11y: 'About: {{section}}',
     subsLabel: 'What it trains',
     subsHint: 'Tap the sub-areas this practice trains. Each one gets its own stars, from 1 to 5.',
