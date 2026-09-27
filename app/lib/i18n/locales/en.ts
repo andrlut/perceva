@@ -478,7 +478,7 @@ const en = {
       dedication: {
         eyebrow: 'Dedication',
         title: 'Stars become Dedication',
-        body: 'Each practice trains sub-areas. 1 to 5 stars: the effort.',
+        body: 'Each practice trains sub-areas. 1 to 5 stars: the effort. Each star is worth 10.',
         cellA11y: '{{stars}} of 5 stars: +{{xp}} Dedication',
         exampleLabel: 'Example',
         exampleTitle: 'Meditate for 10 minutes',
@@ -1494,7 +1494,7 @@ const en = {
       fewerStarsA11y: 'One star fewer for {{sub}}',
       moreStarsA11y: 'One more star for {{sub}}',
       starsScale: 'Dedication per sub-area, each time you check it off:',
-      starsHelp: 'Stars say how hard the practice pushes you in each sub-area: 1★ is light, 5★ is demanding.',
+      starsHelp: 'Stars say how hard the practice pushes you in each sub-area: 1★ is light, 5★ is demanding. Each star is worth 10 Dedication.',
       countSubs: {
         other: '{{count}} sub-areas',
         one: '{{count}} sub-area',

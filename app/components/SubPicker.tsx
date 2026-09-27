@@ -22,9 +22,9 @@ interface Props {
  *   - Tap any sub chip to add it (defaults to 1★) or remove it.
  *   - Use the [− N★ +] stepper on a selected sub to adjust its stars.
  *
- * Per-sub stars cap at 5 (single hard ceiling). No total cap — the
- * exponential XP curve self-regulates: filling 10 subs at 1★ each nets
- * 50 XP, less than a single honest 4★ task. Trust the user.
+ * Per-sub stars cap at 5 (single hard ceiling). No total cap — XP is
+ * linear (10 per star), so spreading stars across subs pays exactly what
+ * concentrating them does; there is nothing to game. Trust the user.
  *
  * Subs are grouped under their parent dim using the dim's color for the
  * group header and the active chip tint.

@@ -23,11 +23,13 @@ export const DIFFICULTY_LABEL: Record<Difficulty, string> = {
 /**
  * Per-star XP/coins reward table.
  *
- * Rebalanced from 5/15/40/100/250 (razão 50×) → 10/20/35/55/80 (razão 8×).
- * The old curve was too exponential — 4★ and 5★ tasks felt unreachable in
- * day-to-day use, even though the harder ones should still pay more. New
- * jumps are ~1.45-2× per tier, a gentle, consistent progression. XP and
- * coins stay 1:1 by current convention.
+ * Linear since 2026-09-27: every star is worth 10 XP (10/20/30/40/50). It
+ * explains itself in one sentence — "XP = stars × 10" — and 2★ + 3★ across
+ * two subs now pays the same as 5★ on one sub (the old 10/20/35/55/80 curve
+ * paid 55 vs 80, the first thing a new user would question). History:
+ * 5/15/40/100/250 → 10/20/35/55/80 (2026-05-28) → linear. Missions already
+ * paid 10 XP per star (`lib/quests/reward.ts`). Coins = XP × the practice's
+ * coin multiplier.
  *
  * Mirror of the SQL `public.base_xp_for_stars` helper — keep both in
  * lockstep (server is authoritative; this table is the optimistic preview).
@@ -35,9 +37,9 @@ export const DIFFICULTY_LABEL: Record<Difficulty, string> = {
 const REWARD_BY_DIFFICULTY: Record<Difficulty, { xp: number; coins: number }> = {
   1: { xp: 10, coins: 10 },
   2: { xp: 20, coins: 20 },
-  3: { xp: 35, coins: 35 },
-  4: { xp: 55, coins: 55 },
-  5: { xp: 80, coins: 80 },
+  3: { xp: 30, coins: 30 },
+  4: { xp: 40, coins: 40 },
+  5: { xp: 50, coins: 50 },
 };
 
 export function rewardForDifficulty(difficulty: Difficulty) {
@@ -70,7 +72,7 @@ export function rewardForTaskSubs(
     const base = REWARD_BY_DIFFICULTY[s.stars];
     const xp = base.xp;
     // Per sub, rounded half up — the same rule as round() in complete_task,
-    // so the preview matches what the server credits (3 stars at half = 18).
+    // so the preview matches what the server credits (1 star at half = 5).
     const coins = Math.round(base.coins * coinMultiplier);
     perSub.push({ sub_id: s.sub_id, stars: s.stars, xp, coins });
     totalXp += xp;
