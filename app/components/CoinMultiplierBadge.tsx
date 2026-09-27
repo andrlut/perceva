@@ -6,9 +6,10 @@ import { tokens } from '@/theme';
 
 /**
  * The quiet mark beside a practice's XP when its coins are not "Igual":
- * `nada` / `½` / `2×` in a hairline pill, dim text, no coin icon and no coin
- * figure — the XP number stays the only number on the row, and the badge
- * only says how the coins relate to it. Renders nothing on "Igual" (the
+ * `nada` / `½` / `2×` in a hairline gold pill (coinLight text — pale gold on
+ * dark, deep gold on light), no coin icon and no coin figure — the XP
+ * number stays the only number on the row, and the badge only says how the
+ * coins relate to it. Renders nothing on "Igual" (the
  * default, where the XP figure already is the coin figure).
  *
  * The spoken label is the full sentence from the picker
@@ -35,13 +36,13 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_700Bold',
     fontSize: 10,
     lineHeight: 13,
-    color: tokens.text.dim,
+    color: tokens.semantic.coinLight,
     letterSpacing: 0.2,
     paddingHorizontal: 5,
     paddingVertical: 1,
     borderRadius: tokens.radius.pill,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: tokens.border.strong,
+    borderColor: tokens.semantic.coinRim,
     overflow: 'hidden',
   },
 });

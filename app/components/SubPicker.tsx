@@ -29,14 +29,17 @@ interface Props {
  * Subs are grouped under their parent dim using the dim's color for the
  * group header and the active chip tint.
  *
- * First-user feedback (2026-09): nobody knew what the stars were, and the
- * helper lines were 11-12px. Once a sub-area is picked (i.e. once the star
- * steppers appear) the picker says what a star means and prints the real
- * scale, read from xp.ts so it can never drift from what complete_task pays.
+ * What a star means and the real scale (`STAR_SCALE_LINES`, read from xp.ts
+ * so it can never drift from what complete_task pays) live behind the
+ * form's (i) — the picker itself stays chips and steppers.
  */
 
 const STAR_LEVELS: Difficulty[] = [1, 2, 3, 4, 5];
-const STAR_SCALE = STAR_LEVELS.map((s) => `${s}★ +${baseXpForDifficulty(s)}`).join('  ·  ');
+/** One line per star level ("3★  +35"), for the form's info sheet. */
+export const STAR_SCALE_LINES = STAR_LEVELS.map(
+  (s) => `${s}★  +${baseXpForDifficulty(s)}`,
+).join('\n');
+
 export function SubPicker({ value, onChange }: Props) {
   const { t } = useT();
   const meta = useMetaLookup();
@@ -74,15 +77,6 @@ export function SubPicker({ value, onChange }: Props) {
             ? t('tasks.subPicker.pickAtLeastOne')
             : `${t('tasks.subPicker.countSubs', { count: value.length })} · ${totalStars}★ ${t('tasks.subPicker.total')}`}
         </Text>
-        {value.length > 0 && (
-          <View style={styles.starsHelp}>
-            <Text style={styles.helperText}>{t('tasks.subPicker.starsHelp')}</Text>
-            <Text style={styles.helperText}>
-              {t('tasks.subPicker.starsScale')}{' '}
-              <Text style={styles.scaleText}>{STAR_SCALE}</Text>
-            </Text>
-          </View>
-        )}
       </View>
 
       <View style={styles.groups}>
@@ -218,21 +212,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_700Bold',
     fontSize: 13,
     lineHeight: 18,
-    color: tokens.text.base,
-  },
-  starsHelp: {
-    gap: 4,
-  },
-  // Helper lines: 13px in text.mid — the old 12px text.dim measured
-  // ~3.5:1 on the form background, under the 4.5:1 small text needs.
-  helperText: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 13,
-    lineHeight: 18,
-    color: tokens.text.mid,
-  },
-  scaleText: {
-    fontFamily: 'Manrope_700Bold',
     color: tokens.text.base,
   },
   groups: {
