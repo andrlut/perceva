@@ -16,9 +16,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useBottomSafeClearance } from '@/components/BottomNavBar';
 import { IdeaActionSheet } from '@/components/ideas/IdeaActionSheet';
+import { IdeaNoteSheet } from '@/components/ideas/IdeaNoteSheet';
 import { IdeaShelf, shelfCardWidth } from '@/components/ideas/IdeaShelf';
 import { ScreenBackground } from '@/components/ScreenBackground';
-import { useReviewIdea } from '@/lib/api/learning';
+import { useReviewIdea, useSetIdeaNote } from '@/lib/api/learning';
 import type { DimensionId } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
@@ -56,7 +57,7 @@ import { DIMENSION_ORDER } from '@/theme/dimensions';
  * it out of the pile).
  */
 
-type Card = IdeaCardData & { haystack: string; favorite: boolean };
+type Card = IdeaCardData & { haystack: string; favorite: boolean; note: string | null };
 
 const cardKey = (c: IdeaCardData) => `${c.materialId}:${c.id}`;
 
@@ -74,7 +75,9 @@ export default function CollectionScreen() {
   const [onlyFavorites, setOnlyFavorites] = useState(true);
   const [query, setQuery] = useState('');
   const [menuKey, setMenuKey] = useState<string | null>(null);
+  const [noteOpen, setNoteOpen] = useState(false);
   const { mutate: reviewIdea } = useReviewIdea();
+  const { mutate: setIdeaNote } = useSetIdeaNote();
   const searching = query.trim().length > 0;
 
   // Every absorbed idea, in collection order, with its search haystack.
@@ -85,6 +88,7 @@ export default function CollectionScreen() {
         return {
           ...toCardDataFromPublic(row),
           favorite: review.favorite === true,
+          note: review.note ?? null,
           haystack: buildHaystack([
             row.title_pt,
             row.title_en,
@@ -94,6 +98,8 @@ export default function CollectionScreen() {
             material?.title_en,
             meta.dim(row.dimension_id).label,
             ...(material?.subs ?? []).map((s) => meta.sub(s).label),
+            // A nota é texto dele: quem escreveu "whey" procura por "whey".
+            review.note,
           ]),
         };
       }),
@@ -167,6 +173,26 @@ export default function CollectionScreen() {
       {
         onError: (e) =>
           showInfo(t('learning.ideas.menu.fail'), e instanceof Error ? e.message : ''),
+      },
+    );
+  };
+
+  // O menu fecha e a folha da nota abre; `menuKey` fica, porque é dele que
+  // a folha tira a ideia (e o texto atual) — fechar os dois é o cancelar.
+  const openNote = () => setNoteOpen(true);
+  const closeNote = () => {
+    setNoteOpen(false);
+    setMenuKey(null);
+  };
+  const saveNote = (note: string) => {
+    if (!menuCard) return;
+    closeNote();
+    Haptics.selectionAsync().catch(() => {});
+    setIdeaNote(
+      { slug: menuCard.slug, ideaId: menuCard.id, note, materialId: menuCard.materialId },
+      {
+        onError: (e) =>
+          showInfo(t('learning.ideas.note.fail'), e instanceof Error ? e.message : ''),
       },
     );
   };
@@ -327,12 +353,22 @@ export default function CollectionScreen() {
         )}
 
         <IdeaActionSheet
-          visible={menuCard != null}
+          visible={menuCard != null && !noteOpen}
           ideaTitle={menuCard ? pickLocalized(menuCard.title, ideaLocale) : ''}
           favorite={menuCard?.favorite ?? false}
+          note={menuCard?.note ?? null}
           onCancel={closeMenu}
           onOpen={openFromMenu}
           onToggleFavorite={toggleFavorite}
+          onEditNote={openNote}
+        />
+
+        <IdeaNoteSheet
+          visible={noteOpen && menuCard != null}
+          ideaTitle={menuCard ? pickLocalized(menuCard.title, ideaLocale) : ''}
+          note={menuCard?.note ?? null}
+          onCancel={closeNote}
+          onSave={saveNote}
         />
       </ScreenBackground>
     </SafeAreaView>

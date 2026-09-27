@@ -843,6 +843,9 @@ export interface LearningIdeaCollectRow {
   collected_at: string;
   reviewed_at: string | null;
   favorite: boolean | null;
+  /** Free note the reader wrote about this idea (`set_idea_note`), or null.
+   *  Readable straight from the table; writes go through the RPC only. */
+  note: string | null;
 }
 
 /** Client shape of a collected idea's review state (camelCase mirror of
@@ -853,6 +856,13 @@ export interface IdeaReview {
   collectedAt: string;
   reviewedAt: string | null;
   favorite: boolean | null;
+  note: string | null;
+}
+
+/** Return shape of the set_idea_note RPC. */
+export interface SetIdeaNoteResult {
+  has_note: boolean;
+  length: number;
 }
 
 /** Return shape of the review_idea RPC. Re-callable: a second call changes

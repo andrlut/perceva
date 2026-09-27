@@ -11,6 +11,7 @@ import type {
   LearningMaterialSub,
   MarkMaterialReadResult,
   ReviewIdeaResult,
+  SetIdeaNoteResult,
   SubId,
 } from '@/lib/db/types';
 import { supabase } from '@/lib/supabase';
@@ -363,7 +364,7 @@ export function useIdeaReviews() {
     queryFn: async (): Promise<IdeaReviews> => {
       const { data, error } = await supabase
         .from('learning_idea_collect')
-        .select('material_id, idea_id, collected_at, reviewed_at, favorite');
+        .select('material_id, idea_id, collected_at, reviewed_at, favorite, note');
       if (error) throw error;
       const rows = ((data ?? []) as LearningIdeaCollectRow[]).map<IdeaReview>((r) => ({
         materialId: r.material_id,
@@ -371,6 +372,7 @@ export function useIdeaReviews() {
         collectedAt: r.collected_at,
         reviewedAt: r.reviewed_at,
         favorite: r.favorite,
+        note: r.note ?? null,
       }));
       return buildIdeaReviews(rows);
     },
@@ -444,6 +446,67 @@ export function useReviewIdea() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: learningKeys.reviews() });
       queryClient.invalidateQueries({ queryKey: learningKeys.collected() });
+    },
+  });
+}
+
+interface SetIdeaNoteInput {
+  slug: string;
+  ideaId: string;
+  /** Empty or whitespace clears the note — same gesture as emptying the field. */
+  note: string;
+  /** Optional shortcut for the optimistic update; otherwise resolved like useReviewIdea. */
+  materialId?: string;
+}
+
+/**
+ * The reader's own note on an absorbed idea (`set_idea_note`). The RPC never
+ * creates the collect row: `collect_idea` mints XP when the last idea of a
+ * material lands, and a text field must not be a path into the economy — so
+ * a note presupposes having absorbed the idea, which is exactly the set
+ * "Minhas ideias" shows. Optimistic like the swipe: the sheet closes on the
+ * user's gesture, not on the round trip.
+ */
+export function useSetIdeaNote() {
+  const queryClient = useQueryClient();
+  return useMutation<SetIdeaNoteResult, Error, SetIdeaNoteInput, { previous?: IdeaReviews }>({
+    mutationFn: async (input) => {
+      const { data, error } = await supabase.rpc('set_idea_note', {
+        p_slug: input.slug,
+        p_idea_id: input.ideaId,
+        p_note: input.note,
+      });
+      if (error) throw error;
+      return data as SetIdeaNoteResult;
+    },
+    onMutate: async (input) => {
+      await queryClient.cancelQueries({ queryKey: learningKeys.reviews() });
+      const previous = queryClient.getQueryData<IdeaReviews>(learningKeys.reviews());
+      if (!previous) return { previous };
+
+      let materialId = input.materialId ?? null;
+      if (!materialId) {
+        const cards = queryClient.getQueryData<LearningIdeaPublic[]>(learningKeys.ideaCards());
+        materialId =
+          cards?.find((c) => c.slug === input.slug && c.idea_id === input.ideaId)?.material_id ??
+          null;
+      }
+      const current = materialId ? previous.byKey.get(reviewKey(materialId, input.ideaId)) : null;
+      if (!current) return { previous };
+
+      const trimmed = input.note.trim();
+      const updated: IdeaReview = { ...current, note: trimmed.length > 0 ? trimmed : null };
+      const rows = [...previous.byKey.values()].map((r) => (r === current ? updated : r));
+      queryClient.setQueryData<IdeaReviews>(learningKeys.reviews(), buildIdeaReviews(rows));
+      return { previous };
+    },
+    onError: (_error, _input, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData<IdeaReviews>(learningKeys.reviews(), context.previous);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: learningKeys.reviews() });
     },
   });
 }
