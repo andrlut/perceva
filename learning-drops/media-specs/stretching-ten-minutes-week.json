@@ -1,0 +1,23 @@
+{
+  "slug": "stretching-ten-minutes-week",
+  "dimension_id": "body",
+  "title": {
+    "pt": "Dez minutos de alongamento por semana bastam",
+    "en": "Ten minutes of stretching a week is enough"
+  },
+  "cover": {
+    "prompt": "Uma pessoa em roupa leve de treino dobrada à frente num alongamento em pé, pernas retas, as pontas dos dedos das mãos descendo até quase tocar os pés descalços sobre um tapete de ioga, vista de lado e de corpo inteiro na metade de baixo do quadro. Uma luz dourada lateral desenha a linha das costas e da parte de trás das pernas esticadas; o resto da sala fica em penumbra calma, com bastante ar livre acima da figura."
+  },
+  "ideas": [
+    {
+      "id": "dez-minutos-por-semana",
+      "ordinal": 1,
+      "image_prompt": "Uma pessoa sentada no piso de madeira de uma sala ampla, vista de lado e ocupando o centro do quadro: uma perna estendida, o tronco inclinado à frente e a mão alcançando a ponta do pé, a postura clara de alongamento. Pequena e discreta no chão, perto do pé, uma ampulheta com quase toda a areia já embaixo, bem menor que a pessoa e fora do foco principal. Uma única luz dourada entra de lado e ilumina as costas curvadas e a perna esticada; a sala ao redor fica em penumbra, um toque de verde-sálvia só na roupa."
+    },
+    {
+      "id": "tolerancia-ao-alongamento",
+      "ordinal": 2,
+      "image_prompt": "Uma pessoa de pé, vista de lado e de corpo inteiro no centro do quadro, com o calcanhar de uma perna apoiado num banco baixo de madeira, o tronco levemente inclinado sobre ela, alongando a parte de trás da coxa; rosto sereno, ombros soltos. Um fio de luz dourada muito fino e sutil corre por dentro do corpo, da perna esticada subindo pela coluna até a nuca, discreto como um contorno aceso, enquanto a perna mantém o mesmo formato natural de sempre. A pose de alongamento é o que domina a cena; o fundo é uma sala simples em penumbra, sem halo nem brilho ao redor da cabeça."
+    }
+  ]
+}
