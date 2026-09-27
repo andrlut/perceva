@@ -430,13 +430,12 @@ const pt: Translations = {
   tour: {
     intro: {
       pillarA11y: 'Pilar {{n}} de 3: {{name}}',
-      pillarN: 'Pilar {{n}}',
       skip: 'Pular introdução',
       next: 'Continuar',
       pageOf: 'Página {{n}} de {{total}}',
       hero: {
         title: 'Perceba quem você está se tornando.',
-        body: 'Três pilares: a filosofia do app.',
+        body: 'Três pilares. Tudo no app nasce deles.',
         pillarSelf: 'Autoconhecimento',
         pillarPractice: 'Prática',
         pillarLearning: 'Aprendizado',
@@ -445,8 +444,7 @@ const pt: Translations = {
       self: {
         card2Body: 'Depois, vá mais fundo: bem-estar (grátis), Big Five, Valores e Apego (Premium).',
         card2Title: 'Questionários',
-        card1Body: 'Dê sua nota nas 6 áreas. Comece por aqui.',
-        card1Title: 'Autoavaliação · 1 min',
+        card1Title: 'Autoavaliação das 6 áreas · 1 min',
         legendSelf: 'Como você se vê',
         legendQuestionnaire: 'O que o questionário mostra',
         artA11y: 'Hexágono das 6 áreas: a forma preenchida é como você se vê; o contorno tracejado é o que o questionário mostra. As duas não coincidem.',
@@ -464,10 +462,10 @@ const pt: Translations = {
         artA11y: 'Exemplo de um dia: duas práticas feitas, uma pulada hoje e o humor registrado.',
       },
       learning: {
-        card2Body: 'O que você absorve fica guardado pra revisar.',
+        card2Body: 'Favorite as que mais gostar e reveja quando quiser.',
         card2Title: 'Minhas ideias',
-        card1Body: 'Um minuto cada, com fonte. Vire o card pra absorver.',
-        card1Title: 'Ideias curtas',
+        card1Body: 'Curtos e com fonte. Vire o card pra absorver.',
+        card1Title: 'Ideias, materiais e vídeos',
         cardTitle: 'Reler dá a sensação de saber',
         cardHint: 'Vire o card',
         cardBack: 'Feche o texto e tente lembrar. Reler só parece funcionar.',
