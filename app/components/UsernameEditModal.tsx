@@ -2,16 +2,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { SheetKeyboardView } from '@/components/SheetKeyboardView';import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useUpdateDisplayName } from '@/lib/api/profile';
 import { useT } from '@/lib/i18n';
@@ -83,10 +82,7 @@ export function UsernameEditModal({ visible, currentValue, onClose }: Props) {
           </Pressable>
         </View>
 
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={{ flex: 1 }}
-        >
+        <SheetKeyboardView style={{ flex: 1 }}>
           <View style={styles.body}>
             <Text style={styles.label}>{t('usernameModal.label')}</Text>
             <TextInput
@@ -105,7 +101,7 @@ export function UsernameEditModal({ visible, currentValue, onClose }: Props) {
               {t('usernameModal.hint', { count: 40 - value.length })}
             </Text>
           </View>
-        </KeyboardAvoidingView>
+        </SheetKeyboardView>
       </SafeAreaView>
     </Modal>
   );

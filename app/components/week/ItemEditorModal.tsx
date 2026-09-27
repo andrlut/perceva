@@ -17,6 +17,7 @@ import {
 } from '@/lib/api/week';
 import type { WeekItem } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
+import { useKeyboardOverlap } from '@/lib/use-keyboard-height';
 import { weekdayShortByIndex } from '@/lib/time';
 import { confirmAction } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
@@ -42,6 +43,8 @@ export function ItemEditorModal({
   onClose: () => void;
 }) {
   const { t, locale } = useT();
+  // Modal com campo de texto: o teclado cobriria o card e os botões.
+  const lift = useKeyboardOverlap();
   const updateItem = useUpdateWeekItem();
   const deleteItem = useDeleteWeekItem();
   const allocate = useAllocateItem();
@@ -102,7 +105,7 @@ export function ItemEditorModal({
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={close}>
-      <Pressable style={styles.backdrop} onPress={close}>
+      <Pressable style={[styles.backdrop, { paddingBottom: lift }]} onPress={close}>
         <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
           {/* ── Title ── */}
           <View style={styles.titleRow}>
