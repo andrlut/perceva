@@ -148,9 +148,23 @@ Three rules the SQL encodes, all from the plan:
   `coalesce(jsonb_typeof(i->'video'->'pt'), 'null') = 'null'`.
 - A material needs a deep dive when `learning_material_media` has no
   `kind='audio'` row for that locale.
+- An idea also needs a video when the one it has carries
+  **`text_revised_at`** — it was generated before the idea's text changed,
+  so it may now contradict the card. Until 2026-09-27 that mark had no
+  consumer: `emit-migration.mjs` wrote it, nothing ever read it, and 55 of
+  the 69 videos in the catalog sat stale forever (the re-cut rewrote nearly
+  every surviving idea). The EN video of `glossary-play`'s idea 1 is the
+  case that exposed it — its bar chart reads as "4 of 4" while the text
+  says 3 of 4. Stale videos come **last**, tier 6: a video that may
+  disagree is still worth more than no video, so nothing missing ever waits
+  on a refresh. A tier-6 item lands on a `.v2` path (§7 — the bucket never
+  overwrites) and §8 writes a **fresh** `video.<lang>` object (path,
+  duration, poster), which drops `text_revised_at` and is what marks it
+  current again. Never carry that key forward.
 - Priority: **tier 1** PT of idea 1 of every material → **tier 2** EN of
   idea 1 → **tier 3** missing deep dives → **tier 4** the other ideas
-  (by ordinal, PT before EN). Optional tier 5, **off by default** (the
+  (by ordinal, PT before EN) → **tier 6** videos marked `text_revised_at`.
+  Optional tier 5, **off by default** (the
   plan's "regenerate a *Curto* audio as *Padrão*"): a third branch in
   `audio_gaps` selecting rows with `mm.kind = 'audio' and
   mm.duration_seconds < 600`, tier 5, uploaded on a `.v2` path. Do not
@@ -182,6 +196,14 @@ video_gaps as (
   cross join (values ('pt'), ('en')) as l(locale)
   where coalesce(jsonb_typeof(i->'video'->l.locale), 'null') = 'null'
 ),
+stale_videos as (
+  select m.slug, m.released_at, 'video' as kind,
+         i->>'id' as idea_id, (i->>'ordinal')::int as ordinal, l.locale
+  from m
+  cross join lateral jsonb_array_elements(m.ideas) i
+  cross join (values ('pt'), ('en')) as l(locale)
+  where i->'video'->l.locale->>'text_revised_at' is not null
+),
 audio_gaps as (
   select m.slug, m.released_at, 'audio' as kind,
          null::text as idea_id, null::int as ordinal, l.locale
@@ -194,11 +216,18 @@ audio_gaps as (
 ),
 queue as (
   select g.*,
-         case when kind = 'video' and ordinal = 1 and locale = 'pt' then 1
+         case when g.stale                                            then 6
+              when kind = 'video' and ordinal = 1 and locale = 'pt' then 1
               when kind = 'video' and ordinal = 1 and locale = 'en' then 2
               when kind = 'audio'                                  then 3
               else 4 end as tier
-  from (select * from video_gaps union all select * from audio_gaps) g
+  from (
+    select *, false as stale from video_gaps
+    union all
+    select *, false as stale from audio_gaps
+    union all
+    select *, true  as stale from stale_videos
+  ) g
 )
 select slug, kind, idea_id, ordinal, locale, tier, count(*) over () as queue_size
 from queue
