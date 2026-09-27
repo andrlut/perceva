@@ -31,7 +31,8 @@ interface Props {
  * time before logging. Opens via long-press on the task's check button.
  *
  * Each sub the task touches gets a stepper [− N ★ +]. Per-sub stars cap
- * at 5; no total cap (the exponential XP curve self-regulates). Reset
+ * at 5; no total cap (XP is linear — 10 per star — so spreading stars
+ * across subs pays exactly what concentrating them does). Reset
  * returns to defaults.
  *
  * Confirming sends the adjusted (sub_id, stars) array as the override

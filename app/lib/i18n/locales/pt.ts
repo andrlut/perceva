@@ -476,7 +476,7 @@ const pt: Translations = {
       dedication: {
         eyebrow: 'Dedicação',
         title: 'Estrelas viram Dedicação',
-        body: 'Cada prática treina sub-áreas. De 1 a 5 estrelas: o esforço.',
+        body: 'Cada prática treina sub-áreas. De 1 a 5 estrelas: o esforço. Cada estrela vale 10.',
         cellA11y: 'Com {{stars}} de 5 estrelas, +{{xp}} de Dedicação',
         exampleLabel: 'Exemplo',
         exampleTitle: 'Meditar 10 minutos',
@@ -1491,7 +1491,7 @@ const pt: Translations = {
       fewerStarsA11y: 'Uma estrela a menos em {{sub}}',
       moreStarsA11y: 'Mais uma estrela em {{sub}}',
       starsScale: 'Dedicação por sub-área, a cada vez que você marca:',
-      starsHelp: 'As estrelas dizem o quanto a prática puxa de você em cada sub-área: 1★ é leve, 5★ é puxado.',
+      starsHelp: 'As estrelas dizem o quanto a prática puxa de você em cada sub-área: 1★ é leve, 5★ é puxado. Cada estrela vale 10 de Dedicação.',
       countSubs: {
         other: '{{count}} sub-áreas',
         one: '{{count}} sub-área',
