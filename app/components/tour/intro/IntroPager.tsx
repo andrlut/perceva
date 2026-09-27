@@ -49,6 +49,8 @@ import {
   IntroPage,
   IntroPayoff,
   IntroTitle,
+  PillarCard,
+  PillarHeader,
   pillarPalette,
 } from './IntroPageLayout';
 import { PillarsHero } from './PillarsHero';
@@ -234,8 +236,10 @@ export function IntroPager() {
       ? Math.min(contentW, 330, Math.max(190, (pageH - padFor(0) - 170) * (300 / 280)))
       : Math.min(contentW, 280),
   );
-  const hexSize = Math.round(Math.min(contentW * 0.72, 210, Math.max(150, pageH * 0.27)));
-  const cardW = Math.round(Math.min(contentW, 250, Math.max(200, pageH * 0.34)));
+  // Pillar pages stack header + drawing + two cards, so the drawing gives up
+  // some height to keep a 640dp phone on one screen.
+  const hexSize = Math.round(Math.min(contentW * 0.62, 190, Math.max(140, pageH * 0.24)));
+  const cardW = Math.round(Math.min(contentW, 220, Math.max(180, pageH * 0.28)));
   const onLast = index === LAST;
   const palette = pillarPalette();
 
@@ -285,41 +289,72 @@ export function IntroPager() {
               <IntroBody>{t('tour.intro.hero.body')}</IntroBody>
             </IntroPage>
 
-            {/* 1 — Autoconhecimento: the Avaliação is where you start */}
+            {/* 1-3 — one page per pillar: which pillar (top), its drawing, and
+               two cards saying what to DO there — no philosophy. */}
             <IntroPage width={pageW} height={pageH} bottomPad={padFor(1)}>
+              <PillarHeader
+                n={1}
+                label={t('tour.intro.pillarN', { n: 1 })}
+                name={t('tour.intro.hero.pillarSelf')}
+                a11y={t('tour.intro.pillarA11y', { n: 1, name: t('tour.intro.hero.pillarSelf') })}
+              />
               <SelfKnowledgeHex size={hexSize} active={index === 1} />
-              <IntroEyebrow color={palette.self.ink}>{t('tour.intro.self.eyebrow')}</IntroEyebrow>
-              <IntroTitle>{t('tour.intro.self.title')}</IntroTitle>
-              <IntroBody>{t('tour.intro.self.body')}</IntroBody>
-              <IntroPayoff color={palette.self.fill} icon="git-compare-outline">
-                {t('tour.intro.self.payoff')}
-              </IntroPayoff>
+              <PillarCard
+                icon="speedometer-outline"
+                color={palette.self.fill}
+                title={t('tour.intro.self.card1Title')}
+                body={t('tour.intro.self.card1Body')}
+              />
+              <PillarCard
+                icon="clipboard-outline"
+                color={palette.self.fill}
+                title={t('tour.intro.self.card2Title')}
+                body={t('tour.intro.self.card2Body')}
+              />
             </IntroPage>
 
-            {/* 2 — Prática */}
             <IntroPage width={pageW} height={pageH} bottomPad={padFor(2)}>
+              <PillarHeader
+                n={2}
+                label={t('tour.intro.pillarN', { n: 2 })}
+                name={t('tour.intro.hero.pillarPractice')}
+                a11y={t('tour.intro.pillarA11y', { n: 2, name: t('tour.intro.hero.pillarPractice') })}
+              />
               <PracticeVisual active={index === 2} />
-              <IntroEyebrow color={palette.practice.ink}>
-                {t('tour.intro.practice.eyebrow')}
-              </IntroEyebrow>
-              <IntroTitle>{t('tour.intro.practice.title')}</IntroTitle>
-              <IntroBody>{t('tour.intro.practice.body')}</IntroBody>
-              <IntroPayoff color={palette.practice.fill} icon="play-skip-forward-outline">
-                {t('tour.intro.practice.payoff')}
-              </IntroPayoff>
+              <PillarCard
+                icon="checkmark-circle-outline"
+                color={palette.practice.fill}
+                title={t('tour.intro.practice.card1Title')}
+                body={t('tour.intro.practice.card1Body')}
+              />
+              <PillarCard
+                icon="happy-outline"
+                color={palette.practice.fill}
+                title={t('tour.intro.practice.card2Title')}
+                body={t('tour.intro.practice.card2Body')}
+              />
             </IntroPage>
 
-            {/* 3 — Aprendizado */}
             <IntroPage width={pageW} height={pageH} bottomPad={padFor(3)}>
+              <PillarHeader
+                n={3}
+                label={t('tour.intro.pillarN', { n: 3 })}
+                name={t('tour.intro.hero.pillarLearning')}
+                a11y={t('tour.intro.pillarA11y', { n: 3, name: t('tour.intro.hero.pillarLearning') })}
+              />
               <IdeaFlipVisual width={cardW} active={index === 3} />
-              <IntroEyebrow color={palette.learning.ink}>
-                {t('tour.intro.learning.eyebrow')}
-              </IntroEyebrow>
-              <IntroTitle>{t('tour.intro.learning.title')}</IntroTitle>
-              <IntroBody>{t('tour.intro.learning.body')}</IntroBody>
-              <IntroPayoff color={palette.learning.fill} icon="flag-outline">
-                {t('tour.intro.learning.payoff')}
-              </IntroPayoff>
+              <PillarCard
+                icon="bulb-outline"
+                color={palette.learning.fill}
+                title={t('tour.intro.learning.card1Title')}
+                body={t('tour.intro.learning.card1Body')}
+              />
+              <PillarCard
+                icon="albums-outline"
+                color={palette.learning.fill}
+                title={t('tour.intro.learning.card2Title')}
+                body={t('tour.intro.learning.card2Body')}
+              />
             </IntroPage>
 
             {/* 4 — Dedicação: what the stars are */}
