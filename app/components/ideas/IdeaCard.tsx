@@ -123,6 +123,13 @@ export interface IdeaCardProps {
    */
   quiet?: boolean;
   /**
+   * The reader wrote a note about this idea. Draws a small dark-glass mark
+   * in the bottom-left of the front — the note itself never shows here.
+   * Seeing the note is a deliberate gesture (hold the card), so the grid
+   * stays a grid of ideas and not a wall of someone's handwriting.
+   */
+  hasNote?: boolean;
+  /**
    * Press-and-hold (the collection opens its menu with it). A haptic marks
    * the hold; the tap that would flip the card does not fire.
    */
@@ -314,6 +321,7 @@ export const IdeaCard = memo(function IdeaCard({
   openAffordance = 'none',
   kicker,
   quiet = false,
+  hasNote = false,
   onLongPress,
   disabled = false,
   testID,
@@ -495,6 +503,15 @@ export const IdeaCard = memo(function IdeaCard({
             <Ionicons name="checkmark" size={13} color={tokens.bg.deep} />
           </View>
         )}
+        {hasNote && (
+          <View style={[styles.noteMark, { bottom: pad - 1, left: pad - 1 }]}>
+            <Ionicons
+              name="create"
+              size={11}
+              color="rgba(255, 255, 255, 0.92)"
+            />
+          </View>
+        )}
       </Animated.View>
 
       {/* BACK — glass, dimension top bar, the claim, optional corner button.
@@ -596,6 +613,19 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.6)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
+  },
+  /** Note mark: dark glass, no color of its own — it must read as a quiet
+   *  dog-ear, never as a second status badge competing with the gold check. */
+  noteMark: {
+    position: 'absolute',
+    width: 20,
+    height: 20,
+    borderRadius: tokens.radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(6, 8, 30, 0.72)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.28)',
   },
   badge: {
     position: 'absolute',

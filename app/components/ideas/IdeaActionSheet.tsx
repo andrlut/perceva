@@ -10,9 +10,12 @@ interface Props {
   ideaTitle: string;
   /** Current review decision — drives the favorite item's label and icon. */
   favorite: boolean;
+  /** The reader's note, shown here and nowhere else. Null = none yet. */
+  note: string | null;
   onCancel: () => void;
   onOpen: () => void;
   onToggleFavorite: () => void;
+  onEditNote: () => void;
 }
 
 /**
@@ -26,9 +29,11 @@ export function IdeaActionSheet({
   visible,
   ideaTitle,
   favorite,
+  note,
   onCancel,
   onOpen,
   onToggleFavorite,
+  onEditNote,
 }: Props) {
   const { t } = useT();
   const sheetBottom = useSheetBottomInset();
@@ -43,6 +48,32 @@ export function IdeaActionSheet({
           <Text style={styles.title} numberOfLines={2}>
             {ideaTitle}
           </Text>
+
+          {note != null && note.trim().length > 0 && (
+            <View style={styles.noteBox}>
+              <Text style={styles.noteLabel}>{t('learning.ideas.note.yours')}</Text>
+              <Text style={styles.noteText}>{note.trim()}</Text>
+            </View>
+          )}
+
+          <Pressable
+            onPress={onEditNote}
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.action, pressed && { opacity: 0.7 }]}
+          >
+            <View style={styles.actionIcon}>
+              <Ionicons name="create-outline" size={18} color={tokens.brand.violet2} />
+            </View>
+            <View style={styles.actionBody}>
+              <Text style={styles.actionTitle}>
+                {note ? t('learning.ideas.menu.editNote') : t('learning.ideas.menu.addNote')}
+              </Text>
+              <Text style={styles.actionSub}>
+                {note ? t('learning.ideas.menu.editNoteSub') : t('learning.ideas.menu.addNoteSub')}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={tokens.text.dim} />
+          </Pressable>
 
           <Pressable
             onPress={onOpen}
@@ -126,6 +157,30 @@ const styles = StyleSheet.create({
     color: tokens.text.hi,
     paddingHorizontal: 4,
     marginBottom: tokens.space[3],
+  },
+  /** The note reads as the reader's own voice — quiet card, violet hairline,
+   *  never a quote block competing with the idea's own claim. */
+  noteBox: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+    backgroundColor: tokens.bg.base,
+    padding: tokens.space[3],
+    gap: 6,
+    marginBottom: tokens.space[2],
+  },
+  noteLabel: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 10,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    color: tokens.semantic.coin,
+  },
+  noteText: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 14,
+    lineHeight: 20,
+    color: tokens.text.hi,
   },
   action: {
     flexDirection: 'row',

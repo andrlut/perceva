@@ -37,20 +37,25 @@ export function shelfCardWidth(screenWidth: number): number {
   return Math.max(132, Math.min(190, raw));
 }
 
+/** A shelf card is an idea plus, optionally, the reader's own note — only
+ *  its presence matters here (the card draws a small mark; the text lives
+ *  in the long-press menu). */
+export type ShelfCard = IdeaCardData & { note?: string | null };
+
 interface Props {
   dimensionId: DimensionId;
   /** Localized dimension label. */
   label: string;
-  cards: IdeaCardData[];
+  cards: ShelfCard[];
   cardWidth: number;
   locale: IdeaLocale;
   onLongPress: (card: IdeaCardData) => void;
 }
 
-const keyExtractor = (c: IdeaCardData) => `${c.materialId}:${c.id}`;
+const keyExtractor = (c: ShelfCard) => `${c.materialId}:${c.id}`;
 
 interface CellProps {
-  data: IdeaCardData;
+  data: ShelfCard;
   width: number;
   locale: IdeaLocale;
   onLongPress: (card: IdeaCardData) => void;
@@ -66,6 +71,7 @@ const Cell = memo(function Cell({ data, width, locale, onLongPress }: CellProps)
       locale={locale}
       collected
       quiet
+      hasNote={(data.note ?? '').trim().length > 0}
       onLongPress={hold}
     />
   );
