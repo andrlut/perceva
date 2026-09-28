@@ -134,17 +134,34 @@ export function PillarCard({
   title,
   body,
   color,
+  outline,
   children,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   title: string;
   body?: string;
   color: string;
+  /**
+   * Draw the border like a shape in the drawing above it, so the card needs
+   * no legend: solid = the self-assessment's filled shape, dashed = the
+   * questionnaire's outline (owner feedback, 2026-09-28).
+   */
+  outline?: { color: string; dashed?: boolean };
   /** Visual content under the title (e.g. the six area chips). */
   children?: ReactNode;
 }) {
   return (
-    <View style={[styles.card, { borderColor: `${color}66`, backgroundColor: `${color}14` }]}>
+    <View
+      style={[
+        styles.card,
+        { borderColor: `${color}66`, backgroundColor: `${color}14` },
+        outline && {
+          borderColor: outline.color,
+          borderWidth: 2,
+          borderStyle: outline.dashed ? 'dashed' : 'solid',
+        },
+      ]}
+    >
       <View style={[styles.cardIcon, { backgroundColor: `${color}29` }]}>
         <Ionicons name={icon} size={22} color={color} />
       </View>
@@ -153,6 +170,37 @@ export function PillarCard({
         {body ? <Text style={styles.cardText}>{body}</Text> : null}
         {children}
       </View>
+    </View>
+  );
+}
+
+/**
+ * Big, iconic header for the economy pages (Dedicação ⚡, Moedas 🪙): the
+ * name in large type next to the same icon the app uses for it everywhere,
+ * then one line saying what it does.
+ */
+export function EconomyHeader({
+  icon,
+  name,
+  subtitle,
+  color,
+}: {
+  icon: ReactNode;
+  name: string;
+  subtitle: string;
+  color: string;
+}) {
+  return (
+    <View style={styles.econHeader} accessible accessibilityRole="header" accessibilityLabel={`${name}. ${subtitle}`}>
+      <View style={styles.econRow} importantForAccessibility="no-hide-descendants">
+        <View style={[styles.econBadge, { backgroundColor: `${color}24`, borderColor: `${color}66` }]}>
+          {icon}
+        </View>
+        <Text style={[styles.econName, { color }]}>{name}</Text>
+      </View>
+      <Text style={styles.econSubtitle} importantForAccessibility="no">
+        {subtitle}
+      </Text>
     </View>
   );
 }
@@ -174,6 +222,35 @@ export function pillarPalette() {
 }
 
 const styles = StyleSheet.create({
+  econHeader: {
+    alignItems: 'center',
+    gap: tokens.space[2],
+  },
+  econRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[3],
+  },
+  econBadge: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  econName: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 34,
+    lineHeight: 40,
+  },
+  econSubtitle: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 17,
+    lineHeight: 23,
+    color: tokens.text.hi,
+    textAlign: 'center',
+  },
   pillarHeader: {
     alignItems: 'center',
     gap: tokens.space[1],

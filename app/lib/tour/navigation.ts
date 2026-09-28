@@ -1,4 +1,15 @@
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
+
+/**
+ * Where to go right after landing on Home once onboarding ends — set by the
+ * intro's "start with the self-assessment" choice, consumed (once) by
+ * exitTourToHome. In memory only: a killed app simply lands on Home.
+ */
+let afterHome: Href | null = null;
+
+export function setAfterOnboarding(href: Href | null): void {
+  afterHome = href;
+}
 
 /**
  * Leave a full-screen onboarding route for Home.
@@ -18,4 +29,7 @@ export function exitTourToHome(): void {
   } else {
     router.replace('/(tabs)');
   }
+  const next = afterHome;
+  afterHome = null;
+  if (next) router.push(next);
 }
