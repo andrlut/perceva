@@ -29,13 +29,14 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppIcon } from '@/components/AppIcon';
+import { CoinIcon } from '@/components/CoinIcon';
 import { PercevaGlyph } from '@/components/PercevaGlyph';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { isTerminal } from '@/lib/tour/constants';
 import { useTourStore } from '@/lib/tour/store';
-import { exitTourToHome } from '@/lib/tour/navigation';
+import { exitTourToHome, setAfterOnboarding } from '@/lib/tour/navigation';
 import { tokens } from '@/theme';
 import { DIMENSION_ORDER } from '@/theme/dimensions';
 
@@ -48,18 +49,17 @@ import {
 import { IdeaFlipVisual } from './IdeaFlipVisual';
 import {
   IntroBody,
-  IntroEyebrow,
   IntroPage,
   IntroPayoff,
   IntroTitle,
+  EconomyHeader,
   PillarCard,
   PillarHeader,
   pillarPalette,
 } from './IntroPageLayout';
 import { PillarsHero } from './PillarsHero';
 import { PracticeVisual } from './PracticeVisual';
-import { SelfKnowledgeHex } from './SelfKnowledgeHex';
-import { SkipIsSafe, TourChecklist } from './TourChoice';
+import { selfKnowledgeColors, SelfKnowledgeHex } from './SelfKnowledgeHex';
 
 /**
  * The method intro — the first thing a new account sees after login.
@@ -93,6 +93,7 @@ const DOTS_BLOCK = 8 + 14;
 const BTN_H = 54;
 const SECONDARY_H = 50;
 const BTN_GAP = 10;
+const SKIP_H = 44;
 /**
  * The last page's primary button sits exactly where "Continuar" sat, so a
  * double tap on page 5 would start the tour unread. Presses that land this
@@ -100,7 +101,7 @@ const BTN_GAP = 10;
  */
 const ARRIVAL_GUARD_MS = 650;
 
-type Choice = 'tour' | 'skip';
+type Choice = 'tour' | 'assessment' | 'skip';
 
 export function IntroPager() {
   const router = useRouter();
@@ -186,6 +187,9 @@ export function IntroPager() {
       try {
         if (choice === 'tour') await startGuidedTour();
         else await skipGuidedTour();
+        // "Start with the self-assessment": land on it once onboarding ends
+        // (after the starter pack, or straight away on an intro-only replay).
+        setAfterOnboarding(choice === 'assessment' ? '/self-assessment' : null);
         await setStatus('intro', 'completed');
         // Replaying only the intro from Ajustes reaches this page with the
         // starter pack already answered — then there is nothing to pick.
@@ -228,7 +232,8 @@ export function IntroPager() {
   // ── Layout ─────────────────────────────────────────────────────────────
   const bottomInset = Math.max(insets.bottom, tokens.space[3]) + tokens.space[2];
   const footerShort = FADE + DOTS_BLOCK + BTN_H + bottomInset;
-  const footerTall = footerShort + BTN_GAP + SECONDARY_H;
+  // Last page: tour (primary) · self-assessment (secondary) · skip (text).
+  const footerTall = footerShort + (BTN_GAP + SECONDARY_H) + (BTN_GAP + SKIP_H);
   const padFor = (page: number) => (page === LAST ? footerTall : footerShort) + tokens.space[2];
   const contentW = pageW - tokens.space[6] * 2;
   // Visual sizes follow the measured page height, so a 640dp phone still
@@ -253,6 +258,7 @@ export function IntroPager() {
   );
   const onLast = index === LAST;
   const palette = pillarPalette();
+  const hexColors = selfKnowledgeColors();
 
   return (
     <ScreenBackground withGoldHalo>
@@ -312,6 +318,7 @@ export function IntroPager() {
               <PillarCard
                 icon="speedometer-outline"
                 color={palette.self.fill}
+                outline={{ color: hexColors.self }}
                 title={t('tour.intro.self.card1Title')}
               >
                 {/* The six life areas, shown instead of named in prose. */}
@@ -330,6 +337,7 @@ export function IntroPager() {
               <PillarCard
                 icon="clipboard-outline"
                 color={palette.self.fill}
+                outline={{ color: hexColors.questionnaire, dashed: true }}
                 title={t('tour.intro.self.card2Title')}
                 body={t('tour.intro.self.card2Body')}
               />
@@ -379,10 +387,12 @@ export function IntroPager() {
 
             {/* 4 — Dedicação: what the stars are */}
             <IntroPage width={pageW} height={pageH} bottomPad={padFor(4)}>
-              <IntroEyebrow color={palette.practice.ink}>
-                {t('tour.intro.dedication.eyebrow')}
-              </IntroEyebrow>
-              <IntroTitle>{t('tour.intro.dedication.title')}</IntroTitle>
+              <EconomyHeader
+                icon={<Ionicons name="flash" size={28} color={tokens.semantic.xp} />}
+                name={t('tour.intro.dedication.eyebrow')}
+                subtitle={t('tour.intro.dedication.title')}
+                color={palette.practice.ink}
+              />
               <IntroBody>{t('tour.intro.dedication.body')}</IntroBody>
               <StarTable />
               <DedicationExample />
@@ -394,10 +404,12 @@ export function IntroPager() {
 
             {/* 5 — Moedas: rewards you define */}
             <IntroPage width={pageW} height={pageH} bottomPad={padFor(5)}>
-              <IntroEyebrow color={palette.learning.ink}>
-                {t('tour.intro.coins.eyebrow')}
-              </IntroEyebrow>
-              <IntroTitle>{t('tour.intro.coins.title')}</IntroTitle>
+              <EconomyHeader
+                icon={<CoinIcon size={28} />}
+                name={t('tour.intro.coins.eyebrow')}
+                subtitle={t('tour.intro.coins.title')}
+                color={palette.learning.ink}
+              />
               <IntroBody>
                 {t('tour.intro.coins.body', {
                   none: t('tasks.coinMultiplier.none'),
@@ -417,11 +429,15 @@ export function IntroPager() {
 
             {/* 6 — Tour or skip */}
             <IntroPage width={pageW} height={pageH} bottomPad={padFor(6)}>
-              <IntroEyebrow>{t('tour.intro.choice.eyebrow')}</IntroEyebrow>
               <IntroTitle>{t('tour.intro.choice.title')}</IntroTitle>
-              <IntroBody>{t('tour.intro.choice.body')}</IntroBody>
-              <TourChecklist />
-              <SkipIsSafe />
+              <View style={styles.safeLine}>
+                <Ionicons name="refresh" size={18} color={tokens.semantic.coinLight} />
+                <Text style={styles.safeLineText}>
+                  {t('tour.intro.choice.safe', {
+                    path: `${t('tabs.settings')} › ${t('profile.actions.replayOnboarding')}`,
+                  })}
+                </Text>
+              </View>
             </IntroPage>
           </Animated.ScrollView>
 
@@ -465,11 +481,24 @@ export function IntroPager() {
                   disabled={busy != null}
                 />
                 <SecondaryButton
-                  label={t('tour.intro.choice.secondary')}
-                  onPress={() => void finish('skip')}
-                  busy={busy === 'skip'}
+                  label={t('tour.intro.choice.assessment')}
+                  onPress={() => void finish('assessment')}
+                  busy={busy === 'assessment'}
                   disabled={busy != null}
                 />
+                <Pressable
+                  onPress={() => void finish('skip')}
+                  disabled={busy != null}
+                  style={({ pressed }) => [styles.skipChoice, pressed && styles.pressed]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('tour.intro.choice.skip')}
+                >
+                  {busy === 'skip' ? (
+                    <ActivityIndicator color={tokens.text.hi} />
+                  ) : (
+                    <Text style={styles.skipChoiceText}>{t('tour.intro.choice.skip')}</Text>
+                  )}
+                </Pressable>
               </Animated.View>
             )}
           </View>
@@ -619,6 +648,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: -(tokens.space[6] - tokens.space[3]),
     marginBottom: tokens.space[2],
+  },
+  safeLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    gap: tokens.space[2],
+    maxWidth: 340,
+  },
+  safeLineText: {
+    flexShrink: 1,
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 15,
+    lineHeight: 21,
+    color: tokens.text.base,
+  },
+  skipChoice: {
+    height: SKIP_H,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  skipChoiceText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 15,
+    color: tokens.text.mid,
   },
   areaChips: {
     flexDirection: 'row',

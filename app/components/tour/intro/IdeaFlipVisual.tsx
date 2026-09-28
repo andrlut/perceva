@@ -100,7 +100,12 @@ export function IdeaFlipVisual({ width, active }: { width: number; active: boole
           end={{ x: 1, y: 1 }}
           style={styles.art}
         >
-          <Ionicons name="book-outline" size={34} color={mind.color} />
+          {/* Ideas come as video, audio and text — one icon each. */}
+          <View style={styles.formats}>
+            <Ionicons name="videocam-outline" size={28} color={mind.color} />
+            <Ionicons name="headset-outline" size={28} color={mind.color} />
+            <Ionicons name="book-outline" size={28} color={mind.color} />
+          </View>
         </LinearGradient>
         <View style={styles.faceBody}>
           <Text style={[styles.kicker, { color: mind.color }]} numberOfLines={1}>
@@ -141,6 +146,11 @@ export function IdeaFlipVisual({ width, active }: { width: number; active: boole
 }
 
 const styles = StyleSheet.create({
+  formats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
   stage: {
     alignSelf: 'stretch',
     alignItems: 'center',

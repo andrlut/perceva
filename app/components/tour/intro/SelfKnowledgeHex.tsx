@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -52,13 +52,22 @@ function points(ratios: number[]): string {
     .join(' ');
 }
 
+/** The two shapes' colours — shared with the page's cards, whose borders
+ *  repeat them (solid = self-assessment, dashed = questionnaire). */
+export function selfKnowledgeColors() {
+  const light = ACTIVE_THEME === 'light';
+  return {
+    self: tokens.brand.violet2,
+    questionnaire: light ? tokens.semantic.coinDeep : tokens.semantic.coin,
+  };
+}
+
 export function SelfKnowledgeHex({ size, active }: { size: number; active: boolean }) {
   const { t } = useT();
   const reduceMotion = useReducedMotion();
   const k = size / VB;
   const light = ACTIVE_THEME === 'light';
-  const selfColor = tokens.brand.violet2;
-  const outlineColor = light ? tokens.semantic.coinDeep : tokens.semantic.coin;
+  const { self: selfColor, questionnaire: outlineColor } = selfKnowledgeColors();
 
   const grow = useSharedValue(reduceMotion ? 1 : 0);
   const outline = useSharedValue(reduceMotion ? 1 : 0);
@@ -180,21 +189,6 @@ export function SelfKnowledgeHex({ size, active }: { size: number; active: boole
         })}
       </View>
 
-      <View style={styles.legend}>
-        <View style={styles.legendRow}>
-          <View
-            style={[
-              styles.swatchFill,
-              { backgroundColor: selfColor, opacity: light ? 0.55 : 0.75 },
-            ]}
-          />
-          <Text style={styles.legendText}>{t('tour.intro.self.legendSelf')}</Text>
-        </View>
-        <View style={styles.legendRow}>
-          <View style={[styles.swatchDash, { borderColor: outlineColor }]} />
-          <Text style={styles.legendText}>{t('tour.intro.self.legendQuestionnaire')}</Text>
-        </View>
-      </View>
     </View>
   );
 }
@@ -208,36 +202,5 @@ const styles = StyleSheet.create({
     position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  // One column, left-aligned, the block itself centred: the swatches line up
-  // however the two labels wrap (side by side they broke onto two ragged
-  // centred rows — owner feedback).
-  legend: {
-    alignSelf: 'center',
-    alignItems: 'flex-start',
-    gap: tokens.space[1],
-  },
-  legendRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[2],
-  },
-  swatchFill: {
-    width: 14,
-    height: 14,
-    borderRadius: 4,
-  },
-  swatchDash: {
-    width: 14,
-    height: 14,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderStyle: 'dashed',
-  },
-  legendText: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 13,
-    lineHeight: 18,
-    color: tokens.text.mid,
   },
 });
