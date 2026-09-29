@@ -58,13 +58,30 @@ gerador não consegue checar sozinho + as lições aprendidas em produção.
 - `claim`, `mecanismo` e `fazer` são REESCRITOS pra caber nos slides — não copiar o body
   inteiro. `mecanismo` ≤ ~280 caracteres; `fazer` ≤ ~200; sempre fiéis ao body original.
 
-## Legendas (legendas.md do lote)
+## Legendas (legendas.md do lote) — formato v4 (feedback do Artur, set/2026)
 
-- Instagram: 1ª linha = gancho autossuficiente; 2º parágrafo = mecanismo + fonte;
-  3º = CTA "Recanto, dentro do Perceva. Link na bio."
-- TikTok (modo foto): 1–2 frases secas + fonte.
-- Hashtags estáveis, sempre as mesmas: `#autoconhecimento #habitos #psicologia #bemestar #perceva`
-- Cadência: 2 carrosséis/semana, dimensões alternadas.
+- **Texto puro, SEM blockquote (`>`)** — a legenda é copiada e colada; nenhum
+  prefixo pode ir junto. Separadores de seção com `====` e `---`.
+- **Blocos por idioma e rede, na MESMA ordem das pastas**:
+  PT·Instagram → PT·TikTok → PT·YouTube → EN·Instagram → EN·TikTok → EN·YouTube.
+- **NUNCA referenciar número de slide** ("está no slide 4" etc.) — encerrar com
+  o CTA e "Link na bio." (IG) direto.
+- Instagram: gancho autossuficiente + mecanismo com fonte + CTA/Link na bio.
+- TikTok: 1–2 frases secas + fonte. YouTube: Título + Descrição (com
+  https://perceva.app/download) + 2 hashtags.
+- Hashtags estáveis: PT `#autoconhecimento #habitos #psicologia #bemestar #perceva`,
+  EN `#habits #selfknowledge #psychology #wellbeing #perceva`.
+- Cadência: 2 carrosséis/semana por idioma, dimensões alternadas.
+
+## Organização do lote e calendário (v4)
+
+- Após gerar slides, baixar reels e escrever legendas: rodar
+  `node organize.js <loteDir>` (requer o **batch.json MANTIDO dentro do lote**).
+  Resultado: `<lote>/{pt,en}/{instagram,tiktok,youtube}/NN-dia-slug/…`
+- **Numeração = dia da semana**: 01-seg · 02-ter · 03-qua · 04-qui · 05-sex.
+  Carrosséis ocupam 01 e 02 (03 se houver um terceiro); reels ocupam 04 e 05 —
+  o espaçamento carrossel→reel do mesmo tema (~3 dias) sai automático.
+- Instagram e TikTok recebem os mesmos arquivos; YouTube só os reels.
 
 ## Inglês (contas EN separadas)
 
