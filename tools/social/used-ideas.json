@@ -64,5 +64,27 @@
     "slug": "craft-praise-price",
     "date": "2026-09-24",
     "lang": "en"
+  },
+  {
+    "image_path": "protein-distribution-30g-myth/idea.1.98c55935.webp",
+    "slug": "saude-proteina-30g",
+    "date": "2026-09-28"
+  },
+  {
+    "image_path": "glossary-learn/idea.1.7acd5e8b.webp",
+    "slug": "mente-reler-nao-grava",
+    "date": "2026-09-28"
+  },
+  {
+    "image_path": "protein-distribution-30g-myth/idea.1.98c55935.webp",
+    "slug": "health-protein-30g-myth",
+    "date": "2026-09-28",
+    "lang": "en"
+  },
+  {
+    "image_path": "glossary-learn/idea.1.7acd5e8b.webp",
+    "slug": "mind-rereading-trap",
+    "date": "2026-09-28",
+    "lang": "en"
   }
 ]
