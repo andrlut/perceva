@@ -18,10 +18,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppIcon } from '@/components/AppIcon';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import {
+  ONB_PAGE_TOP,
   OnbPrimaryButton,
   OnbSubtitle,
   OnbTextButton,
   OnbTitle,
+  OnbTopBar,
 } from '@/components/tour/OnboardingKit';
 import {
   useActiveTasks,
@@ -186,6 +188,8 @@ export default function TourPackScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <Stack.Screen options={{ headerShown: false, gestureEnabled: false }} />
       <ScreenBackground withGoldHalo>
+        {/* Same brand bar and header height as the intro it follows. */}
+        <OnbTopBar />
         {!ready ? (
           <View style={styles.center}>
             {loadFailed ? (
@@ -384,7 +388,7 @@ const styles = StyleSheet.create({
   scrollView: { flex: 1 },
   scroll: { paddingHorizontal: tokens.space[4], paddingBottom: tokens.space[5] },
 
-  header: { paddingTop: tokens.space[6], gap: tokens.space[2], alignItems: 'center' },
+  header: { paddingTop: ONB_PAGE_TOP, gap: tokens.space[2], alignItems: 'center' },
 
   chips: {
     flexDirection: 'row',

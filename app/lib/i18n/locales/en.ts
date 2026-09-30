@@ -431,7 +431,6 @@ const en = {
 
   tour: {
     intro: {
-      pillarA11y: 'Pillar {{n}} of 3: {{name}}',
       skip: 'Skip intro',
       next: 'Continue',
       pageOf: 'Page {{n}} of {{total}}',

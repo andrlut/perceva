@@ -29,7 +29,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppIcon } from '@/components/AppIcon';
 import { CoinIcon } from '@/components/CoinIcon';
-import { PercevaGlyph } from '@/components/PercevaGlyph';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import {
   ONB_BTN_GAP,
@@ -38,9 +37,13 @@ import {
   ONB_TEXT_BTN_H,
   OnbPrimaryButton,
   OnbSecondaryButton,
-  OnbSubtitle,
   OnbTextButton,
-  OnbTitle,
+  FitBox,
+  ONB_HEADER_H,
+  ONB_PAGE_TOP,
+  OnbBadge,
+  OnbHeader,
+  OnbTopBar,
 } from '@/components/tour/OnboardingKit';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
@@ -57,9 +60,8 @@ import {
 import { IdeaFlipVisual } from './IdeaFlipVisual';
 import {
   IntroPage,
-  EconomyHeader,
+  PageBody,
   PillarCard,
-  PillarHeader,
   pillarPalette,
 } from './IntroPageLayout';
 import { PillarsHero } from './PillarsHero';
@@ -241,36 +243,33 @@ export function IntroPager() {
   const footerTall = footerShort + (BTN_GAP + SECONDARY_H) + (BTN_GAP + SKIP_H);
   const padFor = (page: number) => (page === LAST ? footerTall : footerShort) + tokens.space[2];
   const contentW = pageW - tokens.space[6] * 2;
-  // Visual sizes follow the measured page height, so a 640dp phone still
-  // gets the hero and its text on one screen. ~250px is the hero's text
-  // block (two-line title + one line); the art is 300×280, hence the
-  // ratio. It may bleed into the page's side padding (heroArt's negative
-  // margin) — the triangle is the page (owner: "dá pra aumentar?").
+  // One budget for every page's drawing: the page height minus the footer,
+  // the top padding, the header band, the two cards and the gaps between.
+  const CARDS_H = 2 * 86 + tokens.space[3];
+  const GAPS_H = 2 * tokens.space[3];
+  const bodyMax = (page: number, withCards = true) =>
+    Math.max(
+      0,
+      pageH - padFor(page) - ONB_PAGE_TOP - ONB_HEADER_H - GAPS_H - (withCards ? CARDS_H : 0),
+    );
+  const ART_RATIO = 300 / 280; // PillarsHero is 300×280
   const heroSize = Math.round(
     pageH > 0
-      ? Math.min(pageW - tokens.space[3] * 2, 420, Math.max(200, (pageH - padFor(0) - 150) * (300 / 280)))
+      ? Math.min(pageW - tokens.space[3] * 2, 400, Math.max(180, bodyMax(0, false) * ART_RATIO))
       : Math.min(pageW - tokens.space[3] * 2, 300),
   );
-  // Last page: the triangle fills what the question + subtitle (~110dp)
-  // leave above the tallest footer (three choices).
   const choiceHeroSize = Math.round(
-    pageH > 0
-      ? Math.min(contentW, 300, Math.max(170, (pageH - padFor(LAST) - 150) * (300 / 280)))
-      : 220,
+    pageH > 0 ? Math.min(contentW, 300, Math.max(150, bodyMax(LAST, false) * ART_RATIO)) : 220,
   );
   // The redo line is ONE string with the Ajustes path interpolated; split it
   // around the path so the path alone can be styled.
   const redoPath = `${t('tabs.settings')} › ${t('profile.actions.replayOnboarding')}`;
   const redoLine = t('tour.intro.choice.safe', { path: '\u0000' }).split('\u0000');
-  // Pillar pages stack header + drawing + two cards, so the drawing gives up
-  // some height to keep a 640dp phone on one screen.
-  const hexSize = Math.round(Math.min(contentW * 0.62, 190, Math.max(140, pageH * 0.24)));
-  // The idea card is the Learn page's showpiece: as large as the page allows
-  // once the header and the two cards (~290dp) have their room.
+  // Page 1's first card carries the six area chips — ~24 taller than the rest.
+  const hexSize = Math.round(pageH > 0 ? Math.min(contentW, 210, Math.max(120, bodyMax(1) - 24)) : 180);
+  // The idea card is 1.18 as tall as it is wide.
   const cardW = Math.round(
-    pageH > 0
-      ? Math.min(contentW, 250, Math.max(180, (pageH - padFor(3) - 290) / 1.18))
-      : 220,
+    pageH > 0 ? Math.min(contentW, 250, Math.max(150, bodyMax(3) / 1.18)) : 220,
   );
   const onLast = index === LAST;
   const palette = pillarPalette();
@@ -280,23 +279,21 @@ export function IntroPager() {
     <ScreenBackground withGoldHalo>
       <View style={[styles.root, { paddingTop: insets.top }]}>
         {/* ── Top bar: brand · Pular introdução ──────────────────────── */}
-        <View style={styles.topBar}>
-          <View style={styles.brand}>
-            <PercevaGlyph size={24} palette="primary" idSuffix="intro-topbar" />
-            <Text style={styles.brandText}>Perceva</Text>
-          </View>
-          {!onLast && (
-            <Pressable
-              onPress={skipIntro}
-              hitSlop={8}
-              style={({ pressed }) => [styles.skipLink, pressed && styles.pressed]}
-              accessibilityRole="button"
-              accessibilityLabel={t('tour.intro.skip')}
-            >
-              <Text style={styles.skipText}>{t('tour.intro.skip')}</Text>
-            </Pressable>
-          )}
-        </View>
+        <OnbTopBar
+          right={
+            !onLast ? (
+              <Pressable
+                onPress={skipIntro}
+                hitSlop={8}
+                style={({ pressed }) => [styles.skipLink, pressed && styles.pressed]}
+                accessibilityRole="button"
+                accessibilityLabel={t('tour.intro.skip')}
+              >
+                <Text style={styles.skipText}>{t('tour.intro.skip')}</Text>
+              </Pressable>
+            ) : undefined
+          }
+        />
 
         {/* ── Pager ──────────────────────────────────────────────────── */}
         <View style={styles.pagerArea} onLayout={onPagerLayout}>
@@ -313,25 +310,30 @@ export function IntroPager() {
             overScrollMode="never"
             keyboardShouldPersistTaps="handled"
           >
+            {/* Every page: OnbHeader at the same height, the drawing in the
+               middle band (PageBody, sized by what is left), cards at the
+               bottom. No page centres its content vertically any more. */}
+
             {/* 0 — Hero: the three pillars */}
             <IntroPage width={pageW} height={pageH} bottomPad={padFor(0)}>
-              <View style={styles.heroArt}>
-                <PillarsHero size={heroSize} active={index === 0} idSuffix="hero" />
-              </View>
-              <OnbTitle>{t('tour.intro.hero.title')}</OnbTitle>
-              <OnbSubtitle>{t('tour.intro.hero.body')}</OnbSubtitle>
+              <OnbHeader title={t('tour.intro.hero.title')} subtitle={t('tour.intro.hero.body')} />
+              <PageBody>
+                <View style={styles.heroArt}>
+                  <PillarsHero size={heroSize} active={index === 0} idSuffix="hero" />
+                </View>
+              </PageBody>
             </IntroPage>
 
-            {/* 1-3 — one page per pillar: which pillar (top), its drawing, and
-               two cards saying what to DO there — no philosophy. */}
+            {/* 1 — Autoconhecimento */}
             <IntroPage width={pageW} height={pageH} bottomPad={padFor(1)}>
-              <PillarHeader
-                n={1}
-                name={t('tour.intro.hero.pillarSelf')}
+              <OnbHeader
+                title={t('tour.intro.hero.pillarSelf')}
                 subtitle={t('tour.intro.self.subtitle')}
-                a11y={t('tour.intro.pillarA11y', { n: 1, name: t('tour.intro.hero.pillarSelf') })}
+                color={palette.self.ink}
               />
-              <SelfKnowledgeHex size={hexSize} active={index === 1} />
+              <PageBody>
+                <SelfKnowledgeHex size={hexSize} active={index === 1} />
+              </PageBody>
               <PillarCard
                 icon="speedometer-outline"
                 color={palette.self.fill}
@@ -360,14 +362,18 @@ export function IntroPager() {
               />
             </IntroPage>
 
+            {/* 2 — Prática */}
             <IntroPage width={pageW} height={pageH} bottomPad={padFor(2)}>
-              <PillarHeader
-                n={2}
-                name={t('tour.intro.hero.pillarPractice')}
+              <OnbHeader
+                title={t('tour.intro.hero.pillarPractice')}
                 subtitle={t('tour.intro.practice.subtitle')}
-                a11y={t('tour.intro.pillarA11y', { n: 2, name: t('tour.intro.hero.pillarPractice') })}
+                color={palette.practice.ink}
               />
-              <PracticeVisual active={index === 2} />
+              <PageBody>
+                <FitBox maxHeight={bodyMax(2)}>
+                  <PracticeVisual active={index === 2} />
+                </FitBox>
+              </PageBody>
               <PillarCard
                 icon="checkmark-circle-outline"
                 color={palette.practice.fill}
@@ -382,14 +388,16 @@ export function IntroPager() {
               />
             </IntroPage>
 
+            {/* 3 — Aprendizado */}
             <IntroPage width={pageW} height={pageH} bottomPad={padFor(3)}>
-              <PillarHeader
-                n={3}
-                name={t('tour.intro.hero.pillarLearning')}
+              <OnbHeader
+                title={t('tour.intro.hero.pillarLearning')}
                 subtitle={t('tour.intro.learning.subtitle')}
-                a11y={t('tour.intro.pillarA11y', { n: 3, name: t('tour.intro.hero.pillarLearning') })}
+                color={palette.learning.ink}
               />
-              <IdeaFlipVisual width={cardW} active={index === 3} />
+              <PageBody>
+                <IdeaFlipVisual width={cardW} active={index === 3} />
+              </PageBody>
               <PillarCard
                 icon="bulb-outline"
                 color={palette.learning.fill}
@@ -404,17 +412,24 @@ export function IntroPager() {
               />
             </IntroPage>
 
-            {/* 4 — Dedicação: the basics and the purpose, like the pillar
-               pages. How stars turn into numbers is left to the practice
-               form's (i) and the guided tour (owner, 2026-09-29). */}
+            {/* 4 — Dedicação: the basics and the purpose. How stars turn into
+               numbers is left to the practice form's (i) and the guided tour. */}
             <IntroPage width={pageW} height={pageH} bottomPad={padFor(4)}>
-              <EconomyHeader
-                icon={<Ionicons name="flash" size={28} color={tokens.semantic.xp} />}
-                name={t('tour.intro.dedication.eyebrow')}
+              <OnbHeader
+                title={t('tour.intro.dedication.eyebrow')}
                 subtitle={t('tour.intro.dedication.title')}
                 color={palette.practice.ink}
+                badge={
+                  <OnbBadge color={palette.practice.ink}>
+                    <Ionicons name="flash" size={24} color={tokens.semantic.xp} />
+                  </OnbBadge>
+                }
               />
-              <DedicationExample />
+              <PageBody>
+                <FitBox maxHeight={bodyMax(4)}>
+                  <DedicationExample />
+                </FitBox>
+              </PageBody>
               <PillarCard
                 icon="add-circle-outline"
                 color={palette.practice.fill}
@@ -431,15 +446,21 @@ export function IntroPager() {
 
             {/* 5 — Moedas: rewards you define */}
             <IntroPage width={pageW} height={pageH} bottomPad={padFor(5)}>
-              <EconomyHeader
-                icon={<CoinIcon size={28} />}
-                name={t('tour.intro.coins.eyebrow')}
+              <OnbHeader
+                title={t('tour.intro.coins.eyebrow')}
                 subtitle={t('tour.intro.coins.title')}
                 color={palette.learning.ink}
+                badge={
+                  <OnbBadge color={palette.learning.ink}>
+                    <CoinIcon size={24} />
+                  </OnbBadge>
+                }
               />
-              {/* Basics and purpose only, like Dedicação: how much a practice
-                  pays (Nada/Metade/Igual/Dobro) is the practice form's (i). */}
-              <RewardSamples />
+              <PageBody>
+                <FitBox maxHeight={bodyMax(5)}>
+                  <RewardSamples />
+                </FitBox>
+              </PageBody>
               <PillarCard
                 icon="wallet-outline"
                 color={palette.learning.fill}
@@ -454,24 +475,22 @@ export function IntroPager() {
               />
             </IntroPage>
 
-            {/* 6 — How to start. Reading order = hierarchy: the question at
-               the top, the "you can redo it" reassurance as its subtitle (a
-               narrow centred caption, the Ajustes path in gold), the pillars
-               triangle filling the space above the three choices. */}
+            {/* 6 — How to start: the question, the redo line (Ajustes path in
+               gold), the pillars triangle above the three choices. */}
             <IntroPage width={pageW} height={pageH} bottomPad={padFor(6)}>
-              <View style={styles.choicePage}>
-                <View style={styles.choiceHead}>
-                  <OnbTitle>{t('tour.intro.choice.title')}</OnbTitle>
-                  <OnbSubtitle>
+              <OnbHeader
+                title={t('tour.intro.choice.title')}
+                subtitle={
+                  <>
                     {redoLine[0]}
                     <Text style={styles.choicePath}>{redoPath}</Text>
                     {redoLine[1]}
-                  </OnbSubtitle>
-                </View>
-                <View style={styles.choiceArt}>
-                  <PillarsHero size={choiceHeroSize} active={index === LAST} idSuffix="choice" />
-                </View>
-              </View>
+                  </>
+                }
+              />
+              <PageBody>
+                <PillarsHero size={choiceHeroSize} active={index === LAST} idSuffix="choice" />
+              </PageBody>
             </IntroPage>
           </Animated.ScrollView>
 
@@ -551,26 +570,6 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
   },
-  topBar: {
-    height: 52,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingLeft: tokens.space[5],
-    paddingRight: tokens.space[3],
-  },
-  brand: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[2],
-  },
-  brandText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 17,
-    lineHeight: 21,
-    color: tokens.text.hi,
-    letterSpacing: 0.2,
-  },
   skipLink: {
     minHeight: 44,
     justifyContent: 'center',
@@ -593,25 +592,11 @@ const styles = StyleSheet.create({
     marginHorizontal: -(tokens.space[6] - tokens.space[3]),
     marginBottom: tokens.space[2],
   },
-  choicePage: {
-    flex: 1,
-    alignSelf: 'stretch',
-  },
-  choiceHead: {
-    alignItems: 'center',
-    gap: tokens.space[2],
-    paddingTop: tokens.space[4],
-  },
   // Same size as the pillar names (28) — the page's one headline.
   // A caption, visibly narrower than the button column below.
   choicePath: {
     fontFamily: 'Manrope_700Bold',
     color: tokens.semantic.coinLight,
-  },
-  choiceArt: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   areaChips: {
     flexDirection: 'row',
