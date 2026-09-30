@@ -496,7 +496,7 @@ const pt: Translations = {
       choice: {
         skip: 'Pular',
         assessment: 'Fazer a autoavaliação · 1 min',
-        safe: 'Dá pra refazer tudo depois, em {{path}}.',
+        safe: 'Dá pra refazer tudo depois em {{path}}.',
         title: 'Como quer começar?',
         primary: 'Fazer o tour guiado',
       },

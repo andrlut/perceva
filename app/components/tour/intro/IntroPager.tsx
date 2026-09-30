@@ -243,13 +243,17 @@ export function IntroPager() {
       ? Math.min(pageW - tokens.space[3] * 2, 420, Math.max(200, (pageH - padFor(0) - 150) * (300 / 280)))
       : Math.min(pageW - tokens.space[3] * 2, 300),
   );
-  // Last page: the same triangle above the title and the redo line (~120dp),
-  // over the tallest footer (three choices).
+  // Last page: the triangle fills what the question + subtitle (~110dp)
+  // leave above the tallest footer (three choices).
   const choiceHeroSize = Math.round(
     pageH > 0
-      ? Math.min(contentW, 300, Math.max(170, (pageH - padFor(LAST) - 130) * (300 / 280)))
+      ? Math.min(contentW, 300, Math.max(170, (pageH - padFor(LAST) - 150) * (300 / 280)))
       : 220,
   );
+  // The redo line is ONE string with the Ajustes path interpolated; split it
+  // around the path so the path alone can be styled.
+  const redoPath = `${t('tabs.settings')} › ${t('profile.actions.replayOnboarding')}`;
+  const redoLine = t('tour.intro.choice.safe', { path: '\u0000' }).split('\u0000');
   // Pillar pages stack header + drawing + two cards, so the drawing gives up
   // some height to keep a 640dp phone on one screen.
   const hexSize = Math.round(Math.min(contentW * 0.62, 190, Math.max(140, pageH * 0.24)));
@@ -439,20 +443,25 @@ export function IntroPager() {
               />
             </IntroPage>
 
-            {/* 6 — Tour or skip. The first page's triangle, smaller and still
-               turning, so the page isn't empty above the three choices. */}
+            {/* 6 — How to start. Reading order = hierarchy: the question at
+               the top, the "you can redo it" reassurance as its subtitle (a
+               narrow centred caption, the Ajustes path in gold), the pillars
+               triangle filling the space above the three choices. */}
             <IntroPage width={pageW} height={pageH} bottomPad={padFor(6)}>
-              <View style={styles.choiceArt}>
-                <PillarsHero size={choiceHeroSize} active={index === LAST} idSuffix="choice" />
-              </View>
-              <IntroTitle>{t('tour.intro.choice.title')}</IntroTitle>
-              <View style={styles.safeLine}>
-                <Ionicons name="refresh" size={18} color={tokens.semantic.coinLight} />
-                <Text style={styles.safeLineText}>
-                  {t('tour.intro.choice.safe', {
-                    path: `${t('tabs.settings')} › ${t('profile.actions.replayOnboarding')}`,
-                  })}
-                </Text>
+              <View style={styles.choicePage}>
+                <View style={styles.choiceHead}>
+                  <Text style={styles.choiceTitle} accessibilityRole="header">
+                    {t('tour.intro.choice.title')}
+                  </Text>
+                  <Text style={styles.choiceSub}>
+                    {redoLine[0]}
+                    <Text style={styles.choicePath}>{redoPath}</Text>
+                    {redoLine[1]}
+                  </Text>
+                </View>
+                <View style={styles.choiceArt}>
+                  <PillarsHero size={choiceHeroSize} active={index === LAST} idSuffix="choice" />
+                </View>
               </View>
             </IntroPage>
           </Animated.ScrollView>
@@ -665,22 +674,40 @@ const styles = StyleSheet.create({
     marginHorizontal: -(tokens.space[6] - tokens.space[3]),
     marginBottom: tokens.space[2],
   },
-  choiceArt: {
-    alignItems: 'center',
+  choicePage: {
+    flex: 1,
+    alignSelf: 'stretch',
   },
-  safeLine: {
-    flexDirection: 'row',
+  choiceHead: {
     alignItems: 'center',
-    alignSelf: 'center',
     gap: tokens.space[2],
-    maxWidth: 340,
+    paddingTop: tokens.space[4],
   },
-  safeLineText: {
-    flexShrink: 1,
-    fontFamily: 'Manrope_600SemiBold',
+  // Same size as the pillar names (28) — the page's one headline.
+  choiceTitle: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 28,
+    lineHeight: 33,
+    color: tokens.text.hi,
+    textAlign: 'center',
+  },
+  // A caption, visibly narrower than the button column below.
+  choiceSub: {
+    maxWidth: 290,
+    fontFamily: 'Manrope_500Medium',
     fontSize: 15,
     lineHeight: 21,
-    color: tokens.text.base,
+    color: tokens.text.mid,
+    textAlign: 'center',
+  },
+  choicePath: {
+    fontFamily: 'Manrope_700Bold',
+    color: tokens.semantic.coinLight,
+  },
+  choiceArt: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   skipChoice: {
     height: SKIP_H,
