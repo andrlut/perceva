@@ -1095,6 +1095,24 @@ const en = {
     ex3: 'Is my mood related to how much I sleep?',
     ex4: 'How many days since I last redeemed that reward?',
     ex5: 'Log my day: woke up late, trained, ate out.',
+    shortcutTitle: 'Shortcut in the app',
+    shortcutToggle: '"Dictate to Claude" button on mood',
+    shortcutToggleDesc:
+      'Shows on Home, in the check-in and in the evening prompt. One tap opens the Claude app ready for you to dictate your day; the connector saves it.',
+    targetLabel: 'Open in',
+    targetPlaceholder: 'Paste a project or chat link',
+    targetHintEmpty:
+      'No link: opens a new chat with the request already typed. You tap the microphone and dictate.',
+    targetHintProject:
+      'Project: each day becomes a chat inside it, and the project instructions tell Claude what to do with the dictation.',
+    targetHintChat: 'Chat: always the same one. Works, but grows long over time.',
+    targetInvalid:
+      'Use a claude.ai/project/… or claude.ai/chat/… link (the one in the address bar on claude.ai).',
+    projectHowTitle: 'Setting up the project',
+    projectHowBody:
+      'On claude.ai, create a project (e.g. "Perceva · Journal"), paste the text below into Instructions and copy the project link from the address bar.',
+    projectInstructions:
+      "This project is my Perceva journal. Every message I send here is the day's mood check-in, almost always dictated: log it with the Perceva connector's log_mood tool and read back what you saved (date, rating and text). If I do not state the 1-5 rating, ask using the anchors the tool returns; never infer it from tone. If the message is a question about my data, answer with the read tools instead of logging.",
   },
 
   hex: {
@@ -2575,7 +2593,14 @@ const en = {
       full: 'Log with tags and a note',
       addTagsNote: 'Add tags and a note',
       editTagsNote: 'Edit tags and note',
+      dictateClaude: 'Dictate to Claude',
     },
+    // Prefilled in the Claude composer when the shortcut opens a NEW chat;
+    // the dictation lands right after it, in the same message. Generic on
+    // purpose — the day's content never travels in a URL.
+    claudePrompt:
+      "Today's mood check-in for Perceva. What follows is my day, dictated. Log it with log_mood and read back what you saved: ",
+    claudeOpenError: 'Could not open Claude. Is the app installed?',
     history: {
       title: 'How I felt',
       seeHistory: 'See history',

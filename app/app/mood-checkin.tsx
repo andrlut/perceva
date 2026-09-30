@@ -21,6 +21,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ClaudeDictateButton } from '@/components/mood/ClaudeDictateButton';
 import { MoodFace, MoodFacePlaceholder } from '@/components/mood/MoodFace';
 import { MoodFaceRow } from '@/components/mood/MoodFaceRow';
 import { MoodTagRow } from '@/components/mood/MoodTagRow';
@@ -289,6 +290,11 @@ export default function MoodCheckinScreen() {
               {isToday ? t('mood.subtitle') : dateLabel}
             </Text>
 
+            {/* Today only: the bridge's prompt says "the day", and a past
+                day would need its date carried into Claude. Renders nothing
+                unless the shortcut is on (Ajustes › Conector). */}
+            {isToday && <ClaudeDictateButton style={styles.claude} />}
+
             {/* Hero — the day's face, big. Keyed remount pops the new level
                 in with a small spring; height is fixed so nothing jumps. */}
             <View style={styles.hero}>
@@ -521,6 +527,10 @@ const styles = StyleSheet.create({
     color: tokens.text.mid,
     textAlign: 'center',
     marginTop: -tokens.space[2],
+  },
+  claude: {
+    alignSelf: 'center',
+    marginTop: -tokens.space[1],
   },
   hero: {
     alignItems: 'center',
