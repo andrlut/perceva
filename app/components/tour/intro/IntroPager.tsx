@@ -44,13 +44,11 @@ import {
   CoinDial,
   DedicationExample,
   RewardSamples,
-  StarTable,
 } from './EconomyVisuals';
 import { IdeaFlipVisual } from './IdeaFlipVisual';
 import {
   IntroBody,
   IntroPage,
-  IntroPayoff,
   IntroTitle,
   EconomyHeader,
   PillarCard,
@@ -385,7 +383,9 @@ export function IntroPager() {
               />
             </IntroPage>
 
-            {/* 4 — Dedicação: what the stars are */}
+            {/* 4 — Dedicação: the basics and the purpose, like the pillar
+               pages. How stars turn into numbers is left to the practice
+               form's (i) and the guided tour (owner, 2026-09-29). */}
             <IntroPage width={pageW} height={pageH} bottomPad={padFor(4)}>
               <EconomyHeader
                 icon={<Ionicons name="flash" size={28} color={tokens.semantic.xp} />}
@@ -393,13 +393,19 @@ export function IntroPager() {
                 subtitle={t('tour.intro.dedication.title')}
                 color={palette.practice.ink}
               />
-              <IntroBody>{t('tour.intro.dedication.body')}</IntroBody>
-              <StarTable />
               <DedicationExample />
-              <IntroBody>{t('tour.intro.dedication.after')}</IntroBody>
-              <IntroPayoff color={palette.self.fill} icon="star-outline">
-                {t('tour.intro.dedication.bridge')}
-              </IntroPayoff>
+              <PillarCard
+                icon="add-circle-outline"
+                color={palette.practice.fill}
+                title={t('tour.intro.dedication.card1Title')}
+                body={t('tour.intro.dedication.card1Body')}
+              />
+              <PillarCard
+                icon="trending-up-outline"
+                color={palette.practice.fill}
+                title={t('tour.intro.dedication.card2Title')}
+                body={t('tour.intro.dedication.card2Body')}
+              />
             </IntroPage>
 
             {/* 5 — Moedas: rewards you define */}

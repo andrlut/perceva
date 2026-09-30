@@ -21,35 +21,8 @@ import { SUB_META } from '@/theme/dimensions';
  * uses — the next screen (the starter pack) must read as the same thing.
  */
 
-const STARS: Difficulty[] = [1, 2, 3, 4, 5];
 export const EXAMPLE_SUB = 'contemplate' as const;
 export const EXAMPLE_STARS: Difficulty = 2;
-
-/** The five-step table: n★ → +XP in that sub-area's area. */
-export function StarTable() {
-  const { t } = useT();
-  return (
-    <View style={styles.table}>
-      {STARS.map((n) => {
-        const xp = baseXpForDifficulty(n);
-        return (
-          <View
-            key={n}
-            style={styles.cell}
-            accessible
-            accessibilityLabel={t('tour.intro.dedication.cellA11y', { stars: n, xp })}
-          >
-            <Text style={styles.cellStars}>
-              {n}
-              <Text style={styles.star}>★</Text>
-            </Text>
-            <Text style={styles.cellXp}>+{xp}</Text>
-          </View>
-        );
-      })}
-    </View>
-  );
-}
 
 /** One practice, one sub-area, the arithmetic spelled out. */
 export function DedicationExample() {
