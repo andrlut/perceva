@@ -582,6 +582,12 @@ export interface CompleteTaskResult {
  * Optimistic update: we drop the task from the buckets cache (single-target
  * only — multi-target tasks need a refetch) and bump character XP by the
  * computed total. Per-dim XP is bumped per sub.
+ *
+ * `times` (the long-press sheet's "quantas vezes", default 1) logs the same
+ * completion N times — N rows, each undoable on its own — by calling
+ * complete_task N times in sequence. Something done in amounts ("1% da
+ * renda investido" × 10) is N units of one practice, not a bigger star.
+ * The one-tap check never passes it.
  */
 export function useCompleteTask() {
   const queryClient = useQueryClient();
@@ -597,21 +603,39 @@ export function useCompleteTask() {
        *  default, resolved server-side (authoritative even when this
        *  client's copy of the task is stale). */
       coinMultiplier?: CoinMultiplier;
+      /** How many times to log it (default 1). See the header. */
+      times?: number;
     }): Promise<CompleteTaskResult> => {
-      const { data, error } = await supabase.rpc('complete_task', {
-        p_task_id: params.task.id,
-        ...(params.completedAt ? { p_completed_at: params.completedAt } : {}),
-        p_local_date: params.completedLocalDate ?? todayLocalDateKey(),
-        p_sub_overrides: params.subs.map((s) => ({
-          sub_id: s.sub_id,
-          stars: s.stars,
-        })),
-        ...(params.coinMultiplier !== undefined
-          ? { p_coin_multiplier: params.coinMultiplier }
-          : {}),
-      });
-      if (error) throw error;
-      return data as CompleteTaskResult;
+      const times = Math.max(1, Math.floor(params.times ?? 1));
+      const localDate = params.completedLocalDate ?? todayLocalDateKey();
+      let total: CompleteTaskResult | null = null;
+      // Sequential, not parallel: each call reads the target/period state
+      // the previous one wrote.
+      for (let i = 0; i < times; i += 1) {
+        const { data, error } = await supabase.rpc('complete_task', {
+          p_task_id: params.task.id,
+          ...(params.completedAt ? { p_completed_at: params.completedAt } : {}),
+          p_local_date: localDate,
+          p_sub_overrides: params.subs.map((s) => ({
+            sub_id: s.sub_id,
+            stars: s.stars,
+          })),
+          ...(params.coinMultiplier !== undefined
+            ? { p_coin_multiplier: params.coinMultiplier }
+            : {}),
+        });
+        if (error) throw error;
+        const r = data as CompleteTaskResult;
+        total = total
+          ? {
+              completion_id: r.completion_id,
+              xp_granted: total.xp_granted + r.xp_granted,
+              coins_granted: total.coins_granted + r.coins_granted,
+              total_stars: total.total_stars + r.total_stars,
+            }
+          : r;
+      }
+      return total as CompleteTaskResult;
     },
 
     onMutate: async (params) => {
@@ -634,6 +658,7 @@ export function useCompleteTask() {
         params.subs,
         params.coinMultiplier ?? params.task.coin_multiplier,
       );
+      const times = Math.max(1, Math.floor(params.times ?? 1));
 
       // Optimistic removal from "pending today" on any live tap (no
       // completedAt). The Home open list drops a task after its FIRST
@@ -669,14 +694,14 @@ export function useCompleteTask() {
         const dimDelta = new Map<DimensionId, number>();
         for (const ps of reward.perSub) {
           const dim = dimensionForSub(ps.sub_id);
-          dimDelta.set(dim, (dimDelta.get(dim) ?? 0) + ps.xp);
+          dimDelta.set(dim, (dimDelta.get(dim) ?? 0) + ps.xp * times);
         }
         queryClient.setQueryData<CharacterWithProfile>(characterKeys.me(), {
           ...prevChar,
           character: {
             ...prevChar.character,
-            total_xp: prevChar.character.total_xp + reward.total.xp,
-            coins: prevChar.character.coins + reward.total.coins,
+            total_xp: prevChar.character.total_xp + reward.total.xp * times,
+            coins: prevChar.character.coins + reward.total.coins * times,
           },
           dimensions: prevChar.dimensions.map((d) => {
             const delta = dimDelta.get(d.dimension_id) ?? 0;

@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { HexRadar, type HexAxis } from '@/components/HexRadar';
 import type { DimensionId, SubId } from '@/lib/db/types';
-import { meanRatio, saturationRatio, spanRatio } from '@/lib/dedicacao/scale';
+import { meanRatio, rimRatio } from '@/lib/dedicacao/scale';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { tokens } from '@/theme';
@@ -40,11 +40,10 @@ interface Props {
   /** XP that fills one SUB axis in this window — the saturation ruler
    *  (lib/saturation.ts), prorated to the window's elapsed days. */
   saturation: number;
-  /** Two views, one rim each. Capped (default): the rim is the ruler (300 in
-   *  30 days). Uncapped: the rim is BAR_SPAN × the ruler (900) — the bars'
-   *  own end — so what went past the minimum shows. Never both lines at
-   *  once. */
-  capped: boolean;
+  /** Where the rim sits, in multiples of the ruler (`HEX_RIMS`): 1 = the
+   *  teto (300 in 30 days, the default), 2 = 600, 3 = the bars' own end
+   *  (900), so what went past the minimum shows. One rim at a time. */
+  rim: number;
   size?: number;
   onAxisPress?: (dim: DimensionId) => void;
   /** Stable id for the gradient def — required when more than one hex can
@@ -90,7 +89,7 @@ export function XpHexChart({
   prevTotalXp,
   isLoading = false,
   saturation,
-  capped,
+  rim,
   size = 240,
   onAxisPress,
   idSuffix,
@@ -103,8 +102,7 @@ export function XpHexChart({
   // to the mean of its two subs. In 'subs' each axis carries its sub glyph
   // but its parent dim's color, so the dodecagon reads as six lobes.
   const vertices = useMemo(() => {
-    const ratioOf = (xp: number) =>
-      capped ? saturationRatio(xp, saturation) : spanRatio(xp, saturation);
+    const ratioOf = (xp: number) => rimRatio(xp, saturation, rim);
     const subs = subSlices ?? [];
     if (variant === 'subs') {
       return subs.map((s) => ({
@@ -128,7 +126,7 @@ export function XpHexChart({
         ),
       };
     });
-  }, [variant, slices, subSlices, metaLookup, saturation, capped]);
+  }, [variant, slices, subSlices, metaLookup, saturation, rim]);
 
   const hasData = totalXp > 0 && vertices.some((v) => v.xp > 0);
 

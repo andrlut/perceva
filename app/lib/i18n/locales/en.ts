@@ -1457,6 +1457,10 @@ const en = {
       editTaskSub: 'Title, sub-areas, how often…',
     },
     completeSheet: {
+      times: 'How many times',
+      timesHint: 'Logs the same completion several times',
+      timesLessA11y: 'One time fewer',
+      timesMoreA11y: 'One time more',
       totalStars: 'Total stars',
       reset: 'Reset',
       log: 'Log',
@@ -2473,6 +2477,10 @@ const en = {
       'Each area fills the hex at {{xp}} XP in 30 days (a 1★ practice every day). On the bars, the tick marks that minimum and the bright part is what went past it.',
     saturationWindow:
       'In this period each area fills the hex at {{xp}} XP (300 per 30 days). On the bars, the tick marks that minimum and the bright part is what went past it.',
+    double30:
+      'In this view each area fills the hex at {{rim}} XP in 30 days, twice the minimum — a 1★ practice a day on its own only fills half.',
+    doubleWindow:
+      'In this view each area fills the hex at {{rim}} XP in this period, twice the minimum — a 1★ practice a day on its own only fills half.',
     uncapped30:
       'In this view each area fills the hex at {{rim}} XP in 30 days, three times the minimum — the end of the bars. It shows how far past it each one went.',
     uncappedWindow:

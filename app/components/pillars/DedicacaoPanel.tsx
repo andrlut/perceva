@@ -10,7 +10,7 @@ import { DayStrip } from '@/components/dedicacao/DayStrip';
 import { SubBar } from '@/components/dedicacao/SubBar';
 import { XpHexChart } from '@/components/dedicacao/XpHexChart';
 import { type SubWindow } from '@/lib/api/dedicacao';
-import { BAR_SPAN } from '@/lib/dedicacao/scale';
+import { HEX_RIMS, type HexRim } from '@/lib/dedicacao/scale';
 import type { CharacterDimension, DimensionId } from '@/lib/db/types';
 import { elapsedDays, SUB_SATURATION_30D, subSaturationFor } from '@/lib/saturation';
 import { useWindowScrub } from '@/lib/dedicacao/useWindowScrub';
@@ -78,10 +78,12 @@ export function DedicacaoPanel({ dimensions }: Props) {
   } = useWindowScrub();
   const [expanded, setExpanded] = useState<Set<DimensionId>>(new Set());
   const [hexMode, toggleHexMode] = useHexGrain();
-  // Two views of the hex, one rim each: up to the ruler (300 in 30 days —
-  // "did I cover each area?") or up to the bars' end (900 — "how far past
+  // Three rims for the hex, cycled by the pill: the ruler (300 in 30 days —
+  // "did I cover each area?"), 600, and the bars' end (900 — "how far past
   // the minimum did each go?"). Per visit, not saved.
-  const [capped, setCapped] = useState(true);
+  const [rimIdx, setRimIdx] = useState(0);
+  const rim: HexRim = HEX_RIMS[rimIdx];
+  const nextRim: HexRim = HEX_RIMS[(rimIdx + 1) % HEX_RIMS.length];
 
   const dimMap = useMemo(() => {
     const m = new Map<DimensionId, CharacterDimension>();
@@ -162,7 +164,8 @@ export function DedicacaoPanel({ dimensions }: Props) {
   const totalWindowXp = windowQuery.data?.totalXp ?? 0;
   const prevTotalXp = windowQuery.data?.prevTotalXp ?? 0;
   const capLabel = Math.round(subCap).toLocaleString();
-  const rimLabel = Math.round(subCap * BAR_SPAN).toLocaleString();
+  const rimLabel = Math.round(subCap * rim).toLocaleString();
+  const nextRimLabel = Math.round(subCap * nextRim).toLocaleString();
 
   const hexSize = Math.max(240, Math.min((screenWidth || 360) - 16, 360));
 
@@ -200,7 +203,7 @@ export function DedicacaoPanel({ dimensions }: Props) {
           variant={hexMode}
           subSlices={subSlices}
           saturation={subCap}
-          capped={capped}
+          rim={rim}
           totalXp={totalWindowXp}
           prevTotalXp={isAll ? null : prevTotalXp}
           isLoading={windowQuery.isPending}
@@ -216,12 +219,12 @@ export function DedicacaoPanel({ dimensions }: Props) {
         onToggle={toggleHexMode}
         leading={
           <HexPill
-            icon={capped ? 'contract-outline' : 'expand-outline'}
-            label={t('dedicacao.rimLabel', { xp: capped ? capLabel : rimLabel })}
+            icon={rim === 1 ? 'contract-outline' : 'expand-outline'}
+            label={t('dedicacao.rimLabel', { xp: rimLabel })}
             accent={tokens.semantic.xp2}
-            onPress={() => setCapped((v) => !v)}
-            selected={!capped}
-            a11yLabel={t('dedicacao.rimShow', { xp: capped ? rimLabel : capLabel })}
+            onPress={() => setRimIdx((i) => (i + 1) % HEX_RIMS.length)}
+            selected={rim !== 1}
+            a11yLabel={t('dedicacao.rimShow', { xp: nextRimLabel })}
           />
         }
       />
@@ -240,13 +243,17 @@ export function DedicacaoPanel({ dimensions }: Props) {
 
       {/* The ruler in words — the one rule the hex and the bars follow. */}
       <Text style={styles.saturationNote}>
-        {capped
+        {rim === 1
           ? isDays30
             ? t('dedicacao.saturation30', { xp: SUB_SATURATION_30D })
             : t('dedicacao.saturationWindow', { xp: capLabel })
-          : isDays30
-            ? t('dedicacao.uncapped30', { rim: rimLabel })
-            : t('dedicacao.uncappedWindow', { rim: rimLabel })}
+          : rim === 2
+            ? isDays30
+              ? t('dedicacao.double30', { rim: rimLabel })
+              : t('dedicacao.doubleWindow', { rim: rimLabel })
+            : isDays30
+              ? t('dedicacao.uncapped30', { rim: rimLabel })
+              : t('dedicacao.uncappedWindow', { rim: rimLabel })}
       </Text>
 
       <View style={styles.list}>
