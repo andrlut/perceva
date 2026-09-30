@@ -1094,9 +1094,25 @@ const en = {
     ex4: 'How many days since I last redeemed that reward?',
     ex5: 'I want to log my mood for today.',
     shortcutsTitle: 'Quick access',
-    shortcutsInfo: 'Shortcuts that take you from Perceva to the Claude app at the right spot, with the connector. They live on this device only.\n\nDictate your mood: a button on Home, in the check-in and in the evening prompt opens Claude ready for you to dictate your day; the connector saves the mood.',
-    shortcutMood: 'Dictate your mood',
-    shortcutMoodDesc: 'On Home, in the check-in and in the evening prompt',
+    shortcutsInfo: 'Shortcuts that take you from Perceva to the Claude app at the right spot, with the connector. They live on this device only: an AI icon shows wherever a screen has something to log or ask — on mood and on the calendar summary.\n\nEach button opens Claude in one of these ways:',
+    shortcutsMaster: 'AI buttons on the screens',
+    shortcutsMasterDesc: "Today's mood and the calendar summary",
+    modeNew: 'No link: a new chat with the request already typed. You just tap the microphone.',
+    modeProject: 'Project link: opens the project. Each day becomes a chat inside it, or you use a pinned one, and the project instructions tell Claude what to do.',
+    modeChat: 'Chat link: always the same chat. Works, but grows long over time.',
+    modePrompt: 'Request included: with the switch on, the project or chat opens with the request already typed. The Claude app does not document this.\n\nThe default link applies to every button; each button can have its own.',
+    defaultLabel: 'Open in (default)',
+    defaultDesc: 'Applies to every button without a link of its own.',
+    promptInLink: 'Include the request in the link',
+    promptInLinkDesc: 'Opens the project or chat with the request already in the field. If it opens without the text, turn it off.',
+    perButtonLabel: 'Per button',
+    buttons: {
+      mood: "Today's mood",
+      moodDesc: 'Home, each day card, the check-in and the evening prompt',
+      calendar: 'Calendar summary',
+      calendarDesc: 'Under the grid, about the visible month',
+    },
+    usesDefault: 'No link of its own: uses the default.',
     targetLabel: 'Open in',
     targetPlaceholder: 'Paste a project or chat link',
     targetHintEmpty:
@@ -1828,6 +1844,11 @@ const en = {
       byDimension: 'By dimension',
       openBreakdown: 'Month summary',
       patterns: 'See patterns',
+      askClaude: 'Ask Claude about this period',
+      // Carried in the link when the AI chip opens a new chat; the ISO dates
+      // are what get_period_digest takes. No personal data — only the ask.
+      claudePrompt:
+        'How was my period from {{from}} to {{to}} on Perceva? Read the digest for that range and tell me what stands out, with the numbers you find.',
       longRangeHint: 'Quarter and all-time totals live in the You tab.',
     },
     filter: {

@@ -20,10 +20,12 @@ import { InfoSheet } from '@/components/InfoSheet';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { SectionLabel } from '@/components/SectionLabel';
 import {
+  CLAUDE_BUTTONS,
   claudeNewChatUrl,
   claudeTargetUrl,
   openClaude,
   parseClaudeTarget,
+  type ClaudeButtonKey,
 } from '@/lib/claudeBridge';
 import { useT } from '@/lib/i18n';
 import {
@@ -43,11 +45,13 @@ import { tokens } from '@/theme';
  *   1. Conectar — os passos, com a URL e o Client ID encaixados no passo em
  *      que são colados, e o botão que abre os conectores do Claude. O que o
  *      conector lê/escreve e o pré-requisito ficam no (i).
- *   2. Acessos rápidos — atalhos do app pro Claude, um por linha, cada linha
- *      com a mesma anatomia (ícone 38 · nome sobre legenda · chave). Hoje só
- *      "Ditar o humor"; a lista existe pra receber os próximos. Ajuste LOCAL
- *      do aparelho (lib/settings): só faz sentido no celular que tem o app
- *      do Claude com o conector montado.
+ *   2. Acessos rápidos — os botões de IA das telas (ClaudeButton), com a
+ *      mesma anatomia de linha (ícone 38 · nome sobre legenda · chave). Uma
+ *      chave-mestra liga todos; embaixo dela, ONDE cada um abre: um link
+ *      padrão, a chave "pedido junto no link" e um campo por botão (vazio =
+ *      padrão). Os quatro jeitos de abrir o Claude estão no (i). Ajuste
+ *      LOCAL do aparelho (lib/settings): só faz sentido no celular que tem
+ *      o app do Claude com o conector montado.
  *   3. Perguntas prontas — cada pergunta é um link: abre uma conversa nova
  *      no Claude (`claude.ai/new?q=`) com ela já escrita e um prefixo que
  *      aponta o conector. Nenhum dado pessoal entra no link (lib/claudeBridge).
@@ -71,11 +75,16 @@ const QUESTION_ICONS: Record<(typeof QUESTION_KEYS)[number], keyof typeof Ionico
   ex5: 'happy-outline',
 };
 
+const BUTTON_ICONS: Record<ClaudeButtonKey, keyof typeof Ionicons.glyphMap> = {
+  mood: 'happy-outline',
+  calendar: 'calendar-outline',
+};
+
 export default function ConectorScreen() {
   const { t } = useT();
   const router = useRouter();
   const bottomClearance = useBottomSafeClearance();
-  // Edge-to-edge screen (no bottom inset) + a TextInput near the bottom: the
+  // Edge-to-edge screen (no bottom inset) + TextInputs near the bottom: the
   // keyboard covers the ScrollView unless the content reserves its height.
   // useKeyboardOverlap, not useKeyboardHeight — see lib/use-keyboard-height.
   const keyboard = useKeyboardOverlap();
@@ -83,12 +92,14 @@ export default function ConectorScreen() {
   const shortcutY = useRef(0);
   const [info, setInfo] = useState<Info | null>(null);
 
-  const scrollToShortcut = () => {
-    // After the keyboard reflow, so the target is measured against the
-    // already-shortened viewport (same timing trick as mood-checkin).
+  // Scroll a focused field (its y inside the shortcuts card) to the top of
+  // the viewport, after the keyboard reflow — same timing trick as
+  // mood-checkin. Several fields live in that card now, and the lower ones
+  // would otherwise sit under the keyboard.
+  const scrollToField = (fieldY: number) => {
     setTimeout(() => {
       scrollRef.current?.scrollTo({
-        y: Math.max(0, shortcutY.current - tokens.space[3]),
+        y: Math.max(0, shortcutY.current + fieldY - tokens.space[4]),
         animated: true,
       });
     }, 120);
@@ -184,7 +195,7 @@ export default function ConectorScreen() {
               shortcutY.current = e.nativeEvent.layout.y;
             }}
           >
-            <ShortcutsCard onInputFocus={scrollToShortcut} onInfo={setInfo} />
+            <ShortcutsCard onFieldFocus={scrollToField} onInfo={setInfo} />
           </View>
 
           {/* 3 — Perguntas prontas: each row opens a new Claude chat. */}
@@ -270,46 +281,39 @@ function CopyField({ value, a11y }: { value: string; a11y: string }) {
 }
 
 /**
- * "Acessos rápidos" — the one card with SETTINGS on this screen. Each
- * shortcut is a row: 38px icon · name over a caption · switch. Today only
- * "Ditar o humor" (the "Ditar no Claude" button on the mood surfaces,
- * ClaudeDictateButton); its options open under the row when it's on.
+ * "Acessos rápidos" — the one card with SETTINGS on this screen: the AI
+ * buttons of the screens (ClaudeButton) and where each one opens.
  *
- * The link field keeps the LAST VALID value: a paste that parses is stored
- * in canonical form at once; an invalid one stays on screen with the error
- * under it and never overwrites the stored target. Blur snaps a valid draft
- * to the canonical form, so the user sees exactly what will open.
+ * One master row (38px icon · name over caption · switch) turns every button
+ * on. Under it, the destinations (lib/claudeBridge): the DEFAULT link, the
+ * "request in the link" switch for the undocumented fourth way, then one
+ * row per button with its own field — empty means the default. The four
+ * ways a link can open Claude are in the (i), not in paragraphs.
+ *
+ * Each field reports its y inside this card on focus (its block's offset in
+ * the options view plus the options view's offset in the card), so the
+ * screen can scroll it above the keyboard.
  */
 function ShortcutsCard({
-  onInputFocus,
+  onFieldFocus,
   onInfo,
 }: {
-  onInputFocus: () => void;
+  onFieldFocus: (fieldY: number) => void;
   onInfo: (info: Info) => void;
 }) {
   const { t } = useT();
   const settings = useLoadedSettings();
   const setSetting = useSettingsStore((s) => s.set);
-  const [draft, setDraft] = useState<string | null>(null);
+  const optionsY = useRef(0);
 
-  const text = draft ?? settings.claudeTarget;
-  const target = parseClaudeTarget(text);
-  const invalid = text.trim().length > 0 && target === null;
-
-  const onChangeText = (v: string) => {
-    setDraft(v);
-    const parsed = parseClaudeTarget(v);
-    if (parsed) void setSetting('claudeTarget', claudeTargetUrl(parsed));
-    else if (!v.trim()) void setSetting('claudeTarget', '');
+  const setButtonTarget = (key: ClaudeButtonKey, url: string) => {
+    const next = { ...settings.claudeButtonTargets };
+    if (url) next[key] = url;
+    else delete next[key];
+    void setSetting('claudeButtonTargets', next);
   };
 
-  const hint = invalid
-    ? t('conector.targetInvalid')
-    : target?.kind === 'project'
-      ? t('conector.targetHintProject')
-      : target?.kind === 'chat'
-        ? t('conector.targetHintChat')
-        : t('conector.targetHintEmpty');
+  const focusAt = (yInOptions: number) => onFieldFocus(optionsY.current + yInOptions);
 
   return (
     <View style={styles.card}>
@@ -317,7 +321,16 @@ function ShortcutsCard({
         icon="flash-outline"
         label={t('conector.shortcutsTitle')}
         onInfo={() =>
-          onInfo({ title: t('conector.shortcutsTitle'), body: t('conector.shortcutsInfo') })
+          onInfo({
+            title: t('conector.shortcutsTitle'),
+            body: [
+              t('conector.shortcutsInfo'),
+              t('conector.modeNew'),
+              t('conector.modeProject'),
+              t('conector.modeChat'),
+              t('conector.modePrompt'),
+            ].join('\n\n'),
+          })
         }
       />
 
@@ -326,38 +339,57 @@ function ShortcutsCard({
           <Ionicons name="sparkles-outline" size={18} color={tokens.brand.violet2} />
         </View>
         <View style={styles.rowBody}>
-          <Text style={styles.rowTitle}>{t('conector.shortcutMood')}</Text>
-          <Text style={styles.rowCaption}>{t('conector.shortcutMoodDesc')}</Text>
+          <Text style={styles.rowTitle}>{t('conector.shortcutsMaster')}</Text>
+          <Text style={styles.rowCaption}>{t('conector.shortcutsMasterDesc')}</Text>
         </View>
         <Switch
           value={settings.claudeShortcut}
           onValueChange={(v) => void setSetting('claudeShortcut', v)}
           trackColor={{ false: tokens.bg.surface2, true: tokens.brand.violet }}
           thumbColor={tokens.text.hi}
-          accessibilityLabel={t('conector.shortcutMood')}
+          accessibilityLabel={t('conector.shortcutsMaster')}
         />
       </View>
 
       {settings.claudeShortcut && (
-        <View style={styles.options}>
-          <Text style={styles.fieldLabel}>{t('conector.targetLabel')}</Text>
-          <TextInput
-            value={text}
-            onChangeText={onChangeText}
-            onFocus={onInputFocus}
-            onBlur={() => {
-              if (!invalid) setDraft(null);
-            }}
-            placeholder={t('conector.targetPlaceholder')}
-            placeholderTextColor={tokens.text.dim}
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="url"
-            returnKeyType="done"
-            style={[styles.input, invalid && styles.inputInvalid]}
-            accessibilityLabel={t('conector.targetLabel')}
+        <View
+          style={styles.options}
+          onLayout={(e) => {
+            optionsY.current = e.nativeEvent.layout.y;
+          }}
+        >
+          <Text style={styles.fieldLabel}>{t('conector.defaultLabel')}</Text>
+          <TargetField
+            value={settings.claudeTarget}
+            onCommit={(url) => void setSetting('claudeTarget', url)}
+            emptyHint={t('conector.targetHintEmpty')}
+            onFocus={focusAt}
           />
-          <Text style={[styles.hint, invalid && styles.hintInvalid]}>{hint}</Text>
+
+          <View style={styles.row}>
+            <View style={styles.rowBody}>
+              <Text style={styles.rowTitle}>{t('conector.promptInLink')}</Text>
+              <Text style={styles.rowCaption}>{t('conector.promptInLinkDesc')}</Text>
+            </View>
+            <Switch
+              value={settings.claudePromptInLink}
+              onValueChange={(v) => void setSetting('claudePromptInLink', v)}
+              trackColor={{ false: tokens.bg.surface2, true: tokens.brand.violet }}
+              thumbColor={tokens.text.hi}
+              accessibilityLabel={t('conector.promptInLink')}
+            />
+          </View>
+
+          <Text style={styles.fieldLabel}>{t('conector.perButtonLabel')}</Text>
+          {CLAUDE_BUTTONS.map((key) => (
+            <ButtonBlock
+              key={key}
+              buttonKey={key}
+              value={settings.claudeButtonTargets[key] ?? ''}
+              onCommit={(url) => setButtonTarget(key, url)}
+              onFocus={focusAt}
+            />
+          ))}
 
           <Text style={styles.fieldLabel}>{t('conector.projectHowTitle')}</Text>
           <Text style={styles.hint}>{t('conector.projectHowBody')}</Text>
@@ -367,6 +399,116 @@ function ShortcutsCard({
           />
         </View>
       )}
+    </View>
+  );
+}
+
+/** One button: its row (icon · name over where it lives) and its own
+ *  destination field. Reports the field's y inside the options view. */
+function ButtonBlock({
+  buttonKey,
+  value,
+  onCommit,
+  onFocus,
+}: {
+  buttonKey: ClaudeButtonKey;
+  value: string;
+  onCommit: (url: string) => void;
+  onFocus: (yInOptions: number) => void;
+}) {
+  const { t } = useT();
+  const blockY = useRef(0);
+  return (
+    <View
+      style={styles.buttonBlock}
+      onLayout={(e) => {
+        blockY.current = e.nativeEvent.layout.y;
+      }}
+    >
+      <View style={styles.row}>
+        <View style={styles.rowIcon}>
+          <Ionicons name={BUTTON_ICONS[buttonKey]} size={18} color={tokens.brand.violet2} />
+        </View>
+        <View style={styles.rowBody}>
+          <Text style={styles.rowTitle}>{t(`conector.buttons.${buttonKey}`)}</Text>
+          <Text style={styles.rowCaption}>{t(`conector.buttons.${buttonKey}Desc`)}</Text>
+        </View>
+      </View>
+      <TargetField
+        value={value}
+        onCommit={onCommit}
+        emptyHint={t('conector.usesDefault')}
+        onFocus={(y) => onFocus(blockY.current + y)}
+      />
+    </View>
+  );
+}
+
+/**
+ * A destination field. Keeps the LAST VALID value: a paste that parses is
+ * committed in canonical form at once; an invalid one stays on screen with
+ * the error under it and never overwrites the stored value. Blur snaps a
+ * valid draft to the canonical form, so the user sees exactly what will open.
+ * Reports its own y inside its parent on focus, for the keyboard scroll.
+ */
+function TargetField({
+  value,
+  onCommit,
+  emptyHint,
+  onFocus,
+}: {
+  value: string;
+  onCommit: (canonicalUrl: string) => void;
+  emptyHint: string;
+  onFocus: (yInParent: number) => void;
+}) {
+  const { t } = useT();
+  const [draft, setDraft] = useState<string | null>(null);
+  const y = useRef(0);
+
+  const text = draft ?? value;
+  const target = parseClaudeTarget(text);
+  const invalid = text.trim().length > 0 && target === null;
+
+  const onChangeText = (v: string) => {
+    setDraft(v);
+    const parsed = parseClaudeTarget(v);
+    if (parsed) onCommit(claudeTargetUrl(parsed));
+    else if (!v.trim()) onCommit('');
+  };
+
+  const hint = invalid
+    ? t('conector.targetInvalid')
+    : target?.kind === 'project'
+      ? t('conector.targetHintProject')
+      : target?.kind === 'chat'
+        ? t('conector.targetHintChat')
+        : emptyHint;
+
+  return (
+    <View
+      style={styles.field}
+      onLayout={(e) => {
+        y.current = e.nativeEvent.layout.y;
+      }}
+    >
+      <TextInput
+        value={text}
+        onChangeText={onChangeText}
+        onFocus={() => onFocus(y.current)}
+        onBlur={() => {
+          if (!invalid) setDraft(null);
+        }}
+        placeholder={t('conector.targetPlaceholder')}
+        placeholderTextColor={tokens.text.dim}
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="url"
+        returnKeyType="done"
+        style={[styles.input, invalid && styles.inputInvalid]}
+        accessibilityLabel={t('conector.targetLabel')}
+      />
+      <Text style={[styles.hint, invalid && styles.hintInvalid]}>{hint}</Text>
     </View>
   );
 }
@@ -516,11 +658,15 @@ const styles = StyleSheet.create({
     color: tokens.text.base,
   },
 
-  // Shortcut options (under the row when it's on)
+  // Shortcut options (under the master row when it's on)
   options: {
     gap: tokens.space[2],
     paddingTop: tokens.space[1],
   },
+  buttonBlock: {
+    gap: tokens.space[1],
+  },
+  field: { gap: tokens.space[2] },
   fieldLabel: {
     fontFamily: 'Manrope_700Bold',
     fontSize: 11,

@@ -875,6 +875,12 @@ export default function CalendarScreen() {
                   dimXp={dimXp}
                   locale={locale}
                   scopeLabel={scopeLabel}
+                  // The same range the totals were summed over — this summary
+                  // only renders in the month view, so it is the month.
+                  period={{
+                    from: dateKeyFromLocal(visibleMonth),
+                    to: dateKeyFromLocal(endOfMonth(visibleMonth)),
+                  }}
                 />
               </View>
 

@@ -1091,9 +1091,25 @@ const pt: Translations = {
     ex4: 'Há quantos dias eu não resgato aquela recompensa?',
     ex5: 'Quero registrar meu humor de hoje.',
     shortcutsTitle: 'Acessos rápidos',
-    shortcutsInfo: 'Atalhos que levam do Perceva pro app do Claude já no ponto certo, com o conector. Ficam só neste aparelho.\n\nDitar o humor: um botão na Home, no check-in e no aviso da noite abre o Claude pronto pra você ditar o dia; o conector grava o humor.',
-    shortcutMood: 'Ditar o humor',
-    shortcutMoodDesc: 'Na Home, no check-in e no aviso da noite',
+    shortcutsInfo: 'Atalhos que levam do Perceva pro app do Claude já no ponto certo, com o conector. Ficam só neste aparelho: um ícone de IA aparece onde a tela tem algo pra registrar ou perguntar — no humor e no resumo do calendário.\n\nCada botão abre o Claude de um destes jeitos:',
+    shortcutsMaster: 'Botões de IA nas telas',
+    shortcutsMasterDesc: 'Humor do dia e resumo do calendário',
+    modeNew: 'Sem link: conversa nova com o pedido já escrito. Você só toca no microfone.',
+    modeProject: 'Link de projeto: abre o projeto. Cada dia vira uma conversa lá dentro, ou você usa uma fixada, e as instruções do projeto dizem ao Claude o que fazer.',
+    modeChat: 'Link de conversa: sempre a mesma conversa. Funciona, mas fica longa com o tempo.',
+    modePrompt: 'Pedido junto: com a chave ligada, o projeto ou a conversa abre já com o pedido escrito. O app do Claude não documenta isso.\n\nO link padrão vale pra todo botão; cada botão pode ter o seu.',
+    defaultLabel: 'Abrir em (padrão)',
+    defaultDesc: 'Vale pra todo botão que não tiver um link próprio.',
+    promptInLink: 'Levar o pedido junto no link',
+    promptInLinkDesc: 'Abre o projeto ou a conversa já com o pedido no campo. Se abrir sem o texto, desligue.',
+    perButtonLabel: 'Por botão',
+    buttons: {
+      mood: 'Humor do dia',
+      moodDesc: 'Home, card de cada dia, check-in e aviso da noite',
+      calendar: 'Resumo do calendário',
+      calendarDesc: 'Abaixo da grade, sobre o mês visível',
+    },
+    usesDefault: 'Sem link próprio: usa o padrão.',
     targetLabel: 'Abrir em',
     targetPlaceholder: 'Cole o link de um projeto ou de uma conversa',
     targetHintEmpty:
@@ -1835,6 +1851,11 @@ const pt: Translations = {
       byDimension: 'Por dimensão',
       openBreakdown: 'Resumo do mês',
       patterns: 'Ver padrões',
+      askClaude: 'Perguntar ao Claude sobre este período',
+      // Carried in the link when the AI chip opens a new chat; the ISO dates
+      // are what get_period_digest takes. No personal data — only the ask.
+      claudePrompt:
+        'Como foi meu período de {{from}} a {{to}} no Perceva? Leia o resumo desse período e me conte o que se destaca, com os números que encontrar.',
       longRangeHint: 'Trimestre e total continuam na aba Eu.',
     },
     filter: {

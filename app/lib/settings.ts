@@ -2,6 +2,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect } from 'react';
 import { create } from 'zustand';
 
+import {
+  CLAUDE_BUTTONS,
+  type ClaudeButtonKey,
+  type ClaudeLinkSettings,
+} from '@/lib/claudeBridge';
 import { detectDeviceLanguage } from '@/lib/i18n/detect';
 
 const KEY = 'rpgtasks.settings.v1';
@@ -15,7 +20,7 @@ export type WeekStart = 'sunday' | 'monday';
 /** What a pillar hex plots: the 6 dimensions or the 12 subs. */
 export type HexGrain = 'dims' | 'subs';
 
-export interface AppSettings {
+export interface AppSettings extends ClaudeLinkSettings {
   theme: ThemeMode;
   language: LanguageCode;
   weekStart: WeekStart;
@@ -47,15 +52,28 @@ export interface AppSettings {
   dayEndHour: number;
   dayEndMinute: number;
   /**
-   * "Ditar no Claude" on the mood surfaces — the Perceva → Claude bridge
+   * The AI buttons on the screens — the Perceva → Claude bridge
    * (lib/claudeBridge). Device-local on purpose: it only makes sense on a
    * phone that has the Claude app and the connector set up, so it lives
-   * here and not in `profile.modules`.
+   * here and not in `profile.modules`. The destinations (`claudeTarget`,
+   * `claudePromptInLink`, `claudeButtonTargets`) come from ClaudeLinkSettings.
    */
   claudeShortcut: boolean;
-  /** Where the bridge opens: a canonical `https://claude.ai/project/<uuid>`
-   *  or `/chat/<uuid>`, or '' for a new chat with the prompt prefilled. */
-  claudeTarget: string;
+}
+
+/** Keeps only string values under known button keys — a corrupt or older
+ *  blob must not smuggle arbitrary shapes into a `Record`. */
+function sanitizeButtonTargets(
+  v: unknown,
+): Partial<Record<ClaudeButtonKey, string>> {
+  const out: Partial<Record<ClaudeButtonKey, string>> = {};
+  if (v && typeof v === 'object') {
+    for (const key of CLAUDE_BUTTONS) {
+      const val = (v as Record<string, unknown>)[key];
+      if (typeof val === 'string' && val.trim()) out[key] = val;
+    }
+  }
+  return out;
 }
 
 /** Guards a persisted value that a corrupt blob could otherwise turn into a
@@ -94,6 +112,8 @@ const DEFAULTS: AppSettings = {
   dayEndMinute: 0,
   claudeShortcut: false,
   claudeTarget: '',
+  claudePromptInLink: false,
+  claudeButtonTargets: {},
 };
 
 type Status = 'unknown' | 'ready';
@@ -143,6 +163,8 @@ export const useSettingsStore = create<Store>((set, get) => ({
           claudeShortcut: parsed.claudeShortcut === true,
           claudeTarget:
             typeof parsed.claudeTarget === 'string' ? parsed.claudeTarget : '',
+          claudePromptInLink: parsed.claudePromptInLink === true,
+          claudeButtonTargets: sanitizeButtonTargets(parsed.claudeButtonTargets),
         },
       });
     } catch {
