@@ -256,14 +256,20 @@ export default function MoodCheckinScreen() {
             <Ionicons name="close" size={22} color={tokens.text.hi} />
           </Pressable>
           <Text style={styles.headerTitle}>{t('mood.title')}</Text>
-          <Pressable
-            onPress={() => router.push('/history')}
-            style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.6 }]}
-            hitSlop={10}
-            accessibilityLabel={t('mood.history.title')}
-          >
-            <Ionicons name="calendar-outline" size={20} color={tokens.text.hi} />
-          </Pressable>
+          <View style={styles.headerRight}>
+            {/* The AI door, as a plain header icon — renders nothing unless
+                the shortcut is on (Ajustes › Conector). Carries this day,
+                so a past day's prompt names its date. */}
+            <ClaudeDictateButton variant="bare" dateKey={targetDate} />
+            <Pressable
+              onPress={() => router.push('/history')}
+              style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.6 }]}
+              hitSlop={10}
+              accessibilityLabel={t('mood.history.title')}
+            >
+              <Ionicons name="calendar-outline" size={20} color={tokens.text.hi} />
+            </Pressable>
+          </View>
         </View>
 
         {/* Shrink the scroll+footer area by the real keyboard height. Under
@@ -289,11 +295,6 @@ export default function MoodCheckinScreen() {
             <Text style={styles.subtitle}>
               {isToday ? t('mood.subtitle') : dateLabel}
             </Text>
-
-            {/* Today only: the bridge's prompt says "the day", and a past
-                day would need its date carried into Claude. Renders nothing
-                unless the shortcut is on (Ajustes › Conector). */}
-            {isToday && <ClaudeDictateButton style={styles.claude} />}
 
             {/* Hero — the day's face, big. Keyed remount pops the new level
                 in with a small spring; height is fixed so nothing jumps. */}
@@ -528,9 +529,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: -tokens.space[2],
   },
-  claude: {
-    alignSelf: 'center',
-    marginTop: -tokens.space[1],
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   hero: {
     alignItems: 'center',

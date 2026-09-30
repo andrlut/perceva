@@ -2590,8 +2590,10 @@ const en = {
       addTagsNote: 'Add tags and a note',
       editTagsNote: 'Edit tags and note',
       dictateClaude: 'Dictate to Claude',
-      // The compact form beside "edit tags and note" — a name, not a verb.
-      dictateClaudeShort: 'Claude',
+      // The header chips: one short word each; the sentences above stay as
+      // the accessible names.
+      fill: 'Fill in',
+      edit: 'Edit',
     },
     // Prefilled in the Claude composer when the shortcut opens a NEW chat;
     // the dictation lands right after it, in the same message. Generic on

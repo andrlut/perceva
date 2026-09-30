@@ -2603,8 +2603,10 @@ const pt: Translations = {
       addTagsNote: 'Adicionar tags e nota',
       editTagsNote: 'Editar tags e nota',
       dictateClaude: 'Ditar no Claude',
-      // The compact form beside "editar tags e nota" — a name, not a verb.
-      dictateClaudeShort: 'Claude',
+      // The header chips: one short word each; the sentences above stay as
+      // the accessible names.
+      fill: 'Preencher',
+      edit: 'Editar',
     },
     // Prefilled in the Claude composer when the shortcut opens a NEW chat;
     // the dictation lands right after it, in the same message. Generic on
