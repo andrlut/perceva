@@ -227,7 +227,7 @@ export function CompleteTaskSheet({
               </Text>
             </View>
             <View style={styles.rewardItem}>
-              <CoinIcon size={14} />
+              <CoinIcon size={16} />
               <Text style={[styles.rewardText, { color: tokens.semantic.coin }]}>
                 +{reward.total.coins * times}
               </Text>
