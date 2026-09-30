@@ -4,7 +4,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   BackHandler,
   type LayoutChangeEvent,
   Pressable,
@@ -32,6 +31,17 @@ import { AppIcon } from '@/components/AppIcon';
 import { CoinIcon } from '@/components/CoinIcon';
 import { PercevaGlyph } from '@/components/PercevaGlyph';
 import { ScreenBackground } from '@/components/ScreenBackground';
+import {
+  ONB_BTN_GAP,
+  ONB_BTN_H,
+  ONB_SECONDARY_H,
+  ONB_TEXT_BTN_H,
+  OnbPrimaryButton,
+  OnbSecondaryButton,
+  OnbSubtitle,
+  OnbTextButton,
+  OnbTitle,
+} from '@/components/tour/OnboardingKit';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { isTerminal } from '@/lib/tour/constants';
@@ -46,9 +56,7 @@ import {
 } from './EconomyVisuals';
 import { IdeaFlipVisual } from './IdeaFlipVisual';
 import {
-  IntroBody,
   IntroPage,
-  IntroTitle,
   EconomyHeader,
   PillarCard,
   PillarHeader,
@@ -87,10 +95,10 @@ const LAST = PAGE_COUNT - 1;
 // room its own footer takes (page 6 has two buttons, the rest one).
 const FADE = 28;
 const DOTS_BLOCK = 8 + 14;
-const BTN_H = 54;
-const SECONDARY_H = 50;
-const BTN_GAP = 10;
-const SKIP_H = 44;
+const BTN_H = ONB_BTN_H;
+const SECONDARY_H = ONB_SECONDARY_H;
+const BTN_GAP = ONB_BTN_GAP;
+const SKIP_H = ONB_TEXT_BTN_H;
 /**
  * The last page's primary button sits exactly where "Continuar" sat, so a
  * double tap on page 5 would start the tour unread. Presses that land this
@@ -310,8 +318,8 @@ export function IntroPager() {
               <View style={styles.heroArt}>
                 <PillarsHero size={heroSize} active={index === 0} idSuffix="hero" />
               </View>
-              <IntroTitle hero>{t('tour.intro.hero.title')}</IntroTitle>
-              <IntroBody>{t('tour.intro.hero.body')}</IntroBody>
+              <OnbTitle>{t('tour.intro.hero.title')}</OnbTitle>
+              <OnbSubtitle>{t('tour.intro.hero.body')}</OnbSubtitle>
             </IntroPage>
 
             {/* 1-3 — one page per pillar: which pillar (top), its drawing, and
@@ -320,6 +328,7 @@ export function IntroPager() {
               <PillarHeader
                 n={1}
                 name={t('tour.intro.hero.pillarSelf')}
+                subtitle={t('tour.intro.self.subtitle')}
                 a11y={t('tour.intro.pillarA11y', { n: 1, name: t('tour.intro.hero.pillarSelf') })}
               />
               <SelfKnowledgeHex size={hexSize} active={index === 1} />
@@ -355,6 +364,7 @@ export function IntroPager() {
               <PillarHeader
                 n={2}
                 name={t('tour.intro.hero.pillarPractice')}
+                subtitle={t('tour.intro.practice.subtitle')}
                 a11y={t('tour.intro.pillarA11y', { n: 2, name: t('tour.intro.hero.pillarPractice') })}
               />
               <PracticeVisual active={index === 2} />
@@ -376,6 +386,7 @@ export function IntroPager() {
               <PillarHeader
                 n={3}
                 name={t('tour.intro.hero.pillarLearning')}
+                subtitle={t('tour.intro.learning.subtitle')}
                 a11y={t('tour.intro.pillarA11y', { n: 3, name: t('tour.intro.hero.pillarLearning') })}
               />
               <IdeaFlipVisual width={cardW} active={index === 3} />
@@ -450,14 +461,12 @@ export function IntroPager() {
             <IntroPage width={pageW} height={pageH} bottomPad={padFor(6)}>
               <View style={styles.choicePage}>
                 <View style={styles.choiceHead}>
-                  <Text style={styles.choiceTitle} accessibilityRole="header">
-                    {t('tour.intro.choice.title')}
-                  </Text>
-                  <Text style={styles.choiceSub}>
+                  <OnbTitle>{t('tour.intro.choice.title')}</OnbTitle>
+                  <OnbSubtitle>
                     {redoLine[0]}
                     <Text style={styles.choicePath}>{redoPath}</Text>
                     {redoLine[1]}
-                  </Text>
+                  </OnbSubtitle>
                 </View>
                 <View style={styles.choiceArt}>
                   <PillarsHero size={choiceHeroSize} active={index === LAST} idSuffix="choice" />
@@ -490,7 +499,7 @@ export function IntroPager() {
 
             {!onLast ? (
               <Animated.View key="next" entering={reduceMotion ? undefined : FadeIn.duration(180)}>
-                <PrimaryButton label={t('tour.intro.next')} icon="arrow-forward" onPress={next} />
+                <OnbPrimaryButton label={t('tour.intro.next')} icon="arrow-forward" onPress={next} />
               </Animated.View>
             ) : (
               <Animated.View
@@ -498,32 +507,25 @@ export function IntroPager() {
                 entering={reduceMotion ? undefined : FadeIn.duration(220)}
                 style={styles.choiceButtons}
               >
-                <PrimaryButton
+                <OnbPrimaryButton
                   label={t('tour.intro.choice.primary')}
                   icon="compass-outline"
                   onPress={() => void finish('tour')}
                   busy={busy === 'tour'}
                   disabled={busy != null}
                 />
-                <SecondaryButton
+                <OnbSecondaryButton
                   label={t('tour.intro.choice.assessment')}
                   onPress={() => void finish('assessment')}
                   busy={busy === 'assessment'}
                   disabled={busy != null}
                 />
-                <Pressable
+                <OnbTextButton
+                  label={t('tour.intro.choice.skip')}
                   onPress={() => void finish('skip')}
+                  busy={busy === 'skip'}
                   disabled={busy != null}
-                  style={({ pressed }) => [styles.skipChoice, pressed && styles.pressed]}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('tour.intro.choice.skip')}
-                >
-                  {busy === 'skip' ? (
-                    <ActivityIndicator color={tokens.text.hi} />
-                  ) : (
-                    <Text style={styles.skipChoiceText}>{t('tour.intro.choice.skip')}</Text>
-                  )}
-                </Pressable>
+                />
               </Animated.View>
             )}
           </View>
@@ -543,89 +545,6 @@ function Dot({ i, scrollX, pageW }: { i: number; scrollX: SharedValue<number>; p
     };
   });
   return <Animated.View style={[styles.dot, style]} />;
-}
-
-function PrimaryButton({
-  label,
-  icon,
-  onPress,
-  busy = false,
-  disabled = false,
-}: {
-  label: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  onPress: () => void;
-  busy?: boolean;
-  disabled?: boolean;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityState={{ disabled, busy }}
-      style={({ pressed }) => [
-        styles.primaryWrap,
-        pressed && styles.primaryPressed,
-        disabled && !busy && styles.dimmed,
-      ]}
-    >
-      <LinearGradient
-        colors={tokens.gradient.completeBtn}
-        locations={tokens.gradient.completeBtnLocations}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={styles.primary}
-      >
-        {busy ? (
-          <ActivityIndicator color="#FFFFFF" />
-        ) : (
-          <>
-            <Text style={styles.primaryText} numberOfLines={1}>
-              {label}
-            </Text>
-            <Ionicons name={icon} size={19} color="#FFFFFF" />
-          </>
-        )}
-      </LinearGradient>
-    </Pressable>
-  );
-}
-
-function SecondaryButton({
-  label,
-  onPress,
-  busy,
-  disabled,
-}: {
-  label: string;
-  onPress: () => void;
-  busy: boolean;
-  disabled: boolean;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityState={{ disabled, busy }}
-      style={({ pressed }) => [
-        styles.secondary,
-        pressed && styles.pressed,
-        disabled && !busy && styles.dimmed,
-      ]}
-    >
-      {busy ? (
-        <ActivityIndicator color={tokens.text.hi} />
-      ) : (
-        <Text style={styles.secondaryText} numberOfLines={1}>
-          {label}
-        </Text>
-      )}
-    </Pressable>
-  );
 }
 
 const styles = StyleSheet.create({
@@ -684,22 +603,7 @@ const styles = StyleSheet.create({
     paddingTop: tokens.space[4],
   },
   // Same size as the pillar names (28) — the page's one headline.
-  choiceTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 28,
-    lineHeight: 33,
-    color: tokens.text.hi,
-    textAlign: 'center',
-  },
   // A caption, visibly narrower than the button column below.
-  choiceSub: {
-    maxWidth: 290,
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 15,
-    lineHeight: 21,
-    color: tokens.text.mid,
-    textAlign: 'center',
-  },
   choicePath: {
     fontFamily: 'Manrope_700Bold',
     color: tokens.semantic.coinLight,
@@ -708,16 +612,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  skipChoice: {
-    height: SKIP_H,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  skipChoiceText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 15,
-    color: tokens.text.mid,
   },
   areaChips: {
     flexDirection: 'row',
@@ -760,50 +654,5 @@ const styles = StyleSheet.create({
   },
   choiceButtons: {
     gap: BTN_GAP,
-  },
-  primaryWrap: {
-    borderRadius: tokens.radius.md,
-    ...tokens.shadow.violetGlowSoft,
-  },
-  primaryPressed: {
-    transform: [{ scale: 0.98 }],
-  },
-  dimmed: {
-    opacity: 0.55,
-  },
-  primary: {
-    height: BTN_H,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: tokens.space[2],
-    borderRadius: tokens.radius.md,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.18)',
-    paddingHorizontal: tokens.space[4],
-  },
-  primaryText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 16,
-    lineHeight: 20,
-    color: '#FFFFFF',
-    letterSpacing: 0.2,
-    flexShrink: 1,
-  },
-  secondary: {
-    height: SECONDARY_H,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: tokens.radius.md,
-    borderWidth: 1.5,
-    borderColor: tokens.border.strong,
-    backgroundColor: tokens.bg.glass,
-    paddingHorizontal: tokens.space[4],
-  },
-  secondaryText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 16,
-    lineHeight: 20,
-    color: tokens.text.hi,
   },
 });

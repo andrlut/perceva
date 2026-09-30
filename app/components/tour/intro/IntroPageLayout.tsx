@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { OnbSubtitle, OnbTitle } from '@/components/tour/OnboardingKit';
 import { ACTIVE_THEME, tokens } from '@/theme';
 
 /**
@@ -39,43 +40,6 @@ export function IntroPage({ width, height, bottomPad, children }: IntroPageProps
   );
 }
 
-export function IntroEyebrow({ children, color }: { children: string; color?: string }) {
-  return <Text style={[styles.eyebrow, color ? { color } : null]}>{children}</Text>;
-}
-
-export function IntroTitle({ children, hero = false }: { children: string; hero?: boolean }) {
-  return (
-    <Text style={[styles.title, hero && styles.titleHero]} accessibilityRole="header">
-      {children}
-    </Text>
-  );
-}
-
-export function IntroBody({ children }: { children: string }) {
-  return <Text style={styles.body}>{children}</Text>;
-}
-
-/**
- * The one line a page must leave behind — "Pular também é decidir", "O
- * Explorar acaba". Left accent rule in the page's pillar color.
- */
-export function IntroPayoff({
-  children,
-  color,
-  icon,
-}: {
-  children: string;
-  color: string;
-  icon?: keyof typeof Ionicons.glyphMap;
-}) {
-  return (
-    <View style={[styles.payoff, { borderLeftColor: color }]}>
-      {icon ? <Ionicons name={icon} size={18} color={color} style={styles.payoffIcon} /> : null}
-      <Text style={styles.payoffText}>{children}</Text>
-    </View>
-  );
-}
-
 /**
  * Top of each pillar page: the three pillars as a 1-2-3 row with THIS one lit,
  * then its name. The first thing on the screen says which pillar this is; no
@@ -84,9 +48,12 @@ export function IntroPayoff({
 export function PillarHeader({
   n,
   name,
+  subtitle,
   a11y,
 }: {
   n: 1 | 2 | 3;
+  /** The one line under the name: what this pillar is, how it's done. */
+  subtitle: string;
   /** "Autoconhecimento" */
   name: string;
   /** "Pilar 1 de 3: Autoconhecimento" */
@@ -119,7 +86,8 @@ export function PillarHeader({
           );
         })}
       </View>
-      <Text style={[styles.pillarName, { color: current.ink }]}>{name}</Text>
+      <OnbTitle color={current.ink}>{name}</OnbTitle>
+      <OnbSubtitle>{subtitle}</OnbSubtitle>
     </View>
   );
 }
@@ -196,11 +164,9 @@ export function EconomyHeader({
         <View style={[styles.econBadge, { backgroundColor: `${color}24`, borderColor: `${color}66` }]}>
           {icon}
         </View>
-        <Text style={[styles.econName, { color }]}>{name}</Text>
+        <OnbTitle color={color}>{name}</OnbTitle>
       </View>
-      <Text style={styles.econSubtitle} importantForAccessibility="no">
-        {subtitle}
-      </Text>
+      <OnbSubtitle>{subtitle}</OnbSubtitle>
     </View>
   );
 }
@@ -232,28 +198,16 @@ const styles = StyleSheet.create({
     gap: tokens.space[3],
   },
   econBadge: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  econName: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 34,
-    lineHeight: 40,
-  },
-  econSubtitle: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 17,
-    lineHeight: 23,
-    color: tokens.text.hi,
-    textAlign: 'center',
-  },
   pillarHeader: {
     alignItems: 'center',
-    gap: tokens.space[1],
+    gap: tokens.space[2],
   },
   stepper: {
     flexDirection: 'row',
@@ -281,13 +235,6 @@ const styles = StyleSheet.create({
   stepNum: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 14,
-  },
-  pillarName: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 28,
-    lineHeight: 33,
-    color: tokens.text.hi,
-    textAlign: 'center',
   },
   card: {
     flexDirection: 'row',
@@ -328,55 +275,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: tokens.space[6],
     paddingTop: tokens.space[3],
     gap: tokens.space[3],
-  },
-  eyebrow: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 13,
-    lineHeight: 16,
-    letterSpacing: 1.4,
-    textTransform: 'uppercase',
-    color: tokens.brand.violet2,
-    textAlign: 'center',
-  },
-  title: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 25,
-    lineHeight: 30,
-    color: tokens.text.hi,
-    textAlign: 'center',
-  },
-  titleHero: {
-    fontSize: 29,
-    lineHeight: 34,
-  },
-  body: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 15,
-    lineHeight: 22,
-    color: tokens.text.mid,
-    textAlign: 'center',
-    alignSelf: 'center',
-    maxWidth: 360,
-  },
-  payoff: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'stretch',
-    gap: tokens.space[2],
-    borderLeftWidth: 3,
-    borderRadius: tokens.radius.xs,
-    backgroundColor: tokens.bg.glass,
-    paddingVertical: tokens.space[3],
-    paddingHorizontal: tokens.space[4],
-  },
-  payoffIcon: {
-    marginTop: 1,
-  },
-  payoffText: {
-    flex: 1,
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 15,
-    lineHeight: 21,
-    color: tokens.text.hi,
   },
 });

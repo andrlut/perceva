@@ -58,7 +58,6 @@ export default function TourWrapScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <FullScreenStep
-        eyebrow={t('tour.wrap.eyebrow')}
         title={t('tour.wrap.title')}
         body={t('tour.wrap.body')}
         primaryLabel={t('tour.wrap.primary')}
