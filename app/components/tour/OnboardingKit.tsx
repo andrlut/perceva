@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import type { ReactNode } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
+import { useState, type ReactNode } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { PercevaGlyph } from '@/components/PercevaGlyph';
 import { tokens } from '@/theme';
 
 /**
@@ -19,12 +20,90 @@ import { tokens } from '@/theme';
  *                                   the coins domain)
  *   secondary  50 high, outline
  *   text       44 high, no chrome — "Pular" and other ways out
+ *
+ * Every screen also shares the same TOP: the brand bar (52) and the header
+ * band starting ONB_PAGE_TOP below it, title in a 44-high row. As the user
+ * swipes, every title sits at the same height (owner feedback 2026-09-30:
+ * "a leitura não começa a cada hora em uma altura diferente").
  */
+
+export const ONB_TOPBAR_H = 52;
+export const ONB_PAGE_TOP = 16;
+/** Title row (44) + gap (8) + a two-line subtitle (44): the header's budget. */
+export const ONB_HEADER_H = 96;
 
 export const ONB_BTN_H = 54;
 export const ONB_SECONDARY_H = 50;
 export const ONB_TEXT_BTN_H = 44;
 export const ONB_BTN_GAP = 10;
+
+/** The brand bar every onboarding screen opens with; `right` holds a way out. */
+export function OnbTopBar({ right }: { right?: ReactNode }) {
+  return (
+    <View style={styles.topBar}>
+      <View style={styles.brand}>
+        <PercevaGlyph size={24} palette="primary" idSuffix="onb-topbar" />
+        <Text style={styles.brandText}>Perceva</Text>
+      </View>
+      {right}
+    </View>
+  );
+}
+
+/**
+ * Title + the one line under it, in a fixed band: the title row is at least
+ * 44 high (the badge's height), so pages with and without a badge put their
+ * title at the same height.
+ */
+export function OnbHeader({
+  title,
+  subtitle,
+  color,
+  badge,
+}: {
+  title: string;
+  subtitle?: ReactNode;
+  color?: string;
+  badge?: ReactNode;
+}) {
+  return (
+    <View style={styles.header}>
+      <View style={styles.headerRow}>
+        {badge}
+        <OnbTitle color={color}>{title}</OnbTitle>
+      </View>
+      {subtitle != null ? <OnbSubtitle>{subtitle}</OnbSubtitle> : null}
+    </View>
+  );
+}
+
+/** The round icon next to a domain title (⚡ Dedicação, the coin). */
+export function OnbBadge({ color, children }: { color: string; children: ReactNode }) {
+  return (
+    <View style={[styles.badge, { backgroundColor: `${color}24`, borderColor: `${color}66` }]}>
+      {children}
+    </View>
+  );
+}
+
+/**
+ * Shrinks a fixed-size drawing to fit `maxHeight`. Layout ignores transforms,
+ * so the measured height is always the natural one and never loops.
+ */
+export function FitBox({ maxHeight, children }: { maxHeight: number; children: ReactNode }) {
+  const [natural, setNatural] = useState(0);
+  const scale = natural > 0 && maxHeight > 0 ? Math.min(1, maxHeight / natural) : 1;
+  return (
+    <View style={[styles.fitOuter, natural > 0 ? { height: natural * scale } : null]}>
+      <View
+        onLayout={(e) => setNatural(e.nativeEvent.layout.height)}
+        style={{ transform: [{ scale }] }}
+      >
+        {children}
+      </View>
+    </View>
+  );
+}
 
 export function OnbTitle({ children, color }: { children: ReactNode; color?: string }) {
   return (
@@ -145,12 +224,58 @@ export function OnbTextButton({
 }
 
 const styles = StyleSheet.create({
+  topBar: {
+    height: ONB_TOPBAR_H,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingLeft: tokens.space[5],
+    paddingRight: tokens.space[3],
+  },
+  brand: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[2],
+  },
+  brandText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 17,
+    lineHeight: 21,
+    color: tokens.text.hi,
+    letterSpacing: 0.2,
+  },
+  header: {
+    alignSelf: 'stretch',
+    alignItems: 'center',
+    gap: tokens.space[2],
+  },
+  headerRow: {
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: tokens.space[3],
+  },
+  badge: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fitOuter: {
+    alignSelf: 'stretch',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   title: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 28,
     lineHeight: 33,
     color: tokens.text.hi,
     textAlign: 'center',
+    flexShrink: 1,
   },
   subtitle: {
     alignSelf: 'center',

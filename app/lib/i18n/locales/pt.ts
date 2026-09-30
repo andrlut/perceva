@@ -429,7 +429,6 @@ const pt: Translations = {
   // different gating concerns.
   tour: {
     intro: {
-      pillarA11y: 'Pilar {{n}} de 3: {{name}}',
       skip: 'Pular introdução',
       next: 'Continuar',
       pageOf: 'Página {{n}} de {{total}}',

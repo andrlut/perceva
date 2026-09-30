@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { OnbSubtitle, OnbTitle } from '@/components/tour/OnboardingKit';
+import { ONB_PAGE_TOP } from '@/components/tour/OnboardingKit';
 import { ACTIVE_THEME, tokens } from '@/theme';
 
 /**
@@ -25,6 +25,14 @@ export interface IntroPageProps {
   children: ReactNode;
 }
 
+/**
+ * The middle band of a page: takes whatever height the header and the cards
+ * leave and centres the drawing in it.
+ */
+export function PageBody({ children }: { children: ReactNode }) {
+  return <View style={styles.pageBody}>{children}</View>;
+}
+
 export function IntroPage({ width, height, bottomPad, children }: IntroPageProps) {
   return (
     <ScrollView
@@ -37,58 +45,6 @@ export function IntroPage({ width, height, bottomPad, children }: IntroPageProps
     >
       {children}
     </ScrollView>
-  );
-}
-
-/**
- * Top of each pillar page: the three pillars as a 1-2-3 row with THIS one lit,
- * then its name. The first thing on the screen says which pillar this is; no
- * "Pilar 1" caption — the lit number already says it (owner, 2026-09-27).
- */
-export function PillarHeader({
-  n,
-  name,
-  subtitle,
-  a11y,
-}: {
-  n: 1 | 2 | 3;
-  /** The one line under the name: what this pillar is, how it's done. */
-  subtitle: string;
-  /** "Autoconhecimento" */
-  name: string;
-  /** "Pilar 1 de 3: Autoconhecimento" */
-  a11y: string;
-}) {
-  const palette = pillarPalette();
-  const hues = [palette.self, palette.practice, palette.learning];
-  const current = hues[n - 1]!;
-  return (
-    <View style={styles.pillarHeader} accessible accessibilityRole="header" accessibilityLabel={a11y}>
-      <View style={styles.stepper} importantForAccessibility="no-hide-descendants">
-        {hues.map((hue, i) => {
-          const on = i === n - 1;
-          return (
-            <View key={i} style={styles.stepCell}>
-              {i > 0 && <View style={[styles.stepLine, { backgroundColor: tokens.border.strong }]} />}
-              <View
-                style={[
-                  styles.stepDot,
-                  on
-                    ? { backgroundColor: hue.fill, borderColor: hue.fill, width: 34, height: 34 }
-                    : { borderColor: hue.fill, opacity: 0.45 },
-                ]}
-              >
-                <Text style={[styles.stepNum, { color: on ? tokens.bg.deep : hue.fill }]}>
-                  {i + 1}
-                </Text>
-              </View>
-            </View>
-          );
-        })}
-      </View>
-      <OnbTitle color={current.ink}>{name}</OnbTitle>
-      <OnbSubtitle>{subtitle}</OnbSubtitle>
-    </View>
   );
 }
 
@@ -143,35 +99,6 @@ export function PillarCard({
 }
 
 /**
- * Big, iconic header for the economy pages (Dedicação ⚡, Moedas 🪙): the
- * name in large type next to the same icon the app uses for it everywhere,
- * then one line saying what it does.
- */
-export function EconomyHeader({
-  icon,
-  name,
-  subtitle,
-  color,
-}: {
-  icon: ReactNode;
-  name: string;
-  subtitle: string;
-  color: string;
-}) {
-  return (
-    <View style={styles.econHeader} accessible accessibilityRole="header" accessibilityLabel={`${name}. ${subtitle}`}>
-      <View style={styles.econRow} importantForAccessibility="no-hide-descendants">
-        <View style={[styles.econBadge, { backgroundColor: `${color}24`, borderColor: `${color}66` }]}>
-          {icon}
-        </View>
-        <OnbTitle color={color}>{name}</OnbTitle>
-      </View>
-      <OnbSubtitle>{subtitle}</OnbSubtitle>
-    </View>
-  );
-}
-
-/**
  * The three pillar hues. Fills are the brand's own (violet / green / gold);
  * inks are what a LABEL in that hue may use — in the light palette the green
  * and gold fills fall under 4.5:1 on porcelain, so labels drop to the
@@ -188,54 +115,6 @@ export function pillarPalette() {
 }
 
 const styles = StyleSheet.create({
-  econHeader: {
-    alignItems: 'center',
-    gap: tokens.space[2],
-  },
-  econRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[3],
-  },
-  econBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pillarHeader: {
-    alignItems: 'center',
-    gap: tokens.space[2],
-  },
-  stepper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: tokens.space[2],
-  },
-  stepCell: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  stepLine: {
-    width: 28,
-    height: 2,
-    borderRadius: 1,
-    marginHorizontal: 6,
-  },
-  stepDot: {
-    width: 26,
-    height: 26,
-    borderRadius: 999,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepNum: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 14,
-  },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -271,9 +150,13 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    justifyContent: 'center',
     paddingHorizontal: tokens.space[6],
-    paddingTop: tokens.space[3],
+    paddingTop: ONB_PAGE_TOP,
     gap: tokens.space[3],
+  },
+  pageBody: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
