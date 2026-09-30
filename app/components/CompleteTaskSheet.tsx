@@ -254,7 +254,7 @@ export function CompleteTaskSheet({
                 onPress={() => setTimes((n) => Math.max(1, n - 1))}
                 disabled={times <= 1}
                 style={({ pressed }) => [
-                  styles.timesBtn,
+                  styles.stepperBtn,
                   times <= 1 && styles.stepperBtnDisabled,
                   pressed && times > 1 && { opacity: 0.6 },
                 ]}
@@ -278,7 +278,7 @@ export function CompleteTaskSheet({
                 onPress={() => setTimes((n) => Math.min(MAX_TIMES, n + 1))}
                 disabled={times >= MAX_TIMES}
                 style={({ pressed }) => [
-                  styles.timesBtn,
+                  styles.stepperBtn,
                   times >= MAX_TIMES && styles.stepperBtnDisabled,
                   pressed && times < MAX_TIMES && { opacity: 0.6 },
                 ]}
@@ -315,25 +315,15 @@ export function CompleteTaskSheet({
 }
 
 const styles = StyleSheet.create({
-  // − N + beside Registrar: one pill, same height as the button.
+  // − N + beside Registrar: the very same 32×32 buttons as the sub
+  // steppers above, so the sheet has one kind of stepper.
   timesStepper: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 48,
-    paddingHorizontal: 4,
-    borderRadius: 12,
-    backgroundColor: tokens.bg.base,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-  },
-  timesBtn: {
-    width: 32,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+    gap: 6,
   },
   timesValue: {
-    minWidth: 24,
+    minWidth: 28,
     textAlign: 'center',
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 16,
@@ -477,7 +467,8 @@ const styles = StyleSheet.create({
   },
   actionsRow: {
     flexDirection: 'row',
-    gap: 10,
+    alignItems: 'center',
+    gap: 12,
     marginTop: 4,
   },
   confirmBtn: {

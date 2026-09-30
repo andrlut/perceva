@@ -44,20 +44,31 @@ export function CoinMultiplierPicker({
   onChange: (m: CoinMultiplier) => void;
   /** Optional small caption above the control (the sheet has no field label). */
   label?: string;
-  /** The completion sheet's row: the coin at the sub icons' size (38) on
-   *  the left, like each sub row above it, and the glyph-only tiles beside
-   *  it. The label and the words live in the a11y labels. */
+  /** The completion sheet's row, built like the sub rows above it: the
+   *  coin at the sub icons' size (38), the label over the selected option
+   *  in gold, and four 36×32 glyph tiles on the right. */
   compact?: boolean;
 }) {
   const { t } = useT();
   const selected = coinMultiplierKey(value);
   if (compact) {
+    // Same anatomy as the sheet's sub rows above it: 38px icon · name over a
+    // colored caption · a cluster of 32px-tall controls on the right, with
+    // the stepper buttons' radius, fill and border. The tiles are fixed
+    // 36×32 — stretched across the row they read as a second, heavier kind
+    // of button than the − + beside every sub.
     return (
       <View style={styles.compactRow}>
-        <View accessible accessibilityLabel={label}>
-          <CoinIcon size={COMPACT_COIN} />
+        <CoinIcon size={COMPACT_COIN} />
+        <View style={styles.compactBody}>
+          <Text style={styles.compactLabel} numberOfLines={1}>
+            {label}
+          </Text>
+          <Text style={styles.compactCaption} numberOfLines={1}>
+            {t(`tasks.coinMultiplier.${selected}`).toUpperCase()}
+          </Text>
         </View>
-        <View style={[styles.row, styles.rowFlex]} accessibilityRole="radiogroup">
+        <View style={styles.compactTiles} accessibilityRole="radiogroup">
           {KEYS.map((key) => {
             const active = key === selected;
             return (
@@ -68,17 +79,19 @@ export function CoinMultiplierPicker({
                   Haptics.selectionAsync().catch(() => {});
                   onChange(COIN_MULTIPLIER_BY_KEY[key]);
                 }}
+                hitSlop={4}
                 accessibilityRole="radio"
                 accessibilityState={{ selected: active }}
                 accessibilityLabel={`${t(`tasks.coinMultiplier.${key}`)}. ${t(`tasks.coinMultiplier.explain.${key}`)}`}
                 style={({ pressed }) => [
-                  styles.tile,
-                  styles.tileCompact,
+                  styles.compactTile,
                   active && styles.tileActive,
                   pressed && !active && { opacity: 0.7 },
                 ]}
               >
-                <Text style={[styles.glyph, active && styles.glyphActive]}>{GLYPH[key]}</Text>
+                <Text style={[styles.compactGlyph, active && styles.glyphActive]}>
+                  {GLYPH[key]}
+                </Text>
               </Pressable>
             );
           })}
@@ -86,6 +99,7 @@ export function CoinMultiplierPicker({
       </View>
     );
   }
+
 
   return (
     <View style={styles.wrap}>
@@ -162,11 +176,40 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 6,
   },
-  rowFlex: {
+  compactBody: {
     flex: 1,
+    minWidth: 0,
   },
-  tileCompact: {
-    paddingVertical: 6,
+  compactLabel: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 14,
+    color: tokens.text.hi,
+  },
+  compactCaption: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 9,
+    letterSpacing: 0.6,
+    marginTop: 2,
+    color: tokens.semantic.coinLight,
+  },
+  compactTiles: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  compactTile: {
+    width: 36,
+    height: 32,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+    backgroundColor: tokens.bg.base,
+  },
+  compactGlyph: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 14,
+    color: tokens.text.mid,
   },
   tileActive: {
     borderColor: tokens.semantic.coinRim,
