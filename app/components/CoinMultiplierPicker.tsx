@@ -35,11 +35,15 @@ export function CoinMultiplierPicker({
   value,
   onChange,
   label,
+  compact = false,
 }: {
   value: CoinMultiplier;
   onChange: (m: CoinMultiplier) => void;
   /** Optional small caption above the control (the sheet has no field label). */
   label?: string;
+  /** Glyph only, shorter tiles — the completion sheet, where the subs'
+   *  steppers already take the room. The word stays in the a11y label. */
+  compact?: boolean;
 }) {
   const { t } = useT();
   const selected = coinMultiplierKey(value);
@@ -67,14 +71,17 @@ export function CoinMultiplierPicker({
               accessibilityLabel={`${t(`tasks.coinMultiplier.${key}`)}. ${t(`tasks.coinMultiplier.explain.${key}`)}`}
               style={({ pressed }) => [
                 styles.tile,
+                compact && styles.tileCompact,
                 active && styles.tileActive,
                 pressed && !active && { opacity: 0.7 },
               ]}
             >
               <Text style={[styles.glyph, active && styles.glyphActive]}>{GLYPH[key]}</Text>
-              <Text style={[styles.word, active && styles.wordActive]} numberOfLines={1}>
-                {t(`tasks.coinMultiplier.${key}`)}
-              </Text>
+              {!compact && (
+                <Text style={[styles.word, active && styles.wordActive]} numberOfLines={1}>
+                  {t(`tasks.coinMultiplier.${key}`)}
+                </Text>
+              )}
             </Pressable>
           );
         })}
@@ -111,6 +118,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: tokens.border.base,
     backgroundColor: tokens.bg.surface,
+  },
+  tileCompact: {
+    paddingVertical: 6,
   },
   tileActive: {
     borderColor: tokens.semantic.coinRim,

@@ -1033,7 +1033,7 @@ const pt: Translations = {
       legend: {
         title: 'O que o emblema mostra',
         effort: 'Esforço',
-        effortWhat: 'cada área acende ao encher: {{floor}} XP em 30 dias, o mínimo de 1★ todo dia',
+        effortWhat: 'cada área acende ao somar {{floor}} XP em 30 dias',
         effortValue: '{{xp}} / {{max}} em 30 dias',
         effortValueFull: '{{xp}} XP no mês',
         self: 'Autoconhecimento',
@@ -1455,7 +1455,6 @@ const pt: Translations = {
     },
     completeSheet: {
       times: 'Quantas vezes',
-      timesHint: 'Registra a mesma conclusão várias vezes',
       timesLessA11y: 'Uma vez a menos',
       timesMoreA11y: 'Uma vez a mais',
       totalStars: 'Estrelas totais',
@@ -2487,17 +2486,17 @@ const pt: Translations = {
   dedicacao: {
     hexAxisA11y: '{{dim}}: {{xp}} XP nesse período',
     saturation30:
-      'Cada área enche o hex com {{xp}} XP em 30 dias (1★ todo dia). Nas barras, o traço marca esse mínimo e o trecho aceso é o que passou dele.',
+      'Cada área enche o hex com {{xp}} XP em 30 dias. Nas barras, o traço marca esse ponto e o trecho aceso é o que passou dele. O botão ao lado do hex sobe a régua.',
     saturationWindow:
-      'Neste período cada área enche o hex com {{xp}} XP (300 a cada 30 dias). Nas barras, o traço marca esse mínimo e o trecho aceso é o que passou dele.',
+      'Neste período cada área enche o hex com {{xp}} XP (300 a cada 30 dias). Nas barras, o traço marca esse ponto e o trecho aceso é o que passou dele. O botão ao lado do hex sobe a régua.',
     double30:
-      'Nesta visão cada área enche o hex com {{rim}} XP em 30 dias, o dobro do mínimo — uma prática de 1★ por dia sozinha só enche metade.',
+      'Nesta visão cada área enche o hex com {{rim}} XP em 30 dias, o dobro da régua.',
     doubleWindow:
-      'Nesta visão cada área enche o hex com {{rim}} XP neste período, o dobro do mínimo — uma prática de 1★ por dia sozinha só enche metade.',
+      'Nesta visão cada área enche o hex com {{rim}} XP neste período, o dobro da régua.',
     uncapped30:
-      'Nesta visão cada área enche o hex com {{rim}} XP em 30 dias, o triplo do mínimo — o fim das barras. Dá pra ver quanto cada uma passou.',
+      'Nesta visão cada área enche o hex com {{rim}} XP em 30 dias, o triplo da régua — o fim das barras.',
     uncappedWindow:
-      'Nesta visão cada área enche o hex com {{rim}} XP neste período, o triplo do mínimo — o fim das barras. Dá pra ver quanto cada uma passou.',
+      'Nesta visão cada área enche o hex com {{rim}} XP neste período, o triplo da régua — o fim das barras.',
     rimLabel: 'Até {{xp}}',
     rimShow: 'Mostrar o hex até {{xp}} XP',
     levelTotal: 'Nível {{level}} · {{xp}} XP no total',
