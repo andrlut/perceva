@@ -562,7 +562,7 @@ export default function TaskFormScreen() {
                   +{reward.total.xp} XP
                 </Text>
                 <View style={styles.rewardCoins}>
-                  <CoinIcon size={14} />
+                  <CoinIcon size={16} />
                   <Text style={[styles.rewardText, { color: tokens.semantic.coinLight }]}>
                     +{reward.total.coins}
                   </Text>
@@ -701,7 +701,7 @@ function SectionLabel({
   return (
     <View style={styles.labelRow}>
       {coin ? (
-        <CoinIcon size={17} />
+        <CoinIcon size={18} />
       ) : icon ? (
         <Ionicons name={icon} size={16} color={tokens.brand.violet2} />
       ) : null}
