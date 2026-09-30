@@ -3,8 +3,10 @@ import { Stack, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useRef, useState } from 'react';
 import {
+  Alert,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Switch,
   Text,
@@ -14,8 +16,15 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useBottomSafeClearance } from '@/components/BottomNavBar';
+import { InfoSheet } from '@/components/InfoSheet';
 import { ScreenBackground } from '@/components/ScreenBackground';
-import { claudeTargetUrl, parseClaudeTarget } from '@/lib/claudeBridge';
+import { SectionLabel } from '@/components/SectionLabel';
+import {
+  claudeNewChatUrl,
+  claudeTargetUrl,
+  openClaude,
+  parseClaudeTarget,
+} from '@/lib/claudeBridge';
 import { useT } from '@/lib/i18n';
 import {
   CLAUDE_CONNECTORS_URL,
@@ -27,21 +36,41 @@ import { useKeyboardOverlap } from '@/lib/use-keyboard-height';
 import { tokens } from '@/theme';
 
 /**
- * Como conectar o Perceva ao Claude.
+ * Conector — o Perceva dentro do Claude. Três cards, o mesmo chassi do
+ * formulário de práticas (título com ícone + (i); a explicação mora no (i),
+ * não em parágrafo):
  *
- * Tela INSTRUCIONAL: nenhum fluxo OAuth roda dentro do app. Isso é uma
- * escolha, não uma limitação — se o beta do Auth quebrar, o pior caso é "os
- * passos não funcionam no claude.ai", nunca uma tela travada aqui.
+ *   1. Conectar — os passos, com a URL e o Client ID encaixados no passo em
+ *      que são colados, e o botão que abre os conectores do Claude. O que o
+ *      conector lê/escreve e o pré-requisito ficam no (i).
+ *   2. Acessos rápidos — atalhos do app pro Claude, um por linha, cada linha
+ *      com a mesma anatomia (ícone 38 · nome sobre legenda · chave). Hoje só
+ *      "Ditar o humor"; a lista existe pra receber os próximos. Ajuste LOCAL
+ *      do aparelho (lib/settings): só faz sentido no celular que tem o app
+ *      do Claude com o conector montado.
+ *   3. Perguntas prontas — cada pergunta é um link: abre uma conversa nova
+ *      no Claude (`claude.ai/new?q=`) com ela já escrita e um prefixo que
+ *      aponta o conector. Nenhum dado pessoal entra no link (lib/claudeBridge).
  *
- * A única coisa que se AJUSTA aqui é o atalho de volta (ShortcutCard): o
- * botão "Ditar no Claude" nas superfícies de humor e onde ele abre. É
- * ajuste local do aparelho, não módulo — só faz sentido no celular que tem
- * o app do Claude com o conector montado.
- *
- * A URL e o Client ID são `selectable` em vez de um botão de copiar porque
- * `expo-clipboard` é módulo nativo: adicioná-lo exigiria um `eas build` e
- * mataria o caminho OTA desta versão.
+ * Tela INSTRUCIONAL: nenhum fluxo OAuth roda aqui. Copiar sem módulo nativo:
+ * `expo-clipboard` exigiria `eas build`; o botão de copiar abre o `Share` do
+ * sistema, cuja folha no Android tem "Copiar" — e o texto segue `selectable`.
  */
+
+interface Info {
+  title: string;
+  body: string;
+}
+
+const QUESTION_KEYS = ['ex1', 'ex2', 'ex3', 'ex4', 'ex5'] as const;
+const QUESTION_ICONS: Record<(typeof QUESTION_KEYS)[number], keyof typeof Ionicons.glyphMap> = {
+  ex1: 'calendar-outline',
+  ex2: 'list-outline',
+  ex3: 'moon-outline',
+  ex4: 'gift-outline',
+  ex5: 'happy-outline',
+};
+
 export default function ConectorScreen() {
   const { t } = useT();
   const router = useRouter();
@@ -52,6 +81,8 @@ export default function ConectorScreen() {
   const keyboard = useKeyboardOverlap();
   const scrollRef = useRef<ScrollView>(null);
   const shortcutY = useRef(0);
+  const [info, setInfo] = useState<Info | null>(null);
+
   const scrollToShortcut = () => {
     // After the keyboard reflow, so the target is measured against the
     // already-shortened viewport (same timing trick as mood-checkin).
@@ -63,13 +94,10 @@ export default function ConectorScreen() {
     }, 120);
   };
 
-  const examples = [
-    t('conector.ex1'),
-    t('conector.ex2'),
-    t('conector.ex3'),
-    t('conector.ex4'),
-    t('conector.ex5'),
-  ];
+  const ask = async (question: string) => {
+    const ok = await openClaude(claudeNewChatUrl(`${t('conector.askPrefix')}${question}`));
+    if (!ok) Alert.alert(t('conector.askTitle'), t('mood.claudeOpenError'));
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -104,101 +132,161 @@ export default function ConectorScreen() {
         >
           <Text style={styles.lead}>{t('conector.lead')}</Text>
 
-          {/* A fronteira, dita antes dos passos: o que o conector NÃO faz é
-              mais importante do que o que ele faz. */}
+          {/* 1 — Conectar */}
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>{t('conector.boundaryTitle')}</Text>
-            <Text style={styles.body}>{t('conector.boundaryRead')}</Text>
-            <Text style={styles.body}>{t('conector.boundaryWrite')}</Text>
-          </View>
+            <SectionLabel
+              icon="link-outline"
+              label={t('conector.connectTitle')}
+              onInfo={() =>
+                setInfo({
+                  title: t('conector.connectTitle'),
+                  body: [
+                    t('conector.needBody'),
+                    t('conector.boundaryRead'),
+                    t('conector.boundaryWrite'),
+                  ].join('\n\n'),
+                })
+              }
+            />
 
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>{t('conector.needTitle')}</Text>
-            <Text style={styles.body}>{t('conector.needBody')}</Text>
-          </View>
-
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>{t('conector.stepsTitle')}</Text>
-            {[1, 2, 3, 4, 5].map((n) => (
-              <View key={n} style={styles.step}>
-                <View style={styles.stepNum}>
-                  <Text style={styles.stepNumText}>{n}</Text>
-                </View>
-                <Text style={styles.stepText}>{t(`conector.step${n}`)}</Text>
-              </View>
-            ))}
-
-            <Text style={styles.fieldLabel}>{t('conector.urlLabel')}</Text>
-            <Text style={styles.mono} selectable>
-              {MCP_CONNECTOR_URL}
-            </Text>
-
-            <Text style={styles.fieldLabel}>{t('conector.clientIdLabel')}</Text>
-            <Text style={styles.mono} selectable>
-              {MCP_CLIENT_ID}
-            </Text>
-
-            <Text style={styles.hint}>{t('conector.copyHint')}</Text>
+            <Step n={1} text={t('conector.step1')} />
+            <Step n={2} text={t('conector.step2')} />
+            <Step n={3} text={t('conector.step3')}>
+              <CopyField
+                value={MCP_CONNECTOR_URL}
+                a11y={t('conector.copyA11y', { what: t('conector.urlLabel') })}
+              />
+            </Step>
+            <Step n={4} text={t('conector.step4')}>
+              <CopyField
+                value={MCP_CLIENT_ID}
+                a11y={t('conector.copyA11y', { what: t('conector.clientIdLabel') })}
+              />
+            </Step>
+            <Step n={5} text={t('conector.step5')} />
 
             <Pressable
               onPress={() => {
-                WebBrowser.openBrowserAsync(CLAUDE_CONNECTORS_URL).catch(
-                  () => {},
-                );
+                WebBrowser.openBrowserAsync(CLAUDE_CONNECTORS_URL).catch(() => {});
               }}
               style={({ pressed }) => [styles.cta, pressed && { opacity: 0.85 }]}
               accessibilityRole="button"
             >
-              <Ionicons
-                name="open-outline"
-                size={15}
-                color={tokens.brand.violet2}
-              />
+              <Ionicons name="open-outline" size={16} color={tokens.text.hi} />
               <Text style={styles.ctaText}>{t('conector.openClaude')}</Text>
             </Pressable>
           </View>
 
-          {/* Direct child of the content view, so layout.y is the offset
-              inside the scroll content — what scrollTo needs. */}
+          {/* 2 — Acessos rápidos. Direct child of the content view, so
+              layout.y is the offset inside the scroll content. */}
           <View
             onLayout={(e) => {
               shortcutY.current = e.nativeEvent.layout.y;
             }}
           >
-            <ShortcutCard onInputFocus={scrollToShortcut} />
+            <ShortcutsCard onInputFocus={scrollToShortcut} onInfo={setInfo} />
           </View>
 
+          {/* 3 — Perguntas prontas: each row opens a new Claude chat. */}
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>{t('conector.askTitle')}</Text>
-            {examples.map((ex) => (
-              <View key={ex} style={styles.example}>
-                <Ionicons
-                  name="chatbubble-ellipses-outline"
-                  size={13}
-                  color={tokens.text.dim}
-                />
-                <Text style={styles.exampleText}>{ex}</Text>
-              </View>
-            ))}
+            <SectionLabel
+              icon="chatbubbles-outline"
+              label={t('conector.askTitle')}
+              onInfo={() =>
+                setInfo({ title: t('conector.askTitle'), body: t('conector.askInfo') })
+              }
+            />
+            {QUESTION_KEYS.map((key, i) => {
+              const question = t(`conector.${key}`);
+              return (
+                <Pressable
+                  key={key}
+                  onPress={() => void ask(question)}
+                  accessibilityRole="link"
+                  accessibilityLabel={t('conector.askA11y', { question })}
+                  style={({ pressed }) => [
+                    styles.row,
+                    i > 0 && styles.rowDivided,
+                    pressed && { opacity: 0.7 },
+                  ]}
+                >
+                  <View style={styles.rowIcon}>
+                    <Ionicons name={QUESTION_ICONS[key]} size={18} color={tokens.brand.violet2} />
+                  </View>
+                  <Text style={styles.rowText}>{question}</Text>
+                  <Ionicons name="arrow-forward" size={16} color={tokens.text.dim} />
+                </Pressable>
+              );
+            })}
           </View>
         </ScrollView>
+
+        <InfoSheet
+          visible={info != null}
+          onClose={() => setInfo(null)}
+          title={info?.title ?? ''}
+          body={info?.body ?? ''}
+        />
       </ScreenBackground>
     </SafeAreaView>
   );
 }
 
+/** One numbered step; a field that belongs to it sits right under its text. */
+function Step({ n, text, children }: { n: number; text: string; children?: React.ReactNode }) {
+  return (
+    <View style={styles.step}>
+      <View style={styles.stepNum}>
+        <Text style={styles.stepNumText}>{n}</Text>
+      </View>
+      <View style={styles.stepBody}>
+        <Text style={styles.stepText}>{text}</Text>
+        {children}
+      </View>
+    </View>
+  );
+}
+
+/** Monospace-ish value + a copy button (the system share sheet has "Copiar"). */
+function CopyField({ value, a11y }: { value: string; a11y: string }) {
+  return (
+    <View style={styles.copyField}>
+      <Text style={styles.copyValue} selectable numberOfLines={2}>
+        {value}
+      </Text>
+      <Pressable
+        onPress={() => {
+          Share.share({ message: value }).catch(() => {});
+        }}
+        hitSlop={6}
+        accessibilityRole="button"
+        accessibilityLabel={a11y}
+        style={({ pressed }) => [styles.copyBtn, pressed && { opacity: 0.6 }]}
+      >
+        <Ionicons name="copy-outline" size={16} color={tokens.text.hi} />
+      </Pressable>
+    </View>
+  );
+}
+
 /**
- * "Atalho no app" — the one SETTING on this screen: the "Ditar no Claude"
- * button on the mood surfaces (ClaudeDictateButton), and where it opens.
- * Device-local (lib/settings) because the bridge only makes sense on a phone
- * with the Claude app; the link rules live in lib/claudeBridge.
+ * "Acessos rápidos" — the one card with SETTINGS on this screen. Each
+ * shortcut is a row: 38px icon · name over a caption · switch. Today only
+ * "Ditar o humor" (the "Ditar no Claude" button on the mood surfaces,
+ * ClaudeDictateButton); its options open under the row when it's on.
  *
  * The link field keeps the LAST VALID value: a paste that parses is stored
  * in canonical form at once; an invalid one stays on screen with the error
  * under it and never overwrites the stored target. Blur snaps a valid draft
  * to the canonical form, so the user sees exactly what will open.
  */
-function ShortcutCard({ onInputFocus }: { onInputFocus: () => void }) {
+function ShortcutsCard({
+  onInputFocus,
+  onInfo,
+}: {
+  onInputFocus: () => void;
+  onInfo: (info: Info) => void;
+}) {
   const { t } = useT();
   const settings = useLoadedSettings();
   const setSetting = useSettingsStore((s) => s.set);
@@ -225,23 +313,33 @@ function ShortcutCard({ onInputFocus }: { onInputFocus: () => void }) {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.cardTitle}>{t('conector.shortcutTitle')}</Text>
+      <SectionLabel
+        icon="flash-outline"
+        label={t('conector.shortcutsTitle')}
+        onInfo={() =>
+          onInfo({ title: t('conector.shortcutsTitle'), body: t('conector.shortcutsInfo') })
+        }
+      />
 
-      <View style={styles.toggleRow}>
-        <View style={styles.toggleBody}>
-          <Text style={styles.toggleLabel}>{t('conector.shortcutToggle')}</Text>
-          <Text style={styles.toggleDesc}>{t('conector.shortcutToggleDesc')}</Text>
+      <View style={styles.row}>
+        <View style={styles.rowIcon}>
+          <Ionicons name="sparkles-outline" size={18} color={tokens.brand.violet2} />
+        </View>
+        <View style={styles.rowBody}>
+          <Text style={styles.rowTitle}>{t('conector.shortcutMood')}</Text>
+          <Text style={styles.rowCaption}>{t('conector.shortcutMoodDesc')}</Text>
         </View>
         <Switch
           value={settings.claudeShortcut}
           onValueChange={(v) => void setSetting('claudeShortcut', v)}
           trackColor={{ false: tokens.bg.surface2, true: tokens.brand.violet }}
           thumbColor={tokens.text.hi}
+          accessibilityLabel={t('conector.shortcutMood')}
         />
       </View>
 
       {settings.claudeShortcut && (
-        <>
+        <View style={styles.options}>
           <Text style={styles.fieldLabel}>{t('conector.targetLabel')}</Text>
           <TextInput
             value={text}
@@ -262,12 +360,12 @@ function ShortcutCard({ onInputFocus }: { onInputFocus: () => void }) {
           <Text style={[styles.hint, invalid && styles.hintInvalid]}>{hint}</Text>
 
           <Text style={styles.fieldLabel}>{t('conector.projectHowTitle')}</Text>
-          <Text style={styles.body}>{t('conector.projectHowBody')}</Text>
-          <Text style={styles.mono} selectable>
-            {t('conector.projectInstructions')}
-          </Text>
-          <Text style={styles.hint}>{t('conector.copyHint')}</Text>
-        </>
+          <Text style={styles.hint}>{t('conector.projectHowBody')}</Text>
+          <CopyField
+            value={t('conector.projectInstructions')}
+            a11y={t('conector.copyA11y', { what: t('conector.projectHowTitle') })}
+          />
+        </View>
       )}
     </View>
   );
@@ -297,46 +395,131 @@ const styles = StyleSheet.create({
   },
   lead: {
     ...tokens.type.body,
-    color: tokens.text.base,
+    color: tokens.text.mid,
   },
+  // Same chassis as the practice form's section cards.
   card: {
-    borderRadius: tokens.radius.md,
+    borderRadius: tokens.radius.lg,
     borderWidth: 1,
-    borderColor: tokens.border.base,
+    borderColor: tokens.border.strong,
     backgroundColor: tokens.bg.surface,
     padding: tokens.space[4],
     gap: tokens.space[3],
   },
-  cardTitle: {
+
+  // Steps
+  step: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  stepNum: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(123, 92, 255, 0.16)',
+    borderWidth: 1,
+    borderColor: 'rgba(155, 130, 255, 0.45)',
+  },
+  stepNumText: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 13,
-    letterSpacing: 0.3,
+    fontSize: 12,
+    color: tokens.brand.violet2,
+  },
+  stepBody: { flex: 1, gap: tokens.space[2], paddingTop: 2 },
+  stepText: {
+    ...tokens.type.body,
+    color: tokens.text.base,
+  },
+
+  // Copy field: value + a 32×32 button (the app's stepper/button size).
+  copyField: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[2],
+    backgroundColor: tokens.bg.base,
+    borderRadius: tokens.radius.md,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+    paddingLeft: tokens.space[3],
+    paddingRight: 4,
+    paddingVertical: 4,
+  },
+  copyValue: {
+    flex: 1,
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 12,
+    lineHeight: 17,
     color: tokens.text.hi,
   },
-  body: {
-    ...tokens.type.body,
-    color: tokens.text.mid,
-  },
-  step: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  stepNum: {
-    width: 20,
-    height: 20,
-    borderRadius: 999,
+  copyBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: tokens.bg.surface2,
     borderWidth: 1,
     borderColor: tokens.border.base,
   },
-  stepNumText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 11,
-    color: tokens.brand.violet2,
+
+  cta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: tokens.brand.violet,
   },
-  stepText: {
+  ctaText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 14,
+    color: tokens.text.hi,
+  },
+
+  // Rows — shortcuts and questions share one anatomy.
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 6,
+  },
+  rowDivided: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: tokens.border.divider,
+    paddingTop: 10,
+  },
+  rowIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(123, 92, 255, 0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(155, 130, 255, 0.35)',
+  },
+  rowBody: { flex: 1, minWidth: 0, gap: 2 },
+  rowTitle: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 14,
+    color: tokens.text.hi,
+  },
+  rowCaption: {
+    ...tokens.type.caption,
+    color: tokens.text.mid,
+  },
+  rowText: {
     flex: 1,
-    ...tokens.type.body,
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 14,
+    lineHeight: 19,
     color: tokens.text.base,
+  },
+
+  // Shortcut options (under the row when it's on)
+  options: {
+    gap: tokens.space[2],
+    paddingTop: tokens.space[1],
   },
   fieldLabel: {
     fontFamily: 'Manrope_700Bold',
@@ -344,78 +527,28 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
     textTransform: 'uppercase',
     color: tokens.text.dim,
-  },
-  mono: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
-    lineHeight: 18,
-    color: tokens.text.hi,
-    backgroundColor: tokens.bg.surface2,
-    borderRadius: tokens.radius.sm,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  hint: {
-    ...tokens.type.caption,
-    color: tokens.text.dim,
-  },
-  hintInvalid: {
-    color: tokens.semantic.danger,
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[3],
-  },
-  toggleBody: { flex: 1, gap: 2 },
-  toggleLabel: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 14,
-    color: tokens.text.hi,
-  },
-  toggleDesc: {
-    ...tokens.type.caption,
-    color: tokens.text.mid,
+    marginTop: tokens.space[1],
   },
   input: {
     fontFamily: 'Manrope_500Medium',
     fontSize: 13,
     color: tokens.text.hi,
-    backgroundColor: tokens.bg.surface2,
-    borderRadius: tokens.radius.sm,
+    backgroundColor: tokens.bg.base,
+    borderRadius: tokens.radius.md,
     borderWidth: 1,
     borderColor: tokens.border.base,
-    paddingHorizontal: 10,
+    paddingHorizontal: tokens.space[3],
     paddingVertical: 10,
     minHeight: 44,
   },
   inputInvalid: {
     borderColor: tokens.semantic.danger,
   },
-  cta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    height: 44,
-    borderRadius: tokens.radius.pill,
-    borderWidth: 1,
-    borderColor: tokens.brand.violet2,
+  hint: {
+    ...tokens.type.caption,
+    color: tokens.text.mid,
   },
-  ctaText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 13,
-    color: tokens.brand.violet2,
-  },
-  example: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-  exampleText: {
-    flex: 1,
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 13,
-    lineHeight: 18,
-    fontStyle: 'italic',
-    color: tokens.text.base,
+  hintInvalid: {
+    color: tokens.semantic.danger,
   },
 });
