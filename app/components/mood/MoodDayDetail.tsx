@@ -2,7 +2,7 @@ import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 
-import { MoodActionsRow } from '@/components/mood/MoodActionsRow';
+import { MoodCardHeader } from '@/components/mood/MoodCardHeader';
 import { MoodEntrySummary } from '@/components/mood/MoodEntrySummary';
 import { MoodFaceRow } from '@/components/mood/MoodFaceRow';
 import { dateKeyFromLocal } from '@/lib/api/history';
@@ -23,11 +23,10 @@ interface Props {
  * Same doors as the Home's today strip, so a past day is as easy to log
  * as today:
  *   - no entry: the question, five faces — one tap logs THIS day, retroactive
- *     when it is past — and the buttons into the full check-in for it;
- *   - entry: the read-back (MoodEntrySummary) and the same buttons to add or
- *     edit the tags and the note.
- * The buttons are MoodActionsRow: the check-in door and, when the owner
- * switched it on, the Claude door beside it — scoped to this date.
+ *     when it is past — and the "Preencher" chip into the full check-in for it;
+ *   - entry: the read-back (MoodEntrySummary) and the "Editar" chip.
+ * The chips live in MoodCardHeader, with the AI chip beside them for whoever
+ * switched it on — scoped to this date.
  * The empty state used to be a sentence and a 12px "Registrar humor" link in
  * the corner, which is exactly what the owner could not find.
  */
@@ -69,19 +68,19 @@ export function MoodDayDetail({ dateKey }: Props) {
     };
     return (
       <View style={styles.card}>
-        <Text style={styles.eyebrow}>{t('mood.day.eyebrow')}</Text>
+        <MoodCardHeader
+          eyebrow={t('mood.day.eyebrow')}
+          action={t('mood.cta.fill')}
+          a11yLabel={t('mood.cta.full')}
+          onPress={open}
+          dateKey={dateKey}
+        />
         <Text style={styles.question}>
           {isToday ? t('mood.todayCard.promptTitle') : t('mood.questionPast')}
         </Text>
         <View style={[logMood.isPending && { opacity: 0.5 }]}>
           <MoodFaceRow value={null} onSelect={quickLog} size="sm" showLabels={false} />
         </View>
-        <MoodActionsRow
-          icon="create-outline"
-          label={t('mood.cta.full')}
-          onPress={open}
-          dateKey={dateKey}
-        />
       </View>
     );
   }
@@ -91,14 +90,14 @@ export function MoodDayDetail({ dateKey }: Props) {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.eyebrow}>{t('mood.day.eyebrow')}</Text>
-      <MoodEntrySummary entry={entry} />
-      <MoodActionsRow
-        icon={hasDetails ? 'create-outline' : 'add-circle-outline'}
-        label={hasDetails ? t('mood.cta.editTagsNote') : t('mood.cta.addTagsNote')}
+      <MoodCardHeader
+        eyebrow={t('mood.day.eyebrow')}
+        action={t('mood.cta.edit')}
+        a11yLabel={hasDetails ? t('mood.cta.editTagsNote') : t('mood.cta.addTagsNote')}
         onPress={open}
         dateKey={dateKey}
       />
+      <MoodEntrySummary entry={entry} />
     </View>
   );
 }
@@ -111,13 +110,6 @@ const styles = StyleSheet.create({
     borderColor: tokens.border.base,
     padding: tokens.space[3],
     gap: tokens.space[3],
-  },
-  eyebrow: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 10,
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    color: tokens.text.dim,
   },
   question: {
     fontFamily: 'Manrope_700Bold',

@@ -191,31 +191,37 @@ export function MoodCheckinPrompt({ enabled = true }: Props) {
                 />
               </View>
 
-              <Pressable
-                onPress={openFull}
-                style={({ pressed }) => [styles.fullBtn, pressed && { opacity: 0.75 }]}
-                accessibilityRole="button"
-                accessibilityLabel={t('mood.cta.full')}
-              >
-                <Ionicons
-                  name="create-outline"
-                  size={18}
-                  color={tokens.brand.violet2}
+              {/* The AI door sits beside the big button, same height, when
+                  the shortcut is on: the sheet closes and stamps the day
+                  (same as openFull) before the app switch — the user is
+                  going to answer in Claude, so asking again tonight would
+                  be wrong. */}
+              <View style={styles.doorRow}>
+                <Pressable
+                  onPress={openFull}
+                  style={({ pressed }) => [
+                    styles.fullBtn,
+                    styles.grow,
+                    pressed && { opacity: 0.75 },
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('mood.cta.full')}
+                >
+                  <Ionicons
+                    name="create-outline"
+                    size={18}
+                    color={tokens.brand.violet2}
+                  />
+                  <Text style={styles.fullBtnText}>{t('mood.cta.full')}</Text>
+                </Pressable>
+                <ClaudeDictateButton
+                  variant="square"
+                  onBeforeOpen={() => {
+                    setVisible(false);
+                    void stamp();
+                  }}
                 />
-                <Text style={styles.fullBtnText}>{t('mood.cta.full')}</Text>
-              </Pressable>
-
-              {/* The evening's voice door, when the shortcut is on: the
-                  sheet closes and stamps the day (same as openFull) before
-                  the app switch — the user is going to answer in Claude,
-                  so asking again tonight would be wrong. */}
-              <ClaudeDictateButton
-                variant="row"
-                onBeforeOpen={() => {
-                  setVisible(false);
-                  void stamp();
-                }}
-              />
+              </View>
 
               <Pressable
                 onPress={close}
@@ -243,31 +249,33 @@ export function MoodCheckinPrompt({ enabled = true }: Props) {
                   theme-invariant and `level.ink` is the measured ink for each
                   fill (4.9–14.9:1), so this is the one fill that passes in
                   both themes — the same pairing as the check-in Save button. */}
-              <Pressable
-                onPress={openFull}
-                style={({ pressed }) => [
-                  styles.primaryBtn,
-                  { backgroundColor: level.color },
-                  pressed && { opacity: 0.85 },
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel={t('mood.cta.addTagsNote')}
-              >
-                <Ionicons name="add-circle-outline" size={19} color={level.ink} />
-                <Text style={[styles.primaryBtnText, { color: level.ink }]}>
-                  {t('mood.cta.addTagsNote')}
-                </Text>
-              </Pressable>
-
-              {/* The face landed; the note can be dictated. Same close-and-
-                  stamp as the unlogged branch. */}
-              <ClaudeDictateButton
-                variant="row"
-                onBeforeOpen={() => {
-                  setVisible(false);
-                  void stamp();
-                }}
-              />
+              {/* The face landed; the note can be dictated — the AI door
+                  beside the primary, same close-and-stamp as above. */}
+              <View style={styles.doorRow}>
+                <Pressable
+                  onPress={openFull}
+                  style={({ pressed }) => [
+                    styles.primaryBtn,
+                    styles.grow,
+                    { backgroundColor: level.color },
+                    pressed && { opacity: 0.85 },
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('mood.cta.addTagsNote')}
+                >
+                  <Ionicons name="add-circle-outline" size={19} color={level.ink} />
+                  <Text style={[styles.primaryBtnText, { color: level.ink }]}>
+                    {t('mood.cta.addTagsNote')}
+                  </Text>
+                </Pressable>
+                <ClaudeDictateButton
+                  variant="square"
+                  onBeforeOpen={() => {
+                    setVisible(false);
+                    void stamp();
+                  }}
+                />
+              </View>
 
               <Pressable
                 onPress={close}
@@ -326,7 +334,13 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingTop: tokens.space[2],
   },
-  // Same secondary button as the Home strip, so both doors read as one.
+  // The big button and, when present, the 52dp AI square beside it.
+  doorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[2],
+  },
+  grow: { flex: 1 },
   fullBtn: {
     minHeight: 52,
     flexDirection: 'row',

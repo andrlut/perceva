@@ -3,7 +3,6 @@ import {
   Alert,
   Pressable,
   StyleSheet,
-  Text,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
@@ -15,9 +14,8 @@ import { useLoadedSettings } from '@/lib/settings';
 import { tokens } from '@/theme';
 
 /**
- * "Ditar no Claude" — the voice door of the mood system, for whoever set up
- * the Perceva connector on their Claude account (Ajustes › Conector › Atalho
- * no app).
+ * The AI door of the mood system — one icon, for whoever set up the Perceva
+ * connector on their Claude account (Ajustes › Conector › Atalho no app).
  *
  * Renders NOTHING until the shortcut setting is on: this is a power-user
  * bridge, not a product feature, so the default app never shows a button
@@ -26,11 +24,15 @@ import { tokens } from '@/theme';
  * and hands it to Android; the dictation itself happens inside the Claude
  * app, and the connector's log_mood does the writing.
  *
- * Three shapes:
- *   - `side`: compact "Claude" beside the check-in button (MoodActionsRow) —
- *     wherever a day can be filled or edited, the AI option is in that row;
- *   - `row`: full-width secondary button of the evening sheet;
- *   - `pill`: the small one under the question on the check-in screen.
+ * Icon only, on purpose: the labelled version was the biggest thing on the
+ * card. The glyph is the generic AI sparkle, not Anthropic's mark — a
+ * third-party app has no licence to Claude's logo; the accessible name still
+ * says where it goes.
+ *
+ * Three sizes for three hosts:
+ *   - `icon`: the 32dp pill in a card header, beside "Editar" (MoodCardHeader);
+ *   - `square`: 52dp, the same height as the evening sheet's big button;
+ *   - `bare`: a plain 36dp header icon on the check-in screen.
  *
  * `dateKey` for a past day puts that date into the new-chat prompt so
  * log_mood writes the right day. With a project/chat target there is no
@@ -38,12 +40,12 @@ import { tokens } from '@/theme';
  * host sheet close itself before the app switch.
  */
 export function ClaudeDictateButton({
-  variant = 'pill',
+  variant = 'icon',
   dateKey,
   onBeforeOpen,
   style,
 }: {
-  variant?: 'pill' | 'row' | 'side';
+  variant?: 'icon' | 'square' | 'bare';
   dateKey?: string;
   onBeforeOpen?: () => void;
   style?: StyleProp<ViewStyle>;
@@ -66,31 +68,18 @@ export function ClaudeDictateButton({
     if (!ok) Alert.alert(label, t('mood.claudeOpenError'));
   };
 
-  const box =
-    variant === 'row' ? styles.row : variant === 'side' ? styles.side : styles.pill;
-  const text =
-    variant === 'row'
-      ? styles.rowText
-      : variant === 'side'
-        ? styles.sideText
-        : styles.pillText;
+  const size = variant === 'square' ? 22 : variant === 'bare' ? 20 : 16;
+  const color = variant === 'bare' ? tokens.text.hi : tokens.brand.violet2;
 
   return (
     <Pressable
       onPress={press}
-      hitSlop={variant === 'pill' ? 6 : 0}
-      style={({ pressed }) => [box, style, pressed && { opacity: 0.7 }]}
+      hitSlop={variant === 'square' ? 0 : 8}
+      style={({ pressed }) => [styles[variant], style, pressed && { opacity: 0.6 }]}
       accessibilityRole="button"
       accessibilityLabel={label}
     >
-      <Ionicons
-        name="mic-outline"
-        size={variant === 'pill' ? 15 : 18}
-        color={tokens.brand.violet2}
-      />
-      <Text style={text}>
-        {variant === 'side' ? t('mood.cta.dictateClaudeShort') : label}
-      </Text>
+      <Ionicons name="sparkles-outline" size={size} color={color} />
     </Pressable>
   );
 }
@@ -108,62 +97,33 @@ function formatDay(dateKey: string, locale: string): string {
   return `${words} (${dateKey})`;
 }
 
-// violet2 on surface2 is the same pairing as FullCheckinButton (4.60:1 dark,
-// 5.81:1 light) — AA for every label size used here.
 const styles = StyleSheet.create({
-  pill: {
-    flexDirection: 'row',
+  // Same quiet chip as the "Editar" pill it sits beside: surface2 fill,
+  // base rim, the violet glyph is what says "action".
+  icon: {
+    width: 34,
+    height: 32,
     alignItems: 'center',
-    gap: 5,
-    minHeight: 34,
-    paddingHorizontal: 12,
+    justifyContent: 'center',
     borderRadius: tokens.radius.pill,
-    borderWidth: 1,
-    borderColor: tokens.brand.violet2,
     backgroundColor: tokens.bg.surface2,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
   },
-  pillText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 13,
-    letterSpacing: 0.2,
-    color: tokens.brand.violet2,
-  },
-  row: {
-    minHeight: 52,
-    flexDirection: 'row',
+  square: {
+    width: 52,
+    height: 52,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    paddingHorizontal: tokens.space[3],
     borderRadius: tokens.radius.md,
-    borderWidth: 1,
-    borderColor: tokens.brand.violet2,
     backgroundColor: tokens.bg.surface2,
+    borderWidth: 1,
+    borderColor: tokens.border.strong,
   },
-  rowText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 14,
-    letterSpacing: 0.2,
-    color: tokens.brand.violet2,
-  },
-  // Same height and rim as the check-in button it sits beside, so the pair
-  // reads as one control with two doors.
-  side: {
-    minHeight: 52,
-    flexDirection: 'row',
+  bare: {
+    width: 36,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingHorizontal: 14,
-    borderRadius: tokens.radius.md,
-    borderWidth: 1,
-    borderColor: tokens.brand.violet2,
-    backgroundColor: tokens.bg.surface2,
-  },
-  sideText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 14,
-    letterSpacing: 0.2,
-    color: tokens.brand.violet2,
   },
 });
