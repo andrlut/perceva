@@ -243,6 +243,13 @@ export function IntroPager() {
       ? Math.min(pageW - tokens.space[3] * 2, 420, Math.max(200, (pageH - padFor(0) - 150) * (300 / 280)))
       : Math.min(pageW - tokens.space[3] * 2, 300),
   );
+  // Last page: the same triangle above the title and the redo line (~120dp),
+  // over the tallest footer (three choices).
+  const choiceHeroSize = Math.round(
+    pageH > 0
+      ? Math.min(contentW, 300, Math.max(170, (pageH - padFor(LAST) - 130) * (300 / 280)))
+      : 220,
+  );
   // Pillar pages stack header + drawing + two cards, so the drawing gives up
   // some height to keep a 640dp phone on one screen.
   const hexSize = Math.round(Math.min(contentW * 0.62, 190, Math.max(140, pageH * 0.24)));
@@ -297,7 +304,7 @@ export function IntroPager() {
             {/* 0 — Hero: the three pillars */}
             <IntroPage width={pageW} height={pageH} bottomPad={padFor(0)}>
               <View style={styles.heroArt}>
-                <PillarsHero size={heroSize} active={index === 0} />
+                <PillarsHero size={heroSize} active={index === 0} idSuffix="hero" />
               </View>
               <IntroTitle hero>{t('tour.intro.hero.title')}</IntroTitle>
               <IntroBody>{t('tour.intro.hero.body')}</IntroBody>
@@ -432,8 +439,12 @@ export function IntroPager() {
               />
             </IntroPage>
 
-            {/* 6 — Tour or skip */}
+            {/* 6 — Tour or skip. The first page's triangle, smaller and still
+               turning, so the page isn't empty above the three choices. */}
             <IntroPage width={pageW} height={pageH} bottomPad={padFor(6)}>
+              <View style={styles.choiceArt}>
+                <PillarsHero size={choiceHeroSize} active={index === LAST} idSuffix="choice" />
+              </View>
               <IntroTitle>{t('tour.intro.choice.title')}</IntroTitle>
               <View style={styles.safeLine}>
                 <Ionicons name="refresh" size={18} color={tokens.semantic.coinLight} />
@@ -653,6 +664,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: -(tokens.space[6] - tokens.space[3]),
     marginBottom: tokens.space[2],
+  },
+  choiceArt: {
+    alignItems: 'center',
   },
   safeLine: {
     flexDirection: 'row',

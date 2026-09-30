@@ -102,7 +102,16 @@ function chevronPath(angleDeg: number): string {
   return `M ${f(w1.x)} ${f(w1.y)} L ${f(tip.x)} ${f(tip.y)} L ${f(w2.x)} ${f(w2.y)}`;
 }
 
-export function PillarsHero({ size, active }: { size: number; active: boolean }) {
+export function PillarsHero({
+  size,
+  active,
+  idSuffix = 'a',
+}: {
+  size: number;
+  active: boolean;
+  /** Keeps SVG gradient ids unique when the hero is on screen twice. */
+  idSuffix?: string;
+}) {
   const { t } = useT();
   const reduceMotion = useReducedMotion();
   const palette = pillarPalette();
@@ -163,7 +172,7 @@ export function PillarsHero({ size, active }: { size: number; active: boolean })
       <Animated.View style={StyleSheet.absoluteFill} entering={enter(0, 700)}>
         <Svg width={size} height={height} viewBox={`0 0 ${VB_W} ${VB_H}`}>
           <Defs>
-            <RadialGradient id="intro-hero-halo" cx="0.5" cy="0.5" r="0.5">
+            <RadialGradient id={`intro-hero-halo-${idSuffix}`} cx="0.5" cy="0.5" r="0.5">
               <Stop offset="0" stopColor={tokens.brand.violet} stopOpacity={light ? 0.18 : 0.34} />
               <Stop offset="1" stopColor={tokens.brand.violet} stopOpacity={0} />
             </RadialGradient>
@@ -174,7 +183,7 @@ export function PillarsHero({ size, active }: { size: number; active: boolean })
               return (
                 <LinearGradient
                   key={n.key}
-                  id={`intro-hero-edge-${n.key}`}
+                  id={`intro-hero-edge-${n.key}-${idSuffix}`}
                   gradientUnits="userSpaceOnUse"
                   x1={a.x}
                   y1={a.y}
@@ -188,7 +197,7 @@ export function PillarsHero({ size, active }: { size: number; active: boolean })
             })}
           </Defs>
 
-          <Circle cx={CX} cy={CY} r={64} fill="url(#intro-hero-halo)" />
+          <Circle cx={CX} cy={CY} r={64} fill={`url(#intro-hero-halo-${idSuffix})`} />
 
           <Circle
             cx={CX}
@@ -215,7 +224,7 @@ export function PillarsHero({ size, active }: { size: number; active: boolean })
                 y1={a.y}
                 x2={b.x}
                 y2={b.y}
-                stroke={`url(#intro-hero-edge-${n.key})`}
+                stroke={`url(#intro-hero-edge-${n.key}-${idSuffix})`}
                 strokeWidth={1.5}
                 strokeOpacity={0.6}
               />
@@ -255,7 +264,7 @@ export function PillarsHero({ size, active }: { size: number; active: boolean })
           <Svg width={ROT * k} height={ROT * k} viewBox={`0 0 ${ROT} ${ROT}`}>
             <Defs>
               <LinearGradient
-                id="intro-hero-tail"
+                id={`intro-hero-tail-${idSuffix}`}
                 gradientUnits="userSpaceOnUse"
                 x1={tailStart.x}
                 y1={tailStart.y}
@@ -265,7 +274,7 @@ export function PillarsHero({ size, active }: { size: number; active: boolean })
                 <Stop offset="0" stopColor={cometColor} stopOpacity={0} />
                 <Stop offset="1" stopColor={cometColor} stopOpacity={0.85} />
               </LinearGradient>
-              <RadialGradient id="intro-hero-comet" cx="0.5" cy="0.5" r="0.5">
+              <RadialGradient id={`intro-hero-comet-${idSuffix}`} cx="0.5" cy="0.5" r="0.5">
                 <Stop offset="0" stopColor={cometColor} stopOpacity={0.7} />
                 <Stop offset="1" stopColor={cometColor} stopOpacity={0} />
               </RadialGradient>
@@ -284,11 +293,11 @@ export function PillarsHero({ size, active }: { size: number; active: boolean })
             <Path
               d={`M ${tailStart.x.toFixed(2)} ${tailStart.y.toFixed(2)} A ${R} ${R} 0 0 1 ${ROT / 2} ${ROT / 2 - R}`}
               fill="none"
-              stroke="url(#intro-hero-tail)"
+              stroke={`url(#intro-hero-tail-${idSuffix})`}
               strokeWidth={2.4}
               strokeLinecap="round"
             />
-            <Circle cx={ROT / 2} cy={ROT / 2 - R} r={10} fill="url(#intro-hero-comet)" />
+            <Circle cx={ROT / 2} cy={ROT / 2 - R} r={10} fill={`url(#intro-hero-comet-${idSuffix})`} />
             <Circle cx={ROT / 2} cy={ROT / 2 - R} r={2.8} fill={cometColor} />
           </Svg>
         </Animated.View>
@@ -297,6 +306,7 @@ export function PillarsHero({ size, active }: { size: number; active: boolean })
       {/* ── Nodes ────────────────────────────────────────────────────── */}
       {NODES.map((n, i) => (
         <PillarNode
+          idSuffix={idSuffix}
           key={n.key}
           spec={n}
           x={pos[i]!.x * k}
@@ -321,7 +331,7 @@ export function PillarsHero({ size, active }: { size: number; active: boolean })
         ]}
         pointerEvents="none"
       >
-        <PercevaGlyph size={GLYPH * k} palette="primary" idSuffix="intro-hero" />
+        <PercevaGlyph size={GLYPH * k} palette="primary" idSuffix={`intro-hero-${idSuffix}`} />
       </Animated.View>
 
       {/* ── Labels (plain Text: crisp, translatable, font-scaled) ───── */}
@@ -365,6 +375,7 @@ export function PillarsHero({ size, active }: { size: number; active: boolean })
 }
 
 function PillarNode({
+  idSuffix,
   spec,
   x,
   y,
@@ -374,6 +385,7 @@ function PillarNode({
   steady,
   enterDelay,
 }: {
+  idSuffix: string;
   spec: NodeSpec;
   x: number;
   y: number;
@@ -405,18 +417,18 @@ function PillarNode({
       <Animated.View style={[StyleSheet.absoluteFill, glowStyle]}>
         <Svg width={tile} height={tile} viewBox={`0 0 ${NODE} ${NODE}`}>
           <Defs>
-            <RadialGradient id={`intro-node-hot-${spec.key}`} cx="0.5" cy="0.5" r="0.5">
+            <RadialGradient id={`intro-node-hot-${spec.key}-${idSuffix}`} cx="0.5" cy="0.5" r="0.5">
               <Stop offset="0" stopColor={color} stopOpacity={0.8} />
               <Stop offset="0.45" stopColor={color} stopOpacity={0.28} />
               <Stop offset="1" stopColor={color} stopOpacity={0} />
             </RadialGradient>
           </Defs>
-          <Circle cx={NODE / 2} cy={NODE / 2} r={NODE / 2} fill={`url(#intro-node-hot-${spec.key})`} />
+          <Circle cx={NODE / 2} cy={NODE / 2} r={NODE / 2} fill={`url(#intro-node-hot-${spec.key}-${idSuffix})`} />
         </Svg>
       </Animated.View>
       <Svg width={tile} height={tile} viewBox={`0 0 ${NODE} ${NODE}`}>
         <Defs>
-          <RadialGradient id={`intro-node-core-${spec.key}`} cx="0.4" cy="0.38" r="0.62">
+          <RadialGradient id={`intro-node-core-${spec.key}-${idSuffix}`} cx="0.4" cy="0.38" r="0.62">
             <Stop offset="0" stopColor="#FFFFFF" stopOpacity={0.95} />
             <Stop offset="1" stopColor={color} stopOpacity={1} />
           </RadialGradient>
@@ -431,7 +443,7 @@ function PillarNode({
           strokeOpacity={0.65}
           strokeWidth={1.5}
         />
-        <Circle cx={NODE / 2} cy={NODE / 2} r={7.5} fill={`url(#intro-node-core-${spec.key})`} />
+        <Circle cx={NODE / 2} cy={NODE / 2} r={7.5} fill={`url(#intro-node-core-${spec.key}-${idSuffix})`} />
       </Svg>
     </Animated.View>
   );
