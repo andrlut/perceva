@@ -1,12 +1,12 @@
 import { Linking } from 'react-native';
 
 /**
- * Ponte Perceva → app do Claude ("Ditar no Claude").
+ * Ponte Perceva → app do Claude: os botões de IA das telas.
  *
- * O caminho de voz do usuário avançado: um toque aqui abre o app do Claude já
- * na conversa certa, com o conector Perceva ligado, e o ditado acontece LÁ —
- * o app do Claude tem ditado nativo; o Perceva não tem microfone (e ganhar
- * um é rebuild nativo). Nada passa por rede aqui: é um intent do Android.
+ * Um toque abre o app do Claude já no lugar certo, com o conector Perceva
+ * ligado, e o resto acontece LÁ — ditado, leitura, resposta. Nada passa por
+ * rede aqui: é um intent do Android. O Perceva não tem microfone (e ganhar
+ * um é rebuild nativo).
  *
  * Por que `https://claude.ai/…` e não `claude://…`: o app Android do Claude
  * verifica App Links para todo `claude.ai/*` (assetlinks `handle_all_urls`),
@@ -14,26 +14,49 @@ import { Linking } from 'react-native';
  * navegador quando não está. O esquema `claude://` só funciona com o app e
  * sem fallback.
  *
- * Três destinos, do mais ao menos recomendado:
- *   - projeto  → `claude.ai/project/<uuid>`: cada dia vira uma conversa
- *     dentro do projeto, e as INSTRUÇÕES do projeto dizem ao Claude o que
- *     fazer com o ditado. Sem prompt no link: a instrução já mora lá.
+ * O que um link consegue carregar é só isto:
+ *   - projeto  → `claude.ai/project/<uuid>`: abre o projeto; cada dia vira
+ *     uma conversa lá dentro (ou uma fixada), e as INSTRUÇÕES do projeto
+ *     dizem ao Claude o que fazer.
  *   - conversa → `claude.ai/chat/<uuid>`: sempre a mesma conversa.
  *   - nenhum   → `claude.ai/new?q=<prompt>`: conversa nova com o pedido já
- *     escrito no campo (validado no Android em 2026-09-29). O ditado entra
- *     depois do texto, na mesma mensagem.
+ *     escrito no campo (validado no Android em 2026-09-29).
+ *   - projeto/conversa + `?q=<prompt>`: os dois juntos. Não documentado pelo
+ *     app do Claude — fica atrás de uma chave (`claudePromptInLink`) que o
+ *     dono liga se o teste no aparelho dele passar.
+ * Nenhum link liga o microfone, anexa áudio, escolhe modelo ou conector: o
+ * prompt é a única carga, então a intenção vai nele e o MCP faz o resto.
  *
- * O prompt NUNCA carrega dado pessoal — só a instrução genérica. O conteúdo
- * do dia é ditado dentro do Claude; nunca passa por URL.
+ * Cada botão da tela é uma entrada em CLAUDE_BUTTONS e pode ter o próprio
+ * destino (Ajustes › Conector); sem um, vale o padrão. O prompt NUNCA leva
+ * dado pessoal — só a instrução; o conteúdo é ditado dentro do Claude.
  */
 
 const CLAUDE_ORIGIN = 'https://claude.ai';
+
+/** Every AI button in the app. The Conector screen lists them off this
+ *  registry (i18n `conector.buttons.{key}` / `{key}Desc`); adding a button =
+ *  one key here + the two strings + the ClaudeButton on its surface. */
+export type ClaudeButtonKey = 'mood' | 'calendar';
+
+export const CLAUDE_BUTTONS: readonly ClaudeButtonKey[] = ['mood', 'calendar'];
 
 export type ClaudeTargetKind = 'project' | 'chat';
 
 export interface ClaudeTarget {
   kind: ClaudeTargetKind;
   id: string;
+}
+
+/** The slice of AppSettings the bridge reads (kept here so the settings
+ *  module can type its keys without importing the button component). */
+export interface ClaudeLinkSettings {
+  /** Default destination: canonical project/chat URL, or '' for a new chat. */
+  claudeTarget: string;
+  /** Append `?q=<prompt>` to a project/chat destination too. */
+  claudePromptInLink: boolean;
+  /** Per-button destination; a missing or empty entry falls back to the default. */
+  claudeButtonTargets: Partial<Record<ClaudeButtonKey, string>>;
 }
 
 const UUID =
@@ -67,15 +90,30 @@ export function claudeNewChatUrl(prompt: string): string {
   return `${CLAUDE_ORIGIN}/new?q=${encodeURIComponent(prompt)}`;
 }
 
+/** The destination one button uses: its own when set, else the default. */
+export function resolveClaudeTarget(
+  settings: ClaudeLinkSettings,
+  button: ClaudeButtonKey,
+): string {
+  const own = settings.claudeButtonTargets[button];
+  return own && own.trim() ? own : settings.claudeTarget;
+}
+
 /**
- * O link que o botão abre: o destino salvo quando há um válido, senão uma
- * conversa nova com o prompt. `stored` é o valor cru dos ajustes — re-parsear
- * aqui, em vez de confiar no que foi persistido, cobre um blob antigo ou
- * editado à mão.
+ * The link a button opens. `stored` is the raw settings value — re-parsed
+ * here, instead of trusting what was persisted, to cover an old or hand-edited
+ * blob. No valid destination → a new chat carrying the prompt; a destination
+ * → it as is, or with the prompt appended when the owner switched that on.
  */
-export function buildClaudeCheckinUrl(stored: string, prompt: string): string {
+export function buildClaudeUrl(
+  stored: string,
+  prompt: string,
+  promptInLink: boolean,
+): string {
   const target = parseClaudeTarget(stored);
-  return target ? claudeTargetUrl(target) : claudeNewChatUrl(prompt);
+  if (!target) return claudeNewChatUrl(prompt);
+  const base = claudeTargetUrl(target);
+  return promptInLink ? `${base}?q=${encodeURIComponent(prompt)}` : base;
 }
 
 /** Abre no app do Claude (ou no navegador). Resolve false quando o sistema

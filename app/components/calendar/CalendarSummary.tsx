@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { ClaudeButton } from '@/components/ClaudeButton';
 import type { CalendarTotals } from '@/lib/calendar/filters';
 import { INTENSITY_RAMP } from '@/lib/calendar/intensity';
 import { FILTERED_OUT_OPACITY } from '@/lib/calendar/paint';
@@ -35,6 +36,8 @@ interface Props {
   /** The filter's XP scope in words ("Saúde"), or null. When set, the XP
    *  headline names it: a number that changes meaning must say so. */
   scopeLabel: string | null;
+  /** The visible range as local YYYY-MM-DD — what the AI chip asks about. */
+  period: { from: string; to: string };
 }
 
 export function CalendarSummary({
@@ -44,6 +47,7 @@ export function CalendarSummary({
   dimXp,
   locale,
   scopeLabel,
+  period,
 }: Props) {
   const { t } = useT();
   const router = useRouter();
@@ -90,6 +94,17 @@ export function CalendarSummary({
             <Text style={styles.filtered}>{` · ${t('calendar.summary.filtered')}`}</Text>
           ) : null}
         </Text>
+        {/* The AI door for this range: "how was this period" asked in the
+            Claude app, which reads the same days through the connector.
+            Renders nothing unless the shortcut is on (Ajustes › Conector). */}
+        <ClaudeButton
+          buttonKey="calendar"
+          prompt={t('calendar.summary.claudePrompt', {
+            from: period.from,
+            to: period.to,
+          })}
+          a11yLabel={t('calendar.summary.askClaude')}
+        />
       </View>
 
       <Legend front={front} />
