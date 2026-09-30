@@ -1454,6 +1454,10 @@ const pt: Translations = {
       editTaskSub: 'Título, sub-áreas, frequência…',
     },
     completeSheet: {
+      times: 'Quantas vezes',
+      timesHint: 'Registra a mesma conclusão várias vezes',
+      timesLessA11y: 'Uma vez a menos',
+      timesMoreA11y: 'Uma vez a mais',
       totalStars: 'Estrelas totais',
       reset: 'Resetar',
       log: 'Registrar',
@@ -2486,6 +2490,10 @@ const pt: Translations = {
       'Cada área enche o hex com {{xp}} XP em 30 dias (1★ todo dia). Nas barras, o traço marca esse mínimo e o trecho aceso é o que passou dele.',
     saturationWindow:
       'Neste período cada área enche o hex com {{xp}} XP (300 a cada 30 dias). Nas barras, o traço marca esse mínimo e o trecho aceso é o que passou dele.',
+    double30:
+      'Nesta visão cada área enche o hex com {{rim}} XP em 30 dias, o dobro do mínimo — uma prática de 1★ por dia sozinha só enche metade.',
+    doubleWindow:
+      'Nesta visão cada área enche o hex com {{rim}} XP neste período, o dobro do mínimo — uma prática de 1★ por dia sozinha só enche metade.',
     uncapped30:
       'Nesta visão cada área enche o hex com {{rim}} XP em 30 dias, o triplo do mínimo — o fim das barras. Dá pra ver quanto cada uma passou.',
     uncappedWindow:

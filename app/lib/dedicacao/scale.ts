@@ -15,8 +15,9 @@
  *   The bars under the hex — `barSegments`: the track runs to BAR_SPAN × the
  *   ruler, so the ruler always sits at the same third of the length ("o
  *   traço é o 300", in every period) and the other two thirds show what went
- *   PAST it — the one thing the capped hex cannot. The hex's second view
- *   (`spanRatio`) moves its rim to that same end: 900 in 30 days.
+ *   PAST it — the one thing the capped hex cannot. The hex's other views
+ *   (`rimRatio`) move its rim out to 2× or 3× the ruler — 600 or 900 in 30
+ *   days, the last being the bars' own end.
  *
  * It replaced a leader-relative scale (the leading axis at 85%, everything
  * else proportional to it), which let one heavy sub squash the other eleven
@@ -34,10 +35,18 @@ export function saturationRatio(xp: number, cap: number): number {
   return Math.max(MIN_RATIO, Math.min(1, xp / cap));
 }
 
-/** The hex's second view: XP against BAR_SPAN × the ruler (the bars' end). */
-export function spanRatio(xp: number, cap: number): number {
-  if (cap <= 0 || xp <= 0) return 0;
-  return Math.max(MIN_RATIO, Math.min(1, xp / (cap * BAR_SPAN)));
+/**
+ * The hex's rims, as multiples of the ruler: 300 (the teto — "did I cover each
+ * area?"), 600 and 900 (the bars' end — "how far past the minimum?"). 600 is
+ * the owner's experiment (2026-09-29): with it, a 1★-a-day practice alone
+ * only half-fills an area.
+ */
+export const HEX_RIMS = [1, 2, BAR_SPAN] as const;
+export type HexRim = (typeof HEX_RIMS)[number];
+
+/** XP against `rim` × the ruler. `rim` 1 is `saturationRatio`. */
+export function rimRatio(xp: number, cap: number, rim: number): number {
+  return saturationRatio(xp, cap * rim);
 }
 
 /**

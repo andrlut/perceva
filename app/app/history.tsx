@@ -452,13 +452,17 @@ export default function CalendarScreen() {
     task: TaskWithSubs,
     subs: TaskSub[],
     coinMultiplier?: CoinMultiplier,
+    times = 1,
   ) => {
     if (completeTask.isPending) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
 
     const reward = rewardForTaskSubs(subs, coinMultiplier ?? task.coin_multiplier);
     const fid = Date.now();
-    setFloats((prev) => [...prev, { id: fid, xp: reward.total.xp, coins: reward.total.coins }]);
+    setFloats((prev) => [
+      ...prev,
+      { id: fid, xp: reward.total.xp * times, coins: reward.total.coins * times },
+    ]);
 
     const stamp = new Date(selected);
     stamp.setHours(12, 0, 0, 0); // noon local — sidesteps day-boundary timezone wobble.
@@ -469,6 +473,7 @@ export default function CalendarScreen() {
         coinMultiplier,
         completedAt: stamp.toISOString(),
         completedLocalDate: dayKey,
+        times,
       },
       {
         onError: (err) => {
@@ -1022,10 +1027,10 @@ export default function CalendarScreen() {
         visible={sheetTask !== null}
         task={sheetTask}
         onCancel={() => setSheetTask(null)}
-        onConfirm={(subs, coinMultiplier) => {
+        onConfirm={(subs, coinMultiplier, times) => {
           const task = sheetTask;
           setSheetTask(null);
-          if (task) fireRetroCompletion(task, subs, coinMultiplier);
+          if (task) fireRetroCompletion(task, subs, coinMultiplier, times);
         }}
       />
 

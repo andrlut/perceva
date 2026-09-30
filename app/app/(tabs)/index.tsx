@@ -261,6 +261,7 @@ export default function HomeScreen() {
     task: TaskWithSubs,
     subs: TaskSub[],
     coinMultiplier?: CoinMultiplier,
+    times = 1,
   ) => {
     if (completeTask.isPending) return;
 
@@ -270,11 +271,11 @@ export default function HomeScreen() {
     const fid = Date.now();
     setFloats((prev) => [
       ...prev,
-      { id: fid, xp: reward.total.xp, coins: reward.total.coins },
+      { id: fid, xp: reward.total.xp * times, coins: reward.total.coins * times },
     ]);
 
     completeTask.mutate(
-      { task, subs, coinMultiplier },
+      { task, subs, coinMultiplier, times },
       {
         onSuccess: () => {
           // Same tick as the emit, on purpose: M1 gains its "Feitas hoje"
@@ -307,9 +308,10 @@ export default function HomeScreen() {
     task: TaskWithSubs,
     subs: TaskSub[],
     coinMultiplier?: CoinMultiplier,
+    times = 1,
   ) => {
     if (isToday) {
-      fireCompletion(task, subs, coinMultiplier);
+      fireCompletion(task, subs, coinMultiplier, times);
       return;
     }
     if (completeTask.isPending) return;
@@ -318,7 +320,7 @@ export default function HomeScreen() {
     const fid = Date.now();
     setFloats((prev) => [
       ...prev,
-      { id: fid, xp: reward.total.xp, coins: reward.total.coins },
+      { id: fid, xp: reward.total.xp * times, coins: reward.total.coins * times },
     ]);
     // File the completion at noon of the selected day so completed_at sits
     // squarely inside that local date; completedLocalDate is what the day
@@ -339,6 +341,7 @@ export default function HomeScreen() {
         coinMultiplier,
         completedAt: at.toISOString(),
         completedLocalDate: selectedKey,
+        times,
       },
       {
         onError: (err) => {
@@ -374,11 +377,15 @@ export default function HomeScreen() {
     emitTourEvent(M1_EVENTS.TASK_LONG_PRESSED);
   };
 
-  const handleSheetConfirm = (subs: TaskSub[], coinMultiplier: CoinMultiplier) => {
+  const handleSheetConfirm = (
+    subs: TaskSub[],
+    coinMultiplier: CoinMultiplier,
+    times: number,
+  ) => {
     if (!sheetTask) return;
     const task = sheetTask;
     setSheetTask(null);
-    completeForSelectedDay(task, subs, coinMultiplier);
+    completeForSelectedDay(task, subs, coinMultiplier, times);
   };
 
   const handleActionAdjust = () => {

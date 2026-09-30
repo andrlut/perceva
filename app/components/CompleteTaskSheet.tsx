@@ -22,8 +22,9 @@ interface Props {
   visible: boolean;
   task: TaskWithSubs | null;
   onCancel: () => void;
-  /** The stars and the coins for THIS log (both start at the practice's). */
-  onConfirm: (subs: TaskSub[], coinMultiplier: CoinMultiplier) => void;
+  /** The stars, the coins and how many times, for THIS log (stars and
+   *  coins start at the practice's; times at 1). */
+  onConfirm: (subs: TaskSub[], coinMultiplier: CoinMultiplier, times: number) => void;
 }
 
 /**
@@ -40,7 +41,13 @@ interface Props {
  *
  * The coins (Nada / Metade / Igual / Dobro) start at the practice's default
  * and change this log only; XP stays the stars.
+ *
+ * "Quantas vezes" logs it N times at once (N completions) — for things done
+ * in amounts (1% da renda × 10, copos d'água). It lives only here, behind the
+ * long-press: the one-tap check stays one tap, one completion.
  */
+
+const MAX_TIMES = 50;
 export function CompleteTaskSheet({
   visible,
   task,
@@ -52,12 +59,14 @@ export function CompleteTaskSheet({
   const meta = useMetaLookup();
   const [draft, setDraft] = useState<TaskSub[]>([]);
   const [mult, setMult] = useState<CoinMultiplier>(1);
+  const [times, setTimes] = useState(1);
 
   // Reset draft each time we open with a new task.
   useEffect(() => {
     if (visible && task) {
       setDraft(task.subs.map((s) => ({ sub_id: s.sub_id, stars: s.stars })));
       setMult(task.coin_multiplier);
+      setTimes(1);
     }
   }, [visible, task]);
 
@@ -87,16 +96,18 @@ export function CompleteTaskSheet({
   const reset = () => {
     setDraft(task.subs.map((s) => ({ sub_id: s.sub_id, stars: s.stars })));
     setMult(task.coin_multiplier);
+    setTimes(1);
   };
 
   const confirm = () => {
-    onConfirm(draft, mult);
+    onConfirm(draft, mult, times);
   };
 
   const isDirty =
     draft.length !== task.subs.length ||
     draft.some((d, i) => task.subs[i]?.stars !== d.stars) ||
-    mult !== task.coin_multiplier;
+    mult !== task.coin_multiplier ||
+    times !== 1;
 
   return (
     <Modal
@@ -196,6 +207,54 @@ export function CompleteTaskSheet({
             );
           })}
 
+          <View style={styles.timesRow}>
+            <View style={styles.timesText}>
+              <Text style={styles.timesLabel}>{t('tasks.completeSheet.times')}</Text>
+              <Text style={styles.timesHint}>{t('tasks.completeSheet.timesHint')}</Text>
+            </View>
+            <View style={styles.stepper}>
+              <Pressable
+                onPress={() => setTimes((n) => Math.max(1, n - 1))}
+                disabled={times <= 1}
+                style={({ pressed }) => [
+                  styles.stepperBtn,
+                  times <= 1 && styles.stepperBtnDisabled,
+                  pressed && times > 1 && { opacity: 0.6 },
+                ]}
+                hitSlop={6}
+                accessibilityRole="button"
+                accessibilityLabel={t('tasks.completeSheet.timesLessA11y')}
+              >
+                <Ionicons
+                  name="remove"
+                  size={16}
+                  color={times > 1 ? tokens.text.hi : tokens.text.faint}
+                />
+              </Pressable>
+              <View style={styles.starsBox}>
+                <Text style={[styles.starsValue, { color: tokens.text.hi }]}>{times}×</Text>
+              </View>
+              <Pressable
+                onPress={() => setTimes((n) => Math.min(MAX_TIMES, n + 1))}
+                disabled={times >= MAX_TIMES}
+                style={({ pressed }) => [
+                  styles.stepperBtn,
+                  times >= MAX_TIMES && styles.stepperBtnDisabled,
+                  pressed && times < MAX_TIMES && { opacity: 0.6 },
+                ]}
+                hitSlop={6}
+                accessibilityRole="button"
+                accessibilityLabel={t('tasks.completeSheet.timesMoreA11y')}
+              >
+                <Ionicons
+                  name="add"
+                  size={16}
+                  color={times < MAX_TIMES ? tokens.text.hi : tokens.text.faint}
+                />
+              </Pressable>
+            </View>
+          </View>
+
           <CoinMultiplierPicker
             label={t('tasks.coinMultiplier.label')}
             value={mult}
@@ -208,13 +267,13 @@ export function CompleteTaskSheet({
             <View style={styles.rewardItem}>
               <Ionicons name="flag" size={14} color={tokens.semantic.xp} />
               <Text style={[styles.rewardText, { color: tokens.semantic.xp }]}>
-                +{reward.total.xp} XP
+                +{reward.total.xp * times} XP
               </Text>
             </View>
             <View style={styles.rewardItem}>
               <CoinIcon size={14} />
               <Text style={[styles.rewardText, { color: tokens.semantic.coin }]}>
-                +{reward.total.coins}
+                +{reward.total.coins * times}
               </Text>
             </View>
             <View style={{ flex: 1 }} />
@@ -261,6 +320,26 @@ export function CompleteTaskSheet({
 }
 
 const styles = StyleSheet.create({
+  timesRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[3],
+    paddingVertical: 4,
+  },
+  timesText: {
+    flex: 1,
+    gap: 2,
+  },
+  timesLabel: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 14,
+    color: tokens.text.hi,
+  },
+  timesHint: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 12,
+    color: tokens.text.dim,
+  },
   scrim: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.55)',
