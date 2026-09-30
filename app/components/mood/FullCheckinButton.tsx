@@ -1,5 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 
 import { tokens } from '@/theme';
 
@@ -19,15 +25,18 @@ export function FullCheckinButton({
   icon,
   label,
   onPress,
+  style,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   onPress: () => void;
+  /** Layout only (MoodActionsRow shares its row with the Claude door). */
+  style?: StyleProp<ViewStyle>;
 }) {
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.btn, pressed && { opacity: 0.75 }]}
+      style={({ pressed }) => [styles.btn, style, pressed && { opacity: 0.75 }]}
       accessibilityRole="button"
       accessibilityLabel={label}
     >

@@ -2590,12 +2590,17 @@ const en = {
       addTagsNote: 'Add tags and a note',
       editTagsNote: 'Edit tags and note',
       dictateClaude: 'Dictate to Claude',
+      // The compact form beside "edit tags and note" — a name, not a verb.
+      dictateClaudeShort: 'Claude',
     },
     // Prefilled in the Claude composer when the shortcut opens a NEW chat;
     // the dictation lands right after it, in the same message. Generic on
     // purpose — the day's content never travels in a URL.
     claudePrompt:
       "Today's mood check-in for Perceva. What follows is my day, dictated. Log it with log_mood and read back what you saved: ",
+    // Same, for a past day: the date goes in so log_mood writes THAT day.
+    claudePromptPast:
+      'Mood check-in for {{date}} on Perceva. What follows is how that day went, dictated. Log it with log_mood for that date and read back what you saved: ',
     claudeOpenError: 'Could not open Claude. Is the app installed?',
     history: {
       title: 'How I felt',

@@ -2,14 +2,13 @@ import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 
-import { ClaudeDictateButton } from '@/components/mood/ClaudeDictateButton';
-import { FullCheckinButton } from '@/components/mood/FullCheckinButton';
-import { MoodFace } from '@/components/mood/MoodFace';
+import { MoodActionsRow } from '@/components/mood/MoodActionsRow';
+import { MoodEntrySummary } from '@/components/mood/MoodEntrySummary';
 import { MoodFaceRow } from '@/components/mood/MoodFaceRow';
 import { TourTarget } from '@/components/tour/TourTarget';
 import { useLogMood, useTodayMood } from '@/lib/api/mood';
 import { useT } from '@/lib/i18n';
-import { moodLevel, type MoodValue } from '@/lib/mood';
+import { type MoodValue } from '@/lib/mood';
 import { emitTourEvent } from '@/lib/tour/eventBus';
 import { M1_EVENTS, M1_TARGETS } from '@/lib/tour/m1Steps';
 import { tokens } from '@/theme';
@@ -29,14 +28,16 @@ import { tokens } from '@/theme';
  * the tags and note was that small text — which, as the last card on Home,
  * also sat under the floating buttons.
  *
- * Past days get the same two doors from MoodDayDetail, which shares the
- * button (FullCheckinButton).
+ * Once logged, today reads back exactly like any other day (MoodEntrySummary:
+ * face, level, tags, note). It used to collapse to "Hoje: bem", so the owner
+ * had to step back a day to see what he had just dictated.
  *
- * A third, optional door: the "Ditar no Claude" pill beside the eyebrow
- * (ClaudeDictateButton). It renders only for a user who switched it on in
- * Ajustes › Conector — the bridge to the Claude app, where the day gets
- * dictated and the connector writes it. Present in both states: after a
- * quick face tap it is how the note gets dictated (log_mood merges).
+ * The buttons are MoodActionsRow: the check-in door and, for whoever switched
+ * it on in Ajustes › Conector, the Claude door beside it — present in both
+ * states, because after a quick face tap it is how the note gets dictated
+ * (log_mood merges).
+ *
+ * Past days get the same doors from MoodDayDetail.
  *
  * Deliberately quiet — no XP, no streak, matching the mood system's rule.
  *
@@ -87,10 +88,7 @@ export function MoodHubStrip() {
     return (
       <TourTarget id={M1_TARGETS.MOOD} radius={tokens.radius.md} style={styles.outer}>
         <View style={styles.card}>
-          <View style={styles.eyebrowRow}>
-            <Text style={styles.eyebrow}>{t('mood.prompt.title')}</Text>
-            <ClaudeDictateButton />
-          </View>
+          <Text style={styles.eyebrow}>{t('mood.prompt.title')}</Text>
           <View style={[logMood.isPending && { opacity: 0.5 }]}>
             <MoodFaceRow
               value={null}
@@ -99,7 +97,7 @@ export function MoodHubStrip() {
               showLabels={false}
             />
           </View>
-          <FullCheckinButton
+          <MoodActionsRow
             icon="create-outline"
             label={t('mood.cta.full')}
             onPress={openCheckin}
@@ -109,30 +107,15 @@ export function MoodHubStrip() {
     );
   }
 
-  const level = moodLevel(entry.mood);
   const hasDetails =
     (entry.tags?.length ?? 0) > 0 || (entry.note?.trim().length ?? 0) > 0;
 
-  // Plain View, not a Pressable: with a real button inside, a pressable
-  // container with its own accessibilityLabel would flatten the button away
-  // from TalkBack. Here the row is read as text and the button as a button.
   return (
     <TourTarget id={M1_TARGETS.MOOD} radius={tokens.radius.md} style={styles.outer}>
       <View style={styles.card}>
-        <View style={styles.loggedRow}>
-          <MoodFace value={level.value} size={38} active />
-          <View style={styles.loggedBody}>
-            <Text style={styles.eyebrow}>{t('mood.todayCard.eyebrow')}</Text>
-            <Text style={styles.loggedValue} numberOfLines={1}>
-              {t('mood.todayCard.loggedPrefix')}{' '}
-              <Text style={styles.loggedStrong}>
-                {t(`mood.levels.${level.key}`).toLowerCase()}
-              </Text>
-            </Text>
-          </View>
-          <ClaudeDictateButton />
-        </View>
-        <FullCheckinButton
+        <Text style={styles.eyebrow}>{t('mood.todayCard.eyebrow')}</Text>
+        <MoodEntrySummary entry={entry} />
+        <MoodActionsRow
           icon={hasDetails ? 'create-outline' : 'add-circle-outline'}
           label={hasDetails ? t('mood.cta.editTagsNote') : t('mood.cta.addTagsNote')}
           onPress={openCheckin}
@@ -155,38 +138,11 @@ const styles = StyleSheet.create({
     borderColor: tokens.border.base,
     gap: tokens.space[3],
   },
-  eyebrowRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: tokens.space[2],
-  },
   eyebrow: {
-    flexShrink: 1,
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 10,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
     color: tokens.text.dim,
-  },
-  loggedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[3],
-  },
-  loggedBody: {
-    flex: 1,
-    minWidth: 0,
-    gap: 2,
-  },
-  loggedValue: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 14,
-    lineHeight: 19,
-    color: tokens.text.base,
-  },
-  loggedStrong: {
-    fontFamily: 'Manrope_800ExtraBold',
-    color: tokens.text.hi,
   },
 });
