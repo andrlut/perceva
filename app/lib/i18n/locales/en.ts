@@ -1036,7 +1036,7 @@ const en = {
       legend: {
         title: 'What the emblem shows',
         effort: 'Effort',
-        effortWhat: 'each area lights up when it fills: {{floor}} XP in 30 days, a 1★ practice every day',
+        effortWhat: 'each area lights up at {{floor}} XP in 30 days',
         effortValue: '{{xp}} / {{max}} in 30 days',
         effortValueFull: '{{xp}} XP this month',
         self: 'Self-knowledge',
@@ -1458,7 +1458,6 @@ const en = {
     },
     completeSheet: {
       times: 'How many times',
-      timesHint: 'Logs the same completion several times',
       timesLessA11y: 'One time fewer',
       timesMoreA11y: 'One time more',
       totalStars: 'Total stars',
@@ -2474,17 +2473,17 @@ const en = {
   dedicacao: {
     hexAxisA11y: '{{dim}}: {{xp}} XP this period',
     saturation30:
-      'Each area fills the hex at {{xp}} XP in 30 days (a 1★ practice every day). On the bars, the tick marks that minimum and the bright part is what went past it.',
+      'Each area fills the hex at {{xp}} XP in 30 days. On the bars, the tick marks that point and the bright part is what went past it. The button beside the hex raises the bar.',
     saturationWindow:
-      'In this period each area fills the hex at {{xp}} XP (300 per 30 days). On the bars, the tick marks that minimum and the bright part is what went past it.',
+      'In this period each area fills the hex at {{xp}} XP (300 per 30 days). On the bars, the tick marks that point and the bright part is what went past it. The button beside the hex raises the bar.',
     double30:
-      'In this view each area fills the hex at {{rim}} XP in 30 days, twice the minimum — a 1★ practice a day on its own only fills half.',
+      'In this view each area fills the hex at {{rim}} XP in 30 days, twice the base.',
     doubleWindow:
-      'In this view each area fills the hex at {{rim}} XP in this period, twice the minimum — a 1★ practice a day on its own only fills half.',
+      'In this view each area fills the hex at {{rim}} XP in this period, twice the base.',
     uncapped30:
-      'In this view each area fills the hex at {{rim}} XP in 30 days, three times the minimum — the end of the bars. It shows how far past it each one went.',
+      'In this view each area fills the hex at {{rim}} XP in 30 days, three times the base — the end of the bars.',
     uncappedWindow:
-      'In this view each area fills the hex at {{rim}} XP in this period, three times the minimum — the end of the bars. It shows how far past it each one went.',
+      'In this view each area fills the hex at {{rim}} XP in this period, three times the base — the end of the bars.',
     rimLabel: 'Up to {{xp}}',
     rimShow: 'Show the hex up to {{xp}} XP',
     levelTotal: 'Level {{level}} · {{xp}} XP all-time',

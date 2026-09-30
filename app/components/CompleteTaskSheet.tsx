@@ -43,8 +43,11 @@ interface Props {
  * and change this log only; XP stays the stars.
  *
  * "Quantas vezes" logs it N times at once (N completions) — for things done
- * in amounts (1% da renda × 10, copos d'água). It lives only here, behind the
- * long-press: the one-tap check stays one tap, one completion.
+ * in amounts (1% da renda × 10, copos d'água). It is the small − N + beside
+ * Registrar (the button then reads "Registrar 3×"), not a row of its own, and
+ * it lives only here, behind the long-press: the one-tap check stays one
+ * tap, one completion. Tapping outside closes the sheet (no Cancelar button
+ * — the room went to the counter).
  */
 
 const MAX_TIMES = 50;
@@ -207,58 +210,11 @@ export function CompleteTaskSheet({
             );
           })}
 
-          <View style={styles.timesRow}>
-            <View style={styles.timesText}>
-              <Text style={styles.timesLabel}>{t('tasks.completeSheet.times')}</Text>
-              <Text style={styles.timesHint}>{t('tasks.completeSheet.timesHint')}</Text>
-            </View>
-            <View style={styles.stepper}>
-              <Pressable
-                onPress={() => setTimes((n) => Math.max(1, n - 1))}
-                disabled={times <= 1}
-                style={({ pressed }) => [
-                  styles.stepperBtn,
-                  times <= 1 && styles.stepperBtnDisabled,
-                  pressed && times > 1 && { opacity: 0.6 },
-                ]}
-                hitSlop={6}
-                accessibilityRole="button"
-                accessibilityLabel={t('tasks.completeSheet.timesLessA11y')}
-              >
-                <Ionicons
-                  name="remove"
-                  size={16}
-                  color={times > 1 ? tokens.text.hi : tokens.text.faint}
-                />
-              </Pressable>
-              <View style={styles.starsBox}>
-                <Text style={[styles.starsValue, { color: tokens.text.hi }]}>{times}×</Text>
-              </View>
-              <Pressable
-                onPress={() => setTimes((n) => Math.min(MAX_TIMES, n + 1))}
-                disabled={times >= MAX_TIMES}
-                style={({ pressed }) => [
-                  styles.stepperBtn,
-                  times >= MAX_TIMES && styles.stepperBtnDisabled,
-                  pressed && times < MAX_TIMES && { opacity: 0.6 },
-                ]}
-                hitSlop={6}
-                accessibilityRole="button"
-                accessibilityLabel={t('tasks.completeSheet.timesMoreA11y')}
-              >
-                <Ionicons
-                  name="add"
-                  size={16}
-                  color={times < MAX_TIMES ? tokens.text.hi : tokens.text.faint}
-                />
-              </Pressable>
-            </View>
-          </View>
-
           <CoinMultiplierPicker
             label={t('tasks.coinMultiplier.label')}
             value={mult}
             onChange={setMult}
+            compact
           />
 
           <View style={styles.divider} />
@@ -293,15 +249,50 @@ export function CompleteTaskSheet({
           </View>
 
           <View style={styles.actionsRow}>
-            <Pressable
-              onPress={onCancel}
-              style={({ pressed }) => [
-                styles.cancelBtn,
-                pressed && { opacity: 0.6 },
-              ]}
-            >
-              <Text style={styles.cancelText}>{t('common.cancel')}</Text>
-            </Pressable>
+            <View style={styles.timesStepper}>
+              <Pressable
+                onPress={() => setTimes((n) => Math.max(1, n - 1))}
+                disabled={times <= 1}
+                style={({ pressed }) => [
+                  styles.timesBtn,
+                  times <= 1 && styles.stepperBtnDisabled,
+                  pressed && times > 1 && { opacity: 0.6 },
+                ]}
+                hitSlop={6}
+                accessibilityRole="button"
+                accessibilityLabel={t('tasks.completeSheet.timesLessA11y')}
+              >
+                <Ionicons
+                  name="remove"
+                  size={16}
+                  color={times > 1 ? tokens.text.hi : tokens.text.faint}
+                />
+              </Pressable>
+              <Text
+                style={styles.timesValue}
+                accessibilityLabel={`${t('tasks.completeSheet.times')}: ${times}`}
+              >
+                {times}
+              </Text>
+              <Pressable
+                onPress={() => setTimes((n) => Math.min(MAX_TIMES, n + 1))}
+                disabled={times >= MAX_TIMES}
+                style={({ pressed }) => [
+                  styles.timesBtn,
+                  times >= MAX_TIMES && styles.stepperBtnDisabled,
+                  pressed && times < MAX_TIMES && { opacity: 0.6 },
+                ]}
+                hitSlop={6}
+                accessibilityRole="button"
+                accessibilityLabel={t('tasks.completeSheet.timesMoreA11y')}
+              >
+                <Ionicons
+                  name="add"
+                  size={16}
+                  color={times < MAX_TIMES ? tokens.text.hi : tokens.text.faint}
+                />
+              </Pressable>
+            </View>
             <Pressable
               onPress={confirm}
               style={({ pressed }) => [
@@ -310,7 +301,11 @@ export function CompleteTaskSheet({
               ]}
             >
               <Ionicons name="checkmark" size={18} color="#fff" />
-              <Text style={styles.confirmText}>{t('tasks.completeSheet.log')}</Text>
+              <Text style={styles.confirmText}>
+                {times > 1
+                  ? `${t('tasks.completeSheet.log')} ${times}×`
+                  : t('tasks.completeSheet.log')}
+              </Text>
             </Pressable>
           </View>
         </Pressable>
@@ -320,25 +315,29 @@ export function CompleteTaskSheet({
 }
 
 const styles = StyleSheet.create({
-  timesRow: {
+  // − N + beside Registrar: one pill, same height as the button.
+  timesStepper: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: tokens.space[3],
-    paddingVertical: 4,
+    height: 48,
+    paddingHorizontal: 4,
+    borderRadius: 12,
+    backgroundColor: tokens.bg.base,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
   },
-  timesText: {
-    flex: 1,
-    gap: 2,
+  timesBtn: {
+    width: 32,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  timesLabel: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 14,
+  timesValue: {
+    minWidth: 24,
+    textAlign: 'center',
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 16,
     color: tokens.text.hi,
-  },
-  timesHint: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
-    color: tokens.text.dim,
   },
   scrim: {
     flex: 1,
@@ -481,23 +480,8 @@ const styles = StyleSheet.create({
     gap: 10,
     marginTop: 4,
   },
-  cancelBtn: {
-    flex: 1,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: tokens.bg.base,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 14,
-    color: tokens.text.hi,
-  },
   confirmBtn: {
-    flex: 2,
+    flex: 1,
     height: 48,
     borderRadius: 12,
     backgroundColor: tokens.brand.violet,
