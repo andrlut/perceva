@@ -21,6 +21,7 @@ import { CoinIcon } from '@/components/CoinIcon';
 import { InfoSheet } from '@/components/InfoSheet';
 import { IconPickerModal } from '@/components/IconPickerModal';
 import { RecurrencePicker } from '@/components/RecurrencePicker';
+import { SectionLabel } from '@/components/SectionLabel';
 import { STAR_SCALE_LINES, SubPicker } from '@/components/SubPicker';
 import { TourModule } from '@/components/tour/TourModule';
 import {
@@ -680,50 +681,6 @@ export default function TaskFormScreen() {
   );
 }
 
-/**
- * Section title of the form: a small icon, the uppercase label and, when the
- * section has an explanation, an (i) that opens it in an InfoSheet. The coin
- * section wears the Vault's gold (coin icon + gold label) so "Moedas" reads
- * as money at a glance.
- */
-function SectionLabel({
-  icon,
-  coin = false,
-  label,
-  onInfo,
-}: {
-  icon?: keyof typeof Ionicons.glyphMap;
-  coin?: boolean;
-  label: string;
-  onInfo?: () => void;
-}) {
-  const { t } = useT();
-  return (
-    <View style={styles.labelRow}>
-      {coin ? (
-        <CoinIcon size={18} />
-      ) : icon ? (
-        <Ionicons name={icon} size={16} color={tokens.brand.violet2} />
-      ) : null}
-      <Text style={[styles.label, coin && { color: tokens.semantic.coinLight }]}>{label}</Text>
-      {onInfo && (
-        <Pressable
-          onPress={onInfo}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel={t('taskForm.infoA11y', { section: label })}
-          style={({ pressed }) => [styles.infoBtn, pressed && { opacity: 0.6 }]}
-        >
-          <Ionicons
-            name="information-circle-outline"
-            size={22}
-            color={coin ? tokens.semantic.coinLight : tokens.text.dim}
-          />
-        </Pressable>
-      )}
-    </View>
-  );
-}
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: tokens.bg.base },
@@ -796,28 +753,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: tokens.border.strong,
     backgroundColor: tokens.bg.deep,
-  },
-  labelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  infoBtn: {
-    marginLeft: 'auto',
-    width: 36,
-    height: 36,
-    marginVertical: -8,
-    marginRight: -8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  label: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 13,
-    lineHeight: 16,
-    color: tokens.text.base,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
   },
   input: {
     backgroundColor: tokens.bg.surface,
