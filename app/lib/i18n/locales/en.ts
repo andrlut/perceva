@@ -771,6 +771,11 @@ const en = {
       myIdeasEmpty: 'Flip the card at the end of an idea to keep it here.',
       searchPlaceholder: 'Search your ideas',
       searchEmpty: 'None of your ideas match “{{query}}”.',
+      help: {
+        title: 'How My ideas works',
+        a11y: 'How My ideas works',
+        body: 'Tap a card to flip it and read the answer. Tap again to flip it back.\n\nHold a card to open its menu: open the full idea (text, image and video), add it to or remove it from your favorites, and write your note.\n\nFavorites: the ideas you chose to keep. "Favorites only" shows them; "Show all" shows everything you have absorbed.\n\nReview: every idea you absorb waits for a decision. In the review, swipe right to favorite or left to let it go. Letting go deletes nothing: it stays under "Show all".\n\nNotes: what you want to do with the idea. Only you see them. A card with a note gets a pencil in the corner; hold it to read or edit. Search looks through your notes too.\n\nIdeas are grouped by area: swipe each row sideways.',
+      },
       menu: {
         open: 'Open full idea',
         openSub: "The idea's text, image and video",
