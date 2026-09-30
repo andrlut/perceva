@@ -41,7 +41,6 @@ import { tokens } from '@/theme';
 import { DIMENSION_ORDER } from '@/theme/dimensions';
 
 import {
-  CoinDial,
   DedicationExample,
   RewardSamples,
 } from './EconomyVisuals';
@@ -416,21 +415,21 @@ export function IntroPager() {
                 subtitle={t('tour.intro.coins.title')}
                 color={palette.learning.ink}
               />
-              <IntroBody>
-                {t('tour.intro.coins.body', {
-                  none: t('tasks.coinMultiplier.none'),
-                  half: t('tasks.coinMultiplier.half'),
-                  same: t('tasks.coinMultiplier.same'),
-                  double: t('tasks.coinMultiplier.double'),
-                })}
-              </IntroBody>
-              <CoinDial />
-              <IntroBody>{t('tour.intro.coins.rewardsBody')}</IntroBody>
+              {/* Basics and purpose only, like Dedicação: how much a practice
+                  pays (Nada/Metade/Igual/Dobro) is the practice form's (i). */}
               <RewardSamples />
-              <View style={styles.neutralNote}>
-                <Ionicons name="time-outline" size={18} color={tokens.text.mid} />
-                <Text style={styles.neutralNoteText}>{t('tour.intro.coins.penalty')}</Text>
-              </View>
+              <PillarCard
+                icon="wallet-outline"
+                color={palette.learning.fill}
+                title={t('tour.intro.coins.card1Title')}
+                body={t('tour.intro.coins.card1Body')}
+              />
+              <PillarCard
+                icon="gift-outline"
+                color={palette.learning.fill}
+                title={t('tour.intro.coins.card2Title')}
+                body={t('tour.intro.coins.card2Body')}
+              />
             </IntroPage>
 
             {/* 6 — Tour or skip */}
@@ -696,20 +695,6 @@ const styles = StyleSheet.create({
   areaChipText: {
     fontFamily: 'Manrope_700Bold',
     fontSize: 12,
-  },
-  neutralNote: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    alignSelf: 'stretch',
-    gap: tokens.space[2],
-    paddingHorizontal: tokens.space[1],
-  },
-  neutralNoteText: {
-    flex: 1,
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 14,
-    lineHeight: 20,
-    color: tokens.text.mid,
   },
   footer: {
     position: 'absolute',

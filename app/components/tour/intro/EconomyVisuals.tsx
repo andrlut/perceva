@@ -59,67 +59,6 @@ export function DedicationExample() {
   );
 }
 
-const MULTIPLIERS = [
-  { key: 'none', value: 0 },
-  { key: 'half', value: 0.5 },
-  { key: 'same', value: 1 },
-  { key: 'double', value: 2 },
-] as const;
-
-/**
- * The coin dial for the example practice: the four choices with the coins
- * each would pay for the same +20 of Dedicação. "Igual" is the default.
- * Labels are the practice form's own (`tasks.coinMultiplier.*`).
- */
-export function CoinDial() {
-  const { t } = useT();
-  const xp = baseXpForDifficulty(EXAMPLE_STARS);
-
-  return (
-    <View style={styles.dialCard}>
-      <View style={styles.dialHeader}>
-        <Text style={styles.dialTitle} numberOfLines={1}>
-          {t('tour.intro.dedication.exampleTitle')}
-        </Text>
-        <Text style={styles.dialXp}>{t('tour.intro.coins.exampleDedication', { xp })}</Text>
-      </View>
-      <View style={styles.dialRow}>
-        {MULTIPLIERS.map((m) => {
-          const on = m.key === 'same';
-          // Per sub, rounded half up — the same rule complete_task uses.
-          const coins = Math.round(xp * m.value);
-          const label = t(`tasks.coinMultiplier.${m.key}`);
-          return (
-            <View
-              key={m.key}
-              style={[styles.dialCell, on && styles.dialCellOn]}
-              accessible
-              accessibilityLabel={
-                on
-                  ? t('tour.intro.coins.dialA11yDefault', { label, coins })
-                  : t('tour.intro.coins.dialA11y', { label, coins })
-              }
-            >
-              <Text style={[styles.dialLabel, on && styles.dialLabelOn]} numberOfLines={1}>
-                {label}
-              </Text>
-              <View style={styles.dialCoins}>
-                <CoinIcon size={14} />
-                <Text style={styles.dialCoinsText}>{coins}</Text>
-              </View>
-              {on ? (
-                <Text style={styles.dialDefault} numberOfLines={1}>
-                  {t('tour.intro.coins.default')}
-                </Text>
-              ) : null}
-            </View>
-          );
-        })}
-      </View>
-    </View>
-  );
-}
-
 const REWARDS = [
   { key: 'reward1', icon: 'film-outline', price: 120 },
   { key: 'reward2', icon: 'restaurant-outline', price: 300 },
