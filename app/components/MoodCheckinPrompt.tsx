@@ -259,6 +259,16 @@ export function MoodCheckinPrompt({ enabled = true }: Props) {
                 </Text>
               </Pressable>
 
+              {/* The face landed; the note can be dictated. Same close-and-
+                  stamp as the unlogged branch. */}
+              <ClaudeDictateButton
+                variant="row"
+                onBeforeOpen={() => {
+                  setVisible(false);
+                  void stamp();
+                }}
+              />
+
               <Pressable
                 onPress={close}
                 style={({ pressed }) => [styles.ghostBtn, pressed && { opacity: 0.6 }]}

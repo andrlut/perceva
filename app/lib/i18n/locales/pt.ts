@@ -2603,12 +2603,17 @@ const pt: Translations = {
       addTagsNote: 'Adicionar tags e nota',
       editTagsNote: 'Editar tags e nota',
       dictateClaude: 'Ditar no Claude',
+      // The compact form beside "editar tags e nota" — a name, not a verb.
+      dictateClaudeShort: 'Claude',
     },
     // Prefilled in the Claude composer when the shortcut opens a NEW chat;
     // the dictation lands right after it, in the same message. Generic on
     // purpose — the day's content never travels in a URL.
     claudePrompt:
       'Check-in de humor do dia no Perceva. O que vem a seguir é o meu dia, ditado. Registre com log_mood e leia de volta o que salvou: ',
+    // Same, for a past day: the date goes in so log_mood writes THAT day.
+    claudePromptPast:
+      'Check-in de humor de {{date}} no Perceva. O que vem a seguir é como foi esse dia, ditado. Registre com log_mood nessa data e leia de volta o que salvou: ',
     claudeOpenError: 'Não deu pra abrir o Claude. O app está instalado?',
     history: {
       title: 'Como me senti',
