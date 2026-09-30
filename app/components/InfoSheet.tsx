@@ -18,6 +18,10 @@ interface Props {
  * why-this-rule blurbs). Replaces native Alert.alert in surfaces where the
  * native dialog was failing to show on some devices.
  *
+ * `**palavra**` in the body renders bold (the one markup it reads): the
+ * key word of each paragraph in bold lets the reader scan what can be done
+ * — tap, hold, favorites — without reading the rest.
+ *
  * The body scrolls when it outgrows the screen (header and button stay
  * put). The sheet is a plain View with the scrim as an absoluteFill sibling
  * behind it: a Pressable sheet would take the touch responder and kill the
@@ -66,7 +70,7 @@ export function InfoSheet({
             </Pressable>
           </View>
           <ScrollView style={styles.bodyScroll} showsVerticalScrollIndicator={false}>
-            <Text style={styles.body}>{body}</Text>
+            <Text style={styles.body}>{renderBold(body)}</Text>
           </ScrollView>
           <Pressable
             onPress={onClose}
@@ -82,6 +86,19 @@ export function InfoSheet({
         </View>
       </View>
     </Modal>
+  );
+}
+
+/** Splits on `**…**`; odd segments are the bold ones. */
+function renderBold(text: string) {
+  return text.split(/\*\*(.+?)\*\*/g).map((part, i) =>
+    i % 2 === 1 ? (
+      <Text key={i} style={styles.bold}>
+        {part}
+      </Text>
+    ) : (
+      part
+    ),
   );
 }
 
@@ -132,6 +149,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 21,
     color: tokens.text.base,
+  },
+  bold: {
+    fontFamily: 'Manrope_800ExtraBold',
+    color: tokens.text.hi,
   },
   okBtn: {
     paddingVertical: tokens.space[3],
