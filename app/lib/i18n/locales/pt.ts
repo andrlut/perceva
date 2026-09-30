@@ -1912,6 +1912,11 @@ const pt: Translations = {
       undoCancel: 'Manter',
     },
     peek: {
+      redeem: 'Resgatar',
+      logMood: 'Registrar',
+      editMood: 'Editar',
+      logMoodA11y: 'Registrar humor neste dia',
+      editMoodA11y: 'Editar o humor deste dia',
       todayDate: 'Hoje · {{date}}',
       dayXp: '{{xp}} XP',
       outside: '+{{xp}} XP fora de {{area}} · {{practices}}',
