@@ -1,0 +1,18 @@
+{
+  "slug": "awe-walk-vastness-novelty",
+  "dimension_id": "mind",
+  "title": {
+    "pt": "Uma caminhada pra sentir admiração",
+    "en": "Walking in search of awe"
+  },
+  "cover": {
+    "prompt": "Uma pessoa de tênis em meio passo numa trilha de terra estreita que sobe a crista de um morro, vista de costas no terço inferior do quadro, cabeça erguida para um céu imenso e vazio que ocupa toda a parte de cima; a trilha serpenteia atrás dela até a borda da imagem, e a única luz dourada do fim de tarde toca só a pessoa e o trecho de trilha sob seus pés."
+  },
+  "ideas": [
+    {
+      "id": "caminhada-da-admiracao",
+      "ordinal": 1,
+      "image_prompt": "Uma pessoa de tênis e roupa de caminhada parada numa trilha de terra no alto de um morro, vista de costas, cabeça levemente erguida olhando um vale enorme coberto de nuvens baixas; ela fica no terço inferior, um pouco fora do centro, grande o bastante para se ler de relance (cerca de um quarto da altura do quadro), e a trilha que ela acabou de percorrer vem do primeiro plano até os pés dela, deixando claro que chegou andando. O vale e o mar de nuvens preenchem todo o resto do quadro; a única luz quente vem do sol baixo à frente dela e desenha o contorno da pessoa e o topo das nuvens, o morro em volta fica na penumbra, com um verde-sálvia apagado só na vegetação rente à trilha."
+    }
+  ]
+}

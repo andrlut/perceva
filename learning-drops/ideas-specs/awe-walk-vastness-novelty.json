@@ -1,0 +1,37 @@
+{
+  "slug": "awe-walk-vastness-novelty",
+  "category": "research",
+  "material_title": {
+    "pt": "Uma caminhada pra sentir admiração",
+    "en": "Walking in search of awe"
+  },
+  "ideas": [
+    {
+      "id": "caminhada-da-admiracao",
+      "ordinal": 1,
+      "title": {
+        "pt": "Uma caminhada pode treinar a admiração?",
+        "en": "Can walking train your sense of awe?"
+      },
+      "claim": {
+        "pt": "Uma vez por semana, caminhe ao menos 15 minutos procurando o que é vasto e o que é novo pra você.",
+        "en": "Once a week, walk for at least 15 minutes looking for what is vast and what is new to you."
+      },
+      "body": {
+        "pt": "Num ensaio de Sturm e colegas (Emotion, 2020), 52 adultos saudáveis de 60 a 90 anos fizeram uma caminhada de 15 minutos ao ar livre por semana, durante 8 semanas. Os 24 de um dos grupos receberam uma única instrução a mais: procurar **vastidão e novidade**, e ir a um lugar novo a cada semana, se possível. Nos passeios, eles sentiram mais admiração, o espanto diante de algo maior que você, e mais alegria. No dia a dia, a angústia caiu mais que no outro grupo. Nas selfies que tiravam no caminho, o próprio rosto e o corpo foram ocupando cada vez menos espaço na foto, e o sorriso cresceu. Os autores leem isso como um \"eu pequeno\": a atenção sai de você e vai pro mundo. As ressalvas contam. A amostra é pequena, os passeios duraram na prática de 38 a 47 minutos em média, e ansiedade e depressão não mudaram. Pra testar, **escolha um caminho que você nunca fez** na caminhada desta semana e procure a coisa maior à vista.",
+        "en": "In a trial by Sturm and colleagues (Emotion, 2020), 52 healthy adults aged 60 to 90 took a 15-minute outdoor walk once a week for 8 weeks. The 24 in one group got a single extra instruction: look for **vastness and novelty**, and go somewhere new each week if you can. On their walks they felt more awe, that jolt of standing before something bigger than you, plus more joy. Their daily distress fell further than the other group's. In the selfies they took along the way, their own face and body filled less and less of the frame, while their smiles grew. The authors read that as a \"small self\": attention moving off you and onto the world. The caveats are real. The sample was small, the walks actually averaged 38 to 47 minutes, and anxiety and depression didn't budge. To try it, **pick a route you've never taken** on this week's walk and look for the biggest thing in view."
+      },
+      "image_brief": "Uma pessoa de tênis parada numa trilha de terra no alto de um morro, vista de costas, cabeça levemente erguida olhando um vale enorme coberto de nuvens baixas; ela ocupa só um canto pequeno do quadro e a paisagem ocupa todo o resto.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Sturm et al., 2020 · Emotion · texto completo",
+            "en": "Sturm et al., 2020 · Emotion · full text"
+          },
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8034841/"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}
