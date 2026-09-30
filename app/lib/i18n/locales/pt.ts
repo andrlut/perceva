@@ -772,7 +772,7 @@ const pt: Translations = {
       help: {
         title: 'Como usar Minhas ideias',
         a11y: 'Como usar Minhas ideias',
-        body: 'Toque numa carta pra virar e ler a resposta. Toque de novo pra voltar.\n\nSegure a carta pra abrir o menu dela: abrir a ideia completa (texto, imagem e vídeo), favoritar ou tirar das favoritas, e escrever a sua nota.\n\nFavoritas: as ideias que você decidiu guardar. "Só favoritas" mostra elas; "Ver todas" mostra tudo que você já absorveu.\n\nRevisar: cada ideia que você absorve espera uma decisão. Na revisão, arraste pra direita pra favoritar ou pra esquerda pra soltar. Soltar não apaga: ela continua em "Ver todas".\n\nNotas: o que você quer fazer com a ideia. Só você vê. A carta com nota ganha um lápis no canto; segure pra ler ou editar. A busca também procura nas suas notas.\n\nAs ideias ficam separadas por área: deslize cada fileira pro lado.',
+        body: '**Toque** numa carta pra virar e ler a resposta. Toque de novo pra voltar.\n\n**Segure** a carta pra abrir o menu dela: abrir a ideia completa (texto, imagem e vídeo), favoritar ou tirar das favoritas, e escrever a sua nota.\n\n**Favoritas:** as ideias que você decidiu guardar. "Só favoritas" mostra elas; "Ver todas" mostra tudo que você já absorveu.\n\n**Revisar:** cada ideia que você absorve espera uma decisão. Na revisão, arraste pra direita pra favoritar ou pra esquerda pra soltar. Soltar não apaga: ela continua em "Ver todas".\n\n**Notas:** o que você quer fazer com a ideia. Só você vê. A carta com nota ganha um lápis no canto; segure pra ler ou editar. A busca também procura nas suas notas.\n\n**Deslize** cada fileira pro lado: as ideias ficam separadas por área.',
       },
       menu: {
         open: 'Abrir ideia completa',
