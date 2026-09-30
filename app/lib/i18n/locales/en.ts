@@ -1905,6 +1905,11 @@ const en = {
       undoCancel: 'Keep it',
     },
     peek: {
+      redeem: 'Redeem',
+      logMood: 'Log',
+      editMood: 'Edit',
+      logMoodA11y: 'Log mood on this day',
+      editMoodA11y: "Edit this day's mood",
       todayDate: 'Today · {{date}}',
       dayXp: '{{xp}} XP',
       outside: '+{{xp}} XP outside {{area}} · {{practices}}',

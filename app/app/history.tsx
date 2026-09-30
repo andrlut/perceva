@@ -867,6 +867,15 @@ export default function CalendarScreen() {
                   tagEmojis={tagEmojis}
                   onOpenDay={openDay}
                   onRetry={() => monthQuery.refetch()}
+                  dateKey={dayKey}
+                  onRedeem={() => {
+                    Haptics.selectionAsync().catch(() => {});
+                    setRedeemPickerOpen(true);
+                  }}
+                  onLogMood={() => {
+                    Haptics.selectionAsync().catch(() => {});
+                    router.push({ pathname: '/mood-checkin', params: { date: dayKey } });
+                  }}
                 />
                 <CalendarSummary
                   totals={totals}

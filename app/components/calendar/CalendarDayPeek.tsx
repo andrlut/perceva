@@ -3,6 +3,7 @@ import { useMemo, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { AppIcon } from '@/components/AppIcon';
+import { ClaudeDictateButton } from '@/components/mood/ClaudeDictateButton';
 import { MoodFace } from '@/components/mood/MoodFace';
 import {
   byXpDesc,
@@ -54,6 +55,17 @@ import { DIMENSION_META } from '@/theme/dimensions';
  * sums to the header, which is the number on the cell. The status row closes
  * the day: header + "+N XP fora de Saúde" = the panel's whole-day total.
  *
+ * ## The day's action, beside "Abrir dia"
+ *
+ * Each front's write lives in the footer, next to the open button, so
+ * logging a string of past days is tap a cell → act → tap the next cell,
+ * never a scroll down to the panel and back up (owner feedback 2026-09-30,
+ * back-filling a week of cigarettes): Vault → "Resgatar" (the day's
+ * RedeemPickerSheet), Humor → "Registrar/Editar humor" (the check-in for that
+ * date) plus the Claude dictate button when that shortcut is on. Rotina has
+ * no footer action: its write is per practice, and "Abrir dia" already lands
+ * on that list. All footer controls share one shape — 44 high, radius lg.
+ *
  * Pure presentation: no data hooks. The screen hands in the day it already
  * holds from the feed, and whether that feed is ready.
  */
@@ -84,6 +96,12 @@ interface Props {
   /** Scroll to the active front's block of the full day panel. */
   onOpenDay: () => void;
   onRetry: () => void;
+  /** Vault: log a redemption on this day (the screen's RedeemPickerSheet). */
+  onRedeem?: () => void;
+  /** Humor: open the check-in for this day. */
+  onLogMood?: () => void;
+  /** The selected day's key, for the Claude dictate button's prompt. */
+  dateKey: string;
 }
 
 const SKELETON_WIDTHS = ['70%', '55%', '62%'] as const;
@@ -100,6 +118,9 @@ export function CalendarDayPeek({
   tagEmojis,
   onOpenDay,
   onRetry,
+  onRedeem,
+  onLogMood,
+  dateKey,
 }: Props) {
   const { t, locale } = useT();
   const { fontScale } = useWindowDimensions();
@@ -190,6 +211,7 @@ export function CalendarDayPeek({
       : null;
 
   const target = openDayTarget(front, day);
+  const hasAction = (front === 'vault' && !!onRedeem) || (front === 'humor' && !!onLogMood);
   const openHint =
     target === 'done'
       ? t('calendar.peek.openHintDone', {
@@ -281,17 +303,61 @@ export function CalendarDayPeek({
       </View>
 
       {/* Left-aligned: the resting filter FAB floats over the right edge of
-          this part of the card. */}
-      <Pressable
-        onPress={onOpenDay}
-        style={({ pressed }) => [styles.open, pressed && styles.pressed]}
-        accessibilityRole="button"
-        accessibilityLabel={t('calendar.peek.open')}
-        accessibilityHint={openHint}
-      >
-        <Text style={styles.openText}>{t('calendar.peek.open')}</Text>
-        <Ionicons name="chevron-down" size={14} color={tokens.brand.violet2} />
-      </Pressable>
+          this part of the card. The front's action comes first. */}
+      <View style={styles.footer}>
+        {front === 'vault' && onRedeem ? (
+          <Pressable
+            onPress={onRedeem}
+            style={({ pressed }) => [styles.action, styles.actionGold, pressed && styles.pressed]}
+            accessibilityRole="button"
+            accessibilityLabel={t('calendar.peek.redeem')}
+          >
+            <Ionicons name="gift-outline" size={16} color={tokens.semantic.coinLight} />
+            <Text style={[styles.actionText, { color: tokens.semantic.coinLight }]}>
+              {t('calendar.peek.redeem')}
+            </Text>
+          </Pressable>
+        ) : null}
+        {front === 'humor' && onLogMood ? (
+          <>
+            <Pressable
+              onPress={onLogMood}
+              style={({ pressed }) => [styles.action, styles.actionViolet, pressed && styles.pressed]}
+              accessibilityRole="button"
+              accessibilityLabel={
+                day?.mood ? t('calendar.peek.editMoodA11y') : t('calendar.peek.logMoodA11y')
+              }
+            >
+              <Ionicons
+                name={day?.mood ? 'create-outline' : 'add'}
+                size={16}
+                color={tokens.brand.violet2}
+              />
+              <Text style={[styles.actionText, { color: tokens.brand.violet2 }]}>
+                {day?.mood ? t('calendar.peek.editMood') : t('calendar.peek.logMood')}
+              </Text>
+            </Pressable>
+            <ClaudeDictateButton variant="icon" dateKey={dateKey} style={styles.dictate} />
+          </>
+        ) : null}
+        {/* Beside a front action the open button shrinks to a 44px chevron,
+            so the row stays clear of the filter FAB on a 360dp phone; the
+            name still reaches a screen reader. */}
+        <Pressable
+          onPress={onOpenDay}
+          style={({ pressed }) => [
+            styles.open,
+            hasAction && styles.openIcon,
+            pressed && styles.pressed,
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel={t('calendar.peek.open')}
+          accessibilityHint={openHint}
+        >
+          {hasAction ? null : <Text style={styles.openText}>{t('calendar.peek.open')}</Text>}
+          <Ionicons name="chevron-down" size={hasAction ? 18 : 14} color={tokens.brand.violet2} />
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -644,8 +710,46 @@ const styles = StyleSheet.create({
     backgroundColor: tokens.bg.surface2,
     marginVertical: 8,
   },
-  open: {
+  footer: {
     marginTop: 4,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: tokens.space[2],
+  },
+  // Footer controls share one shape: 44 high, radius lg, 1px rim.
+  action: {
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: tokens.space[4],
+    borderRadius: tokens.radius.lg,
+    borderWidth: 1,
+  },
+  actionGold: {
+    backgroundColor: 'rgba(255, 200, 61, 0.14)',
+    borderColor: tokens.semantic.coinRim,
+  },
+  actionViolet: {
+    backgroundColor: 'rgba(123, 92, 255, 0.16)',
+    borderColor: 'rgba(155, 130, 255, 0.45)',
+  },
+  actionText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 13,
+  },
+  dictate: {
+    width: 44,
+    height: 44,
+    borderRadius: tokens.radius.lg,
+  },
+  openIcon: {
+    width: 44,
+    paddingHorizontal: 0,
+    justifyContent: 'center',
+  },
+  open: {
     minHeight: 44,
     alignSelf: 'flex-start',
     flexDirection: 'row',
