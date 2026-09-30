@@ -18,6 +18,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppIcon } from '@/components/AppIcon';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import {
+  OnbPrimaryButton,
+  OnbSubtitle,
+  OnbTextButton,
+  OnbTitle,
+} from '@/components/tour/OnboardingKit';
+import {
   useActiveTasks,
   useStartTaskFromTemplate,
   useTaskTemplates,
@@ -32,8 +38,6 @@ import { showInfo } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 import { DIMENSION_META, SUB_META } from '@/theme/dimensions';
 
-/** Ink on the gold primary button — same as FullScreenStep's CTA. */
-const GOLD_INK = '#3D2A00';
 
 /** One-tap limits over the priority order ("quantas você quer, no máximo"). */
 const QUICK_LIMITS = [3, 6] as const;
@@ -200,9 +204,7 @@ export default function TourPackScreen() {
               <ActivityIndicator color={tokens.brand.violet2} />
             )}
             {/* Even a failed or slow load can be walked out of. */}
-            <Pressable onPress={skip} style={styles.skipBtn} accessibilityRole="button">
-              <Text style={styles.skipText}>{t('tour.pack.skip')}</Text>
-            </Pressable>
+            <OnbTextButton label={t('tour.pack.skip')} onPress={skip} />
           </View>
         ) : (
           <>
@@ -212,9 +214,8 @@ export default function TourPackScreen() {
               showsVerticalScrollIndicator={false}
             >
               <View style={styles.header}>
-                <Text style={styles.eyebrow}>{t('tour.pack.eyebrow')}</Text>
-                <Text style={styles.title}>{t('tour.pack.title')}</Text>
-                <Text style={styles.body}>{t('tour.pack.body')}</Text>
+                <OnbTitle>{t('tour.pack.title')}</OnbTitle>
+                <OnbSubtitle>{t('tour.pack.body')}</OnbSubtitle>
               </View>
 
               {available.length > 0 && (
@@ -254,25 +255,13 @@ export default function TourPackScreen() {
               {newIds.length > 0 && !run && (
                 <Text style={styles.summary}>{t('tour.pack.total', { xp: newXp })}</Text>
               )}
-              <Pressable
-                disabled={busy}
+              <OnbPrimaryButton
+                label={primaryLabel}
                 onPress={handleAdd}
-                style={({ pressed }) => [styles.primaryBtn, pressed && !busy && styles.pressed]}
-                accessibilityRole="button"
-                accessibilityLabel={primaryLabel}
-                accessibilityState={{ busy }}
-              >
-                {busy && <ActivityIndicator size="small" color={GOLD_INK} />}
-                <Text style={styles.primaryText}>{primaryLabel}</Text>
-              </Pressable>
-              <Pressable
+                busy={busy}
                 disabled={busy}
-                onPress={skip}
-                style={({ pressed }) => [styles.skipBtn, pressed && styles.pressed]}
-                accessibilityRole="button"
-              >
-                <Text style={styles.skipText}>{t('tour.pack.skip')}</Text>
-              </Pressable>
+              />
+              <OnbTextButton label={t('tour.pack.skip')} onPress={skip} disabled={busy} />
             </View>
           </>
         )}
@@ -346,7 +335,7 @@ function PackRow({
         </View>
       </View>
       <View style={[styles.check, checked && styles.checkOn, adopted && styles.checkAdopted]}>
-        {checked && <Ionicons name="checkmark" size={16} color={adopted ? tokens.text.hi : GOLD_INK} />}
+        {checked && <Ionicons name="checkmark" size={16} color={adopted ? tokens.text.hi : '#FFFFFF'} />}
       </View>
     </Pressable>
   );
@@ -395,29 +384,11 @@ const styles = StyleSheet.create({
   scrollView: { flex: 1 },
   scroll: { paddingHorizontal: tokens.space[4], paddingBottom: tokens.space[5] },
 
-  header: { paddingTop: tokens.space[6], gap: tokens.space[2] },
-  eyebrow: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 11,
-    letterSpacing: 1.8,
-    color: tokens.semantic.coinLight,
-    textTransform: 'uppercase',
-  },
-  title: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 26,
-    lineHeight: 31,
-    color: tokens.text.hi,
-  },
-  body: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 15,
-    lineHeight: 21,
-    color: tokens.text.mid,
-  },
+  header: { paddingTop: tokens.space[6], gap: tokens.space[2], alignItems: 'center' },
 
   chips: {
     flexDirection: 'row',
+    justifyContent: 'center',
     gap: tokens.space[2],
     marginTop: tokens.space[4],
   },
@@ -430,9 +401,10 @@ const styles = StyleSheet.create({
     borderColor: tokens.border.strong,
     backgroundColor: tokens.bg.surface,
   },
-  chipOn: { borderColor: tokens.semantic.coin, backgroundColor: 'rgba(255, 200, 61, 0.14)' },
+  // Selection is violet — the practices domain (gold is coins).
+  chipOn: { borderColor: tokens.brand.violet2, backgroundColor: 'rgba(155, 130, 255, 0.16)' },
   chipText: { fontFamily: 'Manrope_700Bold', fontSize: 13, color: tokens.text.mid },
-  chipTextOn: { color: tokens.semantic.coinLight },
+  chipTextOn: { color: tokens.brand.violet2 },
 
   list: { marginTop: tokens.space[4], gap: tokens.space[2] },
   row: {
@@ -447,7 +419,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: tokens.border.base,
   },
-  rowOn: { borderColor: tokens.semantic.coinRim, backgroundColor: 'rgba(255, 200, 61, 0.07)' },
+  rowOn: { borderColor: 'rgba(155, 130, 255, 0.55)', backgroundColor: 'rgba(123, 92, 255, 0.08)' },
   rowAdopted: { opacity: 0.55 },
   rank: {
     width: 18,
@@ -485,7 +457,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  checkOn: { backgroundColor: tokens.semantic.coin, borderColor: tokens.semantic.coin2 },
+  checkOn: { backgroundColor: tokens.brand.violet, borderColor: tokens.brand.violet2 },
   checkAdopted: { backgroundColor: tokens.bg.surface3, borderColor: tokens.border.strong },
 
   footer: {
@@ -503,31 +475,6 @@ const styles = StyleSheet.create({
     color: tokens.text.base,
     textAlign: 'center',
   },
-  primaryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    minHeight: 50,
-    borderRadius: tokens.radius.pill,
-    backgroundColor: tokens.semantic.coin,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 224, 138, 0.55)',
-  },
-  primaryText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 15,
-    color: GOLD_INK,
-    letterSpacing: 0.3,
-  },
-  skipBtn: {
-    minHeight: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    paddingHorizontal: tokens.space[5],
-  },
-  skipText: { fontFamily: 'Manrope_700Bold', fontSize: 15, color: tokens.text.base },
 });
 
 /** A render error here must never lock the app on every launch. */
