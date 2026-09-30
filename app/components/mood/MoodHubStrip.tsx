@@ -2,6 +2,7 @@ import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 
+import { ClaudeDictateButton } from '@/components/mood/ClaudeDictateButton';
 import { FullCheckinButton } from '@/components/mood/FullCheckinButton';
 import { MoodFace } from '@/components/mood/MoodFace';
 import { MoodFaceRow } from '@/components/mood/MoodFaceRow';
@@ -30,6 +31,12 @@ import { tokens } from '@/theme';
  *
  * Past days get the same two doors from MoodDayDetail, which shares the
  * button (FullCheckinButton).
+ *
+ * A third, optional door: the "Ditar no Claude" pill beside the eyebrow
+ * (ClaudeDictateButton). It renders only for a user who switched it on in
+ * Ajustes › Conector — the bridge to the Claude app, where the day gets
+ * dictated and the connector writes it. Present in both states: after a
+ * quick face tap it is how the note gets dictated (log_mood merges).
  *
  * Deliberately quiet — no XP, no streak, matching the mood system's rule.
  *
@@ -80,7 +87,10 @@ export function MoodHubStrip() {
     return (
       <TourTarget id={M1_TARGETS.MOOD} radius={tokens.radius.md} style={styles.outer}>
         <View style={styles.card}>
-          <Text style={styles.eyebrow}>{t('mood.prompt.title')}</Text>
+          <View style={styles.eyebrowRow}>
+            <Text style={styles.eyebrow}>{t('mood.prompt.title')}</Text>
+            <ClaudeDictateButton />
+          </View>
           <View style={[logMood.isPending && { opacity: 0.5 }]}>
             <MoodFaceRow
               value={null}
@@ -120,6 +130,7 @@ export function MoodHubStrip() {
               </Text>
             </Text>
           </View>
+          <ClaudeDictateButton />
         </View>
         <FullCheckinButton
           icon={hasDetails ? 'create-outline' : 'add-circle-outline'}
@@ -144,7 +155,14 @@ const styles = StyleSheet.create({
     borderColor: tokens.border.base,
     gap: tokens.space[3],
   },
+  eyebrowRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: tokens.space[2],
+  },
   eyebrow: {
+    flexShrink: 1,
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 10,
     letterSpacing: 0.6,

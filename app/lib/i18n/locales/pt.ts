@@ -1092,6 +1092,24 @@ const pt: Translations = {
     ex3: 'Meu humor tem relação com o quanto eu durmo?',
     ex4: 'Há quantos dias eu não resgato aquela recompensa?',
     ex5: 'Registra meu dia: acordei tarde, treinei, jantei fora.',
+    shortcutTitle: 'Atalho no app',
+    shortcutToggle: 'Botão "Ditar no Claude" no humor',
+    shortcutToggleDesc:
+      'Aparece na Home, no check-in e no aviso da noite. Um toque abre o app do Claude pronto pra você ditar o dia; o conector grava.',
+    targetLabel: 'Abrir em',
+    targetPlaceholder: 'Cole o link de um projeto ou de uma conversa',
+    targetHintEmpty:
+      'Sem link: abre uma conversa nova com o pedido já escrito. Você toca no microfone e dita.',
+    targetHintProject:
+      'Projeto: cada dia vira uma conversa dentro dele, e as instruções do projeto dizem ao Claude o que fazer com o ditado.',
+    targetHintChat: 'Conversa: sempre a mesma. Funciona, mas fica longa com o tempo.',
+    targetInvalid:
+      'Use um link claude.ai/project/… ou claude.ai/chat/… (o da barra de endereço no claude.ai).',
+    projectHowTitle: 'Como montar o projeto',
+    projectHowBody:
+      'No claude.ai, crie um projeto (ex.: "Perceva · Diário"), cole o texto abaixo em Instruções e copie o link do projeto da barra de endereço.',
+    projectInstructions:
+      'Este projeto é o meu diário no Perceva. Toda mensagem que eu mandar aqui é o check-in de humor do dia, quase sempre ditado: registre com a ferramenta log_mood do conector Perceva e leia de volta o que salvou (data, nota e texto). Se eu não disser a nota de 1 a 5, pergunte usando as âncoras que a ferramenta devolve; nunca deduza pelo tom. Se a mensagem for uma pergunta sobre os meus dados, responda com as ferramentas de leitura em vez de registrar.',
   },
 
   hex: {
@@ -2587,7 +2605,14 @@ const pt: Translations = {
       full: 'Registrar com tags e nota',
       addTagsNote: 'Adicionar tags e nota',
       editTagsNote: 'Editar tags e nota',
+      dictateClaude: 'Ditar no Claude',
     },
+    // Prefilled in the Claude composer when the shortcut opens a NEW chat;
+    // the dictation lands right after it, in the same message. Generic on
+    // purpose — the day's content never travels in a URL.
+    claudePrompt:
+      'Check-in de humor do dia no Perceva. O que vem a seguir é o meu dia, ditado. Registre com log_mood e leia de volta o que salvou: ',
+    claudeOpenError: 'Não deu pra abrir o Claude. O app está instalado?',
     history: {
       title: 'Como me senti',
       seeHistory: 'Ver histórico',

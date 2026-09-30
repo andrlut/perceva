@@ -1,25 +1,42 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useBottomSafeClearance } from '@/components/BottomNavBar';
 import { ScreenBackground } from '@/components/ScreenBackground';
+import { claudeTargetUrl, parseClaudeTarget } from '@/lib/claudeBridge';
 import { useT } from '@/lib/i18n';
 import {
   CLAUDE_CONNECTORS_URL,
   MCP_CLIENT_ID,
   MCP_CONNECTOR_URL,
 } from '@/lib/mcp';
+import { useLoadedSettings, useSettingsStore } from '@/lib/settings';
+import { useKeyboardOverlap } from '@/lib/use-keyboard-height';
 import { tokens } from '@/theme';
 
 /**
  * Como conectar o Perceva ao Claude.
  *
- * Tela puramente INSTRUCIONAL: nenhum fluxo OAuth roda dentro do app. Isso
- * é uma escolha, não uma limitação — se o beta do Auth quebrar, o pior caso
- * é "os passos não funcionam no claude.ai", nunca uma tela travada aqui.
+ * Tela INSTRUCIONAL: nenhum fluxo OAuth roda dentro do app. Isso é uma
+ * escolha, não uma limitação — se o beta do Auth quebrar, o pior caso é "os
+ * passos não funcionam no claude.ai", nunca uma tela travada aqui.
+ *
+ * A única coisa que se AJUSTA aqui é o atalho de volta (ShortcutCard): o
+ * botão "Ditar no Claude" nas superfícies de humor e onde ele abre. É
+ * ajuste local do aparelho, não módulo — só faz sentido no celular que tem
+ * o app do Claude com o conector montado.
  *
  * A URL e o Client ID são `selectable` em vez de um botão de copiar porque
  * `expo-clipboard` é módulo nativo: adicioná-lo exigiria um `eas build` e
@@ -29,6 +46,22 @@ export default function ConectorScreen() {
   const { t } = useT();
   const router = useRouter();
   const bottomClearance = useBottomSafeClearance();
+  // Edge-to-edge screen (no bottom inset) + a TextInput near the bottom: the
+  // keyboard covers the ScrollView unless the content reserves its height.
+  // useKeyboardOverlap, not useKeyboardHeight — see lib/use-keyboard-height.
+  const keyboard = useKeyboardOverlap();
+  const scrollRef = useRef<ScrollView>(null);
+  const shortcutY = useRef(0);
+  const scrollToShortcut = () => {
+    // After the keyboard reflow, so the target is measured against the
+    // already-shortened viewport (same timing trick as mood-checkin).
+    setTimeout(() => {
+      scrollRef.current?.scrollTo({
+        y: Math.max(0, shortcutY.current - tokens.space[3]),
+        animated: true,
+      });
+    }, 120);
+  };
 
   const examples = [
     t('conector.ex1'),
@@ -58,11 +91,16 @@ export default function ConectorScreen() {
         </View>
 
         <ScrollView
+          ref={scrollRef}
           contentContainerStyle={[
             styles.content,
-            { paddingBottom: bottomClearance },
+            {
+              paddingBottom:
+                keyboard > 0 ? keyboard + tokens.space[6] : bottomClearance,
+            },
           ]}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
           <Text style={styles.lead}>{t('conector.lead')}</Text>
 
@@ -120,6 +158,16 @@ export default function ConectorScreen() {
             </Pressable>
           </View>
 
+          {/* Direct child of the content view, so layout.y is the offset
+              inside the scroll content — what scrollTo needs. */}
+          <View
+            onLayout={(e) => {
+              shortcutY.current = e.nativeEvent.layout.y;
+            }}
+          >
+            <ShortcutCard onInputFocus={scrollToShortcut} />
+          </View>
+
           <View style={styles.card}>
             <Text style={styles.cardTitle}>{t('conector.askTitle')}</Text>
             {examples.map((ex) => (
@@ -136,6 +184,92 @@ export default function ConectorScreen() {
         </ScrollView>
       </ScreenBackground>
     </SafeAreaView>
+  );
+}
+
+/**
+ * "Atalho no app" — the one SETTING on this screen: the "Ditar no Claude"
+ * button on the mood surfaces (ClaudeDictateButton), and where it opens.
+ * Device-local (lib/settings) because the bridge only makes sense on a phone
+ * with the Claude app; the link rules live in lib/claudeBridge.
+ *
+ * The link field keeps the LAST VALID value: a paste that parses is stored
+ * in canonical form at once; an invalid one stays on screen with the error
+ * under it and never overwrites the stored target. Blur snaps a valid draft
+ * to the canonical form, so the user sees exactly what will open.
+ */
+function ShortcutCard({ onInputFocus }: { onInputFocus: () => void }) {
+  const { t } = useT();
+  const settings = useLoadedSettings();
+  const setSetting = useSettingsStore((s) => s.set);
+  const [draft, setDraft] = useState<string | null>(null);
+
+  const text = draft ?? settings.claudeTarget;
+  const target = parseClaudeTarget(text);
+  const invalid = text.trim().length > 0 && target === null;
+
+  const onChangeText = (v: string) => {
+    setDraft(v);
+    const parsed = parseClaudeTarget(v);
+    if (parsed) void setSetting('claudeTarget', claudeTargetUrl(parsed));
+    else if (!v.trim()) void setSetting('claudeTarget', '');
+  };
+
+  const hint = invalid
+    ? t('conector.targetInvalid')
+    : target?.kind === 'project'
+      ? t('conector.targetHintProject')
+      : target?.kind === 'chat'
+        ? t('conector.targetHintChat')
+        : t('conector.targetHintEmpty');
+
+  return (
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>{t('conector.shortcutTitle')}</Text>
+
+      <View style={styles.toggleRow}>
+        <View style={styles.toggleBody}>
+          <Text style={styles.toggleLabel}>{t('conector.shortcutToggle')}</Text>
+          <Text style={styles.toggleDesc}>{t('conector.shortcutToggleDesc')}</Text>
+        </View>
+        <Switch
+          value={settings.claudeShortcut}
+          onValueChange={(v) => void setSetting('claudeShortcut', v)}
+          trackColor={{ false: tokens.bg.surface2, true: tokens.brand.violet }}
+          thumbColor={tokens.text.hi}
+        />
+      </View>
+
+      {settings.claudeShortcut && (
+        <>
+          <Text style={styles.fieldLabel}>{t('conector.targetLabel')}</Text>
+          <TextInput
+            value={text}
+            onChangeText={onChangeText}
+            onFocus={onInputFocus}
+            onBlur={() => {
+              if (!invalid) setDraft(null);
+            }}
+            placeholder={t('conector.targetPlaceholder')}
+            placeholderTextColor={tokens.text.dim}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="url"
+            returnKeyType="done"
+            style={[styles.input, invalid && styles.inputInvalid]}
+            accessibilityLabel={t('conector.targetLabel')}
+          />
+          <Text style={[styles.hint, invalid && styles.hintInvalid]}>{hint}</Text>
+
+          <Text style={styles.fieldLabel}>{t('conector.projectHowTitle')}</Text>
+          <Text style={styles.body}>{t('conector.projectHowBody')}</Text>
+          <Text style={styles.mono} selectable>
+            {t('conector.projectInstructions')}
+          </Text>
+          <Text style={styles.hint}>{t('conector.copyHint')}</Text>
+        </>
+      )}
+    </View>
   );
 }
 
@@ -226,6 +360,39 @@ const styles = StyleSheet.create({
   hint: {
     ...tokens.type.caption,
     color: tokens.text.dim,
+  },
+  hintInvalid: {
+    color: tokens.semantic.danger,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[3],
+  },
+  toggleBody: { flex: 1, gap: 2 },
+  toggleLabel: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 14,
+    color: tokens.text.hi,
+  },
+  toggleDesc: {
+    ...tokens.type.caption,
+    color: tokens.text.mid,
+  },
+  input: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 13,
+    color: tokens.text.hi,
+    backgroundColor: tokens.bg.surface2,
+    borderRadius: tokens.radius.sm,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    minHeight: 44,
+  },
+  inputInvalid: {
+    borderColor: tokens.semantic.danger,
   },
   cta: {
     flexDirection: 'row',

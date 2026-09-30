@@ -13,6 +13,7 @@ import {
   View,
 } from 'react-native';
 
+import { ClaudeDictateButton } from '@/components/mood/ClaudeDictateButton';
 import { MoodFace } from '@/components/mood/MoodFace';
 import { MoodFaceRow } from '@/components/mood/MoodFaceRow';
 import { todayDateKey, useLogMood, useTodayMood } from '@/lib/api/mood';
@@ -203,6 +204,18 @@ export function MoodCheckinPrompt({ enabled = true }: Props) {
                 />
                 <Text style={styles.fullBtnText}>{t('mood.cta.full')}</Text>
               </Pressable>
+
+              {/* The evening's voice door, when the shortcut is on: the
+                  sheet closes and stamps the day (same as openFull) before
+                  the app switch — the user is going to answer in Claude,
+                  so asking again tonight would be wrong. */}
+              <ClaudeDictateButton
+                variant="row"
+                onBeforeOpen={() => {
+                  setVisible(false);
+                  void stamp();
+                }}
+              />
 
               <Pressable
                 onPress={close}

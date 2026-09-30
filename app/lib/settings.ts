@@ -46,6 +46,16 @@ export interface AppSettings {
    */
   dayEndHour: number;
   dayEndMinute: number;
+  /**
+   * "Ditar no Claude" on the mood surfaces — the Perceva → Claude bridge
+   * (lib/claudeBridge). Device-local on purpose: it only makes sense on a
+   * phone that has the Claude app and the connector set up, so it lives
+   * here and not in `profile.modules`.
+   */
+  claudeShortcut: boolean;
+  /** Where the bridge opens: a canonical `https://claude.ai/project/<uuid>`
+   *  or `/chat/<uuid>`, or '' for a new chat with the prompt prefilled. */
+  claudeTarget: string;
 }
 
 /** Guards a persisted value that a corrupt blob could otherwise turn into a
@@ -82,6 +92,8 @@ const DEFAULTS: AppSettings = {
   briefMinute: 0,
   dayEndHour: 21,
   dayEndMinute: 0,
+  claudeShortcut: false,
+  claudeTarget: '',
 };
 
 type Status = 'unknown' | 'ready';
@@ -128,6 +140,9 @@ export const useSettingsStore = create<Store>((set, get) => ({
           briefMinute: clampInt(parsed.briefMinute, 0, 59, DEFAULTS.briefMinute),
           dayEndHour: clampInt(parsed.dayEndHour, 0, 23, DEFAULTS.dayEndHour),
           dayEndMinute: clampInt(parsed.dayEndMinute, 0, 59, DEFAULTS.dayEndMinute),
+          claudeShortcut: parsed.claudeShortcut === true,
+          claudeTarget:
+            typeof parsed.claudeTarget === 'string' ? parsed.claudeTarget : '',
         },
       });
     } catch {
