@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { useT } from '@/lib/i18n';
 import { tokens } from '@/theme';
@@ -17,6 +17,11 @@ interface Props {
  * Centered info modal for short explanations (how-it-works copy on a chip,
  * why-this-rule blurbs). Replaces native Alert.alert in surfaces where the
  * native dialog was failing to show on some devices.
+ *
+ * The body scrolls when it outgrows the screen (header and button stay
+ * put). The sheet is a plain View with the scrim as an absoluteFill sibling
+ * behind it: a Pressable sheet would take the touch responder and kill the
+ * ScrollView's native scroll.
  *
  * Tap the backdrop or the close icon to dismiss. Body text supports plain
  * \n line breaks for bullet lists.
@@ -37,10 +42,14 @@ export function InfoSheet({
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        {/* Inner pressable swallows taps so they don't dismiss when tapping
-            the sheet itself. */}
-        <Pressable style={styles.sheet} onPress={() => {}}>
+      <View style={styles.backdrop}>
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={onClose}
+          accessibilityRole="button"
+          accessibilityLabel={t('common.close')}
+        />
+        <View style={styles.sheet}>
           <View style={styles.header}>
             <Text style={[styles.title, { color: accent }]} numberOfLines={2}>
               {title}
@@ -56,7 +65,9 @@ export function InfoSheet({
               <Ionicons name="close" size={20} color={tokens.text.mid} />
             </Pressable>
           </View>
-          <Text style={styles.body}>{body}</Text>
+          <ScrollView style={styles.bodyScroll} showsVerticalScrollIndicator={false}>
+            <Text style={styles.body}>{body}</Text>
+          </ScrollView>
           <Pressable
             onPress={onClose}
             style={({ pressed }) => [
@@ -68,8 +79,8 @@ export function InfoSheet({
           >
             <Text style={styles.okBtnText}>{t('common.gotIt')}</Text>
           </Pressable>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }
@@ -85,6 +96,7 @@ const styles = StyleSheet.create({
   sheet: {
     width: '100%',
     maxWidth: 420,
+    maxHeight: '85%',
     backgroundColor: tokens.bg.surface,
     borderRadius: tokens.radius.lg,
     borderWidth: 1,
@@ -110,6 +122,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  bodyScroll: {
+    flexGrow: 0,
+    flexShrink: 1,
   },
   body: {
     fontFamily: 'Manrope_500Medium',

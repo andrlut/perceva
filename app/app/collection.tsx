@@ -18,6 +18,7 @@ import { useBottomSafeClearance } from '@/components/BottomNavBar';
 import { IdeaActionSheet } from '@/components/ideas/IdeaActionSheet';
 import { IdeaNoteSheet } from '@/components/ideas/IdeaNoteSheet';
 import { IdeaShelf, shelfCardWidth } from '@/components/ideas/IdeaShelf';
+import { InfoSheet } from '@/components/InfoSheet';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { useReviewIdea, useSetIdeaNote } from '@/lib/api/learning';
 import type { DimensionId } from '@/lib/db/types';
@@ -73,6 +74,9 @@ export default function CollectionScreen() {
   const { absorbed, pending, materials, loading, failed, retry } = useIdeaCollection(ideaLocale);
 
   const [onlyFavorites, setOnlyFavorites] = useState(true);
+  // The (i) top right: how the screen works — above all the hold, which
+  // nothing on screen reveals.
+  const [helpOpen, setHelpOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [menuKey, setMenuKey] = useState<string | null>(null);
   const [noteOpen, setNoteOpen] = useState(false);
@@ -244,7 +248,24 @@ export default function CollectionScreen() {
               {loading || failed ? ' ' : subtitle}
             </Text>
           </View>
+          {/* Same 40px chip as the back button — the header's one control kind. */}
+          <Pressable
+            onPress={() => setHelpOpen(true)}
+            style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('learning.ideas.help.a11y')}
+          >
+            <Ionicons name="information-circle-outline" size={22} color={tokens.text.hi} />
+          </Pressable>
         </View>
+
+        <InfoSheet
+          visible={helpOpen}
+          onClose={() => setHelpOpen(false)}
+          title={t('learning.ideas.help.title')}
+          body={t('learning.ideas.help.body')}
+        />
 
         {loading ? (
           <View style={styles.centerBox}>
