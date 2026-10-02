@@ -106,7 +106,7 @@ const BOOT_AT = Date.now();
  * Fails CLOSED everywhere: the worst case is a stale palette until the
  * user taps Apply, never an app that cannot finish booting.
  */
-async function shouldAutoReload(): Promise<boolean> {
+async function shouldAutoReload(eventScheme: 'light' | 'dark' | null | undefined): Promise<boolean> {
   const state = useSettingsStore.getState();
 
   // Guard 1 — the one that failed open. Before hydration the store
@@ -118,7 +118,14 @@ async function shouldAutoReload(): Promise<boolean> {
   if (pref !== 'system') return false;
 
   // Guard 3 — already showing the right palette (the spurious event).
-  if (resolveThemePref(pref) === ACTIVE_THEME) return false;
+  // Uses the scheme THE EVENT CARRIES: re-reading getColorScheme() inside
+  // the listener can still answer the OLD scheme on Android, which made
+  // this guard refuse real flips in one direction (light→dark) while the
+  // other direction worked. Falls back to the re-read only when the event
+  // came without a scheme. Still fails CLOSED: a spurious event carries
+  // the current scheme, which equals ACTIVE_THEME → refuse, as before.
+  const next = eventScheme ?? resolveThemePref(pref);
+  if (next === ACTIVE_THEME) return false;
 
   // Guard 4 — boot noise, not a person.
   if (Date.now() - BOOT_AT < BOOT_GRACE_MS) return false;
@@ -148,8 +155,8 @@ async function shouldAutoReload(): Promise<boolean> {
  */
 export function useThemeSystemSync(): void {
   useEffect(() => {
-    const sub = Appearance.addChangeListener(() => {
-      void shouldAutoReload().then((go) => {
+    const sub = Appearance.addChangeListener(({ colorScheme }) => {
+      void shouldAutoReload(colorScheme).then((go) => {
         if (go) reloadForTheme();
       });
     });

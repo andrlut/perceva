@@ -306,11 +306,13 @@ const styles = StyleSheet.create({
     elevation: 14,
   },
   card: {
-    backgroundColor: 'rgba(26, 31, 68, 0.98)',
+    // Tokens, não literais: no tema claro o card precisa virar superfície
+    // clara — o navy fixo deixava o tour ilegível fora do escuro.
+    backgroundColor: tokens.bg.surface,
     borderRadius: tokens.radius.lg,
     padding: tokens.space[5],
     borderWidth: 1.5,
-    borderColor: 'rgba(255, 200, 61, 0.55)',
+    borderColor: tokens.semantic.coinRim,
     gap: tokens.space[3],
     // The dim backdrop already separates tour from screen; the shadow
     // keeps the card floating above the spotlight hole area too.
@@ -351,7 +353,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: tokens.semantic.coin,
     borderWidth: 1,
-    borderColor: 'rgba(255, 224, 138, 0.55)',
+    borderColor: tokens.semantic.coinRim,
     marginTop: tokens.space[1],
   },
   primaryText: {
@@ -388,7 +390,7 @@ const styles = StyleSheet.create({
     paddingVertical: tokens.space[2] + 2,
     borderRadius: 999,
     borderWidth: 1.5,
-    borderColor: 'rgba(255, 200, 61, 0.55)',
+    borderColor: tokens.semantic.coinRim,
     backgroundColor: 'rgba(255, 200, 61, 0.10)',
   },
   assistText: {

@@ -90,14 +90,27 @@ export function OnbBadge({ color, children }: { color: string; children: ReactNo
  * Shrinks a fixed-size drawing to fit `maxHeight`. Layout ignores transforms,
  * so the measured height is always the natural one and never loops.
  */
-export function FitBox({ maxHeight, children }: { maxHeight: number; children: ReactNode }) {
+export function FitBox({
+  maxHeight,
+  width,
+  children,
+}: {
+  maxHeight: number;
+  /**
+   * Required by stretch-based children (rows of flex:1 cards): the inner
+   * view shrink-wraps, so without a definite width their flex basis
+   * collapses to zero and the cards render as empty slivers.
+   */
+  width?: number;
+  children: ReactNode;
+}) {
   const [natural, setNatural] = useState(0);
   const scale = natural > 0 && maxHeight > 0 ? Math.min(1, maxHeight / natural) : 1;
   return (
     <View style={[styles.fitOuter, natural > 0 ? { height: natural * scale } : null]}>
       <View
         onLayout={(e) => setNatural(e.nativeEvent.layout.height)}
-        style={{ transform: [{ scale }] }}
+        style={[{ transform: [{ scale }] }, width != null ? { width } : null]}
       >
         {children}
       </View>

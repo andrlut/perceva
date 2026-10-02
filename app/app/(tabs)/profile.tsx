@@ -230,6 +230,23 @@ export default function SettingsScreen() {
             onChange={(v) => setSetting('theme', v)}
             note={t('profile.theme.note')}
           />
+          {/* Qual paleta está DE FATO pintada agora — com pref "Sistema" a
+              resposta não é óbvia, e sem isso escolher o tema igual ao do
+              sistema parecia "não ter feito nada". Alinha com a nota do
+              seletor (mesmo recuo de linha) e diz quando é o sistema
+              mandando. */}
+          <Text style={styles.activeThemeText}>
+            {t(
+              settings.theme === 'system'
+                ? 'profile.theme.activeNowSystem'
+                : 'profile.theme.activeNow',
+              {
+                theme: t(
+                  ACTIVE_THEME === 'light' ? 'profile.theme.light' : 'profile.theme.dark',
+                ),
+              },
+            )}
+          </Text>
           {/* Apply appears only when the SAVED pref resolves to a palette
               other than the running one — switching themes is a JS reload
               (boot-time token capture), so it stays an explicit action. */}
@@ -626,6 +643,16 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: tokens.bg.base },
   content: {
     padding: tokens.space[4],
+  },
+  // Mesmo recuo e tipografia da nota do seletor — a linha lê como
+  // continuação dela.
+  activeThemeText: {
+    ...tokens.type.caption,
+    color: tokens.text.dim,
+    lineHeight: 16,
+    paddingHorizontal: tokens.space[4],
+    marginTop: -tokens.space[2],
+    marginBottom: tokens.space[2],
   },
   applyThemeBtn: {
     flexDirection: 'row',
