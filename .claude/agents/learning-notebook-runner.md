@@ -12,7 +12,7 @@ description: |
   else. Never touches XP, text, images or the app. Triggered by a LOCAL
   scheduled task (~/.claude/scheduled-tasks/, like learning-publisher-cron),
   never by a cloud Routine: the token, gh, Chrome and ffmpeg only exist here.
-tools: ["Bash", "Read", "Write", "Edit", "Grep", "Glob", "ToolSearch", "mcp__claude-in-chrome__list_connected_browsers", "mcp__claude-in-chrome__select_browser", "mcp__claude-in-chrome__tabs_context_mcp", "mcp__claude-in-chrome__tabs_create_mcp", "mcp__claude-in-chrome__tabs_close_mcp", "mcp__claude-in-chrome__navigate", "mcp__claude-in-chrome__computer", "mcp__claude-in-chrome__read_page", "mcp__claude-in-chrome__find", "mcp__claude-in-chrome__form_input", "mcp__claude-in-chrome__javascript_tool", "mcp__claude-in-chrome__browser_batch", "mcp__claude-in-chrome__get_page_text"]
+tools: ["Bash", "Read", "Agent", "Write", "Edit", "Grep", "Glob", "ToolSearch", "mcp__claude-in-chrome__list_connected_browsers", "mcp__claude-in-chrome__select_browser", "mcp__claude-in-chrome__tabs_context_mcp", "mcp__claude-in-chrome__tabs_create_mcp", "mcp__claude-in-chrome__tabs_close_mcp", "mcp__claude-in-chrome__navigate", "mcp__claude-in-chrome__computer", "mcp__claude-in-chrome__read_page", "mcp__claude-in-chrome__find", "mcp__claude-in-chrome__form_input", "mcp__claude-in-chrome__javascript_tool", "mcp__claude-in-chrome__browser_batch", "mcp__claude-in-chrome__get_page_text"]
 model: opus
 ---
 
@@ -557,6 +557,27 @@ right: the model rolls the dice, so the gate has to be on the OUTPUT.
    against the cap. If the second take also contradicts, leave it for the
    maintainer — the fix is editorial (the idea's own text may be the vague
    one), not another roll.
+
+5. **A retake is never the same roll.** The generic focus sentence (§3) is
+   what produced the miss; repeating it repeats the miss (2026-10-01: six
+   second takes reproduced their first take's exact error). Every
+   regeneration of a `needs_review` item — same run or a later one — writes
+   a **targeted focus**: the generic sentence plus one or two sentences that
+   name the previous take's miss and state what the source says instead,
+   in the target language. Examples: *"A fonte diz que ansiedade e
+   depressão não mudaram; diga isso. Não descreva mecanismo no cérebro."*
+   / *"A pesquisa é correlacional; diga que ninguém provou causa."* /
+   *"Não fale em escudo nem proteção biológica: a fonte não explica o
+   mecanismo."* Every clause must be supported by the idea's own `body` —
+   reread it before writing. Record the exact text as `focus` on the item
+   in the manifest. An item already at two generic takes may get ONE more
+   take this way; after a targeted take also fails, it is editorial.
+
+The blind pass uses the `Agent` tool (`subagent_type:
+"learning-card-tester"`). If the tool is not available in your session,
+read a 1 fps caption strip yourself (crop 64–96 % of the height, `tile`
+4xN) — the captions are the narration nearly word for word — and say in
+the manifest's run notes that the read was not blind.
 
 The gate costs one Haiku call per video (~US$ 0.01) against a generation
 that costs minutes of Notebook time, so it is never skipped "to save a
