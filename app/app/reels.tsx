@@ -11,6 +11,7 @@ import {
   useReadMaterialIds,
 } from '@/lib/api/learning';
 import { useT } from '@/lib/i18n';
+import { useMaterialLock } from '@/lib/premium';
 import { buildReelDeck, isGroupRead, type ReelGroup } from '@/lib/reels';
 import { useReelsProgressStore, useReelsProgressReady, reelsToday } from '@/lib/reelsProgress';
 import { tokens } from '@/theme';
@@ -33,6 +34,7 @@ export default function ReelsScreen() {
   const params = useLocalSearchParams<{ slug?: string }>();
 
   const feed = useLearningFeed();
+  const isMaterialLocked = useMaterialLock();
   const reads = useReadMaterialIds();
   // Idea cards + the user's collection — both must land before the deck is
   // built, or the ideas would all sort as unread and the first open would
@@ -57,12 +59,17 @@ export default function ReelsScreen() {
     );
     const readSet = reads.data ?? new Set<string>();
     const collectedMap = collected.data ?? new Map<string, Set<string>>();
+    // Gate do Recanto: o Explorar do free navega só os últimos 30 dias.
+    const gatedFeed = feed.data.filter((m) => !isMaterialLocked(m.released_at));
+    const gatedIdeas = (ideaCards.data ?? []).filter(
+      (i) => !isMaterialLocked(i.released_at),
+    );
     const deck = buildReelDeck(
-      feed.data,
+      gatedFeed,
       locale === 'pt' ? 'pt' : 'en',
       readSet,
       seenAt,
-      ideaCards.data ?? [],
+      gatedIdeas,
       collectedMap,
     );
     deckRef.current = deck;

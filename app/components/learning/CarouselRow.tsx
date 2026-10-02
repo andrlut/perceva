@@ -46,6 +46,9 @@ interface Props {
    * "N ideias · c/N" meta and video icon from here; legacy cards ignore it.
    */
   ideaMetaByMaterial?: Map<string, CoverIdeaMeta>;
+  /** Gate do Recanto: cards fora da janela de 30 dias (free) ganham o selo
+   *  Premium. A tranca de verdade fica na rota do material. */
+  isLockedCard?: (card: LearningFeedCard) => boolean;
 }
 
 export const CarouselRow = memo(function CarouselRow({
@@ -57,6 +60,7 @@ export const CarouselRow = memo(function CarouselRow({
   onCardPress,
   count,
   ideaMetaByMaterial,
+  isLockedCard,
 }: Props) {
   const renderItem = useCallback(
     ({ item }: { item: LearningFeedCard }) => (
@@ -65,9 +69,10 @@ export const CarouselRow = memo(function CarouselRow({
         read={readSet.has(item.id)}
         onPress={onCardPress}
         ideaMeta={ideaMetaByMaterial?.get(item.id)}
+        isPremiumContent={isLockedCard?.(item) ?? false}
       />
     ),
-    [readSet, onCardPress, ideaMetaByMaterial],
+    [readSet, onCardPress, ideaMetaByMaterial, isLockedCard],
   );
 
   if (cards.length === 0) return null;

@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,6 +8,7 @@ import { MaterialMediaScreen } from '@/components/learning/MaterialMediaScreen';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { useLearningMaterial } from '@/lib/api/learning';
 import { useT } from '@/lib/i18n';
+import { useMaterialLock } from '@/lib/premium';
 import { tokens } from '@/theme';
 
 /**
@@ -29,6 +31,7 @@ export default function MaterialDetailScreen() {
   const { t } = useT();
   const params = useLocalSearchParams<{ slug: string }>();
   const material = useLearningMaterial(params.slug);
+  const isLocked = useMaterialLock();
 
   if (material.isLoading) {
     return (
@@ -52,6 +55,36 @@ export default function MaterialDetailScreen() {
             <Text style={styles.errorTitle}>{t('learning.detail.notFound')}</Text>
             <Pressable style={styles.errorBtn} onPress={() => router.back()}>
               <Text style={styles.errorBtnText}>{t('common.back')}</Text>
+            </Pressable>
+          </View>
+        </ScreenBackground>
+      </SafeAreaView>
+    );
+  }
+
+  // Gate do Recanto: free abre só os últimos 30 dias — material do acervo
+  // vira a tela de tranca com o convite pro Premium. Cobre também deep links
+  // e os CTAs antigos das redes sociais (post velho → tranca → conversão).
+  if (isLocked(material.data.released_at)) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <ScreenBackground>
+          <Stack.Screen options={{ headerShown: false }} />
+          <View style={[styles.center, styles.lockPad]}>
+            <View style={styles.lockBadge}>
+              <Ionicons name="lock-closed" size={26} color={tokens.semantic.coin} />
+            </View>
+            <Text style={styles.errorTitle}>{t('premium.learnLock.title')}</Text>
+            <Text style={styles.lockLine}>{t('premium.learnLock.line')}</Text>
+            <Pressable
+              style={styles.errorBtn}
+              onPress={() => router.push('/premium?source=learn')}
+              accessibilityRole="button"
+            >
+              <Text style={styles.errorBtnText}>{t('premium.learnLock.cta')}</Text>
+            </Pressable>
+            <Pressable onPress={() => router.back()} hitSlop={8} accessibilityRole="button">
+              <Text style={styles.lockBack}>{t('premium.learnLock.back')}</Text>
             </Pressable>
           </View>
         </ScreenBackground>
@@ -83,5 +116,33 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_700Bold',
     fontSize: 13,
     color: tokens.text.hi,
+  },
+  lockPad: {
+    paddingHorizontal: tokens.space[6],
+  },
+  lockBadge: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: tokens.bg.surface,
+    borderWidth: 1,
+    borderColor: tokens.semantic.coinRim,
+    marginBottom: tokens.space[1],
+  },
+  lockLine: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 14,
+    lineHeight: 20,
+    color: tokens.text.mid,
+    textAlign: 'center',
+    marginBottom: tokens.space[2],
+  },
+  lockBack: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 13,
+    color: tokens.text.dim,
+    padding: tokens.space[2],
   },
 });

@@ -11,6 +11,7 @@ export {
   type PremiumSource,
 } from './constants';
 export { useIsPremium } from './useIsPremium';
+export { isMaterialLockedFor, useMaterialLock } from './learnGate';
 export { useInstrumentAccess, type InstrumentAccess } from './useInstrumentAccess';
 export { useInstrumentStartGate } from './useInstrumentStartGate';
 export { useInstrumentTeaserStore } from './teaserStore';

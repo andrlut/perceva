@@ -41,11 +41,10 @@ interface Props {
   read: boolean;
   onPress: (card: LearningFeedCard) => void;
   /**
-   * When true the card shows a "Premium" seal. No data source sets this yet:
-   * the `learning_material` table has no premium column (P1 §4 finding), so
-   * it is always `false` today. The prop exists so the component is ready the
-   * moment André's publishing pipeline adds the flag — at which point the tap
-   * handler also gets wired to route free users to `/premium?source=learn`.
+   * When true the card shows a "Premium" seal. Set by the Learn tab via
+   * `useMaterialLock()` (lib/premium/learnGate): materials released more than
+   * 30 days ago are Premium-only on the free tier. The tap still routes to
+   * the material screen, which renders the lock + upgrade CTA itself.
    */
   isPremiumContent?: boolean;
   /**
@@ -126,7 +125,7 @@ export const CoverCard = memo(function CoverCard({
           variant="card"
         />
 
-        {/* Premium seal — inert until the Learn premium column exists. */}
+        {/* Premium seal — material outside the free 30-day window. */}
         {isPremiumContent && (
           <View style={styles.premiumSeal}>
             <Ionicons name="sparkles" size={10} color={tokens.bg.deep} />
@@ -302,10 +301,12 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
   },
+  /** Bottom-left: the cover top belongs to the title (top-anchored, up to
+   *  4 lines), and bottom-right is the read badge's corner. */
   premiumSeal: {
     position: 'absolute',
-    top: 8,
-    right: 8,
+    bottom: 8,
+    left: 8,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,

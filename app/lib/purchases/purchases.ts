@@ -40,7 +40,7 @@ let configured = false;
 
 /**
  * True when this binary can sell: native module present AND this platform
- * has an API key. iOS stays false until the Apple products/key exist.
+ * has an API key. Both platforms sell since 2026-09/10 (goog_ + appl_).
  */
 export function purchasesAvailable(): boolean {
   return Purchases !== null && !!API_KEY;
