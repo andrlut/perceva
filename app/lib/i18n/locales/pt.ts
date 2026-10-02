@@ -330,7 +330,7 @@ const pt: Translations = {
       unlimitedDesc:
         'Práticas, recompensas, habilidades e missões ilimitadas.',
       learnTitle: 'Acervo completo do Recanto',
-      learnDesc: 'No gratuito, as ideias do mês; no Premium, a biblioteca inteira.',
+      learnDesc: 'No gratuito, as ideias dos últimos 30 dias; no Premium, a biblioteca inteira.',
       supportTitle: 'Apoie o Perceva',
       supportDesc: 'Você financia diretamente a evolução do app.',
     },
@@ -351,7 +351,7 @@ const pt: Translations = {
       instrumentsFree: 'Avaliação, DISC e Tipos',
       instrumentsPremium: 'Todos',
       articlesLabel: 'Recanto',
-      articlesFree: 'Ideias do mês',
+      articlesFree: 'Últimos 30 dias',
       articlesPremium: 'Acervo completo',
     },
     plan: {
@@ -431,10 +431,10 @@ const pt: Translations = {
       seePremium: 'Conhecer o Premium',
       archive: 'Arquivar itens',
     },
-    // Tranca do acervo do Recanto (gate mensal).
+    // Tranca do acervo do Recanto (janela móvel de 30 dias).
     learnLock: {
       title: 'Esse estudo está no acervo',
-      line: 'No plano gratuito, o Recanto abre as ideias publicadas neste mês. O acervo completo — todas as ideias, com fonte — é do Premium.',
+      line: 'No plano gratuito, o Recanto abre as ideias dos últimos 30 dias. O acervo completo — todas as ideias, com fonte — é do Premium.',
       cta: 'Conhecer o Premium',
       back: 'Voltar',
     },

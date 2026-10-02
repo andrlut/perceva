@@ -338,7 +338,7 @@ const en = {
       unlimitedTitle: 'No limits',
       unlimitedDesc: 'Unlimited practices, rewards, skills and quests.',
       learnTitle: 'The full Recanto library',
-      learnDesc: "Free gets this month's ideas; Premium opens the whole library.",
+      learnDesc: 'Free gets the last 30 days of ideas; Premium opens the whole library.',
       supportTitle: 'Support Perceva',
       supportDesc: "You directly fund the app's evolution.",
     },
@@ -359,7 +359,7 @@ const en = {
       instrumentsFree: 'Assessment, DISC and Types',
       instrumentsPremium: 'All',
       articlesLabel: 'Recanto',
-      articlesFree: "This month's ideas",
+      articlesFree: 'Last 30 days',
       articlesPremium: 'Full library',
     },
     plan: {
@@ -438,10 +438,10 @@ const en = {
       seePremium: 'See Premium',
       archive: 'Archive items',
     },
-    // Recanto library lock (monthly gate).
+    // Recanto library lock (rolling 30-day window).
     learnLock: {
       title: 'This study lives in the library',
-      line: "On the free plan, Recanto opens the ideas published this month. The full library — every idea, with sources — is Premium.",
+      line: 'On the free plan, Recanto opens the ideas from the last 30 days. The full library — every idea, with sources — is Premium.',
       cta: 'See Premium',
       back: 'Go back',
     },

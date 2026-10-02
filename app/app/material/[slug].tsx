@@ -62,7 +62,7 @@ export default function MaterialDetailScreen() {
     );
   }
 
-  // Gate mensal do Recanto: free abre só o mês corrente — material do acervo
+  // Gate do Recanto: free abre só os últimos 30 dias — material do acervo
   // vira a tela de tranca com o convite pro Premium. Cobre também deep links
   // e os CTAs antigos das redes sociais (post velho → tranca → conversão).
   if (isLocked(material.data.released_at)) {

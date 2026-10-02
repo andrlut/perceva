@@ -19,9 +19,10 @@
 export const PURCHASES_ENABLED: boolean = true;
 
 /**
- * Learn premium gate — modelo mensal (2026-10-02): free abre os materiais do
- * mês calendário corrente, Premium abre o acervo. A regra vive em
- * `learnGate.ts`; este flag é o kill-switch (false = nada tranca, via OTA).
+ * Learn premium gate (2026-10-02): free abre os materiais dos últimos 30
+ * dias (janela móvel, a mesma das "Novidades do mês"), Premium abre o acervo.
+ * A regra vive em `learnGate.ts`; este flag é o kill-switch (false = nada
+ * tranca, via OTA).
  */
 export const PREMIUM_LEARN_ENABLED: boolean = true;
 

@@ -46,7 +46,7 @@ interface Props {
    * "N ideias · c/N" meta and video icon from here; legacy cards ignore it.
    */
   ideaMetaByMaterial?: Map<string, CoverIdeaMeta>;
-  /** Gate mensal do Recanto: cards fora do mês corrente (free) ganham o selo
+  /** Gate do Recanto: cards fora da janela de 30 dias (free) ganham o selo
    *  Premium. A tranca de verdade fica na rota do material. */
   isLockedCard?: (card: LearningFeedCard) => boolean;
 }

@@ -59,7 +59,7 @@ export default function ReelsScreen() {
     );
     const readSet = reads.data ?? new Set<string>();
     const collectedMap = collected.data ?? new Map<string, Set<string>>();
-    // Gate mensal do Recanto: o Explorar do free navega só o mês corrente.
+    // Gate do Recanto: o Explorar do free navega só os últimos 30 dias.
     const gatedFeed = feed.data.filter((m) => !isMaterialLocked(m.released_at));
     const gatedIdeas = (ideaCards.data ?? []).filter(
       (i) => !isMaterialLocked(i.released_at),
