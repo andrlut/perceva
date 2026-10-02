@@ -17,6 +17,7 @@ import { useBottomNavClearance } from '@/components/BottomNavBar';
 import { FabStack, fabStackClearance, type FabSize } from '@/components/FabStack';
 import { TourModule } from '@/components/tour/TourModule';
 import { TourTarget } from '@/components/tour/TourTarget';
+import { useMaterialLock } from '@/lib/premium';
 import { emitTourEvent } from '@/lib/tour/eventBus';
 import { buildM6Steps, M6_EVENTS } from '@/lib/tour/m6Steps';
 import { isWrapPending, useIsCurrentTourModule, useTourStore } from '@/lib/tour/store';
@@ -86,6 +87,11 @@ const LEARNING_FAB_CLEARANCE = fabStackClearance([IDEAS_FAB_SIZE, FILTER_FAB_SIZ
 
 export default function LearningScreen() {
   const router = useRouter();
+  const isMaterialLocked = useMaterialLock();
+  const isLockedCard = useCallback(
+    (card: LearningFeedCard) => isMaterialLocked(card.released_at),
+    [isMaterialLocked],
+  );
   const { t, locale } = useT();
   const feed = useLearningFeed();
   // Pull indicator is local state — the feed's isFetching also flips on
@@ -385,10 +391,11 @@ export default function LearningScreen() {
           onCardPress={onCardPress}
           count={item.cards.length}
           ideaMetaByMaterial={ideaMetaByMaterial}
+          isLockedCard={isLockedCard}
         />
       </View>
     ),
-    [readSet, onCardPress, ideaMetaByMaterial],
+    [readSet, onCardPress, ideaMetaByMaterial, isLockedCard],
   );
 
   return (

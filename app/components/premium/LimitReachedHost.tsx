@@ -21,6 +21,15 @@ const LINE1_KEY: Record<LimitedEntity, string> = {
   quest: 'premium.limit.questLine1',
 };
 
+// Segunda linha por entidade: "arquivar" só existe pra práticas e
+// recompensas — habilidade se apaga, missão/meta se conclui ou abandona.
+const LINE2_KEY: Record<LimitedEntity, string> = {
+  task: 'premium.limit.taskLine2',
+  reward: 'premium.limit.rewardLine2',
+  skill: 'premium.limit.skillLine2',
+  quest: 'premium.limit.questLine2',
+};
+
 export function LimitReachedHost() {
   const router = useRouter();
   const { t } = useT();
@@ -75,7 +84,7 @@ export function LimitReachedHost() {
                 <Ionicons name="sparkles" size={22} color={tokens.brand.violet2} />
               </View>
               <Text style={styles.line1}>{t(LINE1_KEY[entity])}</Text>
-              <Text style={styles.line2}>{t('premium.limit.line2')}</Text>
+              <Text style={styles.line2}>{t(LINE2_KEY[entity])}</Text>
 
               <Pressable
                 style={({ pressed }) => [styles.primaryBtn, pressed && { opacity: 0.9 }]}

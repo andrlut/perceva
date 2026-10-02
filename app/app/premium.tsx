@@ -160,9 +160,9 @@ export default function PremiumScreen() {
               <PlanPicker
                 selected={selectedPlan}
                 onSelect={setSelectedPlan}
-                livePrices={{
-                  annual: offering.data?.annual?.product.priceString ?? null,
-                  monthly: offering.data?.monthly?.product.priceString ?? null,
+                livePackages={{
+                  annual: offering.data?.annual ?? null,
+                  monthly: offering.data?.monthly ?? null,
                 }}
               />
               <Cta onPress={handlePurchase} busy={busy === 'purchase'} />
@@ -272,26 +272,58 @@ function Comparison() {
 
 /* ─────────────────────── Plan picker ──────────────────────── */
 
+/** Formata um valor na moeda da loja; cai pra "CUR 9.99" se Intl faltar. */
+function formatStorePrice(value: number, currencyCode: string): string {
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency: currencyCode,
+    }).format(value);
+  } catch {
+    return `${currencyCode} ${value.toFixed(2)}`;
+  }
+}
+
 function PlanPicker({
   selected,
   onSelect,
-  livePrices,
+  livePackages,
 }: {
   selected: PlanId;
   onSelect: (id: PlanId) => void;
-  /** Store-localized prices from the live offering; null → i18n fallback.
-   *  The store is the source of truth once purchases are live — hardcoded
-   *  strings drift the moment a price changes in the console. */
-  livePrices: Record<PlanId, string | null>;
+  /** Live offering packages; null → i18n fallback. The store is the source
+   *  of truth once purchases are live — hardcoded strings drift the moment
+   *  a price changes in the console, so badge ("N meses grátis") and the
+   *  per-month equivalence are COMPUTED from these when both exist. */
+  livePackages: Record<PlanId, import('react-native-purchases').PurchasesPackage | null>;
 }) {
   const { t } = useT();
+  const annualNum = livePackages.annual?.product.price ?? null;
+  const monthlyNum = livePackages.monthly?.product.price ?? null;
+  const currency = livePackages.annual?.product.currencyCode ?? null;
+  const monthsFree =
+    annualNum != null && monthlyNum != null && monthlyNum > 0
+      ? Math.min(11, Math.max(0, Math.round(12 - annualNum / monthlyNum)))
+      : null;
+  const badge =
+    monthsFree != null
+      ? monthsFree > 0
+        ? t('premium.plan.annualBadgeLive', { months: monthsFree })
+        : null // anual não economiza nada → selo some em vez de mentir
+      : t('premium.plan.annualBadge');
+  const equiv =
+    annualNum != null && currency
+      ? t('premium.plan.annualEquivLive', {
+          price: formatStorePrice(annualNum / 12, currency),
+        })
+      : t('premium.plan.annualEquiv');
   return (
     <View style={styles.plans}>
       <Text style={styles.planPickerLabel}>{t('premium.plan.selectLabel')}</Text>
       {PREMIUM_PLANS.map((plan) => {
         const active = plan.id === selected;
         const name = t(`premium.plan.${plan.id}Name`);
-        const live = livePrices[plan.id];
+        const live = livePackages[plan.id]?.product.priceString ?? null;
         const price = live
           ? t(`premium.plan.${plan.id}PriceLive`, { price: live })
           : t(`premium.plan.${plan.id}Price`);
@@ -311,15 +343,15 @@ function PlanPicker({
             <View style={styles.planBody}>
               <View style={styles.planNameRow}>
                 <Text style={styles.planName}>{name}</Text>
-                {plan.highlighted && (
+                {plan.highlighted && badge != null && (
                   <View style={styles.planBadge}>
-                    <Text style={styles.planBadgeText}>{t('premium.plan.annualBadge')}</Text>
+                    <Text style={styles.planBadgeText}>{badge}</Text>
                   </View>
                 )}
               </View>
               <Text style={styles.planPrice}>{price}</Text>
               {plan.id === 'annual' && (
-                <Text style={styles.planEquiv}>{t('premium.plan.annualEquiv')}</Text>
+                <Text style={styles.planEquiv}>{equiv}</Text>
               )}
             </View>
           </Pressable>

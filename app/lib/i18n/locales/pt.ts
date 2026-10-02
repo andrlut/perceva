@@ -329,8 +329,8 @@ const pt: Translations = {
       unlimitedTitle: 'Sem limites',
       unlimitedDesc:
         'Práticas, recompensas, habilidades e missões ilimitadas.',
-      learnTitle: 'Estudos exclusivos',
-      learnDesc: 'Conteúdo extra no Aprender, toda semana.',
+      learnTitle: 'Acervo completo do Recanto',
+      learnDesc: 'No gratuito, as ideias do mês; no Premium, a biblioteca inteira.',
       supportTitle: 'Apoie o Perceva',
       supportDesc: 'Você financia diretamente a evolução do app.',
     },
@@ -340,27 +340,31 @@ const pt: Translations = {
       premiumHeader: 'Premium',
       unlimited: 'Ilimitado',
       tasksLabel: 'Práticas',
-      tasksFree: '10 ativas',
+      tasksFree: '10 criadas por você',
       rewardsLabel: 'Recompensas',
       rewardsFree: '5 ativas',
       skillsLabel: 'Habilidades',
       skillsFree: '3',
-      questsLabel: 'Missões',
+      questsLabel: 'Missões e Metas',
       questsFree: '3 ativas',
       instrumentsLabel: 'Instrumentos',
       instrumentsFree: 'Avaliação, DISC e Tipos',
       instrumentsPremium: 'Todos',
-      articlesLabel: 'Estudos',
-      articlesFree: 'Base',
-      articlesPremium: '+ exclusivos',
+      articlesLabel: 'Recanto',
+      articlesFree: 'Ideias do mês',
+      articlesPremium: 'Acervo completo',
     },
     plan: {
       selectLabel: 'Escolha seu plano',
-      // 12 × R$14,90 = R$178,80 vs R$99,90/ano → ~5,3 meses de economia.
+      // Fallbacks pra quando o offering não carregou; com preço da loja em
+      // mãos, o selo e a equivalência são CALCULADOS (ver PlanPicker).
+      // 12 − 99,90/14,90 ≈ 5,3 → "5 meses grátis"; 99,90/12 = 8,325 → 8,33.
       annualBadge: '5 meses grátis',
+      annualBadgeLive: '{{months}} meses grátis',
       annualName: 'Anual',
       annualPrice: 'R$ 99,90/ano',
-      annualEquiv: 'equivale a R$ 8,32/mês',
+      annualEquiv: 'equivale a R$ 8,33/mês',
+      annualEquivLive: 'equivale a {{price}}/mês',
       monthlyName: 'Mensal',
       monthlyPrice: 'R$ 14,90/mês',
       // Live store prices (source of truth once purchases are on).
@@ -417,10 +421,22 @@ const pt: Translations = {
       taskLine1: 'Suas 10 práticas próprias estão em uso. As do catálogo continuam ilimitadas.',
       rewardLine1: 'Suas 5 recompensas ativas estão em uso.',
       skillLine1: 'Suas 3 habilidades estão em desenvolvimento.',
-      questLine1: 'Suas 3 missões ativas estão em andamento.',
-      line2: 'Continue no Premium, ou arquive algo pra abrir espaço.',
+      questLine1: 'Suas 3 missões e metas ativas estão em andamento.',
+      // Segunda linha por entidade — o verbo certo pra cada tipo (arquivar
+      // só existe pra práticas e recompensas).
+      taskLine2: 'Continue no Premium, ou arquive uma prática pra abrir espaço.',
+      rewardLine2: 'Continue no Premium, ou arquive uma recompensa pra abrir espaço.',
+      skillLine2: 'Continue no Premium, ou apague uma habilidade pra abrir espaço.',
+      questLine2: 'Continue no Premium, ou conclua ou abandone uma pra abrir espaço.',
       seePremium: 'Conhecer o Premium',
       archive: 'Arquivar itens',
+    },
+    // Tranca do acervo do Recanto (gate mensal).
+    learnLock: {
+      title: 'Esse estudo está no acervo',
+      line: 'No plano gratuito, o Recanto abre as ideias publicadas neste mês. O acervo completo — todas as ideias, com fonte — é do Premium.',
+      cta: 'Conhecer o Premium',
+      back: 'Voltar',
     },
   },
 

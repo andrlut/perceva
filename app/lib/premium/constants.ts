@@ -19,18 +19,18 @@
 export const PURCHASES_ENABLED: boolean = true;
 
 /**
- * Learn premium-content flag — see the §4 investigation in the PR. The
- * `learning_material` table has no premium column yet, so no article is gated
- * in P1: the LearnCard `isPremiumContent` prop defaults to `false` and this
- * stays `false` until André's publishing pipeline adds the flag/column.
+ * Learn premium gate — modelo mensal (2026-10-02): free abre os materiais do
+ * mês calendário corrente, Premium abre o acervo. A regra vive em
+ * `learnGate.ts`; este flag é o kill-switch (false = nada tranca, via OTA).
  */
-export const PREMIUM_LEARN_ENABLED: boolean = false;
+export const PREMIUM_LEARN_ENABLED: boolean = true;
 
 export type PlanId = 'annual' | 'monthly';
 
 export interface PremiumPlan {
   id: PlanId;
-  /** Pre-selected + carries the "4 meses grátis" badge. */
+  /** Pre-selected + carries the "N meses grátis" badge (calculado do preço
+   *  real da loja quando o offering carrega; fallback no i18n). */
   highlighted: boolean;
 }
 
