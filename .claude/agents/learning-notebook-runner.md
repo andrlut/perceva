@@ -911,7 +911,7 @@ one day, up to 5 in flight, `RESULT: ok` ×3, **no quota signal at all**):
 - **The end card survives the "remove watermark" setting** and comes in
   TWO arts: the bright one (YAVG ~230, ~3 s — the default detector) and a
   dark "Gemini Notebook" one (YAVG ~45, ~3 s) — `video.mjs` detects both
-  since 2026-09-12 (`darkThreshold` 60, junction ≥ 120). Curta videos
+  since 2026-09-12 (`darkThreshold` 60; since 2026-10-01 the junction is a one-frame drop ≥ `darkJump` 30, not an absolute "content ≥ 120" — dark-palette videos sit at ~96 before the card). Curta videos
   took 5–16 min; the outliers finished at ~44 min.
 - Poster: `--poster-at <s>` picks the poster frame (default 1 s catches
   a title card sometimes; 2–3 s is safer).

@@ -47,8 +47,13 @@ export const OUTRO_DEFAULTS = Object.freeze({
   threshold: 225,
   /** the Notebook's OTHER end card (dark "Gemini Notebook" art, seen 2026-09-12): YAVG at or below this */
   darkThreshold: 60,
-  /** a dark tail only counts as a card when the content right before it was at least this bright (sharp junction) */
-  darkContentMin: 120,
+  /**
+   * a dark tail only counts as a card when luma DROPS at least this much in one
+   * frame at the junction (sharp cut, not a fade). Was an absolute "content ≥ 120"
+   * until 2026-10-01, which missed the card after dark-palette videos (content
+   * ~96 → card ~45, a 50-point step).
+   */
+  darkJump: 30,
   /** a bright run shorter than this is a flash, not an end card */
   minRun: 0.5,
   /** a bright run longer than this is not the ~2–4 s end card — refuse to cut */
@@ -229,7 +234,7 @@ export function sampleLuma(path, from = 0) {
  * Full diagnostics behind `detectOutroStart` — what the CLI shows on stderr
  * and what the synthetic test asserts on.
  * @param {string} path
- * @param {{window?: number, threshold?: number, minRun?: number, maxRun?: number, darkThreshold?: number, darkContentMin?: number}} [opts]
+ * @param {{window?: number, threshold?: number, minRun?: number, maxRun?: number, darkThreshold?: number, darkJump?: number}} [opts]
  * @returns {TailAnalysis}
  */
 export function analyzeTail(path, opts = {}) {
@@ -238,7 +243,7 @@ export function analyzeTail(path, opts = {}) {
   const minRun = opts.minRun ?? OUTRO_DEFAULTS.minRun;
   const maxRun = opts.maxRun ?? OUTRO_DEFAULTS.maxRun;
   const darkThreshold = opts.darkThreshold ?? OUTRO_DEFAULTS.darkThreshold;
-  const darkContentMin = opts.darkContentMin ?? OUTRO_DEFAULTS.darkContentMin;
+  const darkJump = opts.darkJump ?? OUTRO_DEFAULTS.darkJump;
 
   const { durationSeconds } = probe(path);
   const from = Math.max(0, durationSeconds - window);
@@ -263,7 +268,7 @@ export function analyzeTail(path, opts = {}) {
       if (j === 0) return { ...dCommon, cutAt: null, reason: `dark (≤${darkThreshold}) for the whole ${window}s window — no junction seen` };
       if (dRun < minRun) return { ...dCommon, cutAt: null, reason: `dark run of ${dRun.toFixed(2)}s is shorter than minRun ${minRun}s` };
       if (dRun > maxRun) return { ...dCommon, cutAt: null, reason: `dark run of ${dRun.toFixed(2)}s is longer than maxRun ${maxRun}s — a dim ending, not a card` };
-      if (dContent < darkContentMin) return { ...dCommon, cutAt: null, reason: `content before the dark run is only YAVG ${dContent.toFixed(1)} (< ${darkContentMin}) — no sharp junction, not cutting` };
+      if (dContent - dStart.yavg < darkJump) return { ...dCommon, cutAt: null, reason: `luma steps only ${(dContent - dStart.yavg).toFixed(1)} into the dark run (< ${darkJump}) — a fade, not a card; not cutting` };
       return { ...dCommon, cutAt: dStart.t, reason: `dark end card from ${dStart.t.toFixed(3)}s (${dRun.toFixed(2)}s, YAVG ${dContent.toFixed(1)} → ${dStart.yavg.toFixed(1)})` };
     }
     return {
