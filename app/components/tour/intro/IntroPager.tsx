@@ -192,8 +192,11 @@ export function IntroPager() {
       setBusy(choice);
       Haptics.selectionAsync().catch(() => {});
       try {
-        if (choice === 'tour') await startGuidedTour();
-        else await skipGuidedTour();
+        // "Começar PELA autoavaliação" é ordem, não substituição: o tour
+        // guiado fica pendente e retoma na Home quando ela fechar a
+        // autoavaliação. Só o "pular" descarta o tour de verdade.
+        if (choice === 'skip') await skipGuidedTour();
+        else await startGuidedTour();
         // "Start with the self-assessment": land on it once onboarding ends
         // (after the starter pack, or straight away on an intro-only replay).
         setAfterOnboarding(choice === 'assessment' ? '/self-assessment' : null);
@@ -426,7 +429,7 @@ export function IntroPager() {
                 }
               />
               <PageBody>
-                <FitBox maxHeight={bodyMax(4)}>
+                <FitBox maxHeight={bodyMax(4)} width={contentW}>
                   <DedicationExample />
                 </FitBox>
               </PageBody>
@@ -457,7 +460,7 @@ export function IntroPager() {
                 }
               />
               <PageBody>
-                <FitBox maxHeight={bodyMax(5)}>
+                <FitBox maxHeight={bodyMax(5)} width={contentW}>
                   <RewardSamples />
                 </FitBox>
               </PageBody>

@@ -45,18 +45,33 @@ export function TourTarget({ id, children, style, radius = 16 }: Props) {
   const measureTick = useTourTargetsStore((s) => s.measureTick);
 
   // Measure while active — on activation, on every remeasure tick, and
-  // (via onLayout → tick) on layout changes. Small delay lets the frame
-  // settle before reading coordinates.
+  // continuously (300ms) while spotlighted: a manual scroll or a late
+  // layout shift after the settle timers used to leave the dim hole
+  // stranded where the card WAS. Small delay lets the frame settle.
   useEffect(() => {
     if (!isActive) return;
-    const timer = setTimeout(() => {
+    const measure = () => {
       ref.current?.measureInWindow((x, y, width, height) => {
         if (width > 0 && height > 0) {
-          useTourTargetsStore.getState().setRect(id, { x, y, width, height });
+          const prev = useTourTargetsStore.getState().rects[id];
+          if (
+            !prev ||
+            Math.abs(prev.x - x) > 0.5 ||
+            Math.abs(prev.y - y) > 0.5 ||
+            Math.abs(prev.width - width) > 0.5 ||
+            Math.abs(prev.height - height) > 0.5
+          ) {
+            useTourTargetsStore.getState().setRect(id, { x, y, width, height });
+          }
         }
       });
-    }, 50);
-    return () => clearTimeout(timer);
+    };
+    const timer = setTimeout(measure, 50);
+    const tracker = setInterval(measure, 300);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(tracker);
+    };
   }, [isActive, measureTick, id]);
 
   // Drop the published rect once this target stops being spotlighted so

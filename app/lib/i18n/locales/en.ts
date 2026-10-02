@@ -2210,6 +2210,8 @@ const en = {
       system: 'System',
       note: 'Applying the theme briefly reloads the app.',
       apply: 'Apply theme',
+      activeNow: 'Active theme: {{theme}}',
+      activeNowSystem: 'Active theme: {{theme}} · following the system',
     },
     language: {
       english: 'English',

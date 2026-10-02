@@ -2221,6 +2221,8 @@ const pt: Translations = {
       system: 'Sistema',
       note: 'A troca aplica com um recarregamento rápido do app.',
       apply: 'Aplicar tema',
+      activeNow: 'Tema ativo agora: {{theme}}',
+      activeNowSystem: 'Tema ativo agora: {{theme}} · seguindo o sistema',
     },
     language: {
       english: 'English',
