@@ -11,8 +11,10 @@ import {
 } from 'react-native';
 
 import { SheetKeyboardView } from '@/components/SheetKeyboardView';
+import { useSheetBottomInset } from '@/components/useSheetBottomInset';
 import { FEEDBACK_TAGS } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
+import { useKeyboardOverlap } from '@/lib/use-keyboard-height';
 import { tokens } from '@/theme';
 
 /**
@@ -43,6 +45,8 @@ export function FeedbackSheet({
   onSave,
 }: Props) {
   const { t } = useT();
+  const sheetBottom = useSheetBottomInset();
+  const keyboard = useKeyboardOverlap();
   const [selectedTags, setSelectedTags] = useState<string[]>(initialTags);
   const [comment, setComment] = useState<string>(initialComment ?? '');
 
@@ -83,7 +87,9 @@ export function FeedbackSheet({
     >
       <SheetKeyboardView style={styles.backdrop}>
         <Pressable style={styles.backdropPress} onPress={onClose} />
-        <View style={styles.sheet}>
+        {/* Com o teclado em pé o inset da barra do sistema não existe mais
+            (mesma regra do IdeaNoteSheet). */}
+        <View style={[styles.sheet, { paddingBottom: keyboard > 0 ? tokens.space[4] : sheetBottom }]}>
           <View style={styles.handle} />
 
           <View style={styles.header}>
@@ -184,7 +190,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: tokens.radius.xl,
     paddingHorizontal: tokens.space[4],
     paddingTop: 10,
-    paddingBottom: 28,
+    // paddingBottom inline: useSheetBottomInset (barra de navegação do Android).
     gap: 12,
     borderTopWidth: 1,
     borderColor: tokens.border.strong,

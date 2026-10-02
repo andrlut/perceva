@@ -3,6 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { useMemo } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { useSheetBottomInset } from '@/components/useSheetBottomInset';
 import type { LearningFeedCard } from '@/lib/api/learning';
 import type { DimensionId, LearningMaterialCategory, SubId } from '@/lib/db/types';
 import { useT, type TranslateOptions } from '@/lib/i18n';
@@ -82,6 +83,7 @@ export function LearningFilterSheet({
   const { t } = useT();
   // A busca mora nesta folha: sem isto o teclado cobre os filtros e o botão.
   const lift = useKeyboardOverlap();
+  const sheetBottom = useSheetBottomInset();
   const meta = useMetaLookup();
 
   const stats = useMemo(() => {
@@ -140,7 +142,10 @@ export function LearningFilterSheet({
       statusBarTranslucent
     >
       <Pressable style={[styles.backdrop, { paddingBottom: lift }]} onPress={onClose}>
-        <Pressable style={styles.sheet} onPress={() => {}}>
+        <Pressable
+          style={[styles.sheet, { paddingBottom: lift > 0 ? tokens.space[4] : sheetBottom }]}
+          onPress={() => {}}
+        >
           <View style={styles.handle} />
           <View style={styles.header}>
             <View style={{ flex: 1 }}>

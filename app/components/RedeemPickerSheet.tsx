@@ -3,6 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AppIcon } from '@/components/AppIcon';
+import { useSheetBottomInset } from '@/components/useSheetBottomInset';
 import type { Reward } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { tokens } from '@/theme';
@@ -41,6 +42,7 @@ export function RedeemPickerSheet({
   onPick,
 }: Props) {
   const { t } = useT();
+  const sheetBottom = useSheetBottomInset();
   const handlePick = (reward: Reward) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
     onClose();
@@ -62,7 +64,7 @@ export function RedeemPickerSheet({
           accessibilityRole="button"
           accessibilityLabel={t('common.close')}
         />
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, { paddingBottom: sheetBottom }]}>
           <View style={styles.handle} />
           <View style={styles.header}>
             <View style={{ flex: 1 }}>
