@@ -1339,6 +1339,17 @@ const pt: Translations = {
       a11y: 'Como usar as Práticas',
       body: '**Toque no check** pra concluir a prática.\n\n**Arraste a prática pra direita** pra concluir ajustando as estrelas, as moedas e quantas vezes; **pra esquerda** pra pular o dia.\n\n**Segure** a prática pra abrir o menu: ajustar estrelas, pular ou editar. **Toque** nela pra editar.\n\n**Deslize o topo da tela** (acima da primeira prática), ou use as setas, pra trocar de dia. **Toque na data** pra voltar pra hoje.\n\n**Dias passados:** registre o que você esqueceu. Práticas criadas depois daquele dia aparecem num bloco à parte.',
     },
+    coinsOfDayA11y: '{{count}} moedas neste dia',
+    moodShortcut: {
+      label: 'Humor',
+      logA11y: 'Registrar o humor do dia',
+      editA11y: 'Editar o humor do dia',
+    },
+    redemptions: {
+      title: 'Resgates do dia',
+      empty: 'Nenhum resgate neste dia.',
+      openVault: 'Abrir a Vault',
+    },
     laterPractices: {
       title: 'Criadas depois deste dia',
       caption: 'Dá pra registrar aqui; não contam pro dia fechado.',

@@ -1344,6 +1344,17 @@ const en = {
       a11y: 'How Practices works',
       body: '**Tap the check** to complete a practice.\n\n**Swipe a practice right** to complete it adjusting the stars, the coins and how many times; **left** to skip the day.\n\n**Hold** a practice to open its menu: adjust stars, skip or edit. **Tap** it to edit.\n\n**Swipe the top of the screen** (above the first practice), or use the arrows, to change days. **Tap the date** to go back to today.\n\n**Past days:** log what you forgot. Practices created after that day show up in their own block.',
     },
+    coinsOfDayA11y: '{{count}} coins on this day',
+    moodShortcut: {
+      label: 'Mood',
+      logA11y: "Log the day's mood",
+      editA11y: "Edit the day's mood",
+    },
+    redemptions: {
+      title: "Day's redemptions",
+      empty: 'No redemptions on this day.',
+      openVault: 'Open the Vault',
+    },
     laterPractices: {
       title: 'Created after this day',
       caption: "You can log them here; they don't count toward closing the day.",
