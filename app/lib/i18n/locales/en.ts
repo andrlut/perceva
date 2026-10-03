@@ -1134,6 +1134,8 @@ const en = {
   /** A screen's guide, the (i) sheet (components/guide). The AI door is the
    *  first thing in it and never hides: off = grey, and it leads to Settings. */
   guide: {
+    /** Label of the guide's last section, over the AI block. */
+    aiLabel: 'Still unsure?',
     aiTitle: 'Ask AI',
     aiOn: 'Claude explains this screen with your data',
     aiOff: 'Turn on AI in Settings to use it',

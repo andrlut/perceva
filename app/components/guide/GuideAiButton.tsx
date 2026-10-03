@@ -8,25 +8,27 @@ import { useLoadedSettings } from '@/lib/settings';
 import { tokens } from '@/theme';
 
 /**
- * The AI door of a screen's guide — the FIRST thing in the (i) sheet, under
- * its title, outside the scroll so it never scrolls away.
+ * The AI door of a screen's guide, in two shapes with one behavior:
  *
- * It never hides. With the AI buttons on (Ajustes › Conector), it is violet
- * and opens a new Claude chat carrying `prompt` — a guide question is
+ *   - GuideAiIcon: a 32px circle fixed in the sheet's header, beside the
+ *     close X — always in reach, never in the way;
+ *   - GuideAiButton: the full block, the LAST thing in the guide's scroll.
+ *
+ * Last on purpose (owner, 2026-10-03): the guide's own playground teaches
+ * the screen better than the AI does, so the sheet leads with it and leaves
+ * the AI as the "still unsure?" ending; the header circle is there for
+ * whoever wants it right away.
+ *
+ * Neither ever hides. With the AI buttons on (Ajustes › Conector), they are
+ * violet and open a new Claude chat carrying `prompt` — a guide question is
  * one-off and needs its prompt, and a project link cannot carry one, so it
- * ignores the saved destinations. With them off, it is grey and takes the
+ * ignores the saved destinations. With them off, they are grey and take the
  * person to the switch (`/conector?focus=atalhos` scrolls to and lights up
- * the "Acessos rápidos" card): the grey button is the invitation to turn the
- * AI on, not a dead control. Either way it closes the sheet first
- * (`onLeave`), so coming back lands on the screen, not on a stale sheet.
+ * the "Acessos rápidos" card): grey is the invitation to turn the AI on,
+ * not a dead control. Either way the sheet closes first (`onLeave`), so
+ * coming back lands on the screen, not on a stale sheet.
  */
-export function GuideAiButton({
-  prompt,
-  onLeave,
-}: {
-  prompt: string;
-  onLeave: () => void;
-}) {
+function useGuideAi(prompt: string, onLeave: () => void) {
   const { t } = useT();
   const router = useRouter();
   const settings = useLoadedSettings();
@@ -45,6 +47,18 @@ export function GuideAiButton({
     if (!ok) Alert.alert(title, t('mood.claudeOpenError'));
   };
 
+  return { on, title, sub, press };
+}
+
+/** The full block — the guide's last section. */
+export function GuideAiButton({
+  prompt,
+  onLeave,
+}: {
+  prompt: string;
+  onLeave: () => void;
+}) {
+  const { on, title, sub, press } = useGuideAi(prompt, onLeave);
   return (
     <Pressable
       onPress={press}
@@ -72,6 +86,40 @@ export function GuideAiButton({
       <Ionicons
         name={on ? 'open-outline' : 'settings-outline'}
         size={17}
+        color={on ? tokens.brand.violet2 : tokens.text.mid}
+      />
+    </Pressable>
+  );
+}
+
+/**
+ * The header circle — the close button's sibling, same size. Its outer
+ * hit area stops short of the X's (the X's inner side does the same), so a
+ * tap between the two never lands on the wrong one.
+ */
+export function GuideAiIcon({
+  prompt,
+  onLeave,
+}: {
+  prompt: string;
+  onLeave: () => void;
+}) {
+  const { on, title, sub, press } = useGuideAi(prompt, onLeave);
+  return (
+    <Pressable
+      onPress={press}
+      hitSlop={{ top: 10, bottom: 10, left: 10, right: 4 }}
+      accessibilityRole="button"
+      accessibilityLabel={`${title}. ${sub}`}
+      style={({ pressed }) => [
+        styles.circle,
+        on ? styles.circleOn : styles.circleOff,
+        pressed && { opacity: 0.6 },
+      ]}
+    >
+      <Ionicons
+        name="sparkles"
+        size={16}
         color={on ? tokens.brand.violet2 : tokens.text.mid}
       />
     </Pressable>
@@ -127,4 +175,19 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     color: tokens.text.mid,
   },
+
+  // Same 32px circle as the InfoSheet's close button.
+  circle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  circleOn: {
+    backgroundColor: 'rgba(123, 92, 255, 0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(155, 130, 255, 0.55)',
+  },
+  circleOff: { backgroundColor: 'rgba(255,255,255,0.04)' },
 });
