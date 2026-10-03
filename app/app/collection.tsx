@@ -19,7 +19,7 @@ import {
   IdeaSearchBox,
   ReviewStrip,
 } from '@/components/ideas/CollectionControls';
-import { CollectionGuide } from '@/components/ideas/CollectionGuide';
+import { CollectionGuide, useCollectionGuidePrompt } from '@/components/ideas/CollectionGuide';
 import { IdeaActionSheet } from '@/components/ideas/IdeaActionSheet';
 import { IdeaNoteSheet } from '@/components/ideas/IdeaNoteSheet';
 import { IdeaShelf, shelfCardWidth } from '@/components/ideas/IdeaShelf';
@@ -130,6 +130,8 @@ export default function CollectionScreen() {
     () => cards.find((c) => c.favorite) ?? cards[0] ?? null,
     [cards],
   );
+  // Built from the same item list the guide renders, so it names every option.
+  const guidePrompt = useCollectionGuidePrompt();
   const guideShelf = useMemo(() => {
     const dimensionId: DimensionId = guideCard?.dimensionId ?? 'mind';
     return {
@@ -287,7 +289,7 @@ export default function CollectionScreen() {
           visible={helpOpen}
           onClose={() => setHelpOpen(false)}
           title={t('learning.ideas.help.title')}
-          aiPrompt={t('learning.ideas.help.aiPrompt')}
+          aiPrompt={guidePrompt}
         >
           <CollectionGuide
             demoCard={guideCard}

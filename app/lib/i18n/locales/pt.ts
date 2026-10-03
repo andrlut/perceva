@@ -804,32 +804,60 @@ const pt: Translations = {
       myIdeasEmpty: 'Vire o card no fim de uma ideia pra guardá-la aqui.',
       searchPlaceholder: 'Buscar nas suas ideias',
       searchEmpty: 'Nenhuma ideia sua bate com “{{query}}”.',
-      /** The screen's guide (its (i)) — CollectionGuide. `aiPrompt` is what
-       *  the AI door sends; no personal data, only the question. */
+      /** The screen's guide (its (i)) — the MODEL every screen follows
+       *  (docs/informativo-de-tela.md, lib/guide). `items` are the screen's
+       *  options in CollectionGuide's order: title + body are what the sheet
+       *  shows, `ai` is the extra only the AI prompt carries. screenName,
+       *  purpose and examples frame that prompt. No personal data here. */
       help: {
         title: 'Como usar Minhas ideias',
         a11y: 'Como usar Minhas ideias',
-        aiPrompt: 'Estou na tela Minhas ideias do Perceva. Usando o conector, olhe as minhas ideias e me explique como usar essa tela: virar e segurar as cartas, revisar, as favoritas e as notas.',
+        screenName: 'Minhas ideias',
+        purpose: 'Ela guarda as ideias que eu absorvi no Aprender, virando a carta no fim de cada ideia.',
+        examples: 'das minhas próprias ideias',
         cardLabel: 'Na carta',
         tryIt: 'Experimente nesta carta',
-        tapTitle: 'Toque',
-        tapBody: 'Vira e mostra a resposta.',
-        holdTitle: 'Segure',
-        holdBody: 'Abre o menu: anotar, ler inteira e favoritar.',
         menuLabel: 'O menu da carta',
         screenLabel: 'Na tela',
-        reviewTitle: 'Revisar',
-        reviewBody: 'Toda ideia absorvida espera uma decisão nesta faixa. Arraste pra direita pra favoritar, pra esquerda pra soltar. Sem pendências, ela some.',
-        favoritesTitle: 'Favoritas',
-        favoritesBody: '"Só favoritas" mostra as que você guardou. "Ver todas" mostra tudo que você já absorveu, até as soltas.',
-        notesTitle: 'Notas',
-        notesBody: 'O que você quer fazer com a ideia. Só você vê. A carta com nota ganha um lápis no canto.',
-        shelvesTitle: 'Áreas',
-        shelvesBody: 'Uma fileira por área. Deslize pro lado pra ver mais.',
-        searchTitle: 'Busca',
-        searchBody: 'Procura no título, na resposta, na área e nas suas notas.',
         sampleTitle: 'Toque pra virar',
         sampleClaim: 'Essa é a resposta. Agora segure a carta.',
+        items: {
+          tap: {
+            title: 'Toque',
+            body: 'Vira e mostra a resposta.',
+            ai: 'Tocar de novo vira a carta de volta pra frente.',
+          },
+          hold: {
+            title: 'Segure',
+            body: 'Abre o menu: anotar, ler inteira e favoritar.',
+            ai: 'No menu, Anotar (ou Editar sua nota, se a carta já tiver uma) guarda o que você quer fazer com a ideia; Abrir ideia completa mostra o texto, a imagem e o vídeo; Favoritar põe a ideia em Só favoritas, e Tirar das favoritas devolve ela pra Ver todas.',
+          },
+          review: {
+            title: 'Revisar',
+            body: 'Toda ideia absorvida espera uma decisão nesta faixa. Arraste pra direita pra favoritar, pra esquerda pra soltar. Sem pendências, ela some.',
+            ai: 'A faixa diz quantas ideias faltam revisar e, ao toque, abre a pilha. Soltar não apaga nada: a ideia continua em Ver todas.',
+          },
+          favorites: {
+            title: 'Favoritas',
+            body: '"Só favoritas" mostra as que você guardou. "Ver todas" mostra tudo que você já absorveu, até as soltas.',
+            ai: 'A tela abre em Só favoritas, e o cabeçalho conta as favoritas e as absorvidas.',
+          },
+          notes: {
+            title: 'Notas',
+            body: 'O que você quer fazer com a ideia. Só você vê. A carta com nota ganha um lápis no canto.',
+            ai: 'Pra escrever uma nota, segure a carta e toque em Anotar; numa carta que já tem nota, segurar mostra a nota e o botão de editar. A busca também procura nas notas.',
+          },
+          shelves: {
+            title: 'Áreas',
+            body: 'Uma fileira por área. Deslize pro lado pra ver mais.',
+            ai: 'As áreas são as dimensões do Perceva; cada fileira mostra o ícone, o nome e quantas ideias tem.',
+          },
+          search: {
+            title: 'Busca',
+            body: 'Procura no título, na resposta, na área e nas suas notas.',
+            ai: 'Ignora acentos e aceita um errinho de digitação. Enquanto há busca, a tela mostra todas as ideias, não só as favoritas.',
+          },
+        },
       },
       menu: {
         open: 'Abrir ideia completa',
@@ -1131,6 +1159,9 @@ const pt: Translations = {
   guide: {
     /** Label of the guide's last section, over the AI block. */
     aiLabel: 'Ainda com dúvida?',
+    /** The AI door's prompt (lib/guide buildGuidePrompt): the screen, what
+     *  it is for, one bullet per option WITH its mechanics, and the ask. */
+    prompt: 'Estou na tela {{screen}} do Perceva. {{purpose}}\n\nO que dá pra fazer nela:\n{{items}}\n\nUsando o conector Perceva, olhe os meus dados e me explique cada uma dessas opções, uma por uma e sem pular nenhuma, com exemplos {{examples}}.',
     aiTitle: 'Entenda com a IA',
     aiOn: 'O Claude explica esta tela com os seus dados',
     aiOff: 'Ative a IA nos ajustes pra usar',

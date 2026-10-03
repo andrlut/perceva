@@ -351,6 +351,7 @@ The publishable key is safe in client (RLS protects). The service_role key has b
 | Add a new screen | File under `app/app/`, register in `app/app/_layout.tsx` `<Stack>` |
 | Add a new API hook | File under `app/lib/api/<domain>.ts`; mirror existing hook patterns |
 | Add a new UI component | File under `app/components/`; use design tokens from `app/theme` |
+| Add or replicate a screen's (i) guide (informativo) | Follow `docs/informativo-de-tela.md`. Every option of the screen is an item in `<screen>.help.items.<key>.{title,body,ai}`; ONE ordered key list renders the sheet AND builds the AI prompt (`app/lib/guide.ts`), so no option can be missing from either. Reference: Minhas ideias (`CollectionGuide.tsx`) |
 | Tweak colors / spacing / radii | `app/theme/tokens.ts` (single source of truth — also reflected in `design/tokens.css`) |
 | Build an APK | `cd app && eas build --platform android --profile preview --non-interactive --no-wait` |
 | Ship JS-only hotfix to the Play Store app | `cd app && eas update --channel production` — prefer this over rebuild whenever no native code changed |
