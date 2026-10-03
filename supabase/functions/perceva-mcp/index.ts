@@ -289,7 +289,7 @@ async function rpc(
 
 function buildServer(token: string, userId: string): McpServer {
   const server = new McpServer(
-    { name: 'perceva-mcp', version: '0.4.6' },
+    { name: 'perceva-mcp', version: '0.4.7' },
     {
       instructions: [
         'Perceva is a habit/wellness app organized in 6 dimensions',
@@ -504,9 +504,11 @@ function buildServer(token: string, userId: string): McpServer {
       for (let d = from; daysBetween(d, to) >= 0; d = shiftDate(d, 1)) {
         const open = [], done = [], skipped = [];
         for (const t of tasks) {
-          if (daysBetween(t.since, d) < 0) continue;
           const key = `${t.id}|${d}`;
           const c = compBy.get(key);
+          // Before the practice existed it is never OPEN on a day — but a
+          // retro log filed there (the app allows it) still counts as done.
+          if (daysBetween(t.since, d) < 0 && !c) continue;
           const skipReason = skipBy.has(key) ? skipBy.get(key) : undefined;
           if (c) {
             done.push({ task_id: t.id, title: t.title, times: c.n, xp: c.xp });

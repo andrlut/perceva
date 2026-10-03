@@ -240,19 +240,18 @@ export default function AllPracticesScreen() {
   // day (weekly-all-7 is effectively daily and lives on Hoje). Kept separate
   // from the rendered list because it is what "does this user have any
   // non-daily practice at all?" must be answered with — see `hasAny`.
-  // Listing a task on a day before it existed would date a retro completion
-  // before its own created_at, corrupting the heatmap + Dedicação windows.
-  const recurringOwned = useMemo(() => {
-    const dayEnd = new Date(selectedDate);
-    dayEnd.setHours(23, 59, 59, 999);
-    return (tasks.data ?? []).filter(
-      (task) =>
-        !isEffectivelyDaily(task.recurrence) &&
-        (task.recurrence.type === 'weekly' ||
-          task.recurrence.type === 'monthly') &&
-        new Date(task.created_at).getTime() <= dayEnd.getTime(),
-    );
-  }, [tasks.data, selectedDate]);
+  // NOT gated by created_at: a practice created after the selected day can
+  // still be logged on it (completions are dated by completed_at /
+  // completed_local_date; nothing reads the practice's own created_at).
+  const recurringOwned = useMemo(
+    () =>
+      (tasks.data ?? []).filter(
+        (task) =>
+          !isEffectivelyDaily(task.recurrence) &&
+          (task.recurrence.type === 'weekly' || task.recurrence.type === 'monthly'),
+      ),
+    [tasks.data],
+  );
 
   // What actually renders: minus what's already done or skipped on the
   // selected day, minus what's optimistically hidden this frame. NOT

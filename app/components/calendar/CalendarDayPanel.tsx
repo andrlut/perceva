@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import { AppIcon } from '@/components/AppIcon';
 import { CompletedBucket, completionsToItems, type CompletedItem } from '@/components/CompletedBucket';
 import { DaySeal } from '@/components/DaySeal';
+import { LaterPracticesLabel } from '@/components/LaterPracticesLabel';
 import { DayXpStat } from '@/components/DayXpStat';
 import { MoodDayDetail } from '@/components/mood/MoodDayDetail';
 import { TaskCard } from '@/components/TaskCard';
@@ -148,6 +149,8 @@ export function CalendarDayPanel({
 
   // useDayDetail already applies the shared isOpenOnDay rule.
   const open = day.data?.openTasks ?? [];
+  // Created after this day: loggable here, never open (useDayDetail).
+  const later = day.data?.laterTasks ?? [];
   const doneItems: CompletedItem[] = completionsToItems(
     day.data?.completions ?? [],
     (id) => activeById.get(id),
@@ -228,6 +231,23 @@ export function CalendarDayPanel({
                 onEdit={() => onEdit(task)}
               />
             ))
+          )}
+
+          {later.length > 0 && (
+            <>
+              <LaterPracticesLabel />
+              {later.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  onComplete={() => onRetroComplete(task)}
+                  onSwipeComplete={() => onSwipeComplete(task)}
+                  onSkip={() => onSkip(task)}
+                  onLongPress={() => onLongPress(task)}
+                  onEdit={() => onEdit(task)}
+                />
+              ))}
+            </>
           )}
 
           <Pressable
