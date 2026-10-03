@@ -37,6 +37,7 @@ import { TaskCard } from '@/components/TaskCard';
 import { WeekStrip } from '@/components/WeekStrip';
 import { TASKS_FAB_CLEARANCE, TasksFabStack } from '@/components/TasksFabStack';
 import { TodayAmbient } from '@/components/TodayAmbient';
+import { DayRedemptionsCard } from '@/components/DayRedemptionsCard';
 import { DaySwipeZone } from '@/components/DaySwipeZone';
 import { InfoSheet } from '@/components/InfoSheet';
 import { TodayHeader } from '@/components/TodayHeader';
@@ -47,7 +48,7 @@ import {
   taskFromCompletionSnapshot,
   useDayDetail,
 } from '@/lib/api/history';
-import { todayDateKey, useTodayMood } from '@/lib/api/mood';
+import { todayDateKey, useMoodForDay, useTodayMood } from '@/lib/api/mood';
 import { useT } from '@/lib/i18n';
 import { useLoadedSettings } from '@/lib/settings';
 import { TourModule } from '@/components/tour/TourModule';
@@ -494,6 +495,9 @@ export default function HomeScreen() {
   // The header's (i): how the screen works — swipes and the hold, which
   // nothing on screen reveals.
   const [helpOpen, setHelpOpen] = useState(false);
+  // The day's mood for the header's shortcut face (same query key the mood
+  // surfaces write through, so a check-in lights it up).
+  const dayMood = useMoodForDay(selectedKey);
   const goToToday = () => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
@@ -1137,6 +1141,16 @@ export default function HomeScreen() {
               onNextDay={() => stepDay(1)}
               onResetToday={isToday ? undefined : goToToday}
               onInfo={() => setHelpOpen(true)}
+              coinsOfDay={dayDetail.data ? dayDetail.data.totalCoins : null}
+              mood={dayMood.data?.mood ?? null}
+              onMood={() => {
+                Haptics.selectionAsync().catch(() => {});
+                router.push(
+                  isToday
+                    ? '/mood-checkin'
+                    : { pathname: '/mood-checkin', params: { date: selectedKey } },
+                );
+              }}
             />
           </View>
         </DaySwipeZone>
@@ -1303,6 +1317,9 @@ export default function HomeScreen() {
                 <MoodDayDetail dateKey={selectedKey} />
               </View>
             )}
+
+            {/* Where the day's coins went — the Vault's side of the day. */}
+            <DayRedemptionsCard date={selectedDate} />
           </>
         )}
       </ScrollView>

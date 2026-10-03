@@ -24,6 +24,8 @@ export const rewardKeys = {
   templates: () => [...rewardKeys.all, 'templates'] as const,
   /** The flat redemption ledger (Resgates). */
   log: () => [...rewardKeys.all, 'log'] as const,
+  /** Redemptions of one local day (the Home's "Resgates do dia"). */
+  day: (dateKey: string) => [...rewardKeys.all, 'day', dateKey] as const,
   tracked: () => [...rewardKeys.all, 'tracked'] as const,
   gaps: () => [...rewardKeys.all, 'gaps'] as const,
   ownedOneShots: () => [...rewardKeys.all, 'ownedOneShots'] as const,
@@ -104,6 +106,29 @@ function useLocalizeRedemptions() {
     (rows: RedemptionRow[]): RedemptionEntry[] => rows.map((r) => mapRedemption(r, locale)),
     [locale],
   );
+}
+
+/** Redemptions filed on one LOCAL day (redeemed_at inside it), oldest first. */
+export function useRedemptionsForDay(date: Date) {
+  const start = new Date(date);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+  end.setHours(23, 59, 59, 999);
+  const key = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`;
+  return useQuery({
+    queryKey: rewardKeys.day(key),
+    queryFn: async (): Promise<RedemptionRow[]> => {
+      const { data, error } = await supabase
+        .from('reward_redemption')
+        .select(REDEMPTION_SELECT)
+        .gte('redeemed_at', start.toISOString())
+        .lte('redeemed_at', end.toISOString())
+        .order('redeemed_at', { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as unknown as RedemptionRow[];
+    },
+    select: useLocalizeRedemptions(),
+  });
 }
 
 /** The redemption ledger (Resgates): newest first, capped. */
@@ -607,6 +632,7 @@ export function useAddTemplateToShop() {
 function invalidateRedemptionSurfaces(qc: QueryClient) {
   void qc.invalidateQueries({ queryKey: characterKeys.me() });
   void qc.invalidateQueries({ queryKey: rewardKeys.log() });
+  void qc.invalidateQueries({ queryKey: [...rewardKeys.all, 'day'] });
   void qc.invalidateQueries({ queryKey: rewardKeys.gaps() });
   void qc.invalidateQueries({ queryKey: rewardKeys.ownedOneShots() });
   void qc.invalidateQueries({ queryKey: historyKeys.all });

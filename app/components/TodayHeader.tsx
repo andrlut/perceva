@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { CoinIcon } from '@/components/CoinIcon';
 import { DayXpStat } from '@/components/DayXpStat';
+import { MoodFace, MoodFacePlaceholder } from '@/components/mood/MoodFace';
 import { useT } from '@/lib/i18n';
 import { tokens } from '@/theme';
 
@@ -24,6 +26,12 @@ interface Props {
   /** Provided only when a past day is selected → tapping the date jumps
    *  straight back to today. */
   onResetToday?: () => void;
+  /** Coins earned on the selected day; `null` while loading (like xpOfDay). */
+  coinsOfDay: number | null;
+  /** The day's mood (1..5), or null when not logged yet. */
+  mood: 1 | 2 | 3 | 4 | 5 | null;
+  /** The mood shortcut on the right of the stat row — opens the check-in. */
+  onMood: () => void;
   /** The (i) in the top-right corner — how the screen works. */
   onInfo: () => void;
 }
@@ -32,7 +40,12 @@ interface Props {
  * Header for the V3 Tasks home / day-view.
  *
  *   Row 1: ‹ Segunda, Jul 27 ›                              (i)
- *   Row 2: ⚡ +240 XP                     (green glow; grey at 0)
+ *   Row 2: ⚡ +240 XP   🪙 +240                       ☺ Humor
+ *
+ * Row 2 is the day's three marks, always in view: XP and coins earned (glow
+ * when > 0, quiet grey at 0) and, on the right, the mood — the face of the
+ * day once it is logged, a dashed placeholder before; tapping it opens the
+ * check-in for the selected day.
  *
  * The date is the day selector: the arrows hug the date string (the next
  * arrow sits right after it, not at the screen edge), and the back arrow's
@@ -52,6 +65,9 @@ export function TodayHeader({
   onNextDay,
   canGoNext,
   onResetToday,
+  coinsOfDay,
+  mood,
+  onMood,
   onInfo,
 }: Props) {
   const { t } = useT();
@@ -102,18 +118,43 @@ export function TodayHeader({
 
         <View style={styles.spacer} />
 
+        {/* Just the glyph, no chip around it (owner, 2026-10-03). */}
         <Pressable
           onPress={onInfo}
-          hitSlop={8}
+          hitSlop={10}
           style={({ pressed }) => [styles.infoBtn, pressed && { opacity: 0.6 }]}
           accessibilityRole="button"
           accessibilityLabel={t('home.help.a11y')}
         >
-          <Ionicons name="information-circle-outline" size={22} color={tokens.text.hi} />
+          <Ionicons name="information-circle-outline" size={24} color={tokens.text.mid} />
         </Pressable>
       </View>
 
-      {xpOfDay !== null && <DayXpStat xp={xpOfDay} isToday={isToday} />}
+      <View style={styles.statsRow}>
+        {xpOfDay !== null && <DayXpStat xp={xpOfDay} isToday={isToday} />}
+        {coinsOfDay !== null && (
+          <View
+            style={styles.coinStat}
+            accessible
+            accessibilityRole="text"
+            accessibilityLabel={t('home.coinsOfDayA11y', { count: coinsOfDay })}
+          >
+            <CoinIcon size={20} />
+            <Text style={[styles.coinNum, coinsOfDay === 0 && styles.zero]}>+{coinsOfDay}</Text>
+          </View>
+        )}
+        <View style={styles.spacer} />
+        <Pressable
+          onPress={onMood}
+          hitSlop={8}
+          style={({ pressed }) => [styles.moodBtn, pressed && { opacity: 0.7 }]}
+          accessibilityRole="button"
+          accessibilityLabel={mood ? t('home.moodShortcut.editA11y') : t('home.moodShortcut.logA11y')}
+        >
+          {mood ? <MoodFace value={mood} size={30} active /> : <MoodFacePlaceholder size={30} />}
+          <Text style={styles.moodLabel}>{t('home.moodShortcut.label')}</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -161,13 +202,52 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: tokens.space[2],
   },
-  // Same 40px chip as the (i) on Minhas ideias.
+  // Glyph only — a 40px target, no fill.
   infoBtn: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    marginRight: -8,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: tokens.bg.surface,
+  },
+  // Tight on a 360dp phone with 4-digit numbers: wrap (mood drops to its
+  // own line) rather than clip.
+  statsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'flex-end',
+    columnGap: tokens.space[3],
+    rowGap: tokens.space[1],
+  },
+  coinStat: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 5,
+  },
+  coinNum: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 30,
+    lineHeight: 32,
+    color: tokens.semantic.coinLight,
+    letterSpacing: -0.5,
+    textShadowColor: tokens.semantic.coinGlow,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 12,
+  },
+  zero: {
+    color: tokens.text.dim,
+    textShadowColor: 'transparent',
+    textShadowRadius: 0,
+  },
+  moodBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    minHeight: 40,
+  },
+  moodLabel: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 13,
+    color: tokens.text.mid,
   },
 });
