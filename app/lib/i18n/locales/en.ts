@@ -1376,7 +1376,6 @@ const en = {
     },
     coinsOfDayA11y: '{{count}} coins on this day',
     moodShortcut: {
-      label: 'Mood',
       logA11y: "Log the day's mood",
       editA11y: "Edit the day's mood",
     },
@@ -1384,6 +1383,10 @@ const en = {
       title: "Day's redemptions",
       empty: 'No redemptions on this day.',
       openVault: 'Open the Vault',
+    },
+    allPracticesRow: {
+      title: 'All practices',
+      a11y: 'Open all practices',
     },
     laterPractices: {
       title: 'Created after this day',

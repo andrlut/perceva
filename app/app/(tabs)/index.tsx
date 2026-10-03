@@ -1252,6 +1252,30 @@ export default function HomeScreen() {
                 </>
               )}
 
+              {/* "Todas as práticas" — the FAB's door as a row in the list,
+                  styled like the Concluídas/Puladas drawers right under it
+                  (first users did not read the floating button as a way in).
+                  It opens the same screen the FAB does. */}
+              <Pressable
+                onPress={() => {
+                  Haptics.selectionAsync().catch(() => {});
+                  openAllPractices();
+                }}
+                style={({ pressed }) => [styles.allRow, pressed && { opacity: 0.85 }]}
+                accessibilityRole="button"
+                accessibilityLabel={t('home.allPracticesRow.a11y')}
+              >
+                <Ionicons name="albums-outline" size={16} color={tokens.brand.violet2} />
+                <Text style={styles.allRowTitle}>{t('home.allPracticesRow.title')}</Text>
+                {allActiveTasks.data ? (
+                  <View style={styles.allRowCount}>
+                    <Text style={styles.allRowCountText}>{allActiveTasks.data.length}</Text>
+                  </View>
+                ) : null}
+                <View style={{ flex: 1 }} />
+                <Ionicons name="chevron-forward" size={16} color={tokens.text.dim} />
+              </Pressable>
+
               {/* Completed drawer. On today it always renders — showWhenEmpty
                   keeps the tour's home.completed anchor a real, measurable
                   box on a fresh day (it used to measure a zero-size view),
@@ -1481,6 +1505,39 @@ const styles = StyleSheet.create({
   },
   // MoodDayDetail's own card carries no horizontal margin (it relies on its
   // History container), so this matches MoodHubStrip's outer box.
+  // Same chassis as CompletedBucket's header (wrap margins + header box).
+  allRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[2],
+    minHeight: 48,
+    marginHorizontal: tokens.space[3],
+    marginTop: tokens.space[2],
+    paddingHorizontal: tokens.space[3],
+    paddingVertical: tokens.space[3],
+    backgroundColor: tokens.bg.surface,
+    borderRadius: tokens.radius.lg,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+  },
+  allRowTitle: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 12,
+    color: tokens.text.mid,
+  },
+  allRowCount: {
+    backgroundColor: tokens.bg.surface2,
+    borderRadius: 999,
+    paddingHorizontal: 7,
+    paddingVertical: 1,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+  },
+  allRowCountText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 10,
+    color: tokens.brand.violet2,
+  },
   moodDayWrap: {
     marginHorizontal: tokens.space[4],
     marginTop: tokens.space[3],

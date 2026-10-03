@@ -54,12 +54,18 @@ interface Props {
    * Inactive: translucent disc, level-colored ring, neutral features.
    */
   active?: boolean;
+  /**
+   * Ghost: the face as a placeholder — dashed grey ring, faint features, no
+   * level color. The Home's mood shortcut uses level 4 this way until the
+   * day is logged.
+   */
+  ghost?: boolean;
 }
 
-export function MoodFace({ value, size = 48, active = false }: Props) {
+export function MoodFace({ value, size = 48, active = false, ghost = false }: Props) {
   const level = moodLevel(value);
   const spec = FACE_SPECS[value];
-  const stroke = active ? level.ink : tokens.text.mid;
+  const stroke = ghost ? tokens.text.dim : active ? level.ink : tokens.text.mid;
 
   return (
     <Svg width={size} height={size} viewBox="0 0 48 48">
@@ -67,9 +73,10 @@ export function MoodFace({ value, size = 48, active = false }: Props) {
         cx={24}
         cy={24}
         r={21}
-        fill={active ? level.color : 'rgba(255,255,255,0.03)'}
-        stroke={active ? level.color : `${level.color}99`}
+        fill={active && !ghost ? level.color : 'rgba(255,255,255,0.03)'}
+        stroke={ghost ? tokens.text.dim : active ? level.color : `${level.color}99`}
         strokeWidth={2}
+        strokeDasharray={ghost ? '4 4' : undefined}
       />
       {spec.dotEyes && (
         <>

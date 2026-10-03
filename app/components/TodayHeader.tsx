@@ -2,8 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { CoinIcon } from '@/components/CoinIcon';
-import { DayXpStat } from '@/components/DayXpStat';
-import { MoodFace, MoodFacePlaceholder } from '@/components/mood/MoodFace';
+import { MoodFace } from '@/components/mood/MoodFace';
 import { useT } from '@/lib/i18n';
 import { tokens } from '@/theme';
 
@@ -40,12 +39,16 @@ interface Props {
  * Header for the V3 Tasks home / day-view.
  *
  *   Row 1: ‹ Segunda, Jul 27 ›                              (i)
- *   Row 2: ⚡ +240 XP   🪙 +240                       ☺ Humor
+ *   Row 2: ⚡ 240            🪙 240                ☺
  *
- * Row 2 is the day's three marks, always in view: XP and coins earned (glow
- * when > 0, quiet grey at 0) and, on the right, the mood — the face of the
- * day once it is logged, a dashed placeholder before; tapping it opens the
- * check-in for the selected day.
+ * Row 2 is the day's three marks, always in view, in three EQUAL thirds
+ * (layout only, no dividers): XP on the left edge, coins centered, mood on
+ * the right edge under the (i). Glyph + bare number, no "+" and no unit;
+ * every glyph and figure is centered on one line (includeFontPadding off,
+ * so Android's font padding does not drop the number below its icon). The
+ * mood third is always the level-4 face: dashed grey until the day is
+ * logged, then that day's own face in color. Tapping it opens the check-in
+ * for the selected day.
  *
  * The date is the day selector: the arrows hug the date string (the next
  * arrow sits right after it, not at the screen edge), and the back arrow's
@@ -131,33 +134,70 @@ export function TodayHeader({
       </View>
 
       <View style={styles.statsRow}>
-        {xpOfDay !== null && <DayXpStat xp={xpOfDay} isToday={isToday} />}
-        {coinsOfDay !== null && (
-          <View
-            style={styles.coinStat}
-            accessible
-            accessibilityRole="text"
-            accessibilityLabel={t('home.coinsOfDayA11y', { count: coinsOfDay })}
-          >
-            <CoinIcon size={20} />
-            <Text style={[styles.coinNum, coinsOfDay === 0 && styles.zero]}>+{coinsOfDay}</Text>
-          </View>
-        )}
-        <View style={styles.spacer} />
-        <Pressable
-          onPress={onMood}
-          hitSlop={8}
-          style={({ pressed }) => [styles.moodBtn, pressed && { opacity: 0.7 }]}
-          accessibilityRole="button"
-          accessibilityLabel={mood ? t('home.moodShortcut.editA11y') : t('home.moodShortcut.logA11y')}
+        <View
+          style={[styles.third, styles.thirdStart]}
+          accessible
+          accessibilityRole="text"
+          accessibilityLabel={`${xpOfDay ?? 0} XP ${
+            isToday ? t('home.xpHero.today') : t('home.xpHero.thatDay')
+          }`}
         >
-          {mood ? <MoodFace value={mood} size={30} active /> : <MoodFacePlaceholder size={30} />}
-          <Text style={styles.moodLabel}>{t('home.moodShortcut.label')}</Text>
-        </Pressable>
+          {xpOfDay !== null && (
+            <>
+              <Ionicons
+                name="flash"
+                size={GLYPH}
+                color={xpOfDay > 0 ? tokens.semantic.xp : tokens.text.dim}
+              />
+              <Text style={[styles.num, styles.xpNum, xpOfDay === 0 && styles.zero]}>
+                {xpOfDay}
+              </Text>
+            </>
+          )}
+        </View>
+
+        <View
+          style={[styles.third, styles.thirdCenter]}
+          accessible
+          accessibilityRole="text"
+          accessibilityLabel={t('home.coinsOfDayA11y', { count: coinsOfDay ?? 0 })}
+        >
+          {coinsOfDay !== null && (
+            <>
+              <CoinIcon size={GLYPH} />
+              <Text style={[styles.num, styles.coinNum, coinsOfDay === 0 && styles.zero]}>
+                {coinsOfDay}
+              </Text>
+            </>
+          )}
+        </View>
+
+        <View style={[styles.third, styles.thirdEnd]}>
+          <Pressable
+            onPress={onMood}
+            hitSlop={10}
+            style={({ pressed }) => [styles.moodBtn, pressed && { opacity: 0.7 }]}
+            accessibilityRole="button"
+            accessibilityLabel={
+              mood ? t('home.moodShortcut.editA11y') : t('home.moodShortcut.logA11y')
+            }
+          >
+            {mood ? (
+              <MoodFace value={mood} size={FACE} active />
+            ) : (
+              <MoodFace value={4} size={FACE} ghost />
+            )}
+          </Pressable>
+        </View>
       </View>
     </View>
   );
 }
+
+/** Icon size of the XP and coin thirds; the face is drawn a touch larger so
+ *  its disc reads the same height as glyph + figure. */
+const GLYPH = 22;
+const FACE = 28;
 
 const styles = StyleSheet.create({
   wrap: {
@@ -210,29 +250,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // Tight on a 360dp phone with 4-digit numbers: wrap (mood drops to its
-  // own line) rather than clip.
   statsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'flex-end',
-    columnGap: tokens.space[3],
-    rowGap: tokens.space[1],
+    alignItems: 'center',
+    minHeight: 32,
   },
-  coinStat: {
+  third: {
+    flex: 1,
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 5,
+    alignItems: 'center',
+    gap: 6,
   },
-  coinNum: {
+  thirdStart: { justifyContent: 'flex-start' },
+  thirdCenter: { justifyContent: 'center' },
+  thirdEnd: { justifyContent: 'flex-end' },
+  num: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 30,
-    lineHeight: 32,
-    color: tokens.semantic.coinLight,
-    letterSpacing: -0.5,
-    textShadowColor: tokens.semantic.coinGlow,
+    fontSize: 24,
+    lineHeight: 28,
+    letterSpacing: -0.4,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 12,
+  },
+  xpNum: {
+    color: tokens.semantic.xp,
+    textShadowColor: tokens.semantic.xpGlow,
+  },
+  coinNum: {
+    color: tokens.semantic.coinLight,
+    textShadowColor: tokens.semantic.coinGlow,
   },
   zero: {
     color: tokens.text.dim,
@@ -240,14 +288,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 0,
   },
   moodBtn: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    minHeight: 40,
-  },
-  moodLabel: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 13,
-    color: tokens.text.mid,
+    justifyContent: 'center',
   },
 });
