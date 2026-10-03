@@ -55,6 +55,14 @@ interface TourState {
    * when that module finishes, on hydrate and on resetAll.
    */
   replaying: TourModule | null;
+  /**
+   * Route to open once the help module ends (the intro's "start with the
+   * self-assessment" choice). Persisted under its own key: the window
+   * between the choice and its use now spans the pack AND the help module,
+   * long enough for Android to kill the app.
+   */
+  afterOnboarding: string | null;
+  setAfterOnboarding: (href: string | null) => Promise<void>;
   hydrate: (characterId: string | null) => Promise<void>;
   setStatus: (module: TourModule, status: TourModuleStatus) => Promise<void>;
   setStepIndex: (module: TourModule, index: number) => void;
@@ -73,6 +81,19 @@ interface TourState {
 
 function storageKey(characterId: string | null): string {
   return `${KEY_PREFIX}${characterId ?? 'anonymous'}`;
+}
+
+function hopKey(characterId: string | null): string {
+  return `${KEY_PREFIX}after.${characterId ?? 'anonymous'}`;
+}
+
+async function persistHop(characterId: string | null, href: string | null): Promise<void> {
+  try {
+    if (href) await AsyncStorage.setItem(hopKey(characterId), href);
+    else await AsyncStorage.removeItem(hopKey(characterId));
+  } catch {
+    // Best-effort, like the module map.
+  }
 }
 
 async function persistModules(characterId: string | null, modules: ModuleMap): Promise<void> {
@@ -101,6 +122,15 @@ function migrateLegacy(raw: Record<string, TourEntry>): ModuleMap {
       updatedAt: m05?.updatedAt ?? m0.updatedAt,
     };
   }
+  // `settings` (Oct 2026) is a first-run module. An install that already
+  // answered the starter pack before it existed carries no entry, and a
+  // missing entry reads as pending — it would drop every onboarded user
+  // into the help tour (and hold useTourFinished false) on update. New runs
+  // can never reach this state: answering the pack writes `settings`
+  // pending in the same write (see setStatus).
+  if (!out.settings && isTerminal(out.pack?.status)) {
+    out.settings = { status: 'completed', updatedAt: new Date().toISOString() };
+  }
   // Every guided module done but the closing screen never marked: v1 only
   // stamped `wrap` from its button, so backing out of it left the tour
   // unfinished forever (mood prompt and OTA banner stay off). v2 can reach
@@ -125,6 +155,12 @@ export const useTourStore = create<TourState>((set, get) => ({
   modules: {},
   stepIndices: {},
   replaying: null,
+  afterOnboarding: null,
+
+  setAfterOnboarding: async (href) => {
+    set({ afterOnboarding: href });
+    await persistHop(get().characterId, href);
+  },
 
   hydrate: async (characterId) => {
     if (get().status === 'ready' && get().characterId === characterId) return;
@@ -133,14 +169,34 @@ export const useTourStore = create<TourState>((set, get) => ({
     try {
       const raw = await AsyncStorage.getItem(storageKey(characterId));
       const parsed = raw ? migrateLegacy(JSON.parse(raw) as Record<string, TourEntry>) : {};
-      set({ characterId, status: 'ready', modules: parsed, stepIndices: {}, replaying: null });
+      const hop = await AsyncStorage.getItem(hopKey(characterId));
+      set({
+        characterId,
+        status: 'ready',
+        modules: parsed,
+        stepIndices: {},
+        replaying: null,
+        afterOnboarding: hop,
+      });
     } catch {
-      set({ characterId, status: 'ready', modules: {}, stepIndices: {}, replaying: null });
+      set({
+        characterId,
+        status: 'ready',
+        modules: {},
+        stepIndices: {},
+        replaying: null,
+        afterOnboarding: null,
+      });
     }
   },
 
   setStatus: async (module, status) => {
     const next: ModuleMap = { ...get().modules, [module]: stamp(status) };
+    // Answering the pack queues the help module explicitly, so the
+    // migration above can tell this run from a pre-`settings` install.
+    if (module === 'pack' && isTerminal(status) && !next.settings) {
+      next.settings = stamp('pending');
+    }
     const replaying =
       get().replaying === module && isTerminal(status) ? null : get().replaying;
     set({ modules: next, replaying });
@@ -152,8 +208,9 @@ export const useTourStore = create<TourState>((set, get) => ({
   },
 
   resetAll: async () => {
-    set({ modules: {}, stepIndices: {}, replaying: null });
+    set({ modules: {}, stepIndices: {}, replaying: null, afterOnboarding: null });
     await persistModules(get().characterId, {});
+    await persistHop(get().characterId, null);
   },
 
   replayModule: async (module) => {

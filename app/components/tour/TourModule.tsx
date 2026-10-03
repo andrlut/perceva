@@ -22,7 +22,8 @@ export type TourScreen =
   | 'create'
   | 'rewards'
   | 'me'
-  | 'learn';
+  | 'learn'
+  | 'settings';
 
 /**
  * Step config extension with a screen tag — re-exported so modules can
@@ -88,6 +89,12 @@ interface Props {
    * reappears instead of the whole tour going silent behind the gate.
    */
   rewindOnFocus?: boolean;
+  /**
+   * A module nobody may skip (the help module): the tooltip drops both
+   * ways out ("Pular esta parte", "Sair do tour"). Only for short modules
+   * whose every step has a forward button.
+   */
+  required?: boolean;
   onComplete?: (outcome: 'completed' | 'skipped') => void;
 }
 
@@ -111,6 +118,7 @@ export function TourModule({
   onAdvanceToNextScreen,
   flatNav = false,
   rewindOnFocus = false,
+  required = false,
   onComplete,
 }: Props) {
   const status = useModuleStatus(module);
@@ -262,8 +270,8 @@ export function TourModule({
       stepIndex={stepIndex + 1}
       totalSteps={steps.length}
       onNext={handleNext}
-      onSkip={handleSkip}
-      onExitTour={handleExitTour}
+      onSkip={required ? undefined : handleSkip}
+      onExitTour={required ? undefined : handleExitTour}
       onSkipStep={step.assistSkipsToSameScreen ? handleAssistSkip : undefined}
     />
   );

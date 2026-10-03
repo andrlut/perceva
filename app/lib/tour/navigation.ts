@@ -1,14 +1,17 @@
 import { router, type Href } from 'expo-router';
 
+import { SETTINGS_MODULE } from './constants';
+import { getCurrentTourModule, useTourStore } from './store';
+
 /**
  * Where to go right after landing on Home once onboarding ends — set by the
  * intro's "start with the self-assessment" choice, consumed (once) by
- * exitTourToHome. In memory only: a killed app simply lands on Home.
+ * exitTourToHome — or by the help module's end when that one is still to
+ * run, since it comes first. Persisted by the tour store, so a killed app
+ * still lands where the user asked.
  */
-let afterHome: Href | null = null;
-
-export function setAfterOnboarding(href: Href | null): void {
-  afterHome = href;
+export function setAfterOnboarding(href: string | null): void {
+  void useTourStore.getState().setAfterOnboarding(href);
 }
 
 /**
@@ -29,7 +32,16 @@ export function exitTourToHome(): void {
   } else {
     router.replace('/(tabs)');
   }
-  const next = afterHome;
-  afterHome = null;
+  // The mandatory help module (Ajustes) runs first; it hands the hop over
+  // when it ends (takeAfterOnboarding).
+  if (getCurrentTourModule() === SETTINGS_MODULE) return;
+  const next = takeAfterOnboarding();
   if (next) router.push(next);
+}
+
+/** Read-and-clear the pending after-onboarding destination. */
+export function takeAfterOnboarding(): Href | null {
+  const next = useTourStore.getState().afterOnboarding;
+  if (next) void useTourStore.getState().setAfterOnboarding(null);
+  return next as Href | null;
 }
