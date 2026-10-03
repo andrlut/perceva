@@ -1129,6 +1129,8 @@ const pt: Translations = {
   /** A screen's guide, the (i) sheet (components/guide). The AI door is the
    *  first thing in it and never hides: off = grey, and it leads to Ajustes. */
   guide: {
+    /** Label of the guide's last section, over the AI block. */
+    aiLabel: 'Ainda com dúvida?',
     aiTitle: 'Entenda com a IA',
     aiOn: 'O Claude explica esta tela com os seus dados',
     aiOff: 'Ative a IA nos ajustes pra usar',

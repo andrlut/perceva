@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { GuideAiButton } from '@/components/guide/GuideAiButton';
+import { GuideAiButton, GuideAiIcon } from '@/components/guide/GuideAiButton';
+import { GuideLabel } from '@/components/guide/GuideStep';
 import { useT } from '@/lib/i18n';
 import { tokens } from '@/theme';
 
@@ -14,8 +15,9 @@ interface Props {
   /** Optional accent color for the title text + close icon. */
   accent?: string;
   /**
-   * A screen's guide: the question the AI door sends. Present → the
-   * GuideAiButton is the FIRST thing under the title, outside the scroll.
+   * A screen's guide: the question the AI door sends. Present → a fixed AI
+   * circle beside the close X, and the full AI block as the guide's LAST
+   * section, after `children`.
    */
   aiPrompt?: string;
   /** Rich guide content (GuideStep rows, a playground), after the body. */
@@ -28,16 +30,18 @@ interface Props {
  * native dialog was failing to show on some devices.
  *
  * Two uses, one chassis. A field's (i) passes `body`. A SCREEN's (i) — its
- * guide — passes `aiPrompt` and `children`: the AI door first (never hidden;
- * grey and pointing at Ajustes while the AI is off), then the steps
- * (components/guide, the Minhas ideias guide is the template).
+ * guide — passes `children` and `aiPrompt`: the steps first (components/
+ * guide; the Minhas ideias guide is the template), the AI block last, and
+ * an AI circle fixed beside the X. The guide teaches better than the AI, so
+ * the AI ends the sheet instead of opening it; neither AI door ever hides
+ * (grey and pointing at Ajustes while the AI is off).
  *
  * `**palavra**` in the body renders bold (the one markup it reads): the
  * key word of each paragraph in bold lets the reader scan what can be done
  * — tap, hold, favorites — without reading the rest.
  *
- * The body scrolls when it outgrows the screen (header, AI door and button
- * stay put). The sheet is a plain View with the scrim as an absoluteFill
+ * The body scrolls when it outgrows the screen (header and button stay
+ * put). The sheet is a plain View with the scrim as an absoluteFill
  * sibling behind it: a Pressable sheet would take the touch responder and
  * kill the ScrollView's native scroll.
  *
@@ -74,25 +78,37 @@ export function InfoSheet({
             <Text style={[styles.title, { color: accent }]} numberOfLines={2}>
               {title}
             </Text>
-            <Pressable
-              onPress={onClose}
-              style={({ pressed }) => [
-                styles.closeBtn,
-                pressed && { opacity: 0.6 },
-              ]}
-              hitSlop={10}
-            >
-              <Ionicons name="close" size={20} color={tokens.text.mid} />
-            </Pressable>
+            <View style={styles.headerActions}>
+              {aiPrompt ? <GuideAiIcon prompt={aiPrompt} onLeave={onClose} /> : null}
+              <Pressable
+                onPress={onClose}
+                style={({ pressed }) => [
+                  styles.closeBtn,
+                  pressed && { opacity: 0.6 },
+                ]}
+                // Inner side trimmed when the AI circle sits beside it, so
+                // the two hit areas never overlap.
+                hitSlop={aiPrompt ? { top: 10, bottom: 10, left: 4, right: 10 } : 10}
+                accessibilityRole="button"
+                accessibilityLabel={t('common.close')}
+              >
+                <Ionicons name="close" size={20} color={tokens.text.mid} />
+              </Pressable>
+            </View>
           </View>
-          {aiPrompt ? <GuideAiButton prompt={aiPrompt} onLeave={onClose} /> : null}
           <ScrollView
             style={styles.bodyScroll}
-            contentContainerStyle={children ? styles.guide : undefined}
+            contentContainerStyle={children || aiPrompt ? styles.guide : undefined}
             showsVerticalScrollIndicator={false}
           >
             {body ? <Text style={styles.body}>{renderBold(body)}</Text> : null}
             {children}
+            {aiPrompt ? (
+              <View style={styles.aiEnd}>
+                <GuideLabel>{t('guide.aiLabel')}</GuideLabel>
+                <GuideAiButton prompt={aiPrompt} onLeave={onClose} />
+              </View>
+            ) : null}
           </ScrollView>
           <Pressable
             onPress={onClose}
@@ -148,6 +164,13 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: tokens.space[3],
   },
+  // The AI circle and the X, side by side; 10px apart so their trimmed
+  // inner hit areas (4px each) never meet.
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
   title: {
     flex: 1,
     fontFamily: 'Manrope_800ExtraBold',
@@ -170,6 +193,11 @@ const styles = StyleSheet.create({
   guide: {
     gap: tokens.space[4],
     paddingBottom: tokens.space[1],
+  },
+  // The guide's last section: its label sits close to the block.
+  aiEnd: {
+    gap: tokens.space[2],
+    marginTop: tokens.space[1],
   },
   body: {
     fontFamily: 'Manrope_500Medium',
