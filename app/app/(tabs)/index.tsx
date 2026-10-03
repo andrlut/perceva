@@ -1236,8 +1236,8 @@ export default function HomeScreen() {
                 >
                   <Ionicons
                     name="checkmark-done-outline"
-                    size={15}
-                    color={tokens.text.dim}
+                    size={16}
+                    color={tokens.brand.violet2}
                   />
                   <Text style={styles.clearDayText}>
                     {t('home.clearDay.cta')}
@@ -1343,7 +1343,10 @@ export default function HomeScreen() {
             )}
 
             {/* Where the day's coins went — the Vault's side of the day. */}
-            <DayRedemptionsCard date={selectedDate} />
+            <DayRedemptionsCard
+              date={selectedDate}
+              dayLabel={`${hero.weekday} ${hero.monthDay}`}
+            />
           </>
         )}
       </ScrollView>
@@ -1542,21 +1545,26 @@ const styles = StyleSheet.create({
     marginHorizontal: tokens.space[4],
     marginTop: tokens.space[3],
   },
-  // "Fechar o dia" — deliberately low-prominence: no fill, dim text,
-  // centered under the last card so it reads as a quiet exit, not a CTA.
+  // "Fechar o dia" — a real button now (it read as dead text): the violet
+  // outline of the app's secondary actions, full width like the drawer rows
+  // under it.
   clearDayBtn: {
     flexDirection: 'row',
-    alignSelf: 'center',
     alignItems: 'center',
-    gap: 6,
-    paddingVertical: tokens.space[2],
-    paddingHorizontal: tokens.space[3],
-    marginTop: tokens.space[1],
+    justifyContent: 'center',
+    gap: 8,
+    minHeight: 44,
+    marginHorizontal: tokens.space[3],
+    marginTop: tokens.space[2],
+    borderRadius: tokens.radius.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(155, 130, 255, 0.45)',
+    backgroundColor: 'rgba(123, 92, 255, 0.12)',
   },
   clearDayText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
-    color: tokens.text.dim,
-    letterSpacing: 0.3,
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 13,
+    color: tokens.brand.violet2,
+    letterSpacing: 0.2,
   },
 });
