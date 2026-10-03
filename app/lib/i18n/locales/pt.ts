@@ -1371,7 +1371,6 @@ const pt: Translations = {
     },
     coinsOfDayA11y: '{{count}} moedas neste dia',
     moodShortcut: {
-      label: 'Humor',
       logA11y: 'Registrar o humor do dia',
       editA11y: 'Editar o humor do dia',
     },
@@ -1379,6 +1378,10 @@ const pt: Translations = {
       title: 'Resgates do dia',
       empty: 'Nenhum resgate neste dia.',
       openVault: 'Abrir a Vault',
+    },
+    allPracticesRow: {
+      title: 'Todas as práticas',
+      a11y: 'Abrir todas as práticas',
     },
     laterPractices: {
       title: 'Criadas depois deste dia',
