@@ -1315,6 +1315,10 @@ const pt: Translations = {
       emptyRecurring: 'Você ainda não tem cadências.',
       recurringLead: 'Cadências ativas',
     },
+    laterPractices: {
+      title: 'Criadas depois deste dia',
+      caption: 'Dá pra registrar aqui; não contam pro dia fechado.',
+    },
     completedBucket: {
       daily: 'Feitas hoje',
       weekly: 'Feitas nesta semana',

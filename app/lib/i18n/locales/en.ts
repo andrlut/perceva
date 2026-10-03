@@ -1320,6 +1320,10 @@ const en = {
       emptyRecurring: 'No cadences set up yet.',
       recurringLead: 'Active cadences',
     },
+    laterPractices: {
+      title: 'Created after this day',
+      caption: "You can log them here; they don't count toward closing the day.",
+    },
     completedBucket: {
       daily: 'Done today',
       weekly: 'Done this week',

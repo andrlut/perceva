@@ -207,6 +207,16 @@ export interface DayDetail {
    * every consumer) so this list is directly renderable.
    */
   openTasks: TaskWithSubs[];
+  /**
+   * Active practices CREATED AFTER this day, not completed or skipped on it —
+   * loggable on the day ("fiz yoga sexta e só criei a prática no sábado"),
+   * never "open". They stay out of `openTasks` so a practice created today
+   * does not reopen every past day the user had closed (DaySeal); the day
+   * views show them in their own block. No schedule filter: a practice that
+   * did not exist yet had no schedule on that day — any of them can be
+   * logged. Always empty for today.
+   */
+  laterTasks: TaskWithSubs[];
   /** Tasks skipped on this specific day (task_skip rows). Each entry is
    *  hydrated to the live task; rows whose task no longer exists are
    *  filtered out. Used by the History "Skipped" drawer and the day
@@ -314,20 +324,23 @@ export function useDayDetail(date: Date, weekStart: WeekStart = 'monday') {
         );
       });
 
-      // Active tasks created on or before this day. Ordered by the
-      // user's drag-reorder sort_order (set on the /tasks Alocadas
-      // screen) so the History day view follows the same sequence as
-      // the home buckets — created_at is the defensive tiebreaker.
+      // Every active task, in the user's drag-reorder sort_order (set on the
+      // /tasks screen) so the day view follows the home buckets' sequence —
+      // created_at is the defensive tiebreaker. Split below: tasks that
+      // already existed on the day can be OPEN on it; the ones created
+      // later are only loggable (`laterTasks`).
       const { data: tasks, error: taskErr } = await supabase
         .from('task')
         .select('*, task_sub(sub_id, stars)')
         .eq('is_archived', false)
-        .lte('created_at', dayEnd.toISOString())
         .order('sort_order', { ascending: true })
         .order('created_at', { ascending: true });
       if (taskErr) throw taskErr;
 
-      const taskRows = (tasks ?? []) as TaskRowFull[];
+      const allRows = (tasks ?? []) as TaskRowFull[];
+      const existed = (t: TaskRowFull) =>
+        new Date(t.created_at).getTime() <= dayEnd.getTime();
+      const taskRows = allRows.filter(existed);
 
       // Skips for the selected day — tasks the user explicitly opted
       // out of go to the Skipped drawer, not the open list.
@@ -369,10 +382,27 @@ export function useDayDetail(date: Date, weekStart: WeekStart = 'monday') {
         if (t) skipped.push(t);
       }
 
+      // Created after the day: loggable there, never open (see DayDetail).
+      // Skips are looked up across every task, not just the ones that
+      // existed — a skip filed on such a day must still hide the card.
+      const laterTasks: TaskWithSubs[] = allRows
+        .filter(
+          (t) =>
+            !existed(t) &&
+            (completionCountThisDay.get(t.id) ?? 0) === 0 &&
+            !skippedThisDayIds.has(t.id),
+        )
+        .map((t) => hydrateTask(t, parseRecurrence(t.recurrence)));
+      for (const id of skippedThisDayIds) {
+        if (tasksById.has(id)) continue;
+        const raw = allRows.find((t) => t.id === id);
+        if (raw) skipped.push(hydrateTask(raw, parseRecurrence(raw.recurrence)));
+      }
+
       const totalXp = completions.reduce((s, c) => s + c.xpGranted, 0);
       const totalCoins = completions.reduce((s, c) => s + c.coinsGranted, 0);
 
-      return { dateKey, completions, openTasks, skipped, totalXp, totalCoins };
+      return { dateKey, completions, openTasks, laterTasks, skipped, totalXp, totalCoins };
     },
   });
 }

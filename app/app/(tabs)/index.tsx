@@ -20,6 +20,7 @@ import { useBottomNavClearance } from '@/components/BottomNavBar';
 import { CompleteTaskSheet } from '@/components/CompleteTaskSheet';
 import { DayClearedCelebration } from '@/components/DayClearedCelebration';
 import { DaySeal } from '@/components/DaySeal';
+import { LaterPracticesLabel } from '@/components/LaterPracticesLabel';
 import { MoodCheckinPrompt } from '@/components/MoodCheckinPrompt';
 import { MoodDayDetail } from '@/components/mood/MoodDayDetail';
 import { MoodHubStrip } from '@/components/mood/MoodHubStrip';
@@ -571,6 +572,14 @@ export default function HomeScreen() {
   const pastOpen = useMemo<TaskWithSubs[]>(() => {
     if (isToday || !dayDetail.data) return [];
     return dayDetail.data.openTasks.filter((task) => !retroHidden.has(task.id));
+  }, [isToday, dayDetail.data, retroHidden]);
+
+  // Practices created after the selected day: loggable on it, never open —
+  // they live in their own block under the list and stay out of DaySeal, so
+  // creating a practice today does not reopen every closed past day.
+  const pastLater = useMemo<TaskWithSubs[]>(() => {
+    if (isToday || !dayDetail.data) return [];
+    return dayDetail.data.laterTasks.filter((task) => !retroHidden.has(task.id));
   }, [isToday, dayDetail.data, retroHidden]);
 
   // Every completion the day's XP hero counts must also appear here, so the
@@ -1204,6 +1213,13 @@ export default function HomeScreen() {
                     {t('home.clearDay.cta')}
                   </Text>
                 </Pressable>
+              )}
+
+              {pastLater.length > 0 && (
+                <>
+                  <LaterPracticesLabel />
+                  {pastLater.map((task) => renderTaskCard(task, false))}
+                </>
               )}
 
               {/* Completed drawer. On today it always renders — showWhenEmpty

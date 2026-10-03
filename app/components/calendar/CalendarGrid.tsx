@@ -193,39 +193,51 @@ export function CalendarGrid({
             if (!matched) parts.push(t('a11y.dayCellFiltered'));
 
             return (
-              <Pressable
-                key={key}
-                onPress={() => !isFuture && onSelectDay(cell)}
-                disabled={isFuture}
-                accessibilityRole="button"
-                accessibilityState={{ selected: isSelected, disabled: isFuture }}
-                accessibilityLabel={parts.join(' · ')}
-                style={[
-                  styles.cell,
-                  { backgroundColor: paint.bg, borderColor: paint.border },
-                  isToday && [styles.cellToday, { borderColor: paint.ink }],
-                  isSelected && [styles.cellSelected, { borderColor: paint.ink }],
-                  isFuture && styles.cellFuture,
-                  !matched && !isFuture && { opacity: FILTERED_OUT_OPACITY },
-                ]}
-              >
-                <Text
-                  allowFontScaling={false}
-                  style={[styles.dayNum, { color: paint.inkDim }]}
+              <View key={key} style={styles.cellWrap}>
+                <Pressable
+                  onPress={() => !isFuture && onSelectDay(cell)}
+                  disabled={isFuture}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isSelected, disabled: isFuture }}
+                  accessibilityLabel={parts.join(' · ')}
+                  style={[
+                    styles.cell,
+                    { backgroundColor: paint.bg, borderColor: paint.border },
+                    isToday && [styles.cellToday, { borderColor: paint.ink }],
+                    isFuture && styles.cellFuture,
+                    !matched && !isFuture && { opacity: FILTERED_OUT_OPACITY },
+                  ]}
                 >
-                  {cell.getDate()}
-                </Text>
+                  <Text
+                    allowFontScaling={false}
+                    style={[styles.dayNum, { color: paint.inkDim }]}
+                  >
+                    {cell.getDate()}
+                  </Text>
 
-                <CellFigure day={day} xp={xp} front={front} paint={paint} isFuture={isFuture} />
+                  <CellFigure day={day} xp={xp} front={front} paint={paint} isFuture={isFuture} />
 
-                {!isFuture && (
-                  <CellMarks day={day} front={front} paint={paint} tagEmojis={tagEmojis} />
+                  {!isFuture && (
+                    <CellMarks day={day} front={front} paint={paint} tagEmojis={tagEmojis} />
+                  )}
+
+                  {!isFuture && front !== 'vault' && day?.hasNote && (
+                    <View style={[styles.notePip, { backgroundColor: paint.inkDim }]} />
+                  )}
+                </Pressable>
+                {/* The selection ring is a SIBLING drawn over the cell, not the
+                    cell's own border: a border in the cell's ink vanished on
+                    some fills and faded with a filtered-out day, and on Android
+                    a border-only style change on the Pressable was sometimes not
+                    repainted until the next render — "às vezes aparece".
+                    Two tones (text.hi outside, a dark hairline inside) read on
+                    every ramp, light or dark. */}
+                {isSelected && (
+                  <View pointerEvents="none" style={styles.selRing}>
+                    <View style={styles.selRingInner} />
+                  </View>
                 )}
-
-                {!isFuture && front !== 'vault' && day?.hasNote && (
-                  <View style={[styles.notePip, { backgroundColor: paint.inkDim }]} />
-                )}
-              </Pressable>
+              </View>
             );
           })}
         </View>
@@ -418,9 +430,22 @@ const styles = StyleSheet.create({
   // Both rings take the cell's own ink at render time: no fixed color survives
   // three palettes, and the two obvious candidates are the two worst — violet
   // vanishes on the intensity ramp it belongs to, and white vanishes on the top
-  // of the mood ramp. Width is what separates today from selected.
+  // of the mood ramp. Today keeps the ink ring; selection is the two-tone
+  // overlay (`selRing`) instead.
   cellToday: { borderWidth: 1.5 },
-  cellSelected: { borderWidth: 2 },
+  cellWrap: { flex: 1, height: CELL_HEIGHT },
+  selRing: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 9,
+    borderWidth: 2,
+    borderColor: tokens.text.hi,
+  },
+  selRingInner: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 7,
+    borderWidth: 1,
+    borderColor: 'rgba(10, 14, 38, 0.55)',
+  },
   cellFuture: { opacity: 0.3 },
   notePip: {
     position: 'absolute',
