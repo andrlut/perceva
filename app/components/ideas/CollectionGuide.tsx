@@ -16,16 +16,24 @@ import { FilterPill, IdeaSearchBox, ReviewStrip } from '@/components/ideas/Colle
 import { IdeaCard } from '@/components/ideas/IdeaCard';
 import type { ShelfCard } from '@/components/ideas/IdeaShelf';
 import type { DimensionId } from '@/lib/db/types';
+import { buildGuidePrompt, guideItems } from '@/lib/guide';
 import { useT } from '@/lib/i18n';
 import type { IdeaLocale } from '@/lib/ideas';
 import { tokens } from '@/theme';
 import { DIMENSION_META } from '@/theme/dimensions';
 
 /**
- * The guide of "Minhas ideias" — what fills its (i) sheet, under the AI
- * door. The template every screen's guide follows: the gestures first, on a
- * live element; then one GuideStep per thing on the screen, each with a
- * replica drawn by the screen's own components (CollectionControls).
+ * The guide of "Minhas ideias" — what fills its (i) sheet. THE REFERENCE
+ * for every screen's guide (docs/informativo-de-tela.md): the gestures
+ * first, on a live element; then one GuideStep per thing on the screen,
+ * each with a replica drawn by the screen's own components
+ * (CollectionControls); the AI block closes the sheet (InfoSheet).
+ *
+ * Built on ONE ordered list of the screen's options, COLLECTION_GUIDE_ITEMS.
+ * The sheet renders every key — tap and hold in the playground, the rest as
+ * steps, each step typed by its key so a new key will not compile without
+ * its row — and useCollectionGuidePrompt builds the AI prompt from the same
+ * keys (lib/guide). An option is in both, or in neither.
  *
  * "Na carta" is a playground: a REAL card from the person's shelf (their
  * first favorite, else their first idea; a sample when the shelf is empty),
@@ -34,6 +42,50 @@ import { DIMENSION_META } from '@/theme/dimensions';
  * right here — the real menu is a sheet of its own and would stack on this
  * one. A pulsing hand sits on the card until the first try.
  */
+
+/** i18n root of this guide: `<HELP>.items.<key>.{title,body,ai}`. */
+const HELP = 'learning.ideas.help';
+
+/**
+ * Every option of "Minhas ideias", in the guide's order. Adding an option
+ * = a key here + its item in both locales + its row (GESTURE_ICONS or the
+ * `steps` record below, which the compiler holds to this list).
+ */
+export const COLLECTION_GUIDE_ITEMS = [
+  'tap',
+  'hold',
+  'review',
+  'favorites',
+  'notes',
+  'shelves',
+  'search',
+] as const;
+
+type ItemKey = (typeof COLLECTION_GUIDE_ITEMS)[number];
+type GestureKey = Extract<ItemKey, 'tap' | 'hold'>;
+type StepKey = Exclude<ItemKey, GestureKey>;
+
+const isGesture = (k: ItemKey): k is GestureKey => k === 'tap' || k === 'hold';
+
+const GESTURE_ICONS: Record<GestureKey, keyof typeof Ionicons.glyphMap> = {
+  tap: 'sync-outline',
+  hold: 'finger-print-outline',
+};
+
+/** The AI door's prompt for this screen — every item, with its mechanics. */
+export function useCollectionGuidePrompt(): string {
+  const { t } = useT();
+  return useMemo(
+    () =>
+      buildGuidePrompt(t, {
+        screen: t(`${HELP}.screenName`),
+        purpose: t(`${HELP}.purpose`),
+        examples: t(`${HELP}.examples`),
+        items: guideItems(t, HELP, COLLECTION_GUIDE_ITEMS),
+      }),
+    [t],
+  );
+}
 
 /** Demo card width: a shelf card scaled down, still legible at 4:5. */
 const DEMO_WIDTH = 116;
@@ -53,8 +105,8 @@ export function CollectionGuide({ demoCard, pendingCount, shelf, locale }: Colle
   const [tried, setTried] = useState(false);
   const [menuShown, setMenuShown] = useState(false);
 
-  const sampleTitle = t('learning.ideas.help.sampleTitle');
-  const sampleClaim = t('learning.ideas.help.sampleClaim');
+  const sampleTitle = t(`${HELP}.sampleTitle`);
+  const sampleClaim = t(`${HELP}.sampleClaim`);
   const card = useMemo<ShelfCard & { favorite?: boolean }>(
     () =>
       demoCard ?? {
@@ -73,9 +125,50 @@ export function CollectionGuide({ demoCard, pendingCount, shelf, locale }: Colle
     [demoCard, shelf.dimensionId, sampleTitle, sampleClaim],
   );
 
+  // One row per step key; the Record type makes a missing row a compile error.
+  const steps: Record<
+    StepKey,
+    { icon: keyof typeof Ionicons.glyphMap; iconColor?: string; replica: React.ReactNode }
+  > = {
+    review: {
+      icon: 'layers-outline',
+      replica: (
+        <>
+          <ReviewStrip count={pendingCount > 0 ? pendingCount : 3} />
+          <SwipeHint />
+        </>
+      ),
+    },
+    favorites: {
+      icon: 'star',
+      iconColor: tokens.semantic.coin,
+      replica: (
+        <View style={styles.pills}>
+          <FilterPill label={t('learning.ideas.review.onlyFavorites')} iconName="star" active />
+          <FilterPill label={t('learning.ideas.review.showAll')} active={false} />
+        </View>
+      ),
+    },
+    notes: {
+      icon: 'create-outline',
+      replica: <NoteHint dimensionId={shelf.dimensionId} />,
+    },
+    shelves: {
+      icon: 'albums-outline',
+      replica: <ShelfHint {...shelf} />,
+    },
+    search: {
+      icon: 'search',
+      replica: <IdeaSearchBox value="" />,
+    },
+  };
+
+  const gestureKeys = COLLECTION_GUIDE_ITEMS.filter(isGesture);
+  const stepKeys = COLLECTION_GUIDE_ITEMS.filter((k): k is StepKey => !isGesture(k));
+
   return (
     <>
-      <GuideLabel>{t('learning.ideas.help.cardLabel')}</GuideLabel>
+      <GuideLabel>{t(`${HELP}.cardLabel`)}</GuideLabel>
       <View style={styles.demo}>
         <View>
           <IdeaCard
@@ -94,68 +187,33 @@ export function CollectionGuide({ demoCard, pendingCount, shelf, locale }: Colle
           {!tried && <TapHint />}
         </View>
         <View style={styles.gestures}>
-          <Text style={styles.tryIt}>{t('learning.ideas.help.tryIt')}</Text>
-          <Gesture
-            icon="sync-outline"
-            title={t('learning.ideas.help.tapTitle')}
-            body={t('learning.ideas.help.tapBody')}
-          />
-          <Gesture
-            icon="finger-print-outline"
-            title={t('learning.ideas.help.holdTitle')}
-            body={t('learning.ideas.help.holdBody')}
-          />
+          <Text style={styles.tryIt}>{t(`${HELP}.tryIt`)}</Text>
+          {gestureKeys.map((k) => (
+            <Gesture
+              key={k}
+              icon={GESTURE_ICONS[k]}
+              title={t(`${HELP}.items.${k}.title`)}
+              body={t(`${HELP}.items.${k}.body`)}
+            />
+          ))}
         </View>
       </View>
 
       {menuShown && <MenuReplica favorite={card.favorite === true} hasNote={!!card.note} />}
 
-      <GuideLabel>{t('learning.ideas.help.screenLabel')}</GuideLabel>
+      <GuideLabel>{t(`${HELP}.screenLabel`)}</GuideLabel>
 
-      <GuideStep
-        icon="layers-outline"
-        title={t('learning.ideas.help.reviewTitle')}
-        body={t('learning.ideas.help.reviewBody')}
-      >
-        <ReviewStrip count={pendingCount > 0 ? pendingCount : 3} />
-        <SwipeHint />
-      </GuideStep>
-
-      <GuideStep
-        icon="star"
-        iconColor={tokens.semantic.coin}
-        title={t('learning.ideas.help.favoritesTitle')}
-        body={t('learning.ideas.help.favoritesBody')}
-      >
-        <View style={styles.pills}>
-          <FilterPill label={t('learning.ideas.review.onlyFavorites')} iconName="star" active />
-          <FilterPill label={t('learning.ideas.review.showAll')} active={false} />
-        </View>
-      </GuideStep>
-
-      <GuideStep
-        icon="create-outline"
-        title={t('learning.ideas.help.notesTitle')}
-        body={t('learning.ideas.help.notesBody')}
-      >
-        <NoteHint dimensionId={shelf.dimensionId} />
-      </GuideStep>
-
-      <GuideStep
-        icon="albums-outline"
-        title={t('learning.ideas.help.shelvesTitle')}
-        body={t('learning.ideas.help.shelvesBody')}
-      >
-        <ShelfHint {...shelf} />
-      </GuideStep>
-
-      <GuideStep
-        icon="search"
-        title={t('learning.ideas.help.searchTitle')}
-        body={t('learning.ideas.help.searchBody')}
-      >
-        <IdeaSearchBox value="" />
-      </GuideStep>
+      {stepKeys.map((k) => (
+        <GuideStep
+          key={k}
+          icon={steps[k].icon}
+          iconColor={steps[k].iconColor}
+          title={t(`${HELP}.items.${k}.title`)}
+          body={t(`${HELP}.items.${k}.body`)}
+        >
+          {steps[k].replica}
+        </GuideStep>
+      ))}
     </>
   );
 }

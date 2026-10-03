@@ -808,32 +808,60 @@ const en = {
       myIdeasEmpty: 'Flip the card at the end of an idea to keep it here.',
       searchPlaceholder: 'Search your ideas',
       searchEmpty: 'None of your ideas match “{{query}}”.',
-      /** The screen's guide (its (i)) — CollectionGuide. `aiPrompt` is what
-       *  the AI door sends; no personal data, only the question. */
+      /** The screen's guide (its (i)) — the MODEL every screen follows
+       *  (docs/informativo-de-tela.md, lib/guide). `items` are the screen's
+       *  options in CollectionGuide's order: title + body are what the sheet
+       *  shows, `ai` is the extra only the AI prompt carries. screenName,
+       *  purpose and examples frame that prompt. No personal data here. */
       help: {
         title: 'How My ideas works',
         a11y: 'How My ideas works',
-        aiPrompt: "I'm on the My ideas screen in Perceva. Using the connector, look at my ideas and explain how to use this screen: flipping and holding cards, the review, favorites and notes.",
+        screenName: 'My ideas',
+        purpose: 'It keeps the ideas I absorbed in Learn, by flipping the card at the end of each idea.',
+        examples: 'from my own ideas',
         cardLabel: 'On the card',
         tryIt: 'Try it on this card',
-        tapTitle: 'Tap',
-        tapBody: 'Flips it to show the answer.',
-        holdTitle: 'Hold',
-        holdBody: 'Opens the menu: note, read in full, favorite.',
         menuLabel: "The card's menu",
         screenLabel: 'On the screen',
-        reviewTitle: 'Review',
-        reviewBody: 'Every idea you absorb waits for a decision on this strip. Swipe right to favorite, left to let it go. With nothing pending, it goes away.',
-        favoritesTitle: 'Favorites',
-        favoritesBody: '"Favorites only" shows the ones you kept. "Show all" shows everything you have absorbed, even the ones you let go.',
-        notesTitle: 'Notes',
-        notesBody: 'What you want to do with the idea. Only you see it. A card with a note gets a pencil in the corner.',
-        shelvesTitle: 'Areas',
-        shelvesBody: 'One row per area. Swipe sideways to see more.',
-        searchTitle: 'Search',
-        searchBody: 'Looks through titles, answers, areas and your notes.',
         sampleTitle: 'Tap to flip',
         sampleClaim: 'This is the answer. Now hold the card.',
+        items: {
+          tap: {
+            title: 'Tap',
+            body: 'Flips it to show the answer.',
+            ai: 'Tapping again flips the card back to the front.',
+          },
+          hold: {
+            title: 'Hold',
+            body: 'Opens the menu: note, read in full, favorite.',
+            ai: 'In the menu, Add a note (or Edit your note, when the card already has one) keeps what you want to do with the idea; Open full idea shows the text, the image and the video; Add to favorites puts the idea under Favorites only, and Remove from favorites sends it back to Show all.',
+          },
+          review: {
+            title: 'Review',
+            body: 'Every idea you absorb waits for a decision on this strip. Swipe right to favorite, left to let it go. With nothing pending, it goes away.',
+            ai: 'The strip says how many ideas are left to review and opens the pile when tapped. Letting go deletes nothing: the idea stays under Show all.',
+          },
+          favorites: {
+            title: 'Favorites',
+            body: '"Favorites only" shows the ones you kept. "Show all" shows everything you have absorbed, even the ones you let go.',
+            ai: 'The screen opens on Favorites only, and the header counts favorites and absorbed ideas.',
+          },
+          notes: {
+            title: 'Notes',
+            body: 'What you want to do with the idea. Only you see it. A card with a note gets a pencil in the corner.',
+            ai: 'To write a note, hold the card and tap Add a note; on a card that already has one, holding shows the note and the edit button. Search looks through notes too.',
+          },
+          shelves: {
+            title: 'Areas',
+            body: 'One row per area. Swipe sideways to see more.',
+            ai: "The areas are Perceva's dimensions; each row shows the area's icon, name and how many ideas it holds.",
+          },
+          search: {
+            title: 'Search',
+            body: 'Looks through titles, answers, areas and your notes.',
+            ai: 'It ignores accents and tolerates a small typo. While searching, the screen shows all ideas, not only favorites.',
+          },
+        },
       },
       menu: {
         open: 'Open full idea',
@@ -1136,6 +1164,9 @@ const en = {
   guide: {
     /** Label of the guide's last section, over the AI block. */
     aiLabel: 'Still unsure?',
+    /** The AI door's prompt (lib/guide buildGuidePrompt): the screen, what
+     *  it is for, one bullet per option WITH its mechanics, and the ask. */
+    prompt: "I'm on the {{screen}} screen in Perceva. {{purpose}}\n\nWhat I can do on it:\n{{items}}\n\nUsing the Perceva connector, look at my data and explain each of these options, one by one without skipping any, with examples {{examples}}.",
     aiTitle: 'Ask AI',
     aiOn: 'Claude explains this screen with your data',
     aiOff: 'Turn on AI in Settings to use it',
