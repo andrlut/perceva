@@ -804,10 +804,32 @@ const pt: Translations = {
       myIdeasEmpty: 'Vire o card no fim de uma ideia pra guardá-la aqui.',
       searchPlaceholder: 'Buscar nas suas ideias',
       searchEmpty: 'Nenhuma ideia sua bate com “{{query}}”.',
+      /** The screen's guide (its (i)) — CollectionGuide. `aiPrompt` is what
+       *  the AI door sends; no personal data, only the question. */
       help: {
         title: 'Como usar Minhas ideias',
         a11y: 'Como usar Minhas ideias',
-        body: '**Toque** numa carta pra virar e ler a resposta. Toque de novo pra voltar.\n\n**Segure** a carta pra abrir o menu dela: abrir a ideia completa (texto, imagem e vídeo), favoritar ou tirar das favoritas, e escrever a sua nota.\n\n**Favoritas:** as ideias que você decidiu guardar. "Só favoritas" mostra elas; "Ver todas" mostra tudo que você já absorveu.\n\n**Revisar:** cada ideia que você absorve espera uma decisão. Na revisão, arraste pra direita pra favoritar ou pra esquerda pra soltar. Soltar não apaga: ela continua em "Ver todas".\n\n**Notas:** o que você quer fazer com a ideia. Só você vê. A carta com nota ganha um lápis no canto; segure pra ler ou editar. A busca também procura nas suas notas.\n\n**Deslize** cada fileira pro lado: as ideias ficam separadas por área.',
+        aiPrompt: 'Estou na tela Minhas ideias do Perceva. Usando o conector, olhe as minhas ideias e me explique como usar essa tela: virar e segurar as cartas, revisar, as favoritas e as notas.',
+        cardLabel: 'Na carta',
+        tryIt: 'Experimente nesta carta',
+        tapTitle: 'Toque',
+        tapBody: 'Vira e mostra a resposta.',
+        holdTitle: 'Segure',
+        holdBody: 'Abre o menu: anotar, ler inteira e favoritar.',
+        menuLabel: 'O menu da carta',
+        screenLabel: 'Na tela',
+        reviewTitle: 'Revisar',
+        reviewBody: 'Toda ideia absorvida espera uma decisão nesta faixa. Arraste pra direita pra favoritar, pra esquerda pra soltar. Sem pendências, ela some.',
+        favoritesTitle: 'Favoritas',
+        favoritesBody: '"Só favoritas" mostra as que você guardou. "Ver todas" mostra tudo que você já absorveu, até as soltas.',
+        notesTitle: 'Notas',
+        notesBody: 'O que você quer fazer com a ideia. Só você vê. A carta com nota ganha um lápis no canto.',
+        shelvesTitle: 'Áreas',
+        shelvesBody: 'Uma fileira por área. Deslize pro lado pra ver mais.',
+        searchTitle: 'Busca',
+        searchBody: 'Procura no título, na resposta, na área e nas suas notas.',
+        sampleTitle: 'Toque pra virar',
+        sampleClaim: 'Essa é a resposta. Agora segure a carta.',
       },
       menu: {
         open: 'Abrir ideia completa',
@@ -1104,6 +1126,14 @@ const pt: Translations = {
       },
   },
 
+  /** A screen's guide, the (i) sheet (components/guide). The AI door is the
+   *  first thing in it and never hides: off = grey, and it leads to Ajustes. */
+  guide: {
+    aiTitle: 'Entenda com a IA',
+    aiOn: 'O Claude explica esta tela com os seus dados',
+    aiOff: 'Ative a IA nos ajustes pra usar',
+  },
+
   conector: {
     cardTitle: 'Converse com seus dados',
     title: 'Conector',
@@ -1131,9 +1161,9 @@ const pt: Translations = {
     ex4: 'Há quantos dias eu não resgato aquela recompensa?',
     ex5: 'Quero registrar meu humor de hoje.',
     shortcutsTitle: 'Acessos rápidos',
-    shortcutsInfo: 'Atalhos que levam do Perceva pro app do Claude já no ponto certo, com o conector. Ficam só neste aparelho: um ícone de IA aparece onde a tela tem algo pra registrar ou perguntar — no humor e no resumo do calendário.\n\nCada botão abre o Claude de um destes jeitos:',
+    shortcutsInfo: 'Atalhos que levam do Perceva pro app do Claude já no ponto certo, com o conector. Ficam só neste aparelho: um ícone de IA aparece onde a tela tem algo pra registrar ou perguntar — no humor, no resumo do calendário e no (i) das telas, que sempre abre uma conversa nova com a pergunta da tela.\n\nCada botão abre o Claude de um destes jeitos:',
     shortcutsMaster: 'Botões de IA nas telas',
-    shortcutsMasterDesc: 'Humor do dia e resumo do calendário',
+    shortcutsMasterDesc: 'Humor, calendário e o (i) das telas',
     modeNew: 'Sem link: conversa nova com o pedido já escrito. Você só toca no microfone.',
     modeProject: 'Link de projeto: abre o projeto. Cada dia vira uma conversa lá dentro, ou você usa uma fixada, e as instruções do projeto dizem ao Claude o que fazer.',
     modeChat: 'Link de conversa: sempre a mesma conversa. Funciona, mas fica longa com o tempo.',

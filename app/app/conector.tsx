@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Pressable,
@@ -91,6 +91,35 @@ export default function ConectorScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const shortcutY = useRef(0);
   const [info, setInfo] = useState<Info | null>(null);
+
+  // `?focus=atalhos` — a screen guide's grey AI door sends people here to
+  // turn the AI on: land ON the "Acessos rápidos" card (scroll to it once it
+  // has a position) and light its rim for a moment, so the switch is the
+  // first thing they see. Once per mount; a later layout pass never yanks
+  // the scroll back.
+  const { focus } = useLocalSearchParams<{ focus?: string }>();
+  const wantsShortcuts = focus === 'atalhos';
+  const focusDone = useRef(false);
+  const [highlight, setHighlight] = useState(false);
+  const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (highlightTimer.current) clearTimeout(highlightTimer.current);
+    },
+    [],
+  );
+  const focusShortcuts = () => {
+    if (!wantsShortcuts || focusDone.current) return;
+    focusDone.current = true;
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({
+        y: Math.max(0, shortcutY.current - tokens.space[3]),
+        animated: true,
+      });
+    });
+    setHighlight(true);
+    highlightTimer.current = setTimeout(() => setHighlight(false), 2600);
+  };
 
   // Scroll a focused field (its y inside the shortcuts card) to the top of
   // the viewport, after the keyboard reflow — same timing trick as
@@ -193,9 +222,14 @@ export default function ConectorScreen() {
           <View
             onLayout={(e) => {
               shortcutY.current = e.nativeEvent.layout.y;
+              focusShortcuts();
             }}
           >
-            <ShortcutsCard onFieldFocus={scrollToField} onInfo={setInfo} />
+            <ShortcutsCard
+              onFieldFocus={scrollToField}
+              onInfo={setInfo}
+              highlight={highlight}
+            />
           </View>
 
           {/* 3 — Perguntas prontas: each row opens a new Claude chat. */}
@@ -297,9 +331,12 @@ function CopyField({ value, a11y }: { value: string; a11y: string }) {
 function ShortcutsCard({
   onFieldFocus,
   onInfo,
+  highlight = false,
 }: {
   onFieldFocus: (fieldY: number) => void;
   onInfo: (info: Info) => void;
+  /** Lit rim while the screen was opened to turn the AI on (`?focus=atalhos`). */
+  highlight?: boolean;
 }) {
   const { t } = useT();
   const settings = useLoadedSettings();
@@ -316,7 +353,7 @@ function ShortcutsCard({
   const focusAt = (yInOptions: number) => onFieldFocus(optionsY.current + yInOptions);
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, highlight && styles.cardLit]}>
       <SectionLabel
         icon="flash-outline"
         label={t('conector.shortcutsTitle')}
@@ -547,6 +584,11 @@ const styles = StyleSheet.create({
     backgroundColor: tokens.bg.surface,
     padding: tokens.space[4],
     gap: tokens.space[3],
+  },
+  // Same width, only the color changes — the lit rim must not shift layout.
+  cardLit: {
+    borderColor: tokens.brand.violet2,
+    backgroundColor: 'rgba(123, 92, 255, 0.08)',
   },
 
   // Steps

@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { GuideAiButton } from '@/components/guide/GuideAiButton';
 import { useT } from '@/lib/i18n';
 import { tokens } from '@/theme';
 
@@ -8,9 +9,17 @@ interface Props {
   visible: boolean;
   onClose: () => void;
   title: string;
-  body: string;
+  /** Plain explanation. Optional once `children` carries a guide. */
+  body?: string;
   /** Optional accent color for the title text + close icon. */
   accent?: string;
+  /**
+   * A screen's guide: the question the AI door sends. Present → the
+   * GuideAiButton is the FIRST thing under the title, outside the scroll.
+   */
+  aiPrompt?: string;
+  /** Rich guide content (GuideStep rows, a playground), after the body. */
+  children?: React.ReactNode;
 }
 
 /**
@@ -18,14 +27,19 @@ interface Props {
  * why-this-rule blurbs). Replaces native Alert.alert in surfaces where the
  * native dialog was failing to show on some devices.
  *
+ * Two uses, one chassis. A field's (i) passes `body`. A SCREEN's (i) — its
+ * guide — passes `aiPrompt` and `children`: the AI door first (never hidden;
+ * grey and pointing at Ajustes while the AI is off), then the steps
+ * (components/guide, the Minhas ideias guide is the template).
+ *
  * `**palavra**` in the body renders bold (the one markup it reads): the
  * key word of each paragraph in bold lets the reader scan what can be done
  * — tap, hold, favorites — without reading the rest.
  *
- * The body scrolls when it outgrows the screen (header and button stay
- * put). The sheet is a plain View with the scrim as an absoluteFill sibling
- * behind it: a Pressable sheet would take the touch responder and kill the
- * ScrollView's native scroll.
+ * The body scrolls when it outgrows the screen (header, AI door and button
+ * stay put). The sheet is a plain View with the scrim as an absoluteFill
+ * sibling behind it: a Pressable sheet would take the touch responder and
+ * kill the ScrollView's native scroll.
  *
  * Tap the backdrop or the close icon to dismiss. Body text supports plain
  * \n line breaks for bullet lists.
@@ -36,6 +50,8 @@ export function InfoSheet({
   title,
   body,
   accent = tokens.brand.violet2,
+  aiPrompt,
+  children,
 }: Props) {
   const { t } = useT();
   return (
@@ -69,8 +85,14 @@ export function InfoSheet({
               <Ionicons name="close" size={20} color={tokens.text.mid} />
             </Pressable>
           </View>
-          <ScrollView style={styles.bodyScroll} showsVerticalScrollIndicator={false}>
-            <Text style={styles.body}>{renderBold(body)}</Text>
+          {aiPrompt ? <GuideAiButton prompt={aiPrompt} onLeave={onClose} /> : null}
+          <ScrollView
+            style={styles.bodyScroll}
+            contentContainerStyle={children ? styles.guide : undefined}
+            showsVerticalScrollIndicator={false}
+          >
+            {body ? <Text style={styles.body}>{renderBold(body)}</Text> : null}
+            {children}
           </ScrollView>
           <Pressable
             onPress={onClose}
@@ -143,6 +165,11 @@ const styles = StyleSheet.create({
   bodyScroll: {
     flexGrow: 0,
     flexShrink: 1,
+  },
+  // A guide's rows breathe more than a paragraph's lines.
+  guide: {
+    gap: tokens.space[4],
+    paddingBottom: tokens.space[1],
   },
   body: {
     fontFamily: 'Manrope_500Medium',

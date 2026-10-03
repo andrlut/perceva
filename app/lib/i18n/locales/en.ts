@@ -808,10 +808,32 @@ const en = {
       myIdeasEmpty: 'Flip the card at the end of an idea to keep it here.',
       searchPlaceholder: 'Search your ideas',
       searchEmpty: 'None of your ideas match “{{query}}”.',
+      /** The screen's guide (its (i)) — CollectionGuide. `aiPrompt` is what
+       *  the AI door sends; no personal data, only the question. */
       help: {
         title: 'How My ideas works',
         a11y: 'How My ideas works',
-        body: '**Tap** a card to flip it and read the answer. Tap again to flip it back.\n\n**Hold** a card to open its menu: open the full idea (text, image and video), add it to or remove it from your favorites, and write your note.\n\n**Favorites:** the ideas you chose to keep. "Favorites only" shows them; "Show all" shows everything you have absorbed.\n\n**Review:** every idea you absorb waits for a decision. In the review, swipe right to favorite or left to let it go. Letting go deletes nothing: it stays under "Show all".\n\n**Notes:** what you want to do with the idea. Only you see them. A card with a note gets a pencil in the corner; hold it to read or edit. Search looks through your notes too.\n\n**Swipe** each row sideways: ideas are grouped by area.',
+        aiPrompt: "I'm on the My ideas screen in Perceva. Using the connector, look at my ideas and explain how to use this screen: flipping and holding cards, the review, favorites and notes.",
+        cardLabel: 'On the card',
+        tryIt: 'Try it on this card',
+        tapTitle: 'Tap',
+        tapBody: 'Flips it to show the answer.',
+        holdTitle: 'Hold',
+        holdBody: 'Opens the menu: note, read in full, favorite.',
+        menuLabel: "The card's menu",
+        screenLabel: 'On the screen',
+        reviewTitle: 'Review',
+        reviewBody: 'Every idea you absorb waits for a decision on this strip. Swipe right to favorite, left to let it go. With nothing pending, it goes away.',
+        favoritesTitle: 'Favorites',
+        favoritesBody: '"Favorites only" shows the ones you kept. "Show all" shows everything you have absorbed, even the ones you let go.',
+        notesTitle: 'Notes',
+        notesBody: 'What you want to do with the idea. Only you see it. A card with a note gets a pencil in the corner.',
+        shelvesTitle: 'Areas',
+        shelvesBody: 'One row per area. Swipe sideways to see more.',
+        searchTitle: 'Search',
+        searchBody: 'Looks through titles, answers, areas and your notes.',
+        sampleTitle: 'Tap to flip',
+        sampleClaim: 'This is the answer. Now hold the card.',
       },
       menu: {
         open: 'Open full idea',
@@ -1109,6 +1131,14 @@ const en = {
       },
   },
 
+  /** A screen's guide, the (i) sheet (components/guide). The AI door is the
+   *  first thing in it and never hides: off = grey, and it leads to Settings. */
+  guide: {
+    aiTitle: 'Ask AI',
+    aiOn: 'Claude explains this screen with your data',
+    aiOff: 'Turn on AI in Settings to use it',
+  },
+
   conector: {
     cardTitle: 'Talk to your data',
     title: 'Connector',
@@ -1136,9 +1166,9 @@ const en = {
     ex4: 'How many days since I last redeemed that reward?',
     ex5: 'I want to log my mood for today.',
     shortcutsTitle: 'Quick access',
-    shortcutsInfo: 'Shortcuts that take you from Perceva to the Claude app at the right spot, with the connector. They live on this device only: an AI icon shows wherever a screen has something to log or ask — on mood and on the calendar summary.\n\nEach button opens Claude in one of these ways:',
+    shortcutsInfo: 'Shortcuts that take you from Perceva to the Claude app at the right spot, with the connector. They live on this device only: an AI icon shows wherever a screen has something to log or ask — on mood, on the calendar summary and in each screen\'s (i), which always opens a new chat with that screen\'s question.\n\nEach button opens Claude in one of these ways:',
     shortcutsMaster: 'AI buttons on the screens',
-    shortcutsMasterDesc: "Today's mood and the calendar summary",
+    shortcutsMasterDesc: "Mood, calendar and each screen's (i)",
     modeNew: 'No link: a new chat with the request already typed. You just tap the microphone.',
     modeProject: 'Project link: opens the project. Each day becomes a chat inside it, or you use a pinned one, and the project instructions tell Claude what to do.',
     modeChat: 'Chat link: always the same chat. Works, but grows long over time.',
