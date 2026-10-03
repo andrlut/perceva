@@ -6,8 +6,6 @@ import { useT } from '@/lib/i18n';
 import { tokens } from '@/theme';
 
 interface Props {
-  /** Display name shown in the eyebrow line — DECO style. */
-  displayName: string;
   /** Big headline: weekday word, e.g. "Sunday,". */
   weekdayLabel: string;
   /** Big headline: month + day, e.g. "May 24". Drawn in violet with a glow. */
@@ -23,27 +21,29 @@ interface Props {
   onNextDay: () => void;
   /** False when the selected day IS today — the next arrow greys out. */
   canGoNext: boolean;
-  /** Provided only when a past day is selected → tap the date or the "Hoje"
-   *  chip to jump straight back to today. */
+  /** Provided only when a past day is selected → tapping the date jumps
+   *  straight back to today. */
   onResetToday?: () => void;
+  /** The (i) in the top-right corner — how the screen works. */
+  onInfo: () => void;
 }
 
 /**
  * Header for the V3 Tasks home / day-view.
  *
- *   Row 1: DECO                                   [ Hoje ]  (past days only)
- *   Row 2: ‹  Segunda, Jul 27  ›
- *   Row 3: ⚡ +240 XP                             (green glow; grey at 0)
+ *   Row 1: ‹ Segunda, Jul 27 ›                              (i)
+ *   Row 2: ⚡ +240 XP                     (green glow; grey at 0)
  *
- * The date is the day selector — the ‹ › arrows step between adjacent days
- * (the whole screen follows), and tapping the date (or the "Hoje" chip)
- * jumps back to today. XP earned that day is a standalone glowing stat on
- * its own line — no band, no ring (the old tasks ring was removed: it read
- * as confusing and competed with the date for width). At 0 XP it's a quiet
- * grey "+0" that lights up green on the first completion.
+ * The date is the day selector: the arrows hug the date string (the next
+ * arrow sits right after it, not at the screen edge), and the back arrow's
+ * glyph lines up with the left edge of everything below it. Tapping the
+ * date on a past day jumps back to today — there is no separate "Hoje" chip
+ * and no name eyebrow any more (2026-10-03): the row they took went to the
+ * date, and the freed top-right corner holds the screen's (i), the same
+ * 40px chip as the other screens. Swiping the top of the screen also steps
+ * days (the host owns that gesture).
  */
 export function TodayHeader({
-  displayName,
   weekdayLabel,
   monthDayLabel,
   xpOfDay,
@@ -52,34 +52,17 @@ export function TodayHeader({
   onNextDay,
   canGoNext,
   onResetToday,
+  onInfo,
 }: Props) {
   const { t } = useT();
 
   return (
     <View style={styles.wrap}>
-      <View style={styles.topRow}>
-        <Text style={styles.eyebrow} numberOfLines={1}>
-          {displayName.toUpperCase()}
-        </Text>
-        {onResetToday && (
-          <Pressable
-            onPress={onResetToday}
-            hitSlop={8}
-            style={({ pressed }) => [styles.todayChip, pressed && { opacity: 0.6 }]}
-            accessibilityRole="button"
-            accessibilityLabel={t('home.dayNav.backToTodayA11y')}
-          >
-            <Ionicons name="today-outline" size={13} color={tokens.brand.violet2} />
-            <Text style={styles.todayChipText}>{t('home.dayNav.today')}</Text>
-          </Pressable>
-        )}
-      </View>
-
       <View style={styles.dateRow}>
         <Pressable
           onPress={onPrevDay}
-          hitSlop={8}
-          style={({ pressed }) => [styles.arrowBtn, pressed && { opacity: 0.5 }]}
+          hitSlop={10}
+          style={({ pressed }) => [styles.arrowBtn, styles.arrowPrev, pressed && { opacity: 0.5 }]}
           accessibilityRole="button"
           accessibilityLabel={t('home.dayNav.prev')}
         >
@@ -90,6 +73,8 @@ export function TodayHeader({
           onPress={onResetToday}
           disabled={!onResetToday}
           style={styles.headlineWrap}
+          accessibilityRole={onResetToday ? 'button' : 'header'}
+          accessibilityHint={onResetToday ? t('home.dayNav.backToTodayA11y') : undefined}
         >
           <Text style={styles.headline} numberOfLines={1}>
             {weekdayLabel}{' '}
@@ -100,7 +85,7 @@ export function TodayHeader({
         <Pressable
           onPress={onNextDay}
           disabled={!canGoNext}
-          hitSlop={8}
+          hitSlop={10}
           style={({ pressed }) => [
             styles.arrowBtn,
             pressed && canGoNext && { opacity: 0.5 },
@@ -113,6 +98,18 @@ export function TodayHeader({
             size={22}
             color={canGoNext ? tokens.text.hi : tokens.text.faint}
           />
+        </Pressable>
+
+        <View style={styles.spacer} />
+
+        <Pressable
+          onPress={onInfo}
+          hitSlop={8}
+          style={({ pressed }) => [styles.infoBtn, pressed && { opacity: 0.6 }]}
+          accessibilityRole="button"
+          accessibilityLabel={t('home.help.a11y')}
+        >
+          <Ionicons name="information-circle-outline" size={22} color={tokens.text.hi} />
         </Pressable>
       </View>
 
@@ -128,50 +125,24 @@ const styles = StyleSheet.create({
     paddingBottom: tokens.space[2],
     gap: 10,
   },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: tokens.space[3],
-  },
-  eyebrow: {
-    flex: 1,
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 11,
-    letterSpacing: 1.6,
-    color: tokens.semantic.coinLight,
-    textTransform: 'uppercase',
-  },
-  todayChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    backgroundColor: 'rgba(123,92,255,0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(123,92,255,0.4)',
-  },
-  todayChipText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
-    color: tokens.brand.violet2,
-    letterSpacing: 0.3,
-  },
   dateRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: tokens.space[1],
   },
   arrowBtn: {
-    width: 30,
-    height: 30,
+    width: 28,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // The chevron's stroke starts ~6px inside its 22px box: pull the button
+  // left by that much so the glyph lines up with the content edge below.
+  arrowPrev: {
+    alignItems: 'flex-start',
+    marginLeft: -6,
+  },
   headlineWrap: {
-    flex: 1,
+    flexShrink: 1,
   },
   headline: {
     fontFamily: 'Manrope_800ExtraBold',
@@ -185,5 +156,18 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(155,130,255,0.35)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 12,
+  },
+  spacer: {
+    flex: 1,
+    minWidth: tokens.space[2],
+  },
+  // Same 40px chip as the (i) on Minhas ideias.
+  infoBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: tokens.bg.surface,
   },
 });

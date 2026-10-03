@@ -37,6 +37,8 @@ import { TaskCard } from '@/components/TaskCard';
 import { WeekStrip } from '@/components/WeekStrip';
 import { TASKS_FAB_CLEARANCE, TasksFabStack } from '@/components/TasksFabStack';
 import { TodayAmbient } from '@/components/TodayAmbient';
+import { DaySwipeZone } from '@/components/DaySwipeZone';
+import { InfoSheet } from '@/components/InfoSheet';
 import { TodayHeader } from '@/components/TodayHeader';
 import { XPCoinFloat } from '@/components/XPCoinFloat';
 import { useCharacter } from '@/lib/api/character';
@@ -489,6 +491,9 @@ export default function HomeScreen() {
       return d;
     });
   };
+  // The header's (i): how the screen works — swipes and the hold, which
+  // nothing on screen reveals.
+  const [helpOpen, setHelpOpen] = useState(false);
   const goToToday = () => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
@@ -1113,28 +1118,28 @@ export default function HomeScreen() {
         {/* Zero-height content-top marker: the M1 auto-scroll measures
             anchors against it to get their content Y. */}
         <View ref={contentTopRef} collapsable={false} />
-        <TodayHeader
-          // Blank (not the "aventureiro" fallback) until the profile lands,
-          // so the eyebrow never flashes a placeholder and then swaps to the
-          // real name — the same flash first users reported on the welcome.
-          displayName={
-            character.data
-              ? (character.data.profile.display_name ?? t('home.defaultName'))
-              : ' '
-          }
-          weekdayLabel={hero.weekday}
-          monthDayLabel={hero.monthDay}
-          // XP earned that day is now a standalone glowing stat inside the
-          // header (no band, no ring). null until the day's detail lands so
-          // it never flashes a grey "+0" before the real value (guarding on
-          // isLoading missed today, where dayDetail loads separately).
-          xpOfDay={dayDetail.data ? xpOfDay : null}
-          isToday={isToday}
-          canGoNext={!isToday}
-          onPrevDay={() => stepDay(-1)}
-          onNextDay={() => stepDay(1)}
-          onResetToday={isToday ? undefined : goToToday}
-        />
+        {/* The top of the screen steps days on a horizontal swipe — only
+            what sits ABOVE the first practice, so it never competes with a
+            TaskCard's own complete/skip swipe. */}
+        <DaySwipeZone onPrev={() => stepDay(-1)} onNext={() => stepDay(1)} canNext={!isToday}>
+          <View>
+            <TodayHeader
+              weekdayLabel={hero.weekday}
+              monthDayLabel={hero.monthDay}
+              // XP earned that day is now a standalone glowing stat inside the
+              // header (no band, no ring). null until the day's detail lands so
+              // it never flashes a grey "+0" before the real value (guarding on
+              // isLoading missed today, where dayDetail loads separately).
+              xpOfDay={dayDetail.data ? xpOfDay : null}
+              isToday={isToday}
+              canGoNext={!isToday}
+              onPrevDay={() => stepDay(-1)}
+              onNextDay={() => stepDay(1)}
+              onResetToday={isToday ? undefined : goToToday}
+              onInfo={() => setHelpOpen(true)}
+            />
+          </View>
+        </DaySwipeZone>
 
         {isLoading ? (
           <View style={styles.loadingBox}>
@@ -1154,11 +1159,20 @@ export default function HomeScreen() {
               <>
                 {/* A newer native build on the Play Store — the one update
                     an OTA can't deliver; renders only when truly outdated. */}
-                <StoreUpdateCard />
+                <DaySwipeZone onPrev={() => stepDay(-1)} onNext={() => stepDay(1)} canNext={!isToday}>
+                  <View>
+                    <StoreUpdateCard />
+                  </View>
+                </DaySwipeZone>
+                {/* Outside the swipe zone: the chips scroll sideways. */}
                 <QuestChipsStrip />
-                <NotificationOptInCard enabled={!activeTourStep} />
-                {/* Minha Semana — module-gated; renders nothing when off. */}
-                <WeekStrip />
+                <DaySwipeZone onPrev={() => stepDay(-1)} onNext={() => stepDay(1)} canNext={!isToday}>
+                  <View>
+                    <NotificationOptInCard enabled={!activeTourStep} />
+                    {/* Minha Semana — module-gated; renders nothing when off. */}
+                    <WeekStrip />
+                  </View>
+                </DaySwipeZone>
               </>
             )}
 
@@ -1325,6 +1339,13 @@ export default function HomeScreen() {
         task={sheetTask}
         onCancel={() => setSheetTask(null)}
         onConfirm={handleSheetConfirm}
+      />
+
+      <InfoSheet
+        visible={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        title={t('home.help.title')}
+        body={t('home.help.body')}
       />
 
       <TaskActionSheet
