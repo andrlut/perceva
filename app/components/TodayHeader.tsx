@@ -39,11 +39,12 @@ interface Props {
  * Header for the V3 Tasks home / day-view.
  *
  *   Row 1: ‹ Segunda, Jul 27 ›                              (i)
- *   Row 2: ⚡ 240            🪙 240                ☺
+ *   Row 2: ⚡ 240   🪙 240   ☺
  *
- * Row 2 is the day's three marks, always in view, in three EQUAL thirds
- * (layout only, no dividers): XP on the left edge, coins centered, mood on
- * the right edge under the (i). Glyph + bare number, no "+" and no unit;
+ * Row 2 is the day's three marks, always in view, one after the other from
+ * the left edge (XP, coins, mood) with a roomy fixed gap — spread across
+ * the width they read too far apart (owner, 2026-10-03). Glyph + bare
+ * number, no "+" and no unit;
  * every glyph and figure is centered on one line (includeFontPadding off,
  * so Android's font padding does not drop the number below its icon). The
  * mood third is always the level-4 face: dashed grey until the day is
@@ -135,7 +136,7 @@ export function TodayHeader({
 
       <View style={styles.statsRow}>
         <View
-          style={[styles.third, styles.thirdStart]}
+          style={styles.third}
           accessible
           accessibilityRole="text"
           accessibilityLabel={`${xpOfDay ?? 0} XP ${
@@ -157,7 +158,7 @@ export function TodayHeader({
         </View>
 
         <View
-          style={[styles.third, styles.thirdCenter]}
+          style={styles.third}
           accessible
           accessibilityRole="text"
           accessibilityLabel={t('home.coinsOfDayA11y', { count: coinsOfDay ?? 0 })}
@@ -172,7 +173,7 @@ export function TodayHeader({
           )}
         </View>
 
-        <View style={[styles.third, styles.thirdEnd]}>
+        <View style={styles.third}>
           <Pressable
             onPress={onMood}
             hitSlop={10}
@@ -254,16 +255,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     minHeight: 32,
+    gap: tokens.space[6],
   },
   third: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
-  thirdStart: { justifyContent: 'flex-start' },
-  thirdCenter: { justifyContent: 'center' },
-  thirdEnd: { justifyContent: 'flex-end' },
   num: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 24,

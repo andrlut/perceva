@@ -1415,7 +1415,7 @@ const en = {
     redemptions: {
       title: "Day's redemptions",
       empty: 'No redemptions on this day.',
-      openVault: 'Open the Vault',
+      addA11y: 'Redeem a reward on this day',
     },
     allPracticesRow: {
       title: 'All practices',

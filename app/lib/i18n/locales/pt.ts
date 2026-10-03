@@ -1410,7 +1410,7 @@ const pt: Translations = {
     redemptions: {
       title: 'Resgates do dia',
       empty: 'Nenhum resgate neste dia.',
-      openVault: 'Abrir a Vault',
+      addA11y: 'Resgatar uma recompensa neste dia',
     },
     allPracticesRow: {
       title: 'Todas as práticas',

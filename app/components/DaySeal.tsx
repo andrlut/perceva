@@ -147,7 +147,6 @@ export function DaySeal({
 
   const rewarded = mode === 'complete' || mode === 'cleared';
   const title = t(`home.daySeal.${mode}.title`);
-  const body = t(`home.daySeal.${mode}.body`);
 
   return (
     <Animated.View
@@ -217,7 +216,7 @@ export function DaySeal({
         style={styles.textCol}
         accessible
         accessibilityRole="text"
-        accessibilityLabel={`${title} ${body}`}
+        accessibilityLabel={title}
       >
         <Text
           style={[
@@ -227,7 +226,6 @@ export function DaySeal({
         >
           {title}
         </Text>
-        <Text style={styles.body}>{body}</Text>
       </View>
 
       {/* Nothing was trained on a settled day, so it claims nothing. */}
@@ -327,12 +325,6 @@ const styles = StyleSheet.create({
     fontFamily: tokens.font.familyHeavy,
     textAlign: 'center',
     letterSpacing: -0.2,
-  },
-  body: {
-    ...tokens.type.body,
-    color: tokens.text.mid,
-    textAlign: 'center',
-    maxWidth: 290,
   },
   trainedCol: {
     alignItems: 'center',
