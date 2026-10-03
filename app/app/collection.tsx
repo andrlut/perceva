@@ -8,13 +8,18 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useBottomSafeClearance } from '@/components/BottomNavBar';
+import {
+  FilterPill,
+  IdeaSearchBox,
+  ReviewStrip,
+} from '@/components/ideas/CollectionControls';
+import { CollectionGuide } from '@/components/ideas/CollectionGuide';
 import { IdeaActionSheet } from '@/components/ideas/IdeaActionSheet';
 import { IdeaNoteSheet } from '@/components/ideas/IdeaNoteSheet';
 import { IdeaShelf, shelfCardWidth } from '@/components/ideas/IdeaShelf';
@@ -117,6 +122,22 @@ export default function CollectionScreen() {
   );
 
   const favoriteCount = useMemo(() => cards.filter((c) => c.favorite).length, [cards]);
+
+  // The guide's playground card: their first favorite, else their first
+  // idea (null → the guide's sample). Its shelf is the one the guide's
+  // shelf replica imitates.
+  const guideCard = useMemo(
+    () => cards.find((c) => c.favorite) ?? cards[0] ?? null,
+    [cards],
+  );
+  const guideShelf = useMemo(() => {
+    const dimensionId: DimensionId = guideCard?.dimensionId ?? 'mind';
+    return {
+      dimensionId,
+      label: meta.dim(dimensionId).label,
+      count: guideCard ? cards.filter((c) => c.dimensionId === dimensionId).length : 3,
+    };
+  }, [guideCard, cards, meta]);
 
   const visible = useMemo(
     () =>
@@ -260,12 +281,21 @@ export default function CollectionScreen() {
           </Pressable>
         </View>
 
+        {/* The screen's guide — the template for every screen's (i): the
+            AI door first, then the playground and one step per element. */}
         <InfoSheet
           visible={helpOpen}
           onClose={() => setHelpOpen(false)}
           title={t('learning.ideas.help.title')}
-          body={t('learning.ideas.help.body')}
-        />
+          aiPrompt={t('learning.ideas.help.aiPrompt')}
+        >
+          <CollectionGuide
+            demoCard={guideCard}
+            pendingCount={pending.length}
+            shelf={guideShelf}
+            locale={ideaLocale}
+          />
+        </InfoSheet>
 
         {loading ? (
           <View style={styles.centerBox}>
@@ -291,50 +321,15 @@ export default function CollectionScreen() {
             showsVerticalScrollIndicator={false}
           >
             {absorbed.length > 0 && (
-              <View style={styles.searchWrap}>
-                <Ionicons name="search" size={16} color={tokens.text.dim} />
-                <TextInput
-                  value={query}
-                  onChangeText={setQuery}
-                  placeholder={t('learning.ideas.searchPlaceholder')}
-                  placeholderTextColor={tokens.text.faint}
-                  style={styles.searchInput}
-                  autoCorrect={false}
-                  autoCapitalize="none"
-                  returnKeyType="search"
-                />
-                {query.length > 0 && (
-                  <Pressable
-                    onPress={() => setQuery('')}
-                    hitSlop={8}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('common.clear')}
-                  >
-                    <Ionicons name="close-circle" size={16} color={tokens.text.dim} />
-                  </Pressable>
-                )}
-              </View>
+              <IdeaSearchBox value={query} onChangeText={setQuery} style={styles.searchWrap} />
             )}
 
             {pending.length > 0 && !searching && (
-              <Pressable
+              <ReviewStrip
+                count={pending.length}
                 onPress={openReview}
-                accessibilityRole="button"
-                style={({ pressed }) => [styles.reviewStrip, pressed && { opacity: 0.8 }]}
-              >
-                <View style={styles.reviewIcon}>
-                  <Ionicons name="layers-outline" size={17} color={tokens.brand.violet2} />
-                </View>
-                <View style={styles.reviewText}>
-                  <Text style={styles.reviewTitle}>
-                    {t('learning.ideas.review.fabPending', { count: pending.length })}
-                  </Text>
-                  <Text style={styles.reviewBody} numberOfLines={1}>
-                    {t('learning.ideas.review.stripBody')}
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={tokens.text.mid} />
-              </Pressable>
+                style={styles.reviewStrip}
+              />
             )}
 
             {absorbed.length > 0 && !searching && (
@@ -405,38 +400,6 @@ function EmptyState({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Filter pill — tinted fill + solid rim in violet when selected.
-// ─────────────────────────────────────────────────────────────────────────────
-
-interface FilterPillProps {
-  label: string;
-  iconName?: keyof typeof Ionicons.glyphMap;
-  active: boolean;
-  onPress: () => void;
-}
-
-function FilterPill({ label, iconName, active, onPress }: FilterPillProps) {
-  const accent = tokens.brand.violet2;
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityState={{ selected: active }}
-      style={({ pressed }) => [
-        styles.pill,
-        active && { backgroundColor: accent + '22', borderColor: accent },
-        pressed && { opacity: 0.8 },
-      ]}
-    >
-      {iconName && (
-        <Ionicons name={iconName} size={13} color={active ? accent : tokens.text.mid} />
-      )}
-      <Text style={[styles.pillText, active && { color: accent }]}>{label}</Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: tokens.bg.deep },
   topBar: {
@@ -471,83 +434,20 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingTop: tokens.space[2],
   },
+  // The search box, the review strip and the pills are CollectionControls
+  // (shared with the guide); only their placement lives here.
   searchWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[2],
-    backgroundColor: tokens.bg.surface,
-    borderRadius: tokens.radius.md,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-    paddingHorizontal: tokens.space[3],
     marginHorizontal: tokens.space[4],
-    height: 40,
   },
-  searchInput: {
-    flex: 1,
-    color: tokens.text.hi,
-    ...tokens.type.body,
-    paddingVertical: 0,
-  },
-  /** "N pra revisar" — opens the review pile. */
   reviewStrip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[3],
     marginHorizontal: tokens.space[4],
     marginTop: tokens.space[3],
-    paddingVertical: tokens.space[3],
-    paddingHorizontal: tokens.space[3],
-    borderRadius: tokens.radius.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(123, 92, 255, 0.35)',
-    backgroundColor: 'rgba(123, 92, 255, 0.10)',
-  },
-  reviewIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: tokens.radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(123, 92, 255, 0.18)',
-  },
-  reviewText: {
-    flex: 1,
-    minWidth: 0,
-    gap: 1,
-  },
-  reviewTitle: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 14,
-    color: tokens.text.hi,
-  },
-  reviewBody: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
-    color: tokens.text.mid,
   },
   pillRow: {
     flexDirection: 'row',
     gap: 8,
     paddingHorizontal: tokens.space[4],
     marginTop: tokens.space[3],
-  },
-  pill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: tokens.radius.pill,
-    borderWidth: 1,
-    borderColor: tokens.border.strong,
-    backgroundColor: tokens.bg.glass,
-  },
-  pillText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
-    letterSpacing: 0.2,
-    color: tokens.text.mid,
   },
   shelves: {
     gap: tokens.space[6],
