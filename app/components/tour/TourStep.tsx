@@ -77,10 +77,12 @@ interface Props extends TourStepData {
    */
   flatNav?: boolean;
   onNext: () => void;
-  /** Called by the "Pular este módulo" control — skips the whole module. */
-  onSkip: () => void;
-  /** Called by "Sair do tour" — skips every guided module still to come. */
-  onExitTour: () => void;
+  /** Called by the "Pular este módulo" control — skips the whole module.
+   *  Omitted on a required module: the control is not rendered. */
+  onSkip?: () => void;
+  /** Called by "Sair do tour" — skips every guided module still to come.
+   *  Omitted on a required module: the control is not rendered. */
+  onExitTour?: () => void;
   /**
    * Called when the user uses the inline "Pular este passo" escape
    * inside an awaitEvent step. Same effect as onNext (advance) but
@@ -128,11 +130,11 @@ export function TourStep({
   };
   const handleSkip = () => {
     Haptics.selectionAsync().catch(() => {});
-    onSkip();
+    onSkip?.();
   };
   const handleExitTour = () => {
     Haptics.selectionAsync().catch(() => {});
-    onExitTour();
+    onExitTour?.();
   };
   const handleSkipStep = () => {
     Haptics.selectionAsync().catch(() => {});
@@ -239,7 +241,9 @@ export function TourStep({
 
           {/* The ways out — this module, or the whole tour — behind a hairline
              so they never read as part of the step's own action. */}
+          {onSkip || onExitTour ? (
           <View style={styles.footer}>
+            {onSkip ? (
             <Pressable
               onPress={handleSkip}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -261,6 +265,8 @@ export function TourStep({
                 {t('tour.common.skipModule')}
               </Text>
             </Pressable>
+            ) : null}
+            {onExitTour ? (
             <Pressable
               onPress={handleExitTour}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -275,7 +281,9 @@ export function TourStep({
               <Ionicons name="close-circle-outline" size={15} color={tokens.text.mid} />
               <Text style={styles.skipModule}>{t('tour.common.exitTour')}</Text>
             </Pressable>
+            ) : null}
           </View>
+          ) : null}
         </View>
       </View>
     </View>

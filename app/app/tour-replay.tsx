@@ -16,6 +16,7 @@ import { ScreenBackground } from '@/components/ScreenBackground';
 import { useT } from '@/lib/i18n';
 import {
   ROUTE_MODULE_PATH,
+  SETTINGS_MODULE,
   type GuidedModule,
   type RouteModule,
   type TourModuleStatus,
@@ -35,7 +36,8 @@ import { tokens } from '@/theme';
  * the user never saw still reads "Ainda não visto" after replaying another.
  *
  *   - Opening (intro, pack) → its full-screen route.
- *   - Guided tour (M1…M6) → Home, where each module's first step lives.
+ *   - Guided tour (Ajustes, M1…M6) → Home, where each module's first step
+ *     lives. Ajustes is the mandatory help module, listed first.
  *
  * No M3 row: Missões left the tour (opt-in module, not taught). No wrap
  * row: it marks itself done on mount and only closes the full run.
@@ -51,7 +53,10 @@ const OPENING: ReplaySpec<RouteModule>[] = [
   { id: 'pack', icon: 'albums-outline' },
 ];
 
-const GUIDED: ReplaySpec<GuidedModule>[] = [
+type SpotlightModule = GuidedModule | typeof SETTINGS_MODULE;
+
+const GUIDED: ReplaySpec<SpotlightModule>[] = [
+  { id: SETTINGS_MODULE, icon: 'help-buoy-outline' },
   { id: 'M1', icon: 'checkmark-done-outline' },
   { id: 'M2', icon: 'create-outline' },
   { id: 'M4', icon: 'gift-outline' },
@@ -106,11 +111,11 @@ export default function TourReplayScreen() {
   const handleReplayAll = () => run(resetAll, '/tour/intro');
   const handleReplayOpening = (id: RouteModule) =>
     run(() => replayModule(id), ROUTE_MODULE_PATH[id]);
-  const handleReplayGuided = (id: GuidedModule) =>
+  const handleReplayGuided = (id: SpotlightModule) =>
     run(() => replayModule(id), '/(tabs)');
 
   const renderRow = (
-    spec: ReplaySpec<RouteModule | GuidedModule>,
+    spec: ReplaySpec<RouteModule | SpotlightModule>,
     onPress: () => void,
   ) => {
     const status: TourModuleStatus = modules[spec.id]?.status ?? 'pending';

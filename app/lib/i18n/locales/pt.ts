@@ -633,11 +633,26 @@ const pt: Translations = {
         body: 'Leia até o fim e vire o card para absorver. Toque na lâmpada para revisar o que absorveu.',
       },
     },
+    settings: {
+      step1: {
+        title: 'Em dúvida? A ajuda fica em Ajustes',
+        body: 'Lá você revê a explicação de cada tela e conecta uma IA para te ajudar na jornada.',
+      },
+      step2: {
+        title: 'Refaça o tutorial quando quiser',
+        body: 'Reveja o app inteiro ou só uma parte: Práticas, Recompensas, Eu, Aprender. Nada do que você fez é apagado.',
+      },
+      step3: {
+        title: 'Conecte sua IA, de graça',
+        body: 'Ligue o Perceva ao Claude e pergunte sobre seus dias, seu humor e suas práticas.',
+      },
+      done: 'Entendi',
+    },
     common: {
       exitTour: 'Sair do tour',
       next: 'Próximo',
       skipModule: 'Pular esta parte',
-      skipModuleHint: 'Pula o resto desta parte do tour. Você pode refazê-la em Ajustes › Refazer onboarding.',
+      skipModuleHint: 'Pula o resto desta parte do tour. Você pode refazê-la em Ajustes › Refazer tutorial.',
       skipStep: 'Pular este passo',
       tryIt: 'Faça isso para continuar',
       takeMe: 'Ir para lá',
@@ -652,9 +667,9 @@ const pt: Translations = {
       primary: 'Começar a praticar',
     },
     replay: {
-      title: 'Refazer onboarding',
+      title: 'Refazer tutorial',
       subtitle: 'Refaça tudo desde o início ou apenas a parte que quiser.',
-      allTitle: 'Refazer onboarding completo',
+      allTitle: 'Refazer tutorial completo',
       allDesc: 'Introdução, pacote inicial e tour guiado, desde a primeira tela.',
       allCta: 'Começar do zero',
       sectionOpening: 'Abertura',
@@ -676,6 +691,10 @@ const pt: Translations = {
         pack: {
           name: 'Pacote inicial',
           desc: 'As 12 práticas sugeridas para começar.',
+        },
+        settings: {
+          name: 'Ajustes e ajuda',
+          desc: 'Onde refazer o tutorial e conectar sua IA.',
         },
         M1: {
           name: 'Práticas',
@@ -2203,13 +2222,11 @@ const pt: Translations = {
       modules: 'Módulos',
       notifications: 'Notificações',
       data: 'Dados',
-      conector: 'Conector',
+      tutorial: 'Tutorial',
+      ai: 'Sua IA',
       about: 'Sobre',
     },
-    conectorRow: {
-      title: 'Perceva no Claude',
-      sub: 'Pergunte sobre seus dias, humor e recompensas',
-    },
+    aiRow: 'Conecte gratuitamente a sua IA',
     modules: {
       missoes: 'Missões',
       missoesDesc:
@@ -2278,7 +2295,7 @@ const pt: Translations = {
         'Os horários seguem o relógio do seu celular. O Android pode segurar um lembrete alguns minutos pra economizar bateria.',
     },
     actions: {
-      replayOnboarding: 'Refazer onboarding',
+      replayOnboarding: 'Refazer tutorial',
       checkForUpdates: 'Buscar atualizações',
       checking: 'Verificando…',
       signOut: 'Sair',

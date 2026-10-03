@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import * as Updates from 'expo-updates';
-import { Fragment, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -15,6 +15,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useBottomNavClearance } from '@/components/BottomNavBar';
+import { TourModule } from '@/components/tour/TourModule';
+import { TourTarget } from '@/components/tour/TourTarget';
 import { useCharacter } from '@/lib/api/character';
 import { useSession } from '@/lib/auth';
 import { useT } from '@/lib/i18n';
@@ -28,6 +30,11 @@ import {
   type WeekStart,
 } from '@/lib/settings';
 import { supabase } from '@/lib/supabase';
+import { emitTourEvent } from '@/lib/tour/eventBus';
+import { takeAfterOnboarding } from '@/lib/tour/navigation';
+import { buildSettingsSteps, SETTINGS_EVENTS } from '@/lib/tour/settingsSteps';
+import { useIsCurrentTourModule, useTourStore } from '@/lib/tour/store';
+import { remeasureActiveTourTarget } from '@/lib/tour/targets';
 import { confirmAction, showInfo } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 import { ACTIVE_THEME, resolveThemePref } from '@/theme/activeTheme';
@@ -55,6 +62,49 @@ export default function SettingsScreen() {
   const [timeSheet, setTimeSheet] = useState<'brief' | 'dayEnd' | null>(null);
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const bottomClearance = useBottomNavClearance();
+
+  // ── Help module (tour) plumbing ─────────────────────────────────────
+  // Step 1 lives on Home (the Ajustes tab spotlight) and waits for the user
+  // to reach this tab; steps 2–3 spotlight the Tutorial and IA cards here.
+  const isSettingsCurrent = useIsCurrentTourModule('settings');
+  const settingsStep = useTourStore((s) => s.stepIndices.settings ?? 0);
+  useFocusEffect(
+    useCallback(() => {
+      const state = useTourStore.getState();
+      const status = state.modules.settings?.status ?? 'pending';
+      const idx = state.stepIndices.settings ?? 0;
+      if (isSettingsCurrent && idx === 0 && status !== 'completed' && status !== 'skipped') {
+        emitTourEvent(SETTINGS_EVENTS.SETTINGS_NAVIGATED);
+      }
+    }, [isSettingsCurrent]),
+  );
+  // While the cards are spotlighted, scroll Premium out of view: the cards
+  // move up clear of the bottom tooltip on short phones, and the first
+  // thing the tour shows never reads as a paywall.
+  const scrollRef = useRef<ScrollView>(null);
+  const tutorialY = useRef(0);
+  const onSettingsCards = isSettingsCurrent && settingsStep >= 1;
+  // Deferred: on the first visit the tab mounts in the same tick, before
+  // the Tutorial block has reported its offset.
+  useEffect(() => {
+    if (!onSettingsCards) return;
+    const scroll = setTimeout(() => {
+      scrollRef.current?.scrollTo({ y: tutorialY.current, animated: true });
+    }, 150);
+    const measure = setTimeout(remeasureActiveTourTarget, 550);
+    return () => {
+      clearTimeout(scroll);
+      clearTimeout(measure);
+    };
+  }, [onSettingsCards]);
+  // Last step → Home, where the guided tour (if chosen) picks up at M1; the
+  // intro's "start with the self-assessment" hop waited for this moment.
+  const finishSettings = () => {
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+    router.navigate('/(tabs)');
+    const next = takeAfterOnboarding();
+    if (next) router.push(next);
+  };
 
   // A DAILY trigger whose time already passed today silently waits until
   // tomorrow. Computed at render — which is exactly when it matters, right
@@ -160,7 +210,11 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: bottomClearance }]} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        ref={scrollRef}
+        contentContainerStyle={[styles.content, { paddingBottom: bottomClearance }]}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.titleRow}>
           <Text style={styles.screenTitle}>{t('profile.title')}</Text>
           {profile?.subscription_tier === 'premium' && <PremiumBadge size="sm" />}
@@ -177,6 +231,43 @@ export default function SettingsScreen() {
           />
         </Card>
 
+        {/* ───── TUTORIAL ─────
+            Right under Premium and in its exact shape, on purpose: the
+            first step of the tour points here (a first user who is lost
+            must find the redo in one look — inside Conta it was hidden).
+            Resets tour state only, never data. */}
+        <View onLayout={(e) => { tutorialY.current = e.nativeEvent.layout.y; }}>
+          <SectionHeader icon="school-outline" label={t('profile.sections.tutorial')} />
+          <TourTarget id="settings.replay" radius={tokens.radius.lg}>
+            <Card>
+              <ButtonRow
+                icon="refresh-circle-outline"
+                label={t('profile.actions.replayOnboarding')}
+                onPress={handleReplayOnboarding}
+                chevron
+              />
+            </Card>
+          </TourTarget>
+        </View>
+
+        {/* ───── SUA IA ─────
+            The Claude connector: an external integration, not an app
+            surface — so no MODULE_REGISTRY key and no premium gate (a key
+            would promise something to switch on in here; what exists is a
+            setup guide for claude.ai). Third card, same shape, spotlighted
+            by the tour's last help step. */}
+        <SectionHeader icon="chatbubbles-outline" label={t('profile.sections.ai')} />
+        <TourTarget id="settings.ai" radius={tokens.radius.lg}>
+          <Card>
+            <ButtonRow
+              icon="link-outline"
+              label={t('profile.aiRow')}
+              onPress={() => router.push('/conector')}
+              chevron
+            />
+          </Card>
+        </TourTarget>
+
         {/* ───── ACCOUNT ───── */}
         <SectionHeader icon="person-outline" label={t('profile.sections.account')} />
         <Card>
@@ -187,17 +278,6 @@ export default function SettingsScreen() {
             label={t('profile.fields.username')}
             value={profile?.display_name ?? '—'}
             onPress={() => setUsernameOpen(true)}
-            chevron
-          />
-          <Divider />
-          {/* Refazer onboarding sits up here, with the account actions, on
-              purpose: the owner re-runs it constantly while the onboarding is
-              being built, and "Sobre" at the bottom of the screen was where
-              nobody looked. It only resets tour state — never data. */}
-          <ButtonRow
-            icon="refresh-circle-outline"
-            label={t('profile.actions.replayOnboarding')}
-            onPress={handleReplayOnboarding}
             chevron
           />
           <Divider />
@@ -319,25 +399,6 @@ export default function SettingsScreen() {
           <NoteText>{t('profile.modules.footnote')}</NoteText>
         </Card>
 
-        {/* ───── CONECTOR ─────
-            Integração externa, não superfície do app: por isso NÃO tem
-            chave no MODULE_REGISTRY nem gate premium. Uma chave diria que
-            existe algo a ligar aqui dentro, e o que existe é uma instrução
-            para configurar o claude.ai.
-
-            Mora em Ajustes porque é onde integração mora em qualquer app
-            adulto — até aqui só existia atrás de um toque no avatar. */}
-        <SectionHeader icon="link-outline" label={t('profile.sections.conector')} />
-        <Card>
-          <ButtonRow
-            icon="link-outline"
-            label={t('profile.conectorRow.title')}
-            onPress={() => router.push('/conector')}
-            chevron
-          />
-          <NoteText>{t('profile.conectorRow.sub')}</NoteText>
-        </Card>
-
         {/* ───── NOTIFICATIONS ───── */}
         <SectionHeader icon="notifications-outline" label={t('profile.sections.notifications')} />
         <Card>
@@ -449,6 +510,17 @@ export default function SettingsScreen() {
         visible={usernameOpen}
         currentValue={profile?.display_name ?? ''}
         onClose={() => setUsernameOpen(false)}
+      />
+
+      {/* Help module steps 2–3 (Tutorial, then IA). Step 1 is on Home.
+         Required: no skip links. Tab screen, so no `flatNav`. */}
+      <TourModule
+        module="settings"
+        screen="settings"
+        steps={buildSettingsSteps(t)}
+        enabled={isSettingsCurrent}
+        required
+        onComplete={finishSettings}
       />
     </SafeAreaView>
   );

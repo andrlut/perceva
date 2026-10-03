@@ -63,6 +63,7 @@ import { buildM2Steps, M2_EVENTS } from '@/lib/tour/m2Steps';
 import { buildM4Steps } from '@/lib/tour/m4Steps';
 import { buildM5Steps } from '@/lib/tour/m5Steps';
 import { buildM6Steps } from '@/lib/tour/m6Steps';
+import { buildSettingsSteps } from '@/lib/tour/settingsSteps';
 import {
   getCurrentTourModule,
   isWrapPending,
@@ -225,6 +226,7 @@ export default function HomeScreen() {
   // gap (160+) already clears the 128px stack.
   const bottomClearance =
     navClearance + Math.max(tourBottomBump, TASKS_FAB_CLEARANCE);
+  const isSettingsCurrent = useIsCurrentTourModule('settings');
   const isM1Current = useIsCurrentTourModule('M1');
   const m1StepIndex = useTourStore((s) => s.stepIndices.M1 ?? 0);
   const isM2Current = useIsCurrentTourModule('M2');
@@ -1345,6 +1347,18 @@ export default function HomeScreen() {
       />
 
       <MoodCheckinPrompt enabled={tourFinished && !activeTourStep && isFocused} />
+
+      {/* Help module step 1 (mandatory, first after the starter pack): the
+         Ajustes tab. Reaching the tab fires SETTINGS_NAVIGATED there; "Ir
+         para lá" switches to it ourselves. No skip links (required). */}
+      <TourModule
+        module="settings"
+        steps={buildSettingsSteps(t)}
+        enabled={isSettingsCurrent}
+        required
+        rewindOnFocus
+        onAdvanceToNextScreen={() => router.navigate('/(tabs)/profile')}
+      />
 
       {/* Post-login tour — M1 (Práticas), every step on Home. Gated on the
          current-module check like every mount, plus m1Enabled (today,

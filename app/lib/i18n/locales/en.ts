@@ -637,11 +637,26 @@ const en = {
         body: 'Read to the end and flip the card to absorb. Tap the bulb to review what you absorbed.',
       },
     },
+    settings: {
+      step1: {
+        title: 'Stuck? Help lives in Settings',
+        body: 'Replay the walkthrough of any screen there, and connect an AI to help you along the way.',
+      },
+      step2: {
+        title: 'Redo the tutorial anytime',
+        body: 'Replay the whole app or just one part: Practices, Rewards, Me, Learn. Nothing you did is erased.',
+      },
+      step3: {
+        title: 'Connect your AI, for free',
+        body: 'Link Perceva to Claude and ask about your days, your mood and your practices.',
+      },
+      done: 'Got it',
+    },
     common: {
       exitTour: 'Exit tour',
       next: 'Next',
       skipModule: 'Skip this part',
-      skipModuleHint: 'Skips the rest of this part of the tour. You can redo it in Settings › Redo onboarding.',
+      skipModuleHint: 'Skips the rest of this part of the tour. You can redo it in Settings › Redo the tutorial.',
       skipStep: 'Skip this step',
       tryIt: 'Do it to continue',
       takeMe: 'Take me there',
@@ -656,9 +671,9 @@ const en = {
       primary: 'Start practicing',
     },
     replay: {
-      title: 'Redo onboarding',
+      title: 'Redo the tutorial',
       subtitle: 'Redo everything from the start, or just the part you want.',
-      allTitle: 'Redo the full onboarding',
+      allTitle: 'Redo the full tutorial',
       allDesc: 'Intro, starter pack and guided tour, from the very first screen.',
       allCta: 'Start over',
       sectionOpening: 'Opening',
@@ -680,6 +695,10 @@ const en = {
         pack: {
           name: 'Starter pack',
           desc: 'The 12 suggested practices to start with.',
+        },
+        settings: {
+          name: 'Settings and help',
+          desc: 'Where to redo the tutorial and connect your AI.',
         },
         M1: {
           name: 'Practices',
@@ -2194,13 +2213,11 @@ const en = {
       modules: 'Modules',
       notifications: 'Notifications',
       data: 'Data',
-      conector: 'Connector',
+      tutorial: 'Tutorial',
+      ai: 'Your AI',
       about: 'About',
     },
-    conectorRow: {
-      title: 'Perceva in Claude',
-      sub: 'Ask about your days, mood and rewards',
-    },
+    aiRow: 'Connect your AI for free',
     modules: {
       missoes: 'Quests',
       missoesDesc:
@@ -2267,7 +2284,7 @@ const en = {
         "Times follow your phone's clock. Android may hold a reminder back a few minutes to save battery.",
     },
     actions: {
-      replayOnboarding: 'Redo onboarding',
+      replayOnboarding: 'Redo the tutorial',
       checkForUpdates: 'Check for updates',
       checking: 'Checking…',
       signOut: 'Sign out',
