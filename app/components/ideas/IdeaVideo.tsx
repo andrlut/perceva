@@ -1,8 +1,11 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useEvent } from 'expo';
+import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useT } from '@/lib/i18n';
 import { formatDuration } from '@/lib/ideas';
@@ -13,9 +16,20 @@ import { tokens } from '@/theme';
  *
  * Portrait (9:16 by default — the posters are 720×1280), letterboxed on
  * black inside a rounded box framed in the dimension color, capped at
- * `maxHeight` so the title still peeks above the fold. Native controls,
- * fullscreen allowed, streamed from the public `learning-media` bucket with
- * `useCaching` so a re-open doesn't re-download.
+ * `maxHeight` so the title still peeks above the fold. Streamed from the
+ * public `learning-media` bucket with `useCaching` so a re-open doesn't
+ * re-download.
+ *
+ * ## Quiet inline, full when asked (owner, 2026-10-04)
+ *
+ * Inline it plays MUTED and with NO controls — opening an idea in a quiet
+ * room must never start talking, and the native control bar covered half
+ * the frame. One discreet round button (bottom-right) — or a tap anywhere on
+ * the video — expands it: a full-screen Modal hosting the same player, with
+ * sound on and the native controls (seek, ±5/15s, fullscreen). Closing it
+ * mutes again and the inline view keeps playing silently. Only one
+ * VideoView holds the player at a time: the inline view unmounts while the
+ * Modal is open.
  *
  * Lifecycle is driven by the pager: `isActive` true → play, false → pause;
  * unmount pauses too (the hook releases the native player right after).
@@ -66,7 +80,28 @@ export function IdeaVideo({
   const source = useMemo(() => ({ uri, useCaching: true }), [uri]);
   const player = useVideoPlayer(source, (p) => {
     p.loop = false;
+    p.muted = true;
   });
+  const [expanded, setExpanded] = useState(false);
+
+  const expand = () => {
+    Haptics.selectionAsync().catch(() => {});
+    try {
+      player.muted = false;
+      player.play();
+    } catch {
+      // Released mid-tap.
+    }
+    setExpanded(true);
+  };
+  const collapse = () => {
+    try {
+      player.muted = true;
+    } catch {
+      // Released.
+    }
+    setExpanded(false);
+  };
   const { status } = useEvent(player, 'statusChange', { status: player.status });
   const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
 
@@ -86,6 +121,7 @@ export function IdeaVideo({
     } catch {
       // Player already released (unmount race) — nothing to do.
     }
+    if (!isActive) setExpanded(false);
   }, [isActive, player]);
 
   // Belt and braces: the hook releases the player on unmount, but if the
@@ -117,17 +153,56 @@ export function IdeaVideo({
       {/* textureView so the rounded corners actually clip on Android — a
          SurfaceView punches through `overflow: hidden` — and so the page
          slides cleanly under the pager's horizontal translation. */}
-      <VideoView
-        player={player}
-        style={styles.video}
-        contentFit="contain"
-        nativeControls
-        allowsFullscreen
-        surfaceType="textureView"
+      {expanded ? null : (
+        <VideoView
+          player={player}
+          style={styles.video}
+          contentFit="contain"
+          nativeControls={false}
+          surfaceType="textureView"
+        />
+      )}
+
+      {/* The whole frame expands; the corner button is the visible cue. */}
+      <Pressable
+        style={StyleSheet.absoluteFill}
+        onPress={expand}
+        accessibilityRole="button"
+        accessibilityLabel={t('learning.media.videoExpandA11y')}
       />
+      <View style={styles.expandBtn} pointerEvents="none">
+        <Ionicons name="expand" size={16} color="#FFFFFF" />
+      </View>
+
+      <Modal
+        visible={expanded}
+        animationType="fade"
+        onRequestClose={collapse}
+        statusBarTranslucent
+        supportedOrientations={['portrait', 'landscape']}
+      >
+        <SafeAreaView style={styles.full} edges={['top', 'bottom']}>
+          <VideoView
+            player={player}
+            style={styles.fullVideo}
+            contentFit="contain"
+            nativeControls
+            allowsFullscreen
+          />
+          <Pressable
+            onPress={collapse}
+            hitSlop={10}
+            style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.7 }]}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.close')}
+          >
+            <Ionicons name="close" size={22} color="#FFFFFF" />
+          </Pressable>
+        </SafeAreaView>
+      </Modal>
 
       {/* Poster + spinner until the first real frame. pointerEvents none so
-         a tap still reaches the native controls underneath. */}
+         a tap still reaches the expand target underneath. */}
       {!started && (
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
           {poster ? (
@@ -172,6 +247,40 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  // Discreet: a small dark disc in the corner, the only chrome inline.
+  expandBtn: {
+    position: 'absolute',
+    right: 10,
+    bottom: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+  },
+  full: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
+  fullVideo: {
+    flex: 1,
+  },
+  closeBtn: {
+    position: 'absolute',
+    top: 48,
+    right: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
   spinner: {
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
@@ -179,7 +288,7 @@ const styles = StyleSheet.create({
   },
   durationChip: {
     position: 'absolute',
-    right: 10,
+    left: 10,
     bottom: 10,
     paddingHorizontal: 8,
     paddingVertical: 3,
