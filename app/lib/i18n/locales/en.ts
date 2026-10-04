@@ -1431,7 +1431,7 @@ const en = {
       },
       link: {
         title: "Copy the project's link",
-        body: 'With the project open in a browser, copy the address from the address bar. It has this format:',
+        body: 'With the project open in a browser, copy the address from the address bar. Or, in a chat inside the project, ask "give me this project\'s link": the instructions teach Claude the format. The link looks like this:',
       },
       paste: {
         title: 'Paste it in Perceva',
@@ -1440,8 +1440,13 @@ const en = {
     },
     projectLinkExample: 'https://claude.ai/project/0198c3a2-5b1e-7c4d-9f2a-3e6b8d1c4a70',
     projectShareWarning: 'The link from the "Share" button, which starts with claude.ai/share, does not work: use the one from the address bar.',
+    /** Pasted into the Claude project's Instructions. Asking for the link
+     *  is NOT a check-in (the first rule would log it), and Claude cannot
+     *  see the project's URL on its own: it gets the format with an
+     *  x-pattern no one can mistake for a real link, may return one only
+     *  when it can see the id, and must never invent one. */
     projectInstructions:
-      "This project is my Perceva journal. Every message I send here is the day's mood check-in, almost always dictated: log it with the Perceva connector's log_mood tool and read back what you saved (date, rating and text). If I do not state the 1-5 rating, ask using the anchors the tool returns; never infer it from tone. If the message is a question about my data, answer with the read tools instead of logging.",
+      "This project is my Perceva journal. Every message I send here is the day's mood check-in, almost always dictated: log it with the Perceva connector's log_mood tool and read back what you saved (date, rating and text). If I do not state the 1-5 rating, ask using the anchors the tool returns; never infer it from tone. If the message is a question about my data, answer with the read tools instead of logging.\n\nException: if I ask for this project's or this chat's link, log nothing; I use that link in the Perceva app. A project link has the format https://claude.ai/project/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx and a chat link https://claude.ai/chat/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx, with the id in place of the x's. If you can see the id, for example in your past-chats tools, give me the full link alone on one line, ready to copy. Never make up an id: if you cannot see it, say so and remind me to copy the address from the browser bar with the project open.",
   },
 
   hex: {
