@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { AddCard } from '@/components/AddCard';
 import { CoinIcon } from '@/components/CoinIcon';
@@ -11,6 +11,7 @@ import {
   GuideTapHint,
   GuideTryIt,
 } from '@/components/guide/GuidePlayground';
+import { GuideFit } from '@/components/guide/GuideFit';
 import { GuideLabel, GuideStep } from '@/components/guide/GuideStep';
 import { RewardCard } from '@/components/RewardCard';
 import { TrackedRewardCard } from '@/components/TrackedRewardCard';
@@ -97,6 +98,9 @@ export function RewardsGuide() {
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [menuShown, setMenuShown] = useState(false);
   const [tracked, setTracked] = useState(false);
+  // The shop's real content width (16dp gutters): the miniature is laid
+  // out at it and scaled to the sheet, so the cards keep their proportions.
+  const naturalWidth = useWindowDimensions().width - 32;
 
   const affordable = useMemo(
     () => sampleReward('guide-a', t(`${HELP}.sampleA`), 120, 'cafe-outline'),
@@ -140,40 +144,48 @@ export function RewardsGuide() {
     <>
       <GuideLabel>{t(`${HELP}.cardLabel`)}</GuideLabel>
       <GuidePlayground column>
-        {tracked && (
-          <TrackedRewardCard
-            reward={pricey}
-            coins={BALANCE}
-            onChange={() => {}}
-            onUntrack={() => setTracked(false)}
-          />
-        )}
-        <View style={styles.cards}>
-          <View style={styles.cardCell}>
-            <RewardCard
-              reward={affordable}
-              affordable
-              coins={BALANCE}
-              deficit={0}
-              onRedeem={tryIt(() => setFeedback('redeem'))}
-              onLongPress={tryIt(() => setMenuShown(true))}
-            />
-            {!tried && <GuideTapHint />}
-          </View>
-          {!tracked && (
-            <View style={styles.cardCell}>
-              <RewardCard
+        {/* The shop in miniature: laid out at the screen's real width, in the
+            real two-up grid (48% cards), then scaled to fit the sheet.
+            Squeezed into half the sheet instead, the card's pill ran past
+            its edge (owner's screenshot, 2026-10-04). */}
+        <GuideFit naturalWidth={naturalWidth}>
+          <View style={styles.shop}>
+            {tracked && (
+              <TrackedRewardCard
                 reward={pricey}
-                affordable={false}
                 coins={BALANCE}
-                deficit={pricey.cost - BALANCE}
-                onRedeem={() => {}}
-                onLongPress={tryIt(() => setMenuShown(true))}
-                onTrack={tryIt(() => setTracked(true))}
+                onChange={() => {}}
+                onUntrack={() => setTracked(false)}
               />
+            )}
+            <View style={styles.grid}>
+              <View style={styles.gridItem}>
+                <RewardCard
+                  reward={affordable}
+                  affordable
+                  coins={BALANCE}
+                  deficit={0}
+                  onRedeem={tryIt(() => setFeedback('redeem'))}
+                  onLongPress={tryIt(() => setMenuShown(true))}
+                />
+                {!tried && <GuideTapHint />}
+              </View>
+              {!tracked && (
+                <View style={styles.gridItem}>
+                  <RewardCard
+                    reward={pricey}
+                    affordable={false}
+                    coins={BALANCE}
+                    deficit={pricey.cost - BALANCE}
+                    onRedeem={() => {}}
+                    onLongPress={tryIt(() => setMenuShown(true))}
+                    onTrack={tryIt(() => setTracked(true))}
+                  />
+                </View>
+              )}
             </View>
-          )}
-        </View>
+          </View>
+        </GuideFit>
 
         {feedback === 'redeem' && (
           <View style={styles.feedback}>
@@ -325,8 +337,10 @@ function FabsReplica() {
 }
 
 const styles = StyleSheet.create({
-  cards: { flexDirection: 'row', gap: 10 },
-  cardCell: { flex: 1, minWidth: 0 },
+  // The real shop's grid (rewards.tsx): 12dp gaps, 48% cards that grow.
+  shop: { gap: tokens.space[3] },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: tokens.space[3] },
+  gridItem: { width: '48%', flexGrow: 1 },
   feedback: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   feedbackText: {
     flex: 1,

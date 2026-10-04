@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { PeriodSelector } from '@/components/dedicacao/PeriodSelector';
 import {
@@ -10,6 +10,7 @@ import {
   GuideTapHint,
   GuideTryIt,
 } from '@/components/guide/GuidePlayground';
+import { GuideFit } from '@/components/guide/GuideFit';
 import { GuideLabel, GuideStep } from '@/components/guide/GuideStep';
 import { HexChart } from '@/components/HexChart';
 import { HexGrainToggle, HexPill } from '@/components/HexGrainToggle';
@@ -133,6 +134,11 @@ export function HeroGuide() {
   const [pillar, setPillar] = useState<PillarKey>('praticada');
   const [grain, setGrain] = useState<HexGrain>('dims');
   const [opened, setOpened] = useState<DimensionId | null>(null);
+  // The switcher's miniature is laid out a little wider than the sheet:
+  // squeezed into it, "Percebida" lost its last letter, and at the tab's
+  // full width its 10px labels would shrink to ~8px. ~288dp keeps every
+  // label whole at nearly full size.
+  const switcherWidth = Math.min(288, useWindowDimensions().width - 32);
 
   const scores = useMemo(() => toMap(SAMPLE[pillar]), [pillar]);
   const today = useMemo(() => toMap(SAMPLE.percebida), []);
@@ -189,17 +195,19 @@ export function HeroGuide() {
     <>
       <GuideLabel>{t(`${HELP}.cardLabel`)}</GuideLabel>
       <GuidePlayground column>
-        <View>
-          <PillarSwitcher
-            active={pillar}
-            onChange={(p) => {
-              setTried(true);
-              setOpened(null);
-              setPillar(p);
-            }}
-          />
-          {!tried && <GuideTapHint />}
-        </View>
+        <GuideFit naturalWidth={switcherWidth}>
+          <View>
+            <PillarSwitcher
+              active={pillar}
+              onChange={(p) => {
+                setTried(true);
+                setOpened(null);
+                setPillar(p);
+              }}
+            />
+            {!tried && <GuideTapHint />}
+          </View>
+        </GuideFit>
         <View style={styles.hexWrap}>
           <HexChart
             scores={scores}
@@ -262,20 +270,25 @@ export function HeroGuide() {
   );
 }
 
-/** Dedicação's period selector, on the current 30 days — the real one. */
+/** Dedicação's period selector, on the current 30 days — the real one, as
+ *  a miniature at the tab's real width: its five chips share one row, and
+ *  in the guide's narrower column "Trimestre" split mid-word. */
 function PeriodReplica() {
   const { t } = useT();
+  const naturalWidth = useWindowDimensions().width - 32;
   const spec: WindowSpec = { granularity: 'days30', offset: 0 };
   return (
-    <PeriodSelector
-      spec={spec}
-      onChange={() => {}}
-      label={t('dedicacaoWindow.last30Days')}
-      accent={tokens.semantic.xp2}
-      halo="rgba(111, 232, 170, 0.18)"
-      border="rgba(61, 214, 140, 0.35)"
-      labels={windowChipLabels(t)}
-    />
+    <GuideFit naturalWidth={naturalWidth}>
+      <PeriodSelector
+        spec={spec}
+        onChange={() => {}}
+        label={t('dedicacaoWindow.last30Days')}
+        accent={tokens.semantic.xp2}
+        halo="rgba(111, 232, 170, 0.18)"
+        border="rgba(61, 214, 140, 0.35)"
+        labels={windowChipLabels(t)}
+      />
+    </GuideFit>
   );
 }
 
