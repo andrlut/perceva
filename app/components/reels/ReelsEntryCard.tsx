@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { TourTarget } from '@/components/tour/TourTarget';
 import { useT } from '@/lib/i18n';
 import { groupPreviewUri, type ReelGroup } from '@/lib/reels';
 import { tokens } from '@/theme';
@@ -22,14 +23,17 @@ interface Props {
   groups: ReelGroup[];
   unreadCount: number;
   onPress: () => void;
+  /** Tour spotlight id for the card itself (inside the screen padding). */
+  tourTargetId?: string;
 }
 
-export function ReelsEntryCard({ groups, unreadCount, onPress }: Props) {
+export function ReelsEntryCard({ groups, unreadCount, onPress, tourTargetId }: Props) {
   const { t } = useT();
   const thumbs = groups.slice(0, 3);
 
   return (
     <View style={styles.wrap}>
+      <TourTarget id={tourTargetId ?? 'reels.entry'} radius={tokens.radius.lg}>
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
@@ -82,6 +86,7 @@ export function ReelsEntryCard({ groups, unreadCount, onPress }: Props) {
           <Ionicons name="play" size={16} color="#3D2A00" />
         </View>
       </Pressable>
+      </TourTarget>
     </View>
   );
 }

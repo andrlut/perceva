@@ -23,7 +23,9 @@ export type TourScreen =
   | 'rewards'
   | 'me'
   | 'learn'
-  | 'settings';
+  | 'settings'
+  | 'material'
+  | 'idea';
 
 /**
  * Step config extension with a screen tag — re-exported so modules can
@@ -90,6 +92,13 @@ interface Props {
    */
   rewindOnFocus?: boolean;
   /**
+   * With `rewindOnFocus`: only rewind while the step index is at most this.
+   * Steps past it live on a sibling tab the user can simply return to, and
+   * rewinding from them would throw away a finished walk-through (M6 after
+   * the idea screen).
+   */
+  rewindMaxStep?: number;
+  /**
    * A module nobody may skip (the help module): the tooltip drops both
    * ways out ("Pular esta parte", "Sair do tour"). Only for short modules
    * whose every step has a forward button.
@@ -118,6 +127,7 @@ export function TourModule({
   onAdvanceToNextScreen,
   flatNav = false,
   rewindOnFocus = false,
+  rewindMaxStep,
   required = false,
   onComplete,
 }: Props) {
@@ -164,6 +174,7 @@ export function TourModule({
       const state = useTourStore.getState();
       if (isTerminal(state.modules[module]?.status)) return;
       const idx = state.stepIndices[module] ?? 0;
+      if (rewindMaxStep != null && idx > rewindMaxStep) return;
       if ((steps[idx]?.screen ?? 'home') === screen) return;
       let back = -1;
       for (let i = Math.min(idx, steps.length - 1); i >= 0; i--) {
@@ -176,7 +187,7 @@ export function TourModule({
       if (back !== -1) state.setStepIndex(module, back);
       // `steps` is rebuilt every render, but a module's screen layout is static.
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [rewindOnFocus, enabled, module, screen]),
+    }, [rewindOnFocus, rewindMaxStep, enabled, module, screen]),
   );
 
   // Broadcast the visible step so layout consumers (Home scroll bump,
