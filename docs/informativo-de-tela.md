@@ -22,6 +22,15 @@ O (i) do cabeçalho de cada tela é o **informativo**: ensina a mexer na tela. O
 - **Réplicas usam os componentes da própria tela** (no Minhas ideias, `CollectionControls`). Inertes e escondidas do leitor de tela.
 - **Nenhum dado pessoal no pedido.** Só como a tela funciona; os dados o Claude lê pelo conector.
 
+## Peças prontas (`app/components/guide/`)
+
+| Peça | Pra quê |
+|---|---|
+| `ScreenInfoButton` | O (i) do canto superior direito: só o glifo, sem fundo de botão. O mesmo em toda aba. |
+| `GuidePlayground`, `GuideTryIt`, `GuideGesture`, `GuideTapHint` | A caixa de teste com o elemento real, o rótulo "Experimente", as linhas de gesto e a mão pulsando até a primeira tentativa. `column` empilha quando o elemento é largo. |
+| `GuideLabel`, `GuideStep` | O rótulo de seção e a linha de cada opção com a réplica. |
+| `GuideAiButton`, `GuideAiIcon` | A IA, que o `InfoSheet` já põe sozinho no fim e ao lado do X quando recebe `aiPrompt`. |
+
 ## Como replicar numa tela nova
 
 1. **Liste as opções da tela.** Cada uma vira uma chave, na ordem em que a pessoa encontra.
@@ -34,6 +43,24 @@ O (i) do cabeçalho de cada tela é o **informativo**: ensina a mexer na tela. O
    - `use<Tela>GuidePrompt()`, que chama `buildGuidePrompt` com `guideItems`.
 5. **Na tela:** `<InfoSheet title={…} aiPrompt={use<Tela>GuidePrompt()}><TelaGuide … /></InfoSheet>`.
 6. **Teste o pedido:** com a IA ligada, toque no círculo e confira que a resposta do Claude passa por todas as opções.
+
+## Telas que já têm
+
+| Tela | Informativo | Caixa de teste |
+|---|---|---|
+| Minhas ideias | `components/ideas/CollectionGuide.tsx` | uma carta da prateleira: tocar vira, segurar mostra o menu |
+| Práticas | `components/guide/screens/PracticesGuide.tsx` | um `TaskCard` de exemplo: check, arrastar pros dois lados, segurar, tocar no nome |
+| Recanto | `components/guide/screens/RecantoGuide.tsx` | a carta do fim da ideia: virar absorve |
+| Recompensas | `components/guide/screens/RewardsGuide.tsx` | duas recompensas: resgatar, segurar, mirar |
+| Eu | `components/guide/screens/HeroGuide.tsx` | os três pilares mudando o hex, o 6/12 e os ícones das pontas |
+
+Ajustes não tem informativo, de propósito.
+
+**Opções que dependem de módulo** (Missões, Metas, Semana, Habilidades) entram num mapa `GATES` do informativo: somem do informativo **e** do pedido de quem não tem o módulo ligado. Ver `PracticesGuide` e `HeroGuide`.
+
+**Gestos dentro do informativo:** o `InfoSheet` tem o próprio `GestureHandlerRootView`, porque o `Modal` é uma janela à parte no Android. Sem isso, arrastar um cartão de prática dentro do informativo não funciona.
+
+**Nunca abra a folha de verdade de dentro do informativo** (menu, ajuste, confirmação: todas são `Modal` e empilhariam). Mostre uma réplica inerte embaixo da caixa de teste, como o menu do Minhas ideias.
 
 ## Depois: MCP de informativos
 

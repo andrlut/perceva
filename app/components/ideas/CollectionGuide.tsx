@@ -1,16 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Animated, {
-  cancelAnimation,
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withRepeat,
-  withSequence,
-  withTiming,
-} from 'react-native-reanimated';
 
+import {
+  GuideGesture,
+  GuidePlayground,
+  GuideTapHint,
+  GuideTryIt,
+} from '@/components/guide/GuidePlayground';
 import { GuideLabel, GuideStep } from '@/components/guide/GuideStep';
 import { FilterPill, IdeaSearchBox, ReviewStrip } from '@/components/ideas/CollectionControls';
 import { IdeaCard } from '@/components/ideas/IdeaCard';
@@ -169,7 +166,7 @@ export function CollectionGuide({ demoCard, pendingCount, shelf, locale }: Colle
   return (
     <>
       <GuideLabel>{t(`${HELP}.cardLabel`)}</GuideLabel>
-      <View style={styles.demo}>
+      <GuidePlayground>
         <View>
           <IdeaCard
             data={card}
@@ -184,12 +181,12 @@ export function CollectionGuide({ demoCard, pendingCount, shelf, locale }: Colle
               setMenuShown(true);
             }}
           />
-          {!tried && <TapHint />}
+          {!tried && <GuideTapHint />}
         </View>
         <View style={styles.gestures}>
-          <Text style={styles.tryIt}>{t(`${HELP}.tryIt`)}</Text>
+          <GuideTryIt>{t(`${HELP}.tryIt`)}</GuideTryIt>
           {gestureKeys.map((k) => (
-            <Gesture
+            <GuideGesture
               key={k}
               icon={GESTURE_ICONS[k]}
               title={t(`${HELP}.items.${k}.title`)}
@@ -197,7 +194,7 @@ export function CollectionGuide({ demoCard, pendingCount, shelf, locale }: Colle
             />
           ))}
         </View>
-      </View>
+      </GuidePlayground>
 
       {menuShown && <MenuReplica favorite={card.favorite === true} hasNote={!!card.note} />}
 
@@ -215,48 +212,6 @@ export function CollectionGuide({ demoCard, pendingCount, shelf, locale }: Colle
         </GuideStep>
       ))}
     </>
-  );
-}
-
-/** One gesture beside the demo card: icon, verb, what it does. */
-function Gesture({
-  icon,
-  title,
-  body,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  title: string;
-  body: string;
-}) {
-  return (
-    <View style={styles.gesture}>
-      <Ionicons name={icon} size={16} color={tokens.brand.violet2} style={styles.gestureIcon} />
-      <View style={styles.gestureCol}>
-        <Text style={styles.gestureTitle}>{title}</Text>
-        <Text style={styles.gestureBody}>{body}</Text>
-      </View>
-    </View>
-  );
-}
-
-/** The hand that pulses on the demo card until the first try. Still under
- *  reduced motion. Never takes a touch — the card underneath does. */
-function TapHint() {
-  const reduce = useReducedMotion();
-  const scale = useSharedValue(1);
-  useEffect(() => {
-    if (reduce) return;
-    scale.value = withRepeat(
-      withSequence(withTiming(1.18, { duration: 650 }), withTiming(1, { duration: 650 })),
-      -1,
-    );
-    return () => cancelAnimation(scale);
-  }, [reduce, scale]);
-  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
-  return (
-    <Animated.View pointerEvents="none" style={[styles.tapHint, style]}>
-      <Ionicons name="hand-left" size={14} color={tokens.text.hi} />
-    </Animated.View>
   );
 }
 
@@ -368,51 +323,7 @@ function ShelfHint({
 }
 
 const styles = StyleSheet.create({
-  // The playground: a tinted box so it reads as "try here", not as text.
-  demo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[3],
-    padding: tokens.space[3],
-    borderRadius: tokens.radius.md,
-    borderWidth: 1,
-    borderColor: 'rgba(155, 130, 255, 0.35)',
-    backgroundColor: 'rgba(123, 92, 255, 0.07)',
-  },
   gestures: { flex: 1, minWidth: 0, gap: 10 },
-  tryIt: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 12,
-    letterSpacing: 0.3,
-    color: tokens.brand.violet2,
-  },
-  gesture: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-  gestureIcon: { marginTop: 1 },
-  gestureCol: { flex: 1, minWidth: 0, gap: 1 },
-  gestureTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 13,
-    color: tokens.text.hi,
-  },
-  gestureBody: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
-    lineHeight: 17,
-    color: tokens.text.base,
-  },
-  tapHint: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: tokens.brand.violet,
-    borderWidth: 2,
-    borderColor: tokens.bg.surface,
-  },
 
   menu: {
     gap: 6,

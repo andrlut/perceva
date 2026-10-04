@@ -730,6 +730,61 @@ const en = {
   },
 
   learning: {
+    /** The tab's guide (its (i)) — RecantoGuide, docs/informativo-de-tela.md.
+     *  `items` follow RECANTO_GUIDE_ITEMS: title + body on the sheet, `ai`
+     *  only in the AI prompt. No personal data here. */
+    help: {
+      title: 'How the Study nook works',
+      a11y: 'How the Study nook works',
+      screenName: 'Study nook',
+      purpose: "It's where I read Perceva's materials, split into short ideas, and keep the ones I absorb.",
+      examples: 'from the materials and ideas I have seen',
+      cardLabel: 'At the end of each idea',
+      tryIt: 'Try it on this card',
+      screenLabel: 'On the screen',
+      sampleTitle: 'Flip to absorb',
+      sampleClaim: 'At the end of each idea, flipping the card keeps it in My ideas.',
+      sampleMaterial: 'The power of sleep',
+      sampleSummary: 'What research says about sleeping well.',
+      demoAbsorbed: 'Absorbed! In the app, it would go to My ideas and into review.',
+      items: {
+        absorb: {
+          title: 'Flip the card',
+          body: 'At the end of each idea, flipping the card absorbs the idea.',
+          ai: "Only that flip, at the end of the idea's page, absorbs: the idea goes to My ideas and into review. Flipping cards on the material's page or in Explore only shows the answer. XP arrives when the whole material is absorbed: 10 plus 2 per idea, in XP and in coins.",
+        },
+        explore: {
+          title: 'Explore',
+          body: 'Quick ideas, one after another.',
+          ai: 'Tap the right side to go forward, the left to go back; holding hides the text; swiping down exits. They come in sets of 5. "Open idea" takes you to the full idea, where you can absorb it; Explore alone does not absorb.',
+        },
+        continue: {
+          title: 'Continue reading',
+          body: 'The material you left halfway.',
+          ai: 'It shows how many ideas are absorbed and which one is next; tapping takes you back to the material.',
+        },
+        rows: {
+          title: 'Rows',
+          body: 'New this month and one row per area. Swipe sideways.',
+          ai: "The newest comes first, and a new item also shows in its area's row. Pulling the screen down reloads.",
+        },
+        cover: {
+          title: "The material's card",
+          body: 'Tap to open. Gold rim: in progress. Green check: done.',
+          ai: 'The icons show the category (flask is Research, book is Book, compass is Foundations), the first sub-area, how many ideas it has and whether it has audio, video or images. On the free plan, anything released more than 30 days ago gets the Premium seal.',
+        },
+        lamp: {
+          title: 'The bulb',
+          body: 'Opens My ideas. The number is the ideas waiting for review.',
+          ai: 'In My ideas, the "to review" strip opens the pile: swipe right to favorite, left to let go.',
+        },
+        filters: {
+          title: 'Filters and search',
+          body: 'The filter button opens search, the status and the filters by area, type and sub-area.',
+          ai: 'The screen opens on Pending, so what you have finished leaves the rows: switch to Done or All to see it. Only one area, type or sub-area filter works at a time, and the gold dot on the button means a filter is on. "Clear filter" does not clear the search; the X on the search chip does.',
+        },
+      },
+    },
     title: 'Study nook',
     empty: 'Nothing here with this filter.',
     read: { one: 'done', other: 'done' },
@@ -1075,6 +1130,82 @@ const en = {
   },
 
   hero: {
+    /** The tab's guide (its (i)) — HeroGuide, docs/informativo-de-tela.md.
+     *  `items` follow HERO_GUIDE_ITEMS: title + body on the sheet, `ai` only
+     *  in the AI prompt. No personal data here. */
+    help: {
+      title: 'How Me works',
+      a11y: 'How Me works',
+      screenName: 'Me',
+      purpose: "It's my portrait in Perceva, in three pillars: how I see myself, what my practices train and where I want to get.",
+      examples: 'from my own portrait',
+      cardLabel: 'In the three portraits',
+      tryIt: 'Try it here',
+      screenLabel: 'On the screen',
+      demoDim: 'This would open {{dim}}.',
+      items: {
+        pillars: {
+          title: 'Switch portrait',
+          body: 'Tap Perceived, Practiced or Desired.',
+          ai: 'Perceived is how you see yourself: self-assessment, questionnaire and mood. Practiced is what your practices train, in XP per period. Desired is where you want to get: the North and, with Goals or Skills on, the Path. The tab opens on Practiced.',
+        },
+        grain: {
+          title: '6 or 12',
+          body: 'The 6/12 button by the hex shows the 6 areas or the 12 sub-areas.',
+          ai: 'It lasts only while you are on the screen; the default is set in Settings.',
+        },
+        hexIcons: {
+          title: 'Hex points',
+          body: 'Tap the icon at a point to open that area.',
+          ai: "The hex's center shows the average of the 6 areas (Perceived), the period's XP with its change (Practiced) or the target over today's outline (Desired).",
+        },
+        profile: {
+          title: 'Your profile',
+          body: 'Tap the emblem or your name to open the full profile.',
+          ai: 'The emblem sums up the last 30 days: the rings are XP, the gold arms are the instruments done, the glow is the materials read and the center is your most practiced sub-area. In the full profile you can customize your title and take the 6 self-knowledge instruments: Big Five, Schwartz, ECR-R, DISC, Strengths and Types.',
+        },
+        legend: {
+          title: 'Legend',
+          body: 'Tap a series to show or hide it.',
+          ai: 'The questionnaire series starts hidden; the last visible series cannot be hidden; the area cards follow the visible series.',
+        },
+        assessment: {
+          title: 'Self-assessment and questionnaire',
+          body: 'In Perceived: update how you see yourself or take the questionnaire.',
+          ai: 'The self-assessment takes 1 minute; the questionnaire, 5 to 10. With both done, "Compare self vs questionnaire" shows up.',
+        },
+        mood: {
+          title: "Today's mood",
+          body: 'In Perceived: tap the card to log your mood.',
+          ai: "The card shows the day's face and a line of the last 14 days; \"See history\" opens the calendar.",
+        },
+        period: {
+          title: 'Period',
+          body: 'In Practiced: 30 days, week, month, quarter or all. The arrows go back in time.',
+          ai: '"All" is the last 12 months; the forward arrow turns off on the current period.',
+        },
+        ruler: {
+          title: 'Ruler',
+          body: 'In Practiced: the "Up to 300" button raises the hex ruler to 600 and 900.',
+          ai: 'The ruler is the XP that fills one area of the hex in the period; it lasts only while you are on the screen.',
+        },
+        cards: {
+          title: 'Area cards',
+          body: "In Practiced: tap a card to see each sub-area's days.",
+          ai: "On each sub-area's bar, the tick marks the ruler, the bright part is what went past it and the notch appears past 3 times the ruler. The open card shows the level and a link to the area's history.",
+        },
+        north: {
+          title: 'North',
+          body: 'In Desired: set a target for each area; the outline shows where you are today.',
+          ai: '"Chart my north" opens the self-assessment in target mode. The ✓ shows when the target is not above where you already are.',
+        },
+        path: {
+          title: 'Path',
+          body: 'In Desired: your goals and skills.',
+          ai: 'Hold a goal to open them all; "See all skills" opens the skills. Only shows with the Goals or Skills modules on in Settings.',
+        },
+      },
+    },
     discCta: 'Discover my profile',
     perfilA11y: 'Open your full profile',
   },
@@ -1400,10 +1531,103 @@ const en = {
       emptyRecurring: 'No cadences set up yet.',
       recurringLead: 'Active cadences',
     },
+    /** The tab's guide (its (i)) — PracticesGuide, docs/informativo-de-tela.md.
+     *  `items` follow PRACTICES_GUIDE_ITEMS: title + body on the sheet, `ai`
+     *  only in the AI prompt. No personal data here. */
     help: {
       title: 'How Practices works',
       a11y: 'How Practices works',
-      body: '**Tap the check** to complete a practice.\n\n**Swipe a practice right** to complete it adjusting the stars, the coins and how many times; **left** to skip the day.\n\n**Tap** a practice to open its menu: complete with adjustments, skip or edit. **Hold** it to go straight to editing.\n\n**Swipe the top of the screen** (above the first practice), or use the arrows, to change days. **Tap the date** to go back to today.\n\n**Past days:** log what you forgot. Practices created after that day show up in their own block.',
+      screenName: 'Practices',
+      purpose: "It's the app's main screen: the day's practices to complete, what I've done, my mood and the day's redemptions.",
+      examples: 'from my own practices',
+      cardLabel: 'On a practice',
+      tryIt: 'Try it on this practice',
+      screenLabel: 'On the screen',
+      menuLabel: "The practice's menu",
+      adjustLabel: 'The adjustment',
+      adjustCoins: 'Coins',
+      coinLevels: { none: 'None', half: 'Half', same: 'Same', double: 'Double' },
+      sampleTitle: 'Meditate 10 minutes',
+      demoDone: 'Done: +{{xp}} XP and +{{coins}} coins. It would leave the list and go to "Done today".',
+      demoSkipped: 'Skipped: it would leave the list with no XP and go to "Skipped".',
+      demoEdit: 'This would open the practice editor.',
+      items: {
+        check: {
+          title: 'Tap the check',
+          body: 'Completes it right away, with the usual stars.',
+          ai: "Each star is worth 10 XP, and coins follow the practice's coin setting. The practice leaves the list and goes to \"Done today\". On a past day, the completion is filed at noon of that day. Only the check completes on a tap; tapping the rest of the card opens the menu.",
+        },
+        swipeRight: {
+          title: 'Swipe right',
+          body: 'Opens the adjustment: stars, coins and how many times.',
+          ai: 'In the adjustment you can change the stars of each sub-area (1 to 5), the coins for this log only (None, Half, Same or Double) and "How many times" (1 to 50); each time becomes a separate completion you can undo one by one.',
+        },
+        swipeLeft: {
+          title: 'Swipe left',
+          body: 'Skips the day, losing nothing.',
+          ai: 'The practice leaves the list with no XP and goes to "Skipped", where "Resume" brings it back.',
+        },
+        tap: {
+          title: 'Tap the practice',
+          body: 'Opens the menu: complete with adjustments, skip or edit.',
+          ai: 'Adjust stars opens the same adjustment as swiping right; Skip does the same as swiping left; Edit practice opens the title, sub-areas and frequency. Holding the check opens this menu too.',
+        },
+        hold: {
+          title: 'Hold the practice',
+          body: 'Goes straight to the editor.',
+          ai: 'The editor has the title, the sub-areas with their stars and the frequency.',
+        },
+        days: {
+          title: 'Change the day',
+          body: 'Use the arrows or swipe the top of the screen. Tap the date to go back to today.',
+          ai: 'The app never goes into the future. On a past day you can log what you forgot: completions, mood and redemptions are filed on that day, and practices created after it show in a block of their own. Pulling the screen down reloads.',
+        },
+        stats: {
+          title: 'The day in numbers',
+          body: "The day's XP and coins. The face next to them opens the mood.",
+          ai: "The numbers belong to the selected day; the face stays dashed until that day's mood is logged.",
+        },
+        closeDay: {
+          title: 'Clear the day',
+          body: 'With two or more open practices, skips them all at once.',
+          ai: 'It asks for confirmation and loses nothing: the practices go to "Skipped" and you can resume them one by one.',
+        },
+        done: {
+          title: 'Done',
+          body: 'Tap the title to open it. +1 logs it again; the arrow undoes.',
+          ai: '+1 repeats the stars and coins of that completion. Undo returns the XP and the coins.',
+        },
+        skipped: {
+          title: 'Skipped',
+          body: 'What you skipped that day. "Resume" puts it back on the list.',
+          ai: 'Skipping takes away no XP or coins; it only removes the practice from that day.',
+        },
+        mood: {
+          title: "The day's mood",
+          body: 'A face logs the day. "Fill in" opens tags and a note.',
+          ai: 'Once logged, the card shows the face, the tags and the note, with "Edit". With the AI buttons on, the icon next to it opens Claude to dictate the day.',
+        },
+        redemptions: {
+          title: "The day's redemptions",
+          body: 'The + redeems a reward on that day; the arrow undoes it.',
+          ai: "A redemption is paid from today's balance, even on a past day. Undo returns the coins paid.",
+        },
+        buttons: {
+          title: 'Floating buttons',
+          body: 'The violet one opens all practices; the top one, the calendar.',
+          ai: 'In All practices you create, adopt from the catalog, edit, reorder and archive. The "All practices" row at the end of the list opens the same place; on a past day, it logs on that day.',
+        },
+        quests: {
+          title: 'Quests and goals',
+          body: 'The chips at the top show progress; tap to open.',
+          ai: 'The "+ Quests" and "+ Goals" buttons open the full boards. They only show with the Quests or Goals modules on in Settings.',
+        },
+        week: {
+          title: 'My Week',
+          body: 'The week card: the big 3 and what needs to happen.',
+          ai: 'Tap to open the week; when empty, it invites you to set it up. Only shows with the My Week module on.',
+        },
+      },
     },
     coinsOfDayA11y: '{{count}} coins on this day',
     moodShortcut: {
@@ -1816,6 +2040,71 @@ const en = {
   },
 
   rewards: {
+    /** The tab's guide (its (i)) — RewardsGuide, docs/informativo-de-tela.md.
+     *  `items` follow REWARDS_GUIDE_ITEMS: title + body on the sheet, `ai`
+     *  only in the AI prompt. No personal data here. */
+    help: {
+      title: 'How Rewards works',
+      a11y: 'How Rewards works',
+      screenName: 'Rewards',
+      purpose: "It's my shop: I spend the coins I earn from practices on rewards I define myself.",
+      examples: 'from my own rewards',
+      cardLabel: 'On the rewards',
+      tryIt: 'Try it on these rewards',
+      screenLabel: 'On the screen',
+      menuLabel: "The reward's menu",
+      sampleA: 'Specialty coffee',
+      sampleB: 'Dinner out',
+      demoRedeem: 'This would open the confirmation: quantity, total and Redeem. The coins would go out right away.',
+      demoTrack: 'Tracked! It went to the top as your goal; the X stops tracking.',
+      items: {
+        redeem: {
+          title: 'Redeem',
+          body: 'The gold button shows when your balance can pay. Redeeming already counts as used.',
+          ai: 'Tapping Redeem opens the confirmation: pick the quantity (up to 50; one for one-time rewards) and confirm. The coins go out right away and the redemption is filed on that day; the celebration has "Undo". There is no saving it for later.',
+        },
+        hold: {
+          title: 'Hold',
+          body: 'Opens the menu: redeem multiple, edit or archive.',
+          ai: 'Redeem multiple opens the same confirmation, for several at once. Archive removes the reward from the shop without erasing its history; you can restore it in Manage.',
+        },
+        track: {
+          title: 'Track',
+          body: 'On rewards you cannot afford yet, Track pins one as your goal at the top.',
+          ai: 'One goal at a time: tracking another replaces the current one. The goal card shows how much is left; tapping it switches the goal, the X stops tracking, and Redeem appears once the balance gets there.',
+        },
+        balance: {
+          title: 'Balance',
+          body: 'The coins you have. Practices add; redemptions subtract.',
+          ai: 'Pulling the screen down refreshes the balance and the shop.',
+        },
+        chips: {
+          title: 'Categories',
+          body: 'Indulgence, Good and Experience filter the shop. You can pick more than one.',
+          ai: 'None picked shows everything. The filter never hides the goal.',
+        },
+        sections: {
+          title: 'Sections',
+          body: 'Available now, Almost there and Big goals.',
+          ai: 'Available now is what your balance can pay, in the order you set in Manage. Almost there is anything short by up to 30% of its price. Big goals is the rest, most expensive first.',
+        },
+        add: {
+          title: 'New reward',
+          body: 'The last card creates a reward of your own.',
+          ai: 'The free plan holds 5 active rewards; archiving makes room. With an empty shop, ready-made suggestions show up to adopt.',
+        },
+        undo: {
+          title: 'Undo later',
+          body: 'Past the celebration? Undo it in the calendar or in Redemptions.',
+          ai: "In the calendar, on the Vault front, and in the \"Day's redemptions\" card on Practices, tap the arrow on the redemption. In Manage, the clock opens Redemptions: hold a redemption to undo it. Undo returns what was paid.",
+        },
+        buttons: {
+          title: 'Floating buttons',
+          body: 'The gold one opens Manage; the top one, the calendar.',
+          ai: 'In Manage you create, adopt suggestions, edit, reorder, archive and see redemptions. The calendar opens on the Vault front.',
+        },
+      },
+    },
     title: 'Rewards',
     new: 'New reward',
     edit: 'Edit reward',

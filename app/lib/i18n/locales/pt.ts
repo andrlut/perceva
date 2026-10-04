@@ -726,6 +726,61 @@ const pt: Translations = {
   },
 
   learning: {
+    /** The tab's guide (its (i)) — RecantoGuide, docs/informativo-de-tela.md.
+     *  `items` follow RECANTO_GUIDE_ITEMS: title + body on the sheet, `ai`
+     *  only in the AI prompt. No personal data here. */
+    help: {
+      title: 'Como usar o Recanto',
+      a11y: 'Como usar o Recanto',
+      screenName: 'Recanto',
+      purpose: 'É onde eu leio os materiais do Perceva, divididos em ideias curtas, e guardo as que absorvo.',
+      examples: 'dos materiais e das ideias que eu já vi',
+      cardLabel: 'No fim de cada ideia',
+      tryIt: 'Experimente nesta carta',
+      screenLabel: 'Na tela',
+      sampleTitle: 'Vire pra absorver',
+      sampleClaim: 'No fim de cada ideia, virar a carta guarda ela em Minhas ideias.',
+      sampleMaterial: 'O poder do sono',
+      sampleSummary: 'O que a pesquisa diz sobre dormir bem.',
+      demoAbsorbed: 'Absorvida! No app, ela iria pra Minhas ideias e pra revisão.',
+      items: {
+        absorb: {
+          title: 'Vire a carta',
+          body: 'No fim de cada ideia, virar a carta absorve a ideia.',
+          ai: 'Só esse giro, no fim da página da ideia, absorve: a ideia vai pra Minhas ideias e entra na revisão. Virar cartas na página do material ou no Explorar só mostra a resposta. O XP chega quando o material inteiro é absorvido: 10 mais 2 por ideia, em XP e em moedas.',
+        },
+        explore: {
+          title: 'Explorar',
+          body: 'Ideias rápidas, uma atrás da outra.',
+          ai: 'Toque à direita avança, à esquerda volta; segurar esconde o texto; arrastar pra baixo sai. Vem em séries de 5. "Abrir ideia" leva à ideia completa, onde dá pra absorver; o Explorar sozinho não absorve.',
+        },
+        continue: {
+          title: 'Continue lendo',
+          body: 'O material que você deixou pela metade.',
+          ai: 'Mostra quantas ideias já foram absorvidas e qual é a próxima; tocar leva de volta ao material.',
+        },
+        rows: {
+          title: 'Fileiras',
+          body: 'Novidades do mês e uma fileira por área. Deslize pro lado.',
+          ai: 'O mais novo vem primeiro, e uma novidade aparece também na fileira da área dela. Puxar a tela pra baixo recarrega.',
+        },
+        cover: {
+          title: 'O cartão do material',
+          body: 'Toque pra abrir. Borda dourada: em andamento. Check verde: concluído.',
+          ai: 'Os ícones mostram a categoria (frasco é Pesquisa, livro é Livro, bússola é Fundamentos), a primeira sub-área, quantas ideias tem e se tem áudio, vídeo ou imagens. No plano grátis, o que saiu há mais de 30 dias leva o selo Premium.',
+        },
+        lamp: {
+          title: 'A lâmpada',
+          body: 'Abre Minhas ideias. O número são as ideias esperando revisão.',
+          ai: 'Em Minhas ideias, a faixa "pra revisar" abre a pilha: arraste pra direita pra favoritar, pra esquerda pra soltar.',
+        },
+        filters: {
+          title: 'Filtros e busca',
+          body: 'O botão de filtro abre a busca, o estado e os filtros por área, tipo e sub-área.',
+          ai: 'A tela abre em Pendentes, então o que já foi concluído some das fileiras: troque pra Concluídos ou Todos pra ver. Só um filtro de área, tipo ou sub-área vale por vez, e o ponto dourado no botão avisa que tem filtro ligado. "Limpar filtro" não limpa a busca; o X no chip da busca limpa.',
+        },
+      },
+    },
     title: 'Recanto',
     empty: 'Nada por aqui com esse filtro.',
     read: { one: 'concluído', other: 'concluídos' },
@@ -1070,6 +1125,82 @@ const pt: Translations = {
   },
 
   hero: {
+    /** The tab's guide (its (i)) — HeroGuide, docs/informativo-de-tela.md.
+     *  `items` follow HERO_GUIDE_ITEMS: title + body on the sheet, `ai` only
+     *  in the AI prompt. No personal data here. */
+    help: {
+      title: 'Como usar o Eu',
+      a11y: 'Como usar o Eu',
+      screenName: 'Eu',
+      purpose: 'É o meu retrato no Perceva, em três pilares: como eu me vejo, o que as minhas práticas treinam e onde eu quero chegar.',
+      examples: 'do meu próprio retrato',
+      cardLabel: 'Nos três retratos',
+      tryIt: 'Experimente aqui',
+      screenLabel: 'Na tela',
+      demoDim: 'Abriria a área {{dim}}.',
+      items: {
+        pillars: {
+          title: 'Trocar de retrato',
+          body: 'Toque em Percebida, Praticada ou Desejada.',
+          ai: 'Percebida é como você se vê: autoavaliação, questionário e humor. Praticada é o que as suas práticas treinam, em XP por período. Desejada é onde você quer chegar: o Norte e, com Metas ou Habilidades ligados, o Caminho. A aba abre em Praticada.',
+        },
+        grain: {
+          title: '6 ou 12',
+          body: 'O botão 6/12 junto do hex mostra as 6 áreas ou as 12 sub-áreas.',
+          ai: 'Vale só enquanto você está na tela; o padrão fica em Ajustes, em "Hexágono abre em".',
+        },
+        hexIcons: {
+          title: 'Pontas do hex',
+          body: 'Toque no ícone de uma ponta pra abrir a área.',
+          ai: 'O centro do hex mostra a média das 6 áreas (Percebida), o XP do período com a variação (Praticada) ou a meta sobre o contorno de hoje (Desejada).',
+        },
+        profile: {
+          title: 'Seu perfil',
+          body: 'Toque no emblema ou no nome pra abrir o perfil completo.',
+          ai: 'O emblema resume os últimos 30 dias: os anéis são o XP, os braços dourados são os instrumentos feitos, o brilho são os materiais lidos e o centro é a sub-área mais praticada. No perfil completo dá pra personalizar o título e fazer os 6 instrumentos de autoconhecimento: Big Five, Schwartz, ECR-R, DISC, Strengths e Tipos.',
+        },
+        legend: {
+          title: 'Legenda',
+          body: 'Toque numa série pra mostrar ou esconder.',
+          ai: 'A série do questionário começa escondida; a última série visível não esconde; os cartões das áreas seguem a série que está visível.',
+        },
+        assessment: {
+          title: 'Autoavaliação e questionário',
+          body: 'Em Percebida: atualize como você se vê ou faça o questionário.',
+          ai: 'A autoavaliação leva 1 minuto; o questionário, de 5 a 10. Com os dois feitos, aparece "Comparar self vs questionário".',
+        },
+        mood: {
+          title: 'Humor de hoje',
+          body: 'Em Percebida: toque no cartão pra registrar o humor.',
+          ai: 'O cartão mostra a carinha do dia e um traço dos últimos 14 dias; "Ver histórico" abre o calendário.',
+        },
+        period: {
+          title: 'Período',
+          body: 'Em Praticada: 30 dias, semana, mês, trimestre ou total. As setas voltam no tempo.',
+          ai: '"Total" são os últimos 12 meses; a seta pra frente desliga no período atual.',
+        },
+        ruler: {
+          title: 'Régua',
+          body: 'Em Praticada: o botão "Até 300" sobe a régua do hex pra 600 e 900.',
+          ai: 'A régua é o XP que enche uma área do hex no período; vale só enquanto você está na tela.',
+        },
+        cards: {
+          title: 'Cartões das áreas',
+          body: 'Em Praticada: toque num cartão pra ver os dias de cada sub-área.',
+          ai: 'Na barra de cada sub-área, o traço marca a régua, o trecho aceso é o que passou dela e o entalhe aparece depois de 3 vezes a régua. O cartão aberto mostra o nível e um link pro histórico da área.',
+        },
+        north: {
+          title: 'Norte',
+          body: 'Em Desejada: trace uma meta pra cada área; o contorno mostra onde você está hoje.',
+          ai: '"Traçar meu norte" abre a autoavaliação no modo meta. O ✓ aparece quando a meta não passa de onde você já está.',
+        },
+        path: {
+          title: 'Caminho',
+          body: 'Em Desejada: as suas metas e habilidades.',
+          ai: 'Segure uma meta pra abrir todas; "Ver todas as skills" abre as habilidades. Só aparece com os módulos Metas ou Habilidades ligados em Ajustes.',
+        },
+      },
+    },
     discCta: 'Descobrir meu perfil',
     perfilA11y: 'Abrir seu perfil completo',
   },
@@ -1395,10 +1526,103 @@ const pt: Translations = {
       emptyRecurring: 'Você ainda não tem cadências.',
       recurringLead: 'Cadências ativas',
     },
+    /** The tab's guide (its (i)) — PracticesGuide, docs/informativo-de-tela.md.
+     *  `items` follow PRACTICES_GUIDE_ITEMS: title + body on the sheet, `ai`
+     *  only in the AI prompt. No personal data here. */
     help: {
       title: 'Como usar as Práticas',
       a11y: 'Como usar as Práticas',
-      body: '**Toque no check** pra concluir a prática.\n\n**Arraste a prática pra direita** pra concluir ajustando as estrelas, as moedas e quantas vezes; **pra esquerda** pra pular o dia.\n\n**Toque** na prática pra abrir o menu: concluir ajustando, pular ou editar. **Segure** pra ir direto à edição.\n\n**Deslize o topo da tela** (acima da primeira prática), ou use as setas, pra trocar de dia. **Toque na data** pra voltar pra hoje.\n\n**Dias passados:** registre o que você esqueceu. Práticas criadas depois daquele dia aparecem num bloco à parte.',
+      screenName: 'Práticas',
+      purpose: 'É a tela principal do app: as práticas do dia pra concluir, o que eu já fiz, o meu humor e os resgates do dia.',
+      examples: 'das minhas próprias práticas',
+      cardLabel: 'Na prática',
+      tryIt: 'Experimente nesta prática',
+      screenLabel: 'Na tela',
+      menuLabel: 'O menu da prática',
+      adjustLabel: 'O ajuste',
+      adjustCoins: 'Moedas',
+      coinLevels: { none: 'Nada', half: 'Metade', same: 'Igual', double: 'Dobro' },
+      sampleTitle: 'Meditar 10 minutos',
+      demoDone: 'Concluída: +{{xp}} XP e +{{coins}} moedas. Ela sairia da lista e iria pra "Feitas hoje".',
+      demoSkipped: 'Pulada: sairia da lista sem XP e iria pra "Puladas".',
+      demoEdit: 'Aqui abriria a edição da prática.',
+      items: {
+        check: {
+          title: 'Toque no check',
+          body: 'Conclui na hora, com as estrelas de sempre.',
+          ai: 'Cada estrela vale 10 de XP, e as moedas seguem o ajuste de moedas da prática. A prática sai da lista e vai pra "Feitas hoje". Num dia passado, a conclusão fica registrada ao meio-dia daquele dia. Só o check conclui num toque; tocar no resto do cartão abre o menu.',
+        },
+        swipeRight: {
+          title: 'Arraste pra direita',
+          body: 'Abre o ajuste: estrelas, moedas e quantas vezes.',
+          ai: 'No ajuste dá pra mudar as estrelas de cada sub-área (de 1 a 5), as moedas só deste registro (Nada, Metade, Igual ou Dobro) e "Quantas vezes" (de 1 a 50); cada vez vira uma conclusão separada, que dá pra desfazer uma por uma.',
+        },
+        swipeLeft: {
+          title: 'Arraste pra esquerda',
+          body: 'Pula o dia, sem perder nada.',
+          ai: 'A prática sai da lista sem XP e vai pra "Puladas", de onde "Retomar" devolve ela.',
+        },
+        tap: {
+          title: 'Toque na prática',
+          body: 'Abre o menu: concluir ajustando, pular ou editar.',
+          ai: 'Ajustar estrelas abre o mesmo ajuste de arrastar pra direita; Pular faz o mesmo que arrastar pra esquerda; Editar prática abre o título, as sub-áreas e a frequência. Segurar o check também abre esse menu.',
+        },
+        hold: {
+          title: 'Segure a prática',
+          body: 'Vai direto pra edição.',
+          ai: 'A edição tem o título, as sub-áreas com as estrelas de cada uma e a frequência.',
+        },
+        days: {
+          title: 'Trocar de dia',
+          body: 'Use as setas ou deslize o topo da tela. Toque na data pra voltar pra hoje.',
+          ai: 'O app nunca vai pro futuro. Num dia passado dá pra registrar o que você esqueceu: conclusões, humor e resgates ficam naquele dia, e práticas criadas depois dele aparecem num bloco à parte. Puxar a tela pra baixo recarrega.',
+        },
+        stats: {
+          title: 'O dia em números',
+          body: 'O XP e as moedas do dia. O rosto ao lado abre o humor.',
+          ai: 'Os números são do dia selecionado; o rosto fica tracejado até o humor daquele dia ser registrado.',
+        },
+        closeDay: {
+          title: 'Fechar o dia',
+          body: 'Com duas ou mais práticas abertas, pula todas de uma vez.',
+          ai: 'Pede confirmação e não perde nada: as práticas vão pra "Puladas" e dá pra retomar uma por uma.',
+        },
+        done: {
+          title: 'Feitas',
+          body: 'Toque no título pra abrir. +1 registra de novo; a seta desfaz.',
+          ai: '+1 repete as estrelas e as moedas daquela conclusão. Desfazer devolve o XP e as moedas.',
+        },
+        skipped: {
+          title: 'Puladas',
+          body: 'As que você pulou no dia. "Retomar" devolve pra lista.',
+          ai: 'Pular não tira XP nem moedas; só tira a prática daquele dia.',
+        },
+        mood: {
+          title: 'Humor do dia',
+          body: 'Uma carinha registra o dia. "Preencher" abre tags e nota.',
+          ai: 'Depois de registrar, o cartão mostra a carinha, as tags e a nota, com "Editar". Com os botões de IA ligados, o ícone ao lado abre o Claude pra ditar o dia.',
+        },
+        redemptions: {
+          title: 'Resgates do dia',
+          body: 'O + resgata uma recompensa naquele dia; a seta desfaz.',
+          ai: 'O resgate paga com o saldo de hoje, mesmo num dia passado. Desfazer devolve as moedas pagas.',
+        },
+        buttons: {
+          title: 'Botões flutuantes',
+          body: 'O roxo abre todas as práticas; o de cima, o calendário.',
+          ai: 'Em Todas as práticas você cria, adota do catálogo, edita, ordena e arquiva. A linha "Todas as práticas", no fim da lista, abre o mesmo lugar; num dia passado, registra naquele dia.',
+        },
+        quests: {
+          title: 'Missões e metas',
+          body: 'Os chips no topo mostram o progresso; toque pra abrir.',
+          ai: 'Os botões "+ Missões" e "+ Metas" abrem os quadros completos. Só aparecem com os módulos Missões ou Metas ligados em Ajustes.',
+        },
+        week: {
+          title: 'Minha Semana',
+          body: 'O cartão da semana: as 3 grandes e o que precisa acontecer.',
+          ai: 'Toque pra abrir a semana; vazia, ele convida a montar. Só aparece com o módulo Minha Semana ligado.',
+        },
+      },
     },
     coinsOfDayA11y: '{{count}} moedas neste dia',
     moodShortcut: {
@@ -1820,6 +2044,71 @@ const pt: Translations = {
   },
 
   rewards: {
+    /** The tab's guide (its (i)) — RewardsGuide, docs/informativo-de-tela.md.
+     *  `items` follow REWARDS_GUIDE_ITEMS: title + body on the sheet, `ai`
+     *  only in the AI prompt. No personal data here. */
+    help: {
+      title: 'Como usar as Recompensas',
+      a11y: 'Como usar as Recompensas',
+      screenName: 'Recompensas',
+      purpose: 'É a minha loja: eu gasto as moedas que ganho nas práticas em recompensas que eu mesmo defino.',
+      examples: 'das minhas próprias recompensas',
+      cardLabel: 'Nas recompensas',
+      tryIt: 'Experimente nestas recompensas',
+      screenLabel: 'Na tela',
+      menuLabel: 'O menu da recompensa',
+      sampleA: 'Café especial',
+      sampleB: 'Jantar fora',
+      demoRedeem: 'Aqui abriria a confirmação: quantidade, total e Resgatar. As moedas sairiam na hora.',
+      demoTrack: 'Mirada! Ela foi pro topo como a sua meta; o X para de mirar.',
+      items: {
+        redeem: {
+          title: 'Resgatar',
+          body: 'O botão dourado aparece quando o saldo paga. Resgatar já conta como usado.',
+          ai: 'Tocar em Resgatar abre a confirmação: escolha a quantidade (até 50; nas de uma vez só, uma) e confirme. As moedas saem na hora e o resgate fica registrado no dia; a comemoração tem "Desfazer". Não existe guardar pra usar depois.',
+        },
+        hold: {
+          title: 'Segure',
+          body: 'Abre o menu: resgatar quantidade, editar ou arquivar.',
+          ai: 'Resgatar quantidade abre a mesma confirmação, pra várias de uma vez. Arquivar tira a recompensa da loja sem apagar o histórico; dá pra restaurar em Gerenciar.',
+        },
+        track: {
+          title: 'Mirar',
+          body: 'Nas que ainda faltam moedas, Mirar fixa a recompensa como meta no topo.',
+          ai: 'Só uma meta por vez: mirar outra troca a atual. O cartão da meta mostra quanto falta; tocar nele troca a meta, o X para de mirar e o Resgatar aparece quando o saldo chega.',
+        },
+        balance: {
+          title: 'Saldo',
+          body: 'As moedas que você tem. Práticas somam; resgates descontam.',
+          ai: 'Puxar a tela pra baixo atualiza o saldo e a loja.',
+        },
+        chips: {
+          title: 'Categorias',
+          body: 'Indulgência, Bem e Experiência filtram a loja. Dá pra marcar mais de uma.',
+          ai: 'Nenhuma marcada mostra tudo. O filtro nunca esconde a meta.',
+        },
+        sections: {
+          title: 'Seções',
+          body: 'Disponíveis agora, Quase lá e Grandes metas.',
+          ai: 'Disponíveis agora são as que o saldo paga, na ordem que você define em Gerenciar. Quase lá são as que faltam até 30% do preço. Grandes metas são o resto, das mais caras pras mais baratas.',
+        },
+        add: {
+          title: 'Nova recompensa',
+          body: 'O último cartão cria uma recompensa sua.',
+          ai: 'No plano grátis cabem 5 recompensas ativas; arquivar abre espaço. Com a loja vazia, aparecem sugestões prontas pra adotar.',
+        },
+        undo: {
+          title: 'Desfazer depois',
+          body: 'Passou da comemoração? Desfaça no calendário ou em Resgates.',
+          ai: 'No calendário, na frente Vault, e no cartão "Resgates do dia" das Práticas, toque na seta do resgate. Em Gerenciar, o relógio abre Resgates: segure um resgate pra desfazer. Desfazer devolve o que foi pago.',
+        },
+        buttons: {
+          title: 'Botões flutuantes',
+          body: 'O dourado abre Gerenciar; o de cima, o calendário.',
+          ai: 'Em Gerenciar você cria, adota sugestões, edita, ordena, arquiva e vê os resgates. O calendário já abre na frente Vault.',
+        },
+      },
+    },
     title: 'Recompensas',
     new: 'Nova recompensa',
     edit: 'Editar recompensa',
