@@ -726,9 +726,7 @@ const pt: Translations = {
   },
 
   learning: {
-    eyebrow: 'Biblioteca · Sua via',
     title: 'Recanto',
-    subtitle: 'Pra ler, ouvir ou ver — sempre curto, sempre ligado ao que você cultiva.',
     empty: 'Nada por aqui com esse filtro.',
     read: { one: 'concluído', other: 'concluídos' },
     min: '{{count}} min',
