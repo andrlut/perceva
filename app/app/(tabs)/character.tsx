@@ -11,7 +11,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useBottomNavClearance } from '@/components/BottomNavBar';
+import { HeroGuide, useHeroGuidePrompt } from '@/components/guide/screens/HeroGuide';
 import { HeroHeader } from '@/components/HeroHeader';
+import { InfoSheet } from '@/components/InfoSheet';
 import { PillarSwitcher, type PillarKey } from '@/components/PillarSwitcher';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { AvaliacaoPanel } from '@/components/pillars/AvaliacaoPanel';
@@ -87,6 +89,10 @@ export default function CharacterScreen() {
     ]),
   );
   const params = useLocalSearchParams<{ pillar?: PillarKey }>();
+
+  // The (i) in the hero header: the tab's guide.
+  const [helpOpen, setHelpOpen] = useState(false);
+  const guidePrompt = useHeroGuidePrompt();
 
   const [activePillar, setActivePillar] = useState<PillarKey>(
     // Opens on Praticada: what was practiced lately is the reading that
@@ -243,7 +249,7 @@ export default function CharacterScreen() {
               {/* Full-width header — sits flush against the SafeArea so the
                   ambient halo bleeds from the screen edge. No surrounding
                   padding; the header owns its own internal spacing. */}
-              <HeroHeader />
+              <HeroHeader onInfo={() => setHelpOpen(true)} />
 
               {/* Tab body — padded inset under the header. One panel per
                   pillar; Desejada stacks Caminho under Norte (its sections
@@ -290,6 +296,16 @@ export default function CharacterScreen() {
         enabled={isM5Current}
         onExitScreen={() => router.navigate('/(tabs)')}
       />
+
+      {/* The tab's guide (docs/informativo-de-tela.md). */}
+      <InfoSheet
+        visible={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        title={t('hero.help.title')}
+        aiPrompt={guidePrompt}
+      >
+        <HeroGuide />
+      </InfoSheet>
     </SafeAreaView>
   );
 }

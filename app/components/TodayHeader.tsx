@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { CoinIcon } from '@/components/CoinIcon';
+import { ScreenInfoButton } from '@/components/guide/ScreenInfoButton';
 import { MoodFace } from '@/components/mood/MoodFace';
 import { useT } from '@/lib/i18n';
 import { tokens } from '@/theme';
@@ -122,16 +123,9 @@ export function TodayHeader({
 
         <View style={styles.spacer} />
 
-        {/* Just the glyph, no chip around it (owner, 2026-10-03). */}
-        <Pressable
-          onPress={onInfo}
-          hitSlop={10}
-          style={({ pressed }) => [styles.infoBtn, pressed && { opacity: 0.6 }]}
-          accessibilityRole="button"
-          accessibilityLabel={t('home.help.a11y')}
-        >
-          <Ionicons name="information-circle-outline" size={24} color={tokens.text.mid} />
-        </Pressable>
+        {/* Just the glyph, no chip around it (owner, 2026-10-03) — the
+            same ScreenInfoButton every main tab uses. */}
+        <ScreenInfoButton onPress={onInfo} a11yLabel={t('home.help.a11y')} />
       </View>
 
       <View style={styles.statsRow}>
@@ -244,13 +238,6 @@ const styles = StyleSheet.create({
     minWidth: tokens.space[2],
   },
   // Glyph only — a 40px target, no fill.
-  infoBtn: {
-    width: 40,
-    height: 40,
-    marginRight: -8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   statsRow: {
     flexDirection: 'row',
     alignItems: 'center',

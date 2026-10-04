@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { GuideAiButton, GuideAiIcon } from '@/components/guide/GuideAiButton';
 import { GuideLabel } from '@/components/guide/GuideStep';
@@ -66,6 +67,10 @@ export function InfoSheet({
       onRequestClose={onClose}
       statusBarTranslucent
     >
+      {/* A Modal is its own native window: gesture-handler gestures inside
+          it (a guide's playground swipes a real practice card) need their
+          own root here, as in MediaViewer. */}
+      <GestureHandlerRootView style={styles.gestureRoot}>
       <View style={styles.backdrop}>
         <Pressable
           style={StyleSheet.absoluteFill}
@@ -123,6 +128,7 @@ export function InfoSheet({
           </Pressable>
         </View>
       </View>
+      </GestureHandlerRootView>
     </Modal>
   );
 }
@@ -141,6 +147,7 @@ function renderBold(text: string) {
 }
 
 const styles = StyleSheet.create({
+  gestureRoot: { flex: 1 },
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.65)',

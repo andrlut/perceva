@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 
 import { Emblema } from '@/components/Emblema';
+import { ScreenInfoButton } from '@/components/guide/ScreenInfoButton';
 import { PercevaGlyph } from '@/components/PercevaGlyph';
 import { useCharacter } from '@/lib/api/character';
 import { useEmblemaState } from '@/lib/emblema';
@@ -32,7 +33,7 @@ const EMBLEM = 92;
  * apelido derivado do nível; o nome lê grande e quieto. O bloco inteiro
  * abre /perfil, onde o emblema aparece grande e dá para personalizar.
  */
-export function HeroHeader() {
+export function HeroHeader({ onInfo }: { onInfo?: () => void } = {}) {
   const character = useCharacter();
   const { t } = useT();
   const router = useRouter();
@@ -80,7 +81,7 @@ export function HeroHeader() {
       </View>
 
       <Pressable
-        style={styles.row}
+        style={[styles.row, onInfo && styles.rowWithInfo]}
         onPress={goPerfil}
         hitSlop={4}
         accessibilityRole="button"
@@ -127,6 +128,16 @@ export function HeroHeader() {
           )}
         </View>
       </Pressable>
+
+      {/* The tab's (i) — the screen's guide. Beside the profile
+          Pressable, not in it, so the two taps never nest. */}
+      {onInfo ? (
+        <ScreenInfoButton
+          onPress={onInfo}
+          a11yLabel={t('hero.help.a11y')}
+          style={styles.info}
+        />
+      ) : null}
     </View>
   );
 }
@@ -165,6 +176,15 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     gap: 2,
+  },
+  // Room on the right so a long name or title never runs under the (i).
+  rowWithInfo: { paddingRight: 28 },
+  // Pinned top-right; right 8 lines the glyph up with the other tabs'.
+  info: {
+    position: 'absolute',
+    top: 6,
+    right: 8,
+    marginRight: 0,
   },
   eyebrowRow: {
     flexDirection: 'row',

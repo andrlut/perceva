@@ -58,6 +58,22 @@ export function guideItems(
   }));
 }
 
+/** The whole prompt of a screen whose texts live under `prefix`
+ *  (screenName, purpose, examples, items.<key>.*), for the keys shown —
+ *  a guide passes only the keys its modules leave on screen. */
+export function screenGuidePrompt(
+  t: Translate,
+  prefix: string,
+  keys: readonly string[],
+): string {
+  return buildGuidePrompt(t, {
+    screen: t(`${prefix}.screenName`),
+    purpose: t(`${prefix}.purpose`),
+    examples: t(`${prefix}.examples`),
+    items: guideItems(t, prefix, keys),
+  });
+}
+
 /** The AI door's prompt: `guide.prompt` with one bullet per item. */
 export function buildGuidePrompt(t: Translate, spec: GuidePromptSpec): string {
   const items = spec.items

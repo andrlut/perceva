@@ -40,6 +40,10 @@ import { TodayAmbient } from '@/components/TodayAmbient';
 import { DayRedemptionsCard } from '@/components/DayRedemptionsCard';
 import { DaySwipeZone } from '@/components/DaySwipeZone';
 import { InfoSheet } from '@/components/InfoSheet';
+import {
+  PracticesGuide,
+  usePracticesGuidePrompt,
+} from '@/components/guide/screens/PracticesGuide';
 import { TodayHeader } from '@/components/TodayHeader';
 import { XPCoinFloat } from '@/components/XPCoinFloat';
 import { useCharacter } from '@/lib/api/character';
@@ -144,6 +148,8 @@ interface DayClearedStats {
 export default function HomeScreen() {
   const router = useRouter();
   const { t } = useT();
+  // The (i)'s AI prompt: built from the same item list the guide renders.
+  const guidePrompt = usePracticesGuidePrompt();
   const settings = useLoadedSettings();
   const character = useCharacter();
   const buckets = useHomeBuckets(settings.weekStart);
@@ -1385,12 +1391,15 @@ export default function HomeScreen() {
         onConfirm={handleSheetConfirm}
       />
 
+      {/* The tab's guide (docs/informativo-de-tela.md). */}
       <InfoSheet
         visible={helpOpen}
         onClose={() => setHelpOpen(false)}
         title={t('home.help.title')}
-        body={t('home.help.body')}
-      />
+        aiPrompt={guidePrompt}
+      >
+        <PracticesGuide />
+      </InfoSheet>
 
       <TaskActionSheet
         visible={actionTask !== null}

@@ -15,6 +15,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useBottomNavClearance } from '@/components/BottomNavBar';
 import { FabStack, fabStackClearance, type FabSize } from '@/components/FabStack';
+import { ScreenInfoButton } from '@/components/guide/ScreenInfoButton';
+import { RecantoGuide, useRecantoGuidePrompt } from '@/components/guide/screens/RecantoGuide';
+import { InfoSheet } from '@/components/InfoSheet';
 import { TourModule } from '@/components/tour/TourModule';
 import { TourTarget } from '@/components/tour/TourTarget';
 import { useMaterialLock } from '@/lib/premium';
@@ -116,6 +119,9 @@ export default function LearningScreen() {
   const [pillFilter, setPillFilter] = useState<PillFilter>(null);
   const [query, setQuery] = useState('');
   const [filterOpen, setFilterOpen] = useState(false);
+  // The (i) top right: the tab's guide.
+  const [helpOpen, setHelpOpen] = useState(false);
+  const guidePrompt = useRecantoGuidePrompt();
   const bottomClearance = useBottomNavClearance();
 
   // ── M6 tour plumbing ────────────────────────────────────────────────
@@ -428,6 +434,10 @@ export default function LearningScreen() {
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.title}>{t('learning.title')}</Text>
+            <ScreenInfoButton
+              onPress={() => setHelpOpen(true)}
+              a11yLabel={t('learning.help.a11y')}
+            />
           </View>
 
           {/* Study Reels — story-mode pass over the infographics and the
@@ -587,6 +597,16 @@ export default function LearningScreen() {
           ]}
         />
       )}
+
+      {/* The tab's guide (docs/informativo-de-tela.md). */}
+      <InfoSheet
+        visible={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        title={t('learning.help.title')}
+        aiPrompt={guidePrompt}
+      >
+        <RecantoGuide locale={locale === 'pt' ? 'pt' : 'en'} />
+      </InfoSheet>
 
       <LearningFilterSheet
         visible={filterOpen}
@@ -810,11 +830,14 @@ const styles = StyleSheet.create({
     color: '#3D2A00',
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: tokens.space[4],
     paddingTop: tokens.space[4],
     paddingBottom: tokens.space[2],
   },
   title: {
+    flex: 1,
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 28,
     color: tokens.text.hi,

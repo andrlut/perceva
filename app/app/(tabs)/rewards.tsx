@@ -19,6 +19,9 @@ import { useBottomNavClearance } from '@/components/BottomNavBar';
 import { BuyCelebrationModal } from '@/components/BuyCelebrationModal';
 import { BuyConfirmModal } from '@/components/BuyConfirmModal';
 import { FabStack, fabStackClearance, type FabSize } from '@/components/FabStack';
+import { ScreenInfoButton } from '@/components/guide/ScreenInfoButton';
+import { RewardsGuide, useRewardsGuidePrompt } from '@/components/guide/screens/RewardsGuide';
+import { InfoSheet } from '@/components/InfoSheet';
 import { RewardActionSheet } from '@/components/RewardActionSheet';
 import { RewardCard } from '@/components/RewardCard';
 import { ScreenBackground } from '@/components/ScreenBackground';
@@ -101,6 +104,9 @@ export default function RewardsScreen() {
   );
   const filterActive = selectedCategories.size > 0;
   const [pickerOpen, setPickerOpen] = useState(false);
+  // The (i) top right: the tab's guide.
+  const [helpOpen, setHelpOpen] = useState(false);
+  const guidePrompt = useRewardsGuidePrompt();
   // Long-press → open this reward's action sheet. Single source of truth
   // for the sheet so it stays bound to one reward across re-renders.
   const [actionSheetReward, setActionSheetReward] = useState<Reward | null>(null);
@@ -435,6 +441,16 @@ export default function RewardsScreen() {
           <VaultHero balanceLabel={coins.toLocaleString()} status={headline} />
         </TourTarget>
 
+        {/* The tab's (i). The screen has no header, so it is pinned to
+            the top-right corner over the centered balance (outside the
+            M4 spotlight) instead of pushing the hero down. Drawn after
+            the hero so it sits on top of its halo. */}
+        <ScreenInfoButton
+          onPress={() => setHelpOpen(true)}
+          a11yLabel={t('rewards.help.a11y')}
+          style={styles.info}
+        />
+
         {/* Tracked reward sits right under the coin balance so the user
             sees what they're saving for at a glance. */}
         {trackedReward && (
@@ -644,6 +660,16 @@ export default function RewardsScreen() {
       </ScrollView>
       </ScreenBackground>
 
+      {/* The tab's guide (docs/informativo-de-tela.md). */}
+      <InfoSheet
+        visible={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        title={t('rewards.help.title')}
+        aiPrompt={guidePrompt}
+      >
+        <RewardsGuide />
+      </InfoSheet>
+
       <TrackPickerSheet
         visible={pickerOpen}
         onClose={() => setPickerOpen(false)}
@@ -751,6 +777,15 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: tokens.bg.deep },
   content: {
     padding: tokens.space[4],
+  },
+  // Top-right corner of the scroll content; right 8 lines the glyph up
+  // with the other tabs' (i).
+  info: {
+    position: 'absolute',
+    top: 6,
+    right: 8,
+    marginRight: 0,
+    zIndex: 2,
   },
   chipsRow: {
     flexDirection: 'row',
