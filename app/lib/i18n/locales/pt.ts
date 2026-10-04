@@ -836,6 +836,7 @@ const pt: Translations = {
       audioError: 'Não foi possível carregar o áudio. Tente de novo.',
       video: 'Vídeo',
       videoMin: { one: '{{count}} min de vídeo', other: '{{count}} min de vídeo' },
+      videoExpandA11y: 'Ampliar o vídeo com som',
       videoError: 'Não foi possível carregar o vídeo. Tente de novo.',
     },
     reels: {
