@@ -1,0 +1,23 @@
+{
+  "slug": "hobbies-depression-older-adults",
+  "dimension_id": "craft",
+  "title": {
+    "pt": "Hobby e depressão depois dos 50",
+    "en": "Having a hobby and depression after 50"
+  },
+  "cover": {
+    "prompt": "Vista de cima de uma mesa de madeira com um quebra-cabeça de mil peças quase pronto, uma paisagem colorida de campo com só um buraco no meio; a mão enrugada de uma pessoa mais velha encaixa a peça que falta, iluminada por uma única luz dourada de abajur, peças soltas espalhadas na borda e o resto da sala na penumbra, com espaço livre no alto do quadro."
+  },
+  "ideas": [
+    {
+      "id": "hobby-menos-depressao",
+      "ordinal": 1,
+      "image_prompt": "Uma senhora de cabelos brancos sentada à mesa da cozinha numa tarde de sol, no centro do quadro, as agulhas de tricô em primeiro plano nas mãos dela e um cachecol listrado enorme, em listras de cores alegres com um tom de sálvia, tão comprido que escorre pela borda da mesa e se enrola em montes macios no chão perto dos pés dela. Ela sorri olhando o trabalho, relaxada e contente. A luz dourada da tarde entra por uma janela lateral e cai sobre as mãos, as agulhas e o cachecol, que são a coisa mais clara da cena; a cozinha ao fundo fica calma e na penumbra."
+    },
+    {
+      "id": "hobby-uma-vez-por-semana",
+      "ordinal": 2,
+      "image_prompt": "Um homem de uns 60 anos, à vontade e sorrindo, numa garagem de casa, em roupa de fim de semana, lixando com calma uma pequena casinha de passarinho de madeira sobre uma bancada simples, a casinha grande e no centro do quadro, nas mãos dele. No parapeito da janela atrás dele, uma fileira de sete casinhas já prontas, do mesmo tamanho, cada uma pintada de uma cor viva diferente, alinhadas como uma semana atrás da outra. Uma única luz dourada de fim de tarde entra pela janela, contorna as casinhas coloridas e cai sobre a que ele está lixando; ferramentas poucas e discretas, o resto da garagem na penumbra."
+    }
+  ]
+}
