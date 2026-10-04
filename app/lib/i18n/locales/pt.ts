@@ -1333,17 +1333,49 @@ const pt: Translations = {
     lead: 'Pergunte ao Claude sobre o seu dia a dia: ele lê o seu histórico no Perceva, só o seu.',
     boundaryRead: 'Lê: humor, práticas concluídas, o dia de hoje, recompensas, missões, habilidades e o resumo do seu perfil.',
     boundaryWrite: 'Escreve uma coisa só: o check-in de humor do dia. Concluir prática, gastar moeda, criar ou apagar qualquer coisa continua sendo no app, de propósito.',
-    needBody: 'Precisa de uma conta Claude que permita conectores personalizados; sem ela os passos não aparecem.',
+    needBody: 'Funciona em qualquer plano do Claude; no grátis cabe 1 conector personalizado.',
     connectTitle: 'Conectar ao Claude',
-    step1: 'No claude.ai, abra Settings → Connectors.',
-    step2: 'Toque em Add custom connector.',
-    step3: 'Cole esta URL no campo do endereço:',
-    step4: 'Abra Advanced e cole este Client ID:',
-    step5: 'Entre com o e-mail da sua conta Perceva e autorize.',
+    /** Conectar — seis passos (app/conector.tsx). Labels do claude.ai em
+     *  inglês, com o nome em português entre parênteses: a interface do
+     *  Claude pode estar em qualquer um dos dois. */
+    steps: {
+      have: {
+        title: 'Tenha o Claude',
+        body: 'Você precisa de uma conta no Claude; no plano grátis cabe 1 conector personalizado. No celular, instale também o app do Claude.',
+      },
+      open: {
+        title: 'Abra os conectores do Claude',
+        body: 'Faça isso no navegador (no computador é mais fácil). Em claude.ai, abra Customize › Connectors (Personalizar › Conectores) e toque em "Add custom connector" (Adicionar conector personalizado).',
+      },
+      url: {
+        title: 'Dê um nome e cole o endereço',
+        body: 'No nome, escreva Perceva. No campo do endereço (URL), cole este link:',
+      },
+      client: {
+        title: 'Cole o Client ID no campo certo',
+        body: 'O formulário do Claude aparece de um destes dois jeitos. Siga o que aparecer pra você e cole este código:',
+      },
+      clientAdvanced: 'Se aparecer "Advanced settings" (Configurações avançadas): abra e cole no campo "OAuth Client ID". Deixe o "OAuth Client Secret" vazio.',
+      clientChoice: 'Se aparecerem as escolhas "Authentication" e "OAuth client": em Authentication, deixe "Sign in now"; em OAuth client, marque "Use your own OAuth client" e cole no campo do Client ID. As outras duas opções não funcionam com o Perceva. Deixe o secret vazio.',
+      signin: {
+        title: 'Entre com a sua conta Perceva',
+        body: 'Toque em "Add" (Adicionar). Abre a página do Perceva: entre com o e-mail da sua conta e autorize.',
+      },
+      chat: {
+        title: 'Ligue o conector na conversa',
+        body: 'Numa conversa do Claude, toque no + › Connectors e confira se o Perceva está ligado. Pra testar, pergunte: "O que ainda falta fazer hoje?"',
+      },
+    },
+    links: {
+      signup: 'Criar conta no Claude',
+      app: 'App do Claude',
+      connectors: 'Abrir os conectores do Claude',
+      projects: 'Abrir os projetos do Claude',
+      goToField: 'Ir pro campo do link',
+    },
     urlLabel: 'URL do conector',
     clientIdLabel: 'Client ID',
     copyA11y: 'Copiar ou compartilhar: {{what}}',
-    openClaude: 'Abrir os conectores do Claude',
     askTitle: 'Perguntas prontas',
     askInfo: 'Toque numa pergunta pra abrir uma conversa nova no Claude com ela já escrita. Confira se o conector Perceva está ligado na conversa.',
     askPrefix: 'Usando o conector Perceva: ',
@@ -1374,7 +1406,7 @@ const pt: Translations = {
     },
     usesDefault: 'Sem link próprio: usa o padrão.',
     targetLabel: 'Abrir em',
-    targetPlaceholder: 'Cole o link de um projeto ou de uma conversa',
+    targetPlaceholder: 'https://claude.ai/project/…',
     targetHintEmpty:
       'Sem link: abre uma conversa nova com o pedido já escrito. Você toca no microfone e dita.',
     targetHintProject:
@@ -1382,9 +1414,28 @@ const pt: Translations = {
     targetHintChat: 'Conversa: sempre a mesma. Funciona, mas fica longa com o tempo.',
     targetInvalid:
       'Use um link claude.ai/project/… ou claude.ai/chat/… (o da barra de endereço no claude.ai).',
-    projectHowTitle: 'Como montar o projeto',
-    projectHowBody:
-      'Crie um projeto no claude.ai (ex.: "Perceva · Diário"), cole este texto em Instruções e traga o link do projeto pro campo acima.',
+    projectTitle: 'Projeto do diário (opcional)',
+    projectInfo: 'Um projeto no Claude guarda as conversas do diário juntas, e as instruções dele dizem ao Claude o que fazer com cada mensagem. Os botões de IA do Perceva abrem direto nele.\n\nSe preferir, use uma conversa fixa: o caminho é o mesmo, com o link da conversa.',
+    projectSteps: {
+      create: {
+        title: 'Crie o projeto',
+        body: 'No claude.ai, abra Projects (Projetos) e crie um novo, por exemplo "Perceva · Diário".',
+      },
+      instructions: {
+        title: 'Cole as instruções prontas',
+        body: 'Em "Instructions" (Instruções) do projeto, cole este texto. Ele ensina o Claude a registrar o seu dia:',
+      },
+      link: {
+        title: 'Copie o link do projeto',
+        body: 'Com o projeto aberto no navegador, copie o endereço da barra. Ele tem este formato:',
+      },
+      paste: {
+        title: 'Cole no Perceva',
+        body: 'Cole o link no campo "Abrir em", em Acessos rápidos, logo abaixo. Pra uma conversa fixa, use o endereço da conversa, no formato claude.ai/chat/…',
+      },
+    },
+    projectLinkExample: 'https://claude.ai/project/0198c3a2-5b1e-7c4d-9f2a-3e6b8d1c4a70',
+    projectShareWarning: 'O link do botão "Share" (Compartilhar), que começa com claude.ai/share, não serve: use o da barra de endereço.',
     projectInstructions:
       'Este projeto é o meu diário no Perceva. Toda mensagem que eu mandar aqui é o check-in de humor do dia, quase sempre ditado: registre com a ferramenta log_mood do conector Perceva e leia de volta o que salvou (data, nota e texto). Se eu não disser a nota de 1 a 5, pergunte usando as âncoras que a ferramenta devolve; nunca deduza pelo tom. Se a mensagem for uma pergunta sobre os meus dados, responda com as ferramentas de leitura em vez de registrar.',
   },

@@ -16,4 +16,17 @@ export const MCP_CONNECTOR_URL =
 
 export const MCP_CLIENT_ID = 'e89d46ae-194b-4318-9320-415bcbf84950';
 
-export const CLAUDE_CONNECTORS_URL = 'https://claude.ai/settings/connectors';
+/** Where custom connectors are added. The menu is "Customize > Connectors"
+ *  since 2026 (claude.com/docs/connectors/custom/remote-mcp); the old
+ *  /settings/connectors path predates it. */
+export const CLAUDE_CONNECTORS_URL = 'https://claude.ai/customize/connectors';
+
+/** The Projects list — where the diary project is created. */
+export const CLAUDE_PROJECTS_URL = 'https://claude.ai/projects';
+
+/** Sign in / create an account. */
+export const CLAUDE_SIGNUP_URL = 'https://claude.ai/login';
+
+/** The Claude app on the Play Store (package com.anthropic.claude). */
+export const CLAUDE_APP_URL =
+  'https://play.google.com/store/apps/details?id=com.anthropic.claude';

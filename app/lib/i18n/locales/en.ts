@@ -1338,17 +1338,48 @@ const en = {
     lead: 'Ask Claude about your days: it reads your Perceva history, only yours.',
     boundaryRead: 'Reads: mood, completed practices, today, rewards, missions, skills and your profile summary.',
     boundaryWrite: 'Writes exactly one thing: the mood check-in for the day. Completing a practice, spending coins, creating or deleting anything stays in the app, on purpose.',
-    needBody: 'It needs a Claude account that allows custom connectors; without one the steps will not show up.',
+    needBody: 'Works on any Claude plan; the free plan fits 1 custom connector.',
     connectTitle: 'Connect to Claude',
-    step1: 'On claude.ai, open Settings → Connectors.',
-    step2: 'Tap Add custom connector.',
-    step3: 'Paste this URL into the address field:',
-    step4: 'Open Advanced and paste this Client ID:',
-    step5: 'Sign in with your Perceva account email and authorise.',
+    /** Connect — six steps (app/conector.tsx). claude.ai labels quoted as
+     *  they appear in its English interface. */
+    steps: {
+      have: {
+        title: 'Have Claude',
+        body: 'You need a Claude account; the free plan fits 1 custom connector. On your phone, install the Claude app too.',
+      },
+      open: {
+        title: "Open Claude's connectors",
+        body: 'Do this in a browser (a computer is easier). On claude.ai, open Customize › Connectors and tap "Add custom connector".',
+      },
+      url: {
+        title: 'Name it and paste the address',
+        body: 'For the name, type Perceva. In the address (URL) field, paste this link:',
+      },
+      client: {
+        title: 'Paste the Client ID in the right field',
+        body: "Claude's form shows up in one of these two ways. Follow the one you see and paste this code:",
+      },
+      clientAdvanced: 'If you see "Advanced settings": open it and paste into the "OAuth Client ID" field. Leave "OAuth Client Secret" empty.',
+      clientChoice: 'If you see the "Authentication" and "OAuth client" choices: under Authentication, keep "Sign in now"; under OAuth client, pick "Use your own OAuth client" and paste into the Client ID field. The other two options do not work with Perceva. Leave the secret empty.',
+      signin: {
+        title: 'Sign in with your Perceva account',
+        body: 'Tap "Add". The Perceva page opens: sign in with your account email and authorize.',
+      },
+      chat: {
+        title: 'Turn the connector on in a chat',
+        body: 'In a Claude chat, tap + › Connectors and check that Perceva is on. To test it, ask: "What is still left for today?"',
+      },
+    },
+    links: {
+      signup: 'Create a Claude account',
+      app: 'Claude app',
+      connectors: "Open Claude's connectors",
+      projects: "Open Claude's projects",
+      goToField: 'Go to the link field',
+    },
     urlLabel: 'Connector URL',
     clientIdLabel: 'Client ID',
     copyA11y: 'Copy or share: {{what}}',
-    openClaude: "Open Claude's connectors",
     askTitle: 'Ready-made questions',
     askInfo: 'Tap a question to open a new Claude chat with it already typed. Check that the Perceva connector is on in that chat.',
     askPrefix: 'Using the Perceva connector: ',
@@ -1379,7 +1410,7 @@ const en = {
     },
     usesDefault: 'No link of its own: uses the default.',
     targetLabel: 'Open in',
-    targetPlaceholder: 'Paste a project or chat link',
+    targetPlaceholder: 'https://claude.ai/project/…',
     targetHintEmpty:
       'No link: opens a new chat with the request already typed. You tap the microphone and dictate.',
     targetHintProject:
@@ -1387,9 +1418,28 @@ const en = {
     targetHintChat: 'Chat: always the same one. Works, but grows long over time.',
     targetInvalid:
       'Use a claude.ai/project/… or claude.ai/chat/… link (the one in the address bar on claude.ai).',
-    projectHowTitle: 'Setting up the project',
-    projectHowBody:
-      'Create a project on claude.ai (e.g. "Perceva · Journal"), paste this text into Instructions and bring the project link to the field above.',
+    projectTitle: 'Journal project (optional)',
+    projectInfo: "A Claude project keeps the journal chats together, and its instructions tell Claude what to do with each message. Perceva's AI buttons open straight into it.\n\nIf you prefer, use a pinned chat: the steps are the same, with the chat's link.",
+    projectSteps: {
+      create: {
+        title: 'Create the project',
+        body: 'On claude.ai, open Projects and create a new one, for example "Perceva · Journal".',
+      },
+      instructions: {
+        title: 'Paste the ready instructions',
+        body: "In the project's \"Instructions\", paste this text. It teaches Claude to log your day:",
+      },
+      link: {
+        title: "Copy the project's link",
+        body: 'With the project open in a browser, copy the address from the address bar. It has this format:',
+      },
+      paste: {
+        title: 'Paste it in Perceva',
+        body: 'Paste the link into the "Open in" field, under Quick access, right below. For a pinned chat, use the chat\'s address, in the format claude.ai/chat/…',
+      },
+    },
+    projectLinkExample: 'https://claude.ai/project/0198c3a2-5b1e-7c4d-9f2a-3e6b8d1c4a70',
+    projectShareWarning: 'The link from the "Share" button, which starts with claude.ai/share, does not work: use the one from the address bar.',
     projectInstructions:
       "This project is my Perceva journal. Every message I send here is the day's mood check-in, almost always dictated: log it with the Perceva connector's log_mood tool and read back what you saved (date, rating and text). If I do not state the 1-5 rating, ask using the anchors the tool returns; never infer it from tone. If the message is a question about my data, answer with the read tools instead of logging.",
   },

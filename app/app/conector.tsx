@@ -4,6 +4,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
+  Linking,
   Pressable,
   ScrollView,
   Share,
@@ -29,7 +30,10 @@ import {
 } from '@/lib/claudeBridge';
 import { useT } from '@/lib/i18n';
 import {
+  CLAUDE_APP_URL,
   CLAUDE_CONNECTORS_URL,
+  CLAUDE_PROJECTS_URL,
+  CLAUDE_SIGNUP_URL,
   MCP_CLIENT_ID,
   MCP_CONNECTOR_URL,
 } from '@/lib/mcp';
@@ -38,13 +42,17 @@ import { useKeyboardOverlap } from '@/lib/use-keyboard-height';
 import { tokens } from '@/theme';
 
 /**
- * Conector — o Perceva dentro do Claude. Três cards, o mesmo chassi do
+ * Conector — o Perceva dentro do Claude. Quatro cards, o mesmo chassi do
  * formulário de práticas (título com ícone + (i); a explicação mora no (i),
  * não em parágrafo):
  *
- *   1. Conectar — os passos, com a URL e o Client ID encaixados no passo em
- *      que são colados, e o botão que abre os conectores do Claude. O que o
- *      conector lê/escreve e o pré-requisito ficam no (i).
+ *   1. Conectar — seis passos com título, uma frase e os links de cada um
+ *      (ter o Claude, abrir os conectores, nome + URL, o Client ID no campo
+ *      certo nas DUAS versões do formulário do Claude, entrar, ligar na
+ *      conversa). O que o conector lê/escreve fica no (i).
+ *   1b. Projeto do diário (opcional) — criar o projeto, colar as
+ *      instruções prontas, o FORMATO do link com exemplo (e o aviso de que
+ *      o link de "Compartilhar" não serve) e um botão que leva ao campo.
  *   2. Acessos rápidos — os botões de IA das telas (ClaudeButton), com a
  *      mesma anatomia de linha (ícone 38 · nome sobre legenda · chave). Uma
  *      chave-mestra liga todos; embaixo dela, ONDE cada um abre: um link
@@ -108,9 +116,9 @@ export default function ConectorScreen() {
     },
     [],
   );
-  const focusShortcuts = () => {
-    if (!wantsShortcuts || focusDone.current) return;
-    focusDone.current = true;
+  // Scroll to the "Acessos rápidos" card and light its rim for a moment —
+  // used by `?focus=atalhos` and by the project card's "go to the field".
+  const goToShortcuts = () => {
     requestAnimationFrame(() => {
       scrollRef.current?.scrollTo({
         y: Math.max(0, shortcutY.current - tokens.space[3]),
@@ -118,7 +126,16 @@ export default function ConectorScreen() {
       });
     });
     setHighlight(true);
+    if (highlightTimer.current) clearTimeout(highlightTimer.current);
     highlightTimer.current = setTimeout(() => setHighlight(false), 2600);
+  };
+  const focusShortcuts = () => {
+    if (!wantsShortcuts || focusDone.current) return;
+    focusDone.current = true;
+    goToShortcuts();
+  };
+  const openWeb = (url: string) => {
+    WebBrowser.openBrowserAsync(url).catch(() => {});
   };
 
   // Scroll a focused field (its y inside the shortcuts card) to the top of
@@ -189,32 +206,110 @@ export default function ConectorScreen() {
               }
             />
 
-            <Step n={1} text={t('conector.step1')} />
-            <Step n={2} text={t('conector.step2')} />
-            <Step n={3} text={t('conector.step3')}>
+            <Step n={1} title={t('conector.steps.have.title')} body={t('conector.steps.have.body')}>
+              <View style={styles.linkRow}>
+                <LinkChip
+                  icon="person-add-outline"
+                  label={t('conector.links.signup')}
+                  onPress={() => openWeb(CLAUDE_SIGNUP_URL)}
+                />
+                <LinkChip
+                  icon="logo-google-playstore"
+                  label={t('conector.links.app')}
+                  onPress={() => {
+                    Linking.openURL(CLAUDE_APP_URL).catch(() => {});
+                  }}
+                />
+              </View>
+            </Step>
+            <Step n={2} title={t('conector.steps.open.title')} body={t('conector.steps.open.body')}>
+              <LinkChip
+                primary
+                icon="open-outline"
+                label={t('conector.links.connectors')}
+                onPress={() => openWeb(CLAUDE_CONNECTORS_URL)}
+              />
+            </Step>
+            <Step n={3} title={t('conector.steps.url.title')} body={t('conector.steps.url.body')}>
               <CopyField
                 value={MCP_CONNECTOR_URL}
                 a11y={t('conector.copyA11y', { what: t('conector.urlLabel') })}
               />
             </Step>
-            <Step n={4} text={t('conector.step4')}>
+            {/* The step people got lost in: Claude's form comes in two
+                layouts, and in the second only one OAuth choice works with
+                Perceva (our authorization server has neither CIMD nor DCR
+                on; it takes the pre-registered client). Both spelled out. */}
+            <Step n={4} title={t('conector.steps.client.title')} body={t('conector.steps.client.body')}>
+              <Callout icon="options-outline" text={t('conector.steps.clientAdvanced')} />
+              <Callout icon="git-branch-outline" text={t('conector.steps.clientChoice')} />
               <CopyField
                 value={MCP_CLIENT_ID}
                 a11y={t('conector.copyA11y', { what: t('conector.clientIdLabel') })}
               />
             </Step>
-            <Step n={5} text={t('conector.step5')} />
+            <Step n={5} title={t('conector.steps.signin.title')} body={t('conector.steps.signin.body')} />
+            <Step n={6} title={t('conector.steps.chat.title')} body={t('conector.steps.chat.body')} />
+          </View>
 
-            <Pressable
-              onPress={() => {
-                WebBrowser.openBrowserAsync(CLAUDE_CONNECTORS_URL).catch(() => {});
-              }}
-              style={({ pressed }) => [styles.cta, pressed && { opacity: 0.85 }]}
-              accessibilityRole="button"
+          {/* 1b — Projeto do diário (opcional): its own instruction, with the
+              ready instructions and the link's FORMAT, the part nobody could
+              find without an example. */}
+          <View style={styles.card}>
+            <SectionLabel
+              icon="folder-open-outline"
+              label={t('conector.projectTitle')}
+              onInfo={() =>
+                setInfo({ title: t('conector.projectTitle'), body: t('conector.projectInfo') })
+              }
+            />
+            <Step
+              n={1}
+              title={t('conector.projectSteps.create.title')}
+              body={t('conector.projectSteps.create.body')}
             >
-              <Ionicons name="open-outline" size={16} color={tokens.text.hi} />
-              <Text style={styles.ctaText}>{t('conector.openClaude')}</Text>
-            </Pressable>
+              <LinkChip
+                icon="open-outline"
+                label={t('conector.links.projects')}
+                onPress={() => openWeb(CLAUDE_PROJECTS_URL)}
+              />
+            </Step>
+            <Step
+              n={2}
+              title={t('conector.projectSteps.instructions.title')}
+              body={t('conector.projectSteps.instructions.body')}
+            >
+              <CopyField
+                value={t('conector.projectInstructions')}
+                a11y={t('conector.copyA11y', {
+                  what: t('conector.projectSteps.instructions.title'),
+                })}
+                lines={4}
+              />
+            </Step>
+            <Step
+              n={3}
+              title={t('conector.projectSteps.link.title')}
+              body={t('conector.projectSteps.link.body')}
+            >
+              <View style={styles.example}>
+                <Text style={styles.exampleText} selectable>
+                  {t('conector.projectLinkExample')}
+                </Text>
+              </View>
+              <Callout icon="warning-outline" text={t('conector.projectShareWarning')} />
+            </Step>
+            <Step
+              n={4}
+              title={t('conector.projectSteps.paste.title')}
+              body={t('conector.projectSteps.paste.body')}
+            >
+              <LinkChip
+                icon="arrow-down-circle-outline"
+                label={t('conector.links.goToField')}
+                onPress={goToShortcuts}
+              />
+            </Step>
           </View>
 
           {/* 2 — Acessos rápidos. Direct child of the content view, so
@@ -277,26 +372,78 @@ export default function ConectorScreen() {
   );
 }
 
-/** One numbered step; a field that belongs to it sits right under its text. */
-function Step({ n, text, children }: { n: number; text: string; children?: React.ReactNode }) {
+/** One numbered step: a short title, one sentence, and whatever belongs to
+ *  it (a link, the value to paste, a callout) right under its text. */
+function Step({
+  n,
+  title,
+  body,
+  children,
+}: {
+  n: number;
+  title: string;
+  body: string;
+  children?: React.ReactNode;
+}) {
   return (
     <View style={styles.step}>
       <View style={styles.stepNum}>
         <Text style={styles.stepNumText}>{n}</Text>
       </View>
       <View style={styles.stepBody}>
-        <Text style={styles.stepText}>{text}</Text>
+        <Text style={styles.stepTitle}>{title}</Text>
+        <Text style={styles.stepText}>{body}</Text>
         {children}
       </View>
     </View>
   );
 }
 
+/** A link out of the app: to claude.ai, the Play Store or a spot on this
+ *  screen. `primary` for the one a step is about. */
+function LinkChip({
+  icon,
+  label,
+  onPress,
+  primary = false,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  onPress: () => void;
+  primary?: boolean;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="link"
+      accessibilityLabel={label}
+      style={({ pressed }) => [
+        styles.linkChip,
+        primary && styles.linkChipPrimary,
+        pressed && { opacity: 0.75 },
+      ]}
+    >
+      <Ionicons name={icon} size={15} color={primary ? tokens.text.hi : tokens.brand.violet2} />
+      <Text style={[styles.linkChipText, primary && styles.linkChipTextPrimary]}>{label}</Text>
+    </Pressable>
+  );
+}
+
+/** One case of a step ("if your form shows X, do Y"), or a warning. */
+function Callout({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: string }) {
+  return (
+    <View style={styles.callout}>
+      <Ionicons name={icon} size={15} color={tokens.text.mid} style={styles.calloutIcon} />
+      <Text style={styles.calloutText}>{text}</Text>
+    </View>
+  );
+}
+
 /** Monospace-ish value + a copy button (the system share sheet has "Copiar"). */
-function CopyField({ value, a11y }: { value: string; a11y: string }) {
+function CopyField({ value, a11y, lines = 2 }: { value: string; a11y: string; lines?: number }) {
   return (
     <View style={styles.copyField}>
-      <Text style={styles.copyValue} selectable numberOfLines={2}>
+      <Text style={styles.copyValue} selectable numberOfLines={lines}>
         {value}
       </Text>
       <Pressable
@@ -428,12 +575,6 @@ function ShortcutsCard({
             />
           ))}
 
-          <Text style={styles.fieldLabel}>{t('conector.projectHowTitle')}</Text>
-          <Text style={styles.hint}>{t('conector.projectHowBody')}</Text>
-          <CopyField
-            value={t('conector.projectInstructions')}
-            a11y={t('conector.copyA11y', { what: t('conector.projectHowTitle') })}
-          />
         </View>
       )}
     </View>
@@ -609,9 +750,76 @@ const styles = StyleSheet.create({
     color: tokens.brand.violet2,
   },
   stepBody: { flex: 1, gap: tokens.space[2], paddingTop: 2 },
+  stepTitle: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 14,
+    color: tokens.text.hi,
+    marginBottom: -4,
+  },
   stepText: {
     ...tokens.type.body,
     color: tokens.text.base,
+  },
+
+  // Links out (claude.ai, Play Store, a spot on this screen).
+  linkRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  linkChip: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    minHeight: 40,
+    paddingHorizontal: 12,
+    borderRadius: tokens.radius.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(155, 130, 255, 0.55)',
+    backgroundColor: 'rgba(123, 92, 255, 0.10)',
+  },
+  linkChipPrimary: {
+    borderColor: tokens.brand.violet,
+    backgroundColor: tokens.brand.violet,
+  },
+  linkChipText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 13,
+    color: tokens.brand.violet2,
+  },
+  linkChipTextPrimary: { color: tokens.text.hi },
+
+  // A case of a step, or a warning.
+  callout: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    padding: tokens.space[3],
+    borderRadius: tokens.radius.md,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+    backgroundColor: tokens.bg.surface2,
+  },
+  calloutIcon: { marginTop: 2 },
+  calloutText: {
+    flex: 1,
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 13,
+    lineHeight: 19,
+    color: tokens.text.base,
+  },
+
+  // What a project link looks like.
+  example: {
+    borderRadius: tokens.radius.md,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: 'rgba(155, 130, 255, 0.55)',
+    paddingHorizontal: tokens.space[3],
+    paddingVertical: tokens.space[2],
+  },
+  exampleText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 12,
+    lineHeight: 17,
+    color: tokens.brand.violet2,
   },
 
   // Copy field: value + a 32×32 button (the app's stepper/button size).
@@ -643,21 +851,6 @@ const styles = StyleSheet.create({
     backgroundColor: tokens.bg.surface2,
     borderWidth: 1,
     borderColor: tokens.border.base,
-  },
-
-  cta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: tokens.brand.violet,
-  },
-  ctaText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 14,
-    color: tokens.text.hi,
   },
 
   // Rows — shortcuts and questions share one anatomy.
