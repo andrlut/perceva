@@ -71,8 +71,11 @@ const SWIPE_MAX = 160;
  * sub-1's color, 1 of sub-2's, 1 of sub-3's. The number next to them is
  * the task's total reward in XP.
  *
- * Tap on the body opens edit. Tap on the violet check button (or swipe
- * right) completes. Long-press opens the per-sub adjust popup.
+ * Tap on the body opens the host's menu (`onLongPress` — custom complete,
+ * skip, edit); holding the body goes straight to edit (owner, 2026-10-03:
+ * the menu is the thing people reach for, edit is the rarer, deliberate
+ * one). A host without a menu keeps tap = edit. Tap on the violet check
+ * button (or swipe right) completes; holding the check opens the menu too.
  *
  * Legibility (first-user feedback 2026-09, "tiny and confusing"): the meta
  * line — the green reward number the tour points at, the coin-multiplier badge and the
@@ -273,8 +276,8 @@ export function TaskCard({
               styles.bodyWrap,
               pressed && (onEdit || onLongPress) && { opacity: 0.85 },
             ]}
-            onPress={onEdit}
-            onLongPress={onLongPress}
+            onPress={onLongPress ?? onEdit}
+            onLongPress={onLongPress ? onEdit : undefined}
             delayLongPress={350}
             disabled={!onEdit && !onLongPress}
           >

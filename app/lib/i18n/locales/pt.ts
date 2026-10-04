@@ -554,8 +554,8 @@ const pt: Translations = {
         body: 'Registre como foi o dia, de 1 a 5. O calendário cruza o humor com as práticas.',
       },
       hold: {
-        title: 'Toque e segure',
-        body: 'Segure uma prática para pular hoje, ajustar ou editar. Pular não zera nada.',
+        title: 'Toque na prática',
+        body: 'Toque numa prática para pular hoje, ajustar ou editar; segure para ir direto à edição. Pular não zera nada.',
         cta: 'Entendi',
       },
     },
@@ -1398,7 +1398,7 @@ const pt: Translations = {
     help: {
       title: 'Como usar as Práticas',
       a11y: 'Como usar as Práticas',
-      body: '**Toque no check** pra concluir a prática.\n\n**Arraste a prática pra direita** pra concluir ajustando as estrelas, as moedas e quantas vezes; **pra esquerda** pra pular o dia.\n\n**Segure** a prática pra abrir o menu: ajustar estrelas, pular ou editar. **Toque** nela pra editar.\n\n**Deslize o topo da tela** (acima da primeira prática), ou use as setas, pra trocar de dia. **Toque na data** pra voltar pra hoje.\n\n**Dias passados:** registre o que você esqueceu. Práticas criadas depois daquele dia aparecem num bloco à parte.',
+      body: '**Toque no check** pra concluir a prática.\n\n**Arraste a prática pra direita** pra concluir ajustando as estrelas, as moedas e quantas vezes; **pra esquerda** pra pular o dia.\n\n**Toque** na prática pra abrir o menu: concluir ajustando, pular ou editar. **Segure** pra ir direto à edição.\n\n**Deslize o topo da tela** (acima da primeira prática), ou use as setas, pra trocar de dia. **Toque na data** pra voltar pra hoje.\n\n**Dias passados:** registre o que você esqueceu. Práticas criadas depois daquele dia aparecem num bloco à parte.',
     },
     coinsOfDayA11y: '{{count}} moedas neste dia',
     moodShortcut: {

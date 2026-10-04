@@ -558,8 +558,8 @@ const en = {
         body: 'Log how the day went, 1 to 5. The calendar pairs your mood with your practices.',
       },
       hold: {
-        title: 'Press and hold',
-        body: 'Hold a practice to skip it today, adjust or edit it. Skipping resets nothing.',
+        title: 'Tap a practice',
+        body: 'Tap a practice to skip it today, adjust or edit it; hold it to go straight to editing. Skipping resets nothing.',
         cta: 'Got it',
       },
     },
@@ -1403,7 +1403,7 @@ const en = {
     help: {
       title: 'How Practices works',
       a11y: 'How Practices works',
-      body: '**Tap the check** to complete a practice.\n\n**Swipe a practice right** to complete it adjusting the stars, the coins and how many times; **left** to skip the day.\n\n**Hold** a practice to open its menu: adjust stars, skip or edit. **Tap** it to edit.\n\n**Swipe the top of the screen** (above the first practice), or use the arrows, to change days. **Tap the date** to go back to today.\n\n**Past days:** log what you forgot. Practices created after that day show up in their own block.',
+      body: '**Tap the check** to complete a practice.\n\n**Swipe a practice right** to complete it adjusting the stars, the coins and how many times; **left** to skip the day.\n\n**Tap** a practice to open its menu: complete with adjustments, skip or edit. **Hold** it to go straight to editing.\n\n**Swipe the top of the screen** (above the first practice), or use the arrows, to change days. **Tap the date** to go back to today.\n\n**Past days:** log what you forgot. Practices created after that day show up in their own block.',
     },
     coinsOfDayA11y: '{{count}} coins on this day',
     moodShortcut: {
