@@ -20,6 +20,7 @@ O (i) do cabeçalho de cada tela é o **informativo**: ensina a mexer na tela. O
   - `ai`: o detalhe que só o Claude recebe, a mecânica que no informativo fica por conta da réplica (o que tem no menu, onde tocar, o que não apaga).
 - **A IA nunca some.** Ligada: violeta, abre conversa nova no Claude com o pedido da tela. Desligada: cinza, leva pros ajustes (`/conector?focus=atalhos`).
 - **Réplicas usam os componentes da própria tela** (no Minhas ideias, `CollectionControls`). Inertes e escondidas do leitor de tela.
+- **Elemento largo nunca entra espremido.** O informativo é uns 80 de largura mais estreito que a tela: espremido, o botão do cartão de recompensa vazou da borda e "Trimestre" quebrou no meio. Use `GuideFit`, que mostra a peça inteira em miniatura, na proporção da tela.
 - **Nenhum dado pessoal no pedido.** Só como a tela funciona; os dados o Claude lê pelo conector.
 
 ## Peças prontas (`app/components/guide/`)
@@ -29,6 +30,7 @@ O (i) do cabeçalho de cada tela é o **informativo**: ensina a mexer na tela. O
 | `ScreenInfoButton` | O (i) do canto superior direito: só o glifo, sem fundo de botão. O mesmo em toda aba. |
 | `GuidePlayground`, `GuideTryIt`, `GuideGesture`, `GuideTapHint` | A caixa de teste com o elemento real, o rótulo "Experimente", as linhas de gesto e a mão pulsando até a primeira tentativa. `column` empilha quando o elemento é largo. |
 | `GuideLabel`, `GuideStep` | O rótulo de seção e a linha de cada opção com a réplica. |
+| `GuideFit` | Miniatura: desenha o elemento na largura real da tela e encolhe tudo pra caber, sem cortar. Pra cartões em grade e linhas de botões. |
 | `GuideAiButton`, `GuideAiIcon` | A IA, que o `InfoSheet` já põe sozinho no fim e ao lado do X quando recebe `aiPrompt`. |
 
 ## Como replicar numa tela nova
