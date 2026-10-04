@@ -24,6 +24,7 @@ import type { LearningIdea } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { sortedIdeas } from '@/lib/ideas';
+import { useIdeaSoundSession } from '@/lib/ideaSound';
 import { emitTourEvent } from '@/lib/tour/eventBus';
 import { buildM6Steps, M6_EVENTS, M6_STEP } from '@/lib/tour/m6Steps';
 import { leaveM6Flow } from '@/lib/tour/navigation';
@@ -66,6 +67,8 @@ interface BannerState {
 }
 
 export function IdeaScreen({ detail: m, initialOrdinal }: Props) {
+  // Video sound: kept while the reader moves through ideas, reset on leaving.
+  useIdeaSoundSession();
   const router = useRouter();
 
   // ── Tour (M6) ──────────────────────────────────────────────────────────

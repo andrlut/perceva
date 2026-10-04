@@ -840,7 +840,9 @@ const en = {
       audioError: "Couldn't load the audio. Try again.",
       video: 'Video',
       videoMin: { one: '{{count}} min video', other: '{{count}} min video' },
-      videoExpandA11y: 'Expand the video with sound',
+      videoExpandA11y: 'Expand the video',
+      videoUnmuteA11y: 'Turn the video sound on',
+      videoMuteA11y: 'Turn the video sound off',
       videoError: "Couldn't load the video. Try again.",
     },
     reels: {

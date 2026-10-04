@@ -8,6 +8,7 @@ import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useT } from '@/lib/i18n';
+import { useIdeaSound } from '@/lib/ideaSound';
 import { formatDuration } from '@/lib/ideas';
 import { tokens } from '@/theme';
 
@@ -22,14 +23,14 @@ import { tokens } from '@/theme';
  *
  * ## Quiet inline, full when asked (owner, 2026-10-04)
  *
- * Inline it plays MUTED and with NO controls — opening an idea in a quiet
- * room must never start talking, and the native control bar covered half
- * the frame. One discreet round button (bottom-right) — or a tap anywhere on
- * the video — expands it: a full-screen Modal hosting the same player, with
- * sound on and the native controls (seek, ±5/15s, fullscreen). Closing it
- * mutes again and the inline view keeps playing silently. Only one
- * VideoView holds the player at a time: the inline view unmounts while the
- * Modal is open.
+ * Inline it plays with NO controls — the native control bar covered half
+ * the frame — and MUTED unless the reader turned sound on (lib/ideaSound:
+ * off by default, carried across ideas, reset on leaving them). Two
+ * discreet discs bottom-right: sound (the ONLY thing that unmutes) and
+ * expand. Expanding — the disc or a tap anywhere on the video — opens a
+ * full-screen Modal hosting the same player with the native controls (seek,
+ * ±5/15s, fullscreen) and does NOT touch the sound. Only one VideoView holds
+ * the player at a time: the inline view unmounts while the Modal is open.
  *
  * Lifecycle is driven by the pager: `isActive` true → play, false → pause;
  * unmount pauses too (the hook releases the native player right after).
@@ -78,30 +79,37 @@ export function IdeaVideo({
 
   // Stable source object: the hook keys the native player on it.
   const source = useMemo(() => ({ uri, useCaching: true }), [uri]);
+  const soundOn = useIdeaSound((s) => s.on);
+  const setSound = useIdeaSound((s) => s.set);
   const player = useVideoPlayer(source, (p) => {
     p.loop = false;
-    p.muted = true;
+    p.muted = !useIdeaSound.getState().on;
   });
   const [expanded, setExpanded] = useState(false);
 
+  // The shared choice drives every mounted player.
+  useEffect(() => {
+    try {
+      player.muted = !soundOn;
+    } catch {
+      // Released.
+    }
+  }, [soundOn, player]);
+
+  const toggleSound = () => {
+    Haptics.selectionAsync().catch(() => {});
+    setSound(!soundOn);
+  };
   const expand = () => {
     Haptics.selectionAsync().catch(() => {});
     try {
-      player.muted = false;
       player.play();
     } catch {
       // Released mid-tap.
     }
     setExpanded(true);
   };
-  const collapse = () => {
-    try {
-      player.muted = true;
-    } catch {
-      // Released.
-    }
-    setExpanded(false);
-  };
+  const collapse = () => setExpanded(false);
   const { status } = useEvent(player, 'statusChange', { status: player.status });
   const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
 
@@ -170,8 +178,32 @@ export function IdeaVideo({
         accessibilityRole="button"
         accessibilityLabel={t('learning.media.videoExpandA11y')}
       />
-      <View style={styles.expandBtn} pointerEvents="none">
-        <Ionicons name="expand" size={16} color="#FFFFFF" />
+      <View style={styles.corner}>
+        <Pressable
+          onPress={toggleSound}
+          hitSlop={6}
+          style={({ pressed }) => [styles.disc, pressed && { opacity: 0.7 }]}
+          accessibilityRole="button"
+          accessibilityState={{ checked: soundOn }}
+          accessibilityLabel={
+            soundOn ? t('learning.media.videoMuteA11y') : t('learning.media.videoUnmuteA11y')
+          }
+        >
+          <Ionicons
+            name={soundOn ? 'volume-high' : 'volume-mute'}
+            size={16}
+            color="#FFFFFF"
+          />
+        </Pressable>
+        <Pressable
+          onPress={expand}
+          hitSlop={6}
+          style={({ pressed }) => [styles.disc, pressed && { opacity: 0.7 }]}
+          accessibilityRole="button"
+          accessibilityLabel={t('learning.media.videoExpandA11y')}
+        >
+          <Ionicons name="expand" size={16} color="#FFFFFF" />
+        </Pressable>
       </View>
 
       <Modal
@@ -189,15 +221,29 @@ export function IdeaVideo({
             nativeControls
             allowsFullscreen
           />
-          <Pressable
-            onPress={collapse}
-            hitSlop={10}
-            style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.7 }]}
-            accessibilityRole="button"
-            accessibilityLabel={t('common.close')}
-          >
-            <Ionicons name="close" size={22} color="#FFFFFF" />
-          </Pressable>
+          <View style={styles.fullTop}>
+            <Pressable
+              onPress={toggleSound}
+              hitSlop={10}
+              style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.7 }]}
+              accessibilityRole="button"
+              accessibilityState={{ checked: soundOn }}
+              accessibilityLabel={
+                soundOn ? t('learning.media.videoMuteA11y') : t('learning.media.videoUnmuteA11y')
+              }
+            >
+              <Ionicons name={soundOn ? 'volume-high' : 'volume-mute'} size={20} color="#FFFFFF" />
+            </Pressable>
+            <Pressable
+              onPress={collapse}
+              hitSlop={10}
+              style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.7 }]}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.close')}
+            >
+              <Ionicons name="close" size={22} color="#FFFFFF" />
+            </Pressable>
+          </View>
         </SafeAreaView>
       </Modal>
 
@@ -247,11 +293,15 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  // Discreet: a small dark disc in the corner, the only chrome inline.
-  expandBtn: {
+  // Discreet: two small dark discs in the corner, the only chrome inline.
+  corner: {
     position: 'absolute',
     right: 10,
     bottom: 10,
+    flexDirection: 'row',
+    gap: 8,
+  },
+  disc: {
     width: 32,
     height: 32,
     borderRadius: 16,
@@ -268,10 +318,14 @@ const styles = StyleSheet.create({
   fullVideo: {
     flex: 1,
   },
-  closeBtn: {
+  fullTop: {
     position: 'absolute',
     top: 48,
     right: 16,
+    flexDirection: 'row',
+    gap: 10,
+  },
+  closeBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
