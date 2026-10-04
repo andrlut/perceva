@@ -284,7 +284,7 @@ export default function ConectorScreen() {
                 a11y={t('conector.copyA11y', {
                   what: t('conector.projectSteps.instructions.title'),
                 })}
-                lines={4}
+                lines={0}
               />
             </Step>
             <Step

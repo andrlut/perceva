@@ -1427,7 +1427,7 @@ const pt: Translations = {
       },
       link: {
         title: 'Copie o link do projeto',
-        body: 'Com o projeto aberto no navegador, copie o endereço da barra. Ele tem este formato:',
+        body: 'Com o projeto aberto no navegador, copie o endereço da barra. Ou, numa conversa do projeto, peça "me dá o link deste projeto": as instruções ensinam o formato ao Claude. O link é assim:',
       },
       paste: {
         title: 'Cole no Perceva',
@@ -1436,8 +1436,13 @@ const pt: Translations = {
     },
     projectLinkExample: 'https://claude.ai/project/0198c3a2-5b1e-7c4d-9f2a-3e6b8d1c4a70',
     projectShareWarning: 'O link do botão "Share" (Compartilhar), que começa com claude.ai/share, não serve: use o da barra de endereço.',
+    /** Pasted into the Claude project's Instructions. Asking for the link
+     *  is NOT a check-in (the first rule would log it), and Claude cannot
+     *  see the project's URL on its own: it gets the format with an
+     *  x-pattern no one can mistake for a real link, may return one only
+     *  when it can see the id, and must never invent one. */
     projectInstructions:
-      'Este projeto é o meu diário no Perceva. Toda mensagem que eu mandar aqui é o check-in de humor do dia, quase sempre ditado: registre com a ferramenta log_mood do conector Perceva e leia de volta o que salvou (data, nota e texto). Se eu não disser a nota de 1 a 5, pergunte usando as âncoras que a ferramenta devolve; nunca deduza pelo tom. Se a mensagem for uma pergunta sobre os meus dados, responda com as ferramentas de leitura em vez de registrar.',
+      'Este projeto é o meu diário no Perceva. Toda mensagem que eu mandar aqui é o check-in de humor do dia, quase sempre ditado: registre com a ferramenta log_mood do conector Perceva e leia de volta o que salvou (data, nota e texto). Se eu não disser a nota de 1 a 5, pergunte usando as âncoras que a ferramenta devolve; nunca deduza pelo tom. Se a mensagem for uma pergunta sobre os meus dados, responda com as ferramentas de leitura em vez de registrar.\n\nExceção: se eu pedir o link deste projeto ou desta conversa, não registre nada; eu uso esse link no app do Perceva. O link de um projeto tem o formato https://claude.ai/project/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx e o de uma conversa, https://claude.ai/chat/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx, com o id no lugar dos x. Se você conseguir ver o id, por exemplo nas suas ferramentas de conversas anteriores, me devolva o link completo sozinho numa linha, pronto pra copiar. Nunca invente um id: se não conseguir ver, diga isso e me lembre de copiar o endereço da barra do navegador com o projeto aberto.',
   },
 
   hex: {
