@@ -730,9 +730,7 @@ const en = {
   },
 
   learning: {
-    eyebrow: 'Library · Your path',
     title: 'Study nook',
-    subtitle: 'Read, listen, or watch — always short, always tied to what you cultivate.',
     empty: 'Nothing here with this filter.',
     read: { one: 'done', other: 'done' },
     min: '{{count}} min',

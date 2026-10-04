@@ -427,9 +427,7 @@ export default function LearningScreen() {
             <>
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.eyebrow}>{t('learning.eyebrow')}</Text>
             <Text style={styles.title}>{t('learning.title')}</Text>
-            <Text style={styles.subtitle}>{t('learning.subtitle')}</Text>
           </View>
 
           {/* Study Reels — story-mode pass over the infographics and the
@@ -816,25 +814,10 @@ const styles = StyleSheet.create({
     paddingTop: tokens.space[4],
     paddingBottom: tokens.space[2],
   },
-  eyebrow: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 11,
-    letterSpacing: 1.8,
-    // Perceva pale-gold — sibling of the Rewards "Sua via" vocabulary.
-    color: tokens.semantic.coinLight,
-    textTransform: 'uppercase',
-  },
   title: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 28,
     color: tokens.text.hi,
-    marginTop: 2,
-  },
-  subtitle: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 13,
-    color: tokens.text.mid,
-    marginTop: 2,
   },
   headerGap: {
     height: tokens.space[4],
