@@ -2,11 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { memo, useMemo } from 'react';
+import { memo, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { IdeaCard } from '@/components/ideas/IdeaCard';
 import { IdeaVideo } from '@/components/ideas/IdeaVideo';
+import { TourTarget } from '@/components/tour/TourTarget';
+import { useActiveTourStepStore } from '@/lib/tour/store';
+import { remeasureActiveTourTarget } from '@/lib/tour/targets';
 import { LearningBody } from '@/components/LearningBody';
 import type { DimensionId, LearningIdea } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
@@ -60,6 +63,12 @@ interface Props {
   /** null on the last page → the button becomes "back to the material". */
   onNext: (() => void) | null;
   onExit: () => void;
+  /**
+   * Tour (M6) anchor on the ACTIVE page: 'media' spotlights the video or
+   * image, 'card' scrolls the card to the bottom of the page and
+   * spotlights it. null everywhere else.
+   */
+  tourTarget?: 'media' | 'card' | null;
 }
 
 /** Widest the hero card gets — keeps it a card, not a poster, on tablets. */
@@ -80,8 +89,45 @@ export const IdeaPage = memo(function IdeaPage({
   onFirstFlip,
   onNext,
   onExit,
+  tourTarget = null,
 }: Props) {
   const { t } = useT();
+
+  // ── Tour anchors ─────────────────────────────────────────────────────
+  const scrollRef = useRef<ScrollView>(null);
+  const cardRef = useRef<View>(null);
+  const scrollY = useRef(0);
+  useEffect(() => {
+    if (!tourTarget) return;
+    // Media: back to the top. Card: its top just under the tooltip pinned to
+    // the top of the screen (TourStep: paddingTop space[8] + the measured
+    // card height), whatever the phone's height.
+    const scroll = setTimeout(() => {
+      if (tourTarget === 'media') {
+        scrollRef.current?.scrollTo({ y: 0, animated: true });
+        return;
+      }
+      const tooltipH = useActiveTourStepStore.getState().cardHeight ?? 300;
+      cardRef.current?.measureInWindow((_x, cardTop) => {
+        const clearBelow = tokens.space[8] + tooltipH + tokens.space[3];
+        const to = Math.max(0, scrollY.current + cardTop - clearBelow);
+        scrollRef.current?.scrollTo({ y: to, animated: true });
+      });
+    }, 200);
+    const measure = setTimeout(remeasureActiveTourTarget, 650);
+    return () => {
+      clearTimeout(scroll);
+      clearTimeout(measure);
+    };
+  }, [tourTarget]);
+  // Always wrapped, so a step change never remounts the video or the card
+  // (that restarted the video and flipped the card back). Only the active
+  // anchor carries the id a step points at; every other one is inert.
+  const anchor = (id: 'media' | 'card', node: ReactNode) => (
+    <TourTarget id={tourTarget === id ? `idea.${id}` : `idea.${id}.${idea.id}`} radius={16}>
+      {node}
+    </TourTarget>
+  );
 
   const dim = DIMENSION_META[material.dimension_id];
   const dimColor = dim.color;
@@ -110,12 +156,17 @@ export const IdeaPage = memo(function IdeaPage({
 
   return (
     <ScrollView
+      ref={scrollRef}
+      onScroll={(e) => {
+        scrollY.current = e.nativeEvent.contentOffset.y;
+      }}
+      scrollEventThrottle={64}
       style={{ width: pageW, height: pageH }}
       contentContainerStyle={[styles.content, { paddingBottom: bottomInset + tokens.space[6] }]}
       showsVerticalScrollIndicator={false}
     >
       {/* ── Media ─────────────────────────────────────────────────────── */}
-      {videoPick ? (
+      {anchor('media', videoPick ? (
         <IdeaVideo
           uri={ideaVideoUri(videoPick.video)}
           poster={ideaVideoPosterUri(videoPick.video)}
@@ -147,7 +198,7 @@ export const IdeaPage = memo(function IdeaPage({
         >
           <Ionicons name={dimIcon} size={64} color="rgba(255, 255, 255, 0.9)" />
         </View>
-      )}
+      ))}
 
       {/* ── Title ─────────────────────────────────────────────────────── */}
       <View style={styles.titleRow}>
@@ -198,7 +249,8 @@ export const IdeaPage = memo(function IdeaPage({
       )}
 
       {/* ── The card — flipping it here is what absorbs the idea ──────── */}
-      <View style={styles.cardWrap}>
+      <View ref={cardRef} style={styles.cardWrap}>
+        {anchor('card', (
         <IdeaCard
           data={cardData}
           width={cardW}
@@ -206,6 +258,7 @@ export const IdeaPage = memo(function IdeaPage({
           collected={collected}
           onFirstFlip={() => onFirstFlip(idea)}
         />
+        ))}
         {collected ? (
           <View style={styles.hintRow}>
             <Ionicons name="checkmark-circle" size={15} color={tokens.semantic.coin} />

@@ -1,7 +1,7 @@
 import { router, type Href } from 'expo-router';
 
-import { SETTINGS_MODULE } from './constants';
-import { getCurrentTourModule, useTourStore } from './store';
+import { isTerminal, SETTINGS_MODULE } from './constants';
+import { getCurrentTourModule, isWrapPending, useTourStore } from './store';
 
 /**
  * Where to go right after landing on Home once onboarding ends — set by the
@@ -44,4 +44,18 @@ export function takeAfterOnboarding(): Href | null {
   const next = useTourStore.getState().afterOnboarding;
   if (next) void useTourStore.getState().setAfterOnboarding(null);
   return next as Href | null;
+}
+
+/**
+ * Leave the M6 walk-through (material + idea screens, pushed over the tabs)
+ * for the Recanto tab: the next step lives there. When M6 just ended
+ * (skipped, or "Sair do tour" from one of those screens) and the closing
+ * screen still has to run, open it — the same rule as the Learn tab's own
+ * finish.
+ */
+export function leaveM6Flow(): void {
+  if (router.canDismiss()) router.dismissAll();
+  router.navigate('/(tabs)/learning');
+  const m6 = useTourStore.getState().modules.M6?.status;
+  if (isTerminal(m6) && isWrapPending()) router.push('/tour/wrap');
 }

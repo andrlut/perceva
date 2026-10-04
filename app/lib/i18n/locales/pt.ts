@@ -629,8 +629,36 @@ const pt: Translations = {
         body: 'No Recanto você aprende com ideias curtas e com fonte. Toque em Aprender.',
       },
       step2: {
-        title: 'Como funciona o Recanto',
-        body: 'Leia até o fim e vire o card para absorver. Toque na lâmpada para revisar o que absorveu.',
+        title: 'Materiais',
+        body: 'Cada capa é um livro, uma pesquisa ou um fundamento, resumido em ideias curtas. Toque numa capa.',
+        cta: 'Abrir um material',
+      },
+      step3: {
+        title: 'De 1 a 5 ideias por material',
+        body: 'Toque no botão para abrir a primeira. Rolando a tela, você vê a lista de ideias e o áudio Deep dive, quando houver.',
+        cta: 'Abrir a ideia',
+      },
+      step4: {
+        title: 'Uma ideia por tela',
+        body: 'Quando há vídeo, ele abre a ideia. Depois vêm a frase-chave, um texto curto e as fontes. Deslize para o lado para a próxima ideia.',
+      },
+      step5: {
+        title: 'Vire o card para absorver',
+        body: 'Leu? Toque no card para virar. Virar é o que absorve a ideia.',
+        cta: 'Continuar o tour',
+      },
+      step6: {
+        title: 'É assim que se absorve',
+        body: 'A ideia vai para Minhas ideias. Absorva todas as ideias de um material e ganhe Dedicação e moedas.',
+        cta: 'Voltar ao Recanto',
+      },
+      step7: {
+        title: 'Explorar',
+        body: 'Todas as ideias em sequência, uma atrás da outra, como stories.',
+      },
+      step8: {
+        title: 'Minhas ideias',
+        body: 'Tudo o que você absorve vem para cá. Revise: arraste para a direita para favoritar, para a esquerda para soltar.',
       },
     },
     settings: {
@@ -714,7 +742,7 @@ const pt: Translations = {
         },
         M6: {
           name: 'Aprender',
-          desc: 'Ideias curtas, com fonte, para ler e absorver.',
+          desc: 'Materiais, ideias, vídeos, Explorar e Minhas ideias.',
         },
       },
     },

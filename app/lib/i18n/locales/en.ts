@@ -633,8 +633,36 @@ const en = {
         body: 'Learn from short ideas, each with its sources. Tap Learn.',
       },
       step2: {
-        title: 'How Learn works',
-        body: 'Read to the end and flip the card to absorb. Tap the bulb to review what you absorbed.',
+        title: 'Materials',
+        body: 'Each cover is a book, a study or a foundation, distilled into short ideas. Tap a cover.',
+        cta: 'Open a material',
+      },
+      step3: {
+        title: '1 to 5 ideas per material',
+        body: 'Tap the button to open the first one. Scroll down for the list of ideas and the Deep dive audio, when there is one.',
+        cta: 'Open the idea',
+      },
+      step4: {
+        title: 'One idea per screen',
+        body: 'When there is a video, it opens the idea. Then come the key sentence, a short text and the sources. Swipe sideways for the next idea.',
+      },
+      step5: {
+        title: 'Flip the card to absorb',
+        body: 'Done reading? Tap the card to flip it. Flipping is what absorbs the idea.',
+        cta: 'Continue the tour',
+      },
+      step6: {
+        title: 'That is how you absorb',
+        body: 'The idea goes to My ideas. Absorb every idea of a material and earn Dedication and coins.',
+        cta: 'Back to Learn',
+      },
+      step7: {
+        title: 'Explore',
+        body: 'Every idea in a row, one after the other, like stories.',
+      },
+      step8: {
+        title: 'My ideas',
+        body: 'Everything you absorb lands here. Review it: swipe right to favorite, left to let go.',
       },
     },
     settings: {
@@ -718,7 +746,7 @@ const en = {
         },
         M6: {
           name: 'Learn',
-          desc: 'Short ideas with sources, to read and absorb.',
+          desc: 'Materials, ideas, videos, Explore and My ideas.',
         },
       },
     },

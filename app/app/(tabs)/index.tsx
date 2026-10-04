@@ -65,7 +65,7 @@ import {
 import { buildM2Steps, M2_EVENTS } from '@/lib/tour/m2Steps';
 import { buildM4Steps } from '@/lib/tour/m4Steps';
 import { buildM5Steps } from '@/lib/tour/m5Steps';
-import { buildM6Steps } from '@/lib/tour/m6Steps';
+import { buildM6Steps, M6_STEP } from '@/lib/tour/m6Steps';
 import { buildSettingsSteps } from '@/lib/tour/settingsSteps';
 import {
   getCurrentTourModule,
@@ -1475,6 +1475,9 @@ export default function HomeScreen() {
         steps={buildM6Steps(t)}
         enabled={isM6Current}
         rewindOnFocus
+        // Past the idea screen the remaining steps live on the Recanto tab:
+        // coming Home must not restart the whole walk-through.
+        rewindMaxStep={M6_STEP.ABSORBED}
         onAdvanceToNextScreen={() => router.navigate('/(tabs)/learning')}
         onComplete={finishM6}
       />
