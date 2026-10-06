@@ -16,14 +16,22 @@ import {
 import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { IdeaNoteSheet } from '@/components/ideas/IdeaNoteSheet';
 import { IdeaPage, type IdeaPageMaterial } from '@/components/ideas/IdeaPage';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { TourModule } from '@/components/tour/TourModule';
-import { type LearningMaterialDetail, useCollectedIdeas, useCollectIdea } from '@/lib/api/learning';
+import {
+  type LearningMaterialDetail,
+  reviewKey,
+  useCollectedIdeas,
+  useCollectIdea,
+  useIdeaReviews,
+  useSetIdeaNote,
+} from '@/lib/api/learning';
 import type { LearningIdea } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
-import { sortedIdeas } from '@/lib/ideas';
+import { pickLocalized, sortedIdeas } from '@/lib/ideas';
 import { useIdeaSoundSession } from '@/lib/ideaSound';
 import { emitTourEvent } from '@/lib/tour/eventBus';
 import { buildM6Steps, M6_EVENTS, M6_STEP } from '@/lib/tour/m6Steps';
@@ -252,6 +260,23 @@ export function IdeaScreen({ detail: m, initialOrdinal }: Props) {
 
   const shownIndex = Math.min(currentIndex, Math.max(0, total - 1));
 
+  // Header shortcuts. "Material": the whole material (text, deep dive) — an
+  // idea opened from Minhas ideias had no way back to it. "Anotar": once the
+  // idea is absorbed, the note is one tap away here, not behind the review
+  // pile and the favorites.
+  const reviews = useIdeaReviews();
+  const { mutate: setIdeaNote } = useSetIdeaNote();
+  const [noteOpen, setNoteOpen] = useState(false);
+  const shownIdea = ideas[shownIndex];
+  const shownCollected = shownIdea ? collectedSet.has(shownIdea.id) : false;
+  const shownNote = shownIdea
+    ? (reviews.data?.byKey.get(reviewKey(m.id, shownIdea.id))?.note ?? null)
+    : null;
+  const openMaterial = () => {
+    Haptics.selectionAsync().catch(() => {});
+    router.push(`/material/${m.slug}`);
+  };
+
   return (
     <ScreenBackground>
       <View style={styles.root}>
@@ -266,6 +291,33 @@ export function IdeaScreen({ detail: m, initialOrdinal }: Props) {
               {' · '}
               {t('learning.ideas.ideaOf', { n: shownIndex + 1, total })}
             </Text>
+            <Pressable
+              onPress={openMaterial}
+              accessibilityRole="button"
+              accessibilityLabel={t('learning.ideas.openMaterialA11y')}
+              hitSlop={6}
+              style={({ pressed }) => [styles.materialBtn, pressed && styles.pressed]}
+            >
+              <Ionicons name="book-outline" size={15} color={tokens.text.hi} />
+              <Text style={styles.materialText}>{t('learning.ideas.openMaterial')}</Text>
+            </Pressable>
+            {shownCollected ? (
+              <Pressable
+                onPress={() => setNoteOpen(true)}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  shownNote ? t('learning.ideas.menu.editNote') : t('learning.ideas.menu.addNote')
+                }
+                hitSlop={6}
+                style={({ pressed }) => [styles.closeBtn, pressed && styles.pressed]}
+              >
+                <Ionicons
+                  name={shownNote ? 'create' : 'create-outline'}
+                  size={17}
+                  color={tokens.text.hi}
+                />
+              </Pressable>
+            ) : null}
             <Pressable
               onPress={exit}
               accessibilityRole="button"
@@ -367,6 +419,23 @@ export function IdeaScreen({ detail: m, initialOrdinal }: Props) {
         flatNav
         onExitScreen={leaveM6Flow}
       />
+      <IdeaNoteSheet
+        visible={noteOpen && shownIdea != null}
+        ideaTitle={shownIdea ? pickLocalized(shownIdea.title, locale) : ''}
+        note={shownNote}
+        onCancel={() => setNoteOpen(false)}
+        onSave={(note) => {
+          setNoteOpen(false);
+          if (!shownIdea) return;
+          setIdeaNote(
+            { slug: m.slug, ideaId: shownIdea.id, note, materialId: m.id },
+            {
+              onError: (e) =>
+                showInfo(t('learning.ideas.note.fail'), e instanceof Error ? e.message : ''),
+            },
+          );
+        }}
+      />
     </ScreenBackground>
   );
 }
@@ -397,6 +466,23 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope_700Bold',
     fontSize: 13,
     color: tokens.text.base,
+  },
+  // Same 34px height and dark glass as the close disc, with a label.
+  materialBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    height: 34,
+    paddingHorizontal: 12,
+    borderRadius: tokens.radius.pill,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+  },
+  materialText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 12,
+    color: tokens.text.hi,
   },
   closeBtn: {
     width: 34,

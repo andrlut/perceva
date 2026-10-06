@@ -1,17 +1,23 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useBottomSafeClearance } from '@/components/BottomNavBar';
+import { IdeaNoteSheet } from '@/components/ideas/IdeaNoteSheet';
 import { ReviewStack, type ReviewStackItem } from '@/components/ideas/ReviewStack';
 import { ScreenBackground } from '@/components/ScreenBackground';
-import { useReviewIdea } from '@/lib/api/learning';
+import { useReviewIdea, useSetIdeaNote } from '@/lib/api/learning';
 import { useT } from '@/lib/i18n';
 import { useIdeaCollection } from '@/lib/ideaCollection';
-import { toCardDataFromPublic, type IdeaCardData, type IdeaLocale } from '@/lib/ideas';
+import {
+  pickLocalized,
+  toCardDataFromPublic,
+  type IdeaCardData,
+  type IdeaLocale,
+} from '@/lib/ideas';
 import { showInfo } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 
@@ -37,13 +43,18 @@ export default function IdeaReviewScreen() {
   const ideaLocale: IdeaLocale = locale === 'pt' ? 'pt' : 'en';
   const { pending, titles, loading, failed, retry } = useIdeaCollection(ideaLocale);
   const { mutate: reviewIdea } = useReviewIdea();
+  const { mutate: setIdeaNote } = useSetIdeaNote();
+  // The pile's note button: write the note right where the idea is met
+  // again, without deciding (or hunting it in the favorites) first.
+  const [noteItem, setNoteItem] = useState<ReviewStackItem | null>(null);
 
   const items = useMemo<ReviewStackItem[]>(
     () =>
-      pending.map(({ row }) => ({
+      pending.map(({ row, review }) => ({
         card: toCardDataFromPublic(row),
         kicker: titles.get(row.material_id) ?? '',
         slug: row.slug,
+        note: review.note ?? null,
       })),
     [pending, titles],
   );
@@ -128,6 +139,7 @@ export default function IdeaReviewScreen() {
               locale={ideaLocale}
               onDecision={onDecision}
               onOpen={openStackItem}
+              onNote={setNoteItem}
             />
           </ScrollView>
         ) : (
@@ -146,6 +158,24 @@ export default function IdeaReviewScreen() {
             </Pressable>
           </View>
         )}
+        <IdeaNoteSheet
+          visible={noteItem != null}
+          ideaTitle={noteItem ? pickLocalized(noteItem.card.title, ideaLocale) : ''}
+          note={noteItem?.note ?? null}
+          onCancel={() => setNoteItem(null)}
+          onSave={(note) => {
+            const item = noteItem;
+            setNoteItem(null);
+            if (!item) return;
+            setIdeaNote(
+              { slug: item.slug, ideaId: item.card.id, note, materialId: item.card.materialId },
+              {
+                onError: (e) =>
+                  showInfo(t('learning.ideas.note.fail'), e instanceof Error ? e.message : ''),
+              },
+            );
+          }}
+        />
       </ScreenBackground>
     </SafeAreaView>
   );

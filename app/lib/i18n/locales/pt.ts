@@ -885,6 +885,8 @@ const pt: Translations = {
       videoSoon: 'Vídeo em breve',
       collectFail: 'Não foi possível absorver a ideia',
       myIdeas: 'Minhas ideias',
+      openMaterial: 'Material',
+      openMaterialA11y: 'Abrir o material completo: texto e deep dive',
       myIdeasEmpty: 'Vire o card no fim de uma ideia pra guardá-la aqui.',
       searchPlaceholder: 'Buscar nas suas ideias',
       searchEmpty: 'Nenhuma ideia sua bate com “{{query}}”.',

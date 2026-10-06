@@ -58,6 +58,8 @@ export interface ReviewStackItem {
   /** Material title, shown muted under the counter — never on the card (may be empty). */
   kicker: string;
   slug: string;
+  /** The reader's note on this idea, if any (drives the note button's glyph). */
+  note?: string | null;
 }
 
 interface Props {
@@ -68,6 +70,9 @@ interface Props {
   onDecision: (item: ReviewStackItem, favorite: boolean) => void;
   /** The corner arrow on the back of the top card. */
   onOpen: (item: ReviewStackItem) => void;
+  /** The note button between the two decisions — write/edit the top card's
+   *  note without deciding first. */
+  onNote?: (item: ReviewStackItem) => void;
 }
 
 /** Large card: the idea screen's width, capped. */
@@ -302,7 +307,7 @@ const PeekCard = memo(function PeekCard({
 // The stack
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function ReviewStack({ items, locale, onDecision, onOpen }: Props) {
+export function ReviewStack({ items, locale, onDecision, onOpen, onNote }: Props) {
   const { t } = useT();
   const { width: screenW } = useWindowDimensions();
   const reduceMotion = useReducedMotion();
@@ -380,6 +385,22 @@ export function ReviewStack({ items, locale, onDecision, onOpen }: Props) {
           <Ionicons name="close" size={16} color={tokens.text.mid} />
           <Text style={styles.btnReleaseText}>{t('learning.ideas.review.release')}</Text>
         </Pressable>
+        {onNote ? (
+          <Pressable
+            onPress={() => onNote(top)}
+            accessibilityRole="button"
+            accessibilityLabel={
+              top.note ? t('learning.ideas.menu.editNote') : t('learning.ideas.menu.addNote')
+            }
+            style={({ pressed }) => [styles.noteBtn, pressed && styles.pressed]}
+          >
+            <Ionicons
+              name={top.note ? 'create' : 'create-outline'}
+              size={18}
+              color={tokens.text.hi}
+            />
+          </Pressable>
+        ) : null}
         <Pressable
           onPress={() => topRef.current?.decide(true)}
           accessibilityRole="button"
@@ -508,6 +529,18 @@ const styles = StyleSheet.create({
   },
   btnKeep: {
     ...tokens.shadow.coinGlowSoft,
+  },
+  // Same height and glass as Soltar, square: the note is a side action, not
+  // a third decision.
+  noteBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: tokens.radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: tokens.bg.glass,
+    borderWidth: 1,
+    borderColor: tokens.border.strong,
   },
   btnKeepText: {
     fontFamily: 'Manrope_800ExtraBold',
