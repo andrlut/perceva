@@ -29,6 +29,9 @@ const sample = arg('sample', '');
 // arrastado (medido: 15,7 s sem direção × 33 s com um parágrafo de direção),
 // então o padrão é nenhuma; se usar, que seja curta: --direction "Com voz calorosa"
 const DIRECTION = arg('direction', '');
+// No 3.8 a direção vai em speech_metadata.style (fora do texto — no texto ela
+// seria lida em voz alta). Vazio = estilo padrão da voz.
+const STYLE = arg('style', 'warm, close and confident Brazilian Portuguese narrator; natural conversational pace; smiling slightly; never a radio announcer');
 
 const key = process.env.GEMINI_API_KEY;
 if (!key) throw new Error('GEMINI_API_KEY não está no ambiente.');
@@ -37,7 +40,7 @@ const plain = (s) => s.replace(/\*/g, '');
 
 async function synth(text, voice) {
   const body = {
-    contents: [{ parts: [{ text: DIRECTION ? `${DIRECTION}: ${text}` : text }] }],
+    contents: [{ role: 'user', parts: [{ text: DIRECTION ? `${DIRECTION}: ${text}` : text, ...(STYLE ? { speech_metadata: { style: STYLE } } : {}) }] }],
     generationConfig: {
       responseModalities: ['AUDIO'],
       speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } } },

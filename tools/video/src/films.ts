@@ -1,5 +1,7 @@
 import type React from 'react';
 import manifestoScript from './script.json';
+import recantoScript from './script.recanto.json';
+import { SCENES as RECANTO } from './recanto/scenes';
 import { SCENES as MANIFESTO } from './scenes';
 import type { Line, Scene } from './timeline';
 
@@ -15,6 +17,8 @@ type Film = {
 
 export const FILMS = {
   manifesto: { lines: manifestoScript.lines, voDir: 'vo', scenes: MANIFESTO, noCaption: ['tagline'] },
+  // a cena 'close' já escreve ler / lembrar / fazer na tela
+  recanto: { lines: recantoScript.lines, voDir: 'vo-recanto', scenes: RECANTO, noCaption: ['close', 'tagline'] },
 } satisfies Record<string, Film>;
 
 export type FilmId = keyof typeof FILMS;

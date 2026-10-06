@@ -28,5 +28,7 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="Manifesto" {...common} defaultProps={{ film: 'manifesto', scenes: [], captions: true, voice: true }} />
     {/* Entrada do app: mudo por padrão (som nunca é obrigatório), legenda faz o trabalho. */}
     <Composition id="ManifestoApp" {...common} defaultProps={{ film: 'manifesto', scenes: [], captions: true, voice: false }} />
+    {/* Recanto: Reels pra levar gente à aba Aprender. */}
+    <Composition id="Recanto" {...common} defaultProps={{ film: 'recanto', scenes: [], captions: true, voice: true }} />
   </>
 );

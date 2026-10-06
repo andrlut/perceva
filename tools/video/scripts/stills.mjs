@@ -17,7 +17,7 @@ if (args.includes('--scenes')) {
 }
 fs.mkdirSync(path.join(root, 'out/stills'), { recursive: true });
 for (const frame of frames) {
-  const output = path.join(root, `out/stills/f${frame}.png`);
+  const output = path.join(root, `out/stills/${comp.toLowerCase()}-f${frame}.png`);
   await renderStill({ serveUrl, composition, frame, output, scale: 0.5 });
   console.log(output);
 }

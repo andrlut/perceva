@@ -168,13 +168,15 @@ export const Background: React.FC = () => {
 // ---------------------------------------------------------------- UI do app
 
 /** Moldura de celular — o conteúdo é uma réplica estilizada da tela. */
-export const Phone: React.FC<{ width: number; height: number; top: number; children: React.ReactNode; style?: React.CSSProperties }> = ({
-  width,
-  height,
-  top,
-  children,
-  style,
-}) => (
+export const Phone: React.FC<{
+  width: number;
+  height: number;
+  top: number;
+  children: React.ReactNode;
+  style?: React.CSSProperties;
+  /** conteúdo de borda a borda (stories, imagem cheia) */
+  bleed?: boolean;
+}> = ({ width, height, top, children, style, bleed = false }) => (
   <div
     style={{
       position: 'absolute',
@@ -197,7 +199,7 @@ export const Phone: React.FC<{ width: number; height: number; top: number; child
         background: C.base,
         overflow: 'hidden',
         position: 'relative',
-        padding: '64px 30px 30px',
+        padding: bleed ? 0 : '64px 30px 30px',
       }}
     >
       <div
