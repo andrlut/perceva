@@ -64,7 +64,12 @@ export function DimensionCards({ rows, accent, onDimPress }: Props) {
               <>
                 <View style={styles.cardHeader}>
                   <Ionicons name={meta.iconName as never} size={12} color={color} />
-                  <Text style={[styles.cardLabel, { color }]} numberOfLines={1}>
+                  <Text
+                    style={[styles.cardLabel, { color }]}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.75}
+                  >
                     {meta.label.toUpperCase()}
                   </Text>
                   {badge ? (
