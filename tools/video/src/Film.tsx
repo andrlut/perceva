@@ -5,13 +5,13 @@ import { fade } from '@remotion/transitions/fade';
 import { Background } from './components';
 import { Captions } from './Captions';
 import { FILMS, FilmId } from './films';
-import { FADE, LEAD, Scene } from './timeline';
+import { FADE, Scene } from './timeline';
 
 export type FilmProps = { film: FilmId; scenes: Scene[]; captions: boolean; voice: boolean };
 
 /** Um filme = cenas em sequência com crossfade + uma faixa de voz por fala + legenda queimada. */
 export const Film: React.FC<FilmProps> = ({ film, scenes, captions, voice }) => {
-  const { scenes: sceneMap, voDir, noCaption } = FILMS[film];
+  const { scenes: sceneMap, voDir, noCaption, captionTop } = FILMS[film] as (typeof FILMS)[FilmId] & { captionTop?: number };
   return (
     <AbsoluteFill>
       <Background />
@@ -32,12 +32,12 @@ export const Film: React.FC<FilmProps> = ({ film, scenes, captions, voice }) => 
       </TransitionSeries>
       {voice
         ? scenes.map((s) => (
-            <Sequence key={s.id} from={s.start + LEAD} durationInFrames={s.speech + 30} name={`voz:${s.id}`}>
+            <Sequence key={s.id} from={s.start + s.lead} durationInFrames={s.speech + 30} name={`voz:${s.id}`}>
               <Audio src={staticFile(`${voDir}/${s.id}.wav`)} />
             </Sequence>
           ))
         : null}
-      {captions ? <Captions scenes={scenes} skip={noCaption} /> : null}
+      {captions ? <Captions scenes={scenes} skip={noCaption} top={captionTop} /> : null}
     </AbsoluteFill>
   );
 };

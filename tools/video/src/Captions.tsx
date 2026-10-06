@@ -2,7 +2,7 @@ import React from 'react';
 import { interpolate, useCurrentFrame } from 'remotion';
 import { Rich } from './components';
 import { C, FONT, LAYOUT } from './theme';
-import { LEAD, Scene, cue, plain, speechEnd } from './timeline';
+import { Scene, cue, plain, speechEnd } from './timeline';
 
 const MAX = 58;
 
@@ -43,17 +43,17 @@ const chunk = (caption: string): string[] => {
 };
 
 /** Legenda queimada (playbook: 100% dos vídeos), sempre acima da UI do Reels. */
-export const Captions: React.FC<{ scenes: Scene[]; skip?: string[] }> = ({ scenes, skip = [] }) => {
+export const Captions: React.FC<{ scenes: Scene[]; skip?: string[]; top?: number }> = ({ scenes, skip = [], top = LAYOUT.captionTop }) => {
   const frame = useCurrentFrame();
   // a cena "dona" do frame é a última que já começou a falar
-  const scene = [...scenes].reverse().find((s) => frame >= s.start + LEAD - 2);
+  const scene = [...scenes].reverse().find((s) => frame >= s.start + s.lead - 2);
   if (!scene || skip.includes(scene.id)) return null;
 
   const local = frame - scene.start;
   const chunks = chunk(scene.caption);
   // cada bloco começa quando a fala chega às primeiras palavras dele
   const starts = chunks.map((c, i) =>
-    i === 0 ? LEAD : cue(scene, plain(c).split(' ').slice(0, 2).join(' ')),
+    i === 0 ? scene.lead : cue(scene, plain(c).split(' ').slice(0, 2).join(' ')),
   );
   let current = 0;
   for (let i = 0; i < chunks.length; i++) if (local >= starts[i] - 2) current = i;
@@ -65,9 +65,10 @@ export const Captions: React.FC<{ scenes: Scene[]; skip?: string[] }> = ({ scene
     <div
       style={{
         position: 'absolute',
-        top: LAYOUT.captionTop,
+        top,
+        // a coluna de ícones do Reels/TikTok ocupa a direita do quadro
         left: 70,
-        right: 70,
+        right: 170,
         display: 'flex',
         justifyContent: 'center',
       }}

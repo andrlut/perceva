@@ -115,20 +115,26 @@ export const Header: React.FC<{ kicker?: string; title: string; from?: number; s
   );
 };
 
-export const Footnote: React.FC<{ text: string; from?: number }> = ({ text, from = 0 }) => {
+export const Footnote: React.FC<{ text: string; from?: number; top?: number; size?: number; color?: string }> = ({
+  text,
+  from = 0,
+  top = LAYOUT.footnoteY,
+  size = 24,
+  color = C.dim,
+}) => {
   const frame = useCurrentFrame();
   return (
     <div
       style={{
         position: 'absolute',
-        top: LAYOUT.footnoteY,
+        top,
         left: 90,
         right: 90,
         textAlign: 'center',
         fontFamily: FONT.body,
         fontWeight: 600,
-        fontSize: 24,
-        color: C.dim,
+        fontSize: size,
+        color,
         opacity: ramp(frame, from, 16) * 0.95,
       }}
     >

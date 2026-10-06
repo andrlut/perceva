@@ -8,7 +8,15 @@ export const FADE = 10;
 /** A última cena segura a assinatura na tela. */
 export const HOLD = 54;
 
-export type Line = { id: string; caption: string; say?: string };
+export type Line = {
+  id: string;
+  caption: string;
+  say?: string;
+  /** segundos de imagem ANTES da fala começar (cena que precisa respirar antes) */
+  pre?: number;
+  /** segundos de imagem DEPOIS da fala (deixar um gesto ou um texto assentar) */
+  hold?: number;
+};
 export type Timing = { id: string; seconds: number };
 export type Scene = Line & {
   /** frames de fala */
@@ -17,6 +25,8 @@ export type Scene = Line & {
   frames: number;
   /** frame global em que a cena começa */
   start: number;
+  /** frame local em que a fala começa (LEAD + pre) */
+  lead: number;
 };
 
 export const buildTimeline = (lines: Line[], timings: Timing[]): { scenes: Scene[]; total: number } => {
@@ -26,8 +36,10 @@ export const buildTimeline = (lines: Line[], timings: Timing[]): { scenes: Scene
     if (!t) throw new Error(`Sem voz para "${line.id}" — rode node scripts/tts-gemini.mjs`);
     const speech = Math.round(t.seconds * FPS);
     const last = i === lines.length - 1;
-    const frames = LEAD + speech + TAIL + (last ? HOLD : FADE);
-    const scene = { ...line, speech, frames, start: cursor };
+    const lead = LEAD + Math.round((line.pre ?? 0) * FPS);
+    const extra = Math.round((line.hold ?? 0) * FPS);
+    const frames = lead + speech + extra + TAIL + (last ? HOLD : FADE);
+    const scene = { ...line, speech, frames, start: cursor, lead };
     cursor += frames - (last ? 0 : FADE);
     return scene;
   });
@@ -61,7 +73,7 @@ const speechIndex = (s: Pick<Scene, 'caption' | 'say'>, phrase: string) => {
  * bastante pra voz sintética; com a voz real o modelo continua valendo, e
  * dá pra trocar por marcações manuais se algum ponto ficar fora.
  */
-const frameAtIndex = (s: Pick<Scene, 'caption' | 'say' | 'speech'>, idx: number) => {
+const frameAtIndex = (s: Pick<Scene, 'caption' | 'say' | 'speech' | 'lead'>, idx: number) => {
   const text = spoken(s);
   const units = (upto: number) => {
     let u = 0;
@@ -73,12 +85,12 @@ const frameAtIndex = (s: Pick<Scene, 'caption' | 'say' | 'speech'>, idx: number)
     return u;
   };
   const talk = Math.max(1, s.speech - SPEECH_TAIL);
-  return LEAD + Math.round((units(idx) / units(text.length)) * talk);
+  return s.lead + Math.round((units(idx) / units(text.length)) * talk);
 };
 
 /** Frame local em que a fala chega a `phrase`. */
-export const cue = (s: Pick<Scene, 'caption' | 'say' | 'speech'>, phrase: string) =>
+export const cue = (s: Pick<Scene, 'caption' | 'say' | 'speech' | 'lead'>, phrase: string) =>
   frameAtIndex(s, speechIndex(s, phrase));
 
 /** Fim estimado da fala (sem a cauda de silêncio), em frame local. */
-export const speechEnd = (s: Pick<Scene, 'speech'>) => LEAD + Math.max(1, s.speech - SPEECH_TAIL);
+export const speechEnd = (s: Pick<Scene, 'speech' | 'lead'>) => s.lead + Math.max(1, s.speech - SPEECH_TAIL);
