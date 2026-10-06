@@ -9,7 +9,7 @@
 #   npm run voice -- -MeasureOnly
 # que só remede as durações sem sintetizar nada.
 
-param([switch]$MeasureOnly, [int]$Rate = 1)
+param([switch]$MeasureOnly, [int]$Rate = 3)
 
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
@@ -51,6 +51,12 @@ foreach ($line in $script.lines) {
     $synth.SetOutputToWaveFile($wav, $fmt)
     $synth.Speak($text)
     $synth.SetOutputToNull()
+    # volume de rede social (~-16 LUFS); o sintetizador sai baixo (~-28 dB)
+    if (Get-Command ffmpeg -ErrorAction SilentlyContinue) {
+      $tmp = "$wav.norm.wav"
+      ffmpeg -hide_banner -loglevel error -y -i $wav -af 'loudnorm=I=-16:TP=-1.5:LRA=11' -ar 44100 $tmp
+      Move-Item -Force $tmp $wav
+    }
   }
   $secs = Get-WavSeconds $wav
   $timings += [pscustomobject]@{ id = $line.id; seconds = $secs }
