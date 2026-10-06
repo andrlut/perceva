@@ -1,0 +1,24 @@
+{
+  "name": "perceva-video",
+  "private": true,
+  "description": "Vídeos da marca Perceva em Remotion (vídeo como código React). Ver README.md",
+  "scripts": {
+    "voice": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/voice.ps1",
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts Manifesto out/manifesto.mp4",
+    "still": "remotion still src/index.ts Manifesto out/still.png"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.533",
+    "@remotion/fonts": "4.0.533",
+    "@remotion/shapes": "4.0.533",
+    "@remotion/transitions": "4.0.533",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "remotion": "4.0.533"
+  },
+  "devDependencies": {
+    "@types/react": "19.1.10",
+    "typescript": "5.9.2"
+  }
+}
