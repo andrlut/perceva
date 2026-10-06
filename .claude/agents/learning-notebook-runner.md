@@ -169,6 +169,14 @@ Three rules the SQL encodes, all from the plan:
   `audio_gaps` selecting rows with `mm.kind = 'audio' and
   mm.duration_seconds < 600`, tier 5, uploaded on a `.v2` path. Do not
   enable it without the maintainer.
+- **Tier 7 — review phase, off while tiers 1–6 have anything.** Videos on
+  the air with `needs_review: true` (§6b), **lowest `fidelity_score`
+  first**. The query below already selects them; when the rows it returns
+  are all tier 7, the fill phase is over: do **not** regenerate — end with
+  `RESULT: empty`, and print `REVIEW_PHASE_READY: <n> videos com
+  needs_review` plus the 10 lowest scores. Retakes (§6b item 6, targeted
+  focus) start only after the maintainer says so; each lands on a `.v2`
+  path and its fresh object drops the review keys.
 
 Only materials that already have `ideas` are in scope (the 31 legacy
 materials keep their material-level video; the plan makes per-idea video
@@ -204,6 +212,16 @@ stale_videos as (
   cross join (values ('pt'), ('en')) as l(locale)
   where i->'video'->l.locale->>'text_revised_at' is not null
 ),
+review_videos as (
+  select m.slug, m.released_at, 'video' as kind,
+         i->>'id' as idea_id, (i->>'ordinal')::int as ordinal, l.locale,
+         (i->'video'->l.locale->>'fidelity_score')::int as fidelity_score
+  from m
+  cross join lateral jsonb_array_elements(m.ideas) i
+  cross join (values ('pt'), ('en')) as l(locale)
+  where (i->'video'->l.locale->>'needs_review')::boolean is true
+    and i->'video'->l.locale->>'text_revised_at' is null
+),
 audio_gaps as (
   select m.slug, m.released_at, 'audio' as kind,
          null::text as idea_id, null::int as ordinal, l.locale
@@ -216,22 +234,27 @@ audio_gaps as (
 ),
 queue as (
   select g.*,
-         case when g.stale                                            then 6
+         case when g.review                                           then 7
+              when g.stale                                            then 6
               when kind = 'video' and ordinal = 1 and locale = 'pt' then 1
               when kind = 'video' and ordinal = 1 and locale = 'en' then 2
               when kind = 'audio'                                  then 3
               else 4 end as tier
   from (
-    select *, false as stale from video_gaps
+    select *, null::int as fidelity_score, false as stale, false as review from video_gaps
     union all
-    select *, false as stale from audio_gaps
+    select *, null::int, false, false from audio_gaps
     union all
-    select *, true  as stale from stale_videos
+    select *, null::int, true,  false from stale_videos
+    union all
+    select *, false, true from review_videos
   ) g
 )
-select slug, kind, idea_id, ordinal, locale, tier, count(*) over () as queue_size
+select slug, kind, idea_id, ordinal, locale, tier, fidelity_score,
+       count(*) filter (where tier < 7) over () as queue_size,
+       count(*) filter (where tier = 7) over () as review_size
 from queue
-order by tier, ordinal nulls last, locale desc, released_at desc, slug
+order by tier, fidelity_score nulls last, ordinal nulls last, locale desc, released_at desc, slug
 limit 6;
 ```
 
@@ -550,15 +573,35 @@ right: the model rolls the dice, so the gate has to be on the OUTPUT.
      is a contradiction — the video may not add findings;
    - a subject that is not the idea's is the old drift case, unchanged.
 
-4. On a contradiction: do **not** upload and do **not** write a migration
-   for that item. Mark it `needs_review` in the manifest with the two
-   readings quoted side by side (`video: "4 de 4"` vs `texto: "3"`), and
-   regenerate it at most **once** in the same run; the counter still spends
-   against the cap. If the second take also contradicts, leave it for the
-   maintainer — the fix is editorial (the idea's own text may be the vague
-   one), not another roll.
+4. **Score every video** — `fidelity_score`, 0–100, how faithful it is to
+   the idea's `claim` + `body` (100 = nothing added, nothing contradicted):
 
-5. **A retake is never the same roll.** The generic focus sentence (§3) is
+   | Score | Meaning |
+   |---|---|
+   | 90–100 | Passes. At most an omission or a softened word. |
+   | 75–85 | One overclaim at the edge (a hook or a closing line states cause / a promise the text does not), core numbers and caveat right. |
+   | 60–70 | A wrong number or label on screen, or an overclaim the text explicitly warns against, with the rest right. |
+   | 40–55 | The central caveat is inverted (correlation sold as protection / "it works"), or the evidence the idea is built on is missing. |
+   | < 40 | It invents how a finding was produced, or most of the idea is missing. |
+
+   ≥ 90 is `fidelity: "ok"`; below is `fidelity: "needs_review"`.
+
+5. **A contradiction still uploads (decision of the maintainer,
+   2026-10-05): the priority is to have EVERY video on the air first and
+   review afterwards, lowest score first.** So a `needs_review` video is
+   processed, uploaded and migrated like any other, and its `video.<lang>`
+   object carries three extra keys (§8): `needs_review: true`,
+   `fidelity_score`, and `fidelity_note` (the main miss, one line, PT). In
+   the manifest, keep the two readings quoted side by side in `error`
+   (`video: "4 de 4"` vs `texto: "3"`) and the item walks to `migrated`
+   with `fidelity: "needs_review"`. **No retake in the fill phase**: a
+   regeneration spends a slot that a missing video needs. Retakes happen
+   only in the review phase (tier 7, §1), which is off until the gaps are
+   gone. Two cases still block the upload, because nothing in them is
+   usable: a video about **another idea** (subject drift) and a file whose
+   cut failed (`cutAt` §6).
+
+6. **A retake is never the same roll.** The generic focus sentence (§3) is
    what produced the miss; repeating it repeats the miss (2026-10-01: six
    second takes reproduced their first take's exact error). Every
    regeneration of a `needs_review` item — same run or a later one — writes
@@ -581,7 +624,8 @@ the manifest's run notes that the read was not blind.
 
 The gate costs one Haiku call per video (~US$ 0.01) against a generation
 that costs minutes of Notebook time, so it is never skipped "to save a
-step". Record `fidelity: "ok" | "needs_review"` per item in the manifest.
+step". Record `fidelity: "ok" | "needs_review"` and `fidelity_score` per
+item in the manifest.
 
 Deep dives:
 
@@ -740,7 +784,8 @@ set ideas = (
           || jsonb_build_object('pt', jsonb_build_object(
                'path', 'catch-up-sleep-weekend/idea.2.pt.mp4',
                'duration_seconds', 61,
-               'poster', 'catch-up-sleep-weekend/idea.2.pt.poster.webp')),
+               'poster', 'catch-up-sleep-weekend/idea.2.pt.poster.webp',
+               'fidelity_score', 95)),
         true)
     else i end
     order by (i->>'ordinal')::int)
@@ -767,7 +812,12 @@ $guard$;
 ```
 
 One `update` + one guard per side (`video.pt` and `video.en` of the same
-idea are two blocks). `duration_seconds` is `Math.round(durationSeconds)`
+idea are two blocks). Every side carries its `fidelity_score` (§6b); a side
+below 90 also carries `'needs_review', true` and `'fidelity_note', '<the
+main miss, one line>'` — reference: `20261005000002`. The app reads only
+`path`/`duration_seconds`/`poster`; the extra keys feed the review phase
+(tier 7). Writing a fresh object on a retake drops them, which is what marks
+the video reviewed. `duration_seconds` is `Math.round(durationSeconds)`
 from the CLI — an integer, like the client type. The array keeps its length
 (the 1..5 CHECK holds) and its order (`order by ordinal`); the other side of
 `video` and every other key of the idea survive the `||`. Verified
