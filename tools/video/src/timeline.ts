@@ -1,10 +1,8 @@
-import script from './script.json';
-
 export const FPS = 30;
 /** Frames de silêncio antes da fala em cada cena. */
 export const LEAD = 6;
-/** Respiro depois da fala (o WAV já traz ~0,6 s de cauda). */
-export const TAIL = 4;
+/** Respiro depois da fala, antes do crossfade. */
+export const TAIL = 8;
 /** Duração do crossfade entre cenas — sobrepõe o fim de uma ao começo da outra. */
 export const FADE = 10;
 /** A última cena segura a assinatura na tela. */
@@ -21,15 +19,13 @@ export type Scene = Line & {
   start: number;
 };
 
-export const LINES: Line[] = script.lines;
-
-export const buildTimeline = (timings: Timing[]): { scenes: Scene[]; total: number } => {
+export const buildTimeline = (lines: Line[], timings: Timing[]): { scenes: Scene[]; total: number } => {
   let cursor = 0;
-  const scenes = LINES.map((line, i) => {
+  const scenes = lines.map((line, i) => {
     const t = timings.find((x) => x.id === line.id);
-    if (!t) throw new Error(`Sem voz para "${line.id}" — rode npm run voice`);
+    if (!t) throw new Error(`Sem voz para "${line.id}" — rode node scripts/tts-gemini.mjs`);
     const speech = Math.round(t.seconds * FPS);
-    const last = i === LINES.length - 1;
+    const last = i === lines.length - 1;
     const frames = LEAD + speech + TAIL + (last ? HOLD : FADE);
     const scene = { ...line, speech, frames, start: cursor };
     cursor += frames - (last ? 0 : FADE);
@@ -41,8 +37,8 @@ export const buildTimeline = (timings: Timing[]): { scenes: Scene[]; total: numb
 /** Texto sem os marcadores de destaque. */
 export const plain = (s: string) => s.replace(/\*/g, '');
 
-/** Cauda de silêncio que a voz sintética deixa no fim de cada WAV (~0,6 s). */
-const SPEECH_TAIL = 18;
+/** Cauda de silêncio no fim de cada WAV (tts-gemini.mjs deixa 0,25 s). */
+const SPEECH_TAIL = 8;
 /** Peso das pausas, em "caracteres": fim de frase ≈ 0,7 s, vírgula ≈ 0,25 s. */
 const PAUSE = { stop: 12, comma: 4 };
 
