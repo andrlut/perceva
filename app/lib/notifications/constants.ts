@@ -59,9 +59,19 @@ export const MESSAGES_PT: MessageCatalog = {
     { title: 'Perceva', body: 'Suas práticas te esperam. Dá uma olhada quando puder.' },
     { title: 'Ainda dá tempo', body: 'Você ainda não abriu o app hoje.' },
   ],
+  // Ten, so the evening nudge does not read the same every night. One is
+  // picked per scheduling run (every app open re-schedules it).
   nightly: [
     { title: 'Como foi seu dia?', body: 'Um toque pra registrar como você se sentiu hoje.' },
     { title: 'Perceva', body: 'Fim do dia — como você tá se sentindo?' },
+    { title: 'Antes de dormir', body: 'De 1 a 5, como foi hoje?' },
+    { title: 'Hora de fechar o dia', body: 'Com que carinha esse dia termina?' },
+    { title: 'Um minuto pra você', body: 'Como você se sentiu hoje? É rapidinho.' },
+    { title: 'Check-in da noite', body: 'Conta pro Perceva como foi o seu dia.' },
+    { title: 'E aí, como foi?', body: 'Registra o humor de hoje antes de o dia acabar.' },
+    { title: 'O dia tá acabando', body: 'Qual foi o tom do seu dia?' },
+    { title: 'Pausa rápida', body: 'Respira e marca como você tá agora.' },
+    { title: 'Seu diário te espera', body: 'Uma nota, duas palavras ou só a carinha do dia.' },
   ],
 };
 
@@ -78,6 +88,14 @@ export const MESSAGES_EN: MessageCatalog = {
   nightly: [
     { title: 'How was your day?', body: 'One tap to log how you felt today.' },
     { title: 'Perceva', body: 'End of the day — how are you feeling?' },
+    { title: 'Before bed', body: 'From 1 to 5, how was today?' },
+    { title: 'Time to close the day', body: 'What face does today end with?' },
+    { title: 'A minute for you', body: 'How did you feel today? It takes a second.' },
+    { title: 'Evening check-in', body: 'Tell Perceva how your day went.' },
+    { title: 'So, how was it?', body: "Log today's mood before the day is over." },
+    { title: 'The day is winding down', body: 'What was the tone of your day?' },
+    { title: 'Quick pause', body: 'Breathe, and mark how you are right now.' },
+    { title: 'Your journal is waiting', body: "A note, two words, or just the day's face." },
   ],
 };
 

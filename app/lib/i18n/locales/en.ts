@@ -889,6 +889,8 @@ const en = {
       videoSoon: 'Video coming soon',
       collectFail: "Couldn't absorb the idea",
       myIdeas: 'My ideas',
+      openMaterial: 'Material',
+      openMaterialA11y: 'Open the full material: text and deep dive',
       myIdeasEmpty: 'Flip the card at the end of an idea to keep it here.',
       searchPlaceholder: 'Search your ideas',
       searchEmpty: 'None of your ideas match “{{query}}”.',
