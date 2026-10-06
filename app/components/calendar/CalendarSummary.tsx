@@ -162,7 +162,12 @@ export function CalendarSummary({
                 >
                   <View style={styles.dimName}>
                     <View style={[styles.dimDot, { backgroundColor: DIMENSION_META[dim].color }]} />
-                    <Text style={styles.dimLabel} numberOfLines={1}>
+                    <Text
+                      style={styles.dimLabel}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.75}
+                    >
                       {meta.dim(dim).label}
                     </Text>
                   </View>

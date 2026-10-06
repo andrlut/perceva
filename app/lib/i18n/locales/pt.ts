@@ -2509,7 +2509,7 @@ const pt: Translations = {
       ],
     },
     wealth: {
-      label: 'Riqueza',
+      label: 'Prosperidade',
       tagline: 'O você do futuro precisa disso.',
       description:
         'Dinheiro + carreira. Ganhar, poupar, investir, entregar. Pequenas repetições aqui valem muito mais que grandes movimentos esporádicos.',
@@ -2533,7 +2533,7 @@ const pt: Translations = {
       ],
     },
     craft: {
-      label: 'Criação',
+      label: 'Ofício',
       tagline: 'Faça algo.',
       description:
         'Lazer + construir. Hobbies, trabalho criativo, projetos pessoais. A dimensão que faz o resto da grind valer a pena.',
