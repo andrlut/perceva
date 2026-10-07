@@ -1,0 +1,55 @@
+{
+  "_doc": "Roteiro do Manifesto (docs/brand — R11). Uma linha = uma cena = um arquivo de voz em public/vo/<id>.wav. 'caption' é o texto da legenda (e o que o André lê ao gravar); *palavra* = destaque dourado na legenda; 'say' só existe quando a voz sintética precisa de números por extenso. Mudou o texto: rode `npm run voice` de novo.",
+  "lines": [
+    {
+      "id": "hook",
+      "caption": "Seus hábitos estão te treinando. Todo dia. A pergunta é: *pra ser quem?*"
+    },
+    {
+      "id": "study",
+      "caption": "Isso não é metáfora. Num estudo com mais de 1.500 pessoas, repetir pequenos comportamentos mudou *traços de personalidade*, e amigos e família confirmaram.",
+      "say": "Isso não é metáfora. Num estudo com mais de mil e quinhentas pessoas, repetir pequenos comportamentos mudou traços de personalidade, e amigos e família confirmaram."
+    },
+    {
+      "id": "follow",
+      "caption": "Mas só em *quem fez*. Não em quem só quis."
+    },
+    {
+      "id": "three",
+      "caption": "O Perceva foi desenhado em cima disso. E junta *três coisas* que sempre viveram separadas."
+    },
+    {
+      "id": "self",
+      "caption": "*O teste que te conhece*: personalidade, valores, vínculo, e uma avaliação das seis áreas da sua vida."
+    },
+    {
+      "id": "practice",
+      "caption": "*O hábito que você mede*: um toque por prática, uma linha de humor."
+    },
+    {
+      "id": "feeling",
+      "caption": "Porque *a sensação mente*: nos Estados Unidos, 62% dizem cumprir a meta de exercício. No acelerômetro, *9,6%*.",
+      "say": "Porque a sensação mente. Nos Estados Unidos, sessenta e dois por cento dizem cumprir a meta de exercício. No acelerômetro, nove vírgula seis por cento."
+    },
+    {
+      "id": "learn",
+      "caption": "*A ideia que você lembra*: curta, com fonte, cinco por vez. Porque ler não é lembrar. E lembrar não é fazer."
+    },
+    {
+      "id": "mirror",
+      "caption": "E aí tudo se encontra num hexágono só: como você se vê e o que você pratica de verdade. Onde não bate é onde mora a *sua próxima mudança*."
+    },
+    {
+      "id": "kind",
+      "caption": "Sem contador que zera. *Pular também é decidir.*"
+    },
+    {
+      "id": "close",
+      "caption": "Você já está se tornando alguém. O Perceva *mostra quem*."
+    },
+    {
+      "id": "tagline",
+      "caption": "Perceba. Pratique. Torne-se."
+    }
+  ]
+}

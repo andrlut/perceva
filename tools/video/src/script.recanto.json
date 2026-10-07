@@ -1,0 +1,20 @@
+{
+  "_doc": "Roteiro do vídeo do Recanto (Reels), v2 após revisão adversarial de 2026-10-06 (fidelidade + espectador). Alegações: Lurie, Fabrizio & Westerman 2025 (print de uma obra × só olhar: 54% × 76%) e Roediger & Karpicke 2006 Exp. 1 (56% × 42% uma semana depois). O app NÃO é vendido como método de retenção: o card do fim da ideia mostra a resposta; 'tente lembrar' é um jeito de USAR a revisão, onde a frente mostra só o título. A revisão não é agendada — a ideia 'espera' na pilha até a pessoa abrir. 'pre'/'hold' = segundos de imagem antes/depois da fala.",
+  "lines": [
+    { "id": "hook", "caption": "Tente lembrar de um desses. *Um só.*" },
+    { "id": "save", "caption": "Num experimento de 2025, quem tirou print de uma obra *lembrou menos* dela do que quem só olhou." },
+    {
+      "id": "reread",
+      "caption": "Reler dá a sensação de que você sabe. Uma semana depois, quem tentou lembrar guardou *56%*. Quem só releu, 42%.",
+      "say": "Reler dá a sensação de que você sabe. Uma semana depois, quem tentou lembrar guardou cinquenta e seis por cento. Quem só releu, quarenta e dois."
+    },
+    { "id": "recanto", "caption": "No Recanto, na aba Aprender do Perceva, a ideia não some numa pasta. *Ela espera por você.*" },
+    { "id": "idea", "caption": "Uma ideia por vez: uma imagem que mostra a ideia, *a resposta numa frase*, e a fonte embaixo." },
+    { "id": "five", "caption": "Cinco ideias e pronto. *Continuar? A escolha é sua.*", "pre": 1.4 },
+    { "id": "absorb", "caption": "No fim, você vira o card, e a ideia entra na sua revisão." },
+    { "id": "review", "caption": "Na revisão, ela aparece só com o título. *Antes de virar, tente lembrar.*", "hold": 1.6 },
+    { "id": "note", "caption": "E anota o que você combinou com você mesmo.", "hold": 1.0 },
+    { "id": "close", "caption": "Porque ler não é lembrar. *E lembrar não é fazer.*", "hold": 2.2 },
+    { "id": "tagline", "caption": "Recanto, na aba Aprender do Perceva." }
+  ]
+}

@@ -14,7 +14,7 @@ Página publicada (artifact): ver link no PR que criou esta pasta e em `~/.claud
    - `conteudo-social.md` — sistema de conteúdo para Instagram, TikTok e Shorts: séries, calendário de 30 dias, 40 ganchos, respostas prontas, checklist.
    - `gtm-90-dias.md` — plano operacional de 90 dias, semana a semana.
    - `base-cientifica.md` — o que a evidência sustenta em cada pilar e motor, com força honesta e referências.
-3. **`research/`** — os 13 dossiês de pesquisa de 12/09/2026 (evidência dos 3 pilares e 3 motores; mercado; público; GTM; vídeo curto; padrão de brand book; fidelidade produto × discurso; vocabulário) e o brief de identidade de agosto. Cada dossiê tem tabela de alegações com força (forte / moderada / fraca / contestada), fontes com DOI/URL e a seção "o que não encontrei".
+3. **`research/`** — os 13 dossiês de pesquisa de 12/09/2026 (mais `recanto-microlearning-2026-10.md`, de 06/10/2026: microlearning, memória, saber→fazer, mercado e auditoria do Recanto, feita para o vídeo do Recanto em `tools/video`) (evidência dos 3 pilares e 3 motores; mercado; público; GTM; vídeo curto; padrão de brand book; fidelidade produto × discurso; vocabulário) e o brief de identidade de agosto. Cada dossiê tem tabela de alegações com força (forte / moderada / fraca / contestada), fontes com DOI/URL e a seção "o que não encontrei".
 
 ## Regras que valem para qualquer peça
 
