@@ -1,14 +1,14 @@
 // Ranqueia amostras de voz com o Gemini ouvindo todas lado a lado — triagem,
 // não veredito: a escolha final é de quem vai assinar o vídeo.
-//   node scripts/judge-voices.mjs out/voices/*.wav
+//   node scripts/judge-voices.mjs out/voices/*.mp3
 import fs from 'node:fs';
 import path from 'node:path';
 const key = process.env.GEMINI_API_KEY;
 const files = process.argv.slice(2);
 const parts = [];
 files.forEach((f, i) => {
-  parts.push({ text: `Amostra ${i + 1}: voz "${path.basename(f, '.wav')}"` });
-  parts.push({ inlineData: { mimeType: 'audio/wav', data: fs.readFileSync(f).toString('base64') } });
+  parts.push({ text: `Amostra ${i + 1}: voz "${path.basename(f).replace(/\.(wav|mp3)$/, '')}"` });
+  parts.push({ inlineData: { mimeType: /\.mp3$/i.test(f) ? 'audio/mp3' : 'audio/wav', data: fs.readFileSync(f).toString('base64') } });
 });
 parts.push({
   text:

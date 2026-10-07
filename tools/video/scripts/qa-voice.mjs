@@ -42,7 +42,7 @@ async function transcribe(file) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
     body: JSON.stringify({ contents: [{ parts: [
-      { inlineData: { mimeType: 'audio/wav', data: fs.readFileSync(file).toString('base64') } },
+      { inlineData: { mimeType: /\.mp3$/i.test(file) ? 'audio/mp3' : 'audio/wav', data: fs.readFileSync(file).toString('base64') } },
       { text: 'Transcreva este áudio em português do Brasil exatamente como foi falado, palavra por palavra, sem corrigir nem comentar. ' +
         'Nomes próprios prováveis: Perceva (app), Recanto, Explorar, Aprender. Números em algarismos. Responda só com a transcrição.' },
     ] }] }),
@@ -54,7 +54,7 @@ async function transcribe(file) {
 let failed = 0;
 for (const line of lines) {
   if (only.length && !only.includes(line.id)) continue;
-  const file = path.join(voDir, `${line.id}.wav`);
+  const file = path.join(voDir, `${line.id}.mp3`);
   for (let t = 1; t <= tries; t++) {
     const heard = await transcribe(file);
     const score = Math.max(sim(heard, line.caption.replace(/\*/g, '')), line.say ? sim(heard, line.say) : 0);

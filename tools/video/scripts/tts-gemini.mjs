@@ -1,10 +1,12 @@
 // Voz de narração via Gemini TTS (mesma GEMINI_API_KEY do pipeline de mídia
 // do Learning). Custo: centavos por vídeo.
 //
-//   node scripts/tts-gemini.mjs                       -> public/vo/<id>.wav + timings.json (vídeo do script.json)
+//   node scripts/tts-gemini.mjs                       -> public/vo/<id>.mp3 + timings.json (vídeo do script.json)
 //   node scripts/tts-gemini.mjs --script recanto      -> usa src/script.recanto.json, grava em public/vo-recanto/
 //   node scripts/tts-gemini.mjs --voice Sulafat       -> troca a voz (padrão abaixo)
-//   node scripts/tts-gemini.mjs --sample Kore,Charon  -> out/voices/<voz>.wav com as 2 primeiras falas, pra comparar
+//   node scripts/tts-gemini.mjs --sample Kore,Charon  -> out/voices/<voz>.mp3 com as 2 primeiras falas, pra comparar
+//   node scripts/tts-gemini.mjs --only close,feeling  -> regrava só essas falas (as outras ficam)
+//   node scripts/tts-gemini.mjs --measure             -> só remede as falas que já existem (ex.: voz gravada à mão)
 //
 // Cada WAV é normalizado para ~-16 LUFS (ffmpeg) e medido; timings.json é o
 // que o Remotion lê para dar a cada cena a duração da sua fala.
@@ -34,7 +36,7 @@ const DIRECTION = arg('direction', '');
 const STYLE = arg('style', 'warm, close and confident Brazilian Portuguese narrator; natural conversational pace; smiling slightly; never a radio announcer');
 
 const key = process.env.GEMINI_API_KEY;
-if (!key) throw new Error('GEMINI_API_KEY não está no ambiente.');
+if (!key && !process.argv.includes('--measure')) throw new Error('GEMINI_API_KEY não está no ambiente.');
 
 const plain = (s) => s.replace(/\*/g, '');
 
@@ -95,16 +97,17 @@ function writeWav(file, { wav, pcm, rate }) {
   fs.writeFileSync(file, Buffer.concat([header, pcm]));
 }
 
-// Normaliza volume e corta o silêncio das pontas (deixa 0,25 s no fim como respiro).
-function master(file) {
-  const tmp = `${file}.tmp.wav`;
+// Normaliza volume, corta o silêncio das pontas (deixa 0,25 s de respiro) e
+// grava MP3 — as falas aprovadas ficam versionadas no git (o TTS não repete a
+// mesma tomada), então precisam ser leves.
+function master(raw, mp3) {
   execFileSync('ffmpeg', [
-    '-hide_banner', '-loglevel', 'error', '-y', '-i', file,
+    '-hide_banner', '-loglevel', 'error', '-y', '-i', raw,
     '-af',
     'silenceremove=start_periods=1:start_threshold=-45dB,areverse,silenceremove=start_periods=1:start_threshold=-45dB,areverse,apad=pad_dur=0.25,loudnorm=I=-16:TP=-1.5:LRA=11',
-    '-ar', '44100', tmp,
+    '-ar', '44100', '-codec:a', 'libmp3lame', '-b:a', '192k', mp3,
   ]);
-  fs.renameSync(tmp, file);
+  fs.rmSync(raw, { force: true });
 }
 
 function seconds(file) {
@@ -119,23 +122,25 @@ if (sample) {
   fs.mkdirSync(dir, { recursive: true });
   const text = lines.slice(0, 2).map((l) => plain(l.say ?? l.caption)).join(' ');
   for (const voice of sample.split(',')) {
-    const file = path.join(dir, `${voice.trim()}.wav`);
-    writeWav(file, await synth(text, voice.trim()));
-    master(file);
+    const file = path.join(dir, `${voice.trim()}.mp3`);
+    const raw = `${file}.raw.wav`;
+    writeWav(raw, await synth(text, voice.trim()));
+    master(raw, file);
     console.log(`${voice.trim().padEnd(14)} ${seconds(file).toFixed(1)}s  ${file}`);
   }
   process.exit(0);
 }
 
 fs.mkdirSync(voDir, { recursive: true });
-// --only close,feeling regrava só essas falas (as outras ficam como estão)
 const only = arg('only', '').split(',').filter(Boolean);
+const measureOnly = process.argv.includes('--measure');
 const timings = [];
 for (const line of lines) {
-  const file = path.join(voDir, `${line.id}.wav`);
-  if (!only.length || only.includes(line.id)) {
-    writeWav(file, await synth(plain(line.say ?? line.caption), VOICE));
-    master(file);
+  const file = path.join(voDir, `${line.id}.mp3`);
+  if (!measureOnly && (!only.length || only.includes(line.id))) {
+    const raw = path.join(voDir, `${line.id}.raw.wav`);
+    writeWav(raw, await synth(plain(line.say ?? line.caption), VOICE));
+    master(raw, file);
   }
   const s = seconds(file);
   timings.push({ id: line.id, seconds: s });

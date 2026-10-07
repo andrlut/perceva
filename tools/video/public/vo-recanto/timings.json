@@ -1,0 +1,46 @@
+[
+  {
+    "id": "hook",
+    "seconds": 2.415
+  },
+  {
+    "id": "save",
+    "seconds": 6.88
+  },
+  {
+    "id": "reread",
+    "seconds": 9.748
+  },
+  {
+    "id": "recanto",
+    "seconds": 5.999
+  },
+  {
+    "id": "idea",
+    "seconds": 6.222
+  },
+  {
+    "id": "five",
+    "seconds": 4.117
+  },
+  {
+    "id": "absorb",
+    "seconds": 4.098
+  },
+  {
+    "id": "review",
+    "seconds": 4.97
+  },
+  {
+    "id": "note",
+    "seconds": 2.704
+  },
+  {
+    "id": "close",
+    "seconds": 3.973
+  },
+  {
+    "id": "tagline",
+    "seconds": 3.342
+  }
+]

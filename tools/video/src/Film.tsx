@@ -33,7 +33,7 @@ export const Film: React.FC<FilmProps> = ({ film, scenes, captions, voice }) => 
       {voice
         ? scenes.map((s) => (
             <Sequence key={s.id} from={s.start + s.lead} durationInFrames={s.speech + 30} name={`voz:${s.id}`}>
-              <Audio src={staticFile(`${voDir}/${s.id}.wav`)} />
+              <Audio src={staticFile(`${voDir}/${s.id}.mp3`)} />
             </Sequence>
           ))
         : null}
