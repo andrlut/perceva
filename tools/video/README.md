@@ -16,6 +16,11 @@ empresas de até 3 pessoas. A narração usa o Gemini TTS e custa centavos por v
 
 Precisa de **Node 20+** e **ffmpeg** no PATH (no Windows: `winget install Gyan.FFmpeg`).
 
+No Windows, se o render falhar com `spawn ... chrome-headless-shell.exe ENOENT`,
+o problema é o limite de 260 caracteres de caminho, não o projeto. O Chrome
+que o Remotion baixa fica fundo em `node_modules/.remotion/...`. Clone o repo
+numa pasta curta (ex.: `C:\dev\perceva`) ou ligue os caminhos longos do Windows.
+
 ```bash
 cd tools/video
 npm install
