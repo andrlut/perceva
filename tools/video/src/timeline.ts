@@ -16,6 +16,8 @@ export type Line = {
   pre?: number;
   /** segundos de imagem DEPOIS da fala (deixar um gesto ou um texto assentar) */
   hold?: number;
+  /** cortes em que a fala entra (ex.: ['a'] = só no gancho A); ausente = em todos */
+  in?: string[];
 };
 export type Timing = { id: string; seconds: number };
 export type Scene = Line & {

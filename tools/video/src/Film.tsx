@@ -6,13 +6,15 @@ import { Background } from './components';
 import { Captions } from './Captions';
 import { FILMS, FilmId } from './films';
 import { FADE, Scene } from './timeline';
+import { Variant, VariantContext } from './variant';
 
-export type FilmProps = { film: FilmId; scenes: Scene[]; captions: boolean; voice: boolean };
+export type FilmProps = { film: FilmId; scenes: Scene[]; captions: boolean; voice: boolean; variant: Variant };
 
 /** Um filme = cenas em sequência com crossfade + uma faixa de voz por fala + legenda queimada. */
-export const Film: React.FC<FilmProps> = ({ film, scenes, captions, voice }) => {
+export const Film: React.FC<FilmProps> = ({ film, scenes, captions, voice, variant }) => {
   const { scenes: sceneMap, voDir, noCaption, captionTop } = FILMS[film] as (typeof FILMS)[FilmId] & { captionTop?: number };
   return (
+    <VariantContext.Provider value={variant}>
     <AbsoluteFill>
       <Background />
       <TransitionSeries>
@@ -39,5 +41,6 @@ export const Film: React.FC<FilmProps> = ({ film, scenes, captions, voice }) => 
         : null}
       {captions ? <Captions scenes={scenes} skip={noCaption} top={captionTop} /> : null}
     </AbsoluteFill>
+    </VariantContext.Provider>
   );
 };

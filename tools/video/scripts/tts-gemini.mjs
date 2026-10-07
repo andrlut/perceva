@@ -21,7 +21,7 @@ const arg = (name, fallback) => {
 };
 
 const MODEL = arg('model', 'gemini-3.8-flash-tts');
-const VOICE = arg('voice', 'Aoede');
+const VOICE = arg('voice', 'Kore');
 const scriptName = arg('script', '');
 const scriptFile = path.join(root, 'src', scriptName ? `script.${scriptName}.json` : 'script.json');
 const voDir = path.join(root, 'public', scriptName ? `vo-${scriptName}` : 'vo');
@@ -33,7 +33,8 @@ const sample = arg('sample', '');
 const DIRECTION = arg('direction', '');
 // No 3.8 a direção vai em speech_metadata.style (fora do texto — no texto ela
 // seria lida em voz alta). Vazio = estilo padrão da voz.
-const STYLE = arg('style', 'warm, close and confident Brazilian Portuguese narrator; natural conversational pace; smiling slightly; never a radio announcer');
+// ordem: --style na linha de comando > "style" do roteiro > padrão
+const DEFAULT_STYLE = 'warm, close and confident Brazilian Portuguese narrator; natural conversational pace; smiling slightly; never a radio announcer';
 
 const key = process.env.GEMINI_API_KEY;
 if (!key && !process.argv.includes('--measure')) throw new Error('GEMINI_API_KEY não está no ambiente.');
@@ -115,7 +116,8 @@ function seconds(file) {
   return Math.round(Number(out) * 1000) / 1000;
 }
 
-const { lines } = JSON.parse(fs.readFileSync(scriptFile, 'utf8'));
+const { lines, style: scriptStyle } = JSON.parse(fs.readFileSync(scriptFile, 'utf8'));
+const STYLE = arg('style', scriptStyle ?? DEFAULT_STYLE);
 
 if (sample) {
   const dir = path.join(root, 'out', 'voices');

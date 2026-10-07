@@ -5,6 +5,7 @@
   "scripts": {
     "studio": "remotion studio src/index.ts",
     "render": "remotion render src/index.ts Manifesto out/manifesto.mp4",
+    "render:b": "remotion render src/index.ts ManifestoB out/manifesto-b.mp4",
     "render:app": "remotion render src/index.ts ManifestoApp out/manifesto-app.mp4",
     "render:recanto": "remotion render src/index.ts Recanto out/recanto.mp4",
     "voice": "node scripts/tts-gemini.mjs",

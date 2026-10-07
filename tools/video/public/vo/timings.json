@@ -1,50 +1,46 @@
 [
   {
     "id": "hook",
-    "seconds": 5.587
+    "seconds": 4.042
   },
   {
-    "id": "study",
-    "seconds": 10.207
+    "id": "hookB",
+    "seconds": 2.922
   },
   {
-    "id": "follow",
-    "seconds": 3.123
+    "id": "trio",
+    "seconds": 3.956
   },
   {
-    "id": "three",
-    "seconds": 6.324
-  },
-  {
-    "id": "self",
-    "seconds": 7.309
+    "id": "know",
+    "seconds": 7.341
   },
   {
     "id": "practice",
-    "seconds": 4.506
+    "seconds": 6.487
   },
   {
-    "id": "feeling",
-    "seconds": 10.19
+    "id": "skip",
+    "seconds": 4.115
   },
   {
     "id": "learn",
-    "seconds": 9.447
+    "seconds": 5.142
   },
   {
-    "id": "mirror",
-    "seconds": 9.703
+    "id": "emblem",
+    "seconds": 6.556
   },
   {
-    "id": "kind",
-    "seconds": 3.767
+    "id": "why",
+    "seconds": 5.311
   },
   {
-    "id": "close",
-    "seconds": 3.707
+    "id": "whyB",
+    "seconds": 3.296
   },
   {
-    "id": "tagline",
-    "seconds": 3.562
+    "id": "sign",
+    "seconds": 3.32
   }
 ]
