@@ -6,10 +6,13 @@ import { FILMS } from './films';
 import { FPS, Timing, buildTimeline } from './timeline';
 
 const calculateMetadata: CalculateMetadataFunction<FilmProps> = async ({ props }) => {
-  const { lines, voDir } = FILMS[props.film];
-  const res = await fetch(staticFile(`${voDir}/timings.json`));
+  const film = FILMS[props.film] as (typeof FILMS)[typeof props.film] & { maxSeconds?: number };
+  const res = await fetch(staticFile(`${film.voDir}/timings.json`));
   const timings: Timing[] = await res.json();
-  const { scenes, total } = buildTimeline(lines, timings);
+  const { scenes, total } = buildTimeline(film.lines, timings);
+  if (film.maxSeconds && total > film.maxSeconds * FPS) {
+    throw new Error(`${props.film}: ${(total / FPS).toFixed(1)} s passa do teto de ${film.maxSeconds} s — corte o roteiro`);
+  }
   return { durationInFrames: total, props: { ...props, scenes } };
 };
 
@@ -24,11 +27,14 @@ const common = {
 
 export const RemotionRoot: React.FC = () => (
   <>
-    {/* Fixado do Instagram + Reels: 9:16, com voz e legenda queimada. */}
-    <Composition id="Manifesto" {...common} defaultProps={{ film: 'manifesto', scenes: [], captions: true, voice: true }} />
-    {/* Entrada do app: mudo por padrão (som nunca é obrigatório), legenda faz o trabalho. */}
-    <Composition id="ManifestoApp" {...common} defaultProps={{ film: 'manifesto', scenes: [], captions: true, voice: false }} />
+    {/* Fixado do Instagram, Reels/TikTok e anúncio: 9:16, voz, legenda queimada e CTA. */}
+    <Composition id="Manifesto" {...common} defaultProps={{ film: 'manifesto', scenes: [], captions: true, voice: true, variant: 'ad' }} />
+    {/* Entrada do tutorial no app: mesmo filme sem CTA. Tem áudio, mas o player abre mudo
+        (som nunca é obrigatório no app) — a legenda carrega sozinha. */}
+    <Composition id="ManifestoApp" {...common} defaultProps={{ film: 'manifesto', scenes: [], captions: true, voice: true, variant: 'app' }} />
+    {/* Gancho B ("Você sabe o que deveria fazer. Mas tá fazendo?") pro teste A/B do anúncio. */}
+    <Composition id="ManifestoB" {...common} defaultProps={{ film: 'manifestoB', scenes: [], captions: true, voice: true, variant: 'ad' }} />
     {/* Recanto: Reels pra levar gente à aba Aprender. */}
-    <Composition id="Recanto" {...common} defaultProps={{ film: 'recanto', scenes: [], captions: true, voice: true }} />
+    <Composition id="Recanto" {...common} defaultProps={{ film: 'recanto', scenes: [], captions: true, voice: true, variant: 'ad' }} />
   </>
 );

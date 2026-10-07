@@ -66,18 +66,19 @@ export const Icon: React.FC<{ name: keyof typeof glyphs; size: number; color: st
 );
 
 /** Eyebrow dourado + título em Fraunces, no terço superior. */
-export const Header: React.FC<{ kicker?: string; title: string; from?: number; size?: number }> = ({
+export const Header: React.FC<{ kicker?: string; title: string; from?: number; size?: number; top?: number }> = ({
   kicker,
   title,
   from = 0,
   size = 76,
+  top = LAYOUT.titleTop,
 }) => {
   const frame = useCurrentFrame();
   return (
     <div
       style={{
         position: 'absolute',
-        top: LAYOUT.titleTop,
+        top,
         left: 80,
         right: 80,
         textAlign: 'center',

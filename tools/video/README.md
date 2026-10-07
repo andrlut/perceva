@@ -7,7 +7,7 @@ empresas de até 3 pessoas. A narração usa o Gemini TTS e custa centavos por v
 
 | Filme | Composição | Para quê |
 |---|---|---|
-| **Manifesto** | `Manifesto` (com voz) · `ManifestoApp` (mudo) | Os 3 pilares e por que isso muda quem você está virando. Vai no fixado do Insta, no anúncio e na entrada do app. |
+| **Manifesto v2** (≤ 60 s, voz Kore) | `Manifesto` (Insta/orgânico) · `ManifestoB` (anúncio, gancho B pra A/B) · `ManifestoApp` (abertura do tutorial, sem CTA) | Vende os 3 módulos (Se conhecer · Praticar · Aprender) e fecha no Emblema. Sem número nem estudo no vídeo; a legenda do post e a base ficam em `copy/manifesto-v2.md`. |
 | **Recanto** | `Recanto` | Reels que leva gente pra aba Aprender. Começa em "salvar não é aprender" e termina no jeito de usar o Recanto. |
 
 ---
@@ -33,8 +33,9 @@ do tempo e ver cada cena. **As falas aprovadas já estão no git**
 
 ```bash
 npm run render:recanto   # out/recanto.mp4
-npm run render           # out/manifesto.mp4
-npm run render:app       # out/manifesto-app.mp4 (mudo, pra entrada do app)
+npm run render           # out/manifesto.mp4 (Insta/orgânico)
+npm run render:b         # out/manifesto-b.mp4 (anúncio, gancho B)
+npm run render:app       # out/manifesto-app.mp4 (abertura do tutorial)
 npm run stills           # um PNG por cena em out/stills/ (revisão rápida sem MP4)
 ```
 
@@ -62,7 +63,7 @@ legenda. `say` só existe quando a voz sintética precisa do número por extenso
 
 Homófono que inverte o sentido se resolve reescrevendo a frase, não regravando.
 
-Voz atual: **Aoede**, no modelo `gemini-3.8-flash-tts`, com a direção de
+Voz: **Kore** é o padrão desde o Manifesto v2. O Recanto foi gravado com a Aoede, e pra regravá-lo com a mesma voz use `--voice Aoede`. Modelo `gemini-3.8-flash-tts`, com a direção de
 estilo em `speech_metadata.style`. No 3.8, instrução escrita dentro do
 texto é lida em voz alta e deixa a fala lenta. Pra comparar vozes:
 `node scripts/tts-gemini.mjs --sample Aoede,Kore,Orus`, depois
