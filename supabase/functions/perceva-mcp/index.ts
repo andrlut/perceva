@@ -253,8 +253,23 @@ const MODULE_DEFAULTS: Record<string, boolean> = {
   skills: false,
 };
 
-// Level curve, mirroring app/lib/xp.ts: flat 100 XP per level.
-const XP_PER_LEVEL = 100;
+// Level curve, mirroring app/lib/xp.ts: tiers of ten levels — 1→11 cost 100
+// each, 11→21 cost 200 each, … (cost of L→L+1 = 100 × ceil(L/10)).
+function xpForLevel(level: number): number {
+  if (level <= 1) return 0;
+  const n = level - 1;
+  const t = Math.floor(n / 10);
+  const r = n % 10;
+  return 100 * (5 * t * (t + 1) + r * (t + 1));
+}
+function levelForXp(xp: number): number {
+  if (xp <= 0) return 1;
+  let t = 0;
+  while (xpForLevel((t + 1) * 10 + 1) <= xp) t += 1;
+  const rest = xp - xpForLevel(t * 10 + 1);
+  const r = Math.floor(rest / (100 * (t + 1)));
+  return t * 10 + Math.min(r, 9) + 1;
+}
 
 function userClient(token: string) {
   return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -289,7 +304,7 @@ async function rpc(
 
 function buildServer(token: string, userId: string): McpServer {
   const server = new McpServer(
-    { name: 'perceva-mcp', version: '0.4.7' },
+    { name: 'perceva-mcp', version: '0.4.8' },
     {
       instructions: [
         'Perceva is a habit/wellness app organized in 6 dimensions',
@@ -383,7 +398,7 @@ function buildServer(token: string, userId: string): McpServer {
 
       const base = (core.data ?? {}) as Record<string, unknown>;
       const totalXp = Number(base.total_xp ?? 0);
-      const level = Math.floor(totalXp / XP_PER_LEVEL) + 1;
+      const level = levelForXp(totalXp);
 
       const names = new Map(
         (subs.data ?? []).map((s) => [s.id as string, s.display_name_pt as string]),
@@ -414,7 +429,7 @@ function buildServer(token: string, userId: string): McpServer {
       return ok({
         ...base,
         level,
-        xp_to_next_level: level * XP_PER_LEVEL - totalXp,
+        xp_to_next_level: xpForLevel(level + 1) - totalXp,
         today: localDate(now),
         today_label_pt: dateLabelPt(localDate(now)),
         timezone: TZ,
