@@ -36,9 +36,10 @@
 // ============================================================================
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { secretKey } from '../_shared/keys.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const SUPABASE_SECRET_KEY = secretKey();
 const RC_WEBHOOK_SECRET = Deno.env.get('RC_WEBHOOK_SECRET')!;
 
 const GRANT_EVENTS = new Set([
@@ -93,7 +94,7 @@ Deno.serve(async (req) => {
   }
 
   const type = String(event.type ?? '');
-  const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  const admin = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 

@@ -71,9 +71,10 @@ import {
   type MaterialTitleRow,
   type MaterialViewRow,
 } from './learning.ts';
+import { publishableKey } from '../_shared/keys.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
+const SUPABASE_PUBLISHABLE_KEY = publishableKey();
 
 // The exact URL users paste into Claude's "Add custom connector".
 const RESOURCE_URL = `${SUPABASE_URL}/functions/v1/perceva-mcp`;
@@ -257,7 +258,7 @@ const MODULE_DEFAULTS: Record<string, boolean> = {
 const XP_PER_LEVEL = 100;
 
 function userClient(token: string) {
-  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  return createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     global: { headers: { Authorization: `Bearer ${token}` } },
     auth: { persistSession: false, autoRefreshToken: false },
   });
