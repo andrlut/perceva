@@ -116,23 +116,41 @@ export function asCoinMultiplier(v: unknown): CoinMultiplier {
 }
 
 /**
- * Linear curve: every level costs a flat 100 XP. Recalibrated from the
- * old quadratic (level-1)²×100, which was tuned for the pre-rebalance
- * reward curve (~3× larger) and left leveling punishingly slow after the
- * XP rebalance (reward ratio 50×→8×). Flat-linear keeps the math trivial
- * and the inverse exact — no off-by-one at level boundaries.
+ * Level curve in TIERS of ten (owner, 2026-10-08): levels 1→11 cost 100 XP
+ * each, 11→21 cost 200 each, 21→31 cost 300 each, and so on — "every ten
+ * levels, a level costs 100 more". Fast for someone starting (a month of
+ * daily practice ≈ level 23), genuinely harder as time goes by (a year ≈ 89).
+ * Replaced the flat 100-per-level (2026-07-01), which put a months-long daily
+ * user past level 120.
  *
- * level 1 = 0, 2 = 100, 3 = 200, 5 = 400, 10 = 900, 20 = 1900 XP.
- * Inverse: level = floor(xp / 100) + 1
+ * Cost of going from level L to L+1: 100 × ceil(L / 10).
+ * XP to REACH level L (n = L − 1, t = floor(n/10) full tiers, r = n mod 10):
+ *   100 × (5·t·(t+1) + r·(t+1))
+ * level 1 = 0, 11 = 1 000, 21 = 3 000, 31 = 6 000, 41 = 10 000 XP.
+ *
+ * Mirrored in supabase/functions/perceva-mcp (get_profile_summary) — keep
+ * both in lockstep.
  */
+const XP_TIER_SIZE = 10;
+const XP_TIER_STEP = 100;
+
 export function xpForLevel(level: number): number {
   if (level <= 1) return 0;
-  return (level - 1) * 100;
+  const n = level - 1;
+  const t = Math.floor(n / XP_TIER_SIZE);
+  const r = n % XP_TIER_SIZE;
+  return XP_TIER_STEP * ((XP_TIER_SIZE / 2) * t * (t + 1) + r * (t + 1));
 }
 
 export function levelForXp(xp: number): number {
-  if (xp < 0) return 1;
-  return Math.floor(xp / 100) + 1;
+  if (xp <= 0) return 1;
+  // Full tiers first (tier t costs 1 000·t), then the levels inside the
+  // current one (each costs 100·(t + 1)).
+  let t = 0;
+  while (xpForLevel((t + 1) * XP_TIER_SIZE + 1) <= xp) t += 1;
+  const rest = xp - xpForLevel(t * XP_TIER_SIZE + 1);
+  const r = Math.floor(rest / (XP_TIER_STEP * (t + 1)));
+  return t * XP_TIER_SIZE + Math.min(r, XP_TIER_SIZE - 1) + 1;
 }
 
 /**
