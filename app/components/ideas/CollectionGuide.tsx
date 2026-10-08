@@ -9,7 +9,12 @@ import {
   GuideTryIt,
 } from '@/components/guide/GuidePlayground';
 import { GuideLabel, GuideStep } from '@/components/guide/GuideStep';
-import { FilterPill, IdeaSearchBox, ReviewStrip } from '@/components/ideas/CollectionControls';
+import {
+  FilterPill,
+  IdeaSearchBox,
+  ReviewStrip,
+  StudyStrip,
+} from '@/components/ideas/CollectionControls';
 import { IdeaCard } from '@/components/ideas/IdeaCard';
 import type { ShelfCard } from '@/components/ideas/IdeaShelf';
 import type { DimensionId } from '@/lib/db/types';
@@ -52,6 +57,7 @@ export const COLLECTION_GUIDE_ITEMS = [
   'tap',
   'hold',
   'review',
+  'study',
   'favorites',
   'notes',
   'shelves',
@@ -135,6 +141,11 @@ export function CollectionGuide({ demoCard, pendingCount, shelf, locale }: Colle
           <SwipeHint />
         </>
       ),
+    },
+    study: {
+      icon: 'school-outline',
+      iconColor: tokens.semantic.coin,
+      replica: <StudyStrip count={5} />,
     },
     favorites: {
       icon: 'star',

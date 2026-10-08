@@ -92,6 +92,42 @@ export function ReviewStrip({
   );
 }
 
+/**
+ * "Estudar favoritas" — the review strip's twin, in the favorites' gold: it
+ * opens the study deck (/idea-study). Without `onPress` it is the guide's
+ * replica.
+ */
+export function StudyStrip({
+  count,
+  onPress,
+  style,
+}: {
+  count: number;
+  onPress?: () => void;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const { t } = useT();
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={!onPress}
+      accessibilityRole="button"
+      style={({ pressed }) => [styles.strip, styles.stripGold, style, pressed && { opacity: 0.8 }]}
+    >
+      <View style={[styles.stripIcon, styles.stripIconGold]}>
+        <Ionicons name="school-outline" size={17} color={tokens.semantic.coinLight} />
+      </View>
+      <View style={styles.stripText}>
+        <Text style={styles.stripTitle}>{t('learning.ideas.study.title')}</Text>
+        <Text style={styles.stripBody} numberOfLines={1}>
+          {t('learning.ideas.study.stripBody', { count })}
+        </Text>
+      </View>
+      <Ionicons name="chevron-forward" size={18} color={tokens.text.mid} />
+    </Pressable>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Search box. Without `onChangeText` it draws the placeholder as plain text
 // (the guide's replica — nothing focusable inside a help sheet).
@@ -168,6 +204,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(123, 92, 255, 0.35)',
     backgroundColor: 'rgba(123, 92, 255, 0.10)',
+  },
+  stripGold: {
+    borderColor: tokens.semantic.coinRim,
+    backgroundColor: 'rgba(255, 200, 61, 0.08)',
+  },
+  stripIconGold: {
+    backgroundColor: 'rgba(255, 200, 61, 0.16)',
   },
   stripIcon: {
     width: 34,

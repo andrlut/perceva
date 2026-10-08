@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { IdeaReelPage } from '@/components/reels/IdeaReelPage';
@@ -58,6 +58,13 @@ export function ReelGroupPage({
 }: Props) {
   const { t } = useT();
   const [cardIndex, setCardIndex] = useState(0);
+  // Idea groups: the page's tap flips the card to its claim (owner,
+  // 2026-10-08) instead of advancing — swiping is how you move on. Turned
+  // back to the front whenever the page leaves the screen.
+  const [flipped, setFlipped] = useState(false);
+  useEffect(() => {
+    if (!isActive) setFlipped(false);
+  }, [isActive]);
   const cardCount = group.kind === 'idea' ? 1 : group.cards.length;
   const index = Math.min(cardIndex, cardCount - 1);
 
@@ -75,10 +82,31 @@ export function ReelGroupPage({
   return (
     <View style={[styles.page, { width: pageW, height: pageH }]}>
       {group.kind === 'idea' ? (
-        <IdeaReelPage group={group} isActive={isActive} pageW={pageW} pageH={pageH} />
+        <IdeaReelPage
+          group={group}
+          isActive={isActive}
+          pageW={pageW}
+          pageH={pageH}
+          flipped={flipped}
+        />
       ) : (
         <LegacyArt group={group} index={index} isActive={isActive} pageW={pageW} pageH={pageH} />
       )}
+      {group.kind === 'idea' ? (
+        <Pressable
+          onPress={() => {
+            Haptics.selectionAsync().catch(() => {});
+            setFlipped((v) => !v);
+          }}
+          onLongPress={onChromeHide}
+          onPressOut={onChromeShow}
+          delayLongPress={CHROME_PEEK_DELAY_MS}
+          accessibilityRole="button"
+          accessibilityLabel={t('learning.reels.flipA11y')}
+          style={[styles.zone, { left: 0, width: pageW }]}
+        />
+      ) : (
+        <>
       <Pressable
         onPress={retreat}
         onLongPress={onChromeHide}
@@ -97,6 +125,8 @@ export function ReelGroupPage({
         accessibilityLabel={t('learning.reels.nextZone')}
         style={[styles.zone, { right: 0, width: pageW * (1 - PREV_ZONE_RATIO) }]}
       />
+        </>
+      )}
     </View>
   );
 }

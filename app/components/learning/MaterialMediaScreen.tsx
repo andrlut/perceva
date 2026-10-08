@@ -487,14 +487,14 @@ export function MaterialMediaScreen({ detail: m }: Props) {
                 <Ionicons name="checkmark-circle" size={20} color={tokens.semantic.xp} />
                 <Text style={styles.rewardReadText}>{t('learning.detail.alreadyRead')}</Text>
               </>
-            ) : (
+            ) : xpPreview > 0 ? (
               <>
                 <Ionicons name="gift-outline" size={18} color={tokens.brand.violet2} />
                 <Text style={styles.rewardText}>
                   {t('learning.detail.rewardPreview', { xp: xpPreview, coins: xpPreview })}
                 </Text>
               </>
-            )}
+            ) : null}
           </View>
 
           {/* Feedback */}
@@ -586,9 +586,11 @@ export function MaterialMediaScreen({ detail: m }: Props) {
             ) : (
               <>
                 <Text style={styles.ctaText}>{t('learning.detail.markRead')}</Text>
-                <Text style={styles.ctaSubtext}>
-                  +{xpPreview} XP · +{xpPreview} 🪙
-                </Text>
+                {xpPreview > 0 ? (
+                  <Text style={styles.ctaSubtext}>
+                    +{xpPreview} XP · +{xpPreview} 🪙
+                  </Text>
+                ) : null}
               </>
             )}
           </Pressable>

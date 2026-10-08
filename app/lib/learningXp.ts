@@ -1,19 +1,14 @@
 /**
- * Client mirror of `mark_material_read`'s two branches (migration
- * 20260907000002). The server is authoritative — this only feeds the
- * "+N XP" previews. Keep both in lockstep.
+ * Client mirror of `mark_material_read` (migration 20261008000001): reading
+ * in the Recanto no longer pays XP or coins — the reward for learning is a
+ * practice the reader adopts ("Absorver uma ideia", catalog
+ * `learn_absorb_idea`), under the same rules as every practice. Kept as a
+ * function so the "+N XP" previews have one source; every surface hides its
+ * preview when this is 0.
  *
- * - Legacy material (no ideas): 5 base + 5 per related sub, credited per
- *   dimension on the server.
- * - Material with ideas: 10 base + 2 per idea, generic (no dimension).
+ * History: legacy materials paid 5 + 5 per sub (per dimension); materials
+ * with ideas paid 10 + 2 per idea, generic (20260907000002).
  */
-
-export const LEGACY_XP_BASE = 5;
-export const LEGACY_XP_PER_SUB = 5;
-export const IDEAS_XP_BASE = 10;
-export const IDEAS_XP_PER_IDEA = 2;
-
-export function xpForMaterial(ideaCount: number, subCount: number): number {
-  if (ideaCount > 0) return IDEAS_XP_BASE + IDEAS_XP_PER_IDEA * ideaCount;
-  return LEGACY_XP_BASE + LEGACY_XP_PER_SUB * subCount;
+export function xpForMaterial(_ideaCount: number, _subCount: number): number {
+  return 0;
 }

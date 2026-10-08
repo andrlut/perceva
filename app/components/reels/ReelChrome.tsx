@@ -190,7 +190,9 @@ export function ReelChrome({
                 ) : (
                   <>
                     <Text style={styles.ctaText}>{t('learning.detail.markRead')}</Text>
-                    <Text style={styles.ctaSub}>+{group.xpPreview} XP</Text>
+                    {group.xpPreview > 0 ? (
+                      <Text style={styles.ctaSub}>+{group.xpPreview} XP</Text>
+                    ) : null}
                   </>
                 )}
               </LinearGradient>

@@ -26,6 +26,7 @@ import {
   useCollectedIdeas,
   useCollectIdea,
   useIdeaReviews,
+  useReviewIdea,
   useSetIdeaNote,
 } from '@/lib/api/learning';
 import type { LearningIdea } from '@/lib/db/types';
@@ -269,9 +270,25 @@ export function IdeaScreen({ detail: m, initialOrdinal }: Props) {
   const [noteOpen, setNoteOpen] = useState(false);
   const shownIdea = ideas[shownIndex];
   const shownCollected = shownIdea ? collectedSet.has(shownIdea.id) : false;
-  const shownNote = shownIdea
-    ? (reviews.data?.byKey.get(reviewKey(m.id, shownIdea.id))?.note ?? null)
-    : null;
+  const shownReview = shownIdea
+    ? reviews.data?.byKey.get(reviewKey(m.id, shownIdea.id))
+    : undefined;
+  const shownNote = shownReview?.note ?? null;
+  const shownFavorite = shownReview?.favorite === true;
+  // Favorite straight after absorbing — the same review_idea the pile uses
+  // (re-decidable; favoriting also takes the idea out of the pile).
+  const { mutate: reviewIdea } = useReviewIdea();
+  const toggleFavorite = () => {
+    if (!shownIdea) return;
+    Haptics.selectionAsync().catch(() => {});
+    reviewIdea(
+      { slug: m.slug, ideaId: shownIdea.id, favorite: !shownFavorite, materialId: m.id },
+      {
+        onError: (e) =>
+          showInfo(t('learning.ideas.menu.fail'), e instanceof Error ? e.message : ''),
+      },
+    );
+  };
   const openMaterial = () => {
     Haptics.selectionAsync().catch(() => {});
     router.push(`/material/${m.slug}`);
@@ -301,6 +318,24 @@ export function IdeaScreen({ detail: m, initialOrdinal }: Props) {
               <Ionicons name="book-outline" size={15} color={tokens.text.hi} />
               <Text style={styles.materialText}>{t('learning.ideas.openMaterial')}</Text>
             </Pressable>
+            {shownCollected ? (
+              <Pressable
+                onPress={toggleFavorite}
+                accessibilityRole="button"
+                accessibilityState={{ checked: shownFavorite }}
+                accessibilityLabel={
+                  shownFavorite ? t('learning.ideas.menu.unfavorite') : t('learning.ideas.menu.favorite')
+                }
+                hitSlop={6}
+                style={({ pressed }) => [styles.closeBtn, pressed && styles.pressed]}
+              >
+                <Ionicons
+                  name={shownFavorite ? 'star' : 'star-outline'}
+                  size={17}
+                  color={shownFavorite ? tokens.semantic.coin : tokens.text.hi}
+                />
+              </Pressable>
+            ) : null}
             {shownCollected ? (
               <Pressable
                 onPress={() => setNoteOpen(true)}
