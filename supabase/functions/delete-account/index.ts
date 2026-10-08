@@ -5,25 +5,26 @@
 // self-service account deletion. This function:
 //   1. Authenticates the caller from their JWT (never trusts a body-supplied
 //      uid — the uid is extracted from the verified token only).
-//   2. Uses a service_role client to delete the auth user, which CASCADES the
-//      entire personal data tree (profile → character → tasks/rewards/skills/
-//      quests/psych/learning/etc.). See docs/publish/delete-account.md
-//      (CASCADE AUDIT): zero orphan tables.
+//   2. Uses a secret-key (admin) client to delete the auth user, which
+//      CASCADES the entire personal data tree (profile → character → tasks/
+//      rewards/skills/quests/psych/learning/etc.). See
+//      docs/publish/delete-account.md (CASCADE AUDIT): zero orphan tables.
 //
 // Security notes:
-//   - SUPABASE_SERVICE_ROLE_KEY lives only in this server-side function's
-//     secrets, never in the client. This is the one place service_role is safe.
-//   - We verify the token with the anon key + the caller's Authorization header
-//     (getUser validates the JWT signature and expiry server-side).
+//   - The secret key (SUPABASE_SECRET_KEYS, see ../_shared/keys.ts) lives only
+//     in this server-side function's environment, never in the client.
+//   - We verify the token with the publishable key + the caller's Authorization
+//     header (getUser validates the JWT signature and expiry server-side).
 //   - CORS is permissive on the response but auth is enforced: no valid JWT,
 //     no deletion.
 // ============================================================================
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { publishableKey, secretKey } from '../_shared/keys.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const SUPABASE_PUBLISHABLE_KEY = publishableKey();
+const SUPABASE_SECRET_KEY = secretKey();
 
 // Permissive CORS — the app calls this from a native fetch context.
 // Auth is enforced via the JWT, not via origin, so `*` is acceptable here.
@@ -63,7 +64,7 @@ Deno.serve(async (req) => {
       return json({ error: 'missing_authorization' }, 401);
     }
 
-    const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    const userClient = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
       global: { headers: { Authorization: authHeader } },
       auth: { persistSession: false, autoRefreshToken: false },
     });
@@ -80,7 +81,7 @@ Deno.serve(async (req) => {
     const uid = user.id; // trusted: derived from the verified JWT only
 
     // ── 2. Service-role client for the privileged delete ─────────────────────
-    const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    const adminClient = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
