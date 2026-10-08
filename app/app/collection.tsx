@@ -18,6 +18,7 @@ import {
   FilterPill,
   IdeaSearchBox,
   ReviewStrip,
+  StudyStrip,
 } from '@/components/ideas/CollectionControls';
 import { CollectionGuide, useCollectionGuidePrompt } from '@/components/ideas/CollectionGuide';
 import { IdeaActionSheet } from '@/components/ideas/IdeaActionSheet';
@@ -330,6 +331,17 @@ export default function CollectionScreen() {
               <ReviewStrip
                 count={pending.length}
                 onPress={openReview}
+                style={styles.reviewStrip}
+              />
+            )}
+
+            {favoriteCount > 0 && !searching && (
+              <StudyStrip
+                count={favoriteCount}
+                onPress={() => {
+                  Haptics.selectionAsync().catch(() => {});
+                  router.push('/idea-study');
+                }}
                 style={styles.reviewStrip}
               />
             )}

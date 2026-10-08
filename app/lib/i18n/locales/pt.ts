@@ -775,12 +775,12 @@ const pt: Translations = {
         absorb: {
           title: 'Vire a carta',
           body: 'No fim de cada ideia, virar a carta absorve a ideia.',
-          ai: 'Só esse giro, no fim da página da ideia, absorve: a ideia vai pra Minhas ideias e entra na revisão. Virar cartas na página do material ou no Explorar só mostra a resposta. O XP chega quando o material inteiro é absorvido: 10 mais 2 por ideia, em XP e em moedas.',
+          ai: 'Só esse giro, no fim da página da ideia, absorve: a ideia vai pra Minhas ideias e entra na revisão. Virar cartas na página do material ou no Explorar só mostra a resposta. Ler não rende XP nem moedas; quem quiser recompensa adota a prática Absorver uma ideia, no catálogo.',
         },
         explore: {
           title: 'Explorar',
           body: 'Ideias rápidas, uma atrás da outra.',
-          ai: 'Toque à direita avança, à esquerda volta; segurar esconde o texto; arrastar pra baixo sai. Vem em séries de 5. "Abrir ideia" leva à ideia completa, onde dá pra absorver; o Explorar sozinho não absorve.',
+          ai: 'Tocar vira a carta e mostra a resposta; arrastar pro lado passa pra próxima; segurar esconde o texto; arrastar pra baixo sai. Vem em séries de 5. "Abrir ideia" leva à ideia completa, onde dá pra absorver; o Explorar sozinho não absorve.',
         },
         continue: {
           title: 'Continue lendo',
@@ -848,6 +848,7 @@ const pt: Translations = {
       counter: '{{current}} de {{total}}',
       close: 'Fechar',
       prevZone: 'Material anterior',
+      flipA11y: 'Virar a carta',
       nextZone: 'Próximo material',
       readFull: 'Ler completo',
       setDone: 'Sequência concluída',
@@ -887,6 +888,13 @@ const pt: Translations = {
       myIdeas: 'Minhas ideias',
       openMaterial: 'Material',
       openMaterialA11y: 'Abrir o material completo: texto e deep dive',
+      study: {
+        title: 'Estudar favoritas',
+        stripBody: '{{count}} favoritas, em ordem aleatória',
+        counter: '{{n}} de {{total}}',
+        hint: 'Toque pra virar · arraste pro lado pra próxima',
+        empty: 'Nenhuma favorita ainda. Favorite ideias pra estudar aqui.',
+      },
       myIdeasEmpty: 'Vire o card no fim de uma ideia pra guardá-la aqui.',
       searchPlaceholder: 'Buscar nas suas ideias',
       searchEmpty: 'Nenhuma ideia sua bate com “{{query}}”.',
@@ -922,6 +930,11 @@ const pt: Translations = {
             title: 'Revisar',
             body: 'Toda ideia absorvida espera uma decisão nesta faixa. Arraste pra direita pra favoritar, pra esquerda pra soltar. Sem pendências, ela some.',
             ai: 'A faixa diz quantas ideias faltam revisar e, ao toque, abre a pilha. Soltar não apaga nada: a ideia continua em Ver todas.',
+          },
+          study: {
+            title: 'Estudar',
+            body: 'Um baralho com as suas favoritas, em ordem aleatória. Toque pra virar, arraste pra próxima.',
+            ai: 'A faixa aparece quando há pelo menos uma favorita. Nada é gravado no estudo: é só pra rever o que você guardou.',
           },
           favorites: {
             title: 'Favoritas',

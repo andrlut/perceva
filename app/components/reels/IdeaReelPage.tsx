@@ -1,5 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { useEffect } from 'react';
+import Animated, {
+  Easing,
+  interpolate,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { useT } from '@/lib/i18n';
@@ -19,9 +28,12 @@ import { DIMENSION_META } from '@/theme/dimensions';
  *
  * Centred column: the idea illustration (4:5, rimmed in the dimension
  * color, dimension placeholder when the idea has no image yet), the hook
- * title as the headline, then the parent material and "Ideia n de N". No
- * icons, no infographic — the card is a hook; the idea itself (video/text
- * → flip card → absorb) lives on /idea/[slug].
+ * title as the headline, then the parent material and "Ideia n de N". The
+ * picture is a CARD that flips (owner, 2026-10-08): tapping the page turns
+ * it to the claim — the answer you can use — on a dark face with the
+ * dimension's top bar; tapping again turns it back. Swiping still moves to
+ * the next idea (the pager's own gesture). Reveal-only: nothing is
+ * collected here — absorbing still lives on /idea/[slug].
  *
  * The image is bounded by BOTH axes so the whole column always clears the
  * chrome bands: on tall phones the width wins (page minus the side gutter),
@@ -43,10 +55,34 @@ interface Props {
   isActive: boolean;
   pageW: number;
   pageH: number;
+  /** Showing the claim side (the page owns the tap — ReelGroupPage). */
+  flipped: boolean;
 }
 
-export function IdeaReelPage({ group, isActive, pageW, pageH }: Props) {
+const FLIP_MS = 420;
+
+export function IdeaReelPage({ group, isActive, pageW, pageH, flipped }: Props) {
   const { t } = useT();
+  const reduceMotion = useReducedMotion();
+  const progress = useSharedValue(0);
+  useEffect(() => {
+    progress.value = withTiming(flipped ? 1 : 0, {
+      duration: reduceMotion ? 0 : FLIP_MS,
+      easing: Easing.inOut(Easing.cubic),
+    });
+  }, [flipped, progress, reduceMotion]);
+  const frontStyle = useAnimatedStyle(() => ({
+    transform: [
+      { perspective: 1000 },
+      { rotateY: `${interpolate(progress.value, [0, 1], [0, 180])}deg` },
+    ],
+  }));
+  const backStyle = useAnimatedStyle(() => ({
+    transform: [
+      { perspective: 1000 },
+      { rotateY: `${interpolate(progress.value, [0, 1], [180, 360])}deg` },
+    ],
+  }));
 
   const columnW = pageW - 2 * tokens.space[5];
   const maxByHeight = Math.floor(
@@ -60,10 +96,13 @@ export function IdeaReelPage({ group, isActive, pageW, pageH }: Props) {
 
   return (
     <View style={[styles.page, { width: pageW, height: pageH }]}>
-      <View
+      <View style={{ width: imgW, height: imgH }}>
+      <Animated.View
         style={[
           styles.frame,
-          { width: imgW, height: imgH, borderColor: group.accent + 'B3' },
+          styles.face,
+          { borderColor: group.accent + 'B3' },
+          frontStyle,
         ]}
       >
         {group.imageUri ? (
@@ -90,6 +129,28 @@ export function IdeaReelPage({ group, isActive, pageW, pageH }: Props) {
             <Ionicons name={iconName} size={56} color="rgba(255, 255, 255, 0.9)" />
           </View>
         )}
+      </Animated.View>
+      <Animated.View
+        style={[
+          styles.frame,
+          styles.face,
+          styles.back,
+          { borderColor: group.accent + 'B3' },
+          backStyle,
+        ]}
+        accessible={flipped}
+        accessibilityLabel={group.claim}
+      >
+        <View style={[styles.backBar, { backgroundColor: group.accent }]} />
+        <Text
+          style={styles.claim}
+          numberOfLines={10}
+          adjustsFontSizeToFit
+          minimumFontScale={0.6}
+        >
+          {group.claim}
+        </Text>
+      </Animated.View>
       </View>
 
       <Text style={[styles.headline, { width: columnW }]} numberOfLines={3}>
@@ -122,6 +183,28 @@ const styles = StyleSheet.create({
   placeholder: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  face: {
+    ...StyleSheet.absoluteFillObject,
+    backfaceVisibility: 'hidden',
+  },
+  back: {
+    justifyContent: 'center',
+    paddingHorizontal: tokens.space[5],
+    backgroundColor: tokens.bg.surface2,
+  },
+  backBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 4,
+  },
+  claim: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 22,
+    lineHeight: 30,
+    color: tokens.text.hi,
   },
   headline: {
     marginTop: tokens.space[5],

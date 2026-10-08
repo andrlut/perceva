@@ -328,7 +328,7 @@ export function IdeasMaterialScreen({ detail: m }: Props) {
                 </Text>
               )}
             </View>
-            {!isRead && !progress.done && (
+            {!isRead && !progress.done && xpPreview > 0 && (
               <Text style={styles.rewardHint}>
                 {progress.total === 1
                   ? t('learning.ideas.rewardHintOne', { xp: xpPreview })

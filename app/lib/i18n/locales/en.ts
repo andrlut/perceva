@@ -779,12 +779,12 @@ const en = {
         absorb: {
           title: 'Flip the card',
           body: 'At the end of each idea, flipping the card absorbs the idea.',
-          ai: "Only that flip, at the end of the idea's page, absorbs: the idea goes to My ideas and into review. Flipping cards on the material's page or in Explore only shows the answer. XP arrives when the whole material is absorbed: 10 plus 2 per idea, in XP and in coins.",
+          ai: "Only that flip, at the end of the idea's page, absorbs: the idea goes to My ideas and into review. Flipping cards on the material's page or in Explore only shows the answer. Reading pays no XP or coins; for a reward, adopt the Absorb an idea practice from the catalog.",
         },
         explore: {
           title: 'Explore',
           body: 'Quick ideas, one after another.',
-          ai: 'Tap the right side to go forward, the left to go back; holding hides the text; swiping down exits. They come in sets of 5. "Open idea" takes you to the full idea, where you can absorb it; Explore alone does not absorb.',
+          ai: 'Tapping flips the card to show the answer; swiping sideways goes to the next; holding hides the text; swiping down exits. They come in sets of 5. "Open idea" takes you to the full idea, where you can absorb it; Explore alone does not absorb.',
         },
         continue: {
           title: 'Continue reading',
@@ -852,6 +852,7 @@ const en = {
       counter: '{{current}} of {{total}}',
       close: 'Close',
       prevZone: 'Previous material',
+      flipA11y: 'Flip the card',
       nextZone: 'Next material',
       readFull: 'Read in full',
       setDone: 'Set complete',
@@ -891,6 +892,13 @@ const en = {
       myIdeas: 'My ideas',
       openMaterial: 'Material',
       openMaterialA11y: 'Open the full material: text and deep dive',
+      study: {
+        title: 'Study favorites',
+        stripBody: '{{count}} favorites, in random order',
+        counter: '{{n}} of {{total}}',
+        hint: 'Tap to flip · swipe sideways for the next',
+        empty: 'No favorites yet. Favorite ideas to study them here.',
+      },
       myIdeasEmpty: 'Flip the card at the end of an idea to keep it here.',
       searchPlaceholder: 'Search your ideas',
       searchEmpty: 'None of your ideas match “{{query}}”.',
@@ -926,6 +934,11 @@ const en = {
             title: 'Review',
             body: 'Every idea you absorb waits for a decision on this strip. Swipe right to favorite, left to let it go. With nothing pending, it goes away.',
             ai: 'The strip says how many ideas are left to review and opens the pile when tapped. Letting go deletes nothing: the idea stays under Show all.',
+          },
+          study: {
+            title: 'Study',
+            body: 'A deck of your favorites, in random order. Tap to flip, swipe for the next.',
+            ai: 'The strip shows up once you have at least one favorite. Studying writes nothing: it is just to go over what you kept.',
           },
           favorites: {
             title: 'Favorites',
