@@ -557,6 +557,10 @@ const en = {
         title: 'Mood check-in',
         body: 'Log how the day went, 1 to 5. The calendar pairs your mood with your practices.',
       },
+      info: {
+        title: 'Every screen has an (i)',
+        body: 'The (i) in the top corner explains the screen: what each thing does and where to tap. Every tab has one; when in doubt, tap it.',
+      },
       hold: {
         title: 'Tap a practice',
         body: 'Tap a practice to skip it today, adjust or edit it; hold it to go straight to editing. Skipping resets nothing.',
@@ -1997,11 +2001,11 @@ const en = {
   allPractices: {
     title: 'All practices',
     eyebrow: 'PRACTICES',
-    lead: 'Everything you can do beyond your daily routine.',
+    lead: 'Weeklies and monthlies up top; dailies in the Dailies block.',
     loggingFor: 'Logging on {{date}}',
-    emptyTitle: 'Just your dailies, for now',
-    emptyBody:
-      'Your dailies live on the Today screen. Create a weekly or monthly practice to see it here.',
+    dailies: 'Dailies',
+    emptyTitle: 'No practices yet',
+    emptyBody: 'Create a practice or adopt one from the catalog in Manage.',
     emptyCta: 'Create practice',
   },
   tasksHub: {
@@ -2700,6 +2704,7 @@ const en = {
       skills: 'Skills',
       skillsDesc: 'Personal records with a medal ladder, per life area.',
       footnote: 'Turning a module off never deletes anything. Turn it back on and everything returns.',
+      premiumNote: 'Modules are part of Premium. Tap one to learn more.',
     },
     fields: {
       displayName: 'Display name',

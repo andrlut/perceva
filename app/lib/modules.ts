@@ -15,10 +15,12 @@ import { supabase } from '@/lib/supabase';
  * keys the user explicitly flipped; everything else falls back to
  * MODULE_DEFAULTS, so shipping a new module never rewrites stored rows.
  *
- * Module ≠ premium. A module flag decides what EXISTS in the user's app;
- * `subscription_tier` decides how deep it goes. The two never mix — a module
- * that is OFF must never route to /premium, and a premium teaser must never
- * mention modules.
+ * Modules are PREMIUM (owner, 2026-10-13 — reverses the original "module ≠
+ * premium" rule). A free profile reads every module as OFF whatever it has
+ * stored, so the gates below hide the surfaces exactly like a switched-off
+ * module; the stored flags are kept untouched, so subscribing brings back
+ * whatever the user had turned on. The Settings switches route a free user
+ * to /premium?source=modules instead of flipping.
  *
  * Derived from the shared `character/me` query (useIsPremium precedent):
  * zero extra fetch, survives reinstall, syncs across devices.
@@ -59,9 +61,15 @@ export const MODULE_DEFAULTS: Record<ModuleKey, boolean> = Object.fromEntries(
   MODULE_REGISTRY.map((def) => [def.key, def.default]),
 ) as Record<ModuleKey, boolean>;
 
+const ALL_OFF: Record<ModuleKey, boolean> = Object.fromEntries(
+  MODULE_REGISTRY.map((def) => [def.key, false]),
+) as Record<ModuleKey, boolean>;
+
 export function useModules(): Record<ModuleKey, boolean> {
   const { data } = useCharacter();
-  const stored = (data?.profile.modules ?? {}) as Partial<
+  // Fails closed like useIsPremium: while the profile loads, nothing is on.
+  if (data?.profile.subscription_tier !== 'premium') return ALL_OFF;
+  const stored = (data.profile.modules ?? {}) as Partial<
     Record<ModuleKey, boolean>
   >;
   return { ...MODULE_DEFAULTS, ...stored };

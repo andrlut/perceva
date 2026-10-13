@@ -88,7 +88,8 @@ export type PremiumSource =
   | 'badge'
   | 'instrument'
   | 'settings'
-  | 'learn';
+  | 'learn'
+  | 'modules';
 
 const PREMIUM_SOURCES: readonly PremiumSource[] = [
   'limit-modal',
@@ -96,6 +97,7 @@ const PREMIUM_SOURCES: readonly PremiumSource[] = [
   'instrument',
   'settings',
   'learn',
+  'modules',
 ] as const;
 
 export function normalizePremiumSource(

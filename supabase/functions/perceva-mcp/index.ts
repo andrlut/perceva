@@ -246,7 +246,8 @@ function describeRecurrence(rec: Recurrence, targetCount = 1): string {
 // profile.modules stores ONLY the keys the user flipped; everything else falls
 // back to these defaults. Every default is false — "simple is the factory
 // setting". Exposed so the model never suggests opening a surface that is
-// switched off in this user's app.
+// switched off in this user's app. Modules are premium since 2026-10-13: a
+// free profile reads every module as off, whatever it has stored.
 const MODULE_DEFAULTS: Record<string, boolean> = {
   missoes: false,
   metas: false,
@@ -305,7 +306,7 @@ async function rpc(
 
 function buildServer(token: string, userId: string): McpServer {
   const server = new McpServer(
-    { name: 'perceva-mcp', version: '0.4.8' },
+    { name: 'perceva-mcp', version: '0.4.9' },
     {
       instructions: [
         'Perceva is a habit/wellness app organized in 6 dimensions',
@@ -392,7 +393,7 @@ function buildServer(token: string, userId: string): McpServer {
       const db = userClient(token);
       const [core, profile, subs] = await Promise.all([
         db.rpc('mcp_get_profile_summary'),
-        db.from('profile').select('modules').limit(1),
+        db.from('profile').select('modules,subscription_tier').limit(1),
         db.from('dimension_sub').select('id,display_name_pt,dimension_id'),
       ]);
       if (core.error) return fail(`get_profile_summary: ${core.error.message}`);
@@ -434,10 +435,13 @@ function buildServer(token: string, userId: string): McpServer {
         today: localDate(now),
         today_label_pt: dateLabelPt(localDate(now)),
         timezone: TZ,
-        modules: {
-          ...MODULE_DEFAULTS,
-          ...((profile.data?.[0]?.modules ?? {}) as Record<string, boolean>),
-        },
+        modules:
+          profile.data?.[0]?.subscription_tier === 'premium'
+            ? {
+                ...MODULE_DEFAULTS,
+                ...((profile.data?.[0]?.modules ?? {}) as Record<string, boolean>),
+              }
+            : { ...MODULE_DEFAULTS },
         desired_gap: gap,
       });
     },
