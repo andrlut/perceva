@@ -62,7 +62,12 @@ interface Props {
   weekStart: WeekStart;
   /** Blocks the DaySeal from asserting "nothing was scheduled" mid-write. */
   isMutating: boolean;
-  onRetroComplete: (task: TaskWithSubs, subs?: TaskSub[], coinMultiplier?: CoinMultiplier) => void;
+  onRetroComplete: (
+    task: TaskWithSubs,
+    subs?: TaskSub[],
+    coinMultiplier?: CoinMultiplier,
+    coinStars?: number,
+  ) => void;
   onSwipeComplete: (task: TaskWithSubs) => void;
   onSkip: (task: TaskWithSubs) => void;
   onUnskip: (taskId: string) => void;

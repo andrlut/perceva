@@ -129,6 +129,7 @@ export function PracticesGuide() {
       template_id: null,
       icon: 'leaf-outline',
       coin_multiplier: 1,
+      coin_stars: null,
       subs: [{ sub_id: 'contemplate', stars: 2 }],
       primary_sub_id: 'contemplate',
       primary_dimension_id: 'mind',

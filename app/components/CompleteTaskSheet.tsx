@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 
 import { CoinMultiplierPicker } from '@/components/CoinMultiplierPicker';
-import type { CoinMultiplier, TaskSub, TaskWithSubs } from '@/lib/db/types';
+import { isCoinsOnly, type CoinMultiplier, type TaskSub, type TaskWithSubs } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { rewardForTaskSubs } from '@/lib/xp';
@@ -24,7 +24,13 @@ interface Props {
   onCancel: () => void;
   /** The stars, the coins and how many times, for THIS log (stars and
    *  coins start at the practice's; times at 1). */
-  onConfirm: (subs: TaskSub[], coinMultiplier: CoinMultiplier, times: number) => void;
+  onConfirm: (
+    subs: TaskSub[],
+    coinMultiplier: CoinMultiplier,
+    times: number,
+    /** Coins-only practice: the stars for this log (undefined otherwise). */
+    coinStars?: number,
+  ) => void;
 }
 
 /**
@@ -37,7 +43,9 @@ interface Props {
  * returns to defaults.
  *
  * Confirming sends the adjusted (sub_id, stars) array as the override
- * payload to complete_task.
+ * payload to complete_task. A coins-only practice (no sub) shows a single
+ * gold "Só moedas" row with the same stepper; its stars go as coinStars and
+ * pay coins only.
  *
  * The coins (Nada / Metade / Igual / Dobro) start at the practice's default
  * and change this log only; XP stays the stars.
@@ -63,6 +71,8 @@ export function CompleteTaskSheet({
   const [draft, setDraft] = useState<TaskSub[]>([]);
   const [mult, setMult] = useState<CoinMultiplier>(1);
   const [times, setTimes] = useState(1);
+  const [coinStars, setCoinStars] = useState(1);
+  const coinsOnly = task ? isCoinsOnly(task) : false;
 
   // Reset draft each time we open with a new task.
   useEffect(() => {
@@ -70,17 +80,18 @@ export function CompleteTaskSheet({
       setDraft(task.subs.map((s) => ({ sub_id: s.sub_id, stars: s.stars })));
       setMult(task.coin_multiplier);
       setTimes(1);
+      setCoinStars(task.coin_stars ?? 1);
     }
   }, [visible, task]);
 
   const totalStars = useMemo(
-    () => draft.reduce((s, x) => s + x.stars, 0),
-    [draft],
+    () => (coinsOnly ? coinStars : draft.reduce((s, x) => s + x.stars, 0)),
+    [draft, coinsOnly, coinStars],
   );
 
   const reward = useMemo(
-    () => rewardForTaskSubs(draft, mult),
-    [draft, mult],
+    () => rewardForTaskSubs(draft, mult, coinsOnly ? coinStars : null),
+    [draft, mult, coinsOnly, coinStars],
   );
 
   if (!task) return null;
@@ -100,13 +111,15 @@ export function CompleteTaskSheet({
     setDraft(task.subs.map((s) => ({ sub_id: s.sub_id, stars: s.stars })));
     setMult(task.coin_multiplier);
     setTimes(1);
+    setCoinStars(task.coin_stars ?? 1);
   };
 
   const confirm = () => {
-    onConfirm(draft, mult, times);
+    onConfirm(draft, mult, times, coinsOnly ? coinStars : undefined);
   };
 
   const isDirty =
+    (coinsOnly && coinStars !== (task.coin_stars ?? 1)) ||
     draft.length !== task.subs.length ||
     draft.some((d, i) => task.subs[i]?.stars !== d.stars) ||
     mult !== task.coin_multiplier ||
@@ -210,6 +223,68 @@ export function CompleteTaskSheet({
             );
           })}
 
+          {coinsOnly && (
+            <View style={styles.subRow}>
+              <View
+                style={[
+                  styles.subIcon,
+                  {
+                    backgroundColor: 'rgba(255, 200, 61, 0.14)',
+                    borderColor: tokens.semantic.coin + '55',
+                  },
+                ]}
+              >
+                <CoinIcon size={18} />
+              </View>
+              <View style={styles.subBody}>
+                <Text style={styles.subLabel}>{t('tasks.subPicker.coinsOnly')}</Text>
+                <Text style={[styles.subDim, { color: tokens.semantic.coinLight }]}>
+                  {t('tasks.subPicker.noArea').toUpperCase()}
+                </Text>
+              </View>
+              <View style={styles.stepper}>
+                <Pressable
+                  onPress={() => setCoinStars((n) => Math.max(1, n - 1))}
+                  disabled={coinStars <= 1}
+                  style={({ pressed }) => [
+                    styles.stepperBtn,
+                    coinStars <= 1 && styles.stepperBtnDisabled,
+                    pressed && coinStars > 1 && { opacity: 0.6 },
+                  ]}
+                  hitSlop={6}
+                >
+                  <Ionicons
+                    name="remove"
+                    size={16}
+                    color={coinStars > 1 ? tokens.text.hi : tokens.text.faint}
+                  />
+                </Pressable>
+                <View style={styles.starsBox}>
+                  <Text style={[styles.starsValue, { color: tokens.semantic.coinLight }]}>
+                    {coinStars}
+                  </Text>
+                  <Text style={[styles.starsGlyph, { color: tokens.semantic.coinLight }]}>★</Text>
+                </View>
+                <Pressable
+                  onPress={() => setCoinStars((n) => Math.min(5, n + 1))}
+                  disabled={coinStars >= 5}
+                  style={({ pressed }) => [
+                    styles.stepperBtn,
+                    coinStars >= 5 && styles.stepperBtnDisabled,
+                    pressed && coinStars < 5 && { opacity: 0.6 },
+                  ]}
+                  hitSlop={6}
+                >
+                  <Ionicons
+                    name="add"
+                    size={16}
+                    color={coinStars < 5 ? tokens.text.hi : tokens.text.faint}
+                  />
+                </Pressable>
+              </View>
+            </View>
+          )}
+
           <CoinMultiplierPicker
             label={t('tasks.coinMultiplier.label')}
             value={mult}
@@ -220,12 +295,14 @@ export function CompleteTaskSheet({
           <View style={styles.divider} />
 
           <View style={styles.rewardRow}>
-            <View style={styles.rewardItem}>
-              <Ionicons name="flag" size={14} color={tokens.semantic.xp} />
-              <Text style={[styles.rewardText, { color: tokens.semantic.xp }]}>
-                +{reward.total.xp * times} XP
-              </Text>
-            </View>
+            {!coinsOnly && (
+              <View style={styles.rewardItem}>
+                <Ionicons name="flag" size={14} color={tokens.semantic.xp} />
+                <Text style={[styles.rewardText, { color: tokens.semantic.xp }]}>
+                  +{reward.total.xp * times} XP
+                </Text>
+              </View>
+            )}
             <View style={styles.rewardItem}>
               <CoinIcon size={16} />
               <Text style={[styles.rewardText, { color: tokens.semantic.coin }]}>

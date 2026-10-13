@@ -274,12 +274,17 @@ export default function HomeScreen() {
     subs: TaskSub[],
     coinMultiplier?: CoinMultiplier,
     times = 1,
+    coinStars?: number,
   ) => {
     if (completeTask.isPending) return;
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
 
-    const reward = rewardForTaskSubs(subs, coinMultiplier ?? task.coin_multiplier);
+    const reward = rewardForTaskSubs(
+      subs,
+      coinMultiplier ?? task.coin_multiplier,
+      coinStars ?? task.coin_stars,
+    );
     const fid = Date.now();
     setFloats((prev) => [
       ...prev,
@@ -287,7 +292,7 @@ export default function HomeScreen() {
     ]);
 
     completeTask.mutate(
-      { task, subs, coinMultiplier, times },
+      { task, subs, coinMultiplier, times, coinStars },
       {
         onSuccess: () => {
           // Same tick as the emit, on purpose: M1 gains its "Feitas hoje"
@@ -321,14 +326,19 @@ export default function HomeScreen() {
     subs: TaskSub[],
     coinMultiplier?: CoinMultiplier,
     times = 1,
+    coinStars?: number,
   ) => {
     if (isToday) {
-      fireCompletion(task, subs, coinMultiplier, times);
+      fireCompletion(task, subs, coinMultiplier, times, coinStars);
       return;
     }
     if (completeTask.isPending) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    const reward = rewardForTaskSubs(subs, coinMultiplier ?? task.coin_multiplier);
+    const reward = rewardForTaskSubs(
+      subs,
+      coinMultiplier ?? task.coin_multiplier,
+      coinStars ?? task.coin_stars,
+    );
     const fid = Date.now();
     setFloats((prev) => [
       ...prev,
@@ -354,6 +364,7 @@ export default function HomeScreen() {
         completedAt: at.toISOString(),
         completedLocalDate: selectedKey,
         times,
+        coinStars,
       },
       {
         onError: (err) => {
@@ -379,8 +390,9 @@ export default function HomeScreen() {
     task: TaskWithSubs,
     subs?: TaskSub[],
     coinMultiplier?: CoinMultiplier,
+    coinStars?: number,
   ) => {
-    completeForSelectedDay(task, subs ?? task.subs, coinMultiplier);
+    completeForSelectedDay(task, subs ?? task.subs, coinMultiplier, 1, coinStars);
   };
 
   const handleLongPress = (task: TaskWithSubs) => {
@@ -393,11 +405,12 @@ export default function HomeScreen() {
     subs: TaskSub[],
     coinMultiplier: CoinMultiplier,
     times: number,
+    coinStars?: number,
   ) => {
     if (!sheetTask) return;
     const task = sheetTask;
     setSheetTask(null);
-    completeForSelectedDay(task, subs, coinMultiplier, times);
+    completeForSelectedDay(task, subs, coinMultiplier, times, coinStars);
   };
 
   const handleActionAdjust = () => {

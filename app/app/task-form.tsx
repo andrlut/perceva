@@ -115,6 +115,9 @@ export default function TaskFormScreen() {
   const [icon, setIcon] = useState<string | null>(null);
   // Coins relative to XP. A new practice starts at "Igual" (the old rule).
   const [coinMultiplier, setCoinMultiplier] = useState<CoinMultiplier>(1);
+  // Coins-only practice: its stars, chosen in the picker's "Sem área" group
+  // instead of any sub. null = the practice has subs (the usual case).
+  const [coinStars, setCoinStars] = useState<TaskSub['stars'] | null>(null);
   const [iconPickerVisible, setIconPickerVisible] = useState(false);
   const [prefillApplied, setPrefillApplied] = useState(false);
   // Has the user typed in the description field? See `catalogBlurb`.
@@ -184,6 +187,9 @@ export default function TaskFormScreen() {
       setSubs(existing.data.subs);
       setIcon(existing.data.icon ?? null);
       setCoinMultiplier(existing.data.coin_multiplier);
+      setCoinStars(
+        existing.data.subs.length === 0 ? existing.data.coin_stars ?? 1 : null,
+      );
     }
   }, [existing.data]);
 
@@ -244,12 +250,13 @@ export default function TaskFormScreen() {
 
   const totalStars = subs.reduce((s, x) => s + x.stars, 0);
   const reward = useMemo(
-    () => rewardForTaskSubs(subs, coinMultiplier),
-    [subs, coinMultiplier],
+    () => rewardForTaskSubs(subs, coinMultiplier, coinStars),
+    [subs, coinMultiplier, coinStars],
   );
+  const coinsOnly = subs.length === 0 && coinStars != null;
 
   const formInput = useMemo<TaskFormInput | null>(() => {
-    if (subs.length === 0 || totalStars === 0) return null;
+    if (!coinsOnly && (subs.length === 0 || totalStars === 0)) return null;
     return {
       title: title.trim(),
       description: descriptionForSave,
@@ -259,6 +266,7 @@ export default function TaskFormScreen() {
       subs,
       icon,
       coin_multiplier: coinMultiplier,
+      coin_stars: coinsOnly ? coinStars : null,
     };
   }, [
     title,
@@ -269,6 +277,8 @@ export default function TaskFormScreen() {
     totalStars,
     icon,
     coinMultiplier,
+    coinsOnly,
+    coinStars,
   ]);
 
   /** True when editing a template-adopted task AND the user has changed
@@ -300,7 +310,7 @@ export default function TaskFormScreen() {
       Alert.alert(t('taskForm.titleRequired'), t('taskForm.titleRequiredBody'));
       return;
     }
-    if (subs.length === 0 || !formInput) {
+    if (!formInput) {
       Alert.alert(t('taskForm.subRequired'), t('taskForm.subRequiredBody'));
       return;
     }
@@ -552,16 +562,31 @@ export default function TaskFormScreen() {
                     '',
                     t('tasks.subPicker.starsScale'),
                     STAR_SCALE_LINES,
+                    '',
+                    t('tasks.subPicker.coinsOnlyHelp'),
                   ].join('\n'),
                 })
               }
             />
-            <SubPicker value={subs} onChange={setSubs} />
-            {subs.length > 0 && (
+            <SubPicker
+              value={subs}
+              onChange={(next) => {
+                setSubs(next);
+                if (next.length > 0) setCoinStars(null);
+              }}
+              coinStars={coinStars}
+              onCoinStarsChange={(next) => {
+                setCoinStars(next);
+                if (next != null) setSubs([]);
+              }}
+            />
+            {(subs.length > 0 || coinsOnly) && (
               <View style={styles.rewardPreview}>
-                <Text style={[styles.rewardText, { color: tokens.semantic.xp }]}>
-                  +{reward.total.xp} XP
-                </Text>
+                {!coinsOnly && (
+                  <Text style={[styles.rewardText, { color: tokens.semantic.xp }]}>
+                    +{reward.total.xp} XP
+                  </Text>
+                )}
                 <View style={styles.rewardCoins}>
                   <CoinIcon size={16} />
                   <Text style={[styles.rewardText, { color: tokens.semantic.coinLight }]}>

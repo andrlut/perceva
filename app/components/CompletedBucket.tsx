@@ -12,6 +12,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 
+import { CoinIcon } from '@/components/CoinIcon';
 import { SubColoredPips } from '@/components/SubColoredPips';
 import type { DayCompletion } from '@/lib/api/history';
 import type { CoinMultiplier, TaskSub, TaskWithSubs } from '@/lib/db/types';
@@ -51,6 +52,8 @@ export interface CompletedItem {
   /** Coins relative to XP this completion used, so "+1" repeats the coins
    *  as well as the stars. */
   coinMultiplier?: CoinMultiplier;
+  /** A coins-only log (no sub rows): its stars, so "+1" repeats them. */
+  coinStars?: number;
 }
 
 /**
@@ -86,6 +89,7 @@ export function completionsToItems(
       subs: c.subs,
       at: c.completedAt,
       coinMultiplier: c.coinMultiplier,
+      coinStars: c.subs.length === 0 ? c.totalStars : undefined,
     });
   }
   return out;
@@ -107,7 +111,12 @@ interface Props {
    * so "+1" repeats *that* rep ("do it again, same as this one") rather
    * than silently falling back to the task's defaults.
    */
-  onExtra?: (task: TaskWithSubs, subs?: TaskSub[], coinMultiplier?: CoinMultiplier) => void;
+  onExtra?: (
+    task: TaskWithSubs,
+    subs?: TaskSub[],
+    coinMultiplier?: CoinMultiplier,
+    coinStars?: number,
+  ) => void;
   /** Render the header even with zero items (keeps a tour anchor mounted
    *  and lets "Feitas hoje · 0" grow into the day's tally). */
   showWhenEmpty?: boolean;
@@ -309,12 +318,18 @@ function CompletedRow({
   item: CompletedItem;
   last: boolean;
   onUndo?: (completionId: string) => void;
-  onExtra?: (task: TaskWithSubs, subs?: TaskSub[], coinMultiplier?: CoinMultiplier) => void;
+  onExtra?: (
+    task: TaskWithSubs,
+    subs?: TaskSub[],
+    coinMultiplier?: CoinMultiplier,
+    coinStars?: number,
+  ) => void;
 }) {
   const { t } = useT();
   const meta = useMetaLookup();
   const dim = meta.dim(item.task.primary_dimension_id);
   const stars = item.subs ?? [];
+  const coinsOnly = item.coinStars != null;
   const time = timeStamp(item.at);
   const canExtra = !!onExtra && !item.orphaned;
   const canUndo = !!onUndo && !!item.completionId;
@@ -328,17 +343,26 @@ function CompletedRow({
         xp: item.xp ?? 0,
       })}
     >
-      <View style={[styles.dimTile, { backgroundColor: dim.bg, borderColor: dim.color + '33' }]}>
-        <Ionicons name={dim.iconName as never} size={16} color={dim.color} />
-      </View>
+      {coinsOnly ? (
+        <View style={[styles.dimTile, styles.coinTile]}>
+          <CoinIcon size={18} />
+        </View>
+      ) : (
+        <View style={[styles.dimTile, { backgroundColor: dim.bg, borderColor: dim.color + '33' }]}>
+          <Ionicons name={dim.iconName as never} size={16} color={dim.color} />
+        </View>
+      )}
 
       <View style={styles.textCol}>
         <Text style={styles.rowTitle} numberOfLines={1}>
           {item.task.title}
         </Text>
         <View style={styles.metaLine}>
-          {item.xp !== undefined && (
+          {item.xp !== undefined && !coinsOnly && (
             <Text style={styles.xpText}>+{item.xp} XP</Text>
+          )}
+          {coinsOnly && (
+            <Text style={styles.coinText}>+{item.coins ?? 0}</Text>
           )}
           {stars.length > 0 && (
             <>
@@ -346,7 +370,7 @@ function CompletedRow({
               <SubColoredPips subs={stars} size={5} max={5} />
             </>
           )}
-          {!!item.coins && item.coins > 0 && (
+          {!coinsOnly && !!item.coins && item.coins > 0 && (
             <>
               <Text style={styles.sep}>·</Text>
               <Text style={styles.coinText}>{item.coins}</Text>
@@ -365,7 +389,7 @@ function CompletedRow({
 
       {canExtra ? (
         <Pressable
-          onPress={() => onExtra!(item.task, item.subs, item.coinMultiplier)}
+          onPress={() => onExtra!(item.task, item.subs, item.coinMultiplier, item.coinStars)}
           style={({ pressed }) => [
             styles.iconBtn,
             styles.extraBtn,
@@ -574,6 +598,10 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  coinTile: {
+    backgroundColor: 'rgba(255, 200, 61, 0.14)',
+    borderColor: 'rgba(255, 200, 61, 0.3)',
   },
   dimTileMuted: {
     opacity: 0.55,

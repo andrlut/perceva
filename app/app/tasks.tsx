@@ -21,6 +21,7 @@ import DraggableFlatList, {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppIcon } from '@/components/AppIcon';
+import { CoinIcon } from '@/components/CoinIcon';
 import { AddCard } from '@/components/AddCard';
 import {
   AdoptPeriodicitySheet,
@@ -48,12 +49,13 @@ import {
   useStartTaskFromTemplate,
   useTaskTemplates,
 } from '@/lib/api/tasks';
-import type {
-  DimensionId,
-  Recurrence,
-  SubId,
-  TaskTemplateWithSubs,
-  TaskWithSubs,
+import {
+  isCoinsOnly,
+  type DimensionId,
+  type Recurrence,
+  type SubId,
+  type TaskTemplateWithSubs,
+  type TaskWithSubs,
 } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
@@ -1153,7 +1155,8 @@ function ManageRow({
   const lookup = useMetaLookup();
   const sub = lookup.sub(task.primary_sub_id);
   const dim = lookup.dim(task.primary_dimension_id);
-  const reward = rewardForTaskSubs(task.subs, task.coin_multiplier);
+  const coinsOnly = isCoinsOnly(task);
+  const reward = rewardForTaskSubs(task.subs, task.coin_multiplier, task.coin_stars);
   const isCustom = !task.template_id;
   const recurrenceLabel = describeRecurrence(task.recurrence, task.target_count, t);
   // Same rule as TaskCard: the note only when it says something the group
@@ -1163,7 +1166,13 @@ function ManageRow({
   return (
     <ScaleDecorator>
       <View style={styles.rowWrap}>
-        <View style={[styles.row, { borderLeftColor: dim.color }, isActive && styles.rowActive]}>
+        <View
+          style={[
+            styles.row,
+            { borderLeftColor: coinsOnly ? tokens.semantic.coin : dim.color },
+            isActive && styles.rowActive,
+          ]}
+        >
           <LinearGradient
             colors={tokens.gradient.taskCard}
             locations={tokens.gradient.taskCardLocations}
@@ -1201,20 +1210,39 @@ function ManageRow({
               }
             }}
           >
-            <View style={[styles.subTile, { backgroundColor: dim.bg }]}>
-              <AppIcon name={task.icon ?? sub.iconName} size={17} color={dim.color} />
-            </View>
+            {coinsOnly ? (
+              <View style={[styles.subTile, { backgroundColor: 'rgba(255, 200, 61, 0.14)' }]}>
+                {task.icon ? (
+                  <AppIcon name={task.icon} size={17} color={tokens.semantic.coinLight} />
+                ) : (
+                  <CoinIcon size={19} />
+                )}
+              </View>
+            ) : (
+              <View style={[styles.subTile, { backgroundColor: dim.bg }]}>
+                <AppIcon name={task.icon ?? sub.iconName} size={17} color={dim.color} />
+              </View>
+            )}
             <View style={styles.rowBody}>
               <Text style={styles.rowTitle} numberOfLines={2}>
                 {task.title}
               </Text>
               <View style={styles.metaRow}>
-                {task.subs.length > 0 && (
-                  <SubStack subIds={task.subs.map((s) => s.sub_id)} max={3} size={16} />
+                {coinsOnly ? (
+                  <View style={styles.coinsOnlyMeta}>
+                    <CoinIcon size={14} />
+                    <Text style={styles.coinsOnlyValue}>+{reward.total.coins}</Text>
+                  </View>
+                ) : (
+                  <>
+                    {task.subs.length > 0 && (
+                      <SubStack subIds={task.subs.map((s) => s.sub_id)} max={3} size={16} />
+                    )}
+                    <SubColoredPips subs={task.subs} size={5} />
+                    <Text style={styles.rewardValue}>+{reward.total.xp}</Text>
+                    <CoinMultiplierBadge multiplier={task.coin_multiplier} />
+                  </>
                 )}
-                <SubColoredPips subs={task.subs} size={5} />
-                <Text style={styles.rewardValue}>+{reward.total.xp}</Text>
-                <CoinMultiplierBadge multiplier={task.coin_multiplier} />
                 {showRecurrence && (
                   <Text style={styles.recurrenceNote} numberOfLines={1}>
                     · {recurrenceLabel}
@@ -1322,7 +1350,11 @@ function ArchivedRow({
   return (
     <View style={styles.archivedRow}>
       <View style={[styles.subTile, styles.subTileArchived]}>
-        <AppIcon name={task.icon ?? sub.iconName} size={16} color={tokens.text.dim} />
+        <AppIcon
+          name={task.icon ?? (isCoinsOnly(task) ? 'ellipse-outline' : sub.iconName)}
+          size={16}
+          color={tokens.text.dim}
+        />
       </View>
       <View style={styles.rowBody}>
         <Text style={[styles.rowTitle, { color: tokens.text.mid }]} numberOfLines={1}>
@@ -1906,6 +1938,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 7,
     flexWrap: 'wrap',
+  },
+  coinsOnlyMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  coinsOnlyValue: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 13,
+    color: tokens.semantic.coinLight,
   },
   rewardValue: {
     fontFamily: 'Manrope_800ExtraBold',

@@ -150,6 +150,7 @@ RLS enabled on every table. "Self-only" by `auth.uid()` for personal tables; cat
 |---|---|
 | `task` | user-owned. title, description, task_type ('daily'\|'weekly' — legacy hint; `monthly` recurrences ride as 'daily'), recurrence jsonb (source of truth: daily / weekly{days?} / monthly{day?} — **`one_shot` was retired 2026-09-22**, migration `20260922000005` rewrote the rows and tightened the CHECK), target_count, is_archived, optional `template_id` |
 | `task_sub` | per-task sub allocations: (task_id, sub_id) → stars (1..5) **per sub, no total cap** (the old 5-per-task cap was dropped in `20260505000003`) |
+| `task.coin_stars` | **coins-only practice** (2026-10-13, `20261013000001`): a practice with NO `task_sub` rows carries `coin_stars` 1..5 and pays `base_xp_for_stars(coin_stars) × coin_multiplier` in coins, zero XP, no completion sub rows. `set_task_subs([])` only works once `coin_stars` is set; `complete_task` gained `p_coin_stars` (per-log override). Client: `isCoinsOnly(task)`, `rewardForTaskSubs(subs, mult, coinStars)`, gold tile/meta on cards, "Sem área · Só moedas" chip in `SubPicker`. |
 | `task_template` | **catalog (36 rows)** — 3 templates × 12 subs |
 | `task_template_sub` | sub allocations for templates |
 | `task_completion` | immutable. XP/coin grants cached at completion time |
