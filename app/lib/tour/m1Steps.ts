@@ -24,6 +24,8 @@ export const M1_TARGETS = {
   DRAWER: 'home.completed',
   /** The mood check-in card (MoodHubStrip). */
   MOOD: 'home.mood',
+  /** The screen's (i) in the header's top-right corner. */
+  INFO: 'home.info',
 } as const;
 
 export interface M1Options {
@@ -43,7 +45,9 @@ export interface M1Options {
  *                                        exactly how the old step failed)
  *   3. mood in one line                — awaitEvent MOOD_LOGGED
  *                                        (only when the mood card renders)
- *   4. press and hold                  — awaitEvent TASK_LONG_PRESSED, LAST
+ *   4. every screen has an (i)         — plain "Próximo" (user feedback,
+ *                                        2026-10-13: nobody found the (i)s)
+ *   5. press and hold                  — awaitEvent TASK_LONG_PRESSED, LAST
  *
  * The long-press step is last on purpose: it opens a native action sheet,
  * and a tooltip for a following step would sit hidden behind it (2026-09
@@ -92,6 +96,13 @@ export function buildM1Steps(t: Translator, opts: M1Options): ScreenedStep[] {
       assistSkipsToSameScreen: true,
     });
   }
+  steps.push({
+    screen: 'home',
+    title: t('tour.m1.info.title'),
+    body: t('tour.m1.info.body'),
+    position: 'bottom',
+    target: M1_TARGETS.INFO,
+  });
   steps.push({
     screen: 'home',
     title: t('tour.m1.hold.title'),

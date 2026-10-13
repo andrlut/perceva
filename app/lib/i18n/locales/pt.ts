@@ -553,6 +553,10 @@ const pt: Translations = {
         title: 'Check-in de humor',
         body: 'Registre como foi o dia, de 1 a 5. O calendário cruza o humor com as práticas.',
       },
+      info: {
+        title: 'Toda tela tem um (i)',
+        body: 'O (i) no canto de cima explica a tela: o que cada coisa faz e onde tocar. Ele está em todas as abas; na dúvida, toque nele.',
+      },
       hold: {
         title: 'Toque na prática',
         body: 'Toque numa prática para pular hoje, ajustar ou editar; segure para ir direto à edição. Pular não zera nada.',
@@ -1993,11 +1997,11 @@ const pt: Translations = {
   allPractices: {
     title: 'Todas as práticas',
     eyebrow: 'PRÁTICAS',
-    lead: 'Tudo que dá pra fazer além da rotina diária.',
+    lead: 'Semanais e mensais aqui em cima; as diárias, no bloco Diárias.',
     loggingFor: 'Registrando em {{date}}',
-    emptyTitle: 'Só as diárias, por enquanto',
-    emptyBody:
-      'Suas diárias moram na tela Hoje. Crie uma prática semanal ou mensal pra ela aparecer aqui.',
+    dailies: 'Diárias',
+    emptyTitle: 'Nenhuma prática ainda',
+    emptyBody: 'Crie uma prática ou adote uma do catálogo em Gerenciar.',
     emptyCta: 'Criar prática',
   },
   tasksHub: {
@@ -2710,6 +2714,7 @@ const pt: Translations = {
       skills: 'Habilidades',
       skillsDesc: 'Recordes pessoais com escada de medalhas, por área da vida.',
       footnote: 'Desligar nunca apaga nada. Religou, voltou tudo.',
+      premiumNote: 'Os módulos fazem parte do Premium. Toque num deles para conhecer.',
     },
     fields: {
       displayName: 'Nome de exibição',

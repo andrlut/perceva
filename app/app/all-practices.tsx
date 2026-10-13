@@ -1,7 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import Animated, {
+  useAnimatedStyle,
+  useDerivedValue,
+  withSpring,
+} from 'react-native-reanimated';
 import {
   ActivityIndicator,
   Alert,
@@ -56,8 +61,10 @@ interface FloatItem {
 }
 
 /**
- * "Todas as práticas" — the see-all DOING surface. Every active practice
- * EXCEPT the dailies (those live on Hoje), in the Home card vocabulary so
+ * "Todas as práticas" — the see-all DOING surface. Every active practice,
+ * weeklies and monthlies first; the dailies (whose home is Hoje) sit in a
+ * collapsed "Diárias" block below them (user feedback, 2026-10-13: the
+ * title said ALL and the dailies were missing). In the Home card vocabulary so
  * the user can knock out or work ahead on any weekly / monthly practice
  * on any day. Reuses TaskCard for complete / quick-complete / adjust-then-
  * complete / edit — but deliberately NOT swipe-to-skip: skipping is a
@@ -112,6 +119,7 @@ export default function AllPracticesScreen() {
   // window where a second tap logs a duplicate completion. Pruned once the
   // server confirms (see the effect below); restored on error.
   const [pendingDone, setPendingDone] = useState<Set<string>>(new Set());
+  const [dailiesOpen, setDailiesOpen] = useState(false);
 
   const handleCreate = () => {
     if (taskLimit.atLimit) {
@@ -267,6 +275,22 @@ export default function AllPracticesScreen() {
     [recurringOwned, completedThatDayIds, skippedThatDayIds, pendingDone],
   );
 
+  // The dailies, same filters — they render inside the collapsed block.
+  const dailiesOwned = useMemo(
+    () => (tasks.data ?? []).filter((task) => !recurringOwned.includes(task)),
+    [tasks.data, recurringOwned],
+  );
+  const dailies = useMemo(
+    () =>
+      dailiesOwned.filter(
+        (task) =>
+          !completedThatDayIds.has(task.id) &&
+          !skippedThatDayIds.has(task.id) &&
+          !pendingDone.has(task.id),
+      ),
+    [dailiesOwned, completedThatDayIds, skippedThatDayIds, pendingDone],
+  );
+
   // Prune the optimistic-hide set once the server reflects the completion
   // (the id shows up in the day's completions). Pruning only AFTER the
   // server reflects it keeps the card hidden through the handoff (no
@@ -286,11 +310,9 @@ export default function AllPracticesScreen() {
       completionsToItems(
         dayDetail.data?.completions ?? [],
         (id) => activeById.get(id),
+        // An archived/deleted task keeps its row (rebuilt from the
+        // snapshot) so the day's record isn't silently lost.
         taskFromCompletionSnapshot,
-        // Dailies belong to Hoje — this surface is non-daily only. An
-        // archived/deleted task keeps its row (rebuilt from the snapshot) so
-        // the day's record isn't silently lost.
-        (task, live) => !live || !isEffectivelyDaily(task.recurrence),
       ),
     [dayDetail.data, activeById],
   );
@@ -298,10 +320,10 @@ export default function AllPracticesScreen() {
   const isLoading = tasks.isLoading || dayDetail.isLoading;
   const hasAny =
     // Deliberately counts OWNED practices, not the day-filtered list: the
-    // empty state below says "create your first weekly or monthly practice",
-    // which would be a lie to a user whose whole catalog just happens to be
-    // done or skipped on this particular day.
-    recurringOwned.length > 0 || completedItems.length > 0;
+    // empty state below says "create your first practice", which would be a
+    // lie to a user whose whole catalog just happens to be done or skipped
+    // on this particular day.
+    (tasks.data ?? []).length > 0 || completedItems.length > 0;
 
   const renderCard = (task: TaskWithSubs) => (
     <TaskCard
@@ -401,6 +423,19 @@ export default function AllPracticesScreen() {
           ) : (
             <View style={styles.lists}>
               {recurring.map(renderCard)}
+              {dailies.length > 0 && (
+                <DailiesBlock
+                  count={dailies.length}
+                  open={dailiesOpen}
+                  onToggle={() => {
+                    Haptics.selectionAsync().catch(() => {});
+                    setDailiesOpen((v) => !v);
+                  }}
+                  title={t('allPractices.dailies')}
+                >
+                  {dailies.map(renderCard)}
+                </DailiesBlock>
+              )}
               {completedItems.length > 0 && (
                 <CompletedBucket
                   items={completedItems}
@@ -456,6 +491,54 @@ export default function AllPracticesScreen() {
   );
 }
 
+/**
+ * Collapsed "Diárias" header — the Concluídas drawer's anatomy (title, count
+ * chip, chevron) so the two expandable rows on this screen read as siblings.
+ * Open, the cards render under it at full size: they are the same TaskCards
+ * as above, not a compact list.
+ */
+function DailiesBlock({
+  title,
+  count,
+  open,
+  onToggle,
+  children,
+}: {
+  title: string;
+  count: number;
+  open: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
+  const chevron = useDerivedValue(() =>
+    withSpring(open ? 180 : 0, { damping: 18, stiffness: 220 }),
+  );
+  const chevronStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${chevron.value}deg` }],
+  }));
+  return (
+    <View style={styles.dailiesWrap}>
+      <Pressable
+        onPress={onToggle}
+        style={({ pressed }) => [styles.dailiesHeader, pressed && { opacity: 0.85 }]}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
+      >
+        <View style={styles.dailiesLeft}>
+          <Text style={styles.dailiesTitle}>{title}</Text>
+          <View style={styles.dailiesChip}>
+            <Text style={styles.dailiesCount}>{count}</Text>
+          </View>
+        </View>
+        <Animated.View style={chevronStyle}>
+          <Ionicons name="chevron-down" size={16} color={tokens.text.dim} />
+        </Animated.View>
+      </Pressable>
+      {open ? <View style={styles.lists}>{children}</View> : null}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: tokens.bg.deep },
   topBar: {
@@ -492,6 +575,46 @@ const styles = StyleSheet.create({
   },
   lists: {
     gap: tokens.space[2],
+  },
+  dailiesWrap: {
+    marginHorizontal: tokens.space[3],
+    marginTop: tokens.space[2],
+    gap: tokens.space[2],
+  },
+  dailiesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 48,
+    paddingHorizontal: tokens.space[3],
+    paddingVertical: tokens.space[3],
+    backgroundColor: tokens.bg.surface,
+    borderRadius: tokens.radius.lg,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+  },
+  dailiesLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[2],
+  },
+  dailiesTitle: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 12,
+    color: tokens.text.mid,
+  },
+  dailiesChip: {
+    backgroundColor: tokens.bg.surface2,
+    borderRadius: 999,
+    paddingHorizontal: 7,
+    paddingVertical: 1,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+  },
+  dailiesCount: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 10,
+    color: tokens.brand.violet2,
   },
   loadingBox: {
     paddingVertical: tokens.space[10],

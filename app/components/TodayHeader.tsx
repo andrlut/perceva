@@ -4,7 +4,9 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { CoinIcon } from '@/components/CoinIcon';
 import { ScreenInfoButton } from '@/components/guide/ScreenInfoButton';
 import { MoodFace } from '@/components/mood/MoodFace';
+import { TourTarget } from '@/components/tour/TourTarget';
 import { useT } from '@/lib/i18n';
+import { M1_TARGETS } from '@/lib/tour/m1Steps';
 import { tokens } from '@/theme';
 
 interface Props {
@@ -125,7 +127,9 @@ export function TodayHeader({
 
         {/* Just the glyph, no chip around it (owner, 2026-10-03) — the
             same ScreenInfoButton every main tab uses. */}
-        <ScreenInfoButton onPress={onInfo} a11yLabel={t('home.help.a11y')} />
+        <TourTarget id={M1_TARGETS.INFO} radius={20}>
+          <ScreenInfoButton onPress={onInfo} a11yLabel={t('home.help.a11y')} />
+        </TourTarget>
       </View>
 
       <View style={styles.statsRow}>

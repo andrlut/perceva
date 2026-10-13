@@ -57,6 +57,7 @@ export default function SettingsScreen() {
   const { t, locale } = useT();
 
   const profile = character.data?.profile;
+  const isPremium = profile?.subscription_tier === 'premium';
   const email = session.user?.email ?? '—';
   const [usernameOpen, setUsernameOpen] = useState(false);
   const [timeSheet, setTimeSheet] = useState<'brief' | 'dayEnd' | null>(null);
@@ -217,7 +218,7 @@ export default function SettingsScreen() {
       >
         <View style={styles.titleRow}>
           <Text style={styles.screenTitle}>{t('profile.title')}</Text>
-          {profile?.subscription_tier === 'premium' && <PremiumBadge size="sm" />}
+          {isPremium && <PremiumBadge size="sm" />}
         </View>
 
         {/* ───── PERCEVA PREMIUM ───── */}
@@ -285,13 +286,6 @@ export default function SettingsScreen() {
             icon="log-out-outline"
             label={t('profile.actions.signOut')}
             onPress={handleSignOut}
-            danger
-          />
-          <Divider />
-          <ButtonRow
-            icon="trash-outline"
-            label={t('profile.actions.deleteAccount')}
-            onPress={handleDeleteAccount}
             danger
           />
         </Card>
@@ -382,7 +376,8 @@ export default function SettingsScreen() {
             Per-user opt-in surfaces (profile.modules), mapped straight off
             MODULE_REGISTRY — declaring a module there is what puts its
             switch here. Off = invisibility, never deletion (the footnote
-            promises exactly that). */}
+            promises exactly that). Premium since 2026-10-13: on a free
+            profile every switch reads off and a flip opens the paywall. */}
         <SectionHeader icon="apps-outline" label={t('profile.sections.modules')} />
         <Card>
           {MODULE_REGISTRY.map((def, i) => (
@@ -392,11 +387,17 @@ export default function SettingsScreen() {
                 label={t(`profile.modules.${def.key}`)}
                 description={t(`profile.modules.${def.key}Desc`)}
                 value={modules[def.key]}
-                onChange={(v) => setModule.mutate({ key: def.key, value: v })}
+                onChange={(v) =>
+                  isPremium
+                    ? setModule.mutate({ key: def.key, value: v })
+                    : router.push('/premium?source=modules')
+                }
               />
             </Fragment>
           ))}
-          <NoteText>{t('profile.modules.footnote')}</NoteText>
+          <NoteText>
+            {isPremium ? t('profile.modules.footnote') : t('profile.modules.premiumNote')}
+          </NoteText>
         </Card>
 
         {/* ───── NOTIFICATIONS ───── */}
@@ -472,6 +473,19 @@ export default function SettingsScreen() {
             ? `\n${t('profile.footerUpdate', { id: Updates.updateId.slice(0, 8) })}`
             : ''}
         </Text>
+
+        {/* Excluir conta — a quiet grey link at the very bottom, past the
+            version line (user feedback, 2026-10-13: as a red row beside
+            "Sair" it was too easy to hit). Still reachable in-app, as the
+            stores require; the confirm dialog stays the second gate. */}
+        <Pressable
+          onPress={handleDeleteAccount}
+          hitSlop={8}
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.deleteLink, pressed && { opacity: 0.6 }]}
+        >
+          <Text style={styles.deleteLinkText}>{t('profile.actions.deleteAccount')}</Text>
+        </Pressable>
       </ScrollView>
 
       <TimePickerSheet
@@ -838,5 +852,16 @@ const styles = StyleSheet.create({
     color: tokens.text.faint,
     textAlign: 'center',
     marginTop: tokens.space[7],
+  },
+  deleteLink: {
+    alignSelf: 'center',
+    marginTop: tokens.space[6],
+    paddingVertical: tokens.space[2],
+    paddingHorizontal: tokens.space[3],
+  },
+  deleteLinkText: {
+    ...tokens.type.caption,
+    color: tokens.text.faint,
+    textDecorationLine: 'underline',
   },
 });
