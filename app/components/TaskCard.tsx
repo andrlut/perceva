@@ -16,8 +16,9 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { AppIcon } from '@/components/AppIcon';
+import { CoinIcon } from '@/components/CoinIcon';
 import { useT } from '@/lib/i18n';
-import type { TaskWithSubs } from '@/lib/db/types';
+import { isCoinsOnly, type TaskWithSubs } from '@/lib/db/types';
 import { describeRecurrence } from '@/lib/recurrence';
 import { rewardForTaskSubs } from '@/lib/xp';
 import { tokens } from '@/theme';
@@ -92,8 +93,13 @@ export function TaskCard({
   isCompleting,
 }: Props) {
   const { t } = useT();
-  const accent = DIMENSION_META[task.primary_dimension_id].color;
-  const reward = rewardForTaskSubs(task.subs, task.coin_multiplier);
+  // A coins-only practice (no sub) wears the coins' gold instead of a
+  // dimension's color, and its meta line is the coin number, not XP.
+  const coinsOnly = isCoinsOnly(task);
+  const accent = coinsOnly
+    ? tokens.semantic.coin
+    : DIMENSION_META[task.primary_dimension_id].color;
+  const reward = rewardForTaskSubs(task.subs, task.coin_multiplier, task.coin_stars);
 
   const completeScale = useSharedValue(1);
   const tx = useSharedValue(0);
@@ -296,11 +302,20 @@ export function TaskCard({
                   size={18}
                 />
               )}
-              <SubColoredPips subs={task.subs} size={5} />
-              <Text style={styles.rewardValue}>+{reward.total.xp}</Text>
-              {/* Coins only speak when they differ from the XP (not on
-                  "Igual"): a quiet nada / ½ / 2× beside the number. */}
-              <CoinMultiplierBadge multiplier={task.coin_multiplier} />
+              {coinsOnly ? (
+                <View style={styles.coinsOnlyMeta}>
+                  <CoinIcon size={14} />
+                  <Text style={styles.coinsOnlyValue}>+{reward.total.coins}</Text>
+                </View>
+              ) : (
+                <>
+                  <SubColoredPips subs={task.subs} size={5} />
+                  <Text style={styles.rewardValue}>+{reward.total.xp}</Text>
+                  {/* Coins only speak when they differ from the XP (not on
+                      "Igual"): a quiet nada / ½ / 2× beside the number. */}
+                  <CoinMultiplierBadge multiplier={task.coin_multiplier} />
+                </>
+              )}
               {showRecurrenceNote && (
                 <Text style={styles.recurrenceNote} numberOfLines={1}>
                   · {describeRecurrence(task.recurrence, task.target_count, t)}
@@ -349,6 +364,17 @@ export function TaskCard({
  */
 function SubIconTile({ task }: { task: TaskWithSubs }) {
   const meta = useMetaLookup();
+  if (isCoinsOnly(task)) {
+    return (
+      <View style={[styles.subTile, styles.coinsOnlyTile]}>
+        {task.icon ? (
+          <AppIcon name={task.icon} size={18} color={tokens.semantic.coinLight} />
+        ) : (
+          <CoinIcon size={20} />
+        )}
+      </View>
+    );
+  }
   const sub = meta.sub(task.primary_sub_id);
   const dim = meta.dim(task.primary_dimension_id);
   // Custom icon picked in the task form overrides the auto-derived
@@ -445,6 +471,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     flexWrap: 'wrap',
+  },
+  coinsOnlyTile: {
+    backgroundColor: 'rgba(255, 200, 61, 0.14)',
+  },
+  coinsOnlyMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  coinsOnlyValue: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 13,
+    color: tokens.semantic.coinLight,
+    letterSpacing: 0.2,
   },
   rewardValue: {
     fontFamily: 'Manrope_800ExtraBold',

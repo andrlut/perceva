@@ -360,6 +360,18 @@ export interface Task {
    * A completion can override it (CompleteTaskSheet).
    */
   coin_multiplier: CoinMultiplier;
+  /**
+   * Stars (1..5) of a COINS-ONLY practice — one with no sub at all
+   * (2026-10-13): it pays base_xp_for_stars(coin_stars) × coin_multiplier in
+   * coins and zero XP. Null on a practice with subs (ignored there).
+   * See isCoinsOnly().
+   */
+  coin_stars: TaskSub['stars'] | null;
+}
+
+/** A practice with no sub: pays coins only (see Task.coin_stars). */
+export function isCoinsOnly(task: { subs: readonly unknown[] }): boolean {
+  return task.subs.length === 0;
 }
 
 export interface TaskTemplate {

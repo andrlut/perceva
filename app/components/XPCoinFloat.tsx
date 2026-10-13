@@ -50,10 +50,13 @@ export function XPCoinFloat({ xp, coins, onDone }: Props) {
 
   return (
     <Animated.View style={[styles.container, containerStyle]} pointerEvents="none">
-      <View style={[styles.badge, styles.xpBadge]}>
-        <Ionicons name="flash" size={16} color={tokens.semantic.xp} />
-        <Text style={[styles.text, { color: tokens.semantic.xp }]}>+{xp} XP</Text>
-      </View>
+      {/* A coins-only practice pays no XP — no "+0 XP" badge for it. */}
+      {(xp > 0 || coins === 0) && (
+        <View style={[styles.badge, styles.xpBadge]}>
+          <Ionicons name="flash" size={16} color={tokens.semantic.xp} />
+          <Text style={[styles.text, { color: tokens.semantic.xp }]}>+{xp} XP</Text>
+        </View>
+      )}
       <View style={[styles.badge, styles.coinBadge]}>
         <CoinIcon size={14} />
         <Text style={[styles.text, { color: tokens.semantic.coin }]}>+{coins}</Text>

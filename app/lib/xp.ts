@@ -63,7 +63,18 @@ export function rewardForTaskSubs(
   subs: TaskSub[],
   /** Coins relative to XP for this log (0 / 0.5 / 1 / 2). XP is untouched. */
   coinMultiplier: number = 1,
+  /** A coins-only practice's stars (no subs): they pay coins, zero XP —
+   *  the mirror of complete_task's coins-only branch. Ignored with subs. */
+  coinStars?: number | null,
 ): TaskRewardBreakdown {
+  if (subs.length === 0 && coinStars) {
+    const base = REWARD_BY_DIFFICULTY[coinStars as Difficulty];
+    return {
+      perSub: [],
+      total: { xp: 0, coins: base ? Math.round(base.coins * coinMultiplier) : 0 },
+      totalStars: coinStars,
+    };
+  }
   let totalXp = 0;
   let totalCoins = 0;
   let totalStars = 0;

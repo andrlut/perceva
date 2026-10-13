@@ -46,6 +46,8 @@ export interface TaskFormInput {
   icon: string | null;
   /** Coins relative to XP (0 / 0.5 / 1 / 2) — the practice's default. */
   coin_multiplier: CoinMultiplier;
+  /** Stars of a coins-only practice (`subs` empty); null otherwise. */
+  coin_stars: TaskSub['stars'] | null;
 }
 
 // ─── Row shapes coming from PostgREST ────────────────────────────────────
@@ -69,6 +71,7 @@ interface TaskRow {
   template_id: string | null;
   icon: string | null;
   coin_multiplier: number | string | null;
+  coin_stars: number | null;
   task_sub: TaskSubRow[] | null;
 }
 
@@ -110,6 +113,12 @@ function pickPrimary(subs: TaskSub[]): SubId {
   return subs[0]!.sub_id;
 }
 
+/** coin_stars from the row, clamped to 1..5; null stays null. */
+export function asStars(v: number | null | undefined): TaskSub['stars'] | null {
+  if (v == null) return null;
+  return Math.max(1, Math.min(5, Math.round(v))) as TaskSub['stars'];
+}
+
 function mapTaskRow(t: TaskRow): TaskWithSubs {
   const rawSubs: TaskSub[] = (t.task_sub ?? []).map((r) => ({
     sub_id: r.sub_id as SubId,
@@ -132,6 +141,7 @@ function mapTaskRow(t: TaskRow): TaskWithSubs {
     template_id: t.template_id,
     icon: t.icon,
     coin_multiplier: asCoinMultiplier(t.coin_multiplier),
+    coin_stars: asStars(t.coin_stars),
     subs,
     primary_sub_id: primarySub,
     primary_dimension_id: dimensionForSub(primarySub),
@@ -605,6 +615,9 @@ export function useCompleteTask() {
       coinMultiplier?: CoinMultiplier;
       /** How many times to log it (default 1). See the header. */
       times?: number;
+      /** Coins-only practice: the stars for THIS log. Omitted → the
+       *  practice's coin_stars, resolved server-side. */
+      coinStars?: number;
     }): Promise<CompleteTaskResult> => {
       const times = Math.max(1, Math.floor(params.times ?? 1));
       const localDate = params.completedLocalDate ?? todayLocalDateKey();
@@ -623,6 +636,7 @@ export function useCompleteTask() {
           ...(params.coinMultiplier !== undefined
             ? { p_coin_multiplier: params.coinMultiplier }
             : {}),
+          ...(params.coinStars !== undefined ? { p_coin_stars: params.coinStars } : {}),
         });
         if (error) throw error;
         const r = data as CompleteTaskResult;
@@ -657,6 +671,7 @@ export function useCompleteTask() {
       const reward = rewardForTaskSubs(
         params.subs,
         params.coinMultiplier ?? params.task.coin_multiplier,
+        params.coinStars ?? params.task.coin_stars,
       );
       const times = Math.max(1, Math.floor(params.times ?? 1));
 
@@ -930,6 +945,7 @@ export function useCreateTask() {
           target_count: input.target_count,
           icon: input.icon,
           coin_multiplier: input.coin_multiplier,
+          coin_stars: input.coin_stars,
         })
         .select('id')
         .single();
@@ -971,6 +987,9 @@ export function useUpdateTask(taskId: string) {
         target_count: input.target_count,
         icon: input.icon,
         coin_multiplier: input.coin_multiplier,
+        // Written BEFORE set_task_subs: an empty sub list is only accepted
+        // once the practice carries its coin stars.
+        coin_stars: input.coin_stars,
       };
       if (input.dropTemplateLink) {
         patch.template_id = null;

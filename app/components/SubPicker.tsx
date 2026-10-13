@@ -1,6 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { CoinIcon } from '@/components/CoinIcon';
+
 import type { SubId, TaskSub } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
@@ -15,6 +17,15 @@ interface Props {
   /** Current selection. Per-sub stars capped at 5; no total cap. */
   value: TaskSub[];
   onChange: (next: TaskSub[]) => void;
+  /**
+   * Coins-only practice (2026-10-13): when `onCoinStarsChange` is passed,
+   * a last group "Sem área" offers a gold "Só moedas" chip with the same
+   * [− N★ +] stepper — its stars pay coins only, zero XP. It is the
+   * alternative to the subs: the parent clears one when the other is picked.
+   * null = not chosen.
+   */
+  coinStars?: TaskSub['stars'] | null;
+  onCoinStarsChange?: (next: TaskSub['stars'] | null) => void;
 }
 
 /**
@@ -40,7 +51,7 @@ export const STAR_SCALE_LINES = STAR_LEVELS.map(
   (s) => `${s}★  +${baseXpForDifficulty(s)}`,
 ).join('\n');
 
-export function SubPicker({ value, onChange }: Props) {
+export function SubPicker({ value, onChange, coinStars = null, onCoinStarsChange }: Props) {
   const { t } = useT();
   const meta = useMetaLookup();
   const totalStars = value.reduce((s, x) => s + x.stars, 0);
@@ -73,7 +84,9 @@ export function SubPicker({ value, onChange }: Props) {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerText}>
-          {value.length === 0
+          {coinStars != null
+            ? t('tasks.subPicker.coinsOnlyHeader', { stars: coinStars })
+            : value.length === 0
             ? t('tasks.subPicker.pickAtLeastOne')
             : `${t('tasks.subPicker.countSubs', { count: value.length })} · ${totalStars}★ ${t('tasks.subPicker.total')}`}
         </Text>
@@ -196,6 +209,102 @@ export function SubPicker({ value, onChange }: Props) {
             </View>
           );
         })}
+        {onCoinStarsChange && (
+          <CoinsOnlyGroup stars={coinStars} onChange={onCoinStarsChange} />
+        )}
+      </View>
+    </View>
+  );
+}
+
+/** "Sem área" — the coins-only chip, in the sub chips' anatomy, gold. */
+function CoinsOnlyGroup({
+  stars,
+  onChange,
+}: {
+  stars: TaskSub['stars'] | null;
+  onChange: (next: TaskSub['stars'] | null) => void;
+}) {
+  const { t } = useT();
+  const gold = tokens.semantic.coinLight;
+  const selected = stars != null;
+  const canDec = selected && stars > 1;
+  const canInc = selected && stars < 5;
+  const step = (delta: 1 | -1) => {
+    if (stars == null) return;
+    const next = stars + delta;
+    if (next < 1 || next > 5) return;
+    onChange(next as TaskSub['stars']);
+  };
+  return (
+    <View style={styles.group}>
+      <View style={styles.groupHeader}>
+        <Ionicons name="remove-circle-outline" size={12} color={gold} />
+        <Text style={[styles.groupLabel, { color: gold }]}>
+          {t('tasks.subPicker.noArea')}
+        </Text>
+      </View>
+      <View style={styles.row}>
+        <View
+          style={[
+            styles.chip,
+            selected && {
+              backgroundColor: 'rgba(255, 200, 61, 0.12)',
+              borderColor: tokens.semantic.coin,
+            },
+          ]}
+        >
+          <Pressable
+            onPress={() => onChange(selected ? null : 1)}
+            style={styles.chipBody}
+            hitSlop={4}
+            accessibilityRole="button"
+            accessibilityState={{ selected }}
+            accessibilityLabel={t('tasks.subPicker.coinsOnly')}
+          >
+            <CoinIcon size={14} />
+            <Text style={[styles.chipLabel, { color: selected ? gold : tokens.text.mid }]}>
+              {t('tasks.subPicker.coinsOnly')}
+            </Text>
+          </Pressable>
+          {selected && (
+            <View style={styles.stepper}>
+              <Pressable
+                onPress={() => step(-1)}
+                disabled={!canDec}
+                style={({ pressed }) => [
+                  styles.stepBtn,
+                  !canDec && styles.stepBtnDisabled,
+                  pressed && canDec && { opacity: 0.6 },
+                ]}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={t('tasks.subPicker.fewerStarsA11y', {
+                  sub: t('tasks.subPicker.coinsOnly'),
+                })}
+              >
+                <Ionicons name="remove" size={14} color={canDec ? gold : tokens.text.faint} />
+              </Pressable>
+              <Text style={[styles.stepValue, { color: gold }]}>{stars}★</Text>
+              <Pressable
+                onPress={() => step(1)}
+                disabled={!canInc}
+                style={({ pressed }) => [
+                  styles.stepBtn,
+                  !canInc && styles.stepBtnDisabled,
+                  pressed && canInc && { opacity: 0.6 },
+                ]}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={t('tasks.subPicker.moreStarsA11y', {
+                  sub: t('tasks.subPicker.coinsOnly'),
+                })}
+              >
+                <Ionicons name="add" size={14} color={canInc ? gold : tokens.text.faint} />
+              </Pressable>
+            </View>
+          )}
+        </View>
       </View>
     </View>
   );

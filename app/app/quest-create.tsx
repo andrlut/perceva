@@ -380,13 +380,21 @@ export default function QuestCreateScreen() {
                         !selected && { opacity: 0.55 },
                       ]}
                     >
-                      <View style={[styles.taskIcon, { backgroundColor: dim.bg }]}>
-                        <Ionicons
-                          name={dim.iconName as never}
-                          size={11}
-                          color={dim.color}
-                        />
-                      </View>
+                      {task.subs.length === 0 ? (
+                        <View
+                          style={[styles.taskIcon, { backgroundColor: 'rgba(255, 200, 61, 0.14)' }]}
+                        >
+                          <CoinIcon size={12} />
+                        </View>
+                      ) : (
+                        <View style={[styles.taskIcon, { backgroundColor: dim.bg }]}>
+                          <Ionicons
+                            name={dim.iconName as never}
+                            size={11}
+                            color={dim.color}
+                          />
+                        </View>
+                      )}
                       <Text style={styles.taskName} numberOfLines={1}>
                         {task.title}
                       </Text>

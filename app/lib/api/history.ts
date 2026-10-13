@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { dimensionForSub } from '@/lib/api/tasks';
+import { asStars, dimensionForSub } from '@/lib/api/tasks';
 import type { CoinMultiplier, SubId, TaskSub, TaskType, TaskWithSubs } from '@/lib/db/types';
 import { isOpenOnDay, parseRecurrence } from '@/lib/recurrence';
 import type { WeekStart } from '@/lib/settings';
@@ -188,6 +188,8 @@ export function taskFromCompletionSnapshot(c: DayCompletion): TaskWithSubs {
     template_id: null,
     icon: null,
     coin_multiplier: c.coinMultiplier,
+    // No sub rows = a coins-only log; its stars live on the completion.
+    coin_stars: subs.length === 0 ? asStars(c.totalStars) : null,
     subs,
     primary_sub_id: primary,
     primary_dimension_id: dimensionForSub(primary),
@@ -240,6 +242,7 @@ interface TaskRowFull {
   template_id: string | null;
   icon: string | null;
   coin_multiplier: number | string | null;
+  coin_stars: number | null;
   task_sub: { sub_id: string; stars: number }[] | null;
 }
 
@@ -266,6 +269,7 @@ function hydrateTask(raw: TaskRowFull, recurrence: TaskWithSubs['recurrence']): 
     template_id: raw.template_id,
     icon: raw.icon,
     coin_multiplier: asCoinMultiplier(raw.coin_multiplier),
+    coin_stars: asStars(raw.coin_stars),
     subs,
     primary_sub_id: primary,
     primary_dimension_id: dimensionForSub(primary),

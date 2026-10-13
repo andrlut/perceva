@@ -140,10 +140,15 @@ export default function AllPracticesScreen() {
     subs: TaskSub[],
     coinMultiplier?: CoinMultiplier,
     times = 1,
+    coinStars?: number,
   ) => {
     if (completeTask.isPending) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    const reward = rewardForTaskSubs(subs, coinMultiplier ?? task.coin_multiplier);
+    const reward = rewardForTaskSubs(
+      subs,
+      coinMultiplier ?? task.coin_multiplier,
+      coinStars ?? task.coin_stars,
+    );
     const fid = Date.now();
     setFloats((prev) => [
       ...prev,
@@ -155,7 +160,7 @@ export default function AllPracticesScreen() {
     at.setHours(12, 0, 0, 0);
     completeTask.mutate(
       isToday
-        ? { task, subs, coinMultiplier, times }
+        ? { task, subs, coinMultiplier, times, coinStars }
         : {
             task,
             subs,
@@ -163,6 +168,7 @@ export default function AllPracticesScreen() {
             completedAt: at.toISOString(),
             completedLocalDate: selectedKey,
             times,
+            coinStars,
           },
       {
         onError: (err) => {
@@ -192,17 +198,19 @@ export default function AllPracticesScreen() {
     task: TaskWithSubs,
     subs?: TaskSub[],
     coinMultiplier?: CoinMultiplier,
-  ) => fireCompletion(task, subs ?? task.subs, coinMultiplier);
+    coinStars?: number,
+  ) => fireCompletion(task, subs ?? task.subs, coinMultiplier, 1, coinStars);
 
   const handleSheetConfirm = (
     subs: TaskSub[],
     coinMultiplier: CoinMultiplier,
     times: number,
+    coinStars?: number,
   ) => {
     if (!sheetTask) return;
     const task = sheetTask;
     setSheetTask(null);
-    fireCompletion(task, subs, coinMultiplier, times);
+    fireCompletion(task, subs, coinMultiplier, times, coinStars);
   };
 
   const handleUndo = (completionId: string) => {

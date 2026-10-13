@@ -453,11 +453,16 @@ export default function CalendarScreen() {
     subs: TaskSub[],
     coinMultiplier?: CoinMultiplier,
     times = 1,
+    coinStars?: number,
   ) => {
     if (completeTask.isPending) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
 
-    const reward = rewardForTaskSubs(subs, coinMultiplier ?? task.coin_multiplier);
+    const reward = rewardForTaskSubs(
+      subs,
+      coinMultiplier ?? task.coin_multiplier,
+      coinStars ?? task.coin_stars,
+    );
     const fid = Date.now();
     setFloats((prev) => [
       ...prev,
@@ -474,6 +479,7 @@ export default function CalendarScreen() {
         completedAt: stamp.toISOString(),
         completedLocalDate: dayKey,
         times,
+        coinStars,
       },
       {
         onError: (err) => {
@@ -488,8 +494,9 @@ export default function CalendarScreen() {
     task: TaskWithSubs,
     subs?: TaskSub[],
     coinMultiplier?: CoinMultiplier,
+    coinStars?: number,
   ) => {
-    fireRetroCompletion(task, subs ?? task.subs, coinMultiplier);
+    fireRetroCompletion(task, subs ?? task.subs, coinMultiplier, 1, coinStars);
   };
 
   const handleUndo = async (completionId: string, title: string, xp: number, coins: number) => {
@@ -1042,10 +1049,10 @@ export default function CalendarScreen() {
         visible={sheetTask !== null}
         task={sheetTask}
         onCancel={() => setSheetTask(null)}
-        onConfirm={(subs, coinMultiplier, times) => {
+        onConfirm={(subs, coinMultiplier, times, coinStars) => {
           const task = sheetTask;
           setSheetTask(null);
-          if (task) fireRetroCompletion(task, subs, coinMultiplier, times);
+          if (task) fireRetroCompletion(task, subs, coinMultiplier, times, coinStars);
         }}
       />
 
