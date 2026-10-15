@@ -2053,7 +2053,7 @@ const pt: Translations = {
       deleteA11y: 'Apagar {{title}} pra sempre',
       deleteConfirmTitle: 'Apagar "{{title}}" pra sempre?',
       deleteConfirmBody:
-        'Vai sumir do app sem volta. Só dá pra apagar práticas sem histórico de conclusão.',
+        'A prática e o histórico dela somem do app e do calendário, sem volta. O XP e as moedas que ela já rendeu continuam com você.',
       deleteOk: 'Apagar',
       deleteFail: 'Não consegui apagar',
       deleteBlockedHistory: 'Essa prática já tem conclusões registradas — só dá pra arquivar.',

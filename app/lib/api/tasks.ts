@@ -513,11 +513,11 @@ export function useRestoreTask() {
 }
 
 /**
- * Hard delete via RPC. The server refuses when the task has completion
- * history (archive is the only exit then) — that history carries XP the
- * character already earned, and a cascade delete would erase the evidence
- * while keeping the reward. The error message is a stable English phrase
- * the screen maps to localized copy.
+ * Hard delete via RPC, archived practices only. Since 2026-10-15 (owner,
+ * option A) its completion history goes with it — cascade — while the XP and
+ * coins it already paid stay on the character. The server still refuses a
+ * practice linked to a quest; its error is a stable English phrase the
+ * screen maps to localized copy.
  */
 export function useDeleteTask() {
   const queryClient = useQueryClient();

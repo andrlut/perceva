@@ -2057,7 +2057,7 @@ const en = {
       deleteA11y: 'Delete {{title}} permanently',
       deleteConfirmTitle: 'Delete "{{title}}" forever?',
       deleteConfirmBody:
-        'It disappears from the app for good. Only practices with no completion history can be deleted.',
+        'The practice and its history disappear from the app and the calendar, for good. The XP and coins it already earned stay with you.',
       deleteOk: 'Delete',
       deleteFail: 'Could not delete',
       deleteBlockedHistory: 'This practice already has completions logged — it can only be archived.',
