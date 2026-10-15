@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { subscribeDialog, type DialogRequest } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
@@ -16,7 +16,16 @@ import { tokens } from '@/theme';
  * Replaces the OS-native `window.confirm` / `Alert.alert` UIs that broke
  * the gold/violet aesthetic (especially on web, where the browser confirm
  * dialog is unstyled).
+ *
+ * iOS: the caller's promise resolves only AFTER the dialog has finished
+ * dismissing (`onDismiss`). Callers navigate right after a confirm
+ * ("Arquivar" → router.back() out of the task-form modal); dismissing a
+ * native modal screen while this Modal is still fading out on top of it left
+ * an invisible, touch-swallowing layer on iPhone — the app looked frozen
+ * (user report, 2026-10-15). A timer backs `onDismiss` up in case it never
+ * fires. Android has no such race and resolves at once.
  */
+const DISMISS_FALLBACK_MS = 700;
 export function ConfirmHost() {
   // FIFO queue of pending dialog requests. We render only `queue[0]` —
   // when the user resolves it we shift to expose the next one (or empty).
@@ -30,15 +39,43 @@ export function ConfirmHost() {
   }, []);
 
   const current = queue[0] ?? null;
+  // The answer of a dialog that is closing on iOS, delivered on onDismiss.
+  const [closing, setClosing] = useState(false);
+  const answerRef = useRef<{ req: DialogRequest; ok: boolean } | null>(null);
+  const fallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handle = (ok: boolean) => {
-    if (!current) return;
-    // Resolve THIS dialog's promise, then drop it from the queue.
-    current.resolve(ok);
-    setQueue((prev) => prev.slice(1));
+  const finish = () => {
+    if (fallbackRef.current) {
+      clearTimeout(fallbackRef.current);
+      fallbackRef.current = null;
+    }
+    const answer = answerRef.current;
+    if (!answer) return;
+    answerRef.current = null;
+    answer.req.resolve(answer.ok);
+    setClosing(false);
+    setQueue((prev) => (prev[0] === answer.req ? prev.slice(1) : prev));
   };
 
-  const visible = current !== null;
+  const handle = (ok: boolean) => {
+    if (!current || answerRef.current) return;
+    answerRef.current = { req: current, ok };
+    if (Platform.OS !== 'ios') {
+      finish();
+      return;
+    }
+    setClosing(true);
+    fallbackRef.current = setTimeout(finish, DISMISS_FALLBACK_MS);
+  };
+
+  useEffect(
+    () => () => {
+      if (fallbackRef.current) clearTimeout(fallbackRef.current);
+    },
+    [],
+  );
+
+  const visible = current !== null && !closing;
 
   return (
     <Modal
@@ -48,6 +85,7 @@ export function ConfirmHost() {
       // Treat Android back / hardware dismiss as cancel (or OK for info,
       // since there's no cancel button).
       onRequestClose={() => handle(current?.kind === 'info' ? true : false)}
+      onDismiss={finish}
       statusBarTranslucent
     >
       <Pressable
