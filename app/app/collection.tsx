@@ -87,6 +87,7 @@ export default function CollectionScreen() {
     retry,
     due: trainDue,
     firm: trainFirm,
+    favorites: favoriteCount,
   } = useIdeaTraining(ideaLocale);
 
   const [onlyFavorites, setOnlyFavorites] = useState(true);
@@ -132,7 +133,6 @@ export default function CollectionScreen() {
     [cards, menuKey],
   );
 
-  const favoriteCount = useMemo(() => cards.filter((c) => c.favorite).length, [cards]);
 
   // The guide's playground card: their first favorite, else their first
   // idea (null → the guide's sample). Its shelf is the one the guide's

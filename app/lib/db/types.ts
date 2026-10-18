@@ -861,8 +861,9 @@ export interface LearningIdeaCollectRow {
   /** Treino de ideias (migration 20261018000003), written only by
    *  `train_idea`. Spaced hits in a row, 0..3; 3 = firm. */
   train_box: number;
-  /** Local YYYY-MM-DD the idea comes back to training; null = never trained
-   *  (a favorite joins the day after its review). */
+  /** Local YYYY-MM-DD the idea comes back to training. Stamped by
+   *  `review_idea` when the idea is first favorited (the next day); null =
+   *  never favorited. */
   train_due: string | null;
   /** Local YYYY-MM-DD of the last training answer; the day's first answer
    *  is the one that moves the schedule. */
@@ -894,7 +895,6 @@ export interface TrainIdeaResult {
   box: number;
   firm: boolean;
   due: string | null;
-  firm_favorites: number;
 }
 
 /** Return shape of the set_idea_note RPC. */

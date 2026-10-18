@@ -275,19 +275,28 @@ export function assembleIdeas(
 }
 
 // ─── Treino de ideias ────────────────────────────────────────────────────────
-// O mesmo baralho do "Treino do dia" do app (app/lib/ideaTraining.ts), portado
-// verbatim. A AGENDA é do servidor (RPC train_idea, migration 20261018000003):
-// acertou → 3 / 7 / 21 dias, depois firme a cada 60; errou → amanhã; só a
-// primeira resposta do dia conta. Aqui só se LÊ essa agenda:
+// O mesmo baralho do "Treino do dia" do app (app/lib/ideaTraining.ts): mesma
+// regra e mesma ordem — mexeu num, mexa no outro. A AGENDA inteira é do
+// servidor (migrations 20261018000003/4): review_idea carimba train_due = dia
+// seguinte quando a ideia vira favorita; train_idea move — acertou → 3 / 7 /
+// 21 dias, depois firme a cada 60; errou → amanhã; só a primeira resposta do
+// dia conta. Aqui só se LÊ:
 //
-//   no treino ⟺ favorita
-//   vence hoje ⟺ train_due ≤ hoje, ou nunca treinada e revisada antes de hoje
-//                (a favorita entra no dia SEGUINTE ao que foi guardada)
-//   respondida hoje (trained_on = hoje) → não vence de novo hoje
+//   vence hoje ⟺ favorita ∧ train_due ≤ hoje ∧ trained_on ≠ hoje
 //
+// Ordem: vencida há mais tempo primeiro, depois slug e ordinal (catálogo).
 // Datas são YYYY-MM-DD locais; comparar strings ordena.
 
-export type TrainCollectRow = IdeaCollectRow & {
+/** The view columns the Recanto reads — one list for get_learning_ideas
+ *  and get_idea_training, matching IdeaPublicRow. */
+export const IDEA_PUBLIC_COLUMNS =
+  'material_id,slug,category,dimension_id,released_at,idea_id,ordinal,' +
+  'title_pt,title_en,claim_pt,claim_en,image_path,video_pt_path,video_en_path';
+
+export type TrainCollectRow = {
+  material_id: string;
+  idea_id: string;
+  favorite: boolean | null;
   train_box: number | null;
   train_due: string | null;
   trained_on: string | null;
@@ -316,7 +325,6 @@ export type TrainingIdeaOut = {
   due_today: boolean;
   /** Already answered today: a new answer would not move the schedule. */
   answered_today: boolean;
-  never_trained: boolean;
   open_in_app: string;
 };
 
@@ -331,20 +339,9 @@ export type TrainingSummary = {
   truncated: boolean;
 };
 
-function addDaysKey(key: string, days: number): string {
-  const [y, m, d] = key.split('-').map(Number);
-  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
-}
-
 export function assembleTraining(
   rows: { ideas: IdeaPublicRow[]; collects: TrainCollectRow[]; titles: MaterialTitleRow[] },
-  opts: {
-    today: string;
-    /** Local YYYY-MM-DD of an instant, in the user's timezone. */
-    localDateOf: (iso: string) => string;
-    scope: TrainingScope;
-    limit: number;
-  },
+  opts: { today: string; scope: TrainingScope; limit: number },
 ): { ideas: TrainingIdeaOut[]; summary: TrainingSummary } {
   const ideaBy = new Map<string, IdeaPublicRow>();
   for (const r of rows.ideas) ideaBy.set(`${r.material_id}|${r.idea_id}`, r);
@@ -360,15 +357,12 @@ export function assembleTraining(
     const r = ideaBy.get(`${c.material_id}|${c.idea_id}`);
     if (!r) continue;
     const box = Number(c.train_box ?? 0);
-    const due = c.train_due
-      ?? (c.reviewed_at ? addDaysKey(opts.localDateOf(c.reviewed_at), 1) : null);
+    const isFirm = box >= 3;
+    const due = c.train_due;
     const answeredToday = c.trained_on === opts.today;
-    const dueToday = !answeredToday && due !== null && due <= opts.today;
-    if (box >= 3) firm += 1;
-    if (!dueToday) {
-      const next = due !== null && due > opts.today ? due : addDaysKey(opts.today, 1);
-      if (nextDue === null || next < nextDue) nextDue = next;
-    }
+    const dueToday = due !== null && due <= opts.today && !answeredToday;
+    if (isFirm) firm += 1;
+    if (due !== null && due > opts.today && (nextDue === null || due < nextDue)) nextDue = due;
     const title = titleBy.get(r.material_id);
     const ordinal = Number(r.ordinal);
     all.push({
@@ -383,16 +377,14 @@ export function assembleTraining(
       claim_pt: r.claim_pt,
       claim_en: r.claim_en,
       box,
-      firm: box >= 3,
+      firm: isFirm,
       due,
       due_today: dueToday,
       answered_today: answeredToday,
-      never_trained: c.train_due === null && c.trained_on === null,
       open_in_app: ideaDeepLink(r.slug, ordinal),
     });
   }
 
-  // Mais atrasada primeiro (é a mesma ordem do app); depois o catálogo.
   all.sort((a, b) => {
     if (a.due_today !== b.due_today) return a.due_today ? -1 : 1;
     const da = a.due ?? '';
@@ -402,8 +394,8 @@ export function assembleTraining(
     return a.ordinal - b.ordinal;
   });
 
-  const dueCount = all.filter((i) => i.due_today).length;
-  const scoped = opts.scope === 'due' ? all.filter((i) => i.due_today) : all;
+  const dueList = all.filter((i) => i.due_today);
+  const scoped = opts.scope === 'due' ? dueList : all;
   const page = scoped.slice(0, opts.limit);
 
   return {
@@ -411,7 +403,7 @@ export function assembleTraining(
     summary: {
       today: opts.today,
       favorites: all.length,
-      due_today: dueCount,
+      due_today: dueList.length,
       firm,
       next_due: nextDue,
       returned: page.length,

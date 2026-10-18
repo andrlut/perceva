@@ -293,16 +293,18 @@ export default function LearningScreen() {
     () => reelDeck.filter((g) => !isGroupRead(g, readSet, collectedMap)).length,
     [reelDeck, readSet, collectedMap],
   );
-  // The entry row. Explorar waits for the reads AND the idea/collection
-  // queries so its unread count never flashes inflated; Treinar shows once
-  // the reader has a favorite (training.loading covers the same queries).
-  const showExplore =
+  // The entry row waits for every query either tile reads (the reads and
+  // the idea/collection/review queries), so the Explorar count never
+  // flashes inflated and Treinar never draws full width before Explorar
+  // lands beside it. Treinar shows once the reader has a favorite.
+  const entryRowReady =
     !feed.isLoading &&
     !reads.isLoading &&
     !ideaCards.isLoading &&
     !collectedIdeas.isLoading &&
-    reelDeck.length > 0;
-  const showTrain = !training.loading && training.favorites > 0;
+    !training.loading;
+  const showExplore = entryRowReady && reelDeck.length > 0;
+  const showTrain = entryRowReady && training.favorites > 0;
 
   // Apply both filters (read-state AND pill). Each carousel reads from
   // the same filtered set, so empty groups drop out naturally.

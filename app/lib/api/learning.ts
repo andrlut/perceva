@@ -19,6 +19,7 @@ import { supabase } from '@/lib/supabase';
 
 import { characterKeys } from './character';
 import { dateKeyFromLocal } from './history';
+import { addDaysToKey } from './week';
 
 export const learningKeys = {
   all: ['learning'] as const,
@@ -409,6 +410,9 @@ export function useReviewIdea() {
         p_slug: input.slug,
         p_idea_id: input.ideaId,
         p_favorite: input.favorite,
+        // Favoriting opens the training on the next LOCAL day (the server
+        // stamps train_due; without this it would use Brasília's day).
+        p_today: dateKeyFromLocal(new Date()),
       });
       if (error) throw error;
       return data as ReviewIdeaResult;
@@ -439,6 +443,11 @@ export function useReviewIdea() {
         ...current,
         reviewedAt: new Date().toISOString(),
         favorite: input.favorite,
+        // Mirrors review_idea: a first favorite starts its training tomorrow.
+        trainDue:
+          input.favorite && current.trainDue === null
+            ? addDaysToKey(dateKeyFromLocal(new Date()), 1)
+            : current.trainDue,
       };
       const rows = [...previous.byKey.values()].map((r) => (r === current ? updated : r));
       queryClient.setQueryData<IdeaReviews>(learningKeys.reviews(), buildIdeaReviews(rows));
@@ -520,6 +529,8 @@ export function useSetIdeaNote() {
 interface TrainIdeaInput {
   slug: string;
   ideaId: string;
+  /** Keys the cache patch (the RPC itself is keyed by slug). */
+  materialId: string;
   remembered: boolean;
 }
 
@@ -531,24 +542,40 @@ interface TrainIdeaInput {
  * The day is the device's local one: Postgres' current_date is UTC and would
  * be a day ahead every evening after 21h in Brasília.
  *
- * No optimistic update: the session deck is frozen when it opens, and the
- * counts around it (the strips, "Em dia") only need the reconciled read.
+ * The RPC returns the row's new schedule, so the reviews cache is patched
+ * with it instead of refetching the whole collection after every answer.
+ * Only a row the cache does not have falls back to a refetch.
  */
 export function useTrainIdea() {
   const queryClient = useQueryClient();
-  return useMutation<TrainIdeaResult, Error, TrainIdeaInput>({
+  return useMutation<TrainIdeaResult & { today: string }, Error, TrainIdeaInput>({
     mutationFn: async (input) => {
+      const today = dateKeyFromLocal(new Date());
       const { data, error } = await supabase.rpc('train_idea', {
         p_slug: input.slug,
         p_idea_id: input.ideaId,
         p_remembered: input.remembered,
-        p_today: dateKeyFromLocal(new Date()),
+        p_today: today,
       });
       if (error) throw error;
-      return data as TrainIdeaResult;
+      return { ...(data as TrainIdeaResult), today };
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: learningKeys.reviews() });
+    onSuccess: (result, input) => {
+      const previous = queryClient.getQueryData<IdeaReviews>(learningKeys.reviews());
+      const current = previous?.byKey.get(reviewKey(input.materialId, input.ideaId));
+      if (!previous || !current) {
+        queryClient.invalidateQueries({ queryKey: learningKeys.reviews() });
+        return;
+      }
+      if (result.reason === 'already_trained_today') return;
+      const updated: IdeaReview = {
+        ...current,
+        trainBox: result.box,
+        trainDue: result.due,
+        trainedOn: result.today,
+      };
+      const rows = [...previous.byKey.values()].map((r) => (r === current ? updated : r));
+      queryClient.setQueryData<IdeaReviews>(learningKeys.reviews(), buildIdeaReviews(rows));
     },
   });
 }

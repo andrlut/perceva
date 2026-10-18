@@ -75,6 +75,7 @@ import {
 import {
   assembleIdeas,
   assembleTraining,
+  IDEA_PUBLIC_COLUMNS,
   type IdeaCollectRow,
   type IdeaPublicRow,
   type MaterialSubRow,
@@ -112,9 +113,11 @@ const SUBS = [
 // elsewhere.
 const TZ = 'America/Sao_Paulo';
 
+const LOCAL_DATE_FMT = new Intl.DateTimeFormat('en-CA', { timeZone: TZ });
+
 /** YYYY-MM-DD for an instant, in the user's timezone. */
 function localDate(at: Date): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(at);
+  return LOCAL_DATE_FMT.format(at);
 }
 
 /** Local hour (0-23). */
@@ -314,6 +317,15 @@ async function rpc(
   if (error) return fail(`${fn}: ${error.message}`);
   return ok(data);
 }
+
+type TrainReason = 'already_trained_today' | 'missed' | 'not_due_yet' | 'advanced';
+
+/** What log_idea_training tells the model for each train_idea outcome. */
+const TRAIN_NOTES: Record<Exclude<TrainReason, 'advanced'>, string> = {
+  already_trained_today: 'Already answered today: the schedule did not change.',
+  not_due_yet: 'It was not due yet, so a hit does not push it further out.',
+  missed: 'Logged as a miss: it comes back tomorrow.',
+};
 
 function buildServer(token: string, userId: string): McpServer {
   const server = new McpServer(
@@ -1365,10 +1377,7 @@ function buildServer(token: string, userId: string): McpServer {
       // The view is security_invoker and granted to authenticated, so this
       // runs as the user like everything else here. dimension/slug narrow it
       // server-side; sub needs learning_material_sub and is applied in memory.
-      let ideasQuery = db.from('learning_idea_public').select(
-        'material_id,slug,category,dimension_id,released_at,idea_id,ordinal,' +
-        'title_pt,title_en,claim_pt,claim_en,image_path,video_pt_path,video_en_path',
-      );
+      let ideasQuery = db.from('learning_idea_public').select(IDEA_PUBLIC_COLUMNS);
       if (args.dimension_id) ideasQuery = ideasQuery.eq('dimension_id', args.dimension_id);
       if (args.slug) ideasQuery = ideasQuery.eq('slug', args.slug);
       const ideasRes = await ideasQuery;
@@ -1481,7 +1490,7 @@ function buildServer(token: string, userId: string): McpServer {
       // granted per column (20261018000003).
       const collectsRes = await db
         .from('learning_idea_collect')
-        .select('material_id,idea_id,collected_at,reviewed_at,favorite,train_box,train_due,trained_on')
+        .select('material_id,idea_id,favorite,train_box,train_due,trained_on')
         .eq('favorite', true);
       if (collectsRes.error) return fail(`get_idea_training: ${collectsRes.error.message}`);
       const collects = (collectsRes.data ?? []) as TrainCollectRow[];
@@ -1492,10 +1501,7 @@ function buildServer(token: string, userId: string): McpServer {
       if (materialIds.length > 0) {
         const [ideasRes, titlesRes] = await Promise.all([
           db.from('learning_idea_public')
-            .select(
-              'material_id,slug,category,dimension_id,released_at,idea_id,ordinal,' +
-              'title_pt,title_en,claim_pt,claim_en,image_path,video_pt_path,video_en_path',
-            )
+            .select(IDEA_PUBLIC_COLUMNS)
             .in('material_id', materialIds),
           db.from('learning_material').select('id,title_pt,title_en').in('id', materialIds),
         ]);
@@ -1505,10 +1511,7 @@ function buildServer(token: string, userId: string): McpServer {
         titles = (titlesRes.data ?? []) as MaterialTitleRow[];
       }
 
-      const result = assembleTraining(
-        { ideas, collects, titles },
-        { today, localDateOf: (iso) => localDate(new Date(iso)), scope, limit },
-      );
+      const result = assembleTraining({ ideas, collects, titles }, { today, scope, limit });
 
       return ok({
         filters: { scope, limit },
@@ -1579,30 +1582,28 @@ function buildServer(token: string, userId: string): McpServer {
             'get_idea_training returned them.',
           );
         }
+        if (msg.includes('not a favorite')) {
+          return fail(
+            `log_idea_training: ${msg}. Only favorites are in the training; ` +
+            'the user keeps an idea by swiping it right in Minhas ideias, in the app.',
+          );
+        }
         return fail(`log_idea_training: ${msg}`);
       }
       const r = data as {
         counted: boolean;
-        reason: string;
+        reason: TrainReason;
         box: number;
         firm: boolean;
         due: string | null;
-        firm_favorites: number;
       };
       return ok({
         ...r,
         today,
         due_label_pt: r.due ? dateLabelPt(r.due) : null,
-        note:
-          r.reason === 'already_trained_today'
-            ? 'Already answered today: the schedule did not change.'
-            : r.reason === 'not_due_yet'
-            ? 'It was not due yet, so a hit does not push it further out.'
-            : r.reason === 'missed'
-            ? 'Logged as a miss: it comes back tomorrow.'
-            : r.firm
-            ? 'Logged. This idea is firm now.'
-            : 'Logged. It comes back on the due day.',
+        note: r.reason === 'advanced'
+          ? (r.firm ? 'Logged. This idea is firm now.' : 'Logged. It comes back on the due day.')
+          : TRAIN_NOTES[r.reason],
       });
     },
   );
