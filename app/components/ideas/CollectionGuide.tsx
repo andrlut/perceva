@@ -13,7 +13,7 @@ import {
   FilterPill,
   IdeaSearchBox,
   ReviewStrip,
-  StudyStrip,
+  TrainStrip,
 } from '@/components/ideas/CollectionControls';
 import { IdeaCard } from '@/components/ideas/IdeaCard';
 import type { ShelfCard } from '@/components/ideas/IdeaShelf';
@@ -57,7 +57,7 @@ export const COLLECTION_GUIDE_ITEMS = [
   'tap',
   'hold',
   'review',
-  'study',
+  'train',
   'favorites',
   'notes',
   'shelves',
@@ -142,10 +142,10 @@ export function CollectionGuide({ demoCard, pendingCount, shelf, locale }: Colle
         </>
       ),
     },
-    study: {
+    train: {
       icon: 'school-outline',
       iconColor: tokens.semantic.coin,
-      replica: <StudyStrip count={5} />,
+      replica: <TrainStrip due={5} firm={3} />,
     },
     favorites: {
       icon: 'star',

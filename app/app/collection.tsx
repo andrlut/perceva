@@ -18,7 +18,7 @@ import {
   FilterPill,
   IdeaSearchBox,
   ReviewStrip,
-  StudyStrip,
+  TrainStrip,
 } from '@/components/ideas/CollectionControls';
 import { CollectionGuide, useCollectionGuidePrompt } from '@/components/ideas/CollectionGuide';
 import { IdeaActionSheet } from '@/components/ideas/IdeaActionSheet';
@@ -30,7 +30,8 @@ import { useReviewIdea, useSetIdeaNote } from '@/lib/api/learning';
 import type { DimensionId } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
-import { compareAbsorbed, useIdeaCollection } from '@/lib/ideaCollection';
+import { compareAbsorbed } from '@/lib/ideaCollection';
+import { useIdeaTraining } from '@/lib/ideaTraining';
 import {
   pickLocalized,
   toCardDataFromPublic,
@@ -77,7 +78,17 @@ export default function CollectionScreen() {
   const cardWidth = shelfCardWidth(screenW);
 
   const ideaLocale: IdeaLocale = locale === 'pt' ? 'pt' : 'en';
-  const { absorbed, pending, materials, loading, failed, retry } = useIdeaCollection(ideaLocale);
+  const {
+    absorbed,
+    pending,
+    materials,
+    loading,
+    failed,
+    retry,
+    due: trainDue,
+    firm: trainFirm,
+    favorites: favoriteCount,
+  } = useIdeaTraining(ideaLocale);
 
   const [onlyFavorites, setOnlyFavorites] = useState(true);
   // The (i) top right: how the screen works — above all the hold, which
@@ -122,7 +133,6 @@ export default function CollectionScreen() {
     [cards, menuKey],
   );
 
-  const favoriteCount = useMemo(() => cards.filter((c) => c.favorite).length, [cards]);
 
   // The guide's playground card: their first favorite, else their first
   // idea (null → the guide's sample). Its shelf is the one the guide's
@@ -336,11 +346,12 @@ export default function CollectionScreen() {
             )}
 
             {favoriteCount > 0 && !searching && (
-              <StudyStrip
-                count={favoriteCount}
+              <TrainStrip
+                due={trainDue.length}
+                firm={trainFirm}
                 onPress={() => {
                   Haptics.selectionAsync().catch(() => {});
-                  router.push('/idea-study');
+                  router.push('/idea-train');
                 }}
                 style={styles.reviewStrip}
               />

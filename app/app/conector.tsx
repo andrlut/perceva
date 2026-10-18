@@ -86,6 +86,7 @@ const QUESTION_ICONS: Record<(typeof QUESTION_KEYS)[number], keyof typeof Ionico
 const BUTTON_ICONS: Record<ClaudeButtonKey, keyof typeof Ionicons.glyphMap> = {
   mood: 'happy-outline',
   calendar: 'calendar-outline',
+  train: 'school-outline',
 };
 
 export default function ConectorScreen() {

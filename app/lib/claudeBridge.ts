@@ -37,9 +37,9 @@ const CLAUDE_ORIGIN = 'https://claude.ai';
 /** Every AI button in the app. The Conector screen lists them off this
  *  registry (i18n `conector.buttons.{key}` / `{key}Desc`); adding a button =
  *  one key here + the two strings + the ClaudeButton on its surface. */
-export type ClaudeButtonKey = 'mood' | 'calendar';
+export type ClaudeButtonKey = 'mood' | 'calendar' | 'train';
 
-export const CLAUDE_BUTTONS: readonly ClaudeButtonKey[] = ['mood', 'calendar'];
+export const CLAUDE_BUTTONS: readonly ClaudeButtonKey[] = ['mood', 'calendar', 'train'];
 
 export type ClaudeTargetKind = 'project' | 'chat';
 
