@@ -18,14 +18,19 @@ import { IdeaCard } from '@/components/ideas/IdeaCard';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { reviewKey, useTrainIdea } from '@/lib/api/learning';
 import { useT } from '@/lib/i18n';
-import { TRAIN_MAX_RETURNS, TRAIN_SESSION_SIZE, useIdeaTraining } from '@/lib/ideaTraining';
+import {
+  TRAIN_MAX_RETURNS,
+  TRAIN_MIN_FAVORITES,
+  TRAIN_SESSION_SIZE,
+  useIdeaTraining,
+} from '@/lib/ideaTraining';
 import {
   IDEA_IMAGE_ASPECT,
   toCardDataFromPublic,
   type IdeaCardData,
   type IdeaLocale,
 } from '@/lib/ideas';
-import { bcp47 } from '@/lib/time';
+import { PREMIUM_LEARN_ENABLED, useIsPremium } from '@/lib/premium';
 import { tokens } from '@/theme';
 
 /**
@@ -37,14 +42,22 @@ import { tokens } from '@/theme';
  * point: flipping with no try is rereading, which feels like learning and
  * isn't. A tap in the first second does not flip; it asks for the try.
  *
+ * Training is open WHENEVER the reader wants: the deck is every favorite,
+ * the due ones first, then what comes due soonest (lib/ideaTraining). A card
+ * that is not due yet is extra practice — the server ignores an early hit
+ * and brings a miss back tomorrow, so practising early never breaks the
+ * schedule. Below TRAIN_MIN_FAVORITES the screen asks for more favorites
+ * instead, pointing at the review pile, at Explorar or — free tier with
+ * nothing left open — at the full catalog.
+ *
  * The first answer of each card goes to `train_idea`, which owns the
  * schedule (hit → 3 / 7 / 21 days, then firm every 60; miss → tomorrow). A
  * missed card also comes back at the end of THIS session, up to
  * TRAIN_MAX_RETURNS times, so the session ends on a recall instead of a
  * miss — those replays stay local, the server already has the day's answer.
  *
- * The deck is frozen when the screen opens (an answer drops the idea from
- * "due", and the session must not reshuffle under the reader's thumb). Each
+ * The deck is frozen when the training starts (an answer moves the idea,
+ * and the session must not reshuffle under the reader's thumb). Each
  * session is its own component keyed by its offset, and each card its own
  * component keyed by its turn, so dealing and per-card state start fresh by
  * construction. Nothing here pays XP or coins.
@@ -60,6 +73,8 @@ interface DeckCard {
   key: string;
   card: IdeaCardData;
   kicker: string;
+  /** Due today; otherwise the card is extra practice. */
+  due: boolean;
 }
 
 interface Turn {
@@ -68,31 +83,48 @@ interface Turn {
   sighting: number;
 }
 
-function dateFromKey(key: string): Date {
-  const [y, m, d] = key.split('-').map(Number);
-  return new Date(y, m - 1, d);
-}
+type UnlockPath = '/idea-review' | '/reels' | '/premium?source=learn';
 
 export default function IdeaTrainScreen() {
   const router = useRouter();
   const { t, locale } = useT();
   const ideaLocale: IdeaLocale = locale === 'pt' ? 'pt' : 'en';
-  const { due, favorites, firm, nextDue, titles, loading, failed, retry } =
-    useIdeaTraining(ideaLocale);
+  const {
+    deck: liveDeck,
+    favorites,
+    firm,
+    pending,
+    toAbsorb,
+    titles,
+    loading,
+    failed,
+    retry,
+  } = useIdeaTraining(ideaLocale);
+  const isPremium = useIsPremium();
 
-  // Frozen once, when the first due list lands.
+  // Frozen once the deck lands with enough favorites to train. Below that
+  // the screen follows the live count, so coming back from the review pile
+  // shows the progress (and opens the training once it reaches the bar).
   const deckRef = useRef<DeckCard[] | null>(null);
-  if (deckRef.current === null && !loading && !failed) {
-    deckRef.current = due.map((a) => ({
+  if (deckRef.current === null && !loading && !failed && favorites >= TRAIN_MIN_FAVORITES) {
+    deckRef.current = liveDeck.map(({ absorbed: a, due }) => ({
       key: reviewKey(a.row.material_id, a.row.idea_id),
       card: toCardDataFromPublic(a.row),
       kicker: titles.get(a.row.material_id) ?? '',
+      due,
     }));
   }
   const deck = deckRef.current;
   const [offset, setOffset] = useState(0);
 
   const back = useCallback(() => router.back(), [router]);
+  const go = useCallback(
+    (path: UnlockPath) => {
+      Haptics.selectionAsync().catch(() => {});
+      router.push(path);
+    },
+    [router],
+  );
 
   if (deck !== null && deck.length > 0) {
     const cards = deck.slice(offset, offset + TRAIN_SESSION_SIZE);
@@ -112,7 +144,7 @@ export default function IdeaTrainScreen() {
   }
 
   let body: React.ReactNode;
-  if (failed && deck === null) {
+  if (failed) {
     body = (
       <>
         <Ionicons name="cloud-offline-outline" size={36} color={tokens.text.dim} />
@@ -126,34 +158,62 @@ export default function IdeaTrainScreen() {
         </Pressable>
       </>
     );
-  } else if (deck === null) {
+  } else if (loading) {
     body = <ActivityIndicator color={tokens.brand.violet2} />;
-  } else if (favorites === 0) {
-    body = (
-      <>
-        <Ionicons name="star-outline" size={36} color={tokens.text.dim} />
-        <Text style={styles.muted}>{t('learning.ideas.train.emptyNone')}</Text>
-      </>
-    );
   } else {
+    // Not enough favorites yet: show the way to more. The review pile first
+    // (absorbed, waiting for a decision), then Explorar (open ideas not yet
+    // absorbed). With neither, a free reader has used up the 30-day window:
+    // the full catalog is the Premium; for anyone else, new ideas arrive
+    // every week.
+    const missing = Math.max(0, TRAIN_MIN_FAVORITES - favorites);
+    const nothingLeft = pending.length === 0 && toAbsorb === 0;
+    const showPremium = nothingLeft && !isPremium && PREMIUM_LEARN_ENABLED;
     body = (
       <>
-        <DoneMark />
-        <Text style={styles.bigTitle}>{t('learning.ideas.train.caughtUpTitle')}</Text>
-        {nextDue ? (
-          <Text style={styles.muted}>
-            {t('learning.ideas.train.caughtUpNext', {
-              date: dateFromKey(nextDue).toLocaleDateString(bcp47(), {
-                weekday: 'long',
-                day: 'numeric',
-                month: 'long',
-              }),
-            })}
-          </Text>
-        ) : null}
+        <View style={styles.ring}>
+          <Ionicons name="star" size={28} color={tokens.semantic.coin} />
+        </View>
+        <Text style={styles.bigTitle}>{t('learning.ideas.train.unlockTitle')}</Text>
         <Text style={styles.muted}>
-          {t('learning.ideas.train.caughtUpFirm', { firm, total: favorites })}
+          {t('learning.ideas.train.unlockBody', { min: TRAIN_MIN_FAVORITES })}
         </Text>
+        <View style={styles.unlockBar}>
+          {Array.from({ length: TRAIN_MIN_FAVORITES }, (_, i) => (
+            <View key={i} style={[styles.segment, i < favorites && styles.segmentDone]} />
+          ))}
+        </View>
+        <Text style={styles.unlockCount}>
+          {t('learning.ideas.train.unlockCount', { count: favorites, min: TRAIN_MIN_FAVORITES })}
+        </Text>
+        {pending.length > 0 ? (
+          <UnlockButton
+            label={t('learning.ideas.train.unlockReview', { count: pending.length })}
+            primary
+            onPress={() => go('/idea-review')}
+          />
+        ) : null}
+        {toAbsorb > 0 ? (
+          <UnlockButton
+            label={t('learning.ideas.train.unlockExplore')}
+            primary={pending.length === 0}
+            onPress={() => go('/reels')}
+          />
+        ) : null}
+        {showPremium ? (
+          <>
+            <Text style={styles.muted}>
+              {t('learning.ideas.train.unlockFreeEnd', { count: missing })}
+            </Text>
+            <UnlockButton
+              label={t('learning.ideas.train.unlockPremium')}
+              primary
+              onPress={() => go('/premium?source=learn')}
+            />
+          </>
+        ) : nothingLeft ? (
+          <Text style={styles.muted}>{t('learning.ideas.train.unlockWait')}</Text>
+        ) : null}
       </>
     );
   }
@@ -163,6 +223,31 @@ export default function IdeaTrainScreen() {
       <TopBar onBack={back} />
       <View style={styles.center}>{body}</View>
     </Shell>
+  );
+}
+
+function UnlockButton({
+  label,
+  primary,
+  onPress,
+}: {
+  label: string;
+  primary?: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.btn,
+        styles.btnWide,
+        primary && styles.btnGold,
+        pressed && styles.pressed,
+      ]}
+      accessibilityRole="button"
+    >
+      <Text style={[styles.btnText, primary && styles.btnTextGold]}>{label}</Text>
+    </Pressable>
   );
 }
 
@@ -253,7 +338,10 @@ function TrainSession({
     ? undefined
     : turn.sighting > 0
     ? t('learning.ideas.train.again')
-    : t('learning.ideas.train.counter', { n: Math.min(firstSeen + 1, total), total });
+    : t(turn.deck.due ? 'learning.ideas.train.counter' : 'learning.ideas.train.counterExtra', {
+        n: Math.min(firstSeen + 1, total),
+        total,
+      });
 
   return (
     <>
@@ -520,6 +608,8 @@ const styles = StyleSheet.create({
   segment: { flex: 1, height: 4, borderRadius: 2, backgroundColor: tokens.bg.surface2 },
   segmentDone: { backgroundColor: tokens.semantic.coin },
   segmentNow: { backgroundColor: tokens.semantic.coinLight },
+  unlockBar: { flexDirection: 'row', gap: 4, alignSelf: 'stretch', marginTop: tokens.space[2] },
+  unlockCount: { ...tokens.type.caption, color: tokens.text.mid, marginBottom: tokens.space[2] },
   body: {
     flex: 1,
     alignItems: 'center',

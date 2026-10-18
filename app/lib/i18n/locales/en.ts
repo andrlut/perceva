@@ -788,7 +788,7 @@ const en = {
         train: {
           title: 'Train',
           body: 'Next to Explore: your favorites, on spaced days.',
-          ai: "Shows how many favorites are due today and opens Today's training: you see the title, think of the answer, flip and say whether you remembered. Remembered, the idea comes back in 3, 7 and 21 days and then it is firm; not remembered, it comes back tomorrow. Only shows up once there is at least one favorite in My ideas.",
+          ai: "Opens Today's training any time and shows how many favorites are due today. You see the title, think of the answer, flip and say whether you remembered. Remembered, the idea comes back in 3, 7 and 21 days and then it is firm; not remembered, it comes back tomorrow. Training starts at 5 favorites in My ideas; before that the tile shows how many you have.",
         },
         explore: {
           title: 'Explore',
@@ -904,6 +904,20 @@ const en = {
       train: {
         title: "Today's training",
         counter: '{{n}} of {{total}}',
+        counterExtra: '{{n}} of {{total}} · extra',
+        unlockTitle: 'Build your training',
+        unlockBody:
+          'Training brings back the ideas you kept, on spaced days. It opens at {{min}} favorites.',
+        unlockCount: { one: '1 of {{min}} favorites', other: '{{count}} of {{min}} favorites' },
+        unlockReview: { one: 'Review 1 idea', other: 'Review {{count}} ideas' },
+        unlockExplore: 'Explore ideas',
+        unlockFreeEnd: {
+          one: '1 favorite to go, and you have been through every idea from the last 30 days.',
+          other: '{{count}} favorites to go, and you have been through every idea from the last 30 days.',
+        },
+        unlockPremium: 'Open the whole catalog',
+        unlockWait: 'New ideas arrive every week.',
+        stripUnlock: 'Favorite {{min}} to start · {{count}} of {{min}}',
         think: 'Think of the answer. Then tap to flip.',
         tryFirst: 'Try to recall it before you flip.',
         check: 'Is that what you thought?',
@@ -915,11 +929,7 @@ const en = {
         doneFirm: 'Firm ideas',
         more: '{{count}} more',
         back: 'Back',
-        emptyNone: 'Favorite ideas in the review pile to train them here.',
-        caughtUpTitle: 'All caught up',
         caughtUpShort: 'Caught up',
-        caughtUpNext: 'Next training: {{date}}',
-        caughtUpFirm: '{{firm}} of {{total}} favorites are firm',
         stripDue: { one: '1 idea waiting', other: '{{count}} ideas waiting' },
         firmCount: { one: '1 firm', other: '{{count}} firm' },
         tile: 'Train',
@@ -975,8 +985,8 @@ const en = {
           },
           train: {
             title: 'Train',
-            body: 'Your favorites come back on spaced days. Think of the answer, flip, and say whether you remembered.',
-            ai: "The Today's training strip shows up once you have at least one favorite and counts the ones due today; training deals 5 at a time and \"5 more\" keeps going. A favorite joins the training the day after you kept it. Remembered: it comes back in 3, then 7, then 21 days, and after 3 hits it is firm and comes back every 2 months. Not remembered: it comes back at the end of the session and again tomorrow. Only the first answer of the day counts. Training pays no XP or coins. With the connector, your AI trains the same ideas with you out loud and logs the result.",
+            body: 'Train whenever you like: think of the answer, flip, and say whether you remembered. Favorites come back on spaced days.',
+            ai: "The Today's training strip opens the training any time. It starts at 5 favorites; before that the strip counts how many are missing. Training deals 5 at a time, starting with the ones due today, and \"5 more\" keeps going through the rest as extra practice. A favorite joins the schedule the day after you kept it. Remembered: it comes back in 3, then 7, then 21 days, and after 3 hits it is firm and comes back every 2 months. Not remembered: it comes back at the end of the session and again tomorrow. Only the first answer of the day counts, and a hit before it is due does not move the schedule. Training pays no XP or coins. With the connector, your AI trains the same ideas with you out loud and logs the result.",
           },
           favorites: {
             title: 'Favorites',
