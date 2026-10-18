@@ -13,6 +13,7 @@ import type {
   ReviewIdeaResult,
   SetIdeaNoteResult,
   SubId,
+  TrainIdeaResult,
 } from '@/lib/db/types';
 import { supabase } from '@/lib/supabase';
 
@@ -364,7 +365,9 @@ export function useIdeaReviews() {
     queryFn: async (): Promise<IdeaReviews> => {
       const { data, error } = await supabase
         .from('learning_idea_collect')
-        .select('material_id, idea_id, collected_at, reviewed_at, favorite, note');
+        .select(
+          'material_id, idea_id, collected_at, reviewed_at, favorite, note, train_box, train_due, trained_on',
+        );
       if (error) throw error;
       const rows = ((data ?? []) as LearningIdeaCollectRow[]).map<IdeaReview>((r) => ({
         materialId: r.material_id,
@@ -373,6 +376,9 @@ export function useIdeaReviews() {
         reviewedAt: r.reviewed_at,
         favorite: r.favorite,
         note: r.note ?? null,
+        trainBox: r.train_box ?? 0,
+        trainDue: r.train_due ?? null,
+        trainedOn: r.trained_on ?? null,
       }));
       return buildIdeaReviews(rows);
     },
@@ -504,6 +510,42 @@ export function useSetIdeaNote() {
       if (context?.previous) {
         queryClient.setQueryData<IdeaReviews>(learningKeys.reviews(), context.previous);
       }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: learningKeys.reviews() });
+    },
+  });
+}
+
+interface TrainIdeaInput {
+  slug: string;
+  ideaId: string;
+  remembered: boolean;
+}
+
+/**
+ * One answer in the Treino de ideias (`train_idea`). The server owns the
+ * schedule (3 / 7 / 21 days, then firm every 60; a miss comes back tomorrow)
+ * and only the day's FIRST answer per idea moves it, so the training screen
+ * calls this once per card per session and replays a missed card locally.
+ * The day is the device's local one: Postgres' current_date is UTC and would
+ * be a day ahead every evening after 21h in Brasília.
+ *
+ * No optimistic update: the session deck is frozen when it opens, and the
+ * counts around it (the strips, "Em dia") only need the reconciled read.
+ */
+export function useTrainIdea() {
+  const queryClient = useQueryClient();
+  return useMutation<TrainIdeaResult, Error, TrainIdeaInput>({
+    mutationFn: async (input) => {
+      const { data, error } = await supabase.rpc('train_idea', {
+        p_slug: input.slug,
+        p_idea_id: input.ideaId,
+        p_remembered: input.remembered,
+        p_today: dateKeyFromLocal(new Date()),
+      });
+      if (error) throw error;
+      return data as TrainIdeaResult;
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: learningKeys.reviews() });

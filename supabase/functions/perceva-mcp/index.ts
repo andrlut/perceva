@@ -15,7 +15,7 @@
 //     idea) joined in memory with the user's own learning_idea_collect /
 //     learning_view rows — see learning.ts. Read-only on purpose: absorbing
 //     an idea is the card flip in the app (collect_idea) and nothing else.
-//   - ONE write tool, `log_mood` — the day's mood check-in, dictated by voice
+//   - The first write tool, `log_mood` — the day's mood check-in, dictated by voice
 //     ("how was my day") and written straight to mood_log under RLS. Mood is
 //     the only write path in the schema that is safe for an LLM to drive: it
 //     touches ZERO of the XP/coin economy (20260713000001 is explicit about
@@ -24,6 +24,15 @@
 //     model to resolve or hallucinate. Task completion and skill logs are
 //     deliberately NOT exposed: they mint XP/coins, have no idempotency, and
 //     nothing here could undo a mistake.
+//   - A SECOND write since 0.5.0, `log_idea_training` — one answer of the
+//     Treino de ideias (the user's AI quizzes them out loud on their
+//     favorites, from `get_idea_training`). It passes the same bar as mood:
+//     zero economy (train_idea touches no XP/coins), one decision per idea
+//     per local day (a repeat is a no-op — idempotent), correctable (a miss
+//     only brings the idea back tomorrow), and its key must already exist in
+//     the user's collection, so a hallucinated id fails loudly instead of
+//     writing. It calls the RPC directly: unlike log_mood, there is no
+//     partial-write merge to protect.
 //   - The write does NOT call the log_mood RPC. That RPC keeps the day's note
 //     and tags only on a mood-ONLY call (the app's quick log); any call that
 //     carries a note or tags replaces both, so a model sending just a note
@@ -65,11 +74,13 @@ import {
 } from './self-knowledge.ts';
 import {
   assembleIdeas,
+  assembleTraining,
   type IdeaCollectRow,
   type IdeaPublicRow,
   type MaterialSubRow,
   type MaterialTitleRow,
   type MaterialViewRow,
+  type TrainCollectRow,
 } from './learning.ts';
 import { publishableKey } from '../_shared/keys.ts';
 
@@ -306,7 +317,7 @@ async function rpc(
 
 function buildServer(token: string, userId: string): McpServer {
   const server = new McpServer(
-    { name: 'perceva-mcp', version: '0.4.9' },
+    { name: 'perceva-mcp', version: '0.5.0' },
     {
       instructions: [
         'Perceva is a habit/wellness app organized in 6 dimensions',
@@ -325,7 +336,15 @@ function buildServer(token: string, userId: string): McpServer {
         'Those stay in the app on purpose. Never claim to have done any of',
         'them, and when the user asks, say plainly that it has to be done in',
         'the app.',
-        'THE ONE WRITE is log_mood: one day\'s check-in, typically dictated out',
+        'TWO WRITES, both outside the XP/coin economy: log_mood and',
+        'log_idea_training.',
+        'IDEA TRAINING ("me treina/me testa nas minhas ideias", "quiz me"):',
+        'get_idea_training gives today\'s deck of favorites; ask one title at a',
+        'time, wait for the answer from memory, only then reveal the claim,',
+        'judge it honestly and call log_idea_training before the next one.',
+        'Never reveal the answer first — a training where the answer was shown',
+        'is rereading, and must not be logged.',
+        'log_mood is one day\'s check-in, typically dictated out',
         'loud ("how my day went"). Never infer the 1-5 rating from tone — if the',
         'user did not give one, call it with mood:"unknown" and ask using the',
         'anchors the tool returns. The note is the user\'s own journal, so write',
@@ -1409,6 +1428,181 @@ function buildServer(token: string, userId: string): McpServer {
           'absorbed idea is the swipe in Minhas ideias. This connector cannot ' +
           'collect, favorite or release an idea, nor mark a material read; ' +
           'hand over open_in_app instead.',
+      });
+    },
+  );
+
+  server.registerTool(
+    'get_idea_training',
+    {
+      title: 'Idea training — the favorites due for recall today',
+      description:
+        'The Treino de ideias: the user\'s FAVORITE ideas on a spaced recall ' +
+        'schedule — the exact deck the app\'s "Treino do dia" deals. Each item ' +
+        'has a title (the CUE) and a claim (the ANSWER, the one sentence they ' +
+        'kept), plus box (spaced hits in a row, 0-3; 3 = firm), due, ' +
+        'answered_today and the slug + idea_id that log_idea_training needs. ' +
+        'Default scope "due" = what is due today; "favorites" = every ' +
+        'favorite, for an extra round the user asked for.\n' +
+        'HOW TO RUN A TRAINING (this is the point of the tool): one idea at a ' +
+        'time. Say ONLY the title (the _pt fields unless they write in ' +
+        'English) and wait for their answer from memory — never show, hint ' +
+        'at or paraphrase the claim before they answer, and do not list the ' +
+        'deck up front. Then read the claim back and judge it: remembered = ' +
+        'they got the gist AND the key number or instruction (be generous ' +
+        'with wording, strict with numbers); partial or wrong = not ' +
+        'remembered. Say the result plainly with the right answer, then call ' +
+        'log_idea_training with that verdict before the next idea. Five per ' +
+        'round, like the app; offer more only if they ask. No XP or coins ' +
+        'are involved, so never frame it as winning anything.\n' +
+        'When NOT to use this: to pick something NEW to read or absorb — that ' +
+        'is get_learning_ideas; to see the whole collection or the ideas they ' +
+        'released — get_learning_ideas (favorites_only / status). Ideas that ' +
+        'are not favorites are not in the training.',
+      inputSchema: {
+        scope: z.enum(['due', 'favorites']).optional()
+          .describe(
+            'Default "due": favorites due today, most overdue first. ' +
+            '"favorites": every favorite (an extra round; an early hit does ' +
+            'not push the schedule, a miss brings the idea back tomorrow).',
+          ),
+        limit: z.number().int().min(1).max(30).optional()
+          .describe('Max ideas returned (default 5, one round). The summary counts all.'),
+      },
+      annotations: { readOnlyHint: true },
+    },
+    async (args, _extra) => {
+      const db = userClient(token);
+      const scope = args.scope ?? 'due';
+      const limit = args.limit ?? 5;
+      const today = localDate(new Date());
+
+      // Self-RLS: only this user's collection; the train_* columns are
+      // granted per column (20261018000003).
+      const collectsRes = await db
+        .from('learning_idea_collect')
+        .select('material_id,idea_id,collected_at,reviewed_at,favorite,train_box,train_due,trained_on')
+        .eq('favorite', true);
+      if (collectsRes.error) return fail(`get_idea_training: ${collectsRes.error.message}`);
+      const collects = (collectsRes.data ?? []) as TrainCollectRow[];
+
+      const materialIds = [...new Set(collects.map((c) => c.material_id))];
+      let ideas: IdeaPublicRow[] = [];
+      let titles: MaterialTitleRow[] = [];
+      if (materialIds.length > 0) {
+        const [ideasRes, titlesRes] = await Promise.all([
+          db.from('learning_idea_public')
+            .select(
+              'material_id,slug,category,dimension_id,released_at,idea_id,ordinal,' +
+              'title_pt,title_en,claim_pt,claim_en,image_path,video_pt_path,video_en_path',
+            )
+            .in('material_id', materialIds),
+          db.from('learning_material').select('id,title_pt,title_en').in('id', materialIds),
+        ]);
+        if (ideasRes.error) return fail(`get_idea_training: ${ideasRes.error.message}`);
+        if (titlesRes.error) return fail(`get_idea_training: ${titlesRes.error.message}`);
+        ideas = (ideasRes.data ?? []) as IdeaPublicRow[];
+        titles = (titlesRes.data ?? []) as MaterialTitleRow[];
+      }
+
+      const result = assembleTraining(
+        { ideas, collects, titles },
+        { today, localDateOf: (iso) => localDate(new Date(iso)), scope, limit },
+      );
+
+      return ok({
+        filters: { scope, limit },
+        today_label_pt: dateLabelPt(today),
+        ...result,
+        note:
+          result.summary.favorites === 0
+            ? 'No favorites yet: ideas enter the training once the user keeps ' +
+              'them (swipe right) in the review pile of Minhas ideias, in the app.'
+            : result.summary.due_today === 0 && scope === 'due'
+            ? 'Nothing is due today. Tell them the next_due day, or offer an ' +
+              'extra round with scope:"favorites".'
+            : 'Say only the title, wait for the answer, then reveal the claim ' +
+              'and call log_idea_training before moving on.',
+      });
+    },
+  );
+
+  server.registerTool(
+    'log_idea_training',
+    {
+      title: 'Log one answer of the idea training',
+      description:
+        'Records whether the user remembered ONE idea in the training ' +
+        '(get_idea_training) and moves its spaced schedule — the same record ' +
+        'the app\'s "Treino do dia" writes. Remembered: it comes back in 3, ' +
+        'then 7, then 21 days, then it is firm and comes back every 60. Not ' +
+        'remembered: it comes back tomorrow. Only the FIRST answer of the ' +
+        'day per idea moves the schedule; a repeat the same day, or an early ' +
+        'hit on an idea that was not due yet, is accepted and changes nothing ' +
+        '(the reply says so in `reason`). Touches no XP and no coins.\n' +
+        'Call it right after you judged the answer, once per idea, with the ' +
+        'slug and idea_id exactly as get_idea_training returned them — never ' +
+        'invent or reconstruct an id. Judge honestly: "more or less" is not ' +
+        'remembered; the schedule only helps if a miss is logged as a miss.\n' +
+        'When NOT to use this: the user did not actually try to answer (you ' +
+        'showed the claim first, or they skipped) — then log nothing; and ' +
+        'never for absorbing, favoriting or releasing an idea, which stay in ' +
+        'the app.',
+      inputSchema: {
+        slug: z.string().min(1).describe('The material slug, from get_idea_training.'),
+        idea_id: z.string().min(1).describe('The idea id, from get_idea_training.'),
+        remembered: z.boolean()
+          .describe('true = got the gist and the key number/instruction; false otherwise.'),
+      },
+      annotations: {
+        readOnlyHint: false,
+        // One decision per idea per day, keyed by a date; nothing is deleted
+        // and a miss only brings the idea back sooner.
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    async (args, _extra) => {
+      const today = localDate(new Date());
+      const { data, error } = await userClient(token).rpc('train_idea', {
+        p_slug: args.slug,
+        p_idea_id: args.idea_id,
+        p_remembered: args.remembered,
+        p_today: today,
+      });
+      if (error) {
+        const msg = error.message ?? '';
+        if (msg.includes('idea not collected') || msg.includes('material not found')) {
+          return fail(
+            `log_idea_training: ${msg}. Use the slug and idea_id exactly as ` +
+            'get_idea_training returned them.',
+          );
+        }
+        return fail(`log_idea_training: ${msg}`);
+      }
+      const r = data as {
+        counted: boolean;
+        reason: string;
+        box: number;
+        firm: boolean;
+        due: string | null;
+        firm_favorites: number;
+      };
+      return ok({
+        ...r,
+        today,
+        due_label_pt: r.due ? dateLabelPt(r.due) : null,
+        note:
+          r.reason === 'already_trained_today'
+            ? 'Already answered today: the schedule did not change.'
+            : r.reason === 'not_due_yet'
+            ? 'It was not due yet, so a hit does not push it further out.'
+            : r.reason === 'missed'
+            ? 'Logged as a miss: it comes back tomorrow.'
+            : r.firm
+            ? 'Logged. This idea is firm now.'
+            : 'Logged. It comes back on the due day.',
       });
     },
   );

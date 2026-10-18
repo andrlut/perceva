@@ -858,6 +858,15 @@ export interface LearningIdeaCollectRow {
   /** Free note the reader wrote about this idea (`set_idea_note`), or null.
    *  Readable straight from the table; writes go through the RPC only. */
   note: string | null;
+  /** Treino de ideias (migration 20261018000003), written only by
+   *  `train_idea`. Spaced hits in a row, 0..3; 3 = firm. */
+  train_box: number;
+  /** Local YYYY-MM-DD the idea comes back to training; null = never trained
+   *  (a favorite joins the day after its review). */
+  train_due: string | null;
+  /** Local YYYY-MM-DD of the last training answer; the day's first answer
+   *  is the one that moves the schedule. */
+  trained_on: string | null;
 }
 
 /** Client shape of a collected idea's review state (camelCase mirror of
@@ -869,6 +878,23 @@ export interface IdeaReview {
   reviewedAt: string | null;
   favorite: boolean | null;
   note: string | null;
+  /** Training schedule (see LearningIdeaCollectRow.train_*). */
+  trainBox: number;
+  trainDue: string | null;
+  trainedOn: string | null;
+}
+
+/** Return shape of the train_idea RPC. `counted` = the answer moved the
+ *  schedule (missed / advanced); a repeat the same day or an early hit
+ *  leaves it alone. */
+export interface TrainIdeaResult {
+  counted: boolean;
+  reason: 'already_trained_today' | 'missed' | 'not_due_yet' | 'advanced';
+  remembered: boolean;
+  box: number;
+  firm: boolean;
+  due: string | null;
+  firm_favorites: number;
 }
 
 /** Return shape of the set_idea_note RPC. */

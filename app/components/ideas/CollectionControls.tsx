@@ -93,20 +93,28 @@ export function ReviewStrip({
 }
 
 /**
- * "Estudar favoritas" — the review strip's twin, in the favorites' gold: it
- * opens the study deck (/idea-study). Without `onPress` it is the guide's
+ * "Treino do dia" — the review strip's twin, in the favorites' gold: it
+ * opens the training (/idea-train) and says how many favorites are due
+ * today and how many are already firm. Without `onPress` it is the guide's
  * replica.
  */
-export function StudyStrip({
-  count,
+export function TrainStrip({
+  due,
+  firm,
   onPress,
   style,
 }: {
-  count: number;
+  due: number;
+  firm: number;
   onPress?: () => void;
   style?: StyleProp<ViewStyle>;
 }) {
   const { t } = useT();
+  const head =
+    due > 0
+      ? t('learning.ideas.train.stripDue', { count: due })
+      : t('learning.ideas.train.caughtUpShort');
+  const body = firm > 0 ? `${head} · ${t('learning.ideas.train.firmCount', { count: firm })}` : head;
   return (
     <Pressable
       onPress={onPress}
@@ -118,9 +126,9 @@ export function StudyStrip({
         <Ionicons name="school-outline" size={17} color={tokens.semantic.coinLight} />
       </View>
       <View style={styles.stripText}>
-        <Text style={styles.stripTitle}>{t('learning.ideas.study.title')}</Text>
+        <Text style={styles.stripTitle}>{t('learning.ideas.train.title')}</Text>
         <Text style={styles.stripBody} numberOfLines={1}>
-          {t('learning.ideas.study.stripBody', { count })}
+          {body}
         </Text>
       </View>
       <Ionicons name="chevron-forward" size={18} color={tokens.text.mid} />

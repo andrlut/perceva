@@ -33,6 +33,7 @@ import {
   type PillFilter,
   type ReadFilter,
 } from '@/components/learning/LearningFilterSheet';
+import { TrainEntryTile } from '@/components/ideas/TrainEntryTile';
 import { ReelsEntryCard } from '@/components/reels/ReelsEntryCard';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import {
@@ -51,6 +52,7 @@ import type {
 } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
+import { useIdeaTraining } from '@/lib/ideaTraining';
 import { pickLocalized, type IdeaLocale } from '@/lib/ideas';
 import { categoryOf } from '@/lib/learningCategory';
 import { buildHaystack, matchesQuery } from '@/lib/learningSearch';
@@ -115,6 +117,9 @@ export default function LearningScreen() {
   const pendingReviews = ideaReviews.data?.pendingCount ?? 0;
   const meta = useMetaLookup();
   const ideaLocale: IdeaLocale = locale === 'pt' ? 'pt' : 'en';
+  // Treino do dia: favorites due today. Rides the same three queries as
+  // above (cache hits), so the "Treinar" tile costs no extra request.
+  const training = useIdeaTraining(ideaLocale);
 
   const [readFilter, setReadFilter] = useState<ReadFilter>('unread');
   const [pillFilter, setPillFilter] = useState<PillFilter>(null);
@@ -288,6 +293,16 @@ export default function LearningScreen() {
     () => reelDeck.filter((g) => !isGroupRead(g, readSet, collectedMap)).length,
     [reelDeck, readSet, collectedMap],
   );
+  // The entry row. Explorar waits for the reads AND the idea/collection
+  // queries so its unread count never flashes inflated; Treinar shows once
+  // the reader has a favorite (training.loading covers the same queries).
+  const showExplore =
+    !feed.isLoading &&
+    !reads.isLoading &&
+    !ideaCards.isLoading &&
+    !collectedIdeas.isLoading &&
+    reelDeck.length > 0;
+  const showTrain = !training.loading && training.favorites > 0;
 
   // Apply both filters (read-state AND pill). Each carousel reads from
   // the same filtered set, so empty groups drop out naturally.
@@ -498,26 +513,38 @@ export default function LearningScreen() {
             />
           </View>
 
-          {/* Study Reels — story-mode pass over the infographics and the
-             idea cards. Hidden when nothing is story-ready. Waits for the
-             reads AND the idea/collection queries so the unread count
-             never flashes inflated. */}
-          {!feed.isLoading &&
-            !reads.isLoading &&
-            !ideaCards.isLoading &&
-            !collectedIdeas.isLoading &&
-            reelDeck.length > 0 && (
-              <ReelsEntryCard
-                groups={reelDeck}
-                unreadCount={reelUnread}
-                onPress={() => {
-                  Haptics.selectionAsync().catch(() => {});
-                  router.push('/reels');
-                }}
-                // M6 spotlights it: every idea in a row, story-style.
-                tourTargetId="learn.explore"
-              />
-            )}
+          {/* Entry row: Explorar (Study Reels, the story-mode pass over the
+             idea cards; hidden when nothing is story-ready) and, once there
+             is a favorite to train, Treinar beside it. One compact row, so
+             the entry cards never eat the first screen — the tab is about
+             the materials below. */}
+          {(showExplore || showTrain) && (
+            <View style={styles.entryRow}>
+              {showExplore && (
+                <ReelsEntryCard
+                  groups={reelDeck}
+                  unreadCount={reelUnread}
+                  onPress={() => {
+                    Haptics.selectionAsync().catch(() => {});
+                    router.push('/reels');
+                  }}
+                  // M6 spotlights it: every idea in a row, story-style.
+                  tourTargetId="learn.explore"
+                  style={styles.entryExplore}
+                />
+              )}
+              {showTrain && (
+                <TrainEntryTile
+                  due={training.due.length}
+                  onPress={() => {
+                    Haptics.selectionAsync().catch(() => {});
+                    router.push('/idea-train');
+                  }}
+                  style={styles.entryTrain}
+                />
+              )}
+            </View>
+          )}
 
           {/* Active filter chips — the pill filter and/or a non-default
              read state, each with its own clear. The controls themselves
@@ -867,6 +894,14 @@ const activeChipStyles = StyleSheet.create({
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: tokens.bg.deep },
+  entryRow: {
+    flexDirection: 'row',
+    gap: tokens.space[2],
+    paddingHorizontal: tokens.space[4],
+    paddingTop: tokens.space[3],
+  },
+  entryExplore: { flex: 1.35 },
+  entryTrain: { flex: 1 },
   /** Gold dot on the filter FAB when any non-default filter is active. */
   fabDot: {
     position: 'absolute',

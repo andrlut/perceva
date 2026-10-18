@@ -10,6 +10,7 @@ import {
 } from '@/components/guide/GuidePlayground';
 import { GuideLabel, GuideStep } from '@/components/guide/GuideStep';
 import { IdeaCard } from '@/components/ideas/IdeaCard';
+import { TrainEntryTile } from '@/components/ideas/TrainEntryTile';
 import { ContinueLendoCard } from '@/components/learning/ContinueLendoCard';
 import { CoverCard } from '@/components/learning/CoverCard';
 import type { LearningFeedCard } from '@/lib/api/learning';
@@ -37,6 +38,7 @@ const HELP = 'learning.help';
 export const RECANTO_GUIDE_ITEMS = [
   'absorb',
   'explore',
+  'train',
   'continue',
   'rows',
   'cover',
@@ -105,6 +107,11 @@ export function RecantoGuide({ locale }: { locale: IdeaLocale }) {
     { icon: keyof typeof Ionicons.glyphMap; iconColor?: string; replica?: React.ReactNode }
   > = {
     explore: { icon: 'play-circle-outline' },
+    train: {
+      icon: 'school-outline',
+      iconColor: tokens.semantic.coin,
+      replica: <TrainEntryTile due={5} />,
+    },
     continue: {
       icon: 'book-outline',
       replica: (
