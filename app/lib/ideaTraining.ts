@@ -101,13 +101,20 @@ export function useIdeaTraining(locale: IdeaLocale) {
     () => summarizeTraining(collection.absorbed, today),
     [collection.absorbed, today],
   );
-  const toAbsorb = useMemo(() => {
+  /** Not-yet-absorbed ideas: open to this tier (`toAbsorb`) and locked
+   *  behind the free window (`locked` — what Premium would open). */
+  const { toAbsorb, locked } = useMemo(() => {
     const absorbedKeys = new Set(
       collection.absorbed.map((a) => reviewKey(a.row.material_id, a.row.idea_id)),
     );
-    return (ideaCards.data ?? []).filter(
-      (r) => !absorbedKeys.has(reviewKey(r.material_id, r.idea_id)) && !isLocked(r.released_at),
-    ).length;
+    let open = 0;
+    let closed = 0;
+    for (const r of ideaCards.data ?? []) {
+      if (absorbedKeys.has(reviewKey(r.material_id, r.idea_id))) continue;
+      if (isLocked(r.released_at)) closed += 1;
+      else open += 1;
+    }
+    return { toAbsorb: open, locked: closed };
   }, [collection.absorbed, ideaCards.data, isLocked]);
-  return { ...collection, ...summary, toAbsorb };
+  return { ...collection, ...summary, toAbsorb, locked };
 }

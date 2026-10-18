@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { useIsFocused } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -91,22 +92,35 @@ export default function IdeaTrainScreen() {
   const ideaLocale: IdeaLocale = locale === 'pt' ? 'pt' : 'en';
   const {
     deck: liveDeck,
+    absorbed,
     favorites,
     firm,
     pending,
     toAbsorb,
+    locked,
     titles,
     loading,
     failed,
     retry,
   } = useIdeaTraining(ideaLocale);
   const isPremium = useIsPremium();
+  // The screen stays mounted under /idea-review (no freezeOnBlur), and the
+  // review's optimistic writes re-render it there; freezing then would lock
+  // in the 5th favorite's deck while the reader keeps favoriting.
+  const isFocused = useIsFocused();
 
-  // Frozen once the deck lands with enough favorites to train. Below that
-  // the screen follows the live count, so coming back from the review pile
-  // shows the progress (and opens the training once it reaches the bar).
+  // Frozen once the deck lands with enough favorites to train, while the
+  // screen is in front. Below that the screen follows the live count, so
+  // coming back from the review pile shows the progress (and opens the
+  // training once it reaches the bar).
   const deckRef = useRef<DeckCard[] | null>(null);
-  if (deckRef.current === null && !loading && !failed && favorites >= TRAIN_MIN_FAVORITES) {
+  if (
+    deckRef.current === null &&
+    isFocused &&
+    !loading &&
+    !failed &&
+    favorites >= TRAIN_MIN_FAVORITES
+  ) {
     deckRef.current = liveDeck.map(({ absorbed: a, due }) => ({
       key: reviewKey(a.row.material_id, a.row.idea_id),
       card: toCardDataFromPublic(a.row),
@@ -144,7 +158,9 @@ export default function IdeaTrainScreen() {
   }
 
   let body: React.ReactNode;
-  if (failed) {
+  // A failed BACKGROUND refetch keeps its data (TanStack sets isError
+  // anyway): only a load that never produced the collection is an error.
+  if (failed && absorbed.length === 0) {
     body = (
       <>
         <Ionicons name="cloud-offline-outline" size={36} color={tokens.text.dim} />
@@ -168,7 +184,7 @@ export default function IdeaTrainScreen() {
     // every week.
     const missing = Math.max(0, TRAIN_MIN_FAVORITES - favorites);
     const nothingLeft = pending.length === 0 && toAbsorb === 0;
-    const showPremium = nothingLeft && !isPremium && PREMIUM_LEARN_ENABLED;
+    const showPremium = nothingLeft && locked > 0 && !isPremium && PREMIUM_LEARN_ENABLED;
     body = (
       <>
         <View style={styles.ring}>
