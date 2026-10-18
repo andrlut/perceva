@@ -1,0 +1,44 @@
+{
+  "slug": "ultra-processed-eat-more",
+  "category": "research",
+  "material_title": {
+    "pt": "Ultraprocessados e o quanto você come",
+    "en": "Ultra-processed food and how much you eat"
+  },
+  "ideas": [
+    {
+      "id": "ultraprocessado-come-mais",
+      "ordinal": 1,
+      "title": {
+        "pt": "Ultraprocessados fazem você comer mais?",
+        "en": "Does ultra-processed food make you eat more?"
+      },
+      "claim": {
+        "pt": "Com ultraprocessados à vontade, você come cerca de 500 kcal a mais por dia e ganha peso em duas semanas.",
+        "en": "Free to eat ultra-processed food, you take in about 500 extra kcal a day and gain weight within two weeks."
+      },
+      "body": {
+        "pt": "Kevin Hall e colegas internaram 20 adultos saudáveis no Centro Clínico do NIH, nos Estados Unidos, por quatro semanas (Cell Metabolism, 2019). Em ordem sorteada, cada um passou duas semanas comendo ultraprocessados, a comida montada na indústria com ingredientes refinados e aditivos, e duas comendo alimentos não processados. Os pratos batiam nos nutrientes do rótulo, como calorias, açúcar, gordura e sal, e cada um comia quanto quisesse. Na fase ultraprocessada, **o consumo subiu cerca de 500 kcal por dia**, e o peso subiu 0,9 kg. Na outra, caiu quase o mesmo. Ninguém mandou ninguém repetir o prato. O porquê ainda está em aberto: o ultraprocessado tinha mais calorias por grama, e os hormônios da fome se inverteram. São só 20 pessoas e duas semanas, então trate como pista forte, não sentença. Uma troca razoável, ainda não testada sozinha: **escolha a versão pouco processada de uma refeição que você já come**.",
+        "en": "Kevin Hall's team at the NIH Clinical Center in the US had 20 healthy adults live on the ward for four weeks (Cell Metabolism, 2019). In random order, each spent two weeks on ultra-processed food, the kind assembled in a factory from refined ingredients and additives, and two weeks on unprocessed food. Meals matched on the label nutrients, like calories, sugar, fat and salt, and everyone ate as much as they wanted. On the ultra-processed diet, **intake rose by about 500 kcal a day**, and weight went up 0.9 kg. On the other, it dropped by about the same. Nobody was told to go back for seconds. Why it happens is still open: the ultra-processed meals packed more calories per gram, and hunger hormones flipped. It was 20 people for two weeks, so read it as a strong lead, not a verdict. A reasonable swap, though untested on its own: **pick the minimally processed version of a meal you already eat**."
+      },
+      "image_brief": "Duas bandejas de refeitório lado a lado numa mesa: na da esquerda, nuggets, batata frita, pão branco e biscoitos recheados, raspada quase até o fim, com migalhas espalhadas; na da direita, arroz, feijão, legumes cozidos, frango grelhado e uma fruta inteira, comida só pela metade.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Hall et al., 2019 · Cell Metabolism",
+            "en": "Hall et al., 2019 · Cell Metabolism"
+          },
+          "url": "https://doi.org/10.1016/j.cmet.2019.05.008"
+        },
+        {
+          "label": {
+            "pt": "NIH · comunicado do estudo",
+            "en": "NIH · study news release"
+          },
+          "url": "https://www.nih.gov/news-events/news-releases/nih-study-finds-heavily-processed-foods-cause-overeating-weight-gain"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

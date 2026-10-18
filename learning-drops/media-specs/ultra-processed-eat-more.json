@@ -1,0 +1,18 @@
+{
+  "slug": "ultra-processed-eat-more",
+  "dimension_id": "health",
+  "title": {
+    "pt": "Ultraprocessados e o quanto você come",
+    "en": "Ultra-processed food and how much you eat"
+  },
+  "cover": {
+    "prompt": "Um pacote de biscoito recheado vazio e amassado sobre uma mesa de madeira, embalagem lisa sem estampa, aberto e virado de lado, com uma trilha de migalhas escuras saindo dele até a borda do quadro; ao lado, uma maçã inteira intocada. Os dois objetos ficam no terço de baixo, a única luz quente acende o pacote vazio e as migalhas, e o alto do quadro fica livre e escuro."
+  },
+  "ideas": [
+    {
+      "id": "ultraprocessado-come-mais",
+      "ordinal": 1,
+      "image_prompt": "Vista de cima, levemente inclinada, de duas bandejas de refeitório lado a lado numa mesa, ocupando juntas o centro do quadro com respiro em volta: na da esquerda, restos de nuggets, batata frita, pão branco e biscoitos recheados, a bandeja raspada quase até o fundo, com migalhas e uma batata solta espalhadas pela mesa; na da direita, arroz, feijão, legumes cozidos, um filé de frango grelhado e uma maçã inteira, ainda pela metade, garfo apoiado no prato. Uma única luz quente vem do alto à esquerda e cai sobre a bandeja raspada e suas migalhas; a bandeja da direita fica em meia-luz, com o verde-sálvia dos legumes como único acento. Só as duas bandejas e a comida, sem pessoas, sem embalagens com estampa."
+    }
+  ]
+}
