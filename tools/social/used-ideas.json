@@ -110,5 +110,29 @@
     "slug": "wealth-money-happiness-ceiling",
     "date": "2026-10-06",
     "lang": "en"
+  },
+  {
+    "image_path": "cbt-i-vs-sleep-hygiene/idea.2.c2c940ae.webp",
+    "slug": "saude-insonia-menos-cama",
+    "date": "2026-10-18",
+    "lang": "pt"
+  },
+  {
+    "image_path": "hobbies-depression-older-adults/idea.1.2680ae6c.webp",
+    "slug": "oficio-hobby-menos-depressao",
+    "date": "2026-10-18",
+    "lang": "pt"
+  },
+  {
+    "image_path": "cbt-i-vs-sleep-hygiene/idea.2.c2c940ae.webp",
+    "slug": "health-insomnia-less-bed",
+    "date": "2026-10-18",
+    "lang": "en"
+  },
+  {
+    "image_path": "hobbies-depression-older-adults/idea.1.2680ae6c.webp",
+    "slug": "craft-hobby-less-depression",
+    "date": "2026-10-18",
+    "lang": "en"
   }
 ]
