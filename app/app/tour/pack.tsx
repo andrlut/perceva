@@ -25,6 +25,7 @@ import {
   OnbTitle,
   OnbTopBar,
 } from '@/components/tour/OnboardingKit';
+import { track } from '@/lib/analytics';
 import {
   useActiveTasks,
   useStartTaskFromTemplate,
@@ -105,6 +106,7 @@ export default function TourPackScreen() {
     if (runningRef.current) return;
     runningRef.current = true;
     Haptics.selectionAsync().catch(() => {});
+    track('pack_skipped');
     await setStatus('pack', 'skipped');
     exitTourToHome();
   }, [setStatus]);
@@ -174,6 +176,7 @@ export default function TourPackScreen() {
       void showInfo(t('tour.errors.adopt'));
       return;
     }
+    track('pack_done', { picked: queue.length, adopted: landed });
     await setStatus('pack', 'completed');
     exitTourToHome();
   };
