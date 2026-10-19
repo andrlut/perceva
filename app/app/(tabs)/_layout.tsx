@@ -2,8 +2,11 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 
 import { BottomNavBar } from '@/components/BottomNavBar';
+import { useUnlockProgress } from '@/lib/unlock';
 
 export default function TabLayout() {
+  // Progressive locks: hydrate per user and turn usage into unlocks.
+  useUnlockProgress();
   return (
     <Tabs
       screenOptions={{

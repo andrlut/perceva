@@ -443,6 +443,46 @@ const pt: Translations = {
   // Post-login product tour (M0 → Wrap-up). Pre-login slides live above
   // under `onboarding`. Keep the namespaces separate — same shape, two
   // different gating concerns.
+  // Trancas progressivas e portas animadas (doc "Onboarding simples",
+  // Fase 2). Tranca neutra, nunca o selo dourado do Premium.
+  unlock: {
+    openNow: 'Abrir agora',
+    doAssessment: 'Fazer a Avaliação agora',
+    hint: 'Ou siga praticando: abre sozinho.',
+    line: {
+      rewards: 'Abre quando você marcar {{count}} práticas feitas. Cada uma paga moedas — aqui é onde você gasta.',
+      learning: 'Ideias curtas, com fonte, pra ler em dois minutos. Abre quando você quiser.',
+      me: 'Abre com a Avaliação: é dela que nasce o seu primeiro retrato.',
+      me_practiced: 'Abre depois de {{count}} dias com alguma prática feita.',
+      me_desired: 'Abre quando Percebida e Praticada estiverem abertos.',
+    },
+    progress: {
+      completions: '{{done}} de {{count}} práticas feitas',
+      days: '{{done}} de {{count}} dias',
+    },
+    door: {
+      enter: 'Entendi, abrir',
+      rewards: {
+        title: 'Recompensas',
+        line: 'Cada prática feita paga moedas. Crie recompensas, dê um preço e resgate quando for usar.',
+      },
+      learning: {
+        title: 'Aprender',
+        line: 'Ideias curtas, com fonte, em texto, vídeo e áudio. Uma por tela; vire o card pra absorver.',
+      },
+      me: {
+        title: 'Eu',
+        line: 'Quem você está se tornando, em três retratos. O primeiro nasce da Avaliação.',
+      },
+    },
+    visual: {
+      wallet: 'moedas',
+      practice: 'Caminhada de 20 min',
+      reward: 'Um filme',
+      redeem: 'Resgatar',
+    },
+  },
+
   tour: {
     intro: {
       skip: 'Pular introdução',

@@ -10,6 +10,9 @@ export type PillarKey = 'percebida' | 'praticada' | 'desejada';
 interface Props {
   active: PillarKey;
   onChange: (next: PillarKey) => void;
+  /** Portraits still locked by progression — shown with a small padlock;
+   *  still tappable, the panel then says what opens it. */
+  locked?: readonly PillarKey[];
 }
 
 interface Item {
@@ -54,12 +57,13 @@ const ITEMS: Item[] = [
  *   - Praticada → dopaminergic (xp green)
  *   - Desejada → ceremonious (coin gold)
  */
-export function PillarSwitcher({ active, onChange }: Props) {
+export function PillarSwitcher({ active, onChange, locked = [] }: Props) {
   const { t } = useT();
   return (
     <View style={styles.row}>
       {ITEMS.map((it) => {
         const isActive = it.key === active;
+        const isLocked = locked.includes(it.key);
         return (
           <Pressable
             key={it.key}
@@ -80,11 +84,18 @@ export function PillarSwitcher({ active, onChange }: Props) {
             accessibilityState={isActive ? { selected: true } : {}}
             accessibilityLabel={t(`pillar.top.${it.key}.label`)}
           >
-            <Ionicons
-              name={it.icon}
-              size={22}
-              color={isActive ? it.accent : tokens.text.dim}
-            />
+            <View>
+              <Ionicons
+                name={it.icon}
+                size={22}
+                color={isActive ? it.accent : tokens.text.dim}
+              />
+              {isLocked ? (
+                <View style={styles.lockBadge}>
+                  <Ionicons name="lock-closed" size={9} color={tokens.text.mid} />
+                </View>
+              ) : null}
+            </View>
             <Text
               style={[
                 styles.label,
@@ -105,6 +116,17 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     gap: 8,
+  },
+  lockBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -7,
+    width: 15,
+    height: 15,
+    borderRadius: 8,
+    backgroundColor: tokens.bg.surface2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tab: {
     flex: 1,

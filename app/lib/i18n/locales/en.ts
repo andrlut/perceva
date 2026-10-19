@@ -447,6 +447,45 @@ const en = {
     },
   },
 
+  // Progressive locks and animated doors (doc "Onboarding simples", phase 2).
+  unlock: {
+    openNow: 'Open now',
+    doAssessment: 'Do the self-assessment now',
+    hint: 'Or keep practicing: it opens by itself.',
+    line: {
+      rewards: 'Opens once you mark {{count}} practices done. Each one pays coins — this is where you spend them.',
+      learning: 'Short ideas, with sources, to read in two minutes. Opens whenever you want.',
+      me: 'Opens with the self-assessment: your first portrait is born from it.',
+      me_practiced: 'Opens after {{count}} days with a practice done.',
+      me_desired: 'Opens once Perceived and Practiced are open.',
+    },
+    progress: {
+      completions: '{{done}} of {{count}} practices done',
+      days: '{{done}} of {{count}} days',
+    },
+    door: {
+      enter: 'Got it, open',
+      rewards: {
+        title: 'Rewards',
+        line: 'Every practice done pays coins. Create rewards, set a price, redeem when you use them.',
+      },
+      learning: {
+        title: 'Learn',
+        line: 'Short ideas with sources, in text, video and audio. One per screen; flip the card to absorb it.',
+      },
+      me: {
+        title: 'Me',
+        line: 'Who you are becoming, in three portraits. The first is born from the self-assessment.',
+      },
+    },
+    visual: {
+      wallet: 'coins',
+      practice: '20-min walk',
+      reward: 'A movie',
+      redeem: 'Redeem',
+    },
+  },
+
   tour: {
     intro: {
       skip: 'Skip intro',
