@@ -2044,6 +2044,9 @@ const pt: Translations = {
     },
   },
 
+  firstLaunchUpdate: {
+    preparing: 'Preparando a versão mais nova do Perceva…',
+  },
   allPractices: {
     title: 'Todas as práticas',
     eyebrow: 'PRÁTICAS',
