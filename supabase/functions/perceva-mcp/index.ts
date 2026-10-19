@@ -329,7 +329,7 @@ const TRAIN_NOTES: Record<Exclude<TrainReason, 'advanced'>, string> = {
 
 function buildServer(token: string, userId: string): McpServer {
   const server = new McpServer(
-    { name: 'perceva-mcp', version: '0.5.0' },
+    { name: 'perceva-mcp', version: '0.5.1' },
     {
       instructions: [
         'Perceva is a habit/wellness app organized in 6 dimensions',
@@ -1444,15 +1444,22 @@ function buildServer(token: string, userId: string): McpServer {
   server.registerTool(
     'get_idea_training',
     {
-      title: 'Idea training — the favorites due for recall today',
+      title: 'Idea training — the user\'s favorites, due ones first',
       description:
         'The Treino de ideias: the user\'s FAVORITE ideas on a spaced recall ' +
-        'schedule — the exact deck the app\'s "Treino do dia" deals. Each item ' +
+        'schedule — the exact deck the app\'s "Treino do dia" deals. Training ' +
+        'is open any time: the deck is every favorite, the ones due today ' +
+        'first (due_today:true), then extra practice ordered by the day they ' +
+        'come due. An early hit does not move the schedule and a miss brings ' +
+        'the idea back tomorrow, so training ahead never breaks it. Each item ' +
         'has a title (the CUE) and a claim (the ANSWER, the one sentence they ' +
         'kept), plus box (spaced hits in a row, 0-3; 3 = firm), due, ' +
         'answered_today and the slug + idea_id that log_idea_training needs. ' +
-        'Default scope "due" = what is due today; "favorites" = every ' +
-        'favorite, for an extra round the user asked for.\n' +
+        'Default scope "favorites" = that whole deck; "due" = only what is ' +
+        'due today. The app opens its training at 5 favorites — below that, ' +
+        'quiz what there is and suggest keeping more (the review pile in ' +
+        'Minhas ideias, or new ideas in Explorar). Favorites stay trainable ' +
+        'on the free tier even after their material leaves its 30-day window.\n' +
         'HOW TO RUN A TRAINING (this is the point of the tool): one idea at a ' +
         'time. Say ONLY the title (the _pt fields unless they write in ' +
         'English) and wait for their answer from memory — never show, hint ' +
@@ -1471,9 +1478,8 @@ function buildServer(token: string, userId: string): McpServer {
       inputSchema: {
         scope: z.enum(['due', 'favorites']).optional()
           .describe(
-            'Default "due": favorites due today, most overdue first. ' +
-            '"favorites": every favorite (an extra round; an early hit does ' +
-            'not push the schedule, a miss brings the idea back tomorrow).',
+            'Default "favorites": every favorite, due today first, then extra ' +
+            'practice (the app\'s deck). "due": only favorites due today.',
           ),
         limit: z.number().int().min(1).max(30).optional()
           .describe('Max ideas returned (default 5, one round). The summary counts all.'),
@@ -1482,7 +1488,7 @@ function buildServer(token: string, userId: string): McpServer {
     },
     async (args, _extra) => {
       const db = userClient(token);
-      const scope = args.scope ?? 'due';
+      const scope = args.scope ?? 'favorites';
       const limit = args.limit ?? 5;
       const today = localDate(new Date());
 
@@ -1522,9 +1528,13 @@ function buildServer(token: string, userId: string): McpServer {
             ? 'No favorites yet: ideas enter the training once the user keeps ' +
               'them (swipe right) in the review pile of Minhas ideias, in the app.'
             : result.summary.due_today === 0 && scope === 'due'
-            ? 'Nothing is due today. Tell them the next_due day, or offer an ' +
-              'extra round with scope:"favorites".'
-            : 'Say only the title, wait for the answer, then reveal the claim ' +
+            ? 'Nothing is due today. Offer extra practice (scope "favorites") ' +
+              'or tell them the next_due day.'
+            : (result.summary.favorites < 5
+              ? 'Fewer than 5 favorites: the app\'s training opens at 5, so ' +
+                'after this round suggest keeping more ideas. '
+              : '') +
+              'Say only the title, wait for the answer, then reveal the claim ' +
               'and call log_idea_training before moving on.',
       });
     },

@@ -145,7 +145,7 @@ export function CollectionGuide({ demoCard, pendingCount, shelf, locale }: Colle
     train: {
       icon: 'school-outline',
       iconColor: tokens.semantic.coin,
-      replica: <TrainStrip due={5} firm={3} />,
+      replica: <TrainStrip due={5} firm={3} favorites={12} />,
     },
     favorites: {
       icon: 'star',

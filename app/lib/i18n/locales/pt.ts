@@ -784,7 +784,7 @@ const pt: Translations = {
         train: {
           title: 'Treinar',
           body: 'Ao lado do Explorar: suas favoritas, em dias espaçados.',
-          ai: 'Mostra quantas favoritas vencem hoje e abre o Treino do dia: você vê o título, pensa na resposta, vira e diz se lembrou. Lembrou, a ideia volta em 3, 7 e 21 dias e depois fica firme; não lembrou, volta amanhã. Só aparece quando há pelo menos uma favorita em Minhas ideias.',
+          ai: 'Abre o Treino do dia a qualquer hora e mostra quantas favoritas vencem hoje. Você vê o título, pensa na resposta, vira e diz se lembrou. Lembrou, a ideia volta em 3, 7 e 21 dias e depois fica firme; não lembrou, volta amanhã. O treino começa com 5 favoritas em Minhas ideias; antes disso o cartão mostra quantas você já tem.',
         },
         explore: {
           title: 'Explorar',
@@ -900,6 +900,20 @@ const pt: Translations = {
       train: {
         title: 'Treino do dia',
         counter: '{{n}} de {{total}}',
+        counterExtra: '{{n}} de {{total}} · extra',
+        unlockTitle: 'Monte o seu treino',
+        unlockBody:
+          'O treino traz de volta, em dias espaçados, as ideias que você guardou. Ele abre com {{min}} favoritas.',
+        unlockCount: { one: '1 de {{min}} favoritas', other: '{{count}} de {{min}} favoritas' },
+        unlockReview: { one: 'Revisar 1 ideia', other: 'Revisar {{count}} ideias' },
+        unlockExplore: 'Explorar ideias',
+        unlockFreeEnd: {
+          one: 'Falta 1 favorita, e você já passou por todas as ideias dos últimos 30 dias.',
+          other: 'Faltam {{count}} favoritas, e você já passou por todas as ideias dos últimos 30 dias.',
+        },
+        unlockPremium: 'Abrir o acervo inteiro',
+        unlockWait: 'Novas ideias chegam toda semana.',
+        stripUnlock: 'Favorite {{min}} pra começar · {{count}} de {{min}}',
         think: 'Pense na resposta. Depois toque pra virar.',
         tryFirst: 'Tente lembrar antes de virar.',
         check: 'Era isso que você pensou?',
@@ -911,11 +925,7 @@ const pt: Translations = {
         doneFirm: 'Ideias firmes',
         more: 'Mais {{count}}',
         back: 'Voltar',
-        emptyNone: 'Favorite ideias na revisão pra treinar aqui.',
-        caughtUpTitle: 'Tudo em dia',
         caughtUpShort: 'Em dia',
-        caughtUpNext: 'Próximo treino: {{date}}',
-        caughtUpFirm: '{{firm}} de {{total}} favoritas firmes',
         stripDue: { one: '1 ideia esperando', other: '{{count}} ideias esperando' },
         firmCount: { one: '1 firme', other: '{{count}} firmes' },
         tile: 'Treinar',
@@ -971,8 +981,8 @@ const pt: Translations = {
           },
           train: {
             title: 'Treinar',
-            body: 'Suas favoritas voltam em dias espaçados. Pense na resposta, vire e diga se lembrou.',
-            ai: 'A faixa Treino do dia aparece quando há pelo menos uma favorita e conta as que vencem hoje; o treino passa 5 por vez e "Mais 5" continua. A favorita entra no treino no dia seguinte ao que foi guardada. Lembrou: ela volta em 3, depois 7, depois 21 dias, e com 3 acertos fica firme e volta a cada 2 meses. Não lembrou: volta no fim do treino e de novo amanhã. Só a primeira resposta do dia conta. Treinar não dá XP nem moedas. Com o conector, a sua IA treina as mesmas ideias com você em voz alta e registra o resultado.',
+            body: 'Treine quando quiser: pense na resposta, vire e diga se lembrou. As favoritas voltam em dias espaçados.',
+            ai: 'A faixa Treino do dia abre o treino a qualquer hora. Ele começa com 5 favoritas; antes disso a faixa conta quantas faltam. O treino passa 5 por vez, começando pelas que vencem hoje, e "Mais 5" continua pelas outras como treino extra. A favorita entra na agenda no dia seguinte ao que foi guardada. Lembrou: ela volta em 3, depois 7, depois 21 dias, e com 3 acertos fica firme e volta a cada 2 meses. Não lembrou: volta no fim do treino e de novo amanhã. Só a primeira resposta do dia conta, e acertar antes da hora não adianta a agenda. Treinar não dá XP nem moedas. Com o conector, a sua IA treina as mesmas ideias com você em voz alta e registra o resultado.',
           },
           favorites: {
             title: 'Favoritas',

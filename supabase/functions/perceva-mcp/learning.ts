@@ -282,9 +282,12 @@ export function assembleIdeas(
 // 21 dias, depois firme a cada 60; errou → amanhã; só a primeira resposta do
 // dia conta. Aqui só se LÊ:
 //
-//   vence hoje ⟺ favorita ∧ train_due ≤ hoje ∧ trained_on ≠ hoje
+//   no baralho ⟺ favorita (qualquer dia — treinar é livre)
+//   vence hoje ⟺ train_due ≤ hoje ∧ trained_on ≠ hoje
 //
-// Ordem: vencida há mais tempo primeiro, depois slug e ordinal (catálogo).
+// Ordem: respondida hoje por último; depois train_due (a vencida há mais
+// tempo primeiro), slug e ordinal. Favorita de material que saiu da janela
+// de 30 dias do free continua no baralho: o que a pessoa guardou é dela.
 // Datas são YYYY-MM-DD locais; comparar strings ordena.
 
 /** The view columns the Recanto reads — one list for get_learning_ideas
@@ -385,10 +388,12 @@ export function assembleTraining(
     });
   }
 
+  // Same comparator as the app: answered today last, then by due day (so
+  // what is due leads), slug, ordinal; an unstamped row sorts last.
   all.sort((a, b) => {
-    if (a.due_today !== b.due_today) return a.due_today ? -1 : 1;
-    const da = a.due ?? '';
-    const db = b.due ?? '';
+    if (a.answered_today !== b.answered_today) return a.answered_today ? 1 : -1;
+    const da = a.due ?? '9999-12-31';
+    const db = b.due ?? '9999-12-31';
     if (da !== db) return da < db ? -1 : 1;
     if (a.slug !== b.slug) return a.slug < b.slug ? -1 : 1;
     return a.ordinal - b.ordinal;
