@@ -25,6 +25,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
 import { ConfirmHost } from '@/components/ConfirmHost';
+import { FirstLaunchUpdateGate } from '@/components/FirstLaunchUpdateGate';
 import { OtaUpdateGate } from '@/components/OtaUpdateGate';
 import { InstrumentTeaserHost } from '@/components/premium/InstrumentTeaserHost';
 import { LimitReachedHost } from '@/components/premium/LimitReachedHost';
@@ -183,6 +184,8 @@ export default function RootLayout() {
             ACTIVE_THEME === 'light' ? DefaultTheme : DarkTheme
           }
         >
+          {/* A store install first moves to the newest OTA, then boots. */}
+          <FirstLaunchUpdateGate>
           <AuthGate>
             <Stack>
             <Stack.Screen name="login" options={{ headerShown: false }} />
@@ -315,6 +318,7 @@ export default function RootLayout() {
             <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
           </Stack>
         </AuthGate>
+          </FirstLaunchUpdateGate>
         <ConfirmHost />
         <InstrumentTeaserHost />
         <LimitReachedHost />

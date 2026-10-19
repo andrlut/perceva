@@ -2048,6 +2048,9 @@ const en = {
     },
   },
 
+  firstLaunchUpdate: {
+    preparing: 'Getting the newest version of Perceva…',
+  },
   allPractices: {
     title: 'All practices',
     eyebrow: 'PRACTICES',
