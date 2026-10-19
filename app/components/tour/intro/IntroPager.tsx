@@ -45,6 +45,7 @@ import {
   OnbHeader,
   OnbTopBar,
 } from '@/components/tour/OnboardingKit';
+import { track } from '@/lib/analytics';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { isTerminal } from '@/lib/tour/constants';
@@ -182,6 +183,7 @@ export function IntroPager() {
   const arrivedAtRef = useRef(0);
   useEffect(() => {
     if (index === LAST) arrivedAtRef.current = Date.now();
+    track('intro_page', { page: index });
   }, [index]);
 
   const finish = useCallback(
@@ -200,6 +202,7 @@ export function IntroPager() {
         // "Start with the self-assessment": land on it once onboarding ends
         // (after the starter pack, or straight away on an intro-only replay).
         setAfterOnboarding(choice === 'assessment' ? '/self-assessment' : null);
+        track('intro_done', { choice });
         await setStatus('intro', 'completed');
         // Replaying only the intro from Ajustes reaches this page with the
         // starter pack already answered — then there is nothing to pick.
@@ -236,6 +239,7 @@ export function IntroPager() {
   };
   const skipIntro = () => {
     Haptics.selectionAsync().catch(() => {});
+    track('intro_skip_pressed', { page: indexRef.current });
     goTo(LAST);
   };
 

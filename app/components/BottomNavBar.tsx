@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { trackOnce } from '@/lib/analytics';
 import { useT } from '@/lib/i18n';
 import { tokens } from '@/theme';
 
@@ -110,6 +111,7 @@ export function BottomNavBar({ state, navigation }: BottomTabBarProps) {
             });
             if (!isFocused && !event.defaultPrevented) {
               navigation.navigate(route.name);
+              void trackOnce(`tab.${route.name}`, 'tab_first_open', { tab: route.name });
             }
           };
 
