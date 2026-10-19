@@ -109,7 +109,13 @@ const SKIP_H = ONB_TEXT_BTN_H;
  */
 const ARRIVAL_GUARD_MS = 650;
 
-type Choice = 'tour' | 'assessment' | 'skip';
+/**
+ * Last page (Fase 1 do onboarding simples, 2026-10-19): the default path
+ * goes straight to picking practices; the guided tour is opt-in, demoted to
+ * the text button. Only 'tour' starts the guided modules — the other two
+ * skip them (the mandatory `settings` step still runs after the pack).
+ */
+type Choice = 'practices' | 'assessment' | 'tour';
 
 export function IntroPager() {
   const router = useRouter();
@@ -194,11 +200,10 @@ export function IntroPager() {
       setBusy(choice);
       Haptics.selectionAsync().catch(() => {});
       try {
-        // "Começar PELA autoavaliação" é ordem, não substituição: o tour
-        // guiado fica pendente e retoma na Home quando ela fechar a
-        // autoavaliação. Só o "pular" descarta o tour de verdade.
-        if (choice === 'skip') await skipGuidedTour();
-        else await startGuidedTour();
+        // Só quem pede o tour recebe os módulos guiados; as outras duas
+        // escolhas seguem sem ele (refazível em Ajustes).
+        if (choice === 'tour') await startGuidedTour();
+        else await skipGuidedTour();
         // "Start with the self-assessment": land on it once onboarding ends
         // (after the starter pack, or straight away on an intro-only replay).
         setAfterOnboarding(choice === 'assessment' ? '/self-assessment' : null);
@@ -535,9 +540,9 @@ export function IntroPager() {
               >
                 <OnbPrimaryButton
                   label={t('tour.intro.choice.primary')}
-                  icon="compass-outline"
-                  onPress={() => void finish('tour')}
-                  busy={busy === 'tour'}
+                  icon="checkmark-circle-outline"
+                  onPress={() => void finish('practices')}
+                  busy={busy === 'practices'}
                   disabled={busy != null}
                 />
                 <OnbSecondaryButton
@@ -547,9 +552,9 @@ export function IntroPager() {
                   disabled={busy != null}
                 />
                 <OnbTextButton
-                  label={t('tour.intro.choice.skip')}
-                  onPress={() => void finish('skip')}
-                  busy={busy === 'skip'}
+                  label={t('tour.intro.choice.tour')}
+                  onPress={() => void finish('tour')}
+                  busy={busy === 'tour'}
                   disabled={busy != null}
                 />
               </Animated.View>
