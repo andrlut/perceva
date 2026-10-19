@@ -43,15 +43,18 @@ import { DIMENSION_META, SUB_META } from '@/theme/dimensions';
 
 
 /** One-tap limits over the priority order ("quantas você quer, no máximo"). */
-const QUICK_LIMITS = [3, 6] as const;
+const QUICK_LIMITS = [3, 5] as const;
+/** Ticked by default: the top 5 of the pack (Fase 1 do onboarding simples,
+ *  2026-10-19 — 12 on day one was already a list to get lost in). */
+const DEFAULT_PICK = 5;
 
 /**
  * Onboarding · starter pack (route module `pack`, after `intro`).
  *
- * A closed suggestion, not a choice (maintainer, 2026-09-26): the 12
- * practices of lib/tour/starterPack.ts, numbered by priority, all ticked.
- * The user accepts them, unticks some (or takes the top 3 / top 6), or
- * skips — nothing else to decide, since every practice can be changed later.
+ * The 12 practices of lib/tour/starterPack.ts, numbered by priority, stay
+ * on screen (they double as a tour of the areas); the top 5 come ticked.
+ * The user keeps them, unticks some (or takes the top 3 / all), or skips —
+ * nothing else to decide, since every practice can be changed later.
  *
  * Leaving must always be possible (a user with practices of their own found
  * no way out, closed the app, and the AuthGate re-opened this screen on every
@@ -65,7 +68,7 @@ export default function TourPackScreen() {
   const startFromTemplate = useStartTaskFromTemplate();
   const setStatus = useTourStore((s) => s.setStatus);
 
-  // null = untouched (everything in the pack ticked).
+  // null = untouched (the top DEFAULT_PICK of what is still available).
   const [picked, setPicked] = useState<ReadonlySet<string> | null>(null);
   const [run, setRun] = useState<{ current: number; total: number } | null>(null);
   // State updates are async; a fast double tap must not start two runs.
@@ -96,8 +99,9 @@ export default function TourPackScreen() {
     () => rows.filter((tpl) => !adoptedIds.has(tpl.id)).map((tpl) => tpl.id),
     [rows, adoptedIds],
   );
-  const selection = picked ?? new Set(available);
+  const selection = picked ?? new Set(available.slice(0, DEFAULT_PICK));
   const newIds = available.filter((id) => selection.has(id));
+  const allOn = available.length > 0 && newIds.length === available.length;
   const newXp = rows
     .filter((tpl) => newIds.includes(tpl.id))
     .reduce((sum, tpl) => sum + templateXp(tpl), 0);
@@ -132,20 +136,17 @@ export default function TourPackScreen() {
     });
   };
 
-  // Top N by priority, counting only what is not on the list yet.
+  // Top N by priority, counting only what is not on the list yet; null = all.
   const limitTo = (n: number | null) => {
     if (busy) return;
     Haptics.selectionAsync().catch(() => {});
-    setPicked(n == null ? null : new Set(available.slice(0, n)));
+    setPicked(new Set(n == null ? available : available.slice(0, n)));
   };
-  const activeLimit =
-    picked == null
-      ? null
-      : QUICK_LIMITS.find(
-          (n) =>
-            newIds.length === Math.min(n, available.length) &&
-            newIds.every((id, i) => id === available[i]),
-        );
+  const activeLimit = QUICK_LIMITS.find(
+    (n) =>
+      newIds.length === Math.min(n, available.length) &&
+      newIds.every((id, i) => id === available[i]),
+  );
 
   const handleAdd = async () => {
     if (!ready || runningRef.current) return;
@@ -237,7 +238,7 @@ export default function TourPackScreen() {
                   ))}
                   <Chip
                     label={t('tour.pack.all')}
-                    on={picked == null || newIds.length === available.length}
+                    on={allOn}
                     onPress={() => limitTo(null)}
                   />
                 </View>

@@ -514,14 +514,14 @@ const pt: Translations = {
       choice: {
         title: 'Como você quer começar?',
         safe: 'Refaça a introdução e o tour quando quiser em {{path}}.',
-        primary: 'Fazer o tour guiado',
+        primary: 'Escolher minhas práticas',
         assessment: 'Fazer autoavaliação · 1 min',
-        skip: 'Pular o tour',
+        tour: 'Fazer o tour guiado · 3 min',
       },
     },
     pack: {
-      title: 'Comece com 12 práticas',
-      body: 'Uma por sub-área, em ordem de prioridade. Todas podem ser editadas depois.',
+      title: 'Escolha de 3 a 5 práticas pra começar',
+      body: 'Sugerimos 5, uma por área, em ordem de prioridade. Marque e desmarque à vontade; tudo pode mudar depois.',
       top: 'Top {{count}}',
       all: 'Todas',
       add: {
