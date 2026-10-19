@@ -40,7 +40,10 @@ import {
 } from '@/lib/api/rewards';
 import type { Reward, RewardCategory } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
+import { LockedScreen } from '@/components/unlock/LockedScreen';
+import { UnlockDoor } from '@/components/unlock/UnlockDoor';
 import { useLimitGuard, useRewardLimit } from '@/lib/premium';
+import { useIsLocked } from '@/lib/unlock';
 import { TourModule } from '@/components/tour/TourModule';
 import { TourTarget } from '@/components/tour/TourTarget';
 import { emitTourEvent } from '@/lib/tour/eventBus';
@@ -76,7 +79,21 @@ const MANAGE_FAB_SIZE: FabSize = 'lg';
 /** Height the stack occupies above the nav — the scroll reserves it. */
 const REWARDS_FAB_CLEARANCE = fabStackClearance([CALENDAR_FAB_SIZE, MANAGE_FAB_SIZE]);
 
+/** Progressive lock (doc "Onboarding simples", Fase 2): locked → the
+ *  "what opens it" screen; first opening → the animated door over the
+ *  real content; after that, the tab as it always was. */
 export default function RewardsScreen() {
+  const locked = useIsLocked('rewards');
+  if (locked) return <LockedScreen feature="rewards" />;
+  return (
+    <>
+      <RewardsScreenContent />
+      <UnlockDoor feature="rewards" />
+    </>
+  );
+}
+
+function RewardsScreenContent() {
   const router = useRouter();
   const { t } = useT();
   const character = useCharacter();

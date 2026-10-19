@@ -36,7 +36,11 @@ export type AppEventName =
   /** Primeira vez que esta conta abriu uma aba neste aparelho (tab). */
   | 'tab_first_open'
   /** Paywall aberto (source = de onde veio). */
-  | 'premium_opened';
+  | 'premium_opened'
+  /** Tranca progressiva destravou (tab, by = progress | manual | grandfather). */
+  | 'tab_unlocked'
+  /** Porta animada fechada (tab, ms = tempo até tocar em "Entendi, abrir"). */
+  | 'door_seen';
 
 export type AppEventProps = Record<string, string | number | boolean | null>;
 
