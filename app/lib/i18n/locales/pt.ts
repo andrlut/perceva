@@ -500,7 +500,11 @@ const pt: Translations = {
         opt5: 'Sempre',
         badgeName: 'Seu nome aqui',
         badgeHint: 'Toque no emblema pra abrir seu perfil',
+        ctaHint: 'O questionário fica aqui, no retrato Percebida',
       },
+      absorbed: 'Absorvida',
+      flip: 'Vire o card',
+      myIdeas: 'Minhas ideias',
     },
   },
 
@@ -1232,6 +1236,9 @@ const pt: Translations = {
   },
 
   avaliacao: {
+    questCardTitle: 'Questionário de autoconhecimento',
+    questCardLine: '48 perguntas, 5 a 10 min. É ele que desenha o seu retrato Percebida.',
+    questCardCta: 'Fazer',
     selfAssessmentCtaFirst: 'Fazer autoavaliação · 1 min',
     selfAssessmentCta: 'Atualizar autoavaliação',
     questionnaireFirst: 'Fazer questionário (5-10 min)',

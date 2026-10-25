@@ -503,7 +503,11 @@ const en = {
         opt5: 'Always',
         badgeName: 'Your name here',
         badgeHint: 'Tap the emblem to open your profile',
+        ctaHint: 'The questionnaire lives here, in the Perceived portrait',
       },
+      absorbed: 'Absorbed',
+      flip: 'Flip the card',
+      myIdeas: 'My ideas',
     },
   },
 
@@ -1236,6 +1240,9 @@ const en = {
   },
 
   avaliacao: {
+    questCardTitle: 'Self-knowledge questionnaire',
+    questCardLine: '48 questions, 5 to 10 min. It draws your Perceived portrait.',
+    questCardCta: 'Start',
     selfAssessmentCtaFirst: 'Take the self-assessment · 1 min',
     selfAssessmentCta: 'Update self-assessment',
     questionnaireFirst: 'Take the questionnaire (5-10 min)',

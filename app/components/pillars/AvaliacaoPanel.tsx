@@ -122,6 +122,28 @@ export function AvaliacaoPanel({ subScores, selfAssessmentAnchorRef }: Props) {
 
   return (
     <View style={styles.wrap}>
+      {/* The questionnaire is what draws the Percebida portrait, so until it
+          is taken it is the first thing here — a real card, not a dashed
+          afterthought under the chart (feedback 24/10: it read as disabled). */}
+      {!hasQuestionnaire && (
+        <Pressable
+          onPress={() => router.push('/questionnaire')}
+          style={({ pressed }) => [styles.questCard, pressed && { opacity: 0.9 }]}
+          accessibilityRole="button"
+        >
+          <View style={styles.questIcon}>
+            <Ionicons name="clipboard-outline" size={22} color={tokens.semantic.coinLight} />
+          </View>
+          <View style={styles.questBody}>
+            <Text style={styles.questTitle}>{t('avaliacao.questCardTitle')}</Text>
+            <Text style={styles.questLine}>{t('avaliacao.questCardLine')}</Text>
+          </View>
+          <View style={styles.questBtn}>
+            <Text style={styles.questBtnText}>{t('avaliacao.questCardCta')}</Text>
+            <Ionicons name="arrow-forward" size={14} color={tokens.bg.deep} />
+          </View>
+        </Pressable>
+      )}
       <View style={styles.hexWrap}>
         <HexChart
           scores={primary}
@@ -199,15 +221,17 @@ export function AvaliacaoPanel({ subScores, selfAssessmentAnchorRef }: Props) {
         </TourTarget>
       </View>
 
-      <Pressable
-        onPress={() => router.push('/questionnaire')}
-        style={({ pressed }) => [styles.ctaSecondary, pressed && { opacity: 0.85 }]}
-        hitSlop={4}
-        accessibilityRole="button"
-      >
-        <Ionicons name="clipboard" size={14} color={tokens.brand.violet2} />
-        <Text style={styles.ctaSecondaryText}>{questionnaireLabel}</Text>
-      </Pressable>
+      {hasQuestionnaire && (
+        <Pressable
+          onPress={() => router.push('/questionnaire')}
+          style={({ pressed }) => [styles.ctaSecondary, pressed && { opacity: 0.85 }]}
+          hitSlop={4}
+          accessibilityRole="button"
+        >
+          <Ionicons name="clipboard" size={14} color={tokens.brand.violet2} />
+          <Text style={styles.ctaSecondaryText}>{questionnaireLabel}</Text>
+        </Pressable>
+      )}
 
       {hasQuestionnaire && (
         <Pressable
@@ -234,6 +258,50 @@ const styles = StyleSheet.create({
   },
   hexWrap: {
     alignItems: 'center',
+  },
+  questCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    borderRadius: tokens.radius.lg,
+    backgroundColor: tokens.bg.surface,
+    borderWidth: 1.5,
+    borderColor: tokens.semantic.coinRim,
+  },
+  questIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 200, 61, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  questBody: { flex: 1, gap: 2 },
+  questTitle: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 15,
+    color: tokens.text.hi,
+  },
+  questLine: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 12.5,
+    lineHeight: 17,
+    color: tokens.text.mid,
+  },
+  questBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: tokens.radius.pill,
+    backgroundColor: tokens.semantic.coin,
+  },
+  questBtnText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 12,
+    color: tokens.bg.deep,
   },
   cta: {
     minHeight: 44,
