@@ -465,6 +465,7 @@ const en = {
     },
     door: {
       enter: 'Got it, open',
+      wait: 'Watch it once; the button comes right after.',
       rewards: {
         title: 'Rewards',
         line: 'Every practice done pays coins. Create rewards, set a price, redeem when you use them.',
@@ -483,6 +484,26 @@ const en = {
       practice: '20-min walk',
       reward: 'A movie',
       redeem: 'Redeem',
+      learn: {
+        text: 'TEXT',
+        video: 'VIDEO',
+        audio: 'AUDIO',
+        kicker: 'Health · Sleep',
+        title: 'For insomnia, spend less time in bed',
+      },
+      me: {
+        areas: '6 areas',
+        subs: '12 sub-areas',
+        kicker: 'ASSESSMENT · 1 OF 48',
+        question: 'I wake up rested most days.',
+        opt1: 'Never',
+        opt2: 'Rarely',
+        opt3: 'Sometimes',
+        opt4: 'Usually',
+        opt5: 'Always',
+        badgeName: 'Your name here',
+        badgeHint: 'Tap the emblem to open your profile',
+      },
     },
   },
 
@@ -2839,6 +2860,8 @@ const en = {
     },
     actions: {
       replayOnboarding: 'Redo the tutorial',
+      reviewDoors: 'Replay the tab doors',
+      reviewDoorsDone: 'Done: the next opening of Rewards, Me and Learn shows the intro again.',
       checkForUpdates: 'Check for updates',
       checking: 'Checking…',
       signOut: 'Sign out',

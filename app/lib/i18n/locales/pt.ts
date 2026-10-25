@@ -462,6 +462,7 @@ const pt: Translations = {
     },
     door: {
       enter: 'Entendi, abrir',
+      wait: 'Veja uma vez; o botão aparece em seguida.',
       rewards: {
         title: 'Recompensas',
         line: 'Cada prática feita paga moedas. Crie recompensas, dê um preço e resgate quando for usar.',
@@ -480,6 +481,26 @@ const pt: Translations = {
       practice: 'Caminhada de 20 min',
       reward: 'Um filme',
       redeem: 'Resgatar',
+      learn: {
+        text: 'TEXTO',
+        video: 'VÍDEO',
+        audio: 'ÁUDIO',
+        kicker: 'Saúde · Sono',
+        title: 'Contra a insônia, menos tempo na cama',
+      },
+      me: {
+        areas: '6 áreas',
+        subs: '12 sub-áreas',
+        kicker: 'AVALIAÇÃO · 1 DE 48',
+        question: 'Acordo descansado na maioria dos dias.',
+        opt1: 'Nunca',
+        opt2: 'Raramente',
+        opt3: 'Às vezes',
+        opt4: 'Quase sempre',
+        opt5: 'Sempre',
+        badgeName: 'Seu nome aqui',
+        badgeHint: 'Toque no emblema pra abrir seu perfil',
+      },
     },
   },
 
@@ -2852,6 +2873,8 @@ const pt: Translations = {
     },
     actions: {
       replayOnboarding: 'Refazer tutorial',
+      reviewDoors: 'Rever as portas das abas',
+      reviewDoorsDone: 'Pronto: a próxima abertura de Recompensas, Eu e Aprender mostra a apresentação de novo.',
       checkForUpdates: 'Buscar atualizações',
       checking: 'Verificando…',
       signOut: 'Sair',

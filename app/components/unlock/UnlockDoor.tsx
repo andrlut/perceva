@@ -1,17 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
 import { Modal, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated, {
+  Easing,
+  FadeIn,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { ONB_BTN_H, OnbPrimaryButton } from '@/components/tour/OnboardingKit';
-import { IdeaFlipVisual } from '@/components/tour/intro/IdeaFlipVisual';
-import { SelfKnowledgeHex } from '@/components/tour/intro/SelfKnowledgeHex';
 import { track } from '@/lib/analytics';
 import { useT } from '@/lib/i18n';
 import { useDoorPending, useUnlockStore } from '@/lib/unlock';
 import { tokens } from '@/theme';
 
+import { LearningDoorVisual } from './LearningDoorVisual';
+import { MeDoorVisual } from './MeDoorVisual';
 import { RewardsDoorVisual } from './RewardsDoorVisual';
 
 export type DoorFeature = 'rewards' | 'learning' | 'me';
@@ -36,14 +42,20 @@ export function UnlockDoor({ feature }: { feature: DoorFeature }) {
   const { width } = useWindowDimensions();
   const [ready, setReady] = useState(false);
   const openedAt = useRef(0);
+  // The wait is deliberate (one loop), so it must not read as lag: a thin
+  // line fills over DOOR_MIN_MS under the text, then the button fades in.
+  const wait = useSharedValue(0);
+  const waitStyle = useAnimatedStyle(() => ({ width: `${wait.value * 100}%` }));
 
   useEffect(() => {
     if (!pending) return;
     openedAt.current = Date.now();
     setReady(false);
+    wait.value = 0;
+    wait.value = withTiming(1, { duration: DOOR_MIN_MS, easing: Easing.linear });
     const id = setTimeout(() => setReady(true), DOOR_MIN_MS);
     return () => clearTimeout(id);
-  }, [pending]);
+  }, [pending, wait]);
 
   if (!pending) return null;
 
@@ -63,13 +75,21 @@ export function UnlockDoor({ feature }: { feature: DoorFeature }) {
               {feature === 'rewards' ? (
                 <RewardsDoorVisual width={visualW} />
               ) : feature === 'learning' ? (
-                <IdeaFlipVisual width={Math.min(visualW, 300)} active />
+                <LearningDoorVisual width={Math.min(visualW, 340)} />
               ) : (
-                <SelfKnowledgeHex size={Math.min(visualW, 280)} active />
+                <MeDoorVisual width={Math.min(visualW, 300)} />
               )}
             </View>
             <Text style={styles.title}>{t(`unlock.door.${feature}.title`)}</Text>
             <Text style={styles.line}>{t(`unlock.door.${feature}.line`)}</Text>
+            {!ready ? (
+              <View style={styles.waitWrap}>
+                <View style={styles.waitTrack}>
+                  <Animated.View style={[styles.waitFill, waitStyle]} />
+                </View>
+                <Text style={styles.waitText}>{t('unlock.door.wait')}</Text>
+              </View>
+            ) : null}
           </View>
           <View style={styles.footer}>
             {ready ? (
@@ -118,6 +138,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     maxWidth: 340,
   },
+  waitWrap: { alignItems: 'center', gap: 6, marginTop: tokens.space[2] },
+  waitTrack: {
+    width: 160,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: tokens.bg.surface3,
+    overflow: 'hidden',
+  },
+  waitFill: { height: '100%', backgroundColor: tokens.semantic.coin },
+  waitText: { fontFamily: 'Manrope_600SemiBold', fontSize: 12, color: tokens.text.mid },
   footer: {
     paddingHorizontal: tokens.space[5],
     paddingBottom: tokens.space[4],
