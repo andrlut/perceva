@@ -447,6 +447,70 @@ const en = {
     },
   },
 
+  // Progressive locks and animated doors (doc "Onboarding simples", phase 2).
+  unlock: {
+    openNow: 'Open now',
+    doAssessment: 'Do the self-assessment now',
+    hint: 'Or keep practicing: it opens by itself.',
+    line: {
+      rewards: 'Opens once you mark {{count}} practices done. Each one pays coins — this is where you spend them.',
+      learning: 'Short ideas, with sources, to read in two minutes. Opens whenever you want.',
+      me: 'Opens with the self-assessment: your first portrait is born from it.',
+      me_practiced: 'Opens after {{count}} days with a practice done.',
+      me_desired: 'Opens once Perceived and Practiced are open.',
+    },
+    progress: {
+      completions: '{{done}} of {{count}} practices done',
+      days: '{{done}} of {{count}} days',
+    },
+    door: {
+      enter: 'Got it, open',
+      wait: 'Watch it once; the button comes right after.',
+      rewards: {
+        title: 'Rewards',
+        line: 'Every practice done pays coins. Create rewards, set a price, redeem when you use them.',
+      },
+      learning: {
+        title: 'Learn',
+        line: 'Short ideas with sources, in text, video and audio. One per screen; flip the card to absorb it.',
+      },
+      me: {
+        title: 'Me',
+        line: 'Who you are becoming, in three portraits. The first is born from the self-assessment.',
+      },
+    },
+    visual: {
+      wallet: 'coins',
+      practice: '20-min walk',
+      reward: 'A movie',
+      redeem: 'Redeem',
+      learn: {
+        text: 'TEXT',
+        video: 'VIDEO',
+        audio: 'AUDIO',
+        kicker: 'Health · Sleep',
+        title: 'For insomnia, spend less time in bed',
+      },
+      me: {
+        areas: '6 areas',
+        subs: '12 sub-areas',
+        kicker: 'ASSESSMENT · 1 OF 48',
+        question: 'I wake up rested most days.',
+        opt1: 'Never',
+        opt2: 'Rarely',
+        opt3: 'Sometimes',
+        opt4: 'Usually',
+        opt5: 'Always',
+        badgeName: 'Your name here',
+        badgeHint: 'Tap the emblem to open your profile',
+        ctaHint: 'The questionnaire lives here, in the Perceived portrait',
+      },
+      absorbed: 'Absorbed',
+      flip: 'Flip the card',
+      myIdeas: 'My ideas',
+    },
+  },
+
   tour: {
     intro: {
       skip: 'Skip intro',
@@ -1176,6 +1240,9 @@ const en = {
   },
 
   avaliacao: {
+    questCardTitle: 'Self-knowledge questionnaire',
+    questCardLine: '48 questions, 5 to 10 min. It draws your Perceived portrait.',
+    questCardCta: 'Start',
     selfAssessmentCtaFirst: 'Take the self-assessment · 1 min',
     selfAssessmentCta: 'Update self-assessment',
     questionnaireFirst: 'Take the questionnaire (5-10 min)',
@@ -2800,6 +2867,8 @@ const en = {
     },
     actions: {
       replayOnboarding: 'Redo the tutorial',
+      reviewDoors: 'Replay the tab doors',
+      reviewDoorsDone: 'Done: the next opening of Rewards, Me and Learn shows the intro again.',
       checkForUpdates: 'Check for updates',
       checking: 'Checking…',
       signOut: 'Sign out',

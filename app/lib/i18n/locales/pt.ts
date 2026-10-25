@@ -443,6 +443,71 @@ const pt: Translations = {
   // Post-login product tour (M0 → Wrap-up). Pre-login slides live above
   // under `onboarding`. Keep the namespaces separate — same shape, two
   // different gating concerns.
+  // Trancas progressivas e portas animadas (doc "Onboarding simples",
+  // Fase 2). Tranca neutra, nunca o selo dourado do Premium.
+  unlock: {
+    openNow: 'Abrir agora',
+    doAssessment: 'Fazer a Avaliação agora',
+    hint: 'Ou siga praticando: abre sozinho.',
+    line: {
+      rewards: 'Abre quando você marcar {{count}} práticas feitas. Cada uma paga moedas — aqui é onde você gasta.',
+      learning: 'Ideias curtas, com fonte, pra ler em dois minutos. Abre quando você quiser.',
+      me: 'Abre com a Avaliação: é dela que nasce o seu primeiro retrato.',
+      me_practiced: 'Abre depois de {{count}} dias com alguma prática feita.',
+      me_desired: 'Abre quando Percebida e Praticada estiverem abertos.',
+    },
+    progress: {
+      completions: '{{done}} de {{count}} práticas feitas',
+      days: '{{done}} de {{count}} dias',
+    },
+    door: {
+      enter: 'Entendi, abrir',
+      wait: 'Veja uma vez; o botão aparece em seguida.',
+      rewards: {
+        title: 'Recompensas',
+        line: 'Cada prática feita paga moedas. Crie recompensas, dê um preço e resgate quando for usar.',
+      },
+      learning: {
+        title: 'Aprender',
+        line: 'Ideias curtas, com fonte, em texto, vídeo e áudio. Uma por tela; vire o card pra absorver.',
+      },
+      me: {
+        title: 'Eu',
+        line: 'Quem você está se tornando, em três retratos. O primeiro nasce da Avaliação.',
+      },
+    },
+    visual: {
+      wallet: 'moedas',
+      practice: 'Caminhada de 20 min',
+      reward: 'Um filme',
+      redeem: 'Resgatar',
+      learn: {
+        text: 'TEXTO',
+        video: 'VÍDEO',
+        audio: 'ÁUDIO',
+        kicker: 'Saúde · Sono',
+        title: 'Contra a insônia, menos tempo na cama',
+      },
+      me: {
+        areas: '6 áreas',
+        subs: '12 sub-áreas',
+        kicker: 'AVALIAÇÃO · 1 DE 48',
+        question: 'Acordo descansado na maioria dos dias.',
+        opt1: 'Nunca',
+        opt2: 'Raramente',
+        opt3: 'Às vezes',
+        opt4: 'Quase sempre',
+        opt5: 'Sempre',
+        badgeName: 'Seu nome aqui',
+        badgeHint: 'Toque no emblema pra abrir seu perfil',
+        ctaHint: 'O questionário fica aqui, no retrato Percebida',
+      },
+      absorbed: 'Absorvida',
+      flip: 'Vire o card',
+      myIdeas: 'Minhas ideias',
+    },
+  },
+
   tour: {
     intro: {
       skip: 'Pular introdução',
@@ -1171,6 +1236,9 @@ const pt: Translations = {
   },
 
   avaliacao: {
+    questCardTitle: 'Questionário de autoconhecimento',
+    questCardLine: '48 perguntas, 5 a 10 min. É ele que desenha o seu retrato Percebida.',
+    questCardCta: 'Fazer',
     selfAssessmentCtaFirst: 'Fazer autoavaliação · 1 min',
     selfAssessmentCta: 'Atualizar autoavaliação',
     questionnaireFirst: 'Fazer questionário (5-10 min)',
@@ -2812,6 +2880,8 @@ const pt: Translations = {
     },
     actions: {
       replayOnboarding: 'Refazer tutorial',
+      reviewDoors: 'Rever as portas das abas',
+      reviewDoorsDone: 'Pronto: a próxima abertura de Recompensas, Eu e Aprender mostra a apresentação de novo.',
       checkForUpdates: 'Buscar atualizações',
       checking: 'Verificando…',
       signOut: 'Sair',

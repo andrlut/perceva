@@ -20,7 +20,10 @@ import { RecantoGuide, useRecantoGuidePrompt } from '@/components/guide/screens/
 import { InfoSheet } from '@/components/InfoSheet';
 import { TourModule } from '@/components/tour/TourModule';
 import { TourTarget } from '@/components/tour/TourTarget';
+import { LockedScreen } from '@/components/unlock/LockedScreen';
+import { UnlockDoor } from '@/components/unlock/UnlockDoor';
 import { useMaterialLock } from '@/lib/premium';
+import { useIsLocked } from '@/lib/unlock';
 import { emitTourEvent } from '@/lib/tour/eventBus';
 import { buildM6Steps, M6_EVENTS, M6_STEP } from '@/lib/tour/m6Steps';
 import { isWrapPending, useIsCurrentTourModule, useTourStore } from '@/lib/tour/store';
@@ -91,7 +94,21 @@ const IDEAS_FAB_SIZE: FabSize = 'lg';
 const FILTER_FAB_SIZE: FabSize = 'lg';
 const LEARNING_FAB_CLEARANCE = fabStackClearance([IDEAS_FAB_SIZE, FILTER_FAB_SIZE]);
 
+/** Progressive lock (doc "Onboarding simples", Fase 2): locked → the
+ *  "what opens it" screen; first opening → the animated door over the
+ *  real content; after that, the tab as it always was. */
 export default function LearningScreen() {
+  const locked = useIsLocked('learning');
+  if (locked) return <LockedScreen feature="learning" />;
+  return (
+    <>
+      <LearningScreenContent />
+      <UnlockDoor feature="learning" />
+    </>
+  );
+}
+
+function LearningScreenContent() {
   const router = useRouter();
   const isMaterialLocked = useMaterialLock();
   const isLockedCard = useCallback(
