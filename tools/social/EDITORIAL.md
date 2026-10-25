@@ -82,6 +82,10 @@ gerador não consegue checar sozinho + as lições aprendidas em produção.
   Carrosséis ocupam 01 e 02 (03 se houver um terceiro); reels ocupam 04 e 05 —
   o espaçamento carrossel→reel do mesmo tema (~3 dias) sai automático.
 - Instagram e TikTok recebem os mesmos arquivos; YouTube só os reels.
+- **TikTok rejeita PNG em post de foto** (erro real no agendamento de 19/10:
+  "The 'image/png' type is not allowed, use 'image/jpeg' or 'image/webp'").
+  Rode `node to-jpeg.js <lote>` depois do organize.js: gera um `slide-*.jpg`
+  ao lado de cada PNG. Instagram segue com PNG; TikTok sempre com os JPG.
 
 ## Inglês (contas EN separadas)
 
