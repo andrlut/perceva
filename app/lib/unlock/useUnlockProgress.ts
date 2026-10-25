@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 
+import { pickSubScores, useCharacter } from '@/lib/api/character';
 import { useCompletionStats } from '@/lib/api/history';
 import { useReadMaterialIds } from '@/lib/api/learning';
 import { useLastWellbeingSession } from '@/lib/api/psych';
@@ -15,7 +16,9 @@ import { useUnlockStore } from './store';
  * user and turns usage into unlocks.
  *
  *   rewards      ← N practices done (UNLOCK_TRIGGERS.rewardsAfterCompletions)
- *   me           ← the free self-assessment (Avaliação) completed
+ *   me           ← the 1-min self-assessment (any "self" sub score > 0,
+ *                  same signal as the Percebida panel) OR the avaliacao_v2
+ *                  questionnaire completed
  *   me_practiced ← N distinct days with a practice done
  *   me_desired   ← me + me_practiced
  *   learning     ← ever read a material (older habit) — otherwise manual
@@ -35,6 +38,7 @@ export function useUnlockProgress(): void {
 
   const stats = useCompletionStats();
   const assessment = useLastWellbeingSession();
+  const character = useCharacter();
   const reads = useReadMaterialIds();
   const tourActive = useTourStore((s) =>
     GUIDED_MODULES.some((m) => {
@@ -49,7 +53,9 @@ export function useUnlockProgress(): void {
 
   const total = stats.data?.total ?? 0;
   const days = stats.data?.days ?? 0;
-  const assessed = assessment.data != null;
+  const selfScores = character.data ? pickSubScores(character.data.subScores, 'self') : null;
+  const selfAssessed = selfScores ? [...selfScores.values()].some((v) => v > 0) : false;
+  const assessed = assessment.data != null || selfAssessed;
   const hasRead = (reads.data?.size ?? 0) > 0;
 
   useEffect(() => {

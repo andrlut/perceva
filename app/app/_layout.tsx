@@ -168,6 +168,12 @@ export default function RootLayout() {
     ...MaterialCommunityIcons.font,
   });
 
+  // A failed font is survivable but never silent: say WHICH one, so a tofu
+  // screen (icons as CJK glyphs) can be traced instead of guessed.
+  useEffect(() => {
+    if (fontError) console.warn("[fonts] load failed:", fontError.message);
+  }, [fontError]);
+
   if (!fontsLoaded && !fontError) {
     return null;
   }
