@@ -48,13 +48,14 @@ export function LearningDoorVisual({ width }: { width: number }) {
     p.value = withRepeat(withTiming(1, { duration: LOOP_MS, easing: Easing.linear }), -1, false);
   }, [p, reduceMotion]);
 
-  const openAt = (v: number) => interpolate(v, [0.12, 0.2, 0.9, 0.97], [0, 1, 1, 0], 'clamp');
+  // No helpers inside the worklets: a plain closure reaches the UI thread
+  // as an object ("openAt is not a function"). Inline it.
   const coverStyle = useAnimatedStyle(() => {
-    const o = openAt(p.value);
+    const o = interpolate(p.value, [0.12, 0.2, 0.9, 0.97], [0, 1, 1, 0], 'clamp');
     return { transform: [{ translateY: -26 * o }, { scale: 1 - 0.06 * o }], opacity: 1 - 0.35 * o };
   });
   const panelStyle = useAnimatedStyle(() => {
-    const o = openAt(p.value);
+    const o = interpolate(p.value, [0.12, 0.2, 0.9, 0.97], [0, 1, 1, 0], 'clamp');
     const dim = interpolate(p.value, [0.52, 0.58], [1, 0.45], 'clamp');
     return { opacity: o * dim, transform: [{ translateY: 18 * (1 - o) }] };
   });
