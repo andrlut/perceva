@@ -1,0 +1,51 @@
+{
+  "slug": "shared-novelty-couples",
+  "category": "research",
+  "material_title": {
+    "pt": "O que tira o casal do piloto automático",
+    "en": "What pulls a couple off autopilot"
+  },
+  "ideas": [
+    {
+      "id": "novidade-a-dois",
+      "ordinal": 1,
+      "title": {
+        "pt": "Fazer algo novo a dois reacende o casal",
+        "en": "Trying new things together rekindles a couple"
+      },
+      "claim": {
+        "pt": "Reserve 90 minutos por semana pra algo novo e um pouco desafiador a dois, em vez do programa de sempre.",
+        "en": "Set aside 90 minutes a week for something new and a bit challenging together, instead of your usual outing."
+      },
+      "body": {
+        "pt": "A explicação vem da auto-expansão: a sensação de crescer, de aprender e ver o mundo ficar maior, que você passa a ligar à pessoa ao seu lado. Num ensaio randomizado, em que um sorteio decide quem faz o quê, 53 casais casados dedicaram 1,5 hora por semana, durante 10 semanas, a atividades estimulantes ou só agradáveis (Reissman, Aron e Bergen, 1993). Quem fez coisas estimulantes terminou mais satisfeito. Outro ensaio, com 101 casais (Coulter e Malouff, 2013), usou a mesma dose por 4 semanas e viu mais entusiasmo e satisfação no fim. No laboratório, uma tarefa nova de só 7 minutos já dá um empurrão, mas momentâneo (Aron et al., 2000). O ganho é modesto e as amostras são pequenas: trate isso como aposta, não como cura. Escolha **algo que nenhum dos dois domina**: uma trilha nova, uma aula de dança, uma receita difícil. Reserve **90 minutos nesta semana**. O jantar de sempre continua bom. Ele só não faz esse trabalho.",
+        "en": "Psychologists call the mechanism self-expansion: the feeling of growing, learning and watching your world get bigger, which you start to link with the person beside you. In a randomized trial, where a draw rather than the couple decides who does what, 53 married couples spent 1.5 hours a week for 10 weeks on either exciting or merely pleasant activities (Reissman, Aron & Bergen, 1993). The exciting group ended up more satisfied. A second trial with 101 couples (Coulter & Malouff, 2013) used the same dose for 4 weeks and found more excitement and satisfaction at the end. In the lab, a novel 7-minute task alone gives a boost, though only a momentary one (Aron et al., 2000). The gains are modest and the samples small, so treat this as a good bet, not a cure. Pick **something neither of you is good at yet**: a new trail, a dance class, a dish you've never cooked. Block **90 minutes this week**. Your usual dinner is still nice. It just doesn't do this job."
+      },
+      "image_brief": "Um casal numa cozinha à noite tentando um passo de dança pela primeira vez, rindo, um pisando no pé do outro; na mesa ao lado, o prato de sempre esfriando, intocado.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Reissman, Aron e Bergen, 1993 · J Soc Pers Relatsh · 53 casais",
+            "en": "Reissman, Aron & Bergen, 1993 · J Soc Pers Relatsh · 53 couples"
+          },
+          "url": "https://doi.org/10.1177/026540759301000205"
+        },
+        {
+          "label": {
+            "pt": "Coulter e Malouff, 2013 · ensaio randomizado · 101 casais",
+            "en": "Coulter & Malouff, 2013 · randomized trial · 101 couples"
+          },
+          "url": "https://rune.une.edu.au/web/handle/1959.11/14155"
+        },
+        {
+          "label": {
+            "pt": "Aron et al., 2000 · J Pers Soc Psychol",
+            "en": "Aron et al., 2000 · J Pers Soc Psychol"
+          },
+          "url": "https://pubmed.ncbi.nlm.nih.gov/10707334/"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}
