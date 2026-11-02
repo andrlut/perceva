@@ -1,0 +1,44 @@
+{
+  "slug": "buying-time-chores",
+  "category": "research",
+  "material_title": {
+    "pt": "O dinheiro que tira a tarefa chata da semana",
+    "en": "Money that takes the chores off your plate"
+  },
+  "ideas": [
+    {
+      "id": "comprar-tempo",
+      "ordinal": 1,
+      "title": {
+        "pt": "Vale pagar pra se livrar de uma tarefa chata?",
+        "en": "Should you pay to skip the chores you hate?"
+      },
+      "claim": {
+        "pt": "Pague pra tirar da semana a tarefa que você mais detesta: alivia a pressa mais do que comprar um objeto.",
+        "en": "Pay someone to take the chore you hate most off your week. It eases the rush more than buying a thing."
+      },
+      "body": {
+        "pt": "O que está em jogo é a pressão do tempo, aquela sensação de que o dia não cabe nas horas. Em pesquisas com 6.271 pessoas nos Estados Unidos, no Canadá, na Dinamarca e na Holanda, quem gastava dinheiro pra se livrar de tarefas que não gostava de fazer relatava mais satisfação com a vida (Whillans e colegas, PNAS, 2017). Entre esses compradores de tempo, a pressa quase não pesava no bem-estar. Mesmo assim, só 28% das pessoas faziam isso. Num experimento com 60 adultos que trabalhavam em Vancouver, gastar 40 dólares num fim de semana em algo que poupava tempo deixou as pessoas menos apressadas e de melhor humor do que **gastar o mesmo valor num objeto**. O efeito é pequeno, quase tudo é correlação (os dados andam juntos, sem provar causa) e o experimento mediu só o humor do dia seguinte. A renda não mudou o padrão, mas pouca gente de renda muito baixa entrou na conta. Escolha **a tarefa que você mais detesta**, como a faxina, e teste terceirizá-la uma vez.",
+        "en": "The thing being bought is relief from time pressure, that feeling your day has more to do than hours to do it in. Across surveys of 6,271 people in the US, Canada, Denmark and the Netherlands, those who spent money to offload tasks they disliked reported higher life satisfaction (Whillans and colleagues, PNAS, 2017). For these time buyers, feeling rushed barely dented their well-being. Yet only 28% of people did it. In an experiment with 60 working adults in Vancouver, spending $40 on a time-saving purchase one weekend left them less rushed and in a better mood than **spending the same $40 on a thing**. The effect is small, most of the evidence is correlational (the two move together, with no proof one causes the other) and the experiment only tracked next-day mood. Income didn't change the pattern, but few people on very low incomes were in the data. Pick **the chore you dread most**, say the cleaning, and try outsourcing it once."
+      },
+      "image_brief": "Uma pessoa deitada no sofá da sala numa tarde de domingo, lendo um livro, relaxada; ao fundo, de costas, uma diarista passa pano no chão, e em primeiro plano um balde e um esfregão que a pessoa não precisou pegar.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Whillans et al., 2017 · PNAS · comprar tempo e satisfação",
+            "en": "Whillans et al., 2017 · PNAS · buying time and life satisfaction"
+          },
+          "url": "https://doi.org/10.1073/pnas.1706541114"
+        },
+        {
+          "label": {
+            "pt": "Artigo completo (PMC)",
+            "en": "Full paper (PMC)"
+          },
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5559044/"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}
