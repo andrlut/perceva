@@ -214,20 +214,22 @@ export const Buyers: React.FC<P> = ({ s }) => {
 };
 
 // ===================================================================== 4
-/** Pouca gente faz isso — cem pessoas, poucas acendem. Sem número na tela. */
+/** Pouca gente faz isso — vinte pessoas grandes, só algumas acendem. Sem número na tela. */
+const FEW_ON = [2, 8, 11, 17, 19, 5]; // espalhadas, não num bloco (~28% de 20, como no texto)
 export const Few: React.FC<P> = ({ s }) => {
   const frame = useCurrentFrame();
+  const spr = useSpr();
   const at = cue(s, 'pouca gente');
-  const lit = Math.round(28 * ramp(frame, at, 24));
+  const lit = Math.round(FEW_ON.length * ramp(frame, at, 22));
   return (
     <AbsoluteFill>
-      <div style={{ position: 'absolute', top: 300, left: 115, width: 850, display: 'flex', flexWrap: 'wrap', rowGap: 6 }}>
-        {Array.from({ length: 100 }, (_, i) => {
-          // as que acendem ficam espalhadas, não num bloco
-          const on = (i * 37) % 100 < lit;
+      <div style={{ position: 'absolute', top: 330, left: 70, width: 940, display: 'flex', flexWrap: 'wrap', rowGap: 18 }}>
+        {Array.from({ length: 20 }, (_, i) => {
+          const on = FEW_ON.slice(0, lit).includes(i);
+          const t = spr(i * 1.2, { damping: 13 });
           return (
-            <div key={i} style={{ width: 85, display: 'flex', justifyContent: 'center', opacity: ramp(frame, i * 0.2, 6) }}>
-              <Pessoa t={frame} size={70} seed={i} still skin={SKINS[(i * 7) % SKINS.length]} accent={on ? GOLD : C.surface3} mood={on ? 'feliz' : 'ok'} />
+            <div key={i} style={{ width: 188, display: 'flex', justifyContent: 'center', opacity: t, transform: `translateY(${(1 - t) * 30}px) scale(${on ? 1.06 : 1})` }}>
+              <Pessoa t={frame} size={150} seed={i} skin={SKINS[(i * 7) % SKINS.length]} accent={on ? GOLD : C.surface3} mood={on ? 'feliz' : 'ok'} arms={on ? 'up' : 'none'} />
             </div>
           );
         })}
