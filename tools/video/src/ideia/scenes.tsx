@@ -3,6 +3,7 @@ import { AbsoluteFill, Img, interpolate, spring, staticFile, useCurrentFrame, us
 import { Footnote, Icon, fadeUp, ramp } from '../components';
 import { C, FONT, dimColor } from '../theme';
 import { Scene, cue, speechEnd } from '../timeline';
+import { Cesto, Louca, Moeda, Pessoa, Relogio, Sacola, Vassoura } from '../elenco/cast';
 
 // Teste de 2026-11-04: o vídeo de UMA ideia do Recanto feito em Remotion, pra
 // comparar com o Curta do Gemini Notebook. Tudo o que aparece na tela sai do
@@ -108,17 +109,32 @@ const IdeaCard: React.FC<{ width: number; flip: number; absorbed?: boolean; styl
 };
 
 // ===================================================================== 1
-/** A pergunta da ideia, como ela aparece no app. */
+/** A pessoa sem tempo: relógio acelerado e as tarefas chatas caindo em volta. */
 export const Hook: React.FC<P> = ({ s }) => {
   const frame = useCurrentFrame();
   const spr = useSpr();
-  const t = spr(0, { damping: 18, stiffness: 90 });
-  const push = interpolate(frame, [0, s.frames], [1, 1.035]);
+  const me = spr(0, { damping: 16 });
+  const drop = (at: number) => {
+    const t = spr(at, { damping: 11, stiffness: 140 });
+    return { opacity: Math.min(1, t * 2), transform: `translateY(${(1 - t) * -120}px)` };
+  };
   return (
     <AbsoluteFill>
-      <Kicker text={`${IDEA.dimension} · UMA IDEIA DO RECANTO`} />
-      <div style={{ position: 'absolute', top: 300, left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
-        <IdeaCard width={700} flip={0} style={{ opacity: t, transform: `scale(${(0.9 + 0.1 * t) * push})` }} />
+      <Kicker text={IDEA.dimension} />
+      <div style={{ position: 'absolute', top: 330, left: 640, ...drop(4) }}>
+        <Relogio t={frame} size={230} speed={5} accent={C.violet2} />
+      </div>
+      <div style={{ position: 'absolute', top: 660, left: 390, opacity: me, transform: `scale(${0.85 + 0.15 * me})` }}>
+        <Pessoa t={frame} size={300} mood="cansado" arms="down" accent={C.violet} />
+      </div>
+      <div style={{ position: 'absolute', top: 700, left: 140, ...drop(cue(s, 'dia não cabe')) }}>
+        <Vassoura size={300} tilt={-16} />
+      </div>
+      <div style={{ position: 'absolute', top: 960, left: 700, ...drop(cue(s, 'nas horas')) }}>
+        <Cesto size={250} />
+      </div>
+      <div style={{ position: 'absolute', top: 1110, left: 80, ...drop(cue(s, 'vale pagar')) }}>
+        <Louca size={220} />
       </div>
     </AbsoluteFill>
   );
@@ -126,132 +142,130 @@ export const Hook: React.FC<P> = ({ s }) => {
 
 // ===================================================================== 2
 const COUNTRIES = ['Estados Unidos', 'Canadá', 'Dinamarca', 'Holanda'];
+const SKINS = ['#F2C9A0', '#C68B5E', '#8D5A3B', '#E0AC7E', '#5C3A24', '#F5D5B8'];
 
-/** 6.271 pessoas, quatro países, mais satisfação com a vida. */
+/** 6.271 pessoas em quatro grupos (um por país); quem pagava, mais satisfeito. */
 export const Study: React.FC<P> = ({ s }) => {
   const frame = useCurrentFrame();
   const spr = useSpr();
   const countT = ramp(frame, s.lead, 38);
   const atCountries = cue(s, 'quatro países');
+  const atPay = cue(s, 'quem gastava');
   const atResult = cue(s, 'mais satisfação');
   const res = spr(atResult, { damping: 16 });
   return (
     <AbsoluteFill>
       <Kicker text="A PESQUISA" />
-      <div style={{ position: 'absolute', top: 290, left: 0, right: 0, textAlign: 'center', ...fadeUp(frame, s.lead, 14) }}>
-        <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: 220, lineHeight: 1, color: GOLD, letterSpacing: -4 }}>
+      <div style={{ position: 'absolute', top: 270, left: 0, right: 0, textAlign: 'center', ...fadeUp(frame, s.lead, 14) }}>
+        <span style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: 170, lineHeight: 1, color: GOLD, letterSpacing: -4 }}>
           {thousands(Math.round(6271 * countT))}
-        </div>
-        <div style={{ fontFamily: FONT.body, fontWeight: 700, fontSize: 50, color: C.mid, marginTop: 14 }}>pessoas</div>
+        </span>
+        <span style={{ fontFamily: FONT.body, fontWeight: 700, fontSize: 46, color: C.mid, marginLeft: 18 }}>pessoas</span>
       </div>
-
-      <div
-        style={{
-          position: 'absolute',
-          top: 690,
-          left: 110,
-          right: 110,
-          display: 'flex',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          gap: 20,
-        }}
-      >
-        {COUNTRIES.map((c, i) => {
-          const t = spr(atCountries + i * 5, { damping: 14, stiffness: 150 });
+      <div style={{ position: 'absolute', top: 500, left: 60, right: 60, display: 'flex', flexWrap: 'wrap', rowGap: 26 }}>
+        {COUNTRIES.map((c, g) => {
+          const pill = spr(atCountries + g * 5, { damping: 14, stiffness: 150 });
           return (
-            <div
-              key={c}
-              style={{
-                padding: '18px 32px',
-                borderRadius: 999,
-                border: `2px solid ${C.borderStrong}`,
-                background: C.surface,
-                fontFamily: FONT.body,
-                fontWeight: 700,
-                fontSize: 38,
-                color: C.hi,
-                opacity: t,
-                transform: `translateY(${(1 - t) * 24}px) scale(${0.9 + 0.1 * t})`,
-              }}
-            >
-              {c}
+            <div key={c} style={{ width: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div style={{ display: 'flex' }}>
+                {[0, 1, 2, 3].map((i) => {
+                  const k = g * 4 + i;
+                  const t = spr(s.lead + k * 1.5, { damping: 13 });
+                  // 1 em cada grupo "paga": ganha a cor do dinheiro e sorri no resultado
+                  const payer = i === (g + 1) % 4;
+                  const paid = payer && frame >= atPay;
+                  return (
+                    <div key={i} style={{ opacity: t, transform: `translateY(${(1 - t) * 30}px)`, margin: '0 -4px' }}>
+                      <Pessoa
+                        t={frame}
+                        size={116}
+                        seed={k}
+                        skin={SKINS[k % SKINS.length]}
+                        accent={paid ? GOLD : C.surface3}
+                        mood={payer && frame >= atResult ? 'feliz' : 'ok'}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+              <div
+                style={{
+                  marginTop: 6,
+                  padding: '10px 24px',
+                  borderRadius: 999,
+                  background: C.surface,
+                  border: `2px solid ${C.borderStrong}`,
+                  fontFamily: FONT.body,
+                  fontWeight: 700,
+                  fontSize: 32,
+                  color: C.hi,
+                  opacity: pill,
+                  transform: `scale(${0.9 + 0.1 * pill})`,
+                }}
+              >
+                {c}
+              </div>
             </div>
           );
         })}
       </div>
-
       <div
         style={{
           position: 'absolute',
-          top: 1000,
-          left: 110,
-          right: 110,
-          padding: '36px 40px',
+          top: 1070,
+          left: 90,
+          right: 90,
+          padding: '26px 34px',
           borderRadius: 30,
           background: `linear-gradient(160deg, ${C.surface2} 0%, ${C.base} 100%)`,
           border: `2px solid ${GOLD}66`,
           boxShadow: `0 0 60px ${GOLD}22`,
           display: 'flex',
           alignItems: 'center',
-          gap: 28,
+          gap: 22,
           opacity: res,
           transform: `translateY(${(1 - res) * 30}px)`,
         }}
       >
-        <Icon name="trending-up" size={84} color={GOLD} />
-        <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: 54, lineHeight: 1.12, color: C.hi }}>
+        <Moeda t={frame} size={110} />
+        <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: 50, lineHeight: 1.12, color: C.hi }}>
           quem pagava relatava mais satisfação com a vida
         </div>
       </div>
-
       <Footnote text={IDEA.source} from={atResult + 6} top={1340} size={30} color={C.mid} />
     </AbsoluteFill>
   );
 };
 
 // ===================================================================== 3
-/** Só 28 em cada 100 faziam isso. */
+/** Só 28 em cada 100 faziam isso — cem pessoas, 28 acendem. */
 export const Few: React.FC<P> = ({ s }) => {
   const frame = useCurrentFrame();
   const at = cue(s, 'vinte e oito');
   const fill = ramp(frame, at, 30);
   const lit = Math.round(28 * fill);
-  const DOT = 50;
-  const GAP = 18;
-  const size = 10 * DOT + 9 * GAP;
   return (
     <AbsoluteFill>
-      <div style={{ position: 'absolute', top: 230, left: 0, right: 0, textAlign: 'center', ...fadeUp(frame, at - 6, 12) }}>
-        <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: 250, lineHeight: 1, color: GOLD, letterSpacing: -6 }}>
+      <div style={{ position: 'absolute', top: 200, left: 0, right: 0, textAlign: 'center', ...fadeUp(frame, at - 6, 12) }}>
+        <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: 200, lineHeight: 1, color: GOLD, letterSpacing: -6 }}>
           {Math.round(28 * fill)}%
         </div>
       </div>
-      <div
-        style={{
-          position: 'absolute',
-          top: 560,
-          left: (1080 - size) / 2,
-          width: size,
-          display: 'grid',
-          gridTemplateColumns: `repeat(10, ${DOT}px)`,
-          gap: GAP,
-        }}
-      >
+      <div style={{ position: 'absolute', top: 450, left: 115, width: 850, display: 'flex', flexWrap: 'wrap', rowGap: 4 }}>
         {Array.from({ length: 100 }, (_, i) => {
           const on = i < lit;
           return (
-            <div
-              key={i}
-              style={{
-                width: DOT,
-                height: DOT,
-                borderRadius: DOT / 2,
-                background: on ? GOLD : C.surface2,
-                boxShadow: on ? `0 0 22px ${GOLD}88` : 'none',
-                opacity: ramp(frame, i * 0.25, 6),
-              }}
-            />
+            <div key={i} style={{ width: 85, display: 'flex', justifyContent: 'center', opacity: ramp(frame, i * 0.25, 6) }}>
+              <Pessoa
+                t={frame}
+                size={66}
+                seed={i}
+                still
+                skin={SKINS[(i * 7) % SKINS.length]}
+                accent={on ? GOLD : C.surface3}
+                mood={on ? 'feliz' : 'ok'}
+              />
+            </div>
           );
         })}
       </div>
@@ -260,14 +274,14 @@ export const Few: React.FC<P> = ({ s }) => {
 };
 
 // ===================================================================== 4
-const Choice: React.FC<{
-  x: number;
-  icon: 'sparkles' | 'gift';
-  label: string;
-  from: number;
-  win: number;
-  lose: number;
-}> = ({ x, icon, label, from, win, lose }) => {
+const Panel: React.FC<{ x: number; from: number; win: number; lose: number; label: string; children: React.ReactNode }> = ({
+  x,
+  from,
+  win,
+  lose,
+  label,
+  children,
+}) => {
   const frame = useCurrentFrame();
   const spr = useSpr();
   const t = spr(from, { damping: 15 });
@@ -275,65 +289,99 @@ const Choice: React.FC<{
     <div
       style={{
         position: 'absolute',
-        top: 380,
+        top: 330,
         left: x,
-        width: 410,
-        height: 520,
+        width: 450,
+        height: 640,
         borderRadius: 34,
         background: `linear-gradient(160deg, ${C.surface2} 0%, ${C.base} 100%)`,
         border: `3px solid ${win > 0 ? `rgba(255,200,61,${0.25 + 0.75 * win})` : C.borderStrong}`,
         boxShadow: `0 0 ${80 * win}px ${GOLD}55`,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 30,
-        opacity: t * (1 - 0.55 * lose),
-        transform: `translateY(${(1 - t) * 40}px) scale(${1 + 0.04 * win})`,
+        overflow: 'hidden',
+        opacity: t * (1 - 0.45 * lose),
+        transform: `translateY(${(1 - t) * 40}px) scale(${1 + 0.03 * win})`,
       }}
     >
-      <Icon name={icon} size={130} color={win > 0 ? GOLD : C.mid} />
-      <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: 52, lineHeight: 1.1, color: C.hi, textAlign: 'center', padding: '0 30px' }}>
-        {label}
-      </div>
-      <div
-        style={{
-          padding: '12px 28px',
-          borderRadius: 999,
-          background: C.base,
-          border: `2px solid ${C.borderStrong}`,
-          fontFamily: FONT.body,
-          fontWeight: 800,
-          fontSize: 40,
-          color: C.gold2,
-          opacity: ramp(frame, from + 12, 12),
-        }}
-      >
-        US$ 40
+      {children}
+      <div style={{ position: 'absolute', top: 500, left: 0, right: 0, textAlign: 'center' }}>
+        <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: 46, color: C.hi }}>{label}</div>
+        <div
+          style={{
+            display: 'inline-block',
+            marginTop: 14,
+            padding: '8px 24px',
+            borderRadius: 999,
+            background: C.base,
+            border: `2px solid ${C.borderStrong}`,
+            fontFamily: FONT.body,
+            fontWeight: 800,
+            fontSize: 34,
+            color: C.gold2,
+            opacity: ramp(frame, from + 12, 12),
+          }}
+        >
+          US$ 40
+        </div>
       </div>
     </div>
   );
 };
 
-/** Os mesmos 40 dólares em tempo ou em objeto. Ganha o tempo. */
+/** Os mesmos 40 dólares: um paga pra tirar a vassoura da mão, o outro compra um objeto. */
 export const Experiment: React.FC<P> = ({ s }) => {
   const frame = useCurrentFrame();
   const spr = useSpr();
   const atTime = cue(s, 'algo que poupava');
   const atWin = cue(s, 'menos apressadas');
+  const atMood = cue(s, 'melhor humor');
   const atObject = cue(s, 'num objeto');
   const win = ramp(frame, atWin, 16);
+  const gone = spr(atTime + 10, { damping: 20, stiffness: 70 });
+  const bag = spr(Math.min(atTime + 6, atObject), { damping: 12 });
+  // o relógio da esquerda desacelera quando a pressa cai; o da direita segue igual
+  const slow = interpolate(frame, [atWin - 4, atWin + 20], [5, 0.6], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   const chips = [
     { icon: 'leaf' as const, text: 'menos pressa', at: atWin },
-    { icon: 'happy' as const, text: 'melhor humor', at: cue(s, 'melhor humor') },
+    { icon: 'happy' as const, text: 'melhor humor', at: atMood },
   ];
   return (
     <AbsoluteFill>
       <Kicker text="O EXPERIMENTO" />
-      <Choice x={95} icon="sparkles" label="Algo que poupa tempo" from={atTime - 4} win={win} lose={0} />
+      <Panel x={70} from={atTime - 4} win={win} lose={0} label="Poupar tempo">
+        <div style={{ position: 'absolute', top: 30, left: 150 }}>
+          <Relogio t={frame} size={150} speed={slow} accent={win > 0.5 ? GOLD : C.violet2} />
+        </div>
+        <div style={{ position: 'absolute', top: 196, left: 60 }}>
+          <Pessoa t={frame} size={220} arms={frame >= atTime ? 'out' : 'down'} mood={frame >= atMood ? 'feliz' : 'cansado'} accent={C.violet} />
+        </div>
+        <div style={{ position: 'absolute', top: 340, left: 248, opacity: frame >= atTime ? 1 - gone : 0 }}>
+          <Moeda t={frame} size={60} />
+        </div>
+        <div
+          style={{
+            position: 'absolute',
+            top: 210,
+            left: 300,
+            opacity: 1 - gone,
+            transform: `translate(${gone * 260}px, ${-gone * 120}px) rotate(${gone * 40}deg)`,
+          }}
+        >
+          <Vassoura size={250} tilt={-8} />
+        </div>
+      </Panel>
       {/* o objeto continua na tela, só perde o destaque — a ideia não é "objeto não presta" */}
-      <Choice x={575} icon="gift" label="Um objeto" from={Math.min(atTime + 6, atObject)} win={0} lose={win} />
-      <div style={{ position: 'absolute', top: 950, left: 95, width: 410, display: 'flex', flexDirection: 'column', gap: 18 }}>
+      <Panel x={560} from={Math.min(atTime + 6, atObject)} win={0} lose={win} label="Um objeto">
+        <div style={{ position: 'absolute', top: 30, left: 150 }}>
+          <Relogio t={frame} size={150} speed={5} />
+        </div>
+        <div style={{ position: 'absolute', top: 196, left: 40 }}>
+          <Pessoa t={frame} size={220} seed={3} arms="down" mood="ok" accent={C.surface3} skin="#8D5A3B" />
+        </div>
+        <div style={{ position: 'absolute', top: 300, left: 250, opacity: bag, transform: `scale(${0.6 + 0.4 * bag})` }}>
+          <Sacola size={170} />
+        </div>
+      </Panel>
+      <div style={{ position: 'absolute', top: 1010, left: 70, width: 450, display: 'flex', flexDirection: 'column', gap: 16 }}>
         {chips.map((c) => {
           const t = spr(c.at, { damping: 14, stiffness: 150 });
           return (
@@ -343,7 +391,7 @@ export const Experiment: React.FC<P> = ({ s }) => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 16,
-                padding: '18px 26px',
+                padding: '16px 26px',
                 borderRadius: 22,
                 background: C.surface,
                 border: `2px solid ${GOLD}55`,
@@ -351,8 +399,8 @@ export const Experiment: React.FC<P> = ({ s }) => {
                 transform: `translateX(${(1 - t) * -30}px)`,
               }}
             >
-              <Icon name={c.icon} size={48} color={GOLD} />
-              <div style={{ fontFamily: FONT.body, fontWeight: 800, fontSize: 40, color: C.hi }}>{c.text}</div>
+              <Icon name={c.icon} size={46} color={GOLD} />
+              <div style={{ fontFamily: FONT.body, fontWeight: 800, fontSize: 38, color: C.hi }}>{c.text}</div>
             </div>
           );
         })}

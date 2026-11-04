@@ -9,7 +9,7 @@
 //    ponteiro girando) controladas por `t` = frame, pra reaproveitar em
 //    qualquer cena sem redesenhar.
 import React from 'react';
-import { C } from '../theme';
+import { C, dimColor } from '../theme';
 
 type Base = { t?: number; size?: number; accent?: string };
 
@@ -29,24 +29,34 @@ const Eyes: React.FC<{ t: number; x: number; y: number; gap: number; seed?: numb
 };
 
 /** Pessoa — cabeça redonda, corpo em cápsula. `mood` muda a boca. */
-export const Pessoa: React.FC<Base & { skin?: string; mood?: 'ok' | 'feliz' | 'cansado'; seed?: number }> = ({
-  t = 0,
-  size = 260,
-  accent = C.violet,
-  skin = '#F2C9A0',
-  mood = 'ok',
-  seed = 0,
-}) => {
-  const bob = Math.sin((t + seed * 11) / 14) * 3;
+export type Arms = 'none' | 'down' | 'up' | 'out';
+export const Pessoa: React.FC<
+  Base & { skin?: string; mood?: 'ok' | 'feliz' | 'cansado'; seed?: number; arms?: Arms; still?: boolean }
+> = ({ t = 0, size = 260, accent = C.violet, skin = '#F2C9A0', mood = 'ok', seed = 0, arms = 'none', still = false }) => {
+  const bob = still ? 0 : Math.sin((t + seed * 11) / 14) * 3;
+  const wave = arms === 'up' ? Math.sin((t + seed * 7) / 5) * 10 : 0;
+  const [la, ra] = arms === 'down' ? [14, -14] : arms === 'up' ? [150 + wave, -150 - wave] : arms === 'out' ? [14, -78] : [0, 0];
+  const arm = (side: 'l' | 'r', a: number) => {
+    const px = side === 'l' ? 58 : 142;
+    return (
+      <g transform={`rotate(${a} ${px} 158)`}>
+        <rect x={px - 11} y={150} width={22} height={64} rx={11} fill={accent} />
+        <rect x={px - 11} y={150} width={22} height={64} rx={11} fill={shade} opacity={side === 'r' ? 1 : 0.4} />
+        <circle cx={px} cy={210} r={12} fill={skin} />
+      </g>
+    );
+  };
   const mouth =
     mood === 'feliz' ? 'M88 104 Q100 118 112 104' : mood === 'cansado' ? 'M90 110 Q100 104 110 110' : 'M90 107 L110 107';
   return (
     <svg width={size} height={size * 1.3} viewBox="0 0 200 260">
       <ellipse cx={100} cy={252} rx={58} ry={7} fill="rgba(0,0,0,0.25)" />
       <g transform={`translate(0 ${bob})`}>
+        {arms !== 'none' && arm('l', la)}
         {/* corpo */}
         <rect x={52} y={140} width={96} height={110} rx={46} fill={accent} />
         <path d="M100 140 h2 a46 46 0 0 1 46 46 v18 a46 46 0 0 1 -46 46 z" fill={shade} />
+        {arms !== 'none' && arm('r', ra)}
         {/* cabeça */}
         <circle cx={100} cy={92} r={52} fill={skin} />
         <path d="M100 40 a52 52 0 0 1 0 104 a40 52 0 0 0 0 -104z" fill={shade} opacity={0.5} />
@@ -154,3 +164,51 @@ export const Sacola: React.FC<Base> = ({ size = 200, accent = C.surface3 }) => (
     <circle cx={130} cy={84} r={6} fill={C.deep} />
   </svg>
 );
+
+/** Vassoura — a tarefa doméstica genérica. */
+export const Vassoura: React.FC<Base & { tilt?: number }> = ({ size = 220, accent = C.goldDeep, tilt = -12 }) => (
+  <svg width={size * 0.6} height={size} viewBox="0 0 120 200">
+    <g transform={`rotate(${tilt} 60 100)`}>
+      <rect x={55} y={6} width={10} height={130} rx={5} fill="#B98A5E" />
+      <rect x={60} y={6} width={5} height={130} rx={2.5} fill={shade} />
+      <rect x={42} y={128} width={36} height={14} rx={5} fill={C.surface3} />
+      <path d="M34 140 h52 l14 52 q1 5 -5 5 h-70 q-6 0 -5 -5z" fill={accent} />
+      <path d="M60 140 h26 l14 52 q1 5 -5 5 h-35z" fill={shade} />
+      {[46, 58, 70, 82].map((x) => (
+        <path key={x} d={`M${x} 150 l${(x - 60) * 0.2} 40`} stroke={shade} strokeWidth={3} strokeLinecap="round" />
+      ))}
+    </g>
+  </svg>
+);
+
+/** Cesto de roupa — roupa por lavar/dobrar. */
+export const Cesto: React.FC<Base> = ({ size = 220, accent = C.surface3 }) => (
+  <svg width={size} height={size * 0.85} viewBox="0 0 200 170">
+    <ellipse cx={100} cy={162} rx={70} ry={6} fill="rgba(0,0,0,0.25)" />
+    <circle cx={74} cy={58} r={30} fill={dimColor('bonds')} />
+    <circle cx={116} cy={52} r={34} fill={dimColor('health')} />
+    <circle cx={140} cy={66} r={22} fill={C.violet2} />
+    <path d="M36 66 h128 l-14 90 q-1 6 -7 6 h-86 q-6 0 -7 -6z" fill={accent} />
+    <path d="M100 66 h64 l-14 90 q-1 6 -7 6 h-43z" fill={shade} />
+    {[92, 116, 140].map((y) => (
+      <rect key={y} x={46} y={y} width={108} height={5} rx={2.5} fill={shade} />
+    ))}
+    <rect x={30} y={60} width={140} height={14} rx={7} fill={C.surface2} />
+  </svg>
+);
+
+/** Louça — pilha de pratos com uma esponja. */
+export const Louca: React.FC<Base> = ({ size = 200 }) => (
+  <svg width={size} height={size * 0.8} viewBox="0 0 200 160">
+    <ellipse cx={100} cy={152} rx={76} ry={6} fill="rgba(0,0,0,0.25)" />
+    {[0, 1, 2, 3, 4].map((i) => (
+      <g key={i} transform={`translate(${i % 2 ? 6 : -4} ${-i * 22})`}>
+        <ellipse cx={100} cy={136} rx={70} ry={14} fill={C.text} />
+        <ellipse cx={100} cy={132} rx={52} ry={8} fill={C.mid} />
+      </g>
+    ))}
+    <rect x={142} y={8} width={44} height={26} rx={8} fill={C.gold} transform="rotate(18 164 21)" />
+    <rect x={142} y={24} width={44} height={10} rx={4} fill={C.xp} transform="rotate(18 164 21)" />
+  </svg>
+);
+
