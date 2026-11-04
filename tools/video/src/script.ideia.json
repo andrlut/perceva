@@ -1,7 +1,10 @@
 {
-  "_doc": "Teste 2026-11-04: vídeo de UMA ideia do Recanto feito em Remotion, pra comparar com o vídeo Curta do Gemini Notebook. Material buying-time-chores, ideia comprar-tempo. O roteiro sai SÓ do corpo e do verso da ideia (learning_material.ideas) — nenhuma alegação de fora. O vídeo do Notebook desta ideia subiu com flag de fidelidade: dizia que comprar tempo 'comprovadamente' dá mais satisfação e omitia as duas ressalvas (correlação + efeito pequeno + só o dia seguinte; renda muito baixa fora da amostra). Aqui as duas ressalvas têm cena própria. A cena 'do' fala o VERSO do card palavra por palavra, porque o verso aparece escrito no card que vira.",
+  "_doc": "Teste 2026-11-04: vídeo de UMA ideia do Recanto feito em Remotion, pra comparar com o vídeo Curta do Gemini Notebook. Material buying-time-chores, ideia comprar-tempo. O roteiro sai SÓ do corpo e do verso da ideia (learning_material.ideas) — nenhuma alegação de fora. O vídeo do Notebook desta ideia subiu com flag de fidelidade: dizia que comprar tempo 'comprovadamente' dá mais satisfação e omitia as duas ressalvas (correlação + efeito pequeno + só o dia seguinte; renda muito baixa fora da amostra). Aqui as duas ressalvas têm cena própria. A cena 'do' fala o VERSO do card palavra por palavra, porque o verso aparece escrito no card que vira. Sem cena de assinatura (2026-11-04): o vídeo substitui o Curta do Notebook dentro do card, então termina no verso absorvido.",
   "lines": [
-    { "id": "hook", "caption": "Quando o dia não cabe nas horas, *vale pagar pra se livrar de uma tarefa chata?*" },
+    {
+      "id": "hook",
+      "caption": "Quando o dia não cabe nas horas, *vale pagar pra se livrar de uma tarefa chata?*"
+    },
     {
       "id": "study",
       "caption": "Em pesquisas com 6.271 pessoas em quatro países, quem gastava pra se livrar de tarefas que não gostava relatava *mais satisfação com a vida*.",
@@ -18,9 +21,20 @@
       "caption": "Num experimento, gastar *40 dólares* num fim de semana em algo que poupava tempo deixou as pessoas menos apressadas e de melhor humor do que gastar o mesmo num objeto.",
       "say": "Num experimento, gastar quarenta dólares num fim de semana em algo que poupava tempo deixou as pessoas menos apressadas e de melhor humor do que gastar o mesmo num objeto."
     },
-    { "id": "caveat", "caption": "Mas o efeito é *pequeno*, quase tudo é correlação, e o experimento mediu só o humor do dia seguinte." },
-    { "id": "income", "caption": "A renda não mudou o padrão, mas *pouca gente de renda muito baixa* entrou na conta.", "hold": 0.6 },
-    { "id": "do", "caption": "Pague pra tirar da semana *a tarefa que você mais detesta*: alivia a pressa mais do que comprar um objeto.", "pre": 0.8, "hold": 1.4 },
-    { "id": "close", "caption": "Uma ideia do Recanto, no Perceva." }
+    {
+      "id": "caveat",
+      "caption": "Mas o efeito é *pequeno*, quase tudo é correlação, e o experimento mediu só o humor do dia seguinte."
+    },
+    {
+      "id": "income",
+      "caption": "A renda não mudou o padrão, mas *pouca gente de renda muito baixa* entrou na conta.",
+      "hold": 0.6
+    },
+    {
+      "id": "do",
+      "caption": "Pague pra tirar da semana *a tarefa que você mais detesta*: alivia a pressa mais do que comprar um objeto.",
+      "pre": 0.8,
+      "hold": 1.4
+    }
   ]
 }

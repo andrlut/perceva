@@ -4,6 +4,7 @@ import './fonts';
 import { Film, FilmProps } from './Film';
 import { FILMS } from './films';
 import { FPS, Timing, buildTimeline } from './timeline';
+import { ElencoSheet } from './elenco/Sheet';
 
 const calculateMetadata: CalculateMetadataFunction<FilmProps> = async ({ props }) => {
   const film = FILMS[props.film] as (typeof FILMS)[typeof props.film] & { maxSeconds?: number };
@@ -38,5 +39,7 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="Recanto" {...common} defaultProps={{ film: 'recanto', scenes: [], captions: true, voice: true, variant: 'ad' }} />
     {/* Teste: vídeo de uma ideia do Recanto (comparação com o Curta do Gemini Notebook). */}
     <Composition id="Ideia" {...common} defaultProps={{ film: 'ideia', scenes: [], captions: true, voice: true, variant: 'app' }} />
+    {/* Folha de elenco: personagens e objetos-padrão (amostra de estilo). */}
+    <Composition id="Elenco" component={ElencoSheet} width={1080} height={1920} fps={FPS} durationInFrames={FPS * 6} />
   </>
 );

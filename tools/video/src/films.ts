@@ -35,7 +35,7 @@ export const FILMS = {
   recanto: { lines: recantoScript.lines, voDir: 'vo-recanto', scenes: RECANTO, noCaption: ['close', 'tagline'], captionTop: 1440 },
   // Teste: vídeo de UMA ideia (buying-time-chores) feito aqui, pra comparar com o Curta do Notebook.
   // 'do' e 'close' já escrevem a fala na tela (o verso do card e a assinatura).
-  ideia: { lines: ideiaScript.lines, voDir: 'vo-ideia', scenes: IDEIA, noCaption: ['do', 'close'], captionTop: 1440 },
+  ideia: { lines: ideiaScript.lines, voDir: 'vo-ideia', scenes: IDEIA, noCaption: ['do'], captionTop: 1440 },
 } satisfies Record<string, Film>;
 
 export type FilmId = keyof typeof FILMS;

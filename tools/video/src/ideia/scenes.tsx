@@ -1,7 +1,6 @@
 import React from 'react';
 import { AbsoluteFill, Img, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
 import { Footnote, Icon, fadeUp, ramp } from '../components';
-import { Glyph } from '../Glyph';
 import { C, FONT, dimColor } from '../theme';
 import { Scene, cue, speechEnd } from '../timeline';
 
@@ -475,23 +474,6 @@ export const Do: React.FC<P> = ({ s }) => {
   );
 };
 
-// ===================================================================== 8
-export const Close: React.FC<P> = ({ s }) => {
-  const frame = useCurrentFrame();
-  return (
-    <AbsoluteFill>
-      <Glyph size={240} cx={540} cy={520} rings={ramp(frame, 0, 26)} path={ramp(frame, 10, 26)} glow={0.9} />
-      <div style={{ position: 'absolute', top: 720, left: 0, right: 0, textAlign: 'center', ...fadeUp(frame, s.lead, 14, 24) }}>
-        <div style={{ fontFamily: FONT.body, fontWeight: 800, fontSize: 100, letterSpacing: 14, color: C.hi }}>PERCEVA</div>
-        <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: 54, color: C.gold2, marginTop: 18 }}>Recanto · aba Aprender</div>
-      </div>
-      <div style={{ position: 'absolute', top: 1060, left: 110, right: 110, textAlign: 'center', ...fadeUp(frame, s.lead + 14, 14, 18) }}>
-        <div style={{ fontFamily: FONT.body, fontWeight: 600, fontSize: 32, color: C.mid }}>{IDEA.material}</div>
-      </div>
-    </AbsoluteFill>
-  );
-};
-
 export const SCENES = {
   hook: Hook,
   study: Study,
@@ -500,5 +482,4 @@ export const SCENES = {
   caveat: Caveat,
   income: Income,
   do: Do,
-  close: Close,
 };
