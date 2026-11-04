@@ -1,0 +1,34 @@
+[
+  {
+    "id": "hook",
+    "seconds": 5.266
+  },
+  {
+    "id": "study",
+    "seconds": 12.03
+  },
+  {
+    "id": "few",
+    "seconds": 3.843
+  },
+  {
+    "id": "experiment",
+    "seconds": 10.802
+  },
+  {
+    "id": "caveat",
+    "seconds": 6.678
+  },
+  {
+    "id": "income",
+    "seconds": 5.595
+  },
+  {
+    "id": "do",
+    "seconds": 7.154
+  },
+  {
+    "id": "close",
+    "seconds": 2.451
+  }
+]

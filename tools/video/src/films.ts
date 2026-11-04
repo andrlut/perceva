@@ -1,7 +1,9 @@
 import type React from 'react';
 import manifestoScript from './script.json';
 import recantoScript from './script.recanto.json';
+import ideiaScript from './script.ideia.json';
 import { SCENES as RECANTO } from './recanto/scenes';
+import { SCENES as IDEIA } from './ideia/scenes';
 import { SCENES as MANIFESTO } from './manifesto/scenes';
 import type { Line, Scene } from './timeline';
 
@@ -31,6 +33,9 @@ export const FILMS = {
   manifestoB: { ...MANIFESTO_BASE, lines: cut(manifestoScript.lines as Line[], 'b') },
   // a cena 'close' já escreve ler / lembrar / fazer na tela
   recanto: { lines: recantoScript.lines, voDir: 'vo-recanto', scenes: RECANTO, noCaption: ['close', 'tagline'], captionTop: 1440 },
+  // Teste: vídeo de UMA ideia (buying-time-chores) feito aqui, pra comparar com o Curta do Notebook.
+  // 'do' e 'close' já escrevem a fala na tela (o verso do card e a assinatura).
+  ideia: { lines: ideiaScript.lines, voDir: 'vo-ideia', scenes: IDEIA, noCaption: ['do', 'close'], captionTop: 1440 },
 } satisfies Record<string, Film>;
 
 export type FilmId = keyof typeof FILMS;

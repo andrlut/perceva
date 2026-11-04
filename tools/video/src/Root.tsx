@@ -36,5 +36,7 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="ManifestoB" {...common} defaultProps={{ film: 'manifestoB', scenes: [], captions: true, voice: true, variant: 'ad' }} />
     {/* Recanto: Reels pra levar gente à aba Aprender. */}
     <Composition id="Recanto" {...common} defaultProps={{ film: 'recanto', scenes: [], captions: true, voice: true, variant: 'ad' }} />
+    {/* Teste: vídeo de uma ideia do Recanto (comparação com o Curta do Gemini Notebook). */}
+    <Composition id="Ideia" {...common} defaultProps={{ film: 'ideia', scenes: [], captions: true, voice: true, variant: 'app' }} />
   </>
 );
