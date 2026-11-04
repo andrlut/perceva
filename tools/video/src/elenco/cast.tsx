@@ -31,8 +31,8 @@ const Eyes: React.FC<{ t: number; x: number; y: number; gap: number; seed?: numb
 /** Pessoa — cabeça redonda, corpo em cápsula. `mood` muda a boca. */
 export type Arms = 'none' | 'down' | 'up' | 'out';
 export const Pessoa: React.FC<
-  Base & { skin?: string; mood?: 'ok' | 'feliz' | 'cansado'; seed?: number; arms?: Arms; still?: boolean }
-> = ({ t = 0, size = 260, accent = C.violet, skin = '#F2C9A0', mood = 'ok', seed = 0, arms = 'none', still = false }) => {
+  Base & { skin?: string; mood?: 'ok' | 'feliz' | 'cansado'; seed?: number; arms?: Arms; still?: boolean; cap?: string; sweat?: boolean }
+> = ({ t = 0, size = 260, accent = C.violet, skin = '#F2C9A0', mood = 'ok', seed = 0, arms = 'none', still = false, cap, sweat = false }) => {
   const bob = still ? 0 : Math.sin((t + seed * 11) / 14) * 3;
   const wave = arms === 'up' ? Math.sin((t + seed * 7) / 5) * 10 : 0;
   const [la, ra] = arms === 'down' ? [14, -14] : arms === 'up' ? [150 + wave, -150 - wave] : arms === 'out' ? [14, -78] : [0, 0];
@@ -64,6 +64,20 @@ export const Pessoa: React.FC<
         <Eyes t={t} x={100} y={90} gap={34} seed={seed} />
         <path d={mouth} stroke={C.deep} strokeWidth={5} strokeLinecap="round" fill="none" />
         {mood === 'cansado' && <path d="M78 80 h14 M108 80 h14" stroke={C.deep} strokeWidth={4} strokeLinecap="round" />}
+        {cap && (
+          <g>
+            <path d="M47 84 a53 53 0 0 1 106 0 q-53 -10 -106 0z" fill={cap} />
+            <path d="M100 31 a53 53 0 0 1 53 53 q-26 -5 -53 -6z" fill={shade} />
+            <rect x={120} y={74} width={58} height={12} rx={6} fill={cap} />
+          </g>
+        )}
+        {sweat && (
+          <path
+            d={`M152 ${58 + ((t + seed * 9) % 30)} q8 12 0 18 q-8 -6 0 -18z`}
+            fill={dimColor('bonds')}
+            opacity={1 - ((t + seed * 9) % 30) / 30}
+          />
+        )}
       </g>
     </svg>
   );
@@ -212,3 +226,101 @@ export const Louca: React.FC<Base> = ({ size = 200 }) => (
   </svg>
 );
 
+
+/** Sofá — desenha o encosto, depois quem está sentado (children), depois o assento na frente. */
+export const Sofa: React.FC<{ width?: number; accent?: string; children?: React.ReactNode; seatTop?: number }> = ({
+  width = 620,
+  accent = dimColor('craft'),
+  children,
+  seatTop = 0,
+}) => {
+  const h = width * 0.5;
+  return (
+    <div style={{ position: 'relative', width, height: h }}>
+      <svg style={{ position: 'absolute', inset: 0 }} width={width} height={h} viewBox="0 0 300 150">
+        <rect x={30} y={20} width={240} height={80} rx={26} fill={accent} />
+        <rect x={150} y={20} width={120} height={80} rx={26} fill={shade} />
+      </svg>
+      <div style={{ position: 'absolute', left: 0, right: 0, top: seatTop }}>{children}</div>
+      <svg style={{ position: 'absolute', inset: 0 }} width={width} height={h} viewBox="0 0 300 150">
+        <ellipse cx={150} cy={146} rx={140} ry={5} fill="rgba(0,0,0,0.3)" />
+        <rect x={20} y={84} width={260} height={50} rx={18} fill={accent} />
+        <rect x={150} y={84} width={130} height={50} rx={18} fill={shade} />
+        <rect x={6} y={60} width={44} height={78} rx={20} fill={accent} />
+        <rect x={250} y={60} width={44} height={78} rx={20} fill={accent} />
+        <rect x={250} y={60} width={44} height={78} rx={20} fill={shade} />
+        <rect x={36} y={134} width={10} height={14} rx={3} fill={C.surface} />
+        <rect x={254} y={134} width={10} height={14} rx={3} fill={C.surface} />
+      </svg>
+    </div>
+  );
+};
+
+/** Livro aberto. */
+export const Livro: React.FC<Base> = ({ size = 140, accent = dimColor('mind') }) => (
+  <svg width={size} height={size * 0.7} viewBox="0 0 140 98">
+    <path d="M70 18 q-30 -14 -62 -6 v76 q32 -8 62 6z" fill={C.hi} />
+    <path d="M70 18 q30 -14 62 -6 v76 q-32 -8 -62 6z" fill={C.text} />
+    <path d="M70 94 q-32 -14 -66 -4 v-6 q34 -10 66 4 q32 -14 66 -4 v6 q-34 -10 -66 4z" fill={accent} />
+    {[30, 42, 54].map((y) => (
+      <g key={y}>
+        <rect x={20} y={y} width={38} height={4} rx={2} fill={C.faint} opacity={0.5} />
+        <rect x={82} y={y} width={38} height={4} rx={2} fill={C.faint} opacity={0.5} />
+      </g>
+    ))}
+  </svg>
+);
+
+/** Semana — 7 dias; cada dia vai enchendo (fill 0..1) com blocos de tarefa. */
+export const Semana: React.FC<{ width?: number; fill?: number; accent?: string }> = ({ width = 860, fill = 0, accent = dimColor('health') }) => {
+  const days = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
+  const per = (i: number) => Math.max(0, Math.min(1, fill * 7 - i * 0.6));
+  return (
+    <svg width={width} height={width * 0.42} viewBox="0 0 700 294">
+      {days.map((d, i) => {
+        const x = 10 + i * 98;
+        const f = per(i);
+        const blocks = Math.round(f * 4);
+        return (
+          <g key={i}>
+            <rect x={x} y={10} width={84} height={274} rx={18} fill={C.surface2} />
+            <rect x={x} y={10} width={84} height={48} rx={18} fill={C.surface3} />
+            <text x={x + 42} y={44} textAnchor="middle" fontFamily="Manrope" fontWeight={800} fontSize={26} fill={C.mid}>
+              {d}
+            </text>
+            {Array.from({ length: blocks }, (_, b) => (
+              <rect key={b} x={x + 10} y={240 - b * 52} width={64} height={42} rx={10} fill={b % 2 ? C.violet2 : accent} opacity={0.9} />
+            ))}
+          </g>
+        );
+      })}
+    </svg>
+  );
+};
+
+/** Brilhos — estrelinhas de 4 pontas que piscam em volta de algo bom. */
+export const Brilho: React.FC<Base & { on?: number }> = ({ t = 0, size = 300, accent = C.gold2, on = 1 }) => {
+  const pts = [
+    [40, 60, 0],
+    [250, 40, 9],
+    [270, 200, 17],
+    [30, 230, 25],
+    [150, 18, 33],
+  ];
+  return (
+    <svg width={size} height={size} viewBox="0 0 300 300" style={{ pointerEvents: 'none' }}>
+      {pts.map(([x, y, d], i) => {
+        const k = ((t + d) % 40) / 40;
+        const sc = on * Math.sin(k * Math.PI);
+        return (
+          <path
+            key={i}
+            transform={`translate(${x} ${y}) scale(${sc})`}
+            d="M0 -18 Q3 -3 18 0 Q3 3 0 18 Q-3 3 -18 0 Q-3 -3 0 -18z"
+            fill={accent}
+          />
+        );
+      })}
+    </svg>
+  );
+};

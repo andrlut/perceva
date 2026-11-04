@@ -4,31 +4,27 @@
     "seconds": 5.266
   },
   {
-    "id": "study",
-    "seconds": 12.03
+    "id": "pressure",
+    "seconds": 6.007
+  },
+  {
+    "id": "buyers",
+    "seconds": 7.101
   },
   {
     "id": "few",
-    "seconds": 3.843
+    "seconds": 2.747
   },
   {
     "id": "experiment",
-    "seconds": 10.802
+    "seconds": 7.65
   },
   {
-    "id": "caveat",
-    "seconds": 6.678
-  },
-  {
-    "id": "income",
-    "seconds": 5.595
+    "id": "try",
+    "seconds": 5.388
   },
   {
     "id": "do",
     "seconds": 7.154
-  },
-  {
-    "id": "close",
-    "seconds": 2.451
   }
 ]

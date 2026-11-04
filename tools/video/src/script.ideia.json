@@ -1,40 +1,12 @@
 {
-  "_doc": "Teste 2026-11-04: vídeo de UMA ideia do Recanto feito em Remotion, pra comparar com o vídeo Curta do Gemini Notebook. Material buying-time-chores, ideia comprar-tempo. O roteiro sai SÓ do corpo e do verso da ideia (learning_material.ideas) — nenhuma alegação de fora. O vídeo do Notebook desta ideia subiu com flag de fidelidade: dizia que comprar tempo 'comprovadamente' dá mais satisfação e omitia as duas ressalvas (correlação + efeito pequeno + só o dia seguinte; renda muito baixa fora da amostra). Aqui as duas ressalvas têm cena própria. A cena 'do' fala o VERSO do card palavra por palavra, porque o verso aparece escrito no card que vira. Sem cena de assinatura (2026-11-04): o vídeo substitui o Curta do Notebook dentro do card, então termina no verso absorvido.",
+  "_doc": "Vídeo de UMA ideia do Recanto em Remotion, pra substituir o Curta do Gemini Notebook dentro do card. Material buying-time-chores, ideia comprar-tempo. Regras (André, 2026-11-04): o vídeo e o card NÃO citam dados de pesquisa — nem número, nem estudo, nem amostra, nem as ressalvas metodológicas; isso fica no texto da ideia e no deep dive em áudio. O vídeo conta a ideia como história e termina no verso. Fidelidade continua valendo: tudo sai do corpo da ideia, e onde o texto pede cautela o vídeo fala sem exagero ('tende a', 'um pouco', 'no dia seguinte'), nunca 'comprovadamente'. A cena 'do' fala o VERSO palavra por palavra.",
   "lines": [
-    {
-      "id": "hook",
-      "caption": "Quando o dia não cabe nas horas, *vale pagar pra se livrar de uma tarefa chata?*"
-    },
-    {
-      "id": "study",
-      "caption": "Em pesquisas com 6.271 pessoas em quatro países, quem gastava pra se livrar de tarefas que não gostava relatava *mais satisfação com a vida*.",
-      "say": "Em pesquisas com seis mil, duzentas e setenta e uma pessoas, em quatro países, quem gastava pra se livrar de tarefas que não gostava relatava mais satisfação com a vida."
-    },
-    {
-      "id": "few",
-      "caption": "Mesmo assim, só *28%* das pessoas faziam isso.",
-      "say": "Mesmo assim, só vinte e oito por cento das pessoas faziam isso.",
-      "hold": 0.6
-    },
-    {
-      "id": "experiment",
-      "caption": "Num experimento, gastar *40 dólares* num fim de semana em algo que poupava tempo deixou as pessoas menos apressadas e de melhor humor do que gastar o mesmo num objeto.",
-      "say": "Num experimento, gastar quarenta dólares num fim de semana em algo que poupava tempo deixou as pessoas menos apressadas e de melhor humor do que gastar o mesmo num objeto."
-    },
-    {
-      "id": "caveat",
-      "caption": "Mas o efeito é *pequeno*, quase tudo é correlação, e o experimento mediu só o humor do dia seguinte."
-    },
-    {
-      "id": "income",
-      "caption": "A renda não mudou o padrão, mas *pouca gente de renda muito baixa* entrou na conta.",
-      "hold": 0.6
-    },
-    {
-      "id": "do",
-      "caption": "Pague pra tirar da semana *a tarefa que você mais detesta*: alivia a pressa mais do que comprar um objeto.",
-      "pre": 0.8,
-      "hold": 1.4
-    }
+    { "id": "hook", "caption": "Quando o dia não cabe nas horas, *vale pagar pra se livrar de uma tarefa chata?*" },
+    { "id": "pressure", "caption": "O que pesa ali é a *pressão do tempo*: a semana enche de tarefas e vira uma corrida." },
+    { "id": "buyers", "caption": "Quem paga pra se livrar das tarefas que não gosta tende a estar *mais satisfeito com a vida*, e sente menos o peso da pressa.", "hold": 0.4 },
+    { "id": "few", "caption": "Mesmo assim, *pouca gente* faz isso.", "hold": 0.8 },
+    { "id": "experiment", "caption": "Com o mesmo dinheiro, quem comprou *tempo* em vez de um objeto ficou um pouco menos apressado e de melhor humor no dia seguinte." },
+    { "id": "try", "caption": "Escolha *a tarefa que você mais detesta*, como a faxina, e teste terceirizar uma vez.", "hold": 0.6 },
+    { "id": "do", "caption": "Pague pra tirar da semana *a tarefa que você mais detesta*: alivia a pressa mais do que comprar um objeto.", "pre": 0.8, "hold": 1.4 }
   ]
 }

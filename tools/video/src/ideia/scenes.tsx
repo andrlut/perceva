@@ -1,9 +1,9 @@
 import React from 'react';
 import { AbsoluteFill, Img, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
-import { Footnote, Icon, fadeUp, ramp } from '../components';
+import { Icon, fadeUp, ramp } from '../components';
 import { C, FONT, dimColor } from '../theme';
 import { Scene, cue, speechEnd } from '../timeline';
-import { Cesto, Louca, Moeda, Pessoa, Relogio, Sacola, Vassoura } from '../elenco/cast';
+import { Brilho, Cesto, Livro, Louca, Moeda, Pessoa, Relogio, Sacola, Semana, Sofa, Vassoura } from '../elenco/cast';
 
 // Teste de 2026-11-04: o vídeo de UMA ideia do Recanto feito em Remotion, pra
 // comparar com o Curta do Gemini Notebook. Tudo o que aparece na tela sai do
@@ -30,9 +30,6 @@ const useSpr = () => {
   return (at: number, config: Partial<{ damping: number; stiffness: number; mass: number }> = {}) =>
     spring({ frame: frame - at, fps, config: { damping: 15, stiffness: 120, mass: 1, ...config } });
 };
-
-/** 6271 → "6.271" (sem depender do Intl do Chrome headless). */
-const thousands = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 
 /** Sobrancelha dourada do quadro — o rótulo da cena, nunca uma frase. */
 const Kicker: React.FC<{ text: string; from?: number; top?: number }> = ({ text, from = 0, top = 200 }) => {
@@ -141,139 +138,105 @@ export const Hook: React.FC<P> = ({ s }) => {
 };
 
 // ===================================================================== 2
-const COUNTRIES = ['Estados Unidos', 'Canadá', 'Dinamarca', 'Holanda'];
 const SKINS = ['#F2C9A0', '#C68B5E', '#8D5A3B', '#E0AC7E', '#5C3A24', '#F5D5B8'];
+const HELPER = dimColor('craft');
 
-/** 6.271 pessoas em quatro grupos (um por país); quem pagava, mais satisfeito. */
-export const Study: React.FC<P> = ({ s }) => {
+/** A semana enchendo de tarefas e o relógio disparando: a corrida. */
+export const Pressure: React.FC<P> = ({ s }) => {
   const frame = useCurrentFrame();
   const spr = useSpr();
-  const countT = ramp(frame, s.lead, 38);
-  const atCountries = cue(s, 'quatro países');
-  const atPay = cue(s, 'quem gastava');
-  const atResult = cue(s, 'mais satisfação');
-  const res = spr(atResult, { damping: 16 });
+  const atFill = cue(s, 'a semana enche');
+  const atRun = cue(s, 'corrida');
+  const fill = ramp(frame, atFill, atRun - atFill + 10);
+  const speed = interpolate(frame, [atFill, atRun + 10], [1.5, 9], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const week = spr(s.lead - 4, { damping: 16 });
   return (
     <AbsoluteFill>
-      <Kicker text="A PESQUISA" />
-      <div style={{ position: 'absolute', top: 270, left: 0, right: 0, textAlign: 'center', ...fadeUp(frame, s.lead, 14) }}>
-        <span style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: 170, lineHeight: 1, color: GOLD, letterSpacing: -4 }}>
-          {thousands(Math.round(6271 * countT))}
-        </span>
-        <span style={{ fontFamily: FONT.body, fontWeight: 700, fontSize: 46, color: C.mid, marginLeft: 18 }}>pessoas</span>
+      <Kicker text="PRESSÃO DO TEMPO" />
+      <div style={{ position: 'absolute', top: 320, left: 110, opacity: week, transform: `translateY(${(1 - week) * 30}px)` }}>
+        <Semana width={860} fill={fill} />
       </div>
-      <div style={{ position: 'absolute', top: 500, left: 60, right: 60, display: 'flex', flexWrap: 'wrap', rowGap: 26 }}>
-        {COUNTRIES.map((c, g) => {
-          const pill = spr(atCountries + g * 5, { damping: 14, stiffness: 150 });
-          return (
-            <div key={c} style={{ width: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ display: 'flex' }}>
-                {[0, 1, 2, 3].map((i) => {
-                  const k = g * 4 + i;
-                  const t = spr(s.lead + k * 1.5, { damping: 13 });
-                  // 1 em cada grupo "paga": ganha a cor do dinheiro e sorri no resultado
-                  const payer = i === (g + 1) % 4;
-                  const paid = payer && frame >= atPay;
-                  return (
-                    <div key={i} style={{ opacity: t, transform: `translateY(${(1 - t) * 30}px)`, margin: '0 -4px' }}>
-                      <Pessoa
-                        t={frame}
-                        size={116}
-                        seed={k}
-                        skin={SKINS[k % SKINS.length]}
-                        accent={paid ? GOLD : C.surface3}
-                        mood={payer && frame >= atResult ? 'feliz' : 'ok'}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-              <div
-                style={{
-                  marginTop: 6,
-                  padding: '10px 24px',
-                  borderRadius: 999,
-                  background: C.surface,
-                  border: `2px solid ${C.borderStrong}`,
-                  fontFamily: FONT.body,
-                  fontWeight: 700,
-                  fontSize: 32,
-                  color: C.hi,
-                  opacity: pill,
-                  transform: `scale(${0.9 + 0.1 * pill})`,
-                }}
-              >
-                {c}
-              </div>
-            </div>
-          );
-        })}
+      <div style={{ position: 'absolute', top: 820, left: 150, opacity: week }}>
+        <Relogio t={frame} size={230} speed={speed} accent={C.violet2} />
       </div>
-      <div
-        style={{
-          position: 'absolute',
-          top: 1070,
-          left: 90,
-          right: 90,
-          padding: '26px 34px',
-          borderRadius: 30,
-          background: `linear-gradient(160deg, ${C.surface2} 0%, ${C.base} 100%)`,
-          border: `2px solid ${GOLD}66`,
-          boxShadow: `0 0 60px ${GOLD}22`,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 22,
-          opacity: res,
-          transform: `translateY(${(1 - res) * 30}px)`,
-        }}
-      >
-        <Moeda t={frame} size={110} />
-        <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: 50, lineHeight: 1.12, color: C.hi }}>
-          quem pagava relatava mais satisfação com a vida
-        </div>
+      <div style={{ position: 'absolute', top: 760, left: 500 }}>
+        <Pessoa t={frame * (1 + fill)} size={300} mood="cansado" arms="down" sweat={frame >= atRun - 6} accent={C.violet} />
       </div>
-      <Footnote text={IDEA.source} from={atResult + 6} top={1340} size={30} color={C.mid} />
     </AbsoluteFill>
   );
 };
 
 // ===================================================================== 3
-/** Só 28 em cada 100 faziam isso — cem pessoas, 28 acendem. */
-export const Few: React.FC<P> = ({ s }) => {
+/** Paga, entrega a vassoura pra alguém, e o relógio acalma. */
+export const Buyers: React.FC<P> = ({ s }) => {
   const frame = useCurrentFrame();
-  const at = cue(s, 'vinte e oito');
-  const fill = ramp(frame, at, 30);
-  const lit = Math.round(28 * fill);
+  const spr = useSpr();
+  const atPay = cue(s, 'Quem paga');
+  const atHand = cue(s, 'se livrar');
+  const atGood = cue(s, 'mais satisfeito');
+  const atCalm = cue(s, 'menos o peso');
+  const helper = spr(atPay + 4, { damping: 14 });
+  const pass = spr(atHand, { damping: 18, stiffness: 80 });
+  const coin = spr(atPay - 2, { damping: 12 });
+  const speed = interpolate(frame, [atCalm - 4, atCalm + 18], [6, 0.6], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const happy = frame >= atGood;
+  const sweep = frame >= atHand + 12 ? Math.sin(frame / 4) * 14 : 0;
   return (
     <AbsoluteFill>
-      <div style={{ position: 'absolute', top: 200, left: 0, right: 0, textAlign: 'center', ...fadeUp(frame, at - 6, 12) }}>
-        <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: 200, lineHeight: 1, color: GOLD, letterSpacing: -6 }}>
-          {Math.round(28 * fill)}%
-        </div>
+      <div style={{ position: 'absolute', top: 300, left: 190 }}>
+        <Relogio t={frame} size={200} speed={speed} accent={frame >= atCalm ? GOLD : C.violet2} />
       </div>
-      <div style={{ position: 'absolute', top: 450, left: 115, width: 850, display: 'flex', flexWrap: 'wrap', rowGap: 4 }}>
-        {Array.from({ length: 100 }, (_, i) => {
-          const on = i < lit;
-          return (
-            <div key={i} style={{ width: 85, display: 'flex', justifyContent: 'center', opacity: ramp(frame, i * 0.25, 6) }}>
-              <Pessoa
-                t={frame}
-                size={66}
-                seed={i}
-                still
-                skin={SKINS[(i * 7) % SKINS.length]}
-                accent={on ? GOLD : C.surface3}
-                mood={on ? 'feliz' : 'ok'}
-              />
-            </div>
-          );
-        })}
+      <div style={{ position: 'absolute', top: 600, left: 90 }}>
+        <Pessoa t={frame} size={300} mood={happy ? 'feliz' : 'cansado'} arms={happy ? 'up' : frame >= atPay ? 'out' : 'down'} accent={C.violet} />
+      </div>
+      <div style={{ position: 'absolute', top: 560, left: 50 }}>
+        <Brilho t={frame} size={380} on={ramp(frame, atGood, 10)} />
+      </div>
+      <div style={{ position: 'absolute', top: 760, left: 362, opacity: coin * (1 - pass) }}>
+        <Moeda t={frame} size={80} />
+      </div>
+      <div style={{ position: 'absolute', top: 600, left: 620, opacity: helper, transform: `translateX(${(1 - helper) * 200}px)` }}>
+        <Pessoa t={frame} size={300} seed={4} arms={pass > 0.5 ? 'out' : 'down'} mood="ok" accent={HELPER} skin="#8D5A3B" cap={GOLD} />
+      </div>
+      <div
+        style={{
+          position: 'absolute',
+          top: 620,
+          left: interpolate(pass, [0, 1], [330, 860]),
+          transform: `rotate(${sweep}deg)`,
+          transformOrigin: '50% 10%',
+        }}
+      >
+        <Vassoura size={290} tilt={-10} />
       </div>
     </AbsoluteFill>
   );
 };
 
 // ===================================================================== 4
+/** Pouca gente faz isso — cem pessoas, poucas acendem. Sem número na tela. */
+export const Few: React.FC<P> = ({ s }) => {
+  const frame = useCurrentFrame();
+  const at = cue(s, 'pouca gente');
+  const lit = Math.round(28 * ramp(frame, at, 24));
+  return (
+    <AbsoluteFill>
+      <div style={{ position: 'absolute', top: 300, left: 115, width: 850, display: 'flex', flexWrap: 'wrap', rowGap: 6 }}>
+        {Array.from({ length: 100 }, (_, i) => {
+          // as que acendem ficam espalhadas, não num bloco
+          const on = (i * 37) % 100 < lit;
+          return (
+            <div key={i} style={{ width: 85, display: 'flex', justifyContent: 'center', opacity: ramp(frame, i * 0.2, 6) }}>
+              <Pessoa t={frame} size={70} seed={i} still skin={SKINS[(i * 7) % SKINS.length]} accent={on ? GOLD : C.surface3} mood={on ? 'feliz' : 'ok'} />
+            </div>
+          );
+        })}
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+// ===================================================================== 5
 const Panel: React.FC<{ x: number; from: number; win: number; lose: number; label: string; children: React.ReactNode }> = ({
   x,
   from,
@@ -307,38 +270,40 @@ const Panel: React.FC<{ x: number; from: number; win: number; lose: number; labe
         <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: 46, color: C.hi }}>{label}</div>
         <div
           style={{
-            display: 'inline-block',
-            marginTop: 14,
-            padding: '8px 24px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            marginTop: 12,
+            padding: '4px 22px 4px 8px',
             borderRadius: 999,
             background: C.base,
             border: `2px solid ${C.borderStrong}`,
             fontFamily: FONT.body,
             fontWeight: 800,
-            fontSize: 34,
+            fontSize: 30,
             color: C.gold2,
             opacity: ramp(frame, from + 12, 12),
           }}
         >
-          US$ 40
+          <Moeda size={50} t={8} />
+          mesmo dinheiro
         </div>
       </div>
     </div>
   );
 };
 
-/** Os mesmos 40 dólares: um paga pra tirar a vassoura da mão, o outro compra um objeto. */
+/** O mesmo dinheiro: um compra tempo (a vassoura vai embora), o outro compra um objeto. */
 export const Experiment: React.FC<P> = ({ s }) => {
   const frame = useCurrentFrame();
   const spr = useSpr();
-  const atTime = cue(s, 'algo que poupava');
-  const atWin = cue(s, 'menos apressadas');
+  const atTime = cue(s, 'comprou tempo');
+  const atObject = cue(s, 'um objeto');
+  const atWin = cue(s, 'menos apressado');
   const atMood = cue(s, 'melhor humor');
-  const atObject = cue(s, 'num objeto');
   const win = ramp(frame, atWin, 16);
   const gone = spr(atTime + 10, { damping: 20, stiffness: 70 });
-  const bag = spr(Math.min(atTime + 6, atObject), { damping: 12 });
-  // o relógio da esquerda desacelera quando a pressa cai; o da direita segue igual
+  const bag = spr(atObject, { damping: 12 });
   const slow = interpolate(frame, [atWin - 4, atWin + 20], [5, 0.6], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   const chips = [
     { icon: 'leaf' as const, text: 'menos pressa', at: atWin },
@@ -346,16 +311,12 @@ export const Experiment: React.FC<P> = ({ s }) => {
   ];
   return (
     <AbsoluteFill>
-      <Kicker text="O EXPERIMENTO" />
-      <Panel x={70} from={atTime - 4} win={win} lose={0} label="Poupar tempo">
+      <Panel x={70} from={s.lead - 4} win={win} lose={0} label="Comprar tempo">
         <div style={{ position: 'absolute', top: 30, left: 150 }}>
           <Relogio t={frame} size={150} speed={slow} accent={win > 0.5 ? GOLD : C.violet2} />
         </div>
         <div style={{ position: 'absolute', top: 196, left: 60 }}>
-          <Pessoa t={frame} size={220} arms={frame >= atTime ? 'out' : 'down'} mood={frame >= atMood ? 'feliz' : 'cansado'} accent={C.violet} />
-        </div>
-        <div style={{ position: 'absolute', top: 340, left: 248, opacity: frame >= atTime ? 1 - gone : 0 }}>
-          <Moeda t={frame} size={60} />
+          <Pessoa t={frame} size={220} arms={frame >= atMood ? 'up' : frame >= atTime ? 'out' : 'down'} mood={frame >= atMood ? 'feliz' : 'cansado'} accent={C.violet} />
         </div>
         <div
           style={{
@@ -370,7 +331,7 @@ export const Experiment: React.FC<P> = ({ s }) => {
         </div>
       </Panel>
       {/* o objeto continua na tela, só perde o destaque — a ideia não é "objeto não presta" */}
-      <Panel x={560} from={Math.min(atTime + 6, atObject)} win={0} lose={win} label="Um objeto">
+      <Panel x={560} from={s.lead + 4} win={0} lose={win} label="Comprar um objeto">
         <div style={{ position: 'absolute', top: 30, left: 150 }}>
           <Relogio t={frame} size={150} speed={5} />
         </div>
@@ -405,86 +366,45 @@ export const Experiment: React.FC<P> = ({ s }) => {
           );
         })}
       </div>
-      <Footnote text="60 adultos · Vancouver · um fim de semana" from={atTime} top={1340} size={30} color={C.mid} />
     </AbsoluteFill>
   );
 };
 
-// ===================================================================== 5 e 6
-type Limit = { icon: 'analytics' | 'layers' | 'calendar' | 'wallet'; text: string; sub?: string; phrase: string };
-const LIMITS: Limit[] = [
-  { icon: 'analytics', text: 'Efeito pequeno', phrase: 'pequeno' },
-  { icon: 'layers', text: 'Quase tudo é correlação', sub: 'os dados andam juntos, sem provar causa', phrase: 'correlação' },
-  { icon: 'calendar', text: 'Só o humor do dia seguinte', phrase: 'dia seguinte' },
-];
-const INCOME: Limit = { icon: 'wallet', text: 'Pouca gente de renda muito baixa', sub: 'a renda não mudou o padrão', phrase: 'pouca gente' };
-
-const LimitRow: React.FC<{ l: Limit; t: number; dim?: boolean; fresh?: boolean; top: number }> = ({ l, t, dim = false, fresh = false, top }) => (
-  <div
-    style={{
-      position: 'absolute',
-      top,
-      left: 70,
-      right: 70,
-      padding: '28px 30px',
-      borderRadius: 28,
-      background: C.surface,
-      border: `2px solid ${fresh ? `${GOLD}99` : dim ? C.border : C.borderStrong}`,
-      boxShadow: fresh ? `0 0 50px ${GOLD}33` : 'none',
-      display: 'flex',
-      alignItems: 'center',
-      gap: 28,
-      opacity: t * (dim ? 0.5 : 1),
-      transform: `translateY(${(1 - t) * 26}px)`,
-    }}
-  >
-    <div
-      style={{
-        width: 92,
-        height: 92,
-        borderRadius: 24,
-        background: C.base,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-      }}
-    >
-      <Icon name={l.icon} size={54} color={fresh ? GOLD : C.violet2} />
-    </div>
-    <div>
-      <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: 45, lineHeight: 1.1, color: C.hi }}>{l.text}</div>
-      {l.sub ? <div style={{ fontFamily: FONT.body, fontWeight: 600, fontSize: 32, color: C.mid, marginTop: 8 }}>{l.sub}</div> : null}
-    </div>
-  </div>
-);
-
-const ROW_TOP = 330;
-const ROW_STEP = 218;
-
-/** O que a pesquisa NÃO mostra — a parte que o vídeo do Notebook pulou. */
-export const Caveat: React.FC<P> = ({ s }) => {
+// ===================================================================== 6
+/** Domingo no sofá, lendo, enquanto alguém faz a faxina — a ideia aplicada uma vez. */
+export const Try: React.FC<P> = ({ s }) => {
+  const frame = useCurrentFrame();
   const spr = useSpr();
+  const atChore = cue(s, 'como a faxina');
+  const atTest = cue(s, 'teste terceirizar');
+  const sofa = spr(s.lead - 4, { damping: 16 });
+  const helper = spr(atChore, { damping: 14 });
+  const walk = Math.sin(frame / 18);
   return (
     <AbsoluteFill>
-      <Kicker text="OS LIMITES DO ESTUDO" />
-      {LIMITS.map((l, i) => (
-        <LimitRow key={l.text} l={l} t={spr(cue(s, l.phrase) - 4, { damping: 15 })} top={ROW_TOP + i * ROW_STEP} />
-      ))}
-    </AbsoluteFill>
-  );
-};
-
-/** A quarta ressalva entra; as três de antes ficam, mais apagadas. */
-export const Income: React.FC<P> = ({ s }) => {
-  const spr = useSpr();
-  return (
-    <AbsoluteFill>
-      <Kicker text="OS LIMITES DO ESTUDO" />
-      {LIMITS.map((l, i) => (
-        <LimitRow key={l.text} l={l} t={1} dim top={ROW_TOP + i * ROW_STEP} />
-      ))}
-      <LimitRow l={INCOME} t={spr(cue(s, INCOME.phrase) - 4, { damping: 15 })} fresh top={ROW_TOP + 3 * ROW_STEP} />
+      <Kicker text="TESTE UMA VEZ" />
+      {/* o chão da sala */}
+      <div style={{ position: 'absolute', top: 1180, left: 60, right: 60, height: 6, borderRadius: 3, background: C.surface2 }} />
+      {/* ajudante varrendo atrás do sofá, indo e voltando */}
+      <div style={{ position: 'absolute', top: 880, left: 770 + walk * 50, opacity: helper, transform: `translateY(${(1 - helper) * 40}px)` }}>
+        <Pessoa t={frame} size={230} seed={4} arms="out" mood="ok" accent={HELPER} skin="#8D5A3B" cap={GOLD} />
+        <div style={{ position: 'absolute', top: 40, left: 170, transform: `rotate(${Math.sin(frame / 4) * 16}deg)`, transformOrigin: '50% 10%' }}>
+          <Vassoura size={240} tilt={-14} />
+        </div>
+      </div>
+      <div style={{ position: 'absolute', top: 820, left: 90, opacity: sofa, transform: `translateY(${(1 - sofa) * 30}px)` }}>
+        <Sofa width={640} seatTop={-150}>
+          <div style={{ position: 'relative', left: 170 }}>
+            <Pessoa t={frame} size={260} mood="feliz" arms="none" accent={C.violet} />
+            <div style={{ position: 'absolute', top: 160, left: 55, transform: 'rotate(-6deg)' }}>
+              <Livro size={150} />
+            </div>
+          </div>
+        </Sofa>
+      </div>
+      <div style={{ position: 'absolute', top: 700, left: 120 }}>
+        <Brilho t={frame} size={420} on={ramp(frame, atTest, 10)} />
+      </div>
     </AbsoluteFill>
   );
 };
@@ -524,10 +444,10 @@ export const Do: React.FC<P> = ({ s }) => {
 
 export const SCENES = {
   hook: Hook,
-  study: Study,
+  pressure: Pressure,
+  buyers: Buyers,
   few: Few,
   experiment: Experiment,
-  caveat: Caveat,
-  income: Income,
+  try: Try,
   do: Do,
 };
