@@ -1,0 +1,51 @@
+{
+  "slug": "training-close-to-failure",
+  "category": "research",
+  "material_title": {
+    "pt": "Até a falha não é obrigatório",
+    "en": "You don't have to lift to failure"
+  },
+  "ideas": [
+    {
+      "id": "perto-da-falha",
+      "ordinal": 1,
+      "title": {
+        "pt": "Precisa treinar até a falha pra crescer?",
+        "en": "Do you need to lift to failure to grow?"
+      },
+      "claim": {
+        "pt": "Pare a série perto da falha. Ir até não conseguir mais rende pouco músculo a mais e nada de força.",
+        "en": "Stop each set close to failure. Grinding out the last possible rep adds little muscle and no strength."
+      },
+      "body": {
+        "pt": "Falha, na musculação, é a repetição que você tenta e não consegue completar. Uma meta-análise (estudo que reúne os resultados de vários outros) com 15 estudos em adultos saudáveis achou mais músculo indo até a falha, por uma diferença que os autores chamaram de trivial, e a estatística foi contestada depois (Refalo e colegas, Sports Medicine, 2023). Pra força, outra meta-análise com 15 estudos não encontrou diferença (Grgic e colegas, 2022). A maior, com 55 estudos, mostra que a força fica parecida longe ou perto da falha, e que o músculo cresce um pouco mais quanto mais perto a série termina (Robinson e colegas, 2024). **O trabalho está nas últimas repetições difíceis**, não na que trava. E a falha cobra: num estudo pequeno, com 10 homens treinados, o corpo ainda não tinha se recuperado 24 a 48 horas depois (Morán-Navarro e colegas, 2017). Na próxima série, **pare quando achar que ainda sairiam duas ou três**. De vez em quando, vá até o fim pra conferir: estimar o que sobra é difícil no começo.",
+        "en": "Failure is the rep you try and can't finish. A meta-analysis (a study that pools the results of many others) of 15 studies in healthy adults found a bit more muscle when sets went to failure, by a margin the authors called trivial, and others later challenged the statistics (Refalo and colleagues, Sports Medicine, 2023). For strength, a second meta-analysis of 15 studies found no difference (Grgic and colleagues, 2022). The largest, pooling 55 studies, shows strength holding steady whether you stop near or far from failure, while muscle grows a little more the closer you finish (Robinson and colleagues, 2024). **The work lives in the last few hard reps**, not the one that stalls. Failure also costs you: in a small study of 10 trained men, performance still hadn't bounced back 24 to 48 hours later (Morán-Navarro and colleagues, 2017). On your next set, **stop when you think two or three more would still go up**. Now and then, go all the way to check: guessing what's left is hard early on."
+      },
+      "image_brief": "Uma pessoa sentada num banco de academia termina uma série de rosca com halteres, os braços ainda firmes e o rosto concentrado, sem careta de dor; ela já baixa os pesos com controle, e ao lado do banco há uma toalha dobrada e uma garrafa d'água.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Refalo et al., 2023 · Sports Medicine · meta-análise, 15 estudos",
+            "en": "Refalo et al., 2023 · Sports Medicine · meta-analysis, 15 studies"
+          },
+          "url": "https://doi.org/10.1007/s40279-022-01784-y"
+        },
+        {
+          "label": {
+            "pt": "Grgic et al., 2022 · J Sport Health Sci · meta-análise, 15 estudos",
+            "en": "Grgic et al., 2022 · J Sport Health Sci · meta-analysis, 15 studies"
+          },
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9068575/"
+        },
+        {
+          "label": {
+            "pt": "Robinson et al., 2024 · Sports Medicine · meta-regressões, 55 estudos",
+            "en": "Robinson et al., 2024 · Sports Medicine · meta-regressions, 55 studies"
+          },
+          "url": "https://doi.org/10.1007/s40279-024-02069-2"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

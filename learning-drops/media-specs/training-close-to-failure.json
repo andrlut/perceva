@@ -1,0 +1,18 @@
+{
+  "slug": "training-close-to-failure",
+  "dimension_id": "body",
+  "title": {
+    "pt": "Até a falha não é obrigatório",
+    "en": "You don't have to lift to failure"
+  },
+  "cover": {
+    "prompt": "Uma barra olímpica carregada com anilhas acabando de ser devolvida aos ganchos de um suporte de agachamento, as duas mãos de um atleta ainda apoiadas nela e soltando sem pressa, um leve pó de magnésio suspenso no ar; a cena ocupa o terço de baixo do quadro, com a única luz dourada vindo de cima e tocando a barra e as mãos."
+  },
+  "ideas": [
+    {
+      "id": "perto-da-falha",
+      "ordinal": 1,
+      "image_prompt": "Uma única pessoa sentada num banco de academia, no centro do quadro e vista de lado, baixando com controle dois halteres ao fim de uma série de rosca, braços ainda firmes e rosto sereno e concentrado; aos pés do banco, uma toalha dobrada e uma garrafa d'água lisa. A única luz dourada vem do alto à esquerda e desenha os braços e os halteres, o resto da academia na penumbra; um toque de verde-sálvia apenas na toalha."
+    }
+  ]
+}
