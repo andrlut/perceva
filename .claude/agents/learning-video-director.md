@@ -72,6 +72,16 @@ fala → problema).
 7. **Voz.** Frases curtas, faladas, sem parêntese, sem sigla, sem travessão.
    Evite palavras que o TTS embola ou que viram homófono ("provável" saiu
    "pro app" três vezes): quando der, escolha a palavra mais simples.
+8. **Lições dos quadros revisados** (o revisor já reprovou cada uma):
+   - Ressalva de segurança ("fale com seu médico", "não passe da dose") vai
+     numa fala própria, neutra: nunca na mesma cena de um `glow` ou de uma
+     virada pra `feliz`.
+   - `virada` sempre termina em comemoração (sem `turn`, vira em
+     fim-da-fala − 20). Fala de fato neutro é `pessoa` sem `turn`.
+   - "Misture na água/no suco" → peça `copo`. `ion:water`/`water-outline` na
+     mão lê como sérum ou como "beba água".
+   - Em vídeo de suplemento, raio/bateria carregando junto de "energia" lê
+     como "energia na hora", e chama lê como "termogênico". Evite os dois.
 
 ## Validação (obrigatória, antes de devolver)
 
