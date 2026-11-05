@@ -20,6 +20,7 @@ import { LearningBody } from '@/components/LearningBody';
 import { AudioPane } from '@/components/learning/AudioPane';
 import { FeedbackSheet } from '@/components/learning/FeedbackSheet';
 import { SponsorLine } from '@/components/learning/SponsorLine';
+import { SponsorLogo } from '@/components/learning/SponsorLogo';
 import { MaterialCover } from '@/components/MaterialCover';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { TourModule } from '@/components/tour/TourModule';
@@ -182,7 +183,7 @@ export function IdeasMaterialScreen({ detail: m }: Props) {
   // ── Partner content ──────────────────────────────────────────────────────
   // The badge shows whenever the material is sponsored; the campaign row only
   // when the material names a campaign AND RLS still returns it (live
-  // window). No query at all on regular materials (`enabled: !!id`); on a
+  // window, or already claimed by this user). No query at all on regular materials (`enabled: !!id`); on a
   // sponsored one both reads are the Home card's / campaign screen's own
   // caches, so the row says exactly what the card says (`campaignStateLine`)
   // and the tap paints the screen at once.
@@ -194,7 +195,8 @@ export function IdeasMaterialScreen({ detail: m }: Props) {
       ? campaign.title_pt
       : campaign.title_en
     : null;
-  const campaignLine = campaignStatus ? campaignStateLine(campaignStatus, t) : null;
+  const campaignLine =
+    campaign && campaignStatus ? campaignStateLine(campaign, campaignStatus, t) : null;
   const openCampaign = () => {
     if (!campaign) return;
     Haptics.selectionAsync().catch(() => {});
@@ -317,9 +319,16 @@ export function IdeasMaterialScreen({ detail: m }: Props) {
             >
               <Ionicons name="chevron-back" size={22} color={tokens.text.hi} />
             </Pressable>
-            <View style={styles.heroTypePill}>
-              <Text style={styles.heroTypeText}>{categoryLabel(m, t)}</Text>
-            </View>
+            {/* Partner content: the partner's logo takes the category
+               pill's corner (the "Patrocinado" line under the title
+               already says what kind of material it is). */}
+            {sponsor?.logoPath != null ? (
+              <SponsorLogo path={sponsor.logoPath} name={sponsor.name} height={26} style={styles.heroSponsorLogo} />
+            ) : (
+              <View style={styles.heroTypePill}>
+                <Text style={styles.heroTypeText}>{categoryLabel(m, t)}</Text>
+              </View>
+            )}
           </View>
 
           {/* Title + summary — partner content carries its badge right
@@ -712,6 +721,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.45)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.18)',
+  },
+  heroSponsorLogo: {
+    top: 16,
+    right: 14,
   },
   heroTypeText: {
     fontFamily: 'Manrope_800ExtraBold',

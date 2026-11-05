@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
+  Platform,
   Pressable,
   ScrollView,
   Share,
@@ -32,7 +33,8 @@ import {
 import type { PartnerCampaignSource } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useLocalizedPick } from '@/lib/i18n/catalog';
-import { freeLimitEntity } from '@/lib/premium';
+import { hasPercevaReward, rewardCount } from '@/lib/partnerCampaign';
+import { freeLimitEntity, useIsPremium } from '@/lib/premium';
 import { tokens } from '@/theme';
 
 /**
@@ -42,8 +44,18 @@ import { tokens } from '@/theme';
  *
  *   hero         eyebrow "Patrocinado" + title + pitch
  *   Como funciona  3 sibling steps: join · add the practice · check it daily
- *   Sua recompensa progress bar → locked / claim / pending / code + copy,
- *                  and the partner's site
+ *   Suas recompensas progress bar (until the claim — after it the rewards
+ *                  are secured and the live streak would only alarm) →
+ *                  "unlocks at N" once while locked → the claim (when
+ *                  unlocked) → one row per reward, siblings with the same
+ *                  anatomy: the Perceva Premium discount and the partner's
+ *                  coupon (→ its site). Each row: lock / unlocked / code on
+ *                  its way / code + copy. One claim covers both; each code
+ *                  shows up once released. The Premium row only links to
+ *                  the paywall (`?source=partner`) once its code is in hand,
+ *                  on Android (the Play sheet takes the code; the App Store
+ *                  redeems it on its own) and for someone not yet Premium —
+ *                  never as a full-price shortcut before the code exists.
  *   Leia o material the sponsored material, when the campaign has one
  *   disclosure
  *
@@ -51,7 +63,8 @@ import { tokens } from '@/theme';
  * mid-run, the bar is what the member comes to check, and the steps are
  * already done.
  *
- * Every action is the same gold pill. "Add" and the claim join first when
+ * Every action is the same gold pill (the two links under the rewards are
+ * link rows, not buttons). "Add" and the claim join first when
  * the user hasn't — the server needs membership to claim, and a tap never
  * gains a step. A member's unlock is claimed on sight
  * (`useAutoClaimPartnerCoupon`), so for them the claim pill is only a
@@ -83,9 +96,10 @@ function hostOf(url: string): string | null {
 export default function CampaignScreen() {
   const router = useRouter();
   const { t } = useT();
-  const { pick } = useLocalizedPick();
+  const { pick, pickCascadeNullable } = useLocalizedPick();
   const params = useLocalSearchParams<{ id: string; source?: string }>();
   const bottomClearance = useBottomSafeClearance();
+  const isPremium = useIsPremium();
 
   const campaign = usePartnerCampaign(params.id);
   const c = campaign.data ?? null;
@@ -142,7 +156,9 @@ export default function CampaignScreen() {
   }
 
   // RLS hides ended, inactive, not-yet-started and unknown campaigns the
-  // same way — hence "not available", never "ended".
+  // same way — hence "not available", never "ended". The one exception is
+  // someone who already claimed: they keep seeing theirs after it ends
+  // (migration 20261105000001), since the codes arrive later.
   if (!c) {
     if (campaign.error) {
       return shell(
@@ -242,11 +258,82 @@ export default function CampaignScreen() {
   const title = pick(c.title_en, c.title_pt);
   const ratio = s.goal > 0 ? Math.min(1, s.streak_days / s.goal) : 0;
   const practice = c.practice?.title ?? null;
-  const code = s.claimed ? s.coupon_code : null;
   const partnerUrl = c.partner_url;
   const partnerHost = partnerUrl ? hostOf(partnerUrl) : null;
   const m = material.data ?? null;
   const showSkips = s.adopted && !s.claimed && s.max_skips > 0;
+  // How many rewards the one claim delivers — every line that counts them
+  // is a plural fed with this (a campaign without the Premium discount
+  // promises one, never "two").
+  const count = rewardCount(c);
+
+  // The rewards: the Perceva Premium discount (when the campaign has one),
+  // then the partner's coupon — the program's own order of the two.
+  // A code only comes back once claimed AND released, so `code` alone says
+  // "in hand"; `ready` lets the copy tell the truth before the claim.
+  const rewards: Reward[] = [];
+  if (hasPercevaReward(c)) {
+    const percevaCode = s.claimed ? s.perceva_code : null;
+    rewards.push({
+      key: 'perceva',
+      icon: 'sparkles',
+      title: pickCascadeNullable(c.perceva_reward_en, c.perceva_reward_pt) ?? '',
+      ready: s.perceva_code_ready,
+      code: percevaCode,
+      howTo: percevaCode
+        ? t(
+            Platform.OS === 'ios'
+              ? 'campaign.screen.premiumHowTo.ios'
+              : 'campaign.screen.premiumHowTo.android',
+          )
+        : null,
+      // The paywall has no code field and preselects the annual plan at
+      // full price, so it is only a path once the code is in hand — and
+      // only where the store sheet takes it (Play; the App Store redeems
+      // offer codes on its own) and for someone who isn't Premium yet.
+      link:
+        percevaCode && !isPremium && Platform.OS !== 'ios'
+          ? {
+              icon: 'sparkles-outline',
+              label: t('campaign.screen.seePremium'),
+              external: false,
+              onPress: () => router.push('/premium?source=partner'),
+            }
+          : null,
+    });
+  }
+  rewards.push({
+    key: 'partner',
+    icon: 'pricetag',
+    title: pick(c.reward_en, c.reward_pt),
+    ready: s.coupon_ready,
+    code: s.claimed ? s.coupon_code : null,
+    howTo: null,
+    link: partnerUrl
+      ? {
+          icon: 'globe-outline',
+          label: t('campaign.screen.visitPartner', { name: c.partner_name }),
+          meta: partnerHost,
+          external: true,
+          onPress: () => {
+            Linking.openURL(partnerUrl).catch(() => {});
+          },
+        }
+      : null,
+  });
+  const allReady = rewards.every((r) => r.ready);
+
+  /** A reward row's state line; null once its code is in hand (the code
+   *  box takes the line's place) and while locked (the card says "unlocks
+   *  at N" once, above both rows, and each row's lock disc says the rest). */
+  const rewardState = (r: Reward): string | null => {
+    if (r.code) return null;
+    if (s.claimed) return t('campaign.screen.couponPending');
+    if (s.unlocked) {
+      return r.ready ? t('campaign.screen.rewardReady') : t('campaign.screen.rewardOnItsWay');
+    }
+    return null;
+  };
 
   const howCard = (
     <View style={styles.card}>
@@ -255,7 +342,9 @@ export default function CampaignScreen() {
         n={1}
         done={s.member}
         title={t('campaign.screen.step1Title')}
-        body={s.member ? t('campaign.screen.step1Done') : t('campaign.screen.step1Body')}
+        body={
+          s.member ? t('campaign.screen.step1Done') : t('campaign.screen.step1Body', { count })
+        }
         action={
           s.member
             ? null
@@ -296,7 +385,7 @@ export default function CampaignScreen() {
         n={3}
         done={s.done_today}
         title={t('campaign.screen.step3Title')}
-        body={t('campaign.screen.step3Body', { skips: s.max_skips })}
+        body={t('campaign.screen.step3Body', { count: s.max_skips })}
         action={null}
       />
     </View>
@@ -305,65 +394,59 @@ export default function CampaignScreen() {
   const rewardCard = (
     <View style={[styles.card, styles.rewardCard]}>
       <Text style={[styles.cardLabel, styles.cardLabelGold]}>
-        {t('campaign.screen.couponTitle')}
+        {rewards.length > 1
+          ? t('campaign.screen.rewardsTitle')
+          : t('campaign.screen.couponTitle')}
       </Text>
-      <Text style={styles.rewardText}>{pick(c.reward_en, c.reward_pt)}</Text>
 
-      <View
-        style={styles.progress}
-        accessibilityRole="progressbar"
-        accessibilityValue={{ min: 0, max: s.goal, now: Math.min(s.streak_days, s.goal) }}
-      >
-        <View style={styles.track}>
-          <View style={[styles.fill, { width: `${Math.round(ratio * 100)}%` }]} />
-        </View>
-        <Text style={styles.progressText}>
-          {t('campaign.screen.progress', { days: s.streak_days, goal: s.goal })}
-        </Text>
-        {showSkips && (
-          <Text style={styles.skipsText}>
-            {t('campaign.screen.skipsUsed', { used: s.skips_used, max: s.max_skips })}
-          </Text>
-        )}
-      </View>
-
-      {code ? (
-        <View style={styles.codeRow}>
-          <View style={styles.codeBox}>
-            <Text
-              style={styles.codeText}
-              selectable
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.6}
-            >
-              {code}
-            </Text>
+      {/* The bar only while it decides something: after the claim the
+         rewards are secured, and a live streak that broke ("0 de 7")
+         above codes already in hand would read as if they were at risk —
+         the Home card hides its bar on the same rule. */}
+      {!s.claimed && (
+        <View
+          style={styles.progress}
+          accessibilityRole="progressbar"
+          accessibilityValue={{ min: 0, max: s.goal, now: Math.min(s.streak_days, s.goal) }}
+        >
+          <View style={styles.track}>
+            <View style={[styles.fill, { width: `${Math.round(ratio * 100)}%` }]} />
           </View>
-          <ActionPill
-            icon="share-outline"
-            label={t('campaign.screen.couponCopy')}
-            onPress={() => {
-              Share.share({ message: code }).catch(() => {});
-            }}
-          />
+          <Text style={styles.progressText}>
+            {t('campaign.screen.progress', { days: s.streak_days, goal: s.goal })}
+          </Text>
+          {showSkips && (
+            <Text style={styles.skipsText}>
+              {t('campaign.screen.skipsUsed', { used: s.skips_used, count: s.max_skips })}
+            </Text>
+          )}
         </View>
-      ) : s.claimed ? (
-        <Text style={styles.stateText}>{t('campaign.screen.couponPending')}</Text>
-      ) : s.unlocked ? (
+      )}
+
+      {/* Locked: said once for both rows (each row's lock disc says it). */}
+      {!s.unlocked && (
+        <Text style={styles.stateText}>
+          {t('campaign.screen.couponLocked', { goal: s.goal })}
+        </Text>
+      )}
+
+      {/* The claim — one tap for every reward. Without some code yet, say
+         so before the tap, and why it is worth it: claiming is what keeps
+         the rewards if the streak breaks. */}
+      {s.unlocked && !s.claimed && (
         <>
-          {/* No code yet: say so before the tap, and why it is worth it —
-             claiming is what keeps the coupon if the streak breaks. */}
-          {!s.coupon_ready && (
-            <Text style={styles.stateText}>{t('campaign.screen.couponNotReady')}</Text>
+          {!allReady && (
+            <Text style={styles.stateText}>
+              {t('campaign.screen.couponNotReady', { count })}
+            </Text>
           )}
           <View style={styles.claimRow}>
             <ActionPill
               icon="gift"
               label={
-                s.coupon_ready
-                  ? t('campaign.screen.couponClaim')
-                  : t('campaign.screen.couponSecure')
+                allReady
+                  ? t('campaign.screen.couponClaim', { count })
+                  : t('campaign.screen.couponSecure', { count })
               }
               onPress={handleClaim}
               busy={running === 'claim'}
@@ -371,36 +454,18 @@ export default function CampaignScreen() {
             />
           </View>
         </>
-      ) : (
-        <View style={styles.lockedRow}>
-          <Ionicons name="lock-closed" size={14} color={tokens.text.dim} />
-          <Text style={styles.lockedText}>
-            {t('campaign.screen.couponLocked', { goal: s.goal })}
-          </Text>
-        </View>
       )}
 
-      {partnerUrl && (
-        <Pressable
-          onPress={() => {
-            Linking.openURL(partnerUrl).catch(() => {});
-          }}
-          style={({ pressed }) => [styles.linkRow, pressed && styles.pressed]}
-          accessibilityRole="link"
-          accessibilityHint={partnerHost ?? undefined}
-        >
-          <Ionicons name="globe-outline" size={16} color={tokens.semantic.coinLight} />
-          <Text style={styles.linkText} numberOfLines={1}>
-            {t('campaign.screen.visitPartner')}
-          </Text>
-          {partnerHost && (
-            <Text style={styles.linkMeta} numberOfLines={1}>
-              {partnerHost}
-            </Text>
-          )}
-          <Ionicons name="open-outline" size={15} color={tokens.text.dim} />
-        </Pressable>
-      )}
+      {rewards.map((r) => (
+        <RewardRow
+          key={r.key}
+          reward={r}
+          unlocked={s.unlocked}
+          state={rewardState(r)}
+          copyLabel={t('campaign.screen.couponCopy')}
+          copyA11yLabel={t('campaign.screen.couponCopyA11y', { reward: r.title })}
+        />
+      ))}
     </View>
   );
 
@@ -485,6 +550,8 @@ interface PillAction {
   onPress: () => void;
   busy?: boolean;
   disabled?: boolean;
+  /** Screen-reader label when the visible one repeats (one Copy per code). */
+  a11yLabel?: string;
 }
 
 /** The screen's ONE action control — Join, Add, the claim, Copy. 36px
@@ -494,6 +561,7 @@ function ActionPill({
   onPress,
   busy = false,
   disabled = false,
+  a11yLabel,
   icon,
 }: PillAction & { icon?: keyof typeof Ionicons.glyphMap }) {
   return (
@@ -507,7 +575,7 @@ function ActionPill({
         pressed && styles.pressed,
       ]}
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={a11yLabel ?? label}
       accessibilityState={{ disabled: disabled || busy, busy }}
     >
       {busy ? (
@@ -551,6 +619,118 @@ function StepRow({
         {body && <Text style={styles.stepText}>{body}</Text>}
       </View>
       {action && <ActionPill {...action} />}
+    </View>
+  );
+}
+
+interface RewardLink {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  meta?: string | null;
+  /** Leaves the app (the partner's site) or opens a screen (the paywall). */
+  external: boolean;
+  onPress: () => void;
+}
+
+interface Reward {
+  key: 'perceva' | 'partner';
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  /** The code was already released (the server's `*_ready`). */
+  ready: boolean;
+  /** In hand: claimed AND released. */
+  code: string | null;
+  /** Under the code box: where the code is used (null = nothing to add). */
+  howTo: string | null;
+  link: RewardLink | null;
+}
+
+/** One reward — the two are siblings with this same anatomy, which is also
+ *  a StepRow's: disc (a lock until unlocked, then the reward's glyph on
+ *  solid gold) · title over the state line; the code box + copy pill (and
+ *  the how-to line, when the reward has one) once the code is in hand; then
+ *  the reward's link row. */
+function RewardRow({
+  reward,
+  unlocked,
+  state,
+  copyLabel,
+  copyA11yLabel,
+}: {
+  reward: Reward;
+  unlocked: boolean;
+  state: string | null;
+  copyLabel: string;
+  copyA11yLabel: string;
+}) {
+  const { code, howTo, link } = reward;
+  return (
+    <View style={styles.reward}>
+      <View style={styles.step}>
+        <View style={[styles.stepDisc, unlocked && styles.stepDiscDone]}>
+          <Ionicons
+            name={unlocked ? reward.icon : 'lock-closed'}
+            size={14}
+            color={unlocked ? tokens.semantic.coinInk : tokens.semantic.coinLight}
+          />
+        </View>
+        <View style={styles.stepBody}>
+          <Text style={styles.stepTitle}>{reward.title}</Text>
+          {state && <Text style={styles.stepText}>{state}</Text>}
+        </View>
+      </View>
+
+      {code && (
+        <View style={styles.codeRow}>
+          <View style={styles.codeBox}>
+            <Text
+              style={styles.codeText}
+              selectable
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.6}
+            >
+              {code}
+            </Text>
+          </View>
+          <ActionPill
+            icon="share-outline"
+            label={copyLabel}
+            a11yLabel={copyA11yLabel}
+            onPress={() => {
+              Share.share({ message: code }).catch(() => {});
+            }}
+          />
+        </View>
+      )}
+
+      {code && howTo && <Text style={styles.stepText}>{howTo}</Text>}
+
+      {link && (
+        <Pressable
+          onPress={link.onPress}
+          style={({ pressed }) => [styles.linkRow, pressed && styles.pressed]}
+          accessibilityRole={link.external ? 'link' : 'button'}
+          accessibilityHint={link.meta ?? undefined}
+        >
+          <View style={styles.linkIcon}>
+            <Ionicons name={link.icon} size={16} color={tokens.semantic.coinLight} />
+          </View>
+          <Text style={styles.linkText} numberOfLines={1}>
+            {link.label}
+          </Text>
+          {link.meta && (
+            <Text style={styles.linkMeta} numberOfLines={1}>
+              {link.meta}
+            </Text>
+          )}
+          <Ionicons
+            name={link.external ? 'open-outline' : 'chevron-forward'}
+            size={15}
+            color={tokens.text.dim}
+          />
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -741,12 +921,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 
-  // Reward
-  rewardText: {
-    fontFamily: tokens.font.familyHeavy,
-    fontSize: 17,
-    lineHeight: 22,
-    color: tokens.text.hi,
+  // Rewards
+  reward: {
+    gap: tokens.space[2],
+    borderTopWidth: 1,
+    borderTopColor: tokens.border.divider,
+    paddingTop: tokens.space[3],
   },
   progress: {
     gap: 6,
@@ -771,18 +951,6 @@ const styles = StyleSheet.create({
     fontFamily: tokens.font.family,
     fontSize: 12,
     lineHeight: 16,
-    color: tokens.text.mid,
-  },
-  lockedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  lockedText: {
-    flex: 1,
-    fontFamily: tokens.font.family,
-    fontSize: 13,
-    lineHeight: 18,
     color: tokens.text.mid,
   },
   stateText: {
@@ -817,14 +985,17 @@ const styles = StyleSheet.create({
     color: tokens.semantic.coinLight,
     textAlign: 'center',
   },
+  // The link row sits in the reward row: its glyph in a disc-wide slot, so
+  // the label lines up with the reward's title.
   linkRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: tokens.space[2],
+    gap: tokens.space[3],
     minHeight: 44,
-    borderTopWidth: 1,
-    borderTopColor: tokens.border.divider,
-    paddingTop: tokens.space[2],
+  },
+  linkIcon: {
+    width: 28,
+    alignItems: 'center',
   },
   linkText: {
     flex: 1,

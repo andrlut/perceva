@@ -732,6 +732,9 @@ export interface LearningSponsor {
   name: string;
   campaign_id?: string | null;
   url?: string | null;
+  /** Bucket-relative path in learning-media; drawn top-right on the cover
+   *  and the material hero (components/learning/SponsorLogo). */
+  logo_path?: string | null;
 }
 
 export interface LearningMaterial {
@@ -1050,10 +1053,12 @@ export interface MarkMaterialReadResult {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Partner campaigns (migration 20261104000009) — a sponsored "event": join,
-// adopt the campaign's catalog practice, keep a streak, unlock a coupon.
-// The coupon code lives in `partner_campaign_secret` (no client access) and
-// only comes back through the status RPC once the coupon is claimed.
+// Partner campaigns (migrations 20261104000009 + 20261105000001) — a
+// sponsored "event": join, adopt the campaign's catalog practice, keep a
+// streak, unlock the rewards (the partner's coupon and, when the campaign
+// has one, a Perceva Premium discount). Both codes live in
+// `partner_campaign_secret` (no client access) and only come back through
+// the status RPC once claimed — one claim covers both rewards.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Where a join came from — `partner_campaign_member.source`. The RPC falls
@@ -1065,9 +1070,10 @@ export type PartnerCampaignSource =
   | 'deeplink'
   | 'app';
 
-/** One `partner_campaign` row. RLS only returns campaigns inside their
- *  active window (`is_active`, `starts_at <= now()`, `ends_at` unset or
- *  ahead). */
+/** One `partner_campaign` row. RLS returns campaigns inside their active
+ *  window (`is_active`, `starts_at <= now()`, `ends_at` unset or ahead),
+ *  plus any campaign the caller already claimed (migration 20261105000001:
+ *  the codes arrive later, after the campaign may have ended). */
 export interface PartnerCampaign {
   /** Slug, also the deep-link segment (`/campaign/<id>`). */
   id: string;
@@ -1077,13 +1083,18 @@ export interface PartnerCampaign {
   title_en: string;
   pitch_pt: string;
   pitch_en: string;
+  /** The PARTNER's reward (its coupon). */
   reward_pt: string;
   reward_en: string;
+  /** The Perceva Premium discount that comes with it; null = the campaign
+   *  gives only the partner's reward. */
+  perceva_reward_pt: string | null;
+  perceva_reward_en: string | null;
   /** Sponsored Learning material of the campaign, or null. */
   material_slug: string | null;
   /** `task_template.id` of the practice the streak is counted on. */
   template_id: string;
-  /** Days in a row that unlock the coupon. */
+  /** Days in a row that unlock the rewards. */
   streak_goal: number;
   /** Skipped days that bridge the streak without counting. */
   max_skips: number;
@@ -1115,10 +1126,14 @@ export interface PartnerCampaignStatus {
   unlocked: boolean;
   claimed: boolean;
   claimed_at: string | null;
-  /** The partner already released the code. */
+  /** The partner already released its coupon code. */
   coupon_ready: boolean;
   /** Only when `claimed` and `coupon_ready`; null otherwise. */
   coupon_code: string | null;
+  /** The Perceva Premium discount code was already released. */
+  perceva_code_ready: boolean;
+  /** Only when `claimed` and `perceva_code_ready`; null otherwise. */
+  perceva_code: string | null;
 }
 
 /** Return shape of `join_partner_campaign` (idempotent — the first

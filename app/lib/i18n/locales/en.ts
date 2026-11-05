@@ -1208,27 +1208,49 @@ const en = {
 
   /**
    * Partner campaign (Programa Paker Health): the Home card and the
-   * `/campaign/[id]` screen. The campaign's own title, pitch and reward
-   * come from the `partner_campaign` row (`_pt`/`_en`), not from here.
+   * `/campaign/[id]` screen. The campaign's own title, pitch and the two
+   * rewards' texts come from the `partner_campaign` row (`reward_*` = the
+   * partner's coupon, `perceva_reward_*` = the Premium discount), not from
+   * here. The number of days is always {{goal}} (the server's). Where a
+   * line counts the rewards, `count` = `rewardCount` (1 without the Premium
+   * discount, 2 with it), always spelled out. The codes only show on the
+   * campaign screen: the card and the material row never say "here".
    */
   campaign: {
     /** Eyebrow of the Home card and the screen's hero — the title already
      *  names the partner, so the label only says it is paid. */
     sponsored: 'Sponsored',
     card: {
-      join: 'Join and earn a coupon after {{goal}} days in a row',
+      join: {
+        one: 'Join and earn a discount after {{goal}} days in a row',
+        other: 'Join and earn two discounts after {{goal}} days in a row',
+      },
       adopt: 'Add the practice to start',
       progress: '{{days}} of {{goal}} days in a row',
-      unlocked: 'You made it! Tap to secure your coupon',
-      claimed: 'Your coupon is here',
-      claimedPending: "Coupon secured. The code isn't here yet",
+      unlocked: {
+        one: 'You made it! Tap to secure your discount',
+        other: 'You made it! Tap to secure your two discounts',
+      },
+      claimed: {
+        one: 'Your code is ready · tap to see',
+        other: 'Your two codes are ready · tap to see',
+      },
+      /** Claimed, one code released and the other not yet (two only). */
+      claimedPartial: 'One code released · the other on its way',
+      claimedPending: {
+        one: 'Discount secured · code on its way',
+        other: 'Discounts secured · codes on their way',
+      },
       a11y: '{{sponsored}}. {{title}}',
       dismissA11y: 'Hide this card',
     },
     screen: {
       how: 'How it works',
       step1Title: 'Join the program',
-      step1Body: "It's free. The coupon is for members only.",
+      step1Body: {
+        one: "It's free. The discount is for members only.",
+        other: "It's free. The two discounts are for members only.",
+      },
       step1Done: "You're in",
       step1Cta: 'Join',
       step2Title: 'Add the daily practice',
@@ -1238,20 +1260,56 @@ const en = {
       step2Cta: 'Add',
       step2Done: 'Already in your practices',
       step3Title: 'Check it off every day',
-      step3Body:
-        "Check it off the same day (or by the next morning) — later doesn't count. You can skip up to {{skips}} days; they don't add up, but they don't break the streak.",
+      // count = max_skips (zero: no skip sentence at all)
+      step3Body: {
+        zero: "Check it off the same day (or by the next morning) — later doesn't count.",
+        one: "Check it off the same day (or by the next morning) — later doesn't count. You can skip {{count}} day: it doesn't count toward the streak, but it doesn't break it either.",
+        other:
+          "Check it off the same day (or by the next morning) — later doesn't count. You can skip up to {{count}} days: they don't count toward the streak, but they don't break it either.",
+      },
       progress: '{{days}} of {{goal}} days',
-      skipsUsed: '{{used}} of {{max}} skips used',
+      // count = max_skips
+      skipsUsed: {
+        one: '{{used}} of {{count}} skip used',
+        other: '{{used}} of {{count}} skips used',
+      },
+      /** Card label with a single reward; `rewardsTitle` with both. */
       couponTitle: 'Your reward',
+      rewardsTitle: 'Your rewards',
+      /** Locked: said once, above the rows (each row's lock says the
+       *  rest). */
       couponLocked: 'Unlocks at {{goal}} days in a row',
-      couponClaim: 'Get my coupon',
-      couponSecure: 'Secure my coupon',
-      couponNotReady:
-        "The partner hasn't sent the code yet. Secure it now: the coupon stays yours even if the streak breaks later, and the code shows up here as soon as it arrives.",
-      couponPending:
-        "The coupon is yours. The partner hasn't sent the code yet; it shows up here as soon as it arrives.",
+      /** One reward row's state line — the same in both rows. */
+      rewardReady: 'Unlocked',
+      rewardOnItsWay: 'Unlocked · code on its way',
+      couponPending: "The code is on its way and shows up here as soon as it's released.",
+      /** The one claim covers both rewards. */
+      couponClaim: {
+        one: 'Get my discount',
+        other: 'Get my discounts',
+      },
+      couponSecure: {
+        one: 'Secure my discount',
+        other: 'Secure my discounts',
+      },
+      couponNotReady: {
+        one: 'Secure it now: the discount stays yours even if the streak breaks later, and the code shows up here as soon as it is released.',
+        other:
+          'Secure them now: the two discounts stay yours even if the streak breaks later, and each code shows up here as soon as it is released.',
+      },
       couponCopy: 'Copy or share',
-      visitPartner: 'Partner website',
+      /** Screen-reader label of each row's button (there are two alike). */
+      couponCopyA11y: 'Copy or share the code: {{reward}}',
+      /** Under the Premium code: where it goes (the paywall has no code
+       *  field; the store applies it). */
+      premiumHowTo: {
+        android:
+          'Use the code when you subscribe to the annual plan: on the Play Store payment sheet, tap the payment method, then Redeem code.',
+        ios: 'Use the code for the annual plan: in the App Store, tap your photo, then Redeem Gift Card or Code.',
+      },
+      /** Link under the Premium code (Android, not yet Premium). */
+      seePremium: 'See the annual plan',
+      visitPartner: '{{name}} website',
       materialTitle: 'Read the material',
       disclosure:
         'Sponsored content. {{name}} only gets program totals (how many people joined), never who you are.',

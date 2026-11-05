@@ -20,15 +20,20 @@ import { dateKeyFromLocal } from './history';
 import { invalidateTaskSurfaces } from './tasks';
 
 /**
- * Partner campaigns (Programa Paker Health, migration 20261104000009): a
- * sponsored "event" — join, adopt the campaign's catalog practice, keep a
- * streak, unlock a coupon.
+ * Partner campaigns (Programa Paker Health, migrations 20261104000009 +
+ * 20261105000001): a sponsored "event" — join, adopt the campaign's catalog
+ * practice, keep a streak, unlock the rewards (the partner's coupon and a
+ * Perceva Premium discount; one claim covers both).
  *
  * The client only DISPLAYS progress. The streak is counted by the server
  * (`partner_campaign_status`, the same walk `claim_partner_coupon` re-runs
  * before writing the claim), over completions it stamped itself — so no
- * client-side count here can unlock anything. The coupon code never leaves
+ * client-side count here can unlock anything. Neither code ever leaves
  * `partner_campaign_secret` except through those two RPCs, once claimed.
+ *
+ * ORDER: migration 20261105000001 reaches the cloud before this ships —
+ * CAMPAIGN_SELECT names its perceva_reward_* columns, and PostgREST answers
+ * 400 to an unknown column.
  *
  * Never gated on modules or Premium: the campaign is for every account.
  */
@@ -57,13 +62,17 @@ export interface PartnerCampaignWithPractice extends PartnerCampaign {
 // Explicit list instead of `*`: the row type above is the contract, and the
 // embed rides along in the same round-trip.
 const CAMPAIGN_SELECT = `id, partner_name, partner_url, title_pt, title_en,
-  pitch_pt, pitch_en, reward_pt, reward_en, material_slug, template_id,
+  pitch_pt, pitch_en, reward_pt, reward_en, perceva_reward_pt,
+  perceva_reward_en, material_slug, template_id,
   streak_goal, max_skips, starts_at, ends_at, is_active, created_at,
   practice:task_template ( title, icon )`;
 
 /**
- * The campaign the Home card advertises: the newest one RLS lets through
- * (it only returns campaigns inside their active window), or null.
+ * The campaign the Home card advertises: the newest one RLS lets through,
+ * or null. RLS returns campaigns inside their active window, plus — after
+ * it ends or is paused — the one the caller already claimed (migration
+ * 20261105000001): the codes are filled in later, and the app is the only
+ * place they arrive.
  */
 export function useActivePartnerCampaign(opts: { enabled?: boolean } = {}) {
   return useQuery({
@@ -86,7 +95,8 @@ export function useActivePartnerCampaign(opts: { enabled?: boolean } = {}) {
 
 /**
  * One campaign by id — the `/campaign/[id]` screen (deep links included).
- * Null = ended, inactive or unknown: RLS hides all three the same way.
+ * Null = ended, inactive or unknown: RLS hides all three the same way —
+ * except a campaign the caller already claimed, which stays readable.
  * Opening from the Home card paints instantly from the active-campaign
  * cache while this confirms it.
  */
@@ -226,11 +236,12 @@ export function useAdoptCampaignPractice() {
 }
 
 /**
- * Claim the coupon. The server recomputes the streak with the same walk as
- * the status read and refuses below the goal (`streak_not_reached`) or
- * without membership (`not_a_member`). The claim is permanent: undoing a
- * completion afterwards doesn't take the coupon back. Returns the status
- * object (now `claimed`), with the code once the partner released it.
+ * Claim the rewards (one claim covers both). The server recomputes the
+ * streak with the same walk as the status read and refuses below the goal
+ * (`streak_not_reached`) or without membership (`not_a_member`). The claim
+ * is permanent: undoing a completion afterwards doesn't take the rewards
+ * back. Returns the status object (now `claimed`), with each code once it
+ * was released.
  * `auto` marks the claim useAutoClaimPartnerCoupon fires, in analytics.
  */
 export function useClaimPartnerCoupon() {
@@ -269,10 +280,10 @@ const autoClaimFired = new Set<string>();
 /**
  * Make an unlock permanent the moment the server reports it. `unlocked` is
  * recomputed on every read (`claimed or streak >= goal`), so an unlock that
- * nobody claims lasts only as long as the streak: reach day 28, miss day 29,
- * and it is gone. For a MEMBER the claim needs nothing more from them, so it
+ * nobody claims lasts only as long as the streak: reach the goal, miss the
+ * next day, and it is gone. For a MEMBER the claim needs nothing more from them, so it
  * is sent on their behalf as soon as `member && unlocked && !claimed` shows
- * up — the "Get my coupon" tap is left with revealing the code. A
+ * up — the claim tap is left with revealing the codes. A
  * non-member still has to join first (membership is the partner's tracking
  * base, never implied), which the screen's claim button does in the same
  * tap.

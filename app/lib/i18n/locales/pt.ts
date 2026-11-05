@@ -1205,27 +1205,49 @@ const pt: Translations = {
 
   /**
    * Campanha de parceiro (Programa Paker Health): o cartão da Home e a tela
-   * `/campaign/[id]`. Título, pitch e recompensa da campanha vêm da linha
-   * de `partner_campaign` (`_pt`/`_en`), não daqui.
+   * `/campaign/[id]`. Título, pitch e o texto das duas recompensas vêm da
+   * linha de `partner_campaign` (`reward_*` = o cupom do parceiro,
+   * `perceva_reward_*` = o desconto do Premium), não daqui. O número de
+   * dias é sempre {{goal}} (o do servidor). Onde a frase conta as
+   * recompensas, `count` = `rewardCount` (1 sem o desconto do Premium, 2
+   * com), sempre por extenso. Os códigos só aparecem na tela da campanha:
+   * o cartão e a linha do material nunca dizem "aqui".
    */
   campaign: {
     /** Eyebrow do cartão da Home e do topo da tela — o título já nomeia o
      *  parceiro, então o rótulo só diz que é pago. */
     sponsored: 'Patrocinado',
     card: {
-      join: 'Entre e ganhe um cupom com {{goal}} dias seguidos',
+      join: {
+        one: 'Entre e ganhe um desconto com {{goal}} dias seguidos',
+        other: 'Entre e ganhe dois descontos com {{goal}} dias seguidos',
+      },
       adopt: 'Falta adicionar a prática',
       progress: '{{days}} de {{goal}} dias seguidos',
-      unlocked: 'Você chegou lá! Toque para garantir o cupom',
-      claimed: 'Seu cupom está aqui',
-      claimedPending: 'Cupom garantido. O código ainda não chegou',
+      unlocked: {
+        one: 'Você chegou lá! Toque para garantir seu desconto',
+        other: 'Você chegou lá! Toque para garantir seus dois descontos',
+      },
+      claimed: {
+        one: 'Seu código está pronto · toque para ver',
+        other: 'Seus dois códigos estão prontos · toque para ver',
+      },
+      /** Claim feito, um código liberado e o outro ainda não (só com dois). */
+      claimedPartial: 'Um código liberado · o outro a caminho',
+      claimedPending: {
+        one: 'Desconto garantido · código a caminho',
+        other: 'Descontos garantidos · códigos a caminho',
+      },
       a11y: '{{sponsored}}. {{title}}',
       dismissA11y: 'Esconder este cartão',
     },
     screen: {
       how: 'Como funciona',
       step1Title: 'Entre no programa',
-      step1Body: 'Não custa nada. O cupom é só pra quem entra.',
+      step1Body: {
+        one: 'Não custa nada. O desconto é só pra quem entra.',
+        other: 'Não custa nada. Os dois descontos são só pra quem entra.',
+      },
       step1Done: 'Você está no programa',
       step1Cta: 'Entrar',
       step2Title: 'Adicione a prática diária',
@@ -1234,20 +1256,57 @@ const pt: Translations = {
       step2Cta: 'Adicionar',
       step2Done: 'Já está nas suas práticas',
       step3Title: 'Marque todo dia',
-      step3Body:
-        'Marque no mesmo dia (ou até a manhã seguinte): marcar depois não conta. Pode pular até {{skips}} dias; eles não somam, mas não quebram a sequência.',
+      // count = max_skips (zero: sem a frase do pulo)
+      step3Body: {
+        zero: 'Marque no mesmo dia (ou até a manhã seguinte): marcar depois não conta.',
+        one: 'Marque no mesmo dia (ou até a manhã seguinte): marcar depois não conta. Pode pular {{count}} dia: ele não conta, mas também não quebra a sequência.',
+        other:
+          'Marque no mesmo dia (ou até a manhã seguinte): marcar depois não conta. Pode pular até {{count}} dias: eles não contam, mas também não quebram a sequência.',
+      },
       progress: '{{days}} de {{goal}} dias',
-      skipsUsed: '{{used}} de {{max}} pulos usados',
+      // count = max_skips
+      skipsUsed: {
+        one: '{{used}} de {{count}} pulo usado',
+        other: '{{used}} de {{count}} pulos usados',
+      },
+      /** Rótulo do cartão com uma recompensa só; `rewardsTitle` com as duas. */
       couponTitle: 'Sua recompensa',
+      rewardsTitle: 'Suas recompensas',
+      /** Trancado: dito uma vez só, acima das linhas (o cadeado de cada
+       *  linha já diz o resto). */
       couponLocked: 'Libera com {{goal}} dias seguidos',
-      couponClaim: 'Pegar meu cupom',
-      couponSecure: 'Garantir meu cupom',
-      couponNotReady:
-        'O código ainda não chegou do parceiro. Garanta agora: o cupom fica seu mesmo se a sequência quebrar depois, e o código aparece aqui assim que chegar.',
-      couponPending:
-        'O cupom é seu. O código ainda não chegou do parceiro; ele aparece aqui assim que chegar.',
+      /** A linha de estado de cada recompensa — igual nas duas linhas. */
+      rewardReady: 'Liberado',
+      rewardOnItsWay: 'Liberado · código a caminho',
+      couponPending: 'O código está a caminho e aparece aqui assim que for liberado.',
+      /** Um claim só vale pelas duas recompensas. */
+      couponClaim: {
+        one: 'Pegar meu desconto',
+        other: 'Pegar meus descontos',
+      },
+      couponSecure: {
+        one: 'Garantir meu desconto',
+        other: 'Garantir meus descontos',
+      },
+      couponNotReady: {
+        one: 'Garanta agora: o desconto fica seu mesmo se a sequência quebrar depois, e o código aparece aqui assim que for liberado.',
+        other:
+          'Garanta agora: os dois descontos ficam seus mesmo se a sequência quebrar depois, e cada código aparece aqui assim que for liberado.',
+      },
       couponCopy: 'Copiar ou enviar',
-      visitPartner: 'Site do parceiro',
+      /** Rótulo de leitor de tela do botão de cada linha (são dois iguais). */
+      couponCopyA11y: 'Copiar ou enviar o código: {{reward}}',
+      /** Embaixo do código do Premium: onde ele entra (o paywall não tem
+       *  campo de código; quem aplica é a loja). */
+      premiumHowTo: {
+        android:
+          'Use o código ao assinar o plano anual: na tela de pagamento da Play Store, toque na forma de pagamento e depois em Resgatar código.',
+        ios: 'Use o código no plano anual: na App Store, toque na sua foto e depois em Resgatar Cartão-Presente ou Código.',
+      },
+      /** Link embaixo do código do Premium (Android, quem ainda não é
+       *  Premium). */
+      seePremium: 'Ver o plano anual',
+      visitPartner: 'Site da {{name}}',
       materialTitle: 'Leia o material',
       disclosure:
         'Conteúdo patrocinado. {{name}} recebe só números gerais do programa (quantas pessoas entraram), nunca quem você é.',

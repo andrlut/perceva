@@ -28,9 +28,11 @@ import { tokens } from '@/theme';
  * names the partner). The whole card opens `/campaign/<id>`, where every
  * action lives — no inline CTA. A member's unlock is claimed here on sight
  * (`useAutoClaimPartnerCoupon`): an unclaimed unlock dies with the streak.
+ * The program gives two rewards (a Perceva Premium discount and the
+ * partner's coupon); the line talks about both.
  *
  * The X only shows while there is no progress to hide — before any
- * involvement, or once the code is in hand (`canDismissCampaignCard`). A
+ * involvement, or once every code is in hand (`canDismissCampaignCard`). A
  * dismissal (per campaign) stops counting while there is live progress, so
  * a practice adopted after the X still shows its streak.
  *
@@ -73,7 +75,8 @@ export function PartnerCampaignCard({ enabled }: Props) {
   const s = status.data ?? null;
   useAutoClaimPartnerCoupon(s);
 
-  const canDismiss = s != null && canDismissCampaignCard(s);
+  const canDismiss =
+    s != null && campaign.data != null && canDismissCampaignCard(campaign.data, s);
   const hydrated = campaignId != null && dismissal?.id === campaignId;
   const visible =
     enabled &&
@@ -103,7 +106,7 @@ export function PartnerCampaignCard({ enabled }: Props) {
   const open = () =>
     router.push({ pathname: '/campaign/[id]', params: { id: c.id, source: 'banner' } });
 
-  const line = campaignStateLine(s, t);
+  const line = campaignStateLine(c, s, t);
   const showBar = s.adopted && !s.claimed;
   const ratio = s.goal > 0 ? Math.min(1, s.streak_days / s.goal) : 0;
 

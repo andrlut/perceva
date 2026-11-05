@@ -14,6 +14,7 @@ import { DIMENSION_META, SUB_META } from '@/theme/dimensions';
 
 import { MaterialCover } from '../MaterialCover';
 import { SponsorLine } from './SponsorLine';
+import { SponsorLogo } from './SponsorLogo';
 
 /**
  * Book-cover-style tile for the Learn carousel. 2:3 aspect ratio, title
@@ -144,11 +145,16 @@ export const CoverCard = memo(function CoverCard({
         {/* Title only — TOP-anchored over the art's empty upper third, so the
            lower part of the cover (the illustration's subject) stays visible
            and undimmed. The type moved to the meta row below the cover. */}
-        <View style={styles.titleWrap}>
+        <View style={[styles.titleWrap, sponsor?.logoPath != null && styles.titleWrapUnderLogo]}>
           <Text style={styles.title} numberOfLines={4}>
             {title}
           </Text>
         </View>
+
+        {/* Partner logo — top-right; the title steps down to clear it. */}
+        {sponsor?.logoPath != null && (
+          <SponsorLogo path={sponsor.logoPath} name={sponsor.name} height={18} style={styles.sponsorLogo} />
+        )}
 
         {/* Read indicator — bottom-right now that the title moved up. */}
         {read && (
@@ -304,6 +310,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingTop: 12,
     paddingBottom: 16,
+  },
+  titleWrapUnderLogo: {
+    paddingTop: 36,
+  },
+  sponsorLogo: {
+    top: 10,
+    right: 10,
   },
   title: {
     fontFamily: 'Manrope_800ExtraBold',

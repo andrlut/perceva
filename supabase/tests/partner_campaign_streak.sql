@@ -1,5 +1,8 @@
--- Checagens manuais da 20261104000009_partner_campaign.sql. NÃO é migration
--- e NÃO é pgTAP (`supabase test db` não é o runner deste arquivo).
+-- Checagens manuais da 20261104000009_partner_campaign.sql e da
+-- 20261105000001_partner_campaign_7_days.sql (régua do dia em São Paulo,
+-- portão do perceva_code, quem fez o claim continua vendo a campanha). NÃO
+-- é migration e NÃO é pgTAP (`supabase test db` não é o runner deste
+-- arquivo).
 --
 -- Rodar contra o banco LOCAL depois de `supabase db reset` (nunca na cloud),
 -- como superusuário (o `postgres` local não insere em auth.users):
@@ -13,7 +16,8 @@
 --
 -- Os dias são relativos a current_date (UTC no servidor): k = 0 é hoje,
 -- k = 1 é ontem. Conclusão "no dia" = inserida ao meio-dia UTC do próprio
--- dia; "atrasada" = inserida 7 dias depois do dia local.
+-- dia (9h em São Paulo, dentro da régua d..d+1 da 20261105000001);
+-- "atrasada" = inserida 7 dias depois do dia local.
 --
 -- Não testa o EXECUTE negado chamando a função como authenticated: o Postgres
 -- local já deu SEGFAULT em "permission denied" de função (a cloud não) — por
@@ -313,6 +317,159 @@ begin
   assert s->>'coupon_code' = 'PAKER-TESTE', 'depois: o código continua';
 
   raise notice 'ok  claim, liberação do código e claim idempotente';
+end $$;
+
+-- ─── 20261105000001: a régua do dia em São Paulo ────────────────────────────
+
+do $$
+declare
+  v_uid  uuid := '00000000-0000-4000-8000-0000000c0de1';
+  v_task uuid;
+  r      record;
+begin
+  select id into v_task from public.task
+  where character_id = v_uid
+    and coalesce(origin_template_id, template_id) = 'nutrition_daily_supplement'
+  order by created_at desc
+  limit 1;
+
+  -- amanhã marcado hoje (meio-dia UTC de hoje = 9h em São Paulo): a faixa
+  -- UTC d-1..d+1 da 09 contava; a de São Paulo d..d+1 não
+  perform pg_temp.set_days(array(select generate_series(0, 5)));
+  insert into public.task_completion
+    (task_id, character_id, completed_at, completed_local_date, xp_granted, coins_granted, created_at)
+  values
+    (v_task, v_uid, (current_date + 1) + time '12:00', current_date + 1, 10, 10,
+     current_date + time '12:00');
+  select * into r from public._partner_streak('streak-test', v_uid, current_date + 1);
+  assert r.streak_days = 6 and not r.done_today,
+    format('amanhã marcado hoje não devia contar: veio streak=%s done_today=%s',
+           r.streak_days, r.done_today);
+
+  -- ontem marcado na manhã seguinte (10h UTC = 7h em São Paulo) conta
+  perform pg_temp.set_days('{0}');
+  insert into public.task_completion
+    (task_id, character_id, completed_at, completed_local_date, xp_granted, coins_granted, created_at)
+  values
+    (v_task, v_uid, (current_date - 1) + time '12:00', current_date - 1, 10, 10,
+     current_date + time '10:00');
+  select * into r from public._partner_streak('streak-test', v_uid, current_date);
+  assert r.streak_days = 2,
+    format('ontem marcado na manhã seguinte devia contar: veio streak=%s', r.streak_days);
+
+  -- pulo de amanhã marcado hoje não liga nada
+  perform pg_temp.set_days('{0,2,3}');
+  insert into public.task_skip (task_id, character_id, skipped_for)
+  values (v_task, v_uid, current_date - 1);
+  update public.task_skip
+  set created_at = (current_date - 2) + time '12:00'
+  where task_id = v_task and skipped_for = current_date - 1;
+  select * into r from public._partner_streak('streak-test', v_uid, current_date);
+  assert r.streak_days = 1 and r.skips_used = 0,
+    format('pulo marcado na véspera não devia ligar: veio streak=%s skips=%s',
+           r.streak_days, r.skips_used);
+
+  raise notice 'ok  régua do dia em São Paulo (amanhã hoje não; manhã seguinte sim)';
+end $$;
+
+-- ─── 20261105000001: portão do perceva_code e campanha depois do fim ────────
+
+insert into public.partner_campaign (
+  id, partner_name, title_pt, title_en, pitch_pt, pitch_en, reward_pt, reward_en,
+  perceva_reward_pt, perceva_reward_en, template_id, streak_goal, max_skips, starts_at
+) values (
+  'streak-seven', 'Teste', 'Teste', 'Test', 'p', 'p', 'r', 'r',
+  'pr', 'pr', 'nutrition_daily_supplement', 7, 1, now() - interval '30 days'
+);
+
+-- o código do Premium já liberado ANTES do claim: ready sim, código não
+insert into public.partner_campaign_secret (campaign_id, coupon_code, perceva_code)
+values ('streak-seven', null, 'PERCEVA-TESTE');
+
+select pg_temp.set_days(array(select generate_series(0, 5)));
+
+do $$
+declare
+  s jsonb;
+begin
+  perform public.join_partner_campaign('streak-seven', 'campaign');
+
+  s := public.partner_campaign_status('streak-seven', current_date);
+  assert (s->>'goal')::int = 7 and (s->>'max_skips')::int = 1, 'seven: alvo e teto';
+  assert (s->>'streak_days')::int = 6, 'seven: 6 dias';
+  assert (s->>'unlocked')::boolean = false, 'seven: ainda trancado';
+  assert (s->>'perceva_code_ready')::boolean, 'seven: código do Premium liberado';
+  assert (s->>'perceva_code') is null, 'seven: sem código do Premium antes do claim';
+  assert (s->>'coupon_code') is null, 'seven: sem cupom antes do claim';
+
+  begin
+    perform public.claim_partner_coupon('streak-seven', current_date);
+    raise exception 'claim com 6 de 7 devia falhar';
+  exception when others then
+    if sqlerrm <> 'streak_not_reached' then raise; end if;
+  end;
+
+  raise notice 'ok  perceva_code nulo antes do claim';
+end $$;
+
+select pg_temp.set_days(array(select generate_series(0, 6)));
+
+do $$
+declare
+  s jsonb;
+begin
+  s := public.claim_partner_coupon('streak-seven', current_date);
+  assert (s->>'claimed')::boolean, 'seven: claimed';
+  assert s->>'perceva_code' = 'PERCEVA-TESTE', 'seven: código do Premium depois do claim';
+  assert (s->>'coupon_ready')::boolean = false and (s->>'coupon_code') is null,
+    'seven: cupom do parceiro ainda a caminho';
+
+  -- o Studio encerra (ends_at) e depois pausa (is_active) a campanha; o
+  -- cupom do parceiro só chega depois. Quem fez o claim continua lendo.
+  update public.partner_campaign set ends_at = now() - interval '1 minute'
+  where id = 'streak-seven';
+  update public.partner_campaign_secret set coupon_code = 'PAKER-SEVEN'
+  where campaign_id = 'streak-seven';
+  s := public.partner_campaign_status('streak-seven', current_date);
+  assert s->>'coupon_code' = 'PAKER-SEVEN' and s->>'perceva_code' = 'PERCEVA-TESTE',
+    'seven: os dois códigos chegam depois do fim da campanha';
+
+  update public.partner_campaign set is_active = false where id = 'streak-seven';
+  s := public.partner_campaign_status('streak-seven', current_date);
+  assert (s->>'claimed')::boolean, 'seven: campanha pausada ainda responde pra quem fez o claim';
+
+  -- entrar e fazer o claim seguem presos à janela ativa
+  begin
+    perform public.claim_partner_coupon('streak-seven', current_date);
+    raise exception 'claim fora da janela devia falhar';
+  exception when others then
+    if sqlerrm <> 'campaign_not_found' then raise; end if;
+  end;
+  begin
+    perform public.join_partner_campaign('streak-seven', 'campaign');
+    raise exception 'join fora da janela devia falhar';
+  exception when others then
+    if sqlerrm <> 'campaign_not_found' then raise; end if;
+  end;
+
+  -- sem claim, campanha encerrada some
+  update public.partner_campaign set ends_at = now() - interval '1 minute'
+  where id = 'streak-late-start';
+  begin
+    perform public.partner_campaign_status('streak-late-start', current_date);
+    raise exception 'campanha encerrada sem claim devia sumir';
+  exception when others then
+    if sqlerrm <> 'campaign_not_found' then raise; end if;
+  end;
+
+  assert exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'partner_campaign'
+      and policyname = 'partner_campaign_read_visible'
+      and qual like '%partner_coupon_claim%'
+  ), 'policy de leitura devia aceitar quem fez o claim';
+
+  raise notice 'ok  perceva_code depois do claim; campanha encerrada segue pra quem fez o claim';
 end $$;
 
 rollback;

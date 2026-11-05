@@ -89,7 +89,9 @@ export type PremiumSource =
   | 'instrument'
   | 'settings'
   | 'learn'
-  | 'modules';
+  | 'modules'
+  /** The partner campaign's Perceva Premium discount (`/campaign/[id]`). */
+  | 'partner';
 
 const PREMIUM_SOURCES: readonly PremiumSource[] = [
   'limit-modal',
@@ -98,6 +100,7 @@ const PREMIUM_SOURCES: readonly PremiumSource[] = [
   'settings',
   'learn',
   'modules',
+  'partner',
 ] as const;
 
 export function normalizePremiumSource(

@@ -10,6 +10,10 @@ export interface SponsorInfo {
   /** `partner_campaign.id` the material belongs to, when there is one —
    *  the material screen's CTA opens `/campaign/<id>`. */
   campaignId: string | null;
+  /** Bucket-relative logo (`sponsor.logo_path`), drawn top-right on the
+   *  cover and the material hero. Material rows only — the idea view does
+   *  not flatten it. */
+  logoPath: string | null;
 }
 
 function cleanText(v: unknown): string | null {
@@ -40,9 +44,11 @@ export function sponsorOf(
   if (s != null && typeof s === 'object' && !Array.isArray(s)) {
     const obj = s as Record<string, unknown>;
     const name = cleanText(obj.name);
-    if (name) return { name, campaignId: cleanText(obj.campaign_id) };
+    if (name) {
+      return { name, campaignId: cleanText(obj.campaign_id), logoPath: cleanText(obj.logo_path) };
+    }
   }
   const name = cleanText(row.sponsor_name);
-  if (name) return { name, campaignId: cleanText(row.sponsor_campaign_id) };
+  if (name) return { name, campaignId: cleanText(row.sponsor_campaign_id), logoPath: null };
   return null;
 }

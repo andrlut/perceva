@@ -1,5 +1,5 @@
 {
-  "_doc": "Roteiro do vídeo (molde genérico, tools/video/MOLDE.md). Cada fala = uma cena do catálogo + peças do elenco + deixas (trechos da fala em que algo entra). {pt,en} em qualquer texto. A cena 'verso' fala o card VERBATIM (vem do ideas-spec); o 'say' do verso só soletra os números pra voz. Material patrocinado: as falas tratam do ingrediente e do hábito, sem nome de marca. Sem número, estudo ou ressalva metodológica: isso fica no texto da ideia.",
+  "_doc": "Roteiro do vídeo (molde genérico, tools/video/MOLDE.md). Cada fala = uma cena do catálogo + peças do elenco + deixas (trechos da fala em que algo entra). {pt,en} em qualquer texto. A cena 'verso' fala o card VERBATIM (vem do ideas-spec). Material patrocinado: as falas tratam do ingrediente e do hábito, sem nome de marca, sem resultado de estudo, sem número fora do verso. Números do verso e o QA da voz (scripts/qa-voice.mjs): o QA troca 'um'..'dez' / 'one'..'ten' por algarismo e cobra todo algarismo na transcrição, então número até dez vai por extenso no 'say' (oito, três, cinco); acima de dez NÃO tem 'say' (trinta/sessenta não viram algarismo, o QA cobraria a palavra e o transcritor escreve 30/60), a voz lê o algarismo do próprio card. Unidade abreviada no card (3 a 5 g): no EN o transcritor do QA escreve 'g' e o QA cobraria 'grams' do 'say', então o verso EN da creatina não tem 'say' (a voz lê o card e o QA cobra só o 3 e o 5); no PT o transcritor escreve 'gramas' e o 'say' fica. Sem cena 'comparar' neste material: o molde põe a figura de pele escura sempre no painel que perde (seed 3), o que lê como 'pele escura = jeito errado'; 'weeks' e 'stock' viraram pessoa/virada com a protagonista só, até o molde corrigir o comparar.",
   "slug": "paker-health-energia-pele-forca",
   "ideas": {
     "pre-treino-energia": {
@@ -7,8 +7,8 @@
       "lines": [
         {
           "id": "hook",
-          "scene": "pensa",
-          "hold": 0.4,
+          "scene": "pessoa",
+          "hold": 0.3,
           "pt": {
             "caption": "Hora do treino, e *a disposição não veio junto*?"
           },
@@ -17,16 +17,27 @@
           },
           "props": {
             "mood": "cansado",
-            "thought": "ion:barbell",
-            "at": {
-              "pt": "Hora do treino",
-              "en": "Time to train"
-            }
+            "objects": [
+              {
+                "p": "ion:barbell",
+                "cue": {
+                  "pt": "Hora do treino",
+                  "en": "Time to train"
+                }
+              },
+              {
+                "p": "ion:battery-dead",
+                "cue": {
+                  "pt": "disposição",
+                  "en": "your energy"
+                }
+              }
+            ]
           }
         },
         {
           "id": "star",
-          "scene": "pessoa",
+          "scene": "pensa",
           "pt": {
             "caption": "No pré-treino, a estrela é a *cafeína*: ela ajuda a ficar alerta e a se concentrar melhor."
           },
@@ -35,140 +46,34 @@
           },
           "props": {
             "mood": "cansado",
-            "turn": {
-              "pt": "ficar alerta",
-              "en": "stay alert"
-            },
-            "to": "feliz",
-            "objects": [
-              {
-                "p": "ion:cafe",
-                "cue": {
-                  "pt": "cafeína",
-                  "en": "caffeine"
-                }
-              },
-              {
-                "p": "ion:flash",
-                "cue": {
-                  "pt": "alerta",
-                  "en": "alert"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "id": "careful",
-          "scene": "lista",
-          "hold": 0.4,
-          "pt": {
-            "caption": "Como tem cafeína, *evite perto da hora de dormir*, na gravidez e se você é sensível a estimulantes."
-          },
-          "en": {
-            "caption": "Since it has caffeine, *avoid it close to bedtime*, during pregnancy and if you're sensitive to stimulants."
-          },
-          "props": {
-            "kicker": {
-              "pt": "Bom saber",
-              "en": "Good to know"
-            },
-            "mood": "ok",
-            "items": [
-              {
-                "icon": "moon",
-                "text": {
-                  "pt": "perto da hora de dormir",
-                  "en": "close to bedtime"
-                },
-                "cue": {
-                  "pt": "hora de dormir",
-                  "en": "bedtime"
-                }
-              },
-              {
-                "icon": "woman",
-                "text": {
-                  "pt": "na gravidez",
-                  "en": "during pregnancy"
-                },
-                "cue": {
-                  "pt": "na gravidez",
-                  "en": "during pregnancy"
-                }
-              },
-              {
-                "icon": "alert-circle",
-                "text": {
-                  "pt": "sensível a estimulantes",
-                  "en": "sensitive to stimulants"
-                },
-                "cue": {
-                  "pt": "sensível a estimulantes",
-                  "en": "sensitive to stimulants"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "id": "both",
-          "scene": "comparar",
-          "pt": {
-            "caption": "Pra quem treina há anos e pra quem está começando, *a cafeína melhora o desempenho*."
-          },
-          "en": {
-            "caption": "Whether you've trained for years or you're just starting, *caffeine improves performance*."
-          },
-          "props": {
-            "left": {
-              "label": {
-                "pt": "Treina há anos",
-                "en": "Years of training"
-              },
-              "mood": "feliz",
-              "object": "ion:barbell",
-              "arrives": {
-                "pt": "treina há anos",
-                "en": "trained for years"
-              }
-            },
-            "right": {
-              "label": {
-                "pt": "Está começando",
-                "en": "Just starting"
-              },
-              "mood": "feliz",
-              "object": "ion:footsteps",
-              "arrives": {
-                "pt": "está começando",
-                "en": "just starting"
-              }
+            "thought": "ion:flash",
+            "at": {
+              "pt": "cafeína",
+              "en": "caffeine"
             }
           }
         },
         {
-          "id": "fronts",
+          "id": "fronts2",
           "scene": "lista",
           "pt": {
-            "caption": "Resistência, esforço intenso e foco: *os outros ingredientes trabalham em frentes diferentes*."
+            "caption": "E outros ingredientes trabalham *em frentes diferentes*: um ligado aos vasos, outro ao esforço intenso e outro ligado ao foco."
           },
           "en": {
-            "caption": "Endurance, hard efforts and focus: *the other ingredients work on different fronts*."
+            "caption": "And other ingredients work *on different fronts*: one linked to blood vessels, another to hard efforts, and another linked to focus."
           },
           "props": {
             "mood": "ok",
-            "to": "feliz",
             "items": [
               {
                 "icon": "pulse",
                 "text": {
-                  "pt": "resistência",
-                  "en": "endurance"
+                  "pt": "ligado aos vasos",
+                  "en": "blood vessels"
                 },
                 "cue": {
-                  "pt": "Resistência",
-                  "en": "Endurance"
+                  "pt": "ligado aos vasos",
+                  "en": "blood vessels"
                 }
               },
               {
@@ -185,26 +90,25 @@
               {
                 "icon": "eye",
                 "text": {
-                  "pt": "foco",
-                  "en": "focus"
+                  "pt": "ligado ao foco",
+                  "en": "linked to focus"
                 },
                 "cue": {
-                  "pt": "foco",
-                  "en": "focus"
+                  "pt": "ligado ao foco",
+                  "en": "linked to focus"
                 }
               }
             ]
           }
         },
         {
-          "id": "act",
+          "id": "take",
           "scene": "cena",
-          "hold": 0.4,
           "pt": {
-            "caption": "O jeito de tomar é simples: *misture na água*, um tempo antes do treino."
+            "caption": "Misture na água e tome *com antecedência*. Como tem cafeína, evite perto da hora de dormir, na gravidez ou se você for sensível a estimulantes."
           },
           "en": {
-            "caption": "Taking it is simple: *mix it in water*, a while before you train."
+            "caption": "Mix it in water and drink it *well ahead*. It has caffeine, so avoid it near bedtime, during pregnancy, or if you're sensitive to stimulants."
           },
           "props": {
             "kicker": {
@@ -212,18 +116,53 @@
               "en": "In practice"
             },
             "setting": "mesa",
-            "holding": "ion:water",
-            "mood": "feliz",
+            "holding": "ion:water-outline",
+            "mood": "ok",
             "glow": {
-              "pt": "misture na água",
-              "en": "mix it in water"
+              "pt": "Misture na água",
+              "en": "Mix it in water"
             },
             "objects": [
               {
                 "p": "relogio",
                 "cue": {
-                  "pt": "um tempo antes",
-                  "en": "a while before"
+                  "pt": "com antecedência",
+                  "en": "well ahead"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "arrive",
+          "scene": "pessoa",
+          "hold": 0.5,
+          "pt": {
+            "caption": "Você se troca, sai de casa e, quando o treino começa, *a cafeína já ajuda a ficar alerta*."
+          },
+          "en": {
+            "caption": "You get changed, head out, and when the workout starts, *the caffeine is already helping you stay alert*."
+          },
+          "props": {
+            "mood": "ok",
+            "turn": {
+              "pt": "ajuda a ficar alerta",
+              "en": "helping you stay alert"
+            },
+            "to": "feliz",
+            "objects": [
+              {
+                "p": "casa",
+                "cue": {
+                  "pt": "sai de casa",
+                  "en": "head out"
+                }
+              },
+              {
+                "p": "ion:barbell",
+                "cue": {
+                  "pt": "treino começa",
+                  "en": "workout starts"
                 }
               }
             ]
@@ -239,27 +178,48 @@
       "dimension": "body",
       "lines": [
         {
-          "id": "hook",
-          "scene": "pessoa",
+          "id": "days",
+          "scene": "pensa",
+          "hold": 0.3,
           "pt": {
-            "caption": "Com a idade, *o corpo fabrica menos colágeno*, a proteína que dá estrutura à pele."
+            "caption": "Começou a tomar colágeno e, *depois de uns dias*, a pele continua igual?"
           },
           "en": {
-            "caption": "With age, *your body makes less collagen*, the protein that gives skin its structure."
+            "caption": "Started taking collagen and, *a few days in*, your skin looks the same?"
           },
           "props": {
             "mood": "ok",
-            "turn": {
-              "pt": "fabrica menos",
-              "en": "makes less"
-            },
-            "to": "cansado",
+            "thought": "relogio",
+            "at": {
+              "pt": "depois de uns dias",
+              "en": "a few days in"
+            }
+          }
+        },
+        {
+          "id": "hook2",
+          "scene": "pessoa",
+          "pt": {
+            "caption": "O colágeno é a proteína que dá *estrutura à pele*, e o corpo passa a fabricar menos dele com a idade."
+          },
+          "en": {
+            "caption": "Collagen is the protein that gives *skin its structure*, and your body makes less of it as you age."
+          },
+          "props": {
+            "mood": "ok",
             "objects": [
+              {
+                "p": "ion:layers",
+                "cue": {
+                  "pt": "estrutura à pele",
+                  "en": "skin its structure"
+                }
+              },
               {
                 "p": "ion:hourglass",
                 "cue": {
-                  "pt": "Com a idade",
-                  "en": "With age"
+                  "pt": "com a idade",
+                  "en": "as you age"
                 }
               }
             ]
@@ -267,7 +227,7 @@
         },
         {
           "id": "peptides",
-          "scene": "cena",
+          "scene": "lista",
           "pt": {
             "caption": "Os suplementos trazem o colágeno quebrado em *peptídeos*, pedacinhos que o intestino absorve."
           },
@@ -275,18 +235,69 @@
             "caption": "Supplements bring collagen broken down into *peptides*, small pieces your gut can absorb."
           },
           "props": {
-            "setting": "mesa",
-            "holding": "ion:extension-puzzle",
             "mood": "ok",
+            "items": [
+              {
+                "icon": "extension-puzzle",
+                "text": {
+                  "pt": "Quebrado em peptídeos",
+                  "en": "Broken into peptides"
+                },
+                "cue": {
+                  "pt": "peptídeos",
+                  "en": "peptides"
+                }
+              },
+              {
+                "icon": "body",
+                "text": {
+                  "pt": "O intestino absorve",
+                  "en": "Your gut absorbs them"
+                },
+                "cue": {
+                  "pt": "intestino absorve",
+                  "en": "gut can absorb"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "habit2",
+          "scene": "cena",
+          "pt": {
+            "caption": "O segredo é virar hábito: *mesmo horário todo dia*, na água ou no suco."
+          },
+          "en": {
+            "caption": "The secret is making it a habit: *same time every day*, in water or juice."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Na prática",
+              "en": "In practice"
+            },
+            "setting": "mesa",
+            "holding": "ion:water",
+            "mood": "feliz",
             "glow": {
-              "pt": "absorve",
-              "en": "absorb"
-            }
+              "pt": "virar hábito",
+              "en": "making it a habit"
+            },
+            "objects": [
+              {
+                "p": "relogio",
+                "cue": {
+                  "pt": "mesmo horário",
+                  "en": "same time"
+                }
+              }
+            ]
           }
         },
         {
           "id": "weeks",
-          "scene": "comparar",
+          "scene": "pessoa",
+          "hold": 0.5,
           "pt": {
             "caption": "O resultado aparece *em semanas*, não em dias, porque a pele se renova devagar."
           },
@@ -294,66 +305,19 @@
             "caption": "Results show up *in weeks*, not days, because skin renews itself slowly."
           },
           "props": {
-            "winner": "right",
-            "win": {
+            "mood": "ok",
+            "clock": "calmo",
+            "turn": {
               "pt": "em semanas",
               "en": "in weeks"
             },
-            "left": {
-              "label": {
-                "pt": "Em dias",
-                "en": "In days"
-              },
-              "mood": "cansado",
-              "object": "relogio"
-            },
-            "right": {
-              "label": {
-                "pt": "Em semanas",
-                "en": "In weeks"
-              },
-              "object": "ion:calendar",
-              "arrives": {
-                "pt": "em semanas",
-                "en": "in weeks"
-              }
-            }
-          }
-        },
-        {
-          "id": "habit",
-          "scene": "lista",
-          "hold": 0.6,
-          "pt": {
-            "caption": "Mesmo horário, na água ou no suco: *o segredo é virar hábito*."
-          },
-          "en": {
-            "caption": "Same time each day, in water or juice: *the secret is making it a habit*."
-          },
-          "props": {
-            "mood": "ok",
             "to": "feliz",
-            "items": [
+            "objects": [
               {
-                "icon": "alarm",
-                "text": {
-                  "pt": "mesmo horário",
-                  "en": "same time each day"
-                },
+                "p": "ion:calendar",
                 "cue": {
-                  "pt": "Mesmo horário",
-                  "en": "Same time"
-                }
-              },
-              {
-                "icon": "water",
-                "text": {
-                  "pt": "na água ou no suco",
-                  "en": "water or juice"
-                },
-                "cue": {
-                  "pt": "na água",
-                  "en": "in water"
+                  "pt": "em semanas",
+                  "en": "in weeks"
                 }
               }
             ]
@@ -404,7 +368,7 @@
         },
         {
           "id": "reserve",
-          "scene": "pessoa",
+          "scene": "virada",
           "pt": {
             "caption": "Seu corpo já produz creatina e guarda no músculo, onde ela vira *reserva de energia* pra esforços curtos e intensos."
           },
@@ -430,13 +394,13 @@
           }
         },
         {
-          "id": "efforts",
+          "id": "efforts2",
           "scene": "lista",
           "pt": {
-            "caption": "Por isso ela ajuda o desempenho em *tiros de corrida*, saltos e séries de força: esforços curtos, intensos e repetidos."
+            "caption": "Por isso ela ajuda o desempenho quando o esforço se repete: em *tiros de corrida*, saltos e séries de força."
           },
           "en": {
-            "caption": "That's why it helps performance in *sprints*, jumps and strength sets: short, hard efforts you repeat."
+            "caption": "That's why it helps performance in repeated bursts: *sprints*, jumps and strength sets."
           },
           "props": {
             "mood": "ok",
@@ -479,73 +443,43 @@
           }
         },
         {
-          "id": "everyone",
-          "scene": "comparar",
-          "hold": 0.6,
+          "id": "everyone2",
+          "scene": "pessoa",
           "pt": {
-            "caption": "E ela traz benefícios *de adolescentes a idosos*, e é segura pra quem é saudável."
+            "caption": "Então não é só pra musculação: ela ajuda em treinos feitos de *arrancadas curtas e fortes*."
           },
           "en": {
-            "caption": "And it brings benefits *from teenagers to older adults*, and it's safe for healthy people."
+            "caption": "So it's not just for bodybuilders: it helps training built on *short, explosive efforts*."
           },
           "props": {
-            "kicker": {
-              "pt": "Segura pra saudáveis",
-              "en": "Safe for healthy people"
+            "mood": "ok",
+            "turn": {
+              "pt": "arrancadas curtas",
+              "en": "explosive efforts"
             },
-            "left": {
-              "label": {
-                "pt": "Adolescentes",
-                "en": "Teenagers"
+            "to": "feliz",
+            "objects": [
+              {
+                "p": "ion:barbell",
+                "cue": {
+                  "pt": "só pra musculação",
+                  "en": "just for bodybuilders"
+                }
               },
-              "mood": "feliz",
-              "object": "ion:school",
-              "arrives": {
-                "pt": "adolescentes",
-                "en": "teenagers"
+              {
+                "p": "ion:speedometer",
+                "cue": {
+                  "pt": "ajuda em treinos",
+                  "en": "helps training"
+                }
               }
-            },
-            "right": {
-              "label": {
-                "pt": "Idosos",
-                "en": "Older adults"
-              },
-              "mood": "feliz",
-              "object": "ion:glasses",
-              "arrives": {
-                "pt": "idosos",
-                "en": "older adults"
-              }
-            }
-          }
-        },
-        {
-          "id": "mix",
-          "scene": "cena",
-          "hold": 0.6,
-          "pt": {
-            "caption": "A versão micronizada *se mistura fácil* na água, no suco ou no shake."
-          },
-          "en": {
-            "caption": "The micronized kind *mixes easily* into water, juice or a shake."
-          },
-          "props": {
-            "kicker": {
-              "pt": "Fácil de tomar",
-              "en": "Easy to take"
-            },
-            "setting": "chao",
-            "holding": "ion:water",
-            "mood": "feliz",
-            "glow": {
-              "pt": "se mistura fácil",
-              "en": "mixes easily"
-            }
+            ]
           }
         },
         {
           "id": "stock",
-          "scene": "comparar",
+          "scene": "virada",
+          "hold": 0.5,
           "pt": {
             "caption": "Não precisa tomar antes do treino: *o efeito vem do estoque cheio*, não da hora da dose."
           },
@@ -553,29 +487,26 @@
             "caption": "You don't need it before training: *the effect comes from full stores*, not from the timing."
           },
           "props": {
-            "winner": "right",
-            "win": {
+            "mood": "ok",
+            "gives": "relogio",
+            "from": {
+              "pt": "antes do treino",
+              "en": "before training"
+            },
+            "turn": {
               "pt": "estoque cheio",
               "en": "full stores"
             },
-            "left": {
-              "label": {
-                "pt": "Hora da dose",
-                "en": "Timing"
-              },
-              "object": "relogio"
-            },
-            "right": {
-              "label": {
-                "pt": "Estoque cheio",
-                "en": "Full stores"
-              },
-              "object": "ion:battery-full",
-              "arrives": {
-                "pt": "estoque cheio",
-                "en": "full stores"
+            "to": "feliz",
+            "objects": [
+              {
+                "p": "ion:battery-full",
+                "cue": {
+                  "pt": "estoque cheio",
+                  "en": "full stores"
+                }
               }
-            }
+            ]
           }
         },
         {
