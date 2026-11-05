@@ -19,7 +19,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { IdeaNoteSheet } from '@/components/ideas/IdeaNoteSheet';
 import { IdeaPage, type IdeaPageMaterial } from '@/components/ideas/IdeaPage';
 import { ScreenBackground } from '@/components/ScreenBackground';
-import { TourModule } from '@/components/tour/TourModule';
 import {
   type LearningMaterialDetail,
   reviewKey,
@@ -34,10 +33,6 @@ import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { pickLocalized, sortedIdeas } from '@/lib/ideas';
 import { useIdeaSoundSession } from '@/lib/ideaSound';
-import { emitTourEvent } from '@/lib/tour/eventBus';
-import { buildM6Steps, M6_EVENTS, M6_STEP } from '@/lib/tour/m6Steps';
-import { leaveM6Flow } from '@/lib/tour/navigation';
-import { getCurrentTourModule, useIsCurrentTourModule, useTourStore } from '@/lib/tour/store';
 import { showInfo } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 
@@ -79,24 +74,6 @@ export function IdeaScreen({ detail: m, initialOrdinal }: Props) {
   // Video sound: kept while the reader moves through ideas, reset on leaving.
   useIdeaSoundSession();
   const router = useRouter();
-
-  // ── Tour (M6) ──────────────────────────────────────────────────────────
-  // Opening this screen is step 2's gesture; steps 3–4 (media, card) live
-  // here. Leaving goes back to the Recanto, where step 5 lives.
-  const isM6Current = useIsCurrentTourModule('M6');
-  const m6Step = useTourStore((s) => s.stepIndices.M6 ?? 0);
-  useEffect(() => {
-    if (getCurrentTourModule() === 'M6' && useTourStore.getState().stepIndices.M6 === M6_STEP.MATERIAL) {
-      emitTourEvent(M6_EVENTS.IDEA_OPENED);
-    }
-  }, []);
-  const tourTarget: 'media' | 'card' | null = !isM6Current
-    ? null
-    : m6Step === M6_STEP.MEDIA
-      ? 'media'
-      : m6Step === M6_STEP.CARD
-        ? 'card'
-        : null;
   const { t, locale } = useT();
   const meta = useMetaLookup();
   const insets = useSafeAreaInsets();
@@ -151,8 +128,6 @@ export function IdeaScreen({ detail: m, initialOrdinal }: Props) {
   const inFlightRef = useRef(new Set<string>());
   const onFirstFlip = useCallback(
     (idea: LearningIdea) => {
-      // M6 step 4's gesture — any first flip, absorbed before or not.
-      emitTourEvent(M6_EVENTS.IDEA_FLIPPED);
       const id = idea.id;
       if (collectedRef.current.has(id) || inFlightRef.current.has(id)) return;
       inFlightRef.current.add(id);
@@ -240,11 +215,9 @@ export function IdeaScreen({ detail: m, initialOrdinal }: Props) {
         onFirstFlip={onFirstFlip}
         onNext={index < total - 1 ? () => goTo(index + 1) : null}
         onExit={exit}
-        tourTarget={index === currentIndex ? tourTarget : null}
       />
     ),
     [
-      tourTarget,
       material,
       locale,
       pageW,
@@ -442,18 +415,6 @@ export function IdeaScreen({ detail: m, initialOrdinal }: Props) {
         </View>
       </View>
 
-      {/* M6 steps 3–4 (media, then the card). Leaving — after the flip,
-         "Continuar o tour", a skip or "Sair do tour" — closes this screen
-         and the material under it for the Recanto (leaveM6Flow). No bottom
-         nav here, so `flatNav`. */}
-      <TourModule
-        module="M6"
-        screen="idea"
-        steps={buildM6Steps(t)}
-        enabled={isM6Current}
-        flatNav
-        onExitScreen={leaveM6Flow}
-      />
       <IdeaNoteSheet
         visible={noteOpen && shownIdea != null}
         ideaTitle={shownIdea ? pickLocalized(shownIdea.title, locale) : ''}

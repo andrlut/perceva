@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -23,18 +23,6 @@ import { IconPickerModal } from '@/components/IconPickerModal';
 import { RecurrencePicker } from '@/components/RecurrencePicker';
 import { SectionLabel } from '@/components/SectionLabel';
 import { STAR_SCALE_LINES, SubPicker } from '@/components/SubPicker';
-import { TourModule } from '@/components/tour/TourModule';
-import {
-  buildM2Steps,
-  finishM2AtHome,
-  isM2StepOn,
-  M2_STEP_KEYS,
-} from '@/lib/tour/m2Steps';
-import {
-  useActiveTourStepStore,
-  useIsCurrentTourModule,
-  useTourStore,
-} from '@/lib/tour/store';
 import { useT } from '@/lib/i18n';
 import { freeLimitEntity, useLimitModalStore } from '@/lib/premium';
 import { SUB_META } from '@/theme/dimensions';
@@ -61,27 +49,10 @@ export default function TaskFormScreen() {
 
   const isEdit = !!params.id;
   const fromTemplateId = params.from_template;
-  const isCreateMode = !isEdit && !fromTemplateId;
-  const isM2Current = useIsCurrentTourModule('M2');
 
-  // M2's last three steps live on this form (create mode). The form is
-  // passive — nothing has to be filled — so LEAVING it in any way while one
-  // of them is up completes M2 and lands on Home, where the next module
-  // starts (the 2026-09 audit found the old M2 ending stranded on /tasks):
-  //   - the X, Salvar, a refused save → `leaveForm` below, one transition;
-  //   - hardware back / the modal's swipe-down → this blur cleanup, which
-  //     runs once the form is already gone and walks /tasks back to Home.
-  // Both no-op outside the tour: isM2StepOn is false.
-  useFocusEffect(
-    useCallback(() => {
-      return () => {
-        if (isCreateMode && isM2StepOn('create')) finishM2AtHome();
-      };
-    }, [isCreateMode]),
-  );
+  // The X, Salvar and a refused save all leave the form the same way.
   const leaveForm = () => {
-    if (isCreateMode && isM2StepOn('create')) finishM2AtHome();
-    else router.back();
+    router.back();
   };
 
   const existing = useTask(params.id);
@@ -126,56 +97,6 @@ export default function TaskFormScreen() {
   // doesn't always include the keyboard's tool/suggestion bar, so we add a
   // generous buffer below.
   const keyboardHeight = useKeyboardOverlap();
-
-  // M2 tour auto-scroll: each form step brings its own section to the top
-  // of the form, clear of the bottom tooltip. Section Ys come from onLayout
-  // (they are direct children of the scroll content, so the Y is the
-  // content offset); `sectionsMeasured` re-runs the effect once they exist,
-  // since the first form step is already current when the form mounts.
-  const scrollRef = useRef<ScrollView>(null);
-  const subsY = useRef<number | null>(null);
-  const recurrenceY = useRef<number | null>(null);
-  const coinsY = useRef<number | null>(null);
-  const [sectionsMeasured, setSectionsMeasured] = useState(false);
-  const noteSectionY = (ref: { current: number | null }, y: number) => {
-    ref.current = y;
-    if (
-      !sectionsMeasured &&
-      subsY.current != null &&
-      recurrenceY.current != null &&
-      coinsY.current != null
-    ) {
-      setSectionsMeasured(true);
-    }
-  };
-  const m2StepIndex = useTourStore((s) => s.stepIndices.M2 ?? 0);
-  const m2StepKey = isCreateMode && isM2Current ? M2_STEP_KEYS[m2StepIndex] : undefined;
-  const m2FormStep =
-    m2StepKey === 'trains' || m2StepKey === 'often' || m2StepKey === 'coins';
-  // The last section (coins) sits at the end of the form; without extra
-  // room the scroll can't lift it above the tooltip. Sized off the card's
-  // REAL measured height, so a taller card can't eat the gap.
-  const tourCardHeight = useActiveTourStepStore((s) => s.cardHeight);
-  const m2FormBump = m2FormStep ? (tourCardHeight ?? 280) + tokens.space[6] : 0;
-  useEffect(() => {
-    if (!m2FormStep) return;
-    const targetY =
-      m2StepKey === 'trains'
-        ? subsY.current
-        : m2StepKey === 'often'
-          ? recurrenceY.current
-          : coinsY.current;
-    if (targetY == null) return;
-    const id = setTimeout(
-      () =>
-        scrollRef.current?.scrollTo({
-          y: Math.max(targetY - tokens.space[4], 0),
-          animated: true,
-        }),
-      160,
-    );
-    return () => clearTimeout(id);
-  }, [m2FormStep, m2StepKey, sectionsMeasured]);
 
   // Hydrate from server when editing
   useEffect(() => {
@@ -414,10 +335,8 @@ export default function TaskFormScreen() {
         style={{ flex: 1 }}
       >
         <ScrollView
-          ref={scrollRef}
           contentContainerStyle={[
             styles.content,
-            m2FormBump > 0 && { paddingBottom: tokens.space[10] + m2FormBump },
             keyboardHeight > 0 && { paddingBottom: keyboardHeight + tokens.space[10] },
           ]}
           keyboardShouldPersistTaps="handled"
@@ -446,10 +365,7 @@ export default function TaskFormScreen() {
               style={styles.input}
               placeholder={t('taskForm.titlePlaceholder')}
               placeholderTextColor={tokens.text.faint}
-              // Skip the auto-keyboard while the M2 tour walks the form
-              // — the user is reading tooltips, not typing yet, and a
-              // popped keyboard would shove the spotlight off-screen.
-              autoFocus={!isEdit && !(isCreateMode && isM2Current)}
+              autoFocus={!isEdit}
               returnKeyType="next"
             />
           </View>
@@ -545,10 +461,7 @@ export default function TaskFormScreen() {
             </Pressable>
           </View>
 
-          <View
-            style={styles.field}
-            onLayout={(e) => noteSectionY(subsY, e.nativeEvent.layout.y)}
-          >
+          <View style={styles.field}>
             <SectionLabel
               icon="star-outline"
               label={t('taskForm.subsLabel')}
@@ -597,12 +510,9 @@ export default function TaskFormScreen() {
             )}
           </View>
 
-          {/* Order = the tour's order and the questions the user answers:
+          {/* Order = the questions the user answers:
               what it trains → how often → what it's worth in coins. */}
-          <View
-            style={styles.field}
-            onLayout={(e) => noteSectionY(recurrenceY, e.nativeEvent.layout.y)}
-          >
+          <View style={styles.field}>
             <SectionLabel
               icon="repeat"
               label={t('taskForm.recurrenceLabel')}
@@ -618,10 +528,7 @@ export default function TaskFormScreen() {
             />
           </View>
 
-          <View
-            style={styles.field}
-            onLayout={(e) => noteSectionY(coinsY, e.nativeEvent.layout.y)}
-          >
+          <View style={styles.field}>
             <SectionLabel
               coin
               label={t('tasks.coinMultiplier.label')}
@@ -687,21 +594,6 @@ export default function TaskFormScreen() {
         })()}
         autoA11yLabel={t('taskForm.iconAutoA11y')}
       />
-
-      {/* M2 steps 4-6 (what it trains / how often / coins) live here when
-         the form is in CREATE mode (no id, no template prefill). The last
-         Próximo, and "Pular este módulo", end M2 on Home (finishM2AtHome
-         keeps a skip a skip). */}
-      {isCreateMode && (
-        <TourModule
-          module="M2"
-          screen="create"
-          steps={buildM2Steps(t)}
-          enabled={isM2Current}
-          flatNav
-          onExitScreen={finishM2AtHome}
-        />
-      )}
     </SafeAreaView>
   );
 }

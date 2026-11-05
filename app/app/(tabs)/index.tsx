@@ -52,28 +52,16 @@ import {
   taskFromCompletionSnapshot,
   useDayDetail,
 } from '@/lib/api/history';
-import { todayDateKey, useMoodForDay, useTodayMood } from '@/lib/api/mood';
+import { todayDateKey, useMoodForDay } from '@/lib/api/mood';
 import { useT } from '@/lib/i18n';
 import { useLoadedSettings } from '@/lib/settings';
 import { TourModule } from '@/components/tour/TourModule';
 import { TourTarget } from '@/components/tour/TourTarget';
 import { emitTourEvent } from '@/lib/tour/eventBus';
 import { remeasureActiveTourTarget } from '@/lib/tour/targets';
-import {
-  buildM1Steps,
-  M1_EVENTS,
-  M1_TARGETS,
-  useM1PlanStore,
-  type M1Options,
-} from '@/lib/tour/m1Steps';
-import { buildM2Steps, M2_EVENTS } from '@/lib/tour/m2Steps';
-import { buildM4Steps } from '@/lib/tour/m4Steps';
-import { buildM5Steps } from '@/lib/tour/m5Steps';
-import { buildM6Steps, M6_STEP } from '@/lib/tour/m6Steps';
+import { buildM1Steps, M1_EVENTS, M1_TARGETS } from '@/lib/tour/m1Steps';
 import { buildSettingsSteps } from '@/lib/tour/settingsSteps';
 import {
-  getCurrentTourModule,
-  isWrapPending,
   useActiveTourStep,
   useActiveTourStepStore,
   useIsCurrentTourModule,
@@ -154,9 +142,6 @@ export default function HomeScreen() {
   const character = useCharacter();
   const buckets = useHomeBuckets(settings.weekStart);
   const allActiveTasks = useActiveTasks();
-  // Same query key as MoodHubStrip — read here only to know whether the
-  // mood card is on screen, which decides M1's mood step.
-  const todayMood = useTodayMood();
   // Home only holds this query for pull-to-refresh — QuestChipsStrip shares
   // the key. With both quest modules off there is nothing to keep fresh, so
   // the fetch is gated too.
@@ -237,18 +222,6 @@ export default function HomeScreen() {
     navClearance + Math.max(tourBottomBump, TASKS_FAB_CLEARANCE);
   const isSettingsCurrent = useIsCurrentTourModule('settings');
   const isM1Current = useIsCurrentTourModule('M1');
-  const m1StepIndex = useTourStore((s) => s.stepIndices.M1 ?? 0);
-  const isM2Current = useIsCurrentTourModule('M2');
-  const isM4Current = useIsCurrentTourModule('M4');
-  const isM5Current = useIsCurrentTourModule('M5');
-  const isM6Current = useIsCurrentTourModule('M6');
-
-  // M6 completes (or is skipped) → the closing screen, unless it already
-  // ran (an isolated M6 replay just returns Home instead of replaying it).
-  const finishM6 = () => {
-    if (isWrapPending()) router.push('/tour/wrap');
-    else router.navigate('/(tabs)');
-  };
 
   const scrollRef = useRef<ScrollView>(null);
   // Scroll geometry for the M1 auto-scroll — kept in refs, read only when a
@@ -259,8 +232,6 @@ export default function HomeScreen() {
   const viewportHRef = useRef(0);
   const contentHRef = useRef(0);
   const firstCardRef = useRef<View>(null);
-  const drawerRef = useRef<View>(null);
-  const moodRef = useRef<View>(null);
   const handleScrollSettled = (e: { nativeEvent: { contentOffset: { y: number } } }) => {
     scrollYRef.current = e.nativeEvent.contentOffset.y;
     // Manual scrolls move spotlighted targets — refresh the measured rect
@@ -295,12 +266,6 @@ export default function HomeScreen() {
       { task, subs, coinMultiplier, times, coinStars },
       {
         onSuccess: () => {
-          // Same tick as the emit, on purpose: M1 gains its "Feitas hoje"
-          // step in the very render that advances off step 1 (see
-          // useM1PlanStore).
-          if (getCurrentTourModule() === 'M1') {
-            useM1PlanStore.getState().noteCompletion();
-          }
           emitTourEvent(M1_EVENTS.TASK_COMPLETED);
         },
         onError: (err) => {
@@ -398,7 +363,6 @@ export default function HomeScreen() {
   const handleLongPress = (task: TaskWithSubs) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     setActionTask(task);
-    emitTourEvent(M1_EVENTS.TASK_LONG_PRESSED);
   };
 
   const handleSheetConfirm = (
@@ -814,8 +778,8 @@ export default function HomeScreen() {
     }
     // Observation happens above the tour guard, the FIRE below it: the tour
     // owns the overlay layer, but Home stays mounted under the tour screens,
-    // so gating observation too would freeze the latch for the whole M1–M6
-    // run and silence any day cleared during it.
+    // so gating observation too would freeze the latch while the tour runs
+    // and silence any day cleared during it.
     if (activeTourStep) return;
     // The modal is a native window that draws over EVERYTHING. Home stays
     // mounted under /all-practices and /history, and both act on the same day
@@ -922,83 +886,32 @@ export default function HomeScreen() {
     hero.monthDay,
   ]);
 
-  // ── Post-login tour: M1 (Práticas) ────────────────────────────────────
-  // M1 teaches on today's real cards, so it runs on today only: arrowing to
-  // a past day hides it, coming back restores it at the same step.
-  //
-  // Its step list depends on the day (see buildM1Steps). The plan is LIVE
-  // while step 1 is up and FROZEN once the module moves past it, so the
-  // shared index never slides onto another step when a completion, an undo
-  // or a mood refetch lands mid-module.
-  const m1CompletedThisRun = useM1PlanStore((s) => s.completedThisRun);
-  const m1Frozen = useM1PlanStore((s) => s.frozen);
-  const m1LiveHasCompleted =
-    (data?.todayActivity.completed.length ?? 0) > 0 || m1CompletedThisRun;
-  // MoodHubStrip renders on today exactly when its query succeeded.
-  const m1LiveMood = todayMood.isSuccess;
-  const m1Plan: M1Options =
-    m1StepIndex > 0 && m1Frozen
-      ? m1Frozen
-      : { hasCompletedToday: m1LiveHasCompleted, moodCardVisible: m1LiveMood };
-  const m1Steps = buildM1Steps(t, m1Plan);
-  const m1Step = m1Steps[m1StepIndex];
-  const m1StepNeedsCard = m1Step?.target === M1_TARGETS.CARD;
-  const m1NextWithoutCard = m1Steps.findIndex(
-    (s, i) => i > m1StepIndex && s.target !== M1_TARGETS.CARD,
-  );
+  // ── Post-login tour: M1, the one guided step ──────────────────────────
+  // "Mark this one as done" on today's first open card. Runs on today only:
+  // arrowing to a past day hides it, coming back restores it.
+  const m1Steps = buildM1Steps(t);
 
-  useEffect(() => {
-    const plan = useM1PlanStore.getState();
-    if (!isM1Current) {
-      plan.reset();
-      return;
-    }
-    if (m1StepIndex === 0) {
-      plan.unfreeze();
-      return;
-    }
-    // First render past step 1: freeze exactly what that render used.
-    if (!plan.frozen) {
-      plan.freeze({ hasCompletedToday: m1LiveHasCompleted, moodCardVisible: m1LiveMood });
-    }
-  }, [isM1Current, m1StepIndex, m1LiveHasCompleted, m1LiveMood]);
-
-  // Safety net for the steps that spotlight a card, on a day with no open
-  // card (all done, all skipped, only weekly practices…):
-  //   - step 1 with nothing done today → nothing to practise on: mark M1
-  //     skipped so the tour flows on (same idea as the old M3 auto-skip);
-  //   - otherwise → jump to the next step that needs no card, or finish M1
-  //     when none is left (the long-press step is last).
-  // Acts on SETTLED data only. An optimistic complete empties the list a
-  // full round-trip before the server agrees; acting on that frame would
-  // skip M1 under a user who just did exactly what step 1 asked.
+  // Safety net for a day with no open card (all done, all skipped, only
+  // weekly practices…): nothing to practise on, so M1 ends — completed when
+  // something was done today, skipped otherwise. Acts on SETTLED data only:
+  // an optimistic complete empties the list a full round-trip before the
+  // server agrees, and acting on that frame would end M1 under a user who
+  // just did exactly what the step asked.
   const setTourStatus = useTourStore((s) => s.setStatus);
   const setTourStepIndex = useTourStore((s) => s.setStepIndex);
+  const doneToday = (data?.todayActivity.completed.length ?? 0) > 0;
   useEffect(() => {
-    if (!isM1Current || !isToday || !isFocused || !m1StepNeedsCard) return;
+    if (!isM1Current || !isToday || !isFocused) return;
     if (!buckets.isSuccess || buckets.isFetching) return;
     if (completeTask.isPending || skipTask.isPending || skipTasksBulk.isPending) return;
     if (dayOpen.length > 0) return;
-    if (m1StepIndex === 0 && !m1Plan.hasCompletedToday) {
-      void setTourStatus('M1', 'skipped');
-      setTourStepIndex('M1', 0);
-      return;
-    }
-    if (m1NextWithoutCard === -1) {
-      void setTourStatus('M1', 'completed');
-      setTourStepIndex('M1', 0);
-      return;
-    }
-    void setTourStatus('M1', 'in_progress');
-    setTourStepIndex('M1', m1NextWithoutCard);
+    void setTourStatus('M1', doneToday ? 'completed' : 'skipped');
+    setTourStepIndex('M1', 0);
   }, [
     isM1Current,
     isToday,
     isFocused,
-    m1StepNeedsCard,
-    m1StepIndex,
-    m1Plan.hasCompletedToday,
-    m1NextWithoutCard,
+    doneToday,
     buckets.isSuccess,
     buckets.isFetching,
     completeTask.isPending,
@@ -1009,29 +922,18 @@ export default function HomeScreen() {
     setTourStepIndex,
   ]);
 
-  // Bring the spotlighted element into the open band above the tooltip.
-  // Keyed to the step's TARGET, not to an index — the old effect hardcoded
-  // index 4 and broke as soon as the list changed shape. Scrolls only when
-  // the element is not already fully in that band. Content Y comes from the
-  // window-coordinate difference against the content-top marker (the
-  // pattern character.tsx uses — independent of how measureLayout treats
-  // scroll views on each architecture).
-  const m1ActiveTarget =
-    activeTourStep?.module === 'M1' ? m1Step?.target : undefined;
+  // Bring the spotlighted card into the open band above the tooltip. Scrolls
+  // only when the card is not already fully in that band. Content Y comes
+  // from the window-coordinate difference against the content-top marker
+  // (independent of how measureLayout treats scroll views on each
+  // architecture).
+  const m1CardActive = activeTourStep?.module === 'M1';
   useEffect(() => {
-    const ref =
-      m1ActiveTarget === M1_TARGETS.CARD
-        ? firstCardRef
-        : m1ActiveTarget === M1_TARGETS.DRAWER
-          ? drawerRef
-          : m1ActiveTarget === M1_TARGETS.MOOD
-            ? moodRef
-            : null;
-    if (!ref) return;
+    if (!m1CardActive) return;
     let cancelled = false;
     let settle: ReturnType<typeof setTimeout> | undefined;
     const timer = setTimeout(() => {
-      const node = ref.current;
+      const node = firstCardRef.current;
       const top = contentTopRef.current;
       if (!node || !top) return;
       top.measureInWindow((_tx, topY) => {
@@ -1061,22 +963,16 @@ export default function HomeScreen() {
       clearTimeout(timer);
       if (settle) clearTimeout(settle);
     };
-  }, [m1ActiveTarget, navClearance]);
+  }, [m1CardActive, navClearance]);
 
   // M1 renders only when its surface is really there: today, data loaded,
-  // and — for the card steps — a card to point at (the safety net above
-  // moves the index on; this keeps the tooltip from flashing meanwhile).
+  // and a card to point at (the safety net above ends it meanwhile; this
+  // keeps the tooltip from flashing).
   const m1Enabled =
-    isM1Current &&
-    isToday &&
-    !isLoading &&
-    !hasError &&
-    !(m1StepNeedsCard && dayOpen.length === 0);
+    isM1Current && isToday && !isLoading && !hasError && dayOpen.length > 0;
 
-  // "Todas as práticas" — the FAB's one and only behaviour. It also tells
-  // M2 its step 1 gesture happened; the tour never reroutes it.
+  // "Todas as práticas" — the FAB's one and only behaviour.
   const openAllPractices = () => {
-    emitTourEvent(M2_EVENTS.ALL_OPENED);
     router.push(
       isToday
         ? '/all-practices'
@@ -1295,27 +1191,18 @@ export default function HomeScreen() {
                 <Ionicons name="chevron-forward" size={16} color={tokens.text.dim} />
               </Pressable>
 
-              {/* Completed drawer. On today it always renders — showWhenEmpty
-                  keeps the tour's home.completed anchor a real, measurable
-                  box on a fresh day (it used to measure a zero-size view),
-                  and "Feitas hoje · 0" growing into the day's tally is the
-                  day's arc in one line. A past day shows it only when there
-                  is something to show. The outer View is M1's scroll anchor. */}
+              {/* Completed drawer. On today it always renders — "Feitas
+                  hoje · 0" growing into the day's tally is the day's arc in
+                  one line. A past day shows it only when there is something
+                  to show. */}
               {isToday ? (
-                <View ref={drawerRef} collapsable={false}>
-                  <TourTarget id={M1_TARGETS.DRAWER} radius={18}>
-                    <CompletedBucket
-                      items={dayCompletedItems}
-                      title={t('home.completedBucket.today')}
-                      showWhenEmpty
-                      onUndo={handleUndo}
-                      onExtra={handleQuickComplete}
-                      onToggle={(open) => {
-                        if (open) emitTourEvent(M1_EVENTS.DRAWER_EXPANDED);
-                      }}
-                    />
-                  </TourTarget>
-                </View>
+                <CompletedBucket
+                  items={dayCompletedItems}
+                  title={t('home.completedBucket.today')}
+                  showWhenEmpty
+                  onUndo={handleUndo}
+                  onExtra={handleQuickComplete}
+                />
               ) : (
                 <CompletedBucket
                   items={dayCompletedItems}
@@ -1348,13 +1235,7 @@ export default function HomeScreen() {
                 day with open cards must still be loggable, and DaySeal is a
                 statement about what was trained, not a place for a control. */}
             {isToday ? (
-              // Stays up during the tour: M1 teaches it (home.mood lives
-              // inside MoodHubStrip), and the auto-scroll brings each target
-              // into view by measuring it, so no element has to be the END
-              // of the scroll any more. The View is M1's scroll anchor.
-              <View ref={moodRef} collapsable={false}>
-                <MoodHubStrip />
-              </View>
+              <MoodHubStrip />
             ) : (
               <View style={styles.moodDayWrap}>
                 <MoodDayDetail dateKey={selectedKey} />
@@ -1375,17 +1256,11 @@ export default function HomeScreen() {
           screen) and Todas as práticas (primary — the see-all doing surface,
           which also hosts the "Gerenciar" entry inside it). RAW navClearance
           (not the tour-bumped bottomClearance) so it doesn't leap up under a
-          bottom tour tooltip. M2 step 1 spotlights the Todas button; tapping
-          it does what it always does (see openAllPractices). */}
+          bottom tour tooltip. */}
       <TasksFabStack
         bottomOffset={navClearance}
         onSeeAll={openAllPractices}
         onCalendar={() => router.push('/history')}
-        seeAllWrap={(node) => (
-          <TourTarget id="home.manage" radius={28}>
-            {node}
-          </TourTarget>
-        )}
       />
 
       {floats.map((f) => (
@@ -1447,62 +1322,9 @@ export default function HomeScreen() {
         onAdvanceToNextScreen={() => router.navigate('/(tabs)/profile')}
       />
 
-      {/* Post-login tour — M1 (Práticas), every step on Home. Gated on the
-         current-module check like every mount, plus m1Enabled (today,
-         loaded, and a card to point at for the card steps). */}
+      {/* Post-login tour — M1, the one step, on today's first card. Gated
+         on the current-module check like every mount, plus m1Enabled. */}
       <TourModule module="M1" steps={m1Steps} enabled={m1Enabled} />
-
-      {/* M2 step 1 spotlights the "Todas as práticas" FAB (seeAllWrap's
-         'home.manage' target) and advances on the FAB's own press; the
-         assist "Me leva lá" opens the same screen. Steps 2-6 live on
-         /all-practices, /tasks and the form. rewindOnFocus (here and on the
-         M4-M6 mounts below): coming back to Home mid-module — hardware
-         back, a tab switch — rewinds to this screen's step, so the tooltip
-         reappears instead of the tour going silent. */}
-      <TourModule
-        module="M2"
-        steps={buildM2Steps(t)}
-        enabled={isM2Current}
-        rewindOnFocus
-        onAdvanceToNextScreen={openAllPractices}
-      />
-
-      {/* M4 step 1 lives here (Rewards bottom-nav tab). Switching to the
-         Rewards tab fires REWARDS_NAVIGATED from that screen; Próximo /
-         skip switches there ourselves so steps 2-3 have their surface. */}
-      <TourModule
-        module="M4"
-        steps={buildM4Steps(t)}
-        enabled={isM4Current}
-        rewindOnFocus
-        onAdvanceToNextScreen={() => router.navigate('/(tabs)/rewards')}
-      />
-
-      {/* M5 step 1 lives here (Eu/Hero bottom-nav tab). Switching to the
-         Hero tab fires ME_NAVIGATED from that screen; Próximo / skip
-         switches there ourselves so steps 2-5 have their surface. */}
-      <TourModule
-        module="M5"
-        steps={buildM5Steps(t)}
-        enabled={isM5Current}
-        rewindOnFocus
-        onAdvanceToNextScreen={() => router.navigate('/(tabs)/character')}
-      />
-
-      {/* M6 step 1 lives here (Learn bottom-nav tab). Switching to the
-         Learn tab fires LEARN_NAVIGATED from that screen. Skipping at
-         this step ends M6 → the closing screen (finishM6). */}
-      <TourModule
-        module="M6"
-        steps={buildM6Steps(t)}
-        enabled={isM6Current}
-        rewindOnFocus
-        // Past the idea screen the remaining steps live on the Recanto tab:
-        // coming Home must not restart the whole walk-through.
-        rewindMaxStep={M6_STEP.ABSORBED}
-        onAdvanceToNextScreen={() => router.navigate('/(tabs)/learning')}
-        onComplete={finishM6}
-      />
     </SafeAreaView>
   );
 }

@@ -37,7 +37,6 @@ import {
   ONB_TEXT_BTN_H,
   OnbPrimaryButton,
   OnbSecondaryButton,
-  OnbTextButton,
   FitBox,
   ONB_HEADER_H,
   ONB_PAGE_TOP,
@@ -110,12 +109,12 @@ const SKIP_H = ONB_TEXT_BTN_H;
 const ARRIVAL_GUARD_MS = 650;
 
 /**
- * Last page (Fase 1 do onboarding simples, 2026-10-19): the default path
- * goes straight to picking practices; the guided tour is opt-in, demoted to
- * the text button. Only 'tour' starts the guided modules — the other two
- * skip them (the mandatory `settings` step still runs after the pack).
+ * Last page (Onboarding simples, 2026-10/11): pick practices (primary) or
+ * start with the self-assessment. There is no guided tour to opt into any
+ * more — the mandatory settings help step runs after the pack, then the one
+ * M1 step (mark the first practice done) waits on Home.
  */
-type Choice = 'practices' | 'assessment' | 'tour';
+type Choice = 'practices' | 'assessment';
 
 export function IntroPager() {
   const router = useRouter();
@@ -125,8 +124,6 @@ export function IntroPager() {
   const reduceMotion = useReducedMotion();
   const window = useWindowDimensions();
 
-  const startGuidedTour = useTourStore((s) => s.startGuidedTour);
-  const skipGuidedTour = useTourStore((s) => s.skipGuidedTour);
   const setStatus = useTourStore((s) => s.setStatus);
 
   const [pageW, setPageW] = useState(window.width);
@@ -200,10 +197,8 @@ export function IntroPager() {
       setBusy(choice);
       Haptics.selectionAsync().catch(() => {});
       try {
-        // Só quem pede o tour recebe os módulos guiados; as outras duas
-        // escolhas seguem sem ele (refazível em Ajustes).
-        if (choice === 'tour') await startGuidedTour();
-        else await skipGuidedTour();
+        // The one guided step (mark the first practice done) runs for
+        // everyone once Home opens; there is no tour to opt into any more.
         // "Start with the self-assessment": land on it once onboarding ends
         // (after the starter pack, or straight away on an intro-only replay).
         setAfterOnboarding(choice === 'assessment' ? '/self-assessment' : null);
@@ -219,7 +214,7 @@ export function IntroPager() {
         setBusy(null);
       }
     },
-    [router, setStatus, skipGuidedTour, startGuidedTour],
+    [router, setStatus],
   );
 
   // ── Android hardware back ──────────────────────────────────────────────
@@ -549,12 +544,6 @@ export function IntroPager() {
                   label={t('tour.intro.choice.assessment')}
                   onPress={() => void finish('assessment')}
                   busy={busy === 'assessment'}
-                  disabled={busy != null}
-                />
-                <OnbTextButton
-                  label={t('tour.intro.choice.tour')}
-                  onPress={() => void finish('tour')}
-                  busy={busy === 'tour'}
                   disabled={busy != null}
                 />
               </Animated.View>

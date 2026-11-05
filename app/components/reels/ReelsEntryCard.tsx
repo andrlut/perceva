@@ -23,12 +23,10 @@ interface Props {
   groups: ReelGroup[];
   unreadCount: number;
   onPress: () => void;
-  /** Tour spotlight id for the tile itself (inside the screen padding). */
-  tourTargetId?: string;
   style?: StyleProp<ViewStyle>;
 }
 
-export function ReelsEntryCard({ groups, unreadCount, onPress, tourTargetId, style }: Props) {
+export function ReelsEntryCard({ groups, unreadCount, onPress, style }: Props) {
   const { t } = useT();
   const thumbs = groups.slice(0, 3);
 
@@ -76,7 +74,6 @@ export function ReelsEntryCard({ groups, unreadCount, onPress, tourTargetId, sty
       }
       a11yLabel={t('learning.reels.entry')}
       onPress={onPress}
-      tourTargetId={tourTargetId ?? 'reels.entry'}
       style={style}
     />
   );

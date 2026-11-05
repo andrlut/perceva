@@ -36,11 +36,13 @@ import { tokens } from '@/theme';
  * the user never saw still reads "Ainda não visto" after replaying another.
  *
  *   - Opening (intro, pack) → its full-screen route.
- *   - Guided tour (Ajustes, M1…M6) → Home, where each module's first step
- *     lives. Ajustes is the mandatory help module, listed first.
+ *   - Guided steps (Ajustes, then M1 — the one "mark the first practice
+ *     done" step) → Home, where each one's first step lives. Ajustes is the
+ *     mandatory help module, listed first.
  *
- * No M3 row: Missões left the tour (opt-in module, not taught). No wrap
- * row: it marks itself done on mount and only closes the full run.
+ * The old M2…M6 walk-throughs were deleted with the 2026-11 "Onboarding
+ * simples": the locked tabs teach themselves with their animated doors
+ * (Ajustes › "Rever as portas das abas").
  */
 
 interface ReplaySpec<M> {
@@ -58,10 +60,6 @@ type SpotlightModule = GuidedModule | typeof SETTINGS_MODULE;
 const GUIDED: ReplaySpec<SpotlightModule>[] = [
   { id: SETTINGS_MODULE, icon: 'help-buoy-outline' },
   { id: 'M1', icon: 'checkmark-done-outline' },
-  { id: 'M2', icon: 'create-outline' },
-  { id: 'M4', icon: 'gift-outline' },
-  { id: 'M5', icon: 'person-outline' },
-  { id: 'M6', icon: 'bulb-outline' },
 ];
 
 // text.mid (not dim) for "not seen": the label has to stay readable, it

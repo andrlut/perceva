@@ -200,7 +200,6 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="tour/intro" options={{ headerShown: false, gestureEnabled: false }} />
             <Stack.Screen name="tour/pack" options={{ headerShown: false, gestureEnabled: false }} />
-            <Stack.Screen name="tour/wrap" options={{ headerShown: false }} />
             <Stack.Screen name="tour-replay" options={{ headerShown: false }} />
             <Stack.Screen
               name="task-form"

@@ -5,8 +5,6 @@ import { useCompletionStats } from '@/lib/api/history';
 import { useReadMaterialIds } from '@/lib/api/learning';
 import { useLastWellbeingSession } from '@/lib/api/psych';
 import { useSession } from '@/lib/auth';
-import { GUIDED_MODULES } from '@/lib/tour/constants';
-import { useTourStore } from '@/lib/tour/store';
 
 import { UNLOCK_GATES_ENABLED, UNLOCK_TRIGGERS } from './constants';
 import { useUnlockStore } from './store';
@@ -23,9 +21,6 @@ import { useUnlockStore } from './store';
  *   me_desired   ← me + me_practiced
  *   learning     ← ever read a material (older habit) — otherwise manual
  *
- * Taking the opt-in guided tour opens the three tabs at once: the tour
- * walks through all of them, and a locked tab mid-tour would be a dead end.
- *
  * Signals come from queries the completion/assessment mutations already
  * invalidate, so an unlock lands on the next render after the action.
  */
@@ -40,12 +35,6 @@ export function useUnlockProgress(): void {
   const assessment = useLastWellbeingSession();
   const character = useCharacter();
   const reads = useReadMaterialIds();
-  const tourActive = useTourStore((s) =>
-    GUIDED_MODULES.some((m) => {
-      const st = s.modules[m]?.status;
-      return st === 'pending' || st === 'in_progress';
-    }),
-  );
 
   useEffect(() => {
     if (user?.id) void hydrate(user.id, user.created_at ?? null);
@@ -71,10 +60,5 @@ export function useUnlockProgress(): void {
       void unlock('me_desired', 'progress');
     }
     if (!unlocked.learning && hasRead) void unlock('learning', 'progress');
-    if (tourActive) {
-      for (const f of ['rewards', 'learning', 'me'] as const) {
-        if (!unlocked[f]) void unlock(f, 'manual');
-      }
-    }
-  }, [status, unlocked, total, days, assessed, hasRead, tourActive, unlock]);
+  }, [status, unlocked, total, days, assessed, hasRead, unlock]);
 }
