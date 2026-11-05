@@ -1734,6 +1734,11 @@ const en = {
       title: 'All practices',
       a11y: 'Open all practices',
     },
+    recantoCard: {
+      eyebrow: 'An idea from the Recanto',
+      cta: 'Open the idea',
+      a11y: 'Recanto idea: {{title}}. Tap to open.',
+    },
     laterPractices: {
       title: 'Created after this day',
       caption: "You can log them here; they don't count toward closing the day.",

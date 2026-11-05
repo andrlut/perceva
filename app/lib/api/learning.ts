@@ -16,6 +16,7 @@ import type {
   TrainIdeaResult,
 } from '@/lib/db/types';
 import { supabase } from '@/lib/supabase';
+import { RECANTO_CARD_IDEA } from '@/lib/unlock/constants';
 
 import { characterKeys } from './character';
 import { dateKeyFromLocal } from './history';
@@ -28,6 +29,7 @@ export const learningKeys = {
   views: () => [...learningKeys.all, 'views'] as const,
   myFeedback: (slug: string) => [...learningKeys.all, 'myFeedback', slug] as const,
   ideaCards: () => [...learningKeys.all, 'ideaCards'] as const,
+  featuredIdea: () => [...learningKeys.all, 'featuredIdea'] as const,
   collected: () => [...learningKeys.all, 'collected'] as const,
   reviews: () => [...learningKeys.all, 'reviews'] as const,
 };
@@ -252,6 +254,28 @@ export function useIdeaCards() {
         .order('ordinal', { ascending: true });
       if (error) throw error;
       return (data ?? []) as LearningIdeaPublic[];
+    },
+  });
+}
+
+/**
+ * The fixed idea the Recanto card on Hoje shows (RECANTO_CARD_IDEA). One
+ * row of the public view; null when the catalog no longer has it (the card
+ * then simply doesn't render).
+ */
+export function useFeaturedIdea() {
+  return useQuery({
+    staleTime: 24 * 60 * 60_000,
+    queryKey: learningKeys.featuredIdea(),
+    queryFn: async (): Promise<LearningIdeaPublic | null> => {
+      const { data, error } = await supabase
+        .from('learning_idea_public')
+        .select('*')
+        .eq('slug', RECANTO_CARD_IDEA.slug)
+        .eq('idea_id', RECANTO_CARD_IDEA.ideaId)
+        .maybeSingle();
+      if (error) throw error;
+      return (data as LearningIdeaPublic | null) ?? null;
     },
   });
 }

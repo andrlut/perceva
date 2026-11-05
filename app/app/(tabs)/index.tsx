@@ -45,6 +45,8 @@ import {
   usePracticesGuidePrompt,
 } from '@/components/guide/screens/PracticesGuide';
 import { TodayHeader } from '@/components/TodayHeader';
+import { RecantoCard } from '@/components/unlock/RecantoCard';
+import { useIsFirstDay } from '@/lib/unlock/useFirstDay';
 import { XPCoinFloat } from '@/components/XPCoinFloat';
 import { useCharacter } from '@/lib/api/character';
 import {
@@ -207,6 +209,9 @@ export default function HomeScreen() {
   // routes there is no active step, and the prompt's Modal would pop OVER
   // the onboarding on first open.
   const tourFinished = useTourFinished();
+  // Day one is for the first practice: the mood strip and the evening prompt
+  // join Hoje from day 2 (progressive-unlock accounts only).
+  const firstDay = useIsFirstDay();
   // Floor at the historical constant, but grow with the REAL measured card
   // height (reported by TourStep on layout) so restyles that make the card
   // taller can't silently eat the gap the target settles into.
@@ -1224,6 +1229,10 @@ export default function HomeScreen() {
                   onUnskip={handleUnskip}
                 />
               )}
+
+              {/* The Recanto's fixed idea — the lure into Aprender while that
+                  tab is locked; renders nothing once the tab was opened. */}
+              {isToday && <RecantoCard />}
             </View>
 
             {/* Journal. Today: the quick 5-face strip (the "close the day"
@@ -1235,7 +1244,7 @@ export default function HomeScreen() {
                 day with open cards must still be loggable, and DaySeal is a
                 statement about what was trained, not a place for a control. */}
             {isToday ? (
-              <MoodHubStrip />
+              firstDay ? null : <MoodHubStrip />
             ) : (
               <View style={styles.moodDayWrap}>
                 <MoodDayDetail dateKey={selectedKey} />
@@ -1308,7 +1317,7 @@ export default function HomeScreen() {
         onClose={() => setDayClearedStats(null)}
       />
 
-      <MoodCheckinPrompt enabled={tourFinished && !activeTourStep && isFocused} />
+      <MoodCheckinPrompt enabled={tourFinished && !activeTourStep && isFocused && !firstDay} />
 
       {/* Help module step 1 (mandatory, first after the starter pack): the
          Ajustes tab. Reaching the tab fires SETTINGS_NAVIGATED there; "Ir

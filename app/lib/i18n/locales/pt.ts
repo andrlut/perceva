@@ -1731,6 +1731,11 @@ const pt: Translations = {
       title: 'Todas as práticas',
       a11y: 'Abrir todas as práticas',
     },
+    recantoCard: {
+      eyebrow: 'Uma ideia do Recanto',
+      cta: 'Abrir a ideia',
+      a11y: 'Ideia do Recanto: {{title}}. Toque para abrir.',
+    },
     laterPractices: {
       title: 'Criadas depois deste dia',
       caption: 'Dá pra registrar aqui; não contam pro dia fechado.',
