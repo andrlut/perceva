@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScreenBackground } from '@/components/ScreenBackground';
+import { track } from '@/lib/analytics';
 import { characterKeys } from '@/lib/api/character';
 import { useT } from '@/lib/i18n';
 import {
@@ -63,10 +64,10 @@ export default function PremiumScreen() {
   const offering = useOffering();
   const queryClient = useQueryClient();
 
-  // Origin of the visit. P1: dev-log only. P3: becomes an analytics event.
+  // Origin of the visit — the paywall's own funnel entry.
   useEffect(() => {
     const source = normalizePremiumSource(params.source);
-    if (source) console.log(`[premium] opened from: ${source}`);
+    if (source) track('premium_opened', { source });
   }, [params.source]);
 
   // The store confirmed the purchase but our DB flag flips asynchronously

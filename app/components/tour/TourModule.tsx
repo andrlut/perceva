@@ -8,6 +8,7 @@ import {
   useModuleStatus,
   useTourStore,
 } from '@/lib/tour/store';
+import { track } from '@/lib/analytics';
 import { useTourEvent } from '@/lib/tour/eventBus';
 import { isTerminal, type TourModule as TourModuleId } from '@/lib/tour/constants';
 
@@ -152,11 +153,12 @@ export function TourModule({
 
   const finish = useCallback(
     async (outcome: 'completed' | 'skipped') => {
+      track('tour_module', { module, outcome, step: stepIndex });
       await setStatus(module, outcome);
       setStepIndex(module, 0);
       onComplete?.(outcome);
     },
-    [module, setStatus, setStepIndex, onComplete],
+    [module, stepIndex, setStatus, setStepIndex, onComplete],
   );
 
   const advance = useCallback(async () => {
@@ -253,6 +255,7 @@ export function TourModule({
   // "Sair do tour": every guided module still to come (and the closing
   // screen) is skipped at once; the user stays where they are.
   const handleExitTour = () => {
+    track('tour_exited', { module, step: stepIndex });
     void useTourStore
       .getState()
       .skipGuidedTour()
