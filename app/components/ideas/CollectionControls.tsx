@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 
 import { useT } from '@/lib/i18n';
+import { TRAIN_MIN_FAVORITES } from '@/lib/ideaTraining';
 import { tokens } from '@/theme';
 
 /**
@@ -94,27 +95,35 @@ export function ReviewStrip({
 
 /**
  * "Treino do dia" — the review strip's twin, in the favorites' gold: it
- * opens the training (/idea-train) and says how many favorites are due
+ * opens the training (/idea-train). Below TRAIN_MIN_FAVORITES it says how
+ * far the reader is from opening it; after, how many favorites are due
  * today and how many are already firm. Without `onPress` it is the guide's
  * replica.
  */
 export function TrainStrip({
   due,
   firm,
+  favorites,
   onPress,
   style,
 }: {
   due: number;
   firm: number;
+  favorites: number;
   onPress?: () => void;
   style?: StyleProp<ViewStyle>;
 }) {
   const { t } = useT();
-  const head =
-    due > 0
-      ? t('learning.ideas.train.stripDue', { count: due })
-      : t('learning.ideas.train.caughtUpShort');
-  const body = firm > 0 ? `${head} · ${t('learning.ideas.train.firmCount', { count: firm })}` : head;
+  let body: string;
+  if (favorites < TRAIN_MIN_FAVORITES) {
+    body = t('learning.ideas.train.stripUnlock', { count: favorites, min: TRAIN_MIN_FAVORITES });
+  } else {
+    const head =
+      due > 0
+        ? t('learning.ideas.train.stripDue', { count: due })
+        : t('learning.ideas.train.caughtUpShort');
+    body = firm > 0 ? `${head} · ${t('learning.ideas.train.firmCount', { count: firm })}` : head;
+  }
   return (
     <Pressable
       onPress={onPress}

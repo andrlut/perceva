@@ -313,7 +313,8 @@ function LearningScreenContent() {
   // The entry row waits for every query either tile reads (the reads and
   // the idea/collection/review queries), so the Explorar count never
   // flashes inflated and Treinar never draws full width before Explorar
-  // lands beside it. Treinar shows once the reader has a favorite.
+  // lands beside it. Treinar is always there once ready — below five
+  // favorites it is how the reader finds out the training exists.
   const entryRowReady =
     !feed.isLoading &&
     !reads.isLoading &&
@@ -321,7 +322,7 @@ function LearningScreenContent() {
     !collectedIdeas.isLoading &&
     !training.loading;
   const showExplore = entryRowReady && reelDeck.length > 0;
-  const showTrain = entryRowReady && training.favorites > 0;
+  const showTrain = entryRowReady;
 
   // Apply both filters (read-state AND pill). Each carousel reads from
   // the same filtered set, so empty groups drop out naturally.
@@ -533,8 +534,8 @@ function LearningScreenContent() {
           </View>
 
           {/* Entry row: Explorar (Study Reels, the story-mode pass over the
-             idea cards; hidden when nothing is story-ready) and, once there
-             is a favorite to train, Treinar beside it. One compact row, so
+             idea cards; hidden when nothing is story-ready) and Treinar beside
+             it, always. One compact row, so
              the entry cards never eat the first screen — the tab is about
              the materials below. */}
           {(showExplore || showTrain) && (
@@ -554,7 +555,8 @@ function LearningScreenContent() {
               )}
               {showTrain && (
                 <TrainEntryTile
-                  due={training.due.length}
+                  due={training.dueCount}
+                  favorites={training.favorites}
                   onPress={() => {
                     Haptics.selectionAsync().catch(() => {});
                     router.push('/idea-train');

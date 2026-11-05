@@ -110,7 +110,7 @@ export function RecantoGuide({ locale }: { locale: IdeaLocale }) {
     train: {
       icon: 'school-outline',
       iconColor: tokens.semantic.coin,
-      replica: <TrainEntryTile due={5} />,
+      replica: <TrainEntryTile due={5} favorites={12} />,
     },
     continue: {
       icon: 'book-outline',

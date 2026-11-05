@@ -1,0 +1,18 @@
+{
+  "slug": "retrieval-practice-beats-rereading",
+  "dimension_id": "mind",
+  "title": {
+    "pt": "Lembrar de cabeça fixa mais do que reler",
+    "en": "Recalling from memory beats rereading"
+  },
+  "cover": {
+    "prompt": "Uma mão fechando com firmeza um livro grosso sobre uma mesa de estudo, a capa quase encostando nas páginas, e a luz quente da luminária escapando só pela última fresta entre elas; ao lado, uma folha em branco e um lápis esperando. Tudo ancorado no terço de baixo do quadro, com o alto vazio e escuro."
+  },
+  "ideas": [
+    {
+      "id": "lembrar-vence-reler",
+      "ordinal": 1,
+      "image_prompt": "Uma estudante sentada à mesa de estudo, ereta e inclinada para a frente, ocupando o centro do quadro: olhos apertados e testa franzida no esforço de lembrar, a ponta dos dedos de uma mão na têmpora e a outra mão espalmada com firmeza sobre um livro fechado — o livro fechado e esse esforço são o centro da cena. Do outro lado da mesa, no fundo e menor, um livro idêntico aberto, de páginas onduladas e gastas de tanto folhear, diante de uma cadeira vazia. A única luz quente vem de uma luminária de mesa e cai sobre a mão no livro fechado e o rosto concentrado; o livro aberto e a cadeira ficam na penumbra."
+    }
+  ]
+}

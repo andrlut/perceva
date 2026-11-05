@@ -1,0 +1,18 @@
+{
+  "slug": "buying-time-chores",
+  "dimension_id": "wealth",
+  "title": {
+    "pt": "O dinheiro que tira a tarefa chata da semana",
+    "en": "Money that takes the chores off your plate"
+  },
+  "cover": {
+    "prompt": "Um balde de metal cheio até a borda, transbordando em fios de água sobre um piso de madeira, e uma segunda mão, de outra pessoa, inclinando-o com calma para despejar parte da água, de modo que o nível baixa e o transbordo para; o balde e as mãos ancorados no terço de baixo do quadro, com muito espaço vazio acima."
+  },
+  "ideas": [
+    {
+      "id": "comprar-tempo",
+      "ordinal": 1,
+      "image_prompt": "Numa sala de estar numa tarde de domingo, uma pessoa deitada no sofá no centro do quadro, lendo um livro, o corpo solto e o rosto sereno de alívio; a um passo atrás do sofá, perto e bem visível, uma diarista de costas passa o esfregão no chão, e aos pés do sofá, em primeiro plano, fica o balde de limpeza que a pessoa não precisou pegar — as duas figuras inteiras no quadro, a que descansa e a que faz a faxina. Uma única luz dourada de janela, vinda da lateral, cai sobre a pessoa e o livro; a diarista e o balde ficam num meio-tom suave, com o esfregão e o balde num verde-sálvia discreto, o resto da sala na penumbra."
+    }
+  ]
+}

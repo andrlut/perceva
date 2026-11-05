@@ -1,0 +1,51 @@
+{
+  "slug": "retrieval-practice-beats-rereading",
+  "category": "research",
+  "material_title": {
+    "pt": "Lembrar de cabeça fixa mais do que reler",
+    "en": "Recalling from memory beats rereading"
+  },
+  "ideas": [
+    {
+      "id": "lembrar-vence-reler",
+      "ordinal": 1,
+      "title": {
+        "pt": "Tentar lembrar fixa mais do que reler o texto",
+        "en": "Trying to recall beats rereading a text"
+      },
+      "claim": {
+        "pt": "Leia uma vez, feche o texto e escreva o que lembra. Isso fixa mais do que reler, mesmo parecendo pior.",
+        "en": "Read once, close the text and write down what you remember. It sticks better than rereading, even if it feels worse."
+      },
+      "body": {
+        "pt": "Num experimento de Roediger e Karpicke (Psychological Science, 2006), 180 universitários estudaram o mesmo texto curto. Um grupo leu quatro vezes. Outro leu uma vez e passou o resto do tempo escrevendo o que lembrava, sem olhar e sem correção. Cinco minutos depois, a releitura ganhava. Uma semana depois, o jogo virou: **quem se testou lembrava 61% do texto, e quem releu, 40%**. Os que releram ainda eram os mais confiantes de que iam lembrar.\n\nReler deixa o texto familiar, e familiaridade se parece muito com saber. Buscar a informação na cabeça, em vez de na página, dá mais trabalho. Isso se chama prática de recuperação, e é esse esforço que fixa.\n\nNa prática: leia uma vez, feche e escreva ou fale o que lembra. **Só depois confira o que faltou.** Uma meta-análise, estudo que junta os resultados de várias pesquisas (Rowland, 2014), mostra que lembrar de cabeça vale mais do que reconhecer a resposta numa lista, e que a correção depois pesa no ganho.",
+        "en": "In an experiment by Roediger and Karpicke (Psychological Science, 2006), 180 college students studied the same short passage. One group read it four times. Another read it once and spent the rest of the time writing down what they recalled, without looking and without feedback. Five minutes later, rereading was ahead. A week later it flipped: **the self-testers remembered 61% of the passage, the rereaders 40%**. The rereaders were also the most sure they would remember.\n\nRereading makes a text familiar, and familiarity feels a lot like knowing. Pulling the information out of your head, instead of off the page, takes more work. That is called retrieval practice, and the effort is what makes it stick.\n\nIn practice: read once, close it, then write or say what you remember. **Only then check what you missed.** A meta-analysis, a study that pools the results of many others (Rowland, 2014), found that recalling beats recognizing the answer in a list, and that correcting yourself afterward shapes the gain."
+      },
+      "image_brief": "Uma pessoa sentada à mesa de estudo, de olhos fechados e testa franzida, concentrada em lembrar, com a mão pousada sobre um livro fechado; do outro lado da mesa, um livro idêntico aberto, com as páginas gastas e onduladas de tanto ser folheado, diante de uma cadeira vazia.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Roediger & Karpicke, 2006 · Psychological Science · artigo completo",
+            "en": "Roediger & Karpicke, 2006 · Psychological Science · full paper"
+          },
+          "url": "https://psychology.ecu.edu/wp-content/pv-uploads/sites/216/2019/03/Roediger-Karpicke-2006.pdf"
+        },
+        {
+          "label": {
+            "pt": "Rowland, 2014 · meta-análise do efeito do teste",
+            "en": "Rowland, 2014 · meta-analysis of the testing effect"
+          },
+          "url": "https://doi.org/10.1037/a0037559"
+        },
+        {
+          "label": {
+            "pt": "Dunlosky et al., 2013 · dez técnicas de estudo avaliadas",
+            "en": "Dunlosky et al., 2013 · ten study techniques rated"
+          },
+          "url": "https://doi.org/10.1177/1529100612453266"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}

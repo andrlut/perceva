@@ -85,7 +85,7 @@ export default function CollectionScreen() {
     loading,
     failed,
     retry,
-    due: trainDue,
+    dueCount: trainDue,
     firm: trainFirm,
     favorites: favoriteCount,
   } = useIdeaTraining(ideaLocale);
@@ -345,10 +345,11 @@ export default function CollectionScreen() {
               />
             )}
 
-            {favoriteCount > 0 && !searching && (
+            {absorbed.length > 0 && !searching && (
               <TrainStrip
-                due={trainDue.length}
+                due={trainDue}
                 firm={trainFirm}
+                favorites={favoriteCount}
                 onPress={() => {
                   Haptics.selectionAsync().catch(() => {});
                   router.push('/idea-train');

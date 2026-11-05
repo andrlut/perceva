@@ -1,0 +1,18 @@
+{
+  "slug": "shared-novelty-couples",
+  "dimension_id": "bonds",
+  "title": {
+    "pt": "O que tira o casal do piloto automático",
+    "en": "What pulls a couple off autopilot"
+  },
+  "cover": {
+    "prompt": "Um casal de mãos dadas atravessando um riacho desconhecido pulando de pedra em pedra ao entardecer, um deles no meio do salto e o outro se equilibrando, os dois rindo; pequenos no terço de baixo do quadro, com céu amplo e vazio acima, e uma única luz dourada batendo neles."
+  },
+  "ideas": [
+    {
+      "id": "novidade-a-dois",
+      "ordinal": 1,
+      "image_prompt": "Um casal, só duas pessoas, abraçado em posição de dança no centro de uma cozinha à noite, tentando um passo pela primeira vez: um pisa sem querer no pé do outro e os dois riem, corpos inclinados um para o outro, ocupando a maior parte do quadro de corpo inteiro. Uma única luz quente e dourada vinda de uma luminária baixa acima deles ilumina só o casal; ao fundo, menor e na penumbra fria, uma mesa com o prato de sempre esfriando, intocado. Um leve verde-sálvia na roupa de um dos dois."
+    }
+  ]
+}
