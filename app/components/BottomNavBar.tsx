@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { trackOnce } from '@/lib/analytics';
 import { useT } from '@/lib/i18n';
+import { TAB_FEATURE, UNLOCK_GATES_ENABLED, useUnlockStore } from '@/lib/unlock';
 import { tokens } from '@/theme';
 
 const TAB_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
@@ -71,6 +72,14 @@ export function BottomNavBar({ state, navigation }: BottomTabBarProps) {
   const { t } = useT();
   const tabCount = state.routes.length;
   const barWidth = screenWidth - BAR_HORIZONTAL_MARGIN * 2;
+  // Progressive locks: a locked tab stays in the bar (visible, tappable —
+  // the screen itself says what opens it) with a small neutral padlock.
+  const unlocked = useUnlockStore((s) => s.unlocked);
+  const unlockReady = useUnlockStore((s) => s.status === 'ready');
+  const isLockedTab = (name: string) => {
+    const feature = TAB_FEATURE[name];
+    return UNLOCK_GATES_ENABLED && unlockReady && feature != null && !unlocked[feature];
+  };
   const tabWidth = (barWidth - 12) / tabCount; // 6px padding each side inside bar
 
   // Animated indicator position: shared value follows the active tab.
@@ -133,11 +142,18 @@ export function BottomNavBar({ state, navigation }: BottomTabBarProps) {
                 accessibilityState={isFocused ? { selected: true } : {}}
                 accessibilityLabel={label}
               >
-                <Ionicons
-                  name={iconName}
-                  size={22}
-                  color={isFocused ? tokens.brand.violet2 : tokens.text.dim}
-                />
+                <View>
+                  <Ionicons
+                    name={iconName}
+                    size={22}
+                    color={isFocused ? tokens.brand.violet2 : tokens.text.dim}
+                  />
+                  {isLockedTab(route.name) ? (
+                    <View style={styles.lockBadge}>
+                      <Ionicons name="lock-closed" size={9} color={tokens.text.mid} />
+                    </View>
+                  ) : null}
+                </View>
                 <Text
                   numberOfLines={1}
                   adjustsFontSizeToFit
@@ -164,6 +180,17 @@ export function BottomNavBar({ state, navigation }: BottomTabBarProps) {
 }
 
 const styles = StyleSheet.create({
+  lockBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -7,
+    width: 15,
+    height: 15,
+    borderRadius: 8,
+    backgroundColor: tokens.bg.surface2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   wrap: {
     position: 'absolute',
     left: BAR_HORIZONTAL_MARGIN,

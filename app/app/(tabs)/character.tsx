@@ -15,6 +15,8 @@ import { HeroGuide, useHeroGuidePrompt } from '@/components/guide/screens/HeroGu
 import { HeroHeader } from '@/components/HeroHeader';
 import { InfoSheet } from '@/components/InfoSheet';
 import { PillarSwitcher, type PillarKey } from '@/components/PillarSwitcher';
+import { LockedPanel, LockedScreen } from '@/components/unlock/LockedScreen';
+import { UnlockDoor } from '@/components/unlock/UnlockDoor';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { AvaliacaoPanel } from '@/components/pillars/AvaliacaoPanel';
 import { DedicacaoPanel } from '@/components/pillars/DedicacaoPanel';
@@ -23,6 +25,7 @@ import { NortePanel } from '@/components/pillars/NortePanel';
 import { useCharacter } from '@/lib/api/character';
 import { useSkillStates } from '@/lib/api/skills';
 import { useT } from '@/lib/i18n';
+import { useIsLocked } from '@/lib/unlock';
 import { useModuleEnabled } from '@/lib/modules';
 import { TourModule } from '@/components/tour/TourModule';
 import { TourTarget } from '@/components/tour/TourTarget';
@@ -70,7 +73,22 @@ const CARD_FALLBACK_H = 280;
  * mount never renders would leave the tour silent with no way to skip
  * (audit 2026-09).
  */
+/** Progressive lock (doc "Onboarding simples", Fase 2): locked → the
+ *  "what opens it" screen (its shortcut is the Avaliação); first opening →
+ *  the animated door over the real content; after that, the tab as it
+ *  always was — with the later portraits gating themselves inside. */
 export default function CharacterScreen() {
+  const locked = useIsLocked('me');
+  if (locked) return <LockedScreen feature="me" />;
+  return (
+    <>
+      <CharacterScreenContent />
+      <UnlockDoor feature="me" />
+    </>
+  );
+}
+
+function CharacterScreenContent() {
   const { t } = useT();
   const router = useRouter();
   const character = useCharacter();
@@ -94,10 +112,15 @@ export default function CharacterScreen() {
   const [helpOpen, setHelpOpen] = useState(false);
   const guidePrompt = useHeroGuidePrompt();
 
+  // Portraits open in sequence (Percebida → Praticada → Desejada); a locked
+  // one shows what opens it instead of its panel.
+  const lockedPracticed = useIsLocked('me_practiced');
+  const lockedDesired = useIsLocked('me_desired');
   const [activePillar, setActivePillar] = useState<PillarKey>(
     // Opens on Praticada: what was practiced lately is the reading that
-    // changes day to day, so it is the one worth landing on.
-    params.pillar ?? 'praticada',
+    // changes day to day, so it is the one worth landing on — unless it is
+    // still locked, then on the first portrait.
+    params.pillar ?? (lockedPracticed ? 'percebida' : 'praticada'),
   );
 
   // Honor `?pillar=` changes after mount — e.g. the Home XP card pushes
@@ -257,7 +280,14 @@ export default function CharacterScreen() {
               <View style={styles.body}>
                 <View ref={switcherRef} collapsable={false}>
                   <TourTarget id="me.pillars" radius={tokens.radius.md}>
-                    <PillarSwitcher active={activePillar} onChange={setActivePillar} />
+                    <PillarSwitcher
+                      active={activePillar}
+                      onChange={setActivePillar}
+                      locked={[
+                        ...(lockedPracticed ? (['praticada'] as const) : []),
+                        ...(lockedDesired ? (['desejada'] as const) : []),
+                      ]}
+                    />
                   </TourTarget>
                 </View>
                 <View style={styles.subViewWrap}>
@@ -267,10 +297,16 @@ export default function CharacterScreen() {
                       selfAssessmentAnchorRef={selfAssessmentRef}
                     />
                   )}
-                  {activePillar === 'praticada' && (
+                  {activePillar === 'praticada' && lockedPracticed && (
+                    <LockedPanel feature="me_practiced" />
+                  )}
+                  {activePillar === 'praticada' && !lockedPracticed && (
                     <DedicacaoPanel dimensions={data.dimensions} />
                   )}
-                  {activePillar === 'desejada' && (
+                  {activePillar === 'desejada' && lockedDesired && (
+                    <LockedPanel feature="me_desired" />
+                  )}
+                  {activePillar === 'desejada' && !lockedDesired && (
                     <View style={styles.desejadaStack}>
                       <NortePanel subScores={data.subScores} />
                       <CaminhoPanel skills={skillStates.data ?? []} />

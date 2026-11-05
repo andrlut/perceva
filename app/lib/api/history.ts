@@ -15,6 +15,30 @@ export const historyKeys = {
     [...historyKeys.all, 'day', dateKey, weekStart] as const,
 };
 
+/**
+ * All-time completions and distinct days with at least one — the
+ * progression signals of the unlock gates (lib/unlock). Under
+ * `historyKeys.all`, so every completion mutation invalidates it with the
+ * rest of the history. One column over the wire; a hard user has a few
+ * thousand rows, fine.
+ */
+export function useCompletionStats() {
+  return useQuery({
+    queryKey: [...historyKeys.all, 'stats'] as const,
+    queryFn: async (): Promise<{ total: number; days: number }> => {
+      const { data, error } = await supabase
+        .from('task_completion')
+        .select('completed_local_date');
+      if (error) throw error;
+      const rows = (data ?? []) as { completed_local_date: string }[];
+      return {
+        total: rows.length,
+        days: new Set(rows.map((r) => r.completed_local_date)).size,
+      };
+    },
+  });
+}
+
 export interface DailySummaryEntry {
   /** Local-date key in `YYYY-MM-DD` form — the stored `completed_local_date`. */
   dateKey: string;
