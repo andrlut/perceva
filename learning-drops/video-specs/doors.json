@@ -1,0 +1,194 @@
+{
+  "_doc": "Vídeos das PORTAS das abas (trancas progressivas, app/components/unlock/UnlockDoor.tsx): a primeira abertura de Recompensas, Aprender e Eu. Mesmo molde dos vídeos de ideia (tools/video/MOLDE.md), mas o card do verso vem daqui (ideas.<id>.card) porque porta não é ideia publicada. Saem em learning-media/doors/<id>.<lang>.r<rev>.mp4; o app monta o caminho em app/components/unlock/DoorVideo.tsx (DOOR_VIDEO_REV). Cada afirmação foi conferida no código do app (2026-11-05).",
+  "slug": "doors",
+  "ideas": {
+    "rewards": {
+      "dimension": "wealth",
+      "card": {
+        "file": "rewards",
+        "title": { "pt": "Recompensas", "en": "Rewards" },
+        "claim": {
+          "pt": "Faça as práticas, junte moedas e gaste no que você mesmo escolheu.",
+          "en": "Do your practices, collect coins and spend them on what you chose."
+        }
+      },
+      "lines": [
+        {
+          "id": "hook",
+          "scene": "pessoa",
+          "pt": { "caption": "Cada prática que você faz *paga moedas*." },
+          "en": { "caption": "Every practice you do *pays you coins*." },
+          "props": {
+            "kicker": { "pt": "Recompensas", "en": "Rewards" },
+            "mood": "ok",
+            "turn": { "pt": "paga moedas", "en": "pays you coins" },
+            "to": "feliz",
+            "objects": [
+              { "p": "moeda", "cue": { "pt": "prática", "en": "practice" } },
+              { "p": "moeda", "cue": { "pt": "paga", "en": "pays" } },
+              { "p": "moeda", "cue": { "pt": "moedas", "en": "coins" } }
+            ]
+          }
+        },
+        {
+          "id": "define",
+          "scene": "lista",
+          "pt": { "caption": "E você decide no que gastar: *cria a recompensa* e dá o preço dela." },
+          "en": { "caption": "And you decide what they buy: *create the reward* and set its price." },
+          "props": {
+            "mood": "ok",
+            "items": [
+              { "icon": "gift", "text": { "pt": "Você cria a recompensa", "en": "You create the reward" }, "cue": { "pt": "cria a recompensa", "en": "create the reward" } },
+              { "icon": "pricetag", "text": { "pt": "Você dá o preço", "en": "You set the price" }, "cue": { "pt": "dá o preço", "en": "set its price" } }
+            ]
+          }
+        },
+        {
+          "id": "redeem",
+          "scene": "virada",
+          "hold": 0.4,
+          "pt": { "caption": "Na hora de usar, é só resgatar: as moedas saem e *vale na hora*." },
+          "en": { "caption": "When it's time to use it, just redeem: the coins go and *it counts right away*." },
+          "props": {
+            "gives": "moeda",
+            "mood": "ok",
+            "from": { "pt": "resgatar", "en": "redeem" },
+            "turn": { "pt": "vale na hora", "en": "counts right away" },
+            "to": "feliz"
+          }
+        },
+        {
+          "id": "close",
+          "scene": "verso",
+          "props": {
+            "kicker": { "pt": "Aba aberta", "en": "Tab unlocked" },
+            "done": { "pt": "RECOMPENSAS ABERTAS", "en": "REWARDS UNLOCKED" }
+          }
+        }
+      ]
+    },
+    "learning": {
+      "dimension": "mind",
+      "card": {
+        "file": "learning",
+        "title": { "pt": "Aprender", "en": "Learn" },
+        "claim": {
+          "pt": "Leia uma ideia, vire o card, guarde as favoritas e treine de cabeça.",
+          "en": "Read an idea, flip the card, keep your favorites and train from memory."
+        }
+      },
+      "lines": [
+        {
+          "id": "hook",
+          "scene": "pessoa",
+          "pt": { "caption": "Aqui moram *ideias curtas*, com fonte: uma por tela." },
+          "en": { "caption": "This is where *short ideas* live, with sources: one per screen." },
+          "props": {
+            "kicker": { "pt": "Aprender", "en": "Learn" },
+            "mood": "ok",
+            "objects": [
+              { "p": "livro", "cue": { "pt": "ideias curtas", "en": "short ideas" } },
+              { "p": "lampada", "cue": { "pt": "com fonte", "en": "with sources" } },
+              { "p": "celular", "cue": { "pt": "uma por tela", "en": "one per screen" } }
+            ]
+          }
+        },
+        {
+          "id": "flip",
+          "scene": "cena",
+          "pt": { "caption": "Leu até o fim? *Vira o card*, e guarda como favorita a que valeu." },
+          "en": { "caption": "Read to the end? *Flip the card*, and keep the ones worth it as favorites." },
+          "props": {
+            "setting": "sofa",
+            "holding": "celular",
+            "mood": "ok",
+            "glow": { "pt": "Vira o card", "en": "Flip the card" },
+            "objects": [{ "p": "coracao", "cue": { "pt": "favorita", "en": "favorites" } }]
+          }
+        },
+        {
+          "id": "train",
+          "scene": "pensa",
+          "hold": 0.4,
+          "pt": { "caption": "Depois as favoritas voltam no *treino*: você tenta lembrar de cabeça antes de virar." },
+          "en": { "caption": "Later your favorites come back in *training*: you try to recall them before you flip." },
+          "props": {
+            "thought": "lampada",
+            "at": { "pt": "lembrar de cabeça", "en": "recall them" },
+            "mood": "ok",
+            "turn": { "pt": "antes de virar", "en": "before you flip" },
+            "to": "feliz"
+          }
+        },
+        {
+          "id": "close",
+          "scene": "verso",
+          "props": {
+            "kicker": { "pt": "Aba aberta", "en": "Tab unlocked" },
+            "done": { "pt": "APRENDER ABERTO", "en": "LEARN UNLOCKED" }
+          }
+        }
+      ]
+    },
+    "me": {
+      "dimension": "bonds",
+      "card": {
+        "file": "me",
+        "title": { "pt": "Eu", "en": "Me" },
+        "claim": {
+          "pt": "Como você se vê, o que você pratica e quem quer ser, lado a lado.",
+          "en": "How you see yourself, what you practice and who you want to be, side by side."
+        }
+      },
+      "lines": [
+        {
+          "id": "hook",
+          "scene": "pessoa",
+          "pt": { "caption": "Esta aba mostra *quem você está se tornando*." },
+          "en": { "caption": "This tab shows *who you are becoming*." },
+          "props": {
+            "kicker": { "pt": "Eu", "en": "Me" },
+            "mood": "ok",
+            "glow": { "pt": "se tornando", "en": "becoming" }
+          }
+        },
+        {
+          "id": "pillars",
+          "scene": "lista",
+          "pt": { "caption": "São três retratos: Percebida, *Praticada* e Desejada." },
+          "en": { "caption": "In three portraits: Perceived, *Practiced* and Desired." },
+          "props": {
+            "mood": "ok",
+            "items": [
+              { "icon": "eye", "text": { "pt": "Percebida: como você se vê", "en": "Perceived: how you see you" }, "cue": { "pt": "Percebida", "en": "Perceived" } },
+              { "icon": "barbell", "text": { "pt": "Praticada: o que você treina", "en": "Practiced: what you train" }, "cue": { "pt": "Praticada", "en": "Practiced" } },
+              { "icon": "compass", "text": { "pt": "Desejada: aonde quer chegar", "en": "Desired: where you're going" }, "cue": { "pt": "Desejada", "en": "Desired" } }
+            ]
+          }
+        },
+        {
+          "id": "first",
+          "scene": "pensa",
+          "hold": 0.4,
+          "pt": { "caption": "O primeiro nasce da sua *Avaliação*: o jeito como você se vê hoje." },
+          "en": { "caption": "The first one comes from your *self-assessment*: how you see yourself today." },
+          "props": {
+            "thought": "caderno",
+            "at": { "pt": "Avaliação", "en": "self-assessment" },
+            "mood": "ok",
+            "turn": { "pt": "se vê hoje", "en": "yourself today" },
+            "to": "feliz"
+          }
+        },
+        {
+          "id": "close",
+          "scene": "verso",
+          "props": {
+            "kicker": { "pt": "Aba aberta", "en": "Tab unlocked" },
+            "done": { "pt": "EU ABERTO", "en": "ME UNLOCKED" }
+          }
+        }
+      ]
+    }
+  }
+}

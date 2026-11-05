@@ -166,9 +166,12 @@ function lintIdea(ideaId, spec, card, lang, errors, warns) {
 
 function load() {
   if (!fs.existsSync(videoSpecFile)) die(`sem roteiro: ${path.relative(repo, videoSpecFile)}`);
-  if (!fs.existsSync(ideasSpecFile)) die(`sem ideas-spec: ${path.relative(repo, ideasSpecFile)}`);
   const vs = readJson(videoSpecFile);
-  const is = readJson(ideasSpecFile);
+  // Vídeo que não é de ideia (ex.: as portas das abas, slug "doors") traz o card no próprio
+  // roteiro: ideas.<id>.card = { title, claim, file? } em {pt,en}. Ideia publicada nunca faz isso.
+  const inline = Object.values(vs.ideas ?? {}).every((i) => i.card);
+  if (!inline && !fs.existsSync(ideasSpecFile)) die(`sem ideas-spec: ${path.relative(repo, ideasSpecFile)}`);
+  const is = inline ? { ideas: Object.entries(vs.ideas).map(([id, i]) => ({ id, ...i.card })) } : readJson(ideasSpecFile);
   const manifest = inboxDir && fs.existsSync(path.join(inboxDir, 'manifest.json')) ? readJson(path.join(inboxDir, 'manifest.json')) : null;
   const ideaIds = Object.keys(vs.ideas ?? {}).filter((id) => !onlyIdea || id === onlyIdea);
   if (!ideaIds.length) die(`nenhuma ideia ${onlyIdea ? `"${onlyIdea}" ` : ''}no roteiro`);
@@ -199,6 +202,11 @@ const DIM_LABEL = {
 };
 
 async function cardImage(ctx, ideaId, dest) {
+  const own = ctx.cards[ideaId]?.image;
+  if (own) {
+    fs.copyFileSync(path.join(repo, own), dest);
+    return true;
+  }
   const asset = ctx.manifest?.assets?.find((a) => a.role === 'idea' && a.idea_id === ideaId);
   if (!asset) return false;
   const local = inboxDir && path.join(inboxDir, asset.localPath);
@@ -341,7 +349,7 @@ async function render(ctx) {
       });
       console.log('');
       // versão do app: 720p, AAC 96k, faststart — ~2,5 MB por 50 s
-      const name = `idea.${card.ordinal}.${lang}.r${rev}`;
+      const name = `${card.file ?? `idea.${card.ordinal}`}.${lang}.r${rev}`;
       const mp4 = path.join(dir, 'pub', `${name}.mp4`);
       const poster = path.join(dir, 'pub', `${name}.poster.webp`);
       execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', full, '-vf', 'scale=720:1280', '-c:v', 'libx264', '-crf', '23', '-preset', 'slow', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '96k', '-movflags', '+faststart', mp4]);

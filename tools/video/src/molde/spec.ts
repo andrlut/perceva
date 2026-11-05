@@ -56,6 +56,8 @@ export type SceneProps = {
   holding?: PieceName;
   // pensa
   thought?: PieceName;
+  // verso: o selo dourado depois da leitura (default "IDEIA ABSORVIDA"; as portas trocam)
+  done?: string;
 };
 export type Panel = { label: string; mood?: Mood; object?: PieceName; arrives?: string; leaves?: string };
 export type Chip = { icon: string; text: string; cue: string };
