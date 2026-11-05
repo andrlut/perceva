@@ -4,8 +4,10 @@ import type {
   LearningIdeaPublic,
   LearningIdeaVideo,
   LearningLocalized,
+  LearningSponsor,
 } from '@/lib/db/types';
 import { learningMediaUrl } from '@/lib/learningMedia';
+import { sponsorOf } from '@/lib/learningSponsor';
 
 /**
  * Pure helpers for the "Recanto em ideias" — the 1..5 ideas a material can
@@ -214,11 +216,27 @@ export interface IdeaCardData {
   imagePath: string | null;
   /** First source label — the back of the card shows it when present. */
   sourceLabel: LearningLocalized | null;
+  /**
+   * Partner of the material (`sponsorOf`), when it is sponsored — the front
+   * then carries "Patrocinado · {name}" above the title. Optional so a
+   * hand-built card (the guide's sample) needs no field.
+   */
+  sponsorName?: string | null;
 }
 
+/**
+ * `material.sponsor` is optional: a caller that leaves it out (the material
+ * screen's rail, which sits right under the material's own badge) builds
+ * cards without the partner line.
+ */
 export function toCardData(
   idea: LearningIdea,
-  material: { id: string; slug: string; dimension_id: DimensionId },
+  material: {
+    id: string;
+    slug: string;
+    dimension_id: DimensionId;
+    sponsor?: LearningSponsor | null;
+  },
 ): IdeaCardData {
   return {
     id: idea.id,
@@ -230,6 +248,7 @@ export function toCardData(
     claim: idea.claim,
     imagePath: isBlank(idea.image?.path) ? null : (idea.image as { path: string }).path,
     sourceLabel: idea.sources?.[0]?.label ?? null,
+    sponsorName: sponsorOf(material)?.name ?? null,
   };
 }
 
@@ -245,6 +264,7 @@ export function toCardDataFromPublic(row: LearningIdeaPublic): IdeaCardData {
     claim: { pt: row.claim_pt ?? '', en: row.claim_en ?? '' },
     imagePath: isBlank(row.image_path) ? null : row.image_path,
     sourceLabel: null,
+    sponsorName: sponsorOf(row)?.name ?? null,
   };
 }
 

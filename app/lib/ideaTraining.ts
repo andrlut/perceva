@@ -4,6 +4,7 @@ import { dateKeyFromLocal } from '@/lib/api/history';
 import { reviewKey, useIdeaCards } from '@/lib/api/learning';
 import { useIdeaCollection, type AbsorbedRow } from '@/lib/ideaCollection';
 import type { IdeaLocale } from '@/lib/ideas';
+import { sponsorOf } from '@/lib/learningSponsor';
 import { useMaterialLock } from '@/lib/premium';
 
 /**
@@ -111,7 +112,8 @@ export function useIdeaTraining(locale: IdeaLocale) {
     let closed = 0;
     for (const r of ideaCards.data ?? []) {
       if (absorbedKeys.has(reviewKey(r.material_id, r.idea_id))) continue;
-      if (isLocked(r.released_at)) closed += 1;
+      // Partner content never locks (learnGate) — it counts as open.
+      if (isLocked(r.released_at, sponsorOf(r) != null)) closed += 1;
       else open += 1;
     }
     return { toAbsorb: open, locked: closed };

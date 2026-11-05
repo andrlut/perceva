@@ -54,10 +54,35 @@ interface FeedRow extends LearningMaterialCard {
   learning_material_media: LearningFeedMedia[] | null;
 }
 
+/** The feed's column list; `sponsor` is optional so the fallback below can
+ *  drop it. */
+function feedSelect(withSponsor: boolean): string {
+  return `id, slug, type, category, dimension_id, topic, reading_minutes,
+           title_pt, title_en, summary_pt, summary_en,
+           hero_image_url, source_url, source_label_pt, source_label_en,
+           cta_action, released_at, version, is_archived, idea_count,
+           ${withSponsor ? 'sponsor, ' : ''}created_at, updated_at,
+           learning_material_sub ( sub_id ),
+           learning_material_media ( kind, locale, path, page_paths, meta )`;
+}
+
+/** Postgres "undefined column" (42703) / PostgREST "column not found in
+ *  the schema cache" (PGRST204). */
+function isMissingColumn(error: { code?: string } | null): boolean {
+  return error?.code === '42703' || error?.code === 'PGRST204';
+}
+
 /**
  * Newest-first feed of all non-archived, already-released materials, with
  * their sub tags. The `released_at` gate lets the drops pipeline schedule
  * content into the future and have it appear on its own.
+ *
+ * `sponsor` arrives with migration 20261104000009. A bundle that reaches
+ * users before that migration (an OTA ahead of the push, or a push that
+ * failed) would otherwise lose the WHOLE Recanto to one unknown column, so
+ * a missing-column error retries once without it — every material still
+ * shows, just without the partner badge (`sponsorOf` reads a row with no
+ * field as "not sponsored").
  */
 export function useLearningFeed() {
   return useQuery({
@@ -68,22 +93,18 @@ export function useLearningFeed() {
     staleTime: 5 * 60_000,
     queryKey: learningKeys.feed(),
     queryFn: async (): Promise<LearningFeedCard[]> => {
-      const { data, error } = await supabase
-        .from('learning_material')
-        .select(
-          `id, slug, type, category, dimension_id, topic, reading_minutes,
-           title_pt, title_en, summary_pt, summary_en,
-           hero_image_url, source_url, source_label_pt, source_label_en,
-           cta_action, released_at, version, is_archived, idea_count,
-           created_at, updated_at,
-           learning_material_sub ( sub_id ),
-           learning_material_media ( kind, locale, path, page_paths, meta )`,
-        )
-        .eq('is_archived', false)
-        .lte('released_at', new Date().toISOString())
-        .order('released_at', { ascending: false });
+      const fetchFeed = (withSponsor: boolean) =>
+        supabase
+          .from('learning_material')
+          .select(feedSelect(withSponsor))
+          .eq('is_archived', false)
+          .lte('released_at', new Date().toISOString())
+          .order('released_at', { ascending: false });
+      let { data, error } = await fetchFeed(true);
+      if (isMissingColumn(error)) ({ data, error } = await fetchFeed(false));
       if (error) throw error;
-      return ((data ?? []) as FeedRow[]).map((row) => {
+      // A runtime-built select string has no parsed row type.
+      return ((data ?? []) as unknown as FeedRow[]).map((row) => {
         const { learning_material_sub, learning_material_media, ...card } = row;
         return {
           ...card,

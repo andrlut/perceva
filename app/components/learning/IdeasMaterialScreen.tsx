@@ -19,10 +19,13 @@ import { IdeaRail } from '@/components/ideas/IdeaRail';
 import { LearningBody } from '@/components/LearningBody';
 import { AudioPane } from '@/components/learning/AudioPane';
 import { FeedbackSheet } from '@/components/learning/FeedbackSheet';
+import { SponsorLine } from '@/components/learning/SponsorLine';
+import { SponsorLogo } from '@/components/learning/SponsorLogo';
 import { MaterialCover } from '@/components/MaterialCover';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { TourModule } from '@/components/tour/TourModule';
 import { TourTarget } from '@/components/tour/TourTarget';
+import { GOLD_BADGE_BG, GOLD_TINT_BG } from '@/components/week/gold';
 import {
   type LearningMaterialDetail,
   useCollectedIdeas,
@@ -30,9 +33,12 @@ import {
   useRateMaterial,
   useReadMaterialIds,
 } from '@/lib/api/learning';
+import { usePartnerCampaign, usePartnerCampaignStatus } from '@/lib/api/partners';
 import { useT, type TranslateOptions } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { categoryOf } from '@/lib/learningCategory';
+import { sponsorOf } from '@/lib/learningSponsor';
+import { campaignStateLine } from '@/lib/partnerCampaign';
 import type { IdeaLocale } from '@/lib/ideas';
 import { ideaProgress, localizedIdea, nextIdea, sortedIdeas } from '@/lib/ideas';
 import { learningMediaUrl, pickMedia } from '@/lib/learningMedia';
@@ -54,8 +60,10 @@ import { alpha } from '@/theme/skillTiers';
  * Top to bottom: hero → title/summary → "Ideias · 1 de 3 absorvidas" →
  * the card rail (reveal-only flips) → one row per idea → the deep-dive
  * audio row (mounts `AudioPane` once, keeps it alive) → "Ler o texto
- * completo" (collapsed) → dimension/subs, source, feedback. A sticky CTA
- * opens the next idea to absorb.
+ * completo" (collapsed) → the partner campaign row (sponsored materials
+ * only) → dimension/subs, source, feedback. A sticky CTA opens the next
+ * idea to absorb. Partner content also carries "Patrocinado · …" under
+ * the title.
  *
  * Hero (Deepstash-style, 2026-09-08): when the material has a real cover
  * (`hero_image_url`), this screen shows it as a full-bleed PORTRAIT hero —
@@ -171,6 +179,29 @@ export function IdeasMaterialScreen({ detail: m }: Props) {
   const summary = locale === 'pt' ? m.summary_pt : m.summary_en;
   const sourceLabel = locale === 'pt' ? m.source_label_pt : m.source_label_en;
   const dim = meta.dim(m.dimension_id);
+
+  // ── Partner content ──────────────────────────────────────────────────────
+  // The badge shows whenever the material is sponsored; the campaign row only
+  // when the material names a campaign AND RLS still returns it (live
+  // window, or already claimed by this user). No query at all on regular materials (`enabled: !!id`); on a
+  // sponsored one both reads are the Home card's / campaign screen's own
+  // caches, so the row says exactly what the card says (`campaignStateLine`)
+  // and the tap paints the screen at once.
+  const sponsor = sponsorOf(m);
+  const campaign = usePartnerCampaign(sponsor?.campaignId).data ?? null;
+  const campaignStatus = usePartnerCampaignStatus(campaign?.id).data ?? null;
+  const campaignTitle = campaign
+    ? locale === 'pt'
+      ? campaign.title_pt
+      : campaign.title_en
+    : null;
+  const campaignLine =
+    campaign && campaignStatus ? campaignStateLine(campaign, campaignStatus, t) : null;
+  const openCampaign = () => {
+    if (!campaign) return;
+    Haptics.selectionAsync().catch(() => {});
+    router.push(`/campaign/${campaign.id}?source=material`);
+  };
 
   // ── Deep dive (long-form audio) ──────────────────────────────────────────
   const audioPick = useMemo(() => pickMedia(m.media, ['audio'], locale), [m.media, locale]);
@@ -288,14 +319,23 @@ export function IdeasMaterialScreen({ detail: m }: Props) {
             >
               <Ionicons name="chevron-back" size={22} color={tokens.text.hi} />
             </Pressable>
-            <View style={styles.heroTypePill}>
-              <Text style={styles.heroTypeText}>{categoryLabel(m, t)}</Text>
-            </View>
+            {/* Partner content: the partner's logo takes the category
+               pill's corner (the "Patrocinado" line under the title
+               already says what kind of material it is). */}
+            {sponsor?.logoPath != null ? (
+              <SponsorLogo path={sponsor.logoPath} name={sponsor.name} height={26} style={styles.heroSponsorLogo} />
+            ) : (
+              <View style={styles.heroTypePill}>
+                <Text style={styles.heroTypeText}>{categoryLabel(m, t)}</Text>
+              </View>
+            )}
           </View>
 
-          {/* Title + summary */}
+          {/* Title + summary — partner content carries its badge right
+             under the title */}
           <View style={styles.titleBlock}>
             <Text style={styles.title}>{title}</Text>
+            {sponsor && <SponsorLine name={sponsor.name} numberOfLines={2} />}
             <Text style={styles.summary}>{summary}</Text>
           </View>
 
@@ -436,6 +476,43 @@ export function IdeasMaterialScreen({ detail: m }: Props) {
                   <LearningBody body={body} />
                 </View>
               )}
+            </View>
+          )}
+
+          {/* Partner campaign — the material's way into its program. Same
+             row anatomy as the deep dive and the text above (outline icon,
+             one-line title, meta, dim chevron), in the gold of the partner.
+             The meta is the user's own state, so a member mid-run is never
+             invited to "join" again. Only while the campaign is live (RLS
+             returns nothing once it ends). */}
+          {campaign && campaignTitle && (
+            <View style={styles.sectionGap}>
+              <Pressable
+                onPress={openCampaign}
+                accessibilityRole="button"
+                accessibilityLabel={campaignTitle}
+                accessibilityHint={campaignLine ?? undefined}
+                style={({ pressed }) => [
+                  styles.rowCard,
+                  styles.rowCardPartner,
+                  pressed && { opacity: 0.8 },
+                ]}
+              >
+                <View style={[styles.rowIconWrap, styles.rowIconWrapPartner]}>
+                  <Ionicons name="ribbon-outline" size={18} color={tokens.semantic.coin} />
+                </View>
+                <View style={styles.rowStack}>
+                  <Text style={[styles.rowTitle, styles.rowTitleStacked]} numberOfLines={1}>
+                    {campaignTitle}
+                  </Text>
+                  {campaignLine && (
+                    <Text style={styles.rowMeta} numberOfLines={1}>
+                      {campaignLine}
+                    </Text>
+                  )}
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={tokens.text.dim} />
+              </Pressable>
             </View>
           )}
 
@@ -645,6 +722,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.18)',
   },
+  heroSponsorLogo: {
+    top: 16,
+    right: 14,
+  },
   heroTypeText: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 10,
@@ -782,6 +863,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(123, 92, 255, 0.16)',
+  },
+  /** The campaign row: same anatomy, partner gold (WeekStrip's tint). */
+  rowCardPartner: {
+    backgroundColor: GOLD_TINT_BG,
+    borderColor: tokens.semantic.coinRim,
+  },
+  rowIconWrapPartner: {
+    backgroundColor: GOLD_BADGE_BG,
+  },
+  /** Title over meta — the campaign row's state line is too long to sit
+   *  beside the title the way "5 min" does. */
+  rowStack: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
+  /** rowTitle grows along the ROW; inside the column it sizes to its text
+   *  (flex: 1 there would collapse it in an auto-height stack). */
+  rowTitleStacked: {
+    flex: 0,
   },
   rowTitle: {
     flex: 1,

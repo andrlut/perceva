@@ -1,0 +1,28 @@
+{
+  "slug": "paker-health-energia-pele-forca",
+  "dimension_id": "body",
+  "title": {
+    "pt": "Energia, pele e força com a Paker Health",
+    "en": "Energy, skin and strength with Paker Health"
+  },
+  "cover": {
+    "prompt": "Uma mesa de madeira de cozinha vista de lado e um pouco de cima, ocupando o terço de baixo do quadro: no centro, um único copo de vidro liso com água onde uma nuvem de pó claro gira e se dissolve, uma colher dosadora lisa pousada ao lado; em volta da base do copo, a madeira guarda dezenas de anéis claros sobrepostos e já esmaecidos, deixados pelo mesmo copo no mesmo lugar, manhã após manhã. Um único feixe de sol dourado do começo do dia atravessa o copo e acende o redemoinho do pó; acima da mesa, a parede da cozinha fica lisa e vazia, numa penumbra fria, com um único acento verde-sálvia no cabo da colher."
+  },
+  "ideas": [
+    {
+      "id": "pre-treino-energia",
+      "ordinal": 1,
+      "image_prompt": "Um único homem de uns 30 anos em roupa de treino, de pé numa academia clara de manhã cedo, sacode com energia uma coqueteleira de plástico transparente e totalmente lisa, cheia de uma bebida amarelo-limão, segurada à altura do peito no centro do quadro; o olhar e o sorriso animados de quem vai começar o treino agora, e atrás dele, desfocados, um banco de treino e um suporte de halteres. A luz dourada do sol baixo entra de lado por uma janela alta e acende a bebida dentro da coqueteleira e o rosto dele, os dois pontos mais claros da cena; o resto da academia fica numa meia-luz suave, com um único acento verde-sálvia na camiseta."
+    },
+    {
+      "id": "colageno-constancia",
+      "ordinal": 2,
+      "image_prompt": "Uma única mulher de uns 40 anos na cozinha de manhã, enquadrada da cintura para cima no centro do quadro, mexe com uma colher um copo de vidro liso de água quase transparente onde um pó claro se dissolve num leve redemoinho, o copo na mão à altura do peito; na bancada à frente dela, duas laranjas cortadas ao meio, a polpa à mostra. A luz quente e suave de uma janela lateral toca de frente a pele do rosto, do pescoço e das mãos, que é o ponto mais luminoso da cena, e brilha no vidro do copo; a expressão dela é serena, e o fundo da cozinha fica na penumbra, com um único acento verde-sálvia na blusa."
+    },
+    {
+      "id": "creatina-alem-da-musculacao",
+      "ordinal": 3,
+      "image_prompt": "Uma mão segura uma colher dosadora lisa, de plástico verde-sálvia, cheia de pó branco fino, e a inclina sobre um copo de vidro liso com água no centro do quadro: o pó cai num fio contínuo e abre uma pequena nuvem ao tocar a água. O copo está sobre uma bancada de madeira clara, e ao fundo, desfocados, um par de tênis de corrida lisos e uma mochila lisa esperam a saída de casa, sem nenhum equipamento de academia à vista. A luz natural dourada da manhã entra de lado por uma janela e acende o fio de pó, a colher e o vidro do copo; o resto da cozinha fica numa meia-luz suave."
+    }
+  ]
+}

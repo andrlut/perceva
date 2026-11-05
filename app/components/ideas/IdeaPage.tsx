@@ -11,7 +11,7 @@ import { TourTarget } from '@/components/tour/TourTarget';
 import { useActiveTourStepStore } from '@/lib/tour/store';
 import { remeasureActiveTourTarget } from '@/lib/tour/targets';
 import { LearningBody } from '@/components/LearningBody';
-import type { DimensionId, LearningIdea } from '@/lib/db/types';
+import type { DimensionId, LearningIdea, LearningSponsor } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import {
   IDEA_IMAGE_ASPECT,
@@ -45,6 +45,8 @@ export interface IdeaPageMaterial {
   id: string;
   slug: string;
   dimension_id: DimensionId;
+  /** Partner content: the card at the end carries the partner line. */
+  sponsor?: LearningSponsor | null;
 }
 
 interface Props {
