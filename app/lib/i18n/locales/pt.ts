@@ -1137,6 +1137,11 @@ const pt: Translations = {
       byType: 'Por tipo',
     },
     filteringBy: 'Filtrando: {{what}}',
+    // Conteúdo de parceiro (learning_material.sponsor) — o selo e a seção
+    // do feed. Conteúdo pago diz que é pago com todas as letras (prática do
+    // CONAR): "Patrocinado", nunca só "parceria".
+    sponsorWith: 'Patrocinado · {{name}}',
+    sectionPartner: 'Patrocinado',
     stats: {
       byDim: 'Por dimensão',
       byType: 'Por tipo',
@@ -1195,6 +1200,58 @@ const pt: Translations = {
         mismatch: 'Não bate com minha realidade',
         weak_sources: 'Fontes fracas',
       },
+    },
+  },
+
+  /**
+   * Campanha de parceiro (Programa Paker Health): o cartão da Home e a tela
+   * `/campaign/[id]`. Título, pitch e recompensa da campanha vêm da linha
+   * de `partner_campaign` (`_pt`/`_en`), não daqui.
+   */
+  campaign: {
+    /** Eyebrow do cartão da Home e do topo da tela — o título já nomeia o
+     *  parceiro, então o rótulo só diz que é pago. */
+    sponsored: 'Patrocinado',
+    card: {
+      join: 'Entre e ganhe um cupom com {{goal}} dias seguidos',
+      adopt: 'Falta adicionar a prática',
+      progress: '{{days}} de {{goal}} dias seguidos',
+      unlocked: 'Você chegou lá! Toque para garantir o cupom',
+      claimed: 'Seu cupom está aqui',
+      claimedPending: 'Cupom garantido. O código ainda não chegou',
+      a11y: '{{sponsored}}. {{title}}',
+      dismissA11y: 'Esconder este cartão',
+    },
+    screen: {
+      how: 'Como funciona',
+      step1Title: 'Entre no programa',
+      step1Body: 'Não custa nada. O cupom é só pra quem entra.',
+      step1Done: 'Você está no programa',
+      step1Cta: 'Entrar',
+      step2Title: 'Adicione a prática diária',
+      step2Body: '"{{practice}}" entra nas suas práticas.',
+      step2BodyJoin: '"{{practice}}" entra nas suas práticas e você já entra no programa.',
+      step2Cta: 'Adicionar',
+      step2Done: 'Já está nas suas práticas',
+      step3Title: 'Marque todo dia',
+      step3Body:
+        'Marque no mesmo dia (ou até a manhã seguinte): marcar depois não conta. Pode pular até {{skips}} dias; eles não somam, mas não quebram a sequência.',
+      progress: '{{days}} de {{goal}} dias',
+      skipsUsed: '{{used}} de {{max}} pulos usados',
+      couponTitle: 'Sua recompensa',
+      couponLocked: 'Libera com {{goal}} dias seguidos',
+      couponClaim: 'Pegar meu cupom',
+      couponSecure: 'Garantir meu cupom',
+      couponNotReady:
+        'O código ainda não chegou do parceiro. Garanta agora: o cupom fica seu mesmo se a sequência quebrar depois, e o código aparece aqui assim que chegar.',
+      couponPending:
+        'O cupom é seu. O código ainda não chegou do parceiro; ele aparece aqui assim que chegar.',
+      couponCopy: 'Copiar ou enviar',
+      visitPartner: 'Site do parceiro',
+      materialTitle: 'Leia o material',
+      disclosure:
+        'Conteúdo patrocinado. {{name}} recebe só números gerais do programa (quantas pessoas entraram), nunca quem você é.',
+      notFound: 'Esta campanha não está disponível.',
     },
   },
 

@@ -59,6 +59,7 @@ import { useIdeaTraining } from '@/lib/ideaTraining';
 import { pickLocalized, type IdeaLocale } from '@/lib/ideas';
 import { categoryOf } from '@/lib/learningCategory';
 import { buildHaystack, matchesQuery } from '@/lib/learningSearch';
+import { sponsorOf } from '@/lib/learningSponsor';
 import {
   useContinueReading,
   useReadingProgressReady,
@@ -112,7 +113,7 @@ function LearningScreenContent() {
   const router = useRouter();
   const isMaterialLocked = useMaterialLock();
   const isLockedCard = useCallback(
-    (card: LearningFeedCard) => isMaterialLocked(card.released_at),
+    (card: LearningFeedCard) => isMaterialLocked(card.released_at, sponsorOf(card) != null),
     [isMaterialLocked],
   );
   const { t, locale } = useT();
@@ -251,6 +252,8 @@ function LearningScreenContent() {
           c.slug.replace(/-/g, ' '),
           meta.dim(c.dimension_id).label,
           ...c.subs.map((s) => meta.sub(s).label),
+          // "Paker" finds the partner's material.
+          sponsorOf(c)?.name,
           ...(byMaterial.get(c.id) ?? []),
         ]),
       );
@@ -348,11 +351,17 @@ function LearningScreenContent() {
 
   // Group buckets for the carousel rows. We compute against `filtered`
   // so empty groups drop out naturally.
+  // Partner content gets its own first row and leaves Novidades, so the two
+  // top rows never repeat the same cover; it stays in its dimension row,
+  // like every material.
   const buckets = useMemo(() => {
     const now = Date.now();
-    const novidades = filtered.filter(
-      (c) => now - new Date(c.released_at).getTime() < NEW_WINDOW_MS,
-    );
+    const partner: LearningFeedCard[] = [];
+    const novidades: LearningFeedCard[] = [];
+    for (const c of filtered) {
+      if (sponsorOf(c)) partner.push(c);
+      else if (now - new Date(c.released_at).getTime() < NEW_WINDOW_MS) novidades.push(c);
+    }
 
     const byDim = new Map<DimensionId, LearningFeedCard[]>();
     for (const c of filtered) {
@@ -361,7 +370,7 @@ function LearningScreenContent() {
       byDim.set(c.dimension_id, arr);
     }
 
-    return { novidades, byDim };
+    return { partner, novidades, byDim };
   }, [filtered]);
 
   // useCallback obrigatorio: e dep do renderItem da CarouselRow, e uma
@@ -384,6 +393,16 @@ function LearningScreenContent() {
       cards: LearningFeedCard[];
       groupLabel?: string;
     }[] = [];
+
+    if (buckets.partner.length > 0) {
+      out.push({
+        key: 'partner',
+        title: t('learning.sectionPartner'),
+        iconName: 'ribbon',
+        accentColor: tokens.semantic.coin,
+        cards: buckets.partner,
+      });
+    }
 
     if (buckets.novidades.length > 0) {
       out.push({
@@ -421,12 +440,14 @@ function LearningScreenContent() {
   // The material "Abrir um material" opens: the first one the user can
   // actually open (not locked, with ideas), in on-screen order, preferring
   // one whose ideas carry a video so the next steps can point at it. Its row
-  // is the one step 1 spotlights.
+  // is the one step 1 spotlights. Partner content is never the example: the
+  // onboarding shows what the Recanto is, not a campaign (and its row comes
+  // first, so with a video it would always win).
   const tourPick = useMemo(() => {
     let fallback: { card: LearningFeedCard; sectionIndex: number } | null = null;
     for (let i = 0; i < sections.length; i++) {
       for (const card of sections[i].cards) {
-        if (isLockedCard(card) || card.idea_count === 0) continue;
+        if (isLockedCard(card) || card.idea_count === 0 || sponsorOf(card)) continue;
         if (ideaMetaByMaterial.get(card.id)?.hasVideo) return { card, sectionIndex: i };
         fallback ??= { card, sectionIndex: i };
       }
@@ -496,12 +517,12 @@ function LearningScreenContent() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScreenBackground withGoldHalo>
-        {/* FlatList e nao ScrollView: com o catalogo cheio, montar as 7
+        {/* FlatList e nao ScrollView: com o catalogo cheio, montar as 8
            linhas de uma vez (cada uma com todos os seus cards) era o que
            travava a aba. Sem removeClippedSubviews e com windowSize 5 de
            proposito: desmontar uma CarouselRow zera o offset horizontal
            dela, entao rolar pra baixo e voltar jogaria a linha de volta no
-           primeiro card. Sao no maximo 7 linhas — o ganho grande vem da
+           primeiro card. Sao no maximo 8 linhas — o ganho grande vem da
            FlatList horizontal dentro de cada uma. */}
         <FlatList
           ref={listRef}

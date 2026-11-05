@@ -387,6 +387,15 @@ export function useArchivedTasks() {
 }
 
 /**
+ * Partner-campaign progress (`partnerKeys.statuses()` in ./partners —
+ * spelled out so the import stays one-way, partners → tasks). The server
+ * counts the campaign streak from the adopted practice's completions and
+ * skips, and `adopted` from the task row, so every mutation below that
+ * touches either busts it.
+ */
+const PARTNER_STATUS_KEY = ['partners', 'status'] as const;
+
+/**
  * Every cache that renders the task TABLE, busted together. Any task
  * create / edit / archive / restore / delete / re-schedule must call this:
  * Home's buckets and the Manage lists are obvious, but the History
@@ -395,11 +404,12 @@ export function useArchivedTasks() {
  * from it, so a new or re-scheduled practice never showed up there until
  * something else happened to refetch history.
  */
-function invalidateTaskSurfaces(queryClient: QueryClient, taskId?: string) {
+export function invalidateTaskSurfaces(queryClient: QueryClient, taskId?: string) {
   queryClient.invalidateQueries({ queryKey: taskKeys.pending() });
   queryClient.invalidateQueries({ queryKey: taskKeys.active() });
   queryClient.invalidateQueries({ queryKey: taskKeys.archived() });
   queryClient.invalidateQueries({ queryKey: historyKeys.all });
+  queryClient.invalidateQueries({ queryKey: PARTNER_STATUS_KEY });
   if (taskId) queryClient.invalidateQueries({ queryKey: taskKeys.detail(taskId) });
 }
 
@@ -746,6 +756,7 @@ export function useCompleteTask() {
       // hooks like useSubStarsProgress) — completing a task can move the
       // star count for any accumulate_sub_stars quest the sub touches.
       queryClient.invalidateQueries({ queryKey: questKeys.all });
+      queryClient.invalidateQueries({ queryKey: PARTNER_STATUS_KEY });
     },
   });
 }
@@ -825,6 +836,7 @@ export function useSkipTaskToday() {
       // The Home day-view reads a past day's skips from the History day
       // cache — refresh it so a dated skip moves the card to the drawer.
       queryClient.invalidateQueries({ queryKey: historyKeys.all });
+      queryClient.invalidateQueries({ queryKey: PARTNER_STATUS_KEY });
     },
   });
 }
@@ -881,6 +893,7 @@ export function useSkipTasksBulk() {
       // The Home day-view and the Calendar both read the day through
       // historyKeys — without this a past-day bulk close never lands.
       queryClient.invalidateQueries({ queryKey: historyKeys.all });
+      queryClient.invalidateQueries({ queryKey: PARTNER_STATUS_KEY });
     },
   });
 }
@@ -902,6 +915,7 @@ export function useUnskipTaskToday() {
       // Past-day unskip: refresh the History day cache the Home day-view
       // reads, so the card leaves the Skipped drawer.
       queryClient.invalidateQueries({ queryKey: historyKeys.all });
+      queryClient.invalidateQueries({ queryKey: PARTNER_STATUS_KEY });
     },
   });
 }
@@ -1032,6 +1046,7 @@ export function useUndoCompletion() {
       queryClient.invalidateQueries({ queryKey: characterKeys.me() });
       queryClient.invalidateQueries({ queryKey: historyKeys.all });
       queryClient.invalidateQueries({ queryKey: questKeys.active() });
+      queryClient.invalidateQueries({ queryKey: PARTNER_STATUS_KEY });
     },
   });
 }

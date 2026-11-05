@@ -1140,6 +1140,11 @@ const en = {
       byType: 'By type',
     },
     filteringBy: 'Filtering: {{what}}',
+    // Partner content (learning_material.sponsor) — the badge and the feed
+    // section. Paid content says so in plain words (ad-disclosure practice):
+    // "Sponsored", never just "partnership".
+    sponsorWith: 'Sponsored · {{name}}',
+    sectionPartner: 'Sponsored',
     stats: {
       byDim: 'By dimension',
       byType: 'By type',
@@ -1198,6 +1203,59 @@ const en = {
         mismatch: 'Doesn’t match my reality',
         weak_sources: 'Weak sources',
       },
+    },
+  },
+
+  /**
+   * Partner campaign (Programa Paker Health): the Home card and the
+   * `/campaign/[id]` screen. The campaign's own title, pitch and reward
+   * come from the `partner_campaign` row (`_pt`/`_en`), not from here.
+   */
+  campaign: {
+    /** Eyebrow of the Home card and the screen's hero — the title already
+     *  names the partner, so the label only says it is paid. */
+    sponsored: 'Sponsored',
+    card: {
+      join: 'Join and earn a coupon after {{goal}} days in a row',
+      adopt: 'Add the practice to start',
+      progress: '{{days}} of {{goal}} days in a row',
+      unlocked: 'You made it! Tap to secure your coupon',
+      claimed: 'Your coupon is here',
+      claimedPending: "Coupon secured. The code isn't here yet",
+      a11y: '{{sponsored}}. {{title}}',
+      dismissA11y: 'Hide this card',
+    },
+    screen: {
+      how: 'How it works',
+      step1Title: 'Join the program',
+      step1Body: "It's free. The coupon is for members only.",
+      step1Done: "You're in",
+      step1Cta: 'Join',
+      step2Title: 'Add the daily practice',
+      // en drops the quoted practice title: task_template is pt-only.
+      step2Body: 'This adds it to your practices.',
+      step2BodyJoin: 'This adds the practice and joins you to the program.',
+      step2Cta: 'Add',
+      step2Done: 'Already in your practices',
+      step3Title: 'Check it off every day',
+      step3Body:
+        "Check it off the same day (or by the next morning) — later doesn't count. You can skip up to {{skips}} days; they don't add up, but they don't break the streak.",
+      progress: '{{days}} of {{goal}} days',
+      skipsUsed: '{{used}} of {{max}} skips used',
+      couponTitle: 'Your reward',
+      couponLocked: 'Unlocks at {{goal}} days in a row',
+      couponClaim: 'Get my coupon',
+      couponSecure: 'Secure my coupon',
+      couponNotReady:
+        "The partner hasn't sent the code yet. Secure it now: the coupon stays yours even if the streak breaks later, and the code shows up here as soon as it arrives.",
+      couponPending:
+        "The coupon is yours. The partner hasn't sent the code yet; it shows up here as soon as it arrives.",
+      couponCopy: 'Copy or share',
+      visitPartner: 'Partner website',
+      materialTitle: 'Read the material',
+      disclosure:
+        'Sponsored content. {{name}} only gets program totals (how many people joined), never who you are.',
+      notFound: "This campaign isn't available.",
     },
   },
 

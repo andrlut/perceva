@@ -13,6 +13,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { SponsorLine } from '@/components/learning/SponsorLine';
 import { useT } from '@/lib/i18n';
 import type { IdeaCardData, IdeaLocale } from '@/lib/ideas';
 import {
@@ -35,7 +36,9 @@ import { DIMENSION_META } from '@/theme/dimensions';
  * catalog, the bottom 38% of an idea image carries ~2.4× the edge energy of
  * the top 38%, and only 4 of 40 are the other way around. Text at the bottom
  * sat on the subject; at the top it sits on wall, sky or penumbra. The
- * collected badge moved to the bottom corner for the same reason.
+ * collected badge moved to the bottom corner for the same reason. Partner
+ * content (`data.sponsorName`) adds the pale-gold "Patrocinado · …" mark
+ * (SponsorLine) between the kicker and the title.
  * BACK: dark glass, a thin top bar in the dimension color and the claim in
  * bold — nothing else. The claim owns the whole face (vertically centered,
  * left-aligned) and ALWAYS fits whole: the size is pre-fitted from the
@@ -146,6 +149,10 @@ const LARGE_WIDTH = 300;
 const COLLECTION_CELL_WIDTH = 171;
 /** Mirror of the old bottom ramp: opaque at the top edge, gone by the end of the band. */
 const OVERLAY_LOCATIONS = [0, 0.55, 1] as const;
+/** The partner mark's gold on the front. A literal, like the kicker's white:
+ *  the front is dark in both themes, and the light theme's `coinLight` is a
+ *  deep gold meant for light surfaces (it would sink into the gradient). */
+const SPONSOR_ON_ART = '#FFE3A6';
 
 /** Height of the dimension-colored bar at the top of the back face. */
 const TOP_BAR_H = 3;
@@ -344,6 +351,7 @@ export const IdeaCard = memo(function IdeaCard({
   const kickerSize = scaled(width, 10, 11);
   const iconSize = Math.round(width * 0.28);
   const showKicker = kicker != null && kicker.trim().length > 0;
+  const sponsorName = data.sponsorName?.trim() || null;
   const titleFit = useMemo(
     () => fitTitle(title, titleSize, width - 2 * pad),
     [title, titleSize, width, pad],
@@ -431,9 +439,14 @@ export const IdeaCard = memo(function IdeaCard({
     [onLongPress],
   );
 
+  // The front's label replaces its texts for a screen reader, so the partner
+  // line rides in it too — a disclosure must not be visual-only.
+  const frontA11y = t('learning.ideas.a11yCardFront', { title });
   const a11yLabel = flipped
     ? t('learning.ideas.a11yCardBack', { claim })
-    : t('learning.ideas.a11yCardFront', { title });
+    : sponsorName
+      ? `${t('learning.sponsorWith', { name: sponsorName })}. ${frontA11y}`
+      : frontA11y;
 
   return (
     <Pressable
@@ -485,6 +498,16 @@ export const IdeaCard = memo(function IdeaCard({
             >
               {kicker}
             </Text>
+          )}
+          {sponsorName && (
+            <SponsorLine
+              name={sponsorName}
+              size={kickerSize}
+              color={SPONSOR_ON_ART}
+              numberOfLines={2}
+              shadow
+              style={styles.sponsor}
+            />
           )}
           <Text
             style={[
@@ -605,6 +628,11 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.6)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
+  },
+  /** Partner mark (SponsorLine) — up to two lines on the narrow cards so
+   *  the name never clips; never below 11px whatever the card width. */
+  sponsor: {
+    marginBottom: 3,
   },
   title: {
     fontFamily: 'Manrope_800ExtraBold',

@@ -7,11 +7,13 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { LearningFeedCard } from '@/lib/api/learning';
 import { useT } from '@/lib/i18n';
 import { CATEGORY_META, categoryOf } from '@/lib/learningCategory';
+import { sponsorOf } from '@/lib/learningSponsor';
 import { useMaterialProgress } from '@/lib/readingProgress';
 import { tokens } from '@/theme';
 import { DIMENSION_META, SUB_META } from '@/theme/dimensions';
 
 import { MaterialCover } from '../MaterialCover';
+import { SponsorLine } from './SponsorLine';
 
 /**
  * Book-cover-style tile for the Learn carousel. 2:3 aspect ratio, title
@@ -45,6 +47,7 @@ interface Props {
    * `useMaterialLock()` (lib/premium/learnGate): materials released more than
    * 30 days ago are Premium-only on the free tier. The tap still routes to
    * the material screen, which renders the lock + upgrade CTA itself.
+   * Ignored on partner content (`card.sponsor`), which is never locked.
    */
   isPremiumContent?: boolean;
   /**
@@ -71,6 +74,11 @@ export const CoverCard = memo(function CoverCard({
   // sai a cor — que é estática. Idem meta.sub(), do qual só usamos o label.
   const dimColor = DIMENSION_META[card.dimension_id].color;
   const category = categoryOf(card);
+  // Partner content: the "Patrocinado · …" line in the caption, and never
+  // the Premium seal (learnGate never locks it; the guard here keeps the two
+  // marks from ever meeting on one cover).
+  const sponsor = sponsorOf(card);
+  const showPremiumSeal = isPremiumContent && sponsor == null;
   const primarySub = card.subs[0];
   const subLabel = primarySub ? t(`subs.${primarySub}.label`) : null;
 
@@ -126,7 +134,7 @@ export const CoverCard = memo(function CoverCard({
         />
 
         {/* Premium seal — material outside the free 30-day window. */}
-        {isPremiumContent && (
+        {showPremiumSeal && (
           <View style={styles.premiumSeal}>
             <Ionicons name="sparkles" size={10} color={tokens.bg.deep} />
             <Text style={styles.premiumSealText}>{t('premium.badge')}</Text>
@@ -168,8 +176,14 @@ export const CoverCard = memo(function CoverCard({
         )}
       </View>
 
-      {/* Caption — summary + meta below cover */}
-      <Text style={styles.summary} numberOfLines={2}>
+      {/* Caption — sponsor line (partner content), summary + meta below cover */}
+      {sponsor && (
+        <SponsorLine name={sponsor.name} numberOfLines={2} style={styles.sponsorRow} />
+      )}
+      <Text
+        style={[styles.summary, sponsor != null && styles.summaryAfterSponsor]}
+        numberOfLines={2}
+      >
         {summary}
       </Text>
       <View style={styles.metaRow}>
@@ -341,6 +355,14 @@ const styles = StyleSheet.create({
     fontSize: 11.5,
     lineHeight: 16,
     color: tokens.text.mid,
+  },
+  /** The partner mark (SponsorLine) takes the cover gap; the summary
+   *  follows it close. */
+  sponsorRow: {
+    marginTop: 8,
+  },
+  summaryAfterSponsor: {
+    marginTop: 3,
   },
   metaRow: {
     flexDirection: 'row',

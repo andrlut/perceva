@@ -15,6 +15,11 @@
 //     idea) joined in memory with the user's own learning_idea_collect /
 //     learning_view rows — see learning.ts. Read-only on purpose: absorbing
 //     an idea is the card flip in the app (collect_idea) and nothing else.
+//     Since 0.5.2 each idea (here and in get_idea_training) carries `sponsor`,
+//     the partner name from the view's sponsor_name (20261104000009) — the
+//     model must disclose partner content the way the app's badge does.
+//     Deploy 0.5.2 only AFTER that migration is in the cloud: both idea
+//     tools select sponsor_name and answer 400 while the view lacks it.
 //   - The first write tool, `log_mood` — the day's mood check-in, dictated by voice
 //     ("how was my day") and written straight to mood_log under RLS. Mood is
 //     the only write path in the schema that is safe for an LLM to drive: it
@@ -329,7 +334,7 @@ const TRAIN_NOTES: Record<Exclude<TrainReason, 'advanced'>, string> = {
 
 function buildServer(token: string, userId: string): McpServer {
   const server = new McpServer(
-    { name: 'perceva-mcp', version: '0.5.1' },
+    { name: 'perceva-mcp', version: '0.5.2' },
     {
       instructions: [
         'Perceva is a habit/wellness app organized in 6 dimensions',
@@ -1320,7 +1325,10 @@ function buildServer(token: string, userId: string): McpServer {
         'favorites_only:true returns only the kept ideas, most recently ' +
         'reviewed first, and implies absorbed (status is then ignored). Titles ' +
         'and claims come in pt and en; the app is pt-BR by default, so prefer ' +
-        'the _pt fields unless the user writes in English.\n' +
+        'the _pt fields unless the user writes in English. An idea with a ' +
+        'non-null sponsor is paid partner content: whenever you suggest or ' +
+        'quote it, say it is sponsored ("patrocinado por <sponsor>"), as the ' +
+        'app labels it.\n' +
         'Use it for "qual ideia/vídeo pra mim hoje", "o que eu já absorvi ' +
         'sobre sono" (sub_id:"sleep", status:"absorbed"), "me sugere um ' +
         'conteúdo", and for "quais ideias eu favoritei/marquei", "me lembra as ' +

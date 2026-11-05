@@ -19,6 +19,7 @@ import { LearningBody } from '@/components/LearningBody';
 import { AudioPane } from '@/components/learning/AudioPane';
 import { FeedbackSheet } from '@/components/learning/FeedbackSheet';
 import { MediaViewer } from '@/components/learning/MediaViewer';
+import { SponsorLine } from '@/components/learning/SponsorLine';
 import { VideoPane } from '@/components/learning/VideoPane';
 import { MaterialCover } from '@/components/MaterialCover';
 import { ScreenBackground } from '@/components/ScreenBackground';
@@ -33,6 +34,7 @@ import { useT, type TranslateOptions } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { categoryOf } from '@/lib/learningCategory';
 import { learningMediaUrl, pickMedia } from '@/lib/learningMedia';
+import { sponsorOf } from '@/lib/learningSponsor';
 import { xpForMaterial } from '@/lib/learningXp';
 import { useReadingProgressStore } from '@/lib/readingProgress';
 import { showInfo } from '@/lib/util/confirm';
@@ -92,6 +94,7 @@ export function MaterialMediaScreen({ detail: m }: Props) {
 
   const title = locale === 'pt' ? m.title_pt : m.title_en;
   const summary = locale === 'pt' ? m.summary_pt : m.summary_en;
+  const sponsor = sponsorOf(m);
   const sourceLabel = locale === 'pt' ? m.source_label_pt : m.source_label_en;
   const takeaways = locale === 'pt' ? m.takeaways_pt : m.takeaways_en;
   const tracking = locale === 'pt' ? m.tracking_pt : m.tracking_en;
@@ -278,6 +281,9 @@ export function MaterialMediaScreen({ detail: m }: Props) {
           {/* Title + summary */}
           <View style={styles.titleBlock}>
             <Text style={styles.title}>{title}</Text>
+            {/* Partner content (same badge as IdeasMaterialScreen) — renders
+               nothing on every other material. */}
+            {sponsor && <SponsorLine name={sponsor.name} numberOfLines={2} />}
             <Text style={styles.summary}>{summary}</Text>
           </View>
 

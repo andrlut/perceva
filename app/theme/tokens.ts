@@ -45,6 +45,10 @@ export const tokens = {
     coinLight: '#FFE3A6',
     /** Card rim accent for gold-bordered surfaces (reward/quest chips). */
     coinRim: 'rgba(255, 200, 61, 0.45)',
+    /** Dark ink on a solid gold fill (pill labels, check glyphs). */
+    coinInk: '#3D2A00',
+    /** Pale rim around a solid gold pill (coin2 at 55%). */
+    coinPillRim: 'rgba(255, 224, 138, 0.55)',
     danger: '#FF5C7A',
     warn: '#FF9F43',
   },

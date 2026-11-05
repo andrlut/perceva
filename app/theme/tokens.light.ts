@@ -62,6 +62,8 @@ export const lightTokens: Widen<Tokens> = {
     coinGlow: 'rgba(242, 178, 27, 0.30)',
     coinLight: '#A66F0E',
     coinRim: 'rgba(166, 111, 14, 0.45)',
+    coinInk: '#3D2A00',
+    coinPillRim: 'rgba(248, 206, 91, 0.55)',
     danger: '#D93A5C',
     warn: '#DA7A18',
   },

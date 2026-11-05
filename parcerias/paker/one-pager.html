@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Perceva × Paker Health</title>
+<style>
+  :root {
+    --bg: #0A0E26;
+    --surface: #1A1F44;
+    --surface2: #232958;
+    --violet: #7B5CFF;
+    --violet2: #9B82FF;
+    --gold: #FFC83D;
+    --gold-light: #FFE3A6;
+    --hi: #F2F3FF;
+    --base: #D9DBFA;
+    --mid: #9AA0D4;
+    --line: rgba(255, 255, 255, 0.10);
+  }
+  @page { size: 1080px 1350px; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1350px; background: var(--bg); }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    color: var(--base);
+    padding: 60px 64px 56px;
+    display: flex; flex-direction: column; gap: 24px;
+    background:
+      radial-gradient(700px 420px at 100% 0%, rgba(123, 92, 255, 0.22), transparent 70%),
+      var(--bg);
+  }
+  header .kicker { font-size: 19px; font-weight: 600; color: var(--violet2); letter-spacing: .06em; text-transform: uppercase; }
+  header h1 { font-size: 52px; line-height: 1.1; margin-top: 8px; color: var(--hi); }
+  header p { font-size: 22px; color: var(--mid); margin-top: 10px; }
+
+  h2 { font-size: 20px; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 14px; }
+
+  .deal {
+    background: rgba(123, 92, 255, 0.12); border: 2px solid var(--violet); border-radius: 22px;
+    padding: 24px 28px;
+  }
+  .deal h2 { color: var(--violet2); }
+  .flow { display: flex; align-items: center; gap: 10px; }
+  .step {
+    flex: 1 1 0; min-width: 0; background: var(--surface); border: 1px solid var(--line);
+    border-radius: 14px; padding: 16px 12px;
+    font-size: 18px; line-height: 1.3; text-align: center; min-height: 116px;
+    display: grid; place-items: center; color: var(--base);
+  }
+  .step span { display: block; }
+  .step .n { display: block; font-size: 14px; font-weight: 700; color: var(--mid); margin-bottom: 4px; }
+  .step b { color: var(--hi); }
+  .arrow { color: var(--violet2); font-size: 26px; font-weight: 700; }
+
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 24px 26px; }
+  .card h2 { color: var(--hi); }
+  .card ul { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+  .card li { font-size: 20px; line-height: 1.32; padding-left: 24px; position: relative; }
+  .card li::before { content: ""; position: absolute; left: 0; top: 10px; width: 10px; height: 10px; border-radius: 50%; background: var(--violet); }
+  .card.paker li::before { background: var(--gold); }
+  .card li b { color: var(--hi); font-weight: 600; }
+
+  .together {
+    display: flex; gap: 14px; align-items: center;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 18px 26px; font-size: 20px;
+  }
+  .together b { font-size: 17px; text-transform: uppercase; letter-spacing: .07em; margin-right: 6px; color: var(--hi); }
+  .chip { background: var(--surface2); border-radius: 999px; padding: 8px 16px; color: var(--base); }
+
+  .todo {
+    background: rgba(255, 200, 61, 0.08); border: 1.5px solid rgba(255, 200, 61, 0.45);
+    border-radius: 22px; padding: 22px 28px; flex: 1;
+  }
+  .todo h2 { color: var(--gold); }
+  .todo ul { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 12px 28px; }
+  .todo li { font-size: 19px; line-height: 1.3; padding-left: 34px; position: relative; color: var(--base); }
+  .todo li::before { content: ""; position: absolute; left: 0; top: 3px; width: 20px; height: 20px; border: 2px solid var(--gold); border-radius: 5px; }
+</style>
+</head>
+<body>
+  <header>
+    <div class="kicker">Parceria · resumo da reunião</div>
+    <h1>Perceva × Paker Health</h1>
+    <p>O que combinamos, quem faz o quê e o que falta definir.</p>
+  </header>
+
+  <section class="deal">
+    <h2>Combinado</h2>
+    <div class="flow">
+      <div class="step"><span><span class="n">1</span>Compra um suplemento <b>Paker</b></span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span><span class="n">2</span>Acha o panfleto com <b>QR Code</b> na caixa</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span><span class="n">3</span>Baixa o app e entra no <b>Programa Paker Health</b></span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span><span class="n">4</span>Ganha <b>desconto</b> na Paker Health e no Premium</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span><span class="n">5</span>Assinou Premium: <b>rebate</b> para a Paker Health</span></div>
+    </div>
+  </section>
+
+  <div class="cols">
+    <section class="card paker">
+      <h2>Paker faz</h2>
+      <ul>
+        <li>Coloca o panfleto do Perceva em <b>todas as caixas</b></li>
+        <li>Menciona o Programa Paker Health</li>
+        <li>Desconto nos produtos para quem entra no programa</li>
+        <li><b>Publicação em conjunto</b> nas redes da Paker Health</li>
+      </ul>
+    </section>
+    <section class="card">
+      <h2>Perceva faz</h2>
+      <ul>
+        <li><b>Produz o panfleto</b> e envia ao centro de distribuição em Taboão da Serra</li>
+        <li>Espaço Paker Health no app: banner ou evento</li>
+        <li>Práticas ligadas à suplementação Paker</li>
+        <li>Materiais no Recanto sobre as substâncias</li>
+        <li>Desconto na anuidade, rastreio e <b>rebate</b> por Premium</li>
+        <li>Talvez: anúncio Paker Health no plano gratuito</li>
+      </ul>
+    </section>
+  </div>
+
+  <section class="together">
+    <b>Juntos</b>
+    <span class="chip">Tráfego pago em collab</span>
+    <span class="chip">Posts orgânicos nos dois perfis</span>
+  </section>
+
+  <section class="todo">
+    <h2>A definir</h2>
+    <ul>
+      <li>% de desconto nos produtos Paker</li>
+      <li>% de desconto na anuidade Premium</li>
+      <li>Valor do rebate e como é pago</li>
+      <li>Como rastrear: código, QR ou link próprio</li>
+      <li>Tiragem e data de envio ao CD</li>
+      <li>Quais práticas e materiais entram no app</li>
+      <li>Anúncio no plano gratuito: sim ou não</li>
+      <li>Verba do tráfego pago e calendário de posts</li>
+      <li>Responsável de cada lado</li>
+    </ul>
+  </section>
+</body>
+</html>

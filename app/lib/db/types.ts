@@ -722,6 +722,18 @@ export type LearningCtaAction =
   | { kind: 'start_task'; template_slug: string }
   | { kind: 'open_skill'; skill_id: string };
 
+/** `learning_material.sponsor` (migration 20261104000009): set on partner
+ *  content, which carries a "Patrocinado · {name}" badge everywhere it
+ *  appears and is never locked by the free window. `campaign_id` points at
+ *  the `partner_campaign` the material belongs to, when there is one.
+ *  Read it through `sponsorOf()` — the jsonb is not shape-checked beyond
+ *  a non-empty `name`. */
+export interface LearningSponsor {
+  name: string;
+  campaign_id?: string | null;
+  url?: string | null;
+}
+
 export interface LearningMaterial {
   id: string;
   slug: string;
@@ -765,6 +777,9 @@ export interface LearningMaterial {
   /** Generated column: jsonb_array_length(ideas) or 0 — the ONLY idea field
    *  the feed selects. */
   idea_count: number;
+  /** Partner content (see LearningSponsor). NULL = a regular material;
+   *  optional because selects that predate the column omit it. */
+  sponsor?: LearningSponsor | null;
   released_at: string;
   version: number;
   is_archived: boolean;
@@ -834,6 +849,10 @@ export interface LearningIdeaPublic {
   image_path: string | null;
   video_pt_path: string | null;
   video_en_path: string | null;
+  /** `sponsor->>'name'` / `sponsor->>'campaign_id'` of the material
+   *  (migration 20261104000009). Null on regular content. */
+  sponsor_name?: string | null;
+  sponsor_campaign_id?: string | null;
 }
 
 /** Return shape of the collect_idea RPC. */
@@ -1028,4 +1047,83 @@ export interface MarkMaterialReadResult {
   already_read: boolean;
   xp_awarded: number;
   coins_awarded: number;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Partner campaigns (migration 20261104000009) — a sponsored "event": join,
+// adopt the campaign's catalog practice, keep a streak, unlock a coupon.
+// The coupon code lives in `partner_campaign_secret` (no client access) and
+// only comes back through the status RPC once the coupon is claimed.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Where a join came from — `partner_campaign_member.source`. The RPC falls
+ *  back to 'app' for anything outside this list. */
+export type PartnerCampaignSource =
+  | 'banner'
+  | 'material'
+  | 'campaign'
+  | 'deeplink'
+  | 'app';
+
+/** One `partner_campaign` row. RLS only returns campaigns inside their
+ *  active window (`is_active`, `starts_at <= now()`, `ends_at` unset or
+ *  ahead). */
+export interface PartnerCampaign {
+  /** Slug, also the deep-link segment (`/campaign/<id>`). */
+  id: string;
+  partner_name: string;
+  partner_url: string | null;
+  title_pt: string;
+  title_en: string;
+  pitch_pt: string;
+  pitch_en: string;
+  reward_pt: string;
+  reward_en: string;
+  /** Sponsored Learning material of the campaign, or null. */
+  material_slug: string | null;
+  /** `task_template.id` of the practice the streak is counted on. */
+  template_id: string;
+  /** Days in a row that unlock the coupon. */
+  streak_goal: number;
+  /** Skipped days that bridge the streak without counting. */
+  max_skips: number;
+  starts_at: string;
+  ends_at: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+/** Return shape of `partner_campaign_status` and `claim_partner_coupon`. */
+export interface PartnerCampaignStatus {
+  campaign_id: string;
+  member: boolean;
+  joined_at: string | null;
+  /** Has a non-archived practice adopted from the campaign template —
+   *  by origin (`task.origin_template_id`), so an edit that cut the
+   *  catalog link still counts. */
+  adopted: boolean;
+  /** Newest non-archived such practice; null when not adopted. */
+  task_id: string | null;
+  done_today: boolean;
+  /** Days in a row, counted over every practice born from the template
+   *  (edited and archived included). Today only counts once it is done. */
+  streak_days: number;
+  skips_used: number;
+  max_skips: number;
+  goal: number;
+  /** `claimed` or `streak_days >= goal`. */
+  unlocked: boolean;
+  claimed: boolean;
+  claimed_at: string | null;
+  /** The partner already released the code. */
+  coupon_ready: boolean;
+  /** Only when `claimed` and `coupon_ready`; null otherwise. */
+  coupon_code: string | null;
+}
+
+/** Return shape of `join_partner_campaign` (idempotent — the first
+ *  `joined_at` wins). */
+export interface JoinPartnerCampaignResult {
+  campaign_id: string;
+  joined_at: string;
 }

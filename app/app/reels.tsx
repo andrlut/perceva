@@ -11,6 +11,7 @@ import {
   useReadMaterialIds,
 } from '@/lib/api/learning';
 import { useT } from '@/lib/i18n';
+import { sponsorOf } from '@/lib/learningSponsor';
 import { useMaterialLock } from '@/lib/premium';
 import { buildReelDeck, isGroupRead, type ReelGroup } from '@/lib/reels';
 import { useReelsProgressStore, useReelsProgressReady, reelsToday } from '@/lib/reelsProgress';
@@ -59,10 +60,13 @@ export default function ReelsScreen() {
     );
     const readSet = reads.data ?? new Set<string>();
     const collectedMap = collected.data ?? new Map<string, Set<string>>();
-    // Gate do Recanto: o Explorar do free navega só os últimos 30 dias.
-    const gatedFeed = feed.data.filter((m) => !isMaterialLocked(m.released_at));
+    // Gate do Recanto: o Explorar do free navega só os últimos 30 dias
+    // (conteúdo de parceiro entra sempre — learnGate).
+    const gatedFeed = feed.data.filter(
+      (m) => !isMaterialLocked(m.released_at, sponsorOf(m) != null),
+    );
     const gatedIdeas = (ideaCards.data ?? []).filter(
-      (i) => !isMaterialLocked(i.released_at),
+      (i) => !isMaterialLocked(i.released_at, sponsorOf(i) != null),
     );
     const deck = buildReelDeck(
       gatedFeed,
