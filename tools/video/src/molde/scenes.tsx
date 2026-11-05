@@ -622,7 +622,7 @@ export const Verso: React.FC<P> = ({ s }) => {
           opacity: absorbed ? ramp(frame, speechEnd(s) + 6, 12) : 0,
         }}
       >
-        {L.done}
+        {s.props?.done ?? L.done}
       </div>
     </AbsoluteFill>
   );

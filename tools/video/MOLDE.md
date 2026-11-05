@@ -76,6 +76,16 @@ diferente da legenda. **Deixa** (`cue`, `turn`, `from`, `until`, `at`,
 daquele idioma. A peça entra quando a voz chega ali. Se a deixa não estiver
 na fala, o lint reprova.
 
+### Vídeo que não é de ideia (as portas das abas)
+
+Quando toda ideia do roteiro traz `card: { title, claim, file?, image? }`
+(em `{pt,en}`), o molde não procura ideas-spec: o verso lê esse `claim`.
+`file` dá o nome do mp4 (`doors/rewards.pt.r1.mp4` em vez de
+`idea.<n>`) e `image` (caminho no repo) é a frente do card. O `verso`
+aceita `done` pra trocar o selo "IDEIA ABSORVIDA". Exemplo:
+`learning-drops/video-specs/doors.json` (as portas do onboarding, lidas
+por `app/components/unlock/DoorVideo.tsx`).
+
 ## Cenas
 
 | cena | o que mostra | props |
@@ -88,7 +98,7 @@ na fala, o lint reprova.
 | `lista` | A pessoa em cima e até 3 itens grandes entrando nas deixas. Passos, sinais, opções. | `items[1..3]` `{icon, text ≤30, cue}`, `mood`, `to` |
 | `cena` | A ideia aplicada: a pessoa num lugar com uma peça na mão. | `setting` (sofa/mesa/cama/chao), `holding` (peça), `helper`+`gives`+`from`, `glow`, `objects[≤2]`, `mood` |
 | `pensa` | A pessoa pensando; o balão abre com a peça dentro. Dúvida, desejo, lembrança. | `thought` (peça), `at`, `mood`, `turn`+`to`, `objects[≤2]` |
-| `verso` | O card vira e a voz lê o verso. **Sempre a última.** | `kicker` (opcional) |
+| `verso` | O card vira e a voz lê o verso. **Sempre a última.** | `kicker`, `done` (opcionais) |
 
 Toda cena aceita `kicker` (≤ 24 caracteres), a sobrancelha dourada no topo.
 A 1ª cena recebe o nome da área se não tiver kicker.

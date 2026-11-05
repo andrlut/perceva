@@ -20,7 +20,8 @@ const arg = (name, fallback) => {
   return i > 0 ? process.argv[i + 1] : fallback;
 };
 
-const MODEL = arg('model', 'gemini-3.8-flash-tts');
+// TTS_MODEL troca o modelo sem mexer no molde (ex.: o lite tem cota diária própria)
+const MODEL = arg('model', process.env.TTS_MODEL || 'gemini-3.8-flash-tts');
 const VOICE = arg('voice', 'Kore');
 const scriptName = arg('script', '');
 // --dir molde/<slug>.<idea>.<lang>: roteiro do molde genérico (spec.json resolvido
@@ -58,7 +59,7 @@ async function synth(text, voice) {
       speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } } },
     },
   };
-  for (let attempt = 1; attempt <= 4; attempt++) {
+  for (let attempt = 1; attempt <= 7; attempt++) {
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
@@ -77,12 +78,16 @@ async function synth(text, voice) {
     }
     const err = await res.text();
     if (res.status === 429 || res.status >= 500) {
-      await new Promise((r) => setTimeout(r, 4000 * attempt));
+      // a cota do TTS é por minuto: o 429 diz quanto esperar (retryDelay "37s"); sem isso, recua
+      const hinted = Number(/"retryDelay":\s*"(\d+(?:\.\d+)?)s"/.exec(err)?.[1]);
+      const wait = res.status === 429 ? (hinted ? hinted * 1000 + 1500 : 15000 * attempt) : 4000 * attempt;
+      console.warn(`  · TTS ${res.status}, nova tentativa em ${Math.round(wait / 1000)} s`);
+      await new Promise((r) => setTimeout(r, wait));
       continue;
     }
     throw new Error(`Gemini TTS ${res.status}: ${err.slice(0, 400)}`);
   }
-  throw new Error('Gemini TTS: sem resposta após 4 tentativas');
+  throw new Error('Gemini TTS: sem resposta após 7 tentativas');
 }
 
 function writeWav(file, { wav, pcm, rate }) {
