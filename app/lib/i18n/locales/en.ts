@@ -518,14 +518,14 @@ const en = {
       choice: {
         title: 'How do you want to start?',
         safe: 'Redo the intro and the tour anytime in {{path}}.',
-        primary: 'Take the guided tour',
+        primary: 'Pick my practices',
         assessment: 'Do the self-assessment · 1 min',
-        skip: 'Skip the tour',
+        tour: 'Take the guided tour · 3 min',
       },
     },
     pack: {
-      title: 'Start with 12 practices',
-      body: 'One per sub-area, in priority order. You can edit all of them later.',
+      title: 'Pick 3 to 5 practices to start',
+      body: 'We suggest 5, one per area, in priority order. Tick and untick freely; everything can change later.',
       top: 'Top {{count}}',
       all: 'All',
       add: {

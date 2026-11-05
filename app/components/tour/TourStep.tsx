@@ -258,8 +258,8 @@ export function TourStep({
             >
               <Ionicons
                 name="play-skip-forward-outline"
-                size={15}
-                color={tokens.text.mid}
+                size={16}
+                color={tokens.text.base}
               />
               <Text style={styles.skipModule}>
                 {t('tour.common.skipModule')}
@@ -278,7 +278,7 @@ export function TourStep({
               accessibilityRole="button"
               accessibilityLabel={t('tour.common.exitTour')}
             >
-              <Ionicons name="close-circle-outline" size={15} color={tokens.text.mid} />
+              <Ionicons name="close-circle-outline" size={16} color={tokens.text.base} />
               <Text style={styles.skipModule}>{t('tour.common.exitTour')}</Text>
             </Pressable>
             ) : null}
@@ -437,10 +437,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
+  /** Escapes read as real buttons, not fine print: feedback said people
+   *  felt trapped in the tour (Fase 1 do onboarding simples, 2026-10-19). */
   skipModule: {
     fontFamily: 'Manrope_600SemiBold',
-    fontSize: 13,
-    lineHeight: 18,
-    color: tokens.text.mid,
+    fontSize: 14,
+    lineHeight: 20,
+    color: tokens.text.base,
   },
 });
