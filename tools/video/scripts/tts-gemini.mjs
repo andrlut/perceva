@@ -23,8 +23,14 @@ const arg = (name, fallback) => {
 const MODEL = arg('model', 'gemini-3.8-flash-tts');
 const VOICE = arg('voice', 'Kore');
 const scriptName = arg('script', '');
-const scriptFile = path.join(root, 'src', scriptName ? `script.${scriptName}.json` : 'script.json');
-const voDir = path.join(root, 'public', scriptName ? `vo-${scriptName}` : 'vo');
+// --dir molde/<slug>.<idea>.<lang>: roteiro do molde genérico (spec.json resolvido
+// pelo scripts/molde.mjs), com a voz gravada na mesma pasta.
+const dir = arg('dir', '');
+const LANG = arg('lang', 'pt');
+const scriptFile = dir
+  ? path.join(root, 'public', dir, 'spec.json')
+  : path.join(root, 'src', scriptName ? `script.${scriptName}.json` : 'script.json');
+const voDir = dir ? path.join(root, 'public', dir) : path.join(root, 'public', scriptName ? `vo-${scriptName}` : 'vo');
 const sample = arg('sample', '');
 
 // Direção de voz (opcional). Instrução longa deixa o modelo lento e
@@ -34,7 +40,10 @@ const DIRECTION = arg('direction', '');
 // No 3.8 a direção vai em speech_metadata.style (fora do texto — no texto ela
 // seria lida em voz alta). Vazio = estilo padrão da voz.
 // ordem: --style na linha de comando > "style" do roteiro > padrão
-const DEFAULT_STYLE = 'warm, close and confident Brazilian Portuguese narrator; natural conversational pace; smiling slightly; never a radio announcer';
+const DEFAULT_STYLE =
+  LANG === 'en'
+    ? 'warm, close and confident American English narrator; natural conversational pace; smiling slightly; never a radio announcer'
+    : 'warm, close and confident Brazilian Portuguese narrator; natural conversational pace; smiling slightly; never a radio announcer';
 
 const key = process.env.GEMINI_API_KEY;
 if (!key && !process.argv.includes('--measure')) throw new Error('GEMINI_API_KEY não está no ambiente.');

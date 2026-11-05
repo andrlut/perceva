@@ -1,0 +1,186 @@
+{
+  "_doc": "Roteiro do vídeo (molde genérico, tools/video/MOLDE.md). Cada fala = uma cena do catálogo + peças do elenco + deixas (trechos da fala em que algo entra). {pt,en} em qualquer texto. A cena 'verso' fala o card VERBATIM (vem do ideas-spec). Sem número, estudo ou ressalva metodológica: isso fica no texto da ideia e no deep dive.",
+  "slug": "job-crafting-additive",
+  "ideas": {
+    "faca-o-mapa-voce-mesmo": {
+      "lines": [
+        {
+          "id": "hook",
+          "scene": "pensa",
+          "pt": {
+            "caption": "Quer que o seu trabalho fique melhor? *Por onde você começa?*"
+          },
+          "en": {
+            "caption": "Want your job to get better? *Where do you start?*"
+          },
+          "props": {
+            "mood": "cansado",
+            "thought": "computador",
+            "at": {
+              "pt": "seu trabalho",
+              "en": "your job"
+            }
+          }
+        },
+        {
+          "id": "class",
+          "scene": "pessoa",
+          "pt": {
+            "caption": "A empresa costuma marcar *uma aula* sobre o assunto. Você assiste, volta pra mesa, e nada muda."
+          },
+          "en": {
+            "caption": "Companies usually book *a class* on it. You sit through it, go back to your desk, and nothing changes."
+          },
+          "props": {
+            "mood": "ok",
+            "turn": {
+              "pt": "nada muda",
+              "en": "nothing changes"
+            },
+            "to": "cansado",
+            "objects": [
+              {
+                "p": "ion:easel",
+                "cue": {
+                  "pt": "uma aula",
+                  "en": "a class"
+                }
+              },
+              {
+                "p": "computador",
+                "cue": {
+                  "pt": "volta pra mesa",
+                  "en": "back to your desk"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "log",
+          "scene": "cena",
+          "pt": {
+            "caption": "Um caminho que parece render mais: por uma semana, você *anota o seu dia*, tarefa por tarefa."
+          },
+          "en": {
+            "caption": "A path that looks more promising: for a week, you *write down your day*, task by task."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Anote o dia",
+              "en": "Log your day"
+            },
+            "setting": "mesa",
+            "holding": "caderno",
+            "mood": "ok",
+            "glow": {
+              "pt": "anota o seu dia",
+              "en": "write down your day"
+            }
+          }
+        },
+        {
+          "id": "what",
+          "scene": "lista",
+          "pt": {
+            "caption": "Pra onde vai o seu tempo, e *pra onde vai a sua energia*."
+          },
+          "en": {
+            "caption": "Where your time goes, and *where your energy goes*."
+          },
+          "props": {
+            "mood": "ok",
+            "items": [
+              {
+                "icon": "time",
+                "text": {
+                  "pt": "seu tempo",
+                  "en": "your time"
+                },
+                "cue": {
+                  "pt": "seu tempo",
+                  "en": "your time"
+                }
+              },
+              {
+                "icon": "flash",
+                "text": {
+                  "pt": "sua energia",
+                  "en": "your energy"
+                },
+                "cue": {
+                  "pt": "sua energia",
+                  "en": "your energy"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "why",
+          "scene": "comparar",
+          "pt": {
+            "caption": "A diferença provável: a aula te dá o conceito, e *o caderno faz você olhar pro seu dia*."
+          },
+          "en": {
+            "caption": "The likely difference: the class hands you the idea, and *the notebook makes you look at your day*."
+          },
+          "props": {
+            "winner": "right",
+            "win": {
+              "pt": "o caderno faz",
+              "en": "the notebook makes"
+            },
+            "left": {
+              "label": {
+                "pt": "A aula",
+                "en": "The class"
+              },
+              "object": "ion:easel"
+            },
+            "right": {
+              "label": {
+                "pt": "O caderno",
+                "en": "The notebook"
+              },
+              "mood": "ok",
+              "object": "caderno",
+              "arrives": {
+                "pt": "o caderno",
+                "en": "the notebook"
+              }
+            }
+          }
+        },
+        {
+          "id": "start",
+          "scene": "cena",
+          "hold": 0.6,
+          "pt": {
+            "caption": "Cabe em duas manhãs, e *dá pra fazer sozinho*."
+          },
+          "en": {
+            "caption": "It fits in two mornings, and *you can do it on your own*."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Comece esta semana",
+              "en": "Start this week"
+            },
+            "setting": "chao",
+            "holding": "caderno",
+            "arms": "none",
+            "glow": {
+              "pt": "dá pra fazer",
+              "en": "you can do it"
+            }
+          }
+        },
+        {
+          "id": "do",
+          "scene": "verso"
+        }
+      ]
+    }
+  }
+}
