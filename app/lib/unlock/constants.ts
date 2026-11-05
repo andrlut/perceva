@@ -8,11 +8,10 @@ export const UNLOCK_GATES_ENABLED: boolean = true;
 
 /**
  * Contas criadas antes disto recebem tudo aberto (`grandfather`): quem já
- * usa o app nunca perde acesso. AJUSTAR PRA DATA DO PROMOTE em produção
- * (hoje aponta pro início dos testes, pra contas novas de teste verem as
- * trancas).
+ * usa o app nunca perde acesso. Fixado na data do promote em produção
+ * (2026-11-04): só contas criadas a partir daí veem as trancas.
  */
-export const GATES_SINCE = '2026-10-19T00:00:00Z';
+export const GATES_SINCE = '2026-11-04T00:00:00Z';
 
 export const UNLOCK_FEATURES = [
   /** Aba Recompensas (e as moedas). */
