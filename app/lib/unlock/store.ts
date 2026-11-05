@@ -41,6 +41,8 @@ interface UnlockState {
   unlocked: UnlockMap;
   /** ISO timestamp of when the door animation was seen, per feature. */
   doorsSeen: DoorMap;
+  /** Set by "Rever as portas": grandfathered accounts see the doors too. */
+  replayDoors: boolean;
   hydrate: (characterId: string, accountCreatedAt: string | null) => Promise<void>;
   unlock: (feature: UnlockFeature, by: UnlockBy) => Promise<void>;
   markDoorSeen: (feature: UnlockFeature) => Promise<void>;
@@ -54,6 +56,7 @@ const storageKey = (id: string) => `${KEY_PREFIX}${id}`;
 interface Persisted {
   unlocked: UnlockMap;
   doorsSeen: DoorMap;
+  replayDoors?: boolean;
 }
 
 async function persist(characterId: string | null, data: Persisted): Promise<void> {
@@ -76,6 +79,7 @@ export const useUnlockStore = create<UnlockState>((set, get) => ({
   status: 'unknown',
   unlocked: {},
   doorsSeen: {},
+  replayDoors: false,
 
   hydrate: async (characterId, accountCreatedAt) => {
     if (get().status === 'ready' && get().characterId === characterId) return;
@@ -94,7 +98,13 @@ export const useUnlockStore = create<UnlockState>((set, get) => ({
       data = { ...data, unlocked: grandfatherAll(new Date().toISOString()) };
       await persist(characterId, data);
     }
-    set({ characterId, status: 'ready', unlocked: data.unlocked, doorsSeen: data.doorsSeen });
+    set({
+      characterId,
+      status: 'ready',
+      unlocked: data.unlocked,
+      doorsSeen: data.doorsSeen,
+      replayDoors: data.replayDoors === true,
+    });
   },
 
   unlock: async (feature, by) => {
@@ -105,18 +115,28 @@ export const useUnlockStore = create<UnlockState>((set, get) => ({
     };
     set({ unlocked });
     track('tab_unlocked', { tab: feature, by });
-    await persist(get().characterId, { unlocked, doorsSeen: get().doorsSeen });
+    await persist(get().characterId, { unlocked, doorsSeen: get().doorsSeen, replayDoors: get().replayDoors });
   },
 
   markDoorSeen: async (feature) => {
     const doorsSeen: DoorMap = { ...get().doorsSeen, [feature]: new Date().toISOString() };
     set({ doorsSeen });
-    await persist(get().characterId, { unlocked: get().unlocked, doorsSeen });
+    await persist(get().characterId, {
+      unlocked: get().unlocked,
+      doorsSeen,
+      replayDoors: get().replayDoors,
+    });
   },
 
   resetDoors: async () => {
-    set({ doorsSeen: {} });
-    await persist(get().characterId, { unlocked: get().unlocked, doorsSeen: {} });
+    // replayDoors: without it a grandfathered account (everyone before the
+    // gates) never sees a door, so the button would do nothing for them.
+    set({ doorsSeen: {}, replayDoors: true });
+    await persist(get().characterId, {
+      unlocked: get().unlocked,
+      doorsSeen: {},
+      replayDoors: true,
+    });
   },
 }));
 
@@ -136,7 +156,7 @@ export function useDoorPending(feature: UnlockFeature): boolean {
   return useUnlockStore((s) => {
     if (!UNLOCK_GATES_ENABLED || s.status !== 'ready') return false;
     const entry = s.unlocked[feature];
-    if (!entry || entry.by === 'grandfather') return false;
+    if (!entry || (entry.by === 'grandfather' && !s.replayDoors)) return false;
     return !s.doorsSeen[feature];
   });
 }

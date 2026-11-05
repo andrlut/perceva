@@ -37,7 +37,6 @@ import {
   ONB_TEXT_BTN_H,
   OnbPrimaryButton,
   OnbSecondaryButton,
-  OnbTextButton,
   FitBox,
   ONB_HEADER_H,
   ONB_PAGE_TOP,
@@ -549,12 +548,6 @@ export function IntroPager() {
                   label={t('tour.intro.choice.assessment')}
                   onPress={() => void finish('assessment')}
                   busy={busy === 'assessment'}
-                  disabled={busy != null}
-                />
-                <OnbTextButton
-                  label={t('tour.intro.choice.tour')}
-                  onPress={() => void finish('tour')}
-                  busy={busy === 'tour'}
                   disabled={busy != null}
                 />
               </Animated.View>
