@@ -67,9 +67,10 @@ for (const line of lines) {
     const heard = await transcribe(file);
     const score = Math.max(sim(heard, line.caption.replace(/\*/g, '')), line.say ? sim(heard, line.say) : 0);
     // Semelhança alta não basta: "a diferença provável" ouvido como "a diferença pro app"
-    // passou com 89%. Toda palavra de conteúdo (5+ letras) do roteiro tem que estar na fala.
+    // passou com 89%. Toda palavra de conteúdo (5+ letras) e todo número do roteiro tem que estar
+    // na fala ("in two mornings" ouvido como "into mornings" passou com 88%).
     const heardSet = new Set(norm(heard).map(stem));
-    const missing = [...new Set(norm(line.say ?? line.caption.replace(/\*/g, '')).filter((w) => w.length >= 5 && !/^\d+$/.test(w)))].filter(
+    const missing = [...new Set(norm(line.say ?? line.caption.replace(/\*/g, '')).filter((w) => w.length >= 5 || /^\d+$/.test(w)))].filter(
       (w) => !heardSet.has(stem(w)),
     );
     const ok = score >= 0.86 && missing.length === 0;

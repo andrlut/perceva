@@ -537,7 +537,7 @@ the director as a `voz` fix (a different word, not the same one again), then
 node scripts/molde.mjs stills --slug <slug> --lang both
 ```
 
-One frame per scene at 75% (the cues already in), tiled in
+One frame per scene at the end of its line (every cue already in), tiled in
 `tools/video/out/molde/<slug>.<idea>.<lang>/sheet.png`, with
 `stills/index.json` mapping frame → line. Spawn `learning-video-reviewer`
 in **mode frames** with the sheet paths (PT and EN of every idea). Failure
