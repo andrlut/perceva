@@ -23,7 +23,8 @@ import catalog from './catalog.json';
 // Uma peça por nome: elenco (desenhado) ou ícone do app (`ion:<nome>`).
 // `size` = largura aproximada na tela. Peça desconhecida = erro no render
 // (o lint do molde.mjs barra antes, com a lista do que existe).
-type Draw = (p: { t: number; size: number; accent?: string }) => React.ReactElement;
+// `progress` 0..1 anima o que a peça tem de animável (caderno sendo escrito, tela/lâmpada acendendo)
+type Draw = (p: { t: number; size: number; accent?: string; progress?: number }) => React.ReactElement;
 
 const PIECES: Record<string, Draw> = {
   casa: ({ size, accent }) => <Casa size={size} accent={accent} />,
@@ -36,10 +37,10 @@ const PIECES: Record<string, Draw> = {
   louca: ({ size }) => <Louca size={size} />,
   livro: ({ size, accent }) => <Livro size={size} accent={accent} />,
   cama: ({ size, accent }) => <Cama size={size} accent={accent} />,
-  computador: ({ size, accent }) => <Computador size={size} accent={accent} />,
+  computador: ({ size, accent, progress }) => <Computador size={size} accent={accent} glow={progress ?? 1} />,
   coracao: ({ t, size, accent }) => <Coracao t={t} size={size} accent={accent} />,
-  caderno: ({ size, accent }) => <Caderno size={size} accent={accent} />,
-  lampada: ({ size }) => <Lampada size={size} />,
+  caderno: ({ size, accent, progress }) => <Caderno size={size} accent={accent} write={progress ?? 1} />,
+  lampada: ({ size, progress }) => <Lampada size={size} on={progress ?? 1} />,
 };
 
 export const PIECE_NAMES = Object.keys(PIECES);
@@ -70,11 +71,11 @@ const IonToken: React.FC<{ name: string; size: number; accent: string }> = ({ na
   </div>
 );
 
-export const Peca: React.FC<{ name: string; t: number; size: number; accent?: string }> = ({ name, t, size, accent = C.gold }) => {
+export const Peca: React.FC<{ name: string; t: number; size: number; accent?: string; progress?: number }> = ({ name, t, size, accent = C.gold, progress }) => {
   if (name.startsWith('ion:')) return <IonToken name={name.slice(4)} size={size * 0.8} accent={accent} />;
   const draw = PIECES[name];
   if (!draw) throw new Error(`peça desconhecida: "${name}" (existem: ${PIECE_NAMES.join(', ')}, ou ion:<nome>)`);
-  return draw({ t, size, accent });
+  return draw({ t, size, accent, progress });
 };
 
 /** Ícone solto (chips). */

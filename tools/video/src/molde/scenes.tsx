@@ -330,12 +330,12 @@ const PanelBox: React.FC<{ s: MS; x: number; from: number; win: number; lose: nu
         border: `3px solid ${win > 0 ? `${accent}${Math.round((0.25 + 0.75 * win) * 255).toString(16).padStart(2, '0')}` : C.borderStrong}`,
         boxShadow: `0 0 ${80 * win}px ${accent}55`,
         overflow: 'hidden',
-        opacity: t * (1 - 0.45 * lose),
+        opacity: t * (1 - 0.2 * lose),
         transform: `translateY(${(1 - t) * 40}px) scale(${1 + 0.03 * win})`,
       }}
     >
       <div style={{ position: 'absolute', top: 150, left: 50 }}>
-        <Pessoa t={frame} size={230} seed={seed} arms={win > 0.5 ? 'up' : 'down'} mood={mood} accent={seed ? C.surface3 : C.violet} skin={seed ? '#8D5A3B' : '#F2C9A0'} />
+        <Pessoa t={frame} size={230} seed={seed} arms={win > 0.5 ? 'up' : 'down'} mood={mood} accent={seed ? C.violet2 : C.violet} skin={seed ? '#8D5A3B' : '#F2C9A0'} />
       </div>
       {panel.object ? (
         <div
@@ -399,8 +399,9 @@ export const Comparar: React.FC<P> = ({ s }) => {
   return (
     <AbsoluteFill>
       <Kicker text={pr.kicker} />
-      <PanelBox s={s} x={70} from={s.lead - 4} win={winL} lose={winR} panel={pr.left!} seed={0} pill={pr.pill} />
-      <PanelBox s={s} x={560} from={s.lead + 4} win={winR} lose={winL} panel={pr.right!} seed={3} pill={pr.pill} />
+      {/* a protagonista fica no lado que ganha ("você"); o outro lado é outra pessoa */}
+      <PanelBox s={s} x={70} from={s.lead - 4} win={winL} lose={winR} panel={pr.left!} seed={pr.winner === 'right' ? 3 : 0} pill={pr.pill} />
+      <PanelBox s={s} x={560} from={s.lead + 4} win={winR} lose={winL} panel={pr.right!} seed={pr.winner === 'right' ? 0 : 3} pill={pr.pill} />
       {pr.chips?.length ? <Chips s={s} chips={pr.chips} top={1010} left={pr.winner === 'right' ? 560 : 70} width={450} /> : null}
     </AbsoluteFill>
   );
@@ -417,10 +418,10 @@ export const Lista: React.FC<P> = ({ s }) => {
   return (
     <AbsoluteFill>
       <Kicker text={pr.kicker} />
-      <div style={{ position: 'absolute', top: 290, left: 380, opacity: me }}>
-        <Pessoa t={frame} size={300} mood={frame >= last ? (pr.to ?? pr.mood ?? 'ok') : (pr.mood ?? 'ok')} arms={pr.arms ?? 'out'} accent={C.violet} />
+      <div style={{ position: 'absolute', top: 280, left: 360, opacity: me }}>
+        <Pessoa t={frame} size={340} mood={frame >= last ? (pr.to ?? pr.mood ?? 'ok') : (pr.mood ?? 'ok')} arms={pr.arms ?? 'down'} accent={C.violet} />
       </div>
-      <Chips s={s} chips={(pr.items ?? []).slice(0, 3)} top={760} left={110} width={860} size={54} />
+      <Chips s={s} chips={(pr.items ?? []).slice(0, 3)} top={790} left={90} width={900} size={64} />
     </AbsoluteFill>
   );
 };
@@ -438,14 +439,22 @@ export const Cena: React.FC<P> = ({ s }) => {
   const helper = pr.helper ? spr(at(s, pr.from, s.lead + 10), { damping: 14 }) : 0;
   const walk = Math.sin(frame / 18);
   const mood = pr.mood ?? 'feliz';
+  // a ação acontece ao longo da fala (caderno sendo escrito, tela acendendo)
+  const work = ramp(frame, at(s, pr.glow, s.lead), Math.max(20, speechEnd(s) - at(s, pr.glow, s.lead)));
   const held = pr.holding ? (
-    <div style={{ position: 'absolute', top: 160, left: 55, transform: 'rotate(-6deg)' }}>
-      <Peca name={pr.holding} t={frame} size={150} accent={accent} />
-    </div>
+    setting === 'sofa' ? (
+      <div style={{ position: 'absolute', top: 160, left: 55, transform: 'rotate(-6deg)' }}>
+        <Peca name={pr.holding} t={frame} size={150} accent={accent} progress={work} />
+      </div>
+    ) : (
+      <div style={{ position: 'absolute', top: 150, left: 222, transform: 'rotate(8deg)' }}>
+        <Peca name={pr.holding} t={frame} size={150} accent={accent} progress={work} />
+      </div>
+    )
   ) : null;
   const person = (
     <div style={{ position: 'relative' }}>
-      <Pessoa t={frame} size={260} mood={mood} arms={pr.arms ?? 'none'} accent={C.violet} />
+      <Pessoa t={frame} size={260} mood={mood} arms={pr.arms ?? (setting === 'sofa' ? 'none' : 'out')} accent={C.violet} />
       {held}
     </div>
   );
@@ -472,15 +481,15 @@ export const Cena: React.FC<P> = ({ s }) => {
           </div>
         ) : setting === 'mesa' ? (
           <>
-            <div style={{ position: 'absolute', top: 740, left: 330 }}>
+            <div style={{ position: 'absolute', top: 740, left: 270 }}>
               <Pessoa t={frame} size={300} mood={mood} arms="out" accent={C.violet} />
             </div>
             <div style={{ position: 'absolute', top: 1010, left: 160, width: 760, height: 40, borderRadius: 16, background: C.surface3 }} />
             <div style={{ position: 'absolute', top: 1050, left: 220, width: 26, height: 130, borderRadius: 8, background: C.surface2 }} />
             <div style={{ position: 'absolute', top: 1050, left: 834, width: 26, height: 130, borderRadius: 8, background: C.surface2 }} />
             {pr.holding ? (
-              <div style={{ position: 'absolute', top: 820, left: 560 }}>
-                <Peca name={pr.holding} t={frame} size={260} accent={accent} />
+              <div style={{ position: 'absolute', top: 1010, left: 600, transform: 'translateY(-100%)' }}>
+                <Peca name={pr.holding} t={frame} size={240} accent={accent} progress={work} />
               </div>
             ) : null}
           </>
@@ -492,7 +501,7 @@ export const Cena: React.FC<P> = ({ s }) => {
             <div style={{ position: 'absolute', top: 740, left: 700 }}>{person}</div>
           </>
         ) : (
-          <div style={{ position: 'absolute', top: 700, left: 330, transform: 'scale(1.35)', transformOrigin: '50% 100%' }}>{person}</div>
+          <div style={{ position: 'absolute', top: 1180 - 338, left: 300, transform: 'scale(1.35)', transformOrigin: '50% 100%' }}>{person}</div>
         )}
       </div>
       {(pr.objects ?? []).slice(0, 2).map((o, i) => (

@@ -23,32 +23,26 @@
           }
         },
         {
-          "id": "class",
-          "scene": "pessoa",
+          "id": "class3",
+          "scene": "cena",
           "pt": {
-            "caption": "A empresa costuma marcar *uma aula* sobre o assunto. Você assiste, volta pra mesa, e nada muda."
+            "caption": "A empresa costuma marcar *uma aula* sobre o assunto. Você assiste, volta pra mesa, e pouca coisa tende a mudar."
           },
           "en": {
-            "caption": "Companies usually book *a class* on it. You sit through it, go back to your desk, and nothing changes."
+            "caption": "Companies usually book *a class* on it. You sit through it, go back to your desk, and little tends to change."
           },
           "props": {
-            "mood": "ok",
-            "turn": {
-              "pt": "nada muda",
-              "en": "nothing changes"
-            },
-            "to": "cansado",
+            "setting": "mesa",
+            "holding": "computador",
+            "mood": "cansado",
             "objects": [
               {
                 "p": "ion:easel",
                 "cue": {
                   "pt": "uma aula",
                   "en": "a class"
-                }
-              },
-              {
-                "p": "computador",
-                "cue": {
+                },
+                "out": {
                   "pt": "volta pra mesa",
                   "en": "back to your desk"
                 }
@@ -57,13 +51,13 @@
           }
         },
         {
-          "id": "log",
+          "id": "log2",
           "scene": "cena",
           "pt": {
-            "caption": "Um caminho que parece render mais: por uma semana, você *anota o seu dia*, tarefa por tarefa."
+            "caption": "Outro caminho: você pega um caderno e *anota o seu dia*, do jeito que ele é."
           },
           "en": {
-            "caption": "A path that looks more promising: for a week, you *write down your day*, task by task."
+            "caption": "Another way: you grab a workbook and *write down your day*, just as it is."
           },
           "props": {
             "kicker": {
@@ -80,96 +74,106 @@
           }
         },
         {
-          "id": "what",
-          "scene": "lista",
+          "id": "why2",
+          "scene": "comparar",
           "pt": {
-            "caption": "Pra onde vai o seu tempo, e *pra onde vai a sua energia*."
+            "caption": "A diferença parece estar aqui: na aula, alguém te explica, e no caderno *quem olha o seu dia é você*."
           },
           "en": {
-            "caption": "Where your time goes, and *where your energy goes*."
+            "caption": "The difference seems to be this: in a class, someone explains it, and in the workbook *you're the one looking at your day*."
+          },
+          "props": {
+            "left": {
+              "label": {
+                "pt": "Alguém explica",
+                "en": "Someone explains"
+              },
+              "object": "ion:easel",
+              "arrives": {
+                "pt": "na aula",
+                "en": "in a class"
+              }
+            },
+            "right": {
+              "label": {
+                "pt": "Você olha seu dia",
+                "en": "You look at your day"
+              },
+              "mood": "ok",
+              "object": "caderno",
+              "arrives": {
+                "pt": "no caderno",
+                "en": "in the workbook"
+              }
+            },
+            "winner": "right",
+            "win": {
+              "pt": "quem olha o seu dia é você",
+              "en": "you're the one looking at your day"
+            }
+          }
+        },
+        {
+          "id": "pull2",
+          "scene": "pessoa",
+          "pt": {
+            "caption": "Com o dia no papel, *dá pra ver o que mudar*."
+          },
+          "en": {
+            "caption": "With your day on paper, *you can see what to change*."
           },
           "props": {
             "mood": "ok",
-            "items": [
+            "turn": {
+              "pt": "o que mudar",
+              "en": "what to change"
+            },
+            "to": "feliz",
+            "objects": [
               {
-                "icon": "time",
-                "text": {
-                  "pt": "seu tempo",
-                  "en": "your time"
-                },
+                "p": "caderno",
                 "cue": {
-                  "pt": "seu tempo",
-                  "en": "your time"
+                  "pt": "dia no papel",
+                  "en": "day on paper"
                 }
               },
               {
-                "icon": "flash",
-                "text": {
-                  "pt": "sua energia",
-                  "en": "your energy"
-                },
+                "p": "ion:eye",
                 "cue": {
-                  "pt": "sua energia",
-                  "en": "your energy"
+                  "pt": "dá pra ver",
+                  "en": "you can see"
                 }
               }
             ]
           }
         },
         {
-          "id": "why",
-          "scene": "comparar",
-          "pt": {
-            "caption": "A diferença provável: a aula te dá o conceito, e *o caderno faz você olhar pro seu dia*."
-          },
-          "en": {
-            "caption": "The likely difference: the class hands you the idea, and *the notebook makes you look at your day*."
-          },
-          "props": {
-            "winner": "right",
-            "win": {
-              "pt": "o caderno faz",
-              "en": "the notebook makes"
-            },
-            "left": {
-              "label": {
-                "pt": "A aula",
-                "en": "The class"
-              },
-              "object": "ion:easel"
-            },
-            "right": {
-              "label": {
-                "pt": "O caderno",
-                "en": "The notebook"
-              },
-              "mood": "ok",
-              "object": "caderno",
-              "arrives": {
-                "pt": "o caderno",
-                "en": "the notebook"
-              }
-            }
-          }
-        },
-        {
-          "id": "start",
+          "id": "start3",
           "scene": "cena",
           "hold": 0.6,
           "pt": {
-            "caption": "Cabe em duas manhãs, e *dá pra fazer sozinho*."
+            "caption": "Espalhado pela semana, cabe em duas manhãs, e *dá pra fazer sozinho*."
           },
           "en": {
-            "caption": "It fits in two mornings, and *you can do it on your own*."
+            "caption": "Spread over the week, it fits in two mornings, and *you can do it on your own*."
           },
           "props": {
             "kicker": {
               "pt": "Comece esta semana",
               "en": "Start this week"
             },
-            "setting": "chao",
+            "setting": "mesa",
             "holding": "caderno",
-            "arms": "none",
+            "mood": "feliz",
+            "objects": [
+              {
+                "p": "ion:sunny",
+                "cue": {
+                  "pt": "duas manhãs",
+                  "en": "two mornings"
+                }
+              }
+            ],
             "glow": {
               "pt": "dá pra fazer",
               "en": "you can do it"

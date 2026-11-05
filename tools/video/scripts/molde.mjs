@@ -294,8 +294,8 @@ async function stills(ctx) {
       fs.mkdirSync(dir, { recursive: true });
       const files = [];
       for (const [i, s] of composition.props.scenes.entries()) {
-        // 75% da cena: as deixas já entraram, a fala ainda está na tela
-        const frame = s.start + Math.round(s.frames * (s.scene === 'verso' ? 0.9 : 0.75));
+        // fim da fala: TODAS as deixas já entraram (a 75% uma virada no fim da frase não aparecia)
+        const frame = s.scene === 'verso' ? s.start + Math.round(s.frames * 0.9) : s.start + s.lead + s.speech - 6;
         const f = path.join(dir, `${String(i + 1).padStart(2, '0')}.png`);
         await renderStill({ serveUrl, composition, frame, output: f, scale: 0.4, inputProps: { specKey: k, spec: null, scenes: [] } });
         files.push(f);
@@ -364,9 +364,12 @@ function upload(ctx) {
       if (!fs.existsSync(vj)) die(`${k}: rode render antes`);
       const v = readJson(vj);
       if (v.rev !== rev) die(`${k}: o render é r${v.rev}, não r${rev}`);
+      // o CLI do storage quer caminho RELATIVO e roda do checkout PRINCIPAL — é lá que o projeto
+      // está linkado (supabase/.temp); um worktree mora dentro dele, então o relativo funciona
+      const linked = mainRoot();
       for (const [local, remote, type] of [[v.local, v.path, 'video/mp4'], [v.localPoster, v.poster, 'image/webp']]) {
-        // o CLI do storage quer caminho RELATIVO e roda da raiz do repo (lição do learning-media-ingest)
-        execFileSync(bin, ['storage', 'cp', `./${local.replace(/\\/g, '/')}`, `ss:///learning-media/${remote}`, '--content-type', type, '--cache-control', 'public, max-age=31536000, immutable', '--experimental', '--linked'], { cwd: repo, stdio: 'inherit' });
+        const rel = path.relative(linked, path.join(repo, local)).replace(/\\/g, '/');
+        execFileSync(bin, ['storage', 'cp', `./${rel}`, `ss:///learning-media/${remote}`, '--content-type', type, '--cache-control', 'public, max-age=31536000, immutable', '--experimental', '--linked'], { cwd: linked, stdio: 'inherit' });
       }
       console.log(`✓ ${k}: no bucket (${v.path})`);
     }
