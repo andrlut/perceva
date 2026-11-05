@@ -1794,11 +1794,16 @@ const pt: Translations = {
       today: 'hoje',
       thatDay: 'neste dia',
     },
+    views: {
+      today: 'Hoje',
+      all: 'Todas',
+    },
     dayNav: {
       prev: 'Dia anterior',
       next: 'Próximo dia',
       today: 'Hoje',
       backToTodayA11y: 'Voltar para hoje',
+      calendarA11y: 'Abrir o calendário',
     },
     dayCleared: {
       title: 'Dia fechado!',
@@ -2000,12 +2005,19 @@ const pt: Translations = {
     loggingFor: 'Registrando em {{date}}',
     dailies: 'Diárias',
     emptyTitle: 'Nenhuma prática ainda',
-    emptyBody: 'Crie uma prática ou adote uma do catálogo em Gerenciar.',
+    emptyBody: 'Toque no + pra criar uma prática ou escolher uma sugerida.',
     emptyCta: 'Criar prática',
   },
   tasksHub: {
-    title: 'Gerenciar práticas',
+    title: 'Adicionar e organizar',
     newTask: 'Nova prática',
+    doors: {
+      create: 'Criar a minha',
+      createDesc: 'Nome, o que treina e com que frequência.',
+      suggested: 'Escolher sugerida',
+      suggestedDesc: '{{count}} no catálogo, por área.',
+      back: 'Suas práticas',
+    },
     tabs: {
       mine: 'Minhas',
       suggested: 'Sugeridas',

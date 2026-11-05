@@ -35,7 +35,9 @@ import { StoreUpdateCard } from '@/components/StoreUpdateCard';
 import { TaskActionSheet } from '@/components/TaskActionSheet';
 import { TaskCard } from '@/components/TaskCard';
 import { WeekStrip } from '@/components/WeekStrip';
-import { TASKS_FAB_CLEARANCE, TasksFabStack } from '@/components/TasksFabStack';
+import { BucketTabsV2 } from '@/components/BucketTabsV2';
+import { FabStack, fabStackClearance } from '@/components/FabStack';
+import { AllPracticesBody } from '@/components/practices/AllPracticesBody';
 import { TodayAmbient } from '@/components/TodayAmbient';
 import { DayRedemptionsCard } from '@/components/DayRedemptionsCard';
 import { DaySwipeZone } from '@/components/DaySwipeZone';
@@ -98,6 +100,11 @@ interface FloatItem {
 /** AsyncStorage day-stamp — "day-cleared celebration already fired today".
  *  Same pattern as MoodCheckinPrompt's `@perceva/mood_prompt_shown`. */
 const DAY_CLEARED_KEY = '@perceva/day_cleared';
+
+/** The one floating button: "+" → the add/organize screen (/tasks). */
+const HOME_FAB_CLEARANCE = fabStackClearance(['lg']);
+
+type HomeView = 'today' | 'all';
 
 interface DayClearedStats {
   done: number;
@@ -166,6 +173,9 @@ export default function HomeScreen() {
     d.setHours(0, 0, 0, 0);
     return d;
   });
+  // Hoje | Todas — the tab's two inner pages (Onboarding simples, 2026-11):
+  // tabs under the header, swipe on the header strip, one "+" for both.
+  const [view, setView] = useState<HomeView>('today');
   const todayKey = dateKeyFromLocal(new Date());
   const selectedKey = dateKeyFromLocal(selectedDate);
   const isToday = selectedKey === todayKey;
@@ -224,7 +234,7 @@ export default function HomeScreen() {
   // check-in) sits under the buttons. `max`, not sum: every bottom tooltip
   // gap (160+) already clears the 128px stack.
   const bottomClearance =
-    navClearance + Math.max(tourBottomBump, TASKS_FAB_CLEARANCE);
+    navClearance + Math.max(tourBottomBump, HOME_FAB_CLEARANCE);
   const isSettingsCurrent = useIsCurrentTourModule('settings');
   const isM1Current = useIsCurrentTourModule('M1');
 
@@ -974,16 +984,12 @@ export default function HomeScreen() {
   // and a card to point at (the safety net above ends it meanwhile; this
   // keeps the tooltip from flashing).
   const m1Enabled =
-    isM1Current && isToday && !isLoading && !hasError && dayOpen.length > 0;
-
-  // "Todas as práticas" — the FAB's one and only behaviour.
-  const openAllPractices = () => {
-    router.push(
-      isToday
-        ? '/all-practices'
-        : { pathname: '/all-practices', params: { date: selectedKey } },
-    );
-  };
+    isM1Current &&
+    isToday &&
+    view === 'today' &&
+    !isLoading &&
+    !hasError &&
+    dayOpen.length > 0;
 
   // First rendered card (the first Hoje item) carries the M1 tour anchor.
   const renderTaskCard = (task: TaskWithSubs, isTourAnchor: boolean) => {
@@ -1042,10 +1048,10 @@ export default function HomeScreen() {
         {/* Zero-height content-top marker: the M1 auto-scroll measures
             anchors against it to get their content Y. */}
         <View ref={contentTopRef} collapsable={false} />
-        {/* The top of the screen steps days on a horizontal swipe — only
-            what sits ABOVE the first practice, so it never competes with a
-            TaskCard's own complete/skip swipe. */}
-        <DaySwipeZone onPrev={() => stepDay(-1)} onNext={() => stepDay(1)} canNext={!isToday}>
+        {/* The top of the screen flips Hoje ↔ Todas on a horizontal swipe
+            (days step with the arrows) — only what sits ABOVE the first
+            practice, so it never competes with a TaskCard's own swipe. */}
+        <DaySwipeZone onPrev={() => setView('today')} onNext={() => setView('all')} canNext={view === 'today'}>
           <View>
             <TodayHeader
               weekdayLabel={hero.weekday}
@@ -1060,6 +1066,10 @@ export default function HomeScreen() {
               onPrevDay={() => stepDay(-1)}
               onNextDay={() => stepDay(1)}
               onResetToday={isToday ? undefined : goToToday}
+              onDate={() => {
+                Haptics.selectionAsync().catch(() => {});
+                router.push('/history');
+              }}
               onInfo={() => setHelpOpen(true)}
               coinsOfDay={dayDetail.data ? dayDetail.data.totalCoins : null}
               mood={dayMood.data?.mood ?? null}
@@ -1075,6 +1085,19 @@ export default function HomeScreen() {
           </View>
         </DaySwipeZone>
 
+        <DaySwipeZone onPrev={() => setView('today')} onNext={() => setView('all')} canNext={view === 'today'}>
+          <View>
+            <BucketTabsV2<HomeView>
+              tabs={[
+                { value: 'today', label: t('home.views.today'), count: isToday ? dayOpen.length : pastOpen.length },
+                { value: 'all', label: t('home.views.all'), count: allActiveTasks.data?.length ?? 0 },
+              ]}
+              value={view}
+              onChange={setView}
+            />
+          </View>
+        </DaySwipeZone>
+
         {isLoading ? (
           <View style={styles.loadingBox}>
             <ActivityIndicator color={tokens.brand.violet2} />
@@ -1083,6 +1106,10 @@ export default function HomeScreen() {
           <View style={styles.errorBox}>
             <Ionicons name="alert-circle" size={32} color={tokens.semantic.danger} />
             <Text style={styles.errorText}>{t('home.error')}</Text>
+          </View>
+        ) : view === 'all' ? (
+          <View style={styles.allPage}>
+            <AllPracticesBody key={selectedKey} selectedDate={selectedDate} />
           </View>
         ) : (
           <>
@@ -1093,14 +1120,14 @@ export default function HomeScreen() {
               <>
                 {/* A newer native build on the Play Store — the one update
                     an OTA can't deliver; renders only when truly outdated. */}
-                <DaySwipeZone onPrev={() => stepDay(-1)} onNext={() => stepDay(1)} canNext={!isToday}>
+                <DaySwipeZone onPrev={() => setView('today')} onNext={() => setView('all')} canNext={view === 'today'}>
                   <View>
                     <StoreUpdateCard />
                   </View>
                 </DaySwipeZone>
                 {/* Outside the swipe zone: the chips scroll sideways. */}
                 <QuestChipsStrip />
-                <DaySwipeZone onPrev={() => stepDay(-1)} onNext={() => stepDay(1)} canNext={!isToday}>
+                <DaySwipeZone onPrev={() => setView('today')} onNext={() => setView('all')} canNext={view === 'today'}>
                   <View>
                     <NotificationOptInCard enabled={!activeTourStep} />
                     {/* Minha Semana — module-gated; renders nothing when off. */}
@@ -1172,30 +1199,6 @@ export default function HomeScreen() {
                 </>
               )}
 
-              {/* "Todas as práticas" — the FAB's door as a row in the list,
-                  styled like the Concluídas/Puladas drawers right under it
-                  (first users did not read the floating button as a way in).
-                  It opens the same screen the FAB does. */}
-              <Pressable
-                onPress={() => {
-                  Haptics.selectionAsync().catch(() => {});
-                  openAllPractices();
-                }}
-                style={({ pressed }) => [styles.allRow, pressed && { opacity: 0.85 }]}
-                accessibilityRole="button"
-                accessibilityLabel={t('home.allPracticesRow.a11y')}
-              >
-                <Ionicons name="albums-outline" size={16} color={tokens.brand.violet2} />
-                <Text style={styles.allRowTitle}>{t('home.allPracticesRow.title')}</Text>
-                {allActiveTasks.data ? (
-                  <View style={styles.allRowCount}>
-                    <Text style={styles.allRowCountText}>{allActiveTasks.data.length}</Text>
-                  </View>
-                ) : null}
-                <View style={{ flex: 1 }} />
-                <Ionicons name="chevron-forward" size={16} color={tokens.text.dim} />
-              </Pressable>
-
               {/* Completed drawer. On today it always renders — "Feitas
                   hoje · 0" growing into the day's tally is the day's arc in
                   one line. A past day shows it only when there is something
@@ -1260,16 +1263,26 @@ export default function HomeScreen() {
         )}
       </ScrollView>
 
-      {/* Floating action stack (thumb zone). Two buttons: Calendário
-          (dedicated — opens the unified History calendar, a heavy, important
-          screen) and Todas as práticas (primary — the see-all doing surface,
-          which also hosts the "Gerenciar" entry inside it). RAW navClearance
-          (not the tour-bumped bottomClearance) so it doesn't leap up under a
-          bottom tour tooltip. */}
-      <TasksFabStack
+      {/* The one floating button: "+" opens the add/organize screen (create
+          your own, pick a suggested one, reorder). The calendar moved to the
+          date in the header. RAW navClearance (not the tour-bumped value)
+          so it doesn't leap up under a bottom tour tooltip. */}
+      <FabStack
         bottomOffset={navClearance}
-        onSeeAll={openAllPractices}
-        onCalendar={() => router.push('/history')}
+        actions={[
+          {
+            key: 'add',
+            icon: 'add',
+            onPress: () => {
+              Haptics.selectionAsync().catch(() => {});
+              router.push('/tasks');
+            },
+            accessibilityLabel: t('tasksHub.title'),
+            size: 'lg',
+            tone: 'violet',
+            iconSize: 28,
+          },
+        ]}
       />
 
       {floats.map((f) => (
@@ -1362,41 +1375,9 @@ const styles = StyleSheet.create({
     paddingTop: tokens.space[2],
     gap: tokens.space[2],
   },
+  allPage: { paddingTop: tokens.space[3] },
   // MoodDayDetail's own card carries no horizontal margin (it relies on its
   // History container), so this matches MoodHubStrip's outer box.
-  // Same chassis as CompletedBucket's header (wrap margins + header box).
-  allRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[2],
-    minHeight: 48,
-    marginHorizontal: tokens.space[3],
-    marginTop: tokens.space[2],
-    paddingHorizontal: tokens.space[3],
-    paddingVertical: tokens.space[3],
-    backgroundColor: tokens.bg.surface,
-    borderRadius: tokens.radius.lg,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-  },
-  allRowTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 12,
-    color: tokens.text.mid,
-  },
-  allRowCount: {
-    backgroundColor: tokens.bg.surface2,
-    borderRadius: 999,
-    paddingHorizontal: 7,
-    paddingVertical: 1,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-  },
-  allRowCountText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 10,
-    color: tokens.brand.violet2,
-  },
   moodDayWrap: {
     marginHorizontal: tokens.space[4],
     marginTop: tokens.space[3],

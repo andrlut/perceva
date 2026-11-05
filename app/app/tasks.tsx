@@ -29,7 +29,7 @@ import {
   type AdoptPeriodicityChoice,
 } from '@/components/AdoptPeriodicitySheet';
 import { useBottomSafeClearance } from '@/components/BottomNavBar';
-import { BucketTabsV2 } from '@/components/BucketTabsV2';
+import { ScreenTip } from '@/components/guide/ScreenTip';
 import { CoinMultiplierBadge } from '@/components/CoinMultiplierBadge';
 import { EmptyHero } from '@/components/EmptyHero';
 import { PeriodicitySheet } from '@/components/PeriodicitySheet';
@@ -227,9 +227,7 @@ export default function TasksHubScreen() {
       return next;
     });
 
-  // ── Counts (drive the tab chips and the group counts) ─────────────────
-  const totalTasks = tasks.data?.length ?? 0;
-
+  // ── Counts (the suggested door's chip) ───────────────────────────────
   const adoptedTemplateIds = useMemo(() => {
     const set = new Set<string>();
     (tasks.data ?? []).forEach((tk) => {
@@ -501,29 +499,63 @@ export default function TasksHubScreen() {
               />
             </Pressable>
             <LimitCounterBadge limit={taskLimit} />
-            <Pressable
-              onPress={handleCreatePress}
-              style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel={t('tasksHub.newTask')}
-            >
-              <Ionicons name="add" size={22} color={tokens.brand.violet2} />
-            </Pressable>
           </View>
         </View>
 
-        {/* Tabs + search live outside the body so they stay put while the
-            body container swaps between DraggableFlatList (Minhas) and
-            ScrollView (Sugeridas). */}
-        <BucketTabsV2<Tab>
-          tabs={[
-            { value: 'mine', label: t('tasksHub.tabs.mine'), count: totalTasks },
-            { value: 'suggested', label: t('tasksHub.tabs.suggested'), count: suggestedCount },
-          ]}
-          value={tab}
-          onChange={setTab}
-        />
+        {/* The two doors (Onboarding simples, André 19/10): a practice of
+            your own, or a suggested one from the catalog. Below them, the
+            reorderable list. The catalog view has its own way back. */}
+        {tab === 'mine' ? (
+          <>
+            <View style={styles.doors}>
+              <Pressable
+                onPress={handleCreatePress}
+                style={({ pressed }) => [styles.door, styles.doorCreate, pressed && { opacity: 0.85 }]}
+                accessibilityRole="button"
+                accessibilityLabel={t('tasksHub.doors.create')}
+              >
+                <View style={[styles.doorIcon, { backgroundColor: 'rgba(123, 92, 255, 0.18)' }]}>
+                  <Ionicons name="create-outline" size={22} color={tokens.brand.violet2} />
+                </View>
+                <Text style={styles.doorTitle}>{t('tasksHub.doors.create')}</Text>
+                <Text style={styles.doorDesc}>{t('tasksHub.doors.createDesc')}</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  Haptics.selectionAsync().catch(() => {});
+                  setTab('suggested');
+                }}
+                style={({ pressed }) => [styles.door, styles.doorSuggested, pressed && { opacity: 0.85 }]}
+                accessibilityRole="button"
+                accessibilityLabel={t('tasksHub.doors.suggested')}
+              >
+                <View style={[styles.doorIcon, { backgroundColor: 'rgba(255, 200, 61, 0.16)' }]}>
+                  <Ionicons name="albums-outline" size={22} color={tokens.semantic.coin} />
+                </View>
+                <Text style={styles.doorTitle}>{t('tasksHub.doors.suggested')}</Text>
+                <Text style={styles.doorDesc}>
+                  {t('tasksHub.doors.suggestedDesc', { count: suggestedCount })}
+                </Text>
+              </Pressable>
+            </View>
+            <ScreenTip id="tasks" style={styles.tip} />
+          </>
+        ) : (
+          <Pressable
+            onPress={() => {
+              Haptics.selectionAsync().catch(() => {});
+              setTab('mine');
+            }}
+            style={({ pressed }) => [styles.backRow, pressed && { opacity: 0.7 }]}
+            accessibilityRole="button"
+            accessibilityLabel={t('tasksHub.doors.back')}
+          >
+            <Ionicons name="chevron-back" size={18} color={tokens.brand.violet2} />
+            <Text style={styles.backText}>{t('tasksHub.doors.back')}</Text>
+            <View style={{ flex: 1 }} />
+            <Text style={styles.backCount}>{t('tasksHub.tabs.suggested')} · {suggestedCount}</Text>
+          </Pressable>
+        )}
 
         {searchOpen && (
           <View style={styles.searchWrap}>
@@ -1708,6 +1740,65 @@ const styles = StyleSheet.create({
   title: {
     ...tokens.type.h3,
     color: tokens.text.hi,
+  },
+  doors: {
+    flexDirection: 'row',
+    gap: tokens.space[3],
+    paddingHorizontal: tokens.space[4],
+    paddingTop: tokens.space[2],
+  },
+  door: {
+    flex: 1,
+    gap: 6,
+    padding: tokens.space[3],
+    borderRadius: tokens.radius.lg,
+    borderWidth: 1.5,
+    backgroundColor: tokens.bg.surface,
+  },
+  doorCreate: { borderColor: 'rgba(155, 130, 255, 0.55)' },
+  doorSuggested: { borderColor: 'rgba(255, 200, 61, 0.45)' },
+  doorIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  doorTitle: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 15,
+    lineHeight: 20,
+    color: tokens.text.hi,
+  },
+  doorDesc: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 12,
+    lineHeight: 16,
+    color: tokens.text.mid,
+  },
+  tip: { marginHorizontal: tokens.space[4], marginTop: tokens.space[3], marginBottom: 0 },
+  backRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    minHeight: 44,
+    paddingHorizontal: tokens.space[3],
+    marginHorizontal: tokens.space[4],
+    marginTop: tokens.space[2],
+    borderRadius: tokens.radius.lg,
+    backgroundColor: tokens.bg.surface,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+  },
+  backText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 14,
+    color: tokens.brand.violet2,
+  },
+  backCount: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 12,
+    color: tokens.text.mid,
   },
   searchWrap: {
     flexDirection: 'row',

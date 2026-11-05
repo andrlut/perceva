@@ -1797,11 +1797,16 @@ const en = {
       today: 'today',
       thatDay: 'on this day',
     },
+    views: {
+      today: 'Today',
+      all: 'All',
+    },
     dayNav: {
       prev: 'Previous day',
       next: 'Next day',
       today: 'Today',
       backToTodayA11y: 'Back to today',
+      calendarA11y: 'Open the calendar',
     },
     dayCleared: {
       title: 'Day cleared!',
@@ -2003,12 +2008,19 @@ const en = {
     loggingFor: 'Logging on {{date}}',
     dailies: 'Dailies',
     emptyTitle: 'No practices yet',
-    emptyBody: 'Create a practice or adopt one from the catalog in Manage.',
+    emptyBody: 'Tap + to create a practice or pick a suggested one.',
     emptyCta: 'Create practice',
   },
   tasksHub: {
-    title: 'Manage practices',
+    title: 'Add and organize',
     newTask: 'New practice',
+    doors: {
+      create: 'Create my own',
+      createDesc: 'Name, what it trains and how often.',
+      suggested: 'Pick a suggested one',
+      suggestedDesc: '{{count}} in the catalog, by area.',
+      back: 'Your practices',
+    },
     tabs: {
       mine: 'Mine',
       suggested: 'Suggested',
