@@ -417,3 +417,34 @@ export const Lampada: React.FC<Base & { on?: number }> = ({ size = 200, accent =
     <rect x={86} y={196} width={28} height={12} rx={6} fill={C.surface3} />
   </svg>
 );
+
+/** Copo — bebida com uma colher, o pó sendo mexido na água ou no suco (`stir` 0..1 gira o redemoinho).
+ *  Sem haste, sem alça e sem espuma, pra não ler como vinho, café ou cerveja. */
+export const Copo: React.FC<Base & { stir?: number }> = ({ t = 0, size = 200, accent = C.gold, stir = 1 }) => {
+  const spin = (t * 6 * Math.max(0.15, stir)) % 360;
+  return (
+    <svg width={size * 0.8} height={size} viewBox="0 0 160 200" style={{ overflow: 'visible' }}>
+      <ellipse cx={72} cy={194} rx={54} ry={6} fill="rgba(0,0,0,0.25)" />
+      {/* colher: cabo pra fora da borda, a ponta some dentro da bebida */}
+      <rect x={96} y={-4} width={10} height={120} rx={5} fill={C.mid} transform="rotate(16 101 56)" />
+      {/* vidro (atrás) */}
+      <path d="M18 26 H126 L114 182 a12 12 0 0 1 -12 10 H42 a12 12 0 0 1 -12 -10 Z" fill="rgba(255,255,255,0.16)" />
+      {/* bebida */}
+      <path d="M23 64 H121 L114 182 a12 12 0 0 1 -12 10 H42 a12 12 0 0 1 -12 -10 Z" fill={accent} />
+      <path d="M72 64 H121 L114 182 a12 12 0 0 1 -12 10 H72 Z" fill={shade} />
+      <ellipse cx={72} cy={64} rx={49} ry={9} fill={accent} />
+      <ellipse cx={72} cy={64} rx={49} ry={9} fill="rgba(255,255,255,0.22)" />
+      {/* redemoinho do pó sendo mexido */}
+      <g transform={`translate(72 64) scale(1 0.18) rotate(${spin})`} opacity={0.85}>
+        <path d="M-30 0 a30 30 0 0 1 60 0 a18 18 0 0 1 -36 0" stroke={C.hi} strokeWidth={9} strokeLinecap="round" fill="none" />
+      </g>
+      {/* bolhinhas */}
+      <circle cx={50} cy={120} r={5} fill={shine} />
+      <circle cx={88} cy={150} r={4} fill={shine} />
+      <circle cx={62} cy={96} r={3} fill={shine} />
+      {/* borda e brilho do vidro (na frente) */}
+      <ellipse cx={72} cy={26} rx={54} ry={9} fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth={4} />
+      <rect x={30} y={40} width={9} height={120} rx={4.5} fill={shine} transform="rotate(-4 34 100)" />
+    </svg>
+  );
+};

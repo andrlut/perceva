@@ -8,6 +8,7 @@ import {
   Celular,
   Cesto,
   Computador,
+  Copo,
   Coracao,
   Lampada,
   Livro,
@@ -41,6 +42,7 @@ const PIECES: Record<string, Draw> = {
   coracao: ({ t, size, accent }) => <Coracao t={t} size={size} accent={accent} />,
   caderno: ({ size, accent, progress }) => <Caderno size={size} accent={accent} write={progress ?? 1} />,
   lampada: ({ size, progress }) => <Lampada size={size} on={progress ?? 1} />,
+  copo: ({ t, size, accent, progress }) => <Copo t={t} size={size} accent={accent} stir={progress ?? 1} />,
 };
 
 export const PIECE_NAMES = Object.keys(PIECES);

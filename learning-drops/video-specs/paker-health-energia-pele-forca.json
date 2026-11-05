@@ -1,5 +1,5 @@
 {
-  "_doc": "Roteiro do vídeo (molde genérico, tools/video/MOLDE.md). Cada fala = uma cena do catálogo + peças do elenco + deixas (trechos da fala em que algo entra). {pt,en} em qualquer texto. A cena 'verso' fala o card VERBATIM (vem do ideas-spec). Material patrocinado: as falas tratam do ingrediente e do hábito, sem nome de marca, sem resultado de estudo, sem número fora do verso. Números do verso e o QA da voz (scripts/qa-voice.mjs): o QA troca 'um'..'dez' / 'one'..'ten' por algarismo e cobra todo algarismo na transcrição, então número até dez vai por extenso no 'say' (oito, três, cinco); acima de dez NÃO tem 'say' (trinta/sessenta não viram algarismo, o QA cobraria a palavra e o transcritor escreve 30/60), a voz lê o algarismo do próprio card. Unidade abreviada no card (3 a 5 g): no EN o transcritor do QA escreve 'g' e o QA cobraria 'grams' do 'say', então o verso EN da creatina não tem 'say' (a voz lê o card e o QA cobra só o 3 e o 5); no PT o transcritor escreve 'gramas' e o 'say' fica. Sem cena 'comparar' neste material: o molde põe a figura de pele escura sempre no painel que perde (seed 3), o que lê como 'pele escura = jeito errado'; 'weeks' e 'stock' viraram pessoa/virada com a protagonista só, até o molde corrigir o comparar.",
+  "_doc": "Roteiro do vídeo (molde genérico, tools/video/MOLDE.md). Cada fala = uma cena do catálogo + peças do elenco + deixas (trechos da fala em que algo entra). {pt,en} em qualquer texto. A cena 'verso' fala o card VERBATIM (vem do ideas-spec). Material patrocinado: as falas tratam do ingrediente e do hábito, sem nome de marca, sem resultado de estudo, sem número fora do verso. Números do verso e o QA da voz (scripts/qa-voice.mjs): o QA troca 'um'..'dez' / 'one'..'ten' por algarismo e cobra todo algarismo na transcrição, então número até dez vai por extenso no 'say' (oito, três, cinco); acima de dez NÃO tem 'say' (trinta/sessenta não viram algarismo, o QA cobraria a palavra e o transcritor escreve 30/60), a voz lê o algarismo do próprio card. Unidade abreviada no card (3 a 5 g): o 'say' diz a unidade por extenso nos dois idiomas ('gramas' / 'grams') e o QA passou com 100% nos dois (2026-11-05). Sem cena 'comparar' neste material: o molde põe a figura de pele escura sempre no painel que perde (seed 3), o que lê como 'pele escura = jeito errado'; 'weeks' e 'stock' viraram pessoa/virada com a protagonista só, até o molde corrigir o comparar.",
   "slug": "paker-health-energia-pele-forca",
   "ideas": {
     "pre-treino-energia": {
@@ -69,7 +69,7 @@
                 "icon": "pulse",
                 "text": {
                   "pt": "ligado aos vasos",
-                  "en": "blood vessels"
+                  "en": "linked to blood vessels"
                 },
                 "cue": {
                   "pt": "ligado aos vasos",
@@ -77,7 +77,7 @@
                 }
               },
               {
-                "icon": "flame",
+                "icon": "barbell",
                 "text": {
                   "pt": "esforço intenso",
                   "en": "hard efforts"
@@ -105,10 +105,10 @@
           "id": "take",
           "scene": "cena",
           "pt": {
-            "caption": "Misture na água e tome *com antecedência*. Como tem cafeína, evite perto da hora de dormir, na gravidez ou se você for sensível a estimulantes."
+            "caption": "Misture na água e tome *com antecedência*."
           },
           "en": {
-            "caption": "Mix it in water and drink it *well ahead*. It has caffeine, so avoid it near bedtime, during pregnancy, or if you're sensitive to stimulants."
+            "caption": "Mix it in water and drink it *ahead of time*."
           },
           "props": {
             "kicker": {
@@ -116,7 +116,7 @@
               "en": "In practice"
             },
             "setting": "mesa",
-            "holding": "ion:water-outline",
+            "holding": "copo",
             "mood": "ok",
             "glow": {
               "pt": "Misture na água",
@@ -127,7 +127,59 @@
                 "p": "relogio",
                 "cue": {
                   "pt": "com antecedência",
-                  "en": "well ahead"
+                  "en": "ahead of time"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "careful",
+          "scene": "lista",
+          "pt": {
+            "caption": "Como tem cafeína, *evite* perto da hora de dormir, na gravidez ou se você for sensível a estimulantes."
+          },
+          "en": {
+            "caption": "It has caffeine, so *avoid it* near bedtime, during pregnancy, or if you're sensitive to stimulants."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Atenção",
+              "en": "Careful"
+            },
+            "mood": "ok",
+            "items": [
+              {
+                "icon": "moon",
+                "text": {
+                  "pt": "perto de dormir",
+                  "en": "near bedtime"
+                },
+                "cue": {
+                  "pt": "hora de dormir",
+                  "en": "near bedtime"
+                }
+              },
+              {
+                "icon": "woman",
+                "text": {
+                  "pt": "na gravidez",
+                  "en": "pregnancy"
+                },
+                "cue": {
+                  "pt": "na gravidez",
+                  "en": "during pregnancy"
+                }
+              },
+              {
+                "icon": "alert-circle",
+                "text": {
+                  "pt": "sensível a estimulantes",
+                  "en": "sensitive to stimulants"
+                },
+                "cue": {
+                  "pt": "sensível a estimulantes",
+                  "en": "sensitive to stimulants"
                 }
               }
             ]
@@ -189,11 +241,20 @@
           },
           "props": {
             "mood": "ok",
-            "thought": "relogio",
+            "thought": "ion:calendar",
             "at": {
               "pt": "depois de uns dias",
               "en": "a few days in"
-            }
+            },
+            "objects": [
+              {
+                "p": "copo",
+                "cue": {
+                  "pt": "tomar colágeno",
+                  "en": "taking collagen"
+                }
+              }
+            ]
           }
         },
         {
@@ -277,7 +338,7 @@
               "en": "In practice"
             },
             "setting": "mesa",
-            "holding": "ion:water",
+            "holding": "copo",
             "mood": "feliz",
             "glow": {
               "pt": "virar hábito",
@@ -368,7 +429,7 @@
         },
         {
           "id": "reserve",
-          "scene": "virada",
+          "scene": "pessoa",
           "pt": {
             "caption": "Seu corpo já produz creatina e guarda no músculo, onde ela vira *reserva de energia* pra esforços curtos e intensos."
           },
@@ -377,14 +438,9 @@
           },
           "props": {
             "mood": "ok",
-            "turn": {
-              "pt": "reserva de energia",
-              "en": "energy reserve"
-            },
-            "to": "feliz",
             "objects": [
               {
-                "p": "ion:battery-charging",
+                "p": "ion:battery-half",
                 "cue": {
                   "pt": "guarda no músculo",
                   "en": "stores it"
@@ -490,8 +546,8 @@
             "mood": "ok",
             "gives": "relogio",
             "from": {
-              "pt": "antes do treino",
-              "en": "before training"
+              "pt": "hora da dose",
+              "en": "the timing"
             },
             "turn": {
               "pt": "estoque cheio",
