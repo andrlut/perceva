@@ -1,0 +1,217 @@
+{
+  "_doc": "Roteiro do vídeo (molde genérico, tools/video/MOLDE.md). Cada fala = uma cena do catálogo + peças do elenco + deixas (trechos da fala em que algo entra). {pt,en} em qualquer texto. A cena 'verso' fala o card VERBATIM (vem do ideas-spec). Sem número, estudo ou ressalva metodológica: isso fica no texto da ideia e no deep dive.",
+  "slug": "buying-time-chores",
+  "ideas": {
+    "comprar-tempo": {
+      "lines": [
+        {
+          "id": "hook",
+          "scene": "pessoa",
+          "pt": {
+            "caption": "Quando o dia não cabe nas horas, *vale pagar pra se livrar de uma tarefa chata?*"
+          },
+          "en": {
+            "caption": "When the day won't fit in the hours, *is it worth paying to skip a chore you hate?*"
+          },
+          "props": {
+            "mood": "cansado",
+            "clock": "rapido",
+            "objects": [
+              {
+                "p": "vassoura",
+                "cue": {
+                  "pt": "dia não cabe",
+                  "en": "won't fit"
+                }
+              },
+              {
+                "p": "cesto",
+                "cue": {
+                  "pt": "nas horas",
+                  "en": "in the hours"
+                }
+              },
+              {
+                "p": "louca",
+                "cue": {
+                  "pt": "vale pagar",
+                  "en": "worth paying"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "pressure",
+          "scene": "semana",
+          "pt": {
+            "caption": "O que pesa ali é a *pressão do tempo*: a semana enche de tarefas e vira uma corrida."
+          },
+          "en": {
+            "caption": "What weighs on you is *time pressure*: the week fills up with chores and turns into a race."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Pressão do tempo",
+              "en": "Time pressure"
+            },
+            "from": {
+              "pt": "a semana enche",
+              "en": "the week fills"
+            },
+            "until": {
+              "pt": "corrida",
+              "en": "race"
+            }
+          }
+        },
+        {
+          "id": "buyers",
+          "scene": "virada",
+          "hold": 0.4,
+          "pt": {
+            "caption": "Quem paga pra se livrar das tarefas que não gosta tende a estar *mais satisfeito com a vida*, e sente menos o peso da pressa."
+          },
+          "en": {
+            "caption": "People who pay to offload the chores they dislike tend to be *more satisfied with life*, and feel the rush less."
+          },
+          "props": {
+            "gives": "vassoura",
+            "helper": true,
+            "clock": "acalma",
+            "from": {
+              "pt": "se livrar",
+              "en": "offload"
+            },
+            "turn": {
+              "pt": "mais satisfeito",
+              "en": "more satisfied"
+            }
+          }
+        },
+        {
+          "id": "few",
+          "scene": "multidao",
+          "hold": 0.8,
+          "pt": {
+            "caption": "Mesmo assim, *pouca gente* faz isso."
+          },
+          "en": {
+            "caption": "Even so, *few people* actually do it."
+          },
+          "props": {
+            "lit": "poucos",
+            "at": {
+              "pt": "pouca gente",
+              "en": "few people"
+            }
+          }
+        },
+        {
+          "id": "experiment",
+          "scene": "comparar",
+          "pt": {
+            "caption": "Com o mesmo dinheiro, quem comprou *tempo* em vez de um objeto ficou um pouco menos apressado e de melhor humor no dia seguinte."
+          },
+          "en": {
+            "caption": "With the same money, people who bought *time* instead of a thing felt a little less rushed and in a better mood the next day."
+          },
+          "props": {
+            "winner": "left",
+            "win": {
+              "pt": "menos apressado",
+              "en": "less rushed"
+            },
+            "pill": {
+              "p": "moeda",
+              "text": {
+                "pt": "mesmo dinheiro",
+                "en": "same money"
+              }
+            },
+            "left": {
+              "label": {
+                "pt": "Comprar tempo",
+                "en": "Buy time"
+              },
+              "mood": "cansado",
+              "object": "vassoura",
+              "leaves": {
+                "pt": "comprou",
+                "en": "bought"
+              }
+            },
+            "right": {
+              "label": {
+                "pt": "Comprar um objeto",
+                "en": "Buy a thing"
+              },
+              "object": "sacola",
+              "arrives": {
+                "pt": "um objeto",
+                "en": "a thing"
+              }
+            },
+            "chips": [
+              {
+                "icon": "leaf",
+                "text": {
+                  "pt": "menos pressa",
+                  "en": "less rush"
+                },
+                "cue": {
+                  "pt": "menos apressado",
+                  "en": "less rushed"
+                }
+              },
+              {
+                "icon": "happy",
+                "text": {
+                  "pt": "melhor humor",
+                  "en": "better mood"
+                },
+                "cue": {
+                  "pt": "melhor humor",
+                  "en": "better mood"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "try",
+          "scene": "cena",
+          "hold": 0.6,
+          "pt": {
+            "caption": "Escolha *a tarefa que você mais detesta*, como a faxina, e teste terceirizar uma vez."
+          },
+          "en": {
+            "caption": "Pick *the chore you dread most*, like the cleaning, and try outsourcing it once."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Teste uma vez",
+              "en": "Try it once"
+            },
+            "setting": "sofa",
+            "holding": "livro",
+            "helper": true,
+            "gives": "vassoura",
+            "from": {
+              "pt": "como a faxina",
+              "en": "like the cleaning"
+            },
+            "glow": {
+              "pt": "teste terceirizar",
+              "en": "try outsourcing"
+            }
+          }
+        },
+        {
+          "id": "do",
+          "scene": "verso"
+        }
+      ]
+    }
+  }
+}

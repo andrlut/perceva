@@ -324,3 +324,96 @@ export const Brilho: React.FC<Base & { on?: number }> = ({ t = 0, size = 300, ac
     </svg>
   );
 };
+
+// ---------------------------------------------------------------- v1 (molde)
+// Peças que o molde genérico pede com frequência no catálogo: sono, trabalho,
+// vínculos, anotação, ideia. Mesmo estilo: chapado, sombra num lado só.
+
+/** Cama — cabeceira na cor de destaque, travesseiro e coberta. */
+export const Cama: React.FC<Base> = ({ size = 320, accent = dimColor('health') }) => (
+  <svg width={size} height={size * 0.6} viewBox="0 0 300 180">
+    <ellipse cx={150} cy={172} rx={136} ry={6} fill="rgba(0,0,0,0.28)" />
+    <rect x={14} y={30} width={40} height={140} rx={14} fill={accent} />
+    <rect x={14} y={30} width={40} height={140} rx={14} fill={shade} opacity={0.5} />
+    <rect x={40} y={96} width={246} height={56} rx={16} fill={C.surface3} />
+    <rect x={58} y={70} width={70} height={36} rx={16} fill={C.hi} />
+    <rect x={120} y={84} width={166} height={52} rx={18} fill={accent} />
+    <rect x={206} y={84} width={80} height={52} rx={18} fill={shade} />
+    <rect x={48} y={150} width={12} height={20} rx={4} fill={C.surface2} />
+    <rect x={270} y={150} width={12} height={20} rx={4} fill={C.surface2} />
+  </svg>
+);
+
+/** Computador — notebook aberto, tela que acende (`glow` 0..1). */
+export const Computador: React.FC<Base & { glow?: number }> = ({ size = 280, accent = C.violet, glow = 1 }) => (
+  <svg width={size} height={size * 0.72} viewBox="0 0 260 188">
+    <ellipse cx={130} cy={180} rx={120} ry={6} fill="rgba(0,0,0,0.28)" />
+    <rect x={34} y={10} width={192} height={128} rx={14} fill={C.surface3} />
+    <rect x={46} y={22} width={168} height={104} rx={8} fill={accent} opacity={0.35 + 0.65 * glow} />
+    <rect x={60} y={40} width={90} height={10} rx={5} fill={C.hi} opacity={0.7 * glow} />
+    <rect x={60} y={60} width={120} height={10} rx={5} fill={C.hi} opacity={0.45 * glow} />
+    <rect x={60} y={80} width={70} height={10} rx={5} fill={C.hi} opacity={0.45 * glow} />
+    <path d="M10 146 h240 l-14 26 h-212z" fill={C.surface2} />
+    <path d="M130 146 h120 l-14 26 h-106z" fill={shade} />
+    <rect x={104} y={150} width={52} height={8} rx={4} fill={C.surface3} />
+  </svg>
+);
+
+/** Coração — bate devagar (`beat` liga a pulsação). */
+export const Coracao: React.FC<Base & { beat?: boolean }> = ({ t = 0, size = 200, accent = dimColor('health'), beat = true }) => {
+  const k = beat ? 1 + 0.06 * Math.max(0, Math.sin(t / 5)) : 1;
+  return (
+    <svg width={size} height={size} viewBox="0 0 200 200">
+      <g transform={`translate(100 104) scale(${k}) translate(-100 -104)`}>
+        <path d="M100 176 C40 132 18 100 18 70 a42 42 0 0 1 82 -14 a42 42 0 0 1 82 14 c0 30 -22 62 -82 106z" fill={accent} />
+        <path d="M100 56 a42 42 0 0 1 82 14 c0 30 -22 62 -82 106z" fill={shade} />
+        <circle cx={58} cy={64} r={12} fill={shine} />
+      </g>
+    </svg>
+  );
+};
+
+/** Caderno — páginas com linhas que vão sendo escritas (`write` 0..1). */
+export const Caderno: React.FC<Base & { write?: number }> = ({ size = 220, accent = dimColor('craft'), write = 1 }) => {
+  const rows = [44, 70, 96, 122, 148];
+  return (
+    <svg width={size} height={size * 1.1} viewBox="0 0 200 220">
+      <ellipse cx={100} cy={212} rx={80} ry={6} fill="rgba(0,0,0,0.28)" />
+      <rect x={30} y={14} width={150} height={190} rx={14} fill={accent} />
+      <rect x={42} y={20} width={132} height={178} rx={10} fill={C.hi} />
+      <rect x={108} y={20} width={66} height={178} rx={10} fill="rgba(10,14,38,0.08)" />
+      {[34, 70, 106, 142, 178].map((y) => (
+        <rect key={y} x={22} y={y} width={22} height={10} rx={5} fill={C.surface3} />
+      ))}
+      {rows.map((y, i) => {
+        const w = Math.max(0, Math.min(1, write * rows.length - i)) * (i % 2 ? 84 : 104);
+        return <rect key={y} x={58} y={y} width={w} height={8} rx={4} fill={C.violetDeep} opacity={0.7} />;
+      })}
+    </svg>
+  );
+};
+
+/** Lâmpada — a ideia que acende (`on` 0..1). */
+export const Lampada: React.FC<Base & { on?: number }> = ({ size = 200, accent = C.gold, on = 1 }) => (
+  <svg width={size} height={size * 1.2} viewBox="0 0 200 240" style={{ overflow: 'visible' }}>
+    {[0, 45, 90, 135, 180].map((a) => (
+      <rect
+        key={a}
+        x={96}
+        y={-6}
+        width={8}
+        height={26}
+        rx={4}
+        fill={accent}
+        opacity={on}
+        transform={`rotate(${a - 90} 100 92)`}
+      />
+    ))}
+    <circle cx={100} cy={92} r={62} fill={on > 0.5 ? accent : C.surface3} />
+    <path d="M100 30 a62 62 0 0 1 0 124 a46 62 0 0 0 0 -124z" fill={shade} />
+    <circle cx={76} cy={70} r={12} fill={shine} />
+    <rect x={70} y={150} width={60} height={22} rx={8} fill={C.surface3} />
+    <rect x={76} y={176} width={48} height={16} rx={8} fill={C.surface2} />
+    <rect x={86} y={196} width={28} height={12} rx={6} fill={C.surface3} />
+  </svg>
+);

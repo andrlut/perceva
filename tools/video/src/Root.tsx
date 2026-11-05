@@ -5,6 +5,7 @@ import { Film, FilmProps } from './Film';
 import { FILMS } from './films';
 import { FPS, Timing, buildTimeline } from './timeline';
 import { ElencoSheet } from './elenco/Sheet';
+import { Molde, calculateMoldeMetadata } from './molde/Molde';
 
 const calculateMetadata: CalculateMetadataFunction<FilmProps> = async ({ props }) => {
   const film = FILMS[props.film] as (typeof FILMS)[typeof props.film] & { maxSeconds?: number };
@@ -39,6 +40,18 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="Recanto" {...common} defaultProps={{ film: 'recanto', scenes: [], captions: true, voice: true, variant: 'ad' }} />
     {/* Teste: vídeo de uma ideia do Recanto (comparação com o Curta do Gemini Notebook). */}
     <Composition id="Ideia" {...common} defaultProps={{ film: 'ideia', scenes: [], captions: true, voice: true, variant: 'app' }} />
+    {/* Molde genérico do vídeo de ideia: o roteiro vem de public/molde/<specKey>/ (scripts/molde.mjs).
+        Renderize com --props='{"specKey":"<slug>.<idea>.<lang>"}'. */}
+    <Composition
+      id="Molde"
+      component={Molde}
+      width={1080}
+      height={1920}
+      fps={FPS}
+      durationInFrames={FPS * 60}
+      calculateMetadata={calculateMoldeMetadata}
+      defaultProps={{ specKey: 'buying-time-chores.comprar-tempo.pt', spec: null, scenes: [] }}
+    />
     {/* Folha de elenco: personagens e objetos-padrão (amostra de estilo). */}
     <Composition id="Elenco" component={ElencoSheet} width={1080} height={1920} fps={FPS} durationInFrames={FPS * 6} />
   </>
