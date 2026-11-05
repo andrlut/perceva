@@ -107,7 +107,8 @@ A 1ª cena recebe o nome da área se não tiver kicker.
 
 **Elenco desenhado** (`src/elenco/cast.tsx`): `casa`, `relogio`, `moeda`,
 `celular`, `sacola`, `vassoura`, `cesto`, `louca`, `livro`, `cama`,
-`computador`, `coracao`, `caderno`, `lampada`. A pessoa, o ajudante, o sofá,
+`computador`, `coracao`, `caderno`, `lampada`, `copo` (bebida com colher — pó
+misturado na água ou no suco; sem haste nem alça, pra não ler vinho ou café). A pessoa, o ajudante, o sofá,
 a semana e o brilho entram pelas cenas.
 
 **Ícone do app** (`ion:<nome>`, 1.357 do Ionicons, numa ficha redonda): pra

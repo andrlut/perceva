@@ -488,7 +488,8 @@ export const Cena: React.FC<P> = ({ s }) => {
             <div style={{ position: 'absolute', top: 1050, left: 220, width: 26, height: 130, borderRadius: 8, background: C.surface2 }} />
             <div style={{ position: 'absolute', top: 1050, left: 834, width: 26, height: 130, borderRadius: 8, background: C.surface2 }} />
             {pr.holding ? (
-              <div style={{ position: 'absolute', top: 1010, left: 600, transform: 'translateY(-100%)' }}>
+              // encostada na mão estendida (a mão termina em ~x 577): a peça lê "na mão", não solta no tampo
+              <div style={{ position: 'absolute', top: 1010, left: 565, transform: 'translateY(-100%)' }}>
                 <Peca name={pr.holding} t={frame} size={240} accent={accent} progress={work} />
               </div>
             ) : null}
