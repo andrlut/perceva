@@ -393,9 +393,9 @@ function videos() {
     if (s !== slug || (onlyIdea && idea !== onlyIdea)) continue;
     const vj = path.join(base, d, 'video.json');
     if (!fs.existsSync(vj)) continue;
-    const { path: p, duration_seconds, poster } = readJson(vj);
+    const { path: p, duration_seconds, poster, producer } = readJson(vj);
     entry[idea] ??= { pt: null, en: null };
-    entry[idea][lang] = { path: p, duration_seconds, poster };
+    entry[idea][lang] = { path: p, duration_seconds, poster, ...(producer ? { producer } : {}) };
   }
   if (!Object.keys(entry).length) die(`nenhum video.json de ${slug} — rode render`);
   const file = path.resolve(out);

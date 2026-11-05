@@ -164,6 +164,8 @@ function normalizeVideo(slug, ideaId, raw, errors) {
       path: side.path,
       duration_seconds: Math.round(side.duration_seconds),
       poster: side.poster ?? null,
+      // quem fez o vídeo ('remotion' = molde do publisher v3); o Notebook não manda e fica sem
+      ...(typeof side.producer === 'string' && side.producer ? { producer: side.producer } : {}),
     };
   }
   return out;
