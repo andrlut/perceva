@@ -101,10 +101,10 @@ por `app/components/unlock/DoorVideo.tsx`).
 | `semana` | 7 dias enchendo de tarefas, relógio disparando. Pressa, rotina, acúmulo. | `from`, `until` (deixas do enchimento), `mood` | sim |
 | `virada` | A pessoa passa a peça adiante, pro ajudante (que usa a peça) ou ela some, e o humor vira. | `gives` (peça), `helper` (bool), `from` (entrega), `turn` (vira o humor), `to`, `mood`, `clock` (acalma), `objects[≤2]` | sim |
 | `multidao` | 20 pessoas, algumas acendem. "Pouca gente / metade / quase todo mundo", SEM número. | `lit` (poucos/metade/muitos), `at` | não |
-| `comparar` | Dois painéis lado a lado; um ganha destaque na deixa e o outro só apaga um pouco. | `left`/`right` `{label ≤22, mood?, object?, arrives?, leaves?, ambiente?, hora?}`, `winner` (left/right), `win`, `pill` `{p?, text}`, `chips[]` (sob o vencedor) | por painel |
+| `comparar` | Dois painéis lado a lado; um ganha destaque na deixa e o outro só apaga um pouco. Sem `chips`, os painéis são altos (descem pela faixa vazia: miniatura, pessoa, peça e rótulo crescem). | `left`/`right` `{label ≤22, mood?, object?, arrives?, leaves?, ambiente?, hora?}`, `winner` (left/right), `win`, `pill` `{p?, text}`, `chips[]` (sob o vencedor) | por painel |
 | `lista` | A pessoa em cima e até 3 itens grandes entrando nas deixas. Passos, sinais, opções. | `items[1..3]` `{icon, text ≤30, cue}`, `mood`, `to` | sim |
 | `cena` | A ideia aplicada: a pessoa num lugar com uma peça na mão. | `setting` (sofa/mesa/cama/chao), `holding` (peça), `helper`+`gives`+`from`, `glow`, `objects[≤2]` (**≤6 com ambiente**), `mood` | sim |
-| `pensa` | A pessoa pensando; o balão abre com a peça dentro. Dúvida, desejo, lembrança. | `thought` (peça), `at`, `mood`, `turn`+`to`, `objects[≤2]` | sim |
+| `pensa` | A pessoa pensando; o balão abre com a peça dentro. Dúvida, desejo, lembrança. Com `ambiente: treinamento` ela **senta na plateia** (fileira do meio, encosto da cadeira na frente, turma de costas dos lados) e o balão abre pra esquerda, por cima da lista do slide: é assim que se mostra "assistir a uma aula". Com câmera, o balão encolhe (a cauda fica sobre a cabeça dela) até a nuvem da esquerda ficar ≥ 20 px dentro do quadro no ponto mais perto do movimento. | `thought` (peça), `at`, `mood`, `turn`+`to`, `objects[≤2]` | sim |
 | `mapa` | **O mapa do dia**: blocos de tarefa caem numa folha do dia, cada um com a cor de como pesa; na virada o dia se redesenha pro que energiza. | `blocks[2..6]` (abaixo), `turn`, `mood`, `to`, `glow`, `side` (left/right: lado da pessoa) | sim |
 | `verso` | O card vira e a voz lê o verso. **Sempre a última.** | `kicker`, `done` (opcionais) | não |
 
@@ -127,7 +127,7 @@ antes (o palco navy vazio).
 | `ambiente` | o que tem | movimento ambiente | `gente` (default) | `hora` (default) |
 |---|---|---|---|---|
 | `escritorio` | janela com skyline, estante, relógio de parede, mural de post-its, luminárias pendentes, planta, colegas em mesas com monitor | nuvens, colegas digitando, telas piscando, janelas acesas, ponteiros, folhas | `pouca` = até 2 colegas · `muita` = 4 + alguém passando | `dia` |
-| `treinamento` | tela de projeção com slides abstratos, feixe do projetor, palco baixo, cavalete com quadro, quem apresenta (apontando a tela), fileiras de plateia **de costas**, nucas no primeiro plano | slide troca, quem apresenta gesticula, plateia balança | `pouca` = uma fileira esparsa · `muita` = duas fileiras | — |
+| `treinamento` | tela de projeção com slides abstratos que trocam, **todos no mesmo arranjo** (lista à esquerda, sem nada redondo, que é o lado que o balão cobre; gráfico à direita, onde a vareta encosta), feixe do projetor, palco baixo, cavalete com quadro, quem apresenta (de pé no palco, à direita da tela, com uma vareta no gráfico), fileiras de plateia **de costas**, nucas no primeiro plano | slide troca, a ponta da vareta passeia pelo slide, plateia balança | `pouca` = uma fileira esparsa · `muita` = duas fileiras (no `pensa`, a segunda é a dela) | — |
 | `casa` | janela com o nascer do sol (ou noite), cortinas, quadro na parede, estante, tapete, mesinha com abajur + caneca + planta (se a cena não tiver mesa) | sol subindo, vapor da caneca, cortina, abajur | `nenhuma` · `pouca` = 1 pessoa · `muita` = 2 | `manha` |
 | `cidade` | céu com nuvens e sol/lua, duas camadas de prédios, calçadas, rua com faixa, árvores, poste, ônibus e carro passando, pedestres | nuvens, ônibus/carro, pedestres andando, árvores, janelas acesas | `pouca` = 2 pedestres · `muita` = 4 | `dia` |
 
@@ -141,24 +141,68 @@ Regras que o próprio ambiente garante (não precisa pensar nelas no roteiro):
   peças do fundo, e ninguém do cenário entra na faixa onde ela está.
 - **Figurante = a mesma `Pessoa`** do elenco, menor e apagada (accent
   neutro + filtro). Quando a identidade das pessoas mudar, o cenário muda
-  junto. A plateia de costas é a mesma Pessoa com a cabeça coberta pelo
-  cabelo (`DeCostas`, em `src/elenco/cenario.tsx`).
+  junto. Duas vistas da identidade entram no cenário, as duas opcionais no
+  contrato (`IdentityOption.Costas` e `.Virada`, em `src/identidade/types.ts`):
+  a **plateia de costas** é a vista `Costas` (o cabelo da pessoa visto de
+  trás, gola por trás, nada do peito: sem rosto, botão nem marca), e **quem
+  aponta pro outro lado** é a vista `Virada` (espelhada sem espelhar a marca
+  do peito). Uma identidade sem essas vistas cai no desenho genérico
+  (`DeCostas` cobre a frente da Pessoa com cabelo e camisa lisa; `Figurante`
+  vira a Pessoa com `scaleX(-1)`), em `src/elenco/cenario.tsx`.
+- **Nada do cenário fica embaixo do que a cena desenha.** Cada cena declara
+  o que põe por cima do lugar (as peças nos encaixes, a da mão, as pontas da
+  mesa onde alguma peça pousou, o balão, a folha do mapa, os chips da lista,
+  o relógio) e o cenário sai dali:
+  - **colega e posto andam juntos.** Se qualquer pedaço do posto (rosto,
+    corpo, monitor, mesa) fica embaixo de peça, os dois vão pra beirada do
+    mesmo lado; se lá a cabeça encostaria na borda (< 20 px) ou ainda
+    sobraria mesa/monitor embaixo de peça, **os dois saem**. Nunca sobra
+    colega espremido entre a borda e a peça, nem monitor espiando atrás
+    dela. Por isso `pessoa` no escritório com 3–4 peças costuma ficar sem
+    colega;
+  - móvel do meio sai (a mesinha de casa, quem apresenta);
+  - **enfeite do fundo segue a mesma regra**: o relógio e o mural do
+    escritório, o quadro da casa e da sala de aula, a planta do canto do
+    escritório, o cavalete e o vaso da estante andam pela mesma parede se
+    houver lugar livre, ou saem (quadro meio coberto atrás de peça é ruído);
+  - o canto do primeiro plano que encostar nisso some sozinho.
+  No `mapa`, o cenário só sobra do lado da pessoa.
+- **O lugar não repete a peça da fala.** Se a cena mostra o quadro (no
+  balão, na mão, caindo), a sala de aula fica sem o cavalete dela; a
+  caneca, a planta e o relógio de parede do cenário somem do mesmo jeito.
 - **Topo e base escurecem** (vinheta fixa): a sobrancelha e a legenda
   continuam legíveis sobre qualquer lugar.
 - Os pés da protagonista ficam no chão: cada cena diz onde ela pisa e o
   ambiente se desloca pra isso.
+- **Na sala de aula, quem assiste é a protagonista do `pensa`** (sentada
+  na plateia). Nas outras cenas ela fica na frente da turma, virada pra
+  câmera, e lê como quem apresenta: o lint avisa.
 
 **Peças num ambiente.** Na `cena`, o que é objeto de verdade **pousa** (nas
 pontas da mesa com `setting: "mesa"`, no chão dos lados nos outros
-`setting`) e o que é símbolo (ícone `ion:`, coração, moeda, relógio…)
-flutua no alto. A ordem do `objects` é a ordem de entrada. Se nenhuma peça
-pousou na mesa, ela ganha um enfeite do lugar (abajur em casa, planta no
-escritório, caneca). Nas outras cenas as peças continuam nos encaixes de
+`setting`) e o resto flutua: os dois encaixes grandes do alto vão primeiro
+pro que é desenho (envelope, monitor…), e as fichas `ion:` ficam com os
+dois de baixo, que passam por cima de estante e móvel (a ficha redonda já
+separa do fundo). Desenho que ainda cair num encaixe de baixo vai numa
+ficha também. A ordem do `objects` continua sendo a ordem de entrada. Na
+mesa, as peças das pontas têm ≥ 120 px de desenho mesmo no plano aberto do
+lugar (a mesa fica mais larga com ambiente), e a ponta onde uma peça pousou
+é dela inteira: a planta do canto e o vaso da estante atrás dela saem. Se nenhuma peça pousou na
+mesa, ela ganha um enfeite do lugar (abajur em casa, planta no escritório,
+caneca; na sala de aula a caneca vai pra ponta esquerda, longe da mão de
+quem apresenta). Nas outras cenas as peças continuam nos encaixes de
 sempre, só que "pousam" (queda curta) em vez de cair do céu.
 
 **No `comparar`**, o ambiente é por painel (`left.ambiente`,
 `right.ambiente`): uma miniatura do lugar atrás de cada caminho (a sala de
-aula × a mesa de casa). Gente só aparece na miniatura de `treinamento`.
+aula × a mesa de casa). Gente só aparece na miniatura de `treinamento`. A
+miniatura segue as mesmas regras do lugar inteiro: nada dela fica embaixo
+da peça do painel (a mesinha de casa e quem apresenta saem) e ela não
+repete a peça (sem cavalete quando a peça é o quadro). Os dois rótulos têm
+o mesmo corpo: no painel alto ele cresce até onde os dois cabem numa linha;
+rótulo que não cabe nem assim quebra em duas linhas equilibradas (nunca uma
+palavra sozinha embaixo). O rótulo é texto de tela, não fala: dá pra
+encurtar sem regravar a voz.
 
 ## Câmera (`camera`) e passagem (`transicao`)
 
@@ -214,9 +258,11 @@ crossfade de 10 frames: a duração do vídeo não muda.
 - Uma folha do dia: sol em cima (manhã), lua embaixo (noite), um trilho sem
   horas. **Nunca hora nem número.**
 - Cada bloco: `icon` (Ionicons, diz **o que** é), `feel` (diz **como
-  pesa**: `drena` = frio e apagado, `neutro`, `energiza` = dourado com
-  faísca e brilho), `size` 1..3 (quanto do dia ocupa; soma ≤ 9), `cue`
-  (quando cai; sem deixa, os blocos caem em sequência no começo da fala).
+  pesa**, em três degraus de luz que se separam sem som no celular:
+  `drena` = cinza-azulado frio, sem cor, ícone desbotado; `neutro` = um
+  meio-tom violeta claro com ícone claro; `energiza` = dourado com faísca e
+  brilho), `size` 1..3 (quanto do dia ocupa; soma ≤ 9), `cue` (quando cai;
+  sem deixa, os blocos caem em sequência no começo da fala).
 - **Segunda batida** (opcional): na deixa `turn`, todo bloco com `then`
   vira — `then.feel` (muda a cor), `then.size` (cresce/encolhe; o dia se
   redistribui), `then.icon` (vira outra tarefa). A pessoa pega a caneta, o
@@ -256,7 +302,11 @@ num lado só, cores da paleta, `accent` = cor da área, animação por `t` ou
 `progress`, nenhum texto), registre em `src/molde/Peca.tsx` e em
 `src/molde/catalog.json`. O render quebra se as duas listas divergirem. Se
 ela deve pousar na mesa/chão num ambiente, ponha o nome em `ON_DESK` /
-`ON_FLOOR` (`src/molde/scenes.tsx`). A folha `Elenco` mostra todas.
+`ON_FLOOR` (`src/molde/scenes.tsx`); se a caixa dela não é quadrada, ponha
+a proporção em `BOX` (`src/molde/Peca.tsx`: é por ela que o cenário sabe
+onde a peça está). A folha `Elenco` (`src/elenco/Sheet.tsx`) lê o registro
+do `Peca.tsx`, então mostra todas, mais as pessoas e as vistas de costas e
+espelhada da identidade ativa: `COMP=Elenco node scripts/stills.mjs 60`.
 
 ## Densidade × legibilidade
 
@@ -325,5 +375,6 @@ vazia e coisa pequena.
 | `src/molde/transicao.tsx` | as passagens entre cenas |
 | `src/elenco/cast.tsx` | a Pessoa e as peças v1 (a Pessoa tem API congelada) |
 | `src/elenco/objetos.tsx` | as peças v2 |
-| `src/elenco/cenario.tsx` | as partes do cenário e os figurantes |
+| `src/elenco/cenario.tsx` | as partes do cenário e os figurantes (de frente, de costas, a cadeira da plateia) |
+| `src/identidade/types.ts` | o contrato da identidade: `Pessoa` + as vistas opcionais `Costas` e `Virada` |
 | `src/molde/catalog.json` | cenas, peças e enums que o lint e o render leem |

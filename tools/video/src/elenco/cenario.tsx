@@ -10,17 +10,16 @@
 //    cenário); as que precisam de filtro ou de pessoa são <div> posicionadas.
 import React from 'react';
 import { ACTIVE } from '../identidade/active';
-import type { PessoaProps } from '../identidade/types';
 import { C, dimColor } from '../theme';
 import { Arms, Pessoa } from './cast';
 
 /**
- * Vistas extras que a identidade ativa pode oferecer, com a mesma caixa e as
- * mesmas props do `Pessoa`: `Costas` (a pessoa de trás: cabelo dela, gola por
- * trás, nada do peito) e `Virada` (espelhada sem espelhar a marca). Sem elas,
- * o cenário cai no desenho genérico de antes.
+ * Vistas opcionais da identidade ativa (contrato em src/identidade/types.ts),
+ * com a mesma caixa e as mesmas props do `Pessoa`: `Costas` (a pessoa de trás:
+ * cabelo dela, gola por trás, nada do peito) e `Virada` (espelhada sem
+ * espelhar a marca). Sem elas, o cenário cai no desenho genérico de antes.
  */
-const VISTAS = ACTIVE as { Costas?: React.FC<PessoaProps>; Virada?: React.FC<PessoaProps> };
+const VISTAS = { Costas: ACTIVE.Costas, Virada: ACTIVE.Virada };
 
 export const SET = {
   wallTop: '#151B4C',
@@ -309,8 +308,15 @@ export const Janela: React.FC<{
   );
 };
 
-/** Estante com livros (lombadas nas cores das dimensões, apagadas) e um vaso. */
-export const Estante: React.FC<{ x: number; y: number; w: number; h: number; t: number }> = ({ x, y, w, h, t }) => {
+/** Onde fica o vasinho da prateleira do meio da Estante (folhas incluídas), em coordenadas do cenário. */
+export const estanteVaso = (x: number, y: number, h: number): [number, number, number, number] => {
+  const vx = x + 14 + 3 * 28;
+  const vy = y + (h / 3) * 2 - 14;
+  return [vx - 12, vy - 72, vx + 46, vy];
+};
+
+/** Estante com livros (lombadas nas cores das dimensões, apagadas) e um vaso (`vase={false}`: a cena pôs peça em cima dele). */
+export const Estante: React.FC<{ x: number; y: number; w: number; h: number; t: number; vase?: boolean }> = ({ x, y, w, h, t, vase = true }) => {
   const shelves = 3;
   const gap = h / shelves;
   const colors = [dimColor('mind'), dimColor('bonds'), dimColor('health'), C.gold, dimColor('craft'), C.violet2];
@@ -351,13 +357,15 @@ export const Estante: React.FC<{ x: number; y: number; w: number; h: number; t: 
           </g>
         );
       })}
-      {/* vasinho na prateleira do meio */}
-      <g transform={`translate(${x + 14 + 3 * 28} ${y + gap * 2 - 14})`}>
-        <path d="M0 0 h34 l-4 -30 h-26z" fill={SET.frame} />
-        {[-24, 0, 24].map((a, i) => (
-          <ellipse key={i} cx={17} cy={-46} rx={7} ry={20} fill={SET.leafDark} transform={`rotate(${a + Math.sin(t / 30 + i) * 3} 17 -30)`} />
-        ))}
-      </g>
+      {/* vasinho na prateleira do meio (some se a cena pôs uma peça na frente dele: folha espiando atrás de peça é ruído) */}
+      {vase ? (
+        <g transform={`translate(${x + 14 + 3 * 28} ${y + gap * 2 - 14})`}>
+          <path d="M0 0 h34 l-4 -30 h-26z" fill={SET.frame} />
+          {[-24, 0, 24].map((a, i) => (
+            <ellipse key={i} cx={17} cy={-46} rx={7} ry={20} fill={SET.leafDark} transform={`rotate(${a + Math.sin(t / 30 + i) * 3} 17 -30)`} />
+          ))}
+        </g>
+      ) : null}
     </g>
   );
 };
@@ -494,31 +502,55 @@ export const Poste: React.FC<{ id: string; x: number; base: number; h: number; o
   </g>
 );
 
-/** Tela de projeção com "slides" abstratos que trocam (sem texto nem número). */
+/**
+ * Tela de projeção com "slides" abstratos que trocam (sem texto nem número).
+ * Todo slide tem o MESMO arranjo: lista na metade esquerda (é ela que o balão
+ * do `pensa` cobre) e gráfico na direita (onde a vareta de quem apresenta
+ * encosta, em ≈ 0,86 w × 0,64 h). Nada redondo na metade da lista: forma
+ * grande e redonda meio escondida atrás do balão vira uma lua.
+ */
 export const Projecao: React.FC<{ x: number; y: number; w: number; h: number; t: number; accent: string }> = ({ x, y, w, h, t, accent }) => {
   const slide = Math.floor(t / 110) % 2;
   const fadeK = Math.min(1, (t % 110) / 10);
+  const X = (k: number) => x + w * k;
+  const Y = (k: number) => y + h * k;
+  // marcador da lista: quadradinho de canto arredondado (nunca bolinha)
+  const bullet = (cy: number, fill: string) => <rect x={X(0.11) - h * 0.035} y={Y(cy) - h * 0.035} width={h * 0.07} height={h * 0.07} rx={h * 0.018} fill={fill} opacity={0.7} />;
+  // gráfico de área do 2º slide: sobe da esquerda pra direita e cobre o ponto da vareta
+  const pts: [number, number][] = [
+    [0.6, 0.74],
+    [0.68, 0.62],
+    [0.76, 0.66],
+    [0.84, 0.46],
+    [0.92, 0.34],
+  ];
+  const line = pts.map(([a, b]) => `${X(a)},${Y(b)}`).join(' ');
   const inner = (k: number) =>
     k === 0 ? (
       <g>
-        <rect x={x + w * 0.08} y={y + h * 0.12} width={w * 0.5} height={h * 0.1} rx={8} fill={C.hi} opacity={0.5} />
+        <rect x={X(0.08)} y={Y(0.12)} width={w * 0.5} height={h * 0.1} rx={8} fill={C.hi} opacity={0.5} />
         {[0, 1, 2].map((r) => (
           <g key={r}>
-            <circle cx={x + w * 0.11} cy={y + h * (0.38 + r * 0.17)} r={h * 0.035} fill={accent} opacity={0.7} />
-            <rect x={x + w * 0.16} y={y + h * (0.35 + r * 0.17)} width={w * (0.3 - r * 0.05)} height={h * 0.06} rx={6} fill={C.hi} opacity={0.32} />
+            {bullet(0.38 + r * 0.17, accent)}
+            <rect x={X(0.16)} y={Y(0.35 + r * 0.17)} width={w * (0.3 - r * 0.05)} height={h * 0.06} rx={6} fill={C.hi} opacity={0.32} />
           </g>
         ))}
         {[0.42, 0.62, 0.84].map((bh, i) => (
-          <rect key={i} x={x + w * (0.6 + i * 0.11)} y={y + h * (0.88 - bh * 0.6)} width={w * 0.08} height={h * bh * 0.6} rx={6} fill={i === 2 ? accent : C.violet2} opacity={0.6} />
+          <rect key={i} x={X(0.6 + i * 0.11)} y={Y(0.88 - bh * 0.6)} width={w * 0.08} height={h * bh * 0.6} rx={6} fill={i === 2 ? accent : C.violet2} opacity={0.6} />
         ))}
       </g>
     ) : (
       <g>
-        <circle cx={x + w * 0.3} cy={y + h * 0.52} r={h * 0.26} fill={C.violet2} opacity={0.35} />
-        <circle cx={x + w * 0.44} cy={y + h * 0.52} r={h * 0.26} fill={accent} opacity={0.35} />
-        <rect x={x + w * 0.64} y={y + h * 0.3} width={w * 0.26} height={h * 0.08} rx={6} fill={C.hi} opacity={0.4} />
-        <rect x={x + w * 0.64} y={y + h * 0.46} width={w * 0.2} height={h * 0.08} rx={6} fill={C.hi} opacity={0.3} />
-        <rect x={x + w * 0.64} y={y + h * 0.62} width={w * 0.23} height={h * 0.08} rx={6} fill={C.hi} opacity={0.3} />
+        <rect x={X(0.08)} y={Y(0.12)} width={w * 0.4} height={h * 0.1} rx={8} fill={C.hi} opacity={0.45} />
+        {[0.34, 0.22, 0.28].map((lw, r) => (
+          <g key={r}>
+            {bullet(0.38 + r * 0.17, r === 1 ? accent : C.violet2)}
+            <rect x={X(0.16)} y={Y(0.35 + r * 0.17)} width={w * lw} height={h * 0.06} rx={6} fill={C.hi} opacity={0.3} />
+          </g>
+        ))}
+        <polygon points={`${X(0.92)},${Y(0.88)} ${X(0.6)},${Y(0.88)} ${line}`} fill={accent} opacity={0.32} />
+        <polyline points={line} fill="none" stroke={C.violet2} strokeWidth={7} strokeLinejoin="round" strokeLinecap="round" opacity={0.75} />
+        <rect x={X(0.58)} y={Y(0.88)} width={w * 0.35} height={5} rx={2.5} fill={C.hi} opacity={0.3} />
       </g>
     );
   return (
@@ -567,6 +599,24 @@ export const Pendente: React.FC<{ x: number; y: number; floor: number; t: number
 };
 
 // ------------------------------------------------------------ partes com pessoa (<div>)
+
+/**
+ * O que um Posto ocupa (coordenadas do cenário, mesma geometria do desenho
+ * abaixo): rosto, corpo, monitor e a mesa com caneca, teclado e pés. É por
+ * aqui que o ambiente sabe se alguma parte do posto ficaria embaixo de peça:
+ * o colega e o posto andam juntos ou saem juntos, nunca sobra um pedaço.
+ */
+export const postoPartes = (x: number, top: number, size = 170, flip = false): [number, number, number, number][] => {
+  const pTop = top - size * 1.3 * 0.7;
+  const mx = flip ? x - size * 0.95 : x + size * 0.32;
+  const deskW = size * 2.1;
+  return [
+    [x - 0.34 * size, pTop + 0.12 * size, x + 0.34 * size, pTop + 0.8 * size],
+    [x - 0.4 * size, pTop + 0.8 * size, x + 0.4 * size, top],
+    [mx, top - 100, mx + size * 0.64, top],
+    [x - deskW / 2, top - 40, x + deskW / 2, top + 116],
+  ];
+};
 
 /**
  * Posto de trabalho de um colega: mesa com painel, monitor de lado (tela que
@@ -627,18 +677,28 @@ export const Posto: React.FC<{ t: number; x: number; top: number; seed: number; 
   );
 };
 
+/**
+ * Encosto da cadeira da plateia, visto de trás: vai NA FRENTE de quem senta
+ * (esconde da cintura pra baixo). `x` = centro, `y` = linha dos pés de quem
+ * senta, `size` = tamanho dessa pessoa. A protagonista que senta na plateia
+ * (cena pensa no treinamento) usa o mesmo, por cima dela.
+ */
+export const Encosto: React.FC<{ x: number; y: number; size: number; tone?: string }> = ({ x, y, size, tone = SET.furn }) => (
+  <svg style={{ position: 'absolute', left: x - size * 0.42, top: y - size * 0.3 }} width={size * 0.84} height={size * 0.75} viewBox="0 0 100 90">
+    <rect x={4} y={0} width={92} height={56} rx={18} fill={tone} />
+    <rect x={50} y={0} width={46} height={56} rx={18} fill="rgba(5,7,26,0.25)" />
+    <rect x={14} y={56} width={8} height={34} rx={3} fill={SET.furnDark} />
+    <rect x={78} y={56} width={8} height={34} rx={3} fill={SET.furnDark} />
+  </svg>
+);
+
 /** Fileira de plateia de costas, com o encosto das cadeiras na frente. */
 export const Plateia: React.FC<{ t: number; xs: number[]; y: number; size: number; seed?: number }> = ({ t, xs, y, size, seed = 0 }) => (
   <>
     {xs.map((x, i) => (
       <React.Fragment key={i}>
         <DeCostas t={t} x={x} y={y} size={size} seed={seed + i} />
-        <svg style={{ position: 'absolute', left: x - size * 0.42, top: y - size * 0.3 }} width={size * 0.84} height={size * 0.75} viewBox="0 0 100 90">
-          <rect x={4} y={0} width={92} height={56} rx={18} fill={SET.furn} />
-          <rect x={50} y={0} width={46} height={56} rx={18} fill="rgba(5,7,26,0.25)" />
-          <rect x={14} y={56} width={8} height={34} rx={3} fill={SET.furnDark} />
-          <rect x={78} y={56} width={8} height={34} rx={3} fill={SET.furnDark} />
-        </svg>
+        <Encosto x={x} y={y} size={size} />
       </React.Fragment>
     ))}
   </>

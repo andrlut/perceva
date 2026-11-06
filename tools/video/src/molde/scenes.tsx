@@ -11,16 +11,18 @@
 // Sem essas props, o Stage não faz nada além da sobrancelha — a cena sai
 // igual à de antes. Quem desenha a cena só declara a geometria (onde estão os
 // pés da protagonista, a faixa que ela ocupa, o que a câmera pode focar).
-import React, { createContext, useContext } from 'react';
-import { AbsoluteFill, Img, interpolate, interpolateColors, spring, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { AbsoluteFill, Img, continueRender, delayRender, interpolate, interpolateColors, spring, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
 import { fadeUp, ramp } from '../components';
+import { fontsReady } from '../fonts';
 import { Brilho, Pensamento, Pessoa, Relogio, Semana, Sofa } from '../elenco/cast';
+import { Encosto, SET } from '../elenco/cenario';
 import { Caneca, Caneta, Planta } from '../elenco/objetos';
 import { C, DimId, FONT, dimColor } from '../theme';
 import { Scene, cue, speechEnd } from '../timeline';
-import { Abajur, AmbSpec, Ambiente, AmbienteMini, EnvGeo, Spot, Vinheta } from './ambientes';
+import { Abajur, AmbSpec, Ambiente, AmbienteMini, EnvGeo, Rect, Spot, Vinheta } from './ambientes';
 import { CameraRig, FocusMap, Layer, cameraAt, focusPoint } from './camera';
-import { Ion, Peca } from './Peca';
+import { Ion, Peca, pieceBox } from './Peca';
 import type { Bloco, Chip, Feel, MoldeLine, MoldeSpec, Mood, Obj, Panel } from './spec';
 
 export type MS = Scene & Pick<MoldeLine, 'scene' | 'props'>;
@@ -43,6 +45,30 @@ const useSpr = () => {
   const { fps } = useVideoConfig();
   return (at: number, config: Partial<{ damping: number; stiffness: number; mass: number }> = {}) =>
     spring({ frame: frame - at, fps, config: { damping: 15, stiffness: 120, mass: 1, ...config } });
+};
+
+/**
+ * Largura de um texto na fonte do vídeo, medida no canvas. O quadro só sai
+ * depois das fontes carregadas (delayRender), então a medida é sempre a da
+ * fonte de verdade — em toda aba do render, não só na primeira.
+ */
+let measureCtx: CanvasRenderingContext2D | null = null;
+const useTextWidth = () => {
+  const [ready, setReady] = useState(false);
+  const [handle] = useState(() => delayRender('fontes pra medir texto'));
+  useEffect(() => {
+    fontsReady.then(() => {
+      setReady(true);
+      continueRender(handle);
+    });
+  }, [handle]);
+  return (text: string, font: string) => {
+    if (!ready || typeof document === 'undefined') return Infinity;
+    measureCtx ??= document.createElement('canvas').getContext('2d');
+    if (!measureCtx) return Infinity;
+    measureCtx.font = font;
+    return measureCtx.measureText(text).width;
+  };
 };
 
 /** Frame da deixa, ou `fallback` quando a cena não deu deixa. */
@@ -133,7 +159,7 @@ const Stage: React.FC<{ s: MS; geo?: EnvGeo; focus?: FocusMap; kicker?: string; 
  * Num ambiente, ela "pousa" (queda curta, cresce um pouco). `base` = `top` é a
  * linha onde a peça se apoia (mesa, chão), não o topo dela.
  */
-const Drop: React.FC<{ s: MS; p: string; cueAt?: string; out?: string; top: number; left: number; size: number; delay?: number; fall?: number; base?: boolean }> = ({
+const Drop: React.FC<{ s: MS; p: string; cueAt?: string; out?: string; top: number; left: number; size: number; delay?: number; fall?: number; base?: boolean; chip?: boolean }> = ({
   s,
   p,
   cueAt,
@@ -144,6 +170,7 @@ const Drop: React.FC<{ s: MS; p: string; cueAt?: string; out?: string; top: numb
   delay = 0,
   fall = 120,
   base = false,
+  chip = false,
 }) => {
   const frame = useCurrentFrame();
   const spr = useSpr();
@@ -151,7 +178,27 @@ const Drop: React.FC<{ s: MS; p: string; cueAt?: string; out?: string; top: numb
   const t = spr(at(s, cueAt, s.lead + delay), { damping: 11, stiffness: 140 });
   const gone = out ? spr(cue(s, out), { damping: 20, stiffness: 80 }) : 0;
   const land = fall < 120;
-  const piece = <Peca name={p} t={frame} size={size} accent={accent} />;
+  // desenho que flutua por cima de móvel (estante, mesa): vai numa ficha redonda, como o ícone do app,
+  // pra não sumir no colorido do cenário
+  const piece =
+    chip && !p.startsWith('ion:') ? (
+      <div
+        style={{
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          background: `linear-gradient(150deg, ${C.surface3} 0%, ${C.surface2} 100%)`,
+          boxShadow: '0 18px 40px rgba(0,0,0,0.35)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Peca name={p} t={frame} size={size * 0.72} accent={accent} />
+      </div>
+    ) : (
+      <Peca name={p} t={frame} size={size} accent={accent} />
+    );
   return (
     <div
       style={{
@@ -168,8 +215,17 @@ const Drop: React.FC<{ s: MS; p: string; cueAt?: string; out?: string; top: numb
   );
 };
 
-/** Encaixe de peça: posição + tamanho; `base` = `top` é onde ela se apoia. */
-type Slot = { top: number; left: number; size: number; base?: boolean };
+/** Encaixe de peça: posição + tamanho; `base` = `top` é onde ela se apoia; `chip` = desenho vai numa ficha. */
+type Slot = { top: number; left: number; size: number; base?: boolean; chip?: boolean };
+
+/** Onde a peça `p` fica na tela, num encaixe (pra o cenário não pôr ninguém embaixo dela). */
+const slotRect = (p: string, sl: Slot): Rect => {
+  const [w, h] = sl.chip && !p.startsWith('ion:') ? [sl.size, sl.size] : pieceBox(p, sl.size);
+  return sl.base ? [sl.left, sl.top - h, sl.left + w, sl.top] : [sl.left, sl.top, sl.left + w, sl.top + h];
+};
+/** O que as peças da cena ocupam: `objects` nos `slots`, na ordem. */
+const busyOf = (objects: Obj[] | undefined, slots: Slot[]): Rect[] => (objects ?? []).slice(0, slots.length).map((o, i) => slotRect(o.p, slots[i]));
+
 const Drops: React.FC<{ s: MS; objects?: Obj[]; slots: Slot[]; fall?: number; stagger?: number }> = ({ s, objects = [], slots, fall, stagger = 8 }) => (
   <>
     {objects.slice(0, slots.length).map((o, i) => (
@@ -226,7 +282,9 @@ export const Pessoa_: React.FC<P> = ({ s }) => {
   const positive = (pr.to ?? 'feliz') === 'feliz';
   const me = spr(0, { damping: 16 });
   const slots = (amb ? SLOTS_AMB : SLOTS).map((sl, i) => ({ ...sl, size: i % 2 ? 250 : 280 }));
-  const geo: EnvGeo = { ground: 1043, clear: [360, 720], spot: [540, 830, 380], frontOff: (pr.objects?.length ?? 0) >= 3 ? ['left'] : [] };
+  // o cenário tira colega, móvel e primeiro plano de baixo das peças (e do relógio)
+  const busy: Rect[] = [...busyOf(pr.objects, slots), ...(pr.clock ? [[640, 330, 870, 560] as Rect] : [])];
+  const geo: EnvGeo = { ground: 1043, clear: [360, 720], spot: [540, 830, 380], frontOff: (pr.objects?.length ?? 0) >= 3 ? ['left'] : [], busy, show: pr.objects?.map((o) => o.p) };
   return (
     <Stage s={s} geo={geo} focus={{ peca: [slots[0].left + 140, slots[0].top + 140] }}>
       <Clock s={s} mode={pr.clock} turnAt={turnAt} top={330} left={640} size={230} />
@@ -255,7 +313,8 @@ export const Semana_: React.FC<P> = ({ s }) => {
   const fill = ramp(frame, a, Math.max(10, b - a + 10));
   const speed = interpolate(frame, [a, b + 10], [1.5, 9], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   const week = spr(s.lead - 4, { damping: 16 });
-  const geo: EnvGeo = { ground: 1140, clear: [480, 820], spot: [650, 950, 360] };
+  // a semana e o relógio ficam por cima do cenário
+  const geo: EnvGeo = { ground: 1140, clear: [480, 820], spot: [650, 950, 360], busy: [[110, 320, 970, 682], [150, 820, 380, 1050]] };
   return (
     <Stage s={s} geo={geo} focus={{ peca: [540, 500] }}>
       <div style={{ position: 'absolute', top: 320, left: 110, opacity: week, transform: `translateY(${(1 - week) * 30}px)` }}>
@@ -289,7 +348,14 @@ export const Virada: React.FC<P> = ({ s }) => {
   const happy = frame >= aTurn;
   const sweep = pr.helper && frame >= aGive + 18 ? Math.sin(frame / 4) * 14 : 0;
   const hc = helperColor(spec.dimension);
-  const geo: EnvGeo = pr.helper ? { ground: 980, clear: [70, 960], spot: [500, 780, 480] } : { ground: 980, clear: [360, 720], spot: [530, 780, 380] };
+  const vSlots: Slot[] = [
+    { top: 1060, left: 200, size: 240 },
+    { top: 1060, left: 640, size: 240 },
+  ];
+  // a peça entregue atravessa do colo dela até o ajudante (ou sobe e some): a faixa toda fica livre
+  const busy: Rect[] = [...busyOf(pr.objects, vSlots), ...(pr.gives ? [[320, 440, 1100, 1000] as Rect] : []), ...(pr.clock ? [[190, 300, 390, 500] as Rect] : [])];
+  const show = [pr.gives, ...(pr.objects ?? []).map((o) => o.p)];
+  const geo: EnvGeo = pr.helper ? { ground: 980, clear: [70, 960], spot: [500, 780, 480], busy, show } : { ground: 980, clear: [360, 720], spot: [530, 780, 380], busy, show };
   return (
     <Stage s={s} geo={geo} focus={{ pessoa: pr.helper ? [240, 790] : [530, 790], peca: pr.helper ? [900, 770] : [750, 860] }}>
       <Clock s={s} mode={pr.clock} turnAt={aTurn} top={300} left={190} size={200} />
@@ -326,16 +392,7 @@ export const Virada: React.FC<P> = ({ s }) => {
           <Peca name={pr.gives} t={frame} size={260} accent={accent} />
         </div>
       ) : null}
-      <Drops
-        s={s}
-        objects={pr.objects}
-        slots={[
-          { top: 1060, left: 200, size: 240 },
-          { top: 1060, left: 640, size: 240 },
-        ]}
-        stagger={0}
-        fall={pr.ambiente ? 50 : 120}
-      />
+      <Drops s={s} objects={pr.objects} slots={vSlots} stagger={0} fall={pr.ambiente ? 50 : 120} />
     </Stage>
   );
 };
@@ -394,16 +451,29 @@ const Pill: React.FC<{ p?: string; text: string; from: number }> = ({ p, text, f
   );
 };
 
-const PanelBox: React.FC<{ s: MS; x: number; from: number; win: number; lose: number; panel: Panel; seed: number; pill?: { p?: string; text: string } }> = ({
-  s,
-  x,
-  from,
-  win,
-  lose,
-  panel,
-  seed,
-  pill,
-}) => {
+/**
+ * Geometria do painel. `curto` = o de sempre (deixa lugar pros `chips` embaixo);
+ * `alto` = sem chips, o painel desce pela faixa vazia e tudo cresce (miniatura,
+ * pessoa, peça, rótulo). A peça pousa no chão, ao lado dos pés da pessoa.
+ */
+const PANEL = {
+  curto: { top: 330, h: 640, w: 450, xs: [70, 560], horizon: 300, scale: 0.46, person: { top: 140, left: 50, size: 230 }, object: { top: 200, left: 250, size: 190 }, label: 455 },
+  alto: { top: 280, h: 920, w: 460, xs: [60, 560], horizon: 470, scale: 0.62, person: { top: 240, left: 12, size: 316 }, object: { base: 638, left: 242, size: 214 }, label: 735 },
+} as const;
+type PanelGeo = (typeof PANEL)[keyof typeof PANEL];
+
+const PanelBox: React.FC<{
+  s: MS;
+  g: PanelGeo;
+  x: number;
+  from: number;
+  win: number;
+  lose: number;
+  panel: Panel;
+  seed: number;
+  labelSize: number;
+  pill?: { p?: string; text: string };
+}> = ({ s, g, x, from, win, lose, panel, seed, labelSize, pill }) => {
   const frame = useCurrentFrame();
   const spr = useSpr();
   const accent = useAccent();
@@ -411,14 +481,19 @@ const PanelBox: React.FC<{ s: MS; x: number; from: number; win: number; lose: nu
   const arrive = spr(at(s, panel.arrives, from + 8), { damping: 12 });
   const leave = panel.leaves ? spr(cue(s, panel.leaves) + 6, { damping: 20, stiffness: 70 }) : 0;
   const mood: Mood = win > 0.5 ? 'feliz' : (panel.mood ?? 'ok');
+  const ob = g.object;
+  const [ow, oh] = panel.object ? pieceBox(panel.object, ob.size) : [0, 0];
+  // painel alto: a peça pousa no chão (base); o curto segue com o topo fixo de sempre
+  const oTop = 'base' in ob ? ob.base - oh : ob.top;
+  const ps = g.person;
   return (
     <div
       style={{
         position: 'absolute',
-        top: 330,
+        top: g.top,
         left: x,
-        width: 450,
-        height: 640,
+        width: g.w,
+        height: g.h,
         borderRadius: 34,
         background: `linear-gradient(160deg, ${C.surface2} 0%, ${C.base} 100%)`,
         border: `3px solid ${win > 0 ? `${accent}${Math.round((0.25 + 0.75 * win) * 255).toString(16).padStart(2, '0')}` : C.borderStrong}`,
@@ -429,31 +504,46 @@ const PanelBox: React.FC<{ s: MS; x: number; from: number; win: number; lose: nu
       }}
     >
       {panel.ambiente ? (
-        // o lugar de cada caminho (a sala de aula × a mesa de casa), miniatura atrás da pessoa
+        // o lugar de cada caminho (a sala de aula × a mesa de casa), miniatura atrás da pessoa;
+        // nada da miniatura fica embaixo da peça do painel, e ela não repete a peça
         <div style={{ position: 'absolute', inset: 0, opacity: 1 - 0.35 * lose }}>
-          <AmbienteMini tipo={panel.ambiente} hora={panel.hora} t={frame} accent={accent} horizon={300} cx={225} scale={0.46} />
+          <AmbienteMini
+            tipo={panel.ambiente}
+            hora={panel.hora}
+            t={frame}
+            accent={accent}
+            horizon={g.horizon}
+            cx={g.w / 2}
+            scale={g.scale}
+            w={g.w}
+            h={g.h}
+            clear={[ps.left + ps.size * 0.26, ps.left + ps.size * 0.74]}
+            busy={panel.object ? [[ob.left - 10, oTop - 10, ob.left + ow + 10, oTop + oh + 10]] : []}
+            show={[panel.object]}
+          />
         </div>
       ) : null}
-      <div style={{ position: 'absolute', top: 140, left: 50 }}>
-        <Pessoa t={frame} size={230} seed={seed} arms={win > 0.5 ? 'up' : 'down'} mood={mood} accent={seed ? C.violet2 : C.violet} skin={seed ? '#8D5A3B' : '#F2C9A0'} />
+      <div style={{ position: 'absolute', top: ps.top, left: ps.left }}>
+        <Pessoa t={frame} size={ps.size} seed={seed} arms={win > 0.5 ? 'up' : 'down'} mood={mood} accent={seed ? C.violet2 : C.violet} skin={seed ? '#8D5A3B' : '#F2C9A0'} />
       </div>
       {panel.object ? (
         <div
           style={{
             position: 'absolute',
-            top: 200,
-            left: 250,
+            top: oTop,
+            left: ob.left,
             opacity: arrive * (1 - leave),
             transform: `translate(${leave * 240}px, ${-leave * 120}px) rotate(${leave * 40}deg) scale(${0.6 + 0.4 * arrive})`,
+            transformOrigin: 'base' in ob ? '50% 100%' : undefined,
             filter: panel.ambiente ? 'drop-shadow(0 10px 22px rgba(5,7,26,0.6))' : undefined,
           }}
         >
-          <Peca name={panel.object} t={frame} size={190} accent={accent} />
+          <Peca name={panel.object} t={frame} size={ob.size} accent={accent} />
         </div>
       ) : null}
-      {/* rótulo de duas linhas + pílula cabem no painel (antes a pílula saía cortada embaixo) */}
-      <div style={{ position: 'absolute', top: 455, left: 20, right: 20, textAlign: 'center' }}>
-        <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: 44, lineHeight: 1.1, color: C.hi }}>{panel.label}</div>
+      {/* rótulo de duas linhas + pílula cabem no painel; `balance` reparte as duas linhas (nada de palavra órfã) */}
+      <div style={{ position: 'absolute', top: g.label, left: 20, right: 20, textAlign: 'center' }}>
+        <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: labelSize, lineHeight: 1.1, color: C.hi, textWrap: 'balance' }}>{panel.label}</div>
         {pill ? <Pill p={pill.p} text={pill.text} from={from + 12} /> : null}
       </div>
     </div>
@@ -494,15 +584,25 @@ const Chips: React.FC<{ s: MS; chips: Chip[]; top: number; left: number; width: 
 /** Lado a lado: dois caminhos, um ganha destaque na deixa `win` (o outro só apaga um pouco). */
 export const Comparar: React.FC<P> = ({ s }) => {
   const frame = useCurrentFrame();
+  const width = useTextWidth();
   const pr = s.props ?? {};
   const w = ramp(frame, at(s, pr.win, 1e9), 16);
   const winL = pr.winner === 'left' ? w : 0;
   const winR = pr.winner === 'right' ? w : 0;
+  // sem chips, a faixa de baixo fica vazia: o painel alto ocupa ela
+  const g: PanelGeo = pr.chips?.length ? PANEL.curto : PANEL.alto;
+  // os dois rótulos no mesmo corpo; no painel alto ele cresce até onde os DOIS cabem numa linha
+  // (sem caber nem a 44, quebra em duas linhas equilibradas)
+  const oneLine = (size: number) => [pr.left?.label ?? '', pr.right?.label ?? ''].every((l) => width(l, `600 ${size}px ${FONT.display}`) <= g.w - 40 - 8);
+  const labelSize = g === PANEL.curto ? 44 : ([54, 50, 46].find(oneLine) ?? 44);
+  const right = pr.winner === 'right';
+  const at_ = (k: number): [number, number] => [g.xs[right ? 1 : 0] + g.w * k, g.top + g.h * 0.45];
+  const focus: FocusMap = g === PANEL.curto ? { pessoa: right ? [785, 650] : [295, 650], peca: right ? [880, 600] : [390, 600] } : { pessoa: at_(0.36), peca: at_(0.74) };
   return (
-    <Stage s={s} focus={{ pessoa: pr.winner === 'right' ? [785, 650] : [295, 650], peca: pr.winner === 'right' ? [880, 600] : [390, 600] }}>
+    <Stage s={s} focus={focus}>
       {/* a protagonista fica no lado que ganha ("você"); o outro lado é outra pessoa */}
-      <PanelBox s={s} x={70} from={s.lead - 4} win={winL} lose={winR} panel={pr.left!} seed={pr.winner === 'right' ? 3 : 0} pill={pr.pill} />
-      <PanelBox s={s} x={560} from={s.lead + 4} win={winR} lose={winL} panel={pr.right!} seed={pr.winner === 'right' ? 0 : 3} pill={pr.pill} />
+      <PanelBox s={s} g={g} x={g.xs[0]} from={s.lead - 4} win={winL} lose={winR} panel={pr.left!} seed={pr.winner === 'right' ? 3 : 0} labelSize={labelSize} pill={pr.pill} />
+      <PanelBox s={s} g={g} x={g.xs[1]} from={s.lead + 4} win={winR} lose={winL} panel={pr.right!} seed={pr.winner === 'right' ? 0 : 3} labelSize={labelSize} pill={pr.pill} />
       {pr.chips?.length ? <Chips s={s} chips={pr.chips} top={1010} left={pr.winner === 'right' ? 560 : 70} width={450} /> : null}
     </Stage>
   );
@@ -516,7 +616,8 @@ export const Lista: React.FC<P> = ({ s }) => {
   const pr = s.props ?? {};
   const me = spr(0, { damping: 16 });
   const last = pr.items?.length ? cue(s, pr.items[pr.items.length - 1].cue) : 1e9;
-  const geo: EnvGeo = { ground: 712, clear: [340, 720], spot: [530, 510, 320] };
+  const n = Math.min(3, pr.items?.length ?? 0);
+  const geo: EnvGeo = { ground: 712, clear: [340, 720], spot: [530, 510, 320], busy: n ? [[90, 790, 990, 790 + n * 132]] : [] };
   return (
     <Stage s={s} geo={geo} focus={{ peca: [540, 1000] }}>
       <div style={{ position: 'absolute', top: 280, left: 360, opacity: me }}>
@@ -544,12 +645,14 @@ const cenaPlaced = (setting: string, amb: boolean, objects: Obj[]): { o: Obj; sl
     { top: 420, left: 640, size: 240 },
   ];
   if (!amb) return objects.slice(0, 2).map((o, i) => ({ o, slot: float[i] }));
-  float.push({ top: 640, left: 60, size: 180 }, { top: 620, left: 840, size: 180 });
+  // os dois de baixo ficam por cima de estante e móvel: desenho que cair ali vai numa ficha
+  float.push({ top: 640, left: 60, size: 180, chip: true }, { top: 620, left: 840, size: 180, chip: true });
   const mesa = setting === 'mesa';
+  // na mesa (plano aberto do lugar) as pontas têm peça de ≥ 120 px de verdade, não só de caixa
   const ground: Slot[] = mesa
     ? [
-        { top: 1010, left: 150, size: 130, base: true },
-        { top: 1010, left: 808, size: 125, base: true },
+        { top: 1010, left: 118, size: 178, base: true },
+        { top: 1010, left: 812, size: 160, base: true },
       ]
     : [
         { top: 1180, left: 30, size: 165, base: true },
@@ -557,34 +660,51 @@ const cenaPlaced = (setting: string, amb: boolean, objects: Obj[]): { o: Obj; sl
       ];
   const fits = mesa ? ON_DESK : ON_FLOOR;
   const out: { o: Obj; slot: Slot }[] = [];
-  const rest: Obj[] = [];
+  const up: Obj[] = [];
   for (const o of objects.slice(0, 6)) {
-    const pool = fits.has(o.p) && ground.length ? ground : float.length ? float : null;
-    if (pool) out.push({ o, slot: pool.shift()! });
-    else rest.push(o);
+    if (fits.has(o.p) && ground.length) out.push({ o, slot: ground.shift()! });
+    else up.push(o);
   }
-  for (const o of rest) {
-    const slot = ground.shift() ?? float.shift();
+  // no alto: desenho primeiro nos encaixes grandes, ficha (ion:) nos de baixo — a ficha já
+  // separa do fundo sozinha; o que não couber volta pro chão
+  const drawn = up.filter((o) => !o.p.startsWith('ion:'));
+  const chips = up.filter((o) => o.p.startsWith('ion:'));
+  for (const o of [...drawn, ...chips]) {
+    const slot = float.shift() ?? ground.shift();
     if (slot) out.push({ o, slot });
   }
-  return out;
+  // a ordem de entrada continua a do roteiro
+  return out.sort((a, b) => objects.indexOf(a.o) - objects.indexOf(b.o));
 };
 
-/** O que a mesa ganha num ambiente (quando a cena tem poucas peças): abajur em casa, caneca em todo lugar. */
+/**
+ * O que a mesa ganha num ambiente (quando a cena tem poucas peças): abajur em
+ * casa, planta no escritório, caneca em todo lugar. Na sala de aula a caneca
+ * vai pra ponta esquerda: a direita é onde quem apresenta estende a mão.
+ */
+const deskDressing = (tipo: string): { kind: 'abajur' | 'planta' | 'caneca'; left: number; top: number; rect: Rect }[] => [
+  ...(tipo === 'casa'
+    ? [{ kind: 'abajur' as const, left: 150, top: 1010 - 143, rect: [150, 867, 280, 1010] as Rect }]
+    : tipo === 'escritorio'
+      ? [{ kind: 'planta' as const, left: 170, top: 1010 - 130, rect: [170, 880, 274, 1010] as Rect }]
+      : []),
+  tipo === 'treinamento'
+    ? { kind: 'caneca' as const, left: 170, top: 1010 - 127, rect: [170, 883, 268, 1010] as Rect }
+    : { kind: 'caneca' as const, left: 815, top: 1010 - 127, rect: [815, 883, 913, 1010] as Rect },
+];
 const DeskDressing: React.FC<{ tipo: string; t: number }> = ({ tipo, t }) => (
   <>
-    {tipo === 'casa' ? (
-      <div style={{ position: 'absolute', left: 150, top: 1010 - 143 }}>
-        <Abajur t={t} size={130} />
+    {deskDressing(tipo).map((d) => (
+      <div key={d.kind} style={{ position: 'absolute', left: d.left, top: d.top }}>
+        {d.kind === 'abajur' ? (
+          <Abajur t={t} size={130} />
+        ) : d.kind === 'planta' ? (
+          <Planta t={t} size={130} accent={C.surface3} />
+        ) : (
+          <Caneca t={t} size={115} accent={tipo === 'casa' ? C.gold : C.violet2} />
+        )}
       </div>
-    ) : tipo === 'escritorio' ? (
-      <div style={{ position: 'absolute', left: 170, top: 1010 - 130 }}>
-        <Planta t={t} size={130} accent={C.surface3} />
-      </div>
-    ) : null}
-    <div style={{ position: 'absolute', left: 815, top: 1010 - 127 }}>
-      <Caneca t={t} size={115} accent={tipo === 'casa' ? C.gold : C.violet2} />
-    </div>
+    ))}
   </>
 );
 
@@ -635,9 +755,32 @@ export const Cena: React.FC<P> = ({ s }) => {
   const placed = cenaPlaced(setting, amb, pr.objects ?? []);
   // peça no chão de um canto: o primeiro plano daquele canto sai
   const frontOff = setting === 'mesa' ? [] : placed.filter((x) => x.slot.base).map((x) => (x.slot.left < 540 ? 'left' : 'right') as 'left' | 'right');
-  const geo: EnvGeo = { ...g.geo, ...(pr.helper ? { clear: [g.geo.clear[0], 1080] as [number, number] } : {}), frontOff };
   // a mesa ganha abajur/caneca só se nenhuma peça do roteiro já pousou nela
   const dress = amb && !placed.some((x) => x.slot.base);
+  // o que a cena desenha por cima do cenário: as peças, a da mão, o enfeite da mesa e o ajudante
+  const heldRect: Rect | null = !pr.holding
+    ? null
+    : setting === 'mesa'
+      ? ((([w, h]) => [565, 1010 - h, 565 + w, 1010])(pieceBox(pr.holding, 240)) as Rect)
+      : setting === 'sofa'
+        ? [300, 1000, 480, 1140]
+        : setting === 'cama'
+          ? [560, 900, 720, 1080]
+          : [570, 940, 740, 1135];
+  const busy: Rect[] = [
+    ...placed.map(({ o, slot }) => slotRect(o.p, slot)),
+    // a ponta da mesa (ou o canto do chão) onde uma peça pousou é dela inteira, não só a caixa
+    // da peça: o que o lugar tem ali atrás (a planta do canto, o vaso da estante, o móvel) sai
+    ...(amb ? placed.filter((x) => x.slot.base).map(({ slot }) => [slot.left, slot.top - slot.size, slot.left + slot.size, slot.top] as Rect) : []),
+    ...(heldRect ? [heldRect] : []),
+    ...(dress && setting === 'mesa' ? deskDressing(pr.ambiente!).map((d) => d.rect) : []),
+    ...(pr.helper ? ([[740, 860, 1080, 1180]] as Rect[]) : []),
+  ];
+  // a caneca do enfeite da mesa conta como peça da cena: o cenário não põe outra
+  const show = [pr.holding, pr.gives, ...(pr.objects ?? []).map((o) => o.p), ...(dress && setting === 'mesa' ? ['caneca'] : [])];
+  const geo: EnvGeo = { ...g.geo, ...(pr.helper ? { clear: [g.geo.clear[0], 1080] as [number, number] } : {}), frontOff, busy, show };
+  // num lugar, a mesa é mais larga: as peças das pontas (maiores) pousam no tampo
+  const D = amb ? { x: 100, w: 880 } : { x: 160, w: 760 };
   return (
     <Stage s={s} geo={geo} focus={{ pessoa: g.pessoa, peca: g.peca }}>
       {amb ? null : <div style={{ position: 'absolute', top: 1180, left: 60, right: 60, height: 6, borderRadius: 3, background: C.surface2 }} />}
@@ -667,9 +810,9 @@ export const Cena: React.FC<P> = ({ s }) => {
             {/* frente da mesa: esconde pernas e pés (que ficariam soltos acima da linha do chão) */}
             <div style={{ position: 'absolute', top: 1040, left: 232, width: 616, height: 90, borderRadius: '0 0 14px 14px', background: C.surface2 }} />
             <div style={{ position: 'absolute', top: 1040, left: 540, width: 308, height: 90, borderRadius: '0 0 14px 0', background: 'rgba(5,7,26,0.2)' }} />
-            <div style={{ position: 'absolute', top: 1010, left: 160, width: 760, height: 40, borderRadius: 16, background: C.surface3 }} />
-            <div style={{ position: 'absolute', top: 1050, left: 220, width: 26, height: 130, borderRadius: 8, background: C.surface2 }} />
-            <div style={{ position: 'absolute', top: 1050, left: 834, width: 26, height: 130, borderRadius: 8, background: C.surface2 }} />
+            <div style={{ position: 'absolute', top: 1010, left: D.x, width: D.w, height: 40, borderRadius: 16, background: C.surface3 }} />
+            <div style={{ position: 'absolute', top: 1050, left: D.x + 60, width: 26, height: 130, borderRadius: 8, background: C.surface2 }} />
+            <div style={{ position: 'absolute', top: 1050, left: D.x + D.w - 86, width: 26, height: 130, borderRadius: 8, background: C.surface2 }} />
             {dress ? <DeskDressing tipo={pr.ambiente!} t={frame} /> : null}
             {pr.holding ? (
               // encostada na mão estendida (a mão termina em ~x 577): a peça lê "na mão", não solta no tampo
@@ -695,7 +838,7 @@ export const Cena: React.FC<P> = ({ s }) => {
         )}
       </div>
       {placed.map(({ o, slot }, i) => (
-        <Drop key={i} s={s} p={o.p} cueAt={o.cue} out={o.out} {...slot} delay={4 + i * (amb ? 6 : 0)} fall={amb ? 50 : 120} />
+        <Drop key={i} s={s} p={o.p} cueAt={o.cue} out={o.out} {...slot} delay={4 + i * (amb ? 6 : 0)} fall={amb ? 50 : 120} chip={slot.chip} />
       ))}
       <div style={{ position: 'absolute', top: 700, left: setting === 'cama' ? 350 : 120 }}>
         <Brilho t={frame} size={420} on={ramp(frame, at(s, pr.glow, 1e9), 10)} />
@@ -705,6 +848,85 @@ export const Cena: React.FC<P> = ({ s }) => {
 };
 
 // ===================================================================== pensa
+/**
+ * Na sala de aula (`ambiente: treinamento`) quem pensa é da plateia: ela senta
+ * na fileira do meio, virada pra câmera, com o encosto da cadeira na frente e
+ * a turma de costas dos lados. O balão abre pra cima e pra esquerda, por cima
+ * da lista do slide — o gráfico e quem apresenta (à direita) continuam à vista.
+ */
+const PLATEIA = { x: 560, y: 1125, size: 270, ground: 1030, bubble: 2.3, tail: [505, 795] as [number, number], edge: 20 };
+/** Centro da nuvem (onde vai a peça) pro balão de escala `k`: a cauda fica parada sobre a cabeça dela. */
+const plateiaCloud = (k: number): [number, number] => [PLATEIA.tail[0] - 116 * k, PLATEIA.tail[1] - 103 * k];
+/**
+ * Escala do balão (viewBox 250×200 → 250k px): a maior até `bubble` em que a
+ * nuvem da esquerda (x = cauda − 206 k, depois de espelhar) fica ≥ `edge` px
+ * dentro do quadro em TODO quadro da câmera da cena — inclusive no ponto mais
+ * perto de um pull ou de um push. A cauda não sai de cima da cabeça dela: o
+ * balão encolhe pra dentro, não anda.
+ */
+const plateiaBubble = (s: MS, focus: FocusMap) => {
+  const cam = s.props?.camera;
+  if (!cam || cam.move === 'still') return PLATEIA.bubble;
+  const cueAt = cam.cue ? cue(s, cam.cue) : null;
+  const f = focusPoint(cam.focus, focus);
+  let left = PLATEIA.edge;
+  for (let fr = 0; fr <= s.frames; fr++) {
+    const c = cameraAt(fr, s.frames, cam, cueAt, f);
+    // camada de profundidade 1: x' = ox + (x − ox)·scale + c.x, e x' ≥ edge
+    left = Math.max(left, c.ox + (PLATEIA.edge - c.ox - c.x) / c.scale);
+  }
+  return Math.min(PLATEIA.bubble, (PLATEIA.tail[0] - left) / 206);
+};
+const PensaPlateia: React.FC<P> = ({ s }) => {
+  const frame = useCurrentFrame();
+  const accent = useAccent();
+  const pr = s.props ?? {};
+  const a = at(s, pr.at, s.lead + 4);
+  const turnAt = at(s, pr.turn, 1e9);
+  const pop = ramp(frame, a + 14, 10);
+  const { x, y, size } = PLATEIA;
+  // com focus "peca" a câmera mira a nuvem, que depende da escala: duas passadas bastam
+  const k = plateiaBubble(s, { pessoa: [x, 930], peca: plateiaCloud(plateiaBubble(s, { pessoa: [x, 930], peca: plateiaCloud(PLATEIA.bubble) })) });
+  // balão espelhado (viewBox 250×200): a bolinha de baixo, (220,186) depois de espelhar, fica sobre a cabeça dela
+  const bx = PLATEIA.tail[0] - 220 * k;
+  const by = PLATEIA.tail[1] - 186 * k;
+  const cloud: Rect = [bx + 14 * k, by + 6 * k, bx + 194 * k, by + 160 * k];
+  const pc = plateiaCloud(k);
+  const thoughtSize = Math.round(81 * k);
+  const [tw, th] = pr.thought ? pieceBox(pr.thought, thoughtSize) : [0, 0];
+  const slots: Slot[] = [
+    { top: 1010, left: 60, size: 200 },
+    { top: 1010, left: 820, size: 200 },
+  ];
+  const geo: EnvGeo = {
+    ground: PLATEIA.ground,
+    clear: [x - size * 0.3, x + size * 0.3],
+    spot: [x, 930, 330],
+    seat: { x, y, size },
+    busy: [cloud, [bx + 150 * k, by + 150 * k, PLATEIA.tail[0] + 30, PLATEIA.tail[1] + 20], ...busyOf(pr.objects, slots)],
+    show: [pr.thought, ...(pr.objects ?? []).map((o) => o.p)],
+  };
+  return (
+    <Stage s={s} geo={geo} focus={{ pessoa: [x, 930], peca: pc }}>
+      <div style={{ position: 'absolute', top: y - size * 1.26, left: x - size / 2 }}>
+        <Pessoa t={frame} size={size} mood={frame >= turnAt ? (pr.to ?? 'feliz') : (pr.mood ?? 'ok')} arms={pr.arms ?? 'none'} accent={C.violet} />
+      </div>
+      {/* o encosto da cadeira dela, igual ao da turma: esconde da cintura pra baixo (um pouco
+          mais baixo que o dos vizinhos — ela é quem a gente olha) */}
+      <Encosto x={x} y={y + size * 0.08} size={size} tone={SET.frameShade} />
+      <div style={{ position: 'absolute', top: by, left: bx, transform: 'scaleX(-1)' }}>
+        <Pensamento t={Math.max(0, frame - a)} size={250 * k} />
+      </div>
+      {pr.thought ? (
+        <div style={{ position: 'absolute', top: pc[1] - th / 2, left: pc[0] - tw / 2, opacity: pop, transform: `scale(${0.6 + 0.4 * pop})` }}>
+          <Peca name={pr.thought} t={frame} size={thoughtSize} accent={accent} />
+        </div>
+      ) : null}
+      <Drops s={s} objects={pr.objects} slots={slots} stagger={0} fall={50} />
+    </Stage>
+  );
+};
+
 /** A pessoa pensando: o balão abre na deixa com a peça dentro. */
 export const Pensa: React.FC<P> = ({ s }) => {
   const frame = useCurrentFrame();
@@ -713,7 +935,19 @@ export const Pensa: React.FC<P> = ({ s }) => {
   const a = at(s, pr.at, s.lead + 4);
   const turnAt = at(s, pr.turn, 1e9);
   const pop = ramp(frame, a + 14, 10);
-  const geo: EnvGeo = { ground: 1225, clear: [120, 480], spot: [300, 1000, 360] };
+  const pSlots: Slot[] = [
+    { top: 1000, left: 560, size: 220 },
+    { top: 1000, left: 760, size: 220 },
+  ];
+  // o balão (nuvem + bolinhas), a peça dele e as que caem: nada do cenário embaixo
+  const geo: EnvGeo = {
+    ground: 1225,
+    clear: [120, 480],
+    spot: [300, 1000, 360],
+    busy: [[452, 346, 942, 765], [370, 760, 470, 850], ...busyOf(pr.objects, pSlots)],
+    show: [pr.thought, ...(pr.objects ?? []).map((o) => o.p)],
+  };
+  if (pr.ambiente === 'treinamento') return <PensaPlateia s={s} />;
   return (
     <Stage s={s} geo={geo} focus={{ pessoa: [300, 1010], peca: [670, 565] }}>
       <div style={{ position: 'absolute', top: 820, left: 140 }}>
@@ -727,16 +961,7 @@ export const Pensa: React.FC<P> = ({ s }) => {
           <Peca name={pr.thought} t={frame} size={220} accent={accent} />
         </div>
       ) : null}
-      <Drops
-        s={s}
-        objects={pr.objects}
-        slots={[
-          { top: 1000, left: 560, size: 220 },
-          { top: 1000, left: 760, size: 220 },
-        ]}
-        stagger={0}
-        fall={pr.ambiente ? 50 : 120}
-      />
+      <Drops s={s} objects={pr.objects} slots={pSlots} stagger={0} fall={pr.ambiente ? 50 : 120} />
     </Stage>
   );
 };
@@ -750,9 +975,12 @@ export const Pensa: React.FC<P> = ({ s }) => {
  * do dia ocupa. Na deixa `turn`, os blocos com `then` viram (cor, tamanho,
  * ícone) e o dia se redistribui; a pessoa pega a caneta e o humor vira.
  */
+// três degraus que se separam sem som, no celular: drena = cinza-azulado frio, apagado, ícone
+// desbotado (mais escuro que a folha não: mais FRIO e sem cor); neutro = um meio-tom violeta
+// claro, com ícone claro; energiza = o dourado. A diferença é de luz, não só de matiz.
 const FEEL: Record<Feel, { bg: string; edge: string; icon: string }> = {
-  drena: { bg: '#1D2452', edge: '#34407C', icon: '#7C86BE' },
-  neutro: { bg: C.surface2, edge: C.surface3, icon: C.violet2 },
+  drena: { bg: '#1C2542', edge: '#2F3B5E', icon: '#56658C' },
+  neutro: { bg: '#4D55A3', edge: '#6C74C4', icon: '#E4E6FF' },
   energiza: { bg: C.gold, edge: C.gold2, icon: C.deep },
 };
 const MAPA = { y: 300, w: 540, h: 1040, pad: 120 };
@@ -807,7 +1035,8 @@ const BlocoBox: React.FC<{ s: MS; b: Bloco; i: number; y: number; h: number; x: 
           }}
         />
       ) : null}
-      <div style={{ position: 'relative', width: iconSize, height: iconSize }}>
+      {/* o ícone do que drena desbota (o que é a tarefa ainda lê, mas sem vida) */}
+      <div style={{ position: 'relative', width: iconSize, height: iconSize, opacity: 1 - 0.25 * drain }}>
         <div style={{ position: 'absolute', inset: 0, opacity: icon2 ? 1 - kk : 1 }}>
           <Ion name={b.icon} size={iconSize} color={iconC} />
         </div>
@@ -856,7 +1085,9 @@ export const Mapa: React.FC<P> = ({ s }) => {
   const bx = cardX + 92;
   const bw = MAPA.w - 92 - 34;
   const personX = left ? 60 : 720;
-  const geo: EnvGeo = { ground: 1140, clear: left ? [40, 400] : [680, 1040], spot: [personX + 150, 950, 330] };
+  // a folha é o assunto: nenhum móvel, figurante ou canto do primeiro plano passa por ela
+  // (o cenário só sobra do lado da pessoa)
+  const geo: EnvGeo = { ground: 1140, clear: left ? [40, 400] : [680, 1040], spot: [personX + 150, 950, 330], busy: [[cardX - 20, MAPA.y - 20, cardX + MAPA.w + 20, MAPA.y + MAPA.h + 20]] };
   const penIn = ramp(frame, turnAt - 10, 12);
   // brilho só nos blocos que PASSAM a energizar na virada (no máximo dois)
   const newBoost = laid.filter((l) => l.b.then && (l.b.then.feel ?? l.b.feel) === 'energiza' && (l.b.then.feel !== undefined || (l.b.then.size ?? 0) > (l.b.size ?? 1))).slice(0, 2);

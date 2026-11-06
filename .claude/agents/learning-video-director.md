@@ -96,6 +96,23 @@ fala → problema).
    - Nunca em `multidao` nem no `verso`. No `comparar`, o lugar é por painel
      (`left.ambiente` / `right.ambiente`): ótimo pra "aqui × lá" (a aula × a
      mesa de casa).
+   - "Assistir a uma aula" é `pensa` com `ambiente: treinamento`: ela senta
+     na plateia e o balão abre por cima da lista do slide. Em outra cena a
+     sala de aula põe a pessoa na frente da turma, virada pra câmera, e lê
+     como quem apresenta (o lint avisa). O balão não precisa de cuidado com
+     o cenário nem com a câmera: o lugar nunca repete a peça da fala (sem
+     cavalete quando o balão é o quadro), nada do cenário fica embaixo de
+     peça ou balão, os slides sempre deixam o gráfico à vista do lado de
+     quem apresenta, e num `pull`/`push` o balão encolhe pra não encostar
+     na borda.
+   - O cenário abre espaço sozinho pras peças: colega e posto saem juntos
+     quando não cabem na beirada, e relógio, quadro, mural e planta do
+     fundo andam pela parede ou saem. Consequência: `pessoa` no
+     `escritorio` com 3–4 peças fica sem colega. Se a fala precisa de gente
+     trabalhando em volta, use até 2 peças.
+   - Rótulo do `comparar` é texto de tela, não fala: escreva os dois pra
+     caber numa linha (~16 caracteres cada) que eles crescem no painel;
+     maior que isso quebra em duas linhas.
    - Na `cena` com lugar, objeto de verdade (caneca, papelada, monitor,
      planta…) pousa na mesa/no chão e símbolo (`ion:`, coração, moeda,
      relógio) flutua: ponha primeiro no `objects` o que mais importa. Até 6

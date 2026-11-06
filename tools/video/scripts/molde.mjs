@@ -104,6 +104,9 @@ function lintStage(where, l, i, errors, warns) {
     oneOf(p.ambiente, catalog.ambientes, 'ambiente');
     if (!catalog.ambienteScenes.includes(l.scene))
       errors.push(where(l.id, `cena "${l.scene}" não aceita ambiente (só ${catalog.ambienteScenes.join(', ')}${l.scene === 'comparar' ? '; no comparar é left.ambiente / right.ambiente' : ''})`));
+    // só o pensa senta a pessoa na plateia; nas outras cenas ela fica de pé na frente da turma
+    if (p.ambiente === 'treinamento' && l.scene !== 'pensa')
+      warns.push(where(l.id, `treinamento na cena "${l.scene}": a pessoa fica na frente da turma, virada pra câmera, e lê como quem apresenta (pra "assistir à aula", use a cena pensa: ela senta na plateia)`));
   }
   oneOf(p.gente, catalog.gente, 'gente');
   oneOf(p.hora, catalog.hora, 'hora');

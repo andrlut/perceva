@@ -34,6 +34,19 @@ export type IdentityOption = {
   /** Uma frase: o que faz essa pessoa ser reconhecível como Perceva. */
   pitch: string;
   Pessoa: React.FC<PessoaProps>;
+  /**
+   * Opcional: a mesma pessoa DE COSTAS (plateia, fila da frente), com a caixa
+   * e as props do `Pessoa`: cabelo do seed visto de trás, gola por trás, nada
+   * do peito (sem rosto, botão nem marca). Sem ela, o cenário cobre a frente
+   * da `Pessoa` com cabelo e camisa lisa (src/elenco/cenario.tsx → DeCostas).
+   */
+  Costas?: React.FC<PessoaProps>;
+  /**
+   * Opcional: a pessoa ESPELHADA (quem aponta pro outro lado com arms="out"),
+   * sem espelhar a marca do peito. Sem ela, o cenário vira a `Pessoa` com
+   * scaleX(-1) (src/elenco/cenario.tsx → Figurante).
+   */
+  Virada?: React.FC<PessoaProps>;
   /** Opcional: motivo de fundo da identidade (atrás das pessoas, no palco). */
   Backdrop?: React.FC<{ t: number; width: number; height: number; accent: string }>;
 };

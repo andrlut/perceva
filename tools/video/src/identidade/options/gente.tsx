@@ -869,16 +869,14 @@ const makeCostas = (): React.FC<PessoaProps> => ({ t = 0, size = 260, accent = C
 };
 
 /**
- * Vistas extras (fora do contrato do `Pessoa`, que é o que toda cena usa):
- * `Costas` — a mesma pessoa de trás; `Virada` — espelhada sem espelhar a
- * marca. O cenário (src/elenco/cenario.tsx) usa se a identidade ativa tiver;
- * sem elas, cai no desenho genérico.
+ * Vistas opcionais do contrato (`IdentityOption.Costas` / `.Virada`, em
+ * ../types.ts): `Costas` — a mesma pessoa de trás; `Virada` — espelhada sem
+ * espelhar a marca. O cenário (src/elenco/cenario.tsx) usa as da identidade
+ * ativa; uma identidade sem elas cai no desenho genérico.
  */
-export type GenteVistas = { Costas: React.FC<PessoaProps>; Virada: React.FC<PessoaProps> };
-
 const Costas = makeCostas();
 
-export const option: IdentityOption & GenteVistas = {
+export const option: IdentityOption = {
   id: 'gente',
   name: 'Gente de verdade',
   pitch: 'Gente adulta, de roupa de verdade, que olha com o olho do logo (íris violeta, brilho dourado) e veste o Topo Iris bordado no peito.',
@@ -887,7 +885,7 @@ export const option: IdentityOption & GenteVistas = {
   Virada: makePessoa(false, true),
 };
 
-export const optionNatural: IdentityOption & GenteVistas = {
+export const optionNatural: IdentityOption = {
   id: 'gente-natural',
   name: 'Gente · olho natural',
   pitch: 'A mesma gente adulta e o Topo Iris bordado no peito, com olhos de cor natural: a marca fica no brilho dourado do olhar.',
