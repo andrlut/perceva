@@ -29,6 +29,9 @@ DoorVideo.tsx (DOOR_VIDEO_REV) aponta pra revisão nova
 1. **Abre com o porquê da tela.** A primeira fala diz pra que a tela existe
    (vem de `<tela>.help.purpose` no `pt.ts`), com a tela inteira à vista
    (`camera: "wide"`), que é o que faz a pessoa reconhecer a tela. *(lint avisa)*
+   Quando o porquê é maior que a tela (por que se recompensar, e não só o
+   que a loja faz), ele vira a **abertura** com o elenco (abaixo) e a
+   primeira fala do tutorial passa a ser a ponte da história pra tela.
 2. **Mostrar e fazer, 3 a 4 elementos.** Cada elemento central da tela é
    destacado e, quando faz sentido, tocado: a tela reage como o app reage.
    Não é lista de funções: é o caminho que a pessoa vai fazer.
@@ -77,6 +80,39 @@ DoorVideo.tsx (DOOR_VIDEO_REV) aponta pra revisão nova
 
 `say` (por idioma) é o que a voz lê quando precisa ser diferente da legenda
 (ex.: legenda "(i)", voz "o botão de informação").
+
+### Abertura (`intro`): o porquê com o elenco, antes da tela
+
+`"intro": { "slug": "doors", "idea": "rewards-why" }` abre o vídeo da porta
+com 2 a 4 falas do [molde](MOLDE.md) (a pessoa, o lugar, as peças) que
+contam **por que a tela vale a pena na vida**, e só então a tela entra, num
+zoom pra dentro do celular. A abertura é uma ideia de
+`learning-drops/video-specs/<slug>.json` com `"bridge": "tour"`: sem verso,
+lint e voz do molde, ≤ 24 s. A composição `Porta`
+(`src/tutorial/Porta.tsx`) emenda as duas partes; cada uma guarda o próprio
+relógio, voz e legenda. O audit do movimento continua sendo o do tutorial.
+Teto da porta inteira: **66 s** (1 min + 10%).
+
+- Mesmas regras do molde na abertura: história, sem estudo nem número, sem
+  promessa. Pra Recompensas a régua é a de `docs/brand/base-cientifica.md`
+  §2.4 (recompensa autodefinida e imediata; nada de "a recompensa treina
+  você", petisco ou celebrar gasto).
+- A última fala da abertura e a primeira do tutorial são uma ponte: a
+  história termina no princípio, a tela mostra onde ele acontece (r3:
+  "Você define a recompensa… E o preço também." → "Aqui, as práticas pagam
+  na hora, em moedas…" — o preço é em moedas, e o "na hora" responde ao "só
+  lá na frente" do gancho).
+- A porta abre **muda**: a legenda é o canal principal, e ela corta no `:`.
+  Rótulo seguido de dois-pontos ("É o reforço positivo:") aparece sozinho
+  e se cola na frase anterior; escreva a virada ("Aí entra o reforço
+  positivo:").
+- Na porta a legenda da abertura usa o desenho da do tutorial (centrada,
+  52 px, mesma altura: `Molde captions="door"`), pra não pular na passagem.
+- Mesma narradora nas duas partes: o `qa-voice` confere a voz (sexo, pergunta
+  neutra) além das palavras; uma tomada com outra voz passou no r3 antes disso.
+- Ordem: `molde.mjs build --slug doors --idea <id>` + `voice` + `stills`
+  (conferir as cenas), depois `tour.mjs build` + `voice` + `stills` +
+  `render` (que já sai com as duas partes).
 
 ### Batida
 

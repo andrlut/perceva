@@ -12,7 +12,16 @@ import { passagem } from './transicao';
 /** Teto do vídeo de ideia: passou disso, o render falha (corte o roteiro). */
 export const MOLDE_MAX_SECONDS = 60;
 
-export type MoldeProps = { specKey: string; spec: MoldeSpec | null; scenes: MS[] };
+export type MoldeProps = {
+  specKey: string;
+  spec: MoldeSpec | null;
+  scenes: MS[];
+  /** "door": abertura dentro da porta (Porta.tsx) — legenda centrada e na altura da do tutorial */
+  captions?: 'door';
+};
+
+/** A legenda da abertura na porta fica onde fica a do tutorial (Tour.tsx CAPTION_TOP). */
+export const DOOR_CAPTION_TOP = 1548;
 
 export const calculateMoldeMetadata: CalculateMetadataFunction<MoldeProps> = async ({ props }) => {
   const dir = `molde/${props.specKey}`;
@@ -28,7 +37,7 @@ export const calculateMoldeMetadata: CalculateMetadataFunction<MoldeProps> = asy
 };
 
 /** Vídeo de ideia montado a partir de um spec: cenas do molde + voz por fala + legenda. */
-export const Molde: React.FC<MoldeProps> = ({ specKey, spec, scenes }) => {
+export const Molde: React.FC<MoldeProps> = ({ specKey, spec, scenes, captions }) => {
   if (!spec) return null;
   const skip = scenes.filter((s) => s.scene === 'verso').map((s) => s.id);
   return (
@@ -60,7 +69,11 @@ export const Molde: React.FC<MoldeProps> = ({ specKey, spec, scenes }) => {
                   <Audio src={staticFile(`molde/${specKey}/${s.id}.mp3`)} />
                 </Sequence>
               ))}
-          <Captions scenes={scenes} skip={skip} top={1440} />
+          {captions === 'door' ? (
+            <Captions scenes={scenes} skip={skip} top={DOOR_CAPTION_TOP} frame="door" />
+          ) : (
+            <Captions scenes={scenes} skip={skip} top={1440} />
+          )}
         </AbsoluteFill>
       </VariantContext.Provider>
     </SpecContext.Provider>

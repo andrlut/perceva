@@ -40,6 +40,7 @@ export type TourProps = {
 const HEADER_TOP = 46;
 const STAGE_TOP = 176;
 const STAGE_H = 1340;
+/** a legenda da abertura da porta usa a mesma altura (molde/Molde.tsx DOOR_CAPTION_TOP) */
 const CAPTION_TOP = 1548;
 const PHONE_MARGIN = 22;
 
@@ -142,6 +143,8 @@ const TourCaptions: React.FC<{ scenes: TourScene[] }> = ({ scenes }) => {
           lineHeight: 1.22,
           color: C.hi,
           textAlign: 'center',
+          // linhas equilibradas, igual à legenda do molde (src/Captions.tsx)
+          textWrap: 'balance',
           textShadow: '0 2px 18px rgba(5,7,26,0.95), 0 0 2px rgba(5,7,26,1)',
           opacity: t,
           transform: `translateY(${(1 - t) * 8}px)`,

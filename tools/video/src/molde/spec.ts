@@ -14,7 +14,8 @@ export type Mood = 'ok' | 'feliz' | 'cansado';
 export type PieceName = string;
 
 /** Uma peça que entra na cena, opcionalmente quando a fala chega a `cue`. */
-export type Obj = { p: PieceName; cue?: string; out?: string };
+/** `stay`: a peça já estava em cena na fala anterior (mesmo encaixe) — aparece pousada, sem cair de novo. */
+export type Obj = { p: PieceName; cue?: string; out?: string; stay?: boolean };
 
 export type SceneKind = 'pessoa' | 'semana' | 'virada' | 'multidao' | 'comparar' | 'lista' | 'cena' | 'pensa' | 'mapa' | 'verso';
 

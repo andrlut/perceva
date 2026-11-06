@@ -159,11 +159,12 @@ const Stage: React.FC<{ s: MS; geo?: EnvGeo; focus?: FocusMap; kicker?: string; 
  * Num ambiente, ela "pousa" (queda curta, cresce um pouco). `base` = `top` é a
  * linha onde a peça se apoia (mesa, chão), não o topo dela.
  */
-const Drop: React.FC<{ s: MS; p: string; cueAt?: string; out?: string; top: number; left: number; size: number; delay?: number; fall?: number; base?: boolean; chip?: boolean }> = ({
+const Drop: React.FC<{ s: MS; p: string; cueAt?: string; out?: string; stay?: boolean; top: number; left: number; size: number; delay?: number; fall?: number; base?: boolean; chip?: boolean }> = ({
   s,
   p,
   cueAt,
   out,
+  stay = false,
   top,
   left,
   size,
@@ -175,7 +176,8 @@ const Drop: React.FC<{ s: MS; p: string; cueAt?: string; out?: string; top: numb
   const frame = useCurrentFrame();
   const spr = useSpr();
   const accent = useAccent();
-  const t = spr(at(s, cueAt, s.lead + delay), { damping: 11, stiffness: 140 });
+  // `stay`: já estava em cena (com corte seco da fala anterior) — sem queda, sem sumir no corte
+  const t = stay ? 1 : spr(at(s, cueAt, s.lead + delay), { damping: 11, stiffness: 140 });
   const gone = out ? spr(cue(s, out), { damping: 20, stiffness: 80 }) : 0;
   const land = fall < 120;
   // desenho que flutua por cima de móvel (estante, mesa): vai numa ficha redonda, como o ícone do app,
@@ -229,7 +231,7 @@ const busyOf = (objects: Obj[] | undefined, slots: Slot[]): Rect[] => (objects ?
 const Drops: React.FC<{ s: MS; objects?: Obj[]; slots: Slot[]; fall?: number; stagger?: number }> = ({ s, objects = [], slots, fall, stagger = 8 }) => (
   <>
     {objects.slice(0, slots.length).map((o, i) => (
-      <Drop key={i} s={s} p={o.p} cueAt={o.cue} out={o.out} {...slots[i]} delay={4 + i * stagger} fall={fall} />
+      <Drop key={i} s={s} p={o.p} cueAt={o.cue} out={o.out} stay={o.stay} {...slots[i]} delay={4 + i * stagger} fall={fall} />
     ))}
   </>
 );

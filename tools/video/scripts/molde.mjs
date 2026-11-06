@@ -26,6 +26,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { markVoiced, pendingLines } from './voiced.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const repo = path.resolve(root, '..', '..');
@@ -80,7 +81,7 @@ const BANNED = {
   en: /\b(stud(y|ies)|research\w*|scientists?|samples?|participants?|volunteers?|universit(y|ies)|journals?|experiments?|statistic\w*|data|proven|percent|times more|et al)\b/,
 };
 const CUE_KEYS = ['cue', 'turn', 'from', 'until', 'at', 'win', 'glow', 'out', 'arrives', 'leaves'];
-const LIMITS = { caption: 150, kicker: 24, label: 22, chip: 30, pill: 22, lines: [4, 8], seconds: 58 };
+const LIMITS = { caption: 150, kicker: 24, label: 22, chip: 30, pill: 22, lines: [4, 8], seconds: 58, bridgeLines: [2, 4], bridgeSeconds: 24 };
 
 /** câmera, passagem e ambiente: valem pra qualquer cena (o ambiente só nas que têm pessoa de pé) */
 function lintStage(where, l, i, errors, warns) {
@@ -176,9 +177,14 @@ function lintIdea(ideaId, spec, card, lang, errors, warns) {
   const where = (l, m) => `${ideaId}/${lang}/${l}: ${m}`;
   const lines = spec.lines;
   if (!Array.isArray(lines) || !lines.length) return errors.push(`${ideaId}: sem lines`);
-  if (lines.length < LIMITS.lines[0] || lines.length > LIMITS.lines[1]) errors.push(`${ideaId}: ${lines.length} falas (faixa ${LIMITS.lines.join('–')})`);
+  // abertura de porta (bridge "tour"): a história do porquê que emenda no tutorial da tela, sem verso
+  const bridge = spec.bridge === 'tour';
+  const range = bridge ? LIMITS.bridgeLines : LIMITS.lines;
+  if (spec.bridge !== undefined && !bridge) errors.push(`${ideaId}: bridge "${spec.bridge}" (só "tour")`);
+  if (lines.length < range[0] || lines.length > range[1]) errors.push(`${ideaId}: ${lines.length} falas (faixa ${range.join('–')})`);
   const last = lines[lines.length - 1];
-  if (last.scene !== 'verso') errors.push(`${ideaId}: a última cena tem que ser "verso" (a voz lê o card)`);
+  if (bridge && lines.some((l) => l.scene === 'verso')) errors.push(`${ideaId}: abertura de porta não tem verso (ela emenda na tela: tools/video/TOUR.md)`);
+  if (!bridge && last.scene !== 'verso') errors.push(`${ideaId}: a última cena tem que ser "verso" (a voz lê o card)`);
   const ids = new Set();
   let chars = 0;
   let extra = 0;
@@ -244,8 +250,9 @@ function lintIdea(ideaId, spec, card, lang, errors, warns) {
     for (const c of cues) if (!hay.some((h) => h.includes(c))) errors.push(where(l.id, `deixa "${c}" não está na fala "${plain(cap)}"`));
   }
   const est = chars / (lang === 'en' ? 15.5 : 14.5) + extra + lines.length * 0.6;
-  if (est > LIMITS.seconds) errors.push(`${ideaId}/${lang}: ~${est.toFixed(0)} s estimados (teto ${LIMITS.seconds} s) — corte falas`);
-  else if (est > LIMITS.seconds - 6) warns.push(`${ideaId}/${lang}: ~${est.toFixed(0)} s estimados, perto do teto`);
+  const cap = bridge ? LIMITS.bridgeSeconds : LIMITS.seconds;
+  if (est > cap) errors.push(`${ideaId}/${lang}: ~${est.toFixed(0)} s estimados (teto ${cap} s${bridge ? ' na abertura: o tutorial vem depois' : ''}) — corte falas`);
+  else if (est > cap - (bridge ? 3 : 6)) warns.push(`${ideaId}/${lang}: ~${est.toFixed(0)} s estimados, perto do teto`);
 }
 
 function load() {
@@ -315,7 +322,7 @@ async function build(ctx) {
       const dir = pubDir(k);
       fs.mkdirSync(dir, { recursive: true });
       const hasImg = await cardImage(ctx, id, path.join(dir, 'card.webp'));
-      if (!hasImg) console.warn(`! ${k}: sem imagem 4:5 da ideia — o card do verso sai sem foto`);
+      if (!hasImg && src.bridge !== 'tour') console.warn(`! ${k}: sem imagem 4:5 da ideia — o card do verso sai sem foto`);
       const lines = src.lines.map((raw, i) => {
         const l = resolveLine(raw, lang);
         const out = { id: l.id, scene: l.scene, caption: l.caption, ...(l.say ? { say: l.say } : {}), ...(l.pre ? { pre: l.pre } : {}), ...(l.hold ? { hold: l.hold } : {}), props: l.props ?? {} };
@@ -338,11 +345,9 @@ async function build(ctx) {
         lines,
       };
       // a voz de uma fala que não mudou continua válida; fala que mudou é regravada no `voice`
+      // (a régua é o texto que a voz leu e passou no QA — voiced.json —, não o build anterior)
       const prev = fs.existsSync(path.join(dir, 'spec.json')) ? readJson(path.join(dir, 'spec.json')) : null;
-      const changed = lines.filter((l) => {
-        const p = prev?.lines?.find((x) => x.id === l.id);
-        return !p || (p.say ?? p.caption) !== (l.say ?? l.caption) || !fs.existsSync(path.join(dir, `${l.id}.mp3`));
-      });
+      const changed = pendingLines(dir, lines, prev);
       fs.writeFileSync(path.join(dir, 'spec.json'), JSON.stringify(spec, null, 2));
       fs.writeFileSync(path.join(dir, 'changed.json'), JSON.stringify(changed.map((l) => l.id)));
       if (silent) {
@@ -372,18 +377,26 @@ function voice(ctx) {
     for (const lang of LANGS) {
       const k = key(id, lang);
       const dir = `molde/${k}`;
-      if (!fs.existsSync(path.join(pubDir(k), 'spec.json'))) die(`${k}: rode build antes`);
-      const changed = only ? only.split(',') : readJson(path.join(pubDir(k), 'changed.json'));
+      const specFile = path.join(pubDir(k), 'spec.json');
+      if (!fs.existsSync(specFile)) die(`${k}: rode build antes`);
+      const spec = readJson(specFile);
+      if (spec.silent) die(`${k}: o build foi --silent — rode build sem --silent antes da voz`);
+      const pending = pendingLines(pubDir(k), spec.lines);
+      const changed = only ? only.split(',') : pending.map((l) => l.id);
       if (changed.length) node('tts-gemini.mjs', ['--dir', dir, '--lang', lang, '--only', changed.join(',')]);
       else node('tts-gemini.mjs', ['--dir', dir, '--lang', lang, '--measure']);
       try {
         // QA de tudo que foi gravado agora (as falas antigas já passaram antes)
         if (changed.length) node('qa-voice.mjs', ['--dir', dir, '--lang', lang, '--fix', '--only', changed.join(',')]);
-      } catch {
+      } catch (e) {
+        if (e.status === 2) die(`${k}: o QA da voz ficou sem resposta da API (nada foi reprovado) — rode voice de novo daqui a pouco`);
         die(`${k}: QA da voz reprovou depois das tentativas — reescreva a fala (homófono, palavra difícil) e rode de novo`);
       }
       node('tts-gemini.mjs', ['--dir', dir, '--lang', lang, '--measure']);
-      fs.writeFileSync(path.join(pubDir(k), 'changed.json'), '[]');
+      // só o que foi gravado e passou no QA vira "em dia"; um --only não apaga o resto da fila
+      const left = markVoiced(pubDir(k), spec.lines, changed, pending);
+      fs.writeFileSync(path.join(pubDir(k), 'changed.json'), JSON.stringify(left.map((l) => l.id)));
+      if (left.length) console.warn(`! ${k}: ainda sem voz em dia: ${left.map((l) => l.id).join(', ')}`);
     }
 }
 
@@ -437,7 +450,9 @@ async function render(ctx) {
       const k = key(id, lang);
       const card = ctx.cards[id];
       const dir = outDir(k);
-      const preview = !!readJson(path.join(pubDir(k), 'spec.json')).silent;
+      // abertura de porta: nunca sai sozinha — vai dentro do vídeo da porta (tour.mjs render, composição Porta)
+      const bridge = ctx.vs.ideas[id].bridge === 'tour';
+      const preview = bridge || !!readJson(path.join(pubDir(k), 'spec.json')).silent;
       fs.mkdirSync(path.join(dir, 'pub'), { recursive: true });
       // prévia sem voz: só o mp4 de conferência, sem pub/ nem video.json (não tem como ir pro bucket)
       const full = path.join(dir, preview ? 'preview.mp4' : 'video.mp4');
@@ -456,6 +471,10 @@ async function render(ctx) {
         },
       });
       console.log('');
+      if (bridge) {
+        console.log(`✓ ${k}: abertura de conferência · ${path.relative(repo, full)} (o vídeo da porta sai do tour.mjs render)`);
+        continue;
+      }
       if (preview) {
         console.log(`✓ ${k}: PRÉVIA SEM VOZ · ${path.relative(repo, full)} (rode build sem --silent + voice antes do render de verdade)`);
         continue;
@@ -480,6 +499,10 @@ function upload(ctx) {
   for (const id of ctx.ideaIds)
     for (const lang of LANGS) {
       const k = key(id, lang);
+      if (ctx.vs.ideas[id].bridge === 'tour') {
+        console.log(`· ${k}: abertura de porta — sobe dentro do vídeo da porta (tour.mjs upload)`);
+        continue;
+      }
       const vj = path.join(outDir(k), 'video.json');
       if (!fs.existsSync(vj)) die(`${k}: rode render antes`);
       const v = readJson(vj);

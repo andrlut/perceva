@@ -67,6 +67,69 @@
         }
       ]
     },
+    "rewards-why": {
+      "_doc": "Abertura da porta de Recompensas (r3): o PORQUÊ, contado com o elenco, que emenda no tutorial da tela (tools/video/tours/rewards.json, \"intro\"). Sem verso: a última fala passa pro celular (composição Porta, src/tutorial/Porta.tsx). A régua é a de docs/brand/base-cientifica.md §2.4: o que sustenta o Cofre é recompensa AUTODEFINIDA e IMEDIATA — daí as duas falas do meio (logo depois do esforço; você escolhe e dá o preço). 'Reforço positivo' é o nome do mecanismo (algo bom logo depois de um comportamento torna mais provável repeti-lo), dito como vontade, sem promessa de resultado e sem estudo, e entra como VIRADA ('Aí entra…' / 'That's where… comes in'): a porta abre muda e a legenda corta no ':', então 'É o reforço positivo:' sozinho logo depois de 'o resultado só vem lá na frente' lia como se a demora fosse o reforço (revisão r3). A última fala segue a frase canônica da marca ('você define a recompensa e o preço', 00-espinha.md); 'the reward is yours' em inglês soava 'você ganhou'. O haltere fica em cena na fala do reforço: o 'repetir' é a prática, não o café. Corte seco (transicao corte) nas duas passagens, 1→2 e 2→3: na mesma sala, o crossfade (e o zoom automático do push) dobrava a pessoa por alguns quadros, e o haltere sumia e caía de novo bem na legenda 'Aí entra…' — por isso ele vem com stay (já pousado). A fala 3 não tem hold: a legenda sai no fim da fala, e o hold era só lista parada sem som antes da passagem pro celular. Vetado pela marca (00-espinha.md): petisco/cachorro, 'a recompensa treina você', celebrar gasto. A fala 1 diz 'costuma' porque nem toda prática demora a render. Os três itens da lista são recompensas da loja do tutorial (café, jogo, jantar — o jantar com o mesmo nome do cartão), sem número (o lint barra dígito na tela: por isso 'Uma hora de jogo' e não '1 hora de jogo').",
+      "dimension": "wealth",
+      "bridge": "tour",
+      "card": {
+        "file": "rewards-why",
+        "title": { "pt": "Recompensas", "en": "Rewards" },
+        "claim": {
+          "pt": "Recompensa logo depois do esforço, escolhida e precificada por você.",
+          "en": "A reward right after the effort, picked and priced by you."
+        }
+      },
+      "lines": [
+        {
+          "id": "hook",
+          "scene": "pessoa",
+          "pt": { "caption": "Uma prática cobra esforço agora, e o resultado *costuma vir só lá na frente*." },
+          "en": { "caption": "A practice asks for effort now, and the payoff *usually comes much later*." },
+          "props": {
+            "kicker": { "pt": "Recompensas", "en": "Rewards" },
+            "mood": "cansado",
+            "sweat": true,
+            "ambiente": "casa",
+            "camera": { "move": "pull" },
+            "objects": [
+              { "p": "ion:barbell", "cue": { "pt": "esforço", "en": "effort" } },
+              { "p": "relogio", "cue": { "pt": "lá na frente", "en": "much later" } }
+            ]
+          }
+        },
+        {
+          "id": "reinforce",
+          "scene": "pessoa",
+          "pt": { "caption": "Aí entra o *reforço positivo*: algo bom logo depois do esforço dá vontade de repetir." },
+          "en": { "caption": "That's where *positive reinforcement* comes in: something good right after the effort makes you want to do it again." },
+          "props": {
+            "mood": "cansado",
+            "ambiente": "casa",
+            "camera": { "move": "push" },
+            "transicao": "corte",
+            "objects": [{ "p": "ion:barbell", "stay": true }, { "p": "caneca", "cue": { "pt": "algo bom", "en": "something good" } }],
+            "turn": { "pt": "vontade de repetir", "en": "want to do it again" },
+            "to": "feliz"
+          }
+        },
+        {
+          "id": "yours",
+          "scene": "lista",
+          "pt": { "caption": "Você define a recompensa: um café, uma hora de jogo, um jantar. *E o preço também.*" },
+          "en": { "caption": "And the reward is up to you: a coffee, an hour of gaming, dinner out. *So is the price.*" },
+          "props": {
+            "mood": "feliz",
+            "ambiente": "casa",
+            "transicao": "corte",
+            "items": [
+              { "icon": "cafe", "text": { "pt": "Café especial", "en": "Specialty coffee" }, "cue": { "pt": "café", "en": "coffee" } },
+              { "icon": "game-controller", "text": { "pt": "Uma hora de jogo", "en": "An hour of gaming" }, "cue": { "pt": "uma hora", "en": "an hour" } },
+              { "icon": "restaurant", "text": { "pt": "Jantar bom fora", "en": "A nice dinner out" }, "cue": { "pt": "jantar", "en": "dinner" } }
+            ]
+          }
+        }
+      ]
+    },
     "learning": {
       "dimension": "mind",
       "card": {

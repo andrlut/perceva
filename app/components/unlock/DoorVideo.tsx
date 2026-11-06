@@ -5,6 +5,7 @@ import { Image } from 'expo-image';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import Animated, { FadeOut } from 'react-native-reanimated';
 
 import { useT } from '@/lib/i18n';
 import { learningMediaUrl } from '@/lib/learningMedia';
@@ -19,13 +20,20 @@ import type { DoorFeature } from './UnlockDoor';
  *  - r1: the illustrated story (tools/video molde, learning-drops/video-specs/doors.json).
  *  - r2+: the screen tutorial — a replica of the real tab with a tapping finger,
  *    ending on the (i) (tools/video/TOUR.md, tools/video/tours/<tab>.json).
+ *  - rewards r3: the why first (the cast, ~20 s: positive reinforcement, your own
+ *    reward and price), then the same tutorial — one file, ~59 s.
  */
-const DOOR_VIDEO_REV: Record<DoorFeature, number> = { rewards: 2, learning: 1, me: 1 };
+const DOOR_VIDEO_REV: Record<DoorFeature, number> = { rewards: 3, learning: 1, me: 1 };
 const doorAsset = (feature: DoorFeature, lang: 'pt' | 'en', ext: 'mp4' | 'poster.webp') =>
   learningMediaUrl(`doors/${feature}.${lang}.r${DOOR_VIDEO_REV[feature]}.${ext}`);
 
 /** A video that has not shown a frame by then is treated as failed (offline). */
 const START_TIMEOUT_MS = 7000;
+/** The poster (a frame ~1 s in) stays until the video has drawn its opening — frame 0 of
+ *  a cast intro is the empty room, so dropping the poster on `playing` read as a blink. */
+const POSTER_HOLD_S = 0.4;
+/** …or this long after playback starts, for players that skip early timeUpdates. */
+const POSTER_MAX_MS = 900;
 
 interface Props {
   feature: DoorFeature;
@@ -43,7 +51,7 @@ interface Props {
  * Loops, starts MUTED and never unmutes on its own (onboarding rule: a video
  * never starts with sound) — the captions are burned in, so it reads without
  * sound. One small disc turns the voice on for whoever wants it. The poster
- * stays on top until the first real frame (same trick as IdeaVideo).
+ * stays on top until the video has drawn its opening, then fades out.
  */
 export function DoorVideo({ feature, width, height, onProgress, onFirstLoop, onFail }: Props) {
   const { t, locale } = useT();
@@ -58,6 +66,7 @@ export function DoorVideo({ feature, width, height, onProgress, onFirstLoop, onF
   });
   const [soundOn, setSoundOn] = useState(false);
   const [started, setStarted] = useState(false);
+  const [revealed, setRevealed] = useState(false);
   const looped = useRef(false);
   const lastTime = useRef(0);
 
@@ -67,6 +76,12 @@ export function DoorVideo({ feature, width, height, onProgress, onFirstLoop, onF
   useEffect(() => {
     if (isPlaying) setStarted(true);
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (!started || revealed) return;
+    const id = setTimeout(() => setRevealed(true), POSTER_MAX_MS);
+    return () => clearTimeout(id);
+  }, [started, revealed]);
 
   useEffect(() => {
     if (status === 'error') onFail();
@@ -87,6 +102,7 @@ export function DoorVideo({ feature, width, height, onProgress, onFirstLoop, onF
 
   useEventListener(player, 'playToEnd', firstLoopDone);
   useEventListener(player, 'timeUpdate', ({ currentTime }) => {
+    if (currentTime >= POSTER_HOLD_S) setRevealed(true);
     if (looped.current) return;
     // With loop on, some players wrap without a playToEnd: time going back = one loop.
     if (currentTime + 0.5 < lastTime.current) return firstLoopDone();
@@ -126,8 +142,8 @@ export function DoorVideo({ feature, width, height, onProgress, onFirstLoop, onF
         nativeControls={false}
         surfaceType="textureView"
       />
-      {!started && (
-        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      {!revealed && (
+        <Animated.View style={StyleSheet.absoluteFill} pointerEvents="none" exiting={FadeOut.duration(180)}>
           <Image
             source={{ uri: poster }}
             style={StyleSheet.absoluteFill}
@@ -135,10 +151,12 @@ export function DoorVideo({ feature, width, height, onProgress, onFirstLoop, onF
             cachePolicy="memory-disk"
             transition={120}
           />
-          <View style={styles.spinner}>
-            <ActivityIndicator color={tokens.text.hi} />
-          </View>
-        </View>
+          {!started && (
+            <View style={styles.spinner}>
+              <ActivityIndicator color={tokens.text.hi} />
+            </View>
+          )}
+        </Animated.View>
       )}
       <Pressable
         onPress={toggleSound}

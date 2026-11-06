@@ -1,7 +1,10 @@
 // QA da narração: transcreve cada fala com o Gemini, compara com o roteiro e
 // (com --fix) regrava a que não bater — até N tentativas. Pega fala embolada,
 // palavra trocada e homófono que muda o sentido ("mais" ouvido como "mas").
-//   node scripts/qa-voice.mjs [--script recanto] [--fix] [--tries 4] [--only a,b]
+//   node scripts/qa-voice.mjs [--script recanto] [--fix] [--tries 4] [--only a,b] [--sex female|male|any]
+// Além das palavras, confere a narradora (sexo da voz, pergunta neutra ao Gemini): tomada com outra
+// voz reprova e, com --fix, é regravada (com a mesma --voice, se passada). Erro da API sai com código 2
+// (QA indisponível), sem reprovar nem regravar.
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -43,23 +46,61 @@ const sim = (a, b) => {
   return 1 - d[x.length][y.length] / Math.max(x.length, y.length, 1);
 };
 
-async function transcribe(file) {
-  const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-    body: JSON.stringify({ contents: [{ parts: [
-      { inlineData: { mimeType: /\.mp3$/i.test(file) ? 'audio/mp3' : 'audio/wav', data: fs.readFileSync(file).toString('base64') } },
-      { text: lang === 'en'
-        ? 'Transcribe this English audio exactly as spoken, word for word, without correcting or commenting. Numbers as digits. Reply with the transcription only.'
-        : 'Transcreva este áudio em português do Brasil exatamente como foi falado, palavra por palavra, sem corrigir nem comentar. ' +
-          'Nomes próprios prováveis: Perceva (app), Recanto, Explorar, Aprender. Números em algarismos. Responda só com a transcrição.' },
-    ] }] }),
-  });
-  const j = await res.json();
-  return (j.candidates?.[0]?.content?.parts?.map((p) => p.text).join('') ?? '').trim();
+/** Erro da API (não da voz): o QA não tem como julgar, então não reprova nem regrava. Sai com código 2. */
+class QaUnavailable extends Error {}
+
+/** Uma pergunta ao Gemini sobre o áudio, com 3 tentativas (1 s, 3 s) pra erro de rede/limite/5xx. */
+async function ask(file, text) {
+  let last = '';
+  for (const wait of [0, 1000, 3000]) {
+    if (wait) await new Promise((r) => setTimeout(r, wait));
+    try {
+      const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+        body: JSON.stringify({ contents: [{ parts: [
+          { inlineData: { mimeType: /\.mp3$/i.test(file) ? 'audio/mp3' : 'audio/wav', data: fs.readFileSync(file).toString('base64') } },
+          { text },
+        ] }] }),
+      });
+      const j = await res.json().catch(() => null);
+      const out = j?.candidates?.[0]?.content?.parts?.map((p) => p.text).join('');
+      if (res.ok && !j?.error && typeof out === 'string') return out.trim();
+      last = `HTTP ${res.status}${j?.error?.message ? ` ${j.error.message.slice(0, 120)}` : ''}`;
+    } catch (e) {
+      last = String(e?.message ?? e).slice(0, 120);
+    }
+  }
+  throw new QaUnavailable(last);
+}
+
+const transcribe = (file) =>
+  ask(
+    file,
+    lang === 'en'
+      ? 'Transcribe this English audio exactly as spoken, word for word, without correcting or commenting. Numbers as digits. Reply with the transcription only.'
+      : 'Transcreva este áudio em português do Brasil exatamente como foi falado, palavra por palavra, sem corrigir nem comentar. ' +
+          'Nomes próprios prováveis: Perceva (app), Recanto, Explorar, Aprender. Números em algarismos. Responda só com a transcrição.',
+  );
+
+// A narradora também é conferida, não só as palavras: na porta de Recompensas (r3, 2026-11-06) uma
+// tomada da Kore saiu com outra voz, grave e masculina, e passou no QA de texto com 100%. Pergunta
+// neutra (sem sugerir resposta), SEMPRE 3 vezes, e passa com 2 que batem com o esperado: aceitar no
+// primeiro "female" deixava uma tomada masculina passar com um único engano do classificador.
+// Kore e Aoede (as vozes do projeto) são femininas: --sex male|female|any muda o esperado.
+const expectSex = arg('sex', 'female');
+const askSex = async (file) =>
+  /sex\s*=\s*(male|female|ambiguous)/i.exec(
+    await ask(file, 'Listen to the speaker. Answer in ONE line exactly: "sex=<male|female|ambiguous>; confidence=<0-100>". Nothing else.'),
+  )?.[1]?.toLowerCase() ?? 'ambiguous';
+async function narratorOk(file) {
+  if (expectSex === 'any') return { ok: true, heard: 'any' };
+  const votes = [await askSex(file), await askSex(file), await askSex(file)];
+  return { ok: votes.filter((x) => x === expectSex).length >= 2, heard: votes.join('/') };
 }
 
 let failed = 0;
+try {
 for (const line of lines) {
   if (only.length && !only.includes(line.id)) continue;
   const file = path.join(voDir, `${line.id}.mp3`);
@@ -73,11 +114,23 @@ for (const line of lines) {
     const missing = [...new Set(norm(line.say ?? line.caption.replace(/\*/g, '')).filter((w) => w.length >= 5 || /^\d+$/.test(w)))].filter(
       (w) => !heardSet.has(stem(w)),
     );
-    const ok = score >= 0.86 && missing.length === 0;
-    console.log(`${ok ? 'OK  ' : 'FALHA'} ${line.id.padEnd(9)} ${(score * 100).toFixed(0)}%${missing.length ? ` faltou: ${missing.join(', ')}` : ''}  "${heard}"`);
+    const words = score >= 0.86 && missing.length === 0;
+    const voice = words ? await narratorOk(file) : { ok: true, heard: '' };
+    const ok = words && voice.ok;
+    console.log(
+      `${ok ? 'OK  ' : 'FALHA'} ${line.id.padEnd(9)} ${(score * 100).toFixed(0)}%${missing.length ? ` faltou: ${missing.join(', ')}` : ''}` +
+        `${voice.ok ? '' : ` · OUTRA VOZ (ouvida: ${voice.heard}; esperada: ${expectSex})`}  "${heard}"`,
+    );
     if (ok) break;
     if (!fix || t === tries) { failed++; break; }
-    execFileSync('node', [path.join(root, 'scripts/tts-gemini.mjs'), ...(dir ? ['--dir', dir, '--lang', lang] : name ? ['--script', name] : []), '--only', line.id], { stdio: 'ignore' });
+    // regrava com a MESMA voz da gravação (--voice): sem isso o tts-gemini caía no padrão (Kore)
+    const voiceArg = arg('voice');
+    execFileSync('node', [path.join(root, 'scripts/tts-gemini.mjs'), ...(dir ? ['--dir', dir, '--lang', lang] : name ? ['--script', name] : []), ...(voiceArg ? ['--voice', voiceArg] : []), '--only', line.id], { stdio: 'ignore' });
   }
+}
+} catch (e) {
+  if (!(e instanceof QaUnavailable)) throw e;
+  console.error(`✗ QA indisponível (API do Gemini: ${e.message}) — nada foi reprovado nem regravado; rode de novo daqui a pouco`);
+  process.exit(2);
 }
 process.exitCode = failed ? 1 : 0;

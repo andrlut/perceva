@@ -93,11 +93,16 @@ aceita `done` pra trocar o selo "IDEIA ABSORVIDA". Exemplo:
 `learning-drops/video-specs/doors.json` (as portas do onboarding, lidas
 por `app/components/unlock/DoorVideo.tsx`).
 
+Com `"bridge": "tour"` a ideia é a **abertura** de um tutorial de tela
+(o porquê, antes da tela): 2 a 4 falas, ≤ 24 s, **sem** verso, e o `render`
+daqui só sai como conferência; o vídeo de verdade é o da porta, montado pelo
+`tour.mjs render` ([TOUR.md](TOUR.md), "Abertura").
+
 ## Cenas
 
 | cena | o que mostra | props | ambiente |
 |---|---|---|---|
-| `pessoa` | A pessoa no centro, peças caindo em volta nas deixas. Gancho, estado, problema. | `mood`, `arms`, `sweat`, `clock` (rapido/calmo/acalma), `objects[≤4]` `{p, cue?, out?}`, `turn`+`to` (o humor vira; pra `feliz` ela comemora e brilha), `glow` | sim |
+| `pessoa` | A pessoa no centro, peças caindo em volta nas deixas. Gancho, estado, problema. | `mood`, `arms`, `sweat`, `clock` (rapido/calmo/acalma), `objects[≤4]` `{p, cue?, out?, stay?}` (`stay`: a peça já estava em cena na fala anterior, no mesmo encaixe — use com `transicao: "corte"`), `turn`+`to` (o humor vira; pra `feliz` ela comemora e brilha), `glow` | sim |
 | `semana` | 7 dias enchendo de tarefas, relógio disparando. Pressa, rotina, acúmulo. | `from`, `until` (deixas do enchimento), `mood` | sim |
 | `virada` | A pessoa passa a peça adiante, pro ajudante (que usa a peça) ou ela some, e o humor vira. | `gives` (peça), `helper` (bool), `from` (entrega), `turn` (vira o humor), `to`, `mood`, `clock` (acalma), `objects[≤2]` | sim |
 | `multidao` | 20 pessoas, algumas acendem. "Pouca gente / metade / quase todo mundo", SEM número. | `lit` (poucos/metade/muitos), `at` | não |

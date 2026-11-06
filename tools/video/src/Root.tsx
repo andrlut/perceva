@@ -8,6 +8,7 @@ import { ElencoSheet } from './elenco/Sheet';
 import { Molde, calculateMoldeMetadata } from './molde/Molde';
 import { IdentidadeSheet } from './identidade/Sheet';
 import { Tour, calculateTourMetadata } from './tutorial/Tour';
+import { Porta, calculatePortaMetadata } from './tutorial/Porta';
 
 const calculateMetadata: CalculateMetadataFunction<FilmProps> = async ({ props }) => {
   const film = FILMS[props.film] as (typeof FILMS)[typeof props.film] & { maxSeconds?: number };
@@ -69,6 +70,18 @@ export const RemotionRoot: React.FC = () => (
       durationInFrames={FPS * 40}
       calculateMetadata={calculateTourMetadata}
       defaultProps={{ tourKey: 'rewards.pt', spec: null, scenes: [], mode: 'tour' as const }}
+    />
+    {/* Porta com abertura: o porquê com o elenco (molde, ideia com bridge "tour") emendado no
+        tutorial da tela. scripts/tour.mjs render usa esta quando o roteiro do tour traz `intro`. */}
+    <Composition
+      id="Porta"
+      component={Porta}
+      width={1080}
+      height={1920}
+      fps={FPS}
+      durationInFrames={FPS * 60}
+      calculateMetadata={calculatePortaMetadata}
+      defaultProps={{ introKey: 'doors.rewards-why.pt', tourKey: 'rewards.pt' }}
     />
   </>
 );

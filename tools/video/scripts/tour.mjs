@@ -7,6 +7,7 @@
 //   node scripts/tour.mjs frames  --tour <tela> [--lang …] (--frames a,b | --plan f.json) [--scale 1] [--clean]
 //                                                                       quadros avulsos + frames/index.json
 //   node scripts/tour.mjs render  --tour <tela> [--lang …] [--rev N]   MP4 + versão do app (720p) + pôster (barra se o audit do movimento falhar)
+//                                  com "intro" no roteiro: renderiza a composição Porta (o porquê com o elenco + este tutorial)
 //   node scripts/tour.mjs all     --tour <tela> [--lang …] [--silent]  build → voice → stills → render
 //   node scripts/tour.mjs replica [--screen rewards] [--fixture inicio] [--lang pt] [--state '{"goal":null}'] [--name x]
 //   node scripts/tour.mjs upload  --tour <tela> [--lang …] [--rev N]   sobe pro bucket learning-media (checkout principal)
@@ -20,6 +21,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { markVoiced, pendingLines } from './voiced.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const repo = path.resolve(root, '..', '..');
@@ -57,6 +59,8 @@ const FREE_LIMITS = (() => {
 
 const tourFile = (t) => path.join(root, 'tours', `${t}.json`);
 const key = (lang) => `${tourName}.${lang}`;
+/** a abertura do porquê (molde): public/molde/<slug>.<idea>.<lang>/ */
+const introKey = (spec, lang) => `${spec.intro.slug}.${spec.intro.idea}.${lang}`;
 const pubDir = (k) => path.join(root, 'public', 'tour', k);
 const outDir = (k) => path.join(root, 'out', 'tour', k);
 
@@ -121,6 +125,13 @@ function lintTour(spec, lang, errors, warns) {
   if (!kicker) errors.push(`${lang}: sem kicker`);
   else if (kicker.length > LIMITS.kicker) errors.push(`${lang}: kicker longo (${kicker.length} > ${LIMITS.kicker})`);
   for (const k of Object.keys(spec.state ?? {})) if (!screen.state.includes(k)) errors.push(`state.${k}: a tela não tem esse estado (${screen.state.join(', ')})`);
+  // abertura (o porquê com o elenco): uma ideia do molde com bridge "tour" — o lint do texto dela é o do molde
+  if (spec.intro) {
+    const f = path.join(repo, 'learning-drops', 'video-specs', `${spec.intro.slug}.json`);
+    const idea = fs.existsSync(f) ? readJson(f).ideas?.[spec.intro.idea] : null;
+    if (!idea) errors.push(`intro: sem ideia "${spec.intro.idea}" em learning-drops/video-specs/${spec.intro.slug}.json`);
+    else if (idea.bridge !== 'tour') errors.push(`intro: a ideia "${spec.intro.idea}" precisa de bridge "tour" (abertura sem verso)`);
+  }
   const ids = new Set();
   let chars = 0;
   let extra = 0;
@@ -237,13 +248,12 @@ function build(ctx) {
       rev: ctx.spec.rev ?? 1,
       ...(ctx.spec.posterAt ? { posterAt: ctx.spec.posterAt } : {}),
       ...(ctx.spec.style?.[lang] ? { style: ctx.spec.style[lang] } : {}),
+      ...(ctx.spec.intro ? { introKey: introKey(ctx.spec, lang) } : {}),
       lines,
     };
+    // a régua é o texto que a voz leu e passou no QA (voiced.json), não o build anterior
     const prev = fs.existsSync(path.join(dir, 'spec.json')) ? readJson(path.join(dir, 'spec.json')) : null;
-    const changed = lines.filter((l) => {
-      const p = prev?.lines?.find((x) => x.id === l.id);
-      return !p || (p.say ?? p.caption) !== (l.say ?? l.caption) || !fs.existsSync(path.join(dir, `${l.id}.mp3`));
-    });
+    const changed = pendingLines(dir, lines, prev);
     fs.writeFileSync(path.join(dir, 'spec.json'), JSON.stringify(out, null, 2));
     fs.writeFileSync(path.join(dir, 'changed.json'), JSON.stringify(changed.map((l) => l.id)));
     // tempos estimados (modo sem voz): mesma conta do lint, por fala
@@ -267,16 +277,22 @@ function voice() {
     const dir = `tour/${k}`;
     const specFile = path.join(pubDir(k), 'spec.json');
     if (!fs.existsSync(specFile)) die(`${k}: rode build antes`);
-    if (readJson(specFile).silent) die(`${k}: o build foi --silent — rode build sem --silent antes da voz`);
-    const changed = only ? only.split(',') : readJson(path.join(pubDir(k), 'changed.json'));
+    const spec = readJson(specFile);
+    if (spec.silent) die(`${k}: o build foi --silent — rode build sem --silent antes da voz`);
+    const pending = pendingLines(pubDir(k), spec.lines);
+    const changed = only ? only.split(',') : pending.map((l) => l.id);
     if (changed.length) node('tts-gemini.mjs', ['--dir', dir, '--lang', lang, '--only', changed.join(',')]);
     try {
       if (changed.length) node('qa-voice.mjs', ['--dir', dir, '--lang', lang, '--fix', '--only', changed.join(',')]);
-    } catch {
+    } catch (e) {
+      if (e.status === 2) die(`${k}: o QA da voz ficou sem resposta da API (nada foi reprovado) — rode voice de novo daqui a pouco`);
       die(`${k}: QA da voz reprovou depois das tentativas — reescreva a fala (homófono, palavra difícil) e rode de novo`);
     }
     node('tts-gemini.mjs', ['--dir', dir, '--lang', lang, '--measure']);
-    fs.writeFileSync(path.join(pubDir(k), 'changed.json'), '[]');
+    // só o que foi gravado e passou no QA vira "em dia"; um --only não apaga o resto da fila
+    const left = markVoiced(pubDir(k), spec.lines, changed, pending);
+    fs.writeFileSync(path.join(pubDir(k), 'changed.json'), JSON.stringify(left.map((l) => l.id)));
+    if (left.length) console.warn(`! ${k}: ainda sem voz em dia: ${left.map((l) => l.id).join(', ')}`);
   }
 }
 
@@ -461,19 +477,41 @@ async function render() {
     const composition = await selectComposition({ serveUrl, id: 'Tour', inputProps });
     const spec = composition.props.spec;
     if (spec.silent && !flag('allow-silent')) die(`${k}: o build é --silent (sem voz) — rode build + voice antes de renderizar (ou --allow-silent pra um rascunho)`);
+    // legenda nova sobre voz velha: fala cujo texto não é o que a voz leu e passou no QA
+    const tourPending = spec.silent ? [] : pendingLines(pubDir(k), spec.lines);
+    if (tourPending.length) die(`${k}: fala sem voz em dia (${tourPending.map((l) => l.id).join(', ')}) — node scripts/tour.mjs voice --tour ${tourName} --lang ${lang}`);
     // a régua da mão e do título (TOUR.md) barra o render; --allow-motion só pra rascunho
     if (reportMotion(k, composition.props.motion) && !flag('allow-motion')) die(`${k}: o movimento quebra as regras da mão/título (acima) — corrija o motor ou o roteiro (ou --allow-motion pra um rascunho)`);
     const rev = Number(arg('rev', String(spec.rev)));
     const dir = outDir(k);
     fs.mkdirSync(path.join(dir, 'pub', 'doors'), { recursive: true });
     const full = path.join(dir, 'video.mp4');
+    // com abertura, o filme é a composição Porta (a história do porquê emendada neste tutorial);
+    // o audit do movimento acima continua sendo o do tutorial, que é onde a mão anda
+    let film = { composition, inputProps };
+    if (spec.introKey) {
+      const ik = path.join(root, 'public', 'molde', spec.introKey);
+      const [islug, iidea] = spec.introKey.split('.');
+      // a abertura vem de outro roteiro (learning-drops/video-specs/<slug>.json): o render publicável
+      // refaz o build dela aqui, pra nunca sair com cena/legenda velha (o build não grava voz)
+      if (!spec.silent) node('molde.mjs', ['build', '--slug', islug, '--idea', iidea, '--lang', lang]);
+      if (!fs.existsSync(path.join(ik, 'spec.json'))) die(`${k}: falta a abertura ${spec.introKey} — node scripts/molde.mjs build --slug ${islug} --idea ${iidea} (+ voice)`);
+      const introSpec = readJson(path.join(ik, 'spec.json'));
+      if (!spec.silent && (introSpec.silent || !fs.existsSync(path.join(ik, 'timings.json'))))
+        die(`${k}: a abertura ${spec.introKey} está sem voz — node scripts/molde.mjs build --slug ${islug} --idea ${iidea} (sem --silent) + voice`);
+      const introPending = spec.silent ? [] : pendingLines(ik, introSpec.lines);
+      if (introPending.length) die(`${k}: a abertura tem fala sem voz em dia (${introPending.map((l) => l.id).join(', ')}) — node scripts/molde.mjs voice --slug ${islug} --idea ${iidea} --lang ${lang}`);
+      const props = { introKey: spec.introKey, tourKey: k };
+      film = { composition: await selectComposition({ serveUrl, id: 'Porta', inputProps: props }), inputProps: props };
+      console.log(`· ${k}: abertura ${spec.introKey} + tutorial = ${(film.composition.durationInFrames / 30).toFixed(1)} s`);
+    }
     let shown = -1;
     await renderMedia({
       serveUrl,
-      composition,
+      composition: film.composition,
       codec: 'h264',
       outputLocation: full,
-      inputProps,
+      inputProps: film.inputProps,
       onProgress: ({ progress }) => {
         const pct = Math.floor(progress * 10) * 10;
         if (pct !== shown) process.stdout.write(`${(shown = pct)}% `);

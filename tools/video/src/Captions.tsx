@@ -42,8 +42,18 @@ const chunk = (caption: string): string[] => {
   return merged;
 };
 
-/** Legenda queimada (playbook: 100% dos vídeos), sempre acima da UI do Reels. */
-export const Captions: React.FC<{ scenes: Scene[]; skip?: string[]; top?: number }> = ({ scenes, skip = [], top = LAYOUT.captionTop }) => {
+/**
+ * Legenda queimada (playbook: 100% dos vídeos), sempre acima da UI do Reels.
+ * `frame: "door"`: dentro da porta do app não há a coluna de ícones do Reels, então a legenda
+ * centra e cresce, igual à do tutorial (Tour.tsx: 64/64, 52 px) — sem pular na passagem da Porta.
+ */
+export const Captions: React.FC<{ scenes: Scene[]; skip?: string[]; top?: number; frame?: 'reels' | 'door' }> = ({
+  scenes,
+  skip = [],
+  top = LAYOUT.captionTop,
+  frame: place = 'reels',
+}) => {
+  const door = place === 'door';
   const frame = useCurrentFrame();
   // a cena "dona" do frame é a última que já começou a falar
   const scene = [...scenes].reverse().find((s) => frame >= s.start + s.lead - 2);
@@ -66,9 +76,9 @@ export const Captions: React.FC<{ scenes: Scene[]; skip?: string[]; top?: number
       style={{
         position: 'absolute',
         top,
-        // a coluna de ícones do Reels/TikTok ocupa a direita do quadro
-        left: 70,
-        right: 170,
+        // a coluna de ícones do Reels/TikTok ocupa a direita do quadro (na porta não tem)
+        left: door ? 64 : 70,
+        right: door ? 64 : 170,
         display: 'flex',
         justifyContent: 'center',
       }}
@@ -77,10 +87,12 @@ export const Captions: React.FC<{ scenes: Scene[]; skip?: string[]; top?: number
         style={{
           fontFamily: FONT.body,
           fontWeight: 700,
-          fontSize: 46,
+          fontSize: door ? 52 : 46,
           lineHeight: 1.22,
           color: C.hi,
           textAlign: 'center',
+          // linhas equilibradas: sem palavra órfã na segunda ("dinner / out.", "lá na / frente.")
+          textWrap: 'balance',
           textShadow: '0 2px 18px rgba(5,7,26,0.95), 0 0 2px rgba(5,7,26,1)',
           opacity: t,
           transform: `translateY(${(1 - t) * 8}px)`,
