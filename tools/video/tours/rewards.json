@@ -1,0 +1,90 @@
+{
+  "_doc": "Tutorial da aba Recompensas — o vídeo da porta (app/components/unlock/DoorVideo.tsx, doors/rewards.<lang>.r2.mp4). Formato e regras em tools/video/TOUR.md; roteiro do agente tutorial-video-director. Forma (7 falas): o porquê (rewards.help.purpose) com a tela inteira, saldo e um cartão destacados → Resgatar no cartão → a confirmação (quantidade e total, e o botão dela, que também se chama Resgatar) → a comemoração, onde a linha −120 mostra que as moedas já saíram e o resgate já conta como usado, com Desfazer → Mirar → o botão dourado do canto (Gerenciar) → o (i). Cada fala conferida em 2026-11-06 contra rewards.help.items.*.ai (app/lib/i18n/locales/pt.ts e en.ts) e app/app/(tabs)/rewards.tsx: o Resgatar aparece quando o saldo paga; a confirmação tem quantidade e total e confirma no botão Resgatar (rewards.buyConfirm.confirm); as moedas saem na hora e o resgate já conta como usado (não existe guardar pra depois); a comemoração tem Desfazer, que devolve o que foi pago; Mirar só existe nas que faltam moedas e põe a recompensa como meta no topo (troca a atual); o dourado do canto abre Gerenciar (criar, adotar sugestões, editar, reordenar — a ordem é manual, por isso 'ordena'/'reorder' e nunca 'sort'); o (i) abre o informativo. A fala do Desfazer dá sujeito explícito à segunda oração ('o resgate já conta como usado' / 'the reward counts as used'): sem ele, depois de 'As moedas' o 'conta como usado' soa como erro de concordância. A fala do Gerenciar dá objeto ao verbo ('ordena as recompensas' / 'reorder your rewards'): 'ordena' solto é 'dar ordens' e a voz pode soar 'e você manda'; no EN, 'reorder them' deixaria 'them' preso às sugestões. Não se narra o saldo descendo: o desconto (otimista, como useRedeemRewardN) acontece no toque do Resgatar da confirmação, sob o véu dos modais e fora do quadro; o que se vê é o −120 da comemoração, e é nele que a fala diz que as moedas saíram. 'Botão dourado' vem com 'do canto' porque os Resgatar dos cartões e o Aproveita! também são dourados. Gerenciar fala em adotar sugestões porque quem acabou de destravar a aba chega com a loja vazia (handle_new_user e o pacote inicial não criam recompensas), e as sugestões prontas são o primeiro passo dessa pessoa. Sem linguagem de comemorar gasto: tem quem precifique penalidade como recompensa. Começa SEM meta (a fixture inicio não tem meta; state.goal null deixa isso explícito): é como a aba chega pra quem acabou de destravá-la, e o Mirar vira um cartão novo no topo (o convite 'Mirar uma recompensa' dá lugar à meta) em vez de só trocar o nome de uma meta que já estava lá. A loja tem 5 recompensas ativas, o teto do plano grátis (FREE_LIMITS.reward = 5 em app/lib/premium/limits.ts; adoção do catálogo também conta), que é o plano da maioria de quem vê esta porta — uma loja maior seria uma conta que o free não tem. Com 340 moedas: Disponíveis agora = 1 hora de jogo, Café especial e Livro novo; Quase lá = Jantar bom fora; Grandes metas = Viagem de fim de semana. Depois dos 2 cafés (220), o Jantar (faltam 140) passa pra Grandes metas: é nele que a fala do Mirar rola, destaca e toca, e é ele que vira a meta no topo. O resgate é no Café especial (2º cartão), não no 1º: sem meta a grade sobe, e depois do toque no 1º cartão o dedo pousava em cima do Cancelar da confirmação. No toque do + a mão entra deitada, pela direita (o motor escolhe: em pé ela sentaria em cima do total que acabou de mudar). O destaque da confirmação sai 0,1 s depois do toque no Resgatar do Café (era 0,4): com 0,4 a câmera ficava no cartão e o anel cercava o botão que a confirmação já tapava. Depois dos toques que põem outra coisa debaixo do dedo (Resgatar do Café, Resgatar da confirmação, Mirar) a mão some em T+8 (lift, TOUR.md); no Mirar o Jantar apaga no lugar e a Viagem só desce pro vão em T+22, com a mão longe.",
+  "screen": "rewards",
+  "fixture": "inicio",
+  "file": "rewards",
+  "rev": 2,
+  "posterAt": 1.0,
+  "kicker": { "pt": "Recompensas", "en": "Rewards" },
+  "state": { "goal": null },
+  "lines": [
+    {
+      "id": "why",
+      "title": { "pt": "Sua loja", "en": "Your shop" },
+      "pre": 0.5,
+      "pt": { "caption": "Esta é a sua loja: as *moedas* das práticas pagam recompensas que você define." },
+      "en": { "caption": "This is your shop: the *coins* from your practices pay for rewards you set yourself." },
+      "camera": "wide",
+      "beats": [
+        { "at": { "pt": "moedas", "en": "coins" }, "focus": "balance", "camera": "wide" },
+        { "at": { "pt": "recompensas", "en": "rewards" }, "focus": "card:cafe", "camera": "wide" }
+      ]
+    },
+    {
+      "id": "redeem",
+      "title": { "pt": "Resgatar", "en": "Redeem" },
+      "hold": 0.1,
+      "pt": { "caption": "Quando o saldo paga, toque em *Resgatar*." },
+      "en": { "caption": "When your balance is enough, tap *Redeem*." },
+      "focus": "card:cafe",
+      "beats": [
+        { "at": { "pt": "Resgatar", "en": "Redeem" }, "focus": "card:cafe:cta", "do": "tap" },
+        { "at": { "pt": "Resgatar", "en": "Redeem" }, "after": 0.1, "focus": "confirm" }
+      ]
+    },
+    {
+      "id": "confirm",
+      "title": { "pt": "Quantidade e total", "en": "Quantity and total" },
+      "hold": 0.2,
+      "pt": { "caption": "Escolha quantas, confira o total e toque em *Resgatar*." },
+      "en": { "caption": "Pick how many, check the total and tap *Redeem*." },
+      "beats": [
+        { "at": { "pt": "quantas", "en": "how many" }, "focus": "confirm.amount", "target": "confirm.plus", "do": "tap", "camera": "hold" },
+        { "at": { "pt": "Resgatar", "en": "Redeem" }, "focus": "confirm.redeem", "do": "tap", "camera": "hold" },
+        { "at": { "pt": "Resgatar", "en": "Redeem" }, "after": 0.2, "focus": "celebration" }
+      ]
+    },
+    {
+      "id": "undo",
+      "title": { "pt": "Desfazer", "en": "Undo" },
+      "hold": 0.3,
+      "pt": { "caption": "As moedas já saíram e o resgate já conta como usado. Errou? *Desfazer* devolve." },
+      "en": { "caption": "The coins are already spent and the reward counts as used. Made a mistake? *Undo* refunds them." },
+      "beats": [
+        { "at": { "pt": "Desfazer", "en": "Undo" }, "focus": "celebration.undo", "do": "point", "camera": "hold" },
+        { "at": "@end", "after": 0.2, "focus": "celebration.enjoy", "do": "tap", "camera": "hold" }
+      ]
+    },
+    {
+      "id": "track",
+      "title": { "pt": "Mirar", "en": "Track" },
+      "pt": { "caption": "Nas que faltam moedas, toque em *Mirar* e ela vira sua meta no topo." },
+      "en": { "caption": "Can't afford one yet? Tap *Track* and it becomes your goal up top." },
+      "beats": [
+        { "at": "@start", "after": 0.25, "focus": null, "camera": "wide", "do": "swipe", "scroll": "card:jantar" },
+        { "at": { "pt": "faltam moedas", "en": "afford" }, "after": 0.4, "focus": "card:jantar" },
+        { "at": { "pt": "Mirar", "en": "Track" }, "focus": "card:jantar:cta", "do": "tap", "camera": "hold" },
+        { "at": { "pt": "Mirar", "en": "Track" }, "after": 0.3, "focus": null },
+        { "at": { "pt": "sua meta", "en": "your goal" }, "focus": "goal", "do": "swipe", "scroll": 0 }
+      ]
+    },
+    {
+      "id": "manage",
+      "title": { "pt": "Gerenciar", "en": "Manage" },
+      "pt": { "caption": "No botão dourado do canto você cria, adota sugestões e ordena as recompensas." },
+      "en": { "caption": "Use the gold button in the corner to create, adopt suggestions and reorder your rewards." },
+      "beats": [
+        { "at": { "pt": "botão dourado", "en": "gold button" }, "focus": "fab.manage", "do": "point", "tone": "gold", "camera": 1.7 }
+      ]
+    },
+    {
+      "id": "info",
+      "title": { "pt": "Cada parte, explicada", "en": "Every part, explained" },
+      "pt": { "caption": "Toque no *(i)* e a tela explica cada parte.", "say": "Toque no botão de informação e a tela explica cada parte." },
+      "en": { "caption": "Tap the *(i)* and the screen explains every part.", "say": "Tap the info button and the screen explains every part." },
+      "focus": "info",
+      "pulse": true,
+      "camera": 1.4
+    }
+  ]
+}

@@ -9,6 +9,7 @@ empresas de até 3 pessoas. A narração usa o Gemini TTS e custa centavos por v
 |---|---|---|
 | **Manifesto v2** (≤ 60 s, voz Kore) | `Manifesto` (Insta/orgânico) · `ManifestoB` (anúncio, gancho B pra A/B) · `ManifestoApp` (abertura do tutorial, sem CTA) | Vende os 3 módulos (Se conhecer · Praticar · Aprender) e fecha no Emblema. Sem número nem estudo no vídeo; a legenda do post e a base ficam em `copy/manifesto-v2.md`. |
 | **Recanto** | `Recanto` | Reels que leva gente pra aba Aprender. Começa em "salvar não é aprender" e termina no jeito de usar o Recanto. |
+| **Tutorial de tela** (25–40 s, voz Kore) | `Tour` (props `tourKey: "<tela>.<lang>"`; `mode: "replica"` mostra só a tela) | O vídeo da porta que abre quando uma aba destrava: a réplica da tela feita do código do app, com câmera, destaque e o dedo tocando. Roteiro em `tours/<tela>.json`; formato, regras e comandos (`node scripts/tour.mjs …`) em [TOUR.md](TOUR.md). |
 
 ---
 

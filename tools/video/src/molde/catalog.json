@@ -1,5 +1,5 @@
 {
-  "_doc": "Catálogo do molde: cenas e peças que um roteiro pode pedir. Fonte única pro lint (scripts/molde.mjs) e pro render (src/molde/Peca.tsx confere na carga). Peça nova = desenhar em src/elenco/cast.tsx, registrar em Peca.tsx E aqui.",
+  "_doc": "Catálogo do molde: cenas, peças e os enums que um roteiro pode pedir. Fonte única pro lint (scripts/molde.mjs) e pro render (src/molde/Peca.tsx confere as peças na carga). Peça nova = desenhar em src/elenco/objetos.tsx (ou cast.tsx), registrar em Peca.tsx E aqui.",
   "scenes": [
     "pessoa",
     "semana",
@@ -9,6 +9,7 @@
     "lista",
     "cena",
     "pensa",
+    "mapa",
     "verso"
   ],
   "pieces": [
@@ -26,6 +27,27 @@
     "coracao",
     "caderno",
     "lampada",
-    "copo"
-  ]
+    "copo",
+    "quadro",
+    "caneca",
+    "planta",
+    "caneta",
+    "agenda",
+    "monitor",
+    "papelada",
+    "envelope"
+  ],
+  "camera": {
+    "moves": ["push", "pull", "pan-left", "pan-right", "drift", "still"],
+    "focus": ["pessoa", "peca", "mapa", "centro", "esquerda", "direita", "topo", "base"],
+    "forca": ["leve", "forte"]
+  },
+  "transicao": ["fade", "zoom", "desliza", "corte"],
+  "ambientes": ["escritorio", "treinamento", "casa", "cidade"],
+  "gente": ["nenhuma", "pouca", "muita"],
+  "hora": ["manha", "dia", "noite"],
+  "ambienteScenes": ["pessoa", "semana", "virada", "lista", "cena", "pensa", "mapa"],
+  "objectsMax": { "pessoa": 4, "virada": 2, "cena": 2, "cenaAmbiente": 6, "pensa": 2 },
+  "feel": ["drena", "neutro", "energiza"],
+  "mapa": { "blocks": [2, 6], "size": [1, 3], "sizeSum": 9 }
 }

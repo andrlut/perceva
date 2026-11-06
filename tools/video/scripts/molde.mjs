@@ -1,9 +1,10 @@
 // Molde genérico do vídeo de ideia — do roteiro revisado ao MP4 no bucket.
 //
 //   node scripts/molde.mjs lint    --slug <slug>                      só o lint do roteiro (sem gastar nada)
-//   node scripts/molde.mjs build   --slug <slug> [--idea <id>] [--lang pt|en|both]
+//   node scripts/molde.mjs build   --slug <slug> [--idea <id>] [--lang pt|en|both] [--silent]
 //   node scripts/molde.mjs voice   --slug <slug> [--idea <id>] [--lang …] [--only a,b]   TTS + QA (--fix) por fala
-//   node scripts/molde.mjs stills  --slug <slug> [--idea <id>] [--lang …]  um quadro por cena + folha de contato
+//   node scripts/molde.mjs stills  --slug <slug> [--idea <id>] [--lang …] [--at 0.1,0.5,1] [--scale 0.4]
+//                                  um quadro por cena (ou vários: frações da fala) + folha de contato
 //   node scripts/molde.mjs render  --slug <slug> [--idea <id>] [--lang …] [--rev N]      MP4 + versão do app + pôster
 //   node scripts/molde.mjs upload  --slug <slug> [--idea <id>] [--lang …] [--rev N]      sobe pro bucket learning-media
 //   node scripts/molde.mjs videos  --slug <slug> --out <file.json>    junta os video.json no formato do emit-migration --videos
@@ -17,6 +18,11 @@
 //
 // Correção cirúrgica: mude UMA fala no roteiro → `build` → `voice --only <id>` → `render --rev N+1` → `upload`.
 // As outras falas ficam com a mesma tomada de voz; o bucket nunca sobrescreve (cada revisão é um arquivo novo).
+//
+// Prévia SEM voz (testar cena, câmera, ambiente sem gastar TTS): `build --silent` estima o tempo de cada
+// fala pelo texto (timings.silent.json — o timings.json da voz gravada fica intocado) e marca o spec como
+// silencioso; `stills` e `render` funcionam igual (o render vira out/molde/<key>/preview.mp4, sem pub/
+// nem video.json, então não tem como subir prévia pro bucket). Rode `build` sem --silent pra voltar.
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -33,6 +39,7 @@ const slug = arg('slug');
 const onlyIdea = arg('idea');
 const langArg = arg('lang', 'both');
 const rev = Number(arg('rev', '1'));
+const silent = argv.includes('--silent');
 const LANGS = langArg === 'both' ? ['pt', 'en'] : [langArg];
 const catalog = JSON.parse(fs.readFileSync(path.join(root, 'src/molde/catalog.json'), 'utf8'));
 const ions = JSON.parse(fs.readFileSync(path.join(root, 'src/molde/ionicons-full.json'), 'utf8'));
@@ -75,6 +82,76 @@ const BANNED = {
 const CUE_KEYS = ['cue', 'turn', 'from', 'until', 'at', 'win', 'glow', 'out', 'arrives', 'leaves'];
 const LIMITS = { caption: 150, kicker: 24, label: 22, chip: 30, pill: 22, lines: [4, 8], seconds: 58 };
 
+/** câmera, passagem e ambiente: valem pra qualquer cena (o ambiente só nas que têm pessoa de pé) */
+function lintStage(where, l, i, errors, warns) {
+  const p = l.props ?? {};
+  const oneOf = (v, list, what) => {
+    if (v !== undefined && !list.includes(v)) errors.push(where(l.id, `${what} "${v}" não existe (${list.join(', ')})`));
+  };
+  if (p.camera !== undefined) {
+    if (!p.camera || typeof p.camera !== 'object' || !p.camera.move) errors.push(where(l.id, 'camera precisa de { move }'));
+    else {
+      oneOf(p.camera.move, catalog.camera.moves, 'camera.move');
+      oneOf(p.camera.focus, catalog.camera.focus, 'camera.focus');
+      oneOf(p.camera.forca, catalog.camera.forca, 'camera.forca');
+      if (p.camera.focus === 'mapa' && l.scene !== 'mapa') errors.push(where(l.id, 'camera.focus "mapa" só existe na cena mapa'));
+      for (const k of Object.keys(p.camera)) if (!['move', 'focus', 'cue', 'forca'].includes(k)) errors.push(where(l.id, `camera.${k} não existe (move, focus, cue, forca)`));
+    }
+  }
+  oneOf(p.transicao, catalog.transicao, 'transicao');
+  if (p.transicao && i === 0) warns.push(where(l.id, 'transicao na 1ª cena não tem efeito (é a passagem PRA esta cena)'));
+  if (p.ambiente !== undefined) {
+    oneOf(p.ambiente, catalog.ambientes, 'ambiente');
+    if (!catalog.ambienteScenes.includes(l.scene))
+      errors.push(where(l.id, `cena "${l.scene}" não aceita ambiente (só ${catalog.ambienteScenes.join(', ')}${l.scene === 'comparar' ? '; no comparar é left.ambiente / right.ambiente' : ''})`));
+  }
+  oneOf(p.gente, catalog.gente, 'gente');
+  oneOf(p.hora, catalog.hora, 'hora');
+  if ((p.gente || p.hora) && !p.ambiente) warns.push(where(l.id, 'gente/hora sem ambiente não fazem nada'));
+  for (const side of ['left', 'right']) {
+    oneOf(p[side]?.ambiente, catalog.ambientes, `${side}.ambiente`);
+    oneOf(p[side]?.hora, catalog.hora, `${side}.hora`);
+    if (p[side]?.ambiente && l.scene !== 'comparar') errors.push(where(l.id, `${side}.ambiente só existe no comparar`));
+  }
+  // quantas peças cabem: o resto seria cortado em silêncio
+  const max = l.scene === 'cena' && p.ambiente ? catalog.objectsMax.cenaAmbiente : catalog.objectsMax[l.scene];
+  const n = (p.objects ?? []).length;
+  if (n && max === undefined) errors.push(where(l.id, `cena "${l.scene}" não desenha objects`));
+  else if (n > max) errors.push(where(l.id, `${n} objects; a cena ${l.scene}${p.ambiente ? ' com ambiente' : ''} mostra no máximo ${max}${l.scene === 'cena' && !p.ambiente ? ' (com ambiente: até 6)' : ''}`));
+}
+
+/** cena mapa: blocos do dia (ícone = o que é, feel = como pesa, size = quanto do dia) */
+function lintMapa(where, l, errors) {
+  const p = l.props ?? {};
+  const b = p.blocks;
+  const [lo, hi] = catalog.mapa.blocks;
+  if (!Array.isArray(b) || b.length < lo || b.length > hi) return errors.push(where(l.id, `mapa precisa de ${lo} a ${hi} blocks`));
+  const okSize = (v) => v === undefined || (Number.isInteger(v) && v >= catalog.mapa.size[0] && v <= catalog.mapa.size[1]);
+  let before = 0;
+  let after = 0;
+  let changes = 0;
+  for (const [i, x] of b.entries()) {
+    const tag = `block ${i + 1}`;
+    if (!x.icon || !(x.icon in ions)) errors.push(where(l.id, `${tag}: ícone "${x.icon}" não existe no Ionicons`));
+    if (!catalog.feel.includes(x.feel)) errors.push(where(l.id, `${tag}: feel "${x.feel}" não existe (${catalog.feel.join(', ')})`));
+    if (!okSize(x.size)) errors.push(where(l.id, `${tag}: size ${x.size} (inteiro de ${catalog.mapa.size.join(' a ')})`));
+    before += x.size ?? 1;
+    if (x.then) {
+      changes++;
+      if (x.then.feel !== undefined && !catalog.feel.includes(x.then.feel)) errors.push(where(l.id, `${tag}: then.feel "${x.then.feel}" não existe`));
+      if (!okSize(x.then.size)) errors.push(where(l.id, `${tag}: then.size ${x.then.size} (inteiro de ${catalog.mapa.size.join(' a ')})`));
+      if (x.then.icon !== undefined && !(x.then.icon in ions)) errors.push(where(l.id, `${tag}: then.icon "${x.then.icon}" não existe no Ionicons`));
+      for (const k of Object.keys(x.then)) if (!['feel', 'size', 'icon'].includes(k)) errors.push(where(l.id, `${tag}: then.${k} não existe (feel, size, icon)`));
+    }
+    after += x.then?.size ?? x.size ?? 1;
+  }
+  const cap = catalog.mapa.sizeSum;
+  if (before > cap || after > cap) errors.push(where(l.id, `o dia soma ${Math.max(before, after)} de tamanho (teto ${cap}): blocos ficariam pequenos demais`));
+  if (changes && !p.turn) errors.push(where(l.id, 'blocos com "then" precisam da deixa "turn" (a segunda batida)'));
+  if (p.turn && !changes) errors.push(where(l.id, '"turn" no mapa sem nenhum bloco com "then": nada muda na virada'));
+  if (p.side !== undefined && !['left', 'right'].includes(p.side)) errors.push(where(l.id, `side "${p.side}" (left ou right)`));
+}
+
 /** Troca todo {pt, en} pelo idioma; o resto passa igual. */
 const resolve = (v, lang) => {
   if (Array.isArray(v)) return v.map((x) => resolve(x, lang));
@@ -102,12 +179,16 @@ function lintIdea(ideaId, spec, card, lang, errors, warns) {
   const ids = new Set();
   let chars = 0;
   let extra = 0;
-  for (const raw of lines) {
+  for (const [i, raw] of lines.entries()) {
     const l = resolveLine(raw, lang);
     if (!l.id || ids.has(l.id)) errors.push(where(l.id, 'id vazio ou repetido'));
     ids.add(l.id);
     if (!catalog.scenes.includes(l.scene)) errors.push(where(l.id, `cena "${l.scene}" não existe (${catalog.scenes.join(', ')})`));
+    lintStage(where, l, i, errors, warns);
+    if (l.scene === 'mapa') lintMapa(where, l, errors);
     if (l.scene === 'verso') {
+      // a voz do verso é o card: deixa de câmera aqui não teria o que casar
+      if (l.props?.camera?.cue) errors.push(where(l.id, 'camera.cue no verso (a fala é o card; use a câmera sem deixa)'));
       if (l.id !== last.id) errors.push(where(l.id, 'verso só pode ser a última cena'));
       chars += card.claim[lang].length;
       extra += (l.pre ?? 0.8) + (l.hold ?? 1.4);
@@ -250,6 +331,7 @@ async function build(ctx) {
         claim: card.claim[lang],
         image: hasImg ? `molde/${k}/card.webp` : null,
         style: src.style?.[lang],
+        ...(silent ? { silent: true } : {}),
         lines,
       };
       // a voz de uma fala que não mudou continua válida; fala que mudou é regravada no `voice`
@@ -260,6 +342,19 @@ async function build(ctx) {
       });
       fs.writeFileSync(path.join(dir, 'spec.json'), JSON.stringify(spec, null, 2));
       fs.writeFileSync(path.join(dir, 'changed.json'), JSON.stringify(changed.map((l) => l.id)));
+      if (silent) {
+        // prévia: o tempo de cada fala estimado pelo texto (pausas pesam), num arquivo à parte
+        const est = lines.map((l) => {
+          const text = plain(l.say ?? l.caption);
+          const stops = (text.match(/[.!?:](\s|$)/g) ?? []).length;
+          const commas = (text.match(/,/g) ?? []).length;
+          return { id: l.id, seconds: +(text.length / (lang === 'en' ? 15.5 : 14.5) + stops * 0.35 + commas * 0.15 + 0.3).toFixed(3) };
+        });
+        fs.writeFileSync(path.join(dir, 'timings.silent.json'), JSON.stringify(est, null, 2));
+        const secs = est.reduce((a, t) => a + t.seconds, 0);
+        console.log(`✓ ${k}: ${lines.length} cenas · PRÉVIA SEM VOZ (~${secs.toFixed(0)} s de fala estimados) — rode build sem --silent antes da voz`);
+        continue;
+      }
       console.log(`✓ ${k}: ${lines.length} cenas${changed.length ? ` · voz a gravar: ${changed.map((l) => l.id).join(', ')}` : ' · voz em dia'}`);
     }
   }
@@ -301,15 +396,23 @@ async function stills(ctx) {
       fs.rmSync(dir, { recursive: true, force: true });
       fs.mkdirSync(dir, { recursive: true });
       const files = [];
-      for (const [i, s] of composition.props.scenes.entries()) {
-        // fim da fala: TODAS as deixas já entraram (a 75% uma virada no fim da frase não aparecia)
-        const frame = s.scene === 'verso' ? s.start + Math.round(s.frames * 0.9) : s.start + s.lead + s.speech - 6;
-        const f = path.join(dir, `${String(i + 1).padStart(2, '0')}.png`);
-        await renderStill({ serveUrl, composition, frame, output: f, scale: 0.4, inputProps: { specKey: k, spec: null, scenes: [] } });
-        files.push(f);
+      // --at 0.1,0.5,1: vários quadros por cena (frações da fala) — pra ver câmera, entrada de peça e virada.
+      // Sem --at: um quadro no fim da fala, onde TODAS as deixas já entraram (a 75% uma virada no fim da frase não aparecia).
+      const fracs = arg('at') ? arg('at').split(',').map(Number) : null;
+      const scale = Number(arg('scale', '0.4'));
+      let n = 0;
+      for (const s of composition.props.scenes) {
+        const frames = fracs
+          ? fracs.map((f) => (s.scene === 'verso' ? s.start + Math.round(s.frames * (0.1 + 0.8 * f)) : s.start + s.lead + Math.round(f * Math.max(1, s.speech - 6))))
+          : [s.scene === 'verso' ? s.start + Math.round(s.frames * 0.9) : s.start + s.lead + s.speech - 6];
+        for (const frame of frames) {
+          const f = path.join(dir, `${String(++n).padStart(2, '0')}.png`);
+          await renderStill({ serveUrl, composition, frame, output: f, scale, inputProps: { specKey: k, spec: null, scenes: [] } });
+          files.push(f);
+        }
       }
       const sheet = path.join(outDir(k), 'sheet.png');
-      const cols = Math.min(4, files.length);
+      const cols = fracs ? fracs.length : Math.min(4, files.length);
       fs.writeFileSync(path.join(dir, 'index.json'), JSON.stringify(composition.props.scenes.map((s, i) => ({ n: i + 1, id: s.id, scene: s.scene, caption: s.caption }))));
       execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-framerate', '1', '-start_number', '1', '-i', path.join(dir, '%02d.png'), '-vf', `tile=${cols}x${Math.ceil(files.length / cols)}:padding=12:color=0x0A0E26`, '-frames:v', '1', sheet]);
       console.log(`✓ ${k}: ${files.length} quadros · folha ${path.relative(repo, sheet)}`);
@@ -331,8 +434,10 @@ async function render(ctx) {
       const k = key(id, lang);
       const card = ctx.cards[id];
       const dir = outDir(k);
+      const preview = !!readJson(path.join(pubDir(k), 'spec.json')).silent;
       fs.mkdirSync(path.join(dir, 'pub'), { recursive: true });
-      const full = path.join(dir, 'video.mp4');
+      // prévia sem voz: só o mp4 de conferência, sem pub/ nem video.json (não tem como ir pro bucket)
+      const full = path.join(dir, preview ? 'preview.mp4' : 'video.mp4');
       const inputProps = { specKey: k, spec: null, scenes: [] };
       const composition = await selectComposition({ serveUrl, id: 'Molde', inputProps });
       let shown = -1;
@@ -348,6 +453,10 @@ async function render(ctx) {
         },
       });
       console.log('');
+      if (preview) {
+        console.log(`✓ ${k}: PRÉVIA SEM VOZ · ${path.relative(repo, full)} (rode build sem --silent + voice antes do render de verdade)`);
+        continue;
+      }
       // versão do app: 720p, AAC 96k, faststart — ~2,5 MB por 50 s
       const name = `${card.file ?? `idea.${card.ordinal}`}.${lang}.r${rev}`;
       const mp4 = path.join(dir, 'pub', `${name}.mp4`);

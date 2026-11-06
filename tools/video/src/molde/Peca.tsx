@@ -18,6 +18,7 @@ import {
   Sacola,
   Vassoura,
 } from '../elenco/cast';
+import { Agenda, Caneca, Caneta, Envelope, Monitor, Papelada, Planta, Quadro } from '../elenco/objetos';
 import ions from './ionicons-full.json';
 import catalog from './catalog.json';
 
@@ -43,6 +44,15 @@ const PIECES: Record<string, Draw> = {
   caderno: ({ size, accent, progress }) => <Caderno size={size} accent={accent} write={progress ?? 1} />,
   lampada: ({ size, progress }) => <Lampada size={size} on={progress ?? 1} />,
   copo: ({ t, size, accent, progress }) => <Copo t={t} size={size} accent={accent} stir={progress ?? 1} />,
+  // v2 (objetos.tsx): trabalho, casa, rotina
+  quadro: ({ size, accent, progress }) => <Quadro size={size} accent={accent} progress={progress ?? 1} />,
+  caneca: ({ t, size, accent }) => <Caneca t={t} size={size * 0.85} accent={accent} />,
+  planta: ({ t, size }) => <Planta t={t} size={size} />,
+  caneta: ({ size, accent, progress }) => <Caneta size={size} accent={accent} progress={progress ?? 0} />,
+  agenda: ({ size, accent, progress }) => <Agenda size={size} accent={accent} progress={progress ?? 1} />,
+  monitor: ({ t, size, accent, progress }) => <Monitor t={t} size={size} accent={accent} progress={progress ?? 1} />,
+  papelada: ({ size }) => <Papelada size={size} />,
+  envelope: ({ t, size, accent }) => <Envelope t={t} size={size} accent={accent} />,
 };
 
 export const PIECE_NAMES = Object.keys(PIECES);

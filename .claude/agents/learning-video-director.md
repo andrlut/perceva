@@ -57,6 +57,8 @@ fala → problema).
    - A em vez de B → `comparar`;
    - 2–3 coisas a notar ou fazer → `lista`;
    - a ação aplicada → `cena`;
+   - como o dia/a semana se divide, o que pesa × o que rende, "redistribuir o
+     tempo" → `mapa` (blocos com ícone + `feel`, segunda batida no `turn`);
    - o fim → `verso`.
    Varie: não repita a mesma cena seguida, e tente não usar mais de duas
    vezes a mesma no vídeo.
@@ -82,6 +84,36 @@ fala → problema).
      mão lê como sérum ou como "beba água".
    - Em vídeo de suplemento, raio/bateria carregando junto de "energia" lê
      como "energia na hora", e chama lê como "termogênico". Evite os dois.
+9. **Lugar (`ambiente`).** Quando a fala se passa em algum lugar, dê o lugar:
+   `escritorio` (o trabalho de mesa), `treinamento` (aula, palestra,
+   treinamento da empresa), `casa` (manhã, noite, a vida em casa),
+   `cidade` (caminho, rua, deslocamento). `hora` (`manha`/`dia`/`noite`)
+   quando o texto diz o momento; `gente` (`nenhuma`/`pouca`/`muita`) só
+   quando a quantidade de gente é parte da cena. Regras:
+   - 2 a 3 lugares por vídeo; o mesmo lugar em falas seguidas é bom (a
+     passagem fica contínua). Sem lugar é ok pra fala abstrata (`pensa` de
+     dúvida, `lista` de passos): o palco navy limpo também é linguagem.
+   - Nunca em `multidao` nem no `verso`. No `comparar`, o lugar é por painel
+     (`left.ambiente` / `right.ambiente`): ótimo pra "aqui × lá" (a aula × a
+     mesa de casa).
+   - Na `cena` com lugar, objeto de verdade (caneca, papelada, monitor,
+     planta…) pousa na mesa/no chão e símbolo (`ion:`, coração, moeda,
+     relógio) flutua: ponha primeiro no `objects` o que mais importa. Até 6
+     peças, mas 3–4 é o ponto doce, cada uma com a sua deixa.
+10. **Câmera (`camera`).** Movimento é pontuação: 2 a 4 falas por vídeo.
+    - `push` com `cue` na frase que importa (a percepção, a virada); `focus:
+      "peca"` quando o assunto é a peça, `"mapa"` no mapa.
+    - `pull` pra abrir um lugar novo ("agora olha o todo").
+    - `pan-left`/`pan-right` pra caminho, rua, rotina andando.
+    - `drift` pra calma, pensar, manhã.
+    - Sem `push` com deixa em duas falas seguidas; `forca: "forte"` só quando
+      o resto da cena pode sair do quadro. A passagem entre cenas já
+      acompanha a câmera; `transicao` só se quiser outra (`corte` é raro).
+11. **Densidade × legibilidade.** Um assunto por cena: o lugar é o fundo, a
+    pessoa e a peça da fala são o assunto. Mais peça só quando a fala lista
+    coisas. No `mapa`: 3 a 5 blocos, ícones que leem sozinhos (`mail`,
+    `people`, `call`, `document-text`, `color-palette`, `bulb`, `code-slash`,
+    `chatbubbles`, `barbell`…), soma dos `size` ≤ 9, nada de hora nem número.
 
 ## Validação (obrigatória, antes de devolver)
 
@@ -106,6 +138,7 @@ Devolva em JSON, sem prosa em volta:
       "lines": 7,
       "story": "uma frase: a história que o vídeo conta",
       "softened": ["onde você trocou dado por intensidade, e por quê"],
+      "places": ["os ambientes usados, na ordem (ex.: treinamento → escritorio → casa)"],
       "pieces_missing": ["coisa que o elenco não tem e ficou como ion:… (candidata a desenho)"]
     }
   ],

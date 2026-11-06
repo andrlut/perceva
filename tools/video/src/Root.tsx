@@ -6,6 +6,8 @@ import { FILMS } from './films';
 import { FPS, Timing, buildTimeline } from './timeline';
 import { ElencoSheet } from './elenco/Sheet';
 import { Molde, calculateMoldeMetadata } from './molde/Molde';
+import { IdentidadeSheet } from './identidade/Sheet';
+import { Tour, calculateTourMetadata } from './tutorial/Tour';
 
 const calculateMetadata: CalculateMetadataFunction<FilmProps> = async ({ props }) => {
   const film = FILMS[props.film] as (typeof FILMS)[typeof props.film] & { maxSeconds?: number };
@@ -54,5 +56,19 @@ export const RemotionRoot: React.FC = () => (
     />
     {/* Folha de elenco: personagens e objetos-padrão (amostra de estilo). */}
     <Composition id="Elenco" component={ElencoSheet} width={1080} height={1920} fps={FPS} durationInFrames={FPS * 6} />
+    {/* Opções de identidade visual das pessoas (scripts/identidade.mjs <id>). */}
+    <Composition id="Identidade" component={IdentidadeSheet} width={1080} height={1920} fps={FPS} durationInFrames={FPS * 4} defaultProps={{ option: 'atual' }} />
+    {/* Tutorial de tela (réplica + câmera + destaque + dedo), roteiro em tours/<tela>.json
+        (scripts/tour.mjs, TOUR.md). --props='{"tourKey":"rewards.pt"}'; mode "replica" = só a tela. */}
+    <Composition
+      id="Tour"
+      component={Tour}
+      width={1080}
+      height={1920}
+      fps={FPS}
+      durationInFrames={FPS * 40}
+      calculateMetadata={calculateTourMetadata}
+      defaultProps={{ tourKey: 'rewards.pt', spec: null, scenes: [], mode: 'tour' as const }}
+    />
   </>
 );

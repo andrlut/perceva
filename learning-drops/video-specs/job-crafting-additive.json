@@ -6,7 +6,7 @@
       "lines": [
         {
           "id": "hook",
-          "scene": "pensa",
+          "scene": "pessoa",
           "pt": {
             "caption": "Quer que o seu trabalho fique melhor? *Por onde você começa?*"
           },
@@ -14,37 +14,101 @@
             "caption": "Want your job to get better? *Where do you start?*"
           },
           "props": {
+            "ambiente": "escritorio",
+            "gente": "pouca",
             "mood": "cansado",
-            "thought": "computador",
+            "objects": [
+              {
+                "p": "papelada",
+                "cue": {
+                  "pt": "Quer que",
+                  "en": "Want"
+                }
+              },
+              {
+                "p": "monitor",
+                "cue": {
+                  "pt": "seu trabalho",
+                  "en": "your job"
+                }
+              },
+              {
+                "p": "envelope",
+                "cue": {
+                  "pt": "fique melhor",
+                  "en": "get better"
+                }
+              },
+              {
+                "p": "ion:help",
+                "cue": {
+                  "pt": "Por onde",
+                  "en": "Where"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "class4",
+          "scene": "pensa",
+          "pt": {
+            "caption": "A empresa costuma marcar *uma aula* sobre o assunto, e você assiste."
+          },
+          "en": {
+            "caption": "Companies usually book *a class* on it, and you sit through it."
+          },
+          "props": {
+            "ambiente": "treinamento",
+            "gente": "muita",
+            "camera": {
+              "move": "pull",
+              "focus": "centro"
+            },
+            "mood": "cansado",
+            "thought": "quadro",
             "at": {
-              "pt": "seu trabalho",
-              "en": "your job"
+              "pt": "uma aula",
+              "en": "a class"
             }
           }
         },
         {
-          "id": "class3",
+          "id": "desk",
           "scene": "cena",
+          "hold": 0.5,
           "pt": {
-            "caption": "A empresa costuma marcar *uma aula* sobre o assunto. Você assiste, volta pra mesa, e pouca coisa tende a mudar."
+            "caption": "Aí volta pra mesa, e *pouca coisa tende a mudar*."
           },
           "en": {
-            "caption": "Companies usually book *a class* on it. You sit through it, go back to your desk, and little tends to change."
+            "caption": "Then you go back to your desk, and *little tends to change*."
           },
           "props": {
+            "ambiente": "escritorio",
+            "transicao": "desliza",
+            "camera": {
+              "move": "push",
+              "cue": {
+                "pt": "pouca coisa",
+                "en": "little tends"
+              }
+            },
             "setting": "mesa",
-            "holding": "computador",
+            "holding": "monitor",
             "mood": "cansado",
             "objects": [
               {
-                "p": "ion:easel",
+                "p": "papelada",
                 "cue": {
-                  "pt": "uma aula",
-                  "en": "a class"
-                },
-                "out": {
                   "pt": "volta pra mesa",
-                  "en": "back to your desk"
+                  "en": "go back"
+                }
+              },
+              {
+                "p": "envelope",
+                "cue": {
+                  "pt": "mesa",
+                  "en": "your desk"
                 }
               }
             ]
@@ -53,6 +117,7 @@
         {
           "id": "log2",
           "scene": "cena",
+          "hold": 0.4,
           "pt": {
             "caption": "Outro caminho: você pega um caderno e *anota o seu dia*, do jeito que ele é."
           },
@@ -64,18 +129,45 @@
               "pt": "Anote o dia",
               "en": "Log your day"
             },
-            "setting": "mesa",
+            "ambiente": "casa",
+            "hora": "manha",
+            "transicao": "fade",
+            "setting": "chao",
             "holding": "caderno",
             "mood": "ok",
             "glow": {
               "pt": "anota o seu dia",
               "en": "write down your day"
-            }
+            },
+            "objects": [
+              {
+                "p": "envelope",
+                "cue": {
+                  "pt": "o seu dia",
+                  "en": "your day"
+                }
+              },
+              {
+                "p": "ion:people",
+                "cue": {
+                  "pt": "do jeito",
+                  "en": "just as"
+                }
+              },
+              {
+                "p": "monitor",
+                "cue": {
+                  "pt": "que ele",
+                  "en": "it is"
+                }
+              }
+            ]
           }
         },
         {
           "id": "why2",
           "scene": "comparar",
+          "hold": 0.4,
           "pt": {
             "caption": "A diferença parece estar aqui: na aula, alguém te explica, e no caderno *quem olha o seu dia é você*."
           },
@@ -88,7 +180,8 @@
                 "pt": "Alguém explica",
                 "en": "Someone explains"
               },
-              "object": "ion:easel",
+              "object": "quadro",
+              "ambiente": "treinamento",
               "arrives": {
                 "pt": "na aula",
                 "en": "in a class"
@@ -101,6 +194,8 @@
               },
               "mood": "ok",
               "object": "caderno",
+              "ambiente": "casa",
+              "hora": "manha",
               "arrives": {
                 "pt": "no caderno",
                 "en": "in the workbook"
@@ -115,7 +210,8 @@
         },
         {
           "id": "pull2",
-          "scene": "pessoa",
+          "scene": "mapa",
+          "hold": 2,
           "pt": {
             "caption": "Com o dia no papel, *dá pra ver o que mudar*."
           },
@@ -123,25 +219,66 @@
             "caption": "With your day on paper, *you can see what to change*."
           },
           "props": {
-            "mood": "ok",
-            "turn": {
-              "pt": "o que mudar",
-              "en": "what to change"
+            "kicker": {
+              "pt": "O mapa do dia",
+              "en": "Your day, mapped"
             },
+            "ambiente": "casa",
+            "hora": "manha",
+            "transicao": "zoom",
+            "camera": {
+              "move": "push",
+              "focus": "mapa",
+              "forca": "leve",
+              "cue": {
+                "pt": "dá pra ver",
+                "en": "you can see"
+              }
+            },
+            "mood": "ok",
             "to": "feliz",
-            "objects": [
+            "turn": {
+              "pt": "mudar",
+              "en": "change"
+            },
+            "blocks": [
               {
-                "p": "caderno",
+                "icon": "mail",
+                "feel": "drena",
+                "size": 2,
                 "cue": {
-                  "pt": "dia no papel",
-                  "en": "day on paper"
+                  "pt": "Com",
+                  "en": "With"
                 }
               },
               {
-                "p": "ion:eye",
+                "icon": "people",
+                "feel": "neutro",
+                "size": 1,
                 "cue": {
-                  "pt": "dá pra ver",
-                  "en": "you can see"
+                  "pt": "o dia",
+                  "en": "your day"
+                }
+              },
+              {
+                "icon": "desktop",
+                "feel": "drena",
+                "size": 2,
+                "cue": {
+                  "pt": "no papel",
+                  "en": "on paper"
+                }
+              },
+              {
+                "icon": "bulb",
+                "feel": "energiza",
+                "size": 1,
+                "cue": {
+                  "pt": "papel",
+                  "en": "paper"
+                },
+                "then": {
+                  "size": 2
                 }
               }
             ]
@@ -162,15 +299,36 @@
               "pt": "Comece esta semana",
               "en": "Start this week"
             },
+            "ambiente": "casa",
+            "hora": "manha",
+            "transicao": "fade",
+            "camera": {
+              "move": "drift",
+              "forca": "leve"
+            },
             "setting": "mesa",
             "holding": "caderno",
             "mood": "feliz",
             "objects": [
               {
+                "p": "ion:calendar",
+                "cue": {
+                  "pt": "pela semana",
+                  "en": "over the week"
+                }
+              },
+              {
                 "p": "ion:sunny",
                 "cue": {
                   "pt": "duas manhãs",
                   "en": "two mornings"
+                }
+              },
+              {
+                "p": "caneca",
+                "cue": {
+                  "pt": "manhãs",
+                  "en": "mornings"
                 }
               }
             ],
