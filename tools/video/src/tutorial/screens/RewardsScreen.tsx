@@ -18,13 +18,16 @@ import {
   RewardsCtx,
   RewardsLayout,
   RewardsState,
+  REFLOW,
   RewardsView,
+  blendRewards,
   initialRewards,
   layoutRewards,
   scrollForRewards,
   tapRewards,
 } from './rewardsLayout';
-import { HISTORY_START, ScreenModule, Snap, lastChange, modalPhase, nextValue, stateAt } from './types';
+import { HISTORY_START, SCROLL_EASE, ScreenModule, Snap, lastChange, modalPhase, nextValue, stateAt, swipeProgress } from './types';
+import TARGETS from './targets.json';
 
 const C = tokens;
 const GOLD_INK = '#3D2A00';
@@ -33,7 +36,7 @@ const GOLD_INK = '#3D2A00';
 
 const Hero: React.FC<{ L: RewardsLayout }> = ({ L }) => {
   const id = `halo${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
-  const { rect, row, status, statusH, label } = L.hero;
+  const { rect, row, status, statusH, label, statusO = 1 } = L.hero;
   const cx = rect.x + rect.w / 2;
   const cy = rect.y + rect.h / 2;
   return (
@@ -57,7 +60,7 @@ const Hero: React.FC<{ L: RewardsLayout }> = ({ L }) => {
         <div
           style={at(
             { x: rect.x + (rect.w - 280) / 2, y: row.y + 72 + 8, w: 280, h: statusH },
-            textStyle(13, 600, 18, C.text.mid, { textAlign: 'center', ...clampLines(2) }),
+            textStyle(13, 600, 18, C.text.mid, { textAlign: 'center', opacity: statusO, ...clampLines(2) }),
           )}
         >
           {status}
@@ -69,19 +72,27 @@ const Hero: React.FC<{ L: RewardsLayout }> = ({ L }) => {
 
 // ---------------------------------------------------------------- meta (TrackedRewardCard)
 
-const GoalCard: React.FC<{ g: GoalBox; lang: Lang; coins: number; pressed: string | null }> = ({ g, lang, coins, pressed }) => {
+const GoalCard: React.FC<{ g: GoalBox; lang: Lang; coins: number; pressed: string | null; o?: number; clipH?: number }> = ({
+  g,
+  lang,
+  coins,
+  pressed,
+  o = 1,
+  clipH,
+}) => {
   const cat = CATEGORY_META[g.reward.category];
   const deficit = Math.max(0, g.reward.cost - coins);
   const pct = Math.min(100, Math.round((coins / g.reward.cost) * 100));
   const labelsH = g.progress.h - 16;
+  if (o <= 0.001) return null;
   return (
     <div
-      style={at(g.rect, {
+      style={at(clipH === undefined ? g.rect : { ...g.rect, h: Math.min(g.rect.h, clipH) }, {
         borderRadius: 18,
         border: '1px solid rgba(255, 200, 61, 0.35)',
         overflow: 'hidden',
         background: vGrad(['rgba(36,42,88,0.85)', 'rgba(20,24,60,0.95)']),
-        opacity: pressed === 'goal' ? 0.95 : 1,
+        opacity: (pressed === 'goal' ? 0.95 : 1) * o,
       })}
     >
       <div style={{ position: 'absolute', right: -30, top: -10, width: 180, height: 180, opacity: 0.07 }}>
@@ -191,7 +202,7 @@ const BuyPill: React.FC<{ r: Rect; size: number; lang: Lang; pressed: boolean; l
 
 // ---------------------------------------------------------------- convite "Mirar uma recompensa" (sem meta)
 
-const TrackCta: React.FC<{ r: Rect; lang: Lang }> = ({ r, lang }) => (
+const TrackCta: React.FC<{ r: Rect; lang: Lang; o?: number }> = ({ r, lang, o = 1 }) => (
   <div
     style={at(r, {
       borderRadius: 18,
@@ -201,6 +212,7 @@ const TrackCta: React.FC<{ r: Rect; lang: Lang }> = ({ r, lang }) => (
       alignItems: 'center',
       gap: 12,
       padding: '0 16px',
+      opacity: o,
     })}
   >
     <div
@@ -264,10 +276,11 @@ const Chips: React.FC<{ L: RewardsLayout; filter: string[]; lang: Lang }> = ({ L
 
 const SECTION_COLOR = { available: '#FFC83D', almost: '#FF9F43', big: '#9B82FF' } as const;
 
-const Card: React.FC<{ c: CardBox; lang: Lang; ctaPressed: boolean; opacity?: number }> = ({ c, lang, ctaPressed, opacity = 1 }) => {
+const Card: React.FC<{ c: CardBox; lang: Lang; ctaPressed: boolean; opacity?: number }> = ({ c, lang, ctaPressed, opacity: o0 = 1 }) => {
   const cat = CATEGORY_META[c.reward.category];
   const accent = c.affordable ? C.semantic.coin : cat.color;
   const local = (r: Rect): Rect => ({ ...r, x: r.x - c.rect.x - 1, y: r.y - c.rect.y - 1 });
+  const opacity = o0 * (c.o ?? 1);
   if (opacity <= 0.001) return null;
   return (
     <div
@@ -668,15 +681,16 @@ export const RewardsScreen: React.FC<{ s: RewardsState; v: RewardsView; L: Rewar
           <div style={at(L.info, { display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: p === 'info' ? 0.6 : 1 })}>
             <Ion name="information-circle-outline" size={24} color={C.text.mid} />
           </div>
-          {L.goal ? <GoalCard g={L.goal} lang={lang} coins={v.balance} pressed={p} /> : null}
-          {L.trackCta ? <TrackCta r={L.trackCta} lang={lang} /> : null}
+          {L.goal ? <GoalCard g={L.goal} lang={lang} coins={v.balance} pressed={p} o={L.goalO} clipH={L.goalClipH} /> : null}
+          {L.trackCta && (L.trackCtaO ?? 1) > 0.001 ? <TrackCta r={L.trackCta} lang={lang} o={L.trackCtaO} /> : null}
           <Chips L={L} filter={s.filter} lang={lang} />
           {L.sections.map((sec) => (
             <React.Fragment key={sec.key}>
-              <div style={at(sec.header, { display: 'flex', alignItems: 'center', justifyContent: 'space-between' })}>
+              <div style={at(sec.header, { display: 'flex', alignItems: 'center', justifyContent: 'space-between', opacity: sec.o ?? 1 })}>
                 <span style={textStyle(17, 700, 21, SECTION_COLOR[sec.key])}>{tr(lang, `rewards.vault.sections.${sec.key}`)}</span>
-                <span style={textStyle(12, 600, 16, C.text.mid, { letterSpacing: 0.5 })}>
-                  {upper(lang, tr(lang, 'rewards.vault.itemsCount', { count: sec.cards.length }))}
+                {/* na reorganização a contagem velha sai e só depois a nova entra (nunca as duas) */}
+                <span style={textStyle(12, 600, 16, C.text.mid, { letterSpacing: 0.5, opacity: sec.count?.o ?? 1 })}>
+                  {upper(lang, tr(lang, 'rewards.vault.itemsCount', { count: sec.count?.n ?? sec.cards.length }))}
                 </span>
               </div>
               {sec.cards.map((c) => (
@@ -718,16 +732,18 @@ export const RewardsScreen: React.FC<{ s: RewardsState; v: RewardsView; L: Rewar
 
 /**
  * Tempos do modal, em quadros. O Modal do RN abre e fecha em fade (~270 ms); aqui o fade
- * é dividido em corpo e texto pra que, em nenhum quadro, um texto apareça através de
- * outro: o corpo vazio (fundo 95–98% opaco) entra primeiro e o texto entra por cima dele;
- * na saída o texto sai primeiro e o corpo vazio depois. O véu é um só pros dois modais e
- * fica de pé enquanto um cartão estiver na tela — da confirmação pra comemoração ele não
- * pisca, e a loja só volta a aparecer quando o último cartão já saiu.
+ * é dividido em véu, corpo e texto pra que, em nenhum quadro, dois textos se leiam juntos:
+ * o véu sobe primeiro e o corpo vazio (fundo 95–98% opaco, confirmCardWarm) sobe junto, de modo
+ * que assenta no quadro em que o véu assenta; só então o texto do cartão entra. Com o véu ainda
+ * subindo, a loja atrás está clara demais e, através dos 95% do cartão, "Disponíveis agora" e os
+ * títulos dos cartões liam por trás do texto da confirmação. Na saída o texto sai primeiro, o
+ * corpo vazio depois, e o véu só desce quando o último cartão saiu. O véu é um só pros dois
+ * modais: da confirmação pra comemoração ele não pisca e o texto da comemoração entra no CONTENT_AT.
  */
 const MODAL = {
-  /** o corpo vazio aparece nisto */
+  /** o corpo vazio aparece nisto (terminando quando o véu assenta) */
   BODY_IN: 4,
-  /** o texto começa a entrar aqui (o corpo já está quase opaco) */
+  /** com o véu já de pé (a comemoração), o texto começa a entrar aqui (o corpo já está quase opaco) */
   CONTENT_AT: 3,
   CONTENT_IN: 5,
   /** saída: o texto sai nisto… */
@@ -735,27 +751,22 @@ const MODAL = {
   /** …e o corpo vazio, logo depois */
   BODY_OUT: 4,
   /** o véu sobe/desce nisto */
-  SCRIM: 8,
+  SCRIM: 6,
 } as const;
 const CLOSE_FRAMES = MODAL.CONTENT_OUT + MODAL.BODY_OUT;
 const BALANCE_FRAMES = 20;
+/** rolagem sem dedo (um `scroll` sem `swipe`), na curva SCROLL_EASE; a do arrasto é `swipeProgress` */
 const SCROLL_FRAMES = 22;
 
 const clamp01 = (t: number) => Math.max(0, Math.min(1, t));
 const ease = (t: number) => 1 - Math.pow(1 - clamp01(t), 3);
 const easeIn = (t: number) => Math.pow(clamp01(t), 3);
-const easeIO = (t: number) => {
+const easeInOutCubic = (t: number) => {
   const x = clamp01(t);
   return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
 };
 
 type Phase = NonNullable<ReturnType<typeof modalPhase>>;
-// o corpo vazio sai devagar no começo (ease-in) e o que entra sobe rápido (ease-out):
-// da confirmação pra comemoração os dois somados ficam opacos e a loja não aparece no meio
-const modalAnim = (p: Phase) =>
-  p.closing
-    ? { body: 1 - easeIn((p.since - MODAL.CONTENT_OUT) / MODAL.BODY_OUT), content: 1 - clamp01(p.since / MODAL.CONTENT_OUT), card: p.age, closing: true }
-    : { body: ease(p.age / MODAL.BODY_IN), content: clamp01((p.age - MODAL.CONTENT_AT) / MODAL.CONTENT_IN), card: p.age, closing: false };
 
 /** Algum cartão de modal na tela (aberto ou saindo) no quadro g. */
 const anyCard = (h: Snap<RewardsState>[], g: number) =>
@@ -769,21 +780,61 @@ const scrimAt = (h: Snap<RewardsState>[], f: number) => {
   return on ? n / MODAL.SCRIM : 1 - n / MODAL.SCRIM;
 };
 
+/** Idade do modal (quadros desde que abriu) em que o véu fica de pé: 0 quando ele já estava
+ *  (a comemoração abre sob o véu da confirmação), MODAL.SCRIM quando sobe junto com este. */
+const scrimSettleAge = (h: Snap<RewardsState>[], openedAt: number) => {
+  for (let a = 0; a < MODAL.SCRIM; a++) if (scrimAt(h, openedAt + a) >= 1) return a;
+  return MODAL.SCRIM;
+};
+
+// O corpo vazio sobe enquanto o véu sobe e fica opaco quando ele assenta; o texto do cartão só
+// entra com o véu assentado (nunca antes de CONTENT_AT). Saindo: o corpo vazio sai devagar no
+// começo (ease-in) e o que entra sobe rápido (ease-out): da confirmação pra comemoração os dois
+// somados ficam opacos e a loja não aparece no meio.
+const modalAnim = (h: Snap<RewardsState>[], f: number, p: Phase) => {
+  if (p.closing) {
+    return { body: 1 - easeIn((p.since - MODAL.CONTENT_OUT) / MODAL.BODY_OUT), content: 1 - clamp01(p.since / MODAL.CONTENT_OUT), card: p.age, closing: true, contentAt: 0 };
+  }
+  const settle = scrimSettleAge(h, f - p.age);
+  const bodyAt = Math.max(0, settle - MODAL.BODY_IN);
+  const contentAt = Math.max(MODAL.CONTENT_AT, settle);
+  return {
+    body: ease((p.age - bodyAt) / MODAL.BODY_IN),
+    content: clamp01((p.age - contentAt) / MODAL.CONTENT_IN),
+    // a mola da subida começa com o corpo
+    card: p.age - bodyAt,
+    closing: false,
+    contentAt,
+  };
+};
+
+/** A rolagem mostrada no quadro f: o arrasto anda em `swipeProgress` (a conta do dedo, 1:1 enquanto
+ *  aperta), 'instant' já está no destino (o REFLOW anima), o resto em SCROLL_EASE. */
+const scrollShownAt = (h: Snap<RewardsState>[], f: number) => {
+  const scr = lastChange(h, f, (s) => s.scroll);
+  if (scr.at === HISTORY_START) return scr.to;
+  const m = stateAt(h, scr.at).scrollMotion;
+  if (m === 'instant') return scr.to;
+  const e = m ? swipeProgress(f - scr.at, m) : SCROLL_EASE(clamp01((f - scr.at) / SCROLL_FRAMES));
+  return scr.from + (scr.to - scr.from) * e;
+};
+
 export const viewRewards = (h: Snap<RewardsState>[], f: number): RewardsView => {
   const bal = lastChange(h, f, (s) => s.balance);
-  const scr = lastChange(h, f, (s) => s.scroll);
   const cf = modalPhase(h, f, (s) => s.confirm, CLOSE_FRAMES);
   const cb = modalPhase(h, f, (s) => s.celebration, CLOSE_FRAMES);
   const lv = lastChange(h, f, (s) => s.leaving);
   const iconScale = (age: number) =>
     spring({ frame: age - 2.4, fps: 30, from: 0.4, to: 1, config: { damping: 9, stiffness: 200 } });
+  const cfa = cf ? modalAnim(h, f, cf) : null;
+  const cba = cb ? modalAnim(h, f, cb) : null;
   return {
     balance: bal.at === HISTORY_START ? bal.to : bal.from + (bal.to - bal.from) * ease((f - bal.at) / BALANCE_FRAMES),
-    scroll: scr.at === HISTORY_START ? scr.to : scr.from + (scr.to - scr.from) * easeIO((f - scr.at) / SCROLL_FRAMES),
+    scroll: scrollShownAt(h, f),
     scrim: scrimAt(h, f),
-    // `card` leva a idade do modal (quadros desde que abriu); a mola sai dela no render
-    confirm: cf ? { ...cf.c, ...modalAnim(cf) } : null,
-    celebration: cb ? { ...cb.c, ...modalAnim(cb), icon: cb.closing ? 1 : iconScale(cb.age - MODAL.CONTENT_AT) } : null,
+    // `card` leva a idade da mola (quadros desde que o corpo começou a subir); ela sai no render
+    confirm: cf && cfa ? { ...cf.c, ...cfa } : null,
+    celebration: cb && cba ? { ...cb.c, ...cba, icon: cb.closing ? 1 : iconScale(cb.age - cba.contentAt) } : null,
     leaving: lv.to ? { id: lv.to, t: clamp01((f - lv.at) / LEAVE_FADE) } : null,
   };
 };
@@ -795,16 +846,29 @@ export const REWARDS_SCREEN: ScreenModule<RewardsState, RewardsView, RewardsLayo
   initial: (ctx, patch) => initialRewards(ctx.fx, patch),
   tap: tapRewards,
   scrollFor: scrollForRewards,
+  controls: TARGETS.rewards.controls,
   view: viewRewards,
-  layout: (s, v, ctx, h, f) =>
-    layoutRewards(s, ctx, {
+  layout: (s, v, ctx, h, f) => {
+    const opts = {
       balanceShown: v.balance,
       scrollShown: v.scroll,
       confirmHint: v.confirm ? { id: v.confirm.id, qty: v.confirm.qty } : nextValue(h, f, (x) => x.confirm),
       celebrationHint: v.celebration ? { id: v.celebration.id, qty: v.celebration.qty, paid: v.celebration.paid } : nextValue(h, f, (x) => x.celebration),
       confirmClosing: !!v.confirm?.closing,
       celebrationClosing: !!v.celebration?.closing,
-    }),
+      confirmHidden: !v.confirm,
+      celebrationHidden: !v.celebration,
+    };
+    const L = layoutRewards(s, ctx, opts);
+    // a grade mudou (meta, filtro): reorganiza ANIMADA em REFLOW quadros, do layout de antes pro de agora
+    const rf = lastChange(h, f, (x) => [x.goal, x.filter]);
+    if (rf.at === HISTORY_START || f - rf.at >= REFLOW) return L;
+    const before = stateAt(h, rf.at - 1);
+    // a rolagem de antes: a de agora mais o que a reorganização desfez (o fim da lista que encolheu)
+    const undoClamp = before.scroll - stateAt(h, rf.at).scroll;
+    const A = layoutRewards(before, ctx, { ...opts, scrollShown: v.scroll + undoClamp });
+    return blendRewards(A, L, easeInOutCubic((f - rf.at) / REFLOW), before.leaving);
+  },
   Render: RewardsScreen,
 };
 

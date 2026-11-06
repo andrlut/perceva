@@ -9,7 +9,7 @@ import { AbsoluteFill, Audio, CalculateMetadataFunction, Sequence, interpolate, 
 import { Background, Rich } from '../components';
 import { C } from '../theme';
 import { FPS, Timing, buildTimeline, cue, plain, speechEnd } from '../timeline';
-import { beatFrame, buildPlan } from './engine';
+import { type Plan, beatFrame, buildPlan } from './engine';
 import { Callout, CameraLayer, Finger, Spotlight, Stage } from './overlays';
 import { BEZEL, PhoneBezel, SCREEN_RADIUS } from './screens/chrome';
 import type { Lang } from './screens/i18n';
@@ -28,6 +28,8 @@ export type TourProps = {
   mode?: 'tour' | 'replica';
   /** preenchido pelo calculateMetadata: o quadro de cada batida */
   marks?: TourMark[];
+  /** preenchido pelo calculateMetadata: o audit do movimento (Plan.audit, engine.ts) */
+  motion?: ReturnType<Plan['audit']>;
   screen?: string;
   fixture?: string;
   lang?: Lang;
@@ -51,14 +53,34 @@ export const calculateTourMetadata: CalculateMetadataFunction<TourProps> = async
     throw new Error(`${props.tourKey}: ${(total / FPS).toFixed(1)} s passa do teto de ${TOUR_MAX_SECONDS} s — corte o roteiro`);
   }
   const ts = scenes as TourScene[];
-  // as batidas em quadros: o scripts/tour.mjs tira um quadro de conferência em cada uma
+  // as batidas em quadros: o scripts/tour.mjs tira um quadro de conferência em cada uma. O plano
+  // é o mesmo do filme: dele sai, por gesto, se o toque tira a mão (lift) e de onde a mão parte
+  const plan = buildPlan(spec, ts, screenModule(spec.screen), stageFor(spec.screen));
   const marks: TourMark[] = ts.flatMap((s) =>
-    (s.beats ?? []).map((b) => ({ frame: beatFrame(s, b), line: s.id, at: b.at, focus: b.focus, do: b.do, target: b.target ?? undefined })),
+    (s.beats ?? []).map((b) => {
+      const frame = beatFrame(s, b);
+      const act = b.do ? plan.actions.find((a) => a.T === frame && a.type === b.do) : undefined;
+      return {
+        frame,
+        line: s.id,
+        at: b.at,
+        focus: b.focus,
+        do: b.do,
+        target: b.target ?? undefined,
+        ...(act ? { lift: act.lifts, handFrom: act.travelStart } : {}),
+      };
+    }),
   );
-  return { durationInFrames: total, props: { ...props, spec, scenes: ts, marks } };
+  // o audit do movimento (engine.ts, plan.audit): mão fora do palco, mão parada perto de controle,
+  // arrasto perto de controle, títulos sobrepostos — o scripts/tour.mjs mostra e o render barra
+  return { durationInFrames: total, props: { ...props, spec, scenes: ts, marks, motion: plan.audit() } };
 };
 
-export type TourMark = { frame: number; line: string; at: string; focus?: string | null; do?: string; target?: string };
+/**
+ * Uma batida em quadros. `lift`: o toque põe outra coisa debaixo do dedo e a mão e a onda somem
+ * em T+8 (TIME.LEAVE, engine.ts). `handFrom`: o quadro em que a mão começa a viajar pro gesto.
+ */
+export type TourMark = { frame: number; line: string; at: string; focus?: string | null; do?: string; target?: string; lift?: boolean; handFrom?: number };
 
 const stageFor = (screen: string): Stage => {
   const d = screenModule(screen).device;
@@ -133,7 +155,10 @@ const TourCaptions: React.FC<{ scenes: TourScene[] }> = ({ scenes }) => {
 
 // ---------------------------------------------------------------- cabeçalho
 
-const Header: React.FC<{ kicker: string; title: { cur: string; prev: string; t: number } }> = ({ kicker, title }) => {
+/** O título troca em sequência (engine.titleAt): o velho sobe e apaga, e só depois o novo sobe e
+ *  acende — em nenhum quadro os dois aparecem juntos (sobrepostos, "Mirar" e "Gerenciar" viravam
+ *  uma mancha por ~5 quadros a cada troca de fala). */
+const Header: React.FC<{ kicker: string; title: { cur: string; prev: string; prevO: number; curO: number } }> = ({ kicker, title }) => {
   const line = (text: string, o: number, dy: number) => (
     <div
       style={{
@@ -155,7 +180,6 @@ const Header: React.FC<{ kicker: string; title: { cur: string; prev: string; t: 
       {text}
     </div>
   );
-  const changed = title.cur !== title.prev;
   return (
     <>
       <div
@@ -174,8 +198,8 @@ const Header: React.FC<{ kicker: string; title: { cur: string; prev: string; t: 
       >
         {kicker.toUpperCase()}
       </div>
-      {changed && title.prev ? line(title.prev, 1 - title.t, -10 * title.t) : null}
-      {title.cur ? line(title.cur, changed ? title.t : 1, changed ? (1 - title.t) * 12 : 0) : null}
+      {title.prev && title.prevO > 0.001 ? line(title.prev, title.prevO, -10 * (1 - title.prevO)) : null}
+      {title.cur && title.curO > 0.001 ? line(title.cur, title.curO, (1 - title.curO) * 12) : null}
     </>
   );
 };
@@ -209,7 +233,7 @@ const TourFilm: React.FC<TourProps> = ({ tourKey, spec, scenes }) => {
         <div style={{ position: 'absolute', left: 0, top: 0, width: d.w, height: d.h, borderRadius: SCREEN_RADIUS, overflow: 'hidden' }}>
           <Screen s={s} v={v} L={L} ctx={plan.ctx} pressed={plan.pressedAt(frame)} />
         </div>
-        <Spotlight rect={spot.rect} dim={spot.dim} k={cam.k} pulse={spot.pulse} tone={spot.tone} />
+        <Spotlight layers={spot.layers} dim={spot.dim} k={cam.k} d={d} />
       </CameraLayer>
       {callout ? <Callout target={callout.rect} text={callout.text} t={callout.t} bounds={{ top: STAGE_TOP, bottom: STAGE_TOP + STAGE_H }} /> : null}
       {finger ? <Finger {...finger} /> : null}

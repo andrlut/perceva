@@ -11,6 +11,7 @@ import { lineCount, naturalLine, textWidth } from '../text';
 import { DEVICE, Device, navClearance, navLayout } from './chrome';
 import { Lang, num, tr, upper } from './i18n';
 import { RewardFx, RewardsFixture } from './rewardsFixture';
+import type { SwipeMotion } from './types';
 import TARGETS from './targets.json';
 
 // ---------------------------------------------------------------- estado
@@ -21,6 +22,9 @@ export type RewardsState = {
   filter: RewardCategory[];
   /** deslocamento da rolagem, em dp */
   scroll: number;
+  /** como a rolagem chega no `scroll` novo: o arrasto (1:1 com o dedo + inércia), 'instant' (o vão
+   *  que fecha: o layout anima, ver REFLOW) ou null (SCROLL_EASE) — ver ScreenModule.view */
+  scrollMotion?: SwipeMotion | 'instant' | null;
   confirm: { id: string; qty: number } | null;
   celebration: { id: string; qty: number; paid: number } | null;
   /** o cartão que acabou de ser mirado: apaga no lugar antes de virar a meta (ver TRACK_SETTLE) */
@@ -73,9 +77,20 @@ export type CardBox = {
   titleLines: number;
   footerH: number;
   cta: Rect;
+  /** opacidade durante o REFLOW (o cartão que sai da grade apaga; o que entra acende) */
+  o?: number;
 };
 export type SectionKey = 'available' | 'almost' | 'big';
-export type SectionBox = { key: SectionKey; header: Rect; rect: Rect; cards: CardBox[] };
+export type SectionBox = {
+  key: SectionKey;
+  header: Rect;
+  rect: Rect;
+  cards: CardBox[];
+  /** durante o REFLOW: a contagem que o cabeçalho mostra e a opacidade dela (a velha sai, depois a
+   *  nova entra — nunca as duas) e a da seção inteira (a que some ou aparece) */
+  count?: { n: number; o: number };
+  o?: number;
+};
 export type GoalBox = {
   rect: Rect;
   reward: RewardFx;
@@ -124,10 +139,15 @@ export type RewardsLayout = {
   scroll: number;
   maxScroll: number;
   contentH: number;
-  hero: { rect: Rect; row: Rect; status: string; statusH: number; label: string; labelW: number };
+  hero: { rect: Rect; row: Rect; status: string; statusH: number; label: string; labelW: number; statusO?: number };
   info: Rect;
   goal: GoalBox | null;
   trackCta: Rect | null;
+  /** durante o REFLOW: o convite sai e só depois a meta entra (texto nunca atravessa texto); a meta
+   *  recortada na altura que a grade já abriu (`goalClipH`) */
+  goalO?: number;
+  goalClipH?: number;
+  trackCtaO?: number;
   chips: { rect: Rect; items: { cat: RewardCategory; rect: Rect }[] };
   sections: SectionBox[];
   add: Rect;
@@ -137,6 +157,8 @@ export type RewardsLayout = {
   celebration: CelebBox | null;
   /** todos os alvos, em coordenadas da TELA */
   targets: Record<string, Rect>;
+  /** alvos que só existem pra mirar (o modal que ainda vai abrir): não estão na tela, não são controle */
+  hidden?: string[];
 };
 
 const byId = (fx: RewardsFixture, id: string) => {
@@ -260,6 +282,9 @@ export type LayoutOpts = {
   /** o modal está saindo: ainda é desenhado, mas os alvos dele já não existem */
   confirmClosing?: boolean;
   celebrationClosing?: boolean;
+  /** o modal ainda não está na tela (só a geometria, pra mirar): os alvos dele não são controle */
+  confirmHidden?: boolean;
+  celebrationHidden?: boolean;
 };
 
 /** Folga (dp) de cada lado do destaque da quantidade/total: o valor do total encosta na
@@ -473,8 +498,111 @@ export const layoutRewards = (s: RewardsState, ctx: RewardsCtx, o: LayoutOpts = 
     t['celebration.undo'] = celebration.undo;
   }
   assertTargets(t);
+  const hidden = Object.keys(t).filter((k) => (o.confirmHidden && !s.confirm && k.startsWith('confirm')) || (o.celebrationHidden && !s.celebration && k.startsWith('celebration')));
 
-  return { d, contentTop, scroll, maxScroll, contentH, hero, info, goal, trackCta, chips, sections, add, fabs: { calendar, manage }, nav, confirm, celebration, targets: t };
+  return { d, contentTop, scroll, maxScroll, contentH, hero, info, goal, trackCta, chips, sections, add, fabs: { calendar, manage }, nav, confirm, celebration, targets: t, hidden };
+};
+
+// ---------------------------------------------------------------- a reorganização animada (REFLOW)
+
+const lerpN = (a: number, b: number, t: number) => a + (b - a) * t;
+const lerpR = (a: Rect, b: Rect, t: number): Rect => ({ x: lerpN(a.x, b.x, t), y: lerpN(a.y, b.y, t), w: lerpN(a.w, b.w, t), h: lerpN(a.h, b.h, t), r: lerpN(a.r ?? 0, b.r ?? 0, t) });
+
+/**
+ * A grade entre dois layouts (A = antes, B = depois, `t` 0..1 já com a curva): o que existe nos dois
+ * desliza (posição no conteúdo E rolagem interpoladas, então a posição na tela também); o que só
+ * existe num deles apaga ou acende NO LUGAR, em sequência — o que sai na primeira metade, o que entra
+ * na segunda —, pra que dois textos nunca se leiam no mesmo lugar (a contagem "2 ITENS" → "1 ITEM",
+ * o convite → a meta). A meta cresce da altura do convite até a dela (recortada), então ela nunca
+ * cobre os chips, que descem junto. `gone`: o cartão que já tinha apagado (o mirado) não volta.
+ */
+export const blendRewards = (A: RewardsLayout, B: RewardsLayout, t: number, gone: string | null): RewardsLayout => {
+  if (t >= 1) return B;
+  const out = Math.max(0, 1 - 2 * t);
+  const inn = Math.max(0, 2 * t - 1);
+  const scroll = lerpN(A.scroll, B.scroll, t);
+  const contentTop = B.d.statusBar - scroll;
+
+  // o topo: o convite sai e a meta entra no mesmo lugar (a meta recortada na altura que a grade já abriu)
+  const sameGoal = !!A.goal && !!B.goal && A.goal.reward.id === B.goal.reward.id;
+  let goal = B.goal;
+  let goalO = 1;
+  let goalClipH: number | undefined;
+  if (!sameGoal && (A.goal || B.goal)) {
+    const showA = !!A.goal && (t < 0.5 || !B.goal);
+    goal = showA ? A.goal : B.goal;
+    goalO = showA ? out : inn;
+  } else if (sameGoal && A.goal && B.goal) goal = { ...B.goal, rect: lerpR(A.goal.rect, B.goal.rect, t) };
+  const topA = A.goal?.rect ?? A.trackCta;
+  const topB = B.goal?.rect ?? B.trackCta;
+  if (goal && topA && topB && !sameGoal) goalClipH = lerpN(topA.h, topB.h, t);
+  let trackCta = B.trackCta;
+  let trackCtaO = 1;
+  if (!!A.trackCta !== !!B.trackCta) {
+    trackCta = A.trackCta ? (t < 0.5 ? A.trackCta : null) : t >= 0.5 ? B.trackCta : null;
+    trackCtaO = A.trackCta ? out : inn;
+  }
+
+  // as seções: as dos dois deslizam; cartões casados pelo id
+  const sections: SectionBox[] = [];
+  for (const sb of B.sections) {
+    const sa = A.sections.find((x) => x.key === sb.key);
+    if (!sa) {
+      sections.push({ ...sb, o: inn, cards: sb.cards.map((c) => ({ ...c, o: inn })) });
+      continue;
+    }
+    const cards: CardBox[] = sb.cards.map((cb) => {
+      const ca = sa.cards.find((x) => x.reward.id === cb.reward.id) ?? A.sections.flatMap((x) => x.cards).find((x) => x.reward.id === cb.reward.id);
+      return ca ? { ...cb, rect: lerpR(ca.rect, cb.rect, t), cta: lerpR(ca.cta, cb.cta, t) } : { ...cb, o: inn };
+    });
+    for (const ca of sa.cards) {
+      if (ca.reward.id === gone || B.sections.some((x) => x.cards.some((c) => c.reward.id === ca.reward.id))) continue;
+      cards.push({ ...ca, o: out });
+    }
+    const na = sa.cards.filter((c) => c.reward.id !== gone).length;
+    const nb = sb.cards.length;
+    const count = na === nb ? { n: nb, o: 1 } : t < 0.5 ? { n: na, o: out } : { n: nb, o: inn };
+    sections.push({ ...sb, header: lerpR(sa.header, sb.header, t), rect: lerpR(sa.rect, sb.rect, t), cards, count });
+  }
+  for (const sa of A.sections) {
+    if (B.sections.some((x) => x.key === sa.key)) continue;
+    sections.push({ ...sa, o: out, cards: sa.cards.filter((c) => c.reward.id !== gone).map((c) => ({ ...c, o: out })) });
+  }
+
+  // os alvos: os dos dois interpolam (na tela = no conteúdo + rolagem, ambos interpolados); os de um só
+  // ficam no lugar deles no conteúdo enquanto aparecem
+  const targets: Record<string, Rect> = {};
+  const shift = (r: Rect, from: RewardsLayout): Rect => ({ ...r, y: r.y - from.contentTop + contentTop });
+  for (const [k, rb] of Object.entries(B.targets)) {
+    const ra = A.targets[k];
+    if (ra) targets[k] = lerpR(ra, rb, t);
+    else if (t >= 0.5) targets[k] = shift(rb, B);
+  }
+  if (t < 0.5) for (const [k, ra] of Object.entries(A.targets)) if (!B.targets[k]) targets[k] = shift(ra, A);
+
+  const statusChanged = A.hero.status !== B.hero.status;
+  return {
+    ...B,
+    scroll,
+    contentTop,
+    contentH: lerpN(A.contentH, B.contentH, t),
+    hero: {
+      ...B.hero,
+      rect: lerpR(A.hero.rect, B.hero.rect, t),
+      statusH: lerpN(A.hero.statusH, B.hero.statusH, t),
+      status: statusChanged && t < 0.5 ? A.hero.status : B.hero.status,
+      statusO: statusChanged ? (t < 0.5 ? out : inn) : 1,
+    },
+    goal,
+    goalO,
+    goalClipH,
+    trackCta,
+    trackCtaO,
+    chips: { rect: lerpR(A.chips.rect, B.chips.rect, t), items: B.chips.items.map((c, i) => ({ ...c, rect: lerpR(A.chips.items[i]?.rect ?? c.rect, c.rect, t) })) },
+    sections,
+    add: lerpR(A.add, B.add, t),
+    targets,
+  };
 };
 
 const STATIC = new Set(TARGETS.rewards.static);
@@ -497,16 +625,17 @@ export type TimedPatch = { delay?: number; patch: Partial<RewardsState>; lift?: 
 export const CELEBRATION_DELAY = 4;
 
 /**
- * Mirar: o cartão apaga no lugar em LEAVE_FADE quadros e só TRACK_SETTLE quadros depois do
- * toque (EFFECT + isto) ele vira a meta no topo e a grade fecha o vão. No app a troca é imediata
- * (useSetTrackedReward é otimista), mas fechar o vão debaixo do dedo punha o cartão de baixo
- * (a Viagem) exatamente onde a onda e a mão ainda estavam: parecia que o dedo tinha tocado nele.
- * A mão e a onda somem em T+8 (TIME.LEAVE, engine.ts) e o cartão em T+11; o vão fecha em T+22,
- * depois que a mão do gesto seguinte (que entra por baixo, pela direita) já passou por cima de
- * onde o cartão de baixo vai cair — fechando antes, ela atravessava o MIRAR da Viagem.
+ * Mirar: o cartão apaga no lugar em LEAVE_FADE quadros e, assim que apagou (T+EFFECT+TRACK_SETTLE),
+ * ele vira a meta no topo e a grade se reorganiza ANIMADA em REFLOW quadros (blendRewards): o vão
+ * fecha, os cartões deslizam, o convite "Mirar uma recompensa" sai e a meta entra no lugar dele. No
+ * app a troca é imediata (useSetTrackedReward é otimista); aqui ela espera a mão sair (lift: a mão e
+ * a onda somem em T+8, TIME.LEAVE em engine.ts) e o anel apagar, pra o cartão que cai no vão nunca
+ * parecer o tocado — e anima, porque num quadro só a lista pulava ~340 px sem causa na tela.
  */
-export const LEAVE_FADE = 8;
-export const TRACK_SETTLE = 19;
+export const LEAVE_FADE = 6;
+export const TRACK_SETTLE = LEAVE_FADE;
+/** A grade se reorganiza nisto (quadros), em ease-in-out: o vão fecha e os cartões deslizam. */
+export const REFLOW = 12;
 
 export const tapRewards = (target: string, s: RewardsState, ctx: RewardsCtx): TimedPatch[] | null => {
   const L = layoutRewards(s, ctx);
@@ -515,7 +644,7 @@ export const tapRewards = (target: string, s: RewardsState, ctx: RewardsCtx): Ti
     const c = L.confirm!;
     if (target === 'confirm.plus') return [{ patch: { confirm: { ...s.confirm, qty: Math.min(MAX_QTY, s.confirm.qty + 1) } } }];
     if (target === 'confirm.minus') return [{ patch: { confirm: { ...s.confirm, qty: Math.max(1, s.confirm.qty - 1) } } }];
-    if (target === 'confirm.cancel') return [{ patch: { confirm: null } }];
+    if (target === 'confirm.cancel') return [{ patch: { confirm: null }, lift: true }];
     if (target === 'confirm.redeem') {
       if (!c.canBuy) return null; // botão desabilitado
       // otimista: o saldo cai na hora (useRedeemRewardN.onMutate); a comemoração abre quando a
@@ -527,10 +656,12 @@ export const tapRewards = (target: string, s: RewardsState, ctx: RewardsCtx): Ti
     }
     return null;
   }
+  // fechar um modal levanta (lift): a loja volta debaixo do dedo, e a mão, o disco e a onda saem junto
+  // com o cartão — nada do toque fica em cima da loja que reaparece
   if (s.celebration) {
-    if (target === 'celebration.enjoy') return [{ patch: { celebration: null } }];
+    if (target === 'celebration.enjoy') return [{ patch: { celebration: null }, lift: true }];
     // Desfazer: devolve exatamente o que foi pago (undo_reward_redemption)
-    if (target === 'celebration.undo') return [{ patch: { celebration: null, balance: s.balance + s.celebration.paid } }];
+    if (target === 'celebration.undo') return [{ patch: { celebration: null, balance: s.balance + s.celebration.paid }, lift: true }];
     return null;
   }
   const card = (id: string): TimedPatch[] => {
@@ -538,9 +669,15 @@ export const tapRewards = (target: string, s: RewardsState, ctx: RewardsCtx): Ti
     // RewardCard: COMPRAR (Resgatar) quando o saldo paga — a confirmação abre por cima do dedo —;
     // senão MIRAR — o cartão sai e o de baixo ocupa o lugar dele
     if (s.balance >= r.cost) return [{ patch: { confirm: { id, qty: 1 } }, lift: true }];
+    // a lista encolhe (o cartão sai da grade, a meta entra no lugar do convite): se a rolagem passa
+    // do fim novo, ela volta pro fim (o ScrollView faz isso) — no MESMO quadro da reorganização,
+    // 'instant', porque é o REFLOW que anima as duas coisas juntas
+    const after: RewardsState = { ...s, goal: id, leaving: null };
+    const max = layoutRewards({ ...after, scroll: 0 }, ctx).maxScroll;
+    const clamp = s.scroll > max ? { scroll: max, scrollMotion: 'instant' as const } : {};
     return [
       { patch: { leaving: id }, lift: true },
-      { delay: TRACK_SETTLE, patch: { goal: id, leaving: null } },
+      { delay: TRACK_SETTLE, patch: { goal: id, leaving: null, ...clamp } },
     ];
   };
   if (target === 'card0.cta') {
@@ -573,6 +710,7 @@ export const initialRewards = (fx: RewardsFixture, patch: Partial<RewardsState> 
   goal: fx.goal,
   filter: [],
   scroll: 0,
+  scrollMotion: null,
   confirm: null,
   celebration: null,
   leaving: null,

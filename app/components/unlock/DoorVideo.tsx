@@ -13,15 +13,16 @@ import { tokens } from '@/theme';
 import type { DoorFeature } from './UnlockDoor';
 
 /**
- * The door's video (tools/video molde, roteiro em
- * learning-drops/video-specs/doors.json): the same Remotion cast and burned-in
- * captions as the idea videos, one per tab and language, in the public
- * `learning-media` bucket under `doors/`. Immutable paths — a new cut is a new
- * `rev`, bumped here.
+ * The door's video, one per tab and language, in the public `learning-media`
+ * bucket under `doors/`. Immutable paths — a new cut is a new `rev` for THAT
+ * door, bumped here (each door moves on its own).
+ *  - r1: the illustrated story (tools/video molde, learning-drops/video-specs/doors.json).
+ *  - r2+: the screen tutorial — a replica of the real tab with a tapping finger,
+ *    ending on the (i) (tools/video/TOUR.md, tools/video/tours/<tab>.json).
  */
-const DOOR_VIDEO_REV = 1;
+const DOOR_VIDEO_REV: Record<DoorFeature, number> = { rewards: 2, learning: 1, me: 1 };
 const doorAsset = (feature: DoorFeature, lang: 'pt' | 'en', ext: 'mp4' | 'poster.webp') =>
-  learningMediaUrl(`doors/${feature}.${lang}.r${DOOR_VIDEO_REV}.${ext}`);
+  learningMediaUrl(`doors/${feature}.${lang}.r${DOOR_VIDEO_REV[feature]}.${ext}`);
 
 /** A video that has not shown a frame by then is treated as failed (offline). */
 const START_TIMEOUT_MS = 7000;

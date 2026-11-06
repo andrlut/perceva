@@ -3,8 +3,10 @@
 //   node scripts/tour.mjs lint    --tour <tela>                       só o lint do roteiro (grátis)
 //   node scripts/tour.mjs build   --tour <tela> [--lang pt|en|both] [--silent]
 //   node scripts/tour.mjs voice   --tour <tela> [--lang …] [--only a,b]   TTS Kore + QA por transcrição (--fix)
-//   node scripts/tour.mjs stills  --tour <tela> [--lang …]             um quadro por batida + folha de contato
-//   node scripts/tour.mjs render  --tour <tela> [--lang …] [--rev N]   MP4 + versão do app (720p) + pôster
+//   node scripts/tour.mjs stills  --tour <tela> [--lang …]             um quadro por batida + folha de contato + audit do movimento
+//   node scripts/tour.mjs frames  --tour <tela> [--lang …] (--frames a,b | --plan f.json) [--scale 1] [--clean]
+//                                                                       quadros avulsos + frames/index.json
+//   node scripts/tour.mjs render  --tour <tela> [--lang …] [--rev N]   MP4 + versão do app (720p) + pôster (barra se o audit do movimento falhar)
 //   node scripts/tour.mjs all     --tour <tela> [--lang …] [--silent]  build → voice → stills → render
 //   node scripts/tour.mjs replica [--screen rewards] [--fixture inicio] [--lang pt] [--state '{"goal":null}'] [--name x]
 //   node scripts/tour.mjs upload  --tour <tela> [--lang …] [--rev N]   sobe pro bucket learning-media (checkout principal)
@@ -291,6 +293,23 @@ const tile = (files, sheet, cols) =>
     '-vf', `tile=${cols}x${Math.ceil(files.length / cols)}:padding=12:color=0x0A0E26`, '-frames:v', '1', sheet,
   ]);
 
+/**
+ * O audit do movimento que o plano faz (engine.ts, plan.audit → props.motion; tabela em TOUR.md):
+ * a mão saindo do palco (`stage`), parada perto de um controle (`rest`), andando por cima de um
+ * controle alheio (`path`), o dedo do arrasto perto de controle no caminho inteiro (`contact`), o
+ * conteúdo que não anda 1:1 com o dedo ou inércia longa (`drag`), anel fora do alvo (`ring`), alvo
+ * que salta num quadro (`jump`), mão aparecendo num salto (`pop`) e dois títulos juntos (`title`).
+ * Mostra cada problema com o segundo; devolve quantos.
+ */
+const reportMotion = (k, motion) => {
+  if (!motion) return 0;
+  const sec = (f) => (f / 30).toFixed(2);
+  for (const i of motion.issues) console.warn(`! ${k} ${sec(i.frame)} s${i.to ? `–${sec(i.to)} s` : ''} [${i.rule}] ${i.what}`);
+  const drags = (motion.swipes ?? []).map((s) => `${s.fingerPx}/${s.contentPx} px`).join(', ');
+  console.log(`  ${k}: movimento — ${motion.issues.length ? `${motion.issues.length} problema(s)` : 'ok'} · ${motion.entries.length} aparições da mão · ${motion.swipes.length} arrastos (dedo/conteúdo: ${drags || '—'})`);
+  return motion.issues.length;
+};
+
 async function stills() {
   const { renderStill, selectComposition } = await import('@remotion/renderer');
   const serveUrl = await serve();
@@ -303,17 +322,31 @@ async function stills() {
     const dir = path.join(outDir(k), 'stills');
     fs.rmSync(dir, { recursive: true, force: true });
     fs.mkdirSync(dir, { recursive: true });
-    // um quadro na abertura, um logo depois de cada batida assentar, e o último
+    // um quadro na abertura, um logo depois de cada batida assentar, e o último. O toque com
+    // `lift` (o que entra debaixo do dedo: um modal, o vão do Mirar) apaga mão e onda em T+8, então
+    // o quadro de assentar (T+9) já não prova o toque: esse toque é tirado em T+4 — dedo apertando
+    // e onda saindo do controle — e o T+9 (a mão já fora, o que entrou no lugar) só entra se a
+    // folha tiver espaço (SHEET_MAX)
+    const SHEET_MAX = 25; // 5 × 5
+    const clampF = (f) => Math.max(0, Math.min(composition.durationInFrames - 1, f));
+    const near = (list, f) => list.some((q) => Math.abs(q.frame - f) < 4);
     const picks = [{ frame: 12, what: 'abertura', line: scenes[0].id }];
+    const extras = [];
     for (const m of marks) {
+      const label = `${m.do ?? 'foco'} ${m.target ?? m.focus ?? ''} @ "${m.at}"`.trim();
+      if (m.do === 'tap' && m.lift) {
+        picks.push({ frame: m.frame + 4, beat: m.frame, what: `${label} · contato (T+4): dedo apertando o controle e a onda saindo dele; a mão já começa a apagar (lift)`, line: m.line });
+        extras.push({ frame: m.frame + 9, beat: m.frame, what: `${label} · T+9: mão e onda já saíram (lift); o que o toque pôs debaixo do dedo está no lugar`, line: m.line });
+        continue;
+      }
       const settle = m.do === 'tap' ? 9 : m.do === 'swipe' ? 26 : m.do === 'point' ? 6 : 16;
-      picks.push({ frame: m.frame + settle, what: `${m.do ?? 'foco'} ${m.target ?? m.focus ?? ''} @ "${m.at}"`.trim(), line: m.line });
+      picks.push({ frame: m.frame + settle, beat: m.frame, what: label, line: m.line });
     }
     picks.push({ frame: composition.durationInFrames - 2, what: 'fecho', line: scenes[scenes.length - 1].id });
-    const uniq = picks
-      .map((p) => ({ ...p, frame: Math.max(0, Math.min(composition.durationInFrames - 1, p.frame)) }))
-      .filter((p, i, a) => a.findIndex((q) => Math.abs(q.frame - p.frame) < 4) === i)
-      .sort((a, b) => a.frame - b.frame);
+    const uniq = [];
+    for (const p of picks.map((x) => ({ ...x, frame: clampF(x.frame) }))) if (!near(uniq, p.frame)) uniq.push(p);
+    for (const p of extras.map((x) => ({ ...x, frame: clampF(x.frame) }))) if (uniq.length < SHEET_MAX && !near(uniq, p.frame)) uniq.push(p);
+    uniq.sort((a, b) => a.frame - b.frame);
     const files = [];
     for (const [i, p] of uniq.entries()) {
       const f = path.join(dir, `${String(i + 1).padStart(2, '0')}.png`);
@@ -323,32 +356,77 @@ async function stills() {
     fs.writeFileSync(
       path.join(dir, 'index.json'),
       JSON.stringify(
-        uniq.map((p, i) => ({ n: i + 1, frame: p.frame, seconds: +(p.frame / 30).toFixed(2), line: p.line, shows: p.what, caption: scenes.find((s) => s.id === p.line)?.caption })),
+        uniq.map((p, i) => ({
+          n: i + 1,
+          frame: p.frame,
+          seconds: +(p.frame / 30).toFixed(2),
+          ...(p.beat !== undefined ? { beat: p.beat, t: `T${p.frame - p.beat >= 0 ? '+' : ''}${p.frame - p.beat}` } : {}),
+          line: p.line,
+          shows: p.what,
+          caption: scenes.find((s) => s.id === p.line)?.caption,
+        })),
         null,
         2,
       ),
     );
+    // todas as batidas em quadros (com lift e o quadro em que a mão parte): base pra `frames`
+    fs.writeFileSync(path.join(dir, 'marks.json'), JSON.stringify({ durationInFrames: composition.durationInFrames, marks }, null, 2));
+    // o audit do movimento (cada aparição da mão, cada arrasto, cada problema): o revisor lê junto da folha
+    fs.writeFileSync(path.join(dir, 'motion.json'), JSON.stringify(composition.props.motion ?? null, null, 2));
+    reportMotion(k, composition.props.motion);
     const sheet = path.join(outDir(k), 'sheet.png');
     tile(files, sheet, Math.min(5, files.length));
     console.log(`✓ ${k}: ${files.length} quadros (${(composition.durationInFrames / 30).toFixed(1)} s${spec.silent ? ', SEM VOZ' : ''}) · folha ${path.relative(repo, sheet)}`);
   }
 }
 
+/**
+ * Quadros avulsos pra conferir movimento: `--frames 300,302,…` ou `--plan <json>` — uma lista
+ * [{ frame, window?, expect? }] ou { pt: [...], en: [...] } (o que cada quadro deveria mostrar).
+ * `--clean` apaga a pasta antes (quadro velho não engana o revisor). Escreve frames/index.json.
+ */
 async function frames() {
-  const { renderStill, selectComposition } = await import('@remotion/renderer');
+  const { renderStill, selectComposition, openBrowser } = await import('@remotion/renderer');
   const serveUrl = await serve();
-  const list = (arg('frames') ?? '').split(',').filter(Boolean).map(Number);
-  for (const lang of LANGS) {
-    const k = key(lang);
-    const inputProps = { tourKey: k, spec: null, scenes: [], mode: 'tour' };
-    const composition = await selectComposition({ serveUrl, id: 'Tour', inputProps });
-    const dir = path.join(outDir(k), 'frames');
-    fs.mkdirSync(dir, { recursive: true });
-    for (const fr of list) {
-      const f = path.join(dir, `f${String(fr).padStart(4, '0')}.png`);
-      await renderStill({ serveUrl, composition, frame: fr, output: f, scale: Number(arg('scale', '0.5')), inputProps });
-      console.log(path.relative(repo, f));
+  const plan = arg('plan') ? readJson(path.resolve(arg('plan'))) : null;
+  const fromArg = (arg('frames') ?? '').split(',').filter(Boolean).map((n) => ({ frame: Number(n) }));
+  const scale = Number(arg('scale', '0.5'));
+  // um navegador só pra todos os quadros (abrir um por quadro custa segundos cada)
+  const browser = await openBrowser('chrome', { forceDeviceScaleFactor: scale });
+  try {
+    for (const lang of LANGS) {
+      const k = key(lang);
+      const items = plan ? (Array.isArray(plan) ? plan : plan[lang] ?? []) : fromArg;
+      if (!items.length) die(`${k}: nenhum quadro (--frames a,b,c ou --plan <json>)`);
+      const inputProps = { tourKey: k, spec: null, scenes: [], mode: 'tour' };
+      const composition = await selectComposition({ serveUrl, id: 'Tour', inputProps, puppeteerInstance: browser });
+      const { scenes } = composition.props;
+      const dir = path.join(outDir(k), 'frames');
+      if (flag('clean')) fs.rmSync(dir, { recursive: true, force: true });
+      fs.mkdirSync(dir, { recursive: true });
+      const indexFile = path.join(dir, 'index.json');
+      const index = new Map((fs.existsSync(indexFile) ? readJson(indexFile) : []).map((e) => [e.frame, e]));
+      for (const it of items) {
+        const file = `f${String(it.frame).padStart(4, '0')}.png`;
+        await renderStill({ serveUrl, composition, frame: it.frame, output: path.join(dir, file), scale, inputProps, puppeteerInstance: browser });
+        const line = [...scenes].reverse().find((s) => s.start <= it.frame) ?? scenes[0];
+        index.set(it.frame, {
+          file,
+          frame: it.frame,
+          seconds: +(it.frame / 30).toFixed(2),
+          line: line.id,
+          ...(it.window ? { window: it.window } : {}),
+          ...(it.t ? { t: it.t } : {}),
+          ...(it.expect ? { expect: it.expect } : {}),
+          caption: line.caption,
+        });
+        process.stdout.write('.');
+      }
+      fs.writeFileSync(indexFile, JSON.stringify([...index.values()].sort((a, b) => a.frame - b.frame), null, 2));
+      console.log(`\n✓ ${k}: ${items.length} quadros (escala ${scale}) · ${path.relative(repo, dir)}`);
     }
+  } finally {
+    await browser.close({ silent: true });
   }
 }
 
@@ -383,6 +461,8 @@ async function render() {
     const composition = await selectComposition({ serveUrl, id: 'Tour', inputProps });
     const spec = composition.props.spec;
     if (spec.silent && !flag('allow-silent')) die(`${k}: o build é --silent (sem voz) — rode build + voice antes de renderizar (ou --allow-silent pra um rascunho)`);
+    // a régua da mão e do título (TOUR.md) barra o render; --allow-motion só pra rascunho
+    if (reportMotion(k, composition.props.motion) && !flag('allow-motion')) die(`${k}: o movimento quebra as regras da mão/título (acima) — corrija o motor ou o roteiro (ou --allow-motion pra um rascunho)`);
     const rev = Number(arg('rev', String(spec.rev)));
     const dir = outDir(k);
     fs.mkdirSync(path.join(dir, 'pub', 'doors'), { recursive: true });

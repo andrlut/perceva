@@ -108,55 +108,75 @@ const RING: Record<SpotTone, { stroke: string; glow: string }> = {
   gold: { stroke: '#FFE08A', glow: 'rgba(255,200,61,0.8)' },
 };
 
+/** Um alvo do destaque: `hole` = o quanto o buraco no véu está aberto, `ring` = a opacidade do anel
+ *  (ver SpotLayer em engine.ts: na troca de alvo o novo acende no lugar dele e o velho apaga no dele). */
+export type SpotlightLayer = { rect: Rect; hole: number; ring: number; pulse: number | null; tone: SpotTone };
+
 /**
- * Escurece tudo menos um buraco arredondado em volta do alvo, com um anel
- * suave. Fica DENTRO da câmera (coordenadas em dp); `k` (px por dp) mantém a
- * espessura do anel constante no vídeo, em qualquer zoom.
+ * Escurece tudo menos os buracos arredondados em volta dos alvos, com um anel suave em cada. Fica
+ * DENTRO da câmera (coordenadas em dp); `k` (px por dp) mantém a espessura do anel constante no
+ * vídeo, em qualquer zoom. Os buracos são uma máscara (cada um com a sua abertura), pra que a troca
+ * de alvo nunca estique um anel pela tela: o novo abre e o velho fecha, cada um no seu lugar.
  */
 export const Spotlight: React.FC<{
-  rect: Rect;
+  layers: SpotlightLayer[];
   /** 0..1 — o quanto o resto escurece (0 = sem destaque) */
   dim: number;
   k: number;
-  tone?: SpotTone;
-  /** 0..1, cíclico: o eco que pulsa pra fora (o fecho do tutorial) */
-  pulse?: number | null;
+  /** a tela (dp): o véu cobre ela com folga — a câmera nunca mostra mais que isso */
+  d: Device;
   /** folga em volta do alvo, em dp */
   pad?: number;
-}> = ({ rect, dim, k, tone = 'violet', pulse = null, pad = 6 }) => {
-  if (dim <= 0.001) return null;
-  const hole: Rect = { x: rect.x - pad, y: rect.y - pad, w: rect.w + pad * 2, h: rect.h + pad * 2, r: (rect.r ?? 12) + pad };
-  const big = 6000;
-  const ring = RING[tone];
+}> = ({ layers, dim, k, d, pad = 6 }) => {
+  const id = `spot${React.useId().replace(/[^a-zA-Z0-9]/g, '')}`;
+  if (dim <= 0.001 || !layers.length) return null;
+  const M = 700; // dp além da tela (no zoom mínimo o palco mostra ~650 × 800 dp)
+  const box = { x: -M, y: -M, w: d.w + 2 * M, h: d.h + 2 * M };
   const sw = 4.5 / k; // 4,5 px no vídeo
-  const echo = pulse == null ? null : { d: (4 + 26 * pulse) / k, o: 0.9 * (1 - pulse) };
+  const holeOf = (rect: Rect): Rect => ({ x: rect.x - pad, y: rect.y - pad, w: rect.w + pad * 2, h: rect.h + pad * 2, r: (rect.r ?? 12) + pad });
   return (
     <>
       <svg
-        width={big * 2}
-        height={big * 2}
-        viewBox={`${-big} ${-big} ${big * 2} ${big * 2}`}
-        style={{ position: 'absolute', left: -big, top: -big, pointerEvents: 'none', overflow: 'visible' }}
+        width={box.w}
+        height={box.h}
+        viewBox={`${box.x} ${box.y} ${box.w} ${box.h}`}
+        style={{ position: 'absolute', left: box.x, top: box.y, pointerEvents: 'none', overflow: 'visible' }}
       >
-        <path d={`M ${-big} ${-big} H ${big} V ${big} H ${-big} Z ${roundRect(hole)}`} fill={`rgba(5,7,26,${0.64 * dim})`} fillRule="evenodd" />
+        <defs>
+          <mask id={id} maskUnits="userSpaceOnUse" x={box.x} y={box.y} width={box.w} height={box.h}>
+            <rect x={box.x} y={box.y} width={box.w} height={box.h} fill="white" />
+            {layers.map((L, i) => (L.hole > 0.001 ? <path key={i} d={roundRect(holeOf(L.rect))} fill="black" fillOpacity={Math.min(1, L.hole)} /> : null))}
+          </mask>
+        </defs>
+        <rect x={box.x} y={box.y} width={box.w} height={box.h} fill={`rgba(5,7,26,${0.64 * dim})`} mask={`url(#${id})`} />
       </svg>
-      <svg
-        width={big * 2}
-        height={big * 2}
-        viewBox={`${-big} ${-big} ${big * 2} ${big * 2}`}
-        style={{ position: 'absolute', left: -big, top: -big, pointerEvents: 'none', overflow: 'visible', opacity: dim, filter: `drop-shadow(0 0 ${10 / k}px ${ring.glow})` }}
-      >
-        <path d={roundRect(hole)} fill="none" stroke={ring.stroke} strokeWidth={sw} />
-        {echo ? (
-          <path
-            d={roundRect({ x: hole.x - echo.d, y: hole.y - echo.d, w: hole.w + echo.d * 2, h: hole.h + echo.d * 2, r: (hole.r ?? 0) + echo.d })}
-            fill="none"
-            stroke={ring.stroke}
-            strokeWidth={sw * 0.9}
-            opacity={echo.o}
-          />
-        ) : null}
-      </svg>
+      {layers.map((L, i) => {
+        const o = dim * L.ring;
+        if (o <= 0.001) return null;
+        const ring = RING[L.tone];
+        const hole = holeOf(L.rect);
+        const echo = L.pulse == null ? null : { d: (4 + 26 * L.pulse) / k, o: 0.9 * (1 - L.pulse) };
+        return (
+          <svg
+            key={i}
+            width={box.w}
+            height={box.h}
+            viewBox={`${box.x} ${box.y} ${box.w} ${box.h}`}
+            style={{ position: 'absolute', left: box.x, top: box.y, pointerEvents: 'none', overflow: 'visible', opacity: o, filter: `drop-shadow(0 0 ${10 / k}px ${ring.glow})` }}
+          >
+            <path d={roundRect(hole)} fill="none" stroke={ring.stroke} strokeWidth={sw} />
+            {echo ? (
+              <path
+                d={roundRect({ x: hole.x - echo.d, y: hole.y - echo.d, w: hole.w + echo.d * 2, h: hole.h + echo.d * 2, r: (hole.r ?? 0) + echo.d })}
+                fill="none"
+                stroke={ring.stroke}
+                strokeWidth={sw * 0.9}
+                opacity={echo.o}
+              />
+            ) : null}
+          </svg>
+        );
+      })}
     </>
   );
 };
@@ -204,7 +224,8 @@ export const handBoxes = (x: number, y: number, angle = HAND_ANGLE, size = HAND_
  * A mão que toca: ponta do indicador exatamente em (x, y) do vídeo. `press`
  * (0..1) afunda a mão; `ripple` (0..1) é a onda do toque; `hold` (0..1) é o
  * anel dourado do segurar; `angle` inclina a mão em volta da ponta (padrão em
- * pé; deitada, ela entra pelo lado).
+ * pé; deitada, ela entra pelo lado). `trail`: arrastando — no lugar do disco
+ * de toque, um rastro do ponto `trail` até a ponta (o arrasto nunca parece toque).
  */
 export const Finger: React.FC<{
   x: number;
@@ -216,7 +237,8 @@ export const Finger: React.FC<{
   hold?: number | null;
   size?: number;
   angle?: number;
-}> = ({ x, y, opacity, press = 0, ripple = null, rippleAt, hold = null, size = HAND_SIZE, angle = HAND_ANGLE }) => {
+  trail?: { x: number; y: number } | null;
+}> = ({ x, y, opacity, press = 0, ripple = null, rippleAt, hold = null, size = HAND_SIZE, angle = HAND_ANGLE, trail = null }) => {
   if (opacity <= 0.001) return null;
   const rx = rippleAt?.x ?? x;
   const ry = rippleAt?.y ?? y;
@@ -256,7 +278,19 @@ export const Finger: React.FC<{
           />
         </svg>
       ) : null}
-      {press > 0.05 ? (
+      {trail && press > 0.05 ? (
+        <svg width={1} height={1} style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible' }}>
+          <defs>
+            <linearGradient id="dragTrail" gradientUnits="userSpaceOnUse" x1={trail.x} y1={trail.y} x2={x} y2={y}>
+              <stop offset="0" stopColor="#FFFFFF" stopOpacity={0} />
+              <stop offset="1" stopColor="#FFFFFF" stopOpacity={0.42 * press} />
+            </linearGradient>
+          </defs>
+          <line x1={trail.x} y1={trail.y} x2={x} y2={y} stroke="url(#dragTrail)" strokeWidth={26} strokeLinecap="round" />
+          <circle cx={x} cy={y} r={15} fill={`rgba(255,255,255,${0.3 * press})`} />
+        </svg>
+      ) : null}
+      {press > 0.05 && !trail ? (
         <div
           style={{
             position: 'absolute',

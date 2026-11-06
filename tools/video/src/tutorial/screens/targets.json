@@ -1,5 +1,5 @@
 {
-  "_doc": "Alvos de tour de cada réplica (o que `focus` e `target` aceitam no roteiro). `tap` = toques que a réplica responde como o app. `pointOnly` = o toque leva pra outra tela que a réplica não tem (Gerenciar, calendário, o informativo, o seletor da meta) ou não faz nada no app (o corpo do cartão): no roteiro só `point`, o dedo aponta sem tocar. `card:<id>` e `card:<id>:cta` valem pra qualquer id da fixture. O layout (rewardsLayout.ts) falha o render se produzir alvo fora desta lista.",
+  "_doc": "Alvos de tour de cada réplica (o que `focus` e `target` aceitam no roteiro). `tap` = toques que a réplica responde como o app. `pointOnly` = o toque leva pra outra tela que a réplica não tem (Gerenciar, calendário, o informativo, o seletor da meta) ou não faz nada no app (o corpo do cartão): no roteiro só `point`, o dedo aponta sem tocar. `card:<id>` e `card:<id>:cta` valem pra qualquer id da fixture. O layout (rewardsLayout.ts) falha o render se produzir alvo fora desta lista. `controls` = os alvos que são controle tocável (botão, chip, aba, o cartão da meta): a mão parada e o contato do arrasto ficam a 60 px deles (HAND.CLEAR em engine.ts); o corpo do cartão da loja, os cabeçalhos de seção e o saldo são superfície neutra.",
   "rewards": {
     "static": [
       "screen",
@@ -55,6 +55,28 @@
       "celebration.undo"
     ],
     "pointOnly": ["info", "goal", "trackCta", "add", "fab.manage", "fab.calendar", "nav", "nav.rewards", "card0", "card:{id}"],
-    "state": ["balance", "goal", "filter", "scroll", "confirm", "celebration"]
+    "state": ["balance", "goal", "filter", "scroll", "confirm", "celebration"],
+    "controls": [
+      "info",
+      "goal",
+      "goal.close",
+      "goal.cta",
+      "trackCta",
+      "chip.indulgence",
+      "chip.good",
+      "chip.experience",
+      "card0.cta",
+      "card:{id}:cta",
+      "add",
+      "fab.manage",
+      "fab.calendar",
+      "nav",
+      "confirm.minus",
+      "confirm.plus",
+      "confirm.redeem",
+      "confirm.cancel",
+      "celebration.enjoy",
+      "celebration.undo"
+    ]
   }
 }
