@@ -4,7 +4,9 @@ import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-au
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { useT } from '@/lib/i18n';
 import { formatAudioTime } from '@/lib/learningMedia';
+import { formatSpeed, nextSpeed, type PlaybackSpeed } from '@/lib/playbackSpeed';
 import { tokens } from '@/theme';
 
 /**
@@ -13,8 +15,6 @@ import { tokens } from '@/theme';
  * modes never interrupts playback. Streams straight from the public bucket
  * URL — no download step.
  */
-
-const SPEEDS = [1, 1.25, 1.5] as const;
 
 interface Props {
   uri: string;
@@ -29,7 +29,8 @@ interface Props {
 export function AudioPane({ uri, fallbackDurationSeconds, episodeTitle, langBadge }: Props) {
   const player = useAudioPlayer({ uri });
   const status = useAudioPlayerStatus(player);
-  const [speedIdx, setSpeedIdx] = useState(0);
+  const { t, locale } = useT();
+  const [speed, setSpeedState] = useState<PlaybackSpeed>(1);
   const [scrub, setScrub] = useState<number | null>(null);
 
   // Podcast-grade session: keep playing with the screen locked and through
@@ -60,11 +61,13 @@ export function AudioPane({ uri, fallbackDurationSeconds, episodeTitle, langBadg
     else player.play();
   };
 
+  // Same ladder as the idea videos (lib/playbackSpeed): 1× → 1,25× → 1,5× → 2×.
   const cycleSpeed = () => {
-    const next = (speedIdx + 1) % SPEEDS.length;
-    setSpeedIdx(next);
-    player.setPlaybackRate(SPEEDS[next]);
+    const next = nextSpeed(speed);
+    setSpeedState(next);
+    player.setPlaybackRate(next);
   };
+  const speedLabel = formatSpeed(speed, locale);
 
   return (
     <View style={styles.card}>
@@ -130,9 +133,10 @@ export function AudioPane({ uri, fallbackDurationSeconds, episodeTitle, langBadg
         <Pressable
           onPress={cycleSpeed}
           accessibilityRole="button"
+          accessibilityLabel={t('learning.media.audioSpeedA11y', { speed: speedLabel })}
           style={({ pressed }) => [styles.speedChip, pressed && { opacity: 0.8 }]}
         >
-          <Text style={styles.speedText}>{SPEEDS[speedIdx]}x</Text>
+          <Text style={styles.speedText}>{speedLabel}</Text>
         </Pressable>
       </View>
     </View>

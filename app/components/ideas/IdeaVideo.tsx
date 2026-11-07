@@ -10,6 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useT } from '@/lib/i18n';
 import { useIdeaSound } from '@/lib/ideaSound';
 import { formatDuration } from '@/lib/ideas';
+import { formatSpeed, nextSpeed, useIdeaSpeed } from '@/lib/playbackSpeed';
 import { tokens } from '@/theme';
 
 /**
@@ -41,6 +42,12 @@ import { tokens } from '@/theme';
  * Same visual language as `VideoPane` (lang badge, error box), plus a
  * duration chip that goes away once playback starts (the native controls
  * show the time from then on).
+ *
+ * ## Speed (owner, 2026-11-07)
+ *
+ * A third chip, left of the sound disc, cycles 1× → 1,25× → 1,5× → 2×
+ * (lib/playbackSpeed). Inline and in the full-screen Modal, same shared
+ * choice, carried across ideas; the pitch is preserved.
  */
 
 interface Props {
@@ -75,7 +82,7 @@ export function IdeaVideo({
   aspectRatio = DEFAULT_ASPECT,
   accentColor,
 }: Props) {
-  const { t } = useT();
+  const { t, locale } = useT();
 
   // Stable source object: the hook keys the native player on it.
   const source = useMemo(() => ({ uri, useCaching: true }), [uri]);
@@ -84,6 +91,7 @@ export function IdeaVideo({
   const player = useVideoPlayer(source, (p) => {
     p.loop = false;
     p.muted = !useIdeaSound.getState().on;
+    p.playbackRate = useIdeaSpeed.getState().speed;
   });
   const [expanded, setExpanded] = useState(false);
 
@@ -95,6 +103,22 @@ export function IdeaVideo({
       // Released.
     }
   }, [soundOn, player]);
+
+  const speed = useIdeaSpeed((s) => s.speed);
+  const setSpeed = useIdeaSpeed((s) => s.set);
+  useEffect(() => {
+    try {
+      player.playbackRate = speed;
+    } catch {
+      // Released.
+    }
+  }, [speed, player]);
+  const cycleSpeed = () => {
+    Haptics.selectionAsync().catch(() => {});
+    setSpeed(nextSpeed(speed));
+  };
+  const speedLabel = formatSpeed(speed, locale);
+  const speedA11y = t('learning.media.videoSpeedA11y', { speed: speedLabel });
 
   const toggleSound = () => {
     Haptics.selectionAsync().catch(() => {});
@@ -180,6 +204,15 @@ export function IdeaVideo({
       />
       <View style={styles.corner}>
         <Pressable
+          onPress={cycleSpeed}
+          hitSlop={6}
+          style={({ pressed }) => [styles.speedDisc, pressed && { opacity: 0.7 }]}
+          accessibilityRole="button"
+          accessibilityLabel={speedA11y}
+        >
+          <Text style={styles.speedText}>{speedLabel}</Text>
+        </Pressable>
+        <Pressable
           onPress={toggleSound}
           hitSlop={6}
           style={({ pressed }) => [styles.disc, pressed && { opacity: 0.7 }]}
@@ -222,6 +255,15 @@ export function IdeaVideo({
             allowsFullscreen
           />
           <View style={styles.fullTop}>
+            <Pressable
+              onPress={cycleSpeed}
+              hitSlop={10}
+              style={({ pressed }) => [styles.fullSpeed, pressed && { opacity: 0.7 }]}
+              accessibilityRole="button"
+              accessibilityLabel={speedA11y}
+            >
+              <Text style={[styles.speedText, styles.fullSpeedText]}>{speedLabel}</Text>
+            </Pressable>
             <Pressable
               onPress={toggleSound}
               hitSlop={10}
@@ -310,6 +352,38 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.18)',
+  },
+  // The speed reads as text, so its disc stretches into a pill ("1,25×").
+  speedDisc: {
+    height: 32,
+    minWidth: 32,
+    paddingHorizontal: 8,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+  },
+  speedText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 12,
+    color: '#FFFFFF',
+    fontVariant: ['tabular-nums'],
+  },
+  fullSpeed: {
+    height: 40,
+    minWidth: 40,
+    paddingHorizontal: 10,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  fullSpeedText: {
+    fontSize: 14,
   },
   full: {
     flex: 1,
