@@ -15,7 +15,9 @@
 //     "fazer": "...",                         // slide 4
 //     "fonte": "Autor, ano · Periódico",      // slide 5
 //     "eyebrow2": "O que dizem por aí",       // opcional — post de mito
-//     "eyebrow3": "O que a trilha mostra"     // opcional — post de mito
+//     "eyebrow3": "O que a trilha mostra",    // opcional — post de mito
+//     "patrocinio": "Paker Health"            // opcional — material patrocinado:
+//                                             // selo na capa + linha no slide 5
 //   }
 //
 // Saída: <outDir>/<slug>/slide-{1..5}-*.png (1080×1350, RGB sem alpha).
@@ -66,12 +68,14 @@ const STR = {
     doEyebrow: 'O que fazer', srcEyebrow: 'A fonte',
     cta: 'Gostou? Essa ideia vive completa no Perceva — pra ler, ver e ouvir, junto de mais de 100 ideias com fonte.',
     tagline: 'Perceba quem você está se tornando.', dims: DIM_PT,
+    sponsored: 'Patrocinado', sponsoredBy: 'Material patrocinado por',
   },
   en: {
     serie: 'One idea, with a source', claimEyebrow: 'The claim', mechEyebrow: 'The mechanism',
     doEyebrow: 'What to do', srcEyebrow: 'The source',
     cta: "Like this? The full idea lives in Perceva — to read, watch and listen, with 100+ sourced ideas.",
     tagline: "See who you're becoming.", dims: DIM_EN,
+    sponsored: 'Sponsored', sponsoredBy: 'Sponsored by',
   },
 };
 const langOf = (post) => (post.lang === 'en' ? 'en' : 'pt');
@@ -187,6 +191,14 @@ async function slideCapa(post, imgBuf, outDir) {
   // feedback do André: o selo de série saiu, a fonte ganha presença na chamada.
   const fonteCurta = post.fonte.split('·')[0].trim();
   const pillW = Math.round(fonteCurta.length * 14.5) + 56;
+  // Material patrocinado: o selo diz que é pago (regra do app: toda superfície
+  // do material leva "Patrocinado · <parceiro>"). Canto oposto ao da fonte.
+  const spons = post.patrocinio ? `${S.sponsored} · ${post.patrocinio}` : null;
+  const sponsW = spons ? Math.round(spons.length * 13.5) + 56 : 0;
+  const sponsPill = spons
+    ? `<rect x="52" y="60" width="${sponsW}" height="56" rx="28" fill="rgba(10,14,38,0.62)" stroke="rgba(255,220,143,0.35)" stroke-width="1.5"/>
+  <text x="${52 + sponsW / 2}" y="97" text-anchor="middle" font-family="Manrope" font-weight="700" font-size="25" letter-spacing="1" fill="${C.dourado}">${esc(spons)}</text>`
+    : '';
   const overlay = Buffer.from(`<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
   <defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0" stop-color="${C.noite}" stop-opacity="0"/>
@@ -196,6 +208,7 @@ async function slideCapa(post, imgBuf, outDir) {
   <rect x="${inner}" y="${H - scrimH}" width="${W - inner * 2}" height="${scrimH - inner}" fill="url(#s)"/>
   <rect x="${W - 52 - pillW}" y="60" width="${pillW}" height="56" rx="28" fill="rgba(10,14,38,0.62)" stroke="rgba(255,220,143,0.35)" stroke-width="1.5"/>
   <text x="${W - 52 - pillW / 2}" y="97" text-anchor="middle" font-family="Manrope" font-weight="700" font-size="27" fill="${C.dourado}">${esc(fonteCurta)}</text>
+  ${sponsPill}
   <text font-family="Fraunces" font-weight="600" font-size="${titleSize}" fill="${C.areia}">${tspans(titleLines, 88, titleY0, titleLh)}</text>
   <text x="88" y="${H - 96}" font-family="Manrope" font-weight="700" font-size="28" fill="${C.dim[post.dim]}">${esc(S.dims[post.dim])}</text>
   <text x="${W - 88}" y="${H - 96}" text-anchor="end" font-family="Manrope" font-weight="700" font-size="28" fill="${C.nevoa}">Perceva</text>
@@ -244,6 +257,9 @@ async function slideCTA(post, imgBuf, outDir) {
     : '';
   const ctaLines = wrap(S.cta, 42);
   const ctaY = ty + th + 92;
+  const sponsLine = post.patrocinio
+    ? `<text x="88" y="${ty - 12}" font-family="Manrope" font-weight="600" font-size="26" fill="${C.nevoa}">${esc(S.sponsoredBy + ' ' + post.patrocinio)}</text>`
+    : '';
   const btnY = ctaY + ctaLines.length * 56 + 40;
   const centered = (lines, y0, lh) =>
     lines.map((l, i) => `<tspan x="${W / 2}" y="${y0 + i * lh}">${esc(l)}</tspan>`).join('');
@@ -251,6 +267,7 @@ async function slideCTA(post, imgBuf, outDir) {
   ${eyebrow(S.srcEyebrow, 196)}
   <rect x="88" y="222" width="72" height="8" rx="4" fill="${C.dim[post.dim]}"/>
   <text font-family="Manrope" font-weight="700" font-size="38" fill="${C.dourado}">${tspans(fonteLines, 88, fonteY + 44, 52)}</text>
+  ${sponsLine}
   ${play}
   <text text-anchor="middle" font-family="Manrope" font-weight="500" font-size="40" fill="${C.areia}">${centered(ctaLines, ctaY, 56)}</text>
   <rect x="${W / 2 - 170}" y="${btnY}" width="340" height="78" rx="39" fill="${C.violeta}"/>
