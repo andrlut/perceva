@@ -84,7 +84,7 @@ export const Molde: React.FC<MoldeProps> = ({ specKey, spec, scenes, captions, i
           {/* som das passagens: whoosh nas que andam, subida curta antes do verso */}
           {scenes.map((s, i) =>
             i === 0 ? null : s.scene === 'verso' ? (
-              <Sfx key={`sfx-${s.id}`} at={s.start - 34} name="riser" />
+              <Sfx key={`sfx-${s.id}`} at={s.start - 30} name="riser" />
             ) : ['chicote', 'hexa', 'desliza', 'zoom'].includes(passagemKind(s.props?.transicao, s.props?.camera)) ? (
               <Sfx key={`sfx-${s.id}`} at={s.start - 6} name="whoosh" gain={passagemKind(s.props?.transicao, s.props?.camera) === 'zoom' ? 0.6 : 1} />
             ) : null,

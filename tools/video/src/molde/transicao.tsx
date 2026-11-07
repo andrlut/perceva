@@ -50,7 +50,7 @@ const Hexa: React.FC<{ entering: boolean; p: number; children: React.ReactNode }
           opacity: fade,
           transform: `scale(${1 + 0.35 * e})`,
           transformOrigin: `${HEX_C[0]}px ${HEX_C[1]}px`,
-          filter: `blur(${(4 * e).toFixed(2)}px)`,
+          filter: `blur(${(4 * e).toFixed(2)}px) brightness(${(1 - 0.6 * clamp01(p / 0.45)).toFixed(3)})`,
           maskImage: mask,
           WebkitMaskImage: mask,
         }}
@@ -84,8 +84,12 @@ const Chicote: React.FC<{ entering: boolean; p: number; dir: 1 | -1; children: R
   const e = WHIP(p);
   // as duas cenas coladas: a nova vem exatamente atrás da borda da antiga
   const x = entering ? dir * 1080 * (1 - e) : -dir * 1080 * e;
-  // desfoque já no 1º quadro (piso de 18 px) e no pico com a velocidade
-  const blur = 18 + 62 * (whipV(p) / WHIP_VMAX);
+  // desfoque já no 1º quadro (piso que some até p 0,3) e no pico com a velocidade; no fim, zero
+  const blur = 18 * clamp01(1 - p / 0.3) + 62 * (whipV(p) / WHIP_VMAX);
+  // costura macia: a borda que encosta na outra cena some em 140 px (as duas se misturam ali)
+  const seam = entering ? (dir === 1 ? '90deg' : '270deg') : dir === 1 ? '270deg' : '90deg';
+  const soft = `linear-gradient(${seam}, transparent 0px, #000 140px)`;
+  const xs = entering ? x - dir * 140 * (1 - e) : x;
   return (
     <AbsoluteFill>
       <svg width={0} height={0} style={{ position: 'absolute' }}>
@@ -94,7 +98,9 @@ const Chicote: React.FC<{ entering: boolean; p: number; dir: 1 | -1; children: R
         </filter>
       </svg>
       {/* cada cena recortada no PRÓPRIO quadro de 1080 px (o cenário desenhado além da borda não vaza) e opaca */}
-      <AbsoluteFill style={{ transform: `translateX(${x.toFixed(1)}px)`, overflow: 'hidden', background: FUNDO, filter: `url(#${id})` }}>{children}</AbsoluteFill>
+      <AbsoluteFill style={{ transform: `translateX(${xs.toFixed(1)}px)`, overflow: 'hidden', background: FUNDO, filter: blur > 0.5 ? `url(#${id})` : undefined, maskImage: soft, WebkitMaskImage: soft }}>
+        {children}
+      </AbsoluteFill>
     </AbsoluteFill>
   );
 };
@@ -112,21 +118,21 @@ const Passagem: React.FC<TransitionPresentationComponentProps<TP>> = ({ children
   switch (passedProps.kind) {
     case 'zoom':
       style = entering
-        ? { opacity: clamp01((p - 0.3) / 0.6), transform: `scale(${1 + 0.08 * (1 - e)})` }
-        : { opacity: 1 - clamp01((p - 0.1) / 0.5), transform: `scale(${1 + 0.08 * e})` };
+        ? { opacity: clamp01((p - 0.52) / 0.48), transform: `scale(${1 + 0.08 * (1 - e)})` }
+        : { opacity: 1 - clamp01(p / 0.48), transform: `scale(${1 + 0.08 * e})` };
       break;
     case 'desliza':
       // o zoom de 16% cobre os 80 px de deslize (sobra ~86 px de cada lado)
       style = entering
-        ? { opacity: clamp01((p - 0.2) / 0.55), transform: `translateX(${passedProps.dir * 80 * (1 - e)}px) scale(${1 + 0.16 * (1 - e)})` }
-        : { opacity: 1 - clamp01((p - 0.15) / 0.5), transform: `translateX(${-passedProps.dir * 80 * e}px) scale(${1 + 0.16 * e})` };
+        ? { opacity: clamp01((p - 0.52) / 0.48), transform: `translateX(${passedProps.dir * 80 * (1 - e)}px) scale(${1 + 0.16 * (1 - e)})` }
+        : { opacity: 1 - clamp01(p / 0.48), transform: `translateX(${-passedProps.dir * 80 * e}px) scale(${1 + 0.16 * e})` };
       break;
     case 'corte':
       style = entering ? { opacity: presentationProgress >= 0.5 ? 1 : 0 } : {};
       break;
     default:
       // fade = mergulho: a antiga apaga na 1ª metade, a nova acende na 2ª
-      style = entering ? { opacity: clamp01((p - 0.42) / 0.58) } : { opacity: 1 - clamp01(p / 0.58) };
+      style = entering ? { opacity: clamp01((p - 0.52) / 0.48) } : { opacity: 1 - clamp01(p / 0.48) };
   }
   return <AbsoluteFill style={style}>{children}</AbsoluteFill>;
 };

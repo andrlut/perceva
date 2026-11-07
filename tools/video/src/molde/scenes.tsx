@@ -22,7 +22,7 @@ import { C, DimId, FONT, dimColor } from '../theme';
 import { Scene, cue, speechEnd } from '../timeline';
 import { Abajur, AmbSpec, Ambiente, AmbienteMini, EnvGeo, Rect, Spot, Vinheta } from './ambientes';
 import { CameraRig, FocusMap, Layer, cameraAt, focusPoint } from './camera';
-import { Sfx } from './sfx';
+import { Sfx, type SfxName } from './sfx';
 import { useIdentity } from '../identidade/context';
 import { Ion, Peca, pieceBox } from './Peca';
 import type { Bloco, Chip, Feel, MoldeLine, MoldeSpec, Mood, Obj, Panel } from './spec';
@@ -218,7 +218,7 @@ const Drop: React.FC<{ s: MS; p: string; cueAt?: string; out?: string; stay?: bo
         transformOrigin: land ? '50% 100%' : '50% 100%',
       }}
     >
-      {stay ? null : <Sfx at={dropAt + 5} name="pop" rate={[1, 1.12, 0.94, 1.06, 0.9][[...p].reduce((h, c) => h + c.charCodeAt(0), 0) % 5]} />}
+      {stay ? null : <Sfx at={dropAt + 5} name={`pop${[...p].reduce((h, c) => h + c.charCodeAt(0), 0) % 5}` as SfxName} />}
       {base ? <div style={{ transform: 'translateY(-100%)', display: 'flex', alignItems: 'flex-end' }}>{piece}</div> : piece}
     </div>
   );
@@ -1038,7 +1038,7 @@ const BlocoBox: React.FC<{ s: MS; b: Bloco; i: number; y: number; h: number; x: 
         border: `3px solid ${edge}`,
         boxShadow: boost > 0.05 ? `0 0 ${46 * boost}px ${C.gold}88` : '0 10px 24px rgba(0,0,0,0.3)',
         opacity: Math.min(1, d * 2) * (0.78 + 0.22 * (1 - drain)),
-        transform: `translateY(${(1 - d) * -170}px) scale(${pulse})`,
+        transform: `translateX(${(1 - d) * 110}px) scale(${pulse * (0.94 + 0.06 * Math.min(1, d))})`,
         display: 'flex',
         alignItems: 'center',
         paddingLeft: 30,

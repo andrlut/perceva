@@ -18,9 +18,16 @@ const SOUNDS = {
   // ar passando: ruído rosa + marrom, banda média, sobe devagar e cai mais devagar ainda (sem corte)
   whoosh: ['-f', 'lavfi', '-i', 'anoisesrc=d=0.62:c=pink:r=48000:a=0.8:s=7', '-f', 'lavfi', '-i', 'anoisesrc=d=0.62:c=brown:r=48000:a=0.9:s=9', '-filter_complex', '[0][1]amix=inputs=2:normalize=0,highpass=f=180,lowpass=f=2200,afade=t=in:st=0:d=0.26:curve=hsin,afade=t=out:st=0.26:d=0.36:curve=hsin[a]', '-map', '[a]'],
   // o soco de câmera: mais curto e mais grave
-  punch: ['-f', 'lavfi', '-i', 'anoisesrc=d=0.36:c=brown:r=48000:a=0.8:s=11', '-f', 'lavfi', '-i', "aevalsrc='0.55*sin(2*PI*(110*t-90*t*t))*exp(-11*t)*min(1,t*200)':d=0.36:s=48000", '-filter_complex', '[0]highpass=f=90,lowpass=f=900,afade=t=in:st=0:d=0.06:curve=qsin,afade=t=out:st=0.08:d=0.28:curve=hsin[n];[n][1]amix=inputs=2:normalize=0[a]', '-map', '[a]'],
+  punch: ['-f', 'lavfi', '-i', 'anoisesrc=d=0.36:c=brown:r=48000:a=0.8:s=11', '-f', 'lavfi', '-i', "aevalsrc='0.55*sin(2*PI*(110*t-90*t*t))*exp(-11*t)*min(1,t*200)':d=0.36:s=48000", '-f', 'lavfi', '-i', 'anoisesrc=d=0.36:c=white:r=48000:a=0.6:s=13', '-filter_complex', '[0]highpass=f=90,lowpass=f=900,afade=t=in:st=0:d=0.06:curve=qsin,afade=t=out:st=0.08:d=0.28:curve=hsin[n];[2]highpass=f=1200,lowpass=f=4000,afade=t=out:st=0.005:d=0.03,volume=0.5[c];[n][1][c]amix=inputs=3:normalize=0[a]', '-map', '[a]'],
   // peça pousando: "bloop" curto, de agudo pra médio (1400 → 600 Hz em 80 ms)
   pop: ['-f', 'lavfi', '-i', "aevalsrc='0.7*sin(2*PI*(1400*t-5000*t*t))*exp(-38*t)*min(1,t*400)':d=0.1:s=48000"],
+  // o mesmo bloop em 5 tons (a cena escolhe pela peça)
+  ...Object.fromEntries(
+    [0.9, 0.95, 1, 1.06, 1.12].map((k, i) => [
+      `pop${i}`,
+      ['-f', 'lavfi', '-i', `aevalsrc='0.7*sin(2*PI*(${Math.round(1400 * k)}*t-${Math.round(5000 * k)}*t*t))*exp(-38*t)*min(1,t*400)':d=0.1:s=48000`],
+    ]),
+  ),
   // o hexágono acendendo: sino de três parciais com um leve batimento (brilho, não clique)
   chime: ['-f', 'lavfi', '-i', "aevalsrc='0.22*(sin(2*PI*1568*t)+0.7*sin(2*PI*1572*t)+0.55*sin(2*PI*2093*t)+0.3*sin(2*PI*3136*t))*exp(-3*t)*min(1,t*300)':d=1.2:s=48000"],
   // antes do verso: ar subindo (ruído filtrado que cresce), sem tom de apito

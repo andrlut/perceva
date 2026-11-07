@@ -483,7 +483,9 @@ const Halo: React.FC<{ since: number; t: number; small: boolean; seed: number; c
   const grow = outBack((since - 3) / 16);
   const outer = hexPts(100, cy, R);
   const axis = (j: number, k: number): Pt => [100 + (outer[j][0] - 100) * k, cy + (outer[j][1] - cy) * k];
-  const ratios = DIMS.map((_, j) => 0.55 + 0.4 * random(`radar-${seed}-${j}`));
+  // valores entre 0,62 e 0,95 do raio: com o raio maior que a cabeça, o polígono e os 6 pontos
+  // ficam FORA do cabelo e dos ombros (revisão v4.1: centrado no rosto, lia como capuz)
+  const ratios = DIMS.map((_, j) => 0.62 + 0.33 * random(`radar-${seed}-${j}`));
   const data = ratios.map((r, j) => axis(j, Math.max(0, r * grow)));
   const gid = `rg${seed}${small ? 's' : ''}${Math.round(cy)}`;
   return (
@@ -494,7 +496,7 @@ const Halo: React.FC<{ since: number; t: number; small: boolean; seed: number; c
           <stop offset="1" stopColor={C.violet} stopOpacity={0.35} />
         </linearGradient>
       </defs>
-      <path d={softPoly(outer, R * 0.1)} fill="rgba(10,12,38,0.66)" stroke="rgba(255,255,255,0.26)" strokeWidth={small ? 3 : 2} />
+      <path d={softPoly(outer, R * 0.1)} fill="rgba(10,12,38,0.55)" stroke="rgba(255,255,255,0.26)" strokeWidth={small ? 3 : 2} />
       {!small && (
         <g stroke="rgba(255,255,255,0.13)" strokeWidth={1.6} fill="none">
           <path d={softPoly(hexPts(100, cy, R * 0.67), R * 0.06)} />
@@ -651,7 +653,7 @@ const makeGente = (style: 'limpo' | 'cor'): React.FC<PessoaProps> => {
     const facet = style === 'cor' ? 0.3 : 0.42;
     return (
       <svg width={size} height={size * 1.3} viewBox="0 0 200 260" style={{ overflow: 'visible' }}>
-        {mood === 'feliz' && halo && <Halo since={sinceM} t={t} seed={seed} small={size < 170} {...(halo === 'cabeca' ? { cy: 84, R: 84 } : {})} />}
+        {mood === 'feliz' && halo && <Halo since={sinceM} t={t} seed={seed} small={size < 170} {...(halo === 'cabeca' ? { cy: 82, R: 98 } : { cy: 128, R: 150 })} />}
         <ellipse cx={100} cy={252} rx={56} ry={7} fill="rgba(0,0,0,0.25)" />
         <rect x={72} y={210} width={25} height={34} rx={9} fill={C.faint} />
         <rect x={103} y={210} width={25} height={34} rx={9} fill={C.faint} />
@@ -776,7 +778,7 @@ const Mascote: React.FC<PessoaProps> = ({ t = 0, size = 260, accent = C.violet, 
   const backVisible = hair.back && !(hideTop && (who.hair === 'afro' || who.hair === 'bun'));
   return (
     <svg width={size} height={size * 1.3} viewBox="0 0 200 260" style={{ overflow: 'visible' }}>
-      {mood === 'feliz' && halo && <Halo since={sinceM} t={t} seed={seed} small={size < 170} {...(halo === 'cabeca' ? { cy: 90, R: 96 } : { cy: 116, R: 132 })} />}
+      {mood === 'feliz' && halo && <Halo since={sinceM} t={t} seed={seed} small={size < 170} {...(halo === 'cabeca' ? { cy: 86, R: 108 } : { cy: 124, R: 160 })} />}
       <ellipse cx={100} cy={252} rx={50} ry={7} fill="rgba(0,0,0,0.25)" />
       <rect x={76} y={216} width={20} height={28} rx={9} fill={C.faint} />
       <rect x={104} y={216} width={20} height={28} rx={9} fill={C.faint} />
