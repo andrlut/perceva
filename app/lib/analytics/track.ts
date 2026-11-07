@@ -40,7 +40,22 @@ export type AppEventName =
   /** Tranca progressiva destravou (tab, by = progress | manual | grandfather). */
   | 'tab_unlocked'
   /** Porta animada fechada (tab, ms = tempo até tocar em "Entendi, abrir"). */
-  | 'door_seen';
+  | 'door_seen'
+  /*
+   * Campanha de parceiro (Programa Paker Health). Props de todos:
+   * `campaign` = id da campanha, `source` opcional = de onde veio
+   * (banner | material | campaign | deeplink | app).
+   */
+  /** Cartão da campanha apareceu na Home (uma vez por conta/aparelho). */
+  | 'campaign_card_seen'
+  /** Tela da campanha aberta. */
+  | 'campaign_opened'
+  /** Entrou no programa (`join_partner_campaign`). */
+  | 'campaign_joined'
+  /** Adotou a prática da campanha. */
+  | 'campaign_practice_adopted'
+  /** Pegou o cupom (`claim_partner_coupon`). */
+  | 'campaign_coupon_claimed';
 
 export type AppEventProps = Record<string, string | number | boolean | null>;
 

@@ -12,6 +12,12 @@ import { useIsPremium } from './useIsPremium';
  *             acordava sem nenhum conteúdo aberto.
  *   Premium → acervo completo.
  *
+ * Conteúdo de parceiro (`learning_material.sponsor`, 2026-11-04) NUNCA
+ * tranca: faz parte de uma campanha aberta a todo mundo, e trancar no free
+ * esconderia justamente o que o parceiro patrocina. Quem chama passa
+ * `sponsored` via `sponsorOf(row) != null` (lib/learningSponsor) — material
+ * do feed e linha da view `learning_idea_public` servem as duas.
+ *
  * Enforcement v1 é no cliente (o conteúdo é público no bucket); RLS por
  * `released_at` fica mapeado pra uma fase futura. `PREMIUM_LEARN_ENABLED`
  * é o kill-switch: desligado, nada tranca — via OTA se preciso.
@@ -21,8 +27,9 @@ const FREE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 export function isMaterialLockedFor(
   releasedAt: string | null | undefined,
   isPremium: boolean,
+  sponsored = false,
 ): boolean {
-  if (!PREMIUM_LEARN_ENABLED || isPremium || !releasedAt) return false;
+  if (!PREMIUM_LEARN_ENABLED || isPremium || sponsored || !releasedAt) return false;
   const released = new Date(releasedAt).getTime();
   if (Number.isNaN(released)) return false;
   return Date.now() - released > FREE_WINDOW_MS;
@@ -30,10 +37,14 @@ export function isMaterialLockedFor(
 
 /** Hook: devolve o predicado de tranca já amarrado ao tier do usuário.
  *  Estável entre renders (useCallback) — listas memoizadas dependem disso. */
-export function useMaterialLock(): (releasedAt?: string | null) => boolean {
+export function useMaterialLock(): (
+  releasedAt?: string | null,
+  sponsored?: boolean,
+) => boolean {
   const isPremium = useIsPremium();
   return useCallback(
-    (releasedAt?: string | null) => isMaterialLockedFor(releasedAt, isPremium),
+    (releasedAt?: string | null, sponsored?: boolean) =>
+      isMaterialLockedFor(releasedAt, isPremium, sponsored),
     [isPremium],
   );
 }

@@ -8,6 +8,7 @@ import { MaterialMediaScreen } from '@/components/learning/MaterialMediaScreen';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { useLearningMaterial } from '@/lib/api/learning';
 import { useT } from '@/lib/i18n';
+import { sponsorOf } from '@/lib/learningSponsor';
 import { useMaterialLock } from '@/lib/premium';
 import { tokens } from '@/theme';
 
@@ -65,7 +66,8 @@ export default function MaterialDetailScreen() {
   // Gate do Recanto: free abre só os últimos 30 dias — material do acervo
   // vira a tela de tranca com o convite pro Premium. Cobre também deep links
   // e os CTAs antigos das redes sociais (post velho → tranca → conversão).
-  if (isLocked(material.data.released_at)) {
+  // Material de parceiro nunca tranca (learnGate).
+  if (isLocked(material.data.released_at, sponsorOf(material.data) != null)) {
     return (
       <SafeAreaView style={styles.safe}>
         <ScreenBackground>

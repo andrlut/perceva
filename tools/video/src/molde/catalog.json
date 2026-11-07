@@ -1,0 +1,31 @@
+{
+  "_doc": "Catálogo do molde: cenas e peças que um roteiro pode pedir. Fonte única pro lint (scripts/molde.mjs) e pro render (src/molde/Peca.tsx confere na carga). Peça nova = desenhar em src/elenco/cast.tsx, registrar em Peca.tsx E aqui.",
+  "scenes": [
+    "pessoa",
+    "semana",
+    "virada",
+    "multidao",
+    "comparar",
+    "lista",
+    "cena",
+    "pensa",
+    "verso"
+  ],
+  "pieces": [
+    "casa",
+    "relogio",
+    "moeda",
+    "celular",
+    "sacola",
+    "vassoura",
+    "cesto",
+    "louca",
+    "livro",
+    "cama",
+    "computador",
+    "coracao",
+    "caderno",
+    "lampada",
+    "copo"
+  ]
+}

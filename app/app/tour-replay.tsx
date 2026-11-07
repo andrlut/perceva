@@ -58,6 +58,8 @@ const OPENING: ReplaySpec<RouteModule>[] = [
 type SpotlightModule = GuidedModule | typeof SETTINGS_MODULE;
 
 const GUIDED: ReplaySpec<SpotlightModule>[] = [
+  // M1…M6 left the replay with the tour itself (André, 2026-11-04: the
+  // guided tour is not offered anymore — the tab doors explain each screen).
   { id: SETTINGS_MODULE, icon: 'help-buoy-outline' },
   { id: 'M1', icon: 'checkmark-done-outline' },
 ];

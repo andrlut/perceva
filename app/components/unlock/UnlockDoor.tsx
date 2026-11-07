@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Modal, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Animated, {
   Easing,
@@ -16,18 +16,24 @@ import { useT } from '@/lib/i18n';
 import { useDoorPending, useUnlockStore } from '@/lib/unlock';
 import { tokens } from '@/theme';
 
+import { DoorVideo } from './DoorVideo';
 import { LearningDoorVisual } from './LearningDoorVisual';
 import { MeDoorVisual } from './MeDoorVisual';
 import { RewardsDoorVisual } from './RewardsDoorVisual';
 
 export type DoorFeature = 'rewards' | 'learning' | 'me';
 
-/** The button appears once the first loop has played — 4 s, decided 19/10. */
+/** The button appears once the first loop has played — 4 s for the in-code
+ *  animation, decided 19/10. With the video, the first loop IS the video. */
 const DOOR_MIN_MS = 4000;
+/** Safety net: a video that stalls mid-loop never holds the door shut. */
+const DOOR_MAX_MS = 40000;
 
 /**
  * The door of a feature's first opening (doc "Onboarding simples", Fase 2):
- * a looping in-code animation of the feature in use, one line, one button.
+ * a looping video of the feature (Remotion molde, DoorVideo — muted, burned-in
+ * captions) with the in-code animation as the fallback when it can't load,
+ * one line, one button.
  * It is the explanation — there is no tour behind it. The button shows up
  * after the first loop; from then on, one tap opens. Renders nothing once
  * the door has been seen on this device (or for grandfathered accounts).
@@ -39,8 +45,11 @@ export function UnlockDoor({ feature }: { feature: DoorFeature }) {
   const { t } = useT();
   const pending = useDoorPending(feature);
   const markDoorSeen = useUnlockStore((s) => s.markDoorSeen);
-  const { width } = useWindowDimensions();
+  const { width, height: winH } = useWindowDimensions();
   const [ready, setReady] = useState(false);
+  // Video first; an error or no frame in time drops to the in-code animation
+  // (and its 4 s loop) for the rest of this opening.
+  const [useVideo, setUseVideo] = useState(true);
   const openedAt = useRef(0);
   // The wait is deliberate (one loop), so it must not read as lag: a thin
   // line fills over DOOR_MIN_MS under the text, then the button fades in.
@@ -52,10 +61,24 @@ export function UnlockDoor({ feature }: { feature: DoorFeature }) {
     openedAt.current = Date.now();
     setReady(false);
     wait.value = 0;
+    if (useVideo) {
+      // The video drives the line (onProgress) and the button (onFirstLoop).
+      const id = setTimeout(() => setReady(true), DOOR_MAX_MS);
+      return () => clearTimeout(id);
+    }
     wait.value = withTiming(1, { duration: DOOR_MIN_MS, easing: Easing.linear });
     const id = setTimeout(() => setReady(true), DOOR_MIN_MS);
     return () => clearTimeout(id);
-  }, [pending, wait]);
+  }, [pending, wait, useVideo]);
+
+  const onVideoProgress = useCallback(
+    (f: number) => {
+      wait.value = withTiming(f, { duration: 250, easing: Easing.linear });
+    },
+    [wait],
+  );
+  const onVideoLoop = useCallback(() => setReady(true), []);
+  const onVideoFail = useCallback(() => setUseVideo(false), []);
 
   if (!pending) return null;
 
@@ -65,6 +88,9 @@ export function UnlockDoor({ feature }: { feature: DoorFeature }) {
   };
 
   const visualW = Math.min(width - tokens.space[5] * 2, 360);
+  // 9:16, capped so the title, the line and the button still fit below it.
+  const videoH = Math.round(Math.min(winH * 0.52, (visualW * 16) / 9));
+  const videoW = Math.round((videoH * 9) / 16);
 
   return (
     <Modal visible animationType="fade" statusBarTranslucent onRequestClose={() => {}}>
@@ -72,7 +98,16 @@ export function UnlockDoor({ feature }: { feature: DoorFeature }) {
         <ScreenBackground withGoldHalo>
           <View style={styles.center}>
             <View style={styles.visual}>
-              {feature === 'rewards' ? (
+              {useVideo ? (
+                <DoorVideo
+                  feature={feature}
+                  width={videoW}
+                  height={videoH}
+                  onProgress={onVideoProgress}
+                  onFirstLoop={onVideoLoop}
+                  onFail={onVideoFail}
+                />
+              ) : feature === 'rewards' ? (
                 <RewardsDoorVisual width={visualW} />
               ) : feature === 'learning' ? (
                 <LearningDoorVisual width={Math.min(visualW, 340)} />

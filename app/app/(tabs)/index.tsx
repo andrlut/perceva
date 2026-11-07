@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useIsFocused } from '@react-navigation/native';
+import { useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
@@ -30,6 +31,7 @@ import {
   type CompletedItem,
 } from '@/components/CompletedBucket';
 import { NotificationOptInCard } from '@/components/NotificationOptInCard';
+import { PartnerCampaignCard } from '@/components/PartnerCampaignCard';
 import { QuestChipsStrip } from '@/components/QuestChipsStrip';
 import { StoreUpdateCard } from '@/components/StoreUpdateCard';
 import { TaskActionSheet } from '@/components/TaskActionSheet';
@@ -57,6 +59,7 @@ import {
   useDayDetail,
 } from '@/lib/api/history';
 import { todayDateKey, useMoodForDay } from '@/lib/api/mood';
+import { partnerKeys } from '@/lib/api/partners';
 import { useT } from '@/lib/i18n';
 import { useLoadedSettings } from '@/lib/settings';
 import { TourModule } from '@/components/tour/TourModule';
@@ -144,6 +147,7 @@ interface DayClearedStats {
  */
 export default function HomeScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { t } = useT();
   // The (i)'s AI prompt: built from the same item list the guide renders.
   const guidePrompt = usePracticesGuidePrompt();
@@ -524,6 +528,9 @@ export default function HomeScreen() {
       // while the quest chips above them kept a stale count. refetch()
       // bypasses `enabled`, so it must be guarded by the module gate.
       ...(questsEnabled ? [quests.refetch()] : []),
+      // PartnerCampaignCard owns its queries; invalidating (not refetch())
+      // respects their `enabled`, so a tour-hidden card stays idle.
+      queryClient.invalidateQueries({ queryKey: partnerKeys.all }),
     ]);
   };
   // Pull indicator is local state — the queries' isRefetching also flips on
@@ -1132,6 +1139,9 @@ export default function HomeScreen() {
                     <NotificationOptInCard enabled={!activeTourStep} />
                     {/* Minha Semana — module-gated; renders nothing when off. */}
                     <WeekStrip />
+                    {/* Partner campaign — for every account (never a module),
+                        quiet until the tour is over. */}
+                    <PartnerCampaignCard enabled={tourFinished && !activeTourStep} />
                   </View>
                 </DaySwipeZone>
               </>

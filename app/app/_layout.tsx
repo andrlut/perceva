@@ -213,6 +213,7 @@ export default function RootLayout() {
             <Stack.Screen name="rewards-history" options={{ headerShown: false }} />
             <Stack.Screen name="skill/[id]" options={{ headerShown: false }} />
             <Stack.Screen name="material/[slug]" options={{ headerShown: false }} />
+            <Stack.Screen name="campaign/[id]" options={{ headerShown: false }} />
             <Stack.Screen
               name="reels"
               options={{

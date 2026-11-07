@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { SponsorLine } from '@/components/learning/SponsorLine';
 import { useT } from '@/lib/i18n';
 import { IDEA_IMAGE_ASPECT, ideaCardHeight } from '@/lib/ideas';
 import type { IdeaReelGroup } from '@/lib/reels';
@@ -48,6 +49,8 @@ import { DIMENSION_META } from '@/theme/dimensions';
 const CHROME_TOP_RESERVE = 120;
 const CHROME_BOTTOM_RESERVE = 100;
 const TEXT_RESERVE = 150;
+/** Extra text room on partner content ("Patrocinado · …" line). */
+const SPONSOR_RESERVE = 18;
 const MIN_IMAGE_W = 160;
 
 interface Props {
@@ -85,8 +88,10 @@ export function IdeaReelPage({ group, isActive, pageW, pageH, flipped }: Props) 
   }));
 
   const columnW = pageW - 2 * tokens.space[5];
+  // The partner line is one more text row under the picture.
+  const textReserve = TEXT_RESERVE + (group.sponsorName ? SPONSOR_RESERVE : 0);
   const maxByHeight = Math.floor(
-    (pageH - CHROME_TOP_RESERVE - CHROME_BOTTOM_RESERVE - TEXT_RESERVE) * IDEA_IMAGE_ASPECT,
+    (pageH - CHROME_TOP_RESERVE - CHROME_BOTTOM_RESERVE - textReserve) * IDEA_IMAGE_ASPECT,
   );
   const imgW = Math.max(MIN_IMAGE_W, Math.min(columnW, maxByHeight));
   const imgH = ideaCardHeight(imgW);
@@ -161,6 +166,16 @@ export function IdeaReelPage({ group, isActive, pageW, pageH, flipped }: Props) 
           {group.materialTitle}
         </Text>
       ) : null}
+      {group.sponsorName ? (
+        // The dark palette's gold, passed in: this page is pinned dark and
+        // SponsorLine's default follows the app theme.
+        <SponsorLine
+          name={group.sponsorName}
+          align="center"
+          color={tokens.semantic.coinLight}
+          style={[styles.sponsor, { width: columnW }]}
+        />
+      ) : null}
       <Text style={[styles.ordinal, { color: group.accent }]}>
         {t('learning.ideas.ideaOf', { n: group.ordinal, total: group.ideaCount })}
       </Text>
@@ -221,6 +236,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: tokens.text.mid,
     textAlign: 'center',
+  },
+  /** Partner mark (SponsorLine) — between the material and the ordinal. */
+  sponsor: {
+    marginTop: tokens.space[1],
   },
   ordinal: {
     marginTop: tokens.space[1],

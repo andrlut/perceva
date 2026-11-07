@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { IdeaNoteSheet } from '@/components/ideas/IdeaNoteSheet';
 import { IdeaPage, type IdeaPageMaterial } from '@/components/ideas/IdeaPage';
+import { SponsorLine } from '@/components/learning/SponsorLine';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import {
   type LearningMaterialDetail,
@@ -33,6 +34,7 @@ import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { pickLocalized, sortedIdeas } from '@/lib/ideas';
 import { useIdeaSoundSession } from '@/lib/ideaSound';
+import { sponsorOf } from '@/lib/learningSponsor';
 import { showInfo } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 
@@ -40,7 +42,8 @@ import { tokens } from '@/theme';
  * The idea screen — a horizontal pager over the 1..5 ideas of a material,
  * opened as a fullScreenModal from the material page (`/idea/[slug]?idea=n`).
  *
- * Layout: a fixed header (dimension · "Ideia n de N", progress dots, ✕) and
+ * Layout: a fixed header (dimension · "Ideia n de N", progress dots, ✕ —
+ * plus "Patrocinado · …" on partner content) and
  * below it the pager, one `IdeaPage` per idea, each a vertical scroll. The
  * pager is the ReelsViewer recipe (pagingEnabled + getItemLayout on pageW +
  * onScrollToIndexFailed → scrollToOffset, windowSize 3) WITHOUT the
@@ -83,9 +86,11 @@ export function IdeaScreen({ detail: m, initialOrdinal }: Props) {
   const dim = meta.dim(m.dimension_id);
   const dimIcon = dim.iconName as keyof typeof Ionicons.glyphMap;
   const material = useMemo<IdeaPageMaterial>(
-    () => ({ id: m.id, slug: m.slug, dimension_id: m.dimension_id }),
-    [m.id, m.slug, m.dimension_id],
+    () => ({ id: m.id, slug: m.slug, dimension_id: m.dimension_id, sponsor: m.sponsor }),
+    [m.id, m.slug, m.dimension_id, m.sponsor],
   );
+  // Partner content: "Patrocinado · …" under the header dots.
+  const sponsor = sponsorOf(m);
 
   // ── Collected = server set ∪ optimistic local set ──────────────────────
   const collectedQuery = useCollectedIdeas();
@@ -353,6 +358,7 @@ export function IdeaScreen({ detail: m, initialOrdinal }: Props) {
               );
             })}
           </View>
+          {sponsor && <SponsorLine name={sponsor.name} style={styles.sponsorRow} />}
         </View>
 
         {/* ── Pager ─────────────────────────────────────────────────────── */}
@@ -504,6 +510,10 @@ const styles = StyleSheet.create({
   },
   dotCurrent: {
     width: 18,
+  },
+  /** Partner mark (SponsorLine) — aligned with the label and the dots. */
+  sponsorRow: {
+    paddingLeft: 36,
   },
   pager: {
     flex: 1,

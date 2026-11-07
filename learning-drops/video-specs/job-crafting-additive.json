@@ -1,0 +1,190 @@
+{
+  "_doc": "Roteiro do vídeo (molde genérico, tools/video/MOLDE.md). Cada fala = uma cena do catálogo + peças do elenco + deixas (trechos da fala em que algo entra). {pt,en} em qualquer texto. A cena 'verso' fala o card VERBATIM (vem do ideas-spec). Sem número, estudo ou ressalva metodológica: isso fica no texto da ideia e no deep dive.",
+  "slug": "job-crafting-additive",
+  "ideas": {
+    "faca-o-mapa-voce-mesmo": {
+      "lines": [
+        {
+          "id": "hook",
+          "scene": "pensa",
+          "pt": {
+            "caption": "Quer que o seu trabalho fique melhor? *Por onde você começa?*"
+          },
+          "en": {
+            "caption": "Want your job to get better? *Where do you start?*"
+          },
+          "props": {
+            "mood": "cansado",
+            "thought": "computador",
+            "at": {
+              "pt": "seu trabalho",
+              "en": "your job"
+            }
+          }
+        },
+        {
+          "id": "class3",
+          "scene": "cena",
+          "pt": {
+            "caption": "A empresa costuma marcar *uma aula* sobre o assunto. Você assiste, volta pra mesa, e pouca coisa tende a mudar."
+          },
+          "en": {
+            "caption": "Companies usually book *a class* on it. You sit through it, go back to your desk, and little tends to change."
+          },
+          "props": {
+            "setting": "mesa",
+            "holding": "computador",
+            "mood": "cansado",
+            "objects": [
+              {
+                "p": "ion:easel",
+                "cue": {
+                  "pt": "uma aula",
+                  "en": "a class"
+                },
+                "out": {
+                  "pt": "volta pra mesa",
+                  "en": "back to your desk"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "log2",
+          "scene": "cena",
+          "pt": {
+            "caption": "Outro caminho: você pega um caderno e *anota o seu dia*, do jeito que ele é."
+          },
+          "en": {
+            "caption": "Another way: you grab a workbook and *write down your day*, just as it is."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Anote o dia",
+              "en": "Log your day"
+            },
+            "setting": "mesa",
+            "holding": "caderno",
+            "mood": "ok",
+            "glow": {
+              "pt": "anota o seu dia",
+              "en": "write down your day"
+            }
+          }
+        },
+        {
+          "id": "why2",
+          "scene": "comparar",
+          "pt": {
+            "caption": "A diferença parece estar aqui: na aula, alguém te explica, e no caderno *quem olha o seu dia é você*."
+          },
+          "en": {
+            "caption": "The difference seems to be this: in a class, someone explains it, and in the workbook *you're the one looking at your day*."
+          },
+          "props": {
+            "left": {
+              "label": {
+                "pt": "Alguém explica",
+                "en": "Someone explains"
+              },
+              "object": "ion:easel",
+              "arrives": {
+                "pt": "na aula",
+                "en": "in a class"
+              }
+            },
+            "right": {
+              "label": {
+                "pt": "Você olha seu dia",
+                "en": "You look at your day"
+              },
+              "mood": "ok",
+              "object": "caderno",
+              "arrives": {
+                "pt": "no caderno",
+                "en": "in the workbook"
+              }
+            },
+            "winner": "right",
+            "win": {
+              "pt": "quem olha o seu dia é você",
+              "en": "you're the one looking at your day"
+            }
+          }
+        },
+        {
+          "id": "pull2",
+          "scene": "pessoa",
+          "pt": {
+            "caption": "Com o dia no papel, *dá pra ver o que mudar*."
+          },
+          "en": {
+            "caption": "With your day on paper, *you can see what to change*."
+          },
+          "props": {
+            "mood": "ok",
+            "turn": {
+              "pt": "o que mudar",
+              "en": "what to change"
+            },
+            "to": "feliz",
+            "objects": [
+              {
+                "p": "caderno",
+                "cue": {
+                  "pt": "dia no papel",
+                  "en": "day on paper"
+                }
+              },
+              {
+                "p": "ion:eye",
+                "cue": {
+                  "pt": "dá pra ver",
+                  "en": "you can see"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "start3",
+          "scene": "cena",
+          "hold": 0.6,
+          "pt": {
+            "caption": "Espalhado pela semana, cabe em duas manhãs, e *dá pra fazer sozinho*."
+          },
+          "en": {
+            "caption": "Spread over the week, it fits in two mornings, and *you can do it on your own*."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Comece esta semana",
+              "en": "Start this week"
+            },
+            "setting": "mesa",
+            "holding": "caderno",
+            "mood": "feliz",
+            "objects": [
+              {
+                "p": "ion:sunny",
+                "cue": {
+                  "pt": "duas manhãs",
+                  "en": "two mornings"
+                }
+              }
+            ],
+            "glow": {
+              "pt": "dá pra fazer",
+              "en": "you can do it"
+            }
+          }
+        },
+        {
+          "id": "do",
+          "scene": "verso"
+        }
+      ]
+    }
+  }
+}

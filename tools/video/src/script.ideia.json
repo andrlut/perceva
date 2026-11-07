@@ -1,0 +1,12 @@
+{
+  "_doc": "Vídeo de UMA ideia do Recanto em Remotion, pra substituir o Curta do Gemini Notebook dentro do card. Material buying-time-chores, ideia comprar-tempo. Regras (André, 2026-11-04): o vídeo e o card NÃO citam dados de pesquisa — nem número, nem estudo, nem amostra, nem as ressalvas metodológicas; isso fica no texto da ideia e no deep dive em áudio. O vídeo conta a ideia como história e termina no verso. Fidelidade continua valendo: tudo sai do corpo da ideia, e onde o texto pede cautela o vídeo fala sem exagero ('tende a', 'um pouco', 'no dia seguinte'), nunca 'comprovadamente'. A cena 'do' fala o VERSO palavra por palavra.",
+  "lines": [
+    { "id": "hook", "caption": "Quando o dia não cabe nas horas, *vale pagar pra se livrar de uma tarefa chata?*" },
+    { "id": "pressure", "caption": "O que pesa ali é a *pressão do tempo*: a semana enche de tarefas e vira uma corrida." },
+    { "id": "buyers", "caption": "Quem paga pra se livrar das tarefas que não gosta tende a estar *mais satisfeito com a vida*, e sente menos o peso da pressa.", "hold": 0.4 },
+    { "id": "few", "caption": "Mesmo assim, *pouca gente* faz isso.", "hold": 0.8 },
+    { "id": "experiment", "caption": "Com o mesmo dinheiro, quem comprou *tempo* em vez de um objeto ficou um pouco menos apressado e de melhor humor no dia seguinte." },
+    { "id": "try", "caption": "Escolha *a tarefa que você mais detesta*, como a faxina, e teste terceirizar uma vez.", "hold": 0.6 },
+    { "id": "do", "caption": "Pague pra tirar da semana *a tarefa que você mais detesta*: alivia a pressa mais do que comprar um objeto.", "pre": 0.8, "hold": 1.4 }
+  ]
+}

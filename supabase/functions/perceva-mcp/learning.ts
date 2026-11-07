@@ -29,7 +29,8 @@
 
 export type IdeaStatus = 'unabsorbed' | 'absorbed' | 'all';
 
-/** Uma linha de `learning_idea_public` (colunas da migration 20260907000002). */
+/** Uma linha de `learning_idea_public` (colunas da migration 20260907000002;
+ *  sponsor_name desde 20261104000009). */
 export type IdeaPublicRow = {
   material_id: string;
   slug: string;
@@ -45,6 +46,8 @@ export type IdeaPublicRow = {
   image_path: string | null;
   video_pt_path: string | null;
   video_en_path: string | null;
+  /** learning_material.sponsor->>'name'; null = conteúdo editorial próprio. */
+  sponsor_name: string | null;
 };
 
 export type IdeaCollectRow = {
@@ -95,6 +98,11 @@ export type IdeaOut = {
    */
   favorite: boolean | null;
   has_video: { pt: boolean; en: boolean };
+  /**
+   * Nome do parceiro quando o material é patrocinado (o app mostra
+   * "Patrocinado · …" em todo lugar onde ele aparece); null = editorial.
+   */
+  sponsor: string | null;
   open_in_app: string;
 };
 
@@ -211,6 +219,7 @@ export function assembleIdeas(
       reviewed_at: reviewedAt,
       favorite: reviewedAt === null ? null : (c?.favorite ?? null),
       has_video: { pt: !isBlank(r.video_pt_path), en: !isBlank(r.video_en_path) },
+      sponsor: isBlank(r.sponsor_name) ? null : r.sponsor_name,
       open_in_app: ideaDeepLink(r.slug, ordinal),
     };
   });
@@ -294,7 +303,8 @@ export function assembleIdeas(
  *  and get_idea_training, matching IdeaPublicRow. */
 export const IDEA_PUBLIC_COLUMNS =
   'material_id,slug,category,dimension_id,released_at,idea_id,ordinal,' +
-  'title_pt,title_en,claim_pt,claim_en,image_path,video_pt_path,video_en_path';
+  'title_pt,title_en,claim_pt,claim_en,image_path,video_pt_path,video_en_path,' +
+  'sponsor_name';
 
 export type TrainCollectRow = {
   material_id: string;
@@ -328,6 +338,8 @@ export type TrainingIdeaOut = {
   due_today: boolean;
   /** Already answered today: a new answer would not move the schedule. */
   answered_today: boolean;
+  /** Partner name when the material is sponsored; null = editorial. */
+  sponsor: string | null;
   open_in_app: string;
 };
 
@@ -384,6 +396,7 @@ export function assembleTraining(
       due,
       due_today: dueToday,
       answered_today: answeredToday,
+      sponsor: isBlank(r.sponsor_name) ? null : r.sponsor_name,
       open_in_app: ideaDeepLink(r.slug, ordinal),
     });
   }

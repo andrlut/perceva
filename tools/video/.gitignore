@@ -1,3 +1,5 @@
 out/
 # falas aprovadas (mp3 + timings.json) SÃO versionadas; WAV cru do TTS não
 public/vo*/*.wav
+# molde: spec resolvido + voz gerados pelo scripts/molde.mjs (a fonte é learning-drops/video-specs/)
+public/molde/

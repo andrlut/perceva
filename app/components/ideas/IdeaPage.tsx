@@ -8,7 +8,7 @@ import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-na
 import { IdeaCard } from '@/components/ideas/IdeaCard';
 import { IdeaVideo } from '@/components/ideas/IdeaVideo';
 import { LearningBody } from '@/components/LearningBody';
-import type { DimensionId, LearningIdea } from '@/lib/db/types';
+import type { DimensionId, LearningIdea, LearningSponsor } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import {
   IDEA_IMAGE_ASPECT,
@@ -42,6 +42,8 @@ export interface IdeaPageMaterial {
   id: string;
   slug: string;
   dimension_id: DimensionId;
+  /** Partner content: the card at the end carries the partner line. */
+  sponsor?: LearningSponsor | null;
 }
 
 interface Props {

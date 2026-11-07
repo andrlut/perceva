@@ -1,0 +1,581 @@
+{
+  "_doc": "Roteiro do vídeo (molde genérico, tools/video/MOLDE.md). Cada fala = uma cena do catálogo + peças do elenco + deixas (trechos da fala em que algo entra). {pt,en} em qualquer texto. A cena 'verso' fala o card VERBATIM (vem do ideas-spec). Material patrocinado: as falas tratam do ingrediente e do hábito, sem nome de marca, sem resultado de estudo, sem número fora do verso. Números do verso e o QA da voz (scripts/qa-voice.mjs): o QA troca 'um'..'dez' / 'one'..'ten' por algarismo e cobra todo algarismo na transcrição, então número até dez vai por extenso no 'say' (oito, três, cinco); acima de dez NÃO tem 'say' (trinta/sessenta não viram algarismo, o QA cobraria a palavra e o transcritor escreve 30/60), a voz lê o algarismo do próprio card. Unidade abreviada no card (3 a 5 g): o 'say' diz a unidade por extenso nos dois idiomas ('gramas' / 'grams') e o QA passou com 100% nos dois (2026-11-05). Sem cena 'comparar' neste material: o molde põe a figura de pele escura sempre no painel que perde (seed 3), o que lê como 'pele escura = jeito errado'; 'weeks' e 'stock' viraram pessoa/virada com a protagonista só, até o molde corrigir o comparar.",
+  "slug": "paker-health-energia-pele-forca",
+  "ideas": {
+    "pre-treino-energia": {
+      "dimension": "body",
+      "lines": [
+        {
+          "id": "hook",
+          "scene": "pessoa",
+          "hold": 0.3,
+          "pt": {
+            "caption": "Hora do treino, e *a disposição não veio junto*?"
+          },
+          "en": {
+            "caption": "Time to train, and *your energy hasn't shown up*?"
+          },
+          "props": {
+            "mood": "cansado",
+            "objects": [
+              {
+                "p": "ion:barbell",
+                "cue": {
+                  "pt": "Hora do treino",
+                  "en": "Time to train"
+                }
+              },
+              {
+                "p": "ion:battery-dead",
+                "cue": {
+                  "pt": "disposição",
+                  "en": "your energy"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "star",
+          "scene": "pensa",
+          "pt": {
+            "caption": "No pré-treino, a estrela é a *cafeína*: ela ajuda a ficar alerta e a se concentrar melhor."
+          },
+          "en": {
+            "caption": "In a pre-workout, the star is *caffeine*: it helps you stay alert and concentrate better."
+          },
+          "props": {
+            "mood": "cansado",
+            "thought": "ion:flash",
+            "at": {
+              "pt": "cafeína",
+              "en": "caffeine"
+            }
+          }
+        },
+        {
+          "id": "fronts2",
+          "scene": "lista",
+          "pt": {
+            "caption": "E outros ingredientes trabalham *em frentes diferentes*: um ligado aos vasos, outro ao esforço intenso e outro ligado ao foco."
+          },
+          "en": {
+            "caption": "And other ingredients work *on different fronts*: one linked to blood vessels, another to hard efforts, and another linked to focus."
+          },
+          "props": {
+            "mood": "ok",
+            "items": [
+              {
+                "icon": "pulse",
+                "text": {
+                  "pt": "ligado aos vasos",
+                  "en": "linked to blood vessels"
+                },
+                "cue": {
+                  "pt": "ligado aos vasos",
+                  "en": "blood vessels"
+                }
+              },
+              {
+                "icon": "barbell",
+                "text": {
+                  "pt": "esforço intenso",
+                  "en": "hard efforts"
+                },
+                "cue": {
+                  "pt": "esforço intenso",
+                  "en": "hard efforts"
+                }
+              },
+              {
+                "icon": "eye",
+                "text": {
+                  "pt": "ligado ao foco",
+                  "en": "linked to focus"
+                },
+                "cue": {
+                  "pt": "ligado ao foco",
+                  "en": "linked to focus"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "take",
+          "scene": "cena",
+          "pt": {
+            "caption": "Misture na água e tome *com antecedência*."
+          },
+          "en": {
+            "caption": "Mix it in water and drink it *ahead of time*."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Na prática",
+              "en": "In practice"
+            },
+            "setting": "mesa",
+            "holding": "copo",
+            "mood": "ok",
+            "glow": {
+              "pt": "Misture na água",
+              "en": "Mix it in water"
+            },
+            "objects": [
+              {
+                "p": "relogio",
+                "cue": {
+                  "pt": "com antecedência",
+                  "en": "ahead of time"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "careful",
+          "scene": "lista",
+          "pt": {
+            "caption": "Como tem cafeína, *evite* perto da hora de dormir, na gravidez ou se você for sensível a estimulantes."
+          },
+          "en": {
+            "caption": "It has caffeine, so *avoid it* near bedtime, during pregnancy, or if you're sensitive to stimulants."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Atenção",
+              "en": "Careful"
+            },
+            "mood": "ok",
+            "items": [
+              {
+                "icon": "moon",
+                "text": {
+                  "pt": "perto de dormir",
+                  "en": "near bedtime"
+                },
+                "cue": {
+                  "pt": "hora de dormir",
+                  "en": "near bedtime"
+                }
+              },
+              {
+                "icon": "woman",
+                "text": {
+                  "pt": "na gravidez",
+                  "en": "pregnancy"
+                },
+                "cue": {
+                  "pt": "na gravidez",
+                  "en": "during pregnancy"
+                }
+              },
+              {
+                "icon": "alert-circle",
+                "text": {
+                  "pt": "sensível a estimulantes",
+                  "en": "sensitive to stimulants"
+                },
+                "cue": {
+                  "pt": "sensível a estimulantes",
+                  "en": "sensitive to stimulants"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "arrive",
+          "scene": "pessoa",
+          "hold": 0.5,
+          "pt": {
+            "caption": "Você se troca, sai de casa e, quando o treino começa, *a cafeína já ajuda a ficar alerta*."
+          },
+          "en": {
+            "caption": "You get changed, head out, and when the workout starts, *the caffeine is already helping you stay alert*."
+          },
+          "props": {
+            "mood": "ok",
+            "turn": {
+              "pt": "ajuda a ficar alerta",
+              "en": "helping you stay alert"
+            },
+            "to": "feliz",
+            "objects": [
+              {
+                "p": "casa",
+                "cue": {
+                  "pt": "sai de casa",
+                  "en": "head out"
+                }
+              },
+              {
+                "p": "ion:barbell",
+                "cue": {
+                  "pt": "treino começa",
+                  "en": "workout starts"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "do",
+          "scene": "verso"
+        }
+      ]
+    },
+    "colageno-constancia": {
+      "dimension": "body",
+      "lines": [
+        {
+          "id": "days",
+          "scene": "pensa",
+          "hold": 0.3,
+          "pt": {
+            "caption": "Começou a tomar colágeno e, *depois de uns dias*, a pele continua igual?"
+          },
+          "en": {
+            "caption": "Started taking collagen and, *a few days in*, your skin looks the same?"
+          },
+          "props": {
+            "mood": "ok",
+            "thought": "ion:calendar",
+            "at": {
+              "pt": "depois de uns dias",
+              "en": "a few days in"
+            },
+            "objects": [
+              {
+                "p": "copo",
+                "cue": {
+                  "pt": "tomar colágeno",
+                  "en": "taking collagen"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "hook2",
+          "scene": "pessoa",
+          "pt": {
+            "caption": "O colágeno é a proteína que dá *estrutura à pele*, e o corpo passa a fabricar menos dele com a idade."
+          },
+          "en": {
+            "caption": "Collagen is the protein that gives *skin its structure*, and your body makes less of it as you age."
+          },
+          "props": {
+            "mood": "ok",
+            "objects": [
+              {
+                "p": "ion:layers",
+                "cue": {
+                  "pt": "estrutura à pele",
+                  "en": "skin its structure"
+                }
+              },
+              {
+                "p": "ion:hourglass",
+                "cue": {
+                  "pt": "com a idade",
+                  "en": "as you age"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "peptides",
+          "scene": "lista",
+          "pt": {
+            "caption": "Os suplementos trazem o colágeno quebrado em *peptídeos*, pedacinhos que o intestino absorve."
+          },
+          "en": {
+            "caption": "Supplements bring collagen broken down into *peptides*, small pieces your gut can absorb."
+          },
+          "props": {
+            "mood": "ok",
+            "items": [
+              {
+                "icon": "extension-puzzle",
+                "text": {
+                  "pt": "Quebrado em peptídeos",
+                  "en": "Broken into peptides"
+                },
+                "cue": {
+                  "pt": "peptídeos",
+                  "en": "peptides"
+                }
+              },
+              {
+                "icon": "body",
+                "text": {
+                  "pt": "O intestino absorve",
+                  "en": "Your gut absorbs them"
+                },
+                "cue": {
+                  "pt": "intestino absorve",
+                  "en": "gut can absorb"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "habit2",
+          "scene": "cena",
+          "pt": {
+            "caption": "O segredo é virar hábito: *mesmo horário todo dia*, na água ou no suco."
+          },
+          "en": {
+            "caption": "The secret is making it a habit: *same time every day*, in water or juice."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Na prática",
+              "en": "In practice"
+            },
+            "setting": "mesa",
+            "holding": "copo",
+            "mood": "feliz",
+            "glow": {
+              "pt": "virar hábito",
+              "en": "making it a habit"
+            },
+            "objects": [
+              {
+                "p": "relogio",
+                "cue": {
+                  "pt": "mesmo horário",
+                  "en": "same time"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "weeks",
+          "scene": "pessoa",
+          "hold": 0.5,
+          "pt": {
+            "caption": "O resultado aparece *em semanas*, não em dias, porque a pele se renova devagar."
+          },
+          "en": {
+            "caption": "Results show up *in weeks*, not days, because skin renews itself slowly."
+          },
+          "props": {
+            "mood": "ok",
+            "clock": "calmo",
+            "turn": {
+              "pt": "em semanas",
+              "en": "in weeks"
+            },
+            "to": "feliz",
+            "objects": [
+              {
+                "p": "ion:calendar",
+                "cue": {
+                  "pt": "em semanas",
+                  "en": "in weeks"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "do",
+          "scene": "verso",
+          "pt": {
+            "say": "Tome colágeno todo dia por pelo menos oito semanas, junto com vitamina C, que ajuda o corpo a formar colágeno."
+          },
+          "en": {
+            "say": "Take collagen every day for at least eight weeks, with vitamin C, which helps your body form collagen."
+          }
+        }
+      ]
+    },
+    "creatina-alem-da-musculacao": {
+      "dimension": "body",
+      "lines": [
+        {
+          "id": "hook",
+          "scene": "pensa",
+          "hold": 0.5,
+          "pt": {
+            "caption": "Creatina é *só pra quem faz musculação*, e tem que ser antes do treino?"
+          },
+          "en": {
+            "caption": "Is creatine *just for bodybuilders*, and does it have to be before training?"
+          },
+          "props": {
+            "mood": "ok",
+            "thought": "ion:barbell",
+            "at": {
+              "pt": "Creatina",
+              "en": "creatine"
+            },
+            "objects": [
+              {
+                "p": "relogio",
+                "cue": {
+                  "pt": "antes do treino",
+                  "en": "before training"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "reserve",
+          "scene": "pessoa",
+          "pt": {
+            "caption": "Seu corpo já produz creatina e guarda no músculo, onde ela vira *reserva de energia* pra esforços curtos e intensos."
+          },
+          "en": {
+            "caption": "Your body already makes creatine and stores it in muscle, where it becomes *an energy reserve* for quick bursts of hard effort."
+          },
+          "props": {
+            "mood": "ok",
+            "objects": [
+              {
+                "p": "ion:battery-half",
+                "cue": {
+                  "pt": "guarda no músculo",
+                  "en": "stores it"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "efforts2",
+          "scene": "lista",
+          "pt": {
+            "caption": "Por isso ela ajuda o desempenho quando o esforço se repete: em *tiros de corrida*, saltos e séries de força."
+          },
+          "en": {
+            "caption": "That's why it helps performance in repeated bursts: *sprints*, jumps and strength sets."
+          },
+          "props": {
+            "mood": "ok",
+            "to": "feliz",
+            "items": [
+              {
+                "icon": "speedometer",
+                "text": {
+                  "pt": "tiros de corrida",
+                  "en": "sprints"
+                },
+                "cue": {
+                  "pt": "tiros de corrida",
+                  "en": "sprints"
+                }
+              },
+              {
+                "icon": "arrow-up-circle",
+                "text": {
+                  "pt": "saltos",
+                  "en": "jumps"
+                },
+                "cue": {
+                  "pt": "saltos",
+                  "en": "jumps"
+                }
+              },
+              {
+                "icon": "barbell",
+                "text": {
+                  "pt": "séries de força",
+                  "en": "strength sets"
+                },
+                "cue": {
+                  "pt": "séries de força",
+                  "en": "strength sets"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "everyone2",
+          "scene": "pessoa",
+          "pt": {
+            "caption": "Então não é só pra musculação: ela ajuda em treinos feitos de *arrancadas curtas e fortes*."
+          },
+          "en": {
+            "caption": "So it's not just for bodybuilders: it helps training built on *short, explosive efforts*."
+          },
+          "props": {
+            "mood": "ok",
+            "turn": {
+              "pt": "arrancadas curtas",
+              "en": "explosive efforts"
+            },
+            "to": "feliz",
+            "objects": [
+              {
+                "p": "ion:barbell",
+                "cue": {
+                  "pt": "só pra musculação",
+                  "en": "just for bodybuilders"
+                }
+              },
+              {
+                "p": "ion:speedometer",
+                "cue": {
+                  "pt": "ajuda em treinos",
+                  "en": "helps training"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "stock",
+          "scene": "virada",
+          "hold": 0.5,
+          "pt": {
+            "caption": "Não precisa tomar antes do treino: *o efeito vem do estoque cheio*, não da hora da dose."
+          },
+          "en": {
+            "caption": "You don't need it before training: *the effect comes from full stores*, not from the timing."
+          },
+          "props": {
+            "mood": "ok",
+            "gives": "relogio",
+            "from": {
+              "pt": "hora da dose",
+              "en": "the timing"
+            },
+            "turn": {
+              "pt": "estoque cheio",
+              "en": "full stores"
+            },
+            "to": "feliz",
+            "objects": [
+              {
+                "p": "ion:battery-full",
+                "cue": {
+                  "pt": "estoque cheio",
+                  "en": "full stores"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "do",
+          "scene": "verso",
+          "pt": {
+            "say": "Tome três a cinco gramas de creatina todo dia, em qualquer horário, para manter o estoque do músculo cheio."
+          },
+          "en": {
+            "say": "Take three to five grams of creatine every day, at any time, to keep your muscle stores full."
+          }
+        }
+      ]
+    }
+  }
+}

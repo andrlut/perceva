@@ -2,6 +2,7 @@ import type { LearningFeedCard, LearningFeedMedia } from '@/lib/api/learning';
 import type { DimensionId, LearningIdeaPublic, LearningMediaLocale } from '@/lib/db/types';
 import { ideaImageUriFromPath, pickLocalized } from '@/lib/ideas';
 import { learningMediaUrl, pickMedia } from '@/lib/learningMedia';
+import { sponsorOf } from '@/lib/learningSponsor';
 import { xpForMaterial } from '@/lib/learningXp';
 import { DIMENSION_META } from '@/theme/dimensions';
 
@@ -75,6 +76,9 @@ export interface IdeaReelGroup extends ReelGroupBase {
   /** Localized title of the parent material (empty when the feed doesn't
    *  carry the material — the page then hides that line). */
   materialTitle: string;
+  /** Partner of the material (view's `sponsor_name`), or null — the page
+   *  then adds "Patrocinado · {name}" under the material line. */
+  sponsorName: string | null;
   ideaId: string;
   ordinal: number;
   /** Published ideas of the same material (rows of the view). */
@@ -199,6 +203,7 @@ export function ideaGroups(
     slug: r.slug,
     title: pickLocalized({ pt: r.title_pt ?? '', en: r.title_en ?? '' }, locale),
     materialTitle: materialTitles.get(r.material_id) ?? '',
+    sponsorName: sponsorOf(r)?.name ?? null,
     dimensionId: r.dimension_id,
     accent: DIMENSION_META[r.dimension_id].color,
     releasedAt: new Date(r.released_at).getTime(),
