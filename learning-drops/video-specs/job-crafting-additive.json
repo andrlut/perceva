@@ -49,7 +49,6 @@
             ],
             "camera": {
               "move": "push",
-              "forca": "forte",
               "cue": {
                 "pt": "Por onde",
                 "en": "Where"
@@ -282,8 +281,8 @@
                 "feel": "energiza",
                 "size": 1,
                 "cue": {
-                  "pt": "papel",
-                  "en": "paper"
+                  "pt": "dá pra ver",
+                  "en": "you can see"
                 },
                 "then": {
                   "size": 2

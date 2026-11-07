@@ -245,15 +245,28 @@ encurtar sem regravar a voz.
 `transicao` diz como **esta** cena entra (a passagem da anterior pra ela):
 `fade` (a de sempre), `zoom` (atravessa: a antiga cresce, a nova chega
 grande e assenta), `desliza` (a câmera continua andando de lado), `corte`
-(seco), `hexa` (v4: a antiga cresce rumo ao centro e some, a nova nasce de
-dentro de um hexágono que se abre com aro dourado — use em "outro caminho",
-virada de tema e no verso; abre no centro do quadro, então numa cena com a
-pessoa no meio vira um match cut pelo rosto dela) e `chicote` (v4: whip pan,
-as duas cenas correm juntas pro lado com desfoque horizontal — "em outro
-lugar", "enquanto isso"). Sem `transicao`: cena com câmera entra com a passagem que combina
+(seco), `hexa` (v4: a antiga cresce e some, a nova nasce de dentro de um
+hexágono que se abre com aro dourado — use em "outro caminho", virada de tema
+e no verso; abre na altura do peito/mesa, (540, 1100), nunca no rosto) e
+`chicote` (v4: whip pan, as duas cenas correm juntas pro lado, cada uma
+recortada no próprio quadro, com desfoque horizontal que segue a velocidade
+— "em outro lugar", "enquanto isso"). Desde a v4.1 o `fade` é um mergulho
+curto (a antiga apaga na 1ª metade, a nova acende na 2ª) e `zoom`/`desliza`
+também apagam a antiga: no crossfade cheio, títulos e rostos das duas cenas
+ficavam sobrepostos por ~8 quadros. Sem `transicao`: cena com câmera entra com a passagem que combina
 com o movimento (pan → `desliza` no mesmo sentido; push/pull/drift →
 `zoom`), cena sem câmera entra com `fade` como sempre. Todas cabem no mesmo
 crossfade de 10 frames: a duração do vídeo não muda.
+
+## O radar no feliz (identidades Hexa v4)
+
+As identidades `hexa-*` desenham atrás de quem fica `feliz` o radar do app
+(placa escura, réguas, polígono das 6 áreas enchendo do centro). Regras:
+figurante e fundo nunca acendem (`halo={false}`); sentada atrás de mesa o radar
+fica em volta da cabeça (`halo="cabeca"`); com o radar aceso as cenas tiram as
+estrelinhas de brilho (não dizer "feliz" duas vezes). No roteiro, guarde o
+`to: "feliz"` pro momento em que a protagonista se percebe e faz por conta
+própria — se todo mundo acende o tempo todo, o símbolo dilui.
 
 ## Som (`--sfx`, v4) e identidade (`--identity`)
 

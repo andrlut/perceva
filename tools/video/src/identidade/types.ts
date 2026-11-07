@@ -30,8 +30,12 @@ export type PessoaProps = {
    * virada (o hexágono que acende atrás no feliz, o pulinho) usam isto.
    */
   since?: number;
-  /** false: sem o hexágono atrás no feliz (figurante, fundo). Padrão: com. */
-  halo?: boolean;
+  /**
+   * O hexágono atrás no feliz: false = sem (figurante, fundo); 'cabeca' = menor e
+   * em volta da cabeça (sentada atrás de mesa, onde o de corpo inteiro vira "casinha").
+   * Padrão: com, atrás do corpo.
+   */
+  halo?: boolean | 'cabeca';
   cap?: string;
   sweat?: boolean;
 };
@@ -55,6 +59,8 @@ export type IdentityOption = {
    * scaleX(-1) (src/elenco/cenario.tsx → Figurante).
    */
   Virada?: React.FC<PessoaProps>;
+  /** A própria Pessoa acende o hexágono no feliz: as cenas tiram o brilho (estrelinhas) pra não dizer "feliz" duas vezes. */
+  halo?: boolean;
   /** Opcional: motivo de fundo da identidade (atrás das pessoas, no palco). */
   Backdrop?: React.FC<{ t: number; width: number; height: number; accent: string }>;
 };

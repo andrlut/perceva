@@ -23,6 +23,7 @@ import { Scene, cue, speechEnd } from '../timeline';
 import { Abajur, AmbSpec, Ambiente, AmbienteMini, EnvGeo, Rect, Spot, Vinheta } from './ambientes';
 import { CameraRig, FocusMap, Layer, cameraAt, focusPoint } from './camera';
 import { Sfx } from './sfx';
+import { useIdentity } from '../identidade/context';
 import { Ion, Peca, pieceBox } from './Peca';
 import type { Bloco, Chip, Feel, MoldeLine, MoldeSpec, Mood, Obj, Panel } from './spec';
 
@@ -122,7 +123,7 @@ const Stage: React.FC<{ s: MS; geo?: EnvGeo; focus?: FocusMap; kicker?: string; 
   const kick = <Kicker text={kicker ?? pr.kicker} />;
   return (
     <CameraRig cam={cam}>
-      {cueAt != null ? <Sfx at={cueAt - 2} name={pr.camera?.move === 'push' ? 'punch' : 'whoosh'} gain={pr.camera?.move === 'push' ? 1 : 0.7} /> : null}
+      {cueAt != null ? <Sfx at={cueAt - (pr.camera?.move === 'push' ? 2 : 8)} name={pr.camera?.move === 'push' ? 'punch' : 'whoosh'} gain={pr.camera?.move === 'push' ? 1 : 0.7} /> : null}
       <AbsoluteFill>
         {/* sem ambiente, a sobrancelha fica por baixo como sempre foi (o vídeo antigo sai idêntico) */}
         {amb ? null : kick}
@@ -217,7 +218,7 @@ const Drop: React.FC<{ s: MS; p: string; cueAt?: string; out?: string; stay?: bo
         transformOrigin: land ? '50% 100%' : '50% 100%',
       }}
     >
-      {stay ? null : <Sfx at={dropAt + 5} name="pop" />}
+      {stay ? null : <Sfx at={dropAt + 5} name="pop" rate={[1, 1.12, 0.94, 1.06, 0.9][[...p].reduce((h, c) => h + c.charCodeAt(0), 0) % 5]} />}
       {base ? <div style={{ transform: 'translateY(-100%)', display: 'flex', alignItems: 'flex-end' }}>{piece}</div> : piece}
     </div>
   );
@@ -288,6 +289,8 @@ export const Pessoa_: React.FC<P> = ({ s }) => {
   const mood: Mood = turned ? (pr.to ?? 'feliz') : (pr.mood ?? 'ok');
   // virada pra pior (ex.: "e nada muda") não levanta os braços nem brilha
   const positive = (pr.to ?? 'feliz') === 'feliz';
+  // a identidade que acende o hexágono no feliz já diz "feliz": sem estrelinhas por cima
+  const idHalo = !!useIdentity().halo;
   const me = spr(0, { damping: 16 });
   const slots = (amb ? SLOTS_AMB : SLOTS).map((sl, i) => ({ ...sl, size: i % 2 ? 250 : 280 }));
   // o cenário tira colega, móvel e primeiro plano de baixo das peças (e do relógio)
@@ -300,7 +303,7 @@ export const Pessoa_: React.FC<P> = ({ s }) => {
       <div style={{ position: 'absolute', top: 640, left: 380, opacity: me, transform: `scale(${0.85 + 0.15 * me})` }}>
         <Pessoa t={frame} size={320} mood={mood} since={turned ? frame - turnAt : frame} arms={turned && positive ? 'up' : (pr.arms ?? 'down')} sweat={pr.sweat && !turned} accent={C.violet} />
       </div>
-      {pr.glow || (pr.turn && positive) ? (
+      {(pr.glow && !(idHalo && mood === 'feliz')) || (pr.turn && positive && !idHalo) ? (
         <div style={{ position: 'absolute', top: 600, left: 340 }}>
           <Brilho t={frame} size={400} on={ramp(frame, at(s, pr.glow ?? pr.turn, 1e9), 10)} />
         </div>
@@ -380,9 +383,11 @@ export const Virada: React.FC<P> = ({ s }) => {
           accent={C.violet}
         />
       </div>
-      <div style={{ position: 'absolute', top: 560, left: pr.helper ? 50 : 340 }}>
-        <Brilho t={frame} size={380} on={ramp(frame, aTurn, 10)} />
-      </div>
+      {useIdentity().halo ? null : (
+        <div style={{ position: 'absolute', top: 560, left: pr.helper ? 50 : 340 }}>
+          <Brilho t={frame} size={380} on={ramp(frame, aTurn, 10)} />
+        </div>
+      )}
       {pr.helper ? (
         <div style={{ position: 'absolute', top: 600, left: 620, opacity: helper, transform: `translateX(${(1 - helper) * 200}px)` }}>
           <Pessoa t={frame} size={300} seed={4} arms={pass > 0.5 ? 'out' : 'down'} mood="ok" accent={hc} skin="#8D5A3B" cap={accent} />
@@ -821,7 +826,8 @@ export const Cena: React.FC<P> = ({ s }) => {
         ) : setting === 'mesa' ? (
           <>
             <div style={{ position: 'absolute', top: 740, left: 270 }}>
-              <Pessoa t={frame} size={300} mood={mood} arms="out" accent={C.violet} />
+              {/* atrás da mesa o hexágono de corpo inteiro vira "casinha": em volta da cabeça */}
+              <Pessoa t={frame} size={300} mood={mood} arms="out" accent={C.violet} halo="cabeca" />
             </div>
             {/* frente da mesa: esconde pernas e pés (que ficariam soltos acima da linha do chão) */}
             <div style={{ position: 'absolute', top: 1040, left: 232, width: 616, height: 90, borderRadius: '0 0 14px 14px', background: C.surface2 }} />
@@ -856,9 +862,11 @@ export const Cena: React.FC<P> = ({ s }) => {
       {placed.map(({ o, slot }, i) => (
         <Drop key={i} s={s} p={o.p} cueAt={o.cue} out={o.out} {...slot} delay={4 + i * (amb ? 6 : 0)} fall={amb ? 50 : 120} chip={slot.chip} />
       ))}
-      <div style={{ position: 'absolute', top: 700, left: setting === 'cama' ? 350 : 120 }}>
-        <Brilho t={frame} size={420} on={ramp(frame, at(s, pr.glow, 1e9), 10)} />
-      </div>
+      {useIdentity().halo && mood === 'feliz' ? null : (
+        <div style={{ position: 'absolute', top: 700, left: setting === 'cama' ? 350 : 120 }}>
+          <Brilho t={frame} size={420} on={ramp(frame, at(s, pr.glow, 1e9), 10)} />
+        </div>
+      )}
     </Stage>
   );
 };
@@ -1160,14 +1168,17 @@ export const Mapa: React.FC<P> = ({ s }) => {
       ))}
       {/* a pessoa ao lado, que pega a caneta pra redesenhar o dia */}
       <div style={{ position: 'absolute', top: 760, left: personX, transform: left ? undefined : 'scaleX(-1)' }}>
-        <Pessoa t={frame} size={300} mood={turned ? (pr.to ?? 'feliz') : (pr.mood ?? 'cansado')} arms={frame >= turnAt - 10 ? 'out' : 'down'} accent={C.violet} />
+        <Pessoa t={frame} size={300} mood={turned ? (pr.to ?? 'feliz') : (pr.mood ?? 'cansado')} since={turned ? frame - turnAt : frame} arms={frame >= turnAt - 10 ? 'out' : 'down'} accent={C.violet} />
         <div style={{ position: 'absolute', left: 262, top: 176, opacity: penIn, transform: `rotate(${-30 + Math.sin(frame / 5) * 6 * k}deg) scale(${0.7 + 0.3 * penIn})`, transformOrigin: '50% 90%' }}>
           <Caneta size={150} accent={C.gold} progress={0} />
         </div>
       </div>
-      <div style={{ position: 'absolute', top: 700, left: personX - 50 }}>
-        <Brilho t={frame} size={400} on={ramp(frame, at(s, pr.glow ?? pr.turn, 1e9) + 4, 10)} />
-      </div>
+      {useIdentity().halo ? null : (
+        <div style={{ position: 'absolute', top: 700, left: personX - 50 }}>
+          <Brilho t={frame} size={400} on={ramp(frame, at(s, pr.glow ?? pr.turn, 1e9) + 4, 10)} />
+        </div>
+      )}
+      {pr.turn && (pr.to ?? 'feliz') === 'feliz' ? <Sfx at={turnAt + 8} name="chime" /> : null}
     </Stage>
   );
 };
@@ -1176,6 +1187,10 @@ export const Mapa: React.FC<P> = ({ s }) => {
 const IdeaCard: React.FC<{ width: number; flip: number; absorbed: boolean }> = ({ width, flip, absorbed }) => {
   const spec = useSpec();
   const accent = useAccent();
+  const frame = useCurrentFrame();
+  // identidade que acende o hexágono (v4): a frente do card é o Elenco, não a imagem gerada da ideia
+  // (revisão de marca: a imagem 4:5 é gente semi-realista, o que o André descartou)
+  const elencoFront = !!useIdentity().halo;
   const height = width * 1.25;
   const face: React.CSSProperties = {
     position: 'absolute',
@@ -1192,7 +1207,13 @@ const IdeaCard: React.FC<{ width: number; flip: number; absorbed: boolean }> = (
     <div style={{ width, height, perspective: 2200 }}>
       <div style={{ position: 'relative', width: '100%', height: '100%', transformStyle: 'preserve-3d', transform: `rotateY(${flip * 180}deg)` }}>
         <div style={{ ...face, background: `linear-gradient(160deg, ${C.surface2} 0%, ${C.base} 100%)` }}>
-          {spec.image ? <Img src={staticFile(spec.image)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
+          {elencoFront ? (
+            <div style={{ position: 'absolute', left: 0, right: 0, bottom: -width * 0.02, display: 'flex', justifyContent: 'center' }}>
+              <Pessoa t={frame} size={width * 0.6} mood="feliz" arms="up" since={40} accent={C.violet} />
+            </div>
+          ) : spec.image ? (
+            <Img src={staticFile(spec.image)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : null}
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(10,14,38,0.94) 0%, rgba(10,14,38,0.55) 30%, rgba(10,14,38,0) 55%)' }} />
           <div style={{ position: 'absolute', left: width * 0.07, right: width * 0.07, top: width * 0.07 }}>
             <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: width * 0.078, lineHeight: 1.1, color: C.hi }}>{spec.title}</div>

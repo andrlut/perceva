@@ -24,7 +24,7 @@ const SOUNDS = {
   // o hexágono acendendo: sino de três parciais com um leve batimento (brilho, não clique)
   chime: ['-f', 'lavfi', '-i', "aevalsrc='0.22*(sin(2*PI*1568*t)+0.7*sin(2*PI*1572*t)+0.55*sin(2*PI*2093*t)+0.3*sin(2*PI*3136*t))*exp(-3*t)*min(1,t*300)':d=1.2:s=48000"],
   // antes do verso: ar subindo (ruído filtrado que cresce), sem tom de apito
-  riser: ['-f', 'lavfi', '-i', 'anoisesrc=d=1.2:c=pink:r=48000:a=0.7:s=5', '-af', 'highpass=f=400,lowpass=f=5000,afade=t=in:st=0:d=1.05:curve=exp,afade=t=out:st=1.05:d=0.15:curve=hsin'],
+  riser: ['-f', 'lavfi', '-i', 'anoisesrc=d=1.2:c=pink:r=48000:a=0.7:s=5', '-af', 'highpass=f=400,lowpass=f=5000,afade=t=in:st=0:d=1.05:curve=tri,afade=t=out:st=1.05:d=0.15:curve=hsin'],
 };
 
 for (const [name, args] of Object.entries(SOUNDS)) {

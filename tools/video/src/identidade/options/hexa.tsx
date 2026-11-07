@@ -444,6 +444,8 @@ const GarmentDetail: React.FC<{ g: Garment; accent: string; skin: string; uid: s
 // respiração em escala, pulinho na virada pro feliz, halo com follow-through.
 
 const INK = '#15161F';
+// v4.1: a cabeça do Limpo/Cor um tico maior que a do Rosto Hexa (0,9 → 0,96): mais leitura, ainda adulto
+const HEAD_V4 = 'translate(100 92) scale(0.96) translate(-100 -92)';
 
 /** 0 = olho aberto, 1 = fechado. Piscadas a cada 2–5 s (sorteio pelo seed), 18% delas duplas. */
 const blinkAt = (t: number, seed: number) => {
@@ -467,33 +469,57 @@ const outBack = (x: number) => {
 };
 
 /**
- * O hexágono do app que acende atrás de quem fica feliz: placa violeta, aro
- * dourado, aro violeta por dentro e as 6 cores das áreas nos vértices (o radar).
- * Entra com passagem (outBack), os pontos chegam em cascata (+2 quadros cada) e
- * depois tudo respira devagar. Pequeno (multidão): só o aro e os pontos.
+ * O radar do app (HexRadar) acendendo atrás de quem fica feliz — "o seu hexágono
+ * enche". Placa escura (a pessoa salta como medalha), réguas em terços, raios, e o
+ * polígono de dados violeta que cresce do centro até os valores da pessoa (sorteados
+ * pelo seed, 0,55–0,95), com as 6 cores das áreas nos vértices. Sem aro dourado: o
+ * ouro fica pro broche e pro card (revisão de marca v4: o aro dourado lia como moldura).
+ * Entra com passagem (outBack), os pontos chegam em cascata (+2 quadros cada), depois
+ * respira devagar. Pequeno (multidão): placa, contorno e pontos, sem réguas.
  */
-const Halo: React.FC<{ since: number; t: number; small: boolean; cy?: number; R?: number }> = ({ since, t, small, cy = 112, R = 112 }) => {
-  const a = clamp01(since / 8);
-  const s = (0.5 + 0.5 * outBack(since / 16)) * (1 + 0.012 * Math.sin(t / 30));
-  const rot = 1.5 * Math.sin(t / 55);
+const Halo: React.FC<{ since: number; t: number; small: boolean; seed: number; cy?: number; R?: number }> = ({ since, t, small, seed, cy = 112, R = 112 }) => {
+  const a = clamp01(since / 6);
+  const s = (0.72 + 0.28 * outBack(since / 14)) * (1 + 0.01 * Math.sin(t / 30));
+  const grow = outBack((since - 3) / 16);
   const outer = hexPts(100, cy, R);
+  const axis = (j: number, k: number): Pt => [100 + (outer[j][0] - 100) * k, cy + (outer[j][1] - cy) * k];
+  const ratios = DIMS.map((_, j) => 0.55 + 0.4 * random(`radar-${seed}-${j}`));
+  const data = ratios.map((r, j) => axis(j, Math.max(0, r * grow)));
+  const gid = `rg${seed}${small ? 's' : ''}${Math.round(cy)}`;
   return (
-    <g opacity={a} transform={`translate(100 ${cy}) rotate(${rot}) scale(${s}) translate(-100 ${-cy})`}>
-      {!small && <path d={softPoly(outer, R * 0.12)} fill="rgba(123,92,255,0.13)" />}
-      <path d={softPoly(outer, R * 0.12)} fill="none" stroke={C.gold} strokeWidth={small ? 4 : 3.2} opacity={small ? 0.55 : 0.7} />
-      {!small && <path d={softPoly(hexPts(100, cy, R * 0.7), R * 0.09)} fill="none" stroke={C.violet2} strokeWidth={2.4} opacity={0.45} />}
-      {outer.map((p, j) => (
-        <circle
-          key={j}
-          cx={p[0]}
-          cy={p[1]}
-          r={small ? 6 : 5.5}
-          fill={DIMS[j].color}
-          opacity={clamp01((since - 4 - j * 2) / 6) * (0.75 + 0.25 * Math.sin(t / 9 + j * 1.3))}
-        />
+    <g opacity={a} transform={`translate(100 ${cy}) scale(${s}) translate(-100 ${-cy})`}>
+      <defs>
+        <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={C.violet2} stopOpacity={0.75} />
+          <stop offset="1" stopColor={C.violet} stopOpacity={0.35} />
+        </linearGradient>
+      </defs>
+      <path d={softPoly(outer, R * 0.1)} fill="rgba(10,12,38,0.66)" stroke="rgba(255,255,255,0.26)" strokeWidth={small ? 3 : 2} />
+      {!small && (
+        <g stroke="rgba(255,255,255,0.13)" strokeWidth={1.6} fill="none">
+          <path d={softPoly(hexPts(100, cy, R * 0.67), R * 0.06)} />
+          <path d={softPoly(hexPts(100, cy, R * 0.34), R * 0.03)} />
+          {outer.map((p, j) => (
+            <path key={j} d={`M100 ${cy} L${p[0].toFixed(1)} ${p[1].toFixed(1)}`} />
+          ))}
+        </g>
+      )}
+      {grow > 0.02 && <path d={'M' + data.map(P).join(' L') + 'Z'} fill={`url(#${gid})`} stroke={C.violet2} strokeWidth={small ? 3 : 2.4} strokeLinejoin="round" />}
+      {data.map((p, j) => (
+        <circle key={j} cx={p[0]} cy={p[1]} r={small ? 7 : 6} fill={DIMS[j].color} stroke={C.deep} strokeWidth={2} opacity={clamp01((since - 5 - j * 2) / 5)} />
       ))}
     </g>
   );
+};
+
+/** Luminância relativa (WCAG) — o ponto de luz no olho só onde o preto some na pele. */
+const lum = (h: string) => {
+  if (!HEX6.test(h)) return 1;
+  const c = rgb(h).map((v) => {
+    const x = v / 255;
+    return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
 };
 
 type Style = 'limpo' | 'mascote' | 'cor';
@@ -508,8 +534,11 @@ const EYE_X = [85, 115] as const;
 /** Olhos, sobrancelhas e boca em traço preto. `big`: proporção de mascote. */
 const Face: React.FC<{ mood: PessoaProps['mood']; blink: number; glasses?: boolean; big?: boolean; skin: string }> = ({ mood = 'ok', blink, glasses, big, skin }) => {
   const EY = big ? 97 : 94;
-  const [rx, ry] = big ? [6.2, 7.8] : [5.2, 6.4];
-  const sw = big ? 4.2 : 3.6;
+  // v4.1 (revisão de marca): o olho do Limpo cresceu rumo ao do Mascote — lê melhor a 90 px
+  const [rx, ry] = big ? [6.2, 7.8] : [5.8, 7.1];
+  const sw = big ? 4.2 : 3.9;
+  // ponto de luz só onde o preto some (pele escura); na clara, o olho é preto puro
+  const glint = lum(skin) < 0.2;
   const eye = (x: number) => {
     if (mood === 'feliz') {
       // olho sorrindo: o "^" (pálpebra de baixo subindo) — piscar não muda
@@ -528,7 +557,7 @@ const Face: React.FC<{ mood: PessoaProps['mood']; blink: number; glasses?: boole
       <g key={x}>
         <ellipse cx={x} cy={EY} rx={rx} ry={Math.max(1.1, ry * (1 - blink))} fill={INK} />
         {/* um ponto de luz: o olho continua preto, mas não some na pele escura */}
-        {blink < 0.4 && <circle cx={x + rx * 0.38} cy={EY - ry * 0.42} r={rx * 0.3} fill="#FFFFFF" opacity={0.9} />}
+        {glint && blink < 0.4 && <circle cx={x + rx * 0.38} cy={EY - ry * 0.42} r={rx * 0.28} fill="#FFFFFF" opacity={0.85} />}
       </g>
     );
   };
@@ -543,7 +572,7 @@ const Face: React.FC<{ mood: PessoaProps['mood']; blink: number; glasses?: boole
   return (
     <g>
       {EYE_X.map(eye)}
-      <g stroke={INK} strokeWidth={big ? 3.6 : 3.2} strokeLinecap="round" fill="none">
+      <g stroke={INK} strokeWidth={big ? 3.6 : 3.5} strokeLinecap="round" fill="none">
         <path d={brows[0]} />
         <path d={brows[1]} />
       </g>
@@ -557,7 +586,7 @@ const Face: React.FC<{ mood: PessoaProps['mood']; blink: number; glasses?: boole
         <path
           d={mood === 'cansado' ? `M93 ${121 + my} Q100 ${117.5 + my} 107 ${121 + my}` : `M92.5 ${117.5 + my} Q100 ${122 + my} 107.5 ${117.5 + my}`}
           stroke={INK}
-          strokeWidth={big ? 4.2 : 3.8}
+          strokeWidth={big ? 4.2 : 4}
           strokeLinecap="round"
           fill="none"
         />
@@ -616,13 +645,13 @@ const makeGente = (style: 'limpo' | 'cor'): React.FC<PessoaProps> => {
     const life = lifeOf(t, seed, mood, sinceM, still);
     const [la, ra] = armAngles(arms, t, seed);
     const blink = still ? 0 : blinkAt(t, seed);
-    const HX = `rotate(${TILT[mood]} 100 142) ${HEAD_SCALE}`;
+    const HX = `rotate(${TILT[mood]} 100 142) ${HEAD_V4}`;
     const hideTop = Boolean(cap);
     const backVisible = hair.back && !(hideTop && (who.hair === 'afro' || who.hair === 'bun'));
     const facet = style === 'cor' ? 0.3 : 0.42;
     return (
       <svg width={size} height={size * 1.3} viewBox="0 0 200 260" style={{ overflow: 'visible' }}>
-        {mood === 'feliz' && halo && <Halo since={sinceM} t={t} small={size < 170} />}
+        {mood === 'feliz' && halo && <Halo since={sinceM} t={t} seed={seed} small={size < 170} {...(halo === 'cabeca' ? { cy: 84, R: 84 } : {})} />}
         <ellipse cx={100} cy={252} rx={56} ry={7} fill="rgba(0,0,0,0.25)" />
         <rect x={72} y={210} width={25} height={34} rx={9} fill={C.faint} />
         <rect x={103} y={210} width={25} height={34} rx={9} fill={C.faint} />
@@ -747,7 +776,7 @@ const Mascote: React.FC<PessoaProps> = ({ t = 0, size = 260, accent = C.violet, 
   const backVisible = hair.back && !(hideTop && (who.hair === 'afro' || who.hair === 'bun'));
   return (
     <svg width={size} height={size * 1.3} viewBox="0 0 200 260" style={{ overflow: 'visible' }}>
-      {mood === 'feliz' && halo && <Halo since={sinceM} t={t} small={size < 170} cy={110} R={116} />}
+      {mood === 'feliz' && halo && <Halo since={sinceM} t={t} seed={seed} small={size < 170} {...(halo === 'cabeca' ? { cy: 90, R: 96 } : { cy: 116, R: 132 })} />}
       <ellipse cx={100} cy={252} rx={50} ry={7} fill="rgba(0,0,0,0.25)" />
       <rect x={76} y={216} width={20} height={28} rx={9} fill={C.faint} />
       <rect x={104} y={216} width={20} height={28} rx={9} fill={C.faint} />
@@ -815,7 +844,7 @@ const makeCostas = (style: Style): React.FC<PessoaProps> => {
     const hairColor = style === 'cor' ? mix(dimColor(TINT_DIMS[((seed % 6) + 6) % 6]), C.deep, 0.5) : lap > 0 ? ALT[(seed + lap) % ALT.length] : who.color;
     const hair = HAIRS[who.hair];
     const mas = style === 'mascote';
-    const HX = mas ? M_HX('ok') : HEAD_SCALE;
+    const HX = mas ? M_HX('ok') : HEAD_V4;
     return (
       <svg width={size} height={size * 1.3} viewBox="0 0 200 260" style={{ overflow: 'visible' }}>
         <path d={mas ? M_TORSO : TORSO} fill={accent} />
@@ -853,6 +882,7 @@ export const hexaLimpo: IdentityOption = {
   Pessoa: makeGente('limpo'),
   Costas: makeCostas('limpo'),
   Backdrop,
+  halo: true,
 };
 
 export const hexaMascote: IdentityOption = {
@@ -862,6 +892,7 @@ export const hexaMascote: IdentityOption = {
   Pessoa: Mascote,
   Costas: makeCostas('mascote'),
   Backdrop,
+  halo: true,
 };
 
 export const hexaCor: IdentityOption = {
@@ -871,4 +902,5 @@ export const hexaCor: IdentityOption = {
   Pessoa: makeGente('cor'),
   Costas: makeCostas('cor'),
   Backdrop,
+  halo: true,
 };
