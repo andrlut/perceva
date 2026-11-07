@@ -110,7 +110,8 @@ daqui só sai como conferência; o vídeo de verdade é o da porta, montado pelo
 | `lista` | A pessoa em cima e até 3 itens grandes entrando nas deixas. Passos, sinais, opções. | `items[1..3]` `{icon, text ≤30, cue}`, `mood`, `to` | sim |
 | `cena` | A ideia aplicada: a pessoa num lugar com uma peça na mão. | `setting` (sofa/mesa/cama/chao), `holding` (peça), `helper`+`gives`+`from`, `glow`, `objects[≤2]` (**≤6 com ambiente**), `mood` | sim |
 | `pensa` | A pessoa pensando; o balão abre com a peça dentro. Dúvida, desejo, lembrança. Com `ambiente: treinamento` ela **senta na plateia** (fileira do meio, encosto da cadeira na frente, turma de costas dos lados) e o balão abre pra esquerda, por cima da lista do slide: é assim que se mostra "assistir a uma aula". Com câmera, o balão encolhe (a cauda fica sobre a cabeça dela) até a nuvem da esquerda ficar ≥ 20 px dentro do quadro no ponto mais perto do movimento. | `thought` (peça), `at`, `mood`, `turn`+`to`, `objects[≤2]` | sim |
-| `mapa` | **O mapa do dia**: blocos de tarefa caem numa folha do dia, cada um com a cor de como pesa; na virada o dia se redesenha pro que energiza. | `blocks[2..6]` (abaixo), `turn`, `mood`, `to`, `glow`, `side` (left/right: lado da pessoa) | sim |
+| `mapa` | **O mapa do dia**: blocos de tarefa caem numa folha do dia, cada um com a cor de como pesa; na virada o dia se redesenha pro que energiza. Com `label` nos blocos, a folha alarga e cada bloco leva o NOME da tarefa. | `blocks[2..6]` (abaixo), `turn`, `mood`, `to`, `glow`, `side` (left/right: lado da pessoa) | sim |
+| `caderno` | **(fase 2, piloto)** O método resolvido num exemplo: a página do caderno em plano fechado, a caneta escrevendo cada tarefa com o nome, uma barra pro tempo e uma marca de energia (↓ tira / – / ↑ dá). Os mesmos `blocks` do mapa, então caderno e mapa contam o mesmo dia. | `blocks[2..6]` com `label` (≤ 16) e `feel` (`size` = tempo, `cue` = quando o nome começa), `from` (coluna do tempo), `at` (coluna da energia), `semana` (deixa: os dias acendem no alto), `heads` (os 3 títulos; default no idioma) | não |
 | `verso` | O card vira e a voz lê o verso. **Sempre a última.** | `kicker`, `done` (opcionais) | não |
 
 Toda cena aceita `kicker` (≤ 24 caracteres), a sobrancelha dourada no topo.
@@ -306,6 +307,45 @@ https://claude.ai/artifact/3g7iHRpWs4EeEnnsv8Q4Xh):
   sem nada grande se mexendo (`<video>.ritmo.json`). Só avisa; `--sem-ritmo`
   pula. A régua dos estilos de referência: 16–55% em quase-parada, nenhum
   buraco de mais de 1 s fora do fim.
+
+## Requinte — fase 2 + "demonstrar a ideia" (piloto, 2026-11-07)
+
+O André comparou o nosso vídeo com o do Notebook da mesma ideia: os dois são
+igualmente parados (85–86% em quase-parada), mas o do Notebook mostra o
+MÉTODO resolvido num exemplo (tarefas com nome, rótulos, o quadro que se
+reorganiza). O piloto troca "ilustrar a frase" por "demonstrar a ideia" nas
+falas do método e já leva os moldes da fase 2:
+
+- **Cena `caderno`** e **nome nos blocos do mapa** (`label`): palavra na tela
+  pela primeira vez no meio do vídeo (≥ 38 px, ≤ 16 caracteres, sem número —
+  o lint barra). O tempo continua sem hora: é o comprimento da barra.
+- **Texto por máscara** (`<Mascara>` em `src/components.tsx`): `sobe` (a
+  sobrancelha, os rótulos do comparar, os títulos das colunas, o nome da
+  marca) e `escreve` (a máscara abre com a caneta na ponta da tinta: nomes
+  do caderno e dos blocos). Texto novo não entra só por fade.
+- **Verso que acende com a voz:** cada palavra do card sai de 30%, chega
+  dourada no quadro em que a voz a diz e assenta no branco.
+- **Voz medida** (`pauses.json`, gravado pelo `molde.mjs` antes de todo
+  stills/render): começo, fim e pausas reais de cada fala (silencedetect).
+  As deixas ancoram nas pausas que casam com pontuação
+  (`src/timeline.ts`); sem o arquivo, volta a estimar pelo texto. É o
+  começo do "tempo real por palavra" sem conta nova.
+- **Um soco, na virada:** o chicote saiu da aula e foi pro "Outro caminho".
+- **Fecho com a marca:** depois do selo, o glyph se desenha e "Perceva" sobe
+  ao lado.
+- **Luz com origem** (`<Luz>` em `src/molde/ambientes.tsx`): na casa de
+  manhã/dia, o facho da janela atravessa a sala com poeira boiando; no
+  caderno, a janela cai na página em dois painéis. Se a cena cobre ¾ da
+  janela (a folha do mapa), não tem facho: luz sem origem à vista não vale.
+
+**Piloto lado a lado** (`--roteiro <arquivo> --tag <nome>`): lê outro
+roteiro e grava em chaves à parte (`<slug>.<ideia>-<tag>.<lang>`); a voz e o
+vídeo de verdade ficam intocados, e piloto nunca sobe. O deste piloto é
+`pilotos/job-crafting-additive.demonstrar.json` (as falas iguais reaproveitam
+a tomada de voz; só `log3` e `pull3` foram gravadas).
+
+Pendente: **Fraunces itálico** precisa da fonte variável (só temos a 600
+estática); o destaque do verso por enquanto é a cor.
 
 ## O radar no feliz (identidades Hexa v4) — DESLIGADO
 

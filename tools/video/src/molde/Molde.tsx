@@ -3,7 +3,7 @@ import { AbsoluteFill, Audio, CalculateMetadataFunction, Sequence, staticFile } 
 import { linearTiming, TransitionSeries } from '@remotion/transitions';
 import { Background, Lente } from '../components';
 import { Captions } from '../Captions';
-import { FADE, FPS, Timing, buildTimeline } from '../timeline';
+import { FADE, FPS, Timing, Voice, buildTimeline } from '../timeline';
 import { ACTIVE } from '../identidade/active';
 import { IdentityContext } from '../identidade/context';
 import { OPTIONS } from '../identidade';
@@ -37,7 +37,9 @@ export const calculateMoldeMetadata: CalculateMetadataFunction<MoldeProps> = asy
   // prévia sem voz (`molde.mjs build --silent`): tempos estimados pelo texto, num arquivo à parte
   // (o timings.json da voz gravada nunca é sobrescrito por estimativa)
   const timings: Timing[] = await (await fetch(staticFile(`${dir}/${spec.silent ? 'timings.silent.json' : 'timings.json'}`))).json();
-  const { scenes, total } = buildTimeline(spec.lines, timings);
+  // voz medida (fase 2, `molde.mjs` grava antes de stills/render): as deixas ancoram nas pausas reais
+  const voices: Record<string, Voice> = spec.silent ? {} : await fetch(staticFile(`${dir}/pauses.json`)).then((r) => (r.ok ? r.json() : {}), () => ({}));
+  const { scenes, total } = buildTimeline(spec.lines.map((l) => (voices[l.id] ? { ...l, voice: voices[l.id] } : l)), timings);
   if (total > MOLDE_MAX_SECONDS * FPS) {
     throw new Error(`${props.specKey}: ${(total / FPS).toFixed(1)} s passa do teto de ${MOLDE_MAX_SECONDS} s — corte o roteiro`);
   }

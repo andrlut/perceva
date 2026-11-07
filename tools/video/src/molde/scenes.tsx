@@ -13,14 +13,15 @@
 // pés da protagonista, a faixa que ela ocupa, o que a câmera pode focar).
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { AbsoluteFill, Img, continueRender, delayRender, interpolate, interpolateColors, spring, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
-import { MOLA, fadeUp, ramp, sai } from '../components';
+import { MOLA, Mascara, ramp, sai } from '../components';
 import { fontsReady } from '../fonts';
+import { Glyph } from '../Glyph';
 import { Brilho, Pensamento, Pessoa, Relogio, Semana, Sofa } from '../elenco/cast';
 import { Encosto, SET } from '../elenco/cenario';
 import { Caneca, Caneta, Planta } from '../elenco/objetos';
 import { C, DimId, FONT, dimColor } from '../theme';
-import { Scene, cue, speechEnd } from '../timeline';
-import { Abajur, AmbSpec, Ambiente, AmbienteMini, EnvGeo, Rect, Spot, Vinheta } from './ambientes';
+import { Scene, cue, speechEnd, wordFrames } from '../timeline';
+import { Abajur, AmbSpec, Ambiente, AmbienteMini, EnvGeo, Luz, Rect, Spot, Vinheta } from './ambientes';
 import { CameraRig, FocusMap, Layer, cameraAt, focusPoint } from './camera';
 import { Sfx, type SfxName } from './sfx';
 import { useIdentity } from '../identidade/context';
@@ -81,27 +82,16 @@ const useTextWidth = () => {
 /** Frame da deixa, ou `fallback` quando a cena não deu deixa. */
 const at = (s: MS, phrase: string | undefined, fallback: number) => (phrase ? cue(s, phrase) : fallback);
 
+/** Sobrancelha. Fase 2: SOBE de trás da própria linha (texto por máscara), não aparece por fade. */
 const Kicker: React.FC<{ text?: string; top?: number }> = ({ text, top = 200 }) => {
-  const frame = useCurrentFrame();
+  const spr = useSpr();
   const accent = useAccent();
   if (!text) return null;
   return (
-    <div
-      style={{
-        position: 'absolute',
-        top,
-        left: 80,
-        right: 80,
-        textAlign: 'center',
-        fontFamily: FONT.body,
-        fontWeight: 800,
-        fontSize: 32,
-        letterSpacing: 7,
-        color: accent,
-        ...fadeUp(frame, 0, 12, 16),
-      }}
-    >
-      {text.toUpperCase()}
+    <div style={{ position: 'absolute', top, left: 80, right: 80, display: 'flex', justifyContent: 'center' }}>
+      <Mascara p={spr(1, MOLA.pousa)}>
+        <div style={{ fontFamily: FONT.body, fontWeight: 800, fontSize: 32, letterSpacing: 7, color: accent, whiteSpace: 'nowrap' }}>{text.toUpperCase()}</div>
+      </Mascara>
     </div>
   );
 };
@@ -150,6 +140,10 @@ const Stage: React.FC<{ s: MS; geo?: EnvGeo; focus?: FocusMap; kicker?: string; 
         </Layer>
         {amb && geo ? (
           <>
+            {/* fase 2: luz com origem — o facho da janela atravessa o ar da sala (por cima de quem está nele) */}
+            <Layer depth={0.92}>
+              <Luz amb={amb} geo={geo} t={frame} />
+            </Layer>
             <Layer depth={1.35}>
               <Ambiente amb={amb} geo={geo} part="front" t={frame} accent={accent} />
             </Layer>
@@ -566,7 +560,10 @@ const PanelBox: React.FC<{
       ) : null}
       {/* rótulo de duas linhas + pílula cabem no painel; `balance` reparte as duas linhas (nada de palavra órfã) */}
       <div style={{ position: 'absolute', top: g.label, left: 20, right: 20, textAlign: 'center' }}>
-        <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: labelSize, lineHeight: 1.1, color: C.hi, textWrap: 'balance' }}>{panel.label}</div>
+        {/* fase 2: o rótulo sobe de trás da linha quando o painel assenta */}
+        <Mascara p={spr(from + 8, MOLA.pousa)}>
+          <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: labelSize, lineHeight: 1.1, color: C.hi, textWrap: 'balance' }}>{panel.label}</div>
+        </Mascara>
         {pill ? <Pill p={pill.p} text={pill.text} from={from + 12} /> : null}
       </div>
     </div>
@@ -1007,25 +1004,31 @@ export const Pensa: React.FC<P> = ({ s }) => {
 // três degraus que se separam sem som, no celular: drena = cinza-azulado frio, apagado, ícone
 // desbotado (mais escuro que a folha não: mais FRIO e sem cor); neutro = um meio-tom violeta
 // claro, com ícone claro; energiza = o dourado. A diferença é de luz, não só de matiz.
-const FEEL: Record<Feel, { bg: string; edge: string; icon: string }> = {
-  drena: { bg: '#1C2542', edge: '#2F3B5E', icon: '#56658C' },
-  neutro: { bg: '#4D55A3', edge: '#6C74C4', icon: '#E4E6FF' },
-  energiza: { bg: C.gold, edge: C.gold2, icon: C.deep },
+// `text`: o nome da tarefa (fase 2) — no que drena ele não desbota como o ícone: palavra tem que ler
+const FEEL: Record<Feel, { bg: string; edge: string; icon: string; text: string }> = {
+  drena: { bg: '#1C2542', edge: '#2F3B5E', icon: '#56658C', text: C.mid },
+  neutro: { bg: '#4D55A3', edge: '#6C74C4', icon: '#E4E6FF', text: C.hi },
+  energiza: { bg: C.gold, edge: C.gold2, icon: C.deep, text: C.deep },
 };
 const MAPA = { y: 300, w: 540, h: 1040, pad: 120 };
+/** Com nome nos blocos (fase 2) a folha alarga e a pessoa encosta na borda. */
+const MAPA_NOMES = { w: 640, xLeft: 400, xRight: 40, personLeft: 20, personRight: 760 };
 
-const BlocoBox: React.FC<{ s: MS; b: Bloco; i: number; y: number; h: number; x: number; w: number; k: number }> = ({ s, b, i, y, h, x, w, k }) => {
+const BlocoBox: React.FC<{ s: MS; b: Bloco; i: number; y: number; h: number; x: number; w: number; k: number; labelSize?: number }> = ({ s, b, i, y, h, x, w, k, labelSize = 42 }) => {
   const frame = useCurrentFrame();
   const spr = useSpr();
-  const d = spr(at(s, b.cue, s.lead + 6 + i * 9), MOLA.pousa);
+  const dropAt = at(s, b.cue, s.lead + 6 + i * 9);
+  const d = spr(dropAt, MOLA.pousa);
   const to = b.then?.feel ?? b.feel;
   const kk = b.then ? k : 0;
   const bg = interpolateColors(kk, [0, 1], [FEEL[b.feel].bg, FEEL[to].bg]);
   const edge = interpolateColors(kk, [0, 1], [FEEL[b.feel].edge, FEEL[to].edge]);
   const iconC = interpolateColors(kk, [0, 1], [FEEL[b.feel].icon, FEEL[to].icon]);
+  const textC = interpolateColors(kk, [0, 1], [FEEL[b.feel].text, FEEL[to].text]);
   const boost = (b.feel === 'energiza' ? 1 - kk : 0) + (to === 'energiza' ? kk : 0);
   const drain = (b.feel === 'drena' ? 1 - kk : 0) + (to === 'drena' ? kk : 0);
-  const iconSize = Math.max(44, Math.min(72, h * 0.5));
+  // com nome, o ícone tem tamanho fixo: se crescesse com o bloco, empurraria o nome pra faísca
+  const iconSize = b.label ? 52 : Math.max(44, Math.min(72, h * 0.5));
   const icon2 = b.then?.icon;
   // o que drena "pesa" (afunda um tiquinho); o que energiza pulsa
   const sag = drain * Math.sin(frame / 20 + i) * 2;
@@ -1075,6 +1078,12 @@ const BlocoBox: React.FC<{ s: MS; b: Bloco; i: number; y: number; h: number; x: 
           </div>
         ) : null}
       </div>
+      {/* fase 2: o nome da tarefa, escrito pela máscara logo depois que o bloco pousa */}
+      {b.label ? (
+        <Mascara p={ramp(frame, dropAt + 4, 12)} modo="escreve" style={{ marginLeft: 18 }}>
+          <div style={{ fontFamily: FONT.body, fontWeight: 800, fontSize: labelSize, lineHeight: 1.1, color: textC, whiteSpace: 'nowrap' }}>{b.label}</div>
+        </Mascara>
+      ) : null}
       {/* o que energiza ganha uma faísca à direita; o que drena fica só frio e apagado */}
       <div style={{ position: 'absolute', right: 26, top: '50%', marginTop: -iconSize * 0.3, opacity: boost }}>
         <Ion name="sparkles" size={iconSize * 0.6} color={C.deep} />
@@ -1090,7 +1099,10 @@ export const Mapa: React.FC<P> = ({ s }) => {
   const pr = s.props ?? {};
   const blocks = (pr.blocks ?? []).slice(0, 6);
   const left = (pr.side ?? 'left') === 'left';
-  const cardX = left ? 470 : 70;
+  const width = useTextWidth();
+  const named = blocks.some((b) => b.label);
+  const W = named ? MAPA_NOMES.w : MAPA.w;
+  const cardX = named ? (left ? MAPA_NOMES.xLeft : MAPA_NOMES.xRight) : left ? 470 : 70;
   const turnAt = at(s, pr.turn, 1e9);
   const k = ramp(frame, turnAt, 28);
   const turned = frame >= turnAt;
@@ -1112,23 +1124,27 @@ export const Mapa: React.FC<P> = ({ s }) => {
     return out;
   });
   const bx = cardX + 92;
-  const bw = MAPA.w - 92 - 34;
-  const personX = left ? 60 : 720;
+  const bw = W - 92 - 34;
+  const personX = named ? (left ? MAPA_NOMES.personLeft : MAPA_NOMES.personRight) : left ? 60 : 720;
+  // o nome mais largo cabe no bloco (ícone + faísca à direita), no mesmo corpo em todos
+  // padding + ícone fixo (52) + respiro + faísca à direita (26 + 0,6 × 52 + folga)
+  const room = bw - 30 - 52 - 18 - 76;
+  const labelSize = [44, 42, 40].find((f) => blocks.every((b) => width(b.label ?? '', `800 ${f}px ${FONT.body}`) <= room)) ?? 38;
   // a folha é o assunto: nenhum móvel, figurante ou canto do primeiro plano passa por ela
   // (o cenário só sobra do lado da pessoa)
-  const geo: EnvGeo = { ground: 1140, clear: left ? [40, 400] : [680, 1040], spot: [personX + 150, 950, 330], busy: [[cardX - 20, MAPA.y - 20, cardX + MAPA.w + 20, MAPA.y + MAPA.h + 20]] };
+  const geo: EnvGeo = { ground: 1140, clear: left ? [40, 400] : [680, 1040], spot: [personX + 150, 950, 330], busy: [[cardX - 20, MAPA.y - 20, cardX + W + 20, MAPA.y + MAPA.h + 20]] };
   const penIn = ramp(frame, turnAt - 10, 12);
   // brilho só nos blocos que PASSAM a energizar na virada (no máximo dois)
   const newBoost = laid.filter((l) => l.b.then && (l.b.then.feel ?? l.b.feel) === 'energiza' && (l.b.then.feel !== undefined || (l.b.then.size ?? 0) > (l.b.size ?? 1))).slice(0, 2);
   return (
-    <Stage s={s} geo={geo} focus={{ pessoa: [personX + 150, 950], mapa: [cardX + MAPA.w / 2, MAPA.y + MAPA.h / 2] }}>
+    <Stage s={s} geo={geo} focus={{ pessoa: [personX + 150, 950], mapa: [cardX + W / 2, MAPA.y + MAPA.h / 2] }}>
       {/* a folha do dia */}
       <div
         style={{
           position: 'absolute',
           left: cardX,
           top: MAPA.y,
-          width: MAPA.w,
+          width: W,
           height: MAPA.h,
           borderRadius: 40,
           background: `linear-gradient(170deg, ${C.surface} 0%, ${C.base} 100%)`,
@@ -1163,7 +1179,7 @@ export const Mapa: React.FC<P> = ({ s }) => {
               opacity: card,
             }}
           />
-          <BlocoBox s={s} b={b} i={i} y={by} h={h} x={bx} w={bw} k={k} />
+          <BlocoBox s={s} b={b} i={i} y={by} h={h} x={bx} w={bw} k={k} labelSize={labelSize} />
         </React.Fragment>
       ))}
       {newBoost.map((l, i) => (
@@ -1188,8 +1204,258 @@ export const Mapa: React.FC<P> = ({ s }) => {
   );
 };
 
+// ===================================================================== caderno
+/**
+ * O caderno (fase 2, "demonstrar a ideia"): a página onde o exemplo se ESCREVE. Plano fechado, sem
+ * pessoa — a caneta é a mão dela. Três colunas: o NOME da tarefa (máscara que abre com a caneta na
+ * ponta da tinta), o TEMPO (uma barra; nunca hora nem número) e a ENERGIA (uma pilha: fraca e fria
+ * no que tira, carregando e dourada no que dá). Usa os mesmos `blocks` do mapa — o caderno e o mapa
+ * contam o mesmo dia. Luz com origem: a janela da manhã cai na página em dois painéis.
+ *
+ * Deixas: `cue` de cada bloco (quando o nome começa a ser escrito; sem deixa, um depois do outro),
+ * `from` (a coluna do tempo) e `at` (a coluna da energia).
+ */
+const CADERNO = { x: 50, y: 330, w: 980, h: 1010, head: 160, row: 150, nameX: 60, timeX: 490, unit: 64, energyX: 740, energyW: 210 };
+const CADERNO_HEADS = { pt: ['Tarefa', 'Tempo', 'Energia'], en: ['Task', 'Time', 'Energy'] };
+/** a faixa da semana no alto da página (deixa `semana`): a página é um dos dias anotados */
+const CADERNO_DIAS = { pt: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'], en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] };
+/** A marca de energia: seta + palavra (o neutro é só um traço — "nem tira nem dá"). */
+const ENERGIA: Record<Feel, { icon: string; pt?: string; en?: string }> = {
+  drena: { icon: 'arrow-down', pt: 'tira', en: 'drains' },
+  neutro: { icon: 'remove' },
+  energiza: { icon: 'arrow-up', pt: 'dá', en: 'fuels' },
+};
+/** quadros pra escrever um nome; a barra do tempo cresce em BARRA quadros, uma a cada PASSO */
+const ESCRITA = 13;
+const BARRA = 9;
+const PASSO = 13;
+const smooth = (x: number) => {
+  const t = Math.max(0, Math.min(1, x));
+  return t * t * (3 - 2 * t);
+};
+
+export const Caderno: React.FC<P> = ({ s }) => {
+  const frame = useCurrentFrame();
+  const spr = useSpr();
+  const spec = useSpec();
+  const width = useTextWidth();
+  const accent = useAccent();
+  const pr = s.props ?? {};
+  const G = CADERNO;
+  const blocks = (pr.blocks ?? []).slice(0, 6);
+  const heads = pr.heads ?? CADERNO_HEADS[spec.lang];
+  const page = spr(s.lead - 10);
+  const weekAt = pr.semana ? cue(s, pr.semana) : null;
+  // cada nome começa na sua deixa (sem deixa: um depois do outro, desde o começo da fala)
+  const starts: number[] = [];
+  for (const [i, b] of blocks.entries()) {
+    const after = i ? starts[i - 1] + ESCRITA + 3 : s.lead + 4;
+    starts.push(b.cue ? Math.max(cue(s, b.cue), i ? starts[i - 1] + 6 : 0) : after);
+  }
+  const named = starts[starts.length - 1] + ESCRITA;
+  const timeAt = Math.max(at(s, pr.from, named + 6), named + 4);
+  const barAt = (i: number) => timeAt + i * PASSO;
+  const energyAt = Math.max(at(s, pr.at, barAt(blocks.length - 1) + BARRA + 6), timeAt + 10);
+  // o nome mais largo cabe na coluna, no mesmo corpo em todos
+  const colW = G.timeX - G.nameX - 40;
+  const font = (f: number) => `600 ${f}px ${FONT.display}`;
+  const size = [56, 52, 48, 44].find((f) => blocks.every((b) => width(b.label ?? '', font(f)) <= colW)) ?? 40;
+  const rowsTop = G.y + G.head + 46;
+  const rowY = (i: number) => rowsTop + i * G.row;
+  const base = (i: number) => rowY(i) + G.row / 2 + size * 0.32;
+  const nameW = (i: number) => Math.min(colW, width(blocks[i].label ?? '', font(size)));
+  const barW = (b: Bloco) => (b.size ?? 1) * G.unit;
+  // a caneta: entra, escreve cada nome na ponta da tinta, desce pro próximo, risca as barras e sai
+  const keys: [number, number, number][] = [[starts[0] - 14, G.x + G.w + 120, G.y + G.h + 160]];
+  blocks.forEach((b, i) => {
+    keys.push([starts[i], G.x + G.nameX, base(i)], [starts[i] + ESCRITA, G.x + G.nameX + nameW(i), base(i)]);
+  });
+  blocks.forEach((b, i) => {
+    const mid = rowY(i) + G.row / 2 + 14;
+    keys.push([barAt(i), G.x + G.timeX, mid], [barAt(i) + BARRA, G.x + G.timeX + barW(b), mid]);
+  });
+  keys.push([barAt(blocks.length - 1) + BARRA + 16, G.x + G.timeX + 120, G.y + G.h + 220]);
+  let pen: [number, number] = [keys[0][1], keys[0][2]];
+  for (let j = 0; j < keys.length - 1; j++) {
+    const [ta, xa, ya] = keys[j];
+    const [tb, xb, yb] = keys[j + 1];
+    if (frame >= ta) {
+      const f = tb > ta ? (frame - ta) / (tb - ta) : 1;
+      // escrevendo (mesma linha) a ponta anda reto com a tinta; entre linhas, a mão vai e assenta
+      const e = ya === yb ? Math.max(0, Math.min(1, f)) : smooth(f);
+      pen = [xa + (xb - xa) * e, ya + (yb - ya) * e];
+    }
+  }
+  const penOn = ramp(frame, starts[0] - 14, 8) * (1 - sai(frame, barAt(blocks.length - 1) + BARRA + 4, 12));
+  const PEN = 170;
+  // luz da janela (manhã, do alto à direita) em dois painéis sobre a página, respirando com uma nuvem
+  const luz = 0.85 + 0.15 * Math.sin(frame / 37);
+  return (
+    <Stage s={s} focus={{ pessoa: [540, 820], peca: [G.x + G.w / 2, rowsTop + (blocks.length * G.row) / 2] }}>
+      <div style={{ position: 'absolute', left: G.x, top: G.y, width: G.w, height: G.h, opacity: page, transform: `translateY(${(1 - page) * 50}px)` }}>
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            borderRadius: 36,
+            overflow: 'hidden',
+            background: `linear-gradient(170deg, ${C.surface} 0%, ${C.base} 100%)`,
+            border: `3px solid ${C.borderStrong}`,
+            boxShadow: '0 34px 90px rgba(0,0,0,0.5)',
+          }}
+        >
+          {/* pautas */}
+          {blocks.map((_, i) => (
+            <div key={i} style={{ position: 'absolute', left: 40, right: 40, top: rowY(i) - G.y + G.row, height: 2, background: C.surface3 }} />
+          ))}
+          <div style={{ position: 'absolute', left: 40, right: 40, top: rowsTop - G.y - 2, height: 3, background: C.surface3 }} />
+          {/* luz com origem: a janela cai na página (dois painéis, a sombra do batente no meio) */}
+          {[0, 1].map((k) => (
+            <div
+              key={k}
+              style={{
+                position: 'absolute',
+                left: 540 + k * 210,
+                top: -60,
+                width: 190,
+                height: 620,
+                borderRadius: 24,
+                background: `linear-gradient(200deg, ${C.gold2}2E 0%, ${C.gold2}10 60%, ${C.gold2}00 100%)`,
+                transform: 'skewX(-22deg)',
+                filter: 'blur(14px)',
+                opacity: luz,
+                mixBlendMode: 'screen',
+              }}
+            />
+          ))}
+        </div>
+        {/* espiral do caderno */}
+        {Array.from({ length: 11 }, (_, i) => (
+          <React.Fragment key={i}>
+            <div style={{ position: 'absolute', left: 64 + i * 82, top: 22, width: 18, height: 18, borderRadius: 9, background: C.deep }} />
+            <div style={{ position: 'absolute', left: 66 + i * 82, top: -26, width: 14, height: 58, borderRadius: 7, border: `5px solid ${C.mid}`, borderBottomColor: 'transparent' }} />
+          </React.Fragment>
+        ))}
+      </div>
+      {/* a semana: os cinco dias sobem um atrás do outro na deixa; o de hoje fica aceso */}
+      {weekAt != null
+        ? CADERNO_DIAS[spec.lang].map((d, i) => {
+            const on = spr(weekAt + i * 4, MOLA.pousa);
+            const today = i === 0;
+            return (
+              <div
+                key={d}
+                style={{
+                  position: 'absolute',
+                  left: G.x + G.nameX + i * 136,
+                  top: G.y + 58,
+                  width: 124,
+                  height: 62,
+                  borderRadius: 31,
+                  background: today ? accent : `${accent}1F`,
+                  border: `2px solid ${today ? accent : `${accent}66`}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: Math.min(1, on * 2) * page,
+                  transform: `translateY(${(1 - Math.min(1, on)) * 24}px)`,
+                }}
+              >
+                <div style={{ fontFamily: FONT.body, fontWeight: 800, fontSize: 38, lineHeight: 1, letterSpacing: 2, color: today ? C.deep : accent }}>{d.toUpperCase()}</div>
+              </div>
+            );
+          })
+        : null}
+      {/* títulos das colunas: cada um sobe quando a coluna começa */}
+      {[
+        [G.nameX, starts[0] - 6, 0],
+        [G.timeX, timeAt - 6, 0],
+        [G.energyX, energyAt - 6, G.energyW],
+      ].map(([x, from, w], i) => (
+        <div key={i} style={{ position: 'absolute', left: G.x + x, width: w || undefined, top: G.y + G.head - 22, opacity: page, display: 'flex', justifyContent: w ? 'center' : 'flex-start' }}>
+          <Mascara p={spr(from, MOLA.pousa)}>
+            <div style={{ fontFamily: FONT.body, fontWeight: 800, fontSize: 36, letterSpacing: 4, color: C.mid, whiteSpace: 'nowrap' }}>{heads[i].toUpperCase()}</div>
+          </Mascara>
+        </div>
+      ))}
+      {blocks.map((b, i) => {
+        const pop = spr(energyAt + i * 6, MOLA.pousa);
+        const grow = easeOut(frame, barAt(i), BARRA);
+        const f = FEEL[b.feel];
+        return (
+          <React.Fragment key={i}>
+            {/* o nome: a máscara abre na velocidade da caneta */}
+            <div style={{ position: 'absolute', left: G.x + G.nameX, top: rowY(i), height: G.row, display: 'flex', alignItems: 'center' }}>
+              <Mascara p={(frame - starts[i]) / ESCRITA} modo="escreve" ponta={8}>
+                <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: size, lineHeight: 1.1, color: C.hi, whiteSpace: 'nowrap' }}>{b.label}</div>
+              </Mascara>
+            </div>
+            {/* o tempo: uma barra (quanto do dia), riscada pela caneta */}
+            <div
+              style={{
+                position: 'absolute',
+                left: G.x + G.timeX,
+                top: rowY(i) + G.row / 2 - 15,
+                width: barW(b) * grow,
+                height: 30,
+                borderRadius: 15,
+                background: C.violet2,
+                opacity: grow > 0 ? 1 : 0,
+              }}
+            />
+            {/* a energia: seta + palavra, nas cores do mapa (tira = fria e apagada, dá = dourada) */}
+            <div
+              style={{
+                position: 'absolute',
+                left: G.x + G.energyX + (G.energyW - (ENERGIA[b.feel].pt ? 190 : 110)) / 2,
+                top: rowY(i) + G.row / 2 - 40,
+                width: ENERGIA[b.feel].pt ? 190 : 110,
+                height: 80,
+                borderRadius: 40,
+                background: f.bg,
+                border: `3px solid ${f.edge}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                opacity: Math.min(1, pop * 2),
+                transform: `scale(${0.6 + 0.4 * pop})`,
+                boxShadow: b.feel === 'energiza' ? `0 0 ${30 * Math.min(1, pop)}px ${C.gold}66` : 'none',
+              }}
+            >
+              <Ion name={ENERGIA[b.feel].icon} size={44} color={f.text} />
+              {ENERGIA[b.feel][spec.lang] ? (
+                <div style={{ fontFamily: FONT.body, fontWeight: 800, fontSize: 40, lineHeight: 1, color: f.text, paddingRight: 6 }}>{ENERGIA[b.feel][spec.lang]}</div>
+              ) : null}
+              <Sfx at={energyAt + i * 6 + 3} name={`pop${i % 5}` as SfxName} gain={0.8} />
+            </div>
+          </React.Fragment>
+        );
+      })}
+      {/* a caneta, com a ponta (≈ 11% × 95% da caixa) onde a tinta está */}
+      <div
+        style={{
+          position: 'absolute',
+          left: pen[0] - PEN * 0.11,
+          top: pen[1] - PEN * 0.95,
+          opacity: penOn,
+          filter: 'drop-shadow(10px 18px 14px rgba(5,7,26,0.55))',
+        }}
+      >
+        <Caneta size={PEN} accent={accent} progress={0} />
+      </div>
+    </Stage>
+  );
+};
+
+/** 0→1 com ease-out cúbico entre `from` e `from + dur` (a barra que a caneta risca). */
+const easeOut = (frame: number, from: number, dur: number) => {
+  const t = Math.max(0, Math.min(1, (frame - from) / dur));
+  return 1 - Math.pow(1 - t, 3);
+};
+
 // ===================================================================== verso
-const IdeaCard: React.FC<{ width: number; flip: number; absorbed: boolean }> = ({ width, flip, absorbed }) => {
+const IdeaCard: React.FC<{ width: number; flip: number; absorbed: boolean; words?: number[] }> = ({ width, flip, absorbed, words }) => {
   const spec = useSpec();
   const accent = useAccent();
   const frame = useCurrentFrame();
@@ -1238,7 +1504,28 @@ const IdeaCard: React.FC<{ width: number; flip: number; absorbed: boolean }> = (
           }}
         >
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 10, background: accent }} />
-          <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: claimSize, lineHeight: 1.18, color: C.hi }}>{spec.claim}</div>
+          {/* fase 2: o verso ACENDE com a voz — cada palavra sai de 30% e chega dourada no quadro em
+              que a voz a diz (deixa medida na voz), depois assenta no branco */}
+          <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: claimSize, lineHeight: 1.18, color: C.hi }}>
+            {words
+              ? spec.claim.split(/(\s+)/).map((tok, j) => {
+                  if (!tok.trim()) return tok;
+                  const wAt = words[Math.floor(j / 2)] ?? 0;
+                  const age = frame - wAt;
+                  return (
+                    <span
+                      key={j}
+                      style={{
+                        opacity: interpolate(age, [-2, 3], [0.3, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
+                        color: interpolateColors(Math.max(0, age), [0, 5, 22], [C.gold2, C.gold2, C.hi]),
+                      }}
+                    >
+                      {tok}
+                    </span>
+                  );
+                })
+              : spec.claim}
+          </div>
         </div>
       </div>
     </div>
@@ -1253,16 +1540,30 @@ const VERSO = {
 /** O card vira e a voz lê o verso, palavra por palavra. Sempre a última cena. */
 export const Verso: React.FC<P> = ({ s }) => {
   const frame = useCurrentFrame();
+  const spr = useSpr();
   const spec = useSpec();
   const { fps } = useVideoConfig();
   // fase 1: o giro é mola (MOLA.vira: passa ~3° e assenta), não mais linear em 22 q parando seco
   const flip = spring({ frame: frame - (s.lead - 12), fps, config: MOLA.vira });
   const absorbed = frame > speechEnd(s) + 6;
   const L = VERSO[spec.lang];
+  // o quadro em que a voz chega a cada palavra do verso (o card acende junto)
+  const words = wordFrames(s).map((w) => w.at);
+  // fecho com a marca (fase 2): depois do selo, o glyph se desenha e o nome sobe ao lado
+  const sela = speechEnd(s) + 26;
+  const marca = spr(sela + 8, MOLA.pousa);
   return (
     <Stage s={s} kicker={s.props?.kicker ?? L.kicker} focus={{ pessoa: [540, 750] }}>
       <div style={{ position: 'absolute', top: 300, left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
-        <IdeaCard width={720} flip={flip} absorbed={absorbed} />
+        <IdeaCard width={720} flip={flip} absorbed={absorbed} words={words} />
+      </div>
+      <div style={{ opacity: ramp(frame, sela, 10) }}>
+        <Glyph size={124} cx={418} cy={1428} rings={ramp(frame, sela, 22)} path={ramp(frame, sela + 8, 20)} glow={0.5} />
+      </div>
+      <div style={{ position: 'absolute', left: 494, top: 1386 }}>
+        <Mascara p={marca}>
+          <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: 70, lineHeight: 1.1, color: C.hi }}>Perceva</div>
+        </Mascara>
       </div>
       <div
         style={{
@@ -1295,5 +1596,6 @@ export const MOLDE_SCENES: Record<MoldeLine['scene'], React.FC<P>> = {
   cena: Cena,
   pensa: Pensa,
   mapa: Mapa,
+  caderno: Caderno,
   verso: Verso,
 };

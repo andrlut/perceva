@@ -17,7 +17,7 @@ export type PieceName = string;
 /** `stay`: a peça já estava em cena na fala anterior (mesmo encaixe) — aparece pousada, sem cair de novo. */
 export type Obj = { p: PieceName; cue?: string; out?: string; stay?: boolean };
 
-export type SceneKind = 'pessoa' | 'semana' | 'virada' | 'multidao' | 'comparar' | 'lista' | 'cena' | 'pensa' | 'mapa' | 'verso';
+export type SceneKind = 'pessoa' | 'semana' | 'virada' | 'multidao' | 'comparar' | 'lista' | 'cena' | 'pensa' | 'mapa' | 'caderno' | 'verso';
 
 // ------------------------------------------------------------ câmera, passagem, ambiente
 
@@ -45,7 +45,10 @@ export type Hora = 'manha' | 'dia' | 'noite';
 export type Feel = 'drena' | 'neutro' | 'energiza';
 /** Um bloco do dia: o ícone diz O QUE é, a cor diz COMO pesa. Nunca hora nem número. */
 export type Bloco = {
+  /** Ionicons — no caderno é opcional (lá quem diz o que é a tarefa é o nome) */
   icon: string;
+  /** o NOME da tarefa (fase 2, "demonstrar a ideia"): escrito no caderno e dentro do bloco do mapa; ≤ 16 caracteres */
+  label?: string;
   feel: Feel;
   /** comprimento relativo no dia (1..3, default 1) */
   size?: number;
@@ -104,6 +107,10 @@ export type SceneProps = {
   blocks?: Bloco[];
   /** mapa: de que lado a pessoa fica (default esquerda) */
   side?: 'left' | 'right';
+  /** caderno: os títulos das três colunas (tarefa, tempo, energia); default no idioma */
+  heads?: string[];
+  /** caderno: deixa em que a faixa da semana acende no alto da página */
+  semana?: string;
   // verso: o selo dourado depois da leitura (default "IDEIA ABSORVIDA"; as portas trocam)
   done?: string;
 };

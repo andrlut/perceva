@@ -49,6 +49,34 @@ export const sai = (frame: number, at: number, dur = 8) =>
     easing: Easing.in(Easing.cubic),
   });
 
+/**
+ * Texto por máscara (requinte, fase 2): texto nunca entra só por fade.
+ *  - `sobe`: o bloco sobe de trás de uma linha invisível (a base do próprio texto), como letreiro.
+ *  - `escreve`: a máscara abre da esquerda pra direita com a ponta macia — é a caneta escrevendo.
+ * `p` vai de 0 a 1 (rampa ou mola da marca; a passada da mola é cortada em 1).
+ */
+export const Mascara: React.FC<{ p: number; modo?: 'sobe' | 'escreve'; children: React.ReactNode; style?: React.CSSProperties; ponta?: number }> = ({
+  p,
+  modo = 'sobe',
+  children,
+  style,
+  ponta = 12,
+}) => {
+  const t = Math.max(0, Math.min(1, p));
+  if (modo === 'escreve') {
+    // a borda da tinta anda de -ponta% a 100%: em p = 1 o texto inteiro está aceso
+    const edge = -ponta + t * (100 + ponta);
+    const mask = `linear-gradient(90deg, #000 0%, #000 ${edge}%, transparent ${edge + ponta}%)`;
+    return <div style={{ ...style, WebkitMaskImage: mask, maskImage: mask }}>{children}</div>;
+  }
+  // a folga embaixo (0,18 em) deixa as descendentes (g, p, ç) inteiras dentro da máscara
+  return (
+    <div style={{ ...style, overflow: 'hidden', paddingBottom: '0.18em', marginBottom: '-0.18em' }}>
+      <div style={{ transform: `translateY(${(1 - t) * 108}%)`, opacity: t > 0 ? 1 : 0 }}>{children}</div>
+    </div>
+  );
+};
+
 export const useSpring = (from: number, config: { damping: number; stiffness: number; mass: number } = MOLA.entra) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();

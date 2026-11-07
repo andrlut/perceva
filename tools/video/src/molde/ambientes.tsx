@@ -579,6 +579,65 @@ export const Ambiente: React.FC<{ amb: AmbSpec; geo: EnvGeo; part: 'back' | 'mid
   );
 };
 
+/**
+ * Luz com origem (requinte, fase 2): o facho da janela da casa atravessando o ar da sala, do vidro
+ * pro chão, na diagonal (o sol da manhã vem do alto à direita), com poeira boiando dentro. Fica por
+ * cima de quem está no caminho dele (luz no ar, não no fundo) e respira com uma nuvem. Só na casa de
+ * manhã ou de dia; à noite a janela não acende nada. As coordenadas são as da janela de CasaBack.
+ */
+export const Luz: React.FC<{ amb: AmbSpec; geo: EnvGeo; t: number }> = ({ amb, geo, t }) => {
+  const hora = amb.hora ?? HORA[amb.tipo];
+  if (amb.tipo !== 'casa' || hora === 'noite') return null;
+  const s = shiftOf(amb, geo);
+  // janela (590..930, 330..750) projetada pra baixo e pra esquerda até o chão
+  const [dx, dy] = [-330, 520];
+  const win = { x0: 600, x1: 920, y0: 350, y1: 740 };
+  // luz SEM origem à vista não vale: se a cena cobre três quartos da janela (a folha do mapa), sem
+  // facho. Uma ficha pequena na frente do vidro não apaga a janela.
+  const area = (win.x1 - win.x0) * (win.y1 - win.y0);
+  const covered = (geo.busy ?? []).reduce((acc, [a, b, c, d]) => {
+    const w = Math.min(c, win.x1) - Math.max(a, win.x0);
+    const h = Math.min(d, win.y1 + s) - Math.max(b, win.y0 + s);
+    return acc + (w > 0 && h > 0 ? w * h : 0);
+  }, 0);
+  if (covered > area * 0.75) return null;
+  const warm = hora === 'manha';
+  const tint = warm ? C.gold2 : C.hi;
+  const breathe = 0.82 + 0.18 * Math.sin(t / 41) * Math.sin(t / 17 + 1);
+  const motes = Array.from({ length: 16 }, (_, i) => {
+    const u = ((i * 0.618) % 1) * 0.9 + 0.05;
+    const v = ((i * 0.381 + 0.13) % 1) * 0.85 + 0.08;
+    const drift = (t * (0.18 + (i % 5) * 0.05) + i * 37) % 120;
+    const x = win.x0 + (win.x1 - win.x0) * u + dx * v + Math.sin(t / (23 + i) + i) * 14;
+    const y = win.y0 + (win.y1 - win.y0) * u * 0.4 + dy * v - drift * 0.4 + s;
+    return { x, y, r: 2 + (i % 3), o: 0.25 + 0.35 * (0.5 + 0.5 * Math.sin(t / (11 + (i % 7)) + i)) };
+  });
+  return (
+    <AbsoluteFill style={{ mixBlendMode: 'screen', opacity: breathe }}>
+      <svg width={1080} height={1920} viewBox="0 0 1080 1920" style={{ position: 'absolute', inset: 0, overflow: 'visible' }}>
+        <defs>
+          <linearGradient id="luz-facho" x1="1" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor={tint} stopOpacity={warm ? 0.36 : 0.24} />
+            <stop offset="0.55" stopColor={tint} stopOpacity={warm ? 0.15 : 0.1} />
+            <stop offset="1" stopColor={tint} stopOpacity={0} />
+          </linearGradient>
+          <filter id="luz-borra" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation={18} />
+          </filter>
+        </defs>
+        <path
+          d={`M${win.x0} ${win.y0 + s} L${win.x1} ${win.y0 + s} L${win.x1} ${win.y1 + s} L${win.x1 + dx} ${win.y1 + dy + s} L${win.x0 + dx} ${win.y1 + dy + s} L${win.x0 + dx} ${win.y0 + dy + s} Z`}
+          fill="url(#luz-facho)"
+          filter="url(#luz-borra)"
+        />
+        {motes.map((m, i) => (
+          <circle key={i} cx={m.x} cy={m.y} r={m.r + 0.5} fill={tint} opacity={Math.min(1, m.o * 1.4)} />
+        ))}
+      </svg>
+    </AbsoluteFill>
+  );
+};
+
 /** Foco de luz na protagonista: um halo da cor da cena atrás dela e o resto um pouco mais escuro. */
 export const Spot: React.FC<{ geo: EnvGeo; accent: string }> = ({ geo, accent }) => {
   const [x, y, r] = geo.spot;
