@@ -916,6 +916,8 @@ const en = {
       videoExpandA11y: 'Expand the video',
       videoUnmuteA11y: 'Turn the video sound on',
       videoMuteA11y: 'Turn the video sound off',
+      videoSpeedA11y: 'Video speed: {{speed}}. Tap to change',
+      audioSpeedA11y: 'Audio speed: {{speed}}. Tap to change',
       videoError: "Couldn't load the video. Try again.",
     },
     reels: {

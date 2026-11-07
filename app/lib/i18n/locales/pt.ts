@@ -913,6 +913,8 @@ const pt: Translations = {
       videoExpandA11y: 'Ampliar o vídeo',
       videoUnmuteA11y: 'Ligar o som do vídeo',
       videoMuteA11y: 'Desligar o som do vídeo',
+      videoSpeedA11y: 'Velocidade do vídeo: {{speed}}. Toque para mudar',
+      audioSpeedA11y: 'Velocidade do áudio: {{speed}}. Toque para mudar',
       videoError: 'Não foi possível carregar o vídeo. Tente de novo.',
     },
     reels: {
