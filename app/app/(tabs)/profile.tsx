@@ -26,6 +26,7 @@ import {
   useLoadedSettings,
   useSettingsStore,
   type HexGrain,
+  type PracticesLayout,
   type LanguageCode,
   type ThemeMode,
   type WeekStart,
@@ -382,6 +383,17 @@ export default function SettingsScreen() {
             ]}
             onChange={(v) => setSetting('hexGrain', v)}
             note={t('profile.hexGrain.note')}
+          />
+          <Divider />
+          <SegmentedRow<PracticesLayout>
+            label={t('profile.fields.practicesLayout')}
+            value={settings.practicesLayout}
+            options={[
+              { value: 'tabs', label: t('profile.practicesLayout.tabs') },
+              { value: 'classic', label: t('profile.practicesLayout.classic') },
+            ]}
+            onChange={(v) => setSetting('practicesLayout', v)}
+            note={t('profile.practicesLayout.note')}
           />
         </Card>
 

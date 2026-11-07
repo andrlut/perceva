@@ -19,6 +19,13 @@ export type LanguageCode = 'en' | 'pt';
 export type WeekStart = 'sunday' | 'monday';
 /** What a pillar hex plots: the 6 dimensions or the 12 subs. */
 export type HexGrain = 'dims' | 'subs';
+/**
+ * The Práticas tab's shape. 'tabs' = Hoje | Todas pages with one "+"
+ * (Onboarding simples, 2026-11); 'classic' = the layout before it: no
+ * pages, the header swipe steps days, and the floating calendar + "Todas
+ * as práticas" buttons. Offered in Ajustes for whoever preferred the old one.
+ */
+export type PracticesLayout = 'tabs' | 'classic';
 
 export interface AppSettings extends ClaudeLinkSettings {
   theme: ThemeMode;
@@ -27,6 +34,7 @@ export interface AppSettings extends ClaudeLinkSettings {
   /** Which grain the three Eu hexes open on. The pill beside each hex still
    *  flips it for the visit; this is only where it starts. */
   hexGrain: HexGrain;
+  practicesLayout: PracticesLayout;
   /** Show a confirm dialog before completing a 4★ or 5★ task. */
   confirmHighDifficultyComplete: boolean;
   /** Master notification switch — gates every scheduled notification. */
@@ -98,6 +106,7 @@ const DEFAULTS: AppSettings = {
   language: 'en',
   weekStart: 'sunday',
   hexGrain: 'dims',
+  practicesLayout: 'tabs',
   confirmHighDifficultyComplete: true,
   notificationsEnabled: false,
   dailyReminder: true,
@@ -156,6 +165,7 @@ export const useSettingsStore = create<Store>((set, get) => ({
           ...parsed,
           language,
           hexGrain: parsed.hexGrain === 'subs' ? 'subs' : 'dims',
+          practicesLayout: parsed.practicesLayout === 'classic' ? 'classic' : 'tabs',
           briefHour: clampInt(parsed.briefHour, 0, 23, DEFAULTS.briefHour),
           briefMinute: clampInt(parsed.briefMinute, 0, 59, DEFAULTS.briefMinute),
           dayEndHour: clampInt(parsed.dayEndHour, 0, 23, DEFAULTS.dayEndHour),
