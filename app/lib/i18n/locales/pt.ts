@@ -2854,6 +2854,7 @@ const pt: Translations = {
       language: 'Idioma',
       weekStart: 'Início da semana',
       hexGrain: 'Hexágono abre em',
+      practicesLayout: 'Aba Práticas',
       confirmHighDifficulty: 'Confirmar práticas difíceis',
       confirmHighDifficultyDescription: 'Pede confirmação antes de concluir práticas de 4★ ou 5★. Evita toques acidentais.',
     },
@@ -2873,6 +2874,11 @@ const pt: Translations = {
     weekStart: {
       sunday: 'Domingo',
       monday: 'Segunda',
+    },
+    practicesLayout: {
+      tabs: 'Hoje · Todas',
+      classic: 'Clássica',
+      note: 'Clássica: sem as páginas Hoje e Todas; deslizar no topo troca o dia e voltam os botões de calendário e Todas as práticas.',
     },
     hexGrain: {
       dims: '6 dimensões',

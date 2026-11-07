@@ -2843,6 +2843,7 @@ const en = {
       language: 'Language',
       weekStart: 'Week starts on',
       hexGrain: 'Hexagon opens on',
+      practicesLayout: 'Practices tab',
       confirmHighDifficulty: 'Confirm hard practices',
       confirmHighDifficultyDescription: 'Ask before completing a 4★ or 5★ practice. Stops accidental taps.',
     },
@@ -2862,6 +2863,11 @@ const en = {
     weekStart: {
       sunday: 'Sunday',
       monday: 'Monday',
+    },
+    practicesLayout: {
+      tabs: 'Today · All',
+      classic: 'Classic',
+      note: 'Classic: no Today / All pages; swiping the top steps days, and the calendar and All practices buttons come back.',
     },
     hexGrain: {
       dims: '6 dimensions',
