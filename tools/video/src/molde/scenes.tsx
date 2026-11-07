@@ -22,6 +22,7 @@ import { C, DimId, FONT, dimColor } from '../theme';
 import { Scene, cue, speechEnd } from '../timeline';
 import { Abajur, AmbSpec, Ambiente, AmbienteMini, EnvGeo, Rect, Spot, Vinheta } from './ambientes';
 import { CameraRig, FocusMap, Layer, cameraAt, focusPoint } from './camera';
+import { Sfx } from './sfx';
 import { Ion, Peca, pieceBox } from './Peca';
 import type { Bloco, Chip, Feel, MoldeLine, MoldeSpec, Mood, Obj, Panel } from './spec';
 
@@ -121,6 +122,7 @@ const Stage: React.FC<{ s: MS; geo?: EnvGeo; focus?: FocusMap; kicker?: string; 
   const kick = <Kicker text={kicker ?? pr.kicker} />;
   return (
     <CameraRig cam={cam}>
+      {cueAt != null ? <Sfx at={cueAt - 2} name={pr.camera?.move === 'push' ? 'punch' : 'whoosh'} gain={pr.camera?.move === 'push' ? 1 : 0.7} /> : null}
       <AbsoluteFill>
         {/* sem ambiente, a sobrancelha fica por baixo como sempre foi (o vídeo antigo sai idêntico) */}
         {amb ? null : kick}
@@ -177,7 +179,10 @@ const Drop: React.FC<{ s: MS; p: string; cueAt?: string; out?: string; stay?: bo
   const spr = useSpr();
   const accent = useAccent();
   // `stay`: já estava em cena (com corte seco da fala anterior) — sem queda, sem sumir no corte
-  const t = stay ? 1 : spr(at(s, cueAt, s.lead + delay), { damping: 11, stiffness: 140 });
+  const dropAt = at(s, cueAt, s.lead + delay);
+  const t = stay ? 1 : spr(dropAt, { damping: 11, stiffness: 140 });
+  // v4: amassa no impacto (a mola passa do alvo): achata e alarga mantendo o volume, depois assenta
+  const sq = Math.max(0, t - 1) * 2.2;
   const gone = out ? spr(cue(s, out), { damping: 20, stiffness: 80 }) : 0;
   const land = fall < 120;
   // desenho que flutua por cima de móvel (estante, mesa): vai numa ficha redonda, como o ícone do app,
@@ -208,10 +213,11 @@ const Drop: React.FC<{ s: MS; p: string; cueAt?: string; out?: string; stay?: bo
         top,
         left,
         opacity: Math.min(1, t * 2) * (1 - gone),
-        transform: `translateY(${(1 - t) * -fall - gone * 160}px) scale(${(land ? 0.7 + 0.3 * t : 1) * (1 - 0.3 * gone)})`,
-        transformOrigin: land ? '50% 100%' : undefined,
+        transform: `translateY(${(1 - t) * -fall - gone * 160}px) scale(${(land ? 0.7 + 0.3 * t : 1) * (1 - 0.3 * gone)}) scale(${1 + 0.45 * sq}, ${1 - 0.55 * sq})`,
+        transformOrigin: land ? '50% 100%' : '50% 100%',
       }}
     >
+      {stay ? null : <Sfx at={dropAt + 5} name="pop" />}
       {base ? <div style={{ transform: 'translateY(-100%)', display: 'flex', alignItems: 'flex-end' }}>{piece}</div> : piece}
     </div>
   );
@@ -290,8 +296,9 @@ export const Pessoa_: React.FC<P> = ({ s }) => {
   return (
     <Stage s={s} geo={geo} focus={{ peca: [slots[0].left + 140, slots[0].top + 140] }}>
       <Clock s={s} mode={pr.clock} turnAt={turnAt} top={330} left={640} size={230} />
+      {pr.turn && positive ? <Sfx at={turnAt} name="chime" /> : null}
       <div style={{ position: 'absolute', top: 640, left: 380, opacity: me, transform: `scale(${0.85 + 0.15 * me})` }}>
-        <Pessoa t={frame} size={320} mood={mood} arms={turned && positive ? 'up' : (pr.arms ?? 'down')} sweat={pr.sweat && !turned} accent={C.violet} />
+        <Pessoa t={frame} size={320} mood={mood} since={turned ? frame - turnAt : frame} arms={turned && positive ? 'up' : (pr.arms ?? 'down')} sweat={pr.sweat && !turned} accent={C.violet} />
       </div>
       {pr.glow || (pr.turn && positive) ? (
         <div style={{ position: 'absolute', top: 600, left: 340 }}>
@@ -361,11 +368,13 @@ export const Virada: React.FC<P> = ({ s }) => {
   return (
     <Stage s={s} geo={geo} focus={{ pessoa: pr.helper ? [240, 790] : [530, 790], peca: pr.helper ? [900, 770] : [750, 860] }}>
       <Clock s={s} mode={pr.clock} turnAt={aTurn} top={300} left={190} size={200} />
+      {(pr.to ?? 'feliz') === 'feliz' ? <Sfx at={aTurn} name="chime" /> : null}
       <div style={{ position: 'absolute', top: 600, left: pr.helper ? 90 : 380 }}>
         <Pessoa
           t={frame}
           size={300}
           mood={happy ? (pr.to ?? 'feliz') : (pr.mood ?? 'cansado')}
+          since={happy ? frame - aTurn : frame}
           // com `gives` ela já começa segurando a peça (braço estendido); sem, estende na entrega
           arms={happy ? 'up' : pr.gives || frame >= aGive ? 'out' : 'down'}
           accent={C.violet}
@@ -471,11 +480,13 @@ const PanelBox: React.FC<{
   from: number;
   win: number;
   lose: number;
+  /** quadros desde que este painel virou o vencedor (o humor dele vira aí) */
+  winSince?: number;
   panel: Panel;
   seed: number;
   labelSize: number;
   pill?: { p?: string; text: string };
-}> = ({ s, g, x, from, win, lose, panel, seed, labelSize, pill }) => {
+}> = ({ s, g, x, from, win, lose, winSince, panel, seed, labelSize, pill }) => {
   const frame = useCurrentFrame();
   const spr = useSpr();
   const accent = useAccent();
@@ -526,7 +537,7 @@ const PanelBox: React.FC<{
         </div>
       ) : null}
       <div style={{ position: 'absolute', top: ps.top, left: ps.left }}>
-        <Pessoa t={frame} size={ps.size} seed={seed} arms={win > 0.5 ? 'up' : 'down'} mood={mood} accent={seed ? C.violet2 : C.violet} skin={seed ? '#8D5A3B' : '#F2C9A0'} />
+        <Pessoa t={frame} size={ps.size} seed={seed} arms={win > 0.5 ? 'up' : 'down'} mood={mood} since={win > 0.5 && winSince != null ? winSince : frame} accent={seed ? C.violet2 : C.violet} skin={seed ? '#8D5A3B' : '#F2C9A0'} />
       </div>
       {panel.object ? (
         <div
@@ -589,6 +600,7 @@ export const Comparar: React.FC<P> = ({ s }) => {
   const width = useTextWidth();
   const pr = s.props ?? {};
   const w = ramp(frame, at(s, pr.win, 1e9), 16);
+  const winSfx = <Sfx at={at(s, pr.win, 1e9) + 8} name="chime" />;
   const winL = pr.winner === 'left' ? w : 0;
   const winR = pr.winner === 'right' ? w : 0;
   // sem chips, a faixa de baixo fica vazia: o painel alto ocupa ela
@@ -602,9 +614,10 @@ export const Comparar: React.FC<P> = ({ s }) => {
   const focus: FocusMap = g === PANEL.curto ? { pessoa: right ? [785, 650] : [295, 650], peca: right ? [880, 600] : [390, 600] } : { pessoa: at_(0.36), peca: at_(0.74) };
   return (
     <Stage s={s} focus={focus}>
+      {winSfx}
       {/* a protagonista fica no lado que ganha ("você"); o outro lado é outra pessoa */}
-      <PanelBox s={s} g={g} x={g.xs[0]} from={s.lead - 4} win={winL} lose={winR} panel={pr.left!} seed={pr.winner === 'right' ? 3 : 0} labelSize={labelSize} pill={pr.pill} />
-      <PanelBox s={s} g={g} x={g.xs[1]} from={s.lead + 4} win={winR} lose={winL} panel={pr.right!} seed={pr.winner === 'right' ? 0 : 3} labelSize={labelSize} pill={pr.pill} />
+      <PanelBox s={s} g={g} x={g.xs[0]} from={s.lead - 4} win={winL} lose={winR} winSince={frame - at(s, pr.win, 1e9) - 8} panel={pr.left!} seed={pr.winner === 'right' ? 3 : 0} labelSize={labelSize} pill={pr.pill} />
+      <PanelBox s={s} g={g} x={g.xs[1]} from={s.lead + 4} win={winR} lose={winL} winSince={frame - at(s, pr.win, 1e9) - 8} panel={pr.right!} seed={pr.winner === 'right' ? 0 : 3} labelSize={labelSize} pill={pr.pill} />
       {pr.chips?.length ? <Chips s={s} chips={pr.chips} top={1010} left={pr.winner === 'right' ? 560 : 70} width={450} /> : null}
     </Stage>
   );
@@ -622,8 +635,9 @@ export const Lista: React.FC<P> = ({ s }) => {
   const geo: EnvGeo = { ground: 712, clear: [340, 720], spot: [530, 510, 320], busy: n ? [[90, 790, 990, 790 + n * 132]] : [] };
   return (
     <Stage s={s} geo={geo} focus={{ peca: [540, 1000] }}>
+      {pr.to === 'feliz' && pr.mood !== 'feliz' ? <Sfx at={last} name="chime" /> : null}
       <div style={{ position: 'absolute', top: 280, left: 360, opacity: me }}>
-        <Pessoa t={frame} size={340} mood={frame >= last ? (pr.to ?? pr.mood ?? 'ok') : (pr.mood ?? 'ok')} arms={pr.arms ?? 'down'} accent={C.violet} />
+        <Pessoa t={frame} size={340} mood={frame >= last ? (pr.to ?? pr.mood ?? 'ok') : (pr.mood ?? 'ok')} since={frame >= last ? frame - last : frame} arms={pr.arms ?? 'down'} accent={C.violet} />
       </div>
       <Chips s={s} chips={(pr.items ?? []).slice(0, 3)} top={790} left={90} width={900} size={64} />
     </Stage>

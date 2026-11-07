@@ -40,6 +40,12 @@ const slug = arg('slug');
 const onlyIdea = arg('idea');
 const langArg = arg('lang', 'both');
 const rev = Number(arg('rev', '1'));
+// --identity <id>: comparação de identidade (src/identidade) — stills e render saem à parte
+// (out/molde/<key>/identidade/<id>.mp4, sheet-<id>.png), sem pub/ nem video.json
+const identity = arg('identity');
+// --sfx: com os efeitos sonoros sintetizados (scripts/sfx.mjs) por baixo da voz
+const sfxOn = argv.includes('--sfx');
+const idProps = { ...(identity ? { identity } : {}), ...(sfxOn ? { sfx: true } : {}) };
 const silent = argv.includes('--silent');
 const LANGS = langArg === 'both' ? ['pt', 'en'] : [langArg];
 const catalog = JSON.parse(fs.readFileSync(path.join(root, 'src/molde/catalog.json'), 'utf8'));
@@ -407,8 +413,8 @@ async function stills(ctx) {
   for (const id of ctx.ideaIds)
     for (const lang of LANGS) {
       const k = key(id, lang);
-      const composition = await selectComposition({ serveUrl, id: 'Molde', inputProps: { specKey: k, spec: null, scenes: [] } });
-      const dir = path.join(outDir(k), 'stills');
+      const composition = await selectComposition({ serveUrl, id: 'Molde', inputProps: { specKey: k, spec: null, scenes: [], ...idProps } });
+      const dir = path.join(outDir(k), identity ? `stills-${identity}` : 'stills');
       fs.rmSync(dir, { recursive: true, force: true });
       fs.mkdirSync(dir, { recursive: true });
       const files = [];
@@ -423,11 +429,11 @@ async function stills(ctx) {
           : [s.scene === 'verso' ? s.start + Math.round(s.frames * 0.9) : s.start + s.lead + s.speech - 6];
         for (const frame of frames) {
           const f = path.join(dir, `${String(++n).padStart(2, '0')}.png`);
-          await renderStill({ serveUrl, composition, frame, output: f, scale, inputProps: { specKey: k, spec: null, scenes: [] } });
+          await renderStill({ serveUrl, composition, frame, output: f, scale, inputProps: { specKey: k, spec: null, scenes: [], ...idProps } });
           files.push(f);
         }
       }
-      const sheet = path.join(outDir(k), 'sheet.png');
+      const sheet = path.join(outDir(k), identity ? `sheet-${identity}.png` : 'sheet.png');
       const cols = fracs ? fracs.length : Math.min(4, files.length);
       fs.writeFileSync(path.join(dir, 'index.json'), JSON.stringify(composition.props.scenes.map((s, i) => ({ n: i + 1, id: s.id, scene: s.scene, caption: s.caption }))));
       execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-framerate', '1', '-start_number', '1', '-i', path.join(dir, '%02d.png'), '-vf', `tile=${cols}x${Math.ceil(files.length / cols)}:padding=12:color=0x0A0E26`, '-frames:v', '1', sheet]);
@@ -455,8 +461,9 @@ async function render(ctx) {
       const preview = bridge || !!readJson(path.join(pubDir(k), 'spec.json')).silent;
       fs.mkdirSync(path.join(dir, 'pub'), { recursive: true });
       // prévia sem voz: só o mp4 de conferência, sem pub/ nem video.json (não tem como ir pro bucket)
-      const full = path.join(dir, preview ? 'preview.mp4' : 'video.mp4');
-      const inputProps = { specKey: k, spec: null, scenes: [] };
+      if (identity) fs.mkdirSync(path.join(dir, 'identidade'), { recursive: true });
+      const full = identity ? path.join(dir, 'identidade', `${identity}${sfxOn ? '-som' : ''}.mp4`) : path.join(dir, preview ? 'preview.mp4' : 'video.mp4');
+      const inputProps = { specKey: k, spec: null, scenes: [], ...idProps };
       const composition = await selectComposition({ serveUrl, id: 'Molde', inputProps });
       let shown = -1;
       await renderMedia({
@@ -471,6 +478,10 @@ async function render(ctx) {
         },
       });
       console.log('');
+      if (identity) {
+        console.log(`✓ ${k}: comparação de identidade "${identity}" · ${path.relative(repo, full)} (não sobe)`);
+        continue;
+      }
       if (bridge) {
         console.log(`✓ ${k}: abertura de conferência · ${path.relative(repo, full)} (o vídeo da porta sai do tour.mjs render)`);
         continue;

@@ -9,7 +9,7 @@
 //    ponteiro girando) controladas por `t` = frame, pra reaproveitar em
 //    qualquer cena sem redesenhar.
 import React from 'react';
-import { ACTIVE } from '../identidade/active';
+import { useIdentity } from '../identidade/context';
 import type { PessoaProps } from '../identidade/types';
 import { C, dimColor } from '../theme';
 
@@ -94,7 +94,11 @@ export const PessoaV0: React.FC<
  * (src/identidade/active.ts); o contrato de props e a caixa 200×260 são os
  * mesmos da PessoaV0, então nenhuma cena muda quando a identidade troca.
  */
-export const Pessoa: React.FC<PessoaProps> = (props) => <ACTIVE.Pessoa {...props} />;
+export const Pessoa: React.FC<PessoaProps> = (props) => {
+  // a identidade do vídeo (src/identidade/context.ts) — por padrão, a ativa
+  const { Pessoa: P } = useIdentity();
+  return <P {...props} />;
+};
 
 /** Casa — telhado na cor de destaque, janela que acende. */
 export const Casa: React.FC<Base & { lit?: number }> = ({ size = 260, accent = C.gold, lit = 1 }) => (

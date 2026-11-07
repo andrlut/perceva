@@ -221,7 +221,8 @@ encurtar sem regravar a voz.
 | `pull` | começa perto e abre, revelando o lugar | abrir um lugar novo, o "agora olha o todo" |
 | `pan-left` / `pan-right` | atravessa o palco de lado; o fundo anda menos que a pessoa e o primeiro plano anda mais | caminho, rotina, rua, "enquanto isso" |
 | `drift` | flutua devagar, quase parada | pensar, manhã calma, respiro |
-| `still` | nada (o mesmo que não pôr `camera`) | — |
+| `dolly` | (v4) o fundo cresce e a pessoa fica do mesmo tamanho; o fundo desfoca um pouco | "caiu a ficha" — **uma vez por vídeo**, com `cue` |
+| `still` | só a câmera na mão (o mesmo que não pôr `camera`) | — |
 
 - `focus`: `pessoa` (default), `peca` (a peça principal da cena: a da mão,
   a do balão, a 1ª que cai), `mapa` (só na cena mapa), ou uma região fixa:
@@ -233,14 +234,40 @@ encurtar sem regravar a voz.
 - `forca`: `leve` (≈ metade) ou `forte` (≈ o dobro; pode cortar o que está
   na borda oposta ao foco — use só quando o resto da cena pode sair).
 - A sobrancelha e a legenda nunca se movem.
+- **Câmera na mão (v4, sempre ligada):** toda cena com palco respira 3–5 px e
+  ±0,2°, por profundidade (o fundo anda menos). Desligar: `HANDHELD = 0` em
+  `src/molde/camera.tsx`.
+- **Soco de mola (v4):** com `cue`, o movimento é uma mola que passa ~4% do
+  alvo e assenta em ~15 quadros (antes era uma curva de 40 quadros).
+- **Rack focus (v4):** no `push` (e no `dolly`) o fundo desfoca enquanto a
+  câmera chega (até |1 − profundidade| × 7 px); no `pull` ele volta a focar.
 
 `transicao` diz como **esta** cena entra (a passagem da anterior pra ela):
 `fade` (a de sempre), `zoom` (atravessa: a antiga cresce, a nova chega
 grande e assenta), `desliza` (a câmera continua andando de lado), `corte`
-(seco). Sem `transicao`: cena com câmera entra com a passagem que combina
+(seco), `hexa` (v4: a antiga cresce rumo ao centro e some, a nova nasce de
+dentro de um hexágono que se abre com aro dourado — use em "outro caminho",
+virada de tema e no verso; abre no centro do quadro, então numa cena com a
+pessoa no meio vira um match cut pelo rosto dela) e `chicote` (v4: whip pan,
+as duas cenas correm juntas pro lado com desfoque horizontal — "em outro
+lugar", "enquanto isso"). Sem `transicao`: cena com câmera entra com a passagem que combina
 com o movimento (pan → `desliza` no mesmo sentido; push/pull/drift →
 `zoom`), cena sem câmera entra com `fade` como sempre. Todas cabem no mesmo
 crossfade de 10 frames: a duração do vídeo não muda.
+
+## Som (`--sfx`, v4) e identidade (`--identity`)
+
+- `node scripts/molde.mjs render … --sfx` toca efeitos **sintetizados no ffmpeg**
+  (`node scripts/sfx.mjs` → `public/sfx/*.wav`, sem licença de terceiros) por
+  baixo da voz: whoosh nas passagens que andam (zoom, desliza, hexa,
+  chicote), soco grave no `push` com deixa, "bloop" quando uma peça pousa,
+  sininho quando alguém vira feliz (o hexágono acende), ar subindo antes do
+  verso. Volumes em `src/molde/sfx.tsx` (~−18 a −24 dB sob a voz). Sem
+  `--sfx`, silêncio como sempre. Ainda experimental: o André ouve antes de
+  virar padrão.
+- `--identity <id>` (stills e render) desenha o elenco com outra opção de
+  `src/identidade` sem mexer em `active.ts`; o mp4 sai em
+  `out/molde/<key>/identidade/<id>[-som].mp4` e **não sobe**.
 
 ## Mapa do dia (`mapa`)
 

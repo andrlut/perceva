@@ -46,7 +46,15 @@
                   "en": "Where"
                 }
               }
-            ]
+            ],
+            "camera": {
+              "move": "push",
+              "forca": "forte",
+              "cue": {
+                "pt": "Por onde",
+                "en": "Where"
+              }
+            }
           }
         },
         {
@@ -70,7 +78,8 @@
             "at": {
               "pt": "uma aula",
               "en": "a class"
-            }
+            },
+            "transicao": "chicote"
           }
         },
         {
@@ -131,7 +140,7 @@
             },
             "ambiente": "casa",
             "hora": "manha",
-            "transicao": "fade",
+            "transicao": "hexa",
             "setting": "chao",
             "holding": "caderno",
             "mood": "ok",
@@ -227,9 +236,8 @@
             "hora": "manha",
             "transicao": "zoom",
             "camera": {
-              "move": "push",
+              "move": "dolly",
               "focus": "mapa",
-              "forca": "leve",
               "cue": {
                 "pt": "dá pra ver",
                 "en": "you can see"
@@ -340,7 +348,14 @@
         },
         {
           "id": "do",
-          "scene": "verso"
+          "scene": "verso",
+          "props": {
+            "transicao": "hexa",
+            "camera": {
+              "move": "push",
+              "forca": "leve"
+            }
+          }
         }
       ]
     }

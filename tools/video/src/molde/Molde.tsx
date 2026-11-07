@@ -4,10 +4,14 @@ import { linearTiming, TransitionSeries } from '@remotion/transitions';
 import { Background } from '../components';
 import { Captions } from '../Captions';
 import { FADE, FPS, Timing, buildTimeline } from '../timeline';
+import { ACTIVE } from '../identidade/active';
+import { IdentityContext } from '../identidade/context';
+import { OPTIONS } from '../identidade';
 import { VariantContext } from '../variant';
 import { MOLDE_SCENES, MS, SpecContext } from './scenes';
 import type { MoldeSpec } from './spec';
-import { passagem } from './transicao';
+import { SfxContext, Sfx } from './sfx';
+import { passagem, passagemKind } from './transicao';
 
 /** Teto do vídeo de ideia: passou disso, o render falha (corte o roteiro). */
 export const MOLDE_MAX_SECONDS = 60;
@@ -18,6 +22,10 @@ export type MoldeProps = {
   scenes: MS[];
   /** "door": abertura dentro da porta (Porta.tsx) — legenda centrada e na altura da do tutorial */
   captions?: 'door';
+  /** Id de uma opção de src/identidade (comparação); sem ele, a identidade ativa. */
+  identity?: string;
+  /** Efeitos sonoros por baixo da voz (src/molde/sfx.tsx). Sem ele, silêncio como sempre. */
+  sfx?: boolean;
 };
 
 /** A legenda da abertura na porta fica onde fica a do tutorial (Tour.tsx CAPTION_TOP). */
@@ -37,10 +45,14 @@ export const calculateMoldeMetadata: CalculateMetadataFunction<MoldeProps> = asy
 };
 
 /** Vídeo de ideia montado a partir de um spec: cenas do molde + voz por fala + legenda. */
-export const Molde: React.FC<MoldeProps> = ({ specKey, spec, scenes, captions }) => {
+export const Molde: React.FC<MoldeProps> = ({ specKey, spec, scenes, captions, identity, sfx = false }) => {
   if (!spec) return null;
   const skip = scenes.filter((s) => s.scene === 'verso').map((s) => s.id);
+  const who = identity ? OPTIONS.find((o) => o.id === identity) : ACTIVE;
+  if (!who) throw new Error(`identidade desconhecida: ${identity} (tem: ${OPTIONS.map((o) => o.id).join(', ')})`);
   return (
+    <IdentityContext.Provider value={who}>
+    <SfxContext.Provider value={sfx && !spec.silent}>
     <SpecContext.Provider value={spec}>
       <VariantContext.Provider value="app">
         <AbsoluteFill>
@@ -69,6 +81,14 @@ export const Molde: React.FC<MoldeProps> = ({ specKey, spec, scenes, captions })
                   <Audio src={staticFile(`molde/${specKey}/${s.id}.mp3`)} />
                 </Sequence>
               ))}
+          {/* som das passagens: whoosh nas que andam, subida curta antes do verso */}
+          {scenes.map((s, i) =>
+            i === 0 ? null : s.scene === 'verso' ? (
+              <Sfx key={`sfx-${s.id}`} at={s.start - 34} name="riser" />
+            ) : ['chicote', 'hexa', 'desliza', 'zoom'].includes(passagemKind(s.props?.transicao, s.props?.camera)) ? (
+              <Sfx key={`sfx-${s.id}`} at={s.start - 6} name="whoosh" gain={passagemKind(s.props?.transicao, s.props?.camera) === 'zoom' ? 0.6 : 1} />
+            ) : null,
+          )}
           {captions === 'door' ? (
             <Captions scenes={scenes} skip={skip} top={DOOR_CAPTION_TOP} frame="door" />
           ) : (
@@ -77,5 +97,7 @@ export const Molde: React.FC<MoldeProps> = ({ specKey, spec, scenes, captions })
         </AbsoluteFill>
       </VariantContext.Provider>
     </SpecContext.Provider>
+    </SfxContext.Provider>
+    </IdentityContext.Provider>
   );
 };

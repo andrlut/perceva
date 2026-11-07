@@ -38,11 +38,11 @@
     "envelope"
   ],
   "camera": {
-    "moves": ["push", "pull", "pan-left", "pan-right", "drift", "still"],
+    "moves": ["push", "pull", "pan-left", "pan-right", "drift", "dolly", "still"],
     "focus": ["pessoa", "peca", "mapa", "centro", "esquerda", "direita", "topo", "base"],
     "forca": ["leve", "forte"]
   },
-  "transicao": ["fade", "zoom", "desliza", "corte"],
+  "transicao": ["fade", "zoom", "desliza", "corte", "hexa", "chicote"],
   "ambientes": ["escritorio", "treinamento", "casa", "cidade"],
   "gente": ["nenhuma", "pouca", "muita"],
   "hora": ["manha", "dia", "noite"],

@@ -9,7 +9,7 @@
 //  - partes que vão dentro do SVG grande do fundo são <g> (coordenadas do
 //    cenário); as que precisam de filtro ou de pessoa são <div> posicionadas.
 import React from 'react';
-import { ACTIVE } from '../identidade/active';
+import { useIdentity } from '../identidade/context';
 import { C, dimColor } from '../theme';
 import { Arms, Pessoa } from './cast';
 
@@ -19,7 +19,6 @@ import { Arms, Pessoa } from './cast';
  * cabelo dela, gola por trás, nada do peito) e `Virada` (espelhada sem
  * espelhar a marca). Sem elas, o cenário cai no desenho genérico de antes.
  */
-const VISTAS = { Costas: ACTIVE.Costas, Virada: ACTIVE.Virada };
 
 export const SET = {
   wallTop: '#151B4C',
@@ -75,11 +74,12 @@ export const Figurante: React.FC<{
   accent?: string;
 }> = ({ t, x, y, size, seed, arms = 'none', mood = 'ok', dim = DIM, flip = false, accent = FIG_ACCENT }) => {
   // virado: a vista espelhada da identidade (o Topo Iris não sai ao contrário); sem ela, scaleX(-1)
-  const Mirror = flip ? VISTAS.Virada : undefined;
+  const { Virada } = useIdentity();
+  const Mirror = flip ? Virada : undefined;
   const P = Mirror ?? Pessoa;
   return (
     <div style={{ position: 'absolute', left: x - size / 2, top: y - size * 1.26, filter: dim, transform: flip && !Mirror ? 'scaleX(-1)' : undefined }}>
-      <P t={t} size={size} seed={seed} skin={SKINS[seed % SKINS.length]} accent={accent} arms={arms} mood={mood} />
+      <P t={t} size={size} seed={seed} skin={SKINS[seed % SKINS.length]} accent={accent} arms={arms} mood={mood} halo={false} />
     </div>
   );
 };
@@ -108,7 +108,7 @@ export const DeCostas: React.FC<{ t: number; x: number; y: number; size: number;
   const skin = SKINS[(seed * 5 + 1) % SKINS.length];
   const shirt = SHIRTS[seed % SHIRTS.length];
   const rot = Math.sin((t + seed * 23) / 40) * 1.2 * sway;
-  const Back = VISTAS.Costas;
+  const Back = useIdentity().Costas;
   return (
     <div
       style={{

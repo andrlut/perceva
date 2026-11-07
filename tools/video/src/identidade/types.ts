@@ -24,6 +24,14 @@ export type PessoaProps = {
   seed?: number;
   arms?: Arms;
   still?: boolean;
+  /**
+   * Quadros desde que o humor atual começou (a cena passa na virada `turn`).
+   * Sem ele, conta desde o início da cena (`t`). Identidades que reagem à
+   * virada (o hexágono que acende atrás no feliz, o pulinho) usam isto.
+   */
+  since?: number;
+  /** false: sem o hexágono atrás no feliz (figurante, fundo). Padrão: com. */
+  halo?: boolean;
   cap?: string;
   sweat?: boolean;
 };

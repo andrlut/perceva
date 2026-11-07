@@ -21,7 +21,7 @@ export type SceneKind = 'pessoa' | 'semana' | 'virada' | 'multidao' | 'comparar'
 
 // ------------------------------------------------------------ câmera, passagem, ambiente
 
-export type CameraMove = 'push' | 'pull' | 'pan-left' | 'pan-right' | 'drift' | 'still';
+export type CameraMove = 'push' | 'pull' | 'pan-left' | 'pan-right' | 'drift' | 'dolly' | 'still';
 /** pessoa/peca/mapa = o que a cena desenha; o resto = região fixa do palco. */
 export type CameraFocus = 'pessoa' | 'peca' | 'mapa' | 'centro' | 'esquerda' | 'direita' | 'topo' | 'base';
 export type CameraSpec = {
@@ -34,7 +34,7 @@ export type CameraSpec = {
   forca?: 'leve' | 'forte';
 };
 /** Como esta cena ENTRA (a passagem da anterior pra ela). */
-export type Transicao = 'fade' | 'zoom' | 'desliza' | 'corte';
+export type Transicao = 'fade' | 'zoom' | 'desliza' | 'corte' | 'hexa' | 'chicote';
 
 export type AmbienteKind = 'escritorio' | 'treinamento' | 'casa' | 'cidade';
 export type Gente = 'nenhuma' | 'pouca' | 'muita';
