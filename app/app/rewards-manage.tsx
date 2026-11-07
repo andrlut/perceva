@@ -26,6 +26,7 @@ import { BucketTabsV2 } from '@/components/BucketTabsV2';
 import { CoinIcon } from '@/components/CoinIcon';
 import { EmptyHero } from '@/components/EmptyHero';
 import { ScreenBackground } from '@/components/ScreenBackground';
+import { ScreenTip } from '@/components/guide/ScreenTip';
 import { LimitCounterBadge } from '@/components/premium/LimitCounterBadge';
 import {
   useAddTemplateToShop,
@@ -649,7 +650,10 @@ function MineBody({
       // 8dp scroll slop and eat slow-starting scrolls.
       dragHitSlop={{ right: 0, width: DRAG_HANDLE_WIDTH + tokens.space[4] }}
       ListHeaderComponent={
-        nothingActive ? null : <Text style={styles.lead}>{t('rewardsHub.lead')}</Text>
+        <View>
+          <ScreenTip id="rewardsManage" />
+          {nothingActive ? null : <Text style={styles.lead}>{t('rewardsHub.lead')}</Text>}
+        </View>
       }
       ListEmptyComponent={
         nothingMatches ? (

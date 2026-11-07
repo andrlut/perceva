@@ -11,12 +11,15 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppIcon } from '@/components/AppIcon';
 import { ScreenBackground } from '@/components/ScreenBackground';
+import { AreasReveal } from '@/components/tour/intro/AreasReveal';
 import {
   ONB_PAGE_TOP,
   OnbPrimaryButton,
@@ -60,9 +63,15 @@ const DEFAULT_PICK = 5;
  * no way out, closed the app, and the AuthGate re-opened this screen on every
  * launch): "Pular" is a real button in the footer and the Android back button
  * skips too. Both mark `pack` skipped, which releases the AuthGate.
+ *
+ * It opens with the short "6 areas" animation (AreasReveal, decided
+ * 2026-10-19): the areas and sub-areas the list is about to name, in about
+ * three seconds, while the catalog loads behind it. Its button appears when
+ * the loop ends; "Pular" is available the whole time.
  */
 export default function TourPackScreen() {
   const { t } = useT();
+  const window = useWindowDimensions();
   const templates = useTaskTemplates();
   const activeTasks = useActiveTasks();
   const startFromTemplate = useStartTaskFromTemplate();
@@ -74,6 +83,11 @@ export default function TourPackScreen() {
   // State updates are async; a fast double tap must not start two runs.
   const runningRef = useRef(false);
   const busy = run !== null;
+
+  // 'areas' = the opening animation; 'pick' = the selector.
+  const [phase, setPhase] = useState<'areas' | 'pick'>('areas');
+  const [areasReady, setAreasReady] = useState(false);
+  const stageSize = Math.min(window.width - tokens.space[4] * 2, 340);
 
   const ready = templates.data != null && activeTasks.data != null;
   const loadFailed = !ready && (templates.isError || activeTasks.isError);
@@ -194,7 +208,34 @@ export default function TourPackScreen() {
       <ScreenBackground withGoldHalo>
         {/* Same brand bar and header height as the intro it follows. */}
         <OnbTopBar />
-        {!ready ? (
+        {phase === 'areas' ? (
+          <Animated.View style={styles.areas} exiting={FadeOut.duration(180)}>
+            <View style={styles.header}>
+              <OnbTitle>{t('tour.pack.areas.title')}</OnbTitle>
+              <OnbSubtitle>{t('tour.pack.areas.body')}</OnbSubtitle>
+            </View>
+            <View style={styles.stage}>
+              <AreasReveal size={stageSize} onReady={() => setAreasReady(true)} />
+            </View>
+            <View style={styles.footer}>
+              {areasReady ? (
+                <Animated.View entering={FadeIn.duration(220)}>
+                  <OnbPrimaryButton
+                    label={t('tour.pack.areas.cta')}
+                    icon="checkmark-circle-outline"
+                    onPress={() => {
+                      Haptics.selectionAsync().catch(() => {});
+                      setPhase('pick');
+                    }}
+                  />
+                </Animated.View>
+              ) : (
+                <View style={styles.footerSpacer} />
+              )}
+              <OnbTextButton label={t('tour.pack.skip')} onPress={skip} />
+            </View>
+          </Animated.View>
+        ) : !ready ? (
           <View style={styles.center}>
             {loadFailed ? (
               <Pressable
@@ -393,6 +434,10 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: tokens.space[4], paddingBottom: tokens.space[5] },
 
   header: { paddingTop: ONB_PAGE_TOP, gap: tokens.space[2], alignItems: 'center' },
+  areas: { flex: 1, paddingHorizontal: tokens.space[4] },
+  stage: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  // Keeps the footer's height while the button is still to appear.
+  footerSpacer: { height: 54 },
 
   chips: {
     flexDirection: 'row',

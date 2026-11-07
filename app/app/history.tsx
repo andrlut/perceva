@@ -31,6 +31,7 @@ import { CompleteTaskSheet } from '@/components/CompleteTaskSheet';
 import { FabStack, fabStackClearance, type FabSize } from '@/components/FabStack';
 import { RedeemPickerSheet } from '@/components/RedeemPickerSheet';
 import { ScreenBackground } from '@/components/ScreenBackground';
+import { ScreenTip } from '@/components/guide/ScreenTip';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { TaskActionSheet } from '@/components/TaskActionSheet';
 import { UndoRedemptionModal } from '@/components/UndoRedemptionModal';
@@ -832,6 +833,8 @@ export default function CalendarScreen() {
             />
           </View>
 
+          <ScreenTip id="history" style={styles.tip} />
+
           <CalendarActiveFilters
             filter={filter}
             taskTitles={taskTitles}
@@ -1121,6 +1124,7 @@ export default function CalendarScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: tokens.bg.deep },
   content: { padding: tokens.space[4] },
+  tip: { marginTop: tokens.space[3], marginBottom: 0 },
   header: {
     flexDirection: 'row',
     alignItems: 'flex-end',

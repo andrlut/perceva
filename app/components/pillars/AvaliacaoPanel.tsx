@@ -8,14 +8,11 @@ import { HexChart } from '@/components/HexChart';
 import { HexGrainToggle, useHexGrain } from '@/components/HexGrainToggle';
 import { HexSeriesLegend } from '@/components/HexSeriesLegend';
 import { MoodTodayCard } from '@/components/mood/MoodTodayCard';
-import { TourTarget } from '@/components/tour/TourTarget';
 import type { CharacterSubScore } from '@/lib/db/types';
 import { pickSubScores, pickSubScoresDecimal } from '@/lib/api/character';
 import { useLastWellbeingSession } from '@/lib/api/psych';
 import { daysSince } from '@/lib/api/questionnaire';
 import { useT } from '@/lib/i18n';
-import { emitTourEvent } from '@/lib/tour/eventBus';
-import { M5_EVENTS } from '@/lib/tour/m5Steps';
 import { formatScore } from '@/lib/util/formatScore';
 import { tokens } from '@/theme';
 import { DIMENSION_ORDER, SUBS_BY_DIM } from '@/theme/dimensions';
@@ -26,9 +23,6 @@ const QUESTIONNAIRE_COLOR = tokens.dimension.bonds;
 
 interface Props {
   subScores: CharacterSubScore[];
-  /** Attached to the "Fazer autoavaliação" CTA's wrapper, so the Eu tab can
-   *  scroll it clear of the M5 tooltip that spotlights it. */
-  selfAssessmentAnchorRef?: React.RefObject<View | null>;
 }
 
 /**
@@ -39,7 +33,7 @@ interface Props {
  *
  * Quiet by design: no XP, no Momentum, no confetti.
  */
-export function AvaliacaoPanel({ subScores, selfAssessmentAnchorRef }: Props) {
+export function AvaliacaoPanel({ subScores }: Props) {
   const router = useRouter();
   const { t } = useT();
   const { width: screenWidth } = useWindowDimensions();
@@ -105,7 +99,7 @@ export function AvaliacaoPanel({ subScores, selfAssessmentAnchorRef }: Props) {
 
   // Never self-assessed = every "self" score still at the seed 0. The CTA
   // then reads as a first step ("Fazer autoavaliação · 1 min") instead of
-  // an update — it is where the M5 tour starts the Percebida portrait.
+  // an update.
   const hasSelfAssessment = useMemo(
     () => [...selfScores.values()].some((v) => v > 0),
     [selfScores],
@@ -197,29 +191,19 @@ export function AvaliacaoPanel({ subScores, selfAssessmentAnchorRef }: Props) {
         }
       />
 
-      {/* M5 step 3 spotlights this CTA and advances when it is tapped
-          (the emit is inert outside that step — the tour only counts
-          emissions made while a step waits on them). */}
-      <View ref={selfAssessmentAnchorRef} collapsable={false}>
-        <TourTarget id="me.self-assessment" radius={tokens.radius.md}>
-          <Pressable
-            onPress={() => {
-              emitTourEvent(M5_EVENTS.SELF_ASSESSMENT_OPENED);
-              router.push('/self-assessment');
-            }}
-            style={({ pressed }) => [styles.cta, pressed && { opacity: 0.85 }]}
-            hitSlop={4}
-            accessibilityRole="button"
-          >
-            <Text style={styles.ctaText}>
-              {hasSelfAssessment
-                ? t('avaliacao.selfAssessmentCta')
-                : t('avaliacao.selfAssessmentCtaFirst')}
-            </Text>
-            <Ionicons name="arrow-forward" size={14} color={tokens.brand.violet2} />
-          </Pressable>
-        </TourTarget>
-      </View>
+      <Pressable
+        onPress={() => router.push('/self-assessment')}
+        style={({ pressed }) => [styles.cta, pressed && { opacity: 0.85 }]}
+        hitSlop={4}
+        accessibilityRole="button"
+      >
+        <Text style={styles.ctaText}>
+          {hasSelfAssessment
+            ? t('avaliacao.selfAssessmentCta')
+            : t('avaliacao.selfAssessmentCtaFirst')}
+        </Text>
+        <Ionicons name="arrow-forward" size={14} color={tokens.brand.violet2} />
+      </Pressable>
 
       {hasQuestionnaire && (
         <Pressable

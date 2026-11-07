@@ -5,12 +5,9 @@ import { Alert, StyleSheet, View } from 'react-native';
 import { MoodCardHeader } from '@/components/mood/MoodCardHeader';
 import { MoodEntrySummary } from '@/components/mood/MoodEntrySummary';
 import { MoodFaceRow } from '@/components/mood/MoodFaceRow';
-import { TourTarget } from '@/components/tour/TourTarget';
 import { useLogMood, useTodayMood } from '@/lib/api/mood';
 import { useT } from '@/lib/i18n';
 import { type MoodValue } from '@/lib/mood';
-import { emitTourEvent } from '@/lib/tour/eventBus';
-import { M1_EVENTS, M1_TARGETS } from '@/lib/tour/m1Steps';
 import { tokens } from '@/theme';
 
 /**
@@ -33,10 +30,7 @@ import { tokens } from '@/theme';
  *
  * Deliberately quiet — no XP, no streak, matching the mood system's rule.
  *
- * Tour: the card is M1's "Humor em uma linha" target (home.mood). The ring
- * wraps the card itself — the margins live on the TourTarget wrapper, so the
- * spotlight hugs the card instead of its margin box — and a quick log emits
- * MOOD_LOGGED, the step's real gesture. Inert outside the tour.
+ * The margins live on the outer wrapper, not on the card itself.
  */
 export function MoodHubStrip() {
   const { t } = useT();
@@ -66,7 +60,6 @@ export function MoodHubStrip() {
             Haptics.notificationAsync(
               Haptics.NotificationFeedbackType.Success,
             ).catch(() => {});
-            emitTourEvent(M1_EVENTS.MOOD_LOGGED);
           },
           onError: (err) => {
             Alert.alert(
@@ -78,7 +71,7 @@ export function MoodHubStrip() {
       );
     };
     return (
-      <TourTarget id={M1_TARGETS.MOOD} radius={tokens.radius.md} style={styles.outer}>
+      <View style={styles.outer}>
         <View style={styles.card}>
           <MoodCardHeader
             eyebrow={t('mood.prompt.title')}
@@ -95,7 +88,7 @@ export function MoodHubStrip() {
             />
           </View>
         </View>
-      </TourTarget>
+      </View>
     );
   }
 
@@ -103,7 +96,7 @@ export function MoodHubStrip() {
     (entry.tags?.length ?? 0) > 0 || (entry.note?.trim().length ?? 0) > 0;
 
   return (
-    <TourTarget id={M1_TARGETS.MOOD} radius={tokens.radius.md} style={styles.outer}>
+    <View style={styles.outer}>
       <View style={styles.card}>
         <MoodCardHeader
           eyebrow={t('mood.todayCard.eyebrow')}
@@ -113,7 +106,7 @@ export function MoodHubStrip() {
         />
         <MoodEntrySummary entry={entry} />
       </View>
-    </TourTarget>
+    </View>
   );
 }
 

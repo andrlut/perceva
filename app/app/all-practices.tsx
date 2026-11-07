@@ -1,83 +1,24 @@
 import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import Animated, {
-  useAnimatedStyle,
-  useDerivedValue,
-  withSpring,
-} from 'react-native-reanimated';
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { useMemo } from 'react';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useBottomSafeClearance } from '@/components/BottomNavBar';
-import {
-  CompletedBucket,
-  completionsToItems,
-  type CompletedItem,
-} from '@/components/CompletedBucket';
-import { CompleteTaskSheet } from '@/components/CompleteTaskSheet';
+import { AllPracticesBody } from '@/components/practices/AllPracticesBody';
 import { ScreenBackground } from '@/components/ScreenBackground';
-import { TaskCard } from '@/components/TaskCard';
-import { TourModule } from '@/components/tour/TourModule';
-import { TourTarget } from '@/components/tour/TourTarget';
-import { XPCoinFloat } from '@/components/XPCoinFloat';
-import {
-  dateKeyFromLocal,
-  taskFromCompletionSnapshot,
-  useDayDetail,
-} from '@/lib/api/history';
-import {
-  useActiveTasks,
-  useCompleteTask,
-  useUndoCompletion,
-} from '@/lib/api/tasks';
-import type { CoinMultiplier, TaskSub, TaskWithSubs } from '@/lib/db/types';
+import { dateKeyFromLocal, useDayDetail } from '@/lib/api/history';
+import { useActiveTasks } from '@/lib/api/tasks';
 import { useT } from '@/lib/i18n';
-import { useLimitModalStore, useTaskLimit } from '@/lib/premium';
-import { isEffectivelyDaily } from '@/lib/recurrence';
 import { useLoadedSettings } from '@/lib/settings';
-import { formatLongDate } from '@/lib/time';
-import { emitTourEvent } from '@/lib/tour/eventBus';
-import { buildM2Steps, M2_EVENTS } from '@/lib/tour/m2Steps';
-import { useIsCurrentTourModule } from '@/lib/tour/store';
 import { usePullToRefresh } from '@/lib/usePullToRefresh';
-import { rewardForTaskSubs } from '@/lib/xp';
 import { tokens } from '@/theme';
 
-interface FloatItem {
-  id: number;
-  xp: number;
-  coins: number;
-}
-
 /**
- * "Todas as práticas" — the see-all DOING surface. Every active practice,
- * weeklies and monthlies first; the dailies (whose home is Hoje) sit in a
- * collapsed "Diárias" block below them (user feedback, 2026-10-13: the
- * title said ALL and the dailies were missing). In the Home card vocabulary so
- * the user can knock out or work ahead on any weekly / monthly practice
- * on any day. Reuses TaskCard for complete / quick-complete / adjust-then-
- * complete / edit — but deliberately NOT swipe-to-skip: skipping is a
- * Hoje-contract concept, meaningless here, and would pollute the day ring.
- *
- * Completions earn XP as usual; the underlying complete_task only feeds
- * the Hoje ring when the practice was actually DUE today (see wasDueToday
- * in index.tsx), so doing a non-scheduled practice here never misfires the
- * day-cleared celebration.
- *
- * Tour: M2 step 2 lives here — it spotlights the "Gerenciar" entry, the
- * permanent door to the curation screen (/tasks), so the path the tour
- * teaches is the path that exists after it.
+ * /all-practices — the standalone route for "Todas as práticas". Since the
+ * Práticas tab gained its own Todas page (Onboarding simples, 2026-11) this
+ * route only serves the calendar's "log on this day" door, which pushes it
+ * with a `date` param. The body is shared (AllPracticesBody).
  */
 export default function AllPracticesScreen() {
   const router = useRouter();
@@ -85,9 +26,7 @@ export default function AllPracticesScreen() {
   const { date } = useLocalSearchParams<{ date?: string }>();
   const settings = useLoadedSettings();
   const bottomClearance = useBottomSafeClearance();
-  const tasks = useActiveTasks();
-  // Optional `date` param makes this a date-aware log surface: opened from a
-  // past day (Home day-view / calendar), completing logs for THAT day.
+
   const selectedDate = useMemo(() => {
     if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
       const [y, m, d] = date.split('-').map(Number);
@@ -99,252 +38,14 @@ export default function AllPracticesScreen() {
     dt.setHours(0, 0, 0, 0);
     return dt;
   }, [date]);
-  const selectedKey = dateKeyFromLocal(selectedDate);
-  const isToday = selectedKey === dateKeyFromLocal(new Date());
-  // Selected day's detail — completions (drawer + hiding done items) and
-  // the day's skips. Works for today and any past day.
+
+  // Same queries the body reads — pull-to-refresh refetches them here.
+  const tasks = useActiveTasks();
   const dayDetail = useDayDetail(selectedDate, settings.weekStart);
-  const completeTask = useCompleteTask();
-  const undoCompletion = useUndoCompletion();
-  const taskLimit = useTaskLimit();
-  const openLimit = useLimitModalStore((s) => s.open);
-  const isM2Current = useIsCurrentTourModule('M2');
-
-  const [floats, setFloats] = useState<FloatItem[]>([]);
-  const [sheetTask, setSheetTask] = useState<TaskWithSubs | null>(null);
-  // Optimistic-hide set: a card tapped complete disappears immediately
-  // (mirrors Home, where buckets.today drops it). useCompleteTask's
-  // optimistic path does NOT touch the useActiveTasks-derived recurring
-  // list, so without this the card lingers until the refetch lands — a
-  // window where a second tap logs a duplicate completion. Pruned once the
-  // server confirms (see the effect below); restored on error.
-  const [pendingDone, setPendingDone] = useState<Set<string>>(new Set());
-  const [dailiesOpen, setDailiesOpen] = useState(false);
-
-  const handleCreate = () => {
-    if (taskLimit.atLimit) {
-      openLimit('task');
-      return;
-    }
-    router.push('/task-form');
-  };
-
-  // Gerenciar práticas — also M2 step 2's real gesture.
-  const openManage = () => {
-    emitTourEvent(M2_EVENTS.MANAGE_OPENED);
-    router.push('/tasks');
-  };
-
-  const fireCompletion = (
-    task: TaskWithSubs,
-    subs: TaskSub[],
-    coinMultiplier?: CoinMultiplier,
-    times = 1,
-    coinStars?: number,
-  ) => {
-    if (completeTask.isPending) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    const reward = rewardForTaskSubs(
-      subs,
-      coinMultiplier ?? task.coin_multiplier,
-      coinStars ?? task.coin_stars,
-    );
-    const fid = Date.now();
-    setFloats((prev) => [
-      ...prev,
-      { id: fid, xp: reward.total.xp * times, coins: reward.total.coins * times },
-    ]);
-    setPendingDone((prev) => new Set(prev).add(task.id));
-    // Retro when a past day is selected — file at noon of that local date.
-    const at = new Date(selectedDate);
-    at.setHours(12, 0, 0, 0);
-    completeTask.mutate(
-      isToday
-        ? { task, subs, coinMultiplier, times, coinStars }
-        : {
-            task,
-            subs,
-            coinMultiplier,
-            completedAt: at.toISOString(),
-            completedLocalDate: selectedKey,
-            times,
-            coinStars,
-          },
-      {
-        onError: (err) => {
-          // Restore the card — the completion didn't land.
-          setPendingDone((prev) => {
-            const next = new Set(prev);
-            next.delete(task.id);
-            return next;
-          });
-          const e = err as { message?: string; code?: string; details?: string };
-          console.error('[complete_task] failed', e);
-          Alert.alert(
-            t('home.actionErrors.complete'),
-            [e.message, e.code, e.details].filter(Boolean).join('\n') ||
-              t('home.actionErrors.unknown'),
-          );
-        },
-      },
-    );
-  };
-
-  // `subs` comes from the drawer's "+1" — it repeats the stars of that
-  // specific rep. Without the parameter the button would silently re-log
-  // the task's DEFAULT stars here while repeating the row's on Home and on
-  // the Calendar: same green button, three different meanings.
-  const handleQuickComplete = (
-    task: TaskWithSubs,
-    subs?: TaskSub[],
-    coinMultiplier?: CoinMultiplier,
-    coinStars?: number,
-  ) => fireCompletion(task, subs ?? task.subs, coinMultiplier, 1, coinStars);
-
-  const handleSheetConfirm = (
-    subs: TaskSub[],
-    coinMultiplier: CoinMultiplier,
-    times: number,
-    coinStars?: number,
-  ) => {
-    if (!sheetTask) return;
-    const task = sheetTask;
-    setSheetTask(null);
-    fireCompletion(task, subs, coinMultiplier, times, coinStars);
-  };
-
-  const handleUndo = (completionId: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    undoCompletion.mutate(completionId, {
-      onError: (err) => {
-        const e = err as { message?: string };
-        Alert.alert(
-          t('home.actionErrors.undo'),
-          e.message ?? t('home.actionErrors.unknown'),
-        );
-      },
-    });
-  };
-
-  // Pull indicator is local state — the queries' isRefetching also flips on
-  // every background refetch (completions, app foreground).
-  const { refreshing: isRefreshing, onRefresh: handleRefresh } = usePullToRefresh(() =>
+  const { refreshing, onRefresh } = usePullToRefresh(() =>
     Promise.all([tasks.refetch(), dayDetail.refetch()]),
   );
-
-  // Completed on the SELECTED day — hide from the active lists (they move
-  // to the drawer).
-  const completedThatDayIds = useMemo(
-    () => new Set((dayDetail.data?.completions ?? []).map((c) => c.taskId)),
-    [dayDetail.data],
-  );
-
-  // Skipped on the SELECTED day. The recurring list is built from
-  // useActiveTasks, so it has to honor skips itself or a practice skipped
-  // on that day still shows up here.
-  const skippedThatDayIds = useMemo(
-    () => new Set((dayDetail.data?.skipped ?? []).map((task) => task.id)),
-    [dayDetail.data],
-  );
-
-  const activeById = useMemo(
-    () => new Map((tasks.data ?? []).map((tk) => [tk.id, tk])),
-    [tasks.data],
-  );
-
-  // Every weekly/monthly this user OWNS that already existed on the selected
-  // day (weekly-all-7 is effectively daily and lives on Hoje). Kept separate
-  // from the rendered list because it is what "does this user have any
-  // non-daily practice at all?" must be answered with — see `hasAny`.
-  // NOT gated by created_at: a practice created after the selected day can
-  // still be logged on it (completions are dated by completed_at /
-  // completed_local_date; nothing reads the practice's own created_at).
-  const recurringOwned = useMemo(
-    () =>
-      (tasks.data ?? []).filter(
-        (task) =>
-          !isEffectivelyDaily(task.recurrence) &&
-          (task.recurrence.type === 'weekly' || task.recurrence.type === 'monthly'),
-      ),
-    [tasks.data],
-  );
-
-  // What actually renders: minus what's already done or skipped on the
-  // selected day, minus what's optimistically hidden this frame. NOT
-  // period-gated — this is the "log anything" catalog.
-  const recurring = useMemo(
-    () =>
-      recurringOwned.filter(
-        (task) =>
-          !completedThatDayIds.has(task.id) &&
-          !skippedThatDayIds.has(task.id) &&
-          !pendingDone.has(task.id),
-      ),
-    [recurringOwned, completedThatDayIds, skippedThatDayIds, pendingDone],
-  );
-
-  // The dailies, same filters — they render inside the collapsed block.
-  const dailiesOwned = useMemo(
-    () => (tasks.data ?? []).filter((task) => !recurringOwned.includes(task)),
-    [tasks.data, recurringOwned],
-  );
-  const dailies = useMemo(
-    () =>
-      dailiesOwned.filter(
-        (task) =>
-          !completedThatDayIds.has(task.id) &&
-          !skippedThatDayIds.has(task.id) &&
-          !pendingDone.has(task.id),
-      ),
-    [dailiesOwned, completedThatDayIds, skippedThatDayIds, pendingDone],
-  );
-
-  // Prune the optimistic-hide set once the server reflects the completion
-  // (the id shows up in the day's completions). Pruning only AFTER the
-  // server reflects it keeps the card hidden through the handoff (no
-  // reappear-then-vanish flicker) and lets an undo bring it back.
-  useEffect(() => {
-    setPendingDone((prev) => {
-      if (prev.size === 0) return prev;
-      const next = new Set(
-        [...prev].filter((id) => !completedThatDayIds.has(id)),
-      );
-      return next.size === prev.size ? prev : next;
-    });
-  }, [completedThatDayIds]);
-
-  const completedItems = useMemo<CompletedItem[]>(
-    () =>
-      completionsToItems(
-        dayDetail.data?.completions ?? [],
-        (id) => activeById.get(id),
-        // An archived/deleted task keeps its row (rebuilt from the
-        // snapshot) so the day's record isn't silently lost.
-        taskFromCompletionSnapshot,
-      ),
-    [dayDetail.data, activeById],
-  );
-
-  const isLoading = tasks.isLoading || dayDetail.isLoading;
-  const hasAny =
-    // Deliberately counts OWNED practices, not the day-filtered list: the
-    // empty state below says "create your first practice", which would be a
-    // lie to a user whose whole catalog just happens to be done or skipped
-    // on this particular day.
-    (tasks.data ?? []).length > 0 || completedItems.length > 0;
-
-  const renderCard = (task: TaskWithSubs) => (
-    <TaskCard
-      key={task.id}
-      task={task}
-      onComplete={() => handleQuickComplete(task)}
-      onLongPress={() => setSheetTask(task)}
-      onSwipeComplete={() => setSheetTask(task)}
-      onEdit={() =>
-        router.push({ pathname: '/task-form', params: { id: task.id } })
-      }
-    />
-  );
+  const selectedKey = dateKeyFromLocal(selectedDate);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
@@ -355,195 +56,41 @@ export default function AllPracticesScreen() {
             onPress={() => router.back()}
             style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
             hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.back')}
           >
             <Ionicons name="chevron-back" size={22} color={tokens.text.hi} />
           </Pressable>
           <Text style={styles.title}>{t('allPractices.title')}</Text>
-          <View style={styles.topActions}>
-            {/* Gerenciar práticas lives here (moved off the Home FAB) —
-                buckets, drag-reorder, adopt, edit. M2 spotlights it. */}
-            <TourTarget id="all.manage" radius={12}>
-              <Pressable
-                onPress={openManage}
-                style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel={t('tasksHub.title')}
-              >
-                <Ionicons name="options-outline" size={20} color={tokens.text.mid} />
-              </Pressable>
-            </TourTarget>
-            <Pressable
-              onPress={handleCreate}
-              style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel={t('tasksHub.newTask')}
-            >
-              <Ionicons name="add" size={22} color={tokens.brand.violet2} />
-            </Pressable>
-          </View>
+          <Pressable
+            onPress={() => router.push('/tasks')}
+            style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('tasksHub.title')}
+          >
+            <Ionicons name="add" size={22} color={tokens.brand.violet2} />
+          </Pressable>
         </View>
 
         <ScrollView
-          contentContainerStyle={[
-            styles.content,
-            {
-              paddingBottom:
-                Math.max(tokens.space[10], bottomClearance) + tokens.space[6],
-            },
-          ]}
+          contentContainerStyle={{
+            paddingBottom: Math.max(tokens.space[10], bottomClearance) + tokens.space[6],
+          }}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
-              refreshing={isRefreshing}
-              onRefresh={handleRefresh}
+              refreshing={refreshing}
+              onRefresh={onRefresh}
               tintColor={tokens.brand.violet2}
               colors={[tokens.brand.violet2]}
             />
           }
         >
-          <Text style={styles.lead}>
-            {isToday
-              ? t('allPractices.lead')
-              : t('allPractices.loggingFor', {
-                  date: formatLongDate(selectedDate),
-                })}
-          </Text>
-
-          {isLoading ? (
-            <View style={styles.loadingBox}>
-              <ActivityIndicator color={tokens.brand.violet2} />
-            </View>
-          ) : !hasAny ? (
-            <View style={styles.emptyBox}>
-              <Ionicons name="albums-outline" size={32} color={tokens.text.dim} />
-              <Text style={styles.emptyTitle}>{t('allPractices.emptyTitle')}</Text>
-              <Text style={styles.emptySub}>{t('allPractices.emptyBody')}</Text>
-              <Pressable
-                onPress={handleCreate}
-                style={({ pressed }) => [styles.emptyCta, pressed && { opacity: 0.7 }]}
-              >
-                <Ionicons name="add" size={18} color={tokens.text.hi} />
-                <Text style={styles.emptyCtaText}>{t('allPractices.emptyCta')}</Text>
-              </Pressable>
-            </View>
-          ) : (
-            <View style={styles.lists}>
-              {recurring.map(renderCard)}
-              {dailies.length > 0 && (
-                <DailiesBlock
-                  count={dailies.length}
-                  open={dailiesOpen}
-                  onToggle={() => {
-                    Haptics.selectionAsync().catch(() => {});
-                    setDailiesOpen((v) => !v);
-                  }}
-                  title={t('allPractices.dailies')}
-                >
-                  {dailies.map(renderCard)}
-                </DailiesBlock>
-              )}
-              {completedItems.length > 0 && (
-                <CompletedBucket
-                  items={completedItems}
-                  title={
-                    isToday
-                      ? t('home.completedBucket.today')
-                      : t('home.completedBucket.day')
-                  }
-                  onUndo={handleUndo}
-                  onExtra={handleQuickComplete}
-                />
-              )}
-            </View>
-          )}
+          <AllPracticesBody key={selectedKey} selectedDate={selectedDate} />
         </ScrollView>
       </ScreenBackground>
-
-      {floats.map((f) => (
-        <XPCoinFloat
-          key={f.id}
-          xp={f.xp}
-          coins={f.coins}
-          onDone={() => setFloats((prev) => prev.filter((x) => x.id !== f.id))}
-        />
-      ))}
-
-      <CompleteTaskSheet
-        visible={sheetTask !== null}
-        task={sheetTask}
-        onCancel={() => setSheetTask(null)}
-        onConfirm={handleSheetConfirm}
-      />
-
-      {/* M2 step 2 — the "Gerenciar" entry. Its real press fires
-         MANAGE_OPENED; the assist walks to /tasks the same way. flatNav:
-         this Stack screen has no floating BottomNavBar. rewindOnFocus:
-         backing out of /tasks mid-M2 lands here with the tooltip back on
-         its own step instead of a silent screen. Skipping the module from
-         here goes Home, where the next module starts. */}
-      <TourModule
-        module="M2"
-        screen="all"
-        steps={buildM2Steps(t)}
-        enabled={isM2Current}
-        flatNav
-        rewindOnFocus
-        onAdvanceToNextScreen={() => router.push('/tasks')}
-        onComplete={(outcome) => {
-          if (outcome === 'skipped') router.dismissTo('/(tabs)');
-        }}
-      />
     </SafeAreaView>
-  );
-}
-
-/**
- * Collapsed "Diárias" header — the Concluídas drawer's anatomy (title, count
- * chip, chevron) so the two expandable rows on this screen read as siblings.
- * Open, the cards render under it at full size: they are the same TaskCards
- * as above, not a compact list.
- */
-function DailiesBlock({
-  title,
-  count,
-  open,
-  onToggle,
-  children,
-}: {
-  title: string;
-  count: number;
-  open: boolean;
-  onToggle: () => void;
-  children: ReactNode;
-}) {
-  const chevron = useDerivedValue(() =>
-    withSpring(open ? 180 : 0, { damping: 18, stiffness: 220 }),
-  );
-  const chevronStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${chevron.value}deg` }],
-  }));
-  return (
-    <View style={styles.dailiesWrap}>
-      <Pressable
-        onPress={onToggle}
-        style={({ pressed }) => [styles.dailiesHeader, pressed && { opacity: 0.85 }]}
-        accessibilityRole="button"
-        accessibilityState={{ expanded: open }}
-      >
-        <View style={styles.dailiesLeft}>
-          <Text style={styles.dailiesTitle}>{title}</Text>
-          <View style={styles.dailiesChip}>
-            <Text style={styles.dailiesCount}>{count}</Text>
-          </View>
-        </View>
-        <Animated.View style={chevronStyle}>
-          <Ionicons name="chevron-down" size={16} color={tokens.text.dim} />
-        </Animated.View>
-      </Pressable>
-      {open ? <View style={styles.lists}>{children}</View> : null}
-    </View>
   );
 }
 
@@ -564,102 +111,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: tokens.bg.surface,
   },
-  topActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[2],
-  },
   title: {
     ...tokens.type.h3,
-    color: tokens.text.hi,
-  },
-  content: {
-    paddingHorizontal: tokens.space[4],
-  },
-  lead: {
-    ...tokens.type.caption,
-    color: tokens.text.dim,
-    paddingBottom: tokens.space[3],
-  },
-  lists: {
-    gap: tokens.space[2],
-  },
-  dailiesWrap: {
-    marginHorizontal: tokens.space[3],
-    marginTop: tokens.space[2],
-    gap: tokens.space[2],
-  },
-  dailiesHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    minHeight: 48,
-    paddingHorizontal: tokens.space[3],
-    paddingVertical: tokens.space[3],
-    backgroundColor: tokens.bg.surface,
-    borderRadius: tokens.radius.lg,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-  },
-  dailiesLeft: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[2],
-  },
-  dailiesTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 12,
-    color: tokens.text.mid,
-  },
-  dailiesChip: {
-    backgroundColor: tokens.bg.surface2,
-    borderRadius: 999,
-    paddingHorizontal: 7,
-    paddingVertical: 1,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-  },
-  dailiesCount: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 10,
-    color: tokens.brand.violet2,
-  },
-  loadingBox: {
-    paddingVertical: tokens.space[10],
-    alignItems: 'center',
-  },
-  emptyBox: {
-    paddingVertical: tokens.space[8],
-    alignItems: 'center',
-    gap: tokens.space[3],
-    paddingHorizontal: tokens.space[5],
-  },
-  emptyTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 16,
-    color: tokens.text.hi,
-    textAlign: 'center',
-  },
-  emptySub: {
-    ...tokens.type.body,
-    color: tokens.text.mid,
-    textAlign: 'center',
-  },
-  emptyCta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[2],
-    paddingHorizontal: tokens.space[4],
-    paddingVertical: tokens.space[3],
-    backgroundColor: tokens.bg.surface,
-    borderRadius: tokens.radius.lg,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-    marginTop: tokens.space[2],
-  },
-  emptyCtaText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 14,
     color: tokens.text.hi,
   },
 });

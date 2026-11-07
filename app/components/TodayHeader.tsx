@@ -4,9 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { CoinIcon } from '@/components/CoinIcon';
 import { ScreenInfoButton } from '@/components/guide/ScreenInfoButton';
 import { MoodFace } from '@/components/mood/MoodFace';
-import { TourTarget } from '@/components/tour/TourTarget';
 import { useT } from '@/lib/i18n';
-import { M1_TARGETS } from '@/lib/tour/m1Steps';
 import { tokens } from '@/theme';
 
 interface Props {
@@ -25,9 +23,11 @@ interface Props {
   onNextDay: () => void;
   /** False when the selected day IS today — the next arrow greys out. */
   canGoNext: boolean;
-  /** Provided only when a past day is selected → tapping the date jumps
-   *  straight back to today. */
+  /** Provided only when a past day is selected → the "Hoje" pill next to
+   *  the arrows jumps straight back to today. */
   onResetToday?: () => void;
+  /** Tapping the date opens the calendar (History). */
+  onDate: () => void;
   /** Coins earned on the selected day; `null` while loading (like xpOfDay). */
   coinsOfDay: number | null;
   /** The day's mood (1..5), or null when not logged yet. */
@@ -57,11 +57,11 @@ interface Props {
  * The date is the day selector: the arrows hug the date string (the next
  * arrow sits right after it, not at the screen edge), and the back arrow's
  * glyph lines up with the left edge of everything below it. Tapping the
- * date on a past day jumps back to today — there is no separate "Hoje" chip
- * and no name eyebrow any more (2026-10-03): the row they took went to the
- * date, and the freed top-right corner holds the screen's (i), the same
- * 40px chip as the other screens. Swiping the top of the screen also steps
- * days (the host owns that gesture).
+ * date opens the calendar (Onboarding simples, 2026-11: the calendar lost
+ * its floating button); on a past day a small "Hoje" pill after the arrows
+ * jumps back to today. The freed top-right corner holds the screen's (i),
+ * the same 40px chip as the other screens. Swiping the top of the screen
+ * flips Hoje ↔ Todas (the host owns that gesture).
  */
 export function TodayHeader({
   weekdayLabel,
@@ -72,6 +72,7 @@ export function TodayHeader({
   onNextDay,
   canGoNext,
   onResetToday,
+  onDate,
   coinsOfDay,
   mood,
   onMood,
@@ -93,11 +94,10 @@ export function TodayHeader({
         </Pressable>
 
         <Pressable
-          onPress={onResetToday}
-          disabled={!onResetToday}
+          onPress={onDate}
           style={styles.headlineWrap}
-          accessibilityRole={onResetToday ? 'button' : 'header'}
-          accessibilityHint={onResetToday ? t('home.dayNav.backToTodayA11y') : undefined}
+          accessibilityRole="button"
+          accessibilityHint={t('home.dayNav.calendarA11y')}
         >
           <Text style={styles.headline} numberOfLines={1}>
             {weekdayLabel}{' '}
@@ -123,13 +123,23 @@ export function TodayHeader({
           />
         </Pressable>
 
+        {onResetToday ? (
+          <Pressable
+            onPress={onResetToday}
+            hitSlop={8}
+            style={({ pressed }) => [styles.todayPill, pressed && { opacity: 0.7 }]}
+            accessibilityRole="button"
+            accessibilityLabel={t('home.dayNav.backToTodayA11y')}
+          >
+            <Text style={styles.todayPillText}>{t('home.dayNav.today')}</Text>
+          </Pressable>
+        ) : null}
+
         <View style={styles.spacer} />
 
         {/* Just the glyph, no chip around it (owner, 2026-10-03) — the
             same ScreenInfoButton every main tab uses. */}
-        <TourTarget id={M1_TARGETS.INFO} radius={20}>
-          <ScreenInfoButton onPress={onInfo} a11yLabel={t('home.help.a11y')} />
-        </TourTarget>
+        <ScreenInfoButton onPress={onInfo} a11yLabel={t('home.help.a11y')} />
       </View>
 
       <View style={styles.statsRow}>
@@ -240,6 +250,21 @@ const styles = StyleSheet.create({
   spacer: {
     flex: 1,
     minWidth: tokens.space[2],
+  },
+  todayPill: {
+    marginLeft: tokens.space[2],
+    paddingHorizontal: 10,
+    height: 26,
+    justifyContent: 'center',
+    borderRadius: tokens.radius.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(155, 130, 255, 0.45)',
+    backgroundColor: 'rgba(123, 92, 255, 0.14)',
+  },
+  todayPillText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 12,
+    color: tokens.brand.violet2,
   },
   // Glyph only — a 40px target, no fill.
   statsRow: {
