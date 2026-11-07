@@ -1,5 +1,5 @@
 import React from 'react';
-import { AbsoluteFill, Easing, Img, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
+import { AbsoluteFill, Easing, interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
 import glyphs from './ionicons.json';
 import { C, FONT, LAYOUT } from './theme';
 
@@ -177,17 +177,12 @@ export const Footnote: React.FC<{ text: string; from?: number; top?: number; siz
 // ---------------------------------------------------------------- fundo
 
 /**
- * Lente (requinte, fase 1): grão fixo e vinheta redonda, PRESOS ao quadro — por cima de todas as
- * cenas e passagens (não andam com a câmera nem crescem no hexágono), por baixo da legenda.
- * O grão (public/lente/grao.png, `node scripts/grao.mjs`) é ±2–6% de claro/escuro em células de
- * 2 px: dá textura de papel ao chapado e quebra o degrau dos degradês navy no H.264. Fixo de
- * propósito — grão animado custa bits e inventa "movimento" no medidor de ritmo.
+ * Lente (requinte, fase 1): vinheta redonda PRESA ao quadro — por cima de todas as cenas e
+ * passagens (não anda com a câmera nem cresce no hexágono), por baixo da legenda. A fase 1 tinha
+ * também um grão fixo; o André viu no celular e achou que parecia baixa resolução — saiu na 1.1.
  */
 export const Lente: React.FC = () => (
-  <AbsoluteFill style={{ pointerEvents: 'none' }}>
-    <AbsoluteFill style={{ background: 'radial-gradient(ellipse 82% 64% at 50% 46%, rgba(5,7,26,0) 58%, rgba(5,7,26,0.3) 100%)' }} />
-    <Img src={staticFile('lente/grao.png')} style={{ position: 'absolute', left: 0, top: 0, width: 1080, height: 1920, imageRendering: 'pixelated' }} />
-  </AbsoluteFill>
+  <AbsoluteFill style={{ pointerEvents: 'none', background: 'radial-gradient(ellipse 82% 64% at 50% 46%, rgba(5,7,26,0) 58%, rgba(5,7,26,0.3) 100%)' }} />
 );
 
 /**

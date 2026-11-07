@@ -479,9 +479,8 @@ const ritmo = (mp4, out) => {
 };
 
 // versão do app (720p): lanczos na redução e x264 afinado pra animação chapada (menos bloco no
-// degradê e no texto) — fase 1 do requinte; antes era bicúbico sem tune. crf 25: o grão da Lente
-// sobrevive e o vídeo fica em ~4 MB por 50 s (no crf 23 o grão levava a 5,0 MB; antes eram 3,5)
-const PUB_ENCODE = ['-vf', 'scale=720:1280:flags=lanczos', '-c:v', 'libx264', '-crf', '25', '-preset', 'slow', '-tune', 'animation', '-pix_fmt', 'yuv420p'];
+// degradê e no texto) — fase 1 do requinte; antes era bicúbico sem tune (e ~20% maior no mesmo crf)
+const PUB_ENCODE = ['-vf', 'scale=720:1280:flags=lanczos', '-c:v', 'libx264', '-crf', '23', '-preset', 'slow', '-tune', 'animation', '-pix_fmt', 'yuv420p'];
 
 async function render(ctx) {
   const { renderMedia, selectComposition } = await import('@remotion/renderer');

@@ -282,30 +282,38 @@ https://claude.ai/artifact/3g7iHRpWs4EeEnnsv8Q4Xh):
   fim da fala). O olho já leu a coisa.
 - **O card do verso vira com mola** (`MOLA.vira`, passa ~3° e assenta) e
   encolhe 4% de lado no meio do giro. Era linear e parava seco.
-- **Dourado só como destaque.** As peças e o mundo da cena são violeta em
-  toda ideia (`useAccent()`); a cor da ÁREA só identifica — o hexágono da
-  sobrancelha (texto em `C.mid`) e o do verso do card, nunca texto, borda ou
-  brilho. O ouro marca o que importa agora: a palavra da legenda, o painel
-  que ganha (aro nítido, sem halo), o bloco que energiza, o aro do hexágono
-  pro verso e o card absorvido. Saíram os halos difusos (painel, bloco,
-  card) e o dourado do rodapé do fundo (virava mancha marrom).
 - **Legenda sem quadro vazio:** o bloco novo nasce a 40% e sobe com
   ease-out; o fim da fala sai em 6 quadros. Sombra curta (a de 18 px virava
   brilho).
-- **Lente** (`<Lente>` em `src/components.tsx`): grão fixo (±2–6%, células
-  de 2 px, `public/lente/grao.png` ← `node scripts/grao.mjs`) e vinheta
-  redonda, presos ao quadro por cima das cenas e por baixo da legenda. Na
-  porta, a `Porta` põe uma lente só por cima das duas partes.
+- **Lente** (`<Lente>` em `src/components.tsx`): vinheta redonda presa ao
+  quadro, por cima das cenas e por baixo da legenda. Na porta, a `Porta` põe
+  uma lente só por cima das duas partes.
 - **Captura sem perda:** `renderMedia` com `imageFormat: 'png'` (o padrão da
   API é JPEG 80; o `setJpegQuality` do config só vale na linha de comando).
-  A versão do app reduz pra 720p com lanczos e `-tune animation`.
+  A versão do app reduz pra 720p com lanczos e `-tune animation` (crf 23).
+- O halo dourado do rodapé do fundo saiu (por cima do navy virava uma mancha
+  marrom atrás da legenda e do verso).
+
+**O que a fase 1 testou e o André vetou na 1.1 (07/11, vendo o vídeo):**
+- *Dourado só no destaque* (peças e sobrancelha em violeta, a cor da área só
+  num hexágono pequeno): ficou monótono. As peças, a sobrancelha e o card
+  voltaram à cor da ÁREA, com os brilhos e a barra no topo do verso.
+- *Grão fixo na lente*: no celular parecia baixa resolução. Saiu.
+- *O radar atrás de quem fica feliz* (abaixo): esquisito. Voltaram as
+  estrelinhas de brilho.
 - **Medidor de ritmo a cada render:** `render` roda `scripts/ritmo.mjs` no
   mp4 e imprime quase-parada, amplitude, picos e os trechos de mais de 1 s
   sem nada grande se mexendo (`<video>.ritmo.json`). Só avisa; `--sem-ritmo`
   pula. A régua dos estilos de referência: 16–55% em quase-parada, nenhum
   buraco de mais de 1 s fora do fim.
 
-## O radar no feliz (identidades Hexa v4)
+## O radar no feliz (identidades Hexa v4) — DESLIGADO
+
+Desligado em 07/11 (`RADAR = false` em `src/identidade/options/hexa.tsx`):
+o André achou o hexágono atrás da pessoa esquisito e prefere as estrelinhas
+de brilho. Com ele desligado, as cenas voltam a pôr as estrelinhas no feliz e
+a frente do card continua sendo o Elenco (`frenteElenco` da identidade). O
+que segue é a regra, se um dia voltar.
 
 As identidades `hexa-*` desenham atrás de quem fica `feliz` o radar do app
 (placa escura, réguas, polígono das 6 áreas enchendo do centro). Regras:
@@ -390,8 +398,7 @@ prefixo.
 
 Peça que aparece em mais de um vídeo merece virar desenho: desenhe em
 `objetos.tsx` (mesmas regras do `cast.tsx`: chapado, sem contorno, sombra
-num lado só, cores da paleta, `accent` = a cor que a cena passa — o violeta
-das peças desde a fase 1, nunca o dourado fixo —, animação por `t` ou
+num lado só, cores da paleta, `accent` = cor da área, animação por `t` ou
 `progress`, nenhum texto), registre em `src/molde/Peca.tsx` e em
 `src/molde/catalog.json`. O render quebra se as duas listas divergirem. Se
 ela deve pousar na mesa/chão num ambiente, ponha o nome em `ON_DESK` /

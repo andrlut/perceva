@@ -460,6 +460,13 @@ const blinkAt = (t: number, seed: number) => {
   return 0;
 };
 
+/**
+ * O radar do app atrás de quem fica feliz (v4). DESLIGADO em 2026-11-07: o André viu o vídeo e
+ * achou o hexágono atrás "esquisito" — prefere as estrelinhas de brilho de sempre (as cenas voltam
+ * a pô-las quando a identidade não tem `halo`). Religar = true aqui; as opções leem daqui.
+ */
+const RADAR = false;
+
 const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 /** easeOutBack: passa um pouco e volta (o "assentar" das molas, sem spring()). */
 const outBack = (x: number) => {
@@ -653,7 +660,7 @@ const makeGente = (style: 'limpo' | 'cor'): React.FC<PessoaProps> => {
     const facet = style === 'cor' ? 0.3 : 0.42;
     return (
       <svg width={size} height={size * 1.3} viewBox="0 0 200 260" style={{ overflow: 'visible' }}>
-        {mood === 'feliz' && halo && <Halo since={sinceM} t={t} seed={seed} small={size < 170} {...(halo === 'cabeca' ? { cy: 82, R: 98 } : { cy: 128, R: 150 })} />}
+        {RADAR && mood === 'feliz' && halo && <Halo since={sinceM} t={t} seed={seed} small={size < 170} {...(halo === 'cabeca' ? { cy: 82, R: 98 } : { cy: 128, R: 150 })} />}
         <ellipse cx={100} cy={252} rx={56} ry={7} fill="rgba(0,0,0,0.25)" />
         <rect x={72} y={210} width={25} height={34} rx={9} fill={C.faint} />
         <rect x={103} y={210} width={25} height={34} rx={9} fill={C.faint} />
@@ -778,7 +785,7 @@ const Mascote: React.FC<PessoaProps> = ({ t = 0, size = 260, accent = C.violet, 
   const backVisible = hair.back && !(hideTop && (who.hair === 'afro' || who.hair === 'bun'));
   return (
     <svg width={size} height={size * 1.3} viewBox="0 0 200 260" style={{ overflow: 'visible' }}>
-      {mood === 'feliz' && halo && <Halo since={sinceM} t={t} seed={seed} small={size < 170} {...(halo === 'cabeca' ? { cy: 86, R: 108 } : { cy: 124, R: 160 })} />}
+      {RADAR && mood === 'feliz' && halo && <Halo since={sinceM} t={t} seed={seed} small={size < 170} {...(halo === 'cabeca' ? { cy: 86, R: 108 } : { cy: 124, R: 160 })} />}
       <ellipse cx={100} cy={252} rx={50} ry={7} fill="rgba(0,0,0,0.25)" />
       <rect x={76} y={216} width={20} height={28} rx={9} fill={C.faint} />
       <rect x={104} y={216} width={20} height={28} rx={9} fill={C.faint} />
@@ -884,7 +891,8 @@ export const hexaLimpo: IdentityOption = {
   Pessoa: makeGente('limpo'),
   Costas: makeCostas('limpo'),
   Backdrop,
-  halo: true,
+  halo: RADAR,
+  frenteElenco: true,
 };
 
 export const hexaMascote: IdentityOption = {
@@ -894,7 +902,8 @@ export const hexaMascote: IdentityOption = {
   Pessoa: Mascote,
   Costas: makeCostas('mascote'),
   Backdrop,
-  halo: true,
+  halo: RADAR,
+  frenteElenco: true,
 };
 
 export const hexaCor: IdentityOption = {
@@ -904,5 +913,6 @@ export const hexaCor: IdentityOption = {
   Pessoa: makeGente('cor'),
   Costas: makeCostas('cor'),
   Backdrop,
-  halo: true,
+  halo: RADAR,
+  frenteElenco: true,
 };

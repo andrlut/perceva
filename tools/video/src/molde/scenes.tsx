@@ -36,23 +36,12 @@ const useSpec = () => {
   if (!spec) throw new Error('SpecContext vazio');
   return spec;
 };
-/** Cor da ÁREA da ideia: identifica (o hexágono da sobrancelha e o do card), nunca destaca. */
-const useArea = () => dimColor(useSpec().dimension);
 /**
- * Cor das peças e do mundo da cena — fase 1 (2026-11-07): o violeta da marca, em toda ideia.
- * Antes era a cor da área; numa ideia de Prosperidade ela é o próprio dourado, e o ouro chegava a
- * 5–6 lugares ao mesmo tempo (sobrancelha, monitor, caneca, "?", sol, bloco…) e parava de apontar.
- * O dourado (C.gold) agora só marca o que importa AGORA: a palavra da legenda, o painel que ganha,
- * o bloco que energiza, a passagem pro verso e o card absorvido.
+ * Cor das peças, da sobrancelha e do mundo da cena: a cor da ÁREA da ideia. A fase 1 do requinte
+ * (2026-11-07) trocou tudo por violeta e deixou o dourado só no destaque; o André viu o vídeo e
+ * achou monótono — voltou na 1.1. Não repetir sem mostrar a ele antes.
  */
-const useAccent = (): string => C.violet2;
-
-/** Hexágono pequeno na cor da área: a área como MARCA (como no app), nunca como texto ou borda. */
-const HexChip: React.FC<{ color: string; size: number; style?: React.CSSProperties }> = ({ color, size, style }) => (
-  <svg width={size} height={size * 1.1547} viewBox="0 0 100 115.47" style={{ flex: 'none', ...style }}>
-    <path d="M50 0 L100 28.87 L100 86.6 L50 115.47 L0 86.6 L0 28.87 Z" fill={color} />
-  </svg>
-);
+const useAccent = () => dimColor(useSpec().dimension);
 /** Cor do ajudante: Ofício (teal), ou Vínculos quando a ideia já é de Ofício. */
 const helperColor = (d: DimId) => dimColor(d === 'craft' ? 'bonds' : 'craft');
 
@@ -92,10 +81,9 @@ const useTextWidth = () => {
 /** Frame da deixa, ou `fallback` quando a cena não deu deixa. */
 const at = (s: MS, phrase: string | undefined, fallback: number) => (phrase ? cue(s, phrase) : fallback);
 
-/** Sobrancelha: texto neutro (C.mid) com o hexágono da área na frente — a área marca, não pinta. */
 const Kicker: React.FC<{ text?: string; top?: number }> = ({ text, top = 200 }) => {
   const frame = useCurrentFrame();
-  const area = useArea();
+  const accent = useAccent();
   if (!text) return null;
   return (
     <div
@@ -104,20 +92,16 @@ const Kicker: React.FC<{ text?: string; top?: number }> = ({ text, top = 200 }) 
         top,
         left: 80,
         right: 80,
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        gap: 16,
+        textAlign: 'center',
         fontFamily: FONT.body,
         fontWeight: 800,
         fontSize: 32,
         letterSpacing: 7,
-        color: C.mid,
+        color: accent,
         ...fadeUp(frame, 0, 12, 16),
       }}
     >
-      <HexChip color={area} size={22} style={{ marginTop: -2 }} />
-      <span>{text.toUpperCase()}</span>
+      {text.toUpperCase()}
     </div>
   );
 };
@@ -285,7 +269,7 @@ const Clock: React.FC<{ s: MS; mode?: 'rapido' | 'calmo' | 'acalma'; turnAt: num
   const calm = mode === 'calmo' || (mode === 'acalma' && frame >= turnAt);
   return (
     <div style={{ position: 'absolute', top, left, opacity: ramp(frame, Math.max(0, s.lead - 6), 10) }}>
-      <Relogio t={frame} size={size} speed={speed} accent={calm ? accent : C.mid} />
+      <Relogio t={frame} size={size} speed={speed} accent={calm ? accent : C.violet2} />
     </div>
   );
 };
@@ -326,7 +310,7 @@ export const Pessoa_: React.FC<P> = ({ s }) => {
       </div>
       {(pr.glow && !(idHalo && mood === 'feliz')) || (pr.turn && positive && !idHalo) ? (
         <div style={{ position: 'absolute', top: 600, left: 340 }}>
-          <Brilho accent={C.violet2} t={frame} size={400} on={ramp(frame, at(s, pr.glow ?? pr.turn, 1e9), 10)} />
+          <Brilho t={frame} size={400} on={ramp(frame, at(s, pr.glow ?? pr.turn, 1e9), 10)} />
         </div>
       ) : null}
       <Drops s={s} objects={pr.objects} slots={slots} fall={amb ? 50 : 120} />
@@ -406,7 +390,7 @@ export const Virada: React.FC<P> = ({ s }) => {
       </div>
       {useIdentity().halo ? null : (
         <div style={{ position: 'absolute', top: 560, left: pr.helper ? 50 : 340 }}>
-          <Brilho accent={C.violet2} t={frame} size={380} on={ramp(frame, aTurn, 10)} />
+          <Brilho t={frame} size={380} on={ramp(frame, aTurn, 10)} />
         </div>
       )}
       {pr.helper ? (
@@ -478,7 +462,7 @@ const Pill: React.FC<{ p?: string; text: string; from: number }> = ({ p, text, f
         fontFamily: FONT.body,
         fontWeight: 800,
         fontSize: 30,
-        color: C.text,
+        color: C.gold2,
         opacity: ramp(frame, from, 12),
       }}
     >
@@ -535,8 +519,8 @@ const PanelBox: React.FC<{
         height: g.h,
         borderRadius: 34,
         background: `linear-gradient(160deg, ${C.surface2} 0%, ${C.base} 100%)`,
-        // o painel que ganha é O destaque da cena: aro dourado nítido, sem brilho em volta
-        border: `3px solid ${win > 0 ? `${C.gold}${Math.round((0.25 + 0.75 * win) * 255).toString(16).padStart(2, '0')}` : C.borderStrong}`,
+        border: `3px solid ${win > 0 ? `${accent}${Math.round((0.25 + 0.75 * win) * 255).toString(16).padStart(2, '0')}` : C.borderStrong}`,
+        boxShadow: `0 0 ${80 * win}px ${accent}55`,
         overflow: 'hidden',
         opacity: t * (1 - 0.2 * lose),
         transform: `translateY(${(1 - t) * 40}px) scale(${1 + 0.03 * win})`,
@@ -743,7 +727,7 @@ const DeskDressing: React.FC<{ tipo: string; t: number }> = ({ tipo, t }) => (
         ) : d.kind === 'planta' ? (
           <Planta t={t} size={130} accent={C.surface3} />
         ) : (
-          <Caneca t={t} size={115} accent={tipo === 'casa' ? C.mid : C.violet2} />
+          <Caneca t={t} size={115} accent={tipo === 'casa' ? C.gold : C.violet2} />
         )}
       </div>
     ))}
@@ -885,7 +869,7 @@ export const Cena: React.FC<P> = ({ s }) => {
       ))}
       {useIdentity().halo && mood === 'feliz' ? null : (
         <div style={{ position: 'absolute', top: 700, left: setting === 'cama' ? 350 : 120 }}>
-          <Brilho accent={C.violet2} t={frame} size={420} on={ramp(frame, at(s, pr.glow, 1e9), 10)} />
+          <Brilho t={frame} size={420} on={ramp(frame, at(s, pr.glow, 1e9), 10)} />
         </div>
       )}
     </Stage>
@@ -1057,8 +1041,7 @@ const BlocoBox: React.FC<{ s: MS; b: Bloco; i: number; y: number; h: number; x: 
         borderRadius: Math.min(26, h / 3),
         background: bg,
         border: `3px solid ${edge}`,
-        // fase 1: sem brilho difuso em volta do que energiza (a cor e a passada de luz já dizem)
-        boxShadow: '0 10px 24px rgba(0,0,0,0.3)',
+        boxShadow: boost > 0.05 ? `0 0 ${46 * boost}px ${C.gold}88` : '0 10px 24px rgba(0,0,0,0.3)',
         opacity: Math.min(1, d * 2) * (0.78 + 0.22 * (1 - drain)),
         transform: `translateX(${(1 - d) * 110}px) scale(${pulse * (0.94 + 0.06 * Math.min(1, d))})`,
         display: 'flex',
@@ -1135,6 +1118,8 @@ export const Mapa: React.FC<P> = ({ s }) => {
   // (o cenário só sobra do lado da pessoa)
   const geo: EnvGeo = { ground: 1140, clear: left ? [40, 400] : [680, 1040], spot: [personX + 150, 950, 330], busy: [[cardX - 20, MAPA.y - 20, cardX + MAPA.w + 20, MAPA.y + MAPA.h + 20]] };
   const penIn = ramp(frame, turnAt - 10, 12);
+  // brilho só nos blocos que PASSAM a energizar na virada (no máximo dois)
+  const newBoost = laid.filter((l) => l.b.then && (l.b.then.feel ?? l.b.feel) === 'energiza' && (l.b.then.feel !== undefined || (l.b.then.size ?? 0) > (l.b.size ?? 1))).slice(0, 2);
   return (
     <Stage s={s} geo={geo} focus={{ pessoa: [personX + 150, 950], mapa: [cardX + MAPA.w / 2, MAPA.y + MAPA.h / 2] }}>
       {/* a folha do dia */}
@@ -1147,14 +1132,14 @@ export const Mapa: React.FC<P> = ({ s }) => {
           height: MAPA.h,
           borderRadius: 40,
           background: `linear-gradient(170deg, ${C.surface} 0%, ${C.base} 100%)`,
-          border: `3px solid ${turned ? `${C.violet2}88` : C.borderStrong}`,
+          border: `3px solid ${turned ? `${C.gold}88` : C.borderStrong}`,
           boxShadow: '0 30px 80px rgba(0,0,0,0.45)',
           opacity: card,
           transform: `translateY(${(1 - card) * 40}px)`,
         }}
       >
         <div style={{ position: 'absolute', left: 34, top: 34 }}>
-          <Ion name="sunny" size={60} color={C.text} />
+          <Ion name="sunny" size={60} color={C.gold} />
         </div>
         <div style={{ position: 'absolute', left: 116, right: 40, top: 60, height: 8, borderRadius: 4, background: C.surface3 }} />
         <div style={{ position: 'absolute', left: 34, bottom: 30 }}>
@@ -1181,16 +1166,21 @@ export const Mapa: React.FC<P> = ({ s }) => {
           <BlocoBox s={s} b={b} i={i} y={by} h={h} x={bx} w={bw} k={k} />
         </React.Fragment>
       ))}
+      {newBoost.map((l, i) => (
+        <div key={i} style={{ position: 'absolute', left: bx + bw - 190, top: l.y + l.h / 2 - 150 }}>
+          <Brilho t={frame + i * 13} size={300} on={ramp(frame, turnAt + 12, 12)} />
+        </div>
+      ))}
       {/* a pessoa ao lado, que pega a caneta pra redesenhar o dia */}
       <div style={{ position: 'absolute', top: 760, left: personX, transform: left ? undefined : 'scaleX(-1)' }}>
         <Pessoa t={frame} size={300} mood={turned ? (pr.to ?? 'feliz') : (pr.mood ?? 'cansado')} since={turned ? frame - turnAt : frame} arms={frame >= turnAt - 10 ? 'out' : 'down'} accent={C.violet} />
         <div style={{ position: 'absolute', left: 262, top: 176, opacity: penIn, transform: `rotate(${-30 + Math.sin(frame / 5) * 6 * k}deg) scale(${0.7 + 0.3 * penIn})`, transformOrigin: '50% 90%' }}>
-          <Caneta size={150} accent={C.violet2} progress={0} />
+          <Caneta size={150} accent={C.gold} progress={0} />
         </div>
       </div>
       {useIdentity().halo ? null : (
         <div style={{ position: 'absolute', top: 700, left: personX - 50 }}>
-          <Brilho accent={C.violet2} t={frame} size={400} on={ramp(frame, at(s, pr.glow ?? pr.turn, 1e9) + 4, 10)} />
+          <Brilho t={frame} size={400} on={ramp(frame, at(s, pr.glow ?? pr.turn, 1e9) + 4, 10)} />
         </div>
       )}
       {pr.turn && (pr.to ?? 'feliz') === 'feliz' ? <Sfx at={turnAt + 8} name="chime" /> : null}
@@ -1201,11 +1191,11 @@ export const Mapa: React.FC<P> = ({ s }) => {
 // ===================================================================== verso
 const IdeaCard: React.FC<{ width: number; flip: number; absorbed: boolean }> = ({ width, flip, absorbed }) => {
   const spec = useSpec();
-  const area = useArea();
+  const accent = useAccent();
   const frame = useCurrentFrame();
-  // identidade que acende o hexágono (v4): a frente do card é o Elenco, não a imagem gerada da ideia
+  // identidades Hexa: a frente do card é o Elenco, não a imagem gerada da ideia
   // (revisão de marca: a imagem 4:5 é gente semi-realista, o que o André descartou)
-  const elencoFront = !!useIdentity().halo;
+  const elencoFront = !!useIdentity().frenteElenco;
   const height = width * 1.25;
   const face: React.CSSProperties = {
     position: 'absolute',
@@ -1213,10 +1203,8 @@ const IdeaCard: React.FC<{ width: number; flip: number; absorbed: boolean }> = (
     borderRadius: 36,
     overflow: 'hidden',
     backfaceVisibility: 'hidden',
-    // fase 1: aro neutro até absorver (a cor da área não vira borda); absorvido, aro dourado nítido
-    // e a mesma sombra de sempre (o brilho de 70 px em volta saiu)
-    border: `3px solid ${absorbed ? C.gold : C.borderStrong}`,
-    boxShadow: '0 30px 90px rgba(0,0,0,0.5)',
+    border: `3px solid ${absorbed ? C.gold : `${accent}AA`}`,
+    boxShadow: absorbed ? `0 0 70px ${C.gold}66` : '0 30px 90px rgba(0,0,0,0.5)',
   };
   // de lado no meio do giro o card "respira": encolhe 4% e a sombra chega mais perto
   const mid = Math.sin(Math.PI * Math.min(1, Math.max(0, flip)));
@@ -1249,7 +1237,7 @@ const IdeaCard: React.FC<{ width: number; flip: number; absorbed: boolean }> = (
             padding: width * 0.09,
           }}
         >
-          <HexChip color={area} size={34} style={{ position: 'absolute', top: width * 0.07, left: width * 0.09 }} />
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 10, background: accent }} />
           <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: claimSize, lineHeight: 1.18, color: C.hi }}>{spec.claim}</div>
         </div>
       </div>

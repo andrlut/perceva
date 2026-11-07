@@ -61,6 +61,8 @@ export type IdentityOption = {
   Virada?: React.FC<PessoaProps>;
   /** A própria Pessoa acende o hexágono no feliz: as cenas tiram o brilho (estrelinhas) pra não dizer "feliz" duas vezes. */
   halo?: boolean;
+  /** A frente do card do verso é o Elenco (a pessoa feliz), não a imagem 4:5 gerada da ideia. */
+  frenteElenco?: boolean;
   /** Opcional: motivo de fundo da identidade (atrás das pessoas, no palco). */
   Backdrop?: React.FC<{ t: number; width: number; height: number; accent: string }>;
 };
