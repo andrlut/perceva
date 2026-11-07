@@ -1,5 +1,5 @@
 import React from 'react';
-import { AbsoluteFill, Easing, interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
+import { AbsoluteFill, Easing, Img, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
 import glyphs from './ionicons.json';
 import { C, FONT, LAYOUT } from './theme';
 
@@ -19,7 +19,37 @@ export const fadeUp = (frame: number, from: number, dur = 14, dist = 28): React.
   return { opacity: t, transform: `translateY(${(1 - t) * dist}px)` };
 };
 
-export const useSpring = (from: number, config = { damping: 16, stiffness: 160, mass: 1 }) => {
+/**
+ * Molas da marca (requinte, fase 1 — 2026-11-07). Nenhuma passa de 4% do alvo: a régua dos
+ * estilos de referência é "pousar com power3/expo out, overshoot de no máximo 4%". Medidas com
+ * o spring() do Remotion 4.0.533 a 30 q/s (antes: 5% a 19%, e o amassado do Drop em ~42%).
+ * Não invente mola nova numa cena — escolha uma destas.
+ */
+export const MOLA = {
+  /** peça, chip, bloco que pousa: passa 3,1%, 90% em 6 q, assenta em 15 q */
+  pousa: { damping: 21, stiffness: 200, mass: 1 },
+  /** coisa grande que entra (pessoa, painel, folha, card): 2,5%, 90% em 8 q, assenta em 17 q */
+  entra: { damping: 18, stiffness: 140, mass: 1 },
+  /** peça que cai e amassa no impacto: 3,5% (o amassado fica em ~8% em vez de ~42%) */
+  peso: { damping: 19, stiffness: 170, mass: 1 },
+  /** soco de câmera na deixa: 3,8%, 90% em 7 q */
+  camera: { damping: 17, stiffness: 140, mass: 1 },
+  /** o card do verso vira: 1,9% (≈3° além dos 180°), 90% em 10 q */
+  vira: { damping: 14, stiffness: 80, mass: 1 },
+} as const;
+
+/**
+ * Saída: acelera pra fora (ease-in) e dura MENOS que a entrada — o olho já leu a coisa.
+ * 0 → 1 de `at` a `at + dur`. Antes as saídas eram molas lentas (90% em 14 q).
+ */
+export const sai = (frame: number, at: number, dur = 8) =>
+  interpolate(frame, [at, at + dur], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.in(Easing.cubic),
+  });
+
+export const useSpring = (from: number, config: { damping: number; stiffness: number; mass: number } = MOLA.entra) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   return spring({ frame: frame - from, fps, config });
@@ -146,7 +176,24 @@ export const Footnote: React.FC<{ text: string; from?: number; top?: number; siz
 
 // ---------------------------------------------------------------- fundo
 
-/** Noite da marca com um halo violeta que respira devagar. */
+/**
+ * Lente (requinte, fase 1): grão fixo e vinheta redonda, PRESOS ao quadro — por cima de todas as
+ * cenas e passagens (não andam com a câmera nem crescem no hexágono), por baixo da legenda.
+ * O grão (public/lente/grao.png, `node scripts/grao.mjs`) é ±2–6% de claro/escuro em células de
+ * 2 px: dá textura de papel ao chapado e quebra o degrau dos degradês navy no H.264. Fixo de
+ * propósito — grão animado custa bits e inventa "movimento" no medidor de ritmo.
+ */
+export const Lente: React.FC = () => (
+  <AbsoluteFill style={{ pointerEvents: 'none' }}>
+    <AbsoluteFill style={{ background: 'radial-gradient(ellipse 82% 64% at 50% 46%, rgba(5,7,26,0) 58%, rgba(5,7,26,0.3) 100%)' }} />
+    <Img src={staticFile('lente/grao.png')} style={{ position: 'absolute', left: 0, top: 0, width: 1080, height: 1920, imageRendering: 'pixelated' }} />
+  </AbsoluteFill>
+);
+
+/**
+ * Noite da marca com um halo violeta que respira devagar. Fase 1: saiu o halo dourado do
+ * rodapé — por cima do navy ele virava uma mancha marrom atrás da legenda e do verso.
+ */
 export const Background: React.FC = () => {
   const frame = useCurrentFrame();
   const drift = Math.sin(frame / 90) * 60;
@@ -156,11 +203,6 @@ export const Background: React.FC = () => {
       <AbsoluteFill
         style={{
           background: `radial-gradient(ellipse 900px 700px at ${540 + drift}px 380px, rgba(123,92,255,${breathe * 0.5}) 0%, rgba(75,47,204,0.12) 45%, rgba(10,14,38,0) 75%)`,
-        }}
-      />
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(ellipse 700px 600px at ${540 - drift}px 1500px, rgba(200,136,28,0.10) 0%, rgba(10,14,38,0) 70%)`,
         }}
       />
       <AbsoluteFill

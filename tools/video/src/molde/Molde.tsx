@@ -1,7 +1,7 @@
 import React from 'react';
 import { AbsoluteFill, Audio, CalculateMetadataFunction, Sequence, staticFile } from 'remotion';
 import { linearTiming, TransitionSeries } from '@remotion/transitions';
-import { Background } from '../components';
+import { Background, Lente } from '../components';
 import { Captions } from '../Captions';
 import { FADE, FPS, Timing, buildTimeline } from '../timeline';
 import { ACTIVE } from '../identidade/active';
@@ -11,7 +11,7 @@ import { VariantContext } from '../variant';
 import { MOLDE_SCENES, MS, SpecContext } from './scenes';
 import type { MoldeSpec } from './spec';
 import { SfxContext, Sfx } from './sfx';
-import { passagem, passagemKind } from './transicao';
+import { passagem, passagens } from './transicao';
 
 /** Teto do vídeo de ideia: passou disso, o render falha (corte o roteiro). */
 export const MOLDE_MAX_SECONDS = 60;
@@ -50,6 +50,7 @@ export const Molde: React.FC<MoldeProps> = ({ specKey, spec, scenes, captions, i
   const skip = scenes.filter((s) => s.scene === 'verso').map((s) => s.id);
   const who = identity ? OPTIONS.find((o) => o.id === identity) : ACTIVE;
   if (!who) throw new Error(`identidade desconhecida: ${identity} (tem: ${OPTIONS.map((o) => o.id).join(', ')})`);
+  const kinds = passagens(scenes);
   return (
     <IdentityContext.Provider value={who}>
     <SfxContext.Provider value={sfx && !spec.silent}>
@@ -64,8 +65,8 @@ export const Molde: React.FC<MoldeProps> = ({ specKey, spec, scenes, captions, i
               return (
                 <React.Fragment key={s.id}>
                   {i > 0 ? (
-                    // a passagem PRA esta cena: fade (como sempre), ou a que acompanha a câmera dela
-                    <TransitionSeries.Transition presentation={passagem(s.props?.transicao, s.props?.camera)} timing={linearTiming({ durationInFrames: FADE })} />
+                    // a passagem PRA esta cena (política em transicao.tsx: mergulho, hexa só no verso, um soco)
+                    <TransitionSeries.Transition presentation={passagem(kinds[i] ?? 'fade', s.props?.camera)} timing={linearTiming({ durationInFrames: FADE })} />
                   ) : null}
                   <TransitionSeries.Sequence durationInFrames={s.frames} name={`${s.id}·${s.scene}`}>
                     <Comp s={s} />
@@ -85,10 +86,12 @@ export const Molde: React.FC<MoldeProps> = ({ specKey, spec, scenes, captions, i
           {scenes.map((s, i) =>
             i === 0 ? null : s.scene === 'verso' ? (
               <Sfx key={`sfx-${s.id}`} at={s.start - 30} name="riser" />
-            ) : ['chicote', 'hexa', 'desliza', 'zoom'].includes(passagemKind(s.props?.transicao, s.props?.camera)) ? (
-              <Sfx key={`sfx-${s.id}`} at={s.start - 6} name="whoosh" gain={passagemKind(s.props?.transicao, s.props?.camera) === 'zoom' ? 0.6 : 1} />
+            ) : ['chicote', 'desliza', 'zoom'].includes(kinds[i] ?? 'fade') ? (
+              <Sfx key={`sfx-${s.id}`} at={s.start - 6} name="whoosh" gain={kinds[i] === 'zoom' ? 0.6 : 1} />
             ) : null,
           )}
+          {/* grão + vinheta presos ao quadro (na porta, quem põe é a Porta, por cima das duas partes) */}
+          {captions === 'door' ? null : <Lente />}
           {captions === 'door' ? (
             <Captions scenes={scenes} skip={skip} top={DOOR_CAPTION_TOP} frame="door" />
           ) : (

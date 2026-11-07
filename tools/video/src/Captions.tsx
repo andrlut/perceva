@@ -1,6 +1,6 @@
 import React from 'react';
-import { interpolate, useCurrentFrame } from 'remotion';
-import { Rich } from './components';
+import { Easing, interpolate, useCurrentFrame } from 'remotion';
+import { Rich, sai } from './components';
 import { C, FONT, LAYOUT } from './theme';
 import { Scene, cue, plain, speechEnd } from './timeline';
 
@@ -68,9 +68,14 @@ export const Captions: React.FC<{ scenes: Scene[]; skip?: string[]; top?: number
   let current = 0;
   for (let i = 0; i < chunks.length; i++) if (local >= starts[i] - 2) current = i;
   const startedAt = starts[current] - 2;
-  if (local > speechEnd(scene) + 14) return null;
+  const end = speechEnd(scene) + 14;
+  if (local > end) return null;
 
-  const t = interpolate(local - startedAt, [0, 5], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  // fase 1: o bloco novo já nasce visível (antes ele nascia com opacidade 0 no mesmo quadro em que o
+  // velho sumia — 1 quadro vazio em cada troca), sobe com ease-out, e o fim da fala sai em 6 q
+  // acelerando, em vez de sumir seco
+  const t = interpolate(local - startedAt, [0, 6], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) });
+  const out = sai(local, end - 6, 6);
   return (
     <div
       style={{
@@ -93,9 +98,10 @@ export const Captions: React.FC<{ scenes: Scene[]; skip?: string[]; top?: number
           textAlign: 'center',
           // linhas equilibradas: sem palavra órfã na segunda ("dinner / out.", "lá na / frente.")
           textWrap: 'balance',
-          textShadow: '0 2px 18px rgba(5,7,26,0.95), 0 0 2px rgba(5,7,26,1)',
-          opacity: t,
-          transform: `translateY(${(1 - t) * 8}px)`,
+          // sombra curta (a de 18 px virava brilho em volta da legenda)
+          textShadow: '0 2px 8px rgba(5,7,26,0.9), 0 0 2px rgba(5,7,26,1)',
+          opacity: (0.4 + 0.6 * t) * (1 - out),
+          transform: `translateY(${(1 - t) * 10 - out * 6}px)`,
         }}
       >
         <Rich text={chunks[current]} accent={C.gold2} />

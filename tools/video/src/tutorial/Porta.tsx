@@ -10,7 +10,7 @@ import React from 'react';
 import { AbsoluteFill, CalculateMetadataFunction, Easing, interpolate } from 'remotion';
 import { linearTiming, TransitionSeries } from '@remotion/transitions';
 import type { TransitionPresentation, TransitionPresentationComponentProps } from '@remotion/transitions';
-import { Background } from '../components';
+import { Background, Lente } from '../components';
 import { C } from '../theme';
 import { FPS, HOLD, TAIL } from '../timeline';
 import { Molde, MoldeProps, calculateMoldeMetadata } from '../molde/Molde';
@@ -87,9 +87,10 @@ export const Porta: React.FC<PortaProps> = ({ intro, tour, introFrames, tourFram
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={mergulho()} timing={linearTiming({ durationInFrames: PASS })} />
         <TransitionSeries.Sequence durationInFrames={tourFrames} name="tela">
-          <Tour {...tour} />
+          <Tour {...tour} embedded />
         </TransitionSeries.Sequence>
       </TransitionSeries>
+      <Lente />
     </AbsoluteFill>
   );
 };

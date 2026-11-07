@@ -137,17 +137,35 @@ const Passagem: React.FC<TransitionPresentationComponentProps<TP>> = ({ children
   return <AbsoluteFill style={style}>{children}</AbsoluteFill>;
 };
 
-/**
- * A passagem PRA esta cena: a que o roteiro pediu (`transicao`), senão uma que
- * acompanha a câmera (pan → desliza no mesmo sentido; push/pull/drift → zoom),
- * senão o fade de sempre.
- */
-/** A passagem que vale pra esta cena (a pedida, a que acompanha a câmera, ou fade). */
-export const passagemKind = (transicao: Transicao | undefined, cam: CameraSpec | undefined): Transicao =>
-  transicao ?? (cam && cam.move !== 'still' ? (cam.move.startsWith('pan') ? 'desliza' : 'zoom') : 'fade');
+/** Passagens que "socam" (andam, atravessam): no máximo UMA por vídeo. */
+export const SOCOS: Transicao[] = ['chicote', 'desliza', 'zoom'];
 
-export const passagem = (transicao: Transicao | undefined, cam: CameraSpec | undefined): TransitionPresentation<TP> => {
-  const kind = passagemKind(transicao, cam);
+/**
+ * Política de passagens (requinte, fase 1 — 2026-11-07). Antes cada cena escolhia a sua e a
+ * câmera puxava zoom/desliza: 5 tipos em 7 emendas, e o olho parava de ler qualquer uma.
+ *  - o padrão é o mergulho (`fade`): a antiga apaga, a nova acende;
+ *  - o hexágono é a assinatura e abre SÓ o verso (o card) — pedido em outra cena, vira mergulho;
+ *  - `chicote`/`desliza`/`zoom` só quando o roteiro pede, e só a PRIMEIRA vale (o soco do vídeo);
+ *  - `corte` sempre vale (é emenda de continuidade, não efeito);
+ *  - a câmera não escolhe mais a passagem.
+ * Devolve a passagem PRA cada cena (a 1ª não tem: null). O lint do molde avisa o que caiu.
+ */
+export const passagens = (scenes: { scene: string; props?: { transicao?: Transicao; camera?: CameraSpec } }[]): (Transicao | null)[] => {
+  let soco = false;
+  return scenes.map((s, i) => {
+    if (i === 0) return null;
+    if (s.scene === 'verso') return 'hexa';
+    const asked = s.props?.transicao;
+    if (asked === 'corte') return 'corte';
+    if (asked && SOCOS.includes(asked) && !soco) {
+      soco = true;
+      return asked;
+    }
+    return 'fade';
+  });
+};
+
+export const passagem = (kind: Transicao, cam: CameraSpec | undefined): TransitionPresentation<TP> => {
   const dir: 1 | -1 = cam?.move === 'pan-left' ? -1 : 1;
   return { component: Passagem, props: { kind, dir } };
 };

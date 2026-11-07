@@ -6,7 +6,7 @@
 //   props.mode = "replica" → só a tela, sem tour (folha de conferência contra o app)
 import React, { useMemo } from 'react';
 import { AbsoluteFill, Audio, CalculateMetadataFunction, Sequence, interpolate, staticFile, useCurrentFrame } from 'remotion';
-import { Background, Rich } from '../components';
+import { Background, Lente, Rich } from '../components';
 import { C } from '../theme';
 import { FPS, Timing, buildTimeline, cue, plain, speechEnd } from '../timeline';
 import { type Plan, beatFrame, buildPlan } from './engine';
@@ -34,6 +34,8 @@ export type TourProps = {
   fixture?: string;
   lang?: Lang;
   state?: Record<string, unknown>;
+  /** dentro da Porta: a lente (grão + vinheta) vem da Porta, por cima das duas partes */
+  embedded?: boolean;
 };
 
 // Grade do quadro 9:16: cabeçalho em cima, palco no meio, legenda embaixo.
@@ -214,7 +216,7 @@ export const Tour: React.FC<TourProps> = (props) => {
   return <TourFilm {...props} />;
 };
 
-const TourFilm: React.FC<TourProps> = ({ tourKey, spec, scenes }) => {
+const TourFilm: React.FC<TourProps> = ({ tourKey, spec, scenes, embedded = false }) => {
   const frame = useCurrentFrame();
   const stage = useMemo(() => (spec ? stageFor(spec.screen) : null), [spec]);
   const plan = useMemo(() => (spec && stage ? buildPlan(spec, scenes, screenModule(spec.screen), stage) : null), [spec, scenes, stage]);
@@ -240,6 +242,7 @@ const TourFilm: React.FC<TourProps> = ({ tourKey, spec, scenes }) => {
       </CameraLayer>
       {callout ? <Callout target={callout.rect} text={callout.text} t={callout.t} bounds={{ top: STAGE_TOP, bottom: STAGE_TOP + STAGE_H }} /> : null}
       {finger ? <Finger {...finger} /> : null}
+      {embedded ? null : <Lente />}
       <TourCaptions scenes={scenes} />
       {spec.silent
         ? null

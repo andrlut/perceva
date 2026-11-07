@@ -25,7 +25,7 @@
 // nem video.json, então não tem como subir prévia pro bucket). Rode `build` sem --silent pra voltar.
 import fs from 'node:fs';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { markVoiced, pendingLines } from './voiced.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
@@ -191,6 +191,18 @@ function lintIdea(ideaId, spec, card, lang, errors, warns) {
   const last = lines[lines.length - 1];
   if (bridge && lines.some((l) => l.scene === 'verso')) errors.push(`${ideaId}: abertura de porta não tem verso (ela emenda na tela: tools/video/TOUR.md)`);
   if (!bridge && last.scene !== 'verso') errors.push(`${ideaId}: a última cena tem que ser "verso" (a voz lê o card)`);
+  // passagens (requinte fase 1, src/molde/transicao.tsx `passagens`): o padrão é o mergulho, o
+  // hexágono só abre o verso, e só UMA passagem que anda (chicote/desliza/zoom) vale por vídeo
+  let socoAt = null;
+  for (const [i, raw] of lines.entries()) {
+    const t = raw.props?.transicao;
+    if (!t || i === 0) continue;
+    if (t === 'hexa' && raw.scene !== 'verso') warns.push(where(raw.id, 'transicao "hexa" só abre o verso (é a assinatura) — aqui vira mergulho'));
+    if (['chicote', 'desliza', 'zoom'].includes(t)) {
+      if (socoAt) warns.push(where(raw.id, `transicao "${t}": o vídeo já soca em ${socoAt} (uma passagem que anda por vídeo) — aqui vira mergulho`));
+      else socoAt = raw.id;
+    }
+  }
   const ids = new Set();
   let chars = 0;
   let extra = 0;
@@ -448,6 +460,29 @@ const serve = async () => {
   return bundled;
 };
 
+/**
+ * Medidor de ritmo (scripts/ritmo.mjs) depois de todo render — só AVISA, não barra. A régua é a dos
+ * estilos de referência (requinte, 2026-11-07): quase-parada entre 16% e 55%, nenhum trecho de
+ * mais de 1 s sem nada grande se mexendo. `--sem-ritmo` pula (≈20 s por vídeo).
+ */
+const ritmo = (mp4, out) => {
+  if (argv.includes('--sem-ritmo')) return;
+  const r = spawnSync(process.execPath, [path.join(root, 'scripts', 'ritmo.mjs'), mp4, '--json', out, '--end-hold', '2'], { encoding: 'utf8', maxBuffer: 64e6 });
+  if (r.status === 2 || !fs.existsSync(out)) return console.warn(`! ritmo: não consegui medir ${path.basename(mp4)}`);
+  const j = readJson(out);
+  const holes = j.ritmo.buracos_mortos;
+  const list = holes.map(([a, b]) => `${a}–${b} s`).join(' · ');
+  console.log(
+    `  ritmo: ${Math.round(j.fracao_parada * 100)}% em quase-parada (referência 16–55%) · amplitude ${j.amplitude.toFixed(1)}x · ${j.picos.length} pico(s) · ` +
+      `${holes.length ? `${holes.length} buraco(s) > 1 s: ${list}` : 'nenhum buraco > 1 s'}${j.ritmo.passou ? '' : ' — AVISO (não barra)'} · ${path.relative(repo, out)}`,
+  );
+};
+
+// versão do app (720p): lanczos na redução e x264 afinado pra animação chapada (menos bloco no
+// degradê e no texto) — fase 1 do requinte; antes era bicúbico sem tune. crf 25: o grão da Lente
+// sobrevive e o vídeo fica em ~4 MB por 50 s (no crf 23 o grão levava a 5,0 MB; antes eram 3,5)
+const PUB_ENCODE = ['-vf', 'scale=720:1280:flags=lanczos', '-c:v', 'libx264', '-crf', '25', '-preset', 'slow', '-tune', 'animation', '-pix_fmt', 'yuv420p'];
+
 async function render(ctx) {
   const { renderMedia, selectComposition } = await import('@remotion/renderer');
   const serveUrl = await serve();
@@ -470,6 +505,9 @@ async function render(ctx) {
         serveUrl,
         composition,
         codec: 'h264',
+        // fase 1 do requinte: captura sem perda. O padrão da API é JPEG 80 (o setJpegQuality do
+        // remotion.config.ts só vale na linha de comando) — degrau no navy e filete dourado borrado
+        imageFormat: 'png',
         outputLocation: full,
         inputProps,
         onProgress: ({ progress }) => {
@@ -478,6 +516,7 @@ async function render(ctx) {
         },
       });
       console.log('');
+      ritmo(full, full.replace(/\.mp4$/, '.ritmo.json'));
       if (identity) {
         console.log(`✓ ${k}: comparação de identidade "${identity}" · ${path.relative(repo, full)} (não sobe)`);
         continue;
@@ -494,7 +533,7 @@ async function render(ctx) {
       const name = `${card.file ?? `idea.${card.ordinal}`}.${lang}.r${rev}`;
       const mp4 = path.join(dir, 'pub', `${name}.mp4`);
       const poster = path.join(dir, 'pub', `${name}.poster.webp`);
-      execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', full, '-vf', 'scale=720:1280', '-c:v', 'libx264', '-crf', '23', '-preset', 'slow', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '96k', '-movflags', '+faststart', mp4]);
+      execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', full, ...PUB_ENCODE, '-c:a', 'aac', '-b:a', '96k', '-movflags', '+faststart', mp4]);
       execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-ss', '3.5', '-i', mp4, '-frames:v', '1', '-vf', 'scale=720:-1', '-c:v', 'libwebp', '-quality', '82', poster]);
       const secs = Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', mp4]).toString());
       const video = { path: `${slug}/${name}.mp4`, duration_seconds: Math.round(secs), poster: `${slug}/${name}.poster.webp`, producer: 'remotion' };

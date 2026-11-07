@@ -13,7 +13,7 @@
 // pés da protagonista, a faixa que ela ocupa, o que a câmera pode focar).
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { AbsoluteFill, Img, continueRender, delayRender, interpolate, interpolateColors, spring, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
-import { fadeUp, ramp } from '../components';
+import { MOLA, fadeUp, ramp, sai } from '../components';
 import { fontsReady } from '../fonts';
 import { Brilho, Pensamento, Pessoa, Relogio, Semana, Sofa } from '../elenco/cast';
 import { Encosto, SET } from '../elenco/cenario';
@@ -36,7 +36,23 @@ const useSpec = () => {
   if (!spec) throw new Error('SpecContext vazio');
   return spec;
 };
-const useAccent = () => dimColor(useSpec().dimension);
+/** Cor da ÁREA da ideia: identifica (o hexágono da sobrancelha e o do card), nunca destaca. */
+const useArea = () => dimColor(useSpec().dimension);
+/**
+ * Cor das peças e do mundo da cena — fase 1 (2026-11-07): o violeta da marca, em toda ideia.
+ * Antes era a cor da área; numa ideia de Prosperidade ela é o próprio dourado, e o ouro chegava a
+ * 5–6 lugares ao mesmo tempo (sobrancelha, monitor, caneca, "?", sol, bloco…) e parava de apontar.
+ * O dourado (C.gold) agora só marca o que importa AGORA: a palavra da legenda, o painel que ganha,
+ * o bloco que energiza, a passagem pro verso e o card absorvido.
+ */
+const useAccent = (): string => C.violet2;
+
+/** Hexágono pequeno na cor da área: a área como MARCA (como no app), nunca como texto ou borda. */
+const HexChip: React.FC<{ color: string; size: number; style?: React.CSSProperties }> = ({ color, size, style }) => (
+  <svg width={size} height={size * 1.1547} viewBox="0 0 100 115.47" style={{ flex: 'none', ...style }}>
+    <path d="M50 0 L100 28.87 L100 86.6 L50 115.47 L0 86.6 L0 28.87 Z" fill={color} />
+  </svg>
+);
 /** Cor do ajudante: Ofício (teal), ou Vínculos quando a ideia já é de Ofício. */
 const helperColor = (d: DimId) => dimColor(d === 'craft' ? 'bonds' : 'craft');
 
@@ -46,7 +62,7 @@ const useSpr = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   return (at: number, config: Partial<{ damping: number; stiffness: number; mass: number }> = {}) =>
-    spring({ frame: frame - at, fps, config: { damping: 15, stiffness: 120, mass: 1, ...config } });
+    spring({ frame: frame - at, fps, config: { ...MOLA.entra, ...config } });
 };
 
 /**
@@ -76,9 +92,10 @@ const useTextWidth = () => {
 /** Frame da deixa, ou `fallback` quando a cena não deu deixa. */
 const at = (s: MS, phrase: string | undefined, fallback: number) => (phrase ? cue(s, phrase) : fallback);
 
+/** Sobrancelha: texto neutro (C.mid) com o hexágono da área na frente — a área marca, não pinta. */
 const Kicker: React.FC<{ text?: string; top?: number }> = ({ text, top = 200 }) => {
   const frame = useCurrentFrame();
-  const accent = useAccent();
+  const area = useArea();
   if (!text) return null;
   return (
     <div
@@ -87,16 +104,20 @@ const Kicker: React.FC<{ text?: string; top?: number }> = ({ text, top = 200 }) 
         top,
         left: 80,
         right: 80,
-        textAlign: 'center',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 16,
         fontFamily: FONT.body,
         fontWeight: 800,
         fontSize: 32,
         letterSpacing: 7,
-        color: accent,
+        color: C.mid,
         ...fadeUp(frame, 0, 12, 16),
       }}
     >
-      {text.toUpperCase()}
+      <HexChip color={area} size={22} style={{ marginTop: -2 }} />
+      <span>{text.toUpperCase()}</span>
     </div>
   );
 };
@@ -181,10 +202,10 @@ const Drop: React.FC<{ s: MS; p: string; cueAt?: string; out?: string; stay?: bo
   const accent = useAccent();
   // `stay`: já estava em cena (com corte seco da fala anterior) — sem queda, sem sumir no corte
   const dropAt = at(s, cueAt, s.lead + delay);
-  const t = stay ? 1 : spr(dropAt, { damping: 11, stiffness: 140 });
+  const t = stay ? 1 : spr(dropAt, MOLA.peso);
   // v4: amassa no impacto (a mola passa do alvo): achata e alarga mantendo o volume, depois assenta
   const sq = Math.max(0, t - 1) * 2.2;
-  const gone = out ? spr(cue(s, out), { damping: 20, stiffness: 80 }) : 0;
+  const gone = out ? sai(frame, cue(s, out), 8) : 0;
   const land = fall < 120;
   // desenho que flutua por cima de móvel (estante, mesa): vai numa ficha redonda, como o ícone do app,
   // pra não sumir no colorido do cenário
@@ -264,7 +285,7 @@ const Clock: React.FC<{ s: MS; mode?: 'rapido' | 'calmo' | 'acalma'; turnAt: num
   const calm = mode === 'calmo' || (mode === 'acalma' && frame >= turnAt);
   return (
     <div style={{ position: 'absolute', top, left, opacity: ramp(frame, Math.max(0, s.lead - 6), 10) }}>
-      <Relogio t={frame} size={size} speed={speed} accent={calm ? accent : C.violet2} />
+      <Relogio t={frame} size={size} speed={speed} accent={calm ? accent : C.mid} />
     </div>
   );
 };
@@ -291,7 +312,7 @@ export const Pessoa_: React.FC<P> = ({ s }) => {
   const positive = (pr.to ?? 'feliz') === 'feliz';
   // a identidade que acende o hexágono no feliz já diz "feliz": sem estrelinhas por cima
   const idHalo = !!useIdentity().halo;
-  const me = spr(0, { damping: 16 });
+  const me = spr(0);
   const slots = (amb ? SLOTS_AMB : SLOTS).map((sl, i) => ({ ...sl, size: i % 2 ? 250 : 280 }));
   // o cenário tira colega, móvel e primeiro plano de baixo das peças (e do relógio)
   const busy: Rect[] = [...busyOf(pr.objects, slots), ...(pr.clock ? [[640, 330, 870, 560] as Rect] : [])];
@@ -305,7 +326,7 @@ export const Pessoa_: React.FC<P> = ({ s }) => {
       </div>
       {(pr.glow && !(idHalo && mood === 'feliz')) || (pr.turn && positive && !idHalo) ? (
         <div style={{ position: 'absolute', top: 600, left: 340 }}>
-          <Brilho t={frame} size={400} on={ramp(frame, at(s, pr.glow ?? pr.turn, 1e9), 10)} />
+          <Brilho accent={C.violet2} t={frame} size={400} on={ramp(frame, at(s, pr.glow ?? pr.turn, 1e9), 10)} />
         </div>
       ) : null}
       <Drops s={s} objects={pr.objects} slots={slots} fall={amb ? 50 : 120} />
@@ -324,7 +345,7 @@ export const Semana_: React.FC<P> = ({ s }) => {
   const b = at(s, pr.until, speechEnd(s) - 10);
   const fill = ramp(frame, a, Math.max(10, b - a + 10));
   const speed = interpolate(frame, [a, b + 10], [1.5, 9], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-  const week = spr(s.lead - 4, { damping: 16 });
+  const week = spr(s.lead - 4);
   // a semana e o relógio ficam por cima do cenário
   const geo: EnvGeo = { ground: 1140, clear: [480, 820], spot: [650, 950, 360], busy: [[110, 320, 970, 682], [150, 820, 380, 1050]] };
   return (
@@ -356,7 +377,7 @@ export const Virada: React.FC<P> = ({ s }) => {
   const aGive = at(s, pr.from, s.lead + 6);
   const aTurn = at(s, pr.turn, speechEnd(s) - 20);
   const pass = spr(aGive + 6, { damping: 18, stiffness: 80 });
-  const helper = pr.helper ? spr(aGive, { damping: 14 }) : 0;
+  const helper = pr.helper ? spr(aGive) : 0;
   const happy = frame >= aTurn;
   const sweep = pr.helper && frame >= aGive + 18 ? Math.sin(frame / 4) * 14 : 0;
   const hc = helperColor(spec.dimension);
@@ -385,7 +406,7 @@ export const Virada: React.FC<P> = ({ s }) => {
       </div>
       {useIdentity().halo ? null : (
         <div style={{ position: 'absolute', top: 560, left: pr.helper ? 50 : 340 }}>
-          <Brilho t={frame} size={380} on={ramp(frame, aTurn, 10)} />
+          <Brilho accent={C.violet2} t={frame} size={380} on={ramp(frame, aTurn, 10)} />
         </div>
       )}
       {pr.helper ? (
@@ -428,7 +449,7 @@ export const Multidao: React.FC<P> = ({ s }) => {
       <div style={{ position: 'absolute', top: 330, left: 70, width: 940, display: 'flex', flexWrap: 'wrap', rowGap: 18 }}>
         {Array.from({ length: 20 }, (_, i) => {
           const isOn = on.slice(0, lit).includes(i);
-          const t = spr(i * 1.2, { damping: 13 });
+          const t = spr(i * 1.2, MOLA.pousa);
           return (
             <div key={i} style={{ width: 188, display: 'flex', justifyContent: 'center', opacity: t, transform: `translateY(${(1 - t) * 30}px) scale(${isOn ? 1.06 : 1})` }}>
               <Pessoa t={frame} size={150} seed={i} skin={SKINS[(i * 7) % SKINS.length]} accent={isOn ? accent : C.surface3} mood={isOn ? 'feliz' : 'ok'} arms={isOn ? 'up' : 'none'} />
@@ -457,7 +478,7 @@ const Pill: React.FC<{ p?: string; text: string; from: number }> = ({ p, text, f
         fontFamily: FONT.body,
         fontWeight: 800,
         fontSize: 30,
-        color: C.gold2,
+        color: C.text,
         opacity: ramp(frame, from, 12),
       }}
     >
@@ -495,9 +516,9 @@ const PanelBox: React.FC<{
   const frame = useCurrentFrame();
   const spr = useSpr();
   const accent = useAccent();
-  const t = spr(from, { damping: 15 });
-  const arrive = spr(at(s, panel.arrives, from + 8), { damping: 12 });
-  const leave = panel.leaves ? spr(cue(s, panel.leaves) + 6, { damping: 20, stiffness: 70 }) : 0;
+  const t = spr(from);
+  const arrive = spr(at(s, panel.arrives, from + 8), MOLA.pousa);
+  const leave = panel.leaves ? sai(frame, cue(s, panel.leaves) + 6, 10) : 0;
   const mood: Mood = win > 0.5 ? 'feliz' : (panel.mood ?? 'ok');
   const ob = g.object;
   const [ow, oh] = panel.object ? pieceBox(panel.object, ob.size) : [0, 0];
@@ -514,8 +535,8 @@ const PanelBox: React.FC<{
         height: g.h,
         borderRadius: 34,
         background: `linear-gradient(160deg, ${C.surface2} 0%, ${C.base} 100%)`,
-        border: `3px solid ${win > 0 ? `${accent}${Math.round((0.25 + 0.75 * win) * 255).toString(16).padStart(2, '0')}` : C.borderStrong}`,
-        boxShadow: `0 0 ${80 * win}px ${accent}55`,
+        // o painel que ganha é O destaque da cena: aro dourado nítido, sem brilho em volta
+        border: `3px solid ${win > 0 ? `${C.gold}${Math.round((0.25 + 0.75 * win) * 255).toString(16).padStart(2, '0')}` : C.borderStrong}`,
         overflow: 'hidden',
         opacity: t * (1 - 0.2 * lose),
         transform: `translateY(${(1 - t) * 40}px) scale(${1 + 0.03 * win})`,
@@ -574,7 +595,7 @@ const Chips: React.FC<{ s: MS; chips: Chip[]; top: number; left: number; width: 
   return (
     <div style={{ position: 'absolute', top, left, width, display: 'flex', flexDirection: 'column', gap: 18 }}>
       {chips.map((c) => {
-        const t = spr(cue(s, c.cue), { damping: 14, stiffness: 150 });
+        const t = spr(cue(s, c.cue), MOLA.pousa);
         return (
           <div
             key={c.text}
@@ -634,7 +655,7 @@ export const Lista: React.FC<P> = ({ s }) => {
   const frame = useCurrentFrame();
   const spr = useSpr();
   const pr = s.props ?? {};
-  const me = spr(0, { damping: 16 });
+  const me = spr(0);
   const last = pr.items?.length ? cue(s, pr.items[pr.items.length - 1].cue) : 1e9;
   const n = Math.min(3, pr.items?.length ?? 0);
   const geo: EnvGeo = { ground: 712, clear: [340, 720], spot: [530, 510, 320], busy: n ? [[90, 790, 990, 790 + n * 132]] : [] };
@@ -722,7 +743,7 @@ const DeskDressing: React.FC<{ tipo: string; t: number }> = ({ tipo, t }) => (
         ) : d.kind === 'planta' ? (
           <Planta t={t} size={130} accent={C.surface3} />
         ) : (
-          <Caneca t={t} size={115} accent={tipo === 'casa' ? C.gold : C.violet2} />
+          <Caneca t={t} size={115} accent={tipo === 'casa' ? C.mid : C.violet2} />
         )}
       </div>
     ))}
@@ -738,8 +759,8 @@ export const Cena: React.FC<P> = ({ s }) => {
   const pr = s.props ?? {};
   const amb = !!pr.ambiente;
   const setting = pr.setting ?? 'chao';
-  const enter = spr(s.lead - 4, { damping: 16 });
-  const helper = pr.helper ? spr(at(s, pr.from, s.lead + 10), { damping: 14 }) : 0;
+  const enter = spr(s.lead - 4);
+  const helper = pr.helper ? spr(at(s, pr.from, s.lead + 10)) : 0;
   const walk = Math.sin(frame / 18);
   const mood = pr.mood ?? 'feliz';
   // a ação acontece ao longo da fala (caderno sendo escrito, tela acendendo)
@@ -864,7 +885,7 @@ export const Cena: React.FC<P> = ({ s }) => {
       ))}
       {useIdentity().halo && mood === 'feliz' ? null : (
         <div style={{ position: 'absolute', top: 700, left: setting === 'cama' ? 350 : 120 }}>
-          <Brilho t={frame} size={420} on={ramp(frame, at(s, pr.glow, 1e9), 10)} />
+          <Brilho accent={C.violet2} t={frame} size={420} on={ramp(frame, at(s, pr.glow, 1e9), 10)} />
         </div>
       )}
     </Stage>
@@ -1012,7 +1033,7 @@ const MAPA = { y: 300, w: 540, h: 1040, pad: 120 };
 const BlocoBox: React.FC<{ s: MS; b: Bloco; i: number; y: number; h: number; x: number; w: number; k: number }> = ({ s, b, i, y, h, x, w, k }) => {
   const frame = useCurrentFrame();
   const spr = useSpr();
-  const d = spr(at(s, b.cue, s.lead + 6 + i * 9), { damping: 13, stiffness: 140 });
+  const d = spr(at(s, b.cue, s.lead + 6 + i * 9), MOLA.pousa);
   const to = b.then?.feel ?? b.feel;
   const kk = b.then ? k : 0;
   const bg = interpolateColors(kk, [0, 1], [FEEL[b.feel].bg, FEEL[to].bg]);
@@ -1036,7 +1057,8 @@ const BlocoBox: React.FC<{ s: MS; b: Bloco; i: number; y: number; h: number; x: 
         borderRadius: Math.min(26, h / 3),
         background: bg,
         border: `3px solid ${edge}`,
-        boxShadow: boost > 0.05 ? `0 0 ${46 * boost}px ${C.gold}88` : '0 10px 24px rgba(0,0,0,0.3)',
+        // fase 1: sem brilho difuso em volta do que energiza (a cor e a passada de luz já dizem)
+        boxShadow: '0 10px 24px rgba(0,0,0,0.3)',
         opacity: Math.min(1, d * 2) * (0.78 + 0.22 * (1 - drain)),
         transform: `translateX(${(1 - d) * 110}px) scale(${pulse * (0.94 + 0.06 * Math.min(1, d))})`,
         display: 'flex',
@@ -1089,7 +1111,7 @@ export const Mapa: React.FC<P> = ({ s }) => {
   const turnAt = at(s, pr.turn, 1e9);
   const k = ramp(frame, turnAt, 28);
   const turned = frame >= turnAt;
-  const card = spr(s.lead - 8, { damping: 16 });
+  const card = spr(s.lead - 8);
   // o dia em blocos: comprimento ∝ size, unidade fixa nas duas batidas (o dia não encolhe)
   const top0 = MAPA.y + MAPA.pad;
   const avail = MAPA.h - MAPA.pad * 2;
@@ -1113,8 +1135,6 @@ export const Mapa: React.FC<P> = ({ s }) => {
   // (o cenário só sobra do lado da pessoa)
   const geo: EnvGeo = { ground: 1140, clear: left ? [40, 400] : [680, 1040], spot: [personX + 150, 950, 330], busy: [[cardX - 20, MAPA.y - 20, cardX + MAPA.w + 20, MAPA.y + MAPA.h + 20]] };
   const penIn = ramp(frame, turnAt - 10, 12);
-  // brilho só nos blocos que PASSAM a energizar na virada (no máximo dois)
-  const newBoost = laid.filter((l) => l.b.then && (l.b.then.feel ?? l.b.feel) === 'energiza' && (l.b.then.feel !== undefined || (l.b.then.size ?? 0) > (l.b.size ?? 1))).slice(0, 2);
   return (
     <Stage s={s} geo={geo} focus={{ pessoa: [personX + 150, 950], mapa: [cardX + MAPA.w / 2, MAPA.y + MAPA.h / 2] }}>
       {/* a folha do dia */}
@@ -1127,14 +1147,14 @@ export const Mapa: React.FC<P> = ({ s }) => {
           height: MAPA.h,
           borderRadius: 40,
           background: `linear-gradient(170deg, ${C.surface} 0%, ${C.base} 100%)`,
-          border: `3px solid ${turned ? `${C.gold}88` : C.borderStrong}`,
+          border: `3px solid ${turned ? `${C.violet2}88` : C.borderStrong}`,
           boxShadow: '0 30px 80px rgba(0,0,0,0.45)',
           opacity: card,
           transform: `translateY(${(1 - card) * 40}px)`,
         }}
       >
         <div style={{ position: 'absolute', left: 34, top: 34 }}>
-          <Ion name="sunny" size={60} color={C.gold} />
+          <Ion name="sunny" size={60} color={C.text} />
         </div>
         <div style={{ position: 'absolute', left: 116, right: 40, top: 60, height: 8, borderRadius: 4, background: C.surface3 }} />
         <div style={{ position: 'absolute', left: 34, bottom: 30 }}>
@@ -1161,21 +1181,16 @@ export const Mapa: React.FC<P> = ({ s }) => {
           <BlocoBox s={s} b={b} i={i} y={by} h={h} x={bx} w={bw} k={k} />
         </React.Fragment>
       ))}
-      {newBoost.map((l, i) => (
-        <div key={i} style={{ position: 'absolute', left: bx + bw - 190, top: l.y + l.h / 2 - 150 }}>
-          <Brilho t={frame + i * 13} size={300} on={ramp(frame, turnAt + 12, 12)} />
-        </div>
-      ))}
       {/* a pessoa ao lado, que pega a caneta pra redesenhar o dia */}
       <div style={{ position: 'absolute', top: 760, left: personX, transform: left ? undefined : 'scaleX(-1)' }}>
         <Pessoa t={frame} size={300} mood={turned ? (pr.to ?? 'feliz') : (pr.mood ?? 'cansado')} since={turned ? frame - turnAt : frame} arms={frame >= turnAt - 10 ? 'out' : 'down'} accent={C.violet} />
         <div style={{ position: 'absolute', left: 262, top: 176, opacity: penIn, transform: `rotate(${-30 + Math.sin(frame / 5) * 6 * k}deg) scale(${0.7 + 0.3 * penIn})`, transformOrigin: '50% 90%' }}>
-          <Caneta size={150} accent={C.gold} progress={0} />
+          <Caneta size={150} accent={C.violet2} progress={0} />
         </div>
       </div>
       {useIdentity().halo ? null : (
         <div style={{ position: 'absolute', top: 700, left: personX - 50 }}>
-          <Brilho t={frame} size={400} on={ramp(frame, at(s, pr.glow ?? pr.turn, 1e9) + 4, 10)} />
+          <Brilho accent={C.violet2} t={frame} size={400} on={ramp(frame, at(s, pr.glow ?? pr.turn, 1e9) + 4, 10)} />
         </div>
       )}
       {pr.turn && (pr.to ?? 'feliz') === 'feliz' ? <Sfx at={turnAt + 8} name="chime" /> : null}
@@ -1186,7 +1201,7 @@ export const Mapa: React.FC<P> = ({ s }) => {
 // ===================================================================== verso
 const IdeaCard: React.FC<{ width: number; flip: number; absorbed: boolean }> = ({ width, flip, absorbed }) => {
   const spec = useSpec();
-  const accent = useAccent();
+  const area = useArea();
   const frame = useCurrentFrame();
   // identidade que acende o hexágono (v4): a frente do card é o Elenco, não a imagem gerada da ideia
   // (revisão de marca: a imagem 4:5 é gente semi-realista, o que o André descartou)
@@ -1198,13 +1213,17 @@ const IdeaCard: React.FC<{ width: number; flip: number; absorbed: boolean }> = (
     borderRadius: 36,
     overflow: 'hidden',
     backfaceVisibility: 'hidden',
-    border: `3px solid ${absorbed ? C.gold : `${accent}AA`}`,
-    boxShadow: absorbed ? `0 0 70px ${C.gold}66` : '0 30px 90px rgba(0,0,0,0.5)',
+    // fase 1: aro neutro até absorver (a cor da área não vira borda); absorvido, aro dourado nítido
+    // e a mesma sombra de sempre (o brilho de 70 px em volta saiu)
+    border: `3px solid ${absorbed ? C.gold : C.borderStrong}`,
+    boxShadow: '0 30px 90px rgba(0,0,0,0.5)',
   };
+  // de lado no meio do giro o card "respira": encolhe 4% e a sombra chega mais perto
+  const mid = Math.sin(Math.PI * Math.min(1, Math.max(0, flip)));
   const len = spec.claim.length;
   const claimSize = width * (len > 120 ? 0.066 : len > 95 ? 0.072 : 0.078);
   return (
-    <div style={{ width, height, perspective: 2200 }}>
+    <div style={{ width, height, perspective: 2200, transform: `scale(${1 - 0.04 * mid})` }}>
       <div style={{ position: 'relative', width: '100%', height: '100%', transformStyle: 'preserve-3d', transform: `rotateY(${flip * 180}deg)` }}>
         <div style={{ ...face, background: `linear-gradient(160deg, ${C.surface2} 0%, ${C.base} 100%)` }}>
           {elencoFront ? (
@@ -1230,7 +1249,7 @@ const IdeaCard: React.FC<{ width: number; flip: number; absorbed: boolean }> = (
             padding: width * 0.09,
           }}
         >
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 10, background: accent }} />
+          <HexChip color={area} size={34} style={{ position: 'absolute', top: width * 0.07, left: width * 0.09 }} />
           <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: claimSize, lineHeight: 1.18, color: C.hi }}>{spec.claim}</div>
         </div>
       </div>
@@ -1247,7 +1266,9 @@ const VERSO = {
 export const Verso: React.FC<P> = ({ s }) => {
   const frame = useCurrentFrame();
   const spec = useSpec();
-  const flip = interpolate(frame, [s.lead - 14, s.lead + 8], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  const { fps } = useVideoConfig();
+  // fase 1: o giro é mola (MOLA.vira: passa ~3° e assenta), não mais linear em 22 q parando seco
+  const flip = spring({ frame: frame - (s.lead - 12), fps, config: MOLA.vira });
   const absorbed = frame > speechEnd(s) + 6;
   const L = VERSO[spec.lang];
   return (

@@ -237,26 +237,73 @@ encurtar sem regravar a voz.
 - **Câmera na mão (v4, sempre ligada):** toda cena com palco respira 3–5 px e
   ±0,2°, por profundidade (o fundo anda menos). Desligar: `HANDHELD = 0` em
   `src/molde/camera.tsx`.
-- **Soco de mola (v4):** com `cue`, o movimento é uma mola que passa ~4% do
-  alvo e assenta em ~15 quadros (antes era uma curva de 40 quadros).
+- **Soco de mola (v4):** com `cue`, o movimento é uma mola (`MOLA.camera`,
+  fase 1: passa 3,8% do alvo, 90% em 7 quadros; na v4 passava 7,3%).
 - **Rack focus (v4):** no `push` (e no `dolly`) o fundo desfoca enquanto a
   câmera chega (até |1 − profundidade| × 7 px); no `pull` ele volta a focar.
 
 `transicao` diz como **esta** cena entra (a passagem da anterior pra ela):
-`fade` (a de sempre), `zoom` (atravessa: a antiga cresce, a nova chega
-grande e assenta), `desliza` (a câmera continua andando de lado), `corte`
-(seco), `hexa` (v4: a antiga cresce e some, a nova nasce de dentro de um
-hexágono que se abre com aro dourado — use em "outro caminho", virada de tema
-e no verso; abre na altura do peito/mesa, (540, 1100), nunca no rosto) e
-`chicote` (v4: whip pan, as duas cenas correm juntas pro lado, cada uma
-recortada no próprio quadro, com desfoque horizontal que segue a velocidade
-— "em outro lugar", "enquanto isso"). Desde a v4.1 o `fade` é um mergulho
-curto (a antiga apaga na 1ª metade, a nova acende na 2ª) e `zoom`/`desliza`
-também apagam a antiga: no crossfade cheio, títulos e rostos das duas cenas
-ficavam sobrepostos por ~8 quadros. Sem `transicao`: cena com câmera entra com a passagem que combina
-com o movimento (pan → `desliza` no mesmo sentido; push/pull/drift →
-`zoom`), cena sem câmera entra com `fade` como sempre. Todas cabem no mesmo
-crossfade de 10 frames: a duração do vídeo não muda.
+`fade` (mergulho: a antiga apaga na 1ª metade, a nova acende na 2ª), `zoom`
+(atravessa: a antiga cresce, a nova chega grande e assenta), `desliza` (a
+câmera continua andando de lado), `corte` (seco), `chicote` (whip pan, as
+duas cenas correm juntas pro lado, com desfoque horizontal que segue a
+velocidade — "em outro lugar", "enquanto isso") e `hexa` (a nova nasce de
+dentro de um hexágono que se abre na altura do peito, (540, 1100), com aro
+dourado). Todas cabem no mesmo crossfade de 10 frames: a duração do vídeo
+não muda.
+
+**Política de passagens (requinte, fase 1 — `passagens()` em
+`src/molde/transicao.tsx`; o lint avisa o que cai).** Na v4 cada cena
+escolhia a sua e a câmera puxava zoom/desliza: 5 tipos em 7 emendas, e o olho
+parava de ler qualquer uma. Agora:
+
+| passagem | vale onde |
+|---|---|
+| `fade` (mergulho) | o padrão — toda emenda sem pedido, e todo pedido que cai |
+| `hexa` | **só o verso** (a assinatura: o hexágono abre o card). Fica automático no verso; pedido em outra cena vira mergulho |
+| `chicote` / `desliza` / `zoom` | só quando o roteiro pede, e **só a primeira** do vídeo (o soco). Guarde pra fala que vira a história |
+| `corte` | sempre (é emenda de continuidade, não efeito) |
+
+A câmera não escolhe mais a passagem.
+
+## Requinte — fase 1 (acabamento, 2026-11-07)
+
+O que a fase 1 fixou no molde (a régua veio da análise dos 21 estilos da skill
+claude-video e das skills oficiais do Remotion; página do André:
+https://claude.ai/artifact/3g7iHRpWs4EeEnnsv8Q4Xh):
+
+- **Molas da marca** (`MOLA` em `src/components.tsx`): nenhuma passa de 4%
+  do alvo — `pousa` (peça, chip, bloco), `entra` (pessoa, painel, folha,
+  card), `peso` (a peça que cai e amassa), `camera` (soco), `vira` (o card
+  do verso). Antes iam de 5% a 19% (o amassado do Drop chegava a ~42%).
+  Cena nova escolhe uma destas; não inventa mola.
+- **Saída mais curta que a entrada** (`sai()` em `src/components.tsx`):
+  ease-in de 8 quadros (peça que sai, painel que perde a peça, legenda no
+  fim da fala). O olho já leu a coisa.
+- **O card do verso vira com mola** (`MOLA.vira`, passa ~3° e assenta) e
+  encolhe 4% de lado no meio do giro. Era linear e parava seco.
+- **Dourado só como destaque.** As peças e o mundo da cena são violeta em
+  toda ideia (`useAccent()`); a cor da ÁREA só identifica — o hexágono da
+  sobrancelha (texto em `C.mid`) e o do verso do card, nunca texto, borda ou
+  brilho. O ouro marca o que importa agora: a palavra da legenda, o painel
+  que ganha (aro nítido, sem halo), o bloco que energiza, o aro do hexágono
+  pro verso e o card absorvido. Saíram os halos difusos (painel, bloco,
+  card) e o dourado do rodapé do fundo (virava mancha marrom).
+- **Legenda sem quadro vazio:** o bloco novo nasce a 40% e sobe com
+  ease-out; o fim da fala sai em 6 quadros. Sombra curta (a de 18 px virava
+  brilho).
+- **Lente** (`<Lente>` em `src/components.tsx`): grão fixo (±2–6%, células
+  de 2 px, `public/lente/grao.png` ← `node scripts/grao.mjs`) e vinheta
+  redonda, presos ao quadro por cima das cenas e por baixo da legenda. Na
+  porta, a `Porta` põe uma lente só por cima das duas partes.
+- **Captura sem perda:** `renderMedia` com `imageFormat: 'png'` (o padrão da
+  API é JPEG 80; o `setJpegQuality` do config só vale na linha de comando).
+  A versão do app reduz pra 720p com lanczos e `-tune animation`.
+- **Medidor de ritmo a cada render:** `render` roda `scripts/ritmo.mjs` no
+  mp4 e imprime quase-parada, amplitude, picos e os trechos de mais de 1 s
+  sem nada grande se mexendo (`<video>.ritmo.json`). Só avisa; `--sem-ritmo`
+  pula. A régua dos estilos de referência: 16–55% em quase-parada, nenhum
+  buraco de mais de 1 s fora do fim.
 
 ## O radar no feliz (identidades Hexa v4)
 
@@ -343,7 +390,8 @@ prefixo.
 
 Peça que aparece em mais de um vídeo merece virar desenho: desenhe em
 `objetos.tsx` (mesmas regras do `cast.tsx`: chapado, sem contorno, sombra
-num lado só, cores da paleta, `accent` = cor da área, animação por `t` ou
+num lado só, cores da paleta, `accent` = a cor que a cena passa — o violeta
+das peças desde a fase 1, nunca o dourado fixo —, animação por `t` ou
 `progress`, nenhum texto), registre em `src/molde/Peca.tsx` e em
 `src/molde/catalog.json`. O render quebra se as duas listas divergirem. Se
 ela deve pousar na mesa/chão num ambiente, ponha o nome em `ON_DESK` /

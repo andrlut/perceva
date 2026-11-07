@@ -7,6 +7,7 @@
 // (a cena sai igual à de antes).
 import React, { createContext, useContext } from 'react';
 import { AbsoluteFill, Easing, interpolate, spring } from 'remotion';
+import { MOLA } from '../components';
 import type { CameraFocus, CameraSpec } from './spec';
 
 export type Cam = {
@@ -64,7 +65,7 @@ const clamp = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const;
  * Estado da câmera no frame local `frame` de uma cena de `dur` frames, já com a
  * câmera na mão. Sem deixa: o movimento atravessa a cena inteira (inclusive o
  * crossfade de saída — nunca para antes do corte). Com deixa: fica parada até
- * ela e dá um "soco" de mola (v4): passa ~4% do alvo e assenta em ~15 quadros.
+ * ela e dá um "soco" de mola (v4; MOLA.camera desde a fase 1: passa 3,8%, antes 7,3%).
  */
 export const cameraAt = (frame: number, dur: number, cam: CameraSpec | undefined, cueAt: number | null, focus: [number, number]): Cam => {
   const base = cameraMove(frame, dur, cam, cueAt, focus);
@@ -76,7 +77,7 @@ const cameraMove = (frame: number, dur: number, cam: CameraSpec | undefined, cue
   const k = cam.forca === 'forte' ? 1.8 : cam.forca === 'leve' ? 0.55 : 1;
   const p =
     cueAt != null
-      ? spring({ frame: frame - cueAt, fps: 30, config: { damping: 14, stiffness: 120, mass: 1 } })
+      ? spring({ frame: frame - cueAt, fps: 30, config: MOLA.camera })
       : interpolate(frame, [0, dur], [0, 1], { ...clamp, easing: Easing.inOut(Easing.sin) });
   // o foco acompanha o avanço (sem a passada da mola): o fundo desfoca enquanto a câmera chega
   const pf = Math.min(1, Math.max(0, p));

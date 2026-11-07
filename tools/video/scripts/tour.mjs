@@ -510,6 +510,8 @@ async function render() {
       serveUrl,
       composition: film.composition,
       codec: 'h264',
+      // captura sem perda (o padrão da API é JPEG 80) — fase 1 do requinte, igual ao molde.mjs
+      imageFormat: 'png',
       outputLocation: full,
       inputProps: film.inputProps,
       onProgress: ({ progress }) => {
@@ -522,7 +524,7 @@ async function render() {
     const name = `${spec.file}.${lang}.r${rev}${spec.silent ? '.silent' : ''}`;
     const mp4 = path.join(dir, 'pub', 'doors', `${name}.mp4`);
     const poster = path.join(dir, 'pub', 'doors', `${name}.poster.webp`);
-    execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', full, '-vf', 'scale=720:1280', '-c:v', 'libx264', '-crf', '23', '-preset', 'slow', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '96k', '-movflags', '+faststart', mp4]);
+    execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', full, '-vf', 'scale=720:1280:flags=lanczos', '-c:v', 'libx264', '-crf', '25', '-preset', 'slow', '-tune', 'animation', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '96k', '-movflags', '+faststart', mp4]);
     execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-ss', String(spec.posterAt ?? 1.2), '-i', mp4, '-frames:v', '1', '-vf', 'scale=720:-1', '-c:v', 'libwebp', '-quality', '82', poster]);
     const secs = Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', mp4]).toString());
     const video = { path: `doors/${name}.mp4`, duration_seconds: Math.round(secs), poster: `doors/${name}.poster.webp`, producer: 'remotion-tour' };

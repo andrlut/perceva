@@ -463,7 +463,7 @@ const blinkAt = (t: number, seed: number) => {
 const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 /** easeOutBack: passa um pouco e volta (o "assentar" das molas, sem spring()). */
 const outBack = (x: number) => {
-  const c = 1.9;
+  const c = 1.0; // fase 1: passa 3,7% (era 1,9 → 12%)
   const y = clamp01(x) - 1;
   return 1 + (c + 1) * y * y * y + c * y * y;
 };
