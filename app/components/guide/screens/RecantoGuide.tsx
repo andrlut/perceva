@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -13,7 +14,10 @@ import { IdeaCard } from '@/components/ideas/IdeaCard';
 import { TrainEntryTile } from '@/components/ideas/TrainEntryTile';
 import { ContinueLendoCard } from '@/components/learning/ContinueLendoCard';
 import { CoverCard } from '@/components/learning/CoverCard';
+import { IdeasCountBadge } from '@/components/learning/IdeasCountBadge';
+import { LearningFilterRow } from '@/components/learning/LearningFilterRow';
 import type { LearningFeedCard } from '@/lib/api/learning';
+import type { DimensionId, LearningMaterialCategory, SubId } from '@/lib/db/types';
 import { screenGuidePrompt } from '@/lib/guide';
 import { useT } from '@/lib/i18n';
 import type { IdeaCardData, IdeaLocale } from '@/lib/ideas';
@@ -28,8 +32,9 @@ import { tokens } from '@/theme';
  * IdeaCard whose first flip turns it "collected" (gold rim and check), the
  * look it takes when absorbed — no RPC, just the card's own state.
  *
- * Steps follow the screen top to bottom; the cover and the "continue" card
- * are drawn with the screen's own components on sample data.
+ * Steps follow the screen top to bottom; the "continue" tile, the filter
+ * row, the cover and the bulb are drawn with the screen's own components on
+ * sample data.
  */
 
 const HELP = 'learning.help';
@@ -40,10 +45,11 @@ export const RECANTO_GUIDE_ITEMS = [
   'explore',
   'train',
   'continue',
+  'search',
+  'filters',
   'rows',
   'cover',
   'lamp',
-  'filters',
 ] as const;
 
 type ItemKey = (typeof RECANTO_GUIDE_ITEMS)[number];
@@ -58,7 +64,7 @@ export function useRecantoGuidePrompt(): string {
 const DEMO_WIDTH = 116;
 
 /** A sample feed row, enough for CoverCard / ContinueLendoCard (they read
- *  these fields only; imagePath-less covers draw the dimension art). */
+ *  these fields only; image-less covers draw the dimension art). */
 function sampleFeedCard(title: string, summary: string): LearningFeedCard {
   return {
     slug: 'guide-sample',
@@ -75,6 +81,30 @@ function sampleFeedCard(title: string, summary: string): LearningFeedCard {
     reading_minutes: 6,
   } as unknown as LearningFeedCard;
 }
+
+/** A small sample library for the filter row's replica: every category and
+ *  six dimensions, with both of Mente's sub-areas so the lit dimension
+ *  shows its sub-area chips. Ids only matter for the read count. */
+const FILTER_SAMPLE: LearningFeedCard[] = (
+  [
+    ['g1', 'mind', 'learn', 'research'],
+    ['g2', 'mind', 'contemplate', 'book'],
+    ['g3', 'health', 'sleep', 'research'],
+    ['g4', 'body', 'strength', 'research'],
+    ['g5', 'wealth', 'money', 'book'],
+    ['g6', 'bonds', 'circle', 'foundation'],
+    ['g7', 'craft', 'build', 'research'],
+  ] as const
+).map(
+  ([id, dim, sub, category]) =>
+    ({
+      id,
+      dimension_id: dim as DimensionId,
+      subs: [sub as SubId],
+      category: category as LearningMaterialCategory,
+    }) as unknown as LearningFeedCard,
+);
+const FILTER_SAMPLE_READ = new Set(['g3']);
 
 export function RecantoGuide({ locale }: { locale: IdeaLocale }) {
   const { t } = useT();
@@ -114,13 +144,22 @@ export function RecantoGuide({ locale }: { locale: IdeaLocale }) {
     },
     continue: {
       icon: 'book-outline',
+      replica: <ContinueLendoCard card={feed} percent={33} />,
+    },
+    search: { icon: 'search-outline' },
+    filters: {
+      icon: 'options-outline',
+      // Wrapped, not scrolled: the guide must show every chip, and the
+      // lit Mente shows how a dimension opens its sub-areas.
       replica: (
-        <ContinueLendoCard
-          card={feed}
-          percent={33}
-          subtitle={t('learning.ideas.nextIdeaLabel', { title: sampleTitle })}
-          metaText={t('learning.ideas.progress', { collected: 1, total: 3 })}
-          onPress={() => {}}
+        <LearningFilterRow
+          cards={FILTER_SAMPLE}
+          readSet={FILTER_SAMPLE_READ}
+          filter={{ kind: 'dim', value: 'mind' }}
+          onFilterChange={() => {}}
+          readFilter="unread"
+          onReadFilterChange={() => {}}
+          layout="wrap"
         />
       ),
     },
@@ -137,7 +176,6 @@ export function RecantoGuide({ locale }: { locale: IdeaLocale }) {
       ),
     },
     lamp: { icon: 'bulb-outline', iconColor: tokens.semantic.coin, replica: <LampReplica /> },
-    filters: { icon: 'options-outline', replica: <FiltersReplica /> },
   };
 
   const stepKeys = RECANTO_GUIDE_ITEMS.filter((k): k is StepKey => k !== 'absorb');
@@ -189,36 +227,23 @@ export function RecantoGuide({ locale }: { locale: IdeaLocale }) {
   );
 }
 
-/** The bulb button with its gold count — same look as the tab's FAB. */
+/** The tab's one floating button: the gold bulb, with the same count badge
+ *  (ringed in the sheet's surface instead of the screen's). */
 function LampReplica() {
   return (
-    <View style={styles.fab}>
-      <Ionicons name="bulb-outline" size={22} color={tokens.text.hi} />
-      <View style={styles.badge}>
-        <Text style={styles.badgeText}>3</Text>
-      </View>
-    </View>
-  );
-}
-
-/** The filter button with its gold dot, and the sheet's state control. */
-function FiltersReplica() {
-  const { t } = useT();
-  return (
-    <View style={styles.filters}>
+    <View style={styles.fabWrap}>
       <View style={styles.fab}>
-        <Ionicons name="options-outline" size={22} color={tokens.text.hi} />
-        <View style={styles.dot} />
+        <LinearGradient
+          colors={tokens.gradient.coinBtn as [string, string, string]}
+          locations={tokens.gradient.coinBtnLocations as [number, number, number]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <Ionicons name="bulb-outline" size={24} color={tokens.semantic.coinInk} />
       </View>
-      <View style={styles.segment}>
-        {(['unread', 'read', 'all'] as const).map((k) => (
-          <View key={k} style={[styles.segmentItem, k === 'unread' && styles.segmentOn]}>
-            <Text style={[styles.segmentText, k === 'unread' && styles.segmentTextOn]}>
-              {t(`learning.readFilter.${k}`)}
-            </Text>
-          </View>
-        ))}
-      </View>
+      {/* Outside the clipped circle, as in the tab's FabStack wrap. */}
+      <IdeasCountBadge count={3} ringColor={tokens.bg.surface} />
     </View>
   );
 }
@@ -233,61 +258,17 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     color: tokens.semantic.coin,
   },
+  // FabStack's lg gold button, drawn by hand (the stack itself is
+  // absolutely positioned over the screen).
+  fabWrap: { alignSelf: 'flex-start' },
   fab: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: tokens.bg.surface2,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-  },
-  badge: {
-    position: 'absolute',
-    top: -2,
-    right: -2,
-    minWidth: 20,
-    height: 20,
-    paddingHorizontal: 5,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: tokens.semantic.coin,
-    borderWidth: 2,
-    borderColor: tokens.bg.surface,
-  },
-  badgeText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 10,
-    lineHeight: 12,
-    color: '#3D2A00',
-  },
-  dot: {
-    position: 'absolute',
-    top: 2,
-    right: 2,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: tokens.semantic.coin,
-    borderWidth: 2,
-    borderColor: tokens.bg.surface,
-  },
-  filters: { flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
-  segment: {
-    flexDirection: 'row',
-    borderRadius: tokens.radius.pill,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,224,138,0.6)',
   },
-  segmentItem: { paddingHorizontal: 8, paddingVertical: 5 },
-  segmentOn: { backgroundColor: 'rgba(123, 92, 255, 0.18)' },
-  segmentText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
-    color: tokens.text.mid,
-  },
-  segmentTextOn: { color: tokens.brand.violet2 },
 });

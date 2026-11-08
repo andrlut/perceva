@@ -5,8 +5,10 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ACTIVE_THEME, tokens } from '@/theme';
 
-/** `gold` is the Vault's coin gradient — its primary button, like violet
- *  is the practices'. */
+/** `gold` (the coin gradient) is the tone of every primary floating button
+ *  in the app — Práticas' "+", the calendar's filter, the Vault's — so the
+ *  thumb always finds the same button. `neutral` is for the utilities
+ *  stacked above it; `violet` is kept for older stacks only. */
 export type FabTone = 'neutral' | 'violet' | 'gold';
 export type FabSize = 'sm' | 'md' | 'lg';
 
@@ -85,8 +87,8 @@ const pressedFx = { opacity: 0.85, transform: [{ scale: 0.96 }] };
  * Generic floating action stack — bottom-right thumb zone. The shared
  * primitive behind the app's FAB clusters: a column of circular buttons
  * that grows/shrinks with its `actions` and lets taps fall through the
- * empty gaps (`box-none`). One spec (38/48/56 diameters, violet or gold
- * primary, neutral utilities) so every stack in the app reads the same.
+ * empty gaps (`box-none`). One spec (38/48/56 diameters, gold primary,
+ * neutral utilities) so every stack in the app reads the same.
  */
 export function FabStack({ bottomOffset, actions }: Props) {
   return (

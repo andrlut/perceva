@@ -485,8 +485,11 @@ function SkippedRow({
 }
 
 const styles = StyleSheet.create({
+  // No horizontal margin and the TaskCard's radius.md: the drawer spans the
+  // column it sits in (Hoje's taskList, Todas, the calendar's day panel)
+  // edge to edge, like the practice cards above it. It used to sit 12px in
+  // with a rounder corner and read as a different kind of box.
   wrap: {
-    marginHorizontal: tokens.space[3],
     marginTop: tokens.space[2],
   },
   header: {
@@ -496,14 +499,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: tokens.space[3],
     paddingVertical: tokens.space[3],
     backgroundColor: tokens.bg.surface,
-    borderRadius: tokens.radius.lg,
+    borderRadius: tokens.radius.md,
     borderWidth: 1,
     borderColor: tokens.border.base,
   },
   headerOpen: {
     borderRadius: 0,
-    borderTopLeftRadius: tokens.radius.lg,
-    borderTopRightRadius: tokens.radius.lg,
+    borderTopLeftRadius: tokens.radius.md,
+    borderTopRightRadius: tokens.radius.md,
     borderBottomColor: 'transparent',
   },
   headerLeft: {
@@ -559,8 +562,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderTopWidth: 0,
     borderColor: tokens.border.base,
-    borderBottomLeftRadius: tokens.radius.lg,
-    borderBottomRightRadius: tokens.radius.lg,
+    borderBottomLeftRadius: tokens.radius.md,
+    borderBottomRightRadius: tokens.radius.md,
     overflow: 'hidden',
   },
   // Helper line — 13px, like every helper since the 2026-09 legibility pass.

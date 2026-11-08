@@ -183,12 +183,14 @@ export function DayRedemptionsCard({ date, dayLabel }: { date: Date; dayLabel: s
 }
 
 const styles = StyleSheet.create({
+  // Outside Hoje's taskList, so it carries the page edge itself (space[4]);
+  // radius.md like the practice cards and the mood card above it.
   card: {
     marginHorizontal: tokens.space[4],
     marginTop: tokens.space[3],
     padding: tokens.space[4],
     gap: tokens.space[2],
-    borderRadius: tokens.radius.lg,
+    borderRadius: tokens.radius.md,
     borderWidth: 1,
     borderColor: tokens.semantic.coinRim,
     backgroundColor: tokens.bg.surface,

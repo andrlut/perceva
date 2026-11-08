@@ -1,252 +1,96 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { PercevaGlyph } from '@/components/PercevaGlyph';
+import { ENTRY_TILE_ART_HEIGHT, EntryTile } from '@/components/learning/EntryTile';
 import type { LearningFeedCard } from '@/lib/api/learning';
 import { useT } from '@/lib/i18n';
-import { useMetaLookup } from '@/lib/i18n/meta';
 import { tokens } from '@/theme';
+import { DIMENSION_META, SUB_META } from '@/theme/dimensions';
 
 /**
- * "Continue lendo" hero card — surfaces the user's most recently
- * in-progress article so they can jump back into a single tap. Carries
- * the Perceva brand (engraved Topo Iris glyph, gold rim, gold-gradient
- * progress bar and play CTA) to feel like a sibling of the
- * TrackedRewardCard.
+ * "Continue lendo" — the material the reader left halfway, one tap back in.
+ * It sits right under the Explorar / Treinar row, so it wears the same
+ * EntryTile chassis: the cover as a 2:3 thumbnail in the art slot, "Continue
+ * lendo" as the title, the material's name as the one detail line and a
+ * thin gold bar for how far along it is. Nothing else on purpose (owner,
+ * 2026-11-07): the old hero — glyph vignette, "Próxima: …", meta row and a
+ * play button — was twice its neighbours' height for the same one job.
  *
- * Mounted at the top of the Learn feed when `useContinueReading()`
- * returns a non-null pick. Renders nothing otherwise.
+ * `percent` is absorbed/total ideas for materials with ideas, the scroll
+ * watermark for legacy articles; the tab decides which. Without `onPress`
+ * the card is inert (the guide's replica).
  */
 
 interface Props {
   card: LearningFeedCard;
-  /** 0..100 — last scroll percentage we have for this material. */
+  /** 0..100 — drives the progress bar. */
   percent: number;
-  /**
-   * Optional muted line under the title. Materials with ideas use it for
-   * "Próxima: <título da ideia>" (the lowest ordinal not yet absorbed);
-   * legacy articles leave it undefined and render exactly as before.
-   */
-  subtitle?: string;
-  /**
-   * Optional replacement for the WHOLE meta row. When given, it renders
-   * alone — no "N% lido", no "N min restantes"; `percent` then only drives
-   * the progress bar. Materials with ideas pass "c de N absorvidas": a
-   * percent derived from absorbed ideas is redundant next to the count, and
-   * minutes derived from the reading time would be plain wrong (the
-   * maintainer read "50% lido · 2 de 4 absorvidas" as saying the same thing
-   * twice). Legacy articles leave it undefined and render exactly as before.
-   */
-  metaText?: string;
-  onPress: () => void;
+  onPress?: () => void;
+  style?: StyleProp<ViewStyle>;
 }
 
-export function ContinueLendoCard({ card, percent, subtitle, metaText, onPress }: Props) {
+export function ContinueLendoCard({ card, percent, onPress, style }: Props) {
   const { t, locale } = useT();
-  const meta = useMetaLookup();
   const title = locale === 'pt' ? card.title_pt : card.title_en;
-  const dim = meta.dim(card.dimension_id);
-
-  // Remaining minutes — proportional to the unread portion. Clamped so
-  // "1 min" still reads when only a sliver is left.
-  const totalMin = Math.max(1, card.reading_minutes);
-  const minLeft = Math.max(1, Math.round(totalMin * (1 - percent / 100)));
+  const dimColor = DIMENSION_META[card.dimension_id].color;
+  const primarySub = card.subs[0];
+  const fallbackIcon = (
+    primarySub && SUB_META[primarySub]
+      ? SUB_META[primarySub].iconName
+      : DIMENSION_META[card.dimension_id].iconName
+  ) as keyof typeof Ionicons.glyphMap;
 
   return (
-    <Pressable
-      onPress={() => {
-        Haptics.selectionAsync().catch(() => {});
-        onPress();
-      }}
-      style={({ pressed }) => [styles.wrap, pressed && styles.pressed]}
-      accessibilityRole="button"
-      accessibilityLabel={`${t('learning.continueReading')}: ${title}`}
-    >
-      {/* Engraved Topo Iris glyph — top-right corner, deliberately spilling
-         beyond the card so the visible portion is a clipped vignette. The
-         clip happens via overflow:hidden on the wrap. */}
-      <View style={styles.glyphWrap} pointerEvents="none">
-        <PercevaGlyph size={260} bare palette="gilded" idSuffix="continue" />
-      </View>
-
-      <View style={styles.content}>
-        <View style={styles.kicker}>
-          <Ionicons name="bookmark" size={10} color={tokens.semantic.coinLight} />
-          <Text style={styles.kickerText}>{t('learning.continueReading')}</Text>
-        </View>
-
-        <Text style={styles.title} numberOfLines={2}>
-          {title}
-        </Text>
-
-        {subtitle ? (
-          <Text style={styles.subtitle} numberOfLines={1}>
-            {subtitle}
-          </Text>
-        ) : null}
-
-        <View style={styles.metaRow}>
-          {metaText ? (
-            <Text style={styles.metaText}>{metaText}</Text>
+    <EntryTile
+      art={
+        <View style={[styles.thumb, { borderColor: dimColor }]}>
+          {card.hero_image_url ? (
+            <Image
+              source={card.hero_image_url}
+              style={StyleSheet.absoluteFill}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              transition={120}
+            />
           ) : (
-            <>
-              <Text style={styles.percentText}>
-                {t('learning.continueProgress', { percent })}
-              </Text>
-              <Text style={styles.metaSep}>·</Text>
-              <Text style={styles.metaText}>
-                {t('learning.continueMinLeft', { count: minLeft })}
-              </Text>
-            </>
+            <View style={[styles.thumbTile, { backgroundColor: dimColor + '2E' }]}>
+              <Ionicons name={fallbackIcon} size={14} color={dimColor} />
+            </View>
           )}
         </View>
-
-        {/* Progress bar — gold 3-stop gradient, mirrors the Reward
-           progress bar token. */}
-        <View style={styles.barTrack}>
-          <View style={[styles.barFillWrap, { width: `${percent}%` }]}>
-            <LinearGradient
-              colors={tokens.gradient.rewardBarFill}
-              locations={tokens.gradient.rewardBarFillLocations}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={StyleSheet.absoluteFillObject}
-            />
-          </View>
-        </View>
-      </View>
-
-      {/* Gold play CTA — visual sibling of the Vault COMPRAR pill. */}
-      <View style={styles.ctaWrap}>
-        <LinearGradient
-          colors={tokens.gradient.coinBtn as [string, string, string]}
-          locations={tokens.gradient.coinBtnLocations as [number, number, number]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={StyleSheet.absoluteFillObject}
-        />
-        <Ionicons name="play" size={13} color="#3D2A00" />
-      </View>
-
-      {/* Subtle dim accent on the left rim — keeps a hint of the
-         article's dimension without overwhelming the gold brand. */}
-      <View style={[styles.dimAccent, { backgroundColor: dim.color }]} />
-    </Pressable>
+      }
+      title={t('learning.continueReading')}
+      subtitle={title}
+      progress={percent}
+      a11yLabel={`${t('learning.continueReading')}: ${title} · ${Math.round(percent)}%`}
+      onPress={
+        onPress
+          ? () => {
+              Haptics.selectionAsync().catch(() => {});
+              onPress();
+            }
+          : undefined
+      }
+      style={style}
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: {
-    marginHorizontal: tokens.space[4],
-    marginBottom: tokens.space[3],
-    borderRadius: tokens.radius.lg,
-    backgroundColor: tokens.bg.glassStrong,
-    borderWidth: 1,
-    borderColor: tokens.semantic.coinRim,
-    paddingVertical: tokens.space[3],
-    paddingHorizontal: tokens.space[3] + 2,
-    paddingRight: tokens.space[3] + 44, // room for the CTA on the right
+  // Same frame as the Explorar tile's thumbnails: 28×42 is the covers' own
+  // 2:3, so the art is cropped, never squeezed.
+  thumb: {
+    width: 28,
+    height: ENTRY_TILE_ART_HEIGHT,
+    borderRadius: tokens.radius.sm,
+    borderWidth: 1.5,
     overflow: 'hidden',
-    position: 'relative',
-    flexDirection: 'row',
-    alignItems: 'center',
+    backgroundColor: tokens.bg.deep,
   },
-  pressed: {
-    opacity: 0.92,
-  },
-  // The whole glyph sits in the top-right corner, clipped by overflow.
-  glyphWrap: {
-    position: 'absolute',
-    right: -50,
-    top: -30,
-    opacity: 0.09,
-  },
-  // Slim left bar tinted by the material's dim — barely visible, just
-  // ties the card to its category without competing with the gold rim.
-  dimAccent: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 2.5,
-    opacity: 0.7,
-  },
-  content: {
+  thumbTile: {
     flex: 1,
-    minWidth: 0,
-    gap: 6,
-  },
-  kicker: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  kickerText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 9.5,
-    letterSpacing: 1.4,
-    textTransform: 'uppercase',
-    color: tokens.semantic.coinLight,
-  },
-  title: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 14,
-    lineHeight: 18,
-    color: tokens.text.hi,
-  },
-  subtitle: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
-    lineHeight: 16,
-    color: tokens.text.mid,
-    marginTop: -2,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    marginTop: 1,
-  },
-  percentText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 11,
-    color: tokens.semantic.coinLight,
-  },
-  metaSep: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 11,
-    color: tokens.text.dim,
-  },
-  metaText: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 11,
-    color: tokens.text.mid,
-  },
-  barTrack: {
-    height: 3,
-    backgroundColor: tokens.border.divider,
-    borderRadius: 999,
-    overflow: 'hidden',
-    marginTop: 4,
-  },
-  barFillWrap: {
-    height: '100%',
-    borderRadius: 999,
-    overflow: 'hidden',
-  },
-  ctaWrap: {
-    position: 'absolute',
-    right: 12,
-    top: '50%',
-    width: 36,
-    height: 36,
-    marginTop: -18,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: tokens.semantic.coinRim,
-    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
   },

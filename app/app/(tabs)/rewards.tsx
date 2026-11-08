@@ -14,7 +14,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppIcon } from '@/components/AppIcon';
-import { AddCard } from '@/components/AddCard';
 import { useBottomNavClearance } from '@/components/BottomNavBar';
 import { BuyCelebrationModal } from '@/components/BuyCelebrationModal';
 import { BuyConfirmModal } from '@/components/BuyConfirmModal';
@@ -61,13 +60,12 @@ import { REWARD_CATEGORY_META, REWARD_CATEGORY_ORDER } from '@/theme/rewards';
  */
 const ALMOST_RATIO = 0.3;
 
-/** The floating stack mirrors the Home's: a neutral calendar on top and the
- *  gold primary below — Gerenciar recompensas (create, adopt, order, edit;
- *  Resgates hangs off its header). */
-const CALENDAR_FAB_SIZE: FabSize = 'md';
+/** One floating button, the Home's: a gold "+" that opens Gerenciar
+ *  recompensas (create your own, pick a suggested one, edit, reorder). The
+ *  calendar moved into Gerenciar's header, next to the search. */
 const MANAGE_FAB_SIZE: FabSize = 'lg';
-/** Height the stack occupies above the nav — the scroll reserves it. */
-const REWARDS_FAB_CLEARANCE = fabStackClearance([CALENDAR_FAB_SIZE, MANAGE_FAB_SIZE]);
+/** Height the button occupies above the nav — the scroll reserves it. */
+const REWARDS_FAB_CLEARANCE = fabStackClearance([MANAGE_FAB_SIZE]);
 
 /** Progressive lock (doc "Onboarding simples", Fase 2): locked → the
  *  "what opens it" screen; first opening → the animated door over the
@@ -131,7 +129,7 @@ function RewardsScreenContent() {
   const navClearance = useBottomNavClearance();
 
   const coins = character.data?.character.coins ?? 0;
-  // Reserve the floating stack's height under the scroll.
+  // Reserve the floating button's height under the scroll.
   const scrollBottomPad = navClearance + REWARDS_FAB_CLEARANCE;
   const trackedReward = useMemo(() => {
     if (!trackedId.data) return null;
@@ -569,18 +567,9 @@ function RewardsScreenContent() {
               </>
             )}
 
-            {/* The empty state above already offers "Criar a minha";
-                a second create card right under it read as a duplicate. */}
-            {!noRewardsAtAll && (
-              <View style={styles.addCardWrap}>
-                <AddCard
-                  label={t('rewards.vault.addReward')}
-                  sublabel={t('rewards.vault.addRewardSub')}
-                  tint={tokens.brand.violet2}
-                  onPress={handleCreateReward}
-                />
-              </View>
-            )}
+            {/* No create card at the end of the shop: the gold "+" (→ the
+                doors in Gerenciar) is the one way in, as on Práticas — one
+                pattern to learn (owner, 2026-11-07). */}
 
       </ScrollView>
       </ScreenBackground>
@@ -648,30 +637,22 @@ function RewardsScreenContent() {
         onUndo={() => handleUndoCelebration(celebration?.redemptionIds ?? [])}
       />
 
-      {/* Floating stack, same shape as the Home's: the calendar (Vault front)
-          on top, Gerenciar recompensas as the gold primary — the Home's
-          primary is Todas as práticas, which hosts Gerenciar; here the shop
-          IS the doing surface, so the primary goes straight to curating.
-          Resgates (the ledger) is the clock in Gerenciar's header, and the
-          calendar. */}
+      {/* The one floating button, the same gold "+" as the Home's: it opens
+          Gerenciar recompensas, the curating screen that shares its pattern
+          with Gerenciar práticas (the doors, the ordered list, Arquivadas,
+          and the calendar on the Vault front in its header). The shop IS
+          the doing surface, so the button goes straight to curating. */}
       <FabStack
         bottomOffset={navClearance}
         actions={[
           {
-            key: 'calendar',
-            icon: 'calendar-outline',
-            onPress: () => router.push({ pathname: '/history', params: { front: 'vault' } }),
-            accessibilityLabel: t('tabs.history'),
-            size: CALENDAR_FAB_SIZE,
-            tone: 'neutral',
-          },
-          {
             key: 'manage',
-            icon: 'options-outline',
+            icon: 'add',
             onPress: handleOpenManage,
             accessibilityLabel: t('rewardsHub.title'),
             size: MANAGE_FAB_SIZE,
             tone: 'gold',
+            iconSize: 28,
           },
         ]}
       />
@@ -813,10 +794,6 @@ const styles = StyleSheet.create({
     // Full row. Used by the "Big goals" section so aspirational
     // rewards read at full attention instead of crammed two-up.
     width: '100%',
-  },
-
-  addCardWrap: {
-    marginTop: tokens.space[2],
   },
 
 
