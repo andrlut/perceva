@@ -1529,26 +1529,36 @@ const IdeaCard: React.FC<{ width: number; flip: number; absorbed: boolean; words
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 10, background: accent }} />
           {/* fase 2: o verso ACENDE com a voz — cada palavra sai de 30% e chega dourada no quadro em
               que a voz a diz (deixa medida na voz), depois assenta no branco */}
-          <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: claimSize, lineHeight: 1.18, color: C.hi }}>
-            {words
-              ? spec.claim.split(/(\s+)/).map((tok, j, all) => {
-                  // espaço antes da última palavra vira inseparável: "faz bem." nunca deixa "bem." sozinho
-                  if (!tok.trim()) return j === all.length - 2 ? '\u00A0' : tok;
-                  const wAt = words[Math.floor(j / 2)] ?? 0;
-                  const age = frame - wAt;
-                  return (
-                    <span
-                      key={j}
-                      style={{
-                        opacity: interpolate(age, [-2, 3], [0.3, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
-                        color: interpolateColors(Math.max(0, age), [0, 5, 22], [C.gold2, C.gold2, C.hi]),
-                      }}
-                    >
-                      {tok}
-                    </span>
-                  );
-                })
-              : spec.claim.replace(/\s+(\S+)$/, '\u00A0$1')}
+          {/* quebra de linha (revisão dos quadros da Paker, 2026-11-08):
+              - espaço antes da última palavra, depois de número e antes de letra solta viram
+                inseparáveis ("faz bem." nunca deixa "bem." sozinho; "8 semanas" e "vitamina C"
+                não se separam);
+              - cada palavra é nowrap ("pre-workout" não quebra no hífen);
+              - textWrap balance (pretty não resolveu no Chrome do Remotion): a cola do fim não
+                pode deixar a penúltima linha com uma palavra só ("chegar no / treino / com disposição.").
+              O split /(\s+)/ fica igual: words[Math.floor(j / 2)] é o tempo da voz por palavra. */}
+          <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: claimSize, lineHeight: 1.18, color: C.hi, textWrap: 'balance' } as React.CSSProperties}>
+            {spec.claim.split(/(\s+)/).map((tok, j, all) => {
+              if (!tok.trim()) {
+                const glue = j === all.length - 2 || /^\d+([.,]\d+)?$/.test(all[j - 1] ?? '') || /^[A-Z]\d{0,2}[.,;:!?]?$/.test(all[j + 1] ?? '');
+                return glue ? '\u00A0' : tok;
+              }
+              if (!words) return <span key={j} style={{ whiteSpace: 'nowrap' }}>{tok}</span>;
+              const wAt = words[Math.floor(j / 2)] ?? 0;
+              const age = frame - wAt;
+              return (
+                <span
+                  key={j}
+                  style={{
+                    whiteSpace: 'nowrap',
+                    opacity: interpolate(age, [-2, 3], [0.3, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
+                    color: interpolateColors(Math.max(0, age), [0, 5, 22], [C.gold2, C.gold2, C.hi]),
+                  }}
+                >
+                  {tok}
+                </span>
+              );
+            })}
           </div>
         </div>
       </div>
