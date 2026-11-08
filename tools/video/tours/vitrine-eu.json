@@ -1,0 +1,35 @@
+{
+  "_doc": "Vídeo do site (src/tutorial/Vitrine.tsx), trecho 1 de 5: a promessa e o retrato. Abre com a aba Eu inteira (a pessoa reconhece um app de verdade), chega perto do emblema no nome da marca e abre no hex na promessa; depois troca Percebida → Praticada (comparar como você se vê com o que pratica — o que só o Perceva cruza). Conferido contra hero.help.items.*.ai (pt.ts/en.ts): Percebida = como você se vê; Praticada = o que as práticas treinaram. Sem número nem estudo na fala.",
+  "kind": "vitrine",
+  "screen": "me",
+  "fixture": "vitrine",
+  "file": "vitrine-eu",
+  "rev": 1,
+  "posterAt": 1.0,
+  "kicker": { "pt": "Se conhecer", "en": "Know yourself" },
+  "lines": [
+    {
+      "id": "promise",
+      "title": { "pt": "Perceva", "en": "Perceva" },
+      "pre": 0.5,
+      "pt": { "caption": "Com o Perceva, você vê *quem está se tornando*." },
+      "en": { "caption": "With Perceva, you see *who you're becoming*." },
+      "camera": "wide",
+      "beats": [
+        { "at": { "pt": "Perceva", "en": "Perceva" }, "focus": "profile", "camera": 1.5 },
+        { "at": { "pt": "se tornando", "en": "becoming" }, "focus": "hex", "camera": "wide" }
+      ]
+    },
+    {
+      "id": "portrait",
+      "title": { "pt": "Seu retrato", "en": "Your portrait" },
+      "pt": { "caption": "Compare *como você se vê* com o que você pratica de verdade, nas seis áreas da vida." },
+      "en": { "caption": "Compare *how you see yourself* with what you actually practice, across six areas of life." },
+      "beats": [
+        { "at": { "pt": "como você se vê", "en": "how you see yourself" }, "focus": "pillar.percebida", "do": "tap", "camera": "wide" },
+        { "at": { "pt": "pratica de verdade", "en": "actually practice" }, "focus": "pillar.praticada", "do": "tap", "camera": "wide" },
+        { "at": { "pt": "seis áreas", "en": "six areas" }, "focus": "hex", "camera": "wide" }
+      ]
+    }
+  ]
+}

@@ -114,6 +114,18 @@ Teto da porta inteira: **66 s** (1 min + 10%).
   (conferir as cenas), depois `tour.mjs build` + `voice` + `stills` +
   `render` (que já sai com as duas partes).
 
+### Trecho da vitrine (`"kind": "vitrine"`)
+
+O vídeo do site (`src/tutorial/Vitrine.tsx`) é feito de trechos curtos deste
+mesmo formato, um por tela, emendados numa passagem que apaga uma tela antes de
+acender a outra, e fecha num cartão da marca sem voz. Um trecho com
+`"kind": "vitrine"` tem 1 a 3 falas (2 a 20 s) e não fecha no (i): o fecho do
+filme é a marca. O resto vale igual: fala conferida contra o informativo, sem
+estudo nem número de pesquisa, só toque que a réplica responde, audit do
+movimento zerado. A ordem dos trechos fica em `VITRINE_SEGMENTS` (Vitrine.tsx)
+e em `scripts/vitrine.mjs`, que roda o lint/build/voice/stills de cada um e
+renderiza o filme (`node scripts/vitrine.mjs all --lang both`).
+
 ### Batida
 
 | campo | o que faz |

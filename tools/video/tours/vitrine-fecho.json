@@ -1,0 +1,24 @@
+{
+  "_doc": "Vídeo do site, trecho 5 de 5: o emblema. Volta pra aba Eu e chega perto do emblema no cabeçalho, que pulsa dourado. Conferido contra hero.help.items (pt.ts/en.ts): o emblema resume os últimos 30 dias — anéis = XP das práticas, braços = instrumentos feitos, brilho = materiais lidos, centro = a sub-área mais praticada — por isso 'tudo isso desenha o seu emblema'. Depois dele vem o cartão final da marca (Vitrine.tsx, sem voz).",
+  "kind": "vitrine",
+  "screen": "me",
+  "fixture": "vitrine",
+  "file": "vitrine-fecho",
+  "rev": 1,
+  "posterAt": 1.0,
+  "kicker": { "pt": "Torne-se", "en": "Become" },
+  "lines": [
+    {
+      "id": "emblem",
+      "title": { "pt": "Seu emblema", "en": "Your emblem" },
+      "pre": 0.4,
+      "hold": 0.8,
+      "pt": { "caption": "E tudo isso desenha o seu emblema: *quem você está se tornando*." },
+      "en": { "caption": "And all of it draws your emblem: *who you're becoming*." },
+      "camera": "wide",
+      "beats": [
+        { "at": { "pt": "emblema", "en": "emblem" }, "focus": "profile", "camera": 1.6, "pulse": true, "tone": "gold" }
+      ]
+    }
+  ]
+}

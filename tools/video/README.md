@@ -9,6 +9,7 @@ empresas de até 3 pessoas. A narração usa o Gemini TTS e custa centavos por v
 |---|---|---|
 | **Manifesto v2** (≤ 60 s, voz Kore) | `Manifesto` (Insta/orgânico) · `ManifestoB` (anúncio, gancho B pra A/B) · `ManifestoApp` (abertura do tutorial, sem CTA) | Vende os 3 módulos (Se conhecer · Praticar · Aprender) e fecha no Emblema. Sem número nem estudo no vídeo; a legenda do post e a base ficam em `copy/manifesto-v2.md`. |
 | **Recanto** | `Recanto` | Reels que leva gente pra aba Aprender. Começa em "salvar não é aprender" e termina no jeito de usar o Recanto. |
+| **Vitrine** (≤ 58 s, voz Kore) | `Vitrine` (props `lang`) | O vídeo de apresentação do site (perceva.app, logo abaixo do topo): uma volta pelas TELAS do app — Eu (a promessa e o retrato) → Práticas → Recompensas → Recanto → o emblema — com as réplicas dos tutoriais, e o cartão final da marca. Trechos em `tours/vitrine-*.json` (`"kind": "vitrine"`); `node scripts/vitrine.mjs all` → `out/vitrine/<lang>/intro.<lang>.mp4`, que vai pro `public/assets/video/` do repo do site. Pedido do André (08/11): o site mostra o app, não o elenco. |
 | **Tutorial de tela** (25–40 s, voz Kore) | `Tour` (props `tourKey: "<tela>.<lang>"`; `mode: "replica"` mostra só a tela) | O vídeo da porta que abre quando uma aba destrava: a réplica da tela feita do código do app, com câmera, destaque e o dedo tocando. Roteiro em `tours/<tela>.json`; formato, regras e comandos (`node scripts/tour.mjs …`) em [TOUR.md](TOUR.md). |
 
 ---

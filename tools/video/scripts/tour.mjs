@@ -104,6 +104,9 @@ const BANNED = {
   en: /\b(stud(y|ies)|research\w*|scientists?|samples?|participants?|volunteers?|universit(y|ies)|journals?|experiments?|statistic\w*|data|proven|percent|times more|et al)\b/,
 };
 const LIMITS = { caption: 150, kicker: 24, title: 24, callout: 24, lines: [4, 8], seconds: [25, 40], hardSeconds: 45 };
+/** "kind": "vitrine" — um trecho curto do vídeo do site (src/tutorial/Vitrine.tsx, scripts/vitrine.mjs):
+ *  1 a 3 falas, sem o fecho no (i) (o filme fecha no cartão da marca, não numa tela). */
+const VITRINE_LIMITS = { lines: [1, 3], seconds: [2, 20], hardSeconds: 22 };
 const CPS = { pt: 14.5, en: 15.5 };
 const ACTIONS = ['tap', 'hold', 'point', 'swipe'];
 const SPECIAL = ['@start', '@end'];
@@ -129,8 +132,10 @@ function lintTour(spec, lang, errors, warns) {
   const cap = FREE_LIMITS[spec.screen === 'rewards' ? 'reward' : spec.screen];
   const capWarn = `fixture ${spec.fixture}: ${fx.rewards?.length} recompensas ativas, mas o plano grátis cabe ${cap} (app/lib/premium/limits.ts) — quem vê a porta no free nunca teria essa loja`;
   if (cap && (fx.rewards?.length ?? 0) > cap && !warns.includes(capWarn)) warns.push(capWarn);
+  const vitrine = spec.kind === 'vitrine';
+  const lim = vitrine ? { ...LIMITS, ...VITRINE_LIMITS } : LIMITS;
   const lines = spec.lines ?? [];
-  if (lines.length < LIMITS.lines[0] || lines.length > LIMITS.lines[1]) errors.push(`${lines.length} falas (faixa ${LIMITS.lines.join('–')})`);
+  if (lines.length < lim.lines[0] || lines.length > lim.lines[1]) errors.push(`${lines.length} falas (faixa ${lim.lines.join('–')})`);
   const kicker = resolve(spec.kicker, lang);
   if (!kicker) errors.push(`${lang}: sem kicker`);
   else if (kicker.length > LIMITS.kicker) errors.push(`${lang}: kicker longo (${kicker.length} > ${LIMITS.kicker})`);
@@ -202,11 +207,11 @@ function lintTour(spec, lang, errors, warns) {
   });
   // regra do formato: o fecho é o (i) pulsando — "a tela explica cada parte"
   const last = lines.length ? resolveLine(lines[lines.length - 1], lang) : null;
-  if (last && !last.beats.some((b) => b.focus === 'info' && b.pulse)) errors.push(`${lang}: a última fala tem que destacar o (i) com pulse (focus "info", pulse true)`);
+  if (last && !vitrine && !last.beats.some((b) => b.focus === 'info' && b.pulse)) errors.push(`${lang}: a última fala tem que destacar o (i) com pulse (focus "info", pulse true)`);
   // PT e EN têm as MESMAS batidas (só a deixa muda de idioma)
   const est = chars / CPS[lang] + extra + lines.length * 0.75 + 1.8;
-  if (est > LIMITS.hardSeconds) errors.push(`${lang}: ~${est.toFixed(0)} s estimados (teto ${LIMITS.hardSeconds} s)`);
-  else if (est < LIMITS.seconds[0] || est > LIMITS.seconds[1]) warns.push(`${lang}: ~${est.toFixed(0)} s estimados (alvo ${LIMITS.seconds.join('–')} s)`);
+  if (est > lim.hardSeconds) errors.push(`${lang}: ~${est.toFixed(0)} s estimados (teto ${lim.hardSeconds} s)`);
+  else if (est < lim.seconds[0] || est > lim.seconds[1]) warns.push(`${lang}: ~${est.toFixed(0)} s estimados (alvo ${lim.seconds.join('–')} s)`);
   return est;
 }
 
