@@ -9,8 +9,10 @@ import { create } from 'zustand';
  * who watches at 1,5× wants the next one at 1,5× too. Unlike the sound
  * (lib/ideaSound), speed never surprises anyone in a quiet room, so it does
  * not reset on leaving the ideas. In memory only: a fresh launch is 1×.
- * Pitch is preserved by the players (expo-video `preservesPitch` defaults to
- * true; the audio pane sets `shouldCorrectPitch`).
+ * Pitch is preserved by the players, and it has to be asked for: expo-video's
+ * `preservesPitch` defaults to true on iOS but FALSE on Android (3.0.x —
+ * the voice went thin at 1,25×/1,5×/2×), so IdeaVideo sets it; the audio
+ * pane sets `shouldCorrectPitch`.
  */
 export const PLAYBACK_SPEEDS = [1, 1.25, 1.5, 2] as const;
 export type PlaybackSpeed = (typeof PLAYBACK_SPEEDS)[number];
