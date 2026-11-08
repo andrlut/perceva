@@ -366,8 +366,15 @@ a tomada de voz; só o caderno, `log3`, foi gravado — o mapa usa a tomada
 aprovada do `pull2`). Ordem do piloto: caderno → mapa → a comparação aula ×
 caderno fecha o argumento.
 
-Pendente: **Fraunces itálico** precisa da fonte variável (só temos a 600
-estática); o destaque do verso por enquanto é a cor.
+**Fraunces itálico** (`public/fonts/Fraunces_Italic_var.ttf`, a variável
+itálica oficial do Google Fonts, licença OFL em `public/fonts/Fraunces-OFL.txt`):
+nos nomes que a caneta escreve no caderno, com cara de anotação à mão. A reta
+continua sendo a `Fraunces_600` estática (nada aprovado muda de desenho).
+O destaque do verso continua sendo a cor: trocar de estilo enquanto a voz lê
+faria a linha pular.
+
+**Aprovado pelo André em 07/11** ("ficou top assim"), incluindo o dourado que
+cresce no mapa antes do card dizer "faz bem".
 
 ## O radar no feliz (identidades Hexa v4) — DESLIGADO
 

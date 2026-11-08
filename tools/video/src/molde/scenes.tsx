@@ -1279,7 +1279,8 @@ export const Caderno: React.FC<P> = ({ s }) => {
   const energyAt = Number.isFinite(energyCue) ? Math.max(energyCue, timeAt + 6) : barAt(n - 1) + barra + 6;
   // o nome mais largo cabe na coluna, no mesmo corpo em todos
   const colW = G.timeX - G.nameX - 40;
-  const font = (f: number) => `600 ${f}px ${FONT.display}`;
+  // os nomes são escritos à mão: Fraunces itálico (fase 2); a medida usa a mesma face
+  const font = (f: number) => `italic 600 ${f}px ${FONT.display}`;
   const size = [56, 52, 48, 44].find((f) => blocks.every((b) => width(b.label ?? '', font(f)) <= colW)) ?? 40;
   const rowsTop = G.y + G.head + 46;
   const rowY = (i: number) => rowsTop + i * G.row;
@@ -1409,7 +1410,7 @@ export const Caderno: React.FC<P> = ({ s }) => {
             {/* o nome: a máscara abre na velocidade da caneta */}
             <div style={{ position: 'absolute', left: G.x + G.nameX, top: rowY(i), height: G.row, display: 'flex', alignItems: 'center' }}>
               <Mascara p={(frame - starts[i]) / escrita} modo="escreve" ponta={8}>
-                <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: size, lineHeight: 1.1, color: C.hi, whiteSpace: 'nowrap' }}>{b.label}</div>
+                <div style={{ fontFamily: FONT.display, fontStyle: 'italic', fontWeight: 600, fontSize: size, lineHeight: 1.1, color: C.hi, whiteSpace: 'nowrap' }}>{b.label}</div>
               </Mascara>
             </div>
             {/* o tempo: uma barra (quanto do dia), riscada pela caneta */}
