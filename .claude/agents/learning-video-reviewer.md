@@ -36,10 +36,20 @@ Para cada ideia, para cada idioma, para cada fala, marque:
 | `fiel` | a fala afirma algo que o corpo não sustenta: fato novo, causa onde o corpo diz correlação, certeza onde o corpo diz "provável/pista", generalização ("todo mundo", "sempre") que o corpo não faz |
 | `sem_dado` | número, %, estudo, autor, amostra, país da amostra, ressalva metodológica, "comprovado", ou qualquer palavra que só o corpo explica |
 | `historia` | a fala é resumo abstrato quando dava pra mostrar alguém fazendo; ou a ordem não leva ao verso (o gancho não cria a tensão que o verso resolve) |
-| `verso` | alguma fala antes do verso já entrega o verso inteiro (o fim fica repetido), ou contradiz o verso |
+| `verso` | alguma fala antes do verso já entrega o verso inteiro (o fim fica repetido), ou contradiz o verso; ou as falas, somadas, recitam as palavras do verso quase na ordem (no "demonstrar a ideia", os substantivos do método ficam na página e a voz usa verbo concreto); ou a sobrancelha repete o verbo do verso |
 | `cena` | a cena ou a peça não mostra o que a fala diz, ou puxa pra outro assunto (ex.: `ion:wine` numa fala de sono) |
 | `paridade` | o EN diz outra coisa que o PT (pode mudar a frase, não o conteúdo) |
 | `voz` | sigla, parêntese, palavra que o TTS tende a embolar, frase longa demais pra uma respiração |
+
+**Texto na tela também é fala** pra estas regras: os nomes dos blocos do
+`caderno` e do `mapa`, os títulos das colunas, as marcas de energia
+(tira/dá), os dias, os rótulos do `comparar`. O exemplo pode ser inventado
+(é ilustração do método: tarefas comuns, neutras), mas não pode virar
+regra nova: reprove em `fiel` quando a tela ou a fala liga duas coisas que
+o corpo não liga (ex.: "o que te dá energia" = "o que você faz bem"), ou
+quando a voz afirma o que devia perguntar ("a tarefa que te dá energia" no
+lugar de "como ficou a sua energia"). Em `cena`: a deixa de cada bloco cai
+no bloco que a palavra descreve ("o que pesa" num bloco que drena).
 
 Também, por ideia: o vídeo como um todo conta **a mesma ideia** que o card
 conta? Responda com a sua leitura em uma frase (`entendi`), sem copiar o
@@ -63,6 +73,20 @@ Para cada quadro, marque:
 
 A legenda queimada aparece no quadro. Ela não é sua para revisar (já
 passou no SCRIPT), mas reprove se ela cobre o desenho.
+
+Pontos que a revisão do piloto do caderno ensinou (requinte fase 2):
+
+- `caderno`: os nomes, os títulos das colunas e as marcas de energia leem
+  num celular (texto ≥ 38 px no quadro de 1080); a marca "↓ tira" tem o
+  mesmo peso de leitura que a "↑ dá"; a página tem ≥ 40 px de margem; a
+  caneta nunca passa por cima da legenda.
+- `mapa` com nomes: nome inteiro, com ar até a faísca; o nome do bloco
+  escuro ainda lê.
+- Peça encostada na moldura de painel ou na mão (< 40 px) é `corte`.
+- `verso`: a última palavra nunca fica sozinha na última linha; o fecho
+  (glyph + "Perceva") é a marca, não um sinal de "proibido".
+- A luz da janela passa por trás da pessoa e das peças; peça lavada pela
+  luz é `corte`.
 
 ## Saída
 

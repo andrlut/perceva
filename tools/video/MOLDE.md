@@ -360,21 +360,25 @@ falas do método e já leva os moldes da fase 2:
 
 **Piloto lado a lado** (`--roteiro <arquivo> --tag <nome>`): lê outro
 roteiro e grava em chaves à parte (`<slug>.<ideia>-<tag>.<lang>`); a voz e o
-vídeo de verdade ficam intocados, e piloto nunca sobe. O deste piloto é
-`pilotos/job-crafting-additive.demonstrar.json` (as falas iguais reaproveitam
-a tomada de voz; só o caderno, `log3`, foi gravado — o mapa usa a tomada
-aprovada do `pull2`). Ordem do piloto: caderno → mapa → a comparação aula ×
-caderno fecha o argumento.
+vídeo de verdade ficam intocados, e piloto nunca sobe. Use pra testar uma
+mudança de roteiro ou de cena lado a lado antes de virar padrão.
+
+**Aprovado pelo André em 07/11** ("ficou top assim"), incluindo o dourado que
+cresce no mapa antes do card dizer "faz bem". O piloto virou o roteiro de
+verdade (`learning-drops/video-specs/job-crafting-additive.json`, ideia
+`faca-o-mapa-voce-mesmo`, revisão r2 no app; ordem caderno → mapa → a
+comparação aula × caderno fecha o argumento) e o **Hexa Limpo virou o rosto
+padrão** (`src/identidade/active.ts`). O roteirista e o revisor do pipeline
+(`.claude/agents/learning-video-director.md` e `learning-video-reviewer.md`)
+aprenderam o caderno e as lições da revisão.
 
 **Fraunces itálico** (`public/fonts/Fraunces_Italic_var.ttf`, a variável
 itálica oficial do Google Fonts, licença OFL em `public/fonts/Fraunces-OFL.txt`):
-nos nomes que a caneta escreve no caderno, com cara de anotação à mão. A reta
+nos nomes que a caneta escreve no caderno, com cara de anotação à mão, com o
+eixo `WONK` em 0 (com ele, o "l" ganha uma volta e "Emails" lia "Emaiſs"). A reta
 continua sendo a `Fraunces_600` estática (nada aprovado muda de desenho).
 O destaque do verso continua sendo a cor: trocar de estilo enquanto a voz lê
 faria a linha pular.
-
-**Aprovado pelo André em 07/11** ("ficou top assim"), incluindo o dourado que
-cresce no mapa antes do card dizer "faz bem".
 
 ## O radar no feliz (identidades Hexa v4) — DESLIGADO
 

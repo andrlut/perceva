@@ -1410,7 +1410,7 @@ export const Caderno: React.FC<P> = ({ s }) => {
             {/* o nome: a máscara abre na velocidade da caneta */}
             <div style={{ position: 'absolute', left: G.x + G.nameX, top: rowY(i), height: G.row, display: 'flex', alignItems: 'center' }}>
               <Mascara p={(frame - starts[i]) / escrita} modo="escreve" ponta={8}>
-                <div style={{ fontFamily: FONT.display, fontStyle: 'italic', fontWeight: 600, fontSize: size, lineHeight: 1.1, color: C.hi, whiteSpace: 'nowrap' }}>{b.label}</div>
+                <div style={{ fontFamily: FONT.display, fontStyle: 'italic', fontWeight: 600, fontVariationSettings: "'WONK' 0", fontSize: size, lineHeight: 1.1, color: C.hi, whiteSpace: 'nowrap' }}>{b.label}</div>
               </Mascara>
             </div>
             {/* o tempo: uma barra (quanto do dia), riscada pela caneta */}

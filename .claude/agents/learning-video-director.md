@@ -28,7 +28,9 @@ Leia antes de escrever, sempre:
    corpo (`body`) de cada ideia, em PT e EN. **É a única fonte de fato.**
 3. `learning-drops/video-specs/buying-time-chores.json` e
    `learning-drops/video-specs/job-crafting-additive.json`: os dois roteiros
-   de referência que o mantenedor aprovou.
+   de referência que o mantenedor aprovou. O do job crafting é a referência
+   de **"demonstrar a ideia"** (caderno → mapa com nomes, aprovado em
+   2026-11-07; seção própria abaixo).
 4. Se existir, `learning-drops/video-specs/<slug>.json` (modo rewrite):
    preserve os `id`s das falas que continuam iguais (é o que mantém a voz
    gravada) e mude só o necessário.
@@ -58,7 +60,12 @@ fala → problema).
    - 2–3 coisas a notar ou fazer → `lista`;
    - a ação aplicada → `cena`;
    - como o dia/a semana se divide, o que pesa × o que rende, "redistribuir o
-     tempo" → `mapa` (blocos com ícone + `feel`, segunda batida no `turn`);
+     tempo" → `mapa` (blocos com ícone + `feel`, segunda batida no `turn`;
+     com `label`, cada bloco leva o nome da tarefa);
+   - o método feito num exemplo — anotar, registrar, listar com nome ("anota
+     o que fez, quanto tempo levou…") → `caderno` (a página em plano
+     fechado, a caneta escreve cada linha), quase sempre seguido do `mapa`
+     com os mesmos nomes (ver "Demonstrar a ideia");
    - o fim → `verso`.
    Varie: não repita a mesma cena seguida, e tente não usar mais de duas
    vezes a mesma no vídeo.
@@ -131,6 +138,51 @@ fala → problema).
     coisas. No `mapa`: 3 a 5 blocos, ícones que leem sozinhos (`mail`,
     `people`, `call`, `document-text`, `color-palette`, `bulb`, `code-slash`,
     `chatbubbles`, `barbell`…), soma dos `size` ≤ 9, nada de hora nem número.
+    Ícone que pode ler errado sai (`hand-left`, a mão aberta, lê como
+    "pare"). Nome de bloco longo encosta na faísca: até ~14 caracteres é o
+    confortável.
+
+## Demonstrar a ideia (requinte fase 2, aprovado pelo mantenedor em 2026-11-07)
+
+O que faz o vídeo parecer "detalhado" não é movimento: é o **método
+resolvido num exemplo, com palavra na tela** (foi a comparação com o vídeo
+do Notebook). Quando a ideia pede uma coisa pra fazer em passos (anotar,
+mapear, listar, registrar), pelo menos uma cena mostra o método feito, com
+nomes, em vez de só ilustrar a frase:
+
+- **`caderno`**: 3 a 5 `blocks`, cada um com `label` (o nome da tarefa,
+  ≤ 16 caracteres, sem número), `feel` (a marca de energia: `drena` ↓ tira,
+  `neutro` –, `energiza` ↑ dá) e `size` (o tempo, como barra). Deixas: o
+  `cue` do 1º bloco é quando a caneta começa (os outros vêm em fila; a
+  caneta acelera pra caber), `from` é a coluna do tempo, `at` a da energia,
+  `semana` (opcional) quando o texto diz "por uns dias/uma semana" — os
+  dias acendem no alto da página e a voz não precisa dizer "semana". Sem
+  `camera` no caderno: o movimento é a caneta. Sem `ambiente`.
+- **`mapa` logo depois, com os mesmos `label`**: o caderno vira o dia.
+  Aqui os blocos caem em fila na 1ª oração (sem `cue` neles: o caderno já
+  os apresentou), e a virada (`turn` + `then` + `camera` dolly com deixa)
+  fica no fim da fala.
+- **Ordem**: o método (caderno → mapa) e depois o porquê (`comparar`), não
+  o contrário — "com o dia no papel" pede a página que acabou de ser escrita.
+
+Lições da revisão do piloto (o revisor reprovou cada uma):
+
+- **A tela mostra o método; a fala não recita o verso.** Os substantivos do
+  método (tarefa, tempo, energia) ficam na página (títulos das colunas,
+  nomes); a voz usa verbo concreto ("você escreve o que fez no dia, quanto
+  tempo levou…"). Guarde as palavras do verso pro card.
+- **A voz pergunta, o exemplo responde.** "E como ficou a sua energia" com
+  as marcas ↓ tira / ↑ dá na página — não "a tarefa que te dá energia", que
+  vira regra dita pela voz.
+- **Não ligue duas coisas que o texto não liga.** "O que te dá energia" não
+  é "o que você faz bem"; "o que pesa" ao lado de "redesenha" convida a
+  "corte o que pesa" (cuidado com ideia irmã que diz o contrário).
+- **A sobrancelha não repete o verbo do verso nem entrega a virada** ("No
+  caderno", "O mapa do dia"; não "Anote o dia" nem "Redesenhe o dia").
+- **A deixa de cada bloco cai no bloco que a palavra descreve** ("o que
+  pesa" num bloco `drena`, nunca no `neutro`).
+- O exemplo é ilustração (tarefas comuns, neutras), nunca dado novo; e a
+  marca de energia é do exemplo, não afirmação sobre a tarefa.
 
 ## Validação (obrigatória, antes de devolver)
 

@@ -77,8 +77,7 @@
             "at": {
               "pt": "uma aula",
               "en": "a class"
-            },
-            "transicao": "chicote"
+            }
           }
         },
         {
@@ -93,7 +92,6 @@
           },
           "props": {
             "ambiente": "escritorio",
-            "transicao": "desliza",
             "camera": {
               "move": "push",
               "cue": {
@@ -123,50 +121,167 @@
           }
         },
         {
-          "id": "log2",
-          "scene": "cena",
-          "hold": 0.4,
+          "id": "log3",
+          "scene": "caderno",
+          "hold": 0.8,
           "pt": {
-            "caption": "Outro caminho: você pega um caderno e *anota o seu dia*, do jeito que ele é."
+            "caption": "Outro caminho: num caderno, você escreve o que fez no dia, quanto tempo levou e *como ficou a sua energia*."
           },
           "en": {
-            "caption": "Another way: you grab a workbook and *write down your day*, just as it is."
+            "caption": "Another way: in a workbook, you write down what you did, how long it took, and *what it did to your energy*."
           },
           "props": {
             "kicker": {
-              "pt": "Anote o dia",
-              "en": "Log your day"
+              "pt": "No caderno",
+              "en": "In the workbook"
+            },
+            "transicao": "chicote",
+            "semana": {
+              "pt": "caminho",
+              "en": "way"
+            },
+            "from": {
+              "pt": "quanto tempo",
+              "en": "how long"
+            },
+            "at": {
+              "pt": "como ficou",
+              "en": "what it did"
+            },
+            "blocks": [
+              {
+                "label": {
+                  "pt": "Reunião",
+                  "en": "Meeting"
+                },
+                "icon": "people",
+                "feel": "drena",
+                "size": 2,
+                "cue": {
+                  "pt": "num caderno",
+                  "en": "in a workbook"
+                }
+              },
+              {
+                "label": {
+                  "pt": "E-mails",
+                  "en": "Emails"
+                },
+                "icon": "mail",
+                "feel": "drena",
+                "size": 2
+              },
+              {
+                "label": {
+                  "pt": "Relatório",
+                  "en": "Report"
+                },
+                "icon": "document-text",
+                "feel": "neutro",
+                "size": 1
+              },
+              {
+                "label": {
+                  "pt": "Ajudar colegas",
+                  "en": "Helping peers"
+                },
+                "icon": "chatbubbles",
+                "feel": "energiza",
+                "size": 1
+              },
+              {
+                "label": {
+                  "pt": "Planejar",
+                  "en": "Planning"
+                },
+                "icon": "bulb",
+                "feel": "energiza",
+                "size": 1
+              }
+            ]
+          }
+        },
+        {
+          "id": "pull2",
+          "scene": "mapa",
+          "hold": 1.8,
+          "pt": {
+            "caption": "Com o dia no papel, *dá pra ver o que mudar*."
+          },
+          "en": {
+            "caption": "With your day on paper, *you can see what to change*."
+          },
+          "props": {
+            "kicker": {
+              "pt": "O mapa do dia",
+              "en": "Your day, mapped"
             },
             "ambiente": "casa",
             "hora": "manha",
-            "transicao": "hexa",
-            "setting": "chao",
-            "holding": "caderno",
-            "mood": "ok",
-            "glow": {
-              "pt": "anota o seu dia",
-              "en": "write down your day"
+            "camera": {
+              "move": "dolly",
+              "focus": "mapa",
+              "cue": {
+                "pt": "mudar",
+                "en": "change"
+              }
             },
-            "objects": [
+            "mood": "ok",
+            "to": "feliz",
+            "turn": {
+              "pt": "mudar",
+              "en": "change"
+            },
+            "blocks": [
               {
-                "p": "envelope",
-                "cue": {
-                  "pt": "o seu dia",
-                  "en": "your day"
+                "label": {
+                  "pt": "Reunião",
+                  "en": "Meeting"
+                },
+                "icon": "people",
+                "feel": "drena",
+                "size": 2
+              },
+              {
+                "label": {
+                  "pt": "E-mails",
+                  "en": "Emails"
+                },
+                "icon": "mail",
+                "feel": "drena",
+                "size": 2
+              },
+              {
+                "label": {
+                  "pt": "Relatório",
+                  "en": "Report"
+                },
+                "icon": "document-text",
+                "feel": "neutro",
+                "size": 1
+              },
+              {
+                "label": {
+                  "pt": "Ajudar colegas",
+                  "en": "Helping peers"
+                },
+                "icon": "chatbubbles",
+                "feel": "energiza",
+                "size": 1,
+                "then": {
+                  "size": 2
                 }
               },
               {
-                "p": "ion:people",
-                "cue": {
-                  "pt": "do jeito",
-                  "en": "just as"
-                }
-              },
-              {
-                "p": "monitor",
-                "cue": {
-                  "pt": "que ele",
-                  "en": "it is"
+                "label": {
+                  "pt": "Planejar",
+                  "en": "Planning"
+                },
+                "icon": "bulb",
+                "feel": "energiza",
+                "size": 1,
+                "then": {
+                  "size": 2
                 }
               }
             ]
@@ -217,81 +332,6 @@
           }
         },
         {
-          "id": "pull2",
-          "scene": "mapa",
-          "hold": 2,
-          "pt": {
-            "caption": "Com o dia no papel, *dá pra ver o que mudar*."
-          },
-          "en": {
-            "caption": "With your day on paper, *you can see what to change*."
-          },
-          "props": {
-            "kicker": {
-              "pt": "O mapa do dia",
-              "en": "Your day, mapped"
-            },
-            "ambiente": "casa",
-            "hora": "manha",
-            "transicao": "zoom",
-            "camera": {
-              "move": "dolly",
-              "focus": "mapa",
-              "cue": {
-                "pt": "dá pra ver",
-                "en": "you can see"
-              }
-            },
-            "mood": "ok",
-            "to": "feliz",
-            "turn": {
-              "pt": "mudar",
-              "en": "change"
-            },
-            "blocks": [
-              {
-                "icon": "mail",
-                "feel": "drena",
-                "size": 2,
-                "cue": {
-                  "pt": "Com",
-                  "en": "With"
-                }
-              },
-              {
-                "icon": "people",
-                "feel": "neutro",
-                "size": 1,
-                "cue": {
-                  "pt": "o dia",
-                  "en": "your day"
-                }
-              },
-              {
-                "icon": "desktop",
-                "feel": "drena",
-                "size": 2,
-                "cue": {
-                  "pt": "no papel",
-                  "en": "on paper"
-                }
-              },
-              {
-                "icon": "bulb",
-                "feel": "energiza",
-                "size": 1,
-                "cue": {
-                  "pt": "dá pra ver",
-                  "en": "you can see"
-                },
-                "then": {
-                  "size": 2
-                }
-              }
-            ]
-          }
-        },
-        {
           "id": "start3",
           "scene": "cena",
           "hold": 0.6,
@@ -309,10 +349,6 @@
             "ambiente": "casa",
             "hora": "manha",
             "transicao": "fade",
-            "camera": {
-              "move": "drift",
-              "forca": "leve"
-            },
             "setting": "mesa",
             "holding": "caderno",
             "mood": "feliz",
@@ -342,6 +378,10 @@
             "glow": {
               "pt": "dá pra fazer",
               "en": "you can do it"
+            },
+            "camera": {
+              "move": "drift",
+              "forca": "leve"
             }
           }
         },
