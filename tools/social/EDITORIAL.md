@@ -130,6 +130,16 @@ gerador não consegue checar sozinho + as lições aprendidas em produção.
   capa com logos + selo, N slides numerados, slide final de chamada. Formato do
   spec no topo de promo.js. Fora da série "Uma ideia com fonte": não entra no
   used-ideas.json.
+- **Imagem nos slides do promo**: `image` (capa: fundo com scrim; slides do meio:
+  faixa de 940 px com degradê; `crop {y,h}` recorta a origem; `fonte`/`fontePos`
+  viram a pill dourada) e `cta.thumbs` (fileira 4:5). Fontes de imagem que já
+  existem e seguem o cânone: ilustrações 4:5 das ideias (bucket learning-media),
+  capas dos materiais e **quadros dos vídeos do molde Remotion** (elenco do
+  André) — extraia com ffmpeg (`-ss <s> -frames:v 1`) do mp4 público
+  `<slug>/idea.<n>.<lang>.r<rev>.mp4` (720×1280; recorte y≈230..860 pega a cena
+  sem o rótulo nem a legenda) e monte uma folha de contato (`fps=1/2,tile=6x5`)
+  pra escolher a cena. ffmpeg nesta máquina:
+  %APPDATA%\OmniVoice\media_tools\ffbin-*\win32\ffmpeg.exe.
 
 ## Saída
 
