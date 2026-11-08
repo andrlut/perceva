@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBottomSafeClearance } from '@/components/BottomNavBar';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { useT } from '@/lib/i18n';
-import { DOOR_VIDEO_SCREENS, type DoorVideoScreen, doorVideoHref, useUnlockStore } from '@/lib/unlock';
+import { DOOR_VIDEO_SCREENS, type ScreenVideoKey, doorVideoHref, useUnlockStore } from '@/lib/unlock';
 import {
   ROUTE_MODULE_PATH,
   SETTINGS_MODULE,
@@ -69,7 +69,10 @@ const GUIDED: ReplaySpec<SpotlightModule>[] = [
   { id: 'M1', icon: 'checkmark-done-outline' },
 ];
 
-const VIDEO_ICON: Record<DoorVideoScreen, keyof typeof Ionicons.glyphMap> = {
+// The app overview first (the intro's video), then the four screens in tab order.
+const VIDEO_ROWS: readonly ScreenVideoKey[] = ['overview', ...DOOR_VIDEO_SCREENS];
+const VIDEO_ICON: Record<ScreenVideoKey, keyof typeof Ionicons.glyphMap> = {
+  overview: 'sparkles-outline',
   practices: 'list-outline',
   rewards: 'gift-outline',
   learning: 'book-outline',
@@ -130,7 +133,7 @@ export default function TourReplayScreen() {
   // A video is pushed over this screen and comes back to it, so no `busy`
   // latch — just a short debounce against a double tap stacking two players.
   const lastVideoAt = useRef(0);
-  const handleWatch = (feature: DoorVideoScreen) => {
+  const handleWatch = (feature: ScreenVideoKey) => {
     const now = Date.now();
     if (now - lastVideoAt.current < 800) return;
     lastVideoAt.current = now;
@@ -138,11 +141,12 @@ export default function TourReplayScreen() {
     router.push(doorVideoHref(feature, 'settings'));
   };
 
-  // Same anatomy as the module rows; "seen" = its door opened on this device.
-  const renderVideoRow = (feature: DoorVideoScreen) => {
+  // Same anatomy as the module rows; "seen" = its door opened on this device
+  // (the overview: played to the end, in the intro or here).
+  const renderVideoRow = (feature: ScreenVideoKey) => {
     const seen = !!doorsSeen[feature];
     const tone = seen ? STATUS_TONE.completed : STATUS_TONE.pending;
-    const name = t(`unlock.door.${feature}.title`);
+    const name = feature === 'overview' ? t('doorVideo.overviewTitle') : t(`unlock.door.${feature}.title`);
     const statusLabel = seen ? t('tour.replay.videoSeen') : t('tour.replay.status.pending');
     return (
       <Pressable
@@ -259,7 +263,7 @@ export default function TourReplayScreen() {
           {/* Right under the full redo: rewatching a screen is what most
               people come here for after the first days. */}
           <Text style={styles.sectionLabel}>{t('tour.replay.sectionVideos')}</Text>
-          <View style={styles.list}>{DOOR_VIDEO_SCREENS.map(renderVideoRow)}</View>
+          <View style={styles.list}>{VIDEO_ROWS.map(renderVideoRow)}</View>
 
           <Text style={styles.sectionLabel}>{t('tour.replay.sectionOpening')}</Text>
           <View style={styles.list}>

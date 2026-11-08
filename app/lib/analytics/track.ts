@@ -43,6 +43,8 @@ export type AppEventName =
   | 'door_seen'
   /** Vídeo de uma tela aberto pra rever (tab, source = guide | settings). */
   | 'door_video_opened'
+  /** Vídeo de abertura da intro (how = end | skip | fail, at = % assistido). */
+  | 'intro_video'
   /*
    * Campanha de parceiro (Programa Paker Health). Props de todos:
    * `campaign` = id da campanha, `source` opcional = de onde veio

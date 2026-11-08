@@ -39,7 +39,11 @@ type UnlockMap = Partial<Record<UnlockFeature, UnlockEntry>>;
  * (André, 08/11: "o das práticas começa de cara já depois do tutorial").
  */
 export type DoorKey = UnlockFeature | 'practices';
-type DoorMap = Partial<Record<DoorKey, string>>;
+/** What `doorsSeen` records: the doors, plus the app overview video (played to
+ *  the end in the intro or in the player — it gates nothing, it only feeds the
+ *  "Visto" of Ajustes › Tutorial e vídeos). */
+export type SeenKey = DoorKey | 'overview';
+type DoorMap = Partial<Record<SeenKey, string>>;
 
 interface UnlockState {
   characterId: string | null;
@@ -53,7 +57,7 @@ interface UnlockState {
   replayDoors: boolean;
   hydrate: (characterId: string, accountCreatedAt: string | null) => Promise<void>;
   unlock: (feature: UnlockFeature, by: UnlockBy) => Promise<void>;
-  markDoorSeen: (feature: DoorKey) => Promise<void>;
+  markDoorSeen: (feature: SeenKey) => Promise<void>;
 }
 
 const KEY_PREFIX = 'rpgtasks.unlock.v1.';

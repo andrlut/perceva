@@ -6,6 +6,9 @@
 // Cada trecho é um tour curto (tools/video/tours/vitrine-*.json, "kind": "vitrine") com voz,
 // legenda e relógio próprios; aqui só se emendam os trechos e se fecha na marca.
 //   props.lang → public/tour/vitrine-<trecho>.<lang>/ (scripts/vitrine.mjs build + voice)
+//   props.inApp → o corte do app (a introdução do 1º acesso e Ajustes › Tutorial e vídeos):
+//   o mesmo filme, mas o cartão final fecha na marca e na tríade, sem "onde baixar" — quem
+//   assiste já está no app (scripts/vitrine.mjs render --app).
 import React from 'react';
 import { AbsoluteFill, CalculateMetadataFunction, Easing, interpolate, useCurrentFrame } from 'remotion';
 import { linearTiming, TransitionSeries } from '@remotion/transitions';
@@ -28,6 +31,8 @@ const END = 96;
 
 export type VitrineProps = {
   lang: Lang;
+  /** O corte do app: sem a linha de loja nem o site no cartão final. */
+  inApp?: boolean;
   parts?: { tour: TourProps; frames: number }[];
 };
 
@@ -67,8 +72,9 @@ const FECHO = {
   en: { triad: ['See.', 'Practice.', 'Become.'], cta: 'Free on the App Store and Google Play', site: 'perceva.app' },
 } as const;
 
-/** O cartão final: a marca, a tríade e onde baixar. Sem voz (a última fala já disse a promessa). */
-const Fecho: React.FC<{ lang: Lang }> = ({ lang }) => {
+/** O cartão final: a marca, a tríade e onde baixar (no corte do app, só a marca e a tríade).
+ *  Sem voz (a última fala já disse a promessa). */
+const Fecho: React.FC<{ lang: Lang; inApp?: boolean }> = ({ lang, inApp }) => {
   const f = useCurrentFrame();
   const t = FECHO[lang];
   const up = (from: number, dur = 14) => {
@@ -93,17 +99,21 @@ const Fecho: React.FC<{ lang: Lang }> = ({ lang }) => {
           </span>
         ))}
       </div>
-      <div style={{ position: 'absolute', top: 1290, left: 80, right: 80, textAlign: 'center', fontFamily: 'Manrope', fontWeight: 700, fontSize: 44, color: C.text, ...up(40) }}>
-        {t.cta}
-      </div>
-      <div style={{ position: 'absolute', top: 1366, left: 0, right: 0, textAlign: 'center', fontFamily: 'Manrope', fontWeight: 800, fontSize: 40, letterSpacing: 2, color: C.gold2, ...up(46) }}>
-        {t.site}
-      </div>
+      {inApp ? null : (
+        <>
+          <div style={{ position: 'absolute', top: 1290, left: 80, right: 80, textAlign: 'center', fontFamily: 'Manrope', fontWeight: 700, fontSize: 44, color: C.text, ...up(40) }}>
+            {t.cta}
+          </div>
+          <div style={{ position: 'absolute', top: 1366, left: 0, right: 0, textAlign: 'center', fontFamily: 'Manrope', fontWeight: 800, fontSize: 40, letterSpacing: 2, color: C.gold2, ...up(46) }}>
+            {t.site}
+          </div>
+        </>
+      )}
     </AbsoluteFill>
   );
 };
 
-export const Vitrine: React.FC<VitrineProps> = ({ lang, parts }) => {
+export const Vitrine: React.FC<VitrineProps> = ({ lang, inApp, parts }) => {
   if (!parts || parts.some((p) => !p.tour.spec)) return null;
   const items: React.ReactNode[] = [];
   parts.forEach((p, i) => {
@@ -121,7 +131,7 @@ export const Vitrine: React.FC<VitrineProps> = ({ lang, parts }) => {
       <TransitionSeries>
         {items}
         <TransitionSeries.Sequence durationInFrames={END} name="fecho">
-          <Fecho lang={lang} />
+          <Fecho lang={lang} inApp={inApp} />
         </TransitionSeries.Sequence>
       </TransitionSeries>
       <Lente />

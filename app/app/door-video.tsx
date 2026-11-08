@@ -8,7 +8,7 @@ import { ScreenBackground } from '@/components/ScreenBackground';
 import { DOOR_VIDEO_BAR_H, DoorVideo } from '@/components/unlock/DoorVideo';
 import { track } from '@/lib/analytics';
 import { useT } from '@/lib/i18n';
-import { DOOR_VIDEO_SCREENS } from '@/lib/unlock';
+import { isScreenVideoKey, useUnlockStore } from '@/lib/unlock';
 import { tokens } from '@/theme';
 
 const HEADER_H = 56;
@@ -24,7 +24,8 @@ export default function DoorVideoScreen() {
   const router = useRouter();
   const { t } = useT();
   const params = useLocalSearchParams<{ feature?: string; source?: string }>();
-  const feature = DOOR_VIDEO_SCREENS.find((f) => f === params.feature) ?? null;
+  const feature = isScreenVideoKey(params.feature) ? params.feature : null;
+  const markSeen = useUnlockStore((s) => s.markDoorSeen);
   const { width: winW, height: winH } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [failed, setFailed] = useState(false);
@@ -40,6 +41,14 @@ export default function DoorVideoScreen() {
   }, []);
 
   const onFail = useCallback(() => setFailed(true), []);
+  // Only the overview is marked from here: a screen's "seen" is its door, and
+  // marking it would cancel that door's first opening.
+  const onEnd = useCallback(
+    ({ scrubbed }: { scrubbed: boolean }) => {
+      if (feature === 'overview' && !scrubbed) void markSeen('overview');
+    },
+    [feature, markSeen],
+  );
 
   if (!feature) return null;
 
@@ -56,7 +65,7 @@ export default function DoorVideoScreen() {
         <View style={styles.header}>
           <View style={styles.side} />
           <Text style={styles.title} numberOfLines={1} accessibilityRole="header">
-            {t(`unlock.door.${feature}.title`)}
+            {feature === 'overview' ? t('doorVideo.overviewTitle') : t(`unlock.door.${feature}.title`)}
           </Text>
           <Pressable
             onPress={() => router.back()}
@@ -80,6 +89,7 @@ export default function DoorVideoScreen() {
               width={videoW}
               height={videoH}
               variant="player"
+              onEnd={onEnd}
               onFail={onFail}
             />
           )}
