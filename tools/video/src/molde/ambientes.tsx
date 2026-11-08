@@ -479,7 +479,7 @@ const CidadeBack: React.FC<EnvP> = ({ t, hora }) => (
   </ArtSvg>
 );
 
-const CidadeMid: React.FC<EnvP> = ({ t, gente, accent }) => {
+const CidadeMid: React.FC<EnvP> = ({ t, gente, accent, hora }) => {
   const n = howMany(gente, 2, 4);
   const walkers = [0, 1, 2, 3].slice(0, n);
   const bus = -800 + ((t * 7 + 600) % 2600);
@@ -490,7 +490,8 @@ const CidadeMid: React.FC<EnvP> = ({ t, gente, accent }) => {
         <SkyDefs id="cidm" hora="dia" />
         <Arvore x={120} base={985} size={320} t={t} seed={1} />
         <Arvore x={990} base={985} size={300} t={t} seed={2} />
-        <Poste id="cidm" x={700} base={985} h={400} />
+        {/* poste aceso só de noite: aceso de dia lia "noite" (revisão dos quadros da Paker) */}
+        <Poste id="cidm" x={700} base={985} h={400} on={hora === 'noite' ? 1 : 0} />
       </ArtSvg>
       {walkers.map((i) => {
         const dir = i % 2 ? -1 : 1;
