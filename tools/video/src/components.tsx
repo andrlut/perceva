@@ -19,7 +19,65 @@ export const fadeUp = (frame: number, from: number, dur = 14, dist = 28): React.
   return { opacity: t, transform: `translateY(${(1 - t) * dist}px)` };
 };
 
-export const useSpring = (from: number, config = { damping: 16, stiffness: 160, mass: 1 }) => {
+/**
+ * Molas da marca (requinte, fase 1 — 2026-11-07). Nenhuma passa de 4% do alvo: a régua dos
+ * estilos de referência é "pousar com power3/expo out, overshoot de no máximo 4%". Medidas com
+ * o spring() do Remotion 4.0.533 a 30 q/s (antes: 5% a 19%, e o amassado do Drop em ~42%).
+ * Não invente mola nova numa cena — escolha uma destas.
+ */
+export const MOLA = {
+  /** peça, chip, bloco que pousa: passa 3,1%, 90% em 6 q, assenta em 15 q */
+  pousa: { damping: 21, stiffness: 200, mass: 1 },
+  /** coisa grande que entra (pessoa, painel, folha, card): 2,5%, 90% em 8 q, assenta em 17 q */
+  entra: { damping: 18, stiffness: 140, mass: 1 },
+  /** peça que cai e amassa no impacto: 3,5% (o amassado fica em ~8% em vez de ~42%) */
+  peso: { damping: 19, stiffness: 170, mass: 1 },
+  /** soco de câmera na deixa: 3,8%, 90% em 7 q */
+  camera: { damping: 17, stiffness: 140, mass: 1 },
+  /** o card do verso vira: 1,9% (≈3° além dos 180°), 90% em 10 q */
+  vira: { damping: 14, stiffness: 80, mass: 1 },
+} as const;
+
+/**
+ * Saída: acelera pra fora (ease-in) e dura MENOS que a entrada — o olho já leu a coisa.
+ * 0 → 1 de `at` a `at + dur`. Antes as saídas eram molas lentas (90% em 14 q).
+ */
+export const sai = (frame: number, at: number, dur = 8) =>
+  interpolate(frame, [at, at + dur], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.in(Easing.cubic),
+  });
+
+/**
+ * Texto por máscara (requinte, fase 2): texto nunca entra só por fade.
+ *  - `sobe`: o bloco sobe de trás de uma linha invisível (a base do próprio texto), como letreiro.
+ *  - `escreve`: a máscara abre da esquerda pra direita com a ponta macia — é a caneta escrevendo.
+ * `p` vai de 0 a 1 (rampa ou mola da marca; a passada da mola é cortada em 1).
+ */
+export const Mascara: React.FC<{ p: number; modo?: 'sobe' | 'escreve'; children: React.ReactNode; style?: React.CSSProperties; ponta?: number }> = ({
+  p,
+  modo = 'sobe',
+  children,
+  style,
+  ponta = 12,
+}) => {
+  const t = Math.max(0, Math.min(1, p));
+  if (modo === 'escreve') {
+    // a borda da tinta anda de -ponta% a 100%: em p = 1 o texto inteiro está aceso
+    const edge = -ponta + t * (100 + ponta);
+    const mask = `linear-gradient(90deg, #000 0%, #000 ${edge}%, transparent ${edge + ponta}%)`;
+    return <div style={{ ...style, WebkitMaskImage: mask, maskImage: mask }}>{children}</div>;
+  }
+  // a folga embaixo (0,18 em) deixa as descendentes (g, p, ç) inteiras dentro da máscara
+  return (
+    <div style={{ ...style, overflow: 'hidden', paddingBottom: '0.18em', marginBottom: '-0.18em' }}>
+      <div style={{ transform: `translateY(${(1 - t) * 108}%)`, opacity: t > 0 ? 1 : 0 }}>{children}</div>
+    </div>
+  );
+};
+
+export const useSpring = (from: number, config: { damping: number; stiffness: number; mass: number } = MOLA.entra) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   return spring({ frame: frame - from, fps, config });
@@ -146,7 +204,19 @@ export const Footnote: React.FC<{ text: string; from?: number; top?: number; siz
 
 // ---------------------------------------------------------------- fundo
 
-/** Noite da marca com um halo violeta que respira devagar. */
+/**
+ * Lente (requinte, fase 1): vinheta redonda PRESA ao quadro — por cima de todas as cenas e
+ * passagens (não anda com a câmera nem cresce no hexágono), por baixo da legenda. A fase 1 tinha
+ * também um grão fixo; o André viu no celular e achou que parecia baixa resolução — saiu na 1.1.
+ */
+export const Lente: React.FC = () => (
+  <AbsoluteFill style={{ pointerEvents: 'none', background: 'radial-gradient(ellipse 82% 64% at 50% 46%, rgba(5,7,26,0) 58%, rgba(5,7,26,0.3) 100%)' }} />
+);
+
+/**
+ * Noite da marca com um halo violeta que respira devagar. Fase 1: saiu o halo dourado do
+ * rodapé — por cima do navy ele virava uma mancha marrom atrás da legenda e do verso.
+ */
 export const Background: React.FC = () => {
   const frame = useCurrentFrame();
   const drift = Math.sin(frame / 90) * 60;
@@ -156,11 +226,6 @@ export const Background: React.FC = () => {
       <AbsoluteFill
         style={{
           background: `radial-gradient(ellipse 900px 700px at ${540 + drift}px 380px, rgba(123,92,255,${breathe * 0.5}) 0%, rgba(75,47,204,0.12) 45%, rgba(10,14,38,0) 75%)`,
-        }}
-      />
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(ellipse 700px 600px at ${540 - drift}px 1500px, rgba(200,136,28,0.10) 0%, rgba(10,14,38,0) 70%)`,
         }}
       />
       <AbsoluteFill

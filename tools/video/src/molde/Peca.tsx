@@ -18,6 +18,7 @@ import {
   Sacola,
   Vassoura,
 } from '../elenco/cast';
+import { Agenda, Caneca, Caneta, Envelope, Monitor, Papelada, Planta, Quadro } from '../elenco/objetos';
 import ions from './ionicons-full.json';
 import catalog from './catalog.json';
 
@@ -43,6 +44,15 @@ const PIECES: Record<string, Draw> = {
   caderno: ({ size, accent, progress }) => <Caderno size={size} accent={accent} write={progress ?? 1} />,
   lampada: ({ size, progress }) => <Lampada size={size} on={progress ?? 1} />,
   copo: ({ t, size, accent, progress }) => <Copo t={t} size={size} accent={accent} stir={progress ?? 1} />,
+  // v2 (objetos.tsx): trabalho, casa, rotina
+  quadro: ({ size, accent, progress }) => <Quadro size={size} accent={accent} progress={progress ?? 1} />,
+  caneca: ({ t, size, accent }) => <Caneca t={t} size={size * 0.85} accent={accent} />,
+  planta: ({ t, size }) => <Planta t={t} size={size} />,
+  caneta: ({ size, accent, progress }) => <Caneta size={size} accent={accent} progress={progress ?? 0} />,
+  agenda: ({ size, accent, progress }) => <Agenda size={size} accent={accent} progress={progress ?? 1} />,
+  monitor: ({ t, size, accent, progress }) => <Monitor t={t} size={size} accent={accent} progress={progress ?? 1} />,
+  papelada: ({ size }) => <Papelada size={size} />,
+  envelope: ({ t, size, accent }) => <Envelope t={t} size={size} accent={accent} />,
 };
 
 export const PIECE_NAMES = Object.keys(PIECES);
@@ -52,6 +62,34 @@ if (PIECE_NAMES.slice().sort().join() !== catalog.pieces.slice().sort().join()) 
 }
 export const isPiece = (name: string) =>
   name in PIECES || (name.startsWith('ion:') && name.slice(4) in (ions as Record<string, number>));
+
+/** Caixa que cada peça ocupa (largura, altura), em frações de `size`. O que não está aqui é quadrado. */
+const BOX: Record<string, [number, number]> = {
+  celular: [0.48, 0.8],
+  vassoura: [0.6, 1],
+  cesto: [1, 0.85],
+  louca: [1, 0.8],
+  livro: [1, 0.7],
+  cama: [1, 0.6],
+  computador: [1, 0.72],
+  caderno: [1, 1.1],
+  lampada: [1, 1.2],
+  copo: [0.8, 1],
+  quadro: [1, 1.15],
+  caneca: [0.85, 0.94],
+  planta: [0.8, 1],
+  caneta: [0.5, 1],
+  agenda: [1, 1.1],
+  monitor: [1, 0.9],
+  papelada: [1, 0.95],
+  envelope: [1, 0.78],
+};
+/** Largura e altura que a peça ocupa na tela (ícone do app = a ficha redonda de 0,8 × size). */
+export const pieceBox = (name: string, size: number): [number, number] => {
+  if (name.startsWith('ion:')) return [size * 0.8, size * 0.8];
+  const [w, h] = BOX[name] ?? [1, 1];
+  return [size * w, size * h];
+};
 
 /** Ficha redonda com o ícone do app — pra o que o elenco ainda não desenhou. */
 const IonToken: React.FC<{ name: string; size: number; accent: string }> = ({ name, size, accent }) => (

@@ -289,6 +289,7 @@ Auto-loaded from `.claude/skills/`. Invoke via `/<name>` in chat.
 | **`/sync-all`** | Start-of-day status — pull main + audit worktrees + verify cloud↔git migration alignment |
 | **`/ota-update`** | Publishing a JS-only hotfix via `eas update` (no rebuild) — channel `production` for the Play Store app, `preview` for the internal APK |
 | **`/worktree-cleanup`** | Removing stale/abandoned/prunable worktrees with confirmation — execute the cleanup `/sync-all` only suggests |
+| **`remotion-*`** (oficiais, `remotion-dev/skills`) | Reference for Remotion markup, effects (light leaks, motion blur, color correction), captions and render flags when working in `tools/video`. Installed 2026-11-07 with `npx skills@1.7.4 add remotion-dev/skills -a claude-code --copy` (9 of 13; `create`, `saas`, `maps`, `interactivity` left out); pinned in `skills-lock.json`. **Our pipeline wins:** videos are made with `tools/video/scripts/molde.mjs` / `tour.mjs` (see `MOLDE.md` / `TOUR.md`) — never scaffold a new Remotion project, never switch to the "open Studio, don't render" flow those skills prescribe. They target Remotion 4.0.541; `tools/video` runs 4.0.533, so check an API exists before using it |
 
 ### Auto-invoke rules (use these without being asked)
 

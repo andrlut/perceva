@@ -3,3 +3,5 @@ out/
 public/vo*/*.wav
 # molde: spec resolvido + voz gerados pelo scripts/molde.mjs (a fonte é learning-drops/video-specs/)
 public/molde/
+# tutorial de tela: spec resolvido + voz gerados pelo scripts/tour.mjs (a fonte é tours/<tela>.json)
+public/tour/

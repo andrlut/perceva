@@ -9,6 +9,8 @@
 //    ponteiro girando) controladas por `t` = frame, pra reaproveitar em
 //    qualquer cena sem redesenhar.
 import React from 'react';
+import { useIdentity } from '../identidade/context';
+import type { PessoaProps } from '../identidade/types';
 import { C, dimColor } from '../theme';
 
 type Base = { t?: number; size?: number; accent?: string };
@@ -28,9 +30,13 @@ const Eyes: React.FC<{ t: number; x: number; y: number; gap: number; seed?: numb
   );
 };
 
-/** Pessoa — cabeça redonda, corpo em cápsula. `mood` muda a boca. */
+/**
+ * PessoaV0 — a primeira pessoa do molde (cabeça redonda, corpo em cápsula).
+ * Fica como linha de base da comparação de identidades (src/identidade).
+ * Os vídeos usam `Pessoa`, logo abaixo, que delega à identidade ativa.
+ */
 export type Arms = 'none' | 'down' | 'up' | 'out';
-export const Pessoa: React.FC<
+export const PessoaV0: React.FC<
   Base & { skin?: string; mood?: 'ok' | 'feliz' | 'cansado'; seed?: number; arms?: Arms; still?: boolean; cap?: string; sweat?: boolean }
 > = ({ t = 0, size = 260, accent = C.violet, skin = '#F2C9A0', mood = 'ok', seed = 0, arms = 'none', still = false, cap, sweat = false }) => {
   const bob = still ? 0 : Math.sin((t + seed * 11) / 14) * 3;
@@ -81,6 +87,17 @@ export const Pessoa: React.FC<
       </g>
     </svg>
   );
+};
+
+/**
+ * Pessoa — o rosto do Elenco Perceva. Quem desenha é a identidade ativa
+ * (src/identidade/active.ts); o contrato de props e a caixa 200×260 são os
+ * mesmos da PessoaV0, então nenhuma cena muda quando a identidade troca.
+ */
+export const Pessoa: React.FC<PessoaProps> = (props) => {
+  // a identidade do vídeo (src/identidade/context.ts) — por padrão, a ativa
+  const { Pessoa: P } = useIdentity();
+  return <P {...props} />;
 };
 
 /** Casa — telhado na cor de destaque, janela que acende. */

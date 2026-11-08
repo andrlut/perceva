@@ -1,9 +1,10 @@
 // Molde genérico do vídeo de ideia — do roteiro revisado ao MP4 no bucket.
 //
 //   node scripts/molde.mjs lint    --slug <slug>                      só o lint do roteiro (sem gastar nada)
-//   node scripts/molde.mjs build   --slug <slug> [--idea <id>] [--lang pt|en|both]
+//   node scripts/molde.mjs build   --slug <slug> [--idea <id>] [--lang pt|en|both] [--silent]
 //   node scripts/molde.mjs voice   --slug <slug> [--idea <id>] [--lang …] [--only a,b]   TTS + QA (--fix) por fala
-//   node scripts/molde.mjs stills  --slug <slug> [--idea <id>] [--lang …]  um quadro por cena + folha de contato
+//   node scripts/molde.mjs stills  --slug <slug> [--idea <id>] [--lang …] [--at 0.1,0.5,1] [--scale 0.4]
+//                                  um quadro por cena (ou vários: frações da fala) + folha de contato
 //   node scripts/molde.mjs render  --slug <slug> [--idea <id>] [--lang …] [--rev N]      MP4 + versão do app + pôster
 //   node scripts/molde.mjs upload  --slug <slug> [--idea <id>] [--lang …] [--rev N]      sobe pro bucket learning-media
 //   node scripts/molde.mjs videos  --slug <slug> --out <file.json>    junta os video.json no formato do emit-migration --videos
@@ -17,9 +18,16 @@
 //
 // Correção cirúrgica: mude UMA fala no roteiro → `build` → `voice --only <id>` → `render --rev N+1` → `upload`.
 // As outras falas ficam com a mesma tomada de voz; o bucket nunca sobrescreve (cada revisão é um arquivo novo).
+//
+// Prévia SEM voz (testar cena, câmera, ambiente sem gastar TTS): `build --silent` estima o tempo de cada
+// fala pelo texto (timings.silent.json — o timings.json da voz gravada fica intocado) e marca o spec como
+// silencioso; `stills` e `render` funcionam igual (o render vira out/molde/<key>/preview.mp4, sem pub/
+// nem video.json, então não tem como subir prévia pro bucket). Rode `build` sem --silent pra voltar.
 import fs from 'node:fs';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { markVoiced, pendingLines } from './voiced.mjs';
+import { measurePauses as measurePausesIn } from './pauses.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const repo = path.resolve(root, '..', '..');
@@ -33,6 +41,22 @@ const slug = arg('slug');
 const onlyIdea = arg('idea');
 const langArg = arg('lang', 'both');
 const rev = Number(arg('rev', '1'));
+// --identity <id>: comparação de identidade (src/identidade) — stills e render saem à parte
+// (out/molde/<key>/identidade/<id>.mp4, sheet-<id>.png), sem pub/ nem video.json
+const identity = arg('identity');
+// --sfx: com os efeitos sonoros sintetizados (scripts/sfx.mjs) por baixo da voz
+const sfxOn = argv.includes('--sfx');
+const idProps = { ...(identity ? { identity } : {}), ...(sfxOn ? { sfx: true } : {}) };
+const silent = argv.includes('--silent');
+// --roteiro <arquivo> + --tag <nome>: piloto lado a lado (requinte, fase 2). Lê outro roteiro e grava
+// em chaves à parte (<slug>.<ideia>-<tag>.<lang>), então a voz e o vídeo de verdade ficam intocados;
+// piloto nunca sobe (upload/videos recusam) e sai sem pub/ nem video.json, como a prévia.
+const roteiro = arg('roteiro');
+const tag = arg('tag');
+if (roteiro && !tag) {
+  console.error('✗ --roteiro pede --tag (o piloto grava em chaves à parte, nunca por cima do vídeo de verdade)');
+  process.exit(1);
+}
 const LANGS = langArg === 'both' ? ['pt', 'en'] : [langArg];
 const catalog = JSON.parse(fs.readFileSync(path.join(root, 'src/molde/catalog.json'), 'utf8'));
 const ions = JSON.parse(fs.readFileSync(path.join(root, 'src/molde/ionicons-full.json'), 'utf8'));
@@ -56,11 +80,11 @@ const mainRoot = () => {
 const readJson = (f) => JSON.parse(fs.readFileSync(f, 'utf8'));
 const firstExisting = (...files) => files.find((f) => f && fs.existsSync(f));
 
-const videoSpecFile = path.join(repo, 'learning-drops/video-specs', `${slug}.json`);
+const videoSpecFile = roteiro ? path.resolve(roteiro) : path.join(repo, 'learning-drops/video-specs', `${slug}.json`);
 const ideasSpecFile = path.join(repo, 'learning-drops/ideas-specs', `${slug}.json`);
 const inboxDir = firstExisting(path.join(repo, 'learning-drops/inbox', slug), path.join(mainRoot(), 'learning-drops/inbox', slug));
 
-const key = (idea, lang) => `${slug}.${idea}.${lang}`;
+const key = (idea, lang) => `${slug}.${idea}${tag ? `-${tag}` : ''}.${lang}`;
 const pubDir = (k) => path.join(root, 'public', 'molde', k);
 const outDir = (k) => path.join(root, 'out', 'molde', k);
 
@@ -72,8 +96,102 @@ const BANNED = {
   pt: /\b(estudos?|pesquisas?|pesquisador\w*|cientistas?|amostras?|participantes?|voluntari\w*|universidades?|revistas?|experimentos?|estatistic\w*|dados|comprovad\w*|por cento|porcento|vezes mais|et al)\b/,
   en: /\b(stud(y|ies)|research\w*|scientists?|samples?|participants?|volunteers?|universit(y|ies)|journals?|experiments?|statistic\w*|data|proven|percent|times more|et al)\b/,
 };
-const CUE_KEYS = ['cue', 'turn', 'from', 'until', 'at', 'win', 'glow', 'out', 'arrives', 'leaves'];
-const LIMITS = { caption: 150, kicker: 24, label: 22, chip: 30, pill: 22, lines: [4, 8], seconds: 58 };
+const CUE_KEYS = ['cue', 'turn', 'from', 'until', 'at', 'win', 'glow', 'out', 'arrives', 'leaves', 'semana'];
+const LIMITS = { caption: 150, kicker: 24, label: 22, chip: 30, pill: 22, bloco: 16, lines: [4, 8], seconds: 58, bridgeLines: [2, 4], bridgeSeconds: 24 };
+
+/** câmera, passagem e ambiente: valem pra qualquer cena (o ambiente só nas que têm pessoa de pé) */
+function lintStage(where, l, i, errors, warns) {
+  const p = l.props ?? {};
+  const oneOf = (v, list, what) => {
+    if (v !== undefined && !list.includes(v)) errors.push(where(l.id, `${what} "${v}" não existe (${list.join(', ')})`));
+  };
+  if (p.camera !== undefined) {
+    if (!p.camera || typeof p.camera !== 'object' || !p.camera.move) errors.push(where(l.id, 'camera precisa de { move }'));
+    else {
+      oneOf(p.camera.move, catalog.camera.moves, 'camera.move');
+      oneOf(p.camera.focus, catalog.camera.focus, 'camera.focus');
+      oneOf(p.camera.forca, catalog.camera.forca, 'camera.forca');
+      if (p.camera.focus === 'mapa' && l.scene !== 'mapa') errors.push(where(l.id, 'camera.focus "mapa" só existe na cena mapa'));
+      for (const k of Object.keys(p.camera)) if (!['move', 'focus', 'cue', 'forca'].includes(k)) errors.push(where(l.id, `camera.${k} não existe (move, focus, cue, forca)`));
+    }
+  }
+  oneOf(p.transicao, catalog.transicao, 'transicao');
+  if (p.transicao && i === 0) warns.push(where(l.id, 'transicao na 1ª cena não tem efeito (é a passagem PRA esta cena)'));
+  if (p.ambiente !== undefined) {
+    oneOf(p.ambiente, catalog.ambientes, 'ambiente');
+    if (!catalog.ambienteScenes.includes(l.scene))
+      errors.push(where(l.id, `cena "${l.scene}" não aceita ambiente (só ${catalog.ambienteScenes.join(', ')}${l.scene === 'comparar' ? '; no comparar é left.ambiente / right.ambiente' : ''})`));
+    // só o pensa senta a pessoa na plateia; nas outras cenas ela fica de pé na frente da turma
+    if (p.ambiente === 'treinamento' && l.scene !== 'pensa')
+      warns.push(where(l.id, `treinamento na cena "${l.scene}": a pessoa fica na frente da turma, virada pra câmera, e lê como quem apresenta (pra "assistir à aula", use a cena pensa: ela senta na plateia)`));
+  }
+  oneOf(p.gente, catalog.gente, 'gente');
+  oneOf(p.hora, catalog.hora, 'hora');
+  if ((p.gente || p.hora) && !p.ambiente) warns.push(where(l.id, 'gente/hora sem ambiente não fazem nada'));
+  for (const side of ['left', 'right']) {
+    oneOf(p[side]?.ambiente, catalog.ambientes, `${side}.ambiente`);
+    oneOf(p[side]?.hora, catalog.hora, `${side}.hora`);
+    if (p[side]?.ambiente && l.scene !== 'comparar') errors.push(where(l.id, `${side}.ambiente só existe no comparar`));
+  }
+  // quantas peças cabem: o resto seria cortado em silêncio
+  const max = l.scene === 'cena' && p.ambiente ? catalog.objectsMax.cenaAmbiente : catalog.objectsMax[l.scene];
+  const n = (p.objects ?? []).length;
+  if (n && max === undefined) errors.push(where(l.id, `cena "${l.scene}" não desenha objects`));
+  else if (n > max) errors.push(where(l.id, `${n} objects; a cena ${l.scene}${p.ambiente ? ' com ambiente' : ''} mostra no máximo ${max}${l.scene === 'cena' && !p.ambiente ? ' (com ambiente: até 6)' : ''}`));
+}
+
+/**
+ * cena caderno (fase 2, "demonstrar a ideia"): a página onde o exemplo se escreve — cada tarefa com
+ * NOME (`label`), a barra do tempo (`size`) e a marca de energia (`feel`). Os mesmos blocos do mapa,
+ * então o caderno e o mapa contam o mesmo dia. Nome é obrigatório aqui (é o que a cena mostra).
+ */
+function lintCaderno(where, l, errors) {
+  const p = l.props ?? {};
+  const b = p.blocks;
+  const [lo, hi] = catalog.caderno.blocks;
+  if (!Array.isArray(b) || b.length < lo || b.length > hi) return errors.push(where(l.id, `caderno precisa de ${lo} a ${hi} blocks`));
+  for (const [i, x] of b.entries()) {
+    const t = `block ${i + 1}`;
+    if (!x.label) errors.push(where(l.id, `${t}: o caderno escreve o nome da tarefa — falta label`));
+    if (!catalog.feel.includes(x.feel)) errors.push(where(l.id, `${t}: feel "${x.feel}" não existe (${catalog.feel.join(', ')})`));
+    if (x.size !== undefined && !(Number.isInteger(x.size) && x.size >= 1 && x.size <= 3)) errors.push(where(l.id, `${t}: size ${x.size} (inteiro de 1 a 3)`));
+    if (x.then) errors.push(where(l.id, `${t}: "then" é do mapa (no caderno a pessoa só anota)`));
+    if (x.icon !== undefined && !(x.icon in ions)) errors.push(where(l.id, `${t}: ícone "${x.icon}" não existe no Ionicons`));
+  }
+  if (p.heads !== undefined && (!Array.isArray(p.heads) || p.heads.length !== 3)) errors.push(where(l.id, 'heads: os três títulos das colunas (tarefa, tempo, energia)'));
+}
+
+/** cena mapa: blocos do dia (ícone = o que é, feel = como pesa, size = quanto do dia) */
+function lintMapa(where, l, errors) {
+  const p = l.props ?? {};
+  const b = p.blocks;
+  const [lo, hi] = catalog.mapa.blocks;
+  if (!Array.isArray(b) || b.length < lo || b.length > hi) return errors.push(where(l.id, `mapa precisa de ${lo} a ${hi} blocks`));
+  const okSize = (v) => v === undefined || (Number.isInteger(v) && v >= catalog.mapa.size[0] && v <= catalog.mapa.size[1]);
+  let before = 0;
+  let after = 0;
+  let changes = 0;
+  for (const [i, x] of b.entries()) {
+    const tag = `block ${i + 1}`;
+    if (!x.icon || !(x.icon in ions)) errors.push(where(l.id, `${tag}: ícone "${x.icon}" não existe no Ionicons`));
+    if (!catalog.feel.includes(x.feel)) errors.push(where(l.id, `${tag}: feel "${x.feel}" não existe (${catalog.feel.join(', ')})`));
+    if (!okSize(x.size)) errors.push(where(l.id, `${tag}: size ${x.size} (inteiro de ${catalog.mapa.size.join(' a ')})`));
+    before += x.size ?? 1;
+    if (x.then) {
+      changes++;
+      if (x.then.feel !== undefined && !catalog.feel.includes(x.then.feel)) errors.push(where(l.id, `${tag}: then.feel "${x.then.feel}" não existe`));
+      if (!okSize(x.then.size)) errors.push(where(l.id, `${tag}: then.size ${x.then.size} (inteiro de ${catalog.mapa.size.join(' a ')})`));
+      if (x.then.icon !== undefined && !(x.then.icon in ions)) errors.push(where(l.id, `${tag}: then.icon "${x.then.icon}" não existe no Ionicons`));
+      for (const k of Object.keys(x.then)) if (!['feel', 'size', 'icon'].includes(k)) errors.push(where(l.id, `${tag}: then.${k} não existe (feel, size, icon)`));
+    }
+    after += x.then?.size ?? x.size ?? 1;
+  }
+  const cap = catalog.mapa.sizeSum;
+  if (before > cap || after > cap) errors.push(where(l.id, `o dia soma ${Math.max(before, after)} de tamanho (teto ${cap}): blocos ficariam pequenos demais`));
+  if (changes && !p.turn) errors.push(where(l.id, 'blocos com "then" precisam da deixa "turn" (a segunda batida)'));
+  if (p.turn && !changes) errors.push(where(l.id, '"turn" no mapa sem nenhum bloco com "then": nada muda na virada'));
+  if (p.side !== undefined && !['left', 'right'].includes(p.side)) errors.push(where(l.id, `side "${p.side}" (left ou right)`));
+}
 
 /** Troca todo {pt, en} pelo idioma; o resto passa igual. */
 const resolve = (v, lang) => {
@@ -96,18 +214,40 @@ function lintIdea(ideaId, spec, card, lang, errors, warns) {
   const where = (l, m) => `${ideaId}/${lang}/${l}: ${m}`;
   const lines = spec.lines;
   if (!Array.isArray(lines) || !lines.length) return errors.push(`${ideaId}: sem lines`);
-  if (lines.length < LIMITS.lines[0] || lines.length > LIMITS.lines[1]) errors.push(`${ideaId}: ${lines.length} falas (faixa ${LIMITS.lines.join('–')})`);
+  // abertura de porta (bridge "tour"): a história do porquê que emenda no tutorial da tela, sem verso
+  const bridge = spec.bridge === 'tour';
+  const range = bridge ? LIMITS.bridgeLines : LIMITS.lines;
+  if (spec.bridge !== undefined && !bridge) errors.push(`${ideaId}: bridge "${spec.bridge}" (só "tour")`);
+  if (lines.length < range[0] || lines.length > range[1]) errors.push(`${ideaId}: ${lines.length} falas (faixa ${range.join('–')})`);
   const last = lines[lines.length - 1];
-  if (last.scene !== 'verso') errors.push(`${ideaId}: a última cena tem que ser "verso" (a voz lê o card)`);
+  if (bridge && lines.some((l) => l.scene === 'verso')) errors.push(`${ideaId}: abertura de porta não tem verso (ela emenda na tela: tools/video/TOUR.md)`);
+  if (!bridge && last.scene !== 'verso') errors.push(`${ideaId}: a última cena tem que ser "verso" (a voz lê o card)`);
+  // passagens (requinte fase 1, src/molde/transicao.tsx `passagens`): o padrão é o mergulho, o
+  // hexágono só abre o verso, e só UMA passagem que anda (chicote/desliza/zoom) vale por vídeo
+  let socoAt = null;
+  for (const [i, raw] of lines.entries()) {
+    const t = raw.props?.transicao;
+    if (!t || i === 0) continue;
+    if (t === 'hexa' && raw.scene !== 'verso') warns.push(where(raw.id, 'transicao "hexa" só abre o verso (é a assinatura) — aqui vira mergulho'));
+    if (['chicote', 'desliza', 'zoom'].includes(t)) {
+      if (socoAt) warns.push(where(raw.id, `transicao "${t}": o vídeo já soca em ${socoAt} (uma passagem que anda por vídeo) — aqui vira mergulho`));
+      else socoAt = raw.id;
+    }
+  }
   const ids = new Set();
   let chars = 0;
   let extra = 0;
-  for (const raw of lines) {
+  for (const [i, raw] of lines.entries()) {
     const l = resolveLine(raw, lang);
     if (!l.id || ids.has(l.id)) errors.push(where(l.id, 'id vazio ou repetido'));
     ids.add(l.id);
     if (!catalog.scenes.includes(l.scene)) errors.push(where(l.id, `cena "${l.scene}" não existe (${catalog.scenes.join(', ')})`));
+    lintStage(where, l, i, errors, warns);
+    if (l.scene === 'mapa') lintMapa(where, l, errors);
+    if (l.scene === 'caderno') lintCaderno(where, l, errors);
     if (l.scene === 'verso') {
+      // a voz do verso é o card: deixa de câmera aqui não teria o que casar
+      if (l.props?.camera?.cue) errors.push(where(l.id, 'camera.cue no verso (a fala é o card; use a câmera sem deixa)'));
       if (l.id !== last.id) errors.push(where(l.id, 'verso só pode ser a última cena'));
       chars += card.claim[lang].length;
       extra += (l.pre ?? 0.8) + (l.hold ?? 1.4);
@@ -125,7 +265,9 @@ function lintIdea(ideaId, spec, card, lang, errors, warns) {
     const stars = (cap.match(/\*/g) ?? []).length;
     if (stars % 2 || stars > 2) errors.push(where(l.id, 'destaque *…*: no máximo um, e fechado'));
     const texts = [cap, l.say, l.props?.kicker, l.props?.left?.label, l.props?.right?.label, l.props?.pill?.text,
-      ...(l.props?.chips ?? []).map((c) => c.text), ...(l.props?.items ?? []).map((c) => c.text)].filter(Boolean);
+      ...(l.props?.chips ?? []).map((c) => c.text), ...(l.props?.items ?? []).map((c) => c.text),
+      ...(l.props?.blocks ?? []).map((b) => b.label), ...(l.props?.heads ?? [])].filter(Boolean);
+    for (const b of l.props?.blocks ?? []) if (b.label && b.label.length > LIMITS.bloco) errors.push(where(l.id, `nome de tarefa longo: "${b.label}" (${b.label.length} > ${LIMITS.bloco})`));
     for (const t of texts) {
       if (/\d|%/.test(t)) errors.push(where(l.id, `número na tela/voz: "${t}" (dado fica no texto e no áudio, não no vídeo)`));
       const m = BANNED[lang].exec(fold(t));
@@ -160,8 +302,9 @@ function lintIdea(ideaId, spec, card, lang, errors, warns) {
     for (const c of cues) if (!hay.some((h) => h.includes(c))) errors.push(where(l.id, `deixa "${c}" não está na fala "${plain(cap)}"`));
   }
   const est = chars / (lang === 'en' ? 15.5 : 14.5) + extra + lines.length * 0.6;
-  if (est > LIMITS.seconds) errors.push(`${ideaId}/${lang}: ~${est.toFixed(0)} s estimados (teto ${LIMITS.seconds} s) — corte falas`);
-  else if (est > LIMITS.seconds - 6) warns.push(`${ideaId}/${lang}: ~${est.toFixed(0)} s estimados, perto do teto`);
+  const cap = bridge ? LIMITS.bridgeSeconds : LIMITS.seconds;
+  if (est > cap) errors.push(`${ideaId}/${lang}: ~${est.toFixed(0)} s estimados (teto ${cap} s${bridge ? ' na abertura: o tutorial vem depois' : ''}) — corte falas`);
+  else if (est > cap - (bridge ? 3 : 6)) warns.push(`${ideaId}/${lang}: ~${est.toFixed(0)} s estimados, perto do teto`);
 }
 
 function load() {
@@ -231,7 +374,7 @@ async function build(ctx) {
       const dir = pubDir(k);
       fs.mkdirSync(dir, { recursive: true });
       const hasImg = await cardImage(ctx, id, path.join(dir, 'card.webp'));
-      if (!hasImg) console.warn(`! ${k}: sem imagem 4:5 da ideia — o card do verso sai sem foto`);
+      if (!hasImg && src.bridge !== 'tour') console.warn(`! ${k}: sem imagem 4:5 da ideia — o card do verso sai sem foto`);
       const lines = src.lines.map((raw, i) => {
         const l = resolveLine(raw, lang);
         const out = { id: l.id, scene: l.scene, caption: l.caption, ...(l.say ? { say: l.say } : {}), ...(l.pre ? { pre: l.pre } : {}), ...(l.hold ? { hold: l.hold } : {}), props: l.props ?? {} };
@@ -250,20 +393,36 @@ async function build(ctx) {
         claim: card.claim[lang],
         image: hasImg ? `molde/${k}/card.webp` : null,
         style: src.style?.[lang],
+        ...(silent ? { silent: true } : {}),
         lines,
       };
       // a voz de uma fala que não mudou continua válida; fala que mudou é regravada no `voice`
+      // (a régua é o texto que a voz leu e passou no QA — voiced.json —, não o build anterior)
       const prev = fs.existsSync(path.join(dir, 'spec.json')) ? readJson(path.join(dir, 'spec.json')) : null;
-      const changed = lines.filter((l) => {
-        const p = prev?.lines?.find((x) => x.id === l.id);
-        return !p || (p.say ?? p.caption) !== (l.say ?? l.caption) || !fs.existsSync(path.join(dir, `${l.id}.mp3`));
-      });
+      const changed = pendingLines(dir, lines, prev);
       fs.writeFileSync(path.join(dir, 'spec.json'), JSON.stringify(spec, null, 2));
       fs.writeFileSync(path.join(dir, 'changed.json'), JSON.stringify(changed.map((l) => l.id)));
+      if (silent) {
+        // prévia: o tempo de cada fala estimado pelo texto (pausas pesam), num arquivo à parte
+        const est = lines.map((l) => {
+          const text = plain(l.say ?? l.caption);
+          const stops = (text.match(/[.!?:](\s|$)/g) ?? []).length;
+          const commas = (text.match(/,/g) ?? []).length;
+          return { id: l.id, seconds: +(text.length / (lang === 'en' ? 15.5 : 14.5) + stops * 0.35 + commas * 0.15 + 0.3).toFixed(3) };
+        });
+        fs.writeFileSync(path.join(dir, 'timings.silent.json'), JSON.stringify(est, null, 2));
+        const secs = est.reduce((a, t) => a + t.seconds, 0);
+        console.log(`✓ ${k}: ${lines.length} cenas · PRÉVIA SEM VOZ (~${secs.toFixed(0)} s de fala estimados) — rode build sem --silent antes da voz`);
+        continue;
+      }
       console.log(`✓ ${k}: ${lines.length} cenas${changed.length ? ` · voz a gravar: ${changed.map((l) => l.id).join(', ')}` : ' · voz em dia'}`);
     }
   }
 }
+
+// ------------------------------------------------------------------ voz medida
+// pauses.json (scripts/pauses.mjs): as deixas ancoram nas pausas reais da gravação
+const measurePauses = (k) => measurePausesIn(pubDir(k));
 
 // ------------------------------------------------------------------ voice
 const node = (script, args) => execFileSync('node', [path.join(root, 'scripts', script), ...args], { stdio: 'inherit', cwd: root });
@@ -274,42 +433,65 @@ function voice(ctx) {
     for (const lang of LANGS) {
       const k = key(id, lang);
       const dir = `molde/${k}`;
-      if (!fs.existsSync(path.join(pubDir(k), 'spec.json'))) die(`${k}: rode build antes`);
-      const changed = only ? only.split(',') : readJson(path.join(pubDir(k), 'changed.json'));
+      const specFile = path.join(pubDir(k), 'spec.json');
+      if (!fs.existsSync(specFile)) die(`${k}: rode build antes`);
+      const spec = readJson(specFile);
+      if (spec.silent) die(`${k}: o build foi --silent — rode build sem --silent antes da voz`);
+      const pending = pendingLines(pubDir(k), spec.lines);
+      const changed = only ? only.split(',') : pending.map((l) => l.id);
       if (changed.length) node('tts-gemini.mjs', ['--dir', dir, '--lang', lang, '--only', changed.join(',')]);
       else node('tts-gemini.mjs', ['--dir', dir, '--lang', lang, '--measure']);
       try {
         // QA de tudo que foi gravado agora (as falas antigas já passaram antes)
         if (changed.length) node('qa-voice.mjs', ['--dir', dir, '--lang', lang, '--fix', '--only', changed.join(',')]);
-      } catch {
+      } catch (e) {
+        if (e.status === 2) die(`${k}: o QA da voz ficou sem resposta da API (nada foi reprovado) — rode voice de novo daqui a pouco`);
         die(`${k}: QA da voz reprovou depois das tentativas — reescreva a fala (homófono, palavra difícil) e rode de novo`);
       }
       node('tts-gemini.mjs', ['--dir', dir, '--lang', lang, '--measure']);
-      fs.writeFileSync(path.join(pubDir(k), 'changed.json'), '[]');
+      measurePauses(k);
+      // só o que foi gravado e passou no QA vira "em dia"; um --only não apaga o resto da fila
+      const left = markVoiced(pubDir(k), spec.lines, changed, pending);
+      fs.writeFileSync(path.join(pubDir(k), 'changed.json'), JSON.stringify(left.map((l) => l.id)));
+      if (left.length) console.warn(`! ${k}: ainda sem voz em dia: ${left.map((l) => l.id).join(', ')}`);
     }
 }
 
 // ------------------------------------------------------------------ stills + render
+/** Mede a voz de todas as chaves do passo ANTES do bundle: ele copia public/ na hora, e o que for gravado depois dá 404. */
+const measureAll = (ctx) => {
+  for (const id of ctx.ideaIds) for (const lang of LANGS) if (fs.existsSync(path.join(pubDir(key(id, lang)), 'spec.json'))) measurePauses(key(id, lang));
+};
+
 async function stills(ctx) {
   const { renderStill, selectComposition } = await import('@remotion/renderer');
+  measureAll(ctx);
   const serveUrl = await serve();
   for (const id of ctx.ideaIds)
     for (const lang of LANGS) {
       const k = key(id, lang);
-      const composition = await selectComposition({ serveUrl, id: 'Molde', inputProps: { specKey: k, spec: null, scenes: [] } });
-      const dir = path.join(outDir(k), 'stills');
+      const composition = await selectComposition({ serveUrl, id: 'Molde', inputProps: { specKey: k, spec: null, scenes: [], ...idProps } });
+      const dir = path.join(outDir(k), identity ? `stills-${identity}` : 'stills');
       fs.rmSync(dir, { recursive: true, force: true });
       fs.mkdirSync(dir, { recursive: true });
       const files = [];
-      for (const [i, s] of composition.props.scenes.entries()) {
-        // fim da fala: TODAS as deixas já entraram (a 75% uma virada no fim da frase não aparecia)
-        const frame = s.scene === 'verso' ? s.start + Math.round(s.frames * 0.9) : s.start + s.lead + s.speech - 6;
-        const f = path.join(dir, `${String(i + 1).padStart(2, '0')}.png`);
-        await renderStill({ serveUrl, composition, frame, output: f, scale: 0.4, inputProps: { specKey: k, spec: null, scenes: [] } });
-        files.push(f);
+      // --at 0.1,0.5,1: vários quadros por cena (frações da fala) — pra ver câmera, entrada de peça e virada.
+      // Sem --at: um quadro no fim da fala, onde TODAS as deixas já entraram (a 75% uma virada no fim da frase não aparecia).
+      const fracs = arg('at') ? arg('at').split(',').map(Number) : null;
+      const scale = Number(arg('scale', '0.4'));
+      let n = 0;
+      for (const s of composition.props.scenes) {
+        const frames = fracs
+          ? fracs.map((f) => (s.scene === 'verso' ? s.start + Math.round(s.frames * (0.1 + 0.8 * f)) : s.start + s.lead + Math.round(f * Math.max(1, s.speech - 6))))
+          : [s.scene === 'verso' ? s.start + Math.round(s.frames * 0.9) : s.start + s.lead + s.speech - 6];
+        for (const frame of frames) {
+          const f = path.join(dir, `${String(++n).padStart(2, '0')}.png`);
+          await renderStill({ serveUrl, composition, frame, output: f, scale, inputProps: { specKey: k, spec: null, scenes: [], ...idProps } });
+          files.push(f);
+        }
       }
-      const sheet = path.join(outDir(k), 'sheet.png');
-      const cols = Math.min(4, files.length);
+      const sheet = path.join(outDir(k), identity ? `sheet-${identity}.png` : 'sheet.png');
+      const cols = fracs ? fracs.length : Math.min(4, files.length);
       fs.writeFileSync(path.join(dir, 'index.json'), JSON.stringify(composition.props.scenes.map((s, i) => ({ n: i + 1, id: s.id, scene: s.scene, caption: s.caption }))));
       execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-framerate', '1', '-start_number', '1', '-i', path.join(dir, '%02d.png'), '-vf', `tile=${cols}x${Math.ceil(files.length / cols)}:padding=12:color=0x0A0E26`, '-frames:v', '1', sheet]);
       console.log(`✓ ${k}: ${files.length} quadros · folha ${path.relative(repo, sheet)}`);
@@ -323,23 +505,56 @@ const serve = async () => {
   return bundled;
 };
 
+/**
+ * Medidor de ritmo (scripts/ritmo.mjs) depois de todo render — só AVISA, não barra. A régua é a dos
+ * estilos de referência (requinte, 2026-11-07): quase-parada entre 16% e 55%, nenhum trecho de
+ * mais de 1 s sem nada grande se mexendo. `--sem-ritmo` pula (≈20 s por vídeo).
+ */
+const ritmo = (mp4, out) => {
+  if (argv.includes('--sem-ritmo')) return;
+  const r = spawnSync(process.execPath, [path.join(root, 'scripts', 'ritmo.mjs'), mp4, '--json', out, '--end-hold', '2'], { encoding: 'utf8', maxBuffer: 64e6 });
+  if (r.status === 2 || !fs.existsSync(out)) return console.warn(`! ritmo: não consegui medir ${path.basename(mp4)}`);
+  const j = readJson(out);
+  const holes = j.ritmo.buracos_mortos;
+  const list = holes.map(([a, b]) => `${a}–${b} s`).join(' · ');
+  console.log(
+    `  ritmo: ${Math.round(j.fracao_parada * 100)}% em quase-parada (referência 16–55%) · amplitude ${j.amplitude.toFixed(1)}x · ${j.picos.length} pico(s) · ` +
+      `${holes.length ? `${holes.length} buraco(s) > 1 s: ${list}` : 'nenhum buraco > 1 s'}${j.ritmo.passou ? '' : ' — AVISO (não barra)'} · ${path.relative(repo, out)}`,
+  );
+};
+
+// versão do app (720p): lanczos na redução e x264 afinado pra animação chapada (menos bloco no
+// degradê e no texto) — fase 1 do requinte; antes era bicúbico sem tune (e ~20% maior no mesmo crf)
+const PUB_ENCODE = ['-vf', 'scale=720:1280:flags=lanczos', '-c:v', 'libx264', '-crf', '23', '-preset', 'slow', '-tune', 'animation', '-pix_fmt', 'yuv420p'];
+
 async function render(ctx) {
   const { renderMedia, selectComposition } = await import('@remotion/renderer');
+  measureAll(ctx);
   const serveUrl = await serve();
   for (const id of ctx.ideaIds)
     for (const lang of LANGS) {
       const k = key(id, lang);
       const card = ctx.cards[id];
       const dir = outDir(k);
+      // abertura de porta: nunca sai sozinha — vai dentro do vídeo da porta (tour.mjs render, composição Porta)
+      const bridge = ctx.vs.ideas[id].bridge === 'tour';
+      const preview = bridge || !!tag || !!readJson(path.join(pubDir(k), 'spec.json')).silent;
       fs.mkdirSync(path.join(dir, 'pub'), { recursive: true });
-      const full = path.join(dir, 'video.mp4');
-      const inputProps = { specKey: k, spec: null, scenes: [] };
+      // prévia sem voz: só o mp4 de conferência, sem pub/ nem video.json (não tem como ir pro bucket)
+      if (identity) fs.mkdirSync(path.join(dir, 'identidade'), { recursive: true });
+      const full = identity
+        ? path.join(dir, 'identidade', `${identity}${sfxOn ? '-som' : ''}.mp4`)
+        : path.join(dir, tag ? `piloto${sfxOn ? '-som' : ''}.mp4` : preview ? 'preview.mp4' : 'video.mp4');
+      const inputProps = { specKey: k, spec: null, scenes: [], ...idProps };
       const composition = await selectComposition({ serveUrl, id: 'Molde', inputProps });
       let shown = -1;
       await renderMedia({
         serveUrl,
         composition,
         codec: 'h264',
+        // fase 1 do requinte: captura sem perda. O padrão da API é JPEG 80 (o setJpegQuality do
+        // remotion.config.ts só vale na linha de comando) — degrau no navy e filete dourado borrado
+        imageFormat: 'png',
         outputLocation: full,
         inputProps,
         onProgress: ({ progress }) => {
@@ -348,11 +563,28 @@ async function render(ctx) {
         },
       });
       console.log('');
+      ritmo(full, full.replace(/\.mp4$/, '.ritmo.json'));
+      if (identity) {
+        console.log(`✓ ${k}: comparação de identidade "${identity}" · ${path.relative(repo, full)} (não sobe)`);
+        continue;
+      }
+      if (bridge) {
+        console.log(`✓ ${k}: abertura de conferência · ${path.relative(repo, full)} (o vídeo da porta sai do tour.mjs render)`);
+        continue;
+      }
+      if (tag) {
+        console.log(`✓ ${k}: PILOTO "${tag}" · ${path.relative(repo, full)} (não sobe)`);
+        continue;
+      }
+      if (preview) {
+        console.log(`✓ ${k}: PRÉVIA SEM VOZ · ${path.relative(repo, full)} (rode build sem --silent + voice antes do render de verdade)`);
+        continue;
+      }
       // versão do app: 720p, AAC 96k, faststart — ~2,5 MB por 50 s
       const name = `${card.file ?? `idea.${card.ordinal}`}.${lang}.r${rev}`;
       const mp4 = path.join(dir, 'pub', `${name}.mp4`);
       const poster = path.join(dir, 'pub', `${name}.poster.webp`);
-      execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', full, '-vf', 'scale=720:1280', '-c:v', 'libx264', '-crf', '23', '-preset', 'slow', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '96k', '-movflags', '+faststart', mp4]);
+      execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', full, ...PUB_ENCODE, '-c:a', 'aac', '-b:a', '96k', '-movflags', '+faststart', mp4]);
       execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-ss', '3.5', '-i', mp4, '-frames:v', '1', '-vf', 'scale=720:-1', '-c:v', 'libwebp', '-quality', '82', poster]);
       const secs = Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', mp4]).toString());
       const video = { path: `${slug}/${name}.mp4`, duration_seconds: Math.round(secs), poster: `${slug}/${name}.poster.webp`, producer: 'remotion' };
@@ -363,11 +595,16 @@ async function render(ctx) {
 
 // ------------------------------------------------------------------ upload + videos
 function upload(ctx) {
+  if (tag) die('piloto (--tag) não sobe pro bucket: aprove, passe o roteiro pro learning-drops/video-specs e rode de novo');
   const supa = process.env.LOCALAPPDATA ? path.join(process.env.LOCALAPPDATA, 'supabase', 'supabase.exe') : 'supabase';
   const bin = fs.existsSync(supa) ? supa : 'supabase';
   for (const id of ctx.ideaIds)
     for (const lang of LANGS) {
       const k = key(id, lang);
+      if (ctx.vs.ideas[id].bridge === 'tour') {
+        console.log(`· ${k}: abertura de porta — sobe dentro do vídeo da porta (tour.mjs upload)`);
+        continue;
+      }
       const vj = path.join(outDir(k), 'video.json');
       if (!fs.existsSync(vj)) die(`${k}: rode render antes`);
       const v = readJson(vj);
@@ -384,6 +621,7 @@ function upload(ctx) {
 }
 
 function videos() {
+  if (tag) die('piloto (--tag) não entra no videos.json');
   const out = arg('out');
   if (!out) die('videos precisa de --out <arquivo.json>');
   const base = path.join(root, 'out', 'molde');

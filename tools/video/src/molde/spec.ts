@@ -14,13 +14,60 @@ export type Mood = 'ok' | 'feliz' | 'cansado';
 export type PieceName = string;
 
 /** Uma peça que entra na cena, opcionalmente quando a fala chega a `cue`. */
-export type Obj = { p: PieceName; cue?: string; out?: string };
+/** `stay`: a peça já estava em cena na fala anterior (mesmo encaixe) — aparece pousada, sem cair de novo. */
+export type Obj = { p: PieceName; cue?: string; out?: string; stay?: boolean };
 
-export type SceneKind = 'pessoa' | 'semana' | 'virada' | 'multidao' | 'comparar' | 'lista' | 'cena' | 'pensa' | 'verso';
+export type SceneKind = 'pessoa' | 'semana' | 'virada' | 'multidao' | 'comparar' | 'lista' | 'cena' | 'pensa' | 'mapa' | 'caderno' | 'verso';
+
+// ------------------------------------------------------------ câmera, passagem, ambiente
+
+export type CameraMove = 'push' | 'pull' | 'pan-left' | 'pan-right' | 'drift' | 'dolly' | 'still';
+/** pessoa/peca/mapa = o que a cena desenha; o resto = região fixa do palco. */
+export type CameraFocus = 'pessoa' | 'peca' | 'mapa' | 'centro' | 'esquerda' | 'direita' | 'topo' | 'base';
+export type CameraSpec = {
+  move: CameraMove;
+  /** pra onde a câmera aproxima/afasta (default: a pessoa) */
+  focus?: CameraFocus;
+  /** deixa: parada até aqui, depois o movimento em ~1,3 s; sem deixa = a cena inteira */
+  cue?: string;
+  /** leve ≈ metade, forte ≈ quase o dobro */
+  forca?: 'leve' | 'forte';
+};
+/** Como esta cena ENTRA (a passagem da anterior pra ela). */
+export type Transicao = 'fade' | 'zoom' | 'desliza' | 'corte' | 'hexa' | 'chicote';
+
+export type AmbienteKind = 'escritorio' | 'treinamento' | 'casa' | 'cidade';
+export type Gente = 'nenhuma' | 'pouca' | 'muita';
+export type Hora = 'manha' | 'dia' | 'noite';
+
+// ------------------------------------------------------------ mapa do dia
+
+export type Feel = 'drena' | 'neutro' | 'energiza';
+/** Um bloco do dia: o ícone diz O QUE é, a cor diz COMO pesa. Nunca hora nem número. */
+export type Bloco = {
+  /** Ionicons — no caderno é opcional (lá quem diz o que é a tarefa é o nome) */
+  icon: string;
+  /** o NOME da tarefa (fase 2, "demonstrar a ideia"): escrito no caderno e dentro do bloco do mapa; ≤ 16 caracteres */
+  label?: string;
+  feel: Feel;
+  /** comprimento relativo no dia (1..3, default 1) */
+  size?: number;
+  /** deixa em que o bloco cai no dia */
+  cue?: string;
+  /** segunda batida (na deixa `turn` da cena): o bloco vira outro peso/tamanho/ícone */
+  then?: { feel?: Feel; size?: number; icon?: string };
+};
 
 /** Props de cada cena, já no idioma resolvido (os {pt,en} viraram string). */
 export type SceneProps = {
   kicker?: string;
+  // valem pra todas as cenas (menos verso): câmera e passagem
+  camera?: CameraSpec;
+  transicao?: Transicao;
+  // pessoa / virada / cena / pensa / lista / semana / mapa: o lugar atrás da pessoa
+  ambiente?: AmbienteKind;
+  gente?: Gente;
+  hora?: Hora;
   // pessoa / virada / cena / pensa
   mood?: Mood;
   /** troca de humor quando a fala chega aqui (virada) */
@@ -56,10 +103,18 @@ export type SceneProps = {
   holding?: PieceName;
   // pensa
   thought?: PieceName;
+  // mapa
+  blocks?: Bloco[];
+  /** mapa: de que lado a pessoa fica (default esquerda) */
+  side?: 'left' | 'right';
+  /** caderno: os títulos das três colunas (tarefa, tempo, energia); default no idioma */
+  heads?: string[];
+  /** caderno: deixa em que a faixa da semana acende no alto da página */
+  semana?: string;
   // verso: o selo dourado depois da leitura (default "IDEIA ABSORVIDA"; as portas trocam)
   done?: string;
 };
-export type Panel = { label: string; mood?: Mood; object?: PieceName; arrives?: string; leaves?: string };
+export type Panel = { label: string; mood?: Mood; object?: PieceName; arrives?: string; leaves?: string; ambiente?: AmbienteKind; hora?: Hora };
 export type Chip = { icon: string; text: string; cue: string };
 
 export type MoldeLine = Line & { scene: SceneKind; props?: SceneProps };
@@ -76,5 +131,7 @@ export type MoldeSpec = {
   claim: string;
   /** imagem 4:5 da ideia, relativa a public/ (frente do card no verso) — null = card sem imagem */
   image: string | null;
+  /** prévia sem voz (`build --silent`): tempos estimados, nenhum <Audio> */
+  silent?: boolean;
   lines: MoldeLine[];
 };

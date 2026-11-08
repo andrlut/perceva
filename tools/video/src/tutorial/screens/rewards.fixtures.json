@@ -1,0 +1,27 @@
+{
+  "_doc": "Dados de mentira da aba Recompensas (lidos pela réplica e pelo lint do scripts/tour.mjs). Preços na economia do app: 10 moedas por estrela, uma prática de 3 estrelas paga 30. A ordem de `rewards` é a ordem de Gerenciar (a de Disponíveis agora).",
+  "inicio": {
+    "_doc": "Quem acabou de abrir a aba, no plano grátis: 5 recompensas ativas, o teto do free (FREE_LIMITS.reward = 5 em app/lib/premium/limits.ts; adoção do catálogo também conta), e sem meta — o topo mostra o convite 'Mirar uma recompensa'. Com 340 moedas: Disponíveis agora = 1 hora de jogo, Café especial e Livro novo; Quase lá = Jantar bom fora (faltam 20); Grandes metas = Viagem de fim de semana. Depois de resgatar 2 cafés (−120 → 220), as três baratas seguem Disponíveis e o Jantar (faltam 140, 39%) passa pra Grandes metas, junto da Viagem: é nele que o tour toca Mirar, e ele vira a meta no topo. As três categorias têm o que filtrar (Indulgência: jogo e café; Bem: livro; Experiência: jantar e viagem).",
+    "balance": 340,
+    "goal": null,
+    "rewards": [
+      { "id": "jogo", "title": { "pt": "1 hora de jogo", "en": "1 hour of gaming" }, "description": { "pt": "Sem culpa, sem meta.", "en": "No guilt, no goals." }, "cost": 80, "icon": "game-controller", "category": "indulgence" },
+      { "id": "cafe", "title": { "pt": "Café especial", "en": "Specialty coffee" }, "description": { "pt": "Um agrado pra você.", "en": "A little treat for you." }, "cost": 60, "icon": "cafe", "category": "indulgence" },
+      { "id": "livro", "title": { "pt": "Livro novo", "en": "A new book" }, "description": { "pt": "Aquele da sua lista.", "en": "The one on your list." }, "cost": 120, "icon": "book", "category": "good" },
+      { "id": "jantar", "title": { "pt": "Jantar bom fora", "en": "A nice dinner out" }, "description": { "pt": "Restaurante de verdade.", "en": "A real restaurant." }, "cost": 360, "icon": "restaurant", "category": "experience" },
+      { "id": "viagem", "title": { "pt": "Viagem de fim de semana", "en": "Weekend trip" }, "description": { "pt": "Dois dias em qualquer lugar.", "en": "Two days anywhere." }, "cost": 1500, "icon": "airplane", "category": "experience" }
+    ]
+  },
+  "vitrine": {
+    "_doc": "O print do site (perceva-site/public/assets/shot-rewards.jpg): saldo alto e uma meta grande. Serve pra comparar a réplica com o app.",
+    "balance": 7355,
+    "goal": "viagem-grande",
+    "rewards": [
+      { "id": "jogo", "title": { "pt": "1 hora de jogo", "en": "1 hour of gaming" }, "description": { "pt": "Sem grind, sem meta — só diversão.", "en": "No grind, no goals — just fun." }, "cost": 80, "icon": "game-controller", "category": "indulgence" },
+      { "id": "jantar", "title": { "pt": "Jantar bom fora", "en": "A nice dinner out" }, "description": { "pt": "Restaurante de verdade, sem pressa.", "en": "A real restaurant, no rush." }, "cost": 500, "icon": "restaurant", "category": "experience" },
+      { "id": "cafe", "title": { "pt": "Café especial", "en": "Specialty coffee" }, "description": { "pt": "Um agrado pra você.", "en": "A little treat for you." }, "cost": 60, "icon": "cafe", "category": "indulgence" },
+      { "id": "viagem", "title": { "pt": "Viagem de fim de semana", "en": "Weekend trip" }, "description": { "pt": "Dois dias em qualquer lugar.", "en": "Two days anywhere." }, "cost": 5000, "icon": "airplane", "category": "experience" },
+      { "id": "viagem-grande", "title": { "pt": "Viagem grande pra fora", "en": "A big trip abroad" }, "description": { "pt": "Passaporte, mala, o pacote completo.", "en": "Passport, bags, the whole package." }, "cost": 15000, "icon": "globe", "category": "experience" }
+    ]
+  }
+}
