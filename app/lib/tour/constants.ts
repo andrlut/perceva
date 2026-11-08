@@ -14,28 +14,19 @@
  *     without knowing where help lives. Not in GUIDED_MODULES on purpose:
  *     "Pular o tour" and "Sair do tour" never touch it, and its tooltips
  *     carry no skip links (three taps of Próximo).
- *   - GUIDED modules (`M1`…`M6`) are the spotlight tooltips that ride on
- *     the real screens and wait for real gestures. Only the first
- *     unfinished one renders (see `useIsCurrentTourModule`).
- *   - `wrap` is the closing full screen; it marks itself completed on
- *     mount, so backing out of it cannot leave the tour unfinished.
+ *   - GUIDED modules: since the 2026-11 simplification ("Onboarding
+ *     simples") there is ONE, `M1` — mark the first practice done, a single
+ *     spotlight step on Home. The old M2…M6 walk-throughs and the `wrap`
+ *     closing screen were deleted: each locked tab now opens with its own
+ *     animated door (lib/unlock) and every screen has its (i).
  *
- * Ids are persisted (AsyncStorage) — keep them stable. `M3` (Missões) was
- * removed in v2: Missões is premium and an opt-in module, so it is not
- * taught by the tour. The numbering keeps its gap on purpose.
+ * Ids are persisted (AsyncStorage) — keep them stable. Legacy keys an
+ * installed app may still carry (M0, M0_5, M2…M6, wrap) are ignored by every
+ * reader; `M1` keeps its id so an account that already did or skipped the
+ * old tour is not shown the step again.
  */
 
-export const TOUR_MODULES = [
-  'intro',
-  'pack',
-  'settings',
-  'M1',
-  'M2',
-  'M4',
-  'M5',
-  'M6',
-  'wrap',
-] as const;
+export const TOUR_MODULES = ['intro', 'pack', 'settings', 'M1'] as const;
 
 export type TourModule = (typeof TOUR_MODULES)[number];
 
@@ -57,8 +48,8 @@ export const ROUTE_MODULE_PATH: Record<RouteModule, '/tour/intro' | '/tour/pack'
 /** The mandatory help module (see the header). */
 export const SETTINGS_MODULE = 'settings' as const;
 
-/** The optional spotlight modules, in the order they run. */
-export const GUIDED_MODULES = ['M1', 'M2', 'M4', 'M5', 'M6'] as const;
+/** The spotlight modules that run after the help module. */
+export const GUIDED_MODULES = ['M1'] as const;
 export type GuidedModule = (typeof GUIDED_MODULES)[number];
 
 export function isTerminal(status: TourModuleStatus | undefined): boolean {

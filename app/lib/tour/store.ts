@@ -73,9 +73,7 @@ interface TourState {
    * current module until it ends. Other statuses are left untouched.
    */
   replayModule: (module: TourModule) => Promise<void>;
-  /** "Fazer o tour": every guided module + wrap back to pending. */
-  startGuidedTour: () => Promise<void>;
-  /** "Pular": every guided module + wrap that is still unfinished → skipped. */
+  /** "Sair do tour": every guided module still unfinished → skipped. */
   skipGuidedTour: () => Promise<void>;
 }
 
@@ -130,17 +128,6 @@ function migrateLegacy(raw: Record<string, TourEntry>): ModuleMap {
   // pending in the same write (see setStatus).
   if (!out.settings && isTerminal(out.pack?.status)) {
     out.settings = { status: 'completed', updatedAt: new Date().toISOString() };
-  }
-  // Every guided module done but the closing screen never marked: v1 only
-  // stamped `wrap` from its button, so backing out of it left the tour
-  // unfinished forever (mood prompt and OTA banner stay off). v2 can reach
-  // the same state if the app dies between M6's end and /tour/wrap mounting.
-  // Nothing routes back to wrap by itself, so close it here.
-  if (
-    GUIDED_MODULES.every((m) => isTerminal(out[m]?.status)) &&
-    !isTerminal(out.wrap?.status)
-  ) {
-    out.wrap = { status: 'completed', updatedAt: new Date().toISOString() };
   }
   return out;
 }
@@ -223,18 +210,9 @@ export const useTourStore = create<TourState>((set, get) => ({
     await persistModules(get().characterId, next);
   },
 
-  startGuidedTour: async () => {
-    const next: ModuleMap = { ...get().modules };
-    for (const m of [...GUIDED_MODULES, 'wrap'] as const) next[m] = stamp('pending');
-    const stepIndices = { ...get().stepIndices };
-    for (const m of GUIDED_MODULES) stepIndices[m] = 0;
-    set({ modules: next, stepIndices });
-    await persistModules(get().characterId, next);
-  },
-
   skipGuidedTour: async () => {
     const next: ModuleMap = { ...get().modules };
-    for (const m of [...GUIDED_MODULES, 'wrap'] as const) {
+    for (const m of GUIDED_MODULES) {
       if (!isTerminal(next[m]?.status)) next[m] = stamp('skipped');
     }
     // A replay in flight ends too — otherwise the replayed (now skipped)
@@ -303,12 +281,6 @@ export function useNextRouteModule(): RouteModule | null {
     }
     return null;
   });
-}
-
-/** True when the closing screen still has to run (pending, never seen). */
-export function isWrapPending(): boolean {
-  const s = useTourStore.getState();
-  return !isTerminal(s.modules.wrap?.status) && s.replaying == null;
 }
 
 /**

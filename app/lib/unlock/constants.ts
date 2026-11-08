@@ -36,6 +36,16 @@ export const UNLOCK_TRIGGERS = {
   practicedAfterDays: 7,
 } as const;
 
+/**
+ * The one idea the Recanto card on Hoje shows while Aprender is locked
+ * (André, 19/10: a fixed, strong idea about habits — not the "66 days" one).
+ * From the Atomic Habits summary: "O hábito pega quando vira identidade".
+ */
+export const RECANTO_CARD_IDEA = {
+  slug: 'summary-atomic-habits',
+  ideaId: 'voto-na-identidade',
+} as const;
+
 /** Features that live behind a tab (lock icon in the nav bar). */
 export const TAB_FEATURE: Record<string, UnlockFeature | undefined> = {
   rewards: 'rewards',

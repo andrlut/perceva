@@ -511,6 +511,15 @@ const en = {
     },
   },
 
+  /** First-open tips (components/guide/ScreenTip) — one line per screen. */
+  tips: {
+    dismiss: 'Close tip',
+    tasks: 'Create a practice of your own or adopt a suggested one. Tap a row to edit; drag the right-hand handle to reorder.',
+    rewardsManage: 'Create rewards and price them in coins. Tap a row to edit; drag the handle to reorder.',
+    history: 'Tap a day to see what was done and log what you forgot. The filters cross mood and practices.',
+    allPractices: 'Every practice you have, not just today\'s. Mark any of them done from here.',
+  },
+
   tour: {
     intro: {
       skip: 'Skip intro',
@@ -584,10 +593,17 @@ const en = {
         safe: 'Redo the intro and the tour anytime in {{path}}.',
         primary: 'Pick my practices',
         assessment: 'Do the self-assessment · 1 min',
-        tour: 'Take the guided tour · 3 min',
       },
     },
     pack: {
+      areas: {
+        title: 'Six areas of life',
+        body: 'Each area has two sub-areas. Every practice trains one or more of them.',
+        countAreas: 'areas',
+        countSubs: 'sub-areas',
+        cta: 'Pick my practices',
+        a11y: 'The six Perceva areas and the twelve sub-areas, appearing one by one.',
+      },
       title: 'Pick 3 to 5 practices to start',
       body: 'We suggest 5, one per area, in priority order. Tick and untick freely; everything can change later.',
       top: 'Top {{count}}',
@@ -613,125 +629,6 @@ const en = {
         title: 'Mark it done',
         body: 'Tap the check when you\'ve done the practice. You earn Dedication and coins.',
       },
-      drawer: {
-        title: 'Done today',
-        body: 'Open it to see what you did today, undo a check-off or add +1.',
-      },
-      mood: {
-        title: 'Mood check-in',
-        body: 'Log how the day went, 1 to 5. The calendar pairs your mood with your practices.',
-      },
-      info: {
-        title: 'Every screen has an (i)',
-        body: 'The (i) in the top corner explains the screen: what each thing does and where to tap. Every tab has one; when in doubt, tap it.',
-      },
-      hold: {
-        title: 'Tap a practice',
-        body: 'Tap a practice to skip it today, adjust or edit it; hold it to go straight to editing. Skipping resets nothing.',
-        cta: 'Got it',
-      },
-    },
-    m2: {
-      seeAll: {
-        title: 'All practices',
-        body: 'Open the list of all your practices. This is where you create a new one.',
-      },
-      manage: {
-        title: 'Manage practices',
-        body: 'Open this to create, adopt from the catalog, edit and reorder your practices.',
-      },
-      create: {
-        title: 'Tap the +',
-        body: 'Create a practice from scratch: you set its name, what it trains and how often.',
-      },
-      trains: {
-        title: 'What it trains',
-        body: 'Pick the sub-areas and give each 1 to 5 stars. Each star is worth 10 Dedication.',
-      },
-      often: {
-        title: 'How often',
-        body: 'Choose daily, weekly or monthly, and how many times per period.',
-      },
-      coins: {
-        title: 'What it\'s worth in coins',
-        body: 'Set how many coins it pays; the default equals its Dedication. Saving is optional.',
-        cta: 'Close and continue',
-      },
-    },
-    m4: {
-      step1: {
-        title: 'Rewards',
-        body: 'Trade coins for rewards you define. Tap Rewards.',
-      },
-      step2: {
-        title: 'Your coins',
-        body: 'This is your balance. Practices you do add coins; redeeming spends them.',
-      },
-      step3: {
-        title: 'Manage rewards',
-        body: 'Open this to create or adopt rewards. To use one, tap {{verb}} on its card.',
-      },
-    },
-    m5: {
-      step1: {
-        title: 'Who you\'re becoming',
-        body: 'The Me tab shows where you stand in the 6 areas. Tap Me.',
-      },
-      step2: {
-        title: 'Three portraits',
-        body: 'Switch portraits here: how you see yourself, what you practice, who you want to become.',
-      },
-      step3: {
-        title: 'Perceived: start here',
-        body: 'Take the self-assessment: rate each area in 1 minute. It fills in this portrait.',
-        later: 'Do it later',
-      },
-      step4: {
-        title: 'Practiced: what you do',
-        body: 'The Dedication from your practices draws this portrait: what you\'re training.',
-      },
-      step5: {
-        title: 'Desired: your north',
-        body: 'Set the score you want to reach in each area. The outline shows where you are today.',
-      },
-    },
-    m6: {
-      step1: {
-        title: 'Learn',
-        body: 'Learn from short ideas, each with its sources. Tap Learn.',
-      },
-      step2: {
-        title: 'Materials',
-        body: 'Each cover is a book, a study or a foundation, distilled into short ideas. Tap a cover.',
-        cta: 'Open a material',
-      },
-      step3: {
-        title: '1 to 5 ideas per material',
-        body: 'Tap the button to open the first one. Scroll down for the list of ideas and the Deep dive audio, when there is one.',
-        cta: 'Open the idea',
-      },
-      step4: {
-        title: 'One idea per screen',
-        body: 'When there is a video, it opens the idea. Then come the key sentence, a short text and the sources. Swipe sideways for the next idea.',
-      },
-      step5: {
-        title: 'Flip the card to absorb',
-        body: 'Done reading? Tap the card to flip it. Flipping is what absorbs the idea.',
-        cta: 'Continue the tour',
-      },
-      step6: {
-        title: 'That is how you absorb',
-        body: 'The idea goes to My ideas. Absorb every idea of a material and earn Dedication and coins.',
-        cta: 'Back to Learn',
-      },
-      step7: {
-        title: 'Explore',
-        body: 'Every idea in a row, one after the other, like stories.',
-      },
-      step8: {
-        title: 'My ideas',
-        body: 'Everything you absorb lands here. Review it: swipe right to favorite, left to let go.',
-      },
     },
     settings: {
       step1: {
@@ -740,7 +637,7 @@ const en = {
       },
       step2: {
         title: 'Redo the tutorial anytime',
-        body: 'Replay the whole app or just one part: Practices, Rewards, Me, Learn. Nothing you did is erased.',
+        body: 'Replay the intro, the starter pack or the first step anytime. Nothing you did is erased.',
       },
       step3: {
         title: 'Connect your AI, for free',
@@ -758,22 +655,14 @@ const en = {
       takeMe: 'Take me there',
       progress: 'Step {{current}} of {{total}}',
     },
-    wrap: {
-      title: 'The rest is practice.',
-      body: 'Every practice you check off is a vote for who you want to become.',
-      modulesNote: '{{list}} are optional modules and start off. Turn them on in {{path}}.',
-      redoNote: 'Redo the intro or the tour anytime in {{path}}.',
-      listAnd: 'and',
-      primary: 'Start practicing',
-    },
     replay: {
       title: 'Redo the tutorial',
       subtitle: 'Redo everything from the start, or just the part you want.',
       allTitle: 'Redo the full tutorial',
-      allDesc: 'Intro and starter pack, from the very first screen.',
+      allDesc: 'Intro, starter pack, help and the first practice, from the very first screen.',
       allCta: 'Start over',
       sectionOpening: 'Opening',
-      sectionGuided: 'Help',
+      sectionGuided: 'Guided steps',
       replayBtn: 'Redo',
       rowA11y: '{{name}}. {{status}}. Tap to redo.',
       footnote: 'Redoing deletes nothing.',
@@ -797,24 +686,8 @@ const en = {
           desc: 'Where to redo the tutorial and connect your AI.',
         },
         M1: {
-          name: 'Practices',
-          desc: 'Check off, undo and skip practices, and log your mood.',
-        },
-        M2: {
-          name: 'Create a practice',
-          desc: 'Create a practice: sub-areas, stars, frequency and coins.',
-        },
-        M4: {
-          name: 'Rewards',
-          desc: 'Trade coins for rewards you define.',
-        },
-        M5: {
-          name: 'Me',
-          desc: 'The three portraits: Perceived, Practiced and Desired.',
-        },
-        M6: {
-          name: 'Learn',
-          desc: 'Materials, ideas, videos, Explore and My ideas.',
+          name: 'First practice',
+          desc: 'The one step: mark a practice as done.',
         },
       },
     },
@@ -916,6 +789,8 @@ const en = {
       videoExpandA11y: 'Expand the video',
       videoUnmuteA11y: 'Turn the video sound on',
       videoMuteA11y: 'Turn the video sound off',
+      videoSpeedA11y: 'Video speed: {{speed}}. Tap to change',
+      audioSpeedA11y: 'Audio speed: {{speed}}. Tap to change',
       videoError: "Couldn't load the video. Try again.",
     },
     reels: {
@@ -1977,6 +1852,11 @@ const en = {
       title: 'All practices',
       a11y: 'Open all practices',
     },
+    recantoCard: {
+      eyebrow: 'An idea from the Recanto',
+      cta: 'Open the idea',
+      a11y: 'Recanto idea: {{title}}. Tap to open.',
+    },
     laterPractices: {
       title: 'Created after this day',
       caption: "You can log them here; they don't count toward closing the day.",
@@ -2035,11 +1915,16 @@ const en = {
       today: 'today',
       thatDay: 'on this day',
     },
+    views: {
+      today: 'Today',
+      all: 'All',
+    },
     dayNav: {
       prev: 'Previous day',
       next: 'Next day',
       today: 'Today',
       backToTodayA11y: 'Back to today',
+      calendarA11y: 'Open the calendar',
     },
     dayCleared: {
       title: 'Day cleared!',
@@ -2241,12 +2126,19 @@ const en = {
     loggingFor: 'Logging on {{date}}',
     dailies: 'Dailies',
     emptyTitle: 'No practices yet',
-    emptyBody: 'Create a practice or adopt one from the catalog in Manage.',
+    emptyBody: 'Tap + to create a practice or pick a suggested one.',
     emptyCta: 'Create practice',
   },
   tasksHub: {
-    title: 'Manage practices',
+    title: 'Add and organize',
     newTask: 'New practice',
+    doors: {
+      create: 'Create my own',
+      createDesc: 'Name, what it trains and how often.',
+      suggested: 'Pick a suggested one',
+      suggestedDesc: '{{count}} in the catalog, by area.',
+      back: 'Your practices',
+    },
     tabs: {
       mine: 'Mine',
       suggested: 'Suggested',
@@ -2951,6 +2843,7 @@ const en = {
       language: 'Language',
       weekStart: 'Week starts on',
       hexGrain: 'Hexagon opens on',
+      practicesLayout: 'Practices tab',
       confirmHighDifficulty: 'Confirm hard practices',
       confirmHighDifficultyDescription: 'Ask before completing a 4★ or 5★ practice. Stops accidental taps.',
     },
@@ -2970,6 +2863,11 @@ const en = {
     weekStart: {
       sunday: 'Sunday',
       monday: 'Monday',
+    },
+    practicesLayout: {
+      tabs: 'Today · All',
+      classic: 'Classic',
+      note: 'Classic: no Today / All pages; swiping the top steps days, and the calendar and All practices buttons come back.',
     },
     hexGrain: {
       dims: '6 dimensions',

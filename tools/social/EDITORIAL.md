@@ -117,6 +117,20 @@ gerador não consegue checar sozinho + as lições aprendidas em produção.
   um tema com carrossel + reel rende dois posts na semana sem produção extra.
 - Cadência sugerida: reel 2–3 dias depois do carrossel do mesmo tema.
 
+## Material patrocinado e carrossel promocional (nov/2026)
+
+- Post de ideia de material patrocinado leva `"patrocinio": "<parceiro>"` no batch:
+  o gerador põe o selo "Patrocinado · <parceiro>" no canto superior esquerdo da
+  capa e a linha "Material patrocinado por <parceiro>" sob a fonte no slide 5.
+  A legenda SEMPRE traz a linha "Publicidade: conteúdo em parceria paga com
+  <parceiro>." e a hashtag #publi (EN: "Paid partnership with…" + #ad); no
+  TikTok, `commercialContentThirdParty: true` no agendamento.
+- Carrossel promocional (parceria, campanha): `node promo.js <spec.json> [outDir]`,
+  mesmo cânone (fundo ambiente, Fraunces, glifo no rodapé), estrutura livre:
+  capa com logos + selo, N slides numerados, slide final de chamada. Formato do
+  spec no topo de promo.js. Fora da série "Uma ideia com fonte": não entra no
+  used-ideas.json.
+
 ## Saída
 
 - PNG RGB **sem canal alpha** (o gerador já remove).

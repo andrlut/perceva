@@ -508,6 +508,15 @@ const pt: Translations = {
     },
   },
 
+  /** First-open tips (components/guide/ScreenTip) — one line per screen. */
+  tips: {
+    dismiss: 'Fechar dica',
+    tasks: 'Crie uma prática sua ou adote uma sugerida. Toque numa linha pra editar; arraste pela alça da direita pra ordenar.',
+    rewardsManage: 'Crie recompensas e dê um preço em moedas. Toque numa linha pra editar; arraste pela alça pra ordenar.',
+    history: 'Toque num dia pra ver o que foi feito e registrar o que esqueceu. Os filtros cruzam humor e práticas.',
+    allPractices: 'Todas as suas práticas, inclusive as que não são de hoje. Marque qualquer uma feita por aqui.',
+  },
+
   tour: {
     intro: {
       skip: 'Pular introdução',
@@ -581,10 +590,17 @@ const pt: Translations = {
         safe: 'Refaça a introdução e o tour quando quiser em {{path}}.',
         primary: 'Escolher minhas práticas',
         assessment: 'Fazer autoavaliação · 1 min',
-        tour: 'Fazer o tour guiado · 3 min',
       },
     },
     pack: {
+      areas: {
+        title: 'Seis áreas da vida',
+        body: 'Cada área tem duas sub-áreas. Cada prática treina uma ou mais delas.',
+        countAreas: 'áreas',
+        countSubs: 'sub-áreas',
+        cta: 'Escolher minhas práticas',
+        a11y: 'As seis áreas do Perceva e as doze sub-áreas, aparecendo uma a uma.',
+      },
       title: 'Escolha de 3 a 5 práticas pra começar',
       body: 'Sugerimos 5, uma por área, em ordem de prioridade. Marque e desmarque à vontade; tudo pode mudar depois.',
       top: 'Top {{count}}',
@@ -610,125 +626,6 @@ const pt: Translations = {
         title: 'Marque como feita',
         body: 'Toque no check quando fizer a prática. Você ganha Dedicação e moedas.',
       },
-      drawer: {
-        title: 'Feitas hoje',
-        body: 'Abra para ver o que fez hoje, desfazer uma marcação ou somar +1.',
-      },
-      mood: {
-        title: 'Check-in de humor',
-        body: 'Registre como foi o dia, de 1 a 5. O calendário cruza o humor com as práticas.',
-      },
-      info: {
-        title: 'Toda tela tem um (i)',
-        body: 'O (i) no canto de cima explica a tela: o que cada coisa faz e onde tocar. Ele está em todas as abas; na dúvida, toque nele.',
-      },
-      hold: {
-        title: 'Toque na prática',
-        body: 'Toque numa prática para pular hoje, ajustar ou editar; segure para ir direto à edição. Pular não zera nada.',
-        cta: 'Entendi',
-      },
-    },
-    m2: {
-      seeAll: {
-        title: 'Todas as práticas',
-        body: 'Abra a lista com todas as suas práticas. É por ela que você cria uma nova.',
-      },
-      manage: {
-        title: 'Gerenciar práticas',
-        body: 'Abra aqui para criar, adotar do catálogo, editar e ordenar suas práticas.',
-      },
-      create: {
-        title: 'Toque no +',
-        body: 'Crie uma prática do zero: você define o nome, o que ela treina e a frequência.',
-      },
-      trains: {
-        title: 'O que ela treina',
-        body: 'Escolha as sub-áreas e dê 1 a 5 estrelas a cada uma. Cada estrela vale 10 de Dedicação.',
-      },
-      often: {
-        title: 'Com que frequência',
-        body: 'Escolha diária, semanal ou mensal e quantas vezes por período.',
-      },
-      coins: {
-        title: 'Quanto vale em moedas',
-        body: 'Defina quanto ela paga em moedas; o padrão é o valor da Dedicação. Salvar é opcional.',
-        cta: 'Fechar e seguir',
-      },
-    },
-    m4: {
-      step1: {
-        title: 'Recompensas',
-        body: 'Troque moedas por recompensas que você define. Toque em Recompensas.',
-      },
-      step2: {
-        title: 'Suas moedas',
-        body: 'Este é o seu saldo. Práticas feitas somam moedas; resgates descontam.',
-      },
-      step3: {
-        title: 'Gerenciar recompensas',
-        body: 'Abra aqui para criar ou adotar recompensas. Para usar uma, toque em {{verb}} no card dela.',
-      },
-    },
-    m5: {
-      step1: {
-        title: 'Quem você está se tornando',
-        body: 'A aba Eu mostra como você está nas 6 áreas. Toque em Eu.',
-      },
-      step2: {
-        title: 'Três retratos',
-        body: 'Troque aqui entre os três: como você se vê, o que pratica e quem quer se tornar.',
-      },
-      step3: {
-        title: 'Percebida: comece por aqui',
-        body: 'Faça a autoavaliação: dê uma nota a cada área, em 1 minuto. Ela preenche este retrato.',
-        later: 'Fazer depois',
-      },
-      step4: {
-        title: 'Praticada: o que você faz',
-        body: 'A Dedicação das suas práticas desenha este retrato: o que você está treinando.',
-      },
-      step5: {
-        title: 'Desejada: seu norte',
-        body: 'Trace a nota que quer alcançar em cada área. O contorno mostra onde você está hoje.',
-      },
-    },
-    m6: {
-      step1: {
-        title: 'Aprender',
-        body: 'No Recanto você aprende com ideias curtas e com fonte. Toque em Aprender.',
-      },
-      step2: {
-        title: 'Materiais',
-        body: 'Cada capa é um livro, uma pesquisa ou um fundamento, resumido em ideias curtas. Toque numa capa.',
-        cta: 'Abrir um material',
-      },
-      step3: {
-        title: 'De 1 a 5 ideias por material',
-        body: 'Toque no botão para abrir a primeira. Rolando a tela, você vê a lista de ideias e o áudio Deep dive, quando houver.',
-        cta: 'Abrir a ideia',
-      },
-      step4: {
-        title: 'Uma ideia por tela',
-        body: 'Quando há vídeo, ele abre a ideia. Depois vêm a frase-chave, um texto curto e as fontes. Deslize para o lado para a próxima ideia.',
-      },
-      step5: {
-        title: 'Vire o card para absorver',
-        body: 'Leu? Toque no card para virar. Virar é o que absorve a ideia.',
-        cta: 'Continuar o tour',
-      },
-      step6: {
-        title: 'É assim que se absorve',
-        body: 'A ideia vai para Minhas ideias. Absorva todas as ideias de um material e ganhe Dedicação e moedas.',
-        cta: 'Voltar ao Recanto',
-      },
-      step7: {
-        title: 'Explorar',
-        body: 'Todas as ideias em sequência, uma atrás da outra, como stories.',
-      },
-      step8: {
-        title: 'Minhas ideias',
-        body: 'Tudo o que você absorve vem para cá. Revise: arraste para a direita para favoritar, para a esquerda para soltar.',
-      },
     },
     settings: {
       step1: {
@@ -737,7 +634,7 @@ const pt: Translations = {
       },
       step2: {
         title: 'Refaça o tutorial quando quiser',
-        body: 'Reveja o app inteiro ou só uma parte: Práticas, Recompensas, Eu, Aprender. Nada do que você fez é apagado.',
+        body: 'Reveja a introdução, o pacote inicial ou o primeiro passo quando quiser. Nada do que você fez é apagado.',
       },
       step3: {
         title: 'Conecte sua IA, de graça',
@@ -755,22 +652,14 @@ const pt: Translations = {
       takeMe: 'Ir para lá',
       progress: 'Passo {{current}} de {{total}}',
     },
-    wrap: {
-      title: 'O resto é prática.',
-      body: 'Cada prática marcada é um voto em quem você quer se tornar.',
-      modulesNote: '{{list}} são módulos opcionais e começam desligados. Ative em {{path}}.',
-      redoNote: 'Refaça a introdução ou o tour quando quiser em {{path}}.',
-      listAnd: 'e',
-      primary: 'Começar a praticar',
-    },
     replay: {
       title: 'Refazer tutorial',
       subtitle: 'Refaça tudo desde o início ou apenas a parte que quiser.',
       allTitle: 'Refazer tutorial completo',
-      allDesc: 'Introdução e pacote inicial, desde a primeira tela.',
+      allDesc: 'Introdução, pacote inicial, ajuda e a primeira prática, desde a primeira tela.',
       allCta: 'Começar do zero',
       sectionOpening: 'Abertura',
-      sectionGuided: 'Ajuda',
+      sectionGuided: 'Passos guiados',
       replayBtn: 'Refazer',
       rowA11y: '{{name}}. {{status}}. Toque para refazer.',
       footnote: 'Refazer não apaga nada.',
@@ -794,24 +683,8 @@ const pt: Translations = {
           desc: 'Onde refazer o tutorial e conectar sua IA.',
         },
         M1: {
-          name: 'Práticas',
-          desc: 'Marcar, desfazer e pular práticas, e registrar o humor.',
-        },
-        M2: {
-          name: 'Criar prática',
-          desc: 'Criar uma prática: sub-áreas, estrelas, frequência e moedas.',
-        },
-        M4: {
-          name: 'Recompensas',
-          desc: 'Trocar moedas por recompensas que você define.',
-        },
-        M5: {
-          name: 'Eu',
-          desc: 'Os três retratos: Percebida, Praticada e Desejada.',
-        },
-        M6: {
-          name: 'Aprender',
-          desc: 'Materiais, ideias, vídeos, Explorar e Minhas ideias.',
+          name: 'Primeira prática',
+          desc: 'O passo único: marcar uma prática como feita.',
         },
       },
     },
@@ -913,6 +786,8 @@ const pt: Translations = {
       videoExpandA11y: 'Ampliar o vídeo',
       videoUnmuteA11y: 'Ligar o som do vídeo',
       videoMuteA11y: 'Desligar o som do vídeo',
+      videoSpeedA11y: 'Velocidade do vídeo: {{speed}}. Toque para mudar',
+      audioSpeedA11y: 'Velocidade do áudio: {{speed}}. Toque para mudar',
       videoError: 'Não foi possível carregar o vídeo. Tente de novo.',
     },
     reels: {
@@ -1974,6 +1849,11 @@ const pt: Translations = {
       title: 'Todas as práticas',
       a11y: 'Abrir todas as práticas',
     },
+    recantoCard: {
+      eyebrow: 'Uma ideia do Recanto',
+      cta: 'Abrir a ideia',
+      a11y: 'Ideia do Recanto: {{title}}. Toque para abrir.',
+    },
     laterPractices: {
       title: 'Criadas depois deste dia',
       caption: 'Dá pra registrar aqui; não contam pro dia fechado.',
@@ -2032,11 +1912,16 @@ const pt: Translations = {
       today: 'hoje',
       thatDay: 'neste dia',
     },
+    views: {
+      today: 'Hoje',
+      all: 'Todas',
+    },
     dayNav: {
       prev: 'Dia anterior',
       next: 'Próximo dia',
       today: 'Hoje',
       backToTodayA11y: 'Voltar para hoje',
+      calendarA11y: 'Abrir o calendário',
     },
     dayCleared: {
       title: 'Dia fechado!',
@@ -2238,12 +2123,19 @@ const pt: Translations = {
     loggingFor: 'Registrando em {{date}}',
     dailies: 'Diárias',
     emptyTitle: 'Nenhuma prática ainda',
-    emptyBody: 'Crie uma prática ou adote uma do catálogo em Gerenciar.',
+    emptyBody: 'Toque no + pra criar uma prática ou escolher uma sugerida.',
     emptyCta: 'Criar prática',
   },
   tasksHub: {
-    title: 'Gerenciar práticas',
+    title: 'Adicionar e organizar',
     newTask: 'Nova prática',
+    doors: {
+      create: 'Criar a minha',
+      createDesc: 'Nome, o que treina e com que frequência.',
+      suggested: 'Escolher sugerida',
+      suggestedDesc: '{{count}} no catálogo, por área.',
+      back: 'Suas práticas',
+    },
     tabs: {
       mine: 'Minhas',
       suggested: 'Sugeridas',
@@ -2962,6 +2854,7 @@ const pt: Translations = {
       language: 'Idioma',
       weekStart: 'Início da semana',
       hexGrain: 'Hexágono abre em',
+      practicesLayout: 'Aba Práticas',
       confirmHighDifficulty: 'Confirmar práticas difíceis',
       confirmHighDifficultyDescription: 'Pede confirmação antes de concluir práticas de 4★ ou 5★. Evita toques acidentais.',
     },
@@ -2981,6 +2874,11 @@ const pt: Translations = {
     weekStart: {
       sunday: 'Domingo',
       monday: 'Segunda',
+    },
+    practicesLayout: {
+      tabs: 'Hoje · Todas',
+      classic: 'Clássica',
+      note: 'Clássica: sem as páginas Hoje e Todas; deslizar no topo troca o dia e voltam os botões de calendário e Todas as práticas.',
     },
     hexGrain: {
       dims: '6 dimensões',

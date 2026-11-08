@@ -2,8 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Stack, useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Stack, useRouter } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -23,8 +23,6 @@ import { SponsorLine } from '@/components/learning/SponsorLine';
 import { SponsorLogo } from '@/components/learning/SponsorLogo';
 import { MaterialCover } from '@/components/MaterialCover';
 import { ScreenBackground } from '@/components/ScreenBackground';
-import { TourModule } from '@/components/tour/TourModule';
-import { TourTarget } from '@/components/tour/TourTarget';
 import { GOLD_BADGE_BG, GOLD_TINT_BG } from '@/components/week/gold';
 import {
   type LearningMaterialDetail,
@@ -43,11 +41,6 @@ import type { IdeaLocale } from '@/lib/ideas';
 import { ideaProgress, localizedIdea, nextIdea, sortedIdeas } from '@/lib/ideas';
 import { learningMediaUrl, pickMedia } from '@/lib/learningMedia';
 import { xpForMaterial } from '@/lib/learningXp';
-import { isTerminal } from '@/lib/tour/constants';
-import { emitTourEvent } from '@/lib/tour/eventBus';
-import { buildM6Steps, M6_EVENTS, M6_STEP } from '@/lib/tour/m6Steps';
-import { leaveM6Flow } from '@/lib/tour/navigation';
-import { getCurrentTourModule, useIsCurrentTourModule, useTourStore } from '@/lib/tour/store';
 import { ACTIVE_THEME, tokens } from '@/theme';
 import { SUB_META } from '@/theme/dimensions';
 import { alpha } from '@/theme/skillTiers';
@@ -112,29 +105,6 @@ interface Props {
 
 export function IdeasMaterialScreen({ detail: m }: Props) {
   const router = useRouter();
-
-  // ── Tour (M6) ──────────────────────────────────────────────────────────
-  // Reaching this screen is step 1's gesture — emitted from here, not from
-  // the cover press, so a locked cover (premium lock screen) never counts.
-  // Step 2 spotlights the sticky start button.
-  const isM6Current = useIsCurrentTourModule('M6');
-  useEffect(() => {
-    if (getCurrentTourModule() === 'M6' && useTourStore.getState().stepIndices.M6 === M6_STEP.MATERIALS) {
-      emitTourEvent(M6_EVENTS.MATERIAL_OPENED);
-    }
-  }, []);
-  // Back from the idea screen mid-walk (✕, Android back, "Voltar ao
-  // material"): before the flip, resume at "Abrir a ideia"; after it, move on
-  // to the Recanto's steps, which show when the user goes back there.
-  useFocusEffect(
-    useCallback(() => {
-      if (getCurrentTourModule() !== 'M6') return;
-      const { stepIndices, setStepIndex } = useTourStore.getState();
-      const idx = stepIndices.M6 ?? 0;
-      if (idx === M6_STEP.MEDIA || idx === M6_STEP.CARD) setStepIndex('M6', M6_STEP.MATERIAL);
-      else if (idx === M6_STEP.ABSORBED) setStepIndex('M6', M6_STEP.EXPLORE);
-    }, []),
-  );
   const { t, locale: appLocale } = useT();
   const locale: IdeaLocale = appLocale === 'pt' ? 'pt' : 'en';
   const meta = useMetaLookup();
@@ -617,10 +587,8 @@ export function IdeasMaterialScreen({ detail: m }: Props) {
           </View>
         </ScrollView>
 
-        {/* Sticky CTA — opens the next idea to absorb (or idea 1 to review).
-           M6 step 2 spotlights it. */}
+        {/* Sticky CTA — opens the next idea to absorb (or idea 1 to review). */}
         <View style={[styles.footer, { paddingBottom: tokens.space[3] }]}>
-          <TourTarget id="material.start" radius={999}>
           <Pressable
             onPress={() => openIdea(ctaTarget)}
             accessibilityRole="button"
@@ -643,7 +611,6 @@ export function IdeasMaterialScreen({ detail: m }: Props) {
               {ctaLabel}
             </Text>
           </Pressable>
-          </TourTarget>
         </View>
 
         <FeedbackSheet
@@ -655,22 +622,6 @@ export function IdeasMaterialScreen({ detail: m }: Props) {
           onSave={handleSheetSave}
         />
       </ScreenBackground>
-
-      {/* M6 step 2: "Abrir a ideia" opens the same idea as the button. Leaving
-         to the idea screen keeps this one underneath; only a skip or "Sair do
-         tour" from here walks back to the Recanto. No bottom nav, so
-         `flatNav`. */}
-      <TourModule
-        module="M6"
-        screen="material"
-        steps={buildM6Steps(t)}
-        enabled={isM6Current}
-        flatNav
-        onAdvanceToNextScreen={() => openIdea(ctaTarget)}
-        onExitScreen={() => {
-          if (isTerminal(useTourStore.getState().modules.M6?.status)) leaveM6Flow();
-        }}
-      />
     </SafeAreaView>
   );
 }

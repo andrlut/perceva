@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { TourTarget } from '@/components/tour/TourTarget';
 import { tokens } from '@/theme';
 
 /**
@@ -24,7 +23,6 @@ export function EntryTile({
   subtitle,
   a11yLabel,
   onPress,
-  tourTargetId,
   style,
 }: {
   art: ReactNode;
@@ -32,38 +30,27 @@ export function EntryTile({
   subtitle: string;
   a11yLabel?: string;
   onPress?: () => void;
-  /** Tour spotlight id for the tile (inside the screen padding). */
-  tourTargetId?: string;
   style?: StyleProp<ViewStyle>;
 }) {
-  const card = (
-    <Pressable
+  return (
+    <View style={style}>
+      <Pressable
       onPress={onPress}
       disabled={!onPress}
       accessibilityRole="button"
       accessibilityLabel={a11yLabel ?? `${title} · ${subtitle}`}
       style={({ pressed }) => [styles.card, pressed && { opacity: 0.85 }]}
     >
-      <View style={styles.art}>{art}</View>
-      <View style={styles.textCol}>
-        <Text style={styles.title} numberOfLines={1}>
-          {title}
-        </Text>
-        <Text style={styles.subtitle} numberOfLines={1}>
-          {subtitle}
-        </Text>
-      </View>
-    </Pressable>
-  );
-  return (
-    <View style={style}>
-      {tourTargetId ? (
-        <TourTarget id={tourTargetId} radius={tokens.radius.lg}>
-          {card}
-        </TourTarget>
-      ) : (
-        card
-      )}
+        <View style={styles.art}>{art}</View>
+        <View style={styles.textCol}>
+          <Text style={styles.title} numberOfLines={1}>
+            {title}
+          </Text>
+          <Text style={styles.subtitle} numberOfLines={1}>
+            {subtitle}
+          </Text>
+        </View>
+      </Pressable>
     </View>
   );
 }

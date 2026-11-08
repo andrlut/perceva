@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'expo-router';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -18,16 +18,10 @@ import { FabStack, fabStackClearance, type FabSize } from '@/components/FabStack
 import { ScreenInfoButton } from '@/components/guide/ScreenInfoButton';
 import { RecantoGuide, useRecantoGuidePrompt } from '@/components/guide/screens/RecantoGuide';
 import { InfoSheet } from '@/components/InfoSheet';
-import { TourModule } from '@/components/tour/TourModule';
-import { TourTarget } from '@/components/tour/TourTarget';
 import { LockedScreen } from '@/components/unlock/LockedScreen';
 import { UnlockDoor } from '@/components/unlock/UnlockDoor';
 import { useMaterialLock } from '@/lib/premium';
 import { useIsLocked } from '@/lib/unlock';
-import { emitTourEvent } from '@/lib/tour/eventBus';
-import { buildM6Steps, M6_EVENTS, M6_STEP } from '@/lib/tour/m6Steps';
-import { isWrapPending, useIsCurrentTourModule, useTourStore } from '@/lib/tour/store';
-import { remeasureActiveTourTarget } from '@/lib/tour/targets';
 import { CarouselRow } from '@/components/learning/CarouselRow';
 import { ContinueLendoCard } from '@/components/learning/ContinueLendoCard';
 import type { CoverIdeaMeta } from '@/components/learning/CoverCard';
@@ -147,30 +141,6 @@ function LearningScreenContent() {
   const [helpOpen, setHelpOpen] = useState(false);
   const guidePrompt = useRecantoGuidePrompt();
   const bottomClearance = useBottomNavClearance();
-
-  // ── M6 tour plumbing ────────────────────────────────────────────────
-  const isM6Current = useIsCurrentTourModule('M6');
-  const m6Step = useTourStore((s) => s.stepIndices.M6 ?? 0);
-  // M6 step 1 lives on Home and waits for the user to reach this tab.
-  // Emit LEARN_NAVIGATED on focus while step 1 is still current so the
-  // Home tooltip advances to step 2 (which renders here).
-  useFocusEffect(
-    useCallback(() => {
-      const state = useTourStore.getState();
-      const status = state.modules.M6?.status ?? 'pending';
-      const idx = state.stepIndices.M6 ?? 0;
-      if (isM6Current && idx === 0 && status !== 'completed' && status !== 'skipped') {
-        emitTourEvent(M6_EVENTS.LEARN_NAVIGATED);
-      }
-    }, [isM6Current]),
-  );
-  // M6 step 2 (Next) ends the module → Wrap-up. Same rule as Home: only
-  // while the closer is still unfinished and nothing is being replayed, so
-  // an isolated M6 replay returns Home instead.
-  const finishM6 = () => {
-    if (isWrapPending()) router.push('/tour/wrap');
-    else router.navigate('/(tabs)');
-  };
 
   // Hydrate the persisted scroll-progress store on first paint so the
   // ContinueLendoCard hero can pick the right material without flashing
@@ -436,46 +406,7 @@ function LearningScreenContent() {
     return out;
   }, [buckets, meta, t]);
 
-  // ── M6 walk-through anchors ─────────────────────────────────────────
-  // The material "Abrir um material" opens: the first one the user can
-  // actually open (not locked, with ideas), in on-screen order, preferring
-  // one whose ideas carry a video so the next steps can point at it. Its row
-  // is the one step 1 spotlights. Partner content is never the example: the
-  // onboarding shows what the Recanto is, not a campaign (and its row comes
-  // first, so with a video it would always win).
-  const tourPick = useMemo(() => {
-    let fallback: { card: LearningFeedCard; sectionIndex: number } | null = null;
-    for (let i = 0; i < sections.length; i++) {
-      for (const card of sections[i].cards) {
-        if (isLockedCard(card) || card.idea_count === 0 || sponsorOf(card)) continue;
-        if (ideaMetaByMaterial.get(card.id)?.hasVideo) return { card, sectionIndex: i };
-        fallback ??= { card, sectionIndex: i };
-      }
-    }
-    return fallback;
-  }, [sections, isLockedCard, ideaMetaByMaterial]);
-  const tourSectionKey = tourPick ? sections[tourPick.sectionIndex]?.key : undefined;
   const listRef = useRef<FlatList<(typeof sections)[number]>>(null);
-  // Step 1: bring the spotlighted row to the top, clear of the tooltip.
-  // Steps 6–7: back to the top, where Explorar sits.
-  const m6OnMaterials = isM6Current && m6Step === M6_STEP.MATERIALS;
-  const m6OnTop = isM6Current && m6Step >= M6_STEP.EXPLORE;
-  const tourSectionIndex = tourPick?.sectionIndex ?? -1;
-  useEffect(() => {
-    if (!m6OnMaterials && !m6OnTop) return;
-    const scroll = setTimeout(() => {
-      if (m6OnMaterials && tourSectionIndex >= 0) {
-        listRef.current?.scrollToIndex({ index: tourSectionIndex, animated: true, viewPosition: 0 });
-      } else {
-        listRef.current?.scrollToOffset({ offset: 0, animated: true });
-      }
-    }, 200);
-    const measure = setTimeout(remeasureActiveTourTarget, 650);
-    return () => {
-      clearTimeout(scroll);
-      clearTimeout(measure);
-    };
-  }, [m6OnMaterials, m6OnTop, tourSectionIndex]);
 
   const renderSection = useCallback(
     ({ item }: { item: (typeof sections)[number] }) => {
@@ -492,9 +423,6 @@ function LearningScreenContent() {
           isLockedCard={isLockedCard}
         />
       );
-      // Every row sits in a TourTarget, so moving the spotlight never
-      // remounts a row (that would reset its horizontal scroll); only the
-      // picked one carries the id step 1 points at.
       return (
         <View>
           {item.groupLabel && (
@@ -502,16 +430,11 @@ function LearningScreenContent() {
               <Text style={styles.sectionGroupTitle}>{item.groupLabel}</Text>
             </View>
           )}
-          <TourTarget
-            id={item.key === tourSectionKey ? 'learn.materials' : `learn.row.${item.key}`}
-            radius={tokens.radius.lg}
-          >
-            {row}
-          </TourTarget>
+          {row}
         </View>
       );
     },
-    [readSet, onCardPress, ideaMetaByMaterial, isLockedCard, tourSectionKey],
+    [readSet, onCardPress, ideaMetaByMaterial, isLockedCard],
   );
 
   return (
@@ -569,8 +492,6 @@ function LearningScreenContent() {
                     Haptics.selectionAsync().catch(() => {});
                     router.push('/reels');
                   }}
-                  // M6 spotlights it: every idea in a row, story-style.
-                  tourTargetId="learn.explore"
                   style={styles.entryExplore}
                 />
               )}
@@ -685,23 +606,19 @@ function LearningScreenContent() {
                 Haptics.selectionAsync().catch(() => {});
                 router.push('/collection');
               },
-              // M6 step 7 spotlights this bulb: where absorbed ideas go.
-              wrap: (node) => (
-                <TourTarget id="learn.my-ideas" radius={999}>
-                  {pendingReviews > 0 ? (
-                    <View>
-                      {node}
-                      <View style={styles.fabBadge} pointerEvents="none">
-                        <Text style={styles.fabBadgeText}>
-                          {pendingReviews > 99 ? '99+' : pendingReviews}
-                        </Text>
-                      </View>
+              wrap: (node) =>
+                pendingReviews > 0 ? (
+                  <View>
+                    {node}
+                    <View style={styles.fabBadge} pointerEvents="none">
+                      <Text style={styles.fabBadgeText}>
+                        {pendingReviews > 99 ? '99+' : pendingReviews}
+                      </Text>
                     </View>
-                  ) : (
-                    node
-                  )}
-                </TourTarget>
-              ),
+                  </View>
+                ) : (
+                  node
+                ),
             },
             {
               key: 'filter',
@@ -748,30 +665,6 @@ function LearningScreenContent() {
         onReadFilterChange={setReadFilter}
         query={query}
         onQueryChange={setQuery}
-      />
-
-      {/* M6 steps 1, 6 and 7 live here: a materials row ("Abrir um
-         material" opens the pick), then — back from the idea screen —
-         Explorar and the Minhas ideias bulb. Step 0 is on Home. Waits for
-         the data the pick and the anchors depend on. rewindOnFocus: backing out of the
-         material or idea screen lands on step 1 again. Last step → Wrap-up.
-         Tab screen, so no `flatNav`. */}
-      <TourModule
-        module="M6"
-        screen="learn"
-        steps={buildM6Steps(t, { canOpenMaterial: tourPick != null })}
-        enabled={
-          isM6Current &&
-          !feed.isLoading &&
-          !reads.isLoading &&
-          !ideaCards.isLoading &&
-          !collectedIdeas.isLoading
-        }
-        rewindOnFocus
-        onAdvanceToNextScreen={() => {
-          if (tourPick) router.push(`/material/${tourPick.card.slug}`);
-        }}
-        onComplete={finishM6}
       />
     </SafeAreaView>
   );
