@@ -1,0 +1,311 @@
+{
+  "_doc": "Vídeo de MARCA (apresentação do sistema), refeito no molde em 2026-11-08 pro topo do site perceva.app (e pro Insta): o Manifesto v2 (tools/video/src/script.json, copy em tools/video/copy/manifesto-v2.md, aprovado pelo André) recontado com o elenco Hexa Limpo e o requinte da fase 2. Vende os 3 módulos (Se conhecer · Praticar · Aprender) e fecha no Emblema e no card. Sem número nem estudo (a base vai na legenda do post). Os primeiros 2–3 s funcionam mudos (o site abre em autoplay sem som). 'Os toques viram moedas' (plural): o multiplicador de moedas de uma prática pode ser 0. Não sobe pro bucket: o mp4 vai pro repo do site. No EN, o trio diz 'It brings…' (o nome Perceva a voz em inglês fala, mas a transcrição do QA nunca acerta) e o skip diz 'Missed a day?' ('Skipped a day' a voz lia 'Skip today').",
+  "dimension": "mind",
+  "ideas": {
+    "manifesto": {
+      "card": {
+        "file": "manifesto",
+        "title": {
+          "pt": "Perceva",
+          "en": "Perceva"
+        },
+        "claim": {
+          "pt": "Perceba quem você é, pratique quem você quer ser e veja quem está aparecendo.",
+          "en": "Notice who you are, practice who you want to be, and see who's showing up."
+        }
+      },
+      "lines": [
+        {
+          "id": "hook",
+          "scene": "pessoa",
+          "pt": {
+            "caption": "Seus hábitos estão te treinando, todo dia. *Pra ser quem?*"
+          },
+          "en": {
+            "caption": "Your habits are training you, every day. *To be who?*"
+          },
+          "props": {
+            "kicker": {
+              "pt": "Perceva",
+              "en": "Perceva"
+            },
+            "ambiente": "cidade",
+            "mood": "cansado",
+            "camera": {
+              "move": "push",
+              "cue": {
+                "pt": "Pra ser quem",
+                "en": "To be who"
+              }
+            },
+            "objects": [
+              {
+                "p": "celular",
+                "cue": {
+                  "pt": "hábitos",
+                  "en": "habits"
+                }
+              },
+              {
+                "p": "relogio",
+                "cue": {
+                  "pt": "todo dia",
+                  "en": "every day"
+                }
+              },
+              {
+                "p": "ion:help",
+                "cue": {
+                  "pt": "Pra ser quem",
+                  "en": "To be who"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "trio",
+          "scene": "lista",
+          "pt": {
+            "caption": "O Perceva junta três coisas: *se conhecer, praticar e aprender*."
+          },
+          "en": {
+            "caption": "It brings three things together: *knowing yourself, practicing and learning*."
+          },
+          "props": {
+            "transicao": "chicote",
+            "mood": "ok",
+            "to": "feliz",
+            "items": [
+              {
+                "icon": "person-circle",
+                "text": {
+                  "pt": "Se conhecer",
+                  "en": "Know yourself"
+                },
+                "cue": {
+                  "pt": "se conhecer",
+                  "en": "knowing yourself"
+                }
+              },
+              {
+                "icon": "checkmark-circle",
+                "text": {
+                  "pt": "Praticar",
+                  "en": "Practice"
+                },
+                "cue": {
+                  "pt": "praticar",
+                  "en": "practicing"
+                }
+              },
+              {
+                "icon": "bulb",
+                "text": {
+                  "pt": "Aprender",
+                  "en": "Learn"
+                },
+                "cue": {
+                  "pt": "aprender",
+                  "en": "learning"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "know",
+          "scene": "pessoa",
+          "pt": {
+            "caption": "*Se conhecer*: testes de personalidade, valores e vínculo, e uma nota pra cada área da vida."
+          },
+          "en": {
+            "caption": "*Know yourself*: personality, values and attachment tests, plus a score for each area of life."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Se conhecer",
+              "en": "Know yourself"
+            },
+            "ambiente": "casa",
+            "hora": "manha",
+            "mood": "ok",
+            "objects": [
+              {
+                "p": "ion:person-circle",
+                "cue": {
+                  "pt": "personalidade",
+                  "en": "personality"
+                }
+              },
+              {
+                "p": "ion:compass",
+                "cue": {
+                  "pt": "valores",
+                  "en": "values"
+                }
+              },
+              {
+                "p": "coracao",
+                "cue": {
+                  "pt": "vínculo",
+                  "en": "attachment"
+                }
+              },
+              {
+                "p": "ion:stats-chart",
+                "cue": {
+                  "pt": "cada área",
+                  "en": "each area"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "practice",
+          "scene": "cena",
+          "pt": {
+            "caption": "*Praticar*: um toque por hábito, e os toques viram moedas pra recompensas que você escolhe."
+          },
+          "en": {
+            "caption": "*Practice*: one tap per habit, and your taps turn into coins for rewards you choose."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Praticar",
+              "en": "Practice"
+            },
+            "ambiente": "casa",
+            "hora": "manha",
+            "setting": "mesa",
+            "holding": "celular",
+            "mood": "feliz",
+            "glow": {
+              "pt": "um toque",
+              "en": "one tap"
+            },
+            "objects": [
+              {
+                "p": "moeda",
+                "cue": {
+                  "pt": "moedas",
+                  "en": "coins"
+                }
+              },
+              {
+                "p": "ion:gift",
+                "cue": {
+                  "pt": "recompensas",
+                  "en": "rewards"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "skip",
+          "scene": "pessoa",
+          "pt": {
+            "caption": "Pulou um dia? *Nada zera.* Pular também é decidir."
+          },
+          "en": {
+            "caption": "Missed a day? *Nothing resets.* Skipping is a choice too."
+          },
+          "props": {
+            "ambiente": "casa",
+            "hora": "manha",
+            "mood": "cansado",
+            "to": "feliz",
+            "turn": {
+              "pt": "Nada zera",
+              "en": "Nothing resets"
+            },
+            "objects": [
+              {
+                "p": "ion:calendar",
+                "cue": {
+                  "pt": "um dia",
+                  "en": "a day"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "learn",
+          "scene": "pensa",
+          "pt": {
+            "caption": "*Aprender*: uma ideia curta por vez, com fonte. Porque ler não é lembrar."
+          },
+          "en": {
+            "caption": "*Learn*: one short idea at a time, with sources. Because reading isn't remembering."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Aprender",
+              "en": "Learn"
+            },
+            "ambiente": "casa",
+            "hora": "manha",
+            "mood": "ok",
+            "thought": "lampada",
+            "at": {
+              "pt": "uma ideia",
+              "en": "one short idea"
+            }
+          }
+        },
+        {
+          "id": "emblem",
+          "scene": "pessoa",
+          "hold": 0.6,
+          "pt": {
+            "caption": "E tudo se junta no seu *Emblema*: o retrato de quem você está se tornando."
+          },
+          "en": {
+            "caption": "And it all comes together in your *emblem*: a portrait of who you're becoming."
+          },
+          "props": {
+            "mood": "ok",
+            "to": "feliz",
+            "turn": {
+              "pt": "se tornando",
+              "en": "becoming"
+            },
+            "camera": {
+              "move": "push",
+              "cue": {
+                "pt": "o retrato",
+                "en": "a portrait"
+              }
+            },
+            "objects": [
+              {
+                "p": "emblema",
+                "cue": {
+                  "pt": "tudo se junta",
+                  "en": "comes together"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "close",
+          "scene": "verso",
+          "props": {
+            "kicker": {
+              "pt": "Perceva",
+              "en": "Perceva"
+            },
+            "done": {
+              "pt": "GRÁTIS PRA COMEÇAR",
+              "en": "FREE TO START"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

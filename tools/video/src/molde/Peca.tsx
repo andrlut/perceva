@@ -19,6 +19,7 @@ import {
   Vassoura,
 } from '../elenco/cast';
 import { Agenda, Caneca, Caneta, Envelope, Monitor, Papelada, Planta, Quadro } from '../elenco/objetos';
+import { Emblema } from '../Emblema';
 import ions from './ionicons-full.json';
 import catalog from './catalog.json';
 
@@ -53,6 +54,16 @@ const PIECES: Record<string, Draw> = {
   monitor: ({ t, size, accent, progress }) => <Monitor t={t} size={size} accent={accent} progress={progress ?? 1} />,
   papelada: ({ size }) => <Papelada size={size} />,
   envelope: ({ t, size, accent }) => <Envelope t={t} size={size} accent={accent} />,
+  // o Emblema do app (src/Emblema.tsx): anéis, braços e áreas acendem ao longo da cena — vídeo de marca
+  emblema: ({ t, size, progress }) => {
+    const p = progress ?? Math.max(0, Math.min(1, t / 150));
+    const lit = Array.from({ length: 12 }, (_, i) => Math.max(0, Math.min(1, p * 2.2 - i * 0.1)));
+    return (
+      <div style={{ position: 'relative', width: size, height: size }}>
+        <Emblema size={size} cx={size / 2} cy={size / 2} rings={5 * p} tests={6 * Math.max(0, Math.min(1, p * 1.25 - 0.1))} halo={p} lit={lit} center={p > 0.55 ? 7 : null} />
+      </div>
+    );
+  },
 };
 
 export const PIECE_NAMES = Object.keys(PIECES);
