@@ -1,0 +1,163 @@
+{
+  "_doc": "Piloto r3 (fase 3) do pré-treino: só a TELA muda; ids, ordem e texto falado (pt/en) são os da r2 (learning-drops/video-specs/paker-health-energia-pele-forca.json), então --voz-de reaproveita a voz aprovada. Assinatura deste vídeo: a academia abre (cansada, andando devagar) e fecha (anda, corre, fica focada); a cozinha de dia é onde ela toma; o corpo de vidro (dentro plano corpo) é o recurso de 'dentro' só deste vídeo. Régua do parceiro: alerta/foco apenas (sem raio, chama, bateria, músculo crescendo, vaso alargando, pulo de alegria), sem marca, sem número fora do verso, rótulos só com palavras da fala. 'Misture na água' = copo (lição da r1).",
+  "slug": "paker-health-energia-pele-forca",
+  "ideas": {
+    "pre-treino-energia": {
+      "dimension": "body",
+      "fase": 3,
+      "protagonista": { "seed": 0, "skin": "#E0AC7E" },
+      "lines": [
+        {
+          "id": "hook",
+          "scene": "faz",
+          "hold": 0.3,
+          "pt": { "caption": "Hora do treino, e *a disposição não veio junto*?" },
+          "en": { "caption": "Time to train, and *your energy hasn't shown up*?" },
+          "props": {
+            "ambiente": "academia",
+            "hora": "dia",
+            "gente": "pouca",
+            "mood": "cansado",
+            "passos": [
+              { "acao": "andar", "ritmo": "lento", "de": 330, "para": 540, "ate": { "pt": "a disposição", "en": "your energy" } }
+            ],
+            "camera": { "move": "push", "cue": { "pt": "a disposição", "en": "your energy" } }
+          }
+        },
+        {
+          "id": "star",
+          "scene": "cena",
+          "pt": { "caption": "No pré-treino, a estrela é a *cafeína*: ela ajuda a ficar alerta e a se concentrar melhor." },
+          "en": { "caption": "In a pre-workout, the star is *caffeine*: it helps you stay alert and concentrate better." },
+          "props": {
+            "kicker": { "pt": "Dentro do pré-treino", "en": "Inside a pre-workout" },
+            "ambiente": "cozinha",
+            "hora": "dia",
+            "setting": "mesa",
+            "holding": "copo-agua",
+            "mood": "cansado",
+            "turn": { "pt": "ficar alerta", "en": "stay alert" },
+            "to": "focado",
+            "acoes": [
+              { "acao": "mexer", "ate": { "pt": "a estrela", "en": "the star" } }
+            ],
+            "lente": {
+              "sobre": "peca",
+              "cue": { "pt": "a estrela", "en": "the star" },
+              "conteudo": {
+                "camadas": [{ "textura": "agua" }],
+                "particulas": {
+                  "forma": "ponto",
+                  "cor": ["health", "body", "mind"],
+                  "n": 12,
+                  "boiam": true,
+                  "destaque": {
+                    "cue": { "pt": "cafeína", "en": "caffeine" },
+                    "rotulo": { "pt": "cafeína", "en": "caffeine" }
+                  }
+                }
+              }
+            },
+            "rotulos": [
+              { "text": { "pt": "alerta", "en": "alert" }, "cue": { "pt": "ficar alerta", "en": "stay alert" }, "seta": "cabeca" },
+              { "text": { "pt": "concentrar", "en": "concentrate" }, "cue": { "pt": "se concentrar", "en": "concentrate" }, "seta": "cabeca" }
+            ]
+          }
+        },
+        {
+          "id": "fronts2",
+          "scene": "dentro",
+          "pt": { "caption": "E outros ingredientes trabalham *em frentes diferentes*: um ligado aos vasos, outro ao esforço intenso e outro ligado ao foco." },
+          "en": { "caption": "And other ingredients work *on different fronts*: one linked to blood vessels, another to hard efforts, and another linked to focus." },
+          "props": {
+            "plano": "corpo",
+            "transicao": "zoom",
+            "mood": "ok",
+            "origem": "barriga",
+            "divide": { "pt": "em frentes diferentes", "en": "on different fronts" },
+            "fluxos": [
+              { "para": "vasos", "cor": "health", "particula": "ponto" },
+              { "para": "musculos", "cor": "body", "particula": "ponto" },
+              { "para": "cabeca", "cor": "mind", "particula": "ponto" }
+            ],
+            "regioes": [
+              { "parte": "vasos", "cue": { "pt": "ligado aos vasos", "en": "blood vessels" }, "efeito": "acende", "cor": "health", "rotulo": { "pt": "vasos", "en": "blood vessels" } },
+              { "parte": "musculos", "cue": { "pt": "esforço intenso", "en": "hard efforts" }, "efeito": "acende", "cor": "body", "rotulo": { "pt": "esforço intenso", "en": "hard efforts" } },
+              { "parte": "cabeca", "cue": { "pt": "ligado ao foco", "en": "linked to focus" }, "efeito": "anel", "cor": "mind", "rotulo": { "pt": "foco", "en": "focus" } }
+            ]
+          }
+        },
+        {
+          "id": "take",
+          "scene": "cena",
+          "pt": { "caption": "Misture na água e tome *com antecedência*." },
+          "en": { "caption": "Mix it in water and drink it *ahead of time*." },
+          "props": {
+            "kicker": { "pt": "Na prática", "en": "In practice" },
+            "ambiente": "cozinha",
+            "hora": "dia",
+            "setting": "mesa",
+            "plano": "fechado",
+            "holding": "copo-agua",
+            "mood": "ok",
+            "acoes": [
+              { "acao": "mexer", "ate": { "pt": "e tome", "en": "drink it" } },
+              { "acao": "beber", "cue": { "pt": "e tome", "en": "drink it" } }
+            ],
+            "objects": [
+              { "p": "relogio", "cue": { "pt": "com antecedência", "en": "ahead of time" } }
+            ],
+            "rotulos": [
+              { "text": { "pt": "com antecedência", "en": "ahead of time" }, "cue": { "pt": "com antecedência", "en": "ahead of time" } }
+            ]
+          }
+        },
+        {
+          "id": "careful",
+          "scene": "lista",
+          "pt": { "caption": "Como tem cafeína, *evite* perto da hora de dormir, na gravidez ou se você for sensível a estimulantes." },
+          "en": { "caption": "It has caffeine, so *avoid it* near bedtime, during pregnancy, or if you're sensitive to stimulants." },
+          "props": {
+            "kicker": { "pt": "Atenção", "en": "Careful" },
+            "ambiente": "cozinha",
+            "hora": "noite",
+            "mood": "ok",
+            "items": [
+              { "icon": "moon", "text": { "pt": "perto de dormir", "en": "near bedtime" }, "cue": { "pt": "hora de dormir", "en": "near bedtime" } },
+              { "icon": "woman", "text": { "pt": "na gravidez", "en": "pregnancy" }, "cue": { "pt": "na gravidez", "en": "during pregnancy" } },
+              { "icon": "alert-circle", "text": { "pt": "sensível a estimulantes", "en": "sensitive to stimulants" }, "cue": { "pt": "sensível a estimulantes", "en": "sensitive to stimulants" } }
+            ]
+          }
+        },
+        {
+          "id": "arrive",
+          "scene": "faz",
+          "hold": 0.5,
+          "pt": { "caption": "Você se troca, sai de casa e, quando o treino começa, *a cafeína já ajuda a ficar alerta*." },
+          "en": { "caption": "You get changed, head out, and when the workout starts, *the caffeine is already helping you stay alert*." },
+          "props": {
+            "ambiente": "academia",
+            "hora": "dia",
+            "gente": "pouca",
+            "mood": "ok",
+            "turn": { "pt": "ajuda a ficar alerta", "en": "helping you stay alert" },
+            "to": "focado",
+            "camera": { "move": "push", "cue": { "pt": "ajuda a ficar alerta", "en": "helping you stay alert" } },
+            "passos": [
+              { "acao": "andar", "de": 200, "para": 540 },
+              { "acao": "correr", "cue": { "pt": "treino começa", "en": "workout starts" }, "para": 540 }
+            ],
+            "rotulos": [
+              { "text": { "pt": "alerta", "en": "alert" }, "cue": { "pt": "ficar alerta", "en": "stay alert" } }
+            ]
+          }
+        },
+        {
+          "id": "do",
+          "scene": "verso",
+          "props": { "camera": { "move": "push", "forca": "leve" } }
+        }
+      ]
+    }
+  }
+}
