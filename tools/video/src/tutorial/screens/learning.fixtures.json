@@ -1,0 +1,51 @@
+{
+  "_doc": "Dados de mentira da aba Aprender (Recanto), lidos pela réplica (learningLayout.ts) e pelo lint do scripts/tour.mjs. Materiais reais do catálogo (título, resumo, área, sub-área e número de ideias das migrations learning_material_* e de learning-drops/ideas-specs), com as capas que já estão em public/img. `catalog` são as contagens do catálogo inteiro (os chips Pendentes/Concluídos/Todos e o Explorar contam o acervo, não só as fileiras desenhadas).",
+  "inicio": {
+    "_doc": "Pouco depois de abrir a aba: uma ideia de 'A amizade cobra em horas' absorvida (1 de 3: capa com borda dourada, barra e o Continue lendo em 33%), ainda sem revisar (o 1 violeta na lâmpada de Minhas ideias) e nenhuma favorita (Treinar mostra '0 de 5 favoritas': o treino abre com 5, TRAIN_MIN_FAVORITES). Nenhum material concluído, então a tela abre em Pendentes com o catálogo inteiro. Novidades do mês = os três primeiros; as fileiras por área vêm depois (só o topo da primeira aparece, atrás da barra de abas).",
+    "catalog": { "total": 38, "read": 0, "exploreNew": 41 },
+    "favorites": 0,
+    "trainDue": 0,
+    "pendingReviews": 1,
+    "continue": "friendship-hours",
+    "exploreThumbs": [
+      { "img": "idea-friendship-3", "dim": "bonds" },
+      { "img": "idea-awe", "dim": "mind" },
+      { "img": "idea-hobby-2", "dim": "craft" }
+    ],
+    "novidades": ["friendship-hours", "awe-walk-vastness-novelty", "hobbies-depression-older-adults"],
+    "materials": [
+      {
+        "slug": "friendship-hours",
+        "title": { "pt": "A amizade cobra em horas", "en": "Friendship Charges You in Hours" },
+        "summary": { "pt": "Um estudo do Kansas pôs número no que uma amizade custa — e explica por que o seu círculo encolheu sem ninguém brigar.", "en": "A Kansas study put a number on what a friendship costs — and explains why your circle shrank without a single fight." },
+        "dim": "bonds", "sub": "circle", "category": "research",
+        "ideas": 3, "collected": 1,
+        "cover": "cover-friendship-hours"
+      },
+      {
+        "slug": "awe-walk-vastness-novelty",
+        "title": { "pt": "Uma caminhada pra sentir admiração", "en": "Walking in search of awe" },
+        "summary": { "pt": "Mudar só pra onde você olha numa caminhada semanal trouxe mais admiração e alegria nos passeios, e menos angústia no resto dos dias.", "en": "Changing only where you look on a weekly walk brought more awe and joy on the walk, and less distress on the days around it." },
+        "dim": "mind", "sub": "contemplate", "category": "research",
+        "ideas": 1, "collected": 0,
+        "cover": "cover-awe-walk-vastness-novelty"
+      },
+      {
+        "slug": "hobbies-depression-older-adults",
+        "title": { "pt": "Hobby e depressão depois dos 50", "en": "Having a hobby and depression after 50" },
+        "summary": { "pt": "Em dezenas de milhares de pessoas mais velhas, ter um hobby anda junto com menos depressão, e o sinal já aparece com uma vez por semana.", "en": "Across tens of thousands of older adults, having a hobby goes with less depression, and the signal shows up at once a week." },
+        "dim": "craft", "sub": "play", "category": "research",
+        "ideas": 2, "collected": 0,
+        "cover": "cover-hobbies-depression-older-adults"
+      },
+      {
+        "slug": "news-pink-noise-sleep-2026-09",
+        "title": { "pt": "Ruído rosa cronometrado e a limpeza cerebral", "en": "Timed Pink Noise and the Brain's Cleanup" },
+        "summary": { "pt": "Cientistas do MIT cronometraram uma rajada de ruído rosa ao pico exato da onda cerebral e ampliaram o pulso que limpa o cérebro durante o sono.", "en": "MIT scientists timed a burst of pink noise to the exact peak of a brain wave and amplified the pulse that flushes the sleeping brain." },
+        "dim": "health", "sub": "sleep", "category": "research",
+        "ideas": 1, "collected": 0,
+        "cover": "cover-news-pink-noise-sleep-2026-09"
+      }
+    ]
+  }
+}

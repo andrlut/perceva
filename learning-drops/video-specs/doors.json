@@ -1,12 +1,15 @@
 {
-  "_doc": "Vídeos das PORTAS das abas (trancas progressivas, app/components/unlock/UnlockDoor.tsx): a primeira abertura de Recompensas, Aprender e Eu. Mesmo molde dos vídeos de ideia (tools/video/MOLDE.md), mas o card do verso vem daqui (ideas.<id>.card) porque porta não é ideia publicada. Saem em learning-media/doors/<id>.<lang>.r<rev>.mp4; o app monta o caminho em app/components/unlock/DoorVideo.tsx (DOOR_VIDEO_REV). Cada afirmação foi conferida no código do app (2026-11-05).",
+  "_doc": "Vídeos das PORTAS das abas (trancas progressivas, app/components/unlock/UnlockDoor.tsx): a primeira abertura de Recompensas, Aprender e Eu. Mesmo molde dos vídeos de ideia (tools/video/MOLDE.md), mas o card do verso vem daqui (ideas.<id>.card) porque porta não é ideia publicada. Saem em learning-media/doors/<id>.<lang>.r<rev>.mp4; o app monta o caminho em app/components/unlock/DoorVideo.tsx (DOOR_VIDEO_REV). Cada afirmação foi conferida no código do app (2026-11-05). Desde 2026-11-08 cada uma das 4 telas (Práticas, Recompensas, Eu, Aprender) tem a sua PORTA = abertura <tela>-why (bridge \"tour\", o porquê com o elenco) + o tutorial da tela (tools/video/tours/<tela>.json, composição Porta). As ideias rewards/learning/me sem bridge são as portas r1 (história ilustrada), mantidas como histórico.",
   "slug": "doors",
   "ideas": {
     "rewards": {
       "dimension": "wealth",
       "card": {
         "file": "rewards",
-        "title": { "pt": "Recompensas", "en": "Rewards" },
+        "title": {
+          "pt": "Recompensas",
+          "en": "Rewards"
+        },
         "claim": {
           "pt": "Faça as práticas, junte moedas e gaste no que você mesmo escolheu.",
           "en": "Do your practices, collect coins and spend them on what you chose."
@@ -16,30 +19,82 @@
         {
           "id": "hook",
           "scene": "pessoa",
-          "pt": { "caption": "Cada prática que você faz *paga moedas*." },
-          "en": { "caption": "Every practice you do *pays you coins*." },
+          "pt": {
+            "caption": "Cada prática que você faz *paga moedas*."
+          },
+          "en": {
+            "caption": "Every practice you do *pays you coins*."
+          },
           "props": {
-            "kicker": { "pt": "Recompensas", "en": "Rewards" },
+            "kicker": {
+              "pt": "Recompensas",
+              "en": "Rewards"
+            },
             "mood": "ok",
-            "turn": { "pt": "paga moedas", "en": "pays you coins" },
+            "turn": {
+              "pt": "paga moedas",
+              "en": "pays you coins"
+            },
             "to": "feliz",
             "objects": [
-              { "p": "moeda", "cue": { "pt": "prática", "en": "practice" } },
-              { "p": "moeda", "cue": { "pt": "paga", "en": "pays" } },
-              { "p": "moeda", "cue": { "pt": "moedas", "en": "coins" } }
+              {
+                "p": "moeda",
+                "cue": {
+                  "pt": "prática",
+                  "en": "practice"
+                }
+              },
+              {
+                "p": "moeda",
+                "cue": {
+                  "pt": "paga",
+                  "en": "pays"
+                }
+              },
+              {
+                "p": "moeda",
+                "cue": {
+                  "pt": "moedas",
+                  "en": "coins"
+                }
+              }
             ]
           }
         },
         {
           "id": "define",
           "scene": "lista",
-          "pt": { "caption": "E você decide no que gastar: *cria a recompensa* e dá o preço dela." },
-          "en": { "caption": "And you decide what they buy: *create the reward* and set its price." },
+          "pt": {
+            "caption": "E você decide no que gastar: *cria a recompensa* e dá o preço dela."
+          },
+          "en": {
+            "caption": "And you decide what they buy: *create the reward* and set its price."
+          },
           "props": {
             "mood": "ok",
             "items": [
-              { "icon": "gift", "text": { "pt": "Você cria a recompensa", "en": "You create the reward" }, "cue": { "pt": "cria a recompensa", "en": "create the reward" } },
-              { "icon": "pricetag", "text": { "pt": "Você dá o preço", "en": "You set the price" }, "cue": { "pt": "dá o preço", "en": "set its price" } }
+              {
+                "icon": "gift",
+                "text": {
+                  "pt": "Você cria a recompensa",
+                  "en": "You create the reward"
+                },
+                "cue": {
+                  "pt": "cria a recompensa",
+                  "en": "create the reward"
+                }
+              },
+              {
+                "icon": "pricetag",
+                "text": {
+                  "pt": "Você dá o preço",
+                  "en": "You set the price"
+                },
+                "cue": {
+                  "pt": "dá o preço",
+                  "en": "set its price"
+                }
+              }
             ]
           }
         },
@@ -47,13 +102,23 @@
           "id": "redeem",
           "scene": "virada",
           "hold": 0.4,
-          "pt": { "caption": "Na hora de usar, é só resgatar: as moedas saem e *vale na hora*." },
-          "en": { "caption": "When it's time to use it, just redeem: the coins go and *it counts right away*." },
+          "pt": {
+            "caption": "Na hora de usar, é só resgatar: as moedas saem e *vale na hora*."
+          },
+          "en": {
+            "caption": "When it's time to use it, just redeem: the coins go and *it counts right away*."
+          },
           "props": {
             "gives": "moeda",
             "mood": "ok",
-            "from": { "pt": "resgatar", "en": "redeem" },
-            "turn": { "pt": "vale na hora", "en": "counts right away" },
+            "from": {
+              "pt": "resgatar",
+              "en": "redeem"
+            },
+            "turn": {
+              "pt": "vale na hora",
+              "en": "counts right away"
+            },
             "to": "feliz"
           }
         },
@@ -61,8 +126,14 @@
           "id": "close",
           "scene": "verso",
           "props": {
-            "kicker": { "pt": "Aba aberta", "en": "Tab unlocked" },
-            "done": { "pt": "RECOMPENSAS ABERTAS", "en": "REWARDS UNLOCKED" }
+            "kicker": {
+              "pt": "Aba aberta",
+              "en": "Tab unlocked"
+            },
+            "done": {
+              "pt": "RECOMPENSAS ABERTAS",
+              "en": "REWARDS UNLOCKED"
+            }
           }
         }
       ]
@@ -73,7 +144,10 @@
       "bridge": "tour",
       "card": {
         "file": "rewards-why",
-        "title": { "pt": "Recompensas", "en": "Rewards" },
+        "title": {
+          "pt": "Recompensas",
+          "en": "Rewards"
+        },
         "claim": {
           "pt": "Recompensa logo depois do esforço, escolhida e precificada por você.",
           "en": "A reward right after the effort, picked and priced by you."
@@ -83,48 +157,124 @@
         {
           "id": "hook",
           "scene": "pessoa",
-          "pt": { "caption": "Uma prática cobra esforço agora, e o resultado *costuma vir só lá na frente*." },
-          "en": { "caption": "A practice asks for effort now, and the payoff *usually comes much later*." },
+          "pt": {
+            "caption": "Uma prática cobra esforço agora, e o resultado *costuma vir só lá na frente*."
+          },
+          "en": {
+            "caption": "A practice asks for effort now, and the payoff *usually comes much later*."
+          },
           "props": {
-            "kicker": { "pt": "Recompensas", "en": "Rewards" },
+            "kicker": {
+              "pt": "Recompensas",
+              "en": "Rewards"
+            },
             "mood": "cansado",
             "sweat": true,
             "ambiente": "casa",
-            "camera": { "move": "pull" },
+            "camera": {
+              "move": "pull"
+            },
             "objects": [
-              { "p": "ion:barbell", "cue": { "pt": "esforço", "en": "effort" } },
-              { "p": "relogio", "cue": { "pt": "lá na frente", "en": "much later" } }
+              {
+                "p": "ion:barbell",
+                "cue": {
+                  "pt": "esforço",
+                  "en": "effort"
+                }
+              },
+              {
+                "p": "relogio",
+                "cue": {
+                  "pt": "lá na frente",
+                  "en": "much later"
+                }
+              }
             ]
           }
         },
         {
           "id": "reinforce",
           "scene": "pessoa",
-          "pt": { "caption": "Aí entra o *reforço positivo*: algo bom logo depois do esforço dá vontade de repetir." },
-          "en": { "caption": "That's where *positive reinforcement* comes in: something good right after the effort makes you want to do it again." },
+          "pt": {
+            "caption": "Aí entra o *reforço positivo*: algo bom logo depois do esforço dá vontade de repetir."
+          },
+          "en": {
+            "caption": "That's where *positive reinforcement* comes in: something good right after the effort makes you want to do it again."
+          },
           "props": {
             "mood": "cansado",
             "ambiente": "casa",
-            "camera": { "move": "push" },
+            "camera": {
+              "move": "push"
+            },
             "transicao": "corte",
-            "objects": [{ "p": "ion:barbell", "stay": true }, { "p": "caneca", "cue": { "pt": "algo bom", "en": "something good" } }],
-            "turn": { "pt": "vontade de repetir", "en": "want to do it again" },
+            "objects": [
+              {
+                "p": "ion:barbell",
+                "stay": true
+              },
+              {
+                "p": "caneca",
+                "cue": {
+                  "pt": "algo bom",
+                  "en": "something good"
+                }
+              }
+            ],
+            "turn": {
+              "pt": "vontade de repetir",
+              "en": "want to do it again"
+            },
             "to": "feliz"
           }
         },
         {
           "id": "yours",
           "scene": "lista",
-          "pt": { "caption": "Você define a recompensa: um café, uma hora de jogo, um jantar. *E o preço também.*" },
-          "en": { "caption": "And the reward is up to you: a coffee, an hour of gaming, dinner out. *So is the price.*" },
+          "pt": {
+            "caption": "Você define a recompensa: um café, uma hora de jogo, um jantar. *E o preço também.*"
+          },
+          "en": {
+            "caption": "And the reward is up to you: a coffee, an hour of gaming, dinner out. *So is the price.*"
+          },
           "props": {
             "mood": "feliz",
             "ambiente": "casa",
             "transicao": "corte",
             "items": [
-              { "icon": "cafe", "text": { "pt": "Café especial", "en": "Specialty coffee" }, "cue": { "pt": "café", "en": "coffee" } },
-              { "icon": "game-controller", "text": { "pt": "Uma hora de jogo", "en": "An hour of gaming" }, "cue": { "pt": "uma hora", "en": "an hour" } },
-              { "icon": "restaurant", "text": { "pt": "Jantar bom fora", "en": "A nice dinner out" }, "cue": { "pt": "jantar", "en": "dinner" } }
+              {
+                "icon": "cafe",
+                "text": {
+                  "pt": "Café especial",
+                  "en": "Specialty coffee"
+                },
+                "cue": {
+                  "pt": "café",
+                  "en": "coffee"
+                }
+              },
+              {
+                "icon": "game-controller",
+                "text": {
+                  "pt": "Uma hora de jogo",
+                  "en": "An hour of gaming"
+                },
+                "cue": {
+                  "pt": "uma hora",
+                  "en": "an hour"
+                }
+              },
+              {
+                "icon": "restaurant",
+                "text": {
+                  "pt": "Jantar bom fora",
+                  "en": "A nice dinner out"
+                },
+                "cue": {
+                  "pt": "jantar",
+                  "en": "dinner"
+                }
+              }
             ]
           }
         }
@@ -134,7 +284,10 @@
       "dimension": "mind",
       "card": {
         "file": "learning",
-        "title": { "pt": "Aprender", "en": "Learn" },
+        "title": {
+          "pt": "Aprender",
+          "en": "Learn"
+        },
         "claim": {
           "pt": "Leia uma ideia, vire o card, guarde as favoritas e treine de cabeça.",
           "en": "Read an idea, flip the card, keep your favorites and train from memory."
@@ -144,42 +297,92 @@
         {
           "id": "hook",
           "scene": "pessoa",
-          "pt": { "caption": "Aqui moram *ideias curtas*, com fonte: uma por tela." },
-          "en": { "caption": "This is where *short ideas* live, with sources: one per screen." },
+          "pt": {
+            "caption": "Aqui moram *ideias curtas*, com fonte: uma por tela."
+          },
+          "en": {
+            "caption": "This is where *short ideas* live, with sources: one per screen."
+          },
           "props": {
-            "kicker": { "pt": "Aprender", "en": "Learn" },
+            "kicker": {
+              "pt": "Aprender",
+              "en": "Learn"
+            },
             "mood": "ok",
             "objects": [
-              { "p": "livro", "cue": { "pt": "ideias curtas", "en": "short ideas" } },
-              { "p": "lampada", "cue": { "pt": "com fonte", "en": "with sources" } },
-              { "p": "celular", "cue": { "pt": "uma por tela", "en": "one per screen" } }
+              {
+                "p": "livro",
+                "cue": {
+                  "pt": "ideias curtas",
+                  "en": "short ideas"
+                }
+              },
+              {
+                "p": "lampada",
+                "cue": {
+                  "pt": "com fonte",
+                  "en": "with sources"
+                }
+              },
+              {
+                "p": "celular",
+                "cue": {
+                  "pt": "uma por tela",
+                  "en": "one per screen"
+                }
+              }
             ]
           }
         },
         {
           "id": "flip",
           "scene": "cena",
-          "pt": { "caption": "Leu até o fim? *Vira o card*, e guarda como favorita a que valeu." },
-          "en": { "caption": "Read to the end? *Flip the card*, and keep the ones worth it as favorites." },
+          "pt": {
+            "caption": "Leu até o fim? *Vira o card*, e guarda como favorita a que valeu."
+          },
+          "en": {
+            "caption": "Read to the end? *Flip the card*, and keep the ones worth it as favorites."
+          },
           "props": {
             "setting": "sofa",
             "holding": "celular",
             "mood": "ok",
-            "glow": { "pt": "Vira o card", "en": "Flip the card" },
-            "objects": [{ "p": "coracao", "cue": { "pt": "favorita", "en": "favorites" } }]
+            "glow": {
+              "pt": "Vira o card",
+              "en": "Flip the card"
+            },
+            "objects": [
+              {
+                "p": "coracao",
+                "cue": {
+                  "pt": "favorita",
+                  "en": "favorites"
+                }
+              }
+            ]
           }
         },
         {
           "id": "train",
           "scene": "pensa",
           "hold": 0.4,
-          "pt": { "caption": "Depois as favoritas voltam no *treino*: você tenta lembrar de cabeça antes de virar." },
-          "en": { "caption": "Later your favorites come back in *training*: you try to recall them before you flip." },
+          "pt": {
+            "caption": "Depois as favoritas voltam no *treino*: você tenta lembrar de cabeça antes de virar."
+          },
+          "en": {
+            "caption": "Later your favorites come back in *training*: you try to recall them before you flip."
+          },
           "props": {
             "thought": "lampada",
-            "at": { "pt": "lembrar de cabeça", "en": "recall them" },
+            "at": {
+              "pt": "lembrar de cabeça",
+              "en": "recall them"
+            },
             "mood": "ok",
-            "turn": { "pt": "antes de virar", "en": "before you flip" },
+            "turn": {
+              "pt": "antes de virar",
+              "en": "before you flip"
+            },
             "to": "feliz"
           }
         },
@@ -187,8 +390,14 @@
           "id": "close",
           "scene": "verso",
           "props": {
-            "kicker": { "pt": "Aba aberta", "en": "Tab unlocked" },
-            "done": { "pt": "APRENDER ABERTO", "en": "LEARN UNLOCKED" }
+            "kicker": {
+              "pt": "Aba aberta",
+              "en": "Tab unlocked"
+            },
+            "done": {
+              "pt": "APRENDER ABERTO",
+              "en": "LEARN UNLOCKED"
+            }
           }
         }
       ]
@@ -197,7 +406,10 @@
       "dimension": "bonds",
       "card": {
         "file": "me",
-        "title": { "pt": "Eu", "en": "Me" },
+        "title": {
+          "pt": "Eu",
+          "en": "Me"
+        },
         "claim": {
           "pt": "Como você se vê, o que você pratica e quem quer ser, lado a lado.",
           "en": "How you see yourself, what you practice and who you want to be, side by side."
@@ -207,25 +419,69 @@
         {
           "id": "hook",
           "scene": "pessoa",
-          "pt": { "caption": "Esta aba mostra *quem você está se tornando*." },
-          "en": { "caption": "This tab shows *who you are becoming*." },
+          "pt": {
+            "caption": "Esta aba mostra *quem você está se tornando*."
+          },
+          "en": {
+            "caption": "This tab shows *who you are becoming*."
+          },
           "props": {
-            "kicker": { "pt": "Eu", "en": "Me" },
+            "kicker": {
+              "pt": "Eu",
+              "en": "Me"
+            },
             "mood": "ok",
-            "glow": { "pt": "se tornando", "en": "becoming" }
+            "glow": {
+              "pt": "se tornando",
+              "en": "becoming"
+            }
           }
         },
         {
           "id": "pillars",
           "scene": "lista",
-          "pt": { "caption": "São três retratos: Percebida, *Praticada* e Desejada." },
-          "en": { "caption": "In three portraits: Perceived, *Practiced* and Desired." },
+          "pt": {
+            "caption": "São três retratos: Percebida, *Praticada* e Desejada."
+          },
+          "en": {
+            "caption": "In three portraits: Perceived, *Practiced* and Desired."
+          },
           "props": {
             "mood": "ok",
             "items": [
-              { "icon": "eye", "text": { "pt": "Percebida: como você se vê", "en": "Perceived: how you see you" }, "cue": { "pt": "Percebida", "en": "Perceived" } },
-              { "icon": "barbell", "text": { "pt": "Praticada: o que você treina", "en": "Practiced: what you train" }, "cue": { "pt": "Praticada", "en": "Practiced" } },
-              { "icon": "compass", "text": { "pt": "Desejada: aonde quer chegar", "en": "Desired: where you're going" }, "cue": { "pt": "Desejada", "en": "Desired" } }
+              {
+                "icon": "eye",
+                "text": {
+                  "pt": "Percebida: como você se vê",
+                  "en": "Perceived: how you see you"
+                },
+                "cue": {
+                  "pt": "Percebida",
+                  "en": "Perceived"
+                }
+              },
+              {
+                "icon": "barbell",
+                "text": {
+                  "pt": "Praticada: o que você treina",
+                  "en": "Practiced: what you train"
+                },
+                "cue": {
+                  "pt": "Praticada",
+                  "en": "Practiced"
+                }
+              },
+              {
+                "icon": "compass",
+                "text": {
+                  "pt": "Desejada: aonde quer chegar",
+                  "en": "Desired: where you're going"
+                },
+                "cue": {
+                  "pt": "Desejada",
+                  "en": "Desired"
+                }
+              }
             ]
           }
         },
@@ -233,13 +489,23 @@
           "id": "first",
           "scene": "pensa",
           "hold": 0.4,
-          "pt": { "caption": "O primeiro nasce da sua *Avaliação*: o jeito como você se vê hoje." },
-          "en": { "caption": "The first one comes from your *self-assessment*: how you see yourself today." },
+          "pt": {
+            "caption": "O primeiro nasce da sua *Avaliação*: o jeito como você se vê hoje."
+          },
+          "en": {
+            "caption": "The first one comes from your *self-assessment*: how you see yourself today."
+          },
           "props": {
             "thought": "caderno",
-            "at": { "pt": "Avaliação", "en": "self-assessment" },
+            "at": {
+              "pt": "Avaliação",
+              "en": "self-assessment"
+            },
             "mood": "ok",
-            "turn": { "pt": "se vê hoje", "en": "yourself today" },
+            "turn": {
+              "pt": "se vê hoje",
+              "en": "yourself today"
+            },
             "to": "feliz"
           }
         },
@@ -247,8 +513,416 @@
           "id": "close",
           "scene": "verso",
           "props": {
-            "kicker": { "pt": "Aba aberta", "en": "Tab unlocked" },
-            "done": { "pt": "EU ABERTO", "en": "ME UNLOCKED" }
+            "kicker": {
+              "pt": "Aba aberta",
+              "en": "Tab unlocked"
+            },
+            "done": {
+              "pt": "EU ABERTO",
+              "en": "ME UNLOCKED"
+            }
+          }
+        }
+      ]
+    },
+    "practices-why": {
+      "_doc": "Abertura da porta de Práticas (2026-11-08): o PORQUÊ com o elenco, que emenda no tutorial da tela (tools/video/tours/practices.json, \"intro\"). Régua: docs/brand/base-cientifica.md §1 (a tese: a pessoa se torna o que pratica) e §2.2 (a sensação erra pros dois lados; registrar na hora mostra o que se fez). Promete VER, não resultado. Sem número, sem estudo. A última fala passa pro celular.",
+      "dimension": "body",
+      "bridge": "tour",
+      "card": {
+        "file": "practices-why",
+        "title": {
+          "pt": "Práticas",
+          "en": "Practices"
+        },
+        "claim": {
+          "pt": "Marque na hora o que você pratica: o registro mostra o que a sensação esconde.",
+          "en": "Check off what you practice as you go: the record shows what the feeling hides."
+        }
+      },
+      "lines": [
+        {
+          "id": "feel",
+          "scene": "pensa",
+          "pt": {
+            "caption": "No fim da semana, fica só uma sensação do que você fez, *e ela costuma errar a conta*."
+          },
+          "en": {
+            "caption": "By the end of the week, all you have is a feeling about what you did, *and it usually gets the count wrong*."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Práticas",
+              "en": "Practices"
+            },
+            "ambiente": "casa",
+            "hora": "noite",
+            "mood": "cansado",
+            "thought": "ion:calendar",
+            "at": {
+              "pt": "sensação",
+              "en": "a feeling"
+            },
+            "camera": {
+              "move": "pull"
+            }
+          }
+        },
+        {
+          "id": "log",
+          "scene": "cena",
+          "pt": {
+            "caption": "Marcar cada prática na hora, num toque, *mostra o que você de fato fez*."
+          },
+          "en": {
+            "caption": "Checking off each practice as you do it, in one tap, *shows what you actually did*."
+          },
+          "props": {
+            "ambiente": "casa",
+            "hora": "manha",
+            "setting": "mesa",
+            "holding": "celular",
+            "mood": "ok",
+            "glow": {
+              "pt": "num toque",
+              "en": "in one tap"
+            },
+            "objects": [
+              {
+                "p": "ion:checkmark-circle",
+                "cue": {
+                  "pt": "cada prática",
+                  "en": "each practice"
+                }
+              },
+              {
+                "p": "ion:calendar",
+                "cue": {
+                  "pt": "de fato",
+                  "en": "actually"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "become",
+          "scene": "pessoa",
+          "pt": {
+            "caption": "E o que você repete, aos poucos, *vai moldando quem você é*."
+          },
+          "en": {
+            "caption": "And what you repeat, little by little, *shapes who you become*."
+          },
+          "props": {
+            "ambiente": "casa",
+            "hora": "manha",
+            "mood": "ok",
+            "to": "feliz",
+            "turn": {
+              "pt": "quem você é",
+              "en": "who you become"
+            },
+            "camera": {
+              "move": "push",
+              "cue": {
+                "pt": "vai moldando",
+                "en": "shapes"
+              }
+            },
+            "objects": [
+              {
+                "p": "ion:barbell",
+                "cue": {
+                  "pt": "repete",
+                  "en": "repeat"
+                }
+              },
+              {
+                "p": "livro",
+                "cue": {
+                  "pt": "aos poucos",
+                  "en": "little by little"
+                }
+              },
+              {
+                "p": "ion:leaf",
+                "cue": {
+                  "pt": "vai moldando",
+                  "en": "shapes"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "me-why": {
+      "_doc": "Abertura da porta de Eu (2026-11-08): o PORQUÊ do autoconhecimento com o elenco, antes do tutorial da tela (tools/video/tours/me.json, \"intro\"). Régua: docs/brand/base-cientifica.md §2.1 — o que serve pra um não serve pra todos; conhecer valores e o próprio jeito AJUDA a escolher o que se cumpre (MODERADA: \"ajuda a\", nunca \"o app sabe a prática certa pra você\"); o retrato é datado e muda com a prática (traços mudam com prática, FORTE) — nunca rótulo nem veredito. Sem número, sem estudo, sem \"teste psicológico\".",
+      "dimension": "bonds",
+      "bridge": "tour",
+      "card": {
+        "file": "me-why",
+        "title": {
+          "pt": "Eu",
+          "en": "Me"
+        },
+        "claim": {
+          "pt": "Conhecer o seu jeito ajuda a escolher o que você vai cumprir, e o retrato muda com a prática.",
+          "en": "Knowing yourself helps you pick what you will follow through on, and the portrait changes with practice."
+        }
+      },
+      "lines": [
+        {
+          "id": "differ",
+          "scene": "comparar",
+          "pt": {
+            "caption": "Tem gente que se anima com desafio, e gente que *rende melhor com calma*."
+          },
+          "en": {
+            "caption": "Some people come alive with a challenge, and some *do their best with calm*."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Eu",
+              "en": "Me"
+            },
+            "left": {
+              "label": {
+                "pt": "Ama um desafio",
+                "en": "Loves a challenge"
+              },
+              "mood": "feliz",
+              "object": "ion:rocket",
+              "ambiente": "cidade",
+              "arrives": {
+                "pt": "desafio",
+                "en": "a challenge"
+              }
+            },
+            "right": {
+              "label": {
+                "pt": "Rende com calma",
+                "en": "Thrives on calm"
+              },
+              "mood": "ok",
+              "object": "caneca",
+              "ambiente": "casa",
+              "hora": "manha",
+              "arrives": {
+                "pt": "com calma",
+                "en": "with calm"
+              }
+            }
+          }
+        },
+        {
+          "id": "know",
+          "scene": "pensa",
+          "pt": {
+            "caption": "Conhecer o seu jeito e os seus valores ajuda a *escolher o que você vai mesmo cumprir*."
+          },
+          "en": {
+            "caption": "Knowing your nature and your values helps you *pick what you will actually follow through on*."
+          },
+          "props": {
+            "ambiente": "casa",
+            "hora": "manha",
+            "mood": "ok",
+            "thought": "ion:compass",
+            "at": {
+              "pt": "seus valores",
+              "en": "your values"
+            },
+            "turn": {
+              "pt": "mesmo cumprir",
+              "en": "follow through"
+            },
+            "to": "feliz"
+          }
+        },
+        {
+          "id": "portrait",
+          "scene": "pessoa",
+          "pt": {
+            "caption": "E esse retrato não é sentença, *ele muda com o que você pratica*."
+          },
+          "en": {
+            "caption": "And that portrait isn't a verdict, *it changes with what you practice*."
+          },
+          "props": {
+            "ambiente": "casa",
+            "hora": "manha",
+            "mood": "ok",
+            "to": "feliz",
+            "turn": {
+              "pt": "o que você pratica",
+              "en": "what you practice"
+            },
+            "camera": {
+              "move": "push",
+              "cue": {
+                "pt": "ele muda",
+                "en": "it changes"
+              }
+            },
+            "objects": [
+              {
+                "p": "ion:person-circle",
+                "cue": {
+                  "pt": "retrato",
+                  "en": "portrait"
+                }
+              },
+              {
+                "p": "ion:barbell",
+                "cue": {
+                  "pt": "pratica",
+                  "en": "practice"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "learning-why": {
+      "_doc": "Abertura da porta de Aprender (2026-11-08): o PORQUÊ do microaprendizado com o elenco, antes do tutorial do Recanto (tools/video/tours/learning.json, \"intro\"). Régua: docs/brand/base-cientifica.md §2.3 — ler não é lembrar (reler infla o \"já sei\"); o que fica é tentar lembrar de cabeça e espaçar (FORTE: efeito de testagem e prática espaçada). O formato curto não é o ingrediente ativo: a fala diz \"uma ideia por vez, curta e com fonte\" como desenho, e o ganho vem de lembrar e voltar (é o Treino). Sem número, sem estudo.",
+      "dimension": "mind",
+      "bridge": "tour",
+      "card": {
+        "file": "learning-why",
+        "title": {
+          "pt": "Aprender",
+          "en": "Learn"
+        },
+        "claim": {
+          "pt": "O que fica é lembrar de cabeça e voltar depois de uns dias.",
+          "en": "What sticks is recalling from memory and coming back a few days later."
+        }
+      },
+      "lines": [
+        {
+          "id": "fade",
+          "scene": "pessoa",
+          "pt": {
+            "caption": "A gente lê uma ideia boa, acha que guardou, *e dias depois ela sumiu*."
+          },
+          "en": {
+            "caption": "You read a good idea, feel like you've got it, *and a few days later it's gone*."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Aprender",
+              "en": "Learn"
+            },
+            "ambiente": "casa",
+            "hora": "noite",
+            "mood": "ok",
+            "to": "cansado",
+            "turn": {
+              "pt": "sumiu",
+              "en": "gone"
+            },
+            "objects": [
+              {
+                "p": "livro",
+                "cue": {
+                  "pt": "lê",
+                  "en": "read"
+                }
+              },
+              {
+                "p": "lampada",
+                "cue": {
+                  "pt": "ideia boa",
+                  "en": "good idea"
+                },
+                "out": {
+                  "pt": "sumiu",
+                  "en": "gone"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "recall",
+          "scene": "pensa",
+          "pt": {
+            "caption": "O que fica é *tentar lembrar de cabeça*, e voltar à ideia depois de uns dias."
+          },
+          "en": {
+            "caption": "What sticks is *trying to recall it from memory*, and coming back to it a few days later."
+          },
+          "props": {
+            "ambiente": "casa",
+            "hora": "manha",
+            "mood": "ok",
+            "thought": "lampada",
+            "at": {
+              "pt": "lembrar de cabeça",
+              "en": "recall it"
+            },
+            "turn": {
+              "pt": "depois de uns dias",
+              "en": "a few days later"
+            },
+            "to": "feliz",
+            "camera": {
+              "move": "drift",
+              "forca": "leve"
+            }
+          }
+        },
+        {
+          "id": "one",
+          "scene": "lista",
+          "pt": {
+            "caption": "Por isso, aqui é *uma ideia por vez*, curta e com fonte."
+          },
+          "en": {
+            "caption": "That's why here it's *one idea at a time*, short and sourced."
+          },
+          "props": {
+            "ambiente": "casa",
+            "hora": "manha",
+            "mood": "feliz",
+            "items": [
+              {
+                "icon": "bulb",
+                "text": {
+                  "pt": "Uma ideia por vez",
+                  "en": "One idea at a time"
+                },
+                "cue": {
+                  "pt": "uma ideia",
+                  "en": "one idea"
+                }
+              },
+              {
+                "icon": "time",
+                "text": {
+                  "pt": "Curta",
+                  "en": "Short"
+                },
+                "cue": {
+                  "pt": "curta",
+                  "en": "short"
+                }
+              },
+              {
+                "icon": "link",
+                "text": {
+                  "pt": "Com fonte",
+                  "en": "With sources"
+                },
+                "cue": {
+                  "pt": "com fonte",
+                  "en": "sourced"
+                }
+              }
+            ]
           }
         }
       ]

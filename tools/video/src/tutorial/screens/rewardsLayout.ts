@@ -56,11 +56,11 @@ export const ALMOST_RATIO = 0.3;
 /** BuyConfirmModal: o servidor também trava em 50. */
 export const MAX_QTY = 50;
 
-// FabStack: diâmetros sm 38 / md 48 / lg 56, gap 8, 16 acima do offset
-const FAB = { md: 48, lg: 56 };
-const FAB_GAP = 8;
+// FabStack: um botão só desde a #563 (o "+" dourado lg 56, que abre Gerenciar), 16 acima do offset;
+// REWARDS_FAB_CLEARANCE = fabStackClearance(['lg']) = 16 + 56
+const FAB = { lg: 56 };
 const FAB_BOTTOM_GAP = 16;
-const FAB_CLEARANCE = FAB_BOTTOM_GAP + FAB.md + FAB.lg + FAB_GAP;
+const FAB_CLEARANCE = FAB_BOTTOM_GAP + FAB.lg;
 
 const PAD = 16; // styles.content padding (tokens.space[4])
 const GRID_GAP = 12; // styles.grid gap (space[3])
@@ -150,8 +150,7 @@ export type RewardsLayout = {
   trackCtaO?: number;
   chips: { rect: Rect; items: { cat: RewardCategory; rect: Rect }[] };
   sections: SectionBox[];
-  add: Rect;
-  fabs: { calendar: Rect; manage: Rect };
+  fabs: { manage: Rect };
   nav: ReturnType<typeof navLayout>;
   confirm: ConfirmBox | null;
   celebration: CelebBox | null;
@@ -408,11 +407,7 @@ export const layoutRewards = (s: RewardsState, ctx: RewardsCtx, o: LayoutOpts = 
     y += 20; // section marginBottom
   }
 
-  // ---- AddCard (addCardWrap marginTop 8): paddingVertical 12 · ícone 36 · rótulo 14/800 + sub 12/500
-  y += 8;
-  const addH = 12 * 2 + Math.max(36, naturalLine(14, 800) + 2 + naturalLine(12, 500)) + 2;
-  const add: Rect = { x: PAD, y, w: CW, h: addH, r: 18 };
-  y += addH;
+  // sem cartão "Nova recompensa" no fim da loja desde a #563: o "+" dourado é a única entrada
 
   // paddingBottom = navClearance + max(tourBump, FAB clearance)
   const contentH = y + navClearance(d) + FAB_CLEARANCE;
@@ -421,9 +416,8 @@ export const layoutRewards = (s: RewardsState, ctx: RewardsCtx, o: LayoutOpts = 
   const scroll = Math.max(0, Math.min(maxScroll, o.scrollShown ?? s.scroll));
   const contentTop = d.statusBar - scroll;
 
-  // ---- FabStack: right 16, bottom = navClearance + 16, coluna centrada na de 56
+  // ---- FabStack: right 16, bottom = navClearance + 16; o calendário foi pro cabeçalho de Gerenciar
   const manage: Rect = { x: W - 16 - FAB.lg, y: d.h - navClearance(d) - FAB_BOTTOM_GAP - FAB.lg, w: FAB.lg, h: FAB.lg, r: FAB.lg / 2 };
-  const calendar: Rect = { x: W - 16 - FAB.lg + (FAB.lg - FAB.md) / 2, y: manage.y - FAB_GAP - FAB.md, w: FAB.md, h: FAB.md, r: FAB.md / 2 };
   const nav = navLayout(d);
 
   // ---- modais (geometria existe mesmo fechado: o tour mira antes de abrir)
@@ -440,10 +434,7 @@ export const layoutRewards = (s: RewardsState, ctx: RewardsCtx, o: LayoutOpts = 
     'balance.value': sc({ ...hero.row, x: hero.row.x - 8, y: hero.row.y - 4, w: hero.row.w + 16, h: hero.row.h + 8 }),
     info: sc(info),
     chips: sc(chips.rect),
-    add: sc(add),
     'fab.manage': manage,
-    'fab.calendar': calendar,
-    fabs: { x: calendar.x - 4, y: calendar.y, w: FAB.lg, h: manage.y + manage.h - calendar.y, r: FAB.lg / 2 },
     nav: nav.bar,
     'nav.rewards': nav.tabs[1].rect,
   };
@@ -500,7 +491,7 @@ export const layoutRewards = (s: RewardsState, ctx: RewardsCtx, o: LayoutOpts = 
   assertTargets(t);
   const hidden = Object.keys(t).filter((k) => (o.confirmHidden && !s.confirm && k.startsWith('confirm')) || (o.celebrationHidden && !s.celebration && k.startsWith('celebration')));
 
-  return { d, contentTop, scroll, maxScroll, contentH, hero, info, goal, trackCta, chips, sections, add, fabs: { calendar, manage }, nav, confirm, celebration, targets: t, hidden };
+  return { d, contentTop, scroll, maxScroll, contentH, hero, info, goal, trackCta, chips, sections, fabs: { manage }, nav, confirm, celebration, targets: t, hidden };
 };
 
 // ---------------------------------------------------------------- a reorganização animada (REFLOW)
@@ -600,7 +591,6 @@ export const blendRewards = (A: RewardsLayout, B: RewardsLayout, t: number, gone
     trackCtaO,
     chips: { rect: lerpR(A.chips.rect, B.chips.rect, t), items: B.chips.items.map((c, i) => ({ ...c, rect: lerpR(A.chips.items[i]?.rect ?? c.rect, c.rect, t) })) },
     sections,
-    add: lerpR(A.add, B.add, t),
     targets,
   };
 };

@@ -33,7 +33,13 @@ export interface UnlockEntry {
 }
 
 type UnlockMap = Partial<Record<UnlockFeature, UnlockEntry>>;
-type DoorMap = Partial<Record<UnlockFeature, string>>;
+/**
+ * The doors: one per screen. Práticas never locks (it is the open tab of day 1),
+ * so its door is not an unlock — it plays once, right after the first-run tour
+ * (André, 08/11: "o das práticas começa de cara já depois do tutorial").
+ */
+export type DoorKey = UnlockFeature | 'practices';
+type DoorMap = Partial<Record<DoorKey, string>>;
 
 interface UnlockState {
   characterId: string | null;
@@ -45,7 +51,7 @@ interface UnlockState {
   replayDoors: boolean;
   hydrate: (characterId: string, accountCreatedAt: string | null) => Promise<void>;
   unlock: (feature: UnlockFeature, by: UnlockBy) => Promise<void>;
-  markDoorSeen: (feature: UnlockFeature) => Promise<void>;
+  markDoorSeen: (feature: DoorKey) => Promise<void>;
   /** Ajustes → "Rever as portas": forget the doors, keep the unlocks. */
   resetDoors: () => Promise<void>;
 }
@@ -152,9 +158,16 @@ export function useIsLocked(feature: UnlockFeature): boolean {
 
 /** True when the feature is open but its door was never shown on this
  *  device — the first opening goes through the animation. */
-export function useDoorPending(feature: UnlockFeature): boolean {
+export function useDoorPending(feature: DoorKey): boolean {
   return useUnlockStore((s) => {
     if (!UNLOCK_GATES_ENABLED || s.status !== 'ready') return false;
+    if (feature === 'practices') {
+      // never locked: pending for whoever goes through the gates (not the accounts
+      // older than them, unless they asked to see the doors again)
+      const grandfathered = Object.values(s.unlocked).some((e) => e?.by === 'grandfather');
+      if (grandfathered && !s.replayDoors) return false;
+      return !s.doorsSeen.practices;
+    }
     const entry = s.unlocked[feature];
     if (!entry || (entry.by === 'grandfather' && !s.replayDoors)) return false;
     return !s.doorsSeen[feature];

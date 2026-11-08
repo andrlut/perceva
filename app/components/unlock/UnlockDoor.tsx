@@ -21,13 +21,17 @@ import { LearningDoorVisual } from './LearningDoorVisual';
 import { MeDoorVisual } from './MeDoorVisual';
 import { RewardsDoorVisual } from './RewardsDoorVisual';
 
-export type DoorFeature = 'rewards' | 'learning' | 'me';
+export type DoorFeature = 'practices' | 'rewards' | 'learning' | 'me';
 
 /** The button appears once the first loop has played — 4 s for the in-code
- *  animation, decided 19/10. With the video, the first loop IS the video. */
+ *  animation, decided 19/10. With the video, the first loop IS the video: the
+ *  first opening is watched to the end (André, 07/11: "quero que vejam tudo").
+ *  There is no time cap any more — the old 40 s net cut a ~60 s door in half. */
 const DOOR_MIN_MS = 4000;
-/** Safety net: a video that stalls mid-loop never holds the door shut. */
-const DOOR_MAX_MS = 40000;
+/** Safety net, and only for a STALLED video: no playback progress for this long
+ *  (buffering forever, a frozen decoder) releases the button. A video that plays
+ *  never trips it, however long it is. */
+const DOOR_STALL_MS = 12000;
 
 /**
  * The door of a feature's first opening (doc "Onboarding simples", Fase 2):
@@ -45,12 +49,16 @@ export function UnlockDoor({ feature }: { feature: DoorFeature }) {
   const { t } = useT();
   const pending = useDoorPending(feature);
   const markDoorSeen = useUnlockStore((s) => s.markDoorSeen);
+  // "Rever as portas" (Ajustes): whoever asked to see them again may skip — the
+  // watch-it-all rule is for the first time only.
+  const replay = useUnlockStore((s) => s.replayDoors);
   const { width, height: winH } = useWindowDimensions();
   const [ready, setReady] = useState(false);
   // Video first; an error or no frame in time drops to the in-code animation
   // (and its 4 s loop) for the rest of this opening.
   const [useVideo, setUseVideo] = useState(true);
   const openedAt = useRef(0);
+  const lastProgressAt = useRef(0);
   // The wait is deliberate (one loop), so it must not read as lag: a thin
   // line fills over DOOR_MIN_MS under the text, then the button fades in.
   const wait = useSharedValue(0);
@@ -61,18 +69,27 @@ export function UnlockDoor({ feature }: { feature: DoorFeature }) {
     openedAt.current = Date.now();
     setReady(false);
     wait.value = 0;
-    if (useVideo) {
-      // The video drives the line (onProgress) and the button (onFirstLoop).
-      const id = setTimeout(() => setReady(true), DOOR_MAX_MS);
+    if (useVideo && replay) {
+      const id = setTimeout(() => setReady(true), DOOR_MIN_MS);
       return () => clearTimeout(id);
+    }
+    if (useVideo) {
+      // The video drives the line (onProgress) and the button (onFirstLoop); this
+      // only watches for a stall (no progress for DOOR_STALL_MS).
+      lastProgressAt.current = Date.now();
+      const id = setInterval(() => {
+        if (Date.now() - lastProgressAt.current > DOOR_STALL_MS) setReady(true);
+      }, 1000);
+      return () => clearInterval(id);
     }
     wait.value = withTiming(1, { duration: DOOR_MIN_MS, easing: Easing.linear });
     const id = setTimeout(() => setReady(true), DOOR_MIN_MS);
     return () => clearTimeout(id);
-  }, [pending, wait, useVideo]);
+  }, [pending, wait, useVideo, replay]);
 
   const onVideoProgress = useCallback(
     (f: number) => {
+      lastProgressAt.current = Date.now();
       wait.value = withTiming(f, { duration: 250, easing: Easing.linear });
     },
     [wait],
@@ -107,7 +124,7 @@ export function UnlockDoor({ feature }: { feature: DoorFeature }) {
                   onFirstLoop={onVideoLoop}
                   onFail={onVideoFail}
                 />
-              ) : feature === 'rewards' ? (
+              ) : feature === 'practices' ? null : feature === 'rewards' ? (
                 <RewardsDoorVisual width={visualW} />
               ) : feature === 'learning' ? (
                 <LearningDoorVisual width={Math.min(visualW, 340)} />

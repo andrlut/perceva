@@ -466,6 +466,10 @@ const en = {
     door: {
       enter: 'Got it, open',
       wait: 'Watch it once; the button comes right after.',
+      practices: {
+        title: 'Practices',
+        line: 'What you do in your day, with stars per area. Every practice done counts toward your portrait and pays coins.',
+      },
       rewards: {
         title: 'Rewards',
         line: 'Every practice done pays coins. Create rewards, set a price, redeem when you use them.',
