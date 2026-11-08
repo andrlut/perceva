@@ -1,0 +1,28 @@
+{
+  "_doc": "Dados de mentira da aba Eu (lidos pela réplica e pelo lint do scripts/tour.mjs). `days`: os últimos 30 dias de cada sub-área, um caractere por dia (o 1º é 29 dias atrás, o último é hoje), o dígito = estrelas da prática (10 XP por estrela, '.' = nada). O XP do período de cada sub-área é a soma, e o do hex sai da mesma conta do app (régua 300 em 30 dias).",
+  "inicio": {
+    "_doc": "Quem fez a autoavaliação de 1 minuto (é ela que destrava o Eu, useUnlockProgress) e já tem 3 semanas de prática: os três retratos estão abertos (Praticada abre com 7 dias, Desejada quando as duas abrem) e a aba abre na Praticada. Ainda sem o questionário (o cartão do topo da Percebida convida a fazer), sem norte traçado (o cartão do topo da Desejada convida a traçar) e sem DISC/Tipos (o cabeçalho mostra 'Descobrir meu perfil'). 30 dias: 1.500 XP (Saúde 390, Mente 330, Corpo 240, Ofício 210, Vínculos 180, Riqueza 150) contra 1.260 no período anterior (▲ +19%).",
+    "name": "Marina",
+    "totalXp": 2010,
+    "dimXp": { "health": 520, "body": 360, "mind": 430, "wealth": 200, "bonds": 240, "craft": 260 },
+    "prevWindowXp": 1260,
+    "self": { "sleep": 3, "nutrition": 4, "strength": 3, "dexterity": 2, "learn": 4, "contemplate": 3, "money": 2, "career": 3, "circle": 4, "romance": 3, "play": 3, "build": 3 },
+    "questionnaire": false,
+    "desired": false,
+    "emblem": { "rings": 2.4, "tests": 0, "halo": 0.3 },
+    "days": {
+      "sleep":       ".........2.22.2..2.22.2.22.2.2",
+      "nutrition":   "..........3....3...3....3..3..",
+      "strength":    "...........3...3..3...3..3..3.",
+      "dexterity":   ".............2......2......2..",
+      "learn":       "..........3..3...3..3...3..3.3",
+      "contemplate": "...........2..2..2...2..2...2.",
+      "money":       "..........3.......3......3....",
+      "career":      "............3.........3.......",
+      "circle":      "...........2...2..2...2..2..2.",
+      "romance":     "..........3..........3........",
+      "play":        "..........3...3.....3...3...3.",
+      "build":       "..............3.......3......."
+    }
+  }
+}

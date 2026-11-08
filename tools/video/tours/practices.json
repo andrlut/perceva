@@ -1,0 +1,74 @@
+{
+  "_doc": "Tutorial da aba Práticas (página Hoje) — o vídeo da porta (app/components/unlock/DoorVideo.tsx, doors/practices.<lang>.r1.mp4). Abre com o porquê contado com o elenco: `intro` aponta pra learning-drops/video-specs/doors.json › practices-why (no fim da semana fica só uma sensação, que erra a conta; marcar na hora, num toque, mostra o que você fez; e o que você repete vai moldando quem você é). A 1ª fala do tutorial é a ponte: a abertura termina em 'o que você repete… vai moldando quem você é' e a tela responde mostrando ONDE isso acontece — as práticas do dia, cada uma com a área e as estrelas que vale. Formato e regras em tools/video/TOUR.md; roteiro do agente tutorial-video-director. Forma (5 falas): a ponte (as práticas do dia, área e estrelas) com a tela inteira → o check (concluir num toque: as estrelas viram XP e moedas na hora, o topo soma e o +XP sobe) → Feitas hoje (a prática vai pra lá; aberta, o +1 registra de novo e a seta desfaz) → o + dourado (criar a sua ou escolher uma sugerida) → o (i). Cada fala conferida em 2026-11-08 contra home.help.items.*.ai (app/lib/i18n/locales/pt.ts e en.ts) e app/app/(tabs)/index.tsx: o check conclui num toque com as estrelas de sempre, cada estrela vale 10 de XP e as moedas seguem o ajuste de moedas da prática (a fixture é toda no ajuste Igual, então 'XP e moedas' vale pra todas); a prática sai da lista e vai pra Feitas hoje (items.check.ai); Feitas hoje abre no título, o +1 registra de novo e a seta desfaz, devolvendo o XP e as moedas (items.done); o + dourado abre Adicionar e organizar, com Criar a minha e Escolher sugerida (items.buttons.ai) — por isso 'escolhe uma sugerida' e não 'adota'; o (i) abre o informativo. A voz diz 'botão dourado' onde a legenda mostra '+' (o TTS leria 'mais'). Sem número na fala: o +20 e os 20 de XP e moedas só aparecem na tela. Escolhas: a fixture `inicio` é o 1º dia de quem acabou de sair do tutorial (0 XP, humor tracejado, Recompensas/Eu/Aprender trancadas, o cartão do Recanto no fim) com 4 práticas de 4 áreas, pra que Fechar o dia e Feitas hoje caibam acima do + sem rolar; o toque é na 1ª (Meditar 10 minutos, +20). O check põe outra coisa debaixo do dedo (o cartão apaga e o de baixo sobe pro lugar dele), então ele levanta (lift): a mão some em T+8 e a lista fecha o vão animada depois que o cartão apagou. Não se toca no desfazer: ele devolveria tudo que a fala acabou de mostrar; o dedo aponta. As abas Hoje|Todas, os dias, o arrastar pros lados e o menu da prática ficaram de fora (o informativo explica): o vídeo é o caminho de quem chega, concluir e ver o que fez.",
+  "screen": "practices",
+  "fixture": "inicio",
+  "file": "practices",
+  "rev": 1,
+  "posterAt": 1.0,
+  "intro": { "slug": "doors", "idea": "practices-why" },
+  "kicker": { "pt": "Práticas", "en": "Practices" },
+  "lines": [
+    {
+      "id": "today",
+      "title": { "pt": "Suas práticas", "en": "Your practices" },
+      "pre": 0.5,
+      "pt": { "caption": "Aqui ficam as práticas do dia, cada uma com a área e as *estrelas* que vale." },
+      "en": { "caption": "Here are the day's practices, each with its area and the *stars* it's worth." },
+      "camera": "wide",
+      "beats": [
+        { "at": { "pt": "práticas do dia", "en": "day's practices" }, "focus": "list", "camera": "wide" },
+        { "at": { "pt": "estrelas", "en": "stars" }, "focus": "card0.meta", "camera": 1.8 }
+      ]
+    },
+    {
+      "id": "check",
+      "title": { "pt": "Toque no check", "en": "Tap the check" },
+      "hold": 0.3,
+      "pt": { "caption": "Fez? Toque no *check* e as estrelas viram XP e moedas na hora." },
+      "en": { "caption": "Done it? Tap the *check* and the stars turn into XP and coins right away." },
+      "focus": "card0",
+      "camera": 1.5,
+      "beats": [
+        { "at": { "pt": "check", "en": "check" }, "focus": "card0.check", "do": "tap", "camera": "hold" },
+        { "at": { "pt": "viram", "en": "turn into" }, "focus": "stats", "camera": "wide" }
+      ]
+    },
+    {
+      "id": "done",
+      "title": { "pt": "Feitas hoje", "en": "Done today" },
+      "hold": 0.4,
+      "pt": { "caption": "Ela vai pra *Feitas hoje*. Abra pra registrar de novo ou desfazer." },
+      "en": { "caption": "It moves to *Done today*. Open it to log it again or undo it." },
+      "beats": [
+        { "at": { "pt": "Feitas hoje", "en": "Done today" }, "focus": "bucket", "camera": 1.5 },
+        { "at": { "pt": "Abra", "en": "Open it" }, "focus": "bucket", "do": "tap", "camera": "hold" },
+        { "at": { "pt": "registrar de novo", "en": "log it again" }, "focus": "done0", "camera": 1.5 },
+        { "at": { "pt": "desfazer", "en": "undo it" }, "focus": "done0.undo", "do": "point", "camera": "hold" }
+      ]
+    },
+    {
+      "id": "add",
+      "title": { "pt": "Criar ou escolher", "en": "Create or pick" },
+      "pt": {
+        "caption": "No *+* dourado você cria a sua prática ou escolhe uma sugerida.",
+        "say": "No botão dourado, você cria a sua prática ou escolhe uma sugerida."
+      },
+      "en": {
+        "caption": "The gold *+* is where you create your own practice or pick a suggested one.",
+        "say": "The gold button is where you create your own practice or pick a suggested one."
+      },
+      "beats": [
+        { "at": { "pt": "dourado", "en": "gold" }, "focus": "fab.add", "do": "point", "tone": "gold", "camera": 1.7 }
+      ]
+    },
+    {
+      "id": "info",
+      "title": { "pt": "Cada parte, explicada", "en": "Every part, explained" },
+      "pt": { "caption": "Toque no *(i)* e a tela explica cada parte.", "say": "Toque no botão de informação e a tela explica cada parte." },
+      "en": { "caption": "Tap the *(i)* and the screen explains every part.", "say": "Tap the info button and the screen explains every part." },
+      "focus": "info",
+      "pulse": true,
+      "camera": 1.4
+    }
+  ]
+}

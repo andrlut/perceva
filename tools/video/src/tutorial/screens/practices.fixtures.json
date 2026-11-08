@@ -1,0 +1,17 @@
+{
+  "_doc": "Dados de mentira da aba Práticas (Hoje), lidos pela réplica e pelo lint do scripts/tour.mjs. Economia do app: 10 de XP por estrela (base_xp_for_stars, linear), moedas = XP × o ajuste de moedas da prática (Igual = 1, sem selo no cartão). Títulos = os do catálogo do pacote inicial (app/lib/tour/starterPack.ts; task_template), uma sub-área cada.",
+  "inicio": {
+    "_doc": "Quem acabou de sair do tutorial e abre a aba pela 1ª vez (a porta de Práticas): dia 1, nada feito ainda (0 XP, 0 moedas, o rosto do humor tracejado), Recompensas, Eu e Aprender trancadas na barra (trancas progressivas, lib/unlock), e por isso o cartão do Recanto no fim da lista (RecantoCard só aparece com Aprender trancado). Quatro práticas do dia, de quatro áreas (cores diferentes na borda e no ícone): Meditar 10 minutos (Mente, 2 estrelas → +20), Sem celular após 22h (Saúde, 3 → +30), Exercício de equilíbrio diário (Corpo, 2 → +20) e 30min em projeto pessoal (Ofício, 2 → +20). Quatro, e não as ~10 do pacote inicial de verdade, pra que Fechar o dia e Feitas hoje caibam acima do + dourado sem rolar. O tour conclui a 1ª (Meditar) no check: sobram 3 (Fechar o dia continua, ele aparece com 2 ou mais), Feitas hoje vira 1 · +20 XP e o topo vai a 20 XP e 20 moedas.",
+    "date": "2026-11-09",
+    "xp": 0,
+    "coins": 0,
+    "lockedTabs": ["rewards", "character", "learning"],
+    "practices": [
+      { "id": "meditar", "title": { "pt": "Meditar 10 minutos", "en": "Meditate 10 minutes" }, "subs": [{ "sub": "contemplate", "stars": 2 }] },
+      { "id": "celular", "title": { "pt": "Sem celular após 22h", "en": "No phone after 10 pm" }, "subs": [{ "sub": "sleep", "stars": 3 }] },
+      { "id": "equilibrio", "title": { "pt": "Exercício de equilíbrio diário", "en": "Daily balance exercise" }, "subs": [{ "sub": "dexterity", "stars": 2 }] },
+      { "id": "projeto", "title": { "pt": "30min em projeto pessoal", "en": "30 min on a personal project" }, "subs": [{ "sub": "build", "stars": 2 }] }
+    ],
+    "recanto": { "title": { "pt": "Dá pra recuperar o sono no fim de semana?", "en": "Can you catch up on sleep at the weekend?" }, "dimension": "health" }
+  }
+}

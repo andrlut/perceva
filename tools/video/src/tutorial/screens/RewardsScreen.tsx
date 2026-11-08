@@ -358,73 +358,26 @@ const Card: React.FC<{ c: CardBox; lang: Lang; ctaPressed: boolean; opacity?: nu
   );
 };
 
-// ---------------------------------------------------------------- "+ Nova recompensa" (AddCard)
-
-const AddCard: React.FC<{ r: Rect; lang: Lang; pressed: boolean }> = ({ r, lang, pressed }) => {
-  const tint = C.brand.violet2;
-  return (
-    <div
-      style={at(r, {
-        borderRadius: 18,
-        border: `1px dashed ${tint}55`,
-        background: 'rgba(255,255,255,0.02)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-        padding: '0 16px',
-        opacity: pressed ? 0.7 : 1,
-        transform: pressed ? 'scale(0.98)' : undefined,
-      })}
-    >
-      <div
-        style={{ width: 36, height: 36, borderRadius: 14, background: `${tint}1F`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-      >
-        <Ion name="add" size={20} color={tint} />
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={textStyle(14, 800, naturalLine(14, 800), tint, { letterSpacing: 0.3, ...clampLines(1) })}>{tr(lang, 'rewards.vault.addReward')}</div>
-        <div style={textStyle(12, 500, naturalLine(12, 500), C.text.dim, { marginTop: 2, ...clampLines(1) })}>{tr(lang, 'rewards.vault.addRewardSub')}</div>
-      </div>
-    </div>
-  );
-};
-
 // ---------------------------------------------------------------- botões flutuantes (FabStack)
 
-const Fabs: React.FC<{ L: RewardsLayout; pressed: string | null }> = ({ L, pressed }) => {
-  const press = (on: boolean): React.CSSProperties => (on ? { opacity: 0.85, transform: 'scale(0.96)' } : {});
-  return (
-    <>
-      <div
-        style={at(L.fabs.calendar, {
-          borderRadius: 999,
-          background: C.bg.glassStrong,
-          border: `1px solid ${C.border.base}`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          ...press(pressed === 'fab.calendar'),
-        })}
-      >
-        <Ion name="calendar-outline" size={22} color={C.text.mid} />
-      </div>
-      <div
-        style={at(L.fabs.manage, {
-          borderRadius: 999,
-          border: '1px solid rgba(255,224,138,0.6)',
-          overflow: 'hidden',
-          background: vGrad(C.gradient.coinBtn, C.gradient.coinBtnLocations),
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          ...press(pressed === 'fab.manage'),
-        })}
-      >
-        <Ion name="options-outline" size={24} color={GOLD_INK} />
-      </div>
-    </>
-  );
-};
+/** Um botão só desde a #563: o "+" dourado (lg 56, ícone 28), o mesmo da aba Práticas, que abre
+ *  Gerenciar recompensas. O calendário saiu pro cabeçalho de Gerenciar. */
+const Fabs: React.FC<{ L: RewardsLayout; pressed: string | null }> = ({ L, pressed }) => (
+  <div
+    style={at(L.fabs.manage, {
+      borderRadius: 999,
+      border: '1px solid rgba(255,224,138,0.6)',
+      overflow: 'hidden',
+      background: vGrad(C.gradient.coinBtn, C.gradient.coinBtnLocations),
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...(pressed === 'fab.manage' ? { opacity: 0.85, transform: 'scale(0.96)' } : {}),
+    })}
+  >
+    <Ion name="add" size={28} color={GOLD_INK} />
+  </div>
+);
 
 // ---------------------------------------------------------------- modais
 
@@ -705,7 +658,6 @@ export const RewardsScreen: React.FC<{ s: RewardsState; v: RewardsView; L: Rewar
               ))}
             </React.Fragment>
           ))}
-          <AddCard r={L.add} lang={lang} pressed={p === 'add'} />
         </div>
       </div>
       <Fabs L={L} pressed={p} />

@@ -45,7 +45,16 @@ const die = (m) => {
 };
 const readJson = (f) => JSON.parse(fs.readFileSync(f, 'utf8'));
 const TARGETS = readJson(path.join(root, 'src/tutorial/screens/targets.json'));
-const FIXTURES = { rewards: readJson(path.join(root, 'src/tutorial/screens/rewards.fixtures.json')) };
+/** as fixtures de cada réplica: screens/<tela>.fixtures.json (a tela que não tem arquivo fica sem) */
+const FIXTURES = Object.fromEntries(
+  Object.keys(TARGETS)
+    .filter((k) => !k.startsWith('_'))
+    .map((k) => [k, path.join(root, 'src/tutorial/screens', `${k}.fixtures.json`)])
+    .filter(([, f]) => fs.existsSync(f))
+    .map(([k, f]) => [k, readJson(f)]),
+);
+/** os ids de uma fixture: todo item com `id` em qualquer lista dela (rewards, practices…) */
+const fixtureIds = (fx) => Object.values(fx ?? {}).filter(Array.isArray).flat().map((r) => r?.id).filter(Boolean);
 const ions = readJson(path.join(root, 'src/molde/ionicons-full.json'));
 /** FREE_LIMITS do app (lido do .ts, sem importar): { task, reward, skill, quest } */
 const FREE_LIMITS = (() => {
@@ -105,7 +114,7 @@ const matchTarget = (list, id, fx) =>
     if (!p.includes('{id}')) return p === id;
     const re = new RegExp(`^${p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace('\\{id\\}', '([\\w-]+)')}$`);
     const m = re.exec(id);
-    return !!m && fx.rewards.some((r) => r.id === m[1]);
+    return !!m && fixtureIds(fx).includes(m[1]);
   });
 
 function lintTour(spec, lang, errors, warns) {

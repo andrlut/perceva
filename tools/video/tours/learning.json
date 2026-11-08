@@ -1,0 +1,147 @@
+{
+  "_doc": "Tutorial da aba Aprender (Recanto) — o vídeo da porta (app/components/unlock/DoorVideo.tsx, doors/learning.<lang>.r2.mp4; a r1 era a história ilustrada antiga). Abre com o porquê contado com o elenco (`intro` → learning-drops/video-specs/doors.json › learning-why: a gente lê e esquece; o que fica é tentar lembrar de cabeça e voltar depois de uns dias; por isso, aqui é uma ideia por vez, curta e com fonte) e a composição Porta emenda a réplica da tela. A 1ª fala é a ponte: a abertura termina em 'uma ideia por vez' e a tela mostra onde — cada material se abre em ideias, e virar a carta no fim de cada uma guarda a ideia (a 1ª capa de Novidades, com a etiqueta '3 ideias · 1/3' e a borda dourada de em andamento). Depois o caminho de quem usa: Explorar (as ideias uma atrás da outra; o toque vira a carta) → Minhas ideias (a lâmpada dourada, onde o que foi guardado é revisado e vira favorita) → Treinar (as favoritas voltam em dias espaçados e a pessoa lembra de cabeça antes de virar: é o 'lembrar de cabeça e voltar depois de uns dias' da abertura, por isso fica por último) → o (i). Conferido em 2026-11-08 contra learning.help.items.{absorb,explore,lamp,train}.ai (app/lib/i18n/locales/pt.ts e en.ts) e app/app/(tabs)/learning.tsx: só o giro no fim da página da ideia absorve (ela vai pra Minhas ideias e pra revisão); no Explorar tocar vira a carta e mostra a resposta, e ele sozinho não absorve (por isso a fala do Explorar não diz 'guarda'); a lâmpada é o único botão flutuante e, em Minhas ideias, a revisão favorita ou solta; o Treinar mostra o título, a pessoa pensa, vira e diz se lembrou, e as favoritas voltam em 3/7/21 dias (a fala diz 'dias espaçados', sem número). Tudo o que se toca nesta aba abre outra tela que a réplica não tem: as ações são `point` (TOUR.md regra 8). A ponte só destaca (capa → etiqueta '3 ideias · 1/3'), sem mão: apontar põe a ponta logo ABAIXO do alvo, e abaixo da capa é o pé do palco (a mão saía do palco). Nos outros três, a fala começa com o destaque (a câmera anda no @start) e o apontar vem numa deixa do meio da fala, com a câmera já parada: apontando logo na 1ª palavra, a mão viajava com a câmera ainda andando e cruzava o Continue lendo. Fixture `inicio`: uma ideia absorvida, sem favorita (Treinar '0 de 5 favoritas'), uma esperando revisão (o 1 na lâmpada) — mostra o cartão de em andamento e o Continue lendo sem inventar um uso que a pessoa recém-chegada não teria. Sem número nem estudo na fala.",
+  "screen": "learning",
+  "fixture": "inicio",
+  "file": "learning",
+  "rev": 2,
+  "posterAt": 1,
+  "intro": {
+    "slug": "doors",
+    "idea": "learning-why"
+  },
+  "kicker": {
+    "pt": "Aprender",
+    "en": "Learn"
+  },
+  "lines": [
+    {
+      "id": "ideas",
+      "title": {
+        "pt": "Ideias",
+        "en": "Ideas"
+      },
+      "pre": 0.5,
+      "pt": {
+        "caption": "Cada material se abre em ideias, e virar a carta no fim de cada uma *guarda a ideia*."
+      },
+      "en": {
+        "caption": "Each material opens into ideas, and flipping the card at the end of each one *keeps the idea*."
+      },
+      "camera": "wide",
+      "beats": [
+        {
+          "at": {
+            "pt": "material",
+            "en": "material"
+          },
+          "focus": "cover0"
+        },
+        {
+          "at": {
+            "pt": "em ideias",
+            "en": "into ideas"
+          },
+          "after": 0.2,
+          "focus": "cover0.ideas",
+          "camera": "hold"
+        }
+      ]
+    },
+    {
+      "id": "explore",
+      "title": {
+        "pt": "Explorar",
+        "en": "Explore"
+      },
+      "pt": {
+        "caption": "No *Explorar*, as ideias passam uma atrás da outra, e um toque vira a carta."
+      },
+      "en": {
+        "caption": "In *Explore*, ideas come one after another, and a tap flips the card."
+      },
+      "beats": [
+        {
+          "at": {
+            "pt": "uma atrás da outra",
+            "en": "one after another"
+          },
+          "focus": "explore",
+          "do": "point",
+          "camera": "hold"
+        }
+      ],
+      "focus": "explore"
+    },
+    {
+      "id": "mine",
+      "title": {
+        "pt": "Minhas ideias",
+        "en": "My ideas"
+      },
+      "pt": {
+        "caption": "O que você guarda vai pra *Minhas ideias*, na lâmpada dourada, onde você escolhe as favoritas."
+      },
+      "en": {
+        "caption": "What you keep goes to *My ideas*, the gold bulb, where you pick your favorites."
+      },
+      "beats": [
+        {
+          "at": {
+            "pt": "lâmpada dourada",
+            "en": "gold bulb"
+          },
+          "focus": "fab.ideas",
+          "do": "point",
+          "tone": "gold",
+          "camera": "hold"
+        }
+      ],
+      "focus": "fab.ideas",
+      "tone": "gold",
+      "camera": 1.7
+    },
+    {
+      "id": "train",
+      "title": {
+        "pt": "Treinar",
+        "en": "Train"
+      },
+      "pt": {
+        "caption": "No *Treinar*, as favoritas voltam em dias espaçados, e você lembra de cabeça antes de virar."
+      },
+      "en": {
+        "caption": "In *Train*, your favorites come back on spaced days, and you recall them before you flip."
+      },
+      "beats": [
+        {
+          "at": {
+            "pt": "dias espaçados",
+            "en": "spaced days"
+          },
+          "focus": "train",
+          "do": "point",
+          "camera": "hold"
+        }
+      ],
+      "focus": "train"
+    },
+    {
+      "id": "info",
+      "title": {
+        "pt": "Cada parte, explicada",
+        "en": "Every part, explained"
+      },
+      "pt": {
+        "caption": "Toque no *(i)* e a tela explica cada parte.",
+        "say": "Toque no botão de informação e a tela explica cada parte."
+      },
+      "en": {
+        "caption": "Tap the *(i)* and the screen explains every part.",
+        "say": "Tap the info button and the screen explains every part."
+      },
+      "focus": "info",
+      "pulse": true,
+      "camera": 1.4
+    }
+  ]
+}

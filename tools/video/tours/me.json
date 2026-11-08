@@ -1,0 +1,78 @@
+{
+  "_doc": "Tutorial da aba Eu — o vídeo da porta (app/components/unlock/DoorVideo.tsx, doors/me.<lang>.r2.mp4; a r1 era a história ilustrada antiga). Abre com o porquê contado com o elenco — `intro` aponta pra learning-drops/video-specs/doors.json › me-why (conhecer o seu jeito ajuda a escolher o que você vai cumprir; o retrato não é sentença, muda com o que você pratica) — e a composição Porta emenda as duas partes; teto da porta inteira 66 s. A 1ª fala do tutorial é a ponte: a abertura termina em \"ele muda com o que você pratica\" e a tela responde \"Aqui, ele começa pela Praticada: o que as suas práticas treinaram em cada área\" — 'ele' é o retrato da abertura, e a aba abre mesmo na Praticada (character.tsx, quando ela está aberta). Forma (6 falas): a ponte com a tela inteira (a aba Praticada destacada, depois o hex) → o cartão da área: arrasta até a lista, toca o primeiro cartão (Saúde, o mais treinado) e ele abre com os dias de cada sub-área → toca Percebida (o retrato de como você se vê) → quem desenha: a autoavaliação (o hex) e o questionário (o cartão do topo, apontado: leva pra outra tela) → toca Desejada e destaca o cartão do topo (traçar uma meta pra cada área) → o (i). Cada fala conferida em 2026-11-08 contra hero.help.items.*.ai (app/lib/i18n/locales/pt.ts e en.ts) e o código: a aba abre em Praticada; Praticada mostra o XP do período, as mais treinadas primeiro, e o cartão aberto mostra os dias de cada sub-área (SubStrips), o nível e o link do histórico; Percebida é como você se vê, autoavaliação e questionário, e antes do 1º questionário um cartão no topo convida a fazer (AvaliacaoPanel); Desejada: trace uma meta pra cada área (norte.emptyBody), e sem meta o cartão do topo convida a traçar (NortePanel); o (i) abre o informativo. EN diz 'target' como o app (north.body: 'set a target for each area'). A fixture é de quem fez só a autoavaliação de 1 minuto (o que destrava o Eu) e tem 3 semanas de prática: os três retratos abertos, sem questionário e sem norte — por isso os dois cartões do topo. Os retratos trocam em sequência (o painel velho apaga em 5 quadros, o novo acende em 7: texto nunca atravessa texto) e o cartão abre animado (LinearTransition 220 ms ≈ 7 quadros). O arrasto até a lista e o de volta ao topo são com a câmera aberta (1:1 com o dedo só cabe no palco assim): o primeiro no começo da fala do cartão, o segundo no fim dela (hold), pra o toque em Percebida cair limpo no começo da fala seguinte. Sem número nem estudo na fala; os números da tela (XP, notas) aparecem só na tela.",
+  "screen": "me",
+  "fixture": "inicio",
+  "file": "me",
+  "rev": 2,
+  "posterAt": 1.0,
+  "intro": { "slug": "doors", "idea": "me-why" },
+  "kicker": { "pt": "Eu", "en": "Me" },
+  "lines": [
+    {
+      "id": "practiced",
+      "title": { "pt": "Praticada", "en": "Practiced" },
+      "pre": 0.5,
+      "pt": { "caption": "Aqui, ele começa pela *Praticada*: o que as suas práticas treinaram em cada área." },
+      "en": { "caption": "Here, it starts with *Practiced*: what your practices trained in each area." },
+      "camera": "wide",
+      "beats": [
+        { "at": { "pt": "Praticada", "en": "Practiced" }, "focus": "pillar.praticada", "camera": "wide" },
+        { "at": { "pt": "cada área", "en": "each area" }, "focus": "hex", "camera": "wide" }
+      ]
+    },
+    {
+      "id": "cards",
+      "title": { "pt": "Cartões das áreas", "en": "Area cards" },
+      "hold": 1.4,
+      "pt": { "caption": "Cada área mostra o XP do período. Toque no cartão e veja os dias de cada sub-área." },
+      "en": { "caption": "Each area shows the period's XP. Tap a card to see the days of each sub-area." },
+      "beats": [
+        { "at": "@start", "after": 0.2, "focus": null, "camera": "wide", "do": "swipe", "scroll": "card0" },
+        { "at": { "pt": "XP", "en": "XP" }, "focus": "card0" },
+        { "at": { "pt": "Toque", "en": "Tap" }, "focus": "card0", "do": "tap", "camera": "hold" },
+        { "at": { "pt": "dias", "en": "days" }, "focus": "card0" },
+        { "at": "@end", "after": 0.5, "focus": null, "camera": "wide", "do": "swipe", "scroll": 0 }
+      ]
+    },
+    {
+      "id": "perceived",
+      "title": { "pt": "Percebida", "en": "Perceived" },
+      "pre": 0.3,
+      "pt": { "caption": "Em *Percebida*, fica o retrato de como você se vê." },
+      "en": { "caption": "In *Perceived*, you find the portrait of how you see yourself." },
+      "beats": [
+        { "at": { "pt": "Percebida", "en": "Perceived" }, "focus": "pillar.percebida", "do": "tap", "camera": "wide" },
+        { "at": { "pt": "como você se vê", "en": "how you see" }, "focus": "hex", "camera": "wide" }
+      ]
+    },
+    {
+      "id": "assessment",
+      "title": { "pt": "Autoavaliação", "en": "Self-assessment" },
+      "pt": { "caption": "Quem desenha esse retrato é você: a autoavaliação e o *questionário*." },
+      "en": { "caption": "You draw this portrait yourself: the self-assessment and the *questionnaire*." },
+      "beats": [
+        { "at": { "pt": "autoavaliação", "en": "self-assessment" }, "focus": "legend", "camera": "wide" },
+        { "at": { "pt": "questionário", "en": "questionnaire" }, "focus": "firstStep", "target": "firstStep.cta", "do": "point" }
+      ]
+    },
+    {
+      "id": "desired",
+      "title": { "pt": "Desejada", "en": "Desired" },
+      "pt": { "caption": "E em *Desejada*, você traça uma meta pra cada área." },
+      "en": { "caption": "And in *Desired*, you set a target for each area." },
+      "beats": [
+        { "at": { "pt": "Desejada", "en": "Desired" }, "focus": "pillar.desejada", "do": "tap", "camera": "wide" },
+        { "at": { "pt": "meta", "en": "target" }, "focus": "firstStep", "camera": "wide" }
+      ]
+    },
+    {
+      "id": "info",
+      "title": { "pt": "Cada parte, explicada", "en": "Every part, explained" },
+      "pt": { "caption": "Toque no *(i)* e a tela explica cada parte.", "say": "Toque no botão de informação e a tela explica cada parte." },
+      "en": { "caption": "Tap the *(i)* and the screen explains every part.", "say": "Tap the info button and the screen explains every part." },
+      "focus": "info",
+      "pulse": true,
+      "camera": 1.4
+    }
+  ]
+}

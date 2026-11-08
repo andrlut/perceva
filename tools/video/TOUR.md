@@ -306,8 +306,8 @@ volta com 0).
 `goal.close` · `goal.cta` · `trackCta` (convite "Mirar uma recompensa", sem
 meta) · `chips` · `chip.indulgence|good|experience` ·
 `section.available|almost|big` · `card0` / `card0.cta` (o 1º cartão da loja e
-o botão dele) · `card:<id>` / `card:<id>:cta` (por id da fixture) · `add` ·
-`fab.manage` · `fab.calendar` · `fabs` · `nav` · `nav.rewards` · `confirm` ·
+o botão dele) · `card:<id>` / `card:<id>:cta` (por id da fixture) ·
+`fab.manage` (o + dourado, único flutuante desde a #563) · `nav` · `nav.rewards` · `confirm` ·
 `confirm.amount` · `confirm.qty` · `confirm.plus|minus` · `confirm.total` ·
 `confirm.redeem` · `confirm.cancel` · `celebration` · `celebration.enjoy` ·
 `celebration.undo`. Lista e o que cada toque faz: `src/tutorial/screens/targets.json`.
