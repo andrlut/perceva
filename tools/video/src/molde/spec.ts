@@ -20,8 +20,9 @@ export type PieceName = string;
  * `run` (fase 3): a peça anda no intervalo da fala — `progress` vai de 0 a 1 entre a deixa `cue`
  * (default: a deixa da própria peça, ou o começo da fala) e a deixa `ate` (default: o fim da fala).
  * O calendário marca casas, o reservatório enche: é como o tempo passa sem lapso.
+ * `casas` (calendário, 1..35): o progresso para nessa casa — "uns dias" = 4–7, "semanas" = 35.
  */
-export type Obj = { p: PieceName; cue?: string; out?: string; stay?: boolean; run?: { cue?: string; ate?: string } };
+export type Obj = { p: PieceName; cue?: string; out?: string; stay?: boolean; run?: { cue?: string; ate?: string; casas?: number } };
 
 export type SceneKind = 'pessoa' | 'semana' | 'virada' | 'multidao' | 'comparar' | 'lista' | 'cena' | 'pensa' | 'mapa' | 'caderno' | 'dentro' | 'faz' | 'verso';
 
@@ -162,7 +163,7 @@ export type LenteSpec = {
 /** Um passo do `faz`: uma ação presa à deixa, com rótulo opcional. Sem lugar por passo (cortado). */
 export type Passo = AcaoSpec & { rotulo?: string };
 /** Figurante do `faz`: cada um num esforço diferente, atrás dela, sem cruzar a caixa dela. */
-export type Extra = { seed: number; x: number; acao: AcaoKind; cue: string; ate?: string; para?: number; size?: number };
+export type Extra = { seed: number; x: number; acao: AcaoKind; cue: string; ate?: string; para?: number; size?: number; reps?: number; ritmo?: 'lento' | 'rapido' };
 /** Medidor do `faz`: o tanque pequeno que gasta um gole por passo. */
 export type MedidorSpec = { nivel: number; gasta?: number; lado?: 'esquerda' | 'direita' };
 
@@ -228,6 +229,8 @@ export type SceneProps = {
   rotulos?: RotuloSpec[];
   /** dentro: `corpo` (o corpo de vidro) ou `lupa` (a lente sobre ela num lugar); cena: `fechado` (do peito pra cima) */
   plano?: 'corpo' | 'lupa' | 'fechado';
+  /** dentro (lupa): `canto` (default, ~330 px no canto) ou `grande` (~480 px, cortada na borda de baixo à esquerda) */
+  pessoa?: 'canto' | 'grande';
   /** dentro (corpo): de onde os fluxos nascem */
   origem?: 'boca' | 'tronco' | 'barriga';
   fluxos?: Fluxo[];
