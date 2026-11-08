@@ -175,9 +175,9 @@ const Borracha: React.FC<{ id: string }> = ({ id }) => {
   return (
     <g>
       <defs>
-        <linearGradient id={`${id}-borracha`} x1="0" y1="1000" x2="0" y2="1700" gradientUnits="userSpaceOnUse">
+        <linearGradient id={`${id}-borracha`} x1="0" y1="1000" x2="0" y2="2300" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor="#20265C" />
-          <stop offset="1" stopColor="#10143A" />
+          <stop offset="1" stopColor="#1A2050" />
         </linearGradient>
       </defs>
       <rect x={-500} y={1000} width={2100} height={1600} fill={`url(#${id}-borracha)`} />
@@ -185,7 +185,7 @@ const Borracha: React.FC<{ id: string }> = ({ id }) => {
         <rect key={r} x={-500} y={1000 + r} width={2100} height={3} fill="rgba(5,7,26,0.24)" />
       ))}
       {[-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6].map((k) => (
-        <path key={k} d={`M${vx + 150 * k} 1000 L${vx + 290 * k} 1600`} stroke="rgba(5,7,26,0.22)" strokeWidth={3} />
+        <path key={k} d={`M${vx + 150 * k} 1000 L${vx + 380 * k} 1900`} stroke="rgba(5,7,26,0.22)" strokeWidth={3} />
       ))}
       {/* rodapé */}
       <rect x={-500} y={994} width={2100} height={12} fill={SET.base} />

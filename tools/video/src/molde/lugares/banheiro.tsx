@@ -389,6 +389,6 @@ export const banheiro: Lugar = {
   // a moldura é o primeiro plano: as zonas ficam só nas bordas, pra peça nenhuma desligar o espelho
   frontZones: { left: [-40, 250, 40, 1400], right: [1040, 250, 1120, 1400] },
   // a janelinha fosca: facho curto, pra baixo e pra esquerda
-  janela: { x0: 656, x1: 814, y0: 306, y1: 420, dx: -190, dy: 340 },
+  janela: { x0: 656, x1: 814, y0: 306, y1: 420, dx: -190, dy: 340, fria: true },
   Balcao,
 };
