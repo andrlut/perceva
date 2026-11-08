@@ -1,5 +1,5 @@
 {
-  "_doc": "Roteiro do vídeo (molde genérico, tools/video/MOLDE.md). Cada fala = uma cena do catálogo + peças do elenco + deixas (trechos da fala em que algo entra). {pt,en} em qualquer texto. A cena 'verso' fala o card VERBATIM (vem do ideas-spec). Material patrocinado: as falas tratam do ingrediente e do hábito, sem nome de marca, sem resultado de estudo, sem número fora do verso. Números do verso e o QA da voz (scripts/qa-voice.mjs): o QA troca 'um'..'dez' / 'one'..'ten' por algarismo e cobra todo algarismo na transcrição, então número até dez vai por extenso no 'say' (oito, três, cinco); acima de dez NÃO tem 'say' (trinta/sessenta não viram algarismo, o QA cobraria a palavra e o transcritor escreve 30/60), a voz lê o algarismo do próprio card. Unidade abreviada no card (3 a 5 g): o 'say' diz a unidade por extenso nos dois idiomas ('gramas' / 'grams') e o QA passou com 100% nos dois (2026-11-05). Sem cena 'comparar' neste material: o molde põe a figura de pele escura sempre no painel que perde (seed 3), o que lê como 'pele escura = jeito errado'; 'weeks' e 'stock' viraram pessoa/virada com a protagonista só, até o molde corrigir o comparar.",
+  "_doc": "Roteiro do vídeo (molde genérico, tools/video/MOLDE.md). Cada fala = uma cena do catálogo + peças do elenco + deixas (trechos da fala em que algo entra). {pt,en} em qualquer texto. A cena 'verso' fala o card VERBATIM (vem do ideas-spec). Material patrocinado: as falas tratam do ingrediente e do hábito, sem nome de marca, sem resultado de estudo, sem número fora do verso. r2 (2026-11-08, molde novo): o TEXTO falado e os ids são os da r1 (aprovada no revisor de roteiro e de quadros em 2026-11-05; voz no QA com 100%), então nenhuma fala precisa regravar; mudou só o visual (lugar, câmera, passagem, sobrancelha, peças) e, no colágeno, a ordem de 'weeks' e 'habit2'. Lições de parceiro que valem aqui: a ressalva da cafeína é fala própria e neutra (lista sem brilho nem virada); virada sempre comemora; 'misture na água' = peça copo; nada de raio, bateria carregando nem chama junto de energia (as baterias da creatina são estáticas, meia → cheia, e foram aprovadas assim na r1). Números do verso e o QA da voz (scripts/qa-voice.mjs): o QA troca 'um'..'dez' / 'one'..'ten' por algarismo e cobra todo algarismo na transcrição, então número até dez vai por extenso no 'say' (oito, três, cinco); acima de dez NÃO tem 'say' (trinta/sessenta não viram algarismo, o QA cobraria a palavra e o transcritor escreve 30/60), a voz lê o algarismo do próprio card. Unidade abreviada no card (3 a 5 g): o 'say' diz a unidade por extenso nos dois idiomas ('gramas' / 'grams') e o QA passou com 100% nos dois (2026-11-05). Sem cena 'comparar' neste material: o molde ainda põe a figura de pele escura no painel que perde (PanelBox, seed 3 → skin #8D5A3B, conferido em 2026-11-08), o que lê como 'pele escura = jeito errado'.",
   "slug": "paker-health-energia-pele-forca",
   "ideas": {
     "pre-treino-energia": {
@@ -16,20 +16,21 @@
             "caption": "Time to train, and *your energy hasn't shown up*?"
           },
           "props": {
+            "ambiente": "casa",
             "mood": "cansado",
+            "camera": {
+              "move": "push",
+              "cue": {
+                "pt": "a disposição",
+                "en": "your energy"
+              }
+            },
             "objects": [
               {
                 "p": "ion:barbell",
                 "cue": {
                   "pt": "Hora do treino",
                   "en": "Time to train"
-                }
-              },
-              {
-                "p": "ion:battery-dead",
-                "cue": {
-                  "pt": "disposição",
-                  "en": "your energy"
                 }
               }
             ]
@@ -45,12 +46,26 @@
             "caption": "In a pre-workout, the star is *caffeine*: it helps you stay alert and concentrate better."
           },
           "props": {
+            "kicker": {
+              "pt": "Dentro do pré-treino",
+              "en": "Inside a pre-workout"
+            },
+            "ambiente": "casa",
             "mood": "cansado",
-            "thought": "ion:flash",
+            "thought": "ion:star",
             "at": {
-              "pt": "cafeína",
-              "en": "caffeine"
-            }
+              "pt": "a estrela",
+              "en": "the star"
+            },
+            "objects": [
+              {
+                "p": "copo",
+                "cue": {
+                  "pt": "No pré-treino",
+                  "en": "In a pre-workout"
+                }
+              }
+            ]
           }
         },
         {
@@ -115,13 +130,15 @@
               "pt": "Na prática",
               "en": "In practice"
             },
+            "ambiente": "casa",
+            "camera": {
+              "move": "push",
+              "focus": "peca",
+              "forca": "leve"
+            },
             "setting": "mesa",
             "holding": "copo",
             "mood": "ok",
-            "glow": {
-              "pt": "Misture na água",
-              "en": "Mix it in water"
-            },
             "objects": [
               {
                 "p": "relogio",
@@ -196,6 +213,11 @@
             "caption": "You get changed, head out, and when the workout starts, *the caffeine is already helping you stay alert*."
           },
           "props": {
+            "ambiente": "cidade",
+            "transicao": "desliza",
+            "camera": {
+              "move": "pan-right"
+            },
             "mood": "ok",
             "turn": {
               "pt": "ajuda a ficar alerta",
@@ -204,10 +226,10 @@
             "to": "feliz",
             "objects": [
               {
-                "p": "casa",
+                "p": "ion:shirt",
                 "cue": {
-                  "pt": "sai de casa",
-                  "en": "head out"
+                  "pt": "se troca",
+                  "en": "get changed"
                 }
               },
               {
@@ -217,12 +239,19 @@
                   "en": "workout starts"
                 }
               }
-            ]
+            ],
+            "hora": "manha"
           }
         },
         {
           "id": "do",
-          "scene": "verso"
+          "scene": "verso",
+          "props": {
+            "camera": {
+              "move": "push",
+              "forca": "leve"
+            }
+          }
         }
       ]
     },
@@ -240,7 +269,16 @@
             "caption": "Started taking collagen and, *a few days in*, your skin looks the same?"
           },
           "props": {
-            "mood": "ok",
+            "ambiente": "casa",
+            "camera": {
+              "move": "push",
+              "forca": "leve",
+              "cue": {
+                "pt": "continua igual",
+                "en": "looks the same"
+              }
+            },
+            "mood": "cansado",
             "thought": "ion:calendar",
             "at": {
               "pt": "depois de uns dias",
@@ -324,8 +362,39 @@
           }
         },
         {
+          "id": "weeks",
+          "scene": "pessoa",
+          "hold": 0.3,
+          "pt": {
+            "caption": "O resultado aparece *em semanas*, não em dias, porque a pele se renova devagar."
+          },
+          "en": {
+            "caption": "Results show up *in weeks*, not days, because skin renews itself slowly."
+          },
+          "props": {
+            "ambiente": "cidade",
+            "transicao": "chicote",
+            "camera": {
+              "move": "pan-right"
+            },
+            "mood": "ok",
+            "clock": "calmo",
+            "objects": [
+              {
+                "p": "ion:calendar",
+                "cue": {
+                  "pt": "em semanas",
+                  "en": "in weeks"
+                }
+              }
+            ],
+            "hora": "manha"
+          }
+        },
+        {
           "id": "habit2",
           "scene": "cena",
+          "hold": 0.5,
           "pt": {
             "caption": "O segredo é virar hábito: *mesmo horário todo dia*, na água ou no suco."
           },
@@ -336,6 +405,11 @@
             "kicker": {
               "pt": "Na prática",
               "en": "In practice"
+            },
+            "ambiente": "casa",
+            "camera": {
+              "move": "drift",
+              "forca": "leve"
             },
             "setting": "mesa",
             "holding": "copo",
@@ -356,35 +430,6 @@
           }
         },
         {
-          "id": "weeks",
-          "scene": "pessoa",
-          "hold": 0.5,
-          "pt": {
-            "caption": "O resultado aparece *em semanas*, não em dias, porque a pele se renova devagar."
-          },
-          "en": {
-            "caption": "Results show up *in weeks*, not days, because skin renews itself slowly."
-          },
-          "props": {
-            "mood": "ok",
-            "clock": "calmo",
-            "turn": {
-              "pt": "em semanas",
-              "en": "in weeks"
-            },
-            "to": "feliz",
-            "objects": [
-              {
-                "p": "ion:calendar",
-                "cue": {
-                  "pt": "em semanas",
-                  "en": "in weeks"
-                }
-              }
-            ]
-          }
-        },
-        {
           "id": "do",
           "scene": "verso",
           "pt": {
@@ -392,6 +437,12 @@
           },
           "en": {
             "say": "Take collagen every day for at least eight weeks, with vitamin C, which helps your body form collagen."
+          },
+          "props": {
+            "camera": {
+              "move": "push",
+              "forca": "leve"
+            }
           }
         }
       ]
@@ -410,6 +461,11 @@
             "caption": "Is creatine *just for bodybuilders*, and does it have to be before training?"
           },
           "props": {
+            "ambiente": "casa",
+            "camera": {
+              "move": "drift",
+              "forca": "leve"
+            },
             "mood": "ok",
             "thought": "ion:barbell",
             "at": {
@@ -437,6 +493,10 @@
             "caption": "Your body already makes creatine and stores it in muscle, where it becomes *an energy reserve* for quick bursts of hard effort."
           },
           "props": {
+            "kicker": {
+              "pt": "No músculo",
+              "en": "In your muscles"
+            },
             "mood": "ok",
             "objects": [
               {
@@ -460,7 +520,6 @@
           },
           "props": {
             "mood": "ok",
-            "to": "feliz",
             "items": [
               {
                 "icon": "speedometer",
@@ -508,12 +567,12 @@
             "caption": "So it's not just for bodybuilders: it helps training built on *short, explosive efforts*."
           },
           "props": {
-            "mood": "ok",
-            "turn": {
-              "pt": "arrancadas curtas",
-              "en": "explosive efforts"
+            "ambiente": "cidade",
+            "transicao": "chicote",
+            "camera": {
+              "move": "pan-right"
             },
-            "to": "feliz",
+            "mood": "ok",
             "objects": [
               {
                 "p": "ion:barbell",
@@ -529,7 +588,8 @@
                   "en": "helps training"
                 }
               }
-            ]
+            ],
+            "hora": "manha"
           }
         },
         {
@@ -543,6 +603,18 @@
             "caption": "You don't need it before training: *the effect comes from full stores*, not from the timing."
           },
           "props": {
+            "kicker": {
+              "pt": "Na prática",
+              "en": "In practice"
+            },
+            "ambiente": "casa",
+            "camera": {
+              "move": "dolly",
+              "cue": {
+                "pt": "estoque cheio",
+                "en": "full stores"
+              }
+            },
             "mood": "ok",
             "gives": "relogio",
             "from": {
@@ -550,8 +622,8 @@
               "en": "the timing"
             },
             "turn": {
-              "pt": "estoque cheio",
-              "en": "full stores"
+              "pt": "hora da dose",
+              "en": "the timing"
             },
             "to": "feliz",
             "objects": [
