@@ -1381,6 +1381,7 @@ export default function HomeScreen() {
         onClose={() => setHelpOpen(false)}
         title={t('home.help.title')}
         aiPrompt={guidePrompt}
+        video="practices"
       >
         <PracticesGuide />
       </InfoSheet>

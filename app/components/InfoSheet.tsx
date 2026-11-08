@@ -4,7 +4,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { GuideAiButton, GuideAiIcon } from '@/components/guide/GuideAiButton';
 import { GuideLabel } from '@/components/guide/GuideStep';
+import { GuideVideoIcon } from '@/components/guide/GuideVideoIcon';
 import { useT } from '@/lib/i18n';
+import type { DoorVideoScreen } from '@/lib/unlock';
 import { tokens } from '@/theme';
 
 interface Props {
@@ -21,6 +23,12 @@ interface Props {
    * section, after `children`.
    */
   aiPrompt?: string;
+  /**
+   * The screen's door video (its why + tutorial). Present → a gold play
+   * circle FIRST in the header, before the AI one: it closes the sheet and
+   * opens the video to rewatch (app/door-video.tsx, closable).
+   */
+  video?: DoorVideoScreen;
   /** Rich guide content (GuideStep rows, a playground), after the body. */
   children?: React.ReactNode;
 }
@@ -56,6 +64,7 @@ export function InfoSheet({
   body,
   accent = tokens.brand.violet2,
   aiPrompt,
+  video,
   children,
 }: Props) {
   const { t } = useT();
@@ -84,6 +93,7 @@ export function InfoSheet({
               {title}
             </Text>
             <View style={styles.headerActions}>
+              {video ? <GuideVideoIcon feature={video} onLeave={onClose} /> : null}
               {aiPrompt ? <GuideAiIcon prompt={aiPrompt} onLeave={onClose} /> : null}
               <Pressable
                 onPress={onClose}
@@ -93,7 +103,7 @@ export function InfoSheet({
                 ]}
                 // Inner side trimmed when the AI circle sits beside it, so
                 // the two hit areas never overlap.
-                hitSlop={aiPrompt ? { top: 10, bottom: 10, left: 4, right: 10 } : 10}
+                hitSlop={aiPrompt || video ? { top: 10, bottom: 10, left: 4, right: 10 } : 10}
                 accessibilityRole="button"
                 accessibilityLabel={t('common.close')}
               >
@@ -171,8 +181,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: tokens.space[3],
   },
-  // The AI circle and the X, side by side; 10px apart so their trimmed
-  // inner hit areas (4px each) never meet.
+  // The video circle, the AI circle and the X, side by side; 10px apart so
+  // their trimmed inner hit areas (4px each) never meet.
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',

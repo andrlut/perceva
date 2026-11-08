@@ -6,7 +6,7 @@ O (i) do cabeçalho de cada tela é o **informativo**: ensina a mexer na tela. O
 
 ## O que o informativo tem, de cima pra baixo
 
-1. **Cabeçalho:** título, o **círculo da IA** e o X. O círculo fica sempre ali.
+1. **Cabeçalho:** título, o **círculo dourado do vídeo** (só nas 4 abas com porta: prop `video` do `InfoSheet`, abre `/door-video`), o **círculo da IA** e o X, nessa ordem. O círculo da IA fica sempre ali.
 2. **Playground ("Na carta"):** o elemento REAL da tela, com os gestos dela. No Minhas ideias é uma carta da prateleira da pessoa: tocar vira, segurar mostra o menu. Uma mão pulsa até a primeira tentativa.
 3. **Passos ("Na tela"):** um `GuideStep` por opção — selo de ícone, palavra-chave, uma frase e uma **réplica** do elemento, desenhada com os mesmos componentes da tela.
 4. **Último bloco ("Ainda com dúvida?"):** "Entenda com a IA". A IA fecha o informativo, não abre: o próprio informativo ensina melhor.

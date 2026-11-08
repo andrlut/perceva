@@ -660,6 +660,7 @@ function LearningScreenContent() {
         onClose={() => setHelpOpen(false)}
         title={t('learning.help.title')}
         aiPrompt={guidePrompt}
+        video="learning"
       >
         <RecantoGuide locale={locale === 'pt' ? 'pt' : 'en'} />
       </InfoSheet>

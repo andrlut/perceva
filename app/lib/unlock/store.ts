@@ -47,13 +47,13 @@ interface UnlockState {
   unlocked: UnlockMap;
   /** ISO timestamp of when the door animation was seen, per feature. */
   doorsSeen: DoorMap;
-  /** Set by "Rever as portas": grandfathered accounts see the doors too. */
+  /** Set by the old Ajustes › "Rever as portas" (removed 2026-11-08 — the
+   *  videos are rewatched in Ajustes › Tutorial now): still read, so whoever
+   *  pressed it sees the doors it re-armed, grandfathered accounts included. */
   replayDoors: boolean;
   hydrate: (characterId: string, accountCreatedAt: string | null) => Promise<void>;
   unlock: (feature: UnlockFeature, by: UnlockBy) => Promise<void>;
   markDoorSeen: (feature: DoorKey) => Promise<void>;
-  /** Ajustes → "Rever as portas": forget the doors, keep the unlocks. */
-  resetDoors: () => Promise<void>;
 }
 
 const KEY_PREFIX = 'rpgtasks.unlock.v1.';
@@ -134,16 +134,6 @@ export const useUnlockStore = create<UnlockState>((set, get) => ({
     });
   },
 
-  resetDoors: async () => {
-    // replayDoors: without it a grandfathered account (everyone before the
-    // gates) never sees a door, so the button would do nothing for them.
-    set({ doorsSeen: {}, replayDoors: true });
-    await persist(get().characterId, {
-      unlocked: get().unlocked,
-      doorsSeen: {},
-      replayDoors: true,
-    });
-  },
 }));
 
 /** True while the gates are on and this feature is still locked. Open (not

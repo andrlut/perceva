@@ -638,7 +638,7 @@ const pt: Translations = {
       },
       step2: {
         title: 'Refaça o tutorial quando quiser',
-        body: 'Reveja a introdução, o pacote inicial ou o primeiro passo quando quiser. Nada do que você fez é apagado.',
+        body: 'Reveja a introdução, o vídeo de cada tela ou o primeiro passo quando quiser. Nada do que você fez é apagado.',
       },
       step3: {
         title: 'Conecte sua IA, de graça',
@@ -650,21 +650,32 @@ const pt: Translations = {
       exitTour: 'Sair do tour',
       next: 'Próximo',
       skipModule: 'Pular esta parte',
-      skipModuleHint: 'Pula o resto desta parte do tour. Você pode refazê-la em Ajustes › Refazer tutorial.',
+      skipModuleHint: 'Pula o resto desta parte do tour. Você pode refazê-la em Ajustes › Tutorial e vídeos.',
       skipStep: 'Pular este passo',
       tryIt: 'Faça isso para continuar',
       takeMe: 'Ir para lá',
       progress: 'Passo {{current}} de {{total}}',
     },
     replay: {
-      title: 'Refazer tutorial',
-      subtitle: 'Refaça tudo desde o início ou apenas a parte que quiser.',
+      title: 'Tutorial e vídeos',
+      subtitle: 'Refaça o tutorial do início, só uma parte, ou reveja o vídeo de uma tela.',
       allTitle: 'Refazer tutorial completo',
       allDesc: 'Introdução, pacote inicial, ajuda e a primeira prática, desde a primeira tela.',
       allCta: 'Começar do zero',
       sectionOpening: 'Abertura',
       sectionGuided: 'Passos guiados',
+      sectionVideos: 'Vídeos das telas',
       replayBtn: 'Refazer',
+      watchBtn: 'Assistir',
+      videoRowA11y: '{{name}}. {{status}}. Toque para assistir.',
+      videoSeen: 'Visto',
+      /** One line per door video (what its tutorial walks through). */
+      videos: {
+        practices: 'Marcar o que fez, as Feitas hoje e o + dourado.',
+        rewards: 'Moedas, resgatar, desfazer e mirar uma meta.',
+        learning: 'Ideias, o Explorar, Minhas ideias e o treino.',
+        me: 'Os três retratos: Praticada, Percebida e Desejada.',
+      },
       rowA11y: '{{name}}. {{status}}. Toque para refazer.',
       footnote: 'Refazer não apaga nada.',
       status: {
@@ -1448,6 +1459,17 @@ const pt: Translations = {
     aiTitle: 'Entenda com a IA',
     aiOn: 'O Claude explica esta tela com os seus dados',
     aiOff: 'Ative a IA nos ajustes pra usar',
+  },
+
+  /** A screen's door video, rewatched from its (i) or Ajustes › Tutorial
+   *  (app/door-video.tsx) — and its time bar, also on the door itself. */
+  doorVideo: {
+    guideA11y: 'Ver o vídeo desta tela',
+    seekA11y: 'Tempo do vídeo',
+    play: 'Continuar o vídeo',
+    pause: 'Pausar o vídeo',
+    replay: 'Ver de novo',
+    failed: 'Não deu pra carregar o vídeo. Confira a conexão e tente de novo.',
   },
 
   conector: {
@@ -3048,9 +3070,7 @@ const pt: Translations = {
         'Os horários seguem o relógio do seu celular. O Android pode segurar um lembrete alguns minutos pra economizar bateria.',
     },
     actions: {
-      replayOnboarding: 'Refazer tutorial',
-      reviewDoors: 'Rever as portas das abas',
-      reviewDoorsDone: 'Pronto: a próxima abertura de Recompensas, Eu e Aprender mostra a apresentação de novo.',
+      replayOnboarding: 'Tutorial e vídeos das telas',
       checkForUpdates: 'Buscar atualizações',
       checking: 'Verificando…',
       signOut: 'Sair',

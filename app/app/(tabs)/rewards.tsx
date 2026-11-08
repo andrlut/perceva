@@ -580,6 +580,7 @@ function RewardsScreenContent() {
         onClose={() => setHelpOpen(false)}
         title={t('rewards.help.title')}
         aiPrompt={guidePrompt}
+        video="rewards"
       >
         <RewardsGuide />
       </InfoSheet>

@@ -41,6 +41,8 @@ export type AppEventName =
   | 'tab_unlocked'
   /** Porta animada fechada (tab, ms = tempo até tocar em "Entendi, abrir"). */
   | 'door_seen'
+  /** Vídeo de uma tela aberto pra rever (tab, source = guide | settings). */
+  | 'door_video_opened'
   /*
    * Campanha de parceiro (Programa Paker Health). Props de todos:
    * `campaign` = id da campanha, `source` opcional = de onde veio
