@@ -9,6 +9,7 @@ import { Molde, calculateMoldeMetadata } from './molde/Molde';
 import { IdentidadeSheet } from './identidade/Sheet';
 import { Tour, calculateTourMetadata } from './tutorial/Tour';
 import { Porta, calculatePortaMetadata } from './tutorial/Porta';
+import { Vitrine, calculateVitrineMetadata } from './tutorial/Vitrine';
 
 const calculateMetadata: CalculateMetadataFunction<FilmProps> = async ({ props }) => {
   const film = FILMS[props.film] as (typeof FILMS)[typeof props.film] & { maxSeconds?: number };
@@ -82,6 +83,18 @@ export const RemotionRoot: React.FC = () => (
       durationInFrames={FPS * 60}
       calculateMetadata={calculatePortaMetadata}
       defaultProps={{ introKey: 'doors.rewards-why.pt', tourKey: 'rewards.pt' }}
+    />
+    {/* Vitrine: o vídeo de apresentação do site — uma volta pelas telas do app (os tours
+        tours/vitrine-*.json emendados) e o cartão final. scripts/vitrine.mjs; --props='{"lang":"pt"}'. */}
+    <Composition
+      id="Vitrine"
+      component={Vitrine}
+      width={1080}
+      height={1920}
+      fps={FPS}
+      durationInFrames={FPS * 50}
+      calculateMetadata={calculateVitrineMetadata}
+      defaultProps={{ lang: 'pt' as const }}
     />
   </>
 );

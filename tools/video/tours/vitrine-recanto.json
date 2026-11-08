@@ -1,0 +1,25 @@
+{
+  "_doc": "Vídeo do site, trecho 4 de 5: aprender. A aba Aprender (Recanto) inteira, o dedo aponta a 1ª capa de Novidades do mês (as ideias curtas) e o Treinar (as favoritas voltam em dias espaçados). Tudo nessa tela abre outra tela que a réplica não tem: só point. Conferido contra recanto.help.items.*.ai.",
+  "kind": "vitrine",
+  "screen": "learning",
+  "fixture": "inicio",
+  "file": "vitrine-recanto",
+  "rev": 1,
+  "posterAt": 1.0,
+  "kicker": { "pt": "Aprender", "en": "Learn" },
+  "lines": [
+    {
+      "id": "ideas",
+      "title": { "pt": "Recanto", "en": "Recanto" },
+      "pre": 0.5,
+      "hold": 0.3,
+      "pt": { "caption": "No Recanto, *ideias curtas* pra aprender, e um treino pra não esquecer." },
+      "en": { "caption": "In the Recanto, *short ideas* to learn, and training so you don't forget." },
+      "camera": "wide",
+      "beats": [
+        { "at": { "pt": "ideias curtas", "en": "short ideas" }, "focus": "cover0", "do": "point", "camera": "hold" },
+        { "at": { "pt": "treino", "en": "training" }, "focus": "train", "do": "point", "camera": "hold" }
+      ]
+    }
+  ]
+}

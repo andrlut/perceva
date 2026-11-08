@@ -1,0 +1,33 @@
+{
+  "_doc": "Vídeo do site, trecho 2 de 5: praticar. O check da 1ª prática conclui (ela sai da lista, o topo soma XP e moedas, o +XP sobe), depois o destaque vai pro XP e pras moedas do topo. Conferido contra tasks.help.items.*.ai: as estrelas viram XP nas áreas da prática e moedas na hora. Sem número na fala; os números são os da tela.",
+  "kind": "vitrine",
+  "screen": "practices",
+  "fixture": "inicio",
+  "file": "vitrine-praticas",
+  "rev": 1,
+  "posterAt": 1.0,
+  "kicker": { "pt": "Praticar", "en": "Practice" },
+  "lines": [
+    {
+      "id": "check",
+      "title": { "pt": "Práticas", "en": "Practices" },
+      "pre": 0.5,
+      "pt": { "caption": "Todo dia, marque suas práticas *em um toque*." },
+      "en": { "caption": "Every day, check off your practices *in one tap*." },
+      "camera": "wide",
+      "beats": [
+        { "at": { "pt": "em um toque", "en": "in one tap" }, "focus": "card0.check", "do": "tap", "camera": "hold" }
+      ]
+    },
+    {
+      "id": "earn",
+      "title": { "pt": "XP e moedas", "en": "XP and coins" },
+      "pt": { "caption": "Cada uma soma XP nas áreas que treina e paga em *moedas*." },
+      "en": { "caption": "Each one adds XP to the areas it trains and pays you in *coins*." },
+      "beats": [
+        { "at": { "pt": "XP", "en": "XP" }, "focus": "stats.xp", "camera": 1.8 },
+        { "at": { "pt": "moedas", "en": "coins" }, "focus": "stats.coins", "camera": "hold" }
+      ]
+    }
+  ]
+}

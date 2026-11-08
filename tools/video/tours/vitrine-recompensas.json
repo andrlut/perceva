@@ -1,0 +1,39 @@
+{
+  "_doc": "Vídeo do site, trecho 3 de 5: as moedas viram recompensas. Saldo → a recompensa que a pessoa criou → Resgatar abre a confirmação → confirmar paga e vale na hora (a comemoração abre). Mesmas batidas do tutorial das Recompensas (tours/rewards.json), sem o +1. Conferido contra rewards.help.items.*.ai: resgatar paga e conta como usado na hora; recompensa é a pessoa que define (base-cientifica §2.4: autodefinida e imediata, sem celebrar gasto).",
+  "kind": "vitrine",
+  "screen": "rewards",
+  "fixture": "inicio",
+  "state": { "goal": null },
+  "file": "vitrine-recompensas",
+  "rev": 1,
+  "posterAt": 1.0,
+  "kicker": { "pt": "Praticar", "en": "Practice" },
+  "lines": [
+    {
+      "id": "spend",
+      "title": { "pt": "Recompensas", "en": "Rewards" },
+      "pre": 0.5,
+      "pt": { "caption": "As moedas viram recompensas que *você mesmo escolhe*." },
+      "en": { "caption": "Coins turn into rewards *you choose yourself*." },
+      "camera": "wide",
+      "beats": [
+        { "at": { "pt": "moedas", "en": "Coins" }, "focus": "balance", "camera": "wide" },
+        { "at": { "pt": "você mesmo escolhe", "en": "you choose yourself" }, "focus": "card:cafe", "camera": "wide" }
+      ]
+    },
+    {
+      "id": "redeem",
+      "title": { "pt": "Resgatar", "en": "Redeem" },
+      "hold": 0.6,
+      "pt": { "caption": "Toque em *Resgatar*, confira o total e confirme: ela vale na hora." },
+      "en": { "caption": "Tap *Redeem*, check the total and confirm: it counts right away." },
+      "focus": "card:cafe",
+      "beats": [
+        { "at": { "pt": "Resgatar", "en": "Redeem" }, "focus": "card:cafe:cta", "do": "tap" },
+        { "at": { "pt": "Resgatar", "en": "Redeem" }, "after": 0.1, "focus": "confirm" },
+        { "at": { "pt": "confirme", "en": "confirm" }, "focus": "confirm.redeem", "do": "tap", "camera": "hold" },
+        { "at": { "pt": "confirme", "en": "confirm" }, "after": 0.2, "focus": "celebration" }
+      ]
+    }
+  ]
+}

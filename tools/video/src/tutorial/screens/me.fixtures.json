@@ -24,5 +24,54 @@
       "play":        "..........3...3.....3...3...3.",
       "build":       "..............3.......3......."
     }
+  },
+  "vitrine": {
+    "_doc": "Vídeo do site (tours/vitrine-eu.json e vitrine-fecho.json): a mesma pessoa da inicio, com o Emblema mais cheio (mais práticas, testes e ideias), porque é ele que fecha o filme em close.",
+    "name": "Marina",
+    "totalXp": 2010,
+    "dimXp": {
+      "health": 520,
+      "body": 360,
+      "mind": 430,
+      "wealth": 200,
+      "bonds": 240,
+      "craft": 260
+    },
+    "prevWindowXp": 1260,
+    "self": {
+      "sleep": 3,
+      "nutrition": 4,
+      "strength": 3,
+      "dexterity": 2,
+      "learn": 4,
+      "contemplate": 3,
+      "money": 2,
+      "career": 3,
+      "circle": 4,
+      "romance": 3,
+      "play": 3,
+      "build": 3
+    },
+    "questionnaire": false,
+    "desired": false,
+    "emblem": {
+      "rings": 3.6,
+      "tests": 3,
+      "halo": 0.6
+    },
+    "days": {
+      "sleep": ".........2.22.2..2.22.2.22.2.2",
+      "nutrition": "..........3....3...3....3..3..",
+      "strength": "...........3...3..3...3..3..3.",
+      "dexterity": ".............2......2......2..",
+      "learn": "..........3..3...3..3...3..3.3",
+      "contemplate": "...........2..2..2...2..2...2.",
+      "money": "..........3.......3......3....",
+      "career": "............3.........3.......",
+      "circle": "...........2...2..2...2..2..2.",
+      "romance": "..........3..........3........",
+      "play": "..........3...3.....3...3...3.",
+      "build": "..............3.......3......."
+    }
   }
 }
