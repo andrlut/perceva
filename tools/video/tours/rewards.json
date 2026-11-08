@@ -3,7 +3,7 @@
   "screen": "rewards",
   "fixture": "inicio",
   "file": "rewards",
-  "rev": 3,
+  "rev": 4,
   "posterAt": 1.0,
   "intro": { "slug": "doors", "idea": "rewards-why" },
   "kicker": { "pt": "Recompensas", "en": "Rewards" },

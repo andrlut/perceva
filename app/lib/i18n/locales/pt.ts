@@ -463,6 +463,10 @@ const pt: Translations = {
     door: {
       enter: 'Entendi, abrir',
       wait: 'Veja uma vez; o botão aparece em seguida.',
+      practices: {
+        title: 'Práticas',
+        line: 'O que você faz no dia, com estrelas por área. Cada prática feita conta no seu retrato e paga moedas.',
+      },
       rewards: {
         title: 'Recompensas',
         line: 'Cada prática feita paga moedas. Crie recompensas, dê um preço e resgate quando for usar.',

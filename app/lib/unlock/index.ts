@@ -7,5 +7,6 @@ export {
 } from './constants';
 export type { UnlockFeature } from './constants';
 export { useDoorPending, useIsLocked, useUnlockStore } from './store';
+export type { DoorKey } from './store';
 export type { UnlockBy, UnlockEntry } from './store';
 export { useUnlockProgress } from './useUnlockProgress';
