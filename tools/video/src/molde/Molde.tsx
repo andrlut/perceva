@@ -38,8 +38,15 @@ export const calculateMoldeMetadata: CalculateMetadataFunction<MoldeProps> = asy
   // (o timings.json da voz gravada nunca é sobrescrito por estimativa)
   const timings: Timing[] = await (await fetch(staticFile(`${dir}/${spec.silent ? 'timings.silent.json' : 'timings.json'}`))).json();
   // voz medida (fase 2, `molde.mjs` grava antes de stills/render): as deixas ancoram nas pausas reais
-  const voices: Record<string, Voice> = spec.silent ? {} : await fetch(staticFile(`${dir}/pauses.json`)).then((r) => (r.ok ? r.json() : {}), () => ({}));
-  const { scenes, total } = buildTimeline(spec.lines.map((l) => (voices[l.id] ? { ...l, voice: voices[l.id] } : l)), timings);
+  const voices: Record<string, Voice & { dur?: number }> = spec.silent ? {} : await fetch(staticFile(`${dir}/pauses.json`)).then((r) => (r.ok ? r.json() : {}), () => ({}));
+  // medição de outra tomada (a fala foi regravada e ninguém mediu de novo): a duração não bate com o
+  // timings.json — volta pra estimativa em vez de ancorar nas pausas velhas
+  const fresh = (id: string) => {
+    const v = voices[id];
+    const t = timings.find((x) => x.id === id);
+    return !!v && !!t && v.dur !== undefined && Math.abs(v.dur - t.seconds) <= 0.05;
+  };
+  const { scenes, total } = buildTimeline(spec.lines.map((l) => (fresh(l.id) ? { ...l, voice: voices[l.id] } : l)), timings);
   if (total > MOLDE_MAX_SECONDS * FPS) {
     throw new Error(`${props.specKey}: ${(total / FPS).toFixed(1)} s passa do teto de ${MOLDE_MAX_SECONDS} s — corte o roteiro`);
   }

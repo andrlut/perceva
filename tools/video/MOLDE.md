@@ -325,24 +325,41 @@ falas do método e já leva os moldes da fase 2:
   do caderno e dos blocos). Texto novo não entra só por fade.
 - **Verso que acende com a voz:** cada palavra do card sai de 30%, chega
   dourada no quadro em que a voz a diz e assenta no branco.
-- **Voz medida** (`pauses.json`, gravado pelo `molde.mjs` antes de todo
-  stills/render): começo, fim e pausas reais de cada fala (silencedetect).
-  As deixas ancoram nas pausas que casam com pontuação
-  (`src/timeline.ts`); sem o arquivo, volta a estimar pelo texto. É o
-  começo do "tempo real por palavra" sem conta nova.
+- **Voz medida** (`pauses.json`, `scripts/pauses.mjs`, gravado pelo
+  `molde.mjs` depois do voice e antes de todo stills/render, e pelo `tour.mjs`
+  antes de montar a porta — sempre antes do bundle, que copia `public/` na
+  hora): começo, fim e pausas reais de cada fala (silencedetect). As deixas
+  ancoram nas pausas que casam com pontuação (`src/timeline.ts`), e só se o
+  ritmo de leitura que a âncora implica, antes e depois dela, for plausível
+  (0,6× a 1,7× da média da fala): uma respiração no meio da frase não pode
+  casar com a vírgula mais perto. Entre âncoras, interpola por caractere (a
+  pausa casada já está no tempo medido; somar o peso da pontuação contava a
+  mesma pausa duas vezes). Cada entrada guarda `dur`; se a fala foi
+  regravada e ninguém mediu, a duração não bate com o `timings.json` e o
+  Molde volta pra estimativa. É o começo do "tempo real por palavra" sem
+  conta nova.
 - **Um soco, na virada:** o chicote saiu da aula e foi pro "Outro caminho".
 - **Fecho com a marca:** depois do selo, o glyph se desenha e "Perceva" sobe
   ao lado.
 - **Luz com origem** (`<Luz>` em `src/molde/ambientes.tsx`): na casa de
-  manhã/dia, o facho da janela atravessa a sala com poeira boiando; no
-  caderno, a janela cai na página em dois painéis. Se a cena cobre ¾ da
-  janela (a folha do mapa), não tem facho: luz sem origem à vista não vale.
+  manhã/dia, o facho da janela atravessa a sala com poeira boiando, por
+  baixo da pessoa e das peças (peça sempre por cima da luz); no caderno, a
+  janela cai na página em dois painéis. Sem facho quando a cena cobre ¾ da
+  janela (luz sem origem à vista não vale) ou quando o caminho do facho cai
+  em cima do assunto (a folha do mapa, de qualquer lado).
+- **O que a revisão do piloto ensinou pro roteiro de "demonstrar":** a tela
+  mostra o método, a fala não recita o verso (guarde as palavras dele pro
+  card); não ligue duas coisas que o texto não liga ("o que te dá energia"
+  não é "o que você faz bem"); a sobrancelha não entrega a virada; e a deixa
+  de cada bloco cai no bloco que a palavra descreve.
 
 **Piloto lado a lado** (`--roteiro <arquivo> --tag <nome>`): lê outro
 roteiro e grava em chaves à parte (`<slug>.<ideia>-<tag>.<lang>`); a voz e o
 vídeo de verdade ficam intocados, e piloto nunca sobe. O deste piloto é
 `pilotos/job-crafting-additive.demonstrar.json` (as falas iguais reaproveitam
-a tomada de voz; só `log3` e `pull3` foram gravadas).
+a tomada de voz; só o caderno, `log3`, foi gravado — o mapa usa a tomada
+aprovada do `pull2`). Ordem do piloto: caderno → mapa → a comparação aula ×
+caderno fecha o argumento.
 
 Pendente: **Fraunces itálico** precisa da fonte variável (só temos a 600
 estática); o destaque do verso por enquanto é a cor.

@@ -133,6 +133,11 @@ const Stage: React.FC<{ s: MS; geo?: EnvGeo; focus?: FocusMap; kicker?: string; 
             <Layer depth={0.92}>
               <Spot geo={geo} accent={accent} />
             </Layer>
+            {/* fase 2: luz com origem — o facho da janela cai na sala, por baixo da pessoa e das peças
+                (por cima, lavava a ficha que pousava na frente da janela) */}
+            <Layer depth={0.92}>
+              <Luz amb={amb} geo={geo} t={frame} />
+            </Layer>
           </>
         ) : null}
         <Layer depth={1} style={amb ? { filter: 'drop-shadow(0 16px 34px rgba(5,7,26,0.6))' } : undefined}>
@@ -140,10 +145,6 @@ const Stage: React.FC<{ s: MS; geo?: EnvGeo; focus?: FocusMap; kicker?: string; 
         </Layer>
         {amb && geo ? (
           <>
-            {/* fase 2: luz com origem — o facho da janela atravessa o ar da sala (por cima de quem está nele) */}
-            <Layer depth={0.92}>
-              <Luz amb={amb} geo={geo} t={frame} />
-            </Layer>
             <Layer depth={1.35}>
               <Ambiente amb={amb} geo={geo} part="front" t={frame} accent={accent} />
             </Layer>
@@ -1006,7 +1007,7 @@ export const Pensa: React.FC<P> = ({ s }) => {
 // claro, com ícone claro; energiza = o dourado. A diferença é de luz, não só de matiz.
 // `text`: o nome da tarefa (fase 2) — no que drena ele não desbota como o ícone: palavra tem que ler
 const FEEL: Record<Feel, { bg: string; edge: string; icon: string; text: string }> = {
-  drena: { bg: '#1C2542', edge: '#2F3B5E', icon: '#56658C', text: C.mid },
+  drena: { bg: '#1C2542', edge: '#2F3B5E', icon: '#56658C', text: '#C9CCF0' },
   neutro: { bg: '#4D55A3', edge: '#6C74C4', icon: '#E4E6FF', text: C.hi },
   energiza: { bg: C.gold, edge: C.gold2, icon: C.deep, text: C.deep },
 };
@@ -1081,7 +1082,7 @@ const BlocoBox: React.FC<{ s: MS; b: Bloco; i: number; y: number; h: number; x: 
       {/* fase 2: o nome da tarefa, escrito pela máscara logo depois que o bloco pousa */}
       {b.label ? (
         <Mascara p={ramp(frame, dropAt + 4, 12)} modo="escreve" style={{ marginLeft: 18 }}>
-          <div style={{ fontFamily: FONT.body, fontWeight: 800, fontSize: labelSize, lineHeight: 1.1, color: textC, whiteSpace: 'nowrap' }}>{b.label}</div>
+          <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: labelSize, lineHeight: 1.1, color: textC, whiteSpace: 'nowrap' }}>{b.label}</div>
         </Mascara>
       ) : null}
       {/* o que energiza ganha uma faísca à direita; o que drena fica só frio e apagado */}
@@ -1129,7 +1130,7 @@ export const Mapa: React.FC<P> = ({ s }) => {
   // o nome mais largo cabe no bloco (ícone + faísca à direita), no mesmo corpo em todos
   // padding + ícone fixo (52) + respiro + faísca à direita (26 + 0,6 × 52 + folga)
   const room = bw - 30 - 52 - 18 - 76;
-  const labelSize = [44, 42, 40].find((f) => blocks.every((b) => width(b.label ?? '', `800 ${f}px ${FONT.body}`) <= room)) ?? 38;
+  const labelSize = [46, 44, 42, 40].find((f) => blocks.every((b) => width(b.label ?? '', `600 ${f}px ${FONT.display}`) <= room)) ?? 38;
   // a folha é o assunto: nenhum móvel, figurante ou canto do primeiro plano passa por ela
   // (o cenário só sobra do lado da pessoa)
   const geo: EnvGeo = { ground: 1140, clear: left ? [40, 400] : [680, 1040], spot: [personX + 150, 950, 330], busy: [[cardX - 20, MAPA.y - 20, cardX + W + 20, MAPA.y + MAPA.h + 20]] };
@@ -1215,7 +1216,7 @@ export const Mapa: React.FC<P> = ({ s }) => {
  * Deixas: `cue` de cada bloco (quando o nome começa a ser escrito; sem deixa, um depois do outro),
  * `from` (a coluna do tempo) e `at` (a coluna da energia).
  */
-const CADERNO = { x: 50, y: 330, w: 980, h: 1010, head: 160, row: 150, nameX: 60, timeX: 490, unit: 64, energyX: 740, energyW: 210 };
+const CADERNO = { x: 50, y: 330, w: 980, h: 1010, head: 160, row: 150, nameX: 60, timeX: 490, unit: 76, energyX: 740, energyW: 210 };
 const CADERNO_HEADS = { pt: ['Tarefa', 'Tempo', 'Energia'], en: ['Task', 'Time', 'Energy'] };
 /** a faixa da semana no alto da página (deixa `semana`): a página é um dos dias anotados */
 const CADERNO_DIAS = { pt: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'], en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] };
@@ -1225,10 +1226,21 @@ const ENERGIA: Record<Feel, { icon: string; pt?: string; en?: string }> = {
   neutro: { icon: 'remove' },
   energiza: { icon: 'arrow-up', pt: 'dá', en: 'fuels' },
 };
-/** quadros pra escrever um nome; a barra do tempo cresce em BARRA quadros, uma a cada PASSO */
+/**
+ * Tetos do ritmo da caneta: um nome em até ESCRITA quadros, uma barra em até BARRA, uma a cada até
+ * PASSO. Quando a voz chega na coluna seguinte antes, a caneta acelera (até o piso) pra coluna
+ * entrar NA deixa — a deixa da fala manda, a caneta se ajusta (revisão do piloto, 07/11).
+ */
 const ESCRITA = 13;
 const BARRA = 9;
 const PASSO = 13;
+const clampN = (x: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, x));
+/** A marca de energia em pílula: as três com o mesmo peso de leitura (o "tira" não pode sumir). */
+const ENERGIA_PILULA: Record<Feel, { bg: string; edge: string; ink: string; w: number }> = {
+  drena: { bg: '#2F3B5E', edge: '#46557F', ink: '#E4E6FF', w: 190 },
+  neutro: { bg: 'transparent', edge: '#6C74C4', ink: '#C9CCF5', w: 110 },
+  energiza: { bg: C.gold, edge: C.gold2, ink: C.deep, w: 190 },
+};
 const smooth = (x: number) => {
   const t = Math.max(0, Math.min(1, x));
   return t * t * (3 - 2 * t);
@@ -1246,16 +1258,25 @@ export const Caderno: React.FC<P> = ({ s }) => {
   const heads = pr.heads ?? CADERNO_HEADS[spec.lang];
   const page = spr(s.lead - 10);
   const weekAt = pr.semana ? cue(s, pr.semana) : null;
-  // cada nome começa na sua deixa (sem deixa: um depois do outro, desde o começo da fala)
+  const n = Math.max(1, blocks.length);
+  // as deixas das colunas mandam; a caneta cabe no intervalo entre elas
+  const timeCue = pr.from ? cue(s, pr.from) : NaN;
+  const energyCue = pr.at ? cue(s, pr.at) : NaN;
+  const first = blocks[0]?.cue ? cue(s, blocks[0].cue) : s.lead + 4;
+  const escrita = Number.isFinite(timeCue) ? clampN((timeCue - 4 - first) / n - 3, 7, ESCRITA) : ESCRITA;
+  // cada nome começa na sua deixa ou logo depois do anterior — nunca antes de o anterior terminar
+  // (deixas coladas punham as chaves da caneta fora de ordem e ela pulava de linha)
   const starts: number[] = [];
   for (const [i, b] of blocks.entries()) {
-    const after = i ? starts[i - 1] + ESCRITA + 3 : s.lead + 4;
-    starts.push(b.cue ? Math.max(cue(s, b.cue), i ? starts[i - 1] + 6 : 0) : after);
+    if (!i) starts.push(first);
+    else starts.push(Math.max(b.cue ? cue(s, b.cue) : 0, starts[i - 1] + escrita + 3));
   }
-  const named = starts[starts.length - 1] + ESCRITA;
-  const timeAt = Math.max(at(s, pr.from, named + 6), named + 4);
-  const barAt = (i: number) => timeAt + i * PASSO;
-  const energyAt = Math.max(at(s, pr.at, barAt(blocks.length - 1) + BARRA + 6), timeAt + 10);
+  const named = starts[starts.length - 1] + escrita;
+  const timeAt = Number.isFinite(timeCue) ? Math.max(timeCue, named + 2) : named + 6;
+  const passo = Number.isFinite(energyCue) ? clampN((energyCue - 2 - timeAt) / n, 6, PASSO) : PASSO;
+  const barra = Math.min(BARRA, passo - 2);
+  const barAt = (i: number) => timeAt + i * passo;
+  const energyAt = Number.isFinite(energyCue) ? Math.max(energyCue, timeAt + 6) : barAt(n - 1) + barra + 6;
   // o nome mais largo cabe na coluna, no mesmo corpo em todos
   const colW = G.timeX - G.nameX - 40;
   const font = (f: number) => `600 ${f}px ${FONT.display}`;
@@ -1268,17 +1289,19 @@ export const Caderno: React.FC<P> = ({ s }) => {
   // a caneta: entra, escreve cada nome na ponta da tinta, desce pro próximo, risca as barras e sai
   const keys: [number, number, number][] = [[starts[0] - 14, G.x + G.w + 120, G.y + G.h + 160]];
   blocks.forEach((b, i) => {
-    keys.push([starts[i], G.x + G.nameX, base(i)], [starts[i] + ESCRITA, G.x + G.nameX + nameW(i), base(i)]);
+    keys.push([starts[i], G.x + G.nameX, base(i)], [starts[i] + escrita, G.x + G.nameX + nameW(i), base(i)]);
   });
   blocks.forEach((b, i) => {
     const mid = rowY(i) + G.row / 2 + 14;
-    keys.push([barAt(i), G.x + G.timeX, mid], [barAt(i) + BARRA, G.x + G.timeX + barW(b), mid]);
+    keys.push([barAt(i), G.x + G.timeX, mid], [barAt(i) + barra, G.x + G.timeX + barW(b), mid]);
   });
-  keys.push([barAt(blocks.length - 1) + BARRA + 16, G.x + G.timeX + 120, G.y + G.h + 220]);
+  // sai pela direita, na altura da página — nunca por baixo, que é onde mora a legenda
+  keys.push([barAt(blocks.length - 1) + barra + 16, G.x + G.w + 260, rowY(Math.min(2, blocks.length - 1))]);
   let pen: [number, number] = [keys[0][1], keys[0][2]];
   for (let j = 0; j < keys.length - 1; j++) {
     const [ta, xa, ya] = keys[j];
     const [tb, xb, yb] = keys[j + 1];
+    if (tb < ta) continue;
     if (frame >= ta) {
       const f = tb > ta ? (frame - ta) / (tb - ta) : 1;
       // escrevendo (mesma linha) a ponta anda reto com a tinta; entre linhas, a mão vai e assenta
@@ -1286,7 +1309,7 @@ export const Caderno: React.FC<P> = ({ s }) => {
       pen = [xa + (xb - xa) * e, ya + (yb - ya) * e];
     }
   }
-  const penOn = ramp(frame, starts[0] - 14, 8) * (1 - sai(frame, barAt(blocks.length - 1) + BARRA + 4, 12));
+  const penOn = ramp(frame, starts[0] - 14, 8) * (1 - sai(frame, barAt(blocks.length - 1) + barra + 4, 12));
   const PEN = 170;
   // luz da janela (manhã, do alto à direita) em dois painéis sobre a página, respirando com uma nuvem
   const luz = 0.85 + 0.15 * Math.sin(frame / 37);
@@ -1333,7 +1356,7 @@ export const Caderno: React.FC<P> = ({ s }) => {
         {Array.from({ length: 11 }, (_, i) => (
           <React.Fragment key={i}>
             <div style={{ position: 'absolute', left: 64 + i * 82, top: 22, width: 18, height: 18, borderRadius: 9, background: C.deep }} />
-            <div style={{ position: 'absolute', left: 66 + i * 82, top: -26, width: 14, height: 58, borderRadius: 7, border: `5px solid ${C.mid}`, borderBottomColor: 'transparent' }} />
+            <div style={{ position: 'absolute', left: 66 + i * 82, top: -26, width: 14, height: 58, borderRadius: 7, border: `5px solid ${accent}`, borderBottomColor: 'transparent' }} />
           </React.Fragment>
         ))}
       </div>
@@ -1380,13 +1403,12 @@ export const Caderno: React.FC<P> = ({ s }) => {
       ))}
       {blocks.map((b, i) => {
         const pop = spr(energyAt + i * 6, MOLA.pousa);
-        const grow = easeOut(frame, barAt(i), BARRA);
-        const f = FEEL[b.feel];
+        const grow = easeOut(frame, barAt(i), barra);
         return (
           <React.Fragment key={i}>
             {/* o nome: a máscara abre na velocidade da caneta */}
             <div style={{ position: 'absolute', left: G.x + G.nameX, top: rowY(i), height: G.row, display: 'flex', alignItems: 'center' }}>
-              <Mascara p={(frame - starts[i]) / ESCRITA} modo="escreve" ponta={8}>
+              <Mascara p={(frame - starts[i]) / escrita} modo="escreve" ponta={8}>
                 <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: size, lineHeight: 1.1, color: C.hi, whiteSpace: 'nowrap' }}>{b.label}</div>
               </Mascara>
             </div>
@@ -1407,13 +1429,13 @@ export const Caderno: React.FC<P> = ({ s }) => {
             <div
               style={{
                 position: 'absolute',
-                left: G.x + G.energyX + (G.energyW - (ENERGIA[b.feel].pt ? 190 : 110)) / 2,
+                left: G.x + G.energyX + (G.energyW - ENERGIA_PILULA[b.feel].w) / 2,
                 top: rowY(i) + G.row / 2 - 40,
-                width: ENERGIA[b.feel].pt ? 190 : 110,
+                width: ENERGIA_PILULA[b.feel].w,
                 height: 80,
                 borderRadius: 40,
-                background: f.bg,
-                border: `3px solid ${f.edge}`,
+                background: ENERGIA_PILULA[b.feel].bg,
+                border: `3px solid ${ENERGIA_PILULA[b.feel].edge}`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -1423,9 +1445,9 @@ export const Caderno: React.FC<P> = ({ s }) => {
                 boxShadow: b.feel === 'energiza' ? `0 0 ${30 * Math.min(1, pop)}px ${C.gold}66` : 'none',
               }}
             >
-              <Ion name={ENERGIA[b.feel].icon} size={44} color={f.text} />
+              <Ion name={ENERGIA[b.feel].icon} size={44} color={ENERGIA_PILULA[b.feel].ink} />
               {ENERGIA[b.feel][spec.lang] ? (
-                <div style={{ fontFamily: FONT.body, fontWeight: 800, fontSize: 40, lineHeight: 1, color: f.text, paddingRight: 6 }}>{ENERGIA[b.feel][spec.lang]}</div>
+                <div style={{ fontFamily: FONT.body, fontWeight: 800, fontSize: 42, lineHeight: 1, color: ENERGIA_PILULA[b.feel].ink, paddingRight: 6 }}>{ENERGIA[b.feel][spec.lang]}</div>
               ) : null}
               <Sfx at={energyAt + i * 6 + 3} name={`pop${i % 5}` as SfxName} gain={0.8} />
             </div>
@@ -1548,7 +1570,11 @@ export const Verso: React.FC<P> = ({ s }) => {
   const absorbed = frame > speechEnd(s) + 6;
   const L = VERSO[spec.lang];
   // o quadro em que a voz chega a cada palavra do verso (o card acende junto)
-  const words = wordFrames(s).map((w) => w.at);
+  // com `say` (ex.: número lido por extenso) a voz pode ter outra contagem de palavras: cada palavra
+  // do card pega o tempo da palavra da voz na mesma posição proporcional
+  const voz = wordFrames(s).map((w) => w.at);
+  const nCard = spec.claim.split(/\s+/).filter(Boolean).length;
+  const words = voz.length === nCard ? voz : Array.from({ length: nCard }, (_, j) => voz[Math.round((j * (voz.length - 1)) / Math.max(1, nCard - 1))] ?? 0);
   // fecho com a marca (fase 2): depois do selo, o glyph se desenha e o nome sobe ao lado
   const sela = speechEnd(s) + 26;
   const marca = spr(sela + 8, MOLA.pousa);
@@ -1558,11 +1584,11 @@ export const Verso: React.FC<P> = ({ s }) => {
         <IdeaCard width={720} flip={flip} absorbed={absorbed} words={words} />
       </div>
       <div style={{ opacity: ramp(frame, sela, 10) }}>
-        <Glyph size={124} cx={418} cy={1428} rings={ramp(frame, sela, 22)} path={ramp(frame, sela + 8, 20)} glow={0.5} />
+        <Glyph size={176} cx={368} cy={1446} rings={ramp(frame, sela, 22)} path={ramp(frame, sela + 8, 20)} glow={1} />
       </div>
-      <div style={{ position: 'absolute', left: 494, top: 1386 }}>
+      <div style={{ position: 'absolute', left: 470, top: 1394 }}>
         <Mascara p={marca}>
-          <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: 70, lineHeight: 1.1, color: C.hi }}>Perceva</div>
+          <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: 82, lineHeight: 1.1, color: C.hi }}>Perceva</div>
         </Mascara>
       </div>
       <div

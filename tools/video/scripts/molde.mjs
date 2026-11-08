@@ -27,6 +27,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { markVoiced, pendingLines } from './voiced.mjs';
+import { measurePauses as measurePausesIn } from './pauses.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const repo = path.resolve(root, '..', '..');
@@ -420,43 +421,8 @@ async function build(ctx) {
 }
 
 // ------------------------------------------------------------------ voz medida
-/**
- * Voz medida (requinte, fase 2): onde cada fala começa e termina no mp3 e as pausas do meio
- * (silencedetect a −36 dB, ≥ 0,12 s) → public/molde/<key>/pauses.json. O render ancora as deixas
- * nessas pausas (src/timeline.ts) em vez de só estimar pelo texto. Grátis e local; roda antes de
- * todo stills/render com voz.
- */
-function measurePauses(k) {
-  const dir = pubDir(k);
-  const spec = readJson(path.join(dir, 'spec.json'));
-  if (spec.silent) return;
-  const out = {};
-  for (const l of spec.lines) {
-    const mp3 = path.join(dir, `${l.id}.mp3`);
-    if (!fs.existsSync(mp3)) continue;
-    const dur = Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', mp3]).toString());
-    const r = spawnSync('ffmpeg', ['-hide_banner', '-nostats', '-i', mp3, '-af', 'silencedetect=noise=-36dB:d=0.12', '-f', 'null', '-'], { encoding: 'utf8' });
-    const sil = [];
-    let open = null;
-    for (const line of (r.stderr ?? '').split('\n')) {
-      const a = /silence_start: (-?[\d.]+)/.exec(line);
-      if (a) open = Math.max(0, Number(a[1]));
-      const b = /silence_end: ([\d.]+)/.exec(line);
-      if (b && open != null) {
-        sil.push([open, Number(b[1])]);
-        open = null;
-      }
-    }
-    if (open != null) sil.push([open, dur]);
-    let start = 0;
-    let end = dur;
-    if (sil.length && sil[0][0] <= 0.05) start = sil.shift()[1];
-    if (sil.length && sil[sil.length - 1][1] >= dur - 0.05) end = sil.pop()[0];
-    const r3 = (x) => Math.round(x * 1000) / 1000;
-    out[l.id] = { start: r3(start), end: r3(end), pauses: sil.map(([a, b]) => [r3(a), r3(b)]) };
-  }
-  fs.writeFileSync(path.join(dir, 'pauses.json'), JSON.stringify(out, null, 2));
-}
+// pauses.json (scripts/pauses.mjs): as deixas ancoram nas pausas reais da gravação
+const measurePauses = (k) => measurePausesIn(pubDir(k));
 
 // ------------------------------------------------------------------ voice
 const node = (script, args) => execFileSync('node', [path.join(root, 'scripts', script), ...args], { stdio: 'inherit', cwd: root });
@@ -483,6 +449,7 @@ function voice(ctx) {
         die(`${k}: QA da voz reprovou depois das tentativas — reescreva a fala (homófono, palavra difícil) e rode de novo`);
       }
       node('tts-gemini.mjs', ['--dir', dir, '--lang', lang, '--measure']);
+      measurePauses(k);
       // só o que foi gravado e passou no QA vira "em dia"; um --only não apaga o resto da fila
       const left = markVoiced(pubDir(k), spec.lines, changed, pending);
       fs.writeFileSync(path.join(pubDir(k), 'changed.json'), JSON.stringify(left.map((l) => l.id)));

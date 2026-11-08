@@ -580,9 +580,9 @@ export const Ambiente: React.FC<{ amb: AmbSpec; geo: EnvGeo; part: 'back' | 'mid
 };
 
 /**
- * Luz com origem (requinte, fase 2): o facho da janela da casa atravessando o ar da sala, do vidro
- * pro chão, na diagonal (o sol da manhã vem do alto à direita), com poeira boiando dentro. Fica por
- * cima de quem está no caminho dele (luz no ar, não no fundo) e respira com uma nuvem. Só na casa de
+ * Luz com origem (requinte, fase 2): o facho da janela da casa atravessando a sala, do vidro pro
+ * chão, na diagonal (o sol da manhã vem do alto à direita), com poeira boiando dentro. Fica por
+ * baixo da pessoa e das peças (peça sempre por cima da luz) e respira com uma nuvem. Só na casa de
  * manhã ou de dia; à noite a janela não acende nada. As coordenadas são as da janela de CasaBack.
  */
 export const Luz: React.FC<{ amb: AmbSpec; geo: EnvGeo; t: number }> = ({ amb, geo, t }) => {
@@ -601,6 +601,16 @@ export const Luz: React.FC<{ amb: AmbSpec; geo: EnvGeo; t: number }> = ({ amb, g
     return acc + (w > 0 && h > 0 ? w * h : 0);
   }, 0);
   if (covered > area * 0.75) return null;
+  // e nem atravessando o assunto da cena: se o caminho do facho (da janela ao chão) cai em cima do
+  // que a cena desenha (a folha do mapa, de qualquer lado), sem facho
+  const box = [win.x0 + dx, win.y0 + s, win.x1, win.y1 + dy + s];
+  const boxArea = (box[2] - box[0]) * (box[3] - box[1]);
+  const onPath = (geo.busy ?? []).reduce((acc, [a, b, c, d]) => {
+    const w = Math.min(c, box[2]) - Math.max(a, box[0]);
+    const h = Math.min(d, box[3]) - Math.max(b, box[1]);
+    return acc + (w > 0 && h > 0 ? w * h : 0);
+  }, 0);
+  if (onPath > boxArea * 0.3) return null;
   const warm = hora === 'manha';
   const tint = warm ? C.gold2 : C.hi;
   const breathe = 0.82 + 0.18 * Math.sin(t / 41) * Math.sin(t / 17 + 1);

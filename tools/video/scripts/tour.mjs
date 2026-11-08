@@ -22,6 +22,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { markVoiced, pendingLines } from './voiced.mjs';
+import { measurePauses } from './pauses.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const repo = path.resolve(root, '..', '..');
@@ -470,6 +471,13 @@ async function replica() {
 
 async function render() {
   const { renderMedia, selectComposition } = await import('@remotion/renderer');
+  // a voz da abertura medida AGORA (pauses.json), antes do bundle — ele copia public/ na hora, e
+  // uma medição de tomada velha (ou nenhuma) faria a porta sair com deixas fora da voz
+  for (const lang of LANGS) {
+    const tf = path.join(pubDir(key(lang)), 'spec.json');
+    const ik = fs.existsSync(tf) ? readJson(tf).introKey : null;
+    if (ik) measurePauses(path.join(root, 'public', 'molde', ik));
+  }
   const serveUrl = await serve();
   for (const lang of LANGS) {
     const k = key(lang);

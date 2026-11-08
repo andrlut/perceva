@@ -1,5 +1,5 @@
 {
-  "_doc": "PILOTO (requinte fase 2 + \"demonstrar a ideia\", 2026-11-07). Mesmo roteiro do job-crafting-additive/faca-o-mapa-voce-mesmo, com duas falas trocadas pra mostrar o MÉTODO resolvido num exemplo: o caderno (log3, cena caderno: cada tarefa escrita com o tempo e a energia) e o mapa com os nomes (pull3, que redesenha o dia). O soco (chicote) saiu da aula e foi pra virada (\"Outro caminho\"). Roda com: node scripts/molde.mjs <passo> --slug job-crafting-additive --idea faca-o-mapa-voce-mesmo --roteiro pilotos/job-crafting-additive.demonstrar.json --tag demonstrar. Nunca sobe; se o André aprovar, vira o roteiro de verdade em learning-drops/video-specs.",
+  "_doc": "PILOTO (requinte fase 2 + \"demonstrar a ideia\", 2026-11-07). Mesmo roteiro do job-crafting-additive/faca-o-mapa-voce-mesmo, com o MÉTODO resolvido num exemplo: o caderno (log3, cena caderno: cada tarefa escrita com o tempo e a energia; a fala mostra o método sem recitar o verso) e o mapa com os nomes (pull2, a fala aprovada de antes). Ordem nova: caderno → mapa → a comparação aula × caderno fecha o argumento. O soco (chicote) saiu da aula e foi pra virada (\"Outro caminho\"). Roda com: node scripts/molde.mjs <passo> --slug job-crafting-additive --idea faca-o-mapa-voce-mesmo --roteiro pilotos/job-crafting-additive.demonstrar.json --tag demonstrar. Nunca sobe; se o André aprovar, vira o roteiro de verdade em learning-drops/video-specs.",
   "slug": "job-crafting-additive",
   "ideas": {
     "faca-o-mapa-voce-mesmo": {
@@ -123,12 +123,12 @@
         {
           "id": "log3",
           "scene": "caderno",
-          "hold": 0.5,
+          "hold": 0.8,
           "pt": {
-            "caption": "Outro caminho: por uma semana, você anota cada tarefa, o tempo que ela leva, e *se ela te tira ou te dá energia*."
+            "caption": "Outro caminho: num caderno, você anota cada tarefa, o tempo que ela leva e *se ela te tira ou te dá energia*."
           },
           "en": {
-            "caption": "Another way: for a week, you write down each task, how long it takes, and *whether it drains or fuels you*."
+            "caption": "Another way: in a workbook, you write down each task, how long it takes, and *whether it drains or fuels you*."
           },
           "props": {
             "kicker": {
@@ -136,10 +136,9 @@
               "en": "Log your day"
             },
             "transicao": "chicote",
-            "camera": {
-              "move": "push",
-              "focus": "centro",
-              "forca": "leve"
+            "semana": {
+              "pt": "Outro caminho",
+              "en": "Another way"
             },
             "from": {
               "pt": "o tempo",
@@ -159,8 +158,8 @@
                 "feel": "drena",
                 "size": 2,
                 "cue": {
-                  "pt": "você anota",
-                  "en": "you write down"
+                  "pt": "num caderno",
+                  "en": "in a workbook"
                 }
               },
               {
@@ -183,10 +182,10 @@
               },
               {
                 "label": {
-                  "pt": "Ajudar um colega",
-                  "en": "Helping a peer"
+                  "pt": "Ajudar colegas",
+                  "en": "Helping peers"
                 },
-                "icon": "hand-left",
+                "icon": "chatbubbles",
                 "feel": "energiza",
                 "size": 1
               },
@@ -199,11 +198,113 @@
                 "feel": "energiza",
                 "size": 1
               }
-            ],
-            "semana": {
-              "pt": "por uma semana",
-              "en": "for a week"
-            }
+            ]
+          }
+        },
+        {
+          "id": "pull2",
+          "scene": "mapa",
+          "hold": 1.8,
+          "pt": {
+            "caption": "Com o dia no papel, *dá pra ver o que mudar*."
+          },
+          "en": {
+            "caption": "With your day on paper, *you can see what to change*."
+          },
+          "props": {
+            "kicker": {
+              "pt": "O mapa do dia",
+              "en": "Your day, mapped"
+            },
+            "ambiente": "casa",
+            "hora": "manha",
+            "camera": {
+              "move": "dolly",
+              "focus": "mapa",
+              "cue": {
+                "pt": "mudar",
+                "en": "change"
+              }
+            },
+            "mood": "ok",
+            "to": "feliz",
+            "turn": {
+              "pt": "mudar",
+              "en": "change"
+            },
+            "blocks": [
+              {
+                "label": {
+                  "pt": "Reunião",
+                  "en": "Meeting"
+                },
+                "icon": "people",
+                "feel": "drena",
+                "size": 2,
+                "cue": {
+                  "pt": "Com",
+                  "en": "With"
+                }
+              },
+              {
+                "label": {
+                  "pt": "E-mails",
+                  "en": "Emails"
+                },
+                "icon": "mail",
+                "feel": "drena",
+                "size": 2,
+                "cue": {
+                  "pt": "o dia",
+                  "en": "your day"
+                }
+              },
+              {
+                "label": {
+                  "pt": "Relatório",
+                  "en": "Report"
+                },
+                "icon": "document-text",
+                "feel": "neutro",
+                "size": 1,
+                "cue": {
+                  "pt": "no papel",
+                  "en": "on paper"
+                }
+              },
+              {
+                "label": {
+                  "pt": "Ajudar colegas",
+                  "en": "Helping peers"
+                },
+                "icon": "chatbubbles",
+                "feel": "energiza",
+                "size": 1,
+                "cue": {
+                  "pt": "dá pra",
+                  "en": "you can"
+                },
+                "then": {
+                  "size": 2
+                }
+              },
+              {
+                "label": {
+                  "pt": "Planejar",
+                  "en": "Planning"
+                },
+                "icon": "bulb",
+                "feel": "energiza",
+                "size": 1,
+                "cue": {
+                  "pt": "ver o que",
+                  "en": "see what"
+                },
+                "then": {
+                  "size": 2
+                }
+              }
+            ]
           }
         },
         {
@@ -248,112 +349,6 @@
               "pt": "quem olha o seu dia é você",
               "en": "you're the one looking at your day"
             }
-          }
-        },
-        {
-          "id": "pull3",
-          "scene": "mapa",
-          "hold": 1.4,
-          "pt": {
-            "caption": "Com o dia no papel, dá pra ver o que pesa e o que você faz bem. Aí você *redesenha o dia*."
-          },
-          "en": {
-            "caption": "With your day on paper, you can see what weighs on you and what you do well. Then you *redraw the day*."
-          },
-          "props": {
-            "kicker": {
-              "pt": "Redesenhe o dia",
-              "en": "Redraw your day"
-            },
-            "ambiente": "casa",
-            "hora": "manha",
-            "camera": {
-              "move": "dolly",
-              "focus": "mapa",
-              "cue": {
-                "pt": "redesenha",
-                "en": "redraw"
-              }
-            },
-            "mood": "ok",
-            "to": "feliz",
-            "turn": {
-              "pt": "redesenha",
-              "en": "redraw"
-            },
-            "blocks": [
-              {
-                "label": {
-                  "pt": "Reunião",
-                  "en": "Meeting"
-                },
-                "icon": "people",
-                "feel": "drena",
-                "size": 2,
-                "cue": {
-                  "pt": "Com o dia",
-                  "en": "With your day"
-                }
-              },
-              {
-                "label": {
-                  "pt": "E-mails",
-                  "en": "Emails"
-                },
-                "icon": "mail",
-                "feel": "drena",
-                "size": 2,
-                "cue": {
-                  "pt": "no papel",
-                  "en": "on paper"
-                }
-              },
-              {
-                "label": {
-                  "pt": "Relatório",
-                  "en": "Report"
-                },
-                "icon": "document-text",
-                "feel": "neutro",
-                "size": 1,
-                "cue": {
-                  "pt": "o que pesa",
-                  "en": "what weighs"
-                }
-              },
-              {
-                "label": {
-                  "pt": "Ajudar um colega",
-                  "en": "Helping a peer"
-                },
-                "icon": "hand-left",
-                "feel": "energiza",
-                "size": 1,
-                "cue": {
-                  "pt": "o que você",
-                  "en": "what you"
-                },
-                "then": {
-                  "size": 2
-                }
-              },
-              {
-                "label": {
-                  "pt": "Planejar",
-                  "en": "Planning"
-                },
-                "icon": "bulb",
-                "feel": "energiza",
-                "size": 1,
-                "cue": {
-                  "pt": "faz bem",
-                  "en": "do well"
-                },
-                "then": {
-                  "size": 2
-                }
-              }
-            ]
           }
         },
         {

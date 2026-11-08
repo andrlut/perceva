@@ -74,25 +74,45 @@ const unitsOf = (text: string, upto: number) => {
   return u;
 };
 
+/** Ritmo de leitura plausível entre duas âncoras, em múltiplos da média da fala (fora disso, a âncora é falsa). */
+const RATE: [number, number] = [0.6, 1.7];
+
 /**
  * Âncoras de tempo da fala [índice do caractere, segundos no mp3], a partir da voz medida: o
- * começo, o fim e cada pausa medida que casa com uma pontuação (a pontuação mais perto do tempo
- * estimado, na ordem). Pausa sem pontuação (a voz respirou no meio da frase) fica de fora.
+ * começo, o fim e cada pausa medida que casa com uma pontuação. Uma pausa só vira âncora se (1)
+ * cai perto do tempo estimado de uma pontuação ainda livre, contando a partir da última âncora, e
+ * (2) o ritmo de leitura que ela implica — antes E depois dela — é plausível pra essa voz. Sem a
+ * régua (2), uma respiração no meio da frase casava com a vírgula mais perto e espremia o resto
+ * da fala (revisão do piloto, 07/11). Pausa sem pontuação que case fica de fora (é respiração).
  */
 const anchorsOf = (text: string, v: Voice): [number, number][] => {
-  const U = unitsOf(text, text.length);
   const span = Math.max(0.1, v.end - v.start);
-  const marks: { i: number; t: number }[] = [];
-  for (let i = 0; i < text.length; i++) if (pauseAt(text, i)) marks.push({ i, t: v.start + (unitsOf(text, i + 1) / U) * span });
+  const marks: number[] = [];
+  for (let i = 0; i < text.length; i++) if (pauseAt(text, i)) marks.push(i);
+  // tempo de silêncio medido dentro de [t0, t1] (respirações e pausas): não é tempo de leitura
+  const silentIn = (t0: number, t1: number) => v.pauses.reduce((acc, [a, b]) => acc + Math.max(0, Math.min(b, t1) - Math.max(a, t0)), 0);
+  const avg = text.length / Math.max(0.1, span - silentIn(v.start, v.end));
+  const plausible = (chars: number, t0: number, t1: number, slack = 1) => {
+    if (chars < 8) return true; // trecho curto demais pra medir ritmo
+    const r = chars / Math.max(0.05, t1 - t0 - silentIn(t0, t1)) / avg;
+    return r >= RATE[0] / slack && r <= RATE[1] * slack;
+  };
   const out: [number, number][] = [[0, v.start]];
   let from = 0;
   for (const [a, b] of v.pauses) {
+    const [ia, ta] = out[out.length - 1];
+    if (a <= ta) continue;
     const mid = (a + b) / 2;
+    // estimativa de cada pontuação livre a partir da última âncora, proporcional aos caracteres
+    const est = (i: number) => ta + ((i + 1 - ia) / Math.max(1, text.length - ia)) * (v.end - ta);
     let best = -1;
-    for (let j = from; j < marks.length; j++) if (best < 0 || Math.abs(marks[j].t - mid) < Math.abs(marks[best].t - mid)) best = j;
-    if (best < 0 || Math.abs(marks[best].t - mid) > Math.max(0.6, span * 0.12)) continue;
+    for (let j = from; j < marks.length; j++) if (best < 0 || Math.abs(est(marks[j]) - mid) < Math.abs(est(marks[best]) - mid)) best = j;
+    if (best < 0) continue;
+    const i = marks[best];
+    if (Math.abs(est(i) - mid) > Math.max(0.6, span * 0.12)) continue;
+    if (!plausible(i + 1 - ia, ta, a) || !plausible(text.length - (i + 2), b, v.end, 1.25)) continue;
     // a pontuação termina quando a pausa começa; a palavra seguinte (depois do espaço) nasce no fim dela
-    out.push([marks[best].i + 1, a], [Math.min(text.length, marks[best].i + 2), b]);
+    out.push([i + 1, a], [Math.min(text.length, i + 2), b]);
     from = best + 1;
   }
   out.push([text.length, v.end]);
@@ -120,13 +140,15 @@ export const frameAtIndex = (s: Pick<Scene, 'caption' | 'say' | 'speech' | 'lead
   const text = spoken(s);
   const units = (upto: number) => unitsOf(text, upto);
   if (s.voice) {
-    // voz medida: interpola entre as âncoras reais (começo, pausas casadas, fim)
+    // voz medida: interpola entre as âncoras reais (começo, pausas casadas, fim) por CARACTERE —
+    // a pausa casada já está no tempo medido, e a pontuação que a voz não pausou não pesa nada
+    // (somar o peso da pontuação aqui contava a mesma pausa duas vezes e adiantava as deixas)
     const an = anchorsOf(text, s.voice);
     let k = 0;
     while (k < an.length - 2 && an[k + 1][0] <= idx) k++;
     const [ia, ta] = an[k];
     const [ib, tb] = an[k + 1];
-    const f = ib > ia ? (units(Math.min(idx, ib)) - units(ia)) / Math.max(1e-6, units(ib) - units(ia)) : 0;
+    const f = ib > ia ? (Math.min(idx, ib) - ia) / (ib - ia) : 0;
     return s.lead + Math.round((ta + Math.max(0, Math.min(1, f)) * (tb - ta)) * FPS);
   }
   const talk = Math.max(1, s.speech - SPEECH_TAIL);
