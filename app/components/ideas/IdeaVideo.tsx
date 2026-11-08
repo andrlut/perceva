@@ -91,6 +91,9 @@ export function IdeaVideo({
   const player = useVideoPlayer(source, (p) => {
     p.loop = false;
     p.muted = !useIdeaSound.getState().on;
+    // Faster without the chipmunk voice (like WhatsApp audio). Must be set:
+    // expo-video defaults it to TRUE on iOS but FALSE on Android.
+    p.preservesPitch = true;
     p.playbackRate = useIdeaSpeed.getState().speed;
   });
   const [expanded, setExpanded] = useState(false);
