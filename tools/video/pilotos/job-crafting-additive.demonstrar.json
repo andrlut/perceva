@@ -123,30 +123,30 @@
         {
           "id": "log3",
           "scene": "caderno",
-          "hold": 0.8,
+          "hold": 0.4,
           "pt": {
-            "caption": "Outro caminho: num caderno, você anota cada tarefa, o tempo que ela leva e *se ela te tira ou te dá energia*."
+            "caption": "Outro caminho: num caderno, você escreve o que fez no dia, quanto tempo levou e *como ficou a sua energia*."
           },
           "en": {
-            "caption": "Another way: in a workbook, you write down each task, how long it takes, and *whether it drains or fuels you*."
+            "caption": "Another way: in a workbook, you write down what you did, how long it took, and *what it did to your energy*."
           },
           "props": {
             "kicker": {
-              "pt": "Anote o dia",
-              "en": "Log your day"
+              "pt": "No caderno",
+              "en": "In the workbook"
             },
             "transicao": "chicote",
             "semana": {
-              "pt": "Outro caminho",
-              "en": "Another way"
+              "pt": "caminho",
+              "en": "way"
             },
             "from": {
-              "pt": "o tempo",
+              "pt": "quanto tempo",
               "en": "how long"
             },
             "at": {
-              "pt": "te tira",
-              "en": "drains"
+              "pt": "sua energia",
+              "en": "your energy"
             },
             "blocks": [
               {
@@ -240,11 +240,7 @@
                 },
                 "icon": "people",
                 "feel": "drena",
-                "size": 2,
-                "cue": {
-                  "pt": "Com",
-                  "en": "With"
-                }
+                "size": 2
               },
               {
                 "label": {
@@ -253,11 +249,7 @@
                 },
                 "icon": "mail",
                 "feel": "drena",
-                "size": 2,
-                "cue": {
-                  "pt": "o dia",
-                  "en": "your day"
-                }
+                "size": 2
               },
               {
                 "label": {
@@ -266,11 +258,7 @@
                 },
                 "icon": "document-text",
                 "feel": "neutro",
-                "size": 1,
-                "cue": {
-                  "pt": "no papel",
-                  "en": "on paper"
-                }
+                "size": 1
               },
               {
                 "label": {
@@ -280,10 +268,6 @@
                 "icon": "chatbubbles",
                 "feel": "energiza",
                 "size": 1,
-                "cue": {
-                  "pt": "dá pra",
-                  "en": "you can"
-                },
                 "then": {
                   "size": 2
                 }
@@ -296,10 +280,6 @@
                 "icon": "bulb",
                 "feel": "energiza",
                 "size": 1,
-                "cue": {
-                  "pt": "ver o que",
-                  "en": "see what"
-                },
                 "then": {
                   "size": 2
                 }
@@ -369,10 +349,6 @@
             "ambiente": "casa",
             "hora": "manha",
             "transicao": "fade",
-            "camera": {
-              "move": "drift",
-              "forca": "leve"
-            },
             "setting": "mesa",
             "holding": "caderno",
             "mood": "feliz",
@@ -402,6 +378,10 @@
             "glow": {
               "pt": "dá pra fazer",
               "en": "you can do it"
+            },
+            "camera": {
+              "move": "drift",
+              "forca": "leve"
             }
           }
         },

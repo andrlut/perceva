@@ -349,9 +349,14 @@ falas do método e já leva os moldes da fase 2:
   em cima do assunto (a folha do mapa, de qualquer lado).
 - **O que a revisão do piloto ensinou pro roteiro de "demonstrar":** a tela
   mostra o método, a fala não recita o verso (guarde as palavras dele pro
-  card); não ligue duas coisas que o texto não liga ("o que te dá energia"
-  não é "o que você faz bem"); a sobrancelha não entrega a virada; e a deixa
+  card; os substantivos do método — tarefa, tempo, energia — ficam na página,
+  e a voz usa verbo concreto); a voz pergunta e o exemplo responde ("como
+  ficou a sua energia", e as pílulas dizem tira/dá); não ligue duas coisas
+  que o texto não liga ("o que te dá energia" não é "o que você faz bem");
+  a sobrancelha não repete o verbo do verso nem entrega a virada; e a deixa
   de cada bloco cai no bloco que a palavra descreve.
+- **O card nunca deixa a última palavra sozinha** (as duas últimas palavras do
+  verso ficam juntas na quebra de linha).
 
 **Piloto lado a lado** (`--roteiro <arquivo> --tag <nome>`): lê outro
 roteiro e grava em chaves à parte (`<slug>.<ideia>-<tag>.<lang>`); a voz e o

@@ -474,7 +474,7 @@ const Pill: React.FC<{ p?: string; text: string; from: number }> = ({ p, text, f
  */
 const PANEL = {
   curto: { top: 330, h: 640, w: 450, xs: [70, 560], horizon: 300, scale: 0.46, person: { top: 140, left: 50, size: 230 }, object: { top: 200, left: 250, size: 190 }, label: 455 },
-  alto: { top: 280, h: 920, w: 460, xs: [60, 560], horizon: 470, scale: 0.62, person: { top: 240, left: 12, size: 316 }, object: { base: 638, left: 242, size: 214 }, label: 735 },
+  alto: { top: 280, h: 920, w: 460, xs: [60, 560], horizon: 470, scale: 0.62, person: { top: 240, left: 12, size: 316 }, object: { base: 638, left: 236, size: 196 }, label: 735 },
 } as const;
 type PanelGeo = (typeof PANEL)[keyof typeof PANEL];
 
@@ -1238,7 +1238,7 @@ const clampN = (x: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, 
 /** A marca de energia em pílula: as três com o mesmo peso de leitura (o "tira" não pode sumir). */
 const ENERGIA_PILULA: Record<Feel, { bg: string; edge: string; ink: string; w: number }> = {
   drena: { bg: '#2F3B5E', edge: '#46557F', ink: '#E4E6FF', w: 190 },
-  neutro: { bg: 'transparent', edge: '#6C74C4', ink: '#C9CCF5', w: 110 },
+  neutro: { bg: 'transparent', edge: 'transparent', ink: '#C9CCF5', w: 110 },
   energiza: { bg: C.gold, edge: C.gold2, ink: C.deep, w: 190 },
 };
 const smooth = (x: number) => {
@@ -1397,7 +1397,7 @@ export const Caderno: React.FC<P> = ({ s }) => {
       ].map(([x, from, w], i) => (
         <div key={i} style={{ position: 'absolute', left: G.x + x, width: w || undefined, top: G.y + G.head - 22, opacity: page, display: 'flex', justifyContent: w ? 'center' : 'flex-start' }}>
           <Mascara p={spr(from, MOLA.pousa)}>
-            <div style={{ fontFamily: FONT.body, fontWeight: 800, fontSize: 36, letterSpacing: 4, color: C.mid, whiteSpace: 'nowrap' }}>{heads[i].toUpperCase()}</div>
+            <div style={{ fontFamily: FONT.body, fontWeight: 800, fontSize: 38, letterSpacing: 4, color: '#B9BEE8', whiteSpace: 'nowrap' }}>{heads[i].toUpperCase()}</div>
           </Mascara>
         </div>
       ))}
@@ -1530,8 +1530,9 @@ const IdeaCard: React.FC<{ width: number; flip: number; absorbed: boolean; words
               que a voz a diz (deixa medida na voz), depois assenta no branco */}
           <div style={{ fontFamily: FONT.display, fontWeight: 600, fontSize: claimSize, lineHeight: 1.18, color: C.hi }}>
             {words
-              ? spec.claim.split(/(\s+)/).map((tok, j) => {
-                  if (!tok.trim()) return tok;
+              ? spec.claim.split(/(\s+)/).map((tok, j, all) => {
+                  // espaço antes da última palavra vira inseparável: "faz bem." nunca deixa "bem." sozinho
+                  if (!tok.trim()) return j === all.length - 2 ? '\u00A0' : tok;
                   const wAt = words[Math.floor(j / 2)] ?? 0;
                   const age = frame - wAt;
                   return (
@@ -1546,7 +1547,7 @@ const IdeaCard: React.FC<{ width: number; flip: number; absorbed: boolean; words
                     </span>
                   );
                 })
-              : spec.claim}
+              : spec.claim.replace(/\s+(\S+)$/, '\u00A0$1')}
           </div>
         </div>
       </div>

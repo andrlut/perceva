@@ -94,8 +94,11 @@ const anchorsOf = (text: string, v: Voice): [number, number][] => {
   const avg = text.length / Math.max(0.1, span - silentIn(v.start, v.end));
   const plausible = (chars: number, t0: number, t1: number, slack = 1) => {
     if (chars < 8) return true; // trecho curto demais pra medir ritmo
+    // trecho curto (item de lista, "um café,") é lido devagar ou rápido com naturalidade: régua
+    // mais larga, senão a âncora certa cai por um triz e a deixa volta a ser estimada
+    const k = chars < 20 ? slack * 1.5 : slack;
     const r = chars / Math.max(0.05, t1 - t0 - silentIn(t0, t1)) / avg;
-    return r >= RATE[0] / slack && r <= RATE[1] * slack;
+    return r >= RATE[0] / k && r <= RATE[1] * k;
   };
   const out: [number, number][] = [[0, v.start]];
   let from = 0;
