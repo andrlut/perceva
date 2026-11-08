@@ -9,6 +9,7 @@ import {
   RefreshControl,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -25,11 +26,12 @@ import { useIsLocked } from '@/lib/unlock';
 import { CarouselRow } from '@/components/learning/CarouselRow';
 import { ContinueLendoCard } from '@/components/learning/ContinueLendoCard';
 import type { CoverIdeaMeta } from '@/components/learning/CoverCard';
+import { IdeasCountBadge } from '@/components/learning/IdeasCountBadge';
 import {
-  LearningFilterSheet,
+  LearningFilterRow,
   type PillFilter,
   type ReadFilter,
-} from '@/components/learning/LearningFilterSheet';
+} from '@/components/learning/LearningFilterRow';
 import { TrainEntryTile } from '@/components/ideas/TrainEntryTile';
 import { ReelsEntryCard } from '@/components/reels/ReelsEntryCard';
 import { ScreenBackground } from '@/components/ScreenBackground';
@@ -41,16 +43,11 @@ import {
   useReadMaterialIds,
   type LearningFeedCard,
 } from '@/lib/api/learning';
-import type {
-  DimensionId,
-  LearningIdeaPublic,
-  LearningMaterialCategory,
-  SubId,
-} from '@/lib/db/types';
+import type { DimensionId, SubId } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { useIdeaTraining } from '@/lib/ideaTraining';
-import { pickLocalized, type IdeaLocale } from '@/lib/ideas';
+import type { IdeaLocale } from '@/lib/ideas';
 import { categoryOf } from '@/lib/learningCategory';
 import { buildHaystack, matchesQuery } from '@/lib/learningSearch';
 import { sponsorOf } from '@/lib/learningSponsor';
@@ -62,32 +59,25 @@ import { buildReelDeck, isGroupRead } from '@/lib/reels';
 import { useReelsProgressReady, useReelsProgressStore } from '@/lib/reelsProgress';
 import { usePullToRefresh } from '@/lib/usePullToRefresh';
 import { tokens } from '@/theme';
-import { DIMENSION_ORDER, SUB_META } from '@/theme/dimensions';
+import { DIMENSION_ORDER } from '@/theme/dimensions';
 
 const NEW_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
 /** Stable empty collection so the idea memos don't churn while loading. */
 const EMPTY_COLLECTION: Map<string, Set<string>> = new Map();
 
-/** The Continue hero pick for a material with ideas (0 < absorbed < total). */
+/** The Continue pick for a material with ideas (0 < absorbed < total). */
 interface IdeaContinuePick {
   card: LearningFeedCard;
   /** absorbed / total, 0..100, rounded. */
   percent: number;
-  /** Absorbed ideas of the material (0 < collected < total by construction). */
-  collected: number;
-  /** Published ideas of the material. */
-  total: number;
-  /** Localized title of the lowest-ordinal idea not yet absorbed. */
-  nextTitle: string;
 }
 
-/** Sizes of the floating stack at the bottom of this screen. The feed
- *  reserves exactly that stack's height (fabStackClearance), so resize the
- *  buttons here, not inline. */
+/** The one floating button of this screen ("Minhas ideias"). The feed
+ *  reserves exactly its height (fabStackClearance), so resize it here, not
+ *  inline. */
 const IDEAS_FAB_SIZE: FabSize = 'lg';
-const FILTER_FAB_SIZE: FabSize = 'lg';
-const LEARNING_FAB_CLEARANCE = fabStackClearance([IDEAS_FAB_SIZE, FILTER_FAB_SIZE]);
+const LEARNING_FAB_CLEARANCE = fabStackClearance([IDEAS_FAB_SIZE]);
 
 /** Progressive lock (doc "Onboarding simples", Fase 2): locked → the
  *  "what opens it" screen; first opening → the animated door over the
@@ -120,7 +110,7 @@ function LearningScreenContent() {
   // Ideas: one row per published idea + the user's collection. Both cheap
   // (a view select and a two-column self-only select) and cached 5 min /
   // 1 min; they feed the cover cards' "N ideias · c/N" and the Continue
-  // hero. The review state (a third self-only select, cached 1 min) only
+  // card. The review state (a third self-only select, cached 1 min) only
   // drives the badge on the "Minhas ideias" bulb FAB: ideas absorbed but
   // not yet reviewed. Hidden at 0 and while loading — no flash.
   const ideaCards = useIdeaCards();
@@ -136,15 +126,25 @@ function LearningScreenContent() {
   const [readFilter, setReadFilter] = useState<ReadFilter>('unread');
   const [pillFilter, setPillFilter] = useState<PillFilter>(null);
   const [query, setQuery] = useState('');
-  const [filterOpen, setFilterOpen] = useState(false);
+  // The magnifier top right opens the search field above the filter row;
+  // closing it clears the query (as in Gerenciar práticas), so a search can
+  // never stay applied out of sight.
+  const [searchOpen, setSearchOpen] = useState(false);
+  const toggleSearch = () => {
+    Haptics.selectionAsync().catch(() => {});
+    setSearchOpen((open) => {
+      if (open) setQuery('');
+      return !open;
+    });
+  };
   // The (i) top right: the tab's guide.
   const [helpOpen, setHelpOpen] = useState(false);
   const guidePrompt = useRecantoGuidePrompt();
   const bottomClearance = useBottomNavClearance();
 
   // Hydrate the persisted scroll-progress store on first paint so the
-  // ContinueLendoCard hero can pick the right material without flashing
-  // an empty state on cold start.
+  // ContinueLendoCard can pick the right material without flashing an
+  // empty state on cold start.
   useReadingProgressReady();
   // Hydrate the reels store too — the entry card's deck order (seenAt for
   // the replay tail) must match what the viewer builds on open.
@@ -231,33 +231,18 @@ function LearningScreenContent() {
     return out;
   }, [all, ideaCards.data, meta]);
 
-  // Continue hero for ideas: the most recently released material with some
-  // but not all ideas absorbed, and the title of its next idea (lowest
-  // ordinal not yet collected). Wins over the legacy scroll candidate.
+  // Continue pick for ideas: the most recently released material with some
+  // but not all ideas absorbed (the map keeps the view's released_at desc
+  // order). Wins over the legacy scroll candidate.
   const ideaContinue = useMemo<IdeaContinuePick | null>(() => {
-    const rows = ideaCards.data;
-    if (!rows || rows.length === 0) return null;
     for (const [materialId, m] of ideaMetaByMaterial) {
       if (m.collected <= 0 || m.collected >= m.total) continue;
       const card = all.find((c) => c.id === materialId);
       if (!card) continue;
-      const done = collectedMap.get(materialId);
-      let next: LearningIdeaPublic | null = null;
-      for (const row of rows) {
-        if (row.material_id !== materialId || done?.has(row.idea_id)) continue;
-        if (next === null || row.ordinal < next.ordinal) next = row;
-      }
-      if (!next) continue;
-      return {
-        card,
-        percent: Math.round((m.collected / m.total) * 100),
-        collected: m.collected,
-        total: m.total,
-        nextTitle: pickLocalized({ pt: next.title_pt, en: next.title_en }, ideaLocale),
-      };
+      return { card, percent: Math.round((m.collected / m.total) * 100) };
     }
     return null;
-  }, [ideaCards.data, ideaMetaByMaterial, collectedMap, all, ideaLocale]);
+  }, [ideaMetaByMaterial, all]);
 
   // Study Reels deck — drives the entry card (thumbnails + unread count).
   // The viewer builds its own frozen copy when it opens; this one is only
@@ -459,6 +444,10 @@ function LearningScreenContent() {
           initialNumToRender={2}
           maxToRenderPerBatch={2}
           windowSize={5}
+          // The search field lives in the header: a tap on its clear button
+          // or on a chip must land while the keyboard is up.
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
           refreshControl={
             <RefreshControl
               refreshing={pull.refreshing}
@@ -468,9 +457,29 @@ function LearningScreenContent() {
           }
           ListHeaderComponent={
             <>
-          {/* Header */}
+          {/* Header — the magnifier beside the (i), the same corner pair as
+             Gerenciar práticas. Tab headers draw bare glyphs like their (i)
+             (40px box); the stack screens' chips are ManageTopBar's. */}
           <View style={styles.header}>
             <Text style={styles.title}>{t('learning.title')}</Text>
+            {!feed.isLoading && all.length > 0 && (
+              <Pressable
+                onPress={toggleSearch}
+                hitSlop={10}
+                style={({ pressed }) => [styles.searchBtn, pressed && { opacity: 0.6 }]}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: searchOpen }}
+                accessibilityLabel={
+                  searchOpen ? t('learning.search.close') : t('learning.search.open')
+                }
+              >
+                <Ionicons
+                  name={searchOpen ? 'close' : 'search-outline'}
+                  size={23}
+                  color={searchOpen ? tokens.brand.violet2 : tokens.text.mid}
+                />
+              </Pressable>
+            )}
             <ScreenInfoButton
               onPress={() => setHelpOpen(true)}
               a11yLabel={t('learning.help.a11y')}
@@ -509,49 +518,75 @@ function LearningScreenContent() {
             </View>
           )}
 
-          {/* Active filter chips — the pill filter and/or a non-default
-             read state, each with its own clear. The controls themselves
-             live in the filter sheet. */}
-          {(pillFilter || readFilter !== 'unread' || query.trim().length > 0) && (
-            <View style={activeChipStyles.row}>
-              {query.trim().length > 0 && (
-                <SearchChip query={query.trim()} onClear={() => setQuery('')} />
-              )}
-              {pillFilter && (
-                <PillFilterChip filter={pillFilter} onClear={() => setPillFilter(null)} />
-              )}
-              {readFilter !== 'unread' && (
-                <ReadFilterChip value={readFilter} onClear={() => setReadFilter('unread')} />
-              )}
-            </View>
-          )}
-
-          {/* Breathing room the retired segmented row used to provide
-             between the entry cards and the Continue hero / first row. */}
-          <View style={styles.headerGap} />
-
-          {/* Continue hero. Ideas first: a material with some but not all
-             ideas absorbed shows "Próxima: <ideia>" and absorbed/total.
-             Otherwise the legacy pick — at least 5% scroll progress on an
-             article, most recently touched one. */}
+          {/* Continue lendo — the third entry tile, full width under the
+             row and in the same chassis. Ideas first: a material with some
+             but not all ideas absorbed (bar = absorbed/total). Otherwise
+             the legacy pick — at least 5% scroll progress on an article,
+             most recently touched one. */}
           {ideaContinue ? (
             <ContinueLendoCard
               card={ideaContinue.card}
               percent={ideaContinue.percent}
-              subtitle={t('learning.ideas.nextIdeaLabel', { title: ideaContinue.nextTitle })}
-              metaText={t('learning.ideas.progress', {
-                collected: ideaContinue.collected,
-                total: ideaContinue.total,
-              })}
               onPress={() => router.push(`/material/${ideaContinue.card.slug}`)}
+              style={styles.continueTile}
             />
           ) : continueCard && continueEntry ? (
             <ContinueLendoCard
               card={continueCard}
               percent={continueEntry.percent}
               onPress={() => router.push(`/material/${continueCard.slug}`)}
+              style={styles.continueTile}
             />
           ) : null}
+
+          {/* Search field — opened by the magnifier in the header, right
+             above what it narrows. It stacks on the filter row below. */}
+          {searchOpen && (
+            <View style={styles.searchWrap}>
+              <Ionicons name="search" size={16} color={tokens.text.dim} />
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder={t('learning.search.placeholder')}
+                placeholderTextColor={tokens.text.faint}
+                style={styles.searchInput}
+                autoCorrect={false}
+                autoCapitalize="none"
+                autoFocus
+                returnKeyType="search"
+                accessibilityLabel={t('learning.search.open')}
+              />
+              {query.length > 0 && (
+                <Pressable
+                  onPress={() => setQuery('')}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('learning.search.clear')}
+                >
+                  <Ionicons name="close-circle" size={16} color={tokens.text.dim} />
+                </Pressable>
+              )}
+            </View>
+          )}
+
+          {/* The filter, on the screen: read state, category, dimension
+             (and its sub-areas) as one row of chips. A lit chip is its own
+             "filter on" mark. */}
+          {!feed.isLoading && all.length > 0 && (
+            <View style={styles.filterRow}>
+              <LearningFilterRow
+                cards={all}
+                readSet={readSet}
+                filter={pillFilter}
+                onFilterChange={setPillFilter}
+                readFilter={readFilter}
+                onReadFilterChange={setReadFilter}
+              />
+            </View>
+          )}
+
+          {/* Breathing room between the controls and the first row. */}
+          <View style={styles.headerGap} />
 
           {/* Loading */}
           {feed.isLoading && (
@@ -581,12 +616,11 @@ function LearningScreenContent() {
         />
       </ScreenBackground>
 
-      {/* Floating stack, matching the Tasks/Rewards FAB vocabulary. Top:
-         the "Minhas ideias" bulb (always shown — the collection has its own
-         empty state) with a gold count badge while ideas wait for review
-         (absorbed, no verdict yet). Bottom: the filter button; a gold dot
-         marks any non-default filter (pill OR read state). Only shown once
-         the feed has content. */}
+      {/* One floating button: the "Minhas ideias" bulb, gold like every
+         primary floating button in the app (the filter went back on the
+         screen, 2026-11-07). Always shown once the feed has content — the
+         collection has its own empty state — with a violet count while
+         ideas wait for review (absorbed, no verdict yet). */}
       {!feed.isLoading && all.length > 0 && (
         <FabStack
           bottomOffset={bottomClearance}
@@ -594,7 +628,7 @@ function LearningScreenContent() {
             {
               key: 'ideas',
               icon: 'bulb-outline',
-              tone: 'violet',
+              tone: 'gold',
               size: IDEAS_FAB_SIZE,
               accessibilityLabel:
                 pendingReviews > 0
@@ -610,35 +644,11 @@ function LearningScreenContent() {
                 pendingReviews > 0 ? (
                   <View>
                     {node}
-                    <View style={styles.fabBadge} pointerEvents="none">
-                      <Text style={styles.fabBadgeText}>
-                        {pendingReviews > 99 ? '99+' : pendingReviews}
-                      </Text>
-                    </View>
+                    <IdeasCountBadge count={pendingReviews} />
                   </View>
                 ) : (
                   node
                 ),
-            },
-            {
-              key: 'filter',
-              icon: 'options-outline',
-              tone: 'violet',
-              size: FILTER_FAB_SIZE,
-              accessibilityLabel: t('learning.filter.open'),
-              onPress: () => {
-                Haptics.selectionAsync().catch(() => {});
-                setFilterOpen(true);
-              },
-              wrap:
-                pillFilter || readFilter !== 'unread'
-                  ? (node) => (
-                      <View>
-                        {node}
-                        <View style={styles.fabDot} pointerEvents="none" />
-                      </View>
-                    )
-                  : undefined,
             },
           ]}
         />
@@ -653,175 +663,9 @@ function LearningScreenContent() {
       >
         <RecantoGuide locale={locale === 'pt' ? 'pt' : 'en'} />
       </InfoSheet>
-
-      <LearningFilterSheet
-        visible={filterOpen}
-        onClose={() => setFilterOpen(false)}
-        cards={all}
-        readSet={readSet}
-        filter={pillFilter}
-        onFilterChange={setPillFilter}
-        readFilter={readFilter}
-        onReadFilterChange={setReadFilter}
-        query={query}
-        onQueryChange={setQuery}
-      />
     </SafeAreaView>
   );
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Active-filter chips — surface the applied filters at the top of the feed,
-// each with its own clear. The pill chip uses the dim/sub color where
-// applicable so it reads as "filtered by Craft" visually, not just
-// textually; the read-state chip is violet, like the sheet's state pills.
-// ─────────────────────────────────────────────────────────────────────────────
-
-interface FilterChipProps {
-  label: string;
-  iconName: keyof typeof Ionicons.glyphMap;
-  accent: string;
-  onClear: () => void;
-}
-
-/** Presentational chip: tinted pill + label + round clear button. */
-function FilterChip({ label, iconName, accent, onClear }: FilterChipProps) {
-  return (
-    <View
-      style={[
-        activeChipStyles.chip,
-        { backgroundColor: accent + '22', borderColor: accent },
-      ]}
-    >
-      <Ionicons name={iconName} size={13} color={accent} />
-      <Text style={[activeChipStyles.label, { color: accent }]}>{label}</Text>
-      <Pressable
-        hitSlop={6}
-        onPress={() => {
-          Haptics.selectionAsync().catch(() => {});
-          onClear();
-        }}
-        style={({ pressed }) => [
-          activeChipStyles.clearBtn,
-          { backgroundColor: accent + '33' },
-          pressed && { opacity: 0.7 },
-        ]}
-      >
-        <Ionicons name="close" size={12} color={accent} />
-      </Pressable>
-    </View>
-  );
-}
-
-interface PillFilterChipProps {
-  filter: NonNullable<PillFilter>;
-  onClear: () => void;
-}
-
-function PillFilterChip({ filter, onClear }: PillFilterChipProps) {
-  const { t } = useT();
-  const meta = useMetaLookup();
-
-  let label = '';
-  let iconName: keyof typeof Ionicons.glyphMap = 'funnel';
-  let accent: string = tokens.brand.violet2;
-
-  if (filter.kind === 'dim') {
-    const dim = meta.dim(filter.value as DimensionId);
-    label = dim.label;
-    iconName = dim.iconName as keyof typeof Ionicons.glyphMap;
-    accent = dim.color;
-  } else if (filter.kind === 'sub') {
-    const subId = filter.value as SubId;
-    const sub = meta.sub(subId);
-    const dim = meta.dim(SUB_META[subId].dimensionId);
-    label = sub.label;
-    iconName = SUB_META[subId].iconName as keyof typeof Ionicons.glyphMap;
-    accent = dim.color;
-  } else {
-    label = t(`learning.category.${filter.value as LearningMaterialCategory}`);
-  }
-
-  return (
-    <FilterChip
-      label={t('learning.filteringBy', { what: label })}
-      iconName={iconName}
-      accent={accent}
-      onClear={onClear}
-    />
-  );
-}
-
-interface ReadFilterChipProps {
-  /** Only the non-default states get a chip; `unread` is the baseline. */
-  value: Exclude<ReadFilter, 'unread'>;
-  onClear: () => void;
-}
-
-function ReadFilterChip({ value, onClear }: ReadFilterChipProps) {
-  const { t } = useT();
-  return (
-    <FilterChip
-      label={t(`learning.readFilter.${value}`)}
-      iconName={value === 'read' ? 'checkmark-done-outline' : 'layers-outline'}
-      accent={tokens.brand.violet2}
-      onClear={onClear}
-    />
-  );
-}
-
-interface SearchChipProps {
-  query: string;
-  onClear: () => void;
-}
-
-/** The active search, with its own clear — the field itself lives in the
- *  filter sheet, so this is what tells you the feed is narrowed. */
-function SearchChip({ query, onClear }: SearchChipProps) {
-  const { t } = useT();
-  return (
-    <FilterChip
-      label={t('learning.search.chip', { q: query })}
-      iconName="search"
-      accent={tokens.brand.violet2}
-      onClear={onClear}
-    />
-  );
-}
-
-const activeChipStyles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    paddingHorizontal: tokens.space[4],
-    paddingTop: tokens.space[3],
-  },
-  chip: {
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingLeft: 11,
-    paddingRight: 4,
-    paddingVertical: 4,
-    borderRadius: 999,
-    borderWidth: 1,
-  },
-  label: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
-    letterSpacing: 0.2,
-  },
-  clearBtn: {
-    width: 20,
-    height: 20,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 4,
-  },
-});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Screen styles
@@ -837,40 +681,40 @@ const styles = StyleSheet.create({
   },
   entryExplore: { flex: 1.35 },
   entryTrain: { flex: 1 },
-  /** Gold dot on the filter FAB when any non-default filter is active. */
-  fabDot: {
-    position: 'absolute',
-    top: 2,
-    right: 2,
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: tokens.semantic.coin,
-    borderWidth: 2,
-    borderColor: tokens.bg.deep,
+  // Same gutter and gap as the entry row above it: the three tiles read as
+  // one group.
+  continueTile: {
+    marginHorizontal: tokens.space[4],
+    marginTop: tokens.space[2],
   },
-  /** Gold count badge on the bulb FAB — ideas waiting review. Same rim as
-   *  the dot so the two read as one family. */
-  fabBadge: {
-    position: 'absolute',
-    top: -2,
-    right: -2,
-    minWidth: 20,
-    height: 20,
-    paddingHorizontal: 5,
-    borderRadius: 10,
-    backgroundColor: tokens.semantic.coin,
-    borderWidth: 2,
-    borderColor: tokens.bg.deep,
+  // The (i)'s box, so the two glyphs sit as a pair in the corner.
+  searchBtn: {
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  fabBadgeText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 10,
-    lineHeight: 12,
-    // Dark ink on gold — the same pairing the old active segment used.
-    color: '#3D2A00',
+  searchWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[2],
+    height: 40,
+    marginHorizontal: tokens.space[4],
+    marginTop: tokens.space[3],
+    paddingHorizontal: tokens.space[3],
+    borderRadius: tokens.radius.md,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+    backgroundColor: tokens.bg.surface,
+  },
+  searchInput: {
+    flex: 1,
+    color: tokens.text.hi,
+    ...tokens.type.body,
+    paddingVertical: 0,
+  },
+  filterRow: {
+    paddingTop: tokens.space[3],
   },
   header: {
     flexDirection: 'row',
@@ -886,7 +730,7 @@ const styles = StyleSheet.create({
     color: tokens.text.hi,
   },
   headerGap: {
-    height: tokens.space[4],
+    height: tokens.space[3],
   },
   loading: {
     paddingVertical: tokens.space[7],

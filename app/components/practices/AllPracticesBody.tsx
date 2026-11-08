@@ -394,8 +394,9 @@ const styles = StyleSheet.create({
     paddingBottom: tokens.space[3],
   },
   lists: { gap: tokens.space[2] },
+  // Flush with the cards and radius.md, exactly like the Concluídas drawer
+  // (CompletedBucket) it mirrors — the two rows stay siblings.
   dailiesWrap: {
-    marginHorizontal: tokens.space[3],
     marginTop: tokens.space[2],
     gap: tokens.space[2],
   },
@@ -406,7 +407,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: tokens.space[3],
     paddingVertical: tokens.space[3],
     backgroundColor: tokens.bg.surface,
-    borderRadius: tokens.radius.lg,
+    borderRadius: tokens.radius.md,
     borderWidth: 1,
     borderColor: tokens.border.base,
   },

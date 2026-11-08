@@ -55,9 +55,10 @@ function dimScores(scores: Map<SubId, number>) {
  * claim worth being able to make.
  *
  * The six dimension cards that used to live here now render separately via
- * <DimensionCards> so the source toggle and the cards can sit in the
- * standard order below the hex. This component is the radar canvas only:
- * per-dim numbers ride the legend cards, the average sits in the center.
+ * <DimensionPillarCard> (components/pillars) so the source toggle and the
+ * cards can sit in the standard order below the hex. This component is the
+ * radar canvas only: per-dim numbers ride the cards, the average sits in
+ * the center.
  */
 export function HexChart({
   scores,

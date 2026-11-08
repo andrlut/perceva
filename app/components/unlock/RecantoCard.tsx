@@ -7,7 +7,6 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFeaturedIdea } from '@/lib/api/learning';
 import { useT } from '@/lib/i18n';
 import { ideaImageUriFromPath } from '@/lib/ideas';
-import { RECANTO_CARD_IDEA } from '@/lib/unlock/constants';
 import { useDoorPending, useIsLocked, useUnlockStore } from '@/lib/unlock/store';
 import { tokens } from '@/theme';
 import { DIMENSION_META } from '@/theme/dimensions';
@@ -77,14 +76,15 @@ export function RecantoCard() {
 }
 
 const styles = StyleSheet.create({
+  // Lives inside Hoje's taskList: no horizontal margin of its own, so it
+  // spans the same width as the practice cards, with their radius.md.
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: tokens.space[3],
-    marginHorizontal: tokens.space[3],
     marginTop: tokens.space[2],
     padding: tokens.space[3],
-    borderRadius: tokens.radius.lg,
+    borderRadius: tokens.radius.md,
     borderWidth: 1,
     backgroundColor: tokens.bg.surface,
   },

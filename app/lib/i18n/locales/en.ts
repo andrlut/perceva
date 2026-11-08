@@ -735,7 +735,12 @@ const en = {
         continue: {
           title: 'Continue reading',
           body: 'The material you left halfway.',
-          ai: 'It shows how many ideas are absorbed and which one is next; tapping takes you back to the material.',
+          ai: "It sits right under Explore and Train, with the cover, the material's name and a gold bar showing how far you got: absorbed ideas for materials with ideas, how much you read for older articles. Tapping takes you back to the material.",
+        },
+        search: {
+          title: 'Search',
+          body: 'The magnifier at the top opens search.',
+          ai: "Search looks through the material's title and summary, its areas and sub-areas, and the ideas' titles and claims, in both languages. It adds up with the filters. Tapping the X where the magnifier was closes search and clears the text.",
         },
         rows: {
           title: 'Rows',
@@ -748,14 +753,14 @@ const en = {
           ai: 'The icons show the category (flask is Research, book is Book, compass is Foundations), the first sub-area, how many ideas it has and whether it has audio, video or images. On the free plan, anything released more than 30 days ago gets the Premium seal.',
         },
         lamp: {
-          title: 'The bulb',
-          body: 'Opens My ideas. The number is the ideas waiting for review.',
-          ai: 'In My ideas, the "to review" strip opens the pile: swipe right to favorite, left to let go.',
+          title: 'My ideas',
+          body: 'The gold bulb button. The number is the ideas waiting for review.',
+          ai: 'It is the only floating button on the screen, in the bottom corner. In My ideas, the "to review" strip opens the pile: swipe right to favorite, left to let go.',
         },
         filters: {
-          title: 'Filters and search',
-          body: 'The filter button opens search, the status and the filters by area, type and sub-area.',
-          ai: 'The screen opens on Pending, so what you have finished leaves the rows: switch to Done or All to see it. Only one area, type or sub-area filter works at a time, and the gold dot on the button means a filter is on. "Clear filter" does not clear the search; the X on the search chip does.',
+          title: 'Filters',
+          body: 'The strip above the material rows: status, type and area.',
+          ai: 'The screen opens on Pending, so what you have finished leaves the rows: tap Done or All to see it. Next come the types (Research, Book, Foundations) and the areas; tapping an area shows its sub-areas right beside it. Only one type, area or sub-area filter works at a time. The active filter is colored and has an X: tap it again to turn it off, and on a sub-area that goes back to the whole area. Swipe the strip sideways to see every filter.',
         },
       },
     },
@@ -765,8 +770,6 @@ const en = {
     min: '{{count}} min',
     readMin: { one: '{{count}} min read', other: '{{count}} min read' },
     continueReading: 'Continue reading',
-    continueProgress: '{{percent}}% read',
-    continueMinLeft: { one: '~{{count}} min left', other: '~{{count}} min left' },
     category: {
       research: 'Research',
       book: 'Book',
@@ -974,7 +977,6 @@ const en = {
         fail: "Couldn't save the note. Try again.",
       },
       openIdea: 'Open idea',
-      nextIdeaLabel: 'Next: {{title}}',
       a11yCardFront: 'Idea card: {{title}}. Tap to flip.',
       a11yCardBack: 'Claim: {{claim}}',
       /** Review pile — what was absorbed waits for a verdict: keep as a
@@ -1014,29 +1016,20 @@ const en = {
       byDim: 'By dimension',
       byType: 'By type',
     },
-    filteringBy: 'Filtering: {{what}}',
     // Partner content (learning_material.sponsor) — the badge and the feed
     // section. Paid content says so in plain words (ad-disclosure practice):
     // "Sponsored", never just "partnership".
     sponsorWith: 'Sponsored · {{name}}',
     sectionPartner: 'Sponsored',
-    stats: {
-      byDim: 'By dimension',
-      byType: 'By type',
-      bySub: 'By sub',
-    },
+    /** The filter row on the tab (LearningFilterRow). */
     filter: {
-      open: 'Filters',
-      title: 'Filter library',
-      subtitle: '{{read}}/{{total}} done',
-      state: 'Status',
-      clear: 'Clear filter',
+      clearHint: 'Tap again to remove the filter',
     },
     search: {
-      section: 'Search',
+      open: 'Search',
+      close: 'Close search',
       placeholder: 'A word from the title, the topic or an idea',
       clear: 'Clear search',
-      chip: 'Search: {{q}}',
       empty: 'Nothing found for “{{q}}”.',
     },
     detail: {
@@ -1244,12 +1237,16 @@ const en = {
     questCardTitle: 'Self-knowledge questionnaire',
     questCardLine: '48 questions, 5 to 10 min. It draws your Perceived portrait.',
     questCardCta: 'Start',
-    selfAssessmentCtaFirst: 'Take the self-assessment · 1 min',
-    selfAssessmentCta: 'Update self-assessment',
-    questionnaireFirst: 'Take the questionnaire (5-10 min)',
-    questionnaireToday: 'Retake questionnaire · done today',
-    questionnaireDaysAgo: 'Retake questionnaire · {{count}}d ago',
-    mirrorCta: 'Compare self vs questionnaire',
+    /** The card that closes Perceived — one row per way to redraw it. */
+    actions: {
+      selfFirst: 'Take the self-assessment',
+      self: 'Update self-assessment',
+      selfTime: '1 min',
+      questionnaire: 'Retake questionnaire',
+      doneToday: 'done today',
+      daysAgo: { one: '{{count}} day ago', other: '{{count}} days ago' },
+      mirror: 'Compare with the questionnaire',
+    },
     nudgeSuffix: 'is at {{score}}/5 — tap to see recommended practices',
     hexAxisA11y: '{{dim}}: {{score}} out of {{max}}',
   },
@@ -1277,8 +1274,8 @@ const en = {
     cta: 'Update my north',
     emptyTitle: 'Where do you want to get to?',
     emptyBody: 'Set a target for each area. The outline shows where you are today.',
-    emptyCta: 'Chart my north',
-    setChip: 'set',
+    emptyCta: 'Chart it',
+    subA11y: '{{sub}}: today {{now}}, target {{target}}',
   },
 
   hero: {
@@ -1299,7 +1296,7 @@ const en = {
         pillars: {
           title: 'Switch portrait',
           body: 'Tap Perceived, Practiced or Desired.',
-          ai: 'Perceived is how you see yourself: self-assessment, questionnaire and mood. Practiced is what your practices train, in XP per period. Desired is where you want to get: the North and, with Goals or Skills on, the Path. The tab opens on Practiced.',
+          ai: 'Perceived is how you see yourself: self-assessment and questionnaire. Practiced is what your practices train, in XP per period. Desired is where you want to get: the North and, with Goals or Skills on, the Path. The tab opens on Practiced.',
         },
         grain: {
           title: '6 or 12',
@@ -1321,15 +1318,15 @@ const en = {
           body: 'Tap a series to show or hide it.',
           ai: 'The questionnaire series starts hidden; the last visible series cannot be hidden; the area cards follow the visible series.',
         },
+        cards: {
+          title: 'Area cards',
+          body: "In Perceived and Desired, tap to open the area. In Practiced, to see each sub-area's days.",
+          ai: "All three portraits use the same card: the area with its number and, below it, each sub-area with its number and bar. Perceived shows the 0-10 score (each sub-area 0-5) of the series visible in the legend. Desired shows the target, with \"today → target\" on each sub-area; the bright part of the bar is the climb still ahead. Practiced shows the period's XP, most trained first: on the bar, the tick marks the ruler, the bright part is what went past it and the notch appears past 3 times the ruler. An open Practiced card shows the level and a link to the area's history.",
+        },
         assessment: {
           title: 'Self-assessment and questionnaire',
-          body: 'In Perceived: update how you see yourself or take the questionnaire.',
-          ai: 'The self-assessment takes 1 minute; the questionnaire, 5 to 10. With both done, "Compare self vs questionnaire" shows up.',
-        },
-        mood: {
-          title: "Today's mood",
-          body: 'In Perceived: tap the card to log your mood.',
-          ai: "The card shows the day's face and a line of the last 14 days; \"See history\" opens the calendar.",
+          body: 'In Perceived, at the bottom: update how you see yourself or retake the questionnaire.',
+          ai: 'They are rows of a card below the areas. The self-assessment takes 1 minute; the questionnaire, 5 to 10. Before the first questionnaire, a card at the top invites you to take it. After it, "Retake questionnaire" shows up with how long ago the last one was, along with "Compare with the questionnaire".',
         },
         period: {
           title: 'Period',
@@ -1341,15 +1338,15 @@ const en = {
           body: 'In Practiced: the "Up to 300" button raises the hex ruler to 600 and 900.',
           ai: 'The ruler is the XP that fills one area of the hex in the period; it lasts only while you are on the screen.',
         },
-        cards: {
-          title: 'Area cards',
-          body: "In Practiced: tap a card to see each sub-area's days.",
-          ai: "On each sub-area's bar, the tick marks the ruler, the bright part is what went past it and the notch appears past 3 times the ruler. The open card shows the level and a link to the area's history.",
+        history: {
+          title: 'History',
+          body: 'In Practiced, at the bottom: "Full history" opens the calendar.',
+          ai: "The calendar opens on the Routine front, by month. An area's own history lives only in its open card.",
         },
         north: {
           title: 'North',
           body: 'In Desired: set a target for each area; the outline shows where you are today.',
-          ai: '"Chart my north" opens the self-assessment in target mode. The ✓ shows when the target is not above where you already are.',
+          ai: 'With no target yet, a card at the top invites you to chart your north; after that, "Update my north" sits at the bottom. Both open the self-assessment in target mode.',
         },
         path: {
           title: 'Path',
@@ -1604,7 +1601,7 @@ const en = {
       notEnoughTitle: 'Not enough coins',
       notEnoughBody: 'You need {{deficit}} more coins.',
       buyTitle: 'Redeem "{{title}}"?',
-      buyBody: 'Spend {{cost}} coins. It counts now — to undo, hold the redemption in Redemptions or in the calendar.',
+      buyBody: 'Spend {{cost}} coins. It counts now — to undo, use the calendar.',
       buyOk: 'Redeem',
       buyFail: 'Could not redeem',
       archiveTitle: 'Archive "{{title}}"?',
@@ -1788,6 +1785,11 @@ const en = {
         },
         days: {
           title: 'Change the day',
+          body: 'Use the arrows. Tapping the date opens the calendar; the Today pill brings you back to today.',
+          ai: 'Swiping the top of the screen switches between the Today and All pages. The app never goes into the future. On a past day you can log what you forgot: completions, mood and redemptions are filed on that day, and practices created after it show in a block of their own. Pulling the screen down reloads.',
+        },
+        daysClassic: {
+          title: 'Change the day',
           body: 'Use the arrows or swipe the top of the screen. Tap the date to go back to today.',
           ai: 'The app never goes into the future. On a past day you can log what you forgot: completions, mood and redemptions are filed on that day, and practices created after it show in a block of their own. Pulling the screen down reloads.',
         },
@@ -1821,10 +1823,17 @@ const en = {
           body: 'The + redeems a reward on that day; the arrow undoes it.',
           ai: "A redemption is paid from today's balance, even on a past day. Undo returns the coins paid.",
         },
+        // `buttons` is the default layout's, `buttonsClassic` the classic
+        // one's (Settings › Preferences); the guide shows only the active one.
         buttons: {
+          title: 'Floating button',
+          body: 'The gold + is where you create and organize your practices.',
+          ai: 'It opens "Add and organize": "Create my own" builds a practice from scratch and "Pick a suggested one" adopts one from the catalog. Below sit your practices: tap one to edit it, drag it by the handle to reorder, and the archived ones are at the end of the list. The calendar has no floating button: tap the date at the top to open it.',
+        },
+        buttonsClassic: {
           title: 'Floating buttons',
-          body: 'The violet one opens all practices; the top one, the calendar.',
-          ai: 'In All practices you create, adopt from the catalog, edit, reorder and archive. The "All practices" row at the end of the list opens the same place; on a past day, it logs on that day.',
+          body: 'The gold one opens all practices; the top one, the calendar.',
+          ai: 'All practices also lists the ones not due that day, so you can complete them; its + at the top creates, adopts from the catalog, edits, reorders and archives. The "All practices" row at the end of the list opens the same place; on a past day, it logs on that day.',
         },
         quests: {
           title: 'Quests and goals',
@@ -2131,7 +2140,81 @@ const en = {
   },
   tasksHub: {
     title: 'Add and organize',
-    newTask: 'New practice',
+    calendarA11y: 'Open the calendar',
+    /** The screen's guide (its (i)) — ManagePracticesGuide,
+     *  docs/informativo-de-tela.md. `items` follow
+     *  MANAGE_PRACTICES_GUIDE_ITEMS: title + body on the sheet, `ai` only in
+     *  the AI prompt. No personal data here. */
+    help: {
+      title: 'How to add and organize',
+      a11y: 'How to use this screen',
+      screenName: 'Add and organize (my practices)',
+      purpose: 'This is where I create, adopt from the catalog, edit, reorder and archive my practices.',
+      examples: 'from my own practices',
+      listLabel: 'In the list',
+      tryIt: 'Try it on these practices',
+      screenLabel: 'On the screen',
+      sampleA: 'Drink 2 L of water',
+      sampleB: 'Meditate for 10 minutes',
+      sampleC: 'Call a friend',
+      sampleArchived: 'Strength workout',
+      demoEdit: 'This would open the editor: name, icon, areas, stars and schedule.',
+      demoReorder: 'New order! On the screen, just drag by the handle. Today follows this order.',
+      demoPeriodic: 'Landed in Periodic. On the screen, you would be asked which days or how often.',
+      demoDaily: 'Landed in Daily: now it shows up on Today every day.',
+      items: {
+        edit: {
+          title: 'Tap a practice',
+          body: 'Opens the editor.',
+          ai: 'In the editor you can change the name, icon, the areas it trains with the stars for each one, the schedule and the coins. Archiving is there too.',
+        },
+        drag: {
+          title: 'Drag by the handle',
+          body: 'The three lines on the right change the order.',
+          ai: 'Only the handle drags: tapping the rest of the row edits it, and swiping scrolls the list. Today shows your practices in this same order.',
+        },
+        regroup: {
+          title: 'Drop in the other group',
+          body: 'Changes when the practice happens.',
+          ai: 'Dropping in Daily makes the practice every day, right away. Dropping in Periodic asks which weekdays, or how many times a week or a month. Cancelling puts the practice back where it was.',
+        },
+        create: {
+          title: 'Create my own',
+          body: 'A practice from scratch, your way.',
+          ai: 'The form asks for a name, an icon, the areas it trains with the stars for each one, and the schedule. You can also make a coins-only practice, with no area.',
+        },
+        suggested: {
+          title: 'Pick a suggested one',
+          body: "The catalog, by area. Catalog practices don't count toward the free limit.",
+          ai: 'In the catalog, the + adds the suggestion as is, after you pick how often. Tapping the suggestion opens the form to tweak it first: then it becomes yours and counts toward the limit. The chips filter by area, and "Your practices" takes you back to the list.',
+        },
+        groups: {
+          title: 'Daily and Periodic',
+          body: 'Daily ones show up on Today every day; Periodic ones, on their set days.',
+          ai: 'Periodic practices are the ones on set weekdays, or a few times a week or a month. Tapping a header collapses or opens the group. Pulling the list down refreshes it.',
+        },
+        search: {
+          title: 'Search',
+          body: 'The magnifier searches by name, in the list or the catalog.',
+          ai: 'In the catalog, search also looks at the description. The X closes search and clears the text.',
+        },
+        calendar: {
+          title: 'Calendar',
+          body: 'Opens the history of what you did, day by day.',
+          ai: 'The calendar opens on the Routine front: each day shows how much you trained, and tapping a day shows what was done, with the option to log anything you forgot.',
+        },
+        archived: {
+          title: 'Archived',
+          body: 'At the end of the list. Tap to see and restore.',
+          ai: 'You archive from the practice editor: it leaves Today, but its history stays. Restore brings it back. The trash deletes forever only a practice that was never completed and is not in a quest; with history, archiving is the way out.',
+        },
+        limit: {
+          title: 'Free plan',
+          body: 'Up to 10 practices you created. Catalog ones are unlimited.',
+          ai: 'Near the limit, a counter (8/10) shows on Create my own. Archiving frees a slot; restoring an archived one counts again. Premium removes the limit.',
+        },
+      },
+    },
     doors: {
       create: 'Create my own',
       createDesc: 'Name, what it trains and how often.',
@@ -2149,9 +2232,6 @@ const en = {
       placeholderMine: 'Search your practices…',
       placeholderCatalog: 'Search catalog…',
     },
-    // One line under the tabs: the two list gestures. Completing lives on
-    // All practices; changing details means opening the practice.
-    lead: 'Tap to edit. Use the handle to drag and reorder; drop in the other group to change when it happens.',
     buckets: {
       daily: 'Daily',
       dailyDesc: 'Every day, on the Today screen',
@@ -2202,7 +2282,7 @@ const en = {
       noMatchesBody: 'Nothing matches "{{query}}".',
       noMatchesCatalog: 'Nothing in the catalog matches "{{query}}".',
       noTasksTitle: 'No practices yet',
-      noTasksBody: 'Add your first practice or browse the Suggested tab.',
+      noTasksBody: 'Create your own or pick a suggested one, up top.',
       cta: 'New practice',
     },
     errors: {
@@ -2213,7 +2293,76 @@ const en = {
 
   rewardsHub: {
     title: 'Manage rewards',
-    newReward: 'New reward',
+    calendarA11y: 'Open the calendar',
+    doors: {
+      create: 'Create my own',
+      createDesc: 'Name, price in coins and category.',
+      suggested: 'Pick a suggested one',
+      suggestedDesc: '{{count}} in the catalog, by category.',
+      back: 'Your rewards',
+    },
+    /** The screen's guide (its (i)) — ManageRewardsGuide,
+     *  docs/informativo-de-tela.md. `items` follow
+     *  MANAGE_REWARDS_GUIDE_ITEMS: title + body on the sheet, `ai` only in
+     *  the AI prompt. No personal data here. */
+    help: {
+      title: 'How to manage rewards',
+      a11y: 'How to use this screen',
+      screenName: 'Manage rewards',
+      purpose: 'This is where I create, adopt from the catalog, edit, reorder and archive the rewards in my shop.',
+      examples: 'from my own rewards',
+      listLabel: 'In the list',
+      tryIt: 'Try it on these rewards',
+      screenLabel: 'On the screen',
+      sampleA: 'Fancy coffee',
+      sampleB: 'One episode of a show',
+      sampleC: 'Dinner out',
+      sampleArchived: 'Saturday pizza',
+      demoEdit: 'This would open the editor: name, price, icon, category and one-time purchase.',
+      demoReorder: "New order! On the screen, just drag by the handle. In the Shop, Available now follows this order.",
+      items: {
+        edit: {
+          title: 'Tap a reward',
+          body: 'Opens the editor.',
+          ai: "In the editor you can change the name, the price in coins, the icon, the category and whether it's a one-time purchase. Archiving is there too.",
+        },
+        drag: {
+          title: 'Drag by the handle',
+          body: 'The three lines on the right change the order.',
+          ai: 'Only the handle drags: tapping the rest of the row edits it, and swiping scrolls the list. In the Shop, Available now follows this order; Almost there and Big goals sort by how far the price is.',
+        },
+        create: {
+          title: 'Create my own',
+          body: 'A reward from scratch, at the price you decide.',
+          ai: 'The form asks for a name, a price in coins, an icon and a category (Indulgence, Good or Experience). A one-time purchase leaves the Shop after its first redemption.',
+        },
+        suggested: {
+          title: 'Pick a suggested one',
+          body: 'The catalog, by category.',
+          ai: 'In the catalog, the + adds the suggestion as is; tapping it opens the form to tweak it first. The chips filter by category, and "Your rewards" takes you back to the list.',
+        },
+        search: {
+          title: 'Search',
+          body: 'The magnifier searches by name, in the list or the catalog.',
+          ai: 'In the catalog, search also looks at the description. The X closes search and clears the text.',
+        },
+        calendar: {
+          title: 'Calendar',
+          body: 'Opens your redemptions, day by day.',
+          ai: 'The calendar opens on the Vault front: tapping a day lists its redemptions, with Undo (the coins come back) and "Redeem on this day" to log one from the past. The List view shows them all in a row.',
+        },
+        archived: {
+          title: 'Archived',
+          body: 'At the end of the list. Tap to see and restore.',
+          ai: 'You archive from the editor, or by holding the reward in the Shop: it leaves the Shop and its history stays. Restore brings it back. The trash deletes forever only a reward that was never redeemed; once redeemed, archiving is the way out.',
+        },
+        limit: {
+          title: 'Free plan',
+          body: 'Up to 5 active rewards.',
+          ai: 'Rewards adopted from the catalog count too. Near the limit, a counter (4/5) shows on Create my own. Archiving frees a slot; restoring counts again. Premium removes the limit.',
+        },
+      },
+    },
     tabs: {
       mine: 'Mine',
       suggested: 'Suggested',
@@ -2224,7 +2373,6 @@ const en = {
       placeholderMine: 'Search your rewards…',
       placeholderCatalog: 'Search catalog…',
     },
-    lead: "Tap to edit. Drag by the handle to set the order of what's available in the Shop.",
     customChip: 'CUSTOM',
     oneShotChip: 'ONE-TIME',
     boughtChip: 'BOUGHT',
@@ -2263,7 +2411,7 @@ const en = {
       noMatchesBody: 'Nothing matches "{{query}}".',
       noMatchesCatalog: 'Nothing in the catalog matches "{{query}}".',
       noRewardsTitle: 'No rewards yet',
-      noRewardsBody: 'Create your first reward or browse the Suggested tab.',
+      noRewardsBody: 'Create your own or pick a suggested one, up top.',
       cta: 'New reward',
     },
     errors: {
@@ -2321,20 +2469,15 @@ const en = {
           body: 'Available now, Almost there and Big goals.',
           ai: 'Available now is what your balance can pay, in the order you set in Manage. Almost there is anything short by up to 30% of its price. Big goals is the rest, most expensive first.',
         },
-        add: {
-          title: 'New reward',
-          body: 'The last card creates a reward of your own.',
-          ai: 'The free plan holds 5 active rewards; archiving makes room. With an empty shop, ready-made suggestions show up to adopt.',
-        },
         undo: {
           title: 'Undo later',
-          body: 'Past the celebration? Undo it in the calendar or in Redemptions.',
-          ai: "In the calendar, on the Vault front, and in the \"Day's redemptions\" card on Practices, tap the arrow on the redemption. In Manage, the clock opens Redemptions: hold a redemption to undo it. Undo returns what was paid.",
+          body: 'Past the celebration? Undo it in the calendar.',
+          ai: "In the calendar, on the Vault front, and in the \"Day's redemptions\" card on Practices, tap the arrow on the redemption. The calendar opens from the icon at the top of Manage. Undo returns what was paid.",
         },
         buttons: {
-          title: 'Floating buttons',
-          body: 'The gold one opens Manage; the top one, the calendar.',
-          ai: 'In Manage you create, adopt suggestions, edit, reorder, archive and see redemptions. The calendar opens on the Vault front.',
+          title: 'Floating button',
+          body: 'The gold + opens Manage: create your own, pick a suggested one, edit and reorder.',
+          ai: 'Manage also keeps your archived rewards and, at the top next to search, the calendar, which opens on the Vault front with your redemptions.',
         },
       },
     },
@@ -2403,8 +2546,6 @@ const en = {
       emptyBody: 'Start from the suggestions or create a reward of your own.',
       seeSuggestions: 'See suggestions',
       createOwn: 'Create my own',
-      addReward: 'New reward',
-      addRewardSub: 'Add a custom one',
     },
     celebration: {
       eyebrow: 'REDEEMED',
@@ -3186,6 +3327,8 @@ const en = {
     rimLabel: 'Up to {{xp}}',
     rimShow: 'Show the hex up to {{xp}} XP',
     levelTotal: 'Level {{level}} · {{xp}} XP all-time',
+    dimHistory: '{{dim}} history',
+    fullHistory: 'Full history',
     activeDays: '{{n}} of {{total}} days',
     activeWeeks: '{{n}} of {{total}} weeks',
     activeMonths: '{{n}} of {{total}} months',

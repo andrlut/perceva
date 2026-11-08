@@ -11,7 +11,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import DraggableFlatList, {
@@ -21,22 +20,45 @@ import DraggableFlatList, {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppIcon } from '@/components/AppIcon';
-import { CoinIcon } from '@/components/CoinIcon';
-import { AddCard } from '@/components/AddCard';
 import {
   AdoptPeriodicitySheet,
   adoptChoiceToOverrides,
   type AdoptPeriodicityChoice,
 } from '@/components/AdoptPeriodicitySheet';
-import { useBottomSafeClearance } from '@/components/BottomNavBar';
 import { ScreenTip } from '@/components/guide/ScreenTip';
-import { CoinMultiplierBadge } from '@/components/CoinMultiplierBadge';
+import {
+  ManagePracticesGuide,
+  useManagePracticesGuidePrompt,
+} from '@/components/guide/screens/ManageGuide';
 import { EmptyHero } from '@/components/EmptyHero';
+import { InfoSheet } from '@/components/InfoSheet';
+import {
+  ArchivedFooter,
+  ManageArchivedRow,
+  archivedMetaStyle,
+} from '@/components/manage/ArchivedFooter';
+import { ManageCatalogBack, ManageDoors } from '@/components/manage/ManageDoors';
+import { ManageGroupEmpty, ManageGroupHeader } from '@/components/manage/ManageGroupHeader';
+import {
+  MANAGE_DRAG_ACTIVATION_DISTANCE,
+  MANAGE_DRAG_HIT_SLOP,
+  MANAGE_LIST_CONTAINER,
+  ManageListArea,
+  ManageSearchField,
+  useManageListBottomPad,
+} from '@/components/manage/ManageList';
+import { ManageTopBar } from '@/components/manage/ManageTopBar';
+import { PracticeManageRow } from '@/components/manage/PracticeManageRow';
+import {
+  BUCKETS,
+  BUCKET_BY_ID,
+  bucketFor,
+  type PracticeBucket as Bucket,
+} from '@/components/manage/practiceBuckets';
 import { PeriodicitySheet } from '@/components/PeriodicitySheet';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { SubColoredPips } from '@/components/SubColoredPips';
 import { SubStack } from '@/components/SubStack';
-import { LimitCounterBadge } from '@/components/premium/LimitCounterBadge';
 import {
   useActiveTasks,
   useArchivedTasks,
@@ -63,7 +85,7 @@ import {
   useTaskLimit,
   type EntityLimit,
 } from '@/lib/premium';
-import { describeRecurrence, isEffectivelyDaily } from '@/lib/recurrence';
+import { describeRecurrence } from '@/lib/recurrence';
 import { usePullToRefresh } from '@/lib/usePullToRefresh';
 import { confirmAction, showInfo } from '@/lib/util/confirm';
 import { rewardForTaskSubs } from '@/lib/xp';
@@ -71,74 +93,26 @@ import { tokens } from '@/theme';
 import { DIMENSION_ORDER, SUBS_BY_DIM } from '@/theme/dimensions';
 
 type Tab = 'mine' | 'suggested';
-/** The two groups. Nothing else: a practice is on Hoje every day, or it is
- *  periodic (weekday schedule, N× a week, monthly). */
-type Bucket = 'daily' | 'periodic';
 type DimFilter = DimensionId | 'all';
-
-interface BucketMeta {
-  id: Bucket;
-  labelKey: string;
-  descKey: string;
-  iconName: keyof typeof Ionicons.glyphMap;
-  /** Accent for icon, eyebrow and count chip. Theme-swapped tokens only. */
-  accent: string;
-  /** Wash behind the icon tile and the count chip. */
-  accentBg: string;
-}
-
-const BUCKETS: BucketMeta[] = [
-  {
-    id: 'daily',
-    labelKey: 'tasksHub.buckets.daily',
-    descKey: 'tasksHub.buckets.dailyDesc',
-    iconName: 'sunny',
-    accent: tokens.brand.violet2,
-    accentBg: tokens.dimensionBg.mind,
-  },
-  {
-    id: 'periodic',
-    labelKey: 'tasksHub.buckets.periodic',
-    descKey: 'tasksHub.buckets.periodicDesc',
-    iconName: 'calendar',
-    accent: tokens.dimension.bonds,
-    accentBg: tokens.dimensionBg.bonds,
-  },
-];
-
-const BUCKET_BY_ID: Record<Bucket, BucketMeta> = {
-  daily: BUCKETS[0]!,
-  periodic: BUCKETS[1]!,
-};
-
-/**
- * Which group a practice lives in, decided by its recurrence. Dropping a
- * row into the other group is what changes it: into Diárias → daily on
- * the spot; into Periódicas → the sheet opens on Semanal. Weekly-all-7-
- * days collapses into Daily so the user isn't surprised.
- */
-function bucketFor(rec: Recurrence): Bucket {
-  return isEffectivelyDaily(rec) ? 'daily' : 'periodic';
-}
-
-/** How far the finger travels after grabbing the handle before the row
- *  starts following it. Small: the handle is the only thing that calls
- *  `drag`, and the list's pan gesture is confined to the handle column
- *  (`dragHitSlop`), so this no longer has to keep a long-press from
- *  stealing the scroll (the 20 the rewards list needs). */
-const DRAG_ACTIVATION_DISTANCE = 6;
-/** The handle column: 44dp, the row's full height. */
-const DRAG_HANDLE_WIDTH = 44;
 
 /** Subs in display order, grouped under their dim. */
 const ALL_SUBS_IN_ORDER: SubId[] = DIMENSION_ORDER.flatMap((d) => SUBS_BY_DIM[d]);
 
+/**
+ * Gerenciar práticas ("Adicionar e organizar", the Home's "+") — the
+ * curating surface, in the SAME pattern as Gerenciar recompensas
+ * (components/manage): header with calendar · search · (i), the two doors
+ * (Criar a minha / Escolher sugerida), the reorderable list grouped in
+ * Diárias / Periódicas, Arquivadas at the foot. The catalog view swaps in
+ * under the doors' back row.
+ */
 export default function TasksHubScreen() {
   const router = useRouter();
   const { t } = useT();
   const taskLimit = useTaskLimit();
   const openLimit = useLimitModalStore((s) => s.open);
-  const bottomClearance = useBottomSafeClearance();
+  const bottomPad = useManageListBottomPad();
+  const guidePrompt = useManagePracticesGuidePrompt();
 
   const tasks = useActiveTasks();
   const archived = useArchivedTasks();
@@ -157,10 +131,6 @@ export default function TasksHubScreen() {
       return;
     }
     router.push('/task-form');
-  };
-
-  const handleCreatePress = () => {
-    handleCreateTask();
   };
 
   // Coming BACK to this screen (from the form, from Home) pulls the lists
@@ -184,6 +154,8 @@ export default function TasksHubScreen() {
   const [tab, setTab] = useState<Tab>('mine');
   const [query, setQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
+  // The header's (i): the screen's guide.
+  const [helpOpen, setHelpOpen] = useState(false);
   const [collapsed, setCollapsed] = useState<Record<Bucket, boolean>>({
     daily: false,
     periodic: false,
@@ -288,6 +260,11 @@ export default function TasksHubScreen() {
       if (open) setQuery('');
       return !open;
     });
+  };
+
+  const openTab = (next: Tab) => {
+    Haptics.selectionAsync().catch(() => {});
+    setTab(next);
   };
 
   const handleAdopt = (template: TaskTemplateWithSubs) => {
@@ -466,184 +443,121 @@ export default function TasksHubScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScreenBackground>
-        {/* Top bar */}
-        <View style={styles.topBar}>
-          <Pressable
-            onPress={() => router.back()}
-            style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel={t('common.back')}
-          >
-            <Ionicons name="chevron-back" size={22} color={tokens.text.hi} />
-          </Pressable>
-          <Text style={styles.title}>{t('tasksHub.title')}</Text>
-          <View style={styles.topActions}>
-            <Pressable
-              onPress={toggleSearch}
-              style={({ pressed }) => [
-                styles.iconButton,
-                searchOpen && styles.iconButtonActive,
-                pressed && { opacity: 0.6 },
-              ]}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel={
-                searchOpen ? t('tasksHub.search.close') : t('tasksHub.search.open')
-              }
-            >
-              <Ionicons
-                name={searchOpen ? 'close' : 'search'}
-                size={20}
-                color={searchOpen ? tokens.brand.violet2 : tokens.text.hi}
-              />
-            </Pressable>
-            <LimitCounterBadge limit={taskLimit} />
-          </View>
-        </View>
+        <ManageTopBar
+          title={t('tasksHub.title')}
+          onBack={() => router.back()}
+          onCalendar={() => router.push({ pathname: '/history', params: { front: 'rotina' } })}
+          calendarLabel={t('tasksHub.calendarA11y')}
+          searchOpen={searchOpen}
+          onToggleSearch={toggleSearch}
+          searchOpenLabel={t('tasksHub.search.open')}
+          searchCloseLabel={t('tasksHub.search.close')}
+          onInfo={() => setHelpOpen(true)}
+          infoLabel={t('tasksHub.help.a11y')}
+        />
 
         {/* The two doors (Onboarding simples, André 19/10): a practice of
             your own, or a suggested one from the catalog. Below them, the
             reorderable list. The catalog view has its own way back. */}
         {tab === 'mine' ? (
           <>
-            <View style={styles.doors}>
-              <Pressable
-                onPress={handleCreatePress}
-                style={({ pressed }) => [styles.door, styles.doorCreate, pressed && { opacity: 0.85 }]}
-                accessibilityRole="button"
-                accessibilityLabel={t('tasksHub.doors.create')}
-              >
-                <View style={[styles.doorIcon, { backgroundColor: 'rgba(123, 92, 255, 0.18)' }]}>
-                  <Ionicons name="create-outline" size={22} color={tokens.brand.violet2} />
-                </View>
-                <Text style={styles.doorTitle}>{t('tasksHub.doors.create')}</Text>
-                <Text style={styles.doorDesc}>{t('tasksHub.doors.createDesc')}</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => {
-                  Haptics.selectionAsync().catch(() => {});
-                  setTab('suggested');
-                }}
-                style={({ pressed }) => [styles.door, styles.doorSuggested, pressed && { opacity: 0.85 }]}
-                accessibilityRole="button"
-                accessibilityLabel={t('tasksHub.doors.suggested')}
-              >
-                <View style={[styles.doorIcon, { backgroundColor: 'rgba(255, 200, 61, 0.16)' }]}>
-                  <Ionicons name="albums-outline" size={22} color={tokens.semantic.coin} />
-                </View>
-                <Text style={styles.doorTitle}>{t('tasksHub.doors.suggested')}</Text>
-                <Text style={styles.doorDesc}>
-                  {t('tasksHub.doors.suggestedDesc', { count: suggestedCount })}
-                </Text>
-              </Pressable>
-            </View>
+            <ManageDoors
+              createTitle={t('tasksHub.doors.create')}
+              createDesc={t('tasksHub.doors.createDesc')}
+              suggestedTitle={t('tasksHub.doors.suggested')}
+              suggestedDesc={t('tasksHub.doors.suggestedDesc', { count: suggestedCount })}
+              onCreate={handleCreateTask}
+              onSuggested={() => openTab('suggested')}
+              limit={taskLimit}
+            />
             <ScreenTip id="tasks" style={styles.tip} />
           </>
         ) : (
-          <Pressable
-            onPress={() => {
-              Haptics.selectionAsync().catch(() => {});
-              setTab('mine');
-            }}
-            style={({ pressed }) => [styles.backRow, pressed && { opacity: 0.7 }]}
-            accessibilityRole="button"
-            accessibilityLabel={t('tasksHub.doors.back')}
-          >
-            <Ionicons name="chevron-back" size={18} color={tokens.brand.violet2} />
-            <Text style={styles.backText}>{t('tasksHub.doors.back')}</Text>
-            <View style={{ flex: 1 }} />
-            <Text style={styles.backCount}>{t('tasksHub.tabs.suggested')} · {suggestedCount}</Text>
-          </Pressable>
+          <ManageCatalogBack
+            label={t('tasksHub.doors.back')}
+            countLabel={`${t('tasksHub.tabs.suggested')} · ${suggestedCount}`}
+            onPress={() => openTab('mine')}
+          />
         )}
 
         {searchOpen && (
-          <View style={styles.searchWrap}>
-            <Ionicons name="search" size={16} color={tokens.text.dim} />
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              placeholder={
-                tab === 'mine'
-                  ? t('tasksHub.search.placeholderMine')
-                  : t('tasksHub.search.placeholderCatalog')
-              }
-              placeholderTextColor={tokens.text.faint}
-              style={styles.searchInput}
-              autoCorrect={false}
-              autoCapitalize="none"
-              autoFocus
-            />
-            {query.length > 0 && (
-              <Pressable
-                onPress={() => setQuery('')}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel={t('common.clear')}
-              >
-                <Ionicons name="close-circle" size={16} color={tokens.text.dim} />
-              </Pressable>
-            )}
-          </View>
+          <ManageSearchField
+            value={query}
+            onChangeText={setQuery}
+            placeholder={
+              tab === 'mine'
+                ? t('tasksHub.search.placeholderMine')
+                : t('tasksHub.search.placeholderCatalog')
+            }
+          />
         )}
 
-        {tab === 'mine' ? (
-          <MineBody
-            allActive={tasks.data ?? []}
-            tasksByBucket={tasksByBucket}
-            archived={archived.data ?? []}
-            loading={tasks.isLoading}
-            query={query}
-            isRefreshing={isRefreshing}
-            collapsed={collapsed}
-            archivedOpen={archivedOpen}
-            onToggle={toggleBucket}
-            onToggleArchived={() => setArchivedOpen((v) => !v)}
-            onRefresh={handleRefresh}
-            onTaskPress={(id) => router.push({ pathname: '/task-form', params: { id } })}
-            onCreate={handleCreateTask}
-            onReorder={(ids) => reorderTasks.mutate(ids)}
-            onCrossDrop={handleCrossDrop}
-            resetToken={resetToken}
-            onRestore={handleRestore}
-            onDelete={handleDelete}
-            busyIds={busyIds}
-            bottomClearance={bottomClearance}
-          />
-        ) : (
-          <ScrollView
-            contentContainerStyle={[
-              styles.content,
-              { paddingBottom: Math.max(tokens.space[10], bottomClearance) + tokens.space[6] },
-            ]}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            refreshControl={
-              <RefreshControl
-                refreshing={isRefreshing}
-                onRefresh={handleRefresh}
-                tintColor={tokens.brand.violet2}
-                colors={[tokens.brand.violet2]}
-              />
-            }
-          >
-            <SuggestedBody
-              templatesBySub={templatesBySub}
-              loading={templates.isLoading}
+        <ManageListArea>
+          {tab === 'mine' ? (
+            <MineBody
+              allActive={tasks.data ?? []}
+              tasksByBucket={tasksByBucket}
+              archived={archived.data ?? []}
+              loading={tasks.isLoading}
               query={query}
-              dimFilter={dimFilter}
-              onSelectDim={selectDim}
-              adoptedTemplateIds={adoptedTemplateIds}
-              collapsedSubs={collapsedSubs}
-              onToggleSub={toggleSub}
-              onAdopt={handleAdopt}
-              onCustomize={handleCustomize}
-              adoptingId={adoptingId}
-              limit={taskLimit}
+              isRefreshing={isRefreshing}
+              collapsed={collapsed}
+              archivedOpen={archivedOpen}
+              onToggle={toggleBucket}
+              onToggleArchived={() => setArchivedOpen((v) => !v)}
+              onRefresh={handleRefresh}
+              onTaskPress={(id) => router.push({ pathname: '/task-form', params: { id } })}
+              onCreate={handleCreateTask}
+              onReorder={(ids) => reorderTasks.mutate(ids)}
+              onCrossDrop={handleCrossDrop}
+              resetToken={resetToken}
+              onRestore={handleRestore}
+              onDelete={handleDelete}
+              busyIds={busyIds}
+              bottomPad={bottomPad}
             />
-          </ScrollView>
-        )}
+          ) : (
+            <ScrollView
+              contentContainerStyle={[styles.content, { paddingBottom: bottomPad }]}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              refreshControl={
+                <RefreshControl
+                  refreshing={isRefreshing}
+                  onRefresh={handleRefresh}
+                  tintColor={tokens.brand.violet2}
+                  colors={[tokens.brand.violet2]}
+                />
+              }
+            >
+              <SuggestedBody
+                templatesBySub={templatesBySub}
+                loading={templates.isLoading}
+                query={query}
+                dimFilter={dimFilter}
+                onSelectDim={selectDim}
+                adoptedTemplateIds={adoptedTemplateIds}
+                collapsedSubs={collapsedSubs}
+                onToggleSub={toggleSub}
+                onAdopt={handleAdopt}
+                onCustomize={handleCustomize}
+                adoptingId={adoptingId}
+                limit={taskLimit}
+              />
+            </ScrollView>
+          )}
+        </ManageListArea>
       </ScreenBackground>
+
+      {/* The screen's guide (docs/informativo-de-tela.md). */}
+      <InfoSheet
+        visible={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        title={t('tasksHub.help.title')}
+        aiPrompt={guidePrompt}
+      >
+        <ManagePracticesGuide suggestedCount={suggestedCount} />
+      </InfoSheet>
 
       <AdoptPeriodicitySheet
         visible={pickerTemplate !== null}
@@ -711,6 +625,7 @@ interface MineBodyProps {
   onToggleArchived: () => void;
   onRefresh: () => void;
   onTaskPress: (id: string) => void;
+  /** The empty state's CTA (the doors cover it otherwise). */
   onCreate: () => void;
   onReorder: (orderedIds: string[]) => void;
   /** Row released in the other group: the task, the target group and the
@@ -723,7 +638,7 @@ interface MineBodyProps {
   onDelete: (task: TaskWithSubs) => void;
   /** Archived rows whose restore / delete is in flight. */
   busyIds: Set<string>;
-  bottomClearance: number;
+  bottomPad: number;
 }
 
 function MineBody({
@@ -746,7 +661,7 @@ function MineBody({
   onRestore,
   onDelete,
   busyIds,
-  bottomClearance,
+  bottomPad,
 }: MineBodyProps) {
   const { t } = useT();
 
@@ -894,9 +809,14 @@ function MineBody({
 
   const renderItem = ({ item, drag, isActive }: RenderItemParams<MineItem>) => {
     if (item.kind === 'header') {
+      const meta = BUCKET_BY_ID[item.bucket];
       return (
-        <BucketHeader
-          meta={BUCKET_BY_ID[item.bucket]}
+        <ManageGroupHeader
+          icon={meta.iconName}
+          accent={meta.accent}
+          accentBg={meta.accentBg}
+          label={t(meta.labelKey)}
+          desc={t(meta.descKey)}
           count={item.count}
           collapsed={collapsed[item.bucket]}
           onToggle={() => onToggle(item.bucket)}
@@ -904,22 +824,20 @@ function MineBody({
       );
     }
     if (item.kind === 'empty') {
-      return (
-        <View style={styles.bucketEmptyCard}>
-          <Text style={styles.bucketEmptyText}>{t('tasksHub.bucketEmpty')}</Text>
-        </View>
-      );
+      return <ManageGroupEmpty text={t('tasksHub.bucketEmpty')} />;
     }
     return (
-      <ManageRow
-        task={item.task}
-        drag={drag}
-        isActive={isActive}
-        onEdit={() => onTaskPress(item.task.id)}
-        onMoveUp={() => moveWithin(item.task.id, -1)}
-        onMoveDown={() => moveWithin(item.task.id, 1)}
-        onSwitchGroup={() => switchGroup(item.task.id)}
-      />
+      <ScaleDecorator>
+        <PracticeManageRow
+          task={item.task}
+          isActive={isActive}
+          onEdit={() => onTaskPress(item.task.id)}
+          onHandlePressIn={drag}
+          onMoveUp={() => moveWithin(item.task.id, -1)}
+          onMoveDown={() => moveWithin(item.task.id, 1)}
+          onSwitchGroup={() => switchGroup(item.task.id)}
+        />
+      </ScaleDecorator>
     );
   };
 
@@ -939,21 +857,27 @@ function MineBody({
     query.trim().length > 0 &&
     BUCKETS.every((b) => tasksByBucket[b.id].length === 0);
 
-  const Footer = (
-    <View style={styles.footer}>
-      {archived.length > 0 && (
-        <ArchivedSection
-          tasks={archived}
-          open={archivedOpen}
-          onToggle={onToggleArchived}
-          onRestore={onRestore}
-          onDelete={onDelete}
-          busyIds={busyIds}
-        />
-      )}
-      {!nothingActive && <AddCard label={t('tasksHub.newTask')} onPress={onCreate} />}
-    </View>
-  );
+  // No "Nova prática" card any more: the "Criar a minha" door above the
+  // list is the one way in (owner, 2026-11-07).
+  const Footer =
+    archived.length > 0 ? (
+      <ArchivedFooter
+        label={t('tasksHub.archived.section')}
+        count={archived.length}
+        open={archivedOpen}
+        onToggle={onToggleArchived}
+      >
+        {archived.map((task) => (
+          <ArchivedPracticeRow
+            key={task.id}
+            task={task}
+            busy={busyIds.has(task.id)}
+            onRestore={() => onRestore(task)}
+            onDelete={() => onDelete(task)}
+          />
+        ))}
+      </ArchivedFooter>
+    ) : null;
 
   return (
     <DraggableFlatList
@@ -1010,17 +934,12 @@ function MineBody({
         setLocalItems(shown);
         onCrossDrop(moved.task, dropTarget, orderAfterDrop(shown, dropTarget));
       }}
-      activationDistance={DRAG_ACTIVATION_DISTANCE}
-      // The pan only exists over the rightmost handle column (44dp + the
-      // 16dp gutter). Body swipes then have no competing gesture and scroll
-      // natively — on Android a 6dp activation would otherwise beat the
-      // 8dp scroll slop and eat slow-starting scrolls.
-      dragHitSlop={{ right: 0, width: DRAG_HANDLE_WIDTH + tokens.space[4] }}
-      ListHeaderComponent={
-        nothingActive ? null : (
-          <Text style={styles.lead}>{t('tasksHub.lead')}</Text>
-        )
-      }
+      activationDistance={MANAGE_DRAG_ACTIVATION_DISTANCE}
+      dragHitSlop={MANAGE_DRAG_HIT_SLOP}
+      // The outer container must be the viewport (flex: 1) — see
+      // MANAGE_LIST_CONTAINER: without it the end of the list sat below
+      // the screen, out of reach.
+      containerStyle={MANAGE_LIST_CONTAINER}
       ListEmptyComponent={
         nothingMatches ? (
           <View style={styles.emptyBox}>
@@ -1045,12 +964,7 @@ function MineBody({
         )
       }
       ListFooterComponent={Footer}
-      contentContainerStyle={[
-        styles.listContent,
-        // Generous bottom padding so the last card clears the OS nav
-        // comfortably even when the safe-area inset under-reports.
-        { paddingBottom: Math.max(tokens.space[10], bottomClearance) + tokens.space[6] },
-      ]}
+      contentContainerStyle={[styles.listContent, { paddingBottom: bottomPad }]}
       refreshControl={
         <RefreshControl
           refreshing={isRefreshing}
@@ -1063,259 +977,9 @@ function MineBody({
   );
 }
 
-/** Slim section header — accent icon, eyebrow, one-line description,
- *  count chip and the collapse chevron. No card: the rows below carry
- *  the surface, the header just names the group. */
-function BucketHeader({
-  meta,
-  count,
-  collapsed,
-  onToggle,
-}: {
-  meta: BucketMeta;
-  count: number;
-  collapsed: boolean;
-  onToggle: () => void;
-}) {
-  const { t } = useT();
-  return (
-    <Pressable
-      onPress={onToggle}
-      style={({ pressed }) => [styles.bucketHeader, pressed && { opacity: 0.7 }]}
-      accessibilityRole="button"
-      accessibilityState={{ expanded: !collapsed }}
-    >
-      <View style={[styles.bucketIcon, { backgroundColor: meta.accentBg }]}>
-        <Ionicons name={meta.iconName} size={16} color={meta.accent} />
-      </View>
-      <View style={styles.bucketTitleCol}>
-        <Text style={[styles.bucketEyebrow, { color: meta.accent }]}>
-          {t(meta.labelKey).toUpperCase()}
-        </Text>
-        <Text style={styles.bucketDesc} numberOfLines={1}>
-          {t(meta.descKey)}
-        </Text>
-      </View>
-      <View style={[styles.countChip, { backgroundColor: meta.accentBg }]}>
-        <Text style={[styles.countChipText, { color: meta.accent }]}>{count}</Text>
-      </View>
-      <Ionicons
-        name={collapsed ? 'chevron-down' : 'chevron-up'}
-        size={16}
-        color={tokens.text.dim}
-      />
-    </Pressable>
-  );
-}
-
-interface ManageRowProps {
-  task: TaskWithSubs;
-  drag: () => void;
-  isActive: boolean;
-  onEdit: () => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
-  onSwitchGroup: () => void;
-}
-
-/**
- * Manage row — the Home TaskCard's vocabulary (gradient surface, dim-
- * tinted icon tile, sub stack + colored pips + XP + recurrence note) minus
- * the check button, plus the drag handle. Tap the row → edit form. Touch
- * the handle → the row lifts at once (`onPressIn`, no long-press wait).
- */
-function ManageRow({
-  task,
-  drag,
-  isActive,
-  onEdit,
-  onMoveUp,
-  onMoveDown,
-  onSwitchGroup,
-}: ManageRowProps) {
-  const { t } = useT();
-  const lookup = useMetaLookup();
-  const sub = lookup.sub(task.primary_sub_id);
-  const dim = lookup.dim(task.primary_dimension_id);
-  const coinsOnly = isCoinsOnly(task);
-  const reward = rewardForTaskSubs(task.subs, task.coin_multiplier, task.coin_stars);
-  const isCustom = !task.template_id;
-  const recurrenceLabel = describeRecurrence(task.recurrence, task.target_count, t);
-  // Same rule as TaskCard: the note only when it says something the group
-  // does not — a plain daily is already "todo dia" by being in Diárias.
-  const showRecurrence = task.recurrence.type !== 'daily' || task.target_count > 1;
-
-  return (
-    <ScaleDecorator>
-      <View style={styles.rowWrap}>
-        <View
-          style={[
-            styles.row,
-            { borderLeftColor: coinsOnly ? tokens.semantic.coin : dim.color },
-            isActive && styles.rowActive,
-          ]}
-        >
-          <LinearGradient
-            colors={tokens.gradient.taskCard}
-            locations={tokens.gradient.taskCardLocations}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={StyleSheet.absoluteFill}
-            pointerEvents="none"
-          />
-          {/* The label replaces the children for screen readers, so the
-              schedule travels as the value; reorder / regroup are custom
-              actions here because the handle is touch-only. */}
-          <Pressable
-            onPress={onEdit}
-            disabled={isActive}
-            style={({ pressed }) => [styles.rowMain, pressed && { opacity: 0.85 }]}
-            accessibilityRole="button"
-            accessibilityLabel={t('tasksHub.row.editA11y', { title: task.title })}
-            accessibilityValue={{ text: recurrenceLabel }}
-            accessibilityActions={[
-              { name: 'moveUp', label: t('tasksHub.row.a11yMoveUp') },
-              { name: 'moveDown', label: t('tasksHub.row.a11yMoveDown') },
-              { name: 'switchGroup', label: t('tasksHub.row.a11ySwitchGroup') },
-            ]}
-            onAccessibilityAction={(e) => {
-              switch (e.nativeEvent.actionName) {
-                case 'moveUp':
-                  onMoveUp();
-                  break;
-                case 'moveDown':
-                  onMoveDown();
-                  break;
-                case 'switchGroup':
-                  onSwitchGroup();
-                  break;
-              }
-            }}
-          >
-            {coinsOnly ? (
-              <View style={[styles.subTile, { backgroundColor: 'rgba(255, 200, 61, 0.14)' }]}>
-                {task.icon ? (
-                  <AppIcon name={task.icon} size={17} color={tokens.semantic.coinLight} />
-                ) : (
-                  <CoinIcon size={19} />
-                )}
-              </View>
-            ) : (
-              <View style={[styles.subTile, { backgroundColor: dim.bg }]}>
-                <AppIcon name={task.icon ?? sub.iconName} size={17} color={dim.color} />
-              </View>
-            )}
-            <View style={styles.rowBody}>
-              <Text style={styles.rowTitle} numberOfLines={2}>
-                {task.title}
-              </Text>
-              <View style={styles.metaRow}>
-                {coinsOnly ? (
-                  <View style={styles.coinsOnlyMeta}>
-                    <CoinIcon size={14} />
-                    <Text style={styles.coinsOnlyValue}>+{reward.total.coins}</Text>
-                  </View>
-                ) : (
-                  <>
-                    {task.subs.length > 0 && (
-                      <SubStack subIds={task.subs.map((s) => s.sub_id)} max={3} size={16} />
-                    )}
-                    <SubColoredPips subs={task.subs} size={5} />
-                    <Text style={styles.rewardValue}>+{reward.total.xp}</Text>
-                    <CoinMultiplierBadge multiplier={task.coin_multiplier} />
-                  </>
-                )}
-                {showRecurrence && (
-                  <Text style={styles.recurrenceNote} numberOfLines={1}>
-                    · {recurrenceLabel}
-                  </Text>
-                )}
-                {isCustom && (
-                  <View style={styles.customChip}>
-                    <Text style={styles.customChipText}>{t('tasksHub.customChip')}</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-          </Pressable>
-          {/* The handle: 44dp wide, full row height, drag starts on touch.
-              Hidden from assistive tech — a press-in never reaches it; the
-              row's custom actions are the accessible path. */}
-          <Pressable
-            onPressIn={drag}
-            disabled={isActive}
-            style={({ pressed }) => [styles.dragHandle, pressed && styles.dragHandlePressed]}
-            accessible={false}
-            importantForAccessibility="no-hide-descendants"
-            accessibilityElementsHidden
-          >
-            <Ionicons
-              name="reorder-three"
-              size={22}
-              color={isActive ? tokens.brand.violet2 : tokens.text.mid}
-            />
-          </Pressable>
-        </View>
-      </View>
-    </ScaleDecorator>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Arquivadas — collapsed footer with restore + (guarded) delete
-// ─────────────────────────────────────────────────────────────────────────────
-
-interface ArchivedSectionProps {
-  tasks: TaskWithSubs[];
-  open: boolean;
-  onToggle: () => void;
-  onRestore: (task: TaskWithSubs) => void;
-  onDelete: (task: TaskWithSubs) => void;
-  busyIds: Set<string>;
-}
-
-function ArchivedSection({ tasks, open, onToggle, onRestore, onDelete, busyIds }: ArchivedSectionProps) {
-  const { t } = useT();
-  return (
-    <View style={styles.archivedBlock}>
-      <Pressable
-        onPress={onToggle}
-        style={({ pressed }) => [styles.bucketHeader, pressed && { opacity: 0.7 }]}
-        accessibilityRole="button"
-        accessibilityState={{ expanded: open }}
-      >
-        <View style={[styles.bucketIcon, { backgroundColor: 'rgba(255,255,255,0.05)' }]}>
-          <Ionicons name="archive-outline" size={16} color={tokens.text.dim} />
-        </View>
-        <View style={styles.bucketTitleCol}>
-          <Text style={[styles.bucketEyebrow, { color: tokens.text.mid }]}>
-            {t('tasksHub.archived.section').toUpperCase()}
-          </Text>
-        </View>
-        <View style={[styles.countChip, { backgroundColor: 'rgba(255,255,255,0.06)' }]}>
-          <Text style={[styles.countChipText, { color: tokens.text.mid }]}>{tasks.length}</Text>
-        </View>
-        <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={16} color={tokens.text.dim} />
-      </Pressable>
-
-      {open && (
-        <View style={styles.archivedList}>
-          {tasks.map((task) => (
-            <ArchivedRow
-              key={task.id}
-              task={task}
-              busy={busyIds.has(task.id)}
-              onRestore={() => onRestore(task)}
-              onDelete={() => onDelete(task)}
-            />
-          ))}
-        </View>
-      )}
-    </View>
-  );
-}
-
-function ArchivedRow({
+/** An archived practice: its icon, the schedule it had, Restaurar and the
+ *  (guarded) trash. */
+function ArchivedPracticeRow({
   task,
   busy,
   onRestore,
@@ -1330,48 +994,21 @@ function ArchivedRow({
   const lookup = useMetaLookup();
   const sub = lookup.sub(task.primary_sub_id);
   return (
-    <View style={styles.archivedRow}>
-      <View style={[styles.subTile, styles.subTileArchived]}>
-        <AppIcon
-          name={task.icon ?? (isCoinsOnly(task) ? 'ellipse-outline' : sub.iconName)}
-          size={16}
-          color={tokens.text.dim}
-        />
-      </View>
-      <View style={styles.rowBody}>
-        <Text style={[styles.rowTitle, { color: tokens.text.mid }]} numberOfLines={1}>
-          {task.title}
-        </Text>
-        <Text style={styles.archivedMeta} numberOfLines={1}>
+    <ManageArchivedRow
+      icon={task.icon ?? (isCoinsOnly(task) ? 'ellipse-outline' : sub.iconName)}
+      title={task.title}
+      meta={
+        <Text style={archivedMetaStyle} numberOfLines={1}>
           {describeRecurrence(task.recurrence, task.target_count, t)}
         </Text>
-      </View>
-      {busy ? (
-        <ActivityIndicator size="small" color={tokens.brand.violet2} />
-      ) : (
-        <>
-          <Pressable
-            onPress={onRestore}
-            hitSlop={8}
-            style={({ pressed }) => [styles.restoreBtn, pressed && { opacity: 0.7 }]}
-            accessibilityRole="button"
-            accessibilityLabel={t('tasksHub.archived.restoreA11y', { title: task.title })}
-          >
-            <Ionicons name="refresh" size={14} color={tokens.brand.violet2} />
-            <Text style={styles.restoreText}>{t('tasksHub.archived.restore')}</Text>
-          </Pressable>
-          <Pressable
-            onPress={onDelete}
-            hitSlop={8}
-            style={({ pressed }) => [styles.trashBtn, pressed && { opacity: 0.6 }]}
-            accessibilityRole="button"
-            accessibilityLabel={t('tasksHub.archived.deleteA11y', { title: task.title })}
-          >
-            <Ionicons name="trash-outline" size={18} color={tokens.semantic.danger} />
-          </Pressable>
-        </>
-      )}
-    </View>
+      }
+      busy={busy}
+      onRestore={onRestore}
+      onDelete={onDelete}
+      restoreLabel={t('tasksHub.archived.restore')}
+      restoreA11y={t('tasksHub.archived.restoreA11y', { title: task.title })}
+      deleteA11y={t('tasksHub.archived.deleteA11y', { title: task.title })}
+    />
   );
 }
 
@@ -1486,7 +1123,7 @@ function SuggestedBody({
           const subMeta = lookup.sub(subId);
           const dimMeta = lookup.dim(subMeta.dimensionId);
           const list = templatesBySub.get(subId) ?? [];
-          // Same count the tab chip shows: what is still there to adopt.
+          // Same count the suggested door shows: what is still there to adopt.
           const openCount = list.filter((tp) => !adoptedTemplateIds.has(tp.id)).length;
           // A picked dimension or an active search force-expands: collapsed
           // groups would hide exactly what the user just asked for. The
@@ -1712,132 +1349,21 @@ function TemplateRow({
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: tokens.bg.deep },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: tokens.space[4],
-    paddingVertical: tokens.space[2],
-  },
-  topActions: {
-    flexDirection: 'row',
-    gap: tokens.space[2],
-    alignItems: 'center',
-  },
-  iconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: tokens.bg.surface,
-  },
-  iconButtonActive: {
-    backgroundColor: 'rgba(123,92,255,0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(123,92,255,0.4)',
-  },
-  title: {
-    ...tokens.type.h3,
-    color: tokens.text.hi,
-  },
-  doors: {
-    flexDirection: 'row',
-    gap: tokens.space[3],
-    paddingHorizontal: tokens.space[4],
-    paddingTop: tokens.space[2],
-  },
-  door: {
-    flex: 1,
-    gap: 6,
-    padding: tokens.space[3],
-    borderRadius: tokens.radius.lg,
-    borderWidth: 1.5,
-    backgroundColor: tokens.bg.surface,
-  },
-  doorCreate: { borderColor: 'rgba(155, 130, 255, 0.55)' },
-  doorSuggested: { borderColor: 'rgba(255, 200, 61, 0.45)' },
-  doorIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  doorTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 15,
-    lineHeight: 20,
-    color: tokens.text.hi,
-  },
-  doorDesc: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
-    lineHeight: 16,
-    color: tokens.text.mid,
-  },
   tip: { marginHorizontal: tokens.space[4], marginTop: tokens.space[3], marginBottom: 0 },
-  backRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    minHeight: 44,
-    paddingHorizontal: tokens.space[3],
-    marginHorizontal: tokens.space[4],
-    marginTop: tokens.space[2],
-    borderRadius: tokens.radius.lg,
-    backgroundColor: tokens.bg.surface,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-  },
-  backText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 14,
-    color: tokens.brand.violet2,
-  },
-  backCount: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
-    color: tokens.text.mid,
-  },
-  searchWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[2],
-    backgroundColor: tokens.bg.surface,
-    borderRadius: tokens.radius.md,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-    paddingHorizontal: tokens.space[3],
-    marginHorizontal: tokens.space[4],
-    height: 40,
-    marginTop: tokens.space[3],
-  },
-  searchInput: {
-    flex: 1,
-    color: tokens.text.hi,
-    ...tokens.type.body,
-    paddingVertical: 0,
-  },
+  // No top padding on either body: ManageListArea's band already parts
+  // them from the doors.
   content: {
     paddingHorizontal: tokens.space[4],
-    paddingTop: tokens.space[3],
   },
   listContent: {
     paddingHorizontal: tokens.space[4],
-    paddingTop: tokens.space[3],
-  },
-  lead: {
-    ...tokens.type.caption,
-    color: tokens.text.dim,
-    paddingBottom: tokens.space[1],
   },
   loadingBox: {
     paddingVertical: tokens.space[10],
     alignItems: 'center',
   },
 
-  // ── Group headers (Minhas buckets · Arquivadas · Sugeridas subs) ──────
+  // ── Group headers (Sugeridas subs) ────────────────────────────────────
   bucketHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1880,62 +1406,8 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 0.3,
   },
-  bucketEmptyCard: {
-    borderRadius: 14,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: tokens.border.strong,
-    paddingVertical: tokens.space[3],
-    paddingHorizontal: tokens.space[4],
-    marginBottom: tokens.space[2],
-  },
-  bucketEmptyText: {
-    ...tokens.type.caption,
-    color: tokens.text.dim,
-    textAlign: 'center',
-  },
 
-  // ── Manage row ────────────────────────────────────────────────────────
-  rowWrap: {
-    marginBottom: tokens.space[2],
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-    borderTopColor: 'rgba(255,255,255,0.04)',
-    borderLeftWidth: 3,
-    overflow: 'hidden',
-  },
-  rowActive: {
-    borderColor: tokens.brand.violet2,
-    backgroundColor: 'rgba(155,130,255,0.10)',
-  },
-  rowMain: {
-    flex: 1,
-    minWidth: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 10,
-    paddingLeft: 10,
-    paddingRight: 4,
-  },
-  // 44dp wide, the row's full height: a thumb lands on it without aiming.
-  dragHandle: {
-    width: DRAG_HANDLE_WIDTH,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderLeftWidth: 1,
-    borderLeftColor: tokens.border.divider,
-  },
-  // Sits ABOVE the card gradient (the handle is a sibling of it), so the
-  // wash actually shows — violetGlow is 0.45 dark / 0.22 light.
-  dragHandlePressed: {
-    backgroundColor: tokens.brand.violetGlow,
-  },
+  // ── Template card ─────────────────────────────────────────────────────
   subTile: {
     width: 34,
     height: 34,
@@ -1943,9 +1415,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
-  },
-  subTileArchived: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
   },
   rowBody: {
     flex: 1,
@@ -1959,36 +1428,11 @@ const styles = StyleSheet.create({
     color: tokens.text.hi,
     flexShrink: 1,
   },
-  customChip: {
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-  },
-  // 9px text.mid — 8px text.dim on the 6% wash sat around 3.3:1.
-  customChipText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 9,
-    letterSpacing: 0.8,
-    color: tokens.text.mid,
-  },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 7,
     flexWrap: 'wrap',
-  },
-  coinsOnlyMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  coinsOnlyValue: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 13,
-    color: tokens.semantic.coinLight,
   },
   rewardValue: {
     fontFamily: 'Manrope_800ExtraBold',
@@ -1996,66 +1440,11 @@ const styles = StyleSheet.create({
     color: tokens.semantic.xp,
     letterSpacing: 0.2,
   },
-  // The row's only statement of WHEN inside Periódicas — text.mid (AA on
-  // both palettes), not the faint italic the Home card can afford because
-  // Hoje already says "today".
   recurrenceNote: {
     fontFamily: 'Manrope_500Medium',
     fontSize: 11,
     color: tokens.text.mid,
     flexShrink: 1,
-  },
-
-  // ── Footer: archived + add ────────────────────────────────────────────
-  footer: {
-    gap: tokens.space[3],
-    marginTop: tokens.space[2],
-  },
-  archivedBlock: {
-    gap: 0,
-  },
-  archivedList: {
-    gap: tokens.space[2],
-  },
-  archivedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-    backgroundColor: 'rgba(255,255,255,0.02)',
-  },
-  archivedMeta: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 11,
-    color: tokens.text.mid,
-  },
-  restoreBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: tokens.radius.pill,
-    borderWidth: 1,
-    borderColor: 'rgba(155,130,255,0.35)',
-    backgroundColor: 'rgba(155,130,255,0.1)',
-  },
-  restoreText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
-    color: tokens.brand.violet2,
-    letterSpacing: 0.3,
-  },
-  trashBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 
   // ── Empty states ──────────────────────────────────────────────────────

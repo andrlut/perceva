@@ -1320,8 +1320,10 @@ export default function HomeScreen() {
 
       {/* The one floating button: "+" opens the add/organize screen (create
           your own, pick a suggested one, reorder). The calendar moved to the
-          date in the header. RAW navClearance (not the tour-bumped value)
-          so it doesn't leap up under a bottom tour tooltip. */}
+          date in the header. Gold, like every primary floating button in the
+          app (the classic layout's "Todas as práticas" too); the calendar
+          stays a neutral utility. RAW navClearance (not the tour-bumped
+          value) so it doesn't leap up under a bottom tour tooltip. */}
       <FabStack
         bottomOffset={navClearance}
         actions={classic ? [
@@ -1339,7 +1341,7 @@ export default function HomeScreen() {
             onPress: openAllPractices,
             accessibilityLabel: t('allPractices.title'),
             size: 'lg',
-            tone: 'violet',
+            tone: 'gold',
           },
         ] : [
           {
@@ -1351,7 +1353,7 @@ export default function HomeScreen() {
             },
             accessibilityLabel: t('tasksHub.title'),
             size: 'lg',
-            tone: 'violet',
+            tone: 'gold',
             iconSize: 28,
           },
         ]}
@@ -1442,6 +1444,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: tokens.space[5],
   },
+  // The column every block of the Hoje page lives in. Its padding IS the
+  // page's edge: practice cards, "Fechar o dia", the drawers and the Recanto
+  // card all span it with no margin of their own, and the blocks outside it
+  // (mood, Resgates do dia) take the same space[4] — one width, one radius
+  // (radius.md, the TaskCard's) from the first card to the last.
   taskList: {
     paddingHorizontal: tokens.space[4],
     paddingTop: tokens.space[2],
@@ -1454,12 +1461,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: tokens.space[2],
     minHeight: 48,
-    marginHorizontal: tokens.space[3],
     marginTop: tokens.space[2],
     paddingHorizontal: tokens.space[3],
     paddingVertical: tokens.space[3],
     backgroundColor: tokens.bg.surface,
-    borderRadius: tokens.radius.lg,
+    borderRadius: tokens.radius.md,
     borderWidth: 1,
     borderColor: tokens.border.base,
   },
@@ -1488,17 +1494,17 @@ const styles = StyleSheet.create({
     marginTop: tokens.space[3],
   },
   // "Fechar o dia" — a real button now (it read as dead text): the violet
-  // outline of the app's secondary actions, full width like the drawer rows
-  // under it.
+  // outline of the app's secondary actions, the full taskList width like the
+  // cards above and the drawers under it (it used to sit 12px further in,
+  // with a rounder corner, and read as a different kind of box).
   clearDayBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     minHeight: 44,
-    marginHorizontal: tokens.space[3],
     marginTop: tokens.space[2],
-    borderRadius: tokens.radius.lg,
+    borderRadius: tokens.radius.md,
     borderWidth: 1,
     borderColor: 'rgba(155, 130, 255, 0.45)',
     backgroundColor: 'rgba(123, 92, 255, 0.12)',

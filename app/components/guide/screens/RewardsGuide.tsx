@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useMemo, useState } from 'react';
 import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
-import { AddCard } from '@/components/AddCard';
 import { CoinIcon } from '@/components/CoinIcon';
 import {
   GuideGesture,
@@ -31,7 +31,7 @@ import { tokens } from '@/theme';
  * at the top of the shop.
  *
  * "Resgate = uso, sem Banco": redeeming pays and counts as used at once;
- * undo lives in the celebration, then in the calendar and in Resgates —
+ * undo lives in the celebration, then in the calendar (Vault front) —
  * the step nobody finds alone, so it has its own row.
  */
 
@@ -45,7 +45,6 @@ export const REWARDS_GUIDE_ITEMS = [
   'balance',
   'chips',
   'sections',
-  'add',
   'undo',
   'buttons',
 ] as const;
@@ -123,18 +122,8 @@ export function RewardsGuide() {
     balance: { icon: 'wallet-outline', iconColor: tokens.semantic.coin, replica: <BalanceReplica /> },
     chips: { icon: 'pricetags-outline', replica: <ChipsReplica /> },
     sections: { icon: 'layers-outline', replica: <SectionsReplica /> },
-    add: {
-      icon: 'add-circle-outline',
-      replica: (
-        <AddCard
-          label={t('rewards.vault.addReward')}
-          sublabel={t('rewards.vault.addRewardSub')}
-          onPress={() => {}}
-        />
-      ),
-    },
     undo: { icon: 'arrow-undo-outline' },
-    buttons: { icon: 'options-outline', iconColor: tokens.semantic.coin, replica: <FabsReplica /> },
+    buttons: { icon: 'add-circle', iconColor: tokens.semantic.coin, replica: <FabReplica /> },
   };
 
   const gestureKeys = REWARDS_GUIDE_ITEMS.filter(isGesture);
@@ -322,16 +311,19 @@ function SectionsReplica() {
   );
 }
 
-/** Calendar on top, the gold Gerenciar below. */
-function FabsReplica() {
+/** The one floating button: the gold "+" that opens Gerenciar (FabStack's
+ *  gold tone — the coin gradient, the dark ink). */
+function FabReplica() {
   return (
-    <View style={styles.fabs}>
-      <View style={[styles.fab, styles.fabSmall]}>
-        <Ionicons name="calendar-outline" size={20} color={tokens.text.hi} />
-      </View>
-      <View style={[styles.fab, styles.fabMain]}>
-        <Ionicons name="options-outline" size={24} color="#3D2A00" />
-      </View>
+    <View style={styles.fab}>
+      <LinearGradient
+        colors={tokens.gradient.coinBtn as [string, string, string]}
+        locations={tokens.gradient.coinBtnLocations as [number, number, number]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+      <Ionicons name="add" size={28} color={tokens.semantic.coinInk} />
     </View>
   );
 }
@@ -420,14 +412,15 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: tokens.text.dim,
   },
-  fabs: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  fab: { alignItems: 'center', justifyContent: 'center', borderRadius: 999 },
-  fabSmall: {
-    width: 40,
-    height: 40,
-    backgroundColor: tokens.bg.surface2,
+  // FabStack's lg (56) with its gold rim.
+  fab: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
     borderWidth: 1,
-    borderColor: tokens.border.base,
+    borderColor: 'rgba(255,224,138,0.6)',
   },
-  fabMain: { width: 48, height: 48, backgroundColor: tokens.semantic.coin },
 });

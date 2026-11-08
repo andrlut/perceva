@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -20,6 +21,7 @@ import type { TaskWithSubs } from '@/lib/db/types';
 import { screenGuidePrompt } from '@/lib/guide';
 import { useT } from '@/lib/i18n';
 import { useModules, type ModuleKey } from '@/lib/modules';
+import { useLoadedSettings, type PracticesLayout } from '@/lib/settings';
 import { tokens } from '@/theme';
 
 /**
@@ -50,6 +52,7 @@ export const PRACTICES_GUIDE_ITEMS = [
   'tap',
   'hold',
   'days',
+  'daysClassic',
   'stats',
   'closeDay',
   'done',
@@ -57,6 +60,7 @@ export const PRACTICES_GUIDE_ITEMS = [
   'mood',
   'redemptions',
   'buttons',
+  'buttonsClassic',
   'quests',
   'week',
 ] as const;
@@ -82,15 +86,28 @@ const GATES: Partial<Record<ItemKey, readonly ModuleKey[]>> = {
   week: ['semana'],
 };
 
+/** Items that exist in one layout of the tab only (Ajustes › Preferências):
+ *  the default has the one gold "+", the classic one the calendar over the
+ *  gold "Todas as práticas". */
+const LAYOUTS: Partial<Record<ItemKey, PracticesLayout>> = {
+  days: 'tabs',
+  daysClassic: 'classic',
+  buttons: 'tabs',
+  buttonsClassic: 'classic',
+};
+
 function useVisibleKeys(): ItemKey[] {
   const modules = useModules();
+  const layout = useLoadedSettings().practicesLayout;
   return useMemo(
     () =>
       PRACTICES_GUIDE_ITEMS.filter((k) => {
+        const only = LAYOUTS[k];
+        if (only && only !== layout) return false;
         const gate = GATES[k];
         return !gate || gate.some((m) => modules[m]);
       }),
-    [modules],
+    [modules, layout],
   );
 }
 
@@ -165,6 +182,7 @@ export function PracticesGuide() {
     { icon: keyof typeof Ionicons.glyphMap; iconColor?: string; replica?: React.ReactNode }
   > = {
     days: { icon: 'calendar-number-outline', replica: <DayNavReplica /> },
+    daysClassic: { icon: 'calendar-number-outline', replica: <DayNavReplica /> },
     stats: { icon: 'flash-outline', iconColor: tokens.semantic.coin, replica: <StatsReplica /> },
     closeDay: { icon: 'checkmark-done-outline', replica: <ClearDayReplica label={t('home.clearDay.cta')} /> },
     done: {
@@ -206,7 +224,12 @@ export function PracticesGuide() {
       ),
     },
     redemptions: { icon: 'gift-outline', iconColor: tokens.semantic.coin, replica: <RedemptionsReplica /> },
-    buttons: { icon: 'albums-outline', replica: <FabsReplica /> },
+    buttons: { icon: 'add-circle-outline', iconColor: tokens.semantic.coin, replica: <FabsReplica /> },
+    buttonsClassic: {
+      icon: 'albums-outline',
+      iconColor: tokens.semantic.coin,
+      replica: <FabsReplica classic />,
+    },
     quests: { icon: 'flag-outline', iconColor: tokens.semantic.coin, replica: <QuestsReplica /> },
     week: { icon: 'calendar-outline', replica: <WeekReplica /> },
   };
@@ -437,15 +460,30 @@ function RedemptionsReplica() {
   );
 }
 
-/** The two floating buttons: calendar on top, the violet one below. */
-function FabsReplica() {
+/** The floating buttons, drawn like FabStack's: the one gold "+" — or, in
+ *  the classic layout, the neutral calendar beside the gold "Todas as
+ *  práticas". */
+function FabsReplica({ classic = false }: { classic?: boolean }) {
   return (
     <View style={styles.fabs}>
-      <View style={[styles.fab, styles.fabSmall]}>
-        <Ionicons name="calendar-outline" size={20} color={tokens.text.hi} />
-      </View>
+      {classic && (
+        <View style={[styles.fab, styles.fabSmall]}>
+          <Ionicons name="calendar-outline" size={20} color={tokens.text.mid} />
+        </View>
+      )}
       <View style={[styles.fab, styles.fabMain]}>
-        <Ionicons name="albums-outline" size={24} color={tokens.text.hi} />
+        <LinearGradient
+          colors={tokens.gradient.coinBtn as [string, string, string]}
+          locations={tokens.gradient.coinBtnLocations as [number, number, number]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <Ionicons
+          name={classic ? 'albums-outline' : 'add'}
+          size={classic ? 22 : 26}
+          color={tokens.semantic.coinInk}
+        />
       </View>
     </View>
   );
@@ -603,7 +641,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     minHeight: 40,
-    borderRadius: tokens.radius.lg,
+    borderRadius: tokens.radius.md,
     borderWidth: 1,
     borderColor: 'rgba(155, 130, 255, 0.45)',
     backgroundColor: 'rgba(123, 92, 255, 0.12)',
@@ -638,11 +676,17 @@ const styles = StyleSheet.create({
   fabSmall: {
     width: 40,
     height: 40,
-    backgroundColor: tokens.bg.surface2,
+    backgroundColor: tokens.bg.glassStrong,
     borderWidth: 1,
     borderColor: tokens.border.base,
   },
-  fabMain: { width: 48, height: 48, backgroundColor: tokens.brand.violet },
+  fabMain: {
+    width: 48,
+    height: 48,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,224,138,0.6)',
+  },
   pills: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   questPill: {
     flexDirection: 'row',

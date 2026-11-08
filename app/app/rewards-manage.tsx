@@ -10,7 +10,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import DraggableFlatList, {
@@ -20,14 +19,32 @@ import DraggableFlatList, {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppIcon } from '@/components/AppIcon';
-import { AddCard } from '@/components/AddCard';
-import { useBottomSafeClearance } from '@/components/BottomNavBar';
-import { BucketTabsV2 } from '@/components/BucketTabsV2';
 import { CoinIcon } from '@/components/CoinIcon';
 import { EmptyHero } from '@/components/EmptyHero';
-import { ScreenBackground } from '@/components/ScreenBackground';
 import { ScreenTip } from '@/components/guide/ScreenTip';
-import { LimitCounterBadge } from '@/components/premium/LimitCounterBadge';
+import {
+  ManageRewardsGuide,
+  useManageRewardsGuidePrompt,
+} from '@/components/guide/screens/ManageGuide';
+import { InfoSheet } from '@/components/InfoSheet';
+import {
+  ArchivedFooter,
+  ManageArchivedRow,
+  archivedMetaStyle,
+} from '@/components/manage/ArchivedFooter';
+import { ManageCatalogBack, ManageDoors } from '@/components/manage/ManageDoors';
+import {
+  MANAGE_DRAG_ACTIVATION_DISTANCE,
+  MANAGE_DRAG_HIT_SLOP,
+  MANAGE_LIST_CONTAINER,
+  ManageListArea,
+  ManageSearchField,
+  manageRowStyles,
+  useManageListBottomPad,
+} from '@/components/manage/ManageList';
+import { ManageTopBar } from '@/components/manage/ManageTopBar';
+import { RewardCostTag, RewardManageRow } from '@/components/manage/RewardManageRow';
+import { ScreenBackground } from '@/components/ScreenBackground';
 import {
   useAddTemplateToShop,
   useArchivedRewards,
@@ -55,14 +72,6 @@ import { REWARD_CATEGORY_META, REWARD_CATEGORY_ORDER } from '@/theme/rewards';
 type Tab = 'mine' | 'suggested';
 type CategoryFilter = RewardCategory | 'all';
 
-/** How far the finger travels after grabbing the handle before the row
- *  starts following it. The handle is the only thing that calls `drag`
- *  and the pan is confined to its column (`dragHitSlop`), so this no
- *  longer has to keep a long-press from stealing the scroll. */
-const DRAG_ACTIVATION_DISTANCE = 6;
-/** The handle column: 44dp, the row's full height. */
-const DRAG_HANDLE_WIDTH = 44;
-
 /** A template already sitting in the user's list (active OR archived — an
  *  archived adoption still "was adopted", its suggestion must not come
  *  back). Matched by template_id, with the title as a net for adoptions
@@ -83,11 +92,14 @@ function isAdopted(template: RewardTemplate, adopted: AdoptedIndex): boolean {
 }
 
 /**
- * Gerenciar recompensas — the curating surface behind the Vault, in the
- * same shape as Gerenciar práticas: Minhas (one ordered list, tap to
- * edit, handle to drag, archived bin at the foot) and Sugeridas (the
- * catalog, by category, adopt as-is or adjust first). Buying and tracking
- * stay on the Vault tab; nothing here spends coins.
+ * Gerenciar recompensas — the curating surface behind the Vault's "+", in
+ * the SAME pattern as Gerenciar práticas (components/manage; owner,
+ * 2026-11-07: one pattern, nobody learns two): header with calendar ·
+ * search · (i), the two doors (Criar a minha / Escolher sugerida), one
+ * ordered list (tap to edit, handle to drag), Arquivadas at the foot. The
+ * catalog — by category, adopt as-is or adjust first — swaps in under the
+ * doors' back row. Buying and tracking stay on the Vault tab; nothing here
+ * spends coins.
  */
 export default function RewardsHubScreen() {
   const router = useRouter();
@@ -96,7 +108,8 @@ export default function RewardsHubScreen() {
   const params = useLocalSearchParams<{ tab?: string }>();
   const rewardLimit = useRewardLimit();
   const openLimit = useLimitModalStore((s) => s.open);
-  const bottomClearance = useBottomSafeClearance();
+  const bottomPad = useManageListBottomPad();
+  const guidePrompt = useManageRewardsGuidePrompt();
 
   const rewards = useRewards();
   const archived = useArchivedRewards();
@@ -133,9 +146,13 @@ export default function RewardsHubScreen() {
     }, [refetchRewards, refetchArchived]),
   );
 
+  // `?tab=suggested` (the Vault's empty state) opens straight on the
+  // catalog, behind the same back row the door leads to.
   const [tab, setTab] = useState<Tab>(params.tab === 'suggested' ? 'suggested' : 'mine');
   const [query, setQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
+  // The header's (i): the screen's guide.
+  const [helpOpen, setHelpOpen] = useState(false);
   const [archivedOpen, setArchivedOpen] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
   const [adoptingId, setAdoptingId] = useState<string | null>(null);
@@ -150,9 +167,7 @@ export default function RewardsHubScreen() {
       return next;
     });
 
-  // ── Counts (drive the tab chips) ──────────────────────────────────────
-  const totalRewards = rewards.data?.length ?? 0;
-
+  // ── Counts (the suggested door's chip) ─────────────────────────────────
   const adopted = useMemo<AdoptedIndex>(() => {
     const ids = new Set<string>();
     const titles = new Set<string>();
@@ -200,6 +215,11 @@ export default function RewardsHubScreen() {
       if (open) setQuery('');
       return !open;
     });
+  };
+
+  const openTab = (next: Tab) => {
+    Haptics.selectionAsync().catch(() => {});
+    setTab(next);
   };
 
   const handleAdopt = (template: RewardTemplate) => {
@@ -293,167 +313,119 @@ export default function RewardsHubScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScreenBackground>
-        {/* Top bar */}
-        <View style={styles.topBar}>
-          <Pressable
-            onPress={() => router.back()}
-            style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel={t('common.back')}
-          >
-            <Ionicons name="chevron-back" size={22} color={tokens.text.hi} />
-          </Pressable>
-          {/* "Gerenciar recompensas" is ~190px at h3; a 360dp phone leaves
-              ~135 next to four 40dp actions, less with the limit badge.
-              Shrinks instead of ellipsizing to "Gerenciar recompens…". */}
-          <Text
-            style={styles.title}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.7}
-          >
-            {t('rewardsHub.title')}
-          </Text>
-          <View style={styles.topActions}>
-            <Pressable
-              onPress={toggleSearch}
-              style={({ pressed }) => [
-                styles.iconButton,
-                searchOpen && styles.iconButtonActive,
-                pressed && { opacity: 0.6 },
-              ]}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel={
-                searchOpen ? t('rewardsHub.search.close') : t('rewardsHub.search.open')
-              }
-            >
-              <Ionicons
-                name={searchOpen ? 'close' : 'search'}
-                size={20}
-                color={searchOpen ? tokens.brand.violet2 : tokens.text.hi}
-              />
-            </Pressable>
-            {/* Resgates — the ledger (hold to undo). The Vault's primary
-                button lands here, so the history's little door is this
-                clock and the calendar. */}
-            <Pressable
-              onPress={() => router.push('/rewards-history')}
-              style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel={t('rewards.history.title')}
-            >
-              <Ionicons name="time-outline" size={20} color={tokens.text.hi} />
-            </Pressable>
-            <LimitCounterBadge limit={rewardLimit} />
-            <Pressable
-              onPress={handleCreate}
-              style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel={t('rewardsHub.newReward')}
-            >
-              <Ionicons name="add" size={22} color={tokens.brand.violet2} />
-            </Pressable>
-          </View>
-        </View>
-
-        {/* Tabs + search live outside the body so they stay put while the
-            body container swaps between DraggableFlatList (Minhas) and
-            ScrollView (Sugeridas). */}
-        <BucketTabsV2<Tab>
-          tabs={[
-            { value: 'mine', label: t('rewardsHub.tabs.mine'), count: totalRewards },
-            { value: 'suggested', label: t('rewardsHub.tabs.suggested'), count: suggestedCount },
-          ]}
-          value={tab}
-          onChange={setTab}
+        {/* The calendar (Vault front) replaces the clock that opened
+            Resgates: the calendar's day panel and its list view cover that
+            ledger, undo included. */}
+        <ManageTopBar
+          title={t('rewardsHub.title')}
+          onBack={() => router.back()}
+          onCalendar={() => router.push({ pathname: '/history', params: { front: 'vault' } })}
+          calendarLabel={t('rewardsHub.calendarA11y')}
+          searchOpen={searchOpen}
+          onToggleSearch={toggleSearch}
+          searchOpenLabel={t('rewardsHub.search.open')}
+          searchCloseLabel={t('rewardsHub.search.close')}
+          onInfo={() => setHelpOpen(true)}
+          infoLabel={t('rewardsHub.help.a11y')}
         />
 
-        {searchOpen && (
-          <View style={styles.searchWrap}>
-            <Ionicons name="search" size={16} color={tokens.text.dim} />
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              placeholder={
-                tab === 'mine'
-                  ? t('rewardsHub.search.placeholderMine')
-                  : t('rewardsHub.search.placeholderCatalog')
-              }
-              placeholderTextColor={tokens.text.faint}
-              style={styles.searchInput}
-              autoCorrect={false}
-              autoCapitalize="none"
-              autoFocus
-            />
-            {query.length > 0 && (
-              <Pressable
-                onPress={() => setQuery('')}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel={t('common.clear')}
-              >
-                <Ionicons name="close-circle" size={16} color={tokens.text.dim} />
-              </Pressable>
-            )}
-          </View>
-        )}
-
+        {/* The two doors, as in Gerenciar práticas: a reward of your own,
+            or a suggested one from the catalog. Below them, the ordered
+            list. The catalog view has its own way back. */}
         {tab === 'mine' ? (
-          <MineBody
-            allActive={rewards.data ?? []}
-            rewards={filteredRewards}
-            archived={archived.data ?? []}
-            ownedOneShots={ownedOneShots.data}
-            loading={rewards.isLoading}
-            query={query}
-            isRefreshing={isRefreshing}
-            archivedOpen={archivedOpen}
-            onToggleArchived={() => setArchivedOpen((v) => !v)}
-            onRefresh={handleRefresh}
-            onRewardPress={(id) => router.push({ pathname: '/reward-form', params: { id } })}
-            onCreate={handleCreate}
-            onReorder={(ids) => reorderRewards.mutate(ids)}
-            onRestore={handleRestore}
-            onDelete={handleDelete}
-            busyIds={busyIds}
-            bottomClearance={bottomClearance}
-          />
-        ) : (
-          <ScrollView
-            contentContainerStyle={[
-              styles.content,
-              { paddingBottom: Math.max(tokens.space[10], bottomClearance) + tokens.space[6] },
-            ]}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            refreshControl={
-              <RefreshControl
-                refreshing={isRefreshing}
-                onRefresh={handleRefresh}
-                tintColor={tokens.brand.violet2}
-                colors={[tokens.brand.violet2]}
-              />
-            }
-          >
-            <SuggestedBody
-              templatesByCategory={templatesByCategory}
-              loading={templates.isLoading}
-              query={query}
-              categoryFilter={categoryFilter}
-              onSelectCategory={selectCategory}
-              adopted={adopted}
-              onAdopt={handleAdopt}
-              onCustomize={handleCustomize}
-              adoptingId={adoptingId}
+          <>
+            <ManageDoors
+              createTitle={t('rewardsHub.doors.create')}
+              createDesc={t('rewardsHub.doors.createDesc')}
+              suggestedTitle={t('rewardsHub.doors.suggested')}
+              suggestedDesc={t('rewardsHub.doors.suggestedDesc', { count: suggestedCount })}
+              onCreate={handleCreate}
+              onSuggested={() => openTab('suggested')}
               limit={rewardLimit}
             />
-          </ScrollView>
+            <ScreenTip id="rewardsManage" style={styles.tip} />
+          </>
+        ) : (
+          <ManageCatalogBack
+            label={t('rewardsHub.doors.back')}
+            countLabel={`${t('rewardsHub.tabs.suggested')} · ${suggestedCount}`}
+            onPress={() => openTab('mine')}
+          />
         )}
+
+        {searchOpen && (
+          <ManageSearchField
+            value={query}
+            onChangeText={setQuery}
+            placeholder={
+              tab === 'mine'
+                ? t('rewardsHub.search.placeholderMine')
+                : t('rewardsHub.search.placeholderCatalog')
+            }
+          />
+        )}
+
+        <ManageListArea>
+          {tab === 'mine' ? (
+            <MineBody
+              allActive={rewards.data ?? []}
+              rewards={filteredRewards}
+              archived={archived.data ?? []}
+              ownedOneShots={ownedOneShots.data}
+              loading={rewards.isLoading}
+              query={query}
+              isRefreshing={isRefreshing}
+              archivedOpen={archivedOpen}
+              onToggleArchived={() => setArchivedOpen((v) => !v)}
+              onRefresh={handleRefresh}
+              onRewardPress={(id) => router.push({ pathname: '/reward-form', params: { id } })}
+              onCreate={handleCreate}
+              onReorder={(ids) => reorderRewards.mutate(ids)}
+              onRestore={handleRestore}
+              onDelete={handleDelete}
+              busyIds={busyIds}
+              bottomPad={bottomPad}
+            />
+          ) : (
+            <ScrollView
+              contentContainerStyle={[styles.content, { paddingBottom: bottomPad }]}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              refreshControl={
+                <RefreshControl
+                  refreshing={isRefreshing}
+                  onRefresh={handleRefresh}
+                  tintColor={tokens.brand.violet2}
+                  colors={[tokens.brand.violet2]}
+                />
+              }
+            >
+              <SuggestedBody
+                templatesByCategory={templatesByCategory}
+                loading={templates.isLoading}
+                query={query}
+                categoryFilter={categoryFilter}
+                onSelectCategory={selectCategory}
+                adopted={adopted}
+                onAdopt={handleAdopt}
+                onCustomize={handleCustomize}
+                adoptingId={adoptingId}
+                limit={rewardLimit}
+              />
+            </ScrollView>
+          )}
+        </ManageListArea>
       </ScreenBackground>
+
+      {/* The screen's guide (docs/informativo-de-tela.md). */}
+      <InfoSheet
+        visible={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        title={t('rewardsHub.help.title')}
+        aiPrompt={guidePrompt}
+      >
+        <ManageRewardsGuide suggestedCount={suggestedCount} />
+      </InfoSheet>
     </SafeAreaView>
   );
 }
@@ -492,13 +464,14 @@ interface MineBodyProps {
   onToggleArchived: () => void;
   onRefresh: () => void;
   onRewardPress: (id: string) => void;
+  /** The empty state's CTA (the doors cover it otherwise). */
   onCreate: () => void;
   onReorder: (orderedIds: string[]) => void;
   onRestore: (reward: Reward) => void;
   onDelete: (reward: Reward) => void;
   /** Archived rows whose restore / delete is in flight. */
   busyIds: Set<string>;
-  bottomClearance: number;
+  bottomPad: number;
 }
 
 function MineBody({
@@ -518,7 +491,7 @@ function MineBody({
   onRestore,
   onDelete,
   busyIds,
-  bottomClearance,
+  bottomPad,
 }: MineBodyProps) {
   const { t } = useT();
 
@@ -580,15 +553,17 @@ function MineBody({
   };
 
   const renderItem = ({ item, drag, isActive }: RenderItemParams<Reward>) => (
-    <ManageRow
-      reward={item}
-      bought={item.is_one_shot && (ownedOneShots?.has(item.id) ?? false)}
-      drag={drag}
-      isActive={isActive}
-      onEdit={() => onRewardPress(item.id)}
-      onMoveUp={() => moveWithin(item.id, -1)}
-      onMoveDown={() => moveWithin(item.id, 1)}
-    />
+    <ScaleDecorator>
+      <RewardManageRow
+        reward={item}
+        bought={item.is_one_shot && (ownedOneShots?.has(item.id) ?? false)}
+        isActive={isActive}
+        onEdit={() => onRewardPress(item.id)}
+        onHandlePressIn={drag}
+        onMoveUp={() => moveWithin(item.id, -1)}
+        onMoveDown={() => moveWithin(item.id, 1)}
+      />
+    </ScaleDecorator>
   );
 
   if (loading) {
@@ -602,21 +577,27 @@ function MineBody({
   const nothingActive = allActive.length === 0;
   const nothingMatches = !nothingActive && query.trim().length > 0 && rewards.length === 0;
 
-  const Footer = (
-    <View style={styles.footer}>
-      {archived.length > 0 && (
-        <ArchivedSection
-          rewards={archived}
-          open={archivedOpen}
-          onToggle={onToggleArchived}
-          onRestore={onRestore}
-          onDelete={onDelete}
-          busyIds={busyIds}
-        />
-      )}
-      {!nothingActive && <AddCard label={t('rewardsHub.newReward')} onPress={onCreate} />}
-    </View>
-  );
+  // No "Nova recompensa" card any more: the "Criar a minha" door above the
+  // list is the one way in (owner, 2026-11-07).
+  const Footer =
+    archived.length > 0 ? (
+      <ArchivedFooter
+        label={t('rewardsHub.archived.section')}
+        count={archived.length}
+        open={archivedOpen}
+        onToggle={onToggleArchived}
+      >
+        {archived.map((reward) => (
+          <ArchivedRewardRow
+            key={reward.id}
+            reward={reward}
+            busy={busyIds.has(reward.id)}
+            onRestore={() => onRestore(reward)}
+            onDelete={() => onDelete(reward)}
+          />
+        ))}
+      </ArchivedFooter>
+    ) : null;
 
   return (
     <DraggableFlatList
@@ -643,18 +624,12 @@ function MineBody({
         setLocalItems(data);
         onReorder(order);
       }}
-      activationDistance={DRAG_ACTIVATION_DISTANCE}
-      // The pan only exists over the rightmost handle column (44dp + the
-      // 16dp gutter). Body swipes then have no competing gesture and scroll
-      // natively — on Android a 6dp activation would otherwise beat the
-      // 8dp scroll slop and eat slow-starting scrolls.
-      dragHitSlop={{ right: 0, width: DRAG_HANDLE_WIDTH + tokens.space[4] }}
-      ListHeaderComponent={
-        <View>
-          <ScreenTip id="rewardsManage" />
-          {nothingActive ? null : <Text style={styles.lead}>{t('rewardsHub.lead')}</Text>}
-        </View>
-      }
+      activationDistance={MANAGE_DRAG_ACTIVATION_DISTANCE}
+      dragHitSlop={MANAGE_DRAG_HIT_SLOP}
+      // The outer container must be the viewport (flex: 1) — see
+      // MANAGE_LIST_CONTAINER: without it the end of the list sat below
+      // the screen, out of reach.
+      containerStyle={MANAGE_LIST_CONTAINER}
       ListEmptyComponent={
         nothingMatches ? (
           <View style={styles.emptyBox}>
@@ -679,12 +654,7 @@ function MineBody({
         )
       }
       ListFooterComponent={Footer}
-      contentContainerStyle={[
-        styles.listContent,
-        // Generous bottom padding so the last card clears the OS nav
-        // comfortably even when the safe-area inset under-reports.
-        { paddingBottom: Math.max(tokens.space[10], bottomClearance) + tokens.space[6] },
-      ]}
+      contentContainerStyle={[styles.listContent, { paddingBottom: bottomPad }]}
       refreshControl={
         <RefreshControl
           refreshing={isRefreshing}
@@ -697,208 +667,9 @@ function MineBody({
   );
 }
 
-interface ManageRowProps {
-  reward: Reward;
-  /** One-shot already bought: out of the Vault, still yours to edit. */
-  bought: boolean;
-  drag: () => void;
-  isActive: boolean;
-  onEdit: () => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
-}
-
-/**
- * Manage row — the Vault card's identity (category-tinted icon tile and
- * left bar, coin cost) on the manage-row chassis shared with práticas:
- * gradient surface, tap the body → edit form, touch the handle → the row
- * lifts at once (`onPressIn`, no long-press wait).
- */
-function ManageRow({
-  reward,
-  bought,
-  drag,
-  isActive,
-  onEdit,
-  onMoveUp,
-  onMoveDown,
-}: ManageRowProps) {
-  const { t } = useT();
-  const cat = REWARD_CATEGORY_META[reward.category];
-  const categoryLabel = t(`rewards.categories.${reward.category}` as const);
-  const isCustom = !reward.template_id;
-  // Spoken value — the chips are visual only, so a screen reader would
-  // otherwise never learn that a one-shot is already bought (and hidden
-  // from the Shop).
-  const a11yValue = [
-    t('rewards.coins', { count: reward.cost }),
-    categoryLabel,
-    reward.is_one_shot
-      ? bought
-        ? t('rewardsHub.row.a11yBought')
-        : t('rewardsHub.row.a11yOneShot')
-      : null,
-  ]
-    .filter(Boolean)
-    .join(' · ');
-
-  return (
-    <ScaleDecorator>
-      <View style={styles.rowWrap}>
-        <View style={[styles.row, { borderLeftColor: cat.color }, isActive && styles.rowActive]}>
-          <LinearGradient
-            colors={tokens.gradient.taskCard}
-            locations={tokens.gradient.taskCardLocations}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={StyleSheet.absoluteFill}
-            pointerEvents="none"
-          />
-          {/* The label replaces the children for screen readers, so cost
-              and category travel as the value; move up / down are custom
-              actions here because the handle is touch-only. */}
-          <Pressable
-            onPress={onEdit}
-            disabled={isActive}
-            style={({ pressed }) => [styles.rowMain, pressed && { opacity: 0.85 }]}
-            accessibilityRole="button"
-            accessibilityLabel={t('rewardsHub.row.editA11y', { title: reward.title })}
-            accessibilityValue={{ text: a11yValue }}
-            accessibilityActions={[
-              { name: 'moveUp', label: t('rewardsHub.row.a11yMoveUp') },
-              { name: 'moveDown', label: t('rewardsHub.row.a11yMoveDown') },
-            ]}
-            onAccessibilityAction={(e) => {
-              switch (e.nativeEvent.actionName) {
-                case 'moveUp':
-                  onMoveUp();
-                  break;
-                case 'moveDown':
-                  onMoveDown();
-                  break;
-              }
-            }}
-          >
-            <View
-              style={[
-                styles.iconTile,
-                { borderColor: `${cat.color}50`, backgroundColor: `${cat.color}26` },
-              ]}
-            >
-              <AppIcon name={reward.icon} size={17} color={cat.color} />
-            </View>
-            <View style={styles.rowBody}>
-              <Text style={styles.rowTitle} numberOfLines={2}>
-                {reward.title}
-              </Text>
-              <View style={styles.metaRow}>
-                <View style={styles.costTag}>
-                  <CoinIcon size={11} />
-                  <Text style={styles.costText}>{reward.cost.toLocaleString()}</Text>
-                </View>
-                <Text style={[styles.categoryNote, { color: cat.color }]} numberOfLines={1}>
-                  · {categoryLabel}
-                </Text>
-                {reward.is_one_shot && (
-                  <View style={styles.chip}>
-                    <Text style={styles.chipText}>
-                      {bought ? t('rewardsHub.boughtChip') : t('rewardsHub.oneShotChip')}
-                    </Text>
-                  </View>
-                )}
-                {isCustom && (
-                  <View style={styles.chip}>
-                    <Text style={styles.chipText}>{t('rewardsHub.customChip')}</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-          </Pressable>
-          {/* The handle: 44dp wide, full row height, drag starts on touch.
-              Hidden from assistive tech — a press-in never reaches it; the
-              row's custom actions are the accessible path. */}
-          <Pressable
-            onPressIn={drag}
-            disabled={isActive}
-            style={({ pressed }) => [styles.dragHandle, pressed && styles.dragHandlePressed]}
-            accessible={false}
-            importantForAccessibility="no-hide-descendants"
-            accessibilityElementsHidden
-          >
-            <Ionicons
-              name="reorder-three"
-              size={22}
-              color={isActive ? tokens.brand.violet2 : tokens.text.mid}
-            />
-          </Pressable>
-        </View>
-      </View>
-    </ScaleDecorator>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Arquivadas — collapsed footer with restore + (guarded) delete
-// ─────────────────────────────────────────────────────────────────────────────
-
-interface ArchivedSectionProps {
-  rewards: Reward[];
-  open: boolean;
-  onToggle: () => void;
-  onRestore: (reward: Reward) => void;
-  onDelete: (reward: Reward) => void;
-  busyIds: Set<string>;
-}
-
-function ArchivedSection({
-  rewards,
-  open,
-  onToggle,
-  onRestore,
-  onDelete,
-  busyIds,
-}: ArchivedSectionProps) {
-  const { t } = useT();
-  return (
-    <View style={styles.archivedBlock}>
-      <Pressable
-        onPress={onToggle}
-        style={({ pressed }) => [styles.groupHeader, pressed && { opacity: 0.7 }]}
-        accessibilityRole="button"
-        accessibilityState={{ expanded: open }}
-      >
-        <View style={[styles.groupIcon, { backgroundColor: 'rgba(255,255,255,0.05)' }]}>
-          <Ionicons name="archive-outline" size={16} color={tokens.text.dim} />
-        </View>
-        <View style={styles.groupTitleCol}>
-          <Text style={[styles.groupEyebrow, { color: tokens.text.mid }]}>
-            {t('rewardsHub.archived.section').toUpperCase()}
-          </Text>
-        </View>
-        <View style={[styles.countChip, { backgroundColor: 'rgba(255,255,255,0.06)' }]}>
-          <Text style={[styles.countChipText, { color: tokens.text.mid }]}>{rewards.length}</Text>
-        </View>
-        <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={16} color={tokens.text.dim} />
-      </Pressable>
-
-      {open && (
-        <View style={styles.archivedList}>
-          {rewards.map((reward) => (
-            <ArchivedRow
-              key={reward.id}
-              reward={reward}
-              busy={busyIds.has(reward.id)}
-              onRestore={() => onRestore(reward)}
-              onDelete={() => onDelete(reward)}
-            />
-          ))}
-        </View>
-      )}
-    </View>
-  );
-}
-
-function ArchivedRow({
+/** An archived reward: its icon, cost and category, Restaurar and the
+ *  (guarded) trash. */
+function ArchivedRewardRow({
   reward,
   busy,
   onRestore,
@@ -911,50 +682,24 @@ function ArchivedRow({
 }) {
   const { t } = useT();
   return (
-    <View style={styles.archivedRow}>
-      <View style={[styles.iconTile, styles.iconTileArchived]}>
-        <AppIcon name={reward.icon} size={16} color={tokens.text.dim} />
-      </View>
-      <View style={styles.rowBody}>
-        <Text style={[styles.rowTitle, { color: tokens.text.mid }]} numberOfLines={1}>
-          {reward.title}
-        </Text>
-        <View style={styles.metaRow}>
-          <View style={styles.costTag}>
-            <CoinIcon size={10} />
-            <Text style={styles.archivedMeta}>{reward.cost.toLocaleString()}</Text>
-          </View>
-          <Text style={styles.archivedMeta} numberOfLines={1}>
+    <ManageArchivedRow
+      icon={reward.icon}
+      title={reward.title}
+      meta={
+        <View style={manageRowStyles.metaRow}>
+          <RewardCostTag cost={reward.cost} />
+          <Text style={archivedMetaStyle} numberOfLines={1}>
             · {t(`rewards.categories.${reward.category}` as const)}
           </Text>
         </View>
-      </View>
-      {busy ? (
-        <ActivityIndicator size="small" color={tokens.brand.violet2} />
-      ) : (
-        <>
-          <Pressable
-            onPress={onRestore}
-            hitSlop={8}
-            style={({ pressed }) => [styles.restoreBtn, pressed && { opacity: 0.7 }]}
-            accessibilityRole="button"
-            accessibilityLabel={t('rewardsHub.archived.restoreA11y', { title: reward.title })}
-          >
-            <Ionicons name="refresh" size={14} color={tokens.brand.violet2} />
-            <Text style={styles.restoreText}>{t('rewardsHub.archived.restore')}</Text>
-          </Pressable>
-          <Pressable
-            onPress={onDelete}
-            hitSlop={8}
-            style={({ pressed }) => [styles.trashBtn, pressed && { opacity: 0.6 }]}
-            accessibilityRole="button"
-            accessibilityLabel={t('rewardsHub.archived.deleteA11y', { title: reward.title })}
-          >
-            <Ionicons name="trash-outline" size={18} color={tokens.semantic.danger} />
-          </Pressable>
-        </>
-      )}
-    </View>
+      }
+      busy={busy}
+      onRestore={onRestore}
+      onDelete={onDelete}
+      restoreLabel={t('rewardsHub.archived.restore')}
+      restoreA11y={t('rewardsHub.archived.restoreA11y', { title: reward.title })}
+      deleteA11y={t('rewardsHub.archived.deleteA11y', { title: reward.title })}
+    />
   );
 }
 
@@ -1068,7 +813,7 @@ function SuggestedBody({
         categoriesWithTemplates.map((c) => {
           const meta = REWARD_CATEGORY_META[c];
           const list = templatesByCategory.get(c) ?? [];
-          // Same count the tab chip shows: what is still there to adopt.
+          // Same count the suggested door shows: what is still there to adopt.
           const openCount = list.filter((tp) => !isAdopted(tp, adopted)).length;
           return (
             <View key={c} style={styles.catGroup}>
@@ -1272,75 +1017,21 @@ function TemplateRow({ template, isAdopted, isAdopting, onAdopt, onPress }: Temp
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: tokens.bg.deep },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: tokens.space[2],
-    paddingHorizontal: tokens.space[4],
-    paddingVertical: tokens.space[2],
-  },
-  topActions: {
-    flexDirection: 'row',
-    gap: tokens.space[2],
-    alignItems: 'center',
-  },
-  iconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: tokens.bg.surface,
-  },
-  iconButtonActive: {
-    backgroundColor: 'rgba(123,92,255,0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(123,92,255,0.4)',
-  },
-  title: {
-    ...tokens.type.h3,
-    color: tokens.text.hi,
-    flexShrink: 1,
-  },
-  searchWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[2],
-    backgroundColor: tokens.bg.surface,
-    borderRadius: tokens.radius.md,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-    paddingHorizontal: tokens.space[3],
-    marginHorizontal: tokens.space[4],
-    height: 40,
-    marginTop: tokens.space[3],
-  },
-  searchInput: {
-    flex: 1,
-    color: tokens.text.hi,
-    ...tokens.type.body,
-    paddingVertical: 0,
-  },
+  tip: { marginHorizontal: tokens.space[4], marginTop: tokens.space[3], marginBottom: 0 },
+  // No top padding on either body: ManageListArea's band already parts
+  // them from the doors.
   content: {
     paddingHorizontal: tokens.space[4],
-    paddingTop: tokens.space[3],
   },
   listContent: {
     paddingHorizontal: tokens.space[4],
-    paddingTop: tokens.space[3],
-  },
-  lead: {
-    ...tokens.type.caption,
-    color: tokens.text.dim,
-    paddingBottom: tokens.space[2],
   },
   loadingBox: {
     paddingVertical: tokens.space[10],
     alignItems: 'center',
   },
 
-  // ── Group headers (Arquivadas · Sugeridas categories) ─────────────────
+  // ── Group headers (Sugeridas categories) ──────────────────────────────
   groupHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1379,47 +1070,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
 
-  // ── Manage row ────────────────────────────────────────────────────────
-  rowWrap: {
-    marginBottom: tokens.space[2],
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-    borderTopColor: 'rgba(255,255,255,0.04)',
-    borderLeftWidth: 3,
-    overflow: 'hidden',
-  },
-  rowActive: {
-    borderColor: tokens.brand.violet2,
-    backgroundColor: 'rgba(155,130,255,0.10)',
-  },
-  rowMain: {
-    flex: 1,
-    minWidth: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 10,
-    paddingLeft: 10,
-    paddingRight: 4,
-  },
-  // 44dp wide, the row's full height: a thumb lands on it without aiming.
-  dragHandle: {
-    width: DRAG_HANDLE_WIDTH,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderLeftWidth: 1,
-    borderLeftColor: tokens.border.divider,
-  },
-  // Sits ABOVE the card gradient (the handle is a sibling of it), so the
-  // wash actually shows.
-  dragHandlePressed: {
-    backgroundColor: tokens.brand.violetGlow,
-  },
+  // ── Template card ─────────────────────────────────────────────────────
   iconTile: {
     width: 34,
     height: 34,
@@ -1428,10 +1079,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
-  },
-  iconTileArchived: {
-    borderColor: tokens.border.base,
-    backgroundColor: 'rgba(255,255,255,0.04)',
   },
   rowBody: {
     flex: 1,
@@ -1462,11 +1109,6 @@ const styles = StyleSheet.create({
     color: tokens.semantic.coinLight,
     letterSpacing: 0.2,
   },
-  categoryNote: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 11,
-    flexShrink: 1,
-  },
   chip: {
     paddingHorizontal: 5,
     paddingVertical: 1,
@@ -1481,58 +1123,6 @@ const styles = StyleSheet.create({
     fontSize: 9,
     letterSpacing: 0.8,
     color: tokens.text.mid,
-  },
-
-  // ── Footer: archived + add ────────────────────────────────────────────
-  footer: {
-    gap: tokens.space[3],
-    marginTop: tokens.space[2],
-  },
-  archivedBlock: {
-    gap: 0,
-  },
-  archivedList: {
-    gap: tokens.space[2],
-  },
-  archivedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: tokens.border.base,
-    backgroundColor: 'rgba(255,255,255,0.02)',
-  },
-  archivedMeta: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 11,
-    color: tokens.text.mid,
-  },
-  restoreBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: tokens.radius.pill,
-    borderWidth: 1,
-    borderColor: 'rgba(155,130,255,0.35)',
-    backgroundColor: 'rgba(155,130,255,0.1)',
-  },
-  restoreText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
-    color: tokens.brand.violet2,
-    letterSpacing: 0.3,
-  },
-  trashBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 
   // ── Empty states ──────────────────────────────────────────────────────

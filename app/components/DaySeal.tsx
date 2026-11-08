@@ -283,11 +283,12 @@ const styles = StyleSheet.create({
     paddingVertical: tokens.space[4],
     textAlign: 'center',
   },
-  // Gradient fill + gold rim + radius.xl at the full taskList inset: wider
-  // than the two drawers below (they add their own space[3] margin), and a
-  // different fill KIND, so it can never read as a third drawer.
+  // The full column width and the TaskCard's radius.md, like every block
+  // around it (the drawers below dropped their own inset for the same
+  // reason). What keeps it from reading as a third drawer is the fill KIND —
+  // gradient + gold rim — not a different shape.
   card: {
-    borderRadius: tokens.radius.xl,
+    borderRadius: tokens.radius.md,
     borderWidth: 1,
     overflow: 'hidden',
     alignItems: 'center',
