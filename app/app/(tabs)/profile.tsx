@@ -20,7 +20,6 @@ import { TourTarget } from '@/components/tour/TourTarget';
 import { useCharacter } from '@/lib/api/character';
 import { useSession } from '@/lib/auth';
 import { useT } from '@/lib/i18n';
-import { useUnlockStore } from '@/lib/unlock';
 import { MODULE_REGISTRY, useModules, useSetModule } from '@/lib/modules';
 import {
   useLoadedSettings,
@@ -180,13 +179,6 @@ export default function SettingsScreen() {
     router.push('/tour-replay');
   };
 
-  // "Rever as portas": forgets the door animations (not the unlocks), so the
-  // next opening of Recompensas / Eu / Aprender shows them again.
-  const resetDoors = useUnlockStore((st) => st.resetDoors);
-  const handleReviewDoors = () => {
-    void resetDoors().then(() => showInfo(t('profile.actions.reviewDoorsDone')));
-  };
-
   const handleCheckForUpdate = async () => {
     if (isCheckingUpdate) return;
     if (__DEV__) {
@@ -250,16 +242,13 @@ export default function SettingsScreen() {
           <SectionHeader icon="school-outline" label={t('profile.sections.tutorial')} />
           <TourTarget id="settings.replay" radius={tokens.radius.lg}>
             <Card>
+              {/* One way in (owner, 2026-11-08): the redo AND the screen
+                  videos live in /tour-replay. */}
               <ButtonRow
                 icon="refresh-circle-outline"
                 label={t('profile.actions.replayOnboarding')}
                 onPress={handleReplayOnboarding}
                 chevron
-              />
-              <ButtonRow
-                icon="play-circle-outline"
-                label={t('profile.actions.reviewDoors')}
-                onPress={handleReviewDoors}
               />
             </Card>
           </TourTarget>

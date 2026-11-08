@@ -16,7 +16,7 @@ import { useT } from '@/lib/i18n';
 import { useDoorPending, useUnlockStore } from '@/lib/unlock';
 import { tokens } from '@/theme';
 
-import { DoorVideo } from './DoorVideo';
+import { DOOR_VIDEO_BAR_H, DoorVideo } from './DoorVideo';
 import { LearningDoorVisual } from './LearningDoorVisual';
 import { MeDoorVisual } from './MeDoorVisual';
 import { RewardsDoorVisual } from './RewardsDoorVisual';
@@ -49,7 +49,8 @@ export function UnlockDoor({ feature }: { feature: DoorFeature }) {
   const { t } = useT();
   const pending = useDoorPending(feature);
   const markDoorSeen = useUnlockStore((s) => s.markDoorSeen);
-  // "Rever as portas" (Ajustes): whoever asked to see them again may skip — the
+  // Left over from the old Ajustes › "Rever as portas" (replaced 08/11 by the
+  // videos in Ajustes › Tutorial): whoever pressed it may skip — the
   // watch-it-all rule is for the first time only.
   const replay = useUnlockStore((s) => s.replayDoors);
   const { width, height: winH } = useWindowDimensions();
@@ -105,8 +106,8 @@ export function UnlockDoor({ feature }: { feature: DoorFeature }) {
   };
 
   const visualW = Math.min(width - tokens.space[5] * 2, 360);
-  // 9:16, capped so the title, the line and the button still fit below it.
-  const videoH = Math.round(Math.min(winH * 0.52, (visualW * 16) / 9));
+  // 9:16, capped so the time bar, the title, the line and the button still fit below it.
+  const videoH = Math.round(Math.min(winH * 0.52 - DOOR_VIDEO_BAR_H, (visualW * 16) / 9));
   const videoW = Math.round((videoH * 9) / 16);
 
   return (
@@ -120,6 +121,7 @@ export function UnlockDoor({ feature }: { feature: DoorFeature }) {
                   feature={feature}
                   width={videoW}
                   height={videoH}
+                  seekAnywhere={replay}
                   onProgress={onVideoProgress}
                   onFirstLoop={onVideoLoop}
                   onFail={onVideoFail}
@@ -134,11 +136,15 @@ export function UnlockDoor({ feature }: { feature: DoorFeature }) {
             </View>
             <Text style={styles.title}>{t(`unlock.door.${feature}.title`)}</Text>
             <Text style={styles.line}>{t(`unlock.door.${feature}.line`)}</Text>
+            {/* With the video, its own time bar is the wait line; the in-code
+                animation keeps the thin line for its 4 s. */}
             {!ready ? (
               <View style={styles.waitWrap}>
-                <View style={styles.waitTrack}>
-                  <Animated.View style={[styles.waitFill, waitStyle]} />
-                </View>
+                {useVideo ? null : (
+                  <View style={styles.waitTrack}>
+                    <Animated.View style={[styles.waitFill, waitStyle]} />
+                  </View>
+                )}
                 <Text style={styles.waitText}>{t('unlock.door.wait')}</Text>
               </View>
             ) : null}

@@ -185,6 +185,7 @@ function CharacterScreenContent() {
         onClose={() => setHelpOpen(false)}
         title={t('hero.help.title')}
         aiPrompt={guidePrompt}
+        video="me"
       >
         <HeroGuide />
       </InfoSheet>

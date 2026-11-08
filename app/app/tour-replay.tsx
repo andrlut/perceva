@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBottomSafeClearance } from '@/components/BottomNavBar';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { useT } from '@/lib/i18n';
+import { DOOR_VIDEO_SCREENS, type DoorVideoScreen, doorVideoHref, useUnlockStore } from '@/lib/unlock';
 import {
   ROUTE_MODULE_PATH,
   SETTINGS_MODULE,
@@ -40,9 +41,13 @@ import { tokens } from '@/theme';
  *     done" step) → Home, where each one's first step lives. Ajustes is the
  *     mandatory help module, listed first.
  *
+ *   - Screen videos (owner, 2026-11-08) → each tab's door video, to
+ *     rewatch any time, closable (app/door-video.tsx). This replaced the
+ *     separate Ajustes › "Rever as portas das abas", which only re-armed the
+ *     doors for their next opening: everything to rewatch lives here now.
+ *
  * The old M2…M6 walk-throughs were deleted with the 2026-11 "Onboarding
- * simples": the locked tabs teach themselves with their animated doors
- * (Ajustes › "Rever as portas das abas").
+ * simples": the locked tabs teach themselves with their door videos.
  */
 
 interface ReplaySpec<M> {
@@ -63,6 +68,13 @@ const GUIDED: ReplaySpec<SpotlightModule>[] = [
   { id: SETTINGS_MODULE, icon: 'help-buoy-outline' },
   { id: 'M1', icon: 'checkmark-done-outline' },
 ];
+
+const VIDEO_ICON: Record<DoorVideoScreen, keyof typeof Ionicons.glyphMap> = {
+  practices: 'list-outline',
+  rewards: 'gift-outline',
+  learning: 'book-outline',
+  me: 'person-outline',
+};
 
 // text.mid (not dim) for "not seen": the label has to stay readable, it
 // is the whole point of the column.
@@ -85,6 +97,7 @@ export default function TourReplayScreen() {
   const modules = useTourStore((s) => s.modules);
   const replayModule = useTourStore((s) => s.replayModule);
   const resetAll = useTourStore((s) => s.resetAll);
+  const doorsSeen = useUnlockStore((s) => s.doorsSeen);
   const bottomClearance = useBottomSafeClearance();
   // One navigation per visit: a double tap would stack two replaces (and a
   // second replayModule over the first). Never re-armed on success — the
@@ -113,6 +126,50 @@ export default function TourReplayScreen() {
     run(() => replayModule(id), ROUTE_MODULE_PATH[id]);
   const handleReplayGuided = (id: SpotlightModule) =>
     run(() => replayModule(id), '/(tabs)');
+
+  // A video is pushed over this screen and comes back to it, so no `busy`
+  // latch — just a short debounce against a double tap stacking two players.
+  const lastVideoAt = useRef(0);
+  const handleWatch = (feature: DoorVideoScreen) => {
+    const now = Date.now();
+    if (now - lastVideoAt.current < 800) return;
+    lastVideoAt.current = now;
+    Haptics.selectionAsync().catch(() => {});
+    router.push(doorVideoHref(feature, 'settings'));
+  };
+
+  // Same anatomy as the module rows; "seen" = its door opened on this device.
+  const renderVideoRow = (feature: DoorVideoScreen) => {
+    const seen = !!doorsSeen[feature];
+    const tone = seen ? STATUS_TONE.completed : STATUS_TONE.pending;
+    const name = t(`unlock.door.${feature}.title`);
+    const statusLabel = seen ? t('tour.replay.videoSeen') : t('tour.replay.status.pending');
+    return (
+      <Pressable
+        key={feature}
+        onPress={() => handleWatch(feature)}
+        style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
+        accessibilityRole="button"
+        accessibilityLabel={t('tour.replay.videoRowA11y', { name, status: statusLabel })}
+      >
+        <View style={styles.rowIcon}>
+          <Ionicons name={VIDEO_ICON[feature]} size={20} color={tokens.brand.violet2} />
+        </View>
+        <View style={styles.rowBody}>
+          <Text style={styles.rowName}>{name}</Text>
+          <Text style={styles.rowDesc}>{t(`tour.replay.videos.${feature}`)}</Text>
+          <View style={styles.statusRow}>
+            <Ionicons name={tone.icon} size={14} color={tone.color} />
+            <Text style={[styles.rowStatus, { color: tone.color }]}>{statusLabel}</Text>
+          </View>
+        </View>
+        <View style={styles.replayPill}>
+          <Ionicons name="play" size={13} color={tokens.brand.violet2} />
+          <Text style={styles.replayText}>{t('tour.replay.watchBtn')}</Text>
+        </View>
+      </Pressable>
+    );
+  };
 
   const renderRow = (
     spec: ReplaySpec<RouteModule | SpotlightModule>,
@@ -198,6 +255,11 @@ export default function TourReplayScreen() {
               <Ionicons name="arrow-forward" size={16} color={GOLD_INK} />
             </View>
           </Pressable>
+
+          {/* Right under the full redo: rewatching a screen is what most
+              people come here for after the first days. */}
+          <Text style={styles.sectionLabel}>{t('tour.replay.sectionVideos')}</Text>
+          <View style={styles.list}>{DOOR_VIDEO_SCREENS.map(renderVideoRow)}</View>
 
           <Text style={styles.sectionLabel}>{t('tour.replay.sectionOpening')}</Text>
           <View style={styles.list}>

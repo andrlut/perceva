@@ -641,7 +641,7 @@ const en = {
       },
       step2: {
         title: 'Redo the tutorial anytime',
-        body: 'Replay the intro, the starter pack or the first step anytime. Nothing you did is erased.',
+        body: "Replay the intro, each screen's video or the first step anytime. Nothing you did is erased.",
       },
       step3: {
         title: 'Connect your AI, for free',
@@ -653,21 +653,32 @@ const en = {
       exitTour: 'Exit tour',
       next: 'Next',
       skipModule: 'Skip this part',
-      skipModuleHint: 'Skips the rest of this part of the tour. You can redo it in Settings › Redo the tutorial.',
+      skipModuleHint: 'Skips the rest of this part of the tour. You can redo it in Settings › Tutorial and videos.',
       skipStep: 'Skip this step',
       tryIt: 'Do it to continue',
       takeMe: 'Take me there',
       progress: 'Step {{current}} of {{total}}',
     },
     replay: {
-      title: 'Redo the tutorial',
-      subtitle: 'Redo everything from the start, or just the part you want.',
+      title: 'Tutorial and videos',
+      subtitle: "Redo the tutorial from the start, just one part, or rewatch a screen's video.",
       allTitle: 'Redo the full tutorial',
       allDesc: 'Intro, starter pack, help and the first practice, from the very first screen.',
       allCta: 'Start over',
       sectionOpening: 'Opening',
       sectionGuided: 'Guided steps',
+      sectionVideos: 'Screen videos',
       replayBtn: 'Redo',
+      watchBtn: 'Watch',
+      videoRowA11y: '{{name}}. {{status}}. Tap to watch.',
+      videoSeen: 'Seen',
+      /** One line per door video (what its tutorial walks through). */
+      videos: {
+        practices: 'Checking off what you did, Done today and the gold +.',
+        rewards: 'Coins, redeeming, undo and tracking a goal.',
+        learning: 'Ideas, Explore, My ideas and training.',
+        me: 'The three portraits: Practiced, Perceived and Desired.',
+      },
       rowA11y: '{{name}}. {{status}}. Tap to redo.',
       footnote: 'Redoing deletes nothing.',
       status: {
@@ -1452,6 +1463,17 @@ const en = {
     aiTitle: 'Ask AI',
     aiOn: 'Claude explains this screen with your data',
     aiOff: 'Turn on AI in Settings to use it',
+  },
+
+  /** A screen's door video, rewatched from its (i) or Settings › Tutorial
+   *  (app/door-video.tsx) — and its time bar, also on the door itself. */
+  doorVideo: {
+    guideA11y: "Watch this screen's video",
+    seekA11y: 'Video time',
+    play: 'Play the video',
+    pause: 'Pause the video',
+    replay: 'Watch again',
+    failed: "Couldn't load the video. Check your connection and try again.",
   },
 
   conector: {
@@ -3038,9 +3060,7 @@ const en = {
         "Times follow your phone's clock. Android may hold a reminder back a few minutes to save battery.",
     },
     actions: {
-      replayOnboarding: 'Redo the tutorial',
-      reviewDoors: 'Replay the tab doors',
-      reviewDoorsDone: 'Done: the next opening of Rewards, Me and Learn shows the intro again.',
+      replayOnboarding: 'Tutorial and screen videos',
       checkForUpdates: 'Check for updates',
       checking: 'Checking…',
       signOut: 'Sign out',
