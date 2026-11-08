@@ -21,18 +21,27 @@ import { Encosto, SET } from '../elenco/cenario';
 import { Caneca, Caneta, Planta } from '../elenco/objetos';
 import { C, DimId, FONT, dimColor } from '../theme';
 import { Scene, cue, speechEnd, wordFrames } from '../timeline';
-import { Abajur, AmbSpec, Ambiente, AmbienteMini, EnvGeo, Luz, Rect, Spot, Vinheta } from './ambientes';
+import { Abajur, AmbSpec, Ambiente, AmbienteMini, EnvGeo, Luz, Rect, Spot, Vinheta, lugarOf, registerLugares } from './ambientes';
 import { CameraRig, FocusMap, Layer, cameraAt, focusPoint } from './camera';
 import { Sfx, type SfxName } from './sfx';
 import { useIdentity } from '../identidade/context';
 import { Ion, Peca, pieceBox } from './Peca';
-import type { Bloco, Chip, Feel, MoldeLine, MoldeSpec, Mood, Obj, Panel } from './spec';
+import type { Bloco, Chip, Feel, MoldeLine, MoldeSpec, Mood, Obj, Panel, Regiao } from './spec';
+// fase 3: a tela demonstra o que a voz diz (ações, rótulos, corpo por dentro, lugares novos)
+import { Ator, poseDe } from '../elenco/acao';
+import { Rotulos } from './rotulo';
+import { LUGARES } from './lugares';
+import { Dentro } from './cenas/dentro';
+import { Faz } from './cenas/faz';
+
+// Os lugares da fase 3 entram no registro do ambientes.tsx aqui (ele nunca importa os lugares: sem ciclo).
+registerLugares(LUGARES);
 
 export type MS = Scene & Pick<MoldeLine, 'scene' | 'props'>;
 type P = { s: MS };
 
 export const SpecContext = createContext<MoldeSpec | null>(null);
-const useSpec = () => {
+export const useSpec = () => {
   const spec = useContext(SpecContext);
   if (!spec) throw new Error('SpecContext vazio');
   return spec;
@@ -42,13 +51,13 @@ const useSpec = () => {
  * (2026-11-07) trocou tudo por violeta e deixou o dourado só no destaque; o André viu o vídeo e
  * achou monótono — voltou na 1.1. Não repetir sem mostrar a ele antes.
  */
-const useAccent = () => dimColor(useSpec().dimension);
+export const useAccent = () => dimColor(useSpec().dimension);
 /** Cor do ajudante: Ofício (teal), ou Vínculos quando a ideia já é de Ofício. */
 const helperColor = (d: DimId) => dimColor(d === 'craft' ? 'bonds' : 'craft');
 
 const SKINS = ['#F2C9A0', '#C68B5E', '#8D5A3B', '#E0AC7E', '#5C3A24', '#F5D5B8'];
 
-const useSpr = () => {
+export const useSpr = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   return (at: number, config: Partial<{ damping: number; stiffness: number; mass: number }> = {}) =>
@@ -80,7 +89,7 @@ const useTextWidth = () => {
 };
 
 /** Frame da deixa, ou `fallback` quando a cena não deu deixa. */
-const at = (s: MS, phrase: string | undefined, fallback: number) => (phrase ? cue(s, phrase) : fallback);
+export const at = (s: MS, phrase: string | undefined, fallback: number) => (phrase ? cue(s, phrase) : fallback);
 
 /** Sobrancelha. Fase 2: SOBE de trás da própria linha (texto por máscara), não aparece por fade. */
 const Kicker: React.FC<{ text?: string; top?: number }> = ({ text, top = 200 }) => {
@@ -106,8 +115,23 @@ const ambOf = (s: MS): AmbSpec | null => {
 /**
  * Palco de toda cena: ambiente (fundo, meio, foco de luz, primeiro plano),
  * câmera com parallax e a sobrancelha por cima de tudo.
+ *
+ * Fase 3: desenha os `rotulos` da cena (Layer depth 1, por cima dela), fora do `geo.busy` e do
+ * `busy` extra (lente, medidor, balão); `pontos` = onde fica cada parte do corpo na tela (as setas).
+ * Sem `rotulos`, nada muda.
+ *
+ * Exportado pras cenas de arquivo próprio (cenas/dentro.tsx, cenas/faz.tsx): elas importam
+ * daqui e são importadas daqui — só use isto DENTRO do componente, nunca no topo do módulo.
  */
-const Stage: React.FC<{ s: MS; geo?: EnvGeo; focus?: FocusMap; kicker?: string; children: React.ReactNode }> = ({ s, geo, focus = {}, kicker, children }) => {
+export const Stage: React.FC<{
+  s: MS;
+  geo?: EnvGeo;
+  focus?: FocusMap;
+  kicker?: string;
+  pontos?: Partial<Record<Regiao, [number, number]>>;
+  busy?: Rect[];
+  children: React.ReactNode;
+}> = ({ s, geo, focus = {}, kicker, pontos, busy, children }) => {
   const frame = useCurrentFrame();
   const accent = useAccent();
   const pr = s.props ?? {};
@@ -143,6 +167,11 @@ const Stage: React.FC<{ s: MS; geo?: EnvGeo; focus?: FocusMap; kicker?: string; 
         <Layer depth={1} style={amb ? { filter: 'drop-shadow(0 16px 34px rgba(5,7,26,0.6))' } : undefined}>
           {children}
         </Layer>
+        {pr.rotulos?.length ? (
+          <Layer depth={1}>
+            <Rotulos s={s} rotulos={pr.rotulos} pontos={pontos} busy={[...(geo?.busy ?? []), ...(busy ?? [])]} accent={accent} />
+          </Layer>
+        ) : null}
         {amb && geo ? (
           <>
             <Layer depth={1.35}>
@@ -162,12 +191,28 @@ const Stage: React.FC<{ s: MS; geo?: EnvGeo; focus?: FocusMap; kicker?: string; 
  * Num ambiente, ela "pousa" (queda curta, cresce um pouco). `base` = `top` é a
  * linha onde a peça se apoia (mesa, chão), não o topo dela.
  */
-const Drop: React.FC<{ s: MS; p: string; cueAt?: string; out?: string; stay?: boolean; top: number; left: number; size: number; delay?: number; fall?: number; base?: boolean; chip?: boolean }> = ({
+const Drop: React.FC<{
+  s: MS;
+  p: string;
+  cueAt?: string;
+  out?: string;
+  stay?: boolean;
+  /** fase 3: a peça anda (progress 0→1) entre run.cue (ou a deixa dela) e run.ate (ou o fim da fala) */
+  run?: Obj['run'];
+  top: number;
+  left: number;
+  size: number;
+  delay?: number;
+  fall?: number;
+  base?: boolean;
+  chip?: boolean;
+}> = ({
   s,
   p,
   cueAt,
   out,
   stay = false,
+  run,
   top,
   left,
   size,
@@ -186,6 +231,10 @@ const Drop: React.FC<{ s: MS; p: string; cueAt?: string; out?: string; stay?: bo
   const sq = Math.max(0, t - 1) * 2.2;
   const gone = out ? sai(frame, cue(s, out), 8) : 0;
   const land = fall < 120;
+  // fase 3: sem `run`, progress fica undefined (a peça sai como sempre saiu)
+  const runFrom = run ? at(s, run.cue ?? cueAt, dropAt) : 0;
+  const runTo = run ? at(s, run.ate, speechEnd(s)) : 0;
+  const progress = run ? Math.max(0, Math.min(1, (frame - runFrom) / Math.max(1, runTo - runFrom))) : undefined;
   // desenho que flutua por cima de móvel (estante, mesa): vai numa ficha redonda, como o ícone do app,
   // pra não sumir no colorido do cenário
   const piece =
@@ -202,10 +251,10 @@ const Drop: React.FC<{ s: MS; p: string; cueAt?: string; out?: string; stay?: bo
           justifyContent: 'center',
         }}
       >
-        <Peca name={p} t={frame} size={size * 0.72} accent={accent} />
+        <Peca name={p} t={frame} size={size * 0.72} accent={accent} progress={progress} />
       </div>
     ) : (
-      <Peca name={p} t={frame} size={size} accent={accent} />
+      <Peca name={p} t={frame} size={size} accent={accent} progress={progress} />
     );
   return (
     <div
@@ -238,7 +287,7 @@ const busyOf = (objects: Obj[] | undefined, slots: Slot[]): Rect[] => (objects ?
 const Drops: React.FC<{ s: MS; objects?: Obj[]; slots: Slot[]; fall?: number; stagger?: number }> = ({ s, objects = [], slots, fall, stagger = 8 }) => (
   <>
     {objects.slice(0, slots.length).map((o, i) => (
-      <Drop key={i} s={s} p={o.p} cueAt={o.cue} out={o.out} stay={o.stay} {...slots[i]} delay={4 + i * stagger} fall={fall} />
+      <Drop key={i} s={s} p={o.p} cueAt={o.cue} out={o.out} stay={o.stay} run={o.run} {...slots[i]} delay={4 + i * stagger} fall={fall} />
     ))}
   </>
 );
@@ -300,9 +349,33 @@ export const Pessoa_: React.FC<P> = ({ s }) => {
     <Stage s={s} geo={geo} focus={{ peca: [slots[0].left + 140, slots[0].top + 140] }}>
       <Clock s={s} mode={pr.clock} turnAt={turnAt} top={330} left={640} size={230} />
       {pr.turn && positive ? <Sfx at={turnAt} name="chime" /> : null}
-      <div style={{ position: 'absolute', top: 640, left: 380, opacity: me, transform: `scale(${0.85 + 0.15 * me})` }}>
-        <Pessoa t={frame} size={320} mood={mood} since={turned ? frame - turnAt : frame} arms={turned && positive ? 'up' : (pr.arms ?? 'down')} sweat={pr.sweat && !turned} accent={C.violet} />
-      </div>
+      {pr.acoes?.length ? (
+        // fase 3: ela FAZ (src/elenco/acao.tsx) — o Ator no lugar da Pessoa, pés na mesma linha (1043)
+        (() => {
+          const pd = poseDe(s, pr.acoes, frame);
+          return (
+            <div style={{ position: 'absolute', inset: 0, opacity: me, transform: `scale(${0.85 + 0.15 * me})`, transformOrigin: '540px 848px' }}>
+              <Ator
+                t={frame}
+                x={(pd.ativa?.de ?? 540) + pd.x}
+                y={1043}
+                size={320}
+                pose={pd.pose}
+                mood={mood}
+                since={turned ? frame - turnAt : frame}
+                arms={turned && positive ? 'up' : (pr.arms ?? 'down')}
+                accent={C.violet}
+                mao={pd.peca ? { p: pd.peca } : undefined}
+                maos={pd.maos}
+              />
+            </div>
+          );
+        })()
+      ) : (
+        <div style={{ position: 'absolute', top: 640, left: 380, opacity: me, transform: `scale(${0.85 + 0.15 * me})` }}>
+          <Pessoa t={frame} size={320} mood={mood} since={turned ? frame - turnAt : frame} arms={turned && positive ? 'up' : (pr.arms ?? 'down')} sweat={pr.sweat && !turned} accent={C.violet} />
+        </div>
+      )}
       {(pr.glow && !(idHalo && mood === 'feliz')) || (pr.turn && positive && !idHalo) ? (
         <div style={{ position: 'absolute', top: 600, left: 340 }}>
           <Brilho t={frame} size={400} on={ramp(frame, at(s, pr.glow ?? pr.turn, 1e9), 10)} />
@@ -654,8 +727,12 @@ export const Lista: React.FC<P> = ({ s }) => {
 
 // ===================================================================== cena
 /** O que pode pousar na mesa / no chão num ambiente (o resto é símbolo e flutua). */
-const ON_DESK = new Set(['caneca', 'copo', 'celular', 'livro', 'caderno', 'agenda', 'monitor', 'computador', 'papelada', 'envelope', 'planta', 'louca', 'relogio', 'lampada']);
-const ON_FLOOR = new Set(['planta', 'cesto', 'vassoura', 'sacola', 'papelada', 'quadro', 'louca']);
+const ON_DESK = new Set([
+  'caneca', 'copo', 'celular', 'livro', 'caderno', 'agenda', 'monitor', 'computador', 'papelada', 'envelope', 'planta', 'louca', 'relogio', 'lampada',
+  // fase 3
+  'pote', 'copo-agua', 'copo-suco', 'coqueteleira', 'reservatorio',
+]);
+const ON_FLOOR = new Set(['planta', 'cesto', 'vassoura', 'sacola', 'papelada', 'quadro', 'louca', 'peso']);
 
 /**
  * Peças da `cena`. Sem ambiente: os 2 encaixes de sempre, no alto. Com
@@ -744,7 +821,18 @@ export const Cena: React.FC<P> = ({ s }) => {
   const enter = spr(s.lead - 4);
   const helper = pr.helper ? spr(at(s, pr.from, s.lead + 10)) : 0;
   const walk = Math.sin(frame / 18);
-  const mood = pr.mood ?? 'feliz';
+  // fase 3: o humor vira na deixa `turn` (chime e brilho só pra feliz; focado vira sem brilho).
+  // Sem `turn`, o humor é o de sempre e nada muda.
+  const turnAt = at(s, pr.turn, 1e9);
+  const turned = frame >= turnAt;
+  const mood: Mood = turned ? (pr.to ?? 'feliz') : (pr.mood ?? 'feliz');
+  const since = pr.turn ? (turned ? frame - turnAt : frame) : undefined;
+  const turnGlow = pr.turn && (pr.to ?? 'feliz') === 'feliz' ? pr.turn : undefined;
+  // fase 3: com `acoes`, ela FAZ (mesa e chão): o Ator no lugar da Pessoa, com a peça na mão
+  const acts = pr.acoes?.length && (setting === 'mesa' || setting === 'chao') ? poseDe(s, pr.acoes, frame) : null;
+  const inHand = acts ? (acts.peca ?? pr.holding) : undefined;
+  // fase 3: o lugar pode trazer o próprio móvel como mesa (o balcão da cozinha, a pia do banheiro)
+  const Balcao = pr.ambiente ? lugarOf(pr.ambiente)?.Balcao : undefined;
   // a ação acontece ao longo da fala (caderno sendo escrito, tela acendendo)
   const work = ramp(frame, at(s, pr.glow, s.lead), Math.max(20, speechEnd(s) - at(s, pr.glow, s.lead)));
   const held = pr.holding ? (
@@ -764,7 +852,7 @@ export const Cena: React.FC<P> = ({ s }) => {
   ) : null;
   const person = (
     <div style={{ position: 'relative' }}>
-      <Pessoa t={frame} size={260} mood={mood} arms={pr.arms ?? (setting === 'sofa' ? 'none' : 'out')} accent={C.violet} />
+      <Pessoa t={frame} size={260} mood={mood} since={since} arms={pr.arms ?? (setting === 'sofa' ? 'none' : 'out')} accent={C.violet} />
       {held}
     </div>
   );
@@ -779,8 +867,8 @@ export const Cena: React.FC<P> = ({ s }) => {
   const placed = cenaPlaced(setting, amb, pr.objects ?? []);
   // peça no chão de um canto: o primeiro plano daquele canto sai
   const frontOff = setting === 'mesa' ? [] : placed.filter((x) => x.slot.base).map((x) => (x.slot.left < 540 ? 'left' : 'right') as 'left' | 'right');
-  // a mesa ganha abajur/caneca só se nenhuma peça do roteiro já pousou nela
-  const dress = amb && !placed.some((x) => x.slot.base);
+  // a mesa ganha abajur/caneca só se nenhuma peça do roteiro já pousou nela (e o lugar não tem balcão próprio)
+  const dress = amb && !Balcao && !placed.some((x) => x.slot.base);
   // o que a cena desenha por cima do cenário: as peças, a da mão, o enfeite da mesa e o ajudante
   const heldRect: Rect | null = !pr.holding
     ? null
@@ -807,6 +895,7 @@ export const Cena: React.FC<P> = ({ s }) => {
   const D = amb ? { x: 100, w: 880 } : { x: 160, w: 760 };
   return (
     <Stage s={s} geo={geo} focus={{ pessoa: g.pessoa, peca: g.peca }}>
+      {turnGlow ? <Sfx at={turnAt} name="chime" /> : null}
       {amb ? null : <div style={{ position: 'absolute', top: 1180, left: 60, right: 60, height: 6, borderRadius: 3, background: C.surface2 }} />}
       {pr.helper ? (
         <div style={{ position: 'absolute', top: 880, left: 770 + walk * 50, opacity: helper, transform: `translateY(${(1 - helper) * 40}px)` }}>
@@ -828,18 +917,45 @@ export const Cena: React.FC<P> = ({ s }) => {
           </div>
         ) : setting === 'mesa' ? (
           <>
-            <div style={{ position: 'absolute', top: 740, left: 270 }}>
-              {/* atrás da mesa o hexágono de corpo inteiro vira "casinha": em volta da cabeça */}
-              <Pessoa t={frame} size={300} mood={mood} arms="out" accent={C.violet} halo="cabeca" />
-            </div>
-            {/* frente da mesa: esconde pernas e pés (que ficariam soltos acima da linha do chão) */}
-            <div style={{ position: 'absolute', top: 1040, left: 232, width: 616, height: 90, borderRadius: '0 0 14px 14px', background: C.surface2 }} />
-            <div style={{ position: 'absolute', top: 1040, left: 540, width: 308, height: 90, borderRadius: '0 0 14px 0', background: 'rgba(5,7,26,0.2)' }} />
-            <div style={{ position: 'absolute', top: 1010, left: D.x, width: D.w, height: 40, borderRadius: 16, background: C.surface3 }} />
-            <div style={{ position: 'absolute', top: 1050, left: D.x + 60, width: 26, height: 130, borderRadius: 8, background: C.surface2 }} />
-            <div style={{ position: 'absolute', top: 1050, left: D.x + D.w - 86, width: 26, height: 130, borderRadius: 8, background: C.surface2 }} />
+            {acts ? (
+              // fase 3: ela faz atrás da mesa (a frente da mesa/balcão esconde as pernas), com a peça na mão
+              <Ator
+                t={frame}
+                x={(acts.ativa?.de ?? 420) + acts.x}
+                y={1118}
+                size={300}
+                pose={acts.pose}
+                mood={mood}
+                since={since}
+                arms="out"
+                accent={C.violet}
+                halo="cabeca"
+                mao={inHand ? { p: inHand, progress: work } : undefined}
+                maos={acts.maos}
+              />
+            ) : (
+              <div style={{ position: 'absolute', top: 740, left: 270 }}>
+                {/* atrás da mesa o hexágono de corpo inteiro vira "casinha": em volta da cabeça */}
+                <Pessoa t={frame} size={300} mood={mood} since={since} arms="out" accent={C.violet} halo="cabeca" />
+              </div>
+            )}
+            {Balcao ? (
+              <>
+                <Balcao t={frame} accent={accent} part="frente" x={232} w={616} top={1040} />
+                <Balcao t={frame} accent={accent} part="tampo" x={D.x} w={D.w} top={1010} />
+              </>
+            ) : (
+              <>
+                {/* frente da mesa: esconde pernas e pés (que ficariam soltos acima da linha do chão) */}
+                <div style={{ position: 'absolute', top: 1040, left: 232, width: 616, height: 90, borderRadius: '0 0 14px 14px', background: C.surface2 }} />
+                <div style={{ position: 'absolute', top: 1040, left: 540, width: 308, height: 90, borderRadius: '0 0 14px 0', background: 'rgba(5,7,26,0.2)' }} />
+                <div style={{ position: 'absolute', top: 1010, left: D.x, width: D.w, height: 40, borderRadius: 16, background: C.surface3 }} />
+                <div style={{ position: 'absolute', top: 1050, left: D.x + 60, width: 26, height: 130, borderRadius: 8, background: C.surface2 }} />
+                <div style={{ position: 'absolute', top: 1050, left: D.x + D.w - 86, width: 26, height: 130, borderRadius: 8, background: C.surface2 }} />
+              </>
+            )}
             {dress ? <DeskDressing tipo={pr.ambiente!} t={frame} /> : null}
-            {pr.holding ? (
+            {pr.holding && !acts ? (
               // encostada na mão estendida (a mão termina em ~x 577): a peça lê "na mão", não solta no tampo
               <div style={{ position: 'absolute', top: 1010, left: 565, transform: 'translateY(-100%)' }}>
                 <Peca name={pr.holding} t={frame} size={240} accent={accent} progress={work} />
@@ -858,16 +974,31 @@ export const Cena: React.FC<P> = ({ s }) => {
               <Peca name="cama" t={frame} size={560} accent={accent} />
             </div>
           </>
+        ) : acts ? (
+          // fase 3: de pé no chão, fazendo — os pés onde a Pessoa de 351 px (260 × 1,35) pisava
+          <Ator
+            t={frame}
+            x={(acts.ativa?.de ?? 430) + acts.x}
+            y={1166}
+            size={351}
+            pose={acts.pose}
+            mood={mood}
+            since={since}
+            arms={pr.arms ?? 'out'}
+            accent={C.violet}
+            mao={inHand ? { p: inHand, progress: work } : undefined}
+            maos={acts.maos}
+          />
         ) : (
           <div style={{ position: 'absolute', top: 1180 - 338, left: 300, transform: 'scale(1.35)', transformOrigin: '50% 100%' }}>{person}</div>
         )}
       </div>
       {placed.map(({ o, slot }, i) => (
-        <Drop key={i} s={s} p={o.p} cueAt={o.cue} out={o.out} {...slot} delay={4 + i * (amb ? 6 : 0)} fall={amb ? 50 : 120} chip={slot.chip} />
+        <Drop key={i} s={s} p={o.p} cueAt={o.cue} out={o.out} run={o.run} {...slot} delay={4 + i * (amb ? 6 : 0)} fall={amb ? 50 : 120} chip={slot.chip} />
       ))}
       {useIdentity().halo && mood === 'feliz' ? null : (
         <div style={{ position: 'absolute', top: 700, left: setting === 'cama' ? 350 : 120 }}>
-          <Brilho t={frame} size={420} on={ramp(frame, at(s, pr.glow, 1e9), 10)} />
+          <Brilho t={frame} size={420} on={ramp(frame, at(s, pr.glow ?? turnGlow, 1e9), 10)} />
         </div>
       )}
     </Stage>
@@ -1625,6 +1756,9 @@ export const Verso: React.FC<P> = ({ s }) => {
 };
 
 export const MOLDE_SCENES: Record<MoldeLine['scene'], React.FC<P>> = {
+  // fase 3 (arquivo próprio em ./cenas/)
+  dentro: Dentro,
+  faz: Faz,
   pessoa: Pessoa_,
   semana: Semana_,
   virada: Virada,

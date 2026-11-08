@@ -11,6 +11,8 @@
     "pensa",
     "mapa",
     "caderno",
+    "dentro",
+    "faz",
     "verso"
   ],
   "pieces": [
@@ -37,7 +39,14 @@
     "agenda",
     "monitor",
     "papelada",
-    "envelope"
+    "envelope",
+    "peso",
+    "pote",
+    "calendario",
+    "coqueteleira",
+    "copo-agua",
+    "copo-suco",
+    "reservatorio"
   ],
   "camera": {
     "moves": ["push", "pull", "pan-left", "pan-right", "drift", "dolly", "still"],
@@ -45,12 +54,24 @@
     "forca": ["leve", "forte"]
   },
   "transicao": ["fade", "zoom", "desliza", "corte", "hexa", "chicote"],
-  "ambientes": ["escritorio", "treinamento", "casa", "cidade"],
+  "ambientes": ["escritorio", "treinamento", "casa", "cidade", "cozinha", "banheiro", "parque", "academia"],
   "gente": ["nenhuma", "pouca", "muita"],
   "hora": ["manha", "dia", "noite"],
-  "ambienteScenes": ["pessoa", "semana", "virada", "lista", "cena", "pensa", "mapa"],
-  "objectsMax": { "pessoa": 4, "virada": 2, "cena": 2, "cenaAmbiente": 6, "pensa": 2 },
+  "ambienteScenes": ["pessoa", "semana", "virada", "lista", "cena", "pensa", "mapa", "dentro", "faz"],
+  "objectsMax": { "pessoa": 4, "virada": 2, "cena": 2, "cenaAmbiente": 6, "pensa": 2, "dentro": 0, "faz": 0 },
   "feel": ["drena", "neutro", "energiza"],
   "caderno": { "blocks": [2, 6] },
-  "mapa": { "blocks": [2, 6], "size": [1, 3], "sizeSum": 9 }
+  "mapa": { "blocks": [2, 6], "size": [1, 3], "sizeSum": 9 },
+  "_fase3": "Enums da fase 3 (a tela demonstra o que a voz diz). O lint das regras novas é da fase 2 da leva; por enquanto só as cenas e os lugares passam.",
+  "acoes": ["pronta", "andar", "correr", "saltar", "levantar", "mexer", "beber"],
+  "ritmos": ["lento", "rapido"],
+  "planos": ["corpo", "lupa", "fechado"],
+  "origens": ["boca", "tronco", "barriga"],
+  "regioes": ["cabeca", "rosto", "boca", "peito", "tronco", "barriga", "braco", "perna", "vasos", "musculos", "pele"],
+  "cores": ["health", "body", "mind", "wealth", "bonds", "craft", "ouro"],
+  "efeitos": ["acende", "anel"],
+  "texturas": ["liso", "rede", "dobras", "fluxo", "agua"],
+  "tons": ["pele", "area", "violeta", "fundo", "ouro"],
+  "tonsRotulo": ["claro", "ouro", "area"],
+  "faz": { "passos": [1, 4], "elenco": 3 }
 }

@@ -394,6 +394,9 @@ async function build(ctx) {
         image: hasImg ? `molde/${k}/card.webp` : null,
         style: src.style?.[lang],
         ...(silent ? { silent: true } : {}),
+        // fase 3 (por ideia, opcionais): a régua do molde e a protagonista do vídeo — sem eles, o de sempre
+        ...(src.fase != null ? { fase: src.fase } : {}),
+        ...(src.protagonista ? { protagonista: src.protagonista } : {}),
         lines,
       };
       // a voz de uma fala que não mudou continua válida; fala que mudou é regravada no `voice`

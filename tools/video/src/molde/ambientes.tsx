@@ -74,16 +74,58 @@ export type EnvGeo = {
 };
 export type AmbSpec = { tipo: AmbienteKind; gente?: Gente; hora?: Hora };
 
+/** Os 4 lugares que moram neste arquivo; os da fase 3 vêm do registro (`registerLugares`). */
+type Antigo = 'escritorio' | 'treinamento' | 'casa' | 'cidade';
 /** Quanto o horizonte (parede × chão) fica acima dos pés da protagonista. */
-const DEPTH: Record<AmbienteKind, number> = { escritorio: 110, treinamento: 120, casa: 100, cidade: 240 };
-const GENTE: Record<AmbienteKind, Gente> = { escritorio: 'pouca', treinamento: 'muita', casa: 'nenhuma', cidade: 'pouca' };
-const HORA: Record<AmbienteKind, Hora> = { escritorio: 'dia', treinamento: 'dia', casa: 'manha', cidade: 'dia' };
+const DEPTH: Record<Antigo, number> = { escritorio: 110, treinamento: 120, casa: 100, cidade: 240 };
+const GENTE: Record<Antigo, Gente> = { escritorio: 'pouca', treinamento: 'muita', casa: 'nenhuma', cidade: 'pouca' };
+const HORA: Record<Antigo, Hora> = { escritorio: 'dia', treinamento: 'dia', casa: 'manha', cidade: 'dia' };
+const antigo = (t: AmbienteKind): t is Antigo => t in DEPTH;
 
-export const horizonOf = (amb: AmbSpec, geo: EnvGeo) => geo.ground - DEPTH[amb.tipo];
+// ===================================================================== registro (fase 3)
+/**
+ * Um lugar da fase 3 (src/molde/lugares/<lugar>.tsx). Mesmo contrato dos 4 de cima: back/mid em
+ * coordenadas do cenário (horizonte em y = 1000), front preso à tela. Os lugares importam DAQUI
+ * (EnvP, free, hits, decor, ArtSvg…) e este arquivo NUNCA importa um lugar: quem junta os dois é o
+ * scenes.tsx (`registerLugares(LUGARES)` no topo do módulo). Sem ciclo de import.
+ */
+export type Lugar = {
+  back: React.FC<EnvP>;
+  mid: React.FC<EnvP>;
+  front: React.FC<EnvP>;
+  /** quanto o horizonte fica acima dos pés da protagonista */
+  depth: number;
+  /** gente e hora quando o roteiro não diz */
+  gente: Gente;
+  hora: Hora;
+  /** onde cada canto do primeiro plano desenha (coordenadas do quadro): com peça ali, o canto sai */
+  frontZones: { left: Rect; right: Rect };
+  /** a janela (coordenadas do cenário): de onde vem a Luz; dx/dy = pra onde o facho cai até o chão */
+  janela?: { x0: number; x1: number; y0: number; y1: number; dx: number; dy: number };
+  /** o móvel que vira a mesa da `cena` com setting mesa (o balcão da cozinha, a pia do banheiro) */
+  Balcao?: React.FC<{ t: number; accent: string; part: 'tampo' | 'frente'; x: number; w: number; top: number }>;
+};
+const REGISTRO: Partial<Record<AmbienteKind, Lugar>> = {};
+/** Junta os lugares da fase 3 aos 4 de sempre (chamado uma vez, no topo do scenes.tsx). */
+export function registerLugares(m: Partial<Record<AmbienteKind, Lugar>>) {
+  Object.assign(REGISTRO, m);
+}
+/** O lugar registrado (fase 3), ou undefined pros 4 de sempre. */
+export const lugarOf = (t: AmbienteKind): Lugar | undefined => (antigo(t) ? undefined : REGISTRO[t]);
+const lugar = (t: AmbienteKind): Lugar => {
+  const l = REGISTRO[t];
+  if (!l) throw new Error(`ambiente "${t}" sem lugar registrado (src/molde/lugares/index.ts → LUGARES)`);
+  return l;
+};
+const depthOf = (t: AmbienteKind) => (antigo(t) ? DEPTH[t] : lugar(t).depth);
+const genteOf = (t: AmbienteKind) => (antigo(t) ? GENTE[t] : lugar(t).gente);
+const horaOf = (t: AmbienteKind) => (antigo(t) ? HORA[t] : lugar(t).hora);
+
+export const horizonOf = (amb: AmbSpec, geo: EnvGeo) => geo.ground - depthOf(amb.tipo);
 /** Quanto o cenário desce (ou sobe) pra que a protagonista pise no chão dele. */
 const shiftOf = (amb: AmbSpec, geo: EnvGeo) => horizonOf(amb, geo) - 1000;
 
-type EnvP = {
+export type EnvP = {
   t: number;
   clear: [number, number];
   gente: Gente;
@@ -100,16 +142,16 @@ type EnvP = {
 };
 
 /** x livre? (o intervalo [a,b] não encosta na faixa da protagonista) */
-const free = (clear: [number, number], a: number, b: number) => b < clear[0] - 10 || a > clear[1] + 10;
-const howMany = (g: Gente, pouca: number, muita: number) => (g === 'nenhuma' ? 0 : g === 'pouca' ? pouca : muita);
+export const free = (clear: [number, number], a: number, b: number) => b < clear[0] - 10 || a > clear[1] + 10;
+export const howMany = (g: Gente, pouca: number, muita: number) => (g === 'nenhuma' ? 0 : g === 'pouca' ? pouca : muita);
 /** `r` encosta em algum retângulo de `busy`? */
 export const hits = (busy: Rect[], r: Rect) => busy.some(([a, b, c, d]) => r[0] < c && r[2] > a && r[1] < d && r[3] > b);
 /** `r` cabe inteiro no que aparece? */
-const inside = (view: Rect, r: Rect) => r[0] >= view[0] && r[2] <= view[2] && r[1] >= view[1] && r[3] <= view[3];
+export const inside = (view: Rect, r: Rect) => r[0] >= view[0] && r[2] <= view[2] && r[1] >= view[1] && r[3] <= view[3];
 /** Rosto (cabeça + cabelo) de uma pessoa da caixa 200×260 com o topo em `top`. */
 export const faceRect = (x: number, top: number, size: number): Rect => [x - 0.34 * size, top + 0.12 * size, x + 0.34 * size, top + 0.8 * size];
 /** Rosto de um figurante de pé (`y` = linha dos pés, como em Figurante/DeCostas). */
-const faceAt = (x: number, y: number, size: number) => faceRect(x, y - size * 1.26, size);
+export const faceAt = (x: number, y: number, size: number) => faceRect(x, y - size * 1.26, size);
 
 /**
  * Enfeite do fundo (relógio, quadro, mural, planta, vaso da estante) com a
@@ -118,7 +160,7 @@ const faceAt = (x: number, y: number, size: number) => faceRect(x, y - size * 1.
  * sair do quadro) e, sem lugar livre, sai. Quadro meio coberto atrás de peça
  * é ruído. Devolve o deslocamento em x, ou null (sai).
  */
-const decor = (p: Pick<EnvP, 'busy' | 'view'>, r: Rect, dxs: number[] = [0]): number | null => {
+export const decor = (p: Pick<EnvP, 'busy' | 'view'>, r: Rect, dxs: number[] = [0]): number | null => {
   for (const dx of dxs) {
     const inFrame = dx === 0 || (r[0] + dx >= p.view[0] + 10 && r[2] + dx <= p.view[2] - 10);
     if (inFrame && !hits(p.busy, [r[0] + dx - 10, r[1] - 10, r[2] + dx + 10, r[3] + 10])) return dx;
@@ -127,14 +169,14 @@ const decor = (p: Pick<EnvP, 'busy' | 'view'>, r: Rect, dxs: number[] = [0]): nu
 };
 
 /** SVG do cenário em coordenadas do cenário (x -400..1480, y -600..2400). */
-const ArtSvg: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({ children, style }) => (
+export const ArtSvg: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({ children, style }) => (
   <svg style={{ position: 'absolute', left: -400, top: -600, overflow: 'visible', ...style }} width={1880} height={3000} viewBox="-400 -600 1880 3000">
     {children}
   </svg>
 );
 
 /** Peça do elenco (svg próprio) num ponto do cenário: x = centro, y = base. */
-const Prop: React.FC<{ x: number; y: number; w: number; h: number; children: React.ReactNode; style?: React.CSSProperties }> = ({ x, y, w, h, children, style }) => (
+export const Prop: React.FC<{ x: number; y: number; w: number; h: number; children: React.ReactNode; style?: React.CSSProperties }> = ({ x, y, w, h, children, style }) => (
   <div style={{ position: 'absolute', left: x - w / 2, top: y - h, width: w, height: h, ...style }}>{children}</div>
 );
 
@@ -526,7 +568,7 @@ const CidadeFront: React.FC<EnvP> = ({ noLeft, noRight }) => (
 
 // ===================================================================== montagem
 
-const ENVS: Record<AmbienteKind, { back: React.FC<EnvP>; mid: React.FC<EnvP>; front: React.FC<EnvP> }> = {
+const ENVS: Record<Antigo, { back: React.FC<EnvP>; mid: React.FC<EnvP>; front: React.FC<EnvP> }> = {
   escritorio: { back: EscritorioBack, mid: EscritorioMid, front: EscritorioFront },
   treinamento: { back: TreinamentoBack, mid: TreinamentoMid, front: TreinamentoFront },
   casa: { back: CasaBack, mid: CasaMid, front: CasaFront },
@@ -538,29 +580,33 @@ const ENVS: Record<AmbienteKind, { back: React.FC<EnvP>; mid: React.FC<EnvP>; fr
  * pôs alguma coisa ali (`busy`), o canto sai sozinho — o primeiro plano nunca
  * passa por cima de peça, balão ou folha.
  */
-const FRONT_ZONES: Record<AmbienteKind, { left: Rect; right: Rect }> = {
+const FRONT_ZONES: Record<Antigo, { left: Rect; right: Rect }> = {
   escritorio: { left: [-110, 1090, 230, 1520], right: [900, 1150, 1300, 1530] },
   treinamento: { left: [-120, 1197, 200, 1613], right: [885, 1204, 1215, 1633] },
   casa: { left: [-125, 1090, 225, 1530], right: [880, 1250, 1140, 1510] },
   cidade: { left: [-140, 1210, 290, 1530], right: [1005, 200, 1050, 1600] },
 };
 
-const FILTER = { back: 'blur(1.2px)', mid: 'blur(0.4px)', front: 'blur(5px) brightness(0.62) saturate(0.75)' } as const;
+const envOf = (t: AmbienteKind) => (antigo(t) ? ENVS[t] : lugar(t));
+const zonesOf = (t: AmbienteKind) => (antigo(t) ? FRONT_ZONES[t] : lugar(t).frontZones);
+
+/** O filtro de cada camada (o Ambiente aplica; um lugar não precisa repetir). */
+export const FILTER = { back: 'blur(1.2px)', mid: 'blur(0.4px)', front: 'blur(5px) brightness(0.62) saturate(0.75)' } as const;
 const FULL: Rect = [0, 0, 1080, 1920];
 
 /** Uma camada do ambiente. back/mid descem pro horizonte da cena; front fica preso à tela. */
 export const Ambiente: React.FC<{ amb: AmbSpec; geo: EnvGeo; part: 'back' | 'mid' | 'front'; t: number; accent: string }> = ({ amb, geo, part, t, accent }) => {
-  const env = ENVS[amb.tipo];
+  const env = envOf(amb.tipo);
   const Part = env[part];
   const shift = shiftOf(amb, geo);
   const busy = geo.busy ?? [];
   const toScene = (r: Rect): Rect => [r[0], r[1] - shift, r[2], r[3] - shift];
-  const off = (side: 'left' | 'right') => !!geo.frontOff?.includes(side) || hits(busy, FRONT_ZONES[amb.tipo][side]);
+  const off = (side: 'left' | 'right') => !!geo.frontOff?.includes(side) || hits(busy, zonesOf(amb.tipo)[side]);
   const p: EnvP = {
     t,
     clear: geo.clear,
-    gente: amb.gente ?? GENTE[amb.tipo],
-    hora: amb.hora ?? HORA[amb.tipo],
+    gente: amb.gente ?? genteOf(amb.tipo),
+    hora: amb.hora ?? horaOf(amb.tipo),
     accent,
     desk: !!geo.desk,
     noLeft: off('left'),
@@ -587,12 +633,14 @@ export const Ambiente: React.FC<{ amb: AmbSpec; geo: EnvGeo; part: 'back' | 'mid
  * manhã ou de dia; à noite a janela não acende nada. As coordenadas são as da janela de CasaBack.
  */
 export const Luz: React.FC<{ amb: AmbSpec; geo: EnvGeo; t: number }> = ({ amb, geo, t }) => {
-  const hora = amb.hora ?? HORA[amb.tipo];
-  if (amb.tipo !== 'casa' || hora === 'noite') return null;
+  const hora = amb.hora ?? horaOf(amb.tipo);
+  // fase 3: um lugar registrado com `janela` também acende (a casa mantém os números de sempre)
+  const jan = amb.tipo === 'casa' ? null : lugarOf(amb.tipo)?.janela;
+  if ((amb.tipo !== 'casa' && !jan) || hora === 'noite') return null;
   const s = shiftOf(amb, geo);
   // janela (590..930, 330..750) projetada pra baixo e pra esquerda até o chão
-  const [dx, dy] = [-330, 520];
-  const win = { x0: 600, x1: 920, y0: 350, y1: 740 };
+  const [dx, dy] = jan ? [jan.dx, jan.dy] : [-330, 520];
+  const win = jan ? { x0: jan.x0, x1: jan.x1, y0: jan.y0, y1: jan.y1 } : { x0: 600, x1: 920, y0: 350, y1: 740 };
   // luz SEM origem à vista não vale: se a cena cobre três quartos da janela (a folha do mapa), sem
   // facho. Uma ficha pequena na frente do vidro não apaga a janela.
   const area = (win.x1 - win.x0) * (win.y1 - win.y0);
@@ -698,7 +746,7 @@ export const AmbienteMini: React.FC<{
   const sx = (x: number) => (x - cx) / scale + 540;
   const sy = (y: number) => (y - horizon) / scale + 1000;
   const sr = (r: Rect): Rect => [sx(r[0]), sy(r[1]), sx(r[2]), sy(r[3])];
-  const geo: EnvGeo = { ground: 1000 + DEPTH[tipo], clear: [sx(clear[0]), sx(clear[1])], spot: [540, 860, 360], busy: busy.map(sr), show, view: sr([0, 0, w, h]) };
+  const geo: EnvGeo = { ground: 1000 + depthOf(tipo), clear: [sx(clear[0]), sx(clear[1])], spot: [540, 860, 360], busy: busy.map(sr), show, view: sr([0, 0, w, h]) };
   return (
     <AbsoluteFill style={{ overflow: 'hidden' }}>
       <div style={{ position: 'absolute', left: cx - 540 * scale, top: horizon - 1000 * scale, width: 1080, height: 1920, transform: `scale(${scale})`, transformOrigin: '0 0' }}>

@@ -19,6 +19,8 @@ import {
   Vassoura,
 } from '../elenco/cast';
 import { Agenda, Caneca, Caneta, Envelope, Monitor, Papelada, Planta, Quadro } from '../elenco/objetos';
+import { Calendario, Coqueteleira, Peso, Pote } from '../elenco/pecas3';
+import { Reservatorio } from '../elenco/reservatorio';
 import { Emblema } from '../Emblema';
 import ions from './ionicons-full.json';
 import catalog from './catalog.json';
@@ -54,6 +56,17 @@ const PIECES: Record<string, Draw> = {
   monitor: ({ t, size, accent, progress }) => <Monitor t={t} size={size} accent={accent} progress={progress ?? 1} />,
   papelada: ({ size }) => <Papelada size={size} />,
   envelope: ({ t, size, accent }) => <Envelope t={t} size={size} accent={accent} />,
+  // fase 3 (pecas3.tsx, reservatorio.tsx): o que a pessoa usa fazendo — nenhuma com marca nem texto
+  peso: ({ size, accent }) => <Peso size={size} accent={accent} />,
+  pote: ({ size, accent, progress }) => <Pote size={size} accent={accent} progress={progress} />,
+  // `progress` = casas marcadas (o Obj.run do roteiro anda com ele)
+  calendario: ({ size, accent, progress }) => <Calendario size={size} accent={accent} progress={progress ?? 0} />,
+  coqueteleira: ({ t, size, accent, progress }) => <Coqueteleira t={t} size={size} accent={accent} progress={progress} />,
+  // o copo de sempre com a bebida na cor dela (água / suco), não na cor da área
+  'copo-agua': ({ t, size, progress }) => <Copo t={t} size={size} accent="#A9BCEB" stir={progress ?? 1} />,
+  'copo-suco': ({ t, size, progress }) => <Copo t={t} size={size} accent="#FFA94D" stir={progress ?? 1} />,
+  // `progress` = nível do estoque
+  reservatorio: ({ t, size, accent, progress }) => <Reservatorio t={t} size={size} nivel={progress ?? 1} accent={accent} />,
   // o Emblema do app (src/Emblema.tsx): anéis, braços e áreas acendem ao longo da cena — vídeo de marca
   emblema: ({ t, size, progress }) => {
     const p = progress ?? Math.max(0, Math.min(1, t / 150));
@@ -94,6 +107,13 @@ const BOX: Record<string, [number, number]> = {
   monitor: [1, 0.9],
   papelada: [1, 0.95],
   envelope: [1, 0.78],
+  peso: [1, 0.5],
+  pote: [0.8, 1],
+  calendario: [1, 1.05],
+  coqueteleira: [0.55, 1],
+  'copo-agua': [0.8, 1],
+  'copo-suco': [0.8, 1],
+  reservatorio: [1, 1.35],
 };
 /** Largura e altura que a peça ocupa na tela (ícone do app = a ficha redonda de 0,8 × size). */
 export const pieceBox = (name: string, size: number): [number, number] => {
