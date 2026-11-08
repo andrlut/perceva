@@ -21,21 +21,32 @@ import { Encosto, SET } from '../elenco/cenario';
 import { Caneca, Caneta, Planta } from '../elenco/objetos';
 import { C, DimId, FONT, dimColor } from '../theme';
 import { Scene, cue, speechEnd, wordFrames } from '../timeline';
-import { Abajur, AmbSpec, Ambiente, AmbienteMini, EnvGeo, Luz, Rect, Spot, Vinheta, lugarOf, registerLugares } from './ambientes';
+import { Abajur, AmbSpec, Ambiente, AmbienteMini, EnvGeo, Luz, Rect, Spot, Vinheta, faceRect, lugarOf, registerLugares } from './ambientes';
 import { CameraRig, FocusMap, Layer, cameraAt, focusPoint } from './camera';
 import { Sfx, type SfxName } from './sfx';
 import { useIdentity } from '../identidade/context';
+import { CORPO, SKINS as PELES, type Arms } from '../identidade/types';
 import { Ion, Peca, pieceBox } from './Peca';
-import type { Bloco, Chip, Feel, MoldeLine, MoldeSpec, Mood, Obj, Panel, Regiao } from './spec';
+import catalog from './catalog.json';
+import type { AcaoKind, AcaoSpec, Bloco, Chip, Feel, MoldeLine, MoldeSpec, Mood, Obj, Panel, PieceName, Regiao } from './spec';
 // fase 3: a tela demonstra o que a voz diz (ações, rótulos, corpo por dentro, lugares novos)
-import { Ator, poseDe } from '../elenco/acao';
-import { Rotulos } from './rotulo';
+import { Ator, cicloDe, maoNaTela, pontoNaTela, poseDe } from '../elenco/acao';
+import { Lente, lenteRect } from './lente';
+import { Rotulos, discoRects, type Ocupa } from './rotulo';
 import { LUGARES } from './lugares';
 import { Dentro } from './cenas/dentro';
 import { Faz } from './cenas/faz';
 
 // Os lugares da fase 3 entram no registro do ambientes.tsx aqui (ele nunca importa os lugares: sem ciclo).
 registerLugares(LUGARES);
+
+// O lint (scripts/molde.mjs) confere se cada ação cabe até a próxima deixa com os quadros do
+// catalog.json; os ciclos de verdade moram no acao.tsx. Divergiu = o render quebra aqui, não em silêncio.
+for (const [a, q] of Object.entries(catalog.acaoQuadros as Record<string, { n: number; lento: number; rapido: number }>)) {
+  const k = a as AcaoKind;
+  if (cicloDe(k) !== q.n || cicloDe(k, 'lento') !== q.lento || cicloDe(k, 'rapido') !== q.rapido)
+    throw new Error(`catalog.json acaoQuadros.${a} diverge de CICLO em src/elenco/acao.tsx (${cicloDe(k)}/${cicloDe(k, 'lento')}/${cicloDe(k, 'rapido')})`);
+}
 
 export type MS = Scene & Pick<MoldeLine, 'scene' | 'props'>;
 type P = { s: MS };
@@ -54,6 +65,57 @@ export const useSpec = () => {
 export const useAccent = () => dimColor(useSpec().dimension);
 /** Cor do ajudante: Ofício (teal), ou Vínculos quando a ideia já é de Ofício. */
 const helperColor = (d: DimId) => dimColor(d === 'craft' ? 'bonds' : 'craft');
+
+/**
+ * A protagonista do vídeo (fase 3: `protagonista: { seed, skin }` na ideia — cada vídeo com a sua
+ * pessoa, a blusa continua violeta). Sem ela, seed 0 e a pele padrão da identidade: o vídeo antigo
+ * sai idêntico. Toda Pessoa/Ator que é "ela" passa por aqui (cenas/dentro e cenas/faz leem o spec).
+ */
+export const useProtagonista = () => {
+  const p = useSpec().protagonista;
+  return { seed: p?.seed ?? 0, skin: p?.skin };
+};
+/** O ajudante (seed 4) nunca tem o rosto dela. */
+const helperSeed = (seed: number) => (seed === 4 ? 1 : 4);
+
+/** Zoom do `plano: "fechado"` (fase 3): o mundo da cena cresce `k` vezes em volta de `o` (a câmera mais perto). */
+export type Zoom = { k: number; o: [number, number] };
+const zPt = (z: Zoom | undefined, [x, y]: [number, number]): [number, number] => (z ? [z.o[0] + (x - z.o[0]) * z.k, z.o[1] + (y - z.o[1]) * z.k] : [x, y]);
+const zRect = (z: Zoom | undefined, r: Rect): Rect => (z ? [...zPt(z, [r[0], r[1]]), ...zPt(z, [r[2], r[3]])] : r);
+/** Da tela pro mundo da cena (o inverso do zoom). */
+const unPt = (z: Zoom | undefined, [x, y]: [number, number]): [number, number] => (z ? [z.o[0] + (x - z.o[0]) / z.k, z.o[1] + (y - z.o[1]) / z.k] : [x, y]);
+const unRect = (z: Zoom | undefined, r: Rect): Rect => (z ? [...unPt(z, [r[0], r[1]]), ...unPt(z, [r[2], r[3]])] : r);
+/** O mundo da cena com o zoom (sem zoom, os filhos passam direto: o DOM sai igual ao de antes). */
+const Zoomed: React.FC<{ z?: Zoom; children: React.ReactNode }> = ({ z, children }) =>
+  z ? <AbsoluteFill style={{ transform: `scale(${z.k})`, transformOrigin: `${z.o[0]}px ${z.o[1]}px` }}>{children}</AbsoluteFill> : <>{children}</>;
+
+/** Caixa de uma Pessoa (o Ator desenha com os pés em `y`): left/top/size, como o acao.tsx mede. */
+type Caixa = { left: number; top: number; size: number };
+const caixaDoAtor = (x: number, y: number, size: number): Caixa => ({ left: x - size / 2, top: y - size * 1.26, size });
+/** O rosto (cabeça + cabelo) de uma caixa: os rótulos nunca caem nele. */
+const rostoDe = (b: Caixa): Rect => faceRect(b.left + b.size / 2, b.top, b.size);
+/** Região do roteiro → ponto do corpo que o Ator conhece (sistemas caem na parte que os mostra). */
+const pontoDe = (r: Regiao | 'peca'): keyof typeof CORPO.pontos =>
+  r in CORPO.pontos ? (r as keyof typeof CORPO.pontos) : r === 'pele' ? 'rosto' : r === 'vasos' || r === 'musculos' ? 'braco' : 'tronco';
+/** Todos os pontos do corpo de uma caixa (as setas dos rótulos; vasos/músculos/pele caem no braço e no rosto). */
+const pontosDe = (b: Caixa, pose?: Parameters<typeof pontoNaTela>[2]): Partial<Record<Regiao, [number, number]>> =>
+  Object.fromEntries((catalog.regioes as Regiao[]).map((r) => [r, pontoNaTela(pontoDe(r), b, pose)]));
+/**
+ * Onde a peça da mão passa na cena inteira (a união do caminho da mão, amostrada): o cenário sai
+ * dali de uma vez, sem enfeite piscando enquanto o copo sobe pra boca.
+ */
+const maoRect = (s: MS, acoes: AcaoSpec[] | undefined, arms: Arms, b: Caixa, peca: PieceName): Rect => {
+  const ps = b.size * 0.32;
+  const [w, h] = pieceBox(peca, ps);
+  let r: Rect | null = null;
+  for (let f = 0; f <= s.frames; f += 3) {
+    const pose = acoes?.length ? poseDe(s, acoes, f).pose : undefined;
+    const m = maoNaTela(pose, arms, 1, b);
+    const box: Rect = [m.x - w * 0.6, m.y - h * 0.8, m.x + w * 0.75, m.y + h * 0.45];
+    r = r ? [Math.min(r[0], box[0]), Math.min(r[1], box[1]), Math.max(r[2], box[2]), Math.max(r[3], box[3])] : box;
+  }
+  return r!;
+};
 
 const SKINS = ['#F2C9A0', '#C68B5E', '#8D5A3B', '#E0AC7E', '#5C3A24', '#F5D5B8'];
 
@@ -116,9 +178,15 @@ const ambOf = (s: MS): AmbSpec | null => {
  * Palco de toda cena: ambiente (fundo, meio, foco de luz, primeiro plano),
  * câmera com parallax e a sobrancelha por cima de tudo.
  *
- * Fase 3: desenha os `rotulos` da cena (Layer depth 1, por cima dela), fora do `geo.busy` e do
- * `busy` extra (lente, medidor, balão); `pontos` = onde fica cada parte do corpo na tela (as setas).
- * Sem `rotulos`, nada muda.
+ * Fase 3: desenha os `rotulos` da cena (Layer depth 1, por cima dela), fora do `geo.busy`, do
+ * `busy` extra (o rosto dela, a lente, o medidor, o balão) e do que a cena `ocupa` só num trecho
+ * (a lente aberta); `pontos` = onde fica cada parte do corpo (as setas). Sem `rotulos`, nada muda.
+ *
+ * `zoom` (o `plano: "fechado"`): o lugar, o foco de luz, a luz e a cena crescem `k` vezes em volta
+ * de `o` — a câmera mais perto, o cômodo cortado. `geo`, `focus`, `pontos` e `busy` continuam nas
+ * coordenadas da cena (o Stage leva pra tela o que é da tela: rótulos, câmera, primeiro plano).
+ * `overlay` (e o `ocupa`) já é da TELA: desenhado sem o zoom, por cima da cena (a lente callout).
+ * Com `fase: 3` no spec, a vinheta abre a base do quadro (escuro só atrás da legenda).
  *
  * Exportado pras cenas de arquivo próprio (cenas/dentro.tsx, cenas/faz.tsx): elas importam
  * daqui e são importadas daqui — só use isto DENTRO do componente, nunca no topo do módulo.
@@ -130,54 +198,74 @@ export const Stage: React.FC<{
   kicker?: string;
   pontos?: Partial<Record<Regiao, [number, number]>>;
   busy?: Rect[];
+  ocupa?: Ocupa[];
+  zoom?: Zoom;
+  overlay?: React.ReactNode;
   children: React.ReactNode;
-}> = ({ s, geo, focus = {}, kicker, pontos, busy, children }) => {
+}> = ({ s, geo, focus = {}, kicker, pontos, busy, ocupa, zoom: z, overlay, children }) => {
   const frame = useCurrentFrame();
   const accent = useAccent();
+  const aberta = (useSpec().fase ?? 0) >= 3;
   const pr = s.props ?? {};
   const amb = geo ? ambOf(s) : null;
-  const map: FocusMap = { ...focus, pessoa: focus.pessoa ?? (geo ? [geo.spot[0], geo.spot[1]] : undefined) };
+  const map0: FocusMap = { ...focus, pessoa: focus.pessoa ?? (geo ? [geo.spot[0], geo.spot[1]] : undefined) };
+  // a câmera mexe na TELA: os focos da cena passam pelo zoom
+  const map: FocusMap = z ? (Object.fromEntries(Object.entries(map0).map(([k, p]) => [k, p ? zPt(z, p) : p])) as FocusMap) : map0;
   const cueAt = pr.camera?.cue ? cue(s, pr.camera.cue) : null;
   const cam = cameraAt(frame, s.frames, pr.camera, cueAt, focusPoint(pr.camera?.focus, map));
   const kick = <Kicker text={kicker ?? pr.kicker} />;
+  // com zoom, o lugar sabe o pedaço do cenário que aparece (quem ficaria fora do quadro sai)
+  const geoZ: EnvGeo | undefined = geo && z ? { ...geo, view: geo.view ?? unRect(z, [0, 0, 1080, 1920]) } : geo;
+  // o primeiro plano é preso à tela: ele vê o que a cena ocupa já na tela
+  const geoFront: EnvGeo | undefined = geo && z ? { ...geo, busy: (geo.busy ?? []).map((r) => zRect(z, r)) } : geo;
+  const pontosTela = z && pontos ? (Object.fromEntries(Object.entries(pontos).map(([k, p]) => [k, p ? zPt(z, p) : p])) as typeof pontos) : pontos;
   return (
     <CameraRig cam={cam}>
       {cueAt != null ? <Sfx at={cueAt - (pr.camera?.move === 'push' ? 2 : 8)} name={pr.camera?.move === 'push' ? 'punch' : 'whoosh'} gain={pr.camera?.move === 'push' ? 1 : 0.7} /> : null}
       <AbsoluteFill>
         {/* sem ambiente, a sobrancelha fica por baixo como sempre foi (o vídeo antigo sai idêntico) */}
         {amb ? null : kick}
-        {amb && geo ? (
+        {amb && geoZ ? (
           <>
             <Layer depth={0.3}>
-              <Ambiente amb={amb} geo={geo} part="back" t={frame} accent={accent} />
+              <Zoomed z={z}>
+                <Ambiente amb={amb} geo={geoZ} part="back" t={frame} accent={accent} />
+              </Zoomed>
             </Layer>
             <Layer depth={0.62}>
-              <Ambiente amb={amb} geo={geo} part="mid" t={frame} accent={accent} />
+              <Zoomed z={z}>
+                <Ambiente amb={amb} geo={geoZ} part="mid" t={frame} accent={accent} />
+              </Zoomed>
             </Layer>
             <Layer depth={0.92}>
-              <Spot geo={geo} accent={accent} />
+              <Zoomed z={z}>
+                <Spot geo={geoZ} accent={accent} />
+              </Zoomed>
             </Layer>
             {/* fase 2: luz com origem — o facho da janela cai na sala, por baixo da pessoa e das peças
                 (por cima, lavava a ficha que pousava na frente da janela) */}
             <Layer depth={0.92}>
-              <Luz amb={amb} geo={geo} t={frame} />
+              <Zoomed z={z}>
+                <Luz amb={amb} geo={geoZ} t={frame} />
+              </Zoomed>
             </Layer>
           </>
         ) : null}
         <Layer depth={1} style={amb ? { filter: 'drop-shadow(0 16px 34px rgba(5,7,26,0.6))' } : undefined}>
-          {children}
+          <Zoomed z={z}>{children}</Zoomed>
         </Layer>
+        {overlay ? <Layer depth={1}>{overlay}</Layer> : null}
         {pr.rotulos?.length ? (
           <Layer depth={1}>
-            <Rotulos s={s} rotulos={pr.rotulos} pontos={pontos} busy={[...(geo?.busy ?? []), ...(busy ?? [])]} accent={accent} />
+            <Rotulos s={s} rotulos={pr.rotulos} pontos={pontosTela} busy={[...(geo?.busy ?? []), ...(busy ?? [])].map((r) => zRect(z, r))} ocupa={ocupa} accent={accent} />
           </Layer>
         ) : null}
-        {amb && geo ? (
+        {amb && geoFront ? (
           <>
             <Layer depth={1.35}>
-              <Ambiente amb={amb} geo={geo} part="front" t={frame} accent={accent} />
+              <Ambiente amb={amb} geo={geoFront} part="front" t={frame} accent={accent} />
             </Layer>
-            <Vinheta />
+            <Vinheta aberta={aberta} />
           </>
         ) : null}
         {amb ? kick : null}
@@ -331,6 +419,8 @@ const SLOTS_AMB = [SLOTS[0], SLOTS[1], { top: 1040, left: 90 }, SLOTS[3]];
 export const Pessoa_: React.FC<P> = ({ s }) => {
   const frame = useCurrentFrame();
   const spr = useSpr();
+  const accent = useAccent();
+  const who = useProtagonista();
   const pr = s.props ?? {};
   const amb = !!pr.ambiente;
   const turnAt = at(s, pr.turn, 1e9);
@@ -345,35 +435,43 @@ export const Pessoa_: React.FC<P> = ({ s }) => {
   // o cenário tira colega, móvel e primeiro plano de baixo das peças (e do relógio)
   const busy: Rect[] = [...busyOf(pr.objects, slots), ...(pr.clock ? [[640, 330, 870, 560] as Rect] : [])];
   const geo: EnvGeo = { ground: 1043, clear: [360, 720], spot: [540, 830, 380], frontOff: (pr.objects?.length ?? 0) >= 3 ? ['left'] : [], busy, show: pr.objects?.map((o) => o.p) };
+  // fase 3: com `acoes` ela FAZ (src/elenco/acao.tsx) — o Ator no lugar da Pessoa, pés na mesma linha (1043)
+  const pd = pr.acoes?.length ? poseDe(s, pr.acoes, frame) : null;
+  const meX = pd ? (pd.ativa?.de ?? 540) + pd.x : 540;
+  // os rótulos não caem no rosto dela em nenhum ponto do caminho, e a seta mira onde ela termina
+  // (parada, sem pose): a fila não pula de quadro em quadro enquanto ela anda ou salta
+  const xs = pr.acoes?.flatMap((a) => (a.acao === 'andar' ? [a.de, a.para] : [a.de]).filter((v): v is number => typeof v === 'number')) ?? [];
+  const rostoBusy: Rect = (() => {
+    const r = rostoDe(caixaDoAtor(540, 1043, 320));
+    return [r[0] + Math.min(540, ...xs) - 540, r[1] - (pr.acoes?.some((a) => a.acao === 'saltar') ? 150 : 0), r[2] + Math.max(540, ...xs) - 540, r[3]];
+  })();
+  const xFim = [...(pr.acoes ?? [])].reverse().map((a) => (a.acao === 'andar' ? (a.para ?? a.de) : a.de)).find((v) => typeof v === 'number') ?? 540;
   return (
-    <Stage s={s} geo={geo} focus={{ peca: [slots[0].left + 140, slots[0].top + 140] }}>
+    <Stage s={s} geo={geo} focus={{ peca: [slots[0].left + 140, slots[0].top + 140] }} busy={[rostoBusy]} pontos={pontosDe(caixaDoAtor(xFim, 1043, 320))}>
       <Clock s={s} mode={pr.clock} turnAt={turnAt} top={330} left={640} size={230} />
       {pr.turn && positive ? <Sfx at={turnAt} name="chime" /> : null}
-      {pr.acoes?.length ? (
-        // fase 3: ela FAZ (src/elenco/acao.tsx) — o Ator no lugar da Pessoa, pés na mesma linha (1043)
-        (() => {
-          const pd = poseDe(s, pr.acoes, frame);
-          return (
-            <div style={{ position: 'absolute', inset: 0, opacity: me, transform: `scale(${0.85 + 0.15 * me})`, transformOrigin: '540px 848px' }}>
-              <Ator
-                t={frame}
-                x={(pd.ativa?.de ?? 540) + pd.x}
-                y={1043}
-                size={320}
-                pose={pd.pose}
-                mood={mood}
-                since={turned ? frame - turnAt : frame}
-                arms={turned && positive ? 'up' : (pr.arms ?? 'down')}
-                accent={C.violet}
-                mao={pd.peca ? { p: pd.peca } : undefined}
-                maos={pd.maos}
-              />
-            </div>
-          );
-        })()
+      {pd ? (
+        <div style={{ position: 'absolute', inset: 0, opacity: me, transform: `scale(${0.85 + 0.15 * me})`, transformOrigin: '540px 848px' }}>
+          <Ator
+            t={frame}
+            x={meX}
+            y={1043}
+            size={320}
+            pose={pd.pose}
+            mood={mood}
+            since={turned ? frame - turnAt : frame}
+            arms={turned && positive ? 'up' : (pr.arms ?? 'down')}
+            seed={who.seed}
+            skin={who.skin}
+            accent={C.violet}
+            corPeca={accent}
+            mao={pd.peca ? { p: pd.peca } : undefined}
+            maos={pd.maos}
+          />
+        </div>
       ) : (
         <div style={{ position: 'absolute', top: 640, left: 380, opacity: me, transform: `scale(${0.85 + 0.15 * me})` }}>
-          <Pessoa t={frame} size={320} mood={mood} since={turned ? frame - turnAt : frame} arms={turned && positive ? 'up' : (pr.arms ?? 'down')} sweat={pr.sweat && !turned} accent={C.violet} />
+          <Pessoa t={frame} size={320} mood={mood} since={turned ? frame - turnAt : frame} arms={turned && positive ? 'up' : (pr.arms ?? 'down')} sweat={pr.sweat && !turned} seed={who.seed} skin={who.skin} accent={C.violet} />
         </div>
       )}
       {(pr.glow && !(idHalo && mood === 'feliz')) || (pr.turn && positive && !idHalo) ? (
@@ -398,10 +496,11 @@ export const Semana_: React.FC<P> = ({ s }) => {
   const fill = ramp(frame, a, Math.max(10, b - a + 10));
   const speed = interpolate(frame, [a, b + 10], [1.5, 9], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   const week = spr(s.lead - 4);
+  const who = useProtagonista();
   // a semana e o relógio ficam por cima do cenário
   const geo: EnvGeo = { ground: 1140, clear: [480, 820], spot: [650, 950, 360], busy: [[110, 320, 970, 682], [150, 820, 380, 1050]] };
   return (
-    <Stage s={s} geo={geo} focus={{ peca: [540, 500] }}>
+    <Stage s={s} geo={geo} focus={{ peca: [540, 500] }} busy={[rostoDe({ left: 500, top: 760, size: 300 })]}>
       <div style={{ position: 'absolute', top: 320, left: 110, opacity: week, transform: `translateY(${(1 - week) * 30}px)` }}>
         <Semana width={860} fill={fill} accent={accent} />
       </div>
@@ -409,7 +508,7 @@ export const Semana_: React.FC<P> = ({ s }) => {
         <Relogio t={frame} size={230} speed={speed} accent={C.violet2} />
       </div>
       <div style={{ position: 'absolute', top: 760, left: 500 }}>
-        <Pessoa t={frame * (1 + fill)} size={300} mood={pr.mood ?? 'cansado'} arms="down" sweat={frame >= b - 6} accent={C.violet} />
+        <Pessoa t={frame * (1 + fill)} size={300} mood={pr.mood ?? 'cansado'} arms="down" sweat={frame >= b - 6} seed={who.seed} skin={who.skin} accent={C.violet} />
       </div>
     </Stage>
   );
@@ -433,6 +532,7 @@ export const Virada: React.FC<P> = ({ s }) => {
   const happy = frame >= aTurn;
   const sweep = pr.helper && frame >= aGive + 18 ? Math.sin(frame / 4) * 14 : 0;
   const hc = helperColor(spec.dimension);
+  const who = useProtagonista();
   const vSlots: Slot[] = [
     { top: 1060, left: 200, size: 240 },
     { top: 1060, left: 640, size: 240 },
@@ -442,7 +542,7 @@ export const Virada: React.FC<P> = ({ s }) => {
   const show = [pr.gives, ...(pr.objects ?? []).map((o) => o.p)];
   const geo: EnvGeo = pr.helper ? { ground: 980, clear: [70, 960], spot: [500, 780, 480], busy, show } : { ground: 980, clear: [360, 720], spot: [530, 780, 380], busy, show };
   return (
-    <Stage s={s} geo={geo} focus={{ pessoa: pr.helper ? [240, 790] : [530, 790], peca: pr.helper ? [900, 770] : [750, 860] }}>
+    <Stage s={s} geo={geo} focus={{ pessoa: pr.helper ? [240, 790] : [530, 790], peca: pr.helper ? [900, 770] : [750, 860] }} busy={[rostoDe({ left: pr.helper ? 90 : 380, top: 600, size: 300 })]}>
       <Clock s={s} mode={pr.clock} turnAt={aTurn} top={300} left={190} size={200} />
       {(pr.to ?? 'feliz') === 'feliz' ? <Sfx at={aTurn} name="chime" /> : null}
       <div style={{ position: 'absolute', top: 600, left: pr.helper ? 90 : 380 }}>
@@ -453,6 +553,8 @@ export const Virada: React.FC<P> = ({ s }) => {
           since={happy ? frame - aTurn : frame}
           // com `gives` ela já começa segurando a peça (braço estendido); sem, estende na entrega
           arms={happy ? 'up' : pr.gives || frame >= aGive ? 'out' : 'down'}
+          seed={who.seed}
+          skin={who.skin}
           accent={C.violet}
         />
       </div>
@@ -463,7 +565,7 @@ export const Virada: React.FC<P> = ({ s }) => {
       )}
       {pr.helper ? (
         <div style={{ position: 'absolute', top: 600, left: 620, opacity: helper, transform: `translateX(${(1 - helper) * 200}px)` }}>
-          <Pessoa t={frame} size={300} seed={4} arms={pass > 0.5 ? 'out' : 'down'} mood="ok" accent={hc} skin="#8D5A3B" cap={accent} />
+          <Pessoa t={frame} size={300} seed={helperSeed(who.seed)} arms={pass > 0.5 ? 'out' : 'down'} mood="ok" accent={hc} skin="#8D5A3B" cap={accent} />
         </div>
       ) : null}
       {pr.gives ? (
@@ -561,10 +663,11 @@ const PanelBox: React.FC<{
   /** quadros desde que este painel virou o vencedor (o humor dele vira aí) */
   winSince?: number;
   panel: Panel;
-  seed: number;
+  /** quem está no painel: a protagonista (no lado que ganha) ou a outra pessoa */
+  who: { seed: number; skin: string; accent: string };
   labelSize: number;
   pill?: { p?: string; text: string };
-}> = ({ s, g, x, from, win, lose, winSince, panel, seed, labelSize, pill }) => {
+}> = ({ s, g, x, from, win, lose, winSince, panel, who, labelSize, pill }) => {
   const frame = useCurrentFrame();
   const spr = useSpr();
   const accent = useAccent();
@@ -615,7 +718,7 @@ const PanelBox: React.FC<{
         </div>
       ) : null}
       <div style={{ position: 'absolute', top: ps.top, left: ps.left }}>
-        <Pessoa t={frame} size={ps.size} seed={seed} arms={win > 0.5 ? 'up' : 'down'} mood={mood} since={win > 0.5 && winSince != null ? winSince : frame} accent={seed ? C.violet2 : C.violet} skin={seed ? '#8D5A3B' : '#F2C9A0'} />
+        <Pessoa t={frame} size={ps.size} seed={who.seed} arms={win > 0.5 ? 'up' : 'down'} mood={mood} since={win > 0.5 && winSince != null ? winSince : frame} accent={who.accent} skin={who.skin} />
       </div>
       {panel.object ? (
         <div
@@ -693,12 +796,18 @@ export const Comparar: React.FC<P> = ({ s }) => {
   const right = pr.winner === 'right';
   const at_ = (k: number): [number, number] => [g.xs[right ? 1 : 0] + g.w * k, g.top + g.h * 0.45];
   const focus: FocusMap = g === PANEL.curto ? { pessoa: right ? [785, 650] : [295, 650], peca: right ? [880, 600] : [390, 600] } : { pessoa: at_(0.36), peca: at_(0.74) };
+  // a protagonista fica no lado que ganha ("você"); o outro lado é outra pessoa. Até a fase 3 a outra
+  // tinha a pele escura (seed 3) — o lado que perde; com `fase: 3` ela tem pele clara (régua do parceiro:
+  // pele escura nunca no lado que perde). Sem fase 3, igual ao de antes.
+  const me = useProtagonista();
+  const spec = useSpec();
+  const ela = { seed: me.seed, skin: me.skin ?? '#F2C9A0', accent: C.violet };
+  const outra = { seed: me.seed === 3 ? 0 : 3, skin: (spec.fase ?? 0) >= 3 ? PELES[3] : '#8D5A3B', accent: C.violet2 };
   return (
     <Stage s={s} focus={focus}>
       {winSfx}
-      {/* a protagonista fica no lado que ganha ("você"); o outro lado é outra pessoa */}
-      <PanelBox s={s} g={g} x={g.xs[0]} from={s.lead - 4} win={winL} lose={winR} winSince={frame - at(s, pr.win, 1e9) - 8} panel={pr.left!} seed={pr.winner === 'right' ? 3 : 0} labelSize={labelSize} pill={pr.pill} />
-      <PanelBox s={s} g={g} x={g.xs[1]} from={s.lead + 4} win={winR} lose={winL} winSince={frame - at(s, pr.win, 1e9) - 8} panel={pr.right!} seed={pr.winner === 'right' ? 0 : 3} labelSize={labelSize} pill={pr.pill} />
+      <PanelBox s={s} g={g} x={g.xs[0]} from={s.lead - 4} win={winL} lose={winR} winSince={frame - at(s, pr.win, 1e9) - 8} panel={pr.left!} who={pr.winner === 'right' ? outra : ela} labelSize={labelSize} pill={pr.pill} />
+      <PanelBox s={s} g={g} x={g.xs[1]} from={s.lead + 4} win={winR} lose={winL} winSince={frame - at(s, pr.win, 1e9) - 8} panel={pr.right!} who={pr.winner === 'right' ? ela : outra} labelSize={labelSize} pill={pr.pill} />
       {pr.chips?.length ? <Chips s={s} chips={pr.chips} top={1010} left={pr.winner === 'right' ? 560 : 70} width={450} /> : null}
     </Stage>
   );
@@ -714,11 +823,12 @@ export const Lista: React.FC<P> = ({ s }) => {
   const last = pr.items?.length ? cue(s, pr.items[pr.items.length - 1].cue) : 1e9;
   const n = Math.min(3, pr.items?.length ?? 0);
   const geo: EnvGeo = { ground: 712, clear: [340, 720], spot: [530, 510, 320], busy: n ? [[90, 790, 990, 790 + n * 132]] : [] };
+  const who = useProtagonista();
   return (
-    <Stage s={s} geo={geo} focus={{ peca: [540, 1000] }}>
+    <Stage s={s} geo={geo} focus={{ peca: [540, 1000] }} busy={[rostoDe({ left: 360, top: 280, size: 340 })]}>
       {pr.to === 'feliz' && pr.mood !== 'feliz' ? <Sfx at={last} name="chime" /> : null}
       <div style={{ position: 'absolute', top: 280, left: 360, opacity: me }}>
-        <Pessoa t={frame} size={340} mood={frame >= last ? (pr.to ?? pr.mood ?? 'ok') : (pr.mood ?? 'ok')} since={frame >= last ? frame - last : frame} arms={pr.arms ?? 'down'} accent={C.violet} />
+        <Pessoa t={frame} size={340} mood={frame >= last ? (pr.to ?? pr.mood ?? 'ok') : (pr.mood ?? 'ok')} since={frame >= last ? frame - last : frame} arms={pr.arms ?? 'down'} seed={who.seed} skin={who.skin} accent={C.violet} />
       </div>
       <Chips s={s} chips={(pr.items ?? []).slice(0, 3)} top={790} left={90} width={900} size={64} />
     </Stage>
@@ -730,7 +840,7 @@ export const Lista: React.FC<P> = ({ s }) => {
 const ON_DESK = new Set([
   'caneca', 'copo', 'celular', 'livro', 'caderno', 'agenda', 'monitor', 'computador', 'papelada', 'envelope', 'planta', 'louca', 'relogio', 'lampada',
   // fase 3
-  'pote', 'copo-agua', 'copo-suco', 'coqueteleira', 'reservatorio',
+  'pote', 'copo-agua', 'copo-suco', 'coqueteleira', 'reservatorio', 'calendario',
 ]);
 const ON_FLOOR = new Set(['planta', 'cesto', 'vassoura', 'sacola', 'papelada', 'quadro', 'louca', 'peso']);
 
@@ -809,12 +919,58 @@ const DeskDressing: React.FC<{ tipo: string; t: number }> = ({ tipo, t }) => (
   </>
 );
 
+/**
+ * Plano fechado (fase 3, `plano: "fechado"` na cena mesa — o balcão da cozinha, a pia do banheiro):
+ * ela do peito pra cima, o cômodo cortado. O mundo da cena (lugar, balcão, ela, peça da mão) cresce
+ * 2,1× em volta de `o` — a câmera chega perto, nada é redesenhado. Na tela: o rosto em ~(400, 790)
+ * com ~300 px de largura (≥ 25% do quadro) e o tampo em y 1180. As peças das pontas e as que
+ * flutuam são posicionadas NA TELA (≥ 200 px) e levadas de volta pro mundo da cena (`unPt`).
+ */
+const FECHADO: Zoom = { k: 2.1, o: [438, 855.5] };
+/** Encaixes do plano fechado, em coordenadas da TELA: as duas pontas do tampo e dois no alto. */
+const FECHADO_SLOTS = {
+  chao: [
+    { top: 1180, left: 30, size: 230, base: true },
+    { top: 1180, left: 830, size: 220, base: true },
+  ] as Slot[],
+  alto: [
+    { top: 330, left: 760, size: 240 },
+    { top: 320, left: 40, size: 210 },
+  ] as Slot[],
+};
+/** Um encaixe da tela levado pro mundo da cena (a peça cresce de volta com o zoom). */
+const slotDaTela = (z: Zoom, sl: Slot): Slot => {
+  const [left, top] = unPt(z, [sl.left, sl.top]);
+  return { ...sl, left, top, size: sl.size / z.k };
+};
+/** Com `acoes` (e no plano fechado) ela fica 60 px mais alta em relação ao tampo: o tampo passa
+ *  pela cintura (≈ 220 un. da caixa), e o copo na frente do peito aparece inteiro. */
+const MESA_ATOR = { x: 420, y: 1058, size: 300 };
+
+/** Peças da cena no plano fechado: pontas do tampo e o alto, todas medidas na tela. */
+const fechadoPlaced = (objects: Obj[]): { o: Obj; slot: Slot }[] => {
+  const ground = FECHADO_SLOTS.chao.map((sl) => slotDaTela(FECHADO, sl));
+  const float = FECHADO_SLOTS.alto.map((sl) => slotDaTela(FECHADO, sl));
+  const out: { o: Obj; slot: Slot }[] = [];
+  const up: Obj[] = [];
+  for (const o of objects.slice(0, 4)) {
+    if (ON_DESK.has(o.p) && ground.length) out.push({ o, slot: ground.shift()! });
+    else up.push(o);
+  }
+  for (const o of up) {
+    const slot = float.shift() ?? ground.shift();
+    if (slot) out.push({ o, slot });
+  }
+  return out.sort((a, b) => objects.indexOf(a.o) - objects.indexOf(b.o));
+};
+
 /** A ideia aplicada: a pessoa num lugar (sofá, mesa, cama, chão) com uma peça na mão. */
 export const Cena: React.FC<P> = ({ s }) => {
   const frame = useCurrentFrame();
   const spr = useSpr();
   const spec = useSpec();
   const accent = useAccent();
+  const who = useProtagonista();
   const pr = s.props ?? {};
   const amb = !!pr.ambiente;
   const setting = pr.setting ?? 'chao';
@@ -828,9 +984,14 @@ export const Cena: React.FC<P> = ({ s }) => {
   const mood: Mood = turned ? (pr.to ?? 'feliz') : (pr.mood ?? 'feliz');
   const since = pr.turn ? (turned ? frame - turnAt : frame) : undefined;
   const turnGlow = pr.turn && (pr.to ?? 'feliz') === 'feliz' ? pr.turn : undefined;
+  // fase 3: plano fechado (só na mesa) — a câmera perto, o mundo da cena com zoom
+  const fechado = pr.plano === 'fechado' && setting === 'mesa';
+  const z = fechado ? FECHADO : undefined;
   // fase 3: com `acoes`, ela FAZ (mesa e chão): o Ator no lugar da Pessoa, com a peça na mão
   const acts = pr.acoes?.length && (setting === 'mesa' || setting === 'chao') ? poseDe(s, pr.acoes, frame) : null;
-  const inHand = acts ? (acts.peca ?? pr.holding) : undefined;
+  // o Ator também desenha o plano fechado sem ações (a peça NA mão, com a mão por cima)
+  const ator = !!acts || fechado;
+  const inHand = acts ? (acts.peca ?? pr.holding) : fechado ? pr.holding : undefined;
   // fase 3: o lugar pode trazer o próprio móvel como mesa (o balcão da cozinha, a pia do banheiro)
   const Balcao = pr.ambiente ? lugarOf(pr.ambiente)?.Balcao : undefined;
   // a ação acontece ao longo da fala (caderno sendo escrito, tela acendendo)
@@ -852,7 +1013,7 @@ export const Cena: React.FC<P> = ({ s }) => {
   ) : null;
   const person = (
     <div style={{ position: 'relative' }}>
-      <Pessoa t={frame} size={260} mood={mood} since={since} arms={pr.arms ?? (setting === 'sofa' ? 'none' : 'out')} accent={C.violet} />
+      <Pessoa t={frame} size={260} mood={mood} since={since} arms={pr.arms ?? (setting === 'sofa' ? 'none' : 'out')} seed={who.seed} skin={who.skin} accent={C.violet} />
       {held}
     </div>
   );
@@ -864,21 +1025,53 @@ export const Cena: React.FC<P> = ({ s }) => {
     chao: { geo: { ground: 1180, clear: [230, 640], spot: [430, 960, 400] }, pessoa: [430, 950], peca: [560, 880] },
   };
   const g = G[setting];
-  const placed = cenaPlaced(setting, amb, pr.objects ?? []);
+  const placed = fechado ? fechadoPlaced(pr.objects ?? []) : cenaPlaced(setting, amb, pr.objects ?? []);
   // peça no chão de um canto: o primeiro plano daquele canto sai
   const frontOff = setting === 'mesa' ? [] : placed.filter((x) => x.slot.base).map((x) => (x.slot.left < 540 ? 'left' : 'right') as 'left' | 'right');
-  // a mesa ganha abajur/caneca só se nenhuma peça do roteiro já pousou nela (e o lugar não tem balcão próprio)
-  const dress = amb && !Balcao && !placed.some((x) => x.slot.base);
+  // a mesa ganha abajur/caneca só se nenhuma peça do roteiro já pousou nela (e o lugar não tem balcão
+  // próprio); no plano fechado o cômodo está cortado: sem enfeite
+  const dress = amb && !Balcao && !fechado && !placed.some((x) => x.slot.base);
+  // onde ela está (o Ator: pés na linha, caixa da identidade) — mesa: atrás do tampo; chão: de pé
+  const atorAt = setting === 'mesa' ? MESA_ATOR : { x: 430, y: 1166, size: 351 };
+  const atorX = acts ? (acts.ativa?.de ?? atorAt.x) + acts.x : atorAt.x;
+  const atorArms: Arms = setting === 'mesa' ? 'out' : (pr.arms ?? 'out');
+  const atorBox = caixaDoAtor(atorX, atorAt.y, atorAt.size);
+  // a caixa dela sem o Ator (as Pessoas de sempre), pros pontos da lente e dos rótulos
+  const caixa: Caixa = ator ? atorBox : setting === 'mesa' ? { left: 270, top: 740, size: 300 } : setting === 'chao' ? { left: 254.5, top: 723.7, size: 351 } : setting === 'cama' ? { left: 430, top: 763, size: 260 } : { left: 260, top: 731, size: 260 };
   // o que a cena desenha por cima do cenário: as peças, a da mão, o enfeite da mesa e o ajudante
-  const heldRect: Rect | null = !pr.holding
-    ? null
-    : setting === 'mesa'
-      ? ((([w, h]) => [565, 1010 - h, 565 + w, 1010])(pieceBox(pr.holding, 240)) as Rect)
-      : setting === 'sofa'
-        ? [300, 1000, 480, 1140]
-        : setting === 'cama'
-          ? [560, 900, 720, 1080]
-          : [570, 940, 740, 1135];
+  // (com o Ator, a peça da mão anda: o retângulo é o caminho inteiro dela na fala)
+  const heldRect: Rect | null =
+    ator && inHand
+      ? maoRect(s, acts ? pr.acoes : undefined, atorArms, caixaDoAtor(acts ? (acts.ativa?.de ?? atorAt.x) : atorAt.x, atorAt.y, atorAt.size), inHand)
+      : !pr.holding || ator
+        ? null
+        : setting === 'mesa'
+          ? ((([w, h]) => [565, 1010 - h, 565 + w, 1010])(pieceBox(pr.holding, 240)) as Rect)
+          : setting === 'sofa'
+            ? [300, 1000, 480, 1140]
+            : setting === 'cama'
+              ? [560, 900, 720, 1080]
+              : [570, 940, 740, 1135];
+  // fase 3: a lente callout (na mesa e no chão) — um círculo na tela ligado por um cone à peça da
+  // mão ou a uma parte do corpo; fica fora do zoom (é da tela), o cenário e os rótulos saem dali
+  const lenteSpec = pr.lente && (setting === 'mesa' || setting === 'chao') ? pr.lente : undefined;
+  const lenteC: [number, number] = fechado ? [800, 470] : setting === 'chao' ? [790, 560] : [760, 560];
+  const lenteD = fechado ? 460 : 520;
+  const lenteAncora: [number, number] | null = (() => {
+    if (!lenteSpec) return null;
+    if (lenteSpec.sobre === 'peca') {
+      if (ator) {
+        const m = maoNaTela(acts?.pose, atorArms, 1, atorBox);
+        return zPt(z, [m.x, m.y]);
+      }
+      if (!heldRect) return zPt(z, pontoNaTela('tronco', caixa));
+      return zPt(z, [(heldRect[0] + heldRect[2]) / 2, (heldRect[1] + heldRect[3]) / 2]);
+    }
+    return zPt(z, pontoNaTela(pontoDe(lenteSpec.sobre), caixa, acts?.pose));
+  })();
+  const lenteAbre = lenteSpec ? at(s, lenteSpec.cue, s.lead) : 0;
+  const lenteFecha = lenteSpec?.fecha ? cue(s, lenteSpec.fecha) + 8 : Infinity;
+  const ocupa: Ocupa[] = lenteSpec ? discoRects(lenteC, lenteD).map((rect) => ({ rect, de: lenteAbre, ate: lenteFecha })) : [];
   const busy: Rect[] = [
     ...placed.map(({ o, slot }) => slotRect(o.p, slot)),
     // a ponta da mesa (ou o canto do chão) onde uma peça pousou é dela inteira, não só a caixa
@@ -887,19 +1080,48 @@ export const Cena: React.FC<P> = ({ s }) => {
     ...(heldRect ? [heldRect] : []),
     ...(dress && setting === 'mesa' ? deskDressing(pr.ambiente!).map((d) => d.rect) : []),
     ...(pr.helper ? ([[740, 860, 1080, 1180]] as Rect[]) : []),
+    ...(lenteSpec ? [unRect(z, lenteRect(lenteC, lenteD))] : []),
   ];
   // a caneca do enfeite da mesa conta como peça da cena: o cenário não põe outra
-  const show = [pr.holding, pr.gives, ...(pr.objects ?? []).map((o) => o.p), ...(dress && setting === 'mesa' ? ['caneca'] : [])];
+  const show = [pr.holding, inHand, pr.gives, ...(pr.objects ?? []).map((o) => o.p), ...(dress && setting === 'mesa' ? ['caneca'] : [])];
   const geo: EnvGeo = { ...g.geo, ...(pr.helper ? { clear: [g.geo.clear[0], 1080] as [number, number] } : {}), frontOff, busy, show };
   // num lugar, a mesa é mais larga: as peças das pontas (maiores) pousam no tampo
   const D = amb ? { x: 100, w: 880 } : { x: 160, w: 760 };
+  const atorEl = (
+    <Ator
+      t={frame}
+      x={atorX}
+      y={atorAt.y}
+      size={atorAt.size}
+      pose={acts?.pose}
+      mood={mood}
+      since={since}
+      arms={atorArms}
+      seed={who.seed}
+      skin={who.skin}
+      accent={C.violet}
+      corPeca={accent}
+      halo={setting === 'mesa' ? 'cabeca' : undefined}
+      mao={inHand ? { p: inHand, progress: work } : undefined}
+      maos={acts?.maos}
+    />
+  );
   return (
-    <Stage s={s} geo={geo} focus={{ pessoa: g.pessoa, peca: g.peca }}>
+    <Stage
+      s={s}
+      geo={geo}
+      focus={{ pessoa: g.pessoa, peca: g.peca }}
+      zoom={z}
+      busy={[rostoDe(caixa)]}
+      pontos={pontosDe(caixa)}
+      ocupa={ocupa}
+      overlay={lenteSpec && lenteAncora ? <Lente s={s} spec={lenteSpec} ancora={lenteAncora} centro={lenteC} diametro={lenteD} accent={accent} pele={who.skin ?? '#F2C9A0'} /> : undefined}
+    >
       {turnGlow ? <Sfx at={turnAt} name="chime" /> : null}
       {amb ? null : <div style={{ position: 'absolute', top: 1180, left: 60, right: 60, height: 6, borderRadius: 3, background: C.surface2 }} />}
       {pr.helper ? (
         <div style={{ position: 'absolute', top: 880, left: 770 + walk * 50, opacity: helper, transform: `translateY(${(1 - helper) * 40}px)` }}>
-          <Pessoa t={frame} size={230} seed={4} arms="out" mood="ok" accent={helperColor(spec.dimension)} skin="#8D5A3B" cap={accent} />
+          <Pessoa t={frame} size={230} seed={helperSeed(who.seed)} arms="out" mood="ok" accent={helperColor(spec.dimension)} skin="#8D5A3B" cap={accent} />
           {pr.gives ? (
             <div style={{ position: 'absolute', top: 40, left: 170, transform: `rotate(${Math.sin(frame / 4) * 16}deg)`, transformOrigin: '50% 10%' }}>
               <Peca name={pr.gives} t={frame} size={240} accent={accent} />
@@ -917,26 +1139,13 @@ export const Cena: React.FC<P> = ({ s }) => {
           </div>
         ) : setting === 'mesa' ? (
           <>
-            {acts ? (
+            {ator ? (
               // fase 3: ela faz atrás da mesa (a frente da mesa/balcão esconde as pernas), com a peça na mão
-              <Ator
-                t={frame}
-                x={(acts.ativa?.de ?? 420) + acts.x}
-                y={1118}
-                size={300}
-                pose={acts.pose}
-                mood={mood}
-                since={since}
-                arms="out"
-                accent={C.violet}
-                halo="cabeca"
-                mao={inHand ? { p: inHand, progress: work } : undefined}
-                maos={acts.maos}
-              />
+              atorEl
             ) : (
               <div style={{ position: 'absolute', top: 740, left: 270 }}>
                 {/* atrás da mesa o hexágono de corpo inteiro vira "casinha": em volta da cabeça */}
-                <Pessoa t={frame} size={300} mood={mood} since={since} arms="out" accent={C.violet} halo="cabeca" />
+                <Pessoa t={frame} size={300} mood={mood} since={since} arms="out" seed={who.seed} skin={who.skin} accent={C.violet} halo="cabeca" />
               </div>
             )}
             {Balcao ? (
@@ -955,7 +1164,7 @@ export const Cena: React.FC<P> = ({ s }) => {
               </>
             )}
             {dress ? <DeskDressing tipo={pr.ambiente!} t={frame} /> : null}
-            {pr.holding && !acts ? (
+            {pr.holding && !ator ? (
               // encostada na mão estendida (a mão termina em ~x 577): a peça lê "na mão", não solta no tampo
               <div style={{ position: 'absolute', top: 1010, left: 565, transform: 'translateY(-100%)' }}>
                 <Peca name={pr.holding} t={frame} size={240} accent={accent} progress={work} />
@@ -976,19 +1185,7 @@ export const Cena: React.FC<P> = ({ s }) => {
           </>
         ) : acts ? (
           // fase 3: de pé no chão, fazendo — os pés onde a Pessoa de 351 px (260 × 1,35) pisava
-          <Ator
-            t={frame}
-            x={(acts.ativa?.de ?? 430) + acts.x}
-            y={1166}
-            size={351}
-            pose={acts.pose}
-            mood={mood}
-            since={since}
-            arms={pr.arms ?? 'out'}
-            accent={C.violet}
-            mao={inHand ? { p: inHand, progress: work } : undefined}
-            maos={acts.maos}
-          />
+          atorEl
         ) : (
           <div style={{ position: 'absolute', top: 1180 - 338, left: 300, transform: 'scale(1.35)', transformOrigin: '50% 100%' }}>{person}</div>
         )}
@@ -996,7 +1193,12 @@ export const Cena: React.FC<P> = ({ s }) => {
       {placed.map(({ o, slot }, i) => (
         <Drop key={i} s={s} p={o.p} cueAt={o.cue} out={o.out} run={o.run} {...slot} delay={4 + i * (amb ? 6 : 0)} fall={amb ? 50 : 120} chip={slot.chip} />
       ))}
-      {useIdentity().halo && mood === 'feliz' ? null : (
+      {useIdentity().halo && mood === 'feliz' ? null : fechado ? (
+        // no plano fechado o brilho fica em volta da cabeça dela (no mundo da cena: 440 px na tela)
+        <div style={{ position: 'absolute', top: atorBox.top + atorBox.size * 0.475 - 105, left: atorX - 105 }}>
+          <Brilho t={frame} size={210} on={ramp(frame, at(s, pr.glow ?? turnGlow, 1e9), 10)} />
+        </div>
+      ) : (
         <div style={{ position: 'absolute', top: 700, left: setting === 'cama' ? 350 : 120 }}>
           <Brilho t={frame} size={420} on={ramp(frame, at(s, pr.glow ?? turnGlow, 1e9), 10)} />
         </div>
@@ -1043,6 +1245,7 @@ const PensaPlateia: React.FC<P> = ({ s }) => {
   const turnAt = at(s, pr.turn, 1e9);
   const pop = ramp(frame, a + 14, 10);
   const { x, y, size } = PLATEIA;
+  const who = useProtagonista();
   // com focus "peca" a câmera mira a nuvem, que depende da escala: duas passadas bastam
   const k = plateiaBubble(s, { pessoa: [x, 930], peca: plateiaCloud(plateiaBubble(s, { pessoa: [x, 930], peca: plateiaCloud(PLATEIA.bubble) })) });
   // balão espelhado (viewBox 250×200): a bolinha de baixo, (220,186) depois de espelhar, fica sobre a cabeça dela
@@ -1065,9 +1268,9 @@ const PensaPlateia: React.FC<P> = ({ s }) => {
     show: [pr.thought, ...(pr.objects ?? []).map((o) => o.p)],
   };
   return (
-    <Stage s={s} geo={geo} focus={{ pessoa: [x, 930], peca: pc }}>
+    <Stage s={s} geo={geo} focus={{ pessoa: [x, 930], peca: pc }} busy={[rostoDe(caixaDoAtor(x, y, size))]}>
       <div style={{ position: 'absolute', top: y - size * 1.26, left: x - size / 2 }}>
-        <Pessoa t={frame} size={size} mood={frame >= turnAt ? (pr.to ?? 'feliz') : (pr.mood ?? 'ok')} arms={pr.arms ?? 'none'} accent={C.violet} />
+        <Pessoa t={frame} size={size} mood={frame >= turnAt ? (pr.to ?? 'feliz') : (pr.mood ?? 'ok')} arms={pr.arms ?? 'none'} seed={who.seed} skin={who.skin} accent={C.violet} />
       </div>
       {/* o encosto da cadeira dela, igual ao da turma: esconde da cintura pra baixo (um pouco
           mais baixo que o dos vizinhos — ela é quem a gente olha) */}
@@ -1105,11 +1308,12 @@ export const Pensa: React.FC<P> = ({ s }) => {
     busy: [[452, 346, 942, 765], [370, 760, 470, 850], ...busyOf(pr.objects, pSlots)],
     show: [pr.thought, ...(pr.objects ?? []).map((o) => o.p)],
   };
+  const who = useProtagonista();
   if (pr.ambiente === 'treinamento') return <PensaPlateia s={s} />;
   return (
-    <Stage s={s} geo={geo} focus={{ pessoa: [300, 1010], peca: [670, 565] }}>
+    <Stage s={s} geo={geo} focus={{ pessoa: [300, 1010], peca: [670, 565] }} busy={[rostoDe({ left: 140, top: 820, size: 320 })]}>
       <div style={{ position: 'absolute', top: 820, left: 140 }}>
-        <Pessoa t={frame} size={320} mood={frame >= turnAt ? (pr.to ?? 'feliz') : (pr.mood ?? 'ok')} arms={pr.arms ?? 'none'} accent={C.violet} />
+        <Pessoa t={frame} size={320} mood={frame >= turnAt ? (pr.to ?? 'feliz') : (pr.mood ?? 'ok')} arms={pr.arms ?? 'none'} seed={who.seed} skin={who.skin} accent={C.violet} />
       </div>
       <div style={{ position: 'absolute', top: 330, left: 300 }}>
         <Pensamento t={Math.max(0, frame - a)} size={680} />
@@ -1268,8 +1472,9 @@ export const Mapa: React.FC<P> = ({ s }) => {
   const penIn = ramp(frame, turnAt - 10, 12);
   // brilho só nos blocos que PASSAM a energizar na virada (no máximo dois)
   const newBoost = laid.filter((l) => l.b.then && (l.b.then.feel ?? l.b.feel) === 'energiza' && (l.b.then.feel !== undefined || (l.b.then.size ?? 0) > (l.b.size ?? 1))).slice(0, 2);
+  const who = useProtagonista();
   return (
-    <Stage s={s} geo={geo} focus={{ pessoa: [personX + 150, 950], mapa: [cardX + W / 2, MAPA.y + MAPA.h / 2] }}>
+    <Stage s={s} geo={geo} focus={{ pessoa: [personX + 150, 950], mapa: [cardX + W / 2, MAPA.y + MAPA.h / 2] }} busy={[rostoDe({ left: personX, top: 760, size: 300 })]}>
       {/* a folha do dia */}
       <div
         style={{
@@ -1321,7 +1526,7 @@ export const Mapa: React.FC<P> = ({ s }) => {
       ))}
       {/* a pessoa ao lado, que pega a caneta pra redesenhar o dia */}
       <div style={{ position: 'absolute', top: 760, left: personX, transform: left ? undefined : 'scaleX(-1)' }}>
-        <Pessoa t={frame} size={300} mood={turned ? (pr.to ?? 'feliz') : (pr.mood ?? 'cansado')} since={turned ? frame - turnAt : frame} arms={frame >= turnAt - 10 ? 'out' : 'down'} accent={C.violet} />
+        <Pessoa t={frame} size={300} mood={turned ? (pr.to ?? 'feliz') : (pr.mood ?? 'cansado')} since={turned ? frame - turnAt : frame} arms={frame >= turnAt - 10 ? 'out' : 'down'} seed={who.seed} skin={who.skin} accent={C.violet} />
         <div style={{ position: 'absolute', left: 262, top: 176, opacity: penIn, transform: `rotate(${-30 + Math.sin(frame / 5) * 6 * k}deg) scale(${0.7 + 0.3 * penIn})`, transformOrigin: '50% 90%' }}>
           <Caneta size={150} accent={C.gold} progress={0} />
         </div>
@@ -1616,6 +1821,7 @@ const IdeaCard: React.FC<{ width: number; flip: number; absorbed: boolean; words
   // identidades Hexa: a frente do card é o Elenco, não a imagem gerada da ideia
   // (revisão de marca: a imagem 4:5 é gente semi-realista, o que o André descartou)
   const elencoFront = !!useIdentity().frenteElenco;
+  const who = useProtagonista();
   const height = width * 1.25;
   const face: React.CSSProperties = {
     position: 'absolute',
@@ -1636,7 +1842,7 @@ const IdeaCard: React.FC<{ width: number; flip: number; absorbed: boolean; words
         <div style={{ ...face, background: `linear-gradient(160deg, ${C.surface2} 0%, ${C.base} 100%)` }}>
           {elencoFront ? (
             <div style={{ position: 'absolute', left: 0, right: 0, bottom: -width * 0.02, display: 'flex', justifyContent: 'center' }}>
-              <Pessoa t={frame} size={width * 0.6} mood="feliz" arms="up" since={40} accent={C.violet} />
+              <Pessoa t={frame} size={width * 0.6} mood="feliz" arms="up" since={40} seed={who.seed} skin={who.skin} accent={C.violet} />
             </div>
           ) : spec.image ? (
             <Img src={staticFile(spec.image)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />

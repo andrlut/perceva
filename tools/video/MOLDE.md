@@ -112,6 +112,8 @@ daqui só sai como conferência; o vídeo de verdade é o da porta, montado pelo
 | `pensa` | A pessoa pensando; o balão abre com a peça dentro. Dúvida, desejo, lembrança. Com `ambiente: treinamento` ela **senta na plateia** (fileira do meio, encosto da cadeira na frente, turma de costas dos lados) e o balão abre pra esquerda, por cima da lista do slide: é assim que se mostra "assistir a uma aula". Com câmera, o balão encolhe (a cauda fica sobre a cabeça dela) até a nuvem da esquerda ficar ≥ 20 px dentro do quadro no ponto mais perto do movimento. | `thought` (peça), `at`, `mood`, `turn`+`to`, `objects[≤2]` | sim |
 | `mapa` | **O mapa do dia**: blocos de tarefa caem numa folha do dia, cada um com a cor de como pesa; na virada o dia se redesenha pro que energiza. Com `label` nos blocos, a folha alarga e cada bloco leva o NOME da tarefa. | `blocks[2..6]` (abaixo), `turn`, `mood`, `to`, `glow`, `side` (left/right: lado da pessoa) | sim |
 | `caderno` | **(fase 2, piloto)** O método resolvido num exemplo: a página do caderno em plano fechado, a caneta escrevendo cada tarefa com o nome, uma barra pro tempo e uma marca de energia (↓ tira / – / ↑ dá). Os mesmos `blocks` do mapa, então caderno e mapa contam o mesmo dia. | `blocks[2..6]` com `label` (≤ 16) e `feel` (`size` = tempo, `cue` = quando o nome começa), `from` (coluna do tempo), `at` (coluna da energia), `semana` (deixa: os dias acendem no alto), `heads` (os 3 títulos; default no idioma) | não |
+| `dentro` | **(fase 3)** O corpo por dentro. `plano: "corpo"` (default): ela grande, a roupa vira vidro, partículas andam da `origem` até as partes, as partes acendem com rótulo, o tanque cresce do músculo. `plano: "lupa"`: ela num lugar, a lente abre sobre a peça ou o corpo. Detalhes em "Fase 3". | corpo: `origem`, `fluxos[1..3]`, `divide`, `regioes[≤3]`, `lente`, `reserva`, `mood`; lupa: `ambiente` + `lente` (obrigatórios), `holding`, `acoes`, `turn`+`to` | só lupa |
+| `faz` | **(fase 3)** Ela FAZENDO em 1 a 4 passos presos às deixas, num lugar, com rótulo por passo, o tanque pequeno que gasta e até 3 figurantes, cada um num esforço diferente. | `passos[1..4]` (ação + `rotulo`), `medidor`, `elenco[≤3]`, `mood`, `turn`+`to` — sem `objects` | sim |
 | `verso` | O card vira e a voz lê o verso. **Sempre a última.** | `kicker`, `done` (opcionais) | não |
 
 Toda cena aceita `kicker` (≤ 24 caracteres), a sobrancelha dourada no topo.
@@ -136,6 +138,10 @@ antes (o palco navy vazio).
 | `treinamento` | tela de projeção com slides abstratos que trocam, **todos no mesmo arranjo** (lista à esquerda, sem nada redondo, que é o lado que o balão cobre; gráfico à direita, onde a vareta encosta), feixe do projetor, palco baixo, cavalete com quadro, quem apresenta (de pé no palco, à direita da tela, com uma vareta no gráfico), fileiras de plateia **de costas**, nucas no primeiro plano | slide troca, a ponta da vareta passeia pelo slide, plateia balança | `pouca` = uma fileira esparsa · `muita` = duas fileiras (no `pensa`, a segunda é a dela) | — |
 | `casa` | janela com o nascer do sol (ou noite), cortinas, quadro na parede, estante, tapete, mesinha com abajur + caneca + planta (se a cena não tiver mesa) | sol subindo, vapor da caneca, cortina, abajur | `nenhuma` · `pouca` = 1 pessoa · `muita` = 2 | `manha` |
 | `cidade` | céu com nuvens e sol/lua, duas camadas de prédios, calçadas, rua com faixa, árvores, poste, ônibus e carro passando, pedestres | nuvens, ônibus/carro, pedestres andando, árvores, janelas acesas | `pouca` = 2 pedestres · `muita` = 4 | `dia` |
+| `cozinha` *(fase 3)* | azulejo, armários altos + coifa, janela com persiana sobre a pia, bancada com forno e cuba, chaleira, fruteira, geladeira na borda, potes na prateleira, relógio, pendente; **o balcão de pedra vira a mesa da `cena`** | vapor da chaleira, quem cozinha mexendo a panela, pendente aceso à noite | `nenhuma` · `pouca` = quem cozinha atrás da ilha · `muita` = + alguém com caneca | `manha` |
+| `banheiro` *(fase 3)* | **a câmera é o espelho** (moldura presa à tela, reflexo e embaçado nos cantos), azulejo metrô, box com cortina, janelinha fosca, prateleira de frascos, toalha, pia de coluna; **a pia (cuba + torneira) vira a mesa da `cena`** | embaçado respirando, a torneira pinga | só `nenhuma` | `manha` |
+| `parque` *(fase 3)* | pista de corrida com 3 raias em perspectiva até a sebe (ela pisa na do meio), gramado, árvores e prédios baixos ao longe, céu da hora, estação ao ar livre (barra fixa + caixote) e tabela de basquete — sem rua, ônibus nem poste | nuvens, quem corre sai de trás da sebe e vem pela trilha na direção da câmera, a rede da cesta balança | `pouca` = 1 corredor · `muita` = 2 corredores + 1 caminhando | `dia` |
+| `academia` *(fase 3)* | janela alta (a Luz cai dela), espelho largo, luminárias tubulares, relógio sem números, gaiola de agachamento com barra e anilhas, rack de halteres, banco, piso de borracha — sem esteira nesta leva | quem treina ao fundo (em laço) | `pouca` = 1 levantando halteres · `muita` = + 1 saltando | `dia` |
 
 `gente`: `nenhuma` / `pouca` / `muita`. `hora`: `manha` / `dia` / `noite`
 (muda o céu das janelas e da rua). Os dois só valem com `ambiente`.
@@ -380,6 +386,224 @@ continua sendo a `Fraunces_600` estática (nada aprovado muda de desenho).
 O destaque do verso continua sendo a cor: trocar de estilo enquanto a voz lê
 faria a linha pular.
 
+## Fase 3 — a tela demonstra o que a voz diz (leva 1, 2026-11-08)
+
+O André achou os 3 vídeos da Paker "com a mesma cara": pessoa pequena parada num fundo vazio, ícone
+de 60 px no lugar do mecanismo, sempre o quarto. A fase 3 troca "ilustrar" por **demonstrar**: ela
+FAZ (anda, corre, salta, levanta, mexe, bebe), o corpo é mostrado por dentro, a palavra que a voz diz
+se escreve na imagem, os lugares são de verdade e variados. Continua vetor em código, no estilo de
+sempre. **Tudo é opcional e por prop:** sem as props novas, cada cena sai idêntica à de antes (diff de
+pixel 0 nos vídeos publicados — é a régua de toda mudança aqui).
+
+### Por ideia: `fase` e `protagonista`
+
+```jsonc
+"pre-treino-energia": {
+  "fase": 3,                                   // ou na raiz do roteiro (vale pras ideias sem fase)
+  "protagonista": { "seed": 5, "skin": "#C68B5E" },
+  "lines": [ … ]
+}
+```
+
+- **`fase: 3`** liga a régua nova: a **base do quadro abre** (a vinheta escurece só uma faixa atrás da
+  legenda, ≈ 0,8 de 1420 a 1600, e some até 1920 — o piso, o balcão e o primeiro plano vão até a
+  borda, como o quadro do Notebook); no `comparar`, **a outra pessoa sai com pele clara** (pele escura
+  nunca no lado que perde); o lint passa a tratar energia-como-carga como erro e liga os avisos de
+  palco vazio / mesma cara / pessoa parada.
+- **`protagonista`**: cada vídeo com a sua pessoa (seed do elenco + pele). Vale pra toda Pessoa/Ator
+  que é "ela" em todas as cenas (pessoa, semana, virada, lista, cena, pensa, mapa, dentro, faz e a
+  frente do card do verso). A blusa continua violeta (a marca). O ajudante nunca tem o rosto dela.
+  Não escolha pele escura justo pro vídeo cujo gancho é o mais "derrotado" (o lint avisa).
+
+### Ações (`acoes`, em `pessoa`, `cena` mesa/chão e `dentro` lupa)
+
+```jsonc
+"acoes": [
+  { "acao": "mexer", "cue": { "pt": "Misture" } },
+  { "acao": "beber", "cue": { "pt": "e tome" }, "ate": { "pt": "antecedência" } }
+]
+```
+
+| `acao` | o que ela faz | quadros por rep (normal / lento / rápido) |
+|---|---|---|
+| `pronta` | parada, pronta (base de quem vai começar) | — (laço) |
+| `andar` | pêndulo, quica e inclina pro trajeto; **o único com trajeto de lado** (`de` → `para`, x na tela; chegando, ela FICA lá) | 26 / 32 / 20 (laço) |
+| `correr` | **no lugar**: joelho alto, braço oposto, voo, amassa no pouso, poeira no pé que pousa. Com `para`, ela **vem pra câmera** (escala 1 → 1,1) — de frente atravessando o quadro lia "deslizando" | 16 / 20 / 12 (laço) |
+| `saltar` | agacha, sobe em parábola (pés ~190 px no ar no Ator de 360), pousa com mola | 22 / 26 / 18 |
+| `levantar` | halteres (`peso`) nas duas mãos, de 80° a 127°: no topo acima do ombro, fora do rosto | 30 / 36 / 22 |
+| `mexer` | o copo na frente do peito, colher girando (com coqueteleira: sacode na vertical) | 10 / 14 / 8 (laço) |
+| `beber` | o copo sobe do peito à boca, a cabeça inclina, o braço passa NA FRENTE da cabeça | 34 / 40 / 28 |
+
+`cue` (começa), `ate` (termina; sem, ao fim das `reps` 1..4 ou na próxima ação), `ritmo`
+(`lento`/`rapido`), `peca` (o que vai na mão; `levantar` usa `peso`; `mexer`/`beber` herdam a peça
+da ação anterior, depois o `holding` da cena — **sem peça é erro**: não se bebe de mão vazia). Entra
+em 6 q, troca de ação em 6 q, volta ao repouso 8 q depois do fim. A peça fica NA mão (a mão desenhada
+por cima da peça) e na cor da área (`corPeca`). Sem `acoes`, a Pessoa de sempre. Os quadros acima
+moram em `src/elenco/acao.tsx` (CICLO) e são espelhados em `catalog.json → acaoQuadros` pro lint
+(o render quebra se divergirem). Na mesa, com ações, ela fica 60 px mais alta em relação ao tampo
+(o tampo passa pela cintura, o copo do peito aparece inteiro).
+
+### Rótulos (`rotulos`, toda cena menos o verso)
+
+A palavra que a voz diz, escrita na imagem (Fraunces itálico 600, ≥ 44 px, cápsula navy que cresce com
+a caneta, sai em 8 q):
+
+```jsonc
+"rotulos": [{ "text": { "pt": "creatina" }, "cue": { "pt": "produz creatina" }, "seta": "tronco", "out": { "pt": "reserva" } }]
+```
+
+- **O texto TEM que estar na fala** do mesmo idioma (sem acento, maiúscula, asterisco ou pontuação),
+  ≤ 28 caracteres, sem algarismo, no máximo 4 rótulos por fala — vale também pro `rotulo` de passo,
+  região, camada, partícula e reserva. É o que o Notebook faz: a tela repete a palavra, não comenta.
+- `seta`: uma região (`cabeca`, `rosto`, `boca`, `peito`, `tronco`, `barriga`, `braco`, `perna`,
+  `vasos`, `musculos`, `pele`) ou `[x, y]`. `tom`: `claro` (default), `ouro`, `area`. `x`/`y` fixam.
+- Sem `x`/`y`, o rótulo acha a vaga: sem seta, a fila de sempre (centro a partir de y 480, de 84 em
+  84, depois os lados); com seta, a coluna do lado do alvo, perto da altura dele (os das `regioes` do
+  corpo alternam de lado). **Nunca** em cima do rosto dela, das peças, do balão, do medidor, nem da
+  lente enquanto ela está aberta (o Stage passa `busy` + `ocupa`), e dois rótulos só se evitam se
+  estão na tela ao mesmo tempo. Linha > 620 px quebra em duas equilibradas.
+
+### Corpo por dentro (`dentro`)
+
+- **`plano: "corpo"`** (sem `ambiente`, `holding` nem `acoes`): ela com 660 px; em 10 q a roupa vira
+  vidro (a cabeça fica intacta, piscando) e aparece o mapa em meio-tom (coração, estômago, intestino,
+  vasos, fusos dos músculos). `origem` (`boca`/`tronco`/`barriga`) → `fluxos[1..3]`
+  `{ para: <região>, cor: <área|ouro>, particula: grao|ponto, cue }`, o caminho acendendo atrás.
+  `divide` (deixa; pede ≥ 2 fluxos): antes, as cores giram num fio só; na deixa, um caminho por fluxo.
+  `regioes[≤3]` `{ parte, cue, efeito: acende|anel, cor, rotulo }` — `acende` = 85% da cor + brilho
+  (sem raio, **nada pulsa**: lia "pump"); `anel` fecha em volta da cabeça. `lente` abre em callout
+  ao lado da cabeça (364 px em [876, 600], ou [204, 600] com a âncora à esquerda; `tamanho: "grande"`
+  = 760 px em [540, 760]); com `cresce`, o corpo apaga pra 30% e os rótulos das regiões saem.
+  `reserva` faz o tanque crescer do músculo até o centro do palco (aparece na deixa mais cedo entre
+  nivel/gasta/pinga/rotulo; o rótulo dele fica embaixo do tanque).
+- **`plano: "lupa"`** (com `ambiente` e `lente`): ela num lugar com a peça e a ação; na deixa da lente
+  ela desliza pro canto (x 230, 330 px), um véu navy escurece o lugar e a lente de 760 px abre em
+  [610, 720], ligada por um cone à âncora (a peça da mão ou a parte do corpo, seguida a cada quadro).
+  `fecha` traz ela de volta e tira o véu; `turn`/`to` viram o humor (brilho só no feliz).
+
+### Lente (`lente`, no `dentro` e na `cena`)
+
+```jsonc
+"lente": {
+  "sobre": "peca",                        // uma região, ou a peça da mão (pede holding)
+  "cue": { "pt": "a estrela" },           // abre (sem: quando a fala começa)
+  "cresce": { "pt": "…" }, "fecha": { "pt": "…" }, "turn": { "pt": "…" },
+  "conteudo": {
+    "camadas": [{ "textura": "agua" }],   // 1..3 bandas: liso | rede | dobras | fluxo | agua
+    "particulas": { "forma": "ponto", "cor": ["health", "body", "mind"], "n": 12, "boiam": true,
+                    "destaque": { "cue": { "pt": "cafeína" }, "rotulo": { "pt": "cafeína" } } }
+  }
+}
+```
+
+- Camada: `textura`, `tom` (`pele`/`area`/`violeta`/`fundo`/`ouro`), `peso` 1..3, `cresce` (a rede se
+  tece), `then` (`rareia`/`renova`, na deixa `turn` da lente), `rotulo {text, cue}`. `toque` (deixa):
+  o dedo aperta a pele. `ritmo: "devagar"`.
+- Partículas: `ponto` (`boiam`, `destaque` = o ponto vai pro centro, fica dourado com a estrelinha) ou
+  `cordao` (`de: "topo"`, `quebra` em pedaços, `atravessa: {camada, cue}` a parede — precisa de uma
+  banda embaixo —, `correnteza`). `n` 6..24, `cor` uma área/ouro ou uma lista (sem `mista`).
+- `conteudo: { reserva }` em vez de camadas: o tanque dentro do círculo.
+- **Na `cena`** a lente é só callout (sem `cresce`): 520 px em [760, 560] (no chão [790, 560]; no plano
+  fechado 460 px em [800, 470]), fora do zoom; o cenário e os rótulos saem dali.
+
+### O tanque (`reserva`, peça `reservatorio`, `medidor`)
+
+Prisma hexagonal de vidro, grãos dourados — **dourado só nos grãos e no aro**, vidro e fundo à vista,
+nada de bateria (sem polo, faixas ou raio). `nivel: [{ v }, { v, cue }…]` (0..1; o primeiro sem cue):
+sobe em ≥ 1,5 s com os grãos chovendo e assentando. `gasta: [{ cue }]`: um jato pela válvula e o nível
+desce 0,06. `pinga: [{ cue }]`: um fio cai e o nível fica. A peça `reservatorio` (nível = `run`) é
+sempre dourada: o mesmo tanque da lente e do medidor.
+
+### Cena `faz`
+
+```jsonc
+{ "id": "efforts2", "scene": "faz", "props": {
+  "ambiente": "parque", "mood": "focado",
+  "passos": [
+    { "acao": "correr", "cue": { "pt": "tiros de corrida" }, "rotulo": { "pt": "tiros de corrida" } },
+    { "acao": "saltar", "cue": { "pt": "saltos" }, "ritmo": "rapido" },
+    { "acao": "levantar", "cue": { "pt": "séries de força" }, "ritmo": "rapido" }
+  ],
+  "medidor": { "nivel": 0.8, "gasta": 0.06, "lado": "direita" },
+  "elenco": [{ "seed": 1, "x": 170, "acao": "saltar", "cue": { "pt": "saltos" } }]
+}}
+```
+
+- `passos` 1..4 (só o 1º sem cue; as deixas na ordem da fala), cada um uma ação (mesmos campos de
+  `acoes`) + `rotulo`. Sem lugar por passo nesta leva.
+- `medidor`: o tanque pequeno numa ficha, um gole por passo; `nivel − gasta × passos ≥ 0,25` (nunca
+  perto do vazio). `elenco` ≤ 3 figurantes (`seed`, `x`, `acao`, `cue`, `size` ≥ 200): cada um num
+  esforço diferente, ninguém correndo junto com ela (lê disputa), nenhum na caixa dela; o filtro do
+  figurante é só saturação (não escurece pele).
+
+### `plano: "fechado"` (cena mesa)
+
+Ela do peito pra cima, o cômodo cortado: o mundo da cena (lugar, balcão, ela, a peça da mão) cresce
+2,1× em volta de (438, 855) — a câmera chega perto, nada é redesenhado. Rosto em ~(400, 790) com
+~300 px de largura (≥ 25% do quadro), tampo em y 1180. As peças vão nas pontas do tampo (≥ 200 px) e
+duas no alto (até 4). Ela sempre segura a peça (`holding`) na mão, com ou sem `acoes`. Use no balcão
+da cozinha e na pia do banheiro (o espelho): é o plano que o Notebook usa — a coisa, perto.
+
+### Peças novas
+
+`peso` (halter sextavado), `pote` (branco, sem rótulo; com `run` a tampa abre e a colher dosadora sai),
+`calendario` (sem algarismo; `run` 0 → 1 = 5 semanas: marca as casas e rola uma linha na 5ª — é como o
+tempo passa sem lapso), `coqueteleira` (sem marca; a mão faz a bebida balançar), `copo-agua` e
+`copo-suco` (o copo com a bebida na cor dela, não na da área), `reservatorio` (dourado; nível =
+`run`). Pousam na mesa (`ON_DESK`: pote, copos, coqueteleira, reservatório, calendário) ou no chão
+(`peso`). `Obj.run: { cue?, ate? }`: a peça anda (progress 0 → 1) entre a deixa e o `ate` (default: a
+deixa da peça e o fim da fala).
+
+### Lint da fase 3 (`molde.mjs lint`)
+
+ERRO (barra o build): rótulo que não está na fala (ou > 28 caracteres, com algarismo, > 4 por fala);
+deixa nova fora da fala (`ate`, `cresce`, `quebra`, `fecha`, `divide`, `toque`, e o `cue` de toda
+lista: acoes, passos, elenco, fluxos, regioes, nivel, gasta, pinga, rotulos); ações fora da ordem da
+fala; `acao`/`reps`/`ritmo` fora do catálogo; `de`/`para` fora de andar/correr; beber/mexer sem peça;
+prop nova na cena errada (acoes, lente, passos/medidor/elenco, fluxos/regioes/divide/origem/reserva,
+plano); `plano: "fechado"` fora da mesa; dentro corpo com lugar/holding/acoes, dentro lupa sem lugar ou
+lente; fluxos 1..3, regioes ≤ 3, divide com < 2 fluxos; lente sobre `peca` sem peça, camadas 1..3,
+textura/tom/then/forma/cor fora do catálogo, partículas 6..24, `atravessa` sem banda embaixo, `cresce`
+na cena; reserva com `v` fora de 0..1 ou o 1º nível com cue; faz com 0 ou > 4 passos, passo sem cue
+depois do 1º, figurante sem cue ou < 200 px, medidor perto do vazio, `objects` no faz; `mood`/`to`
+fora de ok/feliz/cansado/focado; `fase` fora de 1..3, `protagonista` sem seed inteiro ou pele #rrggbb;
+**na fase 3**, peça ou ícone de energia-como-carga (`battery*`, `flash*`, `flame*`, `thunderstorm*`,
+`rocket*`, `nuclear*`).
+
+AVISO (não barra): energia-como-carga fora da fase 3; `correr` com `para` longe do `de` (não atravessa:
+vem pra câmera); `para` fora do quadro sem troca de lugar na fala seguinte; ação sem laço (saltar,
+levantar, beber) que não cabe até a próxima deixa ou o fim + hold (use `ritmo: "rapido"`, menos `reps`
+ou `hold`); figurantes no mesmo esforço, correndo junto com ela ou na caixa dela; push com deixa em
+duas falas seguidas; `comparar` sem fase 3 (a outra pessoa tem pele escura no lado que perde). **Na
+fase 3**: palco vazio (cena de pessoa sem `ambiente` — dê um lugar ou use dentro/mapa/caderno/comparar);
+mesma cara dentro da ideia (um lugar em > 60% das falas, ou menos de 2 lugares sem cena de tela cheia);
+mesma cara entre ideias (cada ideia com um lugar só dela; o mesmo plano — cena + peça na mão + lugar +
+hora — em duas ideias); pessoa parada em mais de 2 falas.
+
+### Piloto com a voz aprovada (`--voz-de`)
+
+```bash
+node scripts/molde.mjs build  --slug <slug> --roteiro pilotos/<arq>.json --tag r3 --lang pt --voz-de
+node scripts/molde.mjs stills --slug <slug> --roteiro pilotos/<arq>.json --tag r3 --lang pt --at 0.15,0.5,0.85
+node scripts/molde.mjs render --slug <slug> --roteiro pilotos/<arq>.json --tag r3 --lang pt
+```
+
+`--voz-de` (sem valor, ou `real`) copia mp3, timings.json e pauses.json da chave de verdade
+(`<slug>.<ideia>.<lang>`) pra chave do piloto e grava o voiced.json dela (o texto que cada tomada leu;
+chave antiga sem voiced.json sai do spec dela). `--voz-de <tag>` copia de outro piloto. A fala que o
+piloto não mudou fica **"voz em dia"** e as deixas caem nas pausas medidas; a que mudou aparece em
+"voz a gravar". Rode build → stills → render; `voice` num piloto regravaria (e pagaria) as mudadas.
+
+### Lugares novos (`src/molde/lugares/`)
+
+Cada lugar é um arquivo que exporta um `Lugar` (`back`/`mid`/`front`, `depth`, `gente`, `hora`,
+`frontZones`, `janela?` com `fria?`, `Balcao?`) e entra em `lugares/index.ts`; o `scenes.tsx` registra
+(`registerLugares`) e o `ambientes.tsx` nunca importa um lugar (sem ciclo de import). Os helpers
+(`EnvP`, `free`, `hits`, `decor`, `faceAt`, `ArtSvg`…) vêm do `ambientes.tsx`. Com a base aberta, o
+piso do lugar aparece até a borda: desenhe-o claro até y ≈ 1900 do cenário (perto da câmera não é
+mais escuro que o fundo). O `Balcao` desenha tampo e frente na coordenada da cena; o plano fechado
+escala por transform.
+
 ## O radar no feliz (identidades Hexa v4) — DESLIGADO
 
 Desligado em 07/11 (`RADAR = false` em `src/identidade/options/hexa.tsx`):
@@ -542,8 +766,13 @@ vazia e coisa pequena.
 
 | arquivo | o quê |
 |---|---|
-| `src/molde/scenes.tsx` | as cenas + o `Stage` (ambiente, câmera, sobrancelha) |
-| `src/molde/ambientes.tsx` | os 4 ambientes (fundo/meio/primeiro plano), foco de luz, vinheta, miniatura do comparar |
+| `src/molde/scenes.tsx` | as cenas + o `Stage` (ambiente, câmera, sobrancelha; fase 3: rótulos, zoom do plano fechado, overlay da lente, protagonista) |
+| `src/molde/ambientes.tsx` | os 4 ambientes (fundo/meio/primeiro plano), o registro dos lugares da fase 3, foco de luz, vinheta (aberta na fase 3), miniatura do comparar |
+| `src/molde/lugares/` | (fase 3) cozinha, banheiro, parque, academia |
+| `src/molde/cenas/` | (fase 3) `dentro.tsx` (corpo de vidro e lupa), `faz.tsx` (ela fazendo em passos) |
+| `src/molde/rotulo.tsx`, `src/molde/lente.tsx` | (fase 3) a palavra escrita na imagem; a lupa redonda e as camadas |
+| `src/elenco/acao.tsx` | (fase 3) as ações (`poseAt`/`poseDe`) e o `Ator` (a Pessoa fazendo, com a peça na mão) |
+| `src/elenco/reservatorio.tsx`, `src/elenco/pecas3.tsx` | (fase 3) o tanque (peça, lente, medidor); peso, pote, calendário, coqueteleira |
 | `src/molde/camera.tsx` | o movimento da câmera e as camadas com parallax |
 | `src/molde/transicao.tsx` | as passagens entre cenas |
 | `src/elenco/cast.tsx` | a Pessoa e as peças v1 (a Pessoa tem API congelada) |

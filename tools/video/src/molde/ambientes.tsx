@@ -100,8 +100,11 @@ export type Lugar = {
   hora: Hora;
   /** onde cada canto do primeiro plano desenha (coordenadas do quadro): com peça ali, o canto sai */
   frontZones: { left: Rect; right: Rect };
-  /** a janela (coordenadas do cenário): de onde vem a Luz; dx/dy = pra onde o facho cai até o chão */
-  janela?: { x0: number; x1: number; y0: number; y1: number; dx: number; dy: number };
+  /**
+   * a janela (coordenadas do cenário): de onde vem a Luz; dx/dy = pra onde o facho cai até o chão;
+   * `fria` = o facho é claro e frio em qualquer hora (o banheiro), sem o dourado da manhã
+   */
+  janela?: { x0: number; x1: number; y0: number; y1: number; dx: number; dy: number; fria?: boolean };
   /** o móvel que vira a mesa da `cena` com setting mesa (o balcão da cozinha, a pia do banheiro) */
   Balcao?: React.FC<{ t: number; accent: string; part: 'tampo' | 'frente'; x: number; w: number; top: number }>;
 };
@@ -660,7 +663,7 @@ export const Luz: React.FC<{ amb: AmbSpec; geo: EnvGeo; t: number }> = ({ amb, g
     return acc + (w > 0 && h > 0 ? w * h : 0);
   }, 0);
   if (onPath > boxArea * 0.3) return null;
-  const warm = hora === 'manha';
+  const warm = hora === 'manha' && !jan?.fria;
   const tint = warm ? C.gold2 : C.hi;
   const breathe = 0.82 + 0.18 * Math.sin(t / 41) * Math.sin(t / 17 + 1);
   const motes = Array.from({ length: 16 }, (_, i) => {
@@ -709,12 +712,21 @@ export const Spot: React.FC<{ geo: EnvGeo; accent: string }> = ({ geo, accent })
   );
 };
 
-/** Moldura fixa: topo escuro (sobrancelha legível) e base que funde no fundo (legenda legível). */
-export const Vinheta: React.FC = () => (
+/**
+ * Moldura fixa: topo escuro (sobrancelha legível) e base que funde no fundo (legenda legível).
+ *
+ * `aberta` (fase 3, `fase: 3` no spec): a base do quadro abre — o escuro fica só numa faixa atrás da
+ * legenda (≈ 0,8 de 1420 a 1600, com degradê dos dois lados, some até 1920) e o piso, o balcão e o
+ * primeiro plano continuam até a borda, como o quadro inteiro do Notebook. O que aparece ali é o
+ * chão de cada lugar: um lugar novo desenha o piso claro até y ≈ 1000 + 900 (o "perto da câmera"). Antes, de 1480 pra baixo era navy chapado
+ * (23% do quadro). Sem `aberta`, a de sempre (o vídeo publicado sai idêntico).
+ */
+export const Vinheta: React.FC<{ aberta?: boolean }> = ({ aberta = false }) => (
   <AbsoluteFill
     style={{
-      background:
-        'linear-gradient(180deg, rgba(10,14,38,0.97) 0px, rgba(10,14,38,0.8) 170px, rgba(10,14,38,0) 380px, rgba(10,14,38,0) 1270px, rgba(10,14,38,0.82) 1410px, #0A0E26 1480px), linear-gradient(90deg, rgba(10,14,38,0.35) 0px, rgba(10,14,38,0) 140px, rgba(10,14,38,0) 940px, rgba(10,14,38,0.35) 1080px)',
+      background: aberta
+        ? 'linear-gradient(180deg, rgba(10,14,38,0.97) 0px, rgba(10,14,38,0.8) 170px, rgba(10,14,38,0) 380px, rgba(10,14,38,0) 1290px, rgba(10,14,38,0.8) 1420px, rgba(10,14,38,0.8) 1600px, rgba(10,14,38,0.3) 1680px, rgba(10,14,38,0.08) 1800px, rgba(10,14,38,0) 1920px), linear-gradient(90deg, rgba(10,14,38,0.35) 0px, rgba(10,14,38,0) 140px, rgba(10,14,38,0) 940px, rgba(10,14,38,0.35) 1080px)'
+        : 'linear-gradient(180deg, rgba(10,14,38,0.97) 0px, rgba(10,14,38,0.8) 170px, rgba(10,14,38,0) 380px, rgba(10,14,38,0) 1270px, rgba(10,14,38,0.82) 1410px, #0A0E26 1480px), linear-gradient(90deg, rgba(10,14,38,0.35) 0px, rgba(10,14,38,0) 140px, rgba(10,14,38,0) 940px, rgba(10,14,38,0.35) 1080px)',
     }}
   />
 );

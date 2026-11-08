@@ -65,8 +65,9 @@ const PIECES: Record<string, Draw> = {
   // o copo de sempre com a bebida na cor dela (água / suco), não na cor da área
   'copo-agua': ({ t, size, progress }) => <Copo t={t} size={size} accent="#A9BCEB" stir={progress ?? 1} />,
   'copo-suco': ({ t, size, progress }) => <Copo t={t} size={size} accent="#FFA94D" stir={progress ?? 1} />,
-  // `progress` = nível do estoque
-  reservatorio: ({ t, size, accent, progress }) => <Reservatorio t={t} size={size} nivel={progress ?? 1} accent={accent} />,
+  // `progress` = nível do estoque. Sempre dourado (o grão e o aro), sem a cor da área: é o MESMO
+  // tanque da lente e do medidor no vídeo da creatina
+  reservatorio: ({ t, size, progress }) => <Reservatorio t={t} size={size} nivel={progress ?? 1} />,
   // o Emblema do app (src/Emblema.tsx): anéis, braços e áreas acendem ao longo da cena — vídeo de marca
   emblema: ({ t, size, progress }) => {
     const p = progress ?? Math.max(0, Math.min(1, t / 150));
