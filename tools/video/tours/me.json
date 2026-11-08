@@ -5,71 +5,214 @@
   "file": "me",
   "rev": 2,
   "posterAt": 1.0,
-  "intro": { "slug": "doors", "idea": "me-why" },
-  "kicker": { "pt": "Eu", "en": "Me" },
+  "intro": {
+    "slug": "doors",
+    "idea": "me-why"
+  },
+  "kicker": {
+    "pt": "Eu",
+    "en": "Me"
+  },
   "lines": [
     {
       "id": "practiced",
-      "title": { "pt": "Praticada", "en": "Practiced" },
+      "title": {
+        "pt": "Praticada",
+        "en": "Practiced"
+      },
       "pre": 0.5,
-      "pt": { "caption": "Aqui, ele começa pela *Praticada*: o que as suas práticas treinaram em cada área." },
-      "en": { "caption": "Here, it starts with *Practiced*: what your practices trained in each area." },
+      "pt": {
+        "caption": "Aqui, ele começa pela *Praticada*: o que as suas práticas treinaram em cada área."
+      },
+      "en": {
+        "caption": "Here it opens on *Practiced*: what your habits have trained in each area."
+      },
       "camera": "wide",
       "beats": [
-        { "at": { "pt": "Praticada", "en": "Practiced" }, "focus": "pillar.praticada", "camera": "wide" },
-        { "at": { "pt": "cada área", "en": "each area" }, "focus": "hex", "camera": "wide" }
+        {
+          "at": {
+            "pt": "Praticada",
+            "en": "Practiced"
+          },
+          "focus": "pillar.praticada",
+          "camera": "wide"
+        },
+        {
+          "at": {
+            "pt": "cada área",
+            "en": "each area"
+          },
+          "focus": "hex",
+          "camera": "wide"
+        }
       ]
     },
     {
       "id": "cards",
-      "title": { "pt": "Cartões das áreas", "en": "Area cards" },
+      "title": {
+        "pt": "Cartões das áreas",
+        "en": "Area cards"
+      },
       "hold": 1.4,
-      "pt": { "caption": "Cada área mostra o XP do período. Toque no cartão e veja os dias de cada sub-área." },
-      "en": { "caption": "Each area shows the period's XP. Tap a card to see the days of each sub-area." },
+      "pt": {
+        "caption": "Cada área mostra o XP do período. Toque no cartão e veja os dias de cada sub-área."
+      },
+      "en": {
+        "caption": "Each area shows the period's XP. Tap a card to see the days of each sub-area."
+      },
       "beats": [
-        { "at": "@start", "after": 0.2, "focus": null, "camera": "wide", "do": "swipe", "scroll": "card0" },
-        { "at": { "pt": "XP", "en": "XP" }, "focus": "card0" },
-        { "at": { "pt": "Toque", "en": "Tap" }, "focus": "card0", "do": "tap", "camera": "hold" },
-        { "at": { "pt": "dias", "en": "days" }, "focus": "card0" },
-        { "at": "@end", "after": 0.5, "focus": null, "camera": "wide", "do": "swipe", "scroll": 0 }
+        {
+          "at": "@start",
+          "after": 0.2,
+          "focus": null,
+          "camera": "wide",
+          "do": "swipe",
+          "scroll": "card0"
+        },
+        {
+          "at": {
+            "pt": "XP",
+            "en": "XP"
+          },
+          "focus": "card0"
+        },
+        {
+          "at": {
+            "pt": "Toque",
+            "en": "Tap"
+          },
+          "focus": "card0",
+          "do": "tap",
+          "camera": "hold"
+        },
+        {
+          "at": {
+            "pt": "dias",
+            "en": "days"
+          },
+          "focus": "card0"
+        },
+        {
+          "at": "@end",
+          "after": 0.5,
+          "focus": null,
+          "camera": "wide",
+          "do": "swipe",
+          "scroll": 0
+        }
       ]
     },
     {
       "id": "perceived",
-      "title": { "pt": "Percebida", "en": "Perceived" },
+      "title": {
+        "pt": "Percebida",
+        "en": "Perceived"
+      },
       "pre": 0.3,
-      "pt": { "caption": "Em *Percebida*, fica o retrato de como você se vê." },
-      "en": { "caption": "In *Perceived*, you find the portrait of how you see yourself." },
+      "pt": {
+        "caption": "Em *Percebida*, fica o retrato de como você se vê."
+      },
+      "en": {
+        "caption": "In *Perceived*, you find the portrait of how you see yourself."
+      },
       "beats": [
-        { "at": { "pt": "Percebida", "en": "Perceived" }, "focus": "pillar.percebida", "do": "tap", "camera": "wide" },
-        { "at": { "pt": "como você se vê", "en": "how you see" }, "focus": "hex", "camera": "wide" }
+        {
+          "at": {
+            "pt": "Percebida",
+            "en": "Perceived"
+          },
+          "focus": "pillar.percebida",
+          "do": "tap",
+          "camera": "wide"
+        },
+        {
+          "at": {
+            "pt": "como você se vê",
+            "en": "how you see"
+          },
+          "focus": "hex",
+          "camera": "wide"
+        }
       ]
     },
     {
       "id": "assessment",
-      "title": { "pt": "Autoavaliação", "en": "Self-assessment" },
-      "pt": { "caption": "Quem desenha esse retrato é você: a autoavaliação e o *questionário*." },
-      "en": { "caption": "You draw this portrait yourself: the self-assessment and the *questionnaire*." },
+      "title": {
+        "pt": "Autoavaliação",
+        "en": "Self-assessment"
+      },
+      "pt": {
+        "caption": "Quem desenha esse retrato é você: a autoavaliação e o *questionário*."
+      },
+      "en": {
+        "caption": "You draw this portrait yourself: the self-assessment and the *questionnaire*."
+      },
       "beats": [
-        { "at": { "pt": "autoavaliação", "en": "self-assessment" }, "focus": "legend", "camera": "wide" },
-        { "at": { "pt": "questionário", "en": "questionnaire" }, "focus": "firstStep", "target": "firstStep.cta", "do": "point" }
+        {
+          "at": {
+            "pt": "autoavaliação",
+            "en": "self-assessment"
+          },
+          "focus": "legend",
+          "camera": "wide"
+        },
+        {
+          "at": {
+            "pt": "questionário",
+            "en": "questionnaire"
+          },
+          "focus": "firstStep",
+          "target": "firstStep.cta",
+          "do": "point"
+        }
       ]
     },
     {
       "id": "desired",
-      "title": { "pt": "Desejada", "en": "Desired" },
-      "pt": { "caption": "E em *Desejada*, você traça uma meta pra cada área." },
-      "en": { "caption": "And in *Desired*, you set a target for each area." },
+      "title": {
+        "pt": "Desejada",
+        "en": "Desired"
+      },
+      "pt": {
+        "caption": "E em *Desejada*, você traça uma meta pra cada área."
+      },
+      "en": {
+        "caption": "And in *Desired*, you set a target for each area."
+      },
       "beats": [
-        { "at": { "pt": "Desejada", "en": "Desired" }, "focus": "pillar.desejada", "do": "tap", "camera": "wide" },
-        { "at": { "pt": "meta", "en": "target" }, "focus": "firstStep", "camera": "wide" }
+        {
+          "at": {
+            "pt": "Desejada",
+            "en": "Desired"
+          },
+          "focus": "pillar.desejada",
+          "do": "tap",
+          "camera": "wide"
+        },
+        {
+          "at": {
+            "pt": "meta",
+            "en": "target"
+          },
+          "focus": "firstStep",
+          "camera": "wide"
+        }
       ]
     },
     {
       "id": "info",
-      "title": { "pt": "Cada parte, explicada", "en": "Every part, explained" },
-      "pt": { "caption": "Toque no *(i)* e a tela explica cada parte.", "say": "Toque no botão de informação e a tela explica cada parte." },
-      "en": { "caption": "Tap the *(i)* and the screen explains every part.", "say": "Tap the info button and the screen explains every part." },
+      "title": {
+        "pt": "Cada parte, explicada",
+        "en": "Every part, explained"
+      },
+      "pt": {
+        "caption": "Toque no *(i)* e a tela explica cada parte.",
+        "say": "Toque no botão de informação e a tela explica cada parte."
+      },
+      "en": {
+        "caption": "Tap the *(i)* and the screen explains every part.",
+        "say": "Tap the info button and the screen explains every part."
+      },
       "focus": "info",
       "pulse": true,
       "camera": 1.4
