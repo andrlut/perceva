@@ -524,6 +524,8 @@ const pt: Translations = {
   tour: {
     intro: {
       skip: 'Pular introdução',
+      /** The overview video that opens the intro (IntroVideoStage). */
+      videoSkip: 'Pular',
       next: 'Continuar',
       pageOf: 'Página {{n}} de {{total}}',
       hero: {
@@ -671,6 +673,7 @@ const pt: Translations = {
       videoSeen: 'Visto',
       /** One line per door video (what its tutorial walks through). */
       videos: {
+        overview: 'Uma volta rápida por todas as telas.',
         practices: 'Marcar o que fez, as Feitas hoje e o + dourado.',
         rewards: 'Moedas, resgatar, desfazer e mirar uma meta.',
         learning: 'Ideias, o Explorar, Minhas ideias e o treino.',
@@ -1464,6 +1467,8 @@ const pt: Translations = {
   /** A screen's door video, rewatched from its (i) or Ajustes › Tutorial
    *  (app/door-video.tsx) — and its time bar, also on the door itself. */
   doorVideo: {
+    /** The app overview (the intro's video, first row of Tutorial e vídeos). */
+    overviewTitle: 'O Perceva em 1 minuto',
     guideA11y: 'Ver o vídeo desta tela',
     seekA11y: 'Tempo do vídeo',
     play: 'Continuar o vídeo',

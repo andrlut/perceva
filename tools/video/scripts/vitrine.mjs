@@ -7,6 +7,8 @@
 //   node scripts/vitrine.mjs voice  [--lang …]              TTS Kore + QA por transcrição, por trecho
 //   node scripts/vitrine.mjs stills [--lang …]              folha de contato + audit do movimento, por trecho
 //   node scripts/vitrine.mjs render [--lang …]              o filme: out/vitrine/<lang>/intro.<lang>.mp4 (720p) + pôster + folha
+//   node scripts/vitrine.mjs render --app [--lang …]        o corte do app (cartão final sem loja/site):
+//                                                            out/vitrine-app/<lang>/overview.<lang>.mp4 → learning-media doors/overview.<lang>.r<N>
 //   node scripts/vitrine.mjs all    [--lang …]              build → voice → stills → render
 //
 // O site usa public/assets/video/intro.<lang>.mp4 (+ .poster.webp) no repo andrlut/perceva-site:
@@ -42,7 +44,7 @@ async function render() {
   const { renderMedia, selectComposition } = await import('@remotion/renderer');
   const serveUrl = await bundle({ entryPoint: path.join(root, 'src/index.ts'), publicDir: path.join(root, 'public') });
   for (const lang of LANGS) {
-    const inputProps = { lang };
+    const inputProps = { lang, inApp: flag('app') };
     const composition = await selectComposition({ serveUrl, id: 'Vitrine', inputProps });
     // cada trecho: com voz em dia e sem problema de movimento (as mesmas travas do tour.mjs render)
     let bad = 0;
@@ -57,7 +59,7 @@ async function render() {
       }
     }
     if (bad && !flag('allow-motion')) die(`vitrine.${lang}: ${bad} problema(s) de movimento (acima) — corrija o roteiro (ou --allow-motion pra rascunho)`);
-    const dir = path.join(root, 'out', 'vitrine', lang);
+    const dir = path.join(root, 'out', flag('app') ? 'vitrine-app' : 'vitrine', lang);
     fs.mkdirSync(dir, { recursive: true });
     const full = path.join(dir, 'video.mp4');
     let shown = -1;
@@ -76,7 +78,7 @@ async function render() {
     console.log('');
     // a versão do site: 720p, AAC 96k, faststart (a mesma régua das portas do app)
     const silent = composition.props.parts.some((p) => p.tour.spec.silent);
-    const name = `intro.${lang}${silent ? '.silent' : ''}`;
+    const name = `${flag('app') ? 'overview' : 'intro'}.${lang}${silent ? '.silent' : ''}`;
     const mp4 = path.join(dir, `${name}.mp4`);
     const poster = path.join(dir, `${name}.poster.webp`);
     execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', full, '-vf', 'scale=720:1280:flags=lanczos', '-c:v', 'libx264', '-crf', '23', '-preset', 'slow', '-tune', 'animation', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '96k', '-movflags', '+faststart', mp4]);

@@ -527,6 +527,8 @@ const en = {
   tour: {
     intro: {
       skip: 'Skip intro',
+      /** The overview video that opens the intro (IntroVideoStage). */
+      videoSkip: 'Skip',
       next: 'Continue',
       pageOf: 'Page {{n}} of {{total}}',
       hero: {
@@ -674,6 +676,7 @@ const en = {
       videoSeen: 'Seen',
       /** One line per door video (what its tutorial walks through). */
       videos: {
+        overview: 'A quick tour of every screen.',
         practices: 'Checking off what you did, Done today and the gold +.',
         rewards: 'Coins, redeeming, undo and tracking a goal.',
         learning: 'Ideas, Explore, My ideas and training.',
@@ -1468,6 +1471,8 @@ const en = {
   /** A screen's door video, rewatched from its (i) or Settings › Tutorial
    *  (app/door-video.tsx) — and its time bar, also on the door itself. */
   doorVideo: {
+    /** The app overview (the intro's video, first row of Tutorial and videos). */
+    overviewTitle: 'Perceva in 1 minute',
     guideA11y: "Watch this screen's video",
     seekA11y: 'Video time',
     play: 'Play the video',

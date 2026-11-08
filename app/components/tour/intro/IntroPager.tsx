@@ -49,6 +49,7 @@ import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { isTerminal } from '@/lib/tour/constants';
 import { useTourStore } from '@/lib/tour/store';
+import { useUnlockStore } from '@/lib/unlock';
 import { exitTourToHome, setAfterOnboarding } from '@/lib/tour/navigation';
 import { tokens } from '@/theme';
 import { DIMENSION_ORDER } from '@/theme/dimensions';
@@ -58,6 +59,7 @@ import {
   RewardSamples,
 } from './EconomyVisuals';
 import { IdeaFlipVisual } from './IdeaFlipVisual';
+import { type IntroVideoOutcome, IntroVideoStage } from './IntroVideoStage';
 import {
   IntroPage,
   PageBody,
@@ -85,6 +87,11 @@ import { selfKnowledgeColors, SelfKnowledgeHex } from './SelfKnowledgeHex';
  * modules pending or skipped, then `intro` completed) before leaving, so
  * there is no half-answered state for a killed app to strand.
  *
+ * Before the pages, the app overview video (IntroVideoStage, 2026-11-08):
+ * it plays on its own over the pager, and its end or its "Pular" lands on
+ * page 6 — it tells what pages 0–5 tell. The pages are its fallback when it
+ * can't play, and stay one swipe back from the choice for whoever wants them.
+ *
  * Deliberately no greeting by name: `display_name` defaults to the email's
  * local part for every email signup, and the profile query can still be in
  * flight here (it used to flash "Bem-vindo, aí").
@@ -107,6 +114,8 @@ const SKIP_H = ONB_TEXT_BTN_H;
  * soon after arriving on the last page are dropped.
  */
 const ARRIVAL_GUARD_MS = 650;
+/** Kill-switch (OTA): false → the intro opens on the slides, as before 08/11. */
+const INTRO_VIDEO_ENABLED = true;
 
 /**
  * Last page (Onboarding simples, 2026-10/11): pick practices (primary) or
@@ -131,6 +140,11 @@ export function IntroPager() {
   const [index, setIndex] = useState(0);
   const indexRef = useRef(0);
   indexRef.current = index;
+  // The overview video, first, over the pager.
+  const [videoOn, setVideoOn] = useState(INTRO_VIDEO_ENABLED);
+  const videoOnRef = useRef(videoOn);
+  videoOnRef.current = videoOn;
+  const markSeen = useUnlockStore((s) => s.markDoorSeen);
 
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollX = useSharedValue(0);
@@ -185,13 +199,16 @@ export function IntroPager() {
   const busyRef = useRef(false);
   const arrivedAtRef = useRef(0);
   useEffect(() => {
+    // Under the video nothing is on screen yet.
+    if (videoOn) return;
     if (index === LAST) arrivedAtRef.current = Date.now();
     track('intro_page', { page: index });
-  }, [index]);
+  }, [index, videoOn]);
 
   const finish = useCallback(
     async (choice: Choice) => {
-      if (busyRef.current) return;
+      // Never under the video (a screen reader could reach the hidden buttons).
+      if (busyRef.current || videoOnRef.current) return;
       if (Date.now() - arrivedAtRef.current < ARRIVAL_GUARD_MS) return;
       busyRef.current = true;
       setBusy(choice);
@@ -219,7 +236,8 @@ export function IntroPager() {
 
   // ── Android hardware back ──────────────────────────────────────────────
   const onBack = useCallback(() => {
-    if (busyRef.current) return true;
+    // Swallowed on the video too: its way out is "Pular".
+    if (busyRef.current || videoOnRef.current) return true;
     const i = indexRef.current;
     if (i > 0) goTo(i - 1);
     // Page 0: swallowed. The AuthGate would re-open this route anyway.
@@ -242,6 +260,20 @@ export function IntroPager() {
     track('intro_skip_pressed', { page: indexRef.current });
     goTo(LAST);
   };
+
+  // The video's end or skip → the choice (the video told pages 0–5). A video
+  // that never played → the slides from the top; one that broke mid-way was
+  // mostly seen → the choice too.
+  const onVideoDone = useCallback(
+    (how: IntroVideoOutcome, fraction: number) => {
+      track('intro_video', { how, at: Math.round(fraction * 100) });
+      if (how === 'end') void markSeen('overview');
+      if (how === 'skip') Haptics.selectionAsync().catch(() => {});
+      if (how !== 'fail' || fraction > 0) goTo(LAST);
+      setVideoOn(false);
+    },
+    [goTo, markSeen],
+  );
 
   // ── Layout ─────────────────────────────────────────────────────────────
   const bottomInset = Math.max(insets.bottom, tokens.space[3]) + tokens.space[2];
@@ -284,7 +316,12 @@ export function IntroPager() {
 
   return (
     <ScreenBackground withGoldHalo>
-      <View style={[styles.root, { paddingTop: insets.top }]}>
+      {/* Under the video the slides are out of the accessibility tree too. */}
+      <View
+        style={[styles.root, { paddingTop: insets.top }]}
+        importantForAccessibility={videoOn ? 'no-hide-descendants' : 'auto'}
+        accessibilityElementsHidden={videoOn}
+      >
         {/* ── Top bar: brand · Pular introdução ──────────────────────── */}
         <OnbTopBar
           right={
@@ -326,7 +363,7 @@ export function IntroPager() {
               <OnbHeader title={t('tour.intro.hero.title')} subtitle={t('tour.intro.hero.body')} />
               <PageBody>
                 <View style={styles.heroArt}>
-                  <PillarsHero size={heroSize} active={index === 0} idSuffix="hero" />
+                  <PillarsHero size={heroSize} active={index === 0 && !videoOn} idSuffix="hero" />
                 </View>
               </PageBody>
             </IntroPage>
@@ -551,6 +588,7 @@ export function IntroPager() {
           </View>
         </View>
       </View>
+      {videoOn ? <IntroVideoStage onDone={onVideoDone} /> : null}
     </ScreenBackground>
   );
 }

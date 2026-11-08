@@ -11,7 +11,8 @@ import { useT } from '@/lib/i18n';
 import { learningMediaUrl } from '@/lib/learningMedia';
 import { tokens } from '@/theme';
 
-import type { DoorFeature } from './UnlockDoor';
+import type { ScreenVideoKey } from '@/lib/unlock';
+
 import { VideoScrubBar } from './VideoScrubBar';
 
 /**
@@ -26,13 +27,19 @@ import { VideoScrubBar } from './VideoScrubBar';
  *  - the four doors (08/11): each screen opens with its why/benefit told by the
  *    cast and then its tutorial, in the requinte-phase-2 look (Hexa Limpo):
  *    practices r1 (right after the first-run tour), rewards r4, learning r2, me r2.
+ *  - overview r1 (08/11): not a door — the site's Vitrine in its in-app cut (the end card
+ *    without the store line), the first thing the intro plays (IntroVideoStage) and the
+ *    first row of Ajustes › Tutorial e vídeos (tools/video/scripts/vitrine.mjs render --app).
  */
-const DOOR_VIDEO_REV: Record<DoorFeature, number> = { practices: 1, rewards: 4, learning: 2, me: 2 };
-const doorAsset = (feature: DoorFeature, lang: 'pt' | 'en', ext: 'mp4' | 'poster.webp') =>
+const DOOR_VIDEO_REV: Record<ScreenVideoKey, number> = { practices: 1, rewards: 4, learning: 2, me: 2, overview: 1 };
+const doorAsset = (feature: ScreenVideoKey, lang: 'pt' | 'en', ext: 'mp4' | 'poster.webp') =>
   learningMediaUrl(`doors/${feature}.${lang}.r${DOOR_VIDEO_REV[feature]}.${ext}`);
 
-/** A video that has not shown a frame by then is treated as failed (offline). */
+/** A video that has not shown a frame by then is treated as failed (offline)… */
 const START_TIMEOUT_MS = 7000;
+/** …unless its source already answered (`sourceLoad`): then it is a slow link
+ *  still buffering, not a dead one, and gets this much longer to start. */
+const LOADED_START_TIMEOUT_MS = 25000;
 /** The poster (a frame ~1 s in) stays until the video has drawn its opening — frame 0 of
  *  a cast intro is the empty room, so dropping the poster on `playing` read as a blink. */
 const POSTER_HOLD_S = 0.4;
@@ -42,7 +49,7 @@ const POSTER_MAX_MS = 900;
 export const DOOR_VIDEO_BAR_H = 40;
 
 interface Props {
-  feature: DoorFeature;
+  feature: ScreenVideoKey;
   width: number;
   height: number;
   /**
@@ -55,8 +62,11 @@ interface Props {
   variant?: 'door' | 'player';
   /** Door only: the bar seeks anywhere ("Rever as portas" — not a first time). */
   seekAnywhere?: boolean;
-  /** 0..1 of the first loop — the door's stall watch. */
+  /** 0..1 of the first loop (or of the one play, as a player) — the door's stall watch. */
   onProgress?: (fraction: number) => void;
+  /** Player only: it reached the end — `scrubbed` when a drag on the bar jumped
+   *  ahead on the way (a skip, not a full watch). */
+  onEnd?: (info: { scrubbed: boolean }) => void;
   /** The first loop has played: the button can show. */
   onFirstLoop?: () => void;
   /** Error or no frame in time: the door falls back to the in-code animation. */
@@ -79,6 +89,7 @@ export function DoorVideo({
   seekAnywhere = false,
   onProgress,
   onFirstLoop,
+  onEnd,
   onFail,
 }: Props) {
   const { t, locale } = useT();
@@ -100,6 +111,10 @@ export function DoorVideo({
   // The furthest point played — on a first opening, the bar's reach.
   const [watched, setWatched] = useState(0);
   const [ended, setEnded] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  // A drag that jumped ahead (more than a couple of seconds): reaching the end
+  // after one is a skip, not a full watch.
+  const scrubbed = useRef(false);
   const looped = useRef(false);
   const lastTime = useRef(0);
 
@@ -122,9 +137,9 @@ export function DoorVideo({
 
   useEffect(() => {
     if (started) return;
-    const id = setTimeout(() => onFail?.(), START_TIMEOUT_MS);
+    const id = setTimeout(() => onFail?.(), loaded ? LOADED_START_TIMEOUT_MS : START_TIMEOUT_MS);
     return () => clearTimeout(id);
-  }, [started, onFail]);
+  }, [started, loaded, onFail]);
 
   const firstLoopDone = () => {
     if (looped.current) return;
@@ -135,12 +150,14 @@ export function DoorVideo({
   };
 
   useEventListener(player, 'sourceLoad', ({ duration: d }) => {
+    setLoaded(true);
     if (d > 0) setDuration(d);
   });
   useEventListener(player, 'playToEnd', () => {
     if (isPlayer) {
       setEnded(true);
       setPosition(player.duration || duration);
+      onEnd?.({ scrubbed: scrubbed.current });
     }
     firstLoopDone();
   });
@@ -185,6 +202,7 @@ export function DoorVideo({
 
   const seek = (seconds: number) => {
     try {
+      if (seconds > position + 2) scrubbed.current = true;
       lastTime.current = seconds;
       player.currentTime = seconds;
       setPosition(seconds);
@@ -201,6 +219,7 @@ export function DoorVideo({
     try {
       if (ended) {
         setEnded(false);
+        scrubbed.current = false;
         lastTime.current = 0;
         player.currentTime = 0;
         player.play();
