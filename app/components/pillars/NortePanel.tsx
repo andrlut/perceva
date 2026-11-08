@@ -1,19 +1,20 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
-import { DimensionCards, type DimCardRow } from '@/components/DimensionCards';
 import { HexChart } from '@/components/HexChart';
 import { HexGrainToggle, useHexGrain } from '@/components/HexGrainToggle';
 import { HexSeriesLegend } from '@/components/HexSeriesLegend';
+import { DimensionPillarCard, ScoreBar } from '@/components/pillars/DimensionPillarCard';
+import { PillarActions } from '@/components/pillars/PillarActions';
+import { PillarFirstStep } from '@/components/pillars/PillarFirstStep';
 import { pickSubScoresDecimal } from '@/lib/api/character';
-import type { CharacterSubScore, SubId } from '@/lib/db/types';
+import type { CharacterSubScore, DimensionId, SubId } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { formatScore } from '@/lib/util/formatScore';
 import { tokens } from '@/theme';
-import { DIMENSION_ORDER, SUBS_BY_DIM } from '@/theme/dimensions';
+import { DIMENSION_META, DIMENSION_ORDER, SUBS_BY_DIM } from '@/theme/dimensions';
 
 // Neutral gray for the "today" ghost outline. Deliberately not gold (that's
 // the desired fill's accent) and not cyan (that means "questionnaire" on the
@@ -28,14 +29,16 @@ interface Props {
 
 /**
  * Desejada · Norte — the aspirational counterpart to Avaliação. Same
- * standardized shape (hex → extras → six cards), but the hex plots the
- * user's DESIRED per-sub scores (filled) over their current self scores
- * (a neutral ghost outline), and the cards show a stacked current→target
- * bar with a gold delta chip.
+ * standardized shape (hex → extras → six cards → closing card), but the hex
+ * plots the user's DESIRED per-sub scores (filled) over their current self
+ * scores (a neutral ghost outline). The cards are Praticada's anatomy: the
+ * dimension's target out of 10, and per sub "today → target" over a bar
+ * whose lit stretch is the climb still ahead.
  *
  * Empty (no targets set yet): the hex draws only the ghost of today with an
- * em-dash center, a dashed hero CTA invites the user to chart their north,
- * and the cards show today's bars with a "set" chip.
+ * em-dash center, the first-step card above it invites the user to chart
+ * their north, and the cards show today's bars, faded. Once charted, the
+ * invitation leaves and "Atualizar meu norte" closes the panel as a row.
  */
 export function NortePanel({ subScores }: Props) {
   const router = useRouter();
@@ -72,54 +75,25 @@ export function NortePanel({ subScores }: Props) {
     return m;
   }, [current, desired]);
 
-  const arrow = (from: number, to: number) =>
-    `${formatScore(from)} → ${formatScore(to)}`;
-
-  const rows = useMemo<DimCardRow[]>(
-    () =>
-      DIMENSION_ORDER.map((dim) => {
-        const [a, b] = SUBS_BY_DIM[dim];
-        const curA = current.get(a) ?? 0;
-        const curB = current.get(b) ?? 0;
-
-        if (!hasDesired) {
-          // Ghost state: today's bars, muted, inviting a target.
-          return {
-            dimId: dim,
-            badge: { text: t('norte.setChip'), tone: 'chip' as const },
-            subs: [
-              { subId: a, fill: curA / 5 },
-              { subId: b, fill: curB / 5 },
-            ],
-          };
-        }
-
-        const desA = desiredEff.get(a) ?? curA;
-        const desB = desiredEff.get(b) ?? curB;
-        const delta = desA + desB - (curA + curB);
-        return {
-          dimId: dim,
-          badge:
-            delta > 0.05
-              ? { text: `+${formatScore(delta)}`, tone: 'chip' as const }
-              : { icon: 'checkmark', tone: 'chip' as const },
-          caption: `${metaLookup.sub(a).label} ${arrow(curA, desA)} · ${
-            metaLookup.sub(b).label
-          } ${arrow(curB, desB)}`,
-          subs: [
-            { subId: a, fill: desA / 5, baseFill: curA / 5 },
-            { subId: b, fill: desB / 5, baseFill: curB / 5 },
-          ],
-        };
-      }),
-    [current, desiredEff, hasDesired, t, metaLookup],
-  );
-
   const openEditor = () =>
     router.push({ pathname: '/self-assessment', params: { mode: 'desired' } });
+  const openDim = (dim: DimensionId) =>
+    router.push({ pathname: '/dimension/[id]', params: { id: dim } });
 
   return (
     <View style={styles.wrap}>
+      {/* Until the north is charted it is the first thing here — the same
+          first-step card Percebida shows before the questionnaire. */}
+      {!hasDesired && (
+        <PillarFirstStep
+          icon="flag-outline"
+          title={t('norte.emptyTitle')}
+          line={t('norte.emptyBody')}
+          cta={t('norte.emptyCta')}
+          onPress={openEditor}
+        />
+      )}
+
       <View style={styles.hexWrap}>
         <HexChart
           scores={hasDesired ? desiredEff : new Map()}
@@ -129,9 +103,7 @@ export function NortePanel({ subScores }: Props) {
           centerValue={hasDesired ? undefined : '—'}
           size={chartSize}
           idSuffix="norte"
-          onDimPress={(dim) =>
-            router.push({ pathname: '/dimension/[id]', params: { id: dim } })
-          }
+          onDimPress={openDim}
         />
       </View>
 
@@ -163,40 +135,76 @@ export function NortePanel({ subScores }: Props) {
         ]}
       />
 
-      {!hasDesired && (
-        <Pressable
-          onPress={openEditor}
-          style={({ pressed }) => [styles.heroCta, pressed && { opacity: 0.85 }]}
-        >
-          <View style={styles.heroIcon}>
-            <Ionicons name="flag" size={18} color={GOLD} />
-          </View>
-          <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={styles.heroTitle}>{t('norte.emptyTitle')}</Text>
-            <Text style={styles.heroBody}>{t('norte.emptyBody')}</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={GOLD} />
-        </Pressable>
+      {/* Fixed axis order, like the hex. A tap opens the area. */}
+      <View style={styles.list}>
+        {DIMENSION_ORDER.map((dim) => {
+          const color = DIMENSION_META[dim].color;
+          const [a, b] = SUBS_BY_DIM[dim];
+          const curA = current.get(a) ?? 0;
+          const curB = current.get(b) ?? 0;
+
+          if (!hasDesired) {
+            // Ghost state: today's bars, pale and faded, no target number.
+            return (
+              <DimensionPillarCard
+                key={dim}
+                dimId={dim}
+                value="—"
+                faint
+                onPress={() => openDim(dim)}
+                subs={[
+                  { subId: a, cur: curA },
+                  { subId: b, cur: curB },
+                ].map(({ subId, cur }) => ({
+                  subId,
+                  value: formatScore(cur),
+                  faint: true,
+                  bar: <ScoreBar fill={cur / 5} from={cur / 5} color={color} />,
+                }))}
+              />
+            );
+          }
+
+          const desA = desiredEff.get(a) ?? curA;
+          const desB = desiredEff.get(b) ?? curB;
+          return (
+            <DimensionPillarCard
+              key={dim}
+              dimId={dim}
+              value={formatScore(desA + desB)}
+              unit="/10"
+              onPress={() => openDim(dim)}
+              subs={[
+                { subId: a, cur: curA, des: desA },
+                { subId: b, cur: curB, des: desB },
+              ].map(({ subId, cur, des }) => ({
+                subId,
+                value: `${formatScore(cur)} → ${formatScore(des)}`,
+                bar: <ScoreBar fill={des / 5} from={cur / 5} color={color} />,
+                a11yLabel: t('norte.subA11y', {
+                  sub: metaLookup.sub(subId).label,
+                  now: formatScore(cur),
+                  target: formatScore(des),
+                }),
+              }))}
+            />
+          );
+        })}
+      </View>
+
+      {hasDesired && (
+        <PillarActions
+          accent={GOLD}
+          actions={[
+            {
+              key: 'north',
+              icon: 'flag-outline',
+              label: t('norte.cta'),
+              onPress: openEditor,
+            },
+          ]}
+        />
       )}
-
-      <DimensionCards
-        rows={rows}
-        accent={GOLD}
-        onDimPress={(dim) =>
-          router.push({ pathname: '/dimension/[id]', params: { id: dim } })
-        }
-      />
-
-      <Pressable
-        onPress={openEditor}
-        style={({ pressed }) => [styles.cta, pressed && { opacity: 0.85 }]}
-        hitSlop={4}
-      >
-        <Ionicons name="flag" size={14} color={GOLD} />
-        <Text style={styles.ctaText}>
-          {hasDesired ? t('norte.cta') : t('norte.emptyCta')}
-        </Text>
-      </Pressable>
     </View>
   );
 }
@@ -208,52 +216,5 @@ const styles = StyleSheet.create({
   hexWrap: {
     alignItems: 'center',
   },
-  heroCta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: tokens.space[3],
-    borderRadius: tokens.radius.md,
-    borderWidth: 1,
-    borderColor: 'rgba(255,200,61,0.35)',
-    borderStyle: 'dashed',
-    backgroundColor: 'rgba(255,200,61,0.06)',
-  },
-  heroIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: tokens.radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,200,61,0.14)',
-  },
-  heroTitle: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 14,
-    color: tokens.text.hi,
-  },
-  heroBody: {
-    fontFamily: 'Manrope_500Medium',
-    fontSize: 12,
-    lineHeight: 16,
-    color: tokens.text.mid,
-    marginTop: 2,
-  },
-  cta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: tokens.space[3],
-    borderRadius: tokens.radius.md,
-    backgroundColor: 'rgba(255,200,61,0.10)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,200,61,0.30)',
-  },
-  ctaText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 13,
-    letterSpacing: 0.3,
-    color: GOLD,
-  },
+  list: { gap: tokens.space[2] },
 });

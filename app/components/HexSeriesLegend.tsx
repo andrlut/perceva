@@ -14,7 +14,7 @@ import { tokens } from '@/theme';
  *
  * A regra agora é uma só: **uma entrada por silhueta desenhada no hex**, e
  * tocar liga/desliga aquela série. Não navega — navegação por eixo já existe
- * no vértice do hex e nos DimensionCards, e a legenda é por SÉRIE, não por
+ * no vértice do hex e nos cartões das áreas, e a legenda é por SÉRIE, não por
  * eixo; não há destino por série.
  *
  * Gramática do swatch:

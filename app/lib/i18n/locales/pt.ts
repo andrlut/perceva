@@ -736,7 +736,12 @@ const pt: Translations = {
         continue: {
           title: 'Continue lendo',
           body: 'O material que você deixou pela metade.',
-          ai: 'Mostra quantas ideias já foram absorvidas e qual é a próxima; tocar leva de volta ao material.',
+          ai: 'Fica logo abaixo do Explorar e do Treinar, com a capa, o nome do material e uma barra dourada do quanto já foi: nos materiais com ideias, as ideias absorvidas; nos artigos antigos, o quanto foi lido. Tocar leva de volta ao material.',
+        },
+        search: {
+          title: 'Buscar',
+          body: 'A lupa no topo abre a busca.',
+          ai: 'A busca procura no título e no resumo do material, nas áreas e sub-áreas e nos títulos e afirmações das ideias, nos dois idiomas. Ela soma com os filtros. Tocar no X no lugar da lupa fecha a busca e apaga o texto.',
         },
         rows: {
           title: 'Fileiras',
@@ -749,14 +754,14 @@ const pt: Translations = {
           ai: 'Os ícones mostram a categoria (frasco é Pesquisa, livro é Livro, bússola é Fundamentos), a primeira sub-área, quantas ideias tem e se tem áudio, vídeo ou imagens. No plano grátis, o que saiu há mais de 30 dias leva o selo Premium.',
         },
         lamp: {
-          title: 'A lâmpada',
-          body: 'Abre Minhas ideias. O número são as ideias esperando revisão.',
-          ai: 'Em Minhas ideias, a faixa "pra revisar" abre a pilha: arraste pra direita pra favoritar, pra esquerda pra soltar.',
+          title: 'Minhas ideias',
+          body: 'O botão dourado da lâmpada. O número são as ideias esperando revisão.',
+          ai: 'É o único botão flutuante da tela, no canto de baixo. Em Minhas ideias, a faixa "pra revisar" abre a pilha: arraste pra direita pra favoritar, pra esquerda pra soltar.',
         },
         filters: {
-          title: 'Filtros e busca',
-          body: 'O botão de filtro abre a busca, o estado e os filtros por área, tipo e sub-área.',
-          ai: 'A tela abre em Pendentes, então o que já foi concluído some das fileiras: troque pra Concluídos ou Todos pra ver. Só um filtro de área, tipo ou sub-área vale por vez, e o ponto dourado no botão avisa que tem filtro ligado. "Limpar filtro" não limpa a busca; o X no chip da busca limpa.',
+          title: 'Filtros',
+          body: 'A faixa de filtros acima dos materiais: estado, tipo e área.',
+          ai: 'A tela abre em Pendentes, então o que já foi concluído some das fileiras: toque em Concluídos ou Todos pra ver. Depois vêm os tipos (Pesquisa, Livro, Fundamentos) e as áreas; tocar numa área mostra as sub-áreas dela ao lado. Só um filtro de tipo, área ou sub-área vale por vez. O filtro ligado fica colorido e com um X: tocar nele de novo desliga, e numa sub-área volta pra área inteira. Deslize a fileira pro lado pra ver todos os filtros.',
         },
       },
     },
@@ -766,8 +771,6 @@ const pt: Translations = {
     min: '{{count}} min',
     readMin: { one: '{{count}} min de leitura', other: '{{count}} min de leitura' },
     continueReading: 'Continue lendo',
-    continueProgress: '{{percent}}% lido',
-    continueMinLeft: { one: '~{{count}} min restante', other: '~{{count}} min restantes' },
     category: {
       research: 'Pesquisa',
       book: 'Livro',
@@ -975,7 +978,6 @@ const pt: Translations = {
         fail: 'Não deu pra salvar a nota. Tente de novo.',
       },
       openIdea: 'Abrir ideia',
-      nextIdeaLabel: 'Próxima: {{title}}',
       a11yCardFront: 'Card da ideia {{title}}. Toque pra virar.',
       a11yCardBack: 'Afirmação: {{claim}}',
       /** Pilha de revisão — o que foi absorvido espera um veredito:
@@ -1015,29 +1017,20 @@ const pt: Translations = {
       byDim: 'Por dimensão',
       byType: 'Por tipo',
     },
-    filteringBy: 'Filtrando: {{what}}',
     // Conteúdo de parceiro (learning_material.sponsor) — o selo e a seção
     // do feed. Conteúdo pago diz que é pago com todas as letras (prática do
     // CONAR): "Patrocinado", nunca só "parceria".
     sponsorWith: 'Patrocinado · {{name}}',
     sectionPartner: 'Patrocinado',
-    stats: {
-      byDim: 'Por dimensão',
-      byType: 'Por tipo',
-      bySub: 'Por sub',
-    },
+    /** The filter row on the tab (LearningFilterRow). */
     filter: {
-      open: 'Filtros',
-      title: 'Filtrar biblioteca',
-      subtitle: '{{read}}/{{total}} concluídos',
-      state: 'Estado',
-      clear: 'Limpar filtro',
+      clearHint: 'Toque de novo pra tirar o filtro',
     },
     search: {
-      section: 'Buscar',
+      open: 'Buscar',
+      close: 'Fechar busca',
       placeholder: 'Palavra do título, do tema ou de uma ideia',
       clear: 'Limpar busca',
-      chip: 'Busca: {{q}}',
       empty: 'Nada encontrado para “{{q}}”.',
     },
     detail: {
@@ -1244,12 +1237,16 @@ const pt: Translations = {
     questCardTitle: 'Questionário de autoconhecimento',
     questCardLine: '48 perguntas, 5 a 10 min. É ele que desenha o seu retrato Percebida.',
     questCardCta: 'Fazer',
-    selfAssessmentCtaFirst: 'Fazer autoavaliação · 1 min',
-    selfAssessmentCta: 'Atualizar autoavaliação',
-    questionnaireFirst: 'Fazer questionário (5-10 min)',
-    questionnaireToday: 'Refazer questionário · feito hoje',
-    questionnaireDaysAgo: 'Refazer questionário · {{count}}d atrás',
-    mirrorCta: 'Comparar self vs questionário',
+    /** The card that closes Percebida — one row per way to redraw it. */
+    actions: {
+      selfFirst: 'Fazer autoavaliação',
+      self: 'Atualizar autoavaliação',
+      selfTime: '1 min',
+      questionnaire: 'Refazer questionário',
+      doneToday: 'feito hoje',
+      daysAgo: { one: 'há {{count}} dia', other: 'há {{count}} dias' },
+      mirror: 'Comparar com o questionário',
+    },
     nudgeSuffix: 'está em {{score}}/5 — toque pra ver práticas recomendadas',
     hexAxisA11y: '{{dim}}: {{score}} de {{max}}',
   },
@@ -1277,8 +1274,8 @@ const pt: Translations = {
     cta: 'Atualizar meu norte',
     emptyTitle: 'Onde você quer chegar?',
     emptyBody: 'Trace uma meta pra cada área. O contorno mostra onde você está hoje.',
-    emptyCta: 'Traçar meu norte',
-    setChip: 'definir',
+    emptyCta: 'Traçar',
+    subA11y: '{{sub}}: hoje {{now}}, meta {{target}}',
   },
 
   hero: {
@@ -1299,7 +1296,7 @@ const pt: Translations = {
         pillars: {
           title: 'Trocar de retrato',
           body: 'Toque em Percebida, Praticada ou Desejada.',
-          ai: 'Percebida é como você se vê: autoavaliação, questionário e humor. Praticada é o que as suas práticas treinam, em XP por período. Desejada é onde você quer chegar: o Norte e, com Metas ou Habilidades ligados, o Caminho. A aba abre em Praticada.',
+          ai: 'Percebida é como você se vê: autoavaliação e questionário. Praticada é o que as suas práticas treinam, em XP por período. Desejada é onde você quer chegar: o Norte e, com Metas ou Habilidades ligados, o Caminho. A aba abre em Praticada.',
         },
         grain: {
           title: '6 ou 12',
@@ -1321,15 +1318,15 @@ const pt: Translations = {
           body: 'Toque numa série pra mostrar ou esconder.',
           ai: 'A série do questionário começa escondida; a última série visível não esconde; os cartões das áreas seguem a série que está visível.',
         },
+        cards: {
+          title: 'Cartões das áreas',
+          body: 'Em Percebida e Desejada, toque pra abrir a área. Em Praticada, pra ver os dias de cada sub-área.',
+          ai: 'Os três retratos usam o mesmo cartão: a área com o seu número e, embaixo, cada sub-área com número e barra. Percebida mostra a nota de 0 a 10 (cada sub-área de 0 a 5) da série visível na legenda. Desejada mostra a meta, com "hoje → meta" em cada sub-área; o trecho aceso da barra é o que falta subir. Praticada mostra o XP do período, as mais treinadas primeiro: na barra, o traço marca a régua, o trecho aceso é o que passou dela e o entalhe aparece depois de 3 vezes a régua. O cartão aberto da Praticada mostra o nível e um link pro histórico da área.',
+        },
         assessment: {
           title: 'Autoavaliação e questionário',
-          body: 'Em Percebida: atualize como você se vê ou faça o questionário.',
-          ai: 'A autoavaliação leva 1 minuto; o questionário, de 5 a 10. Com os dois feitos, aparece "Comparar self vs questionário".',
-        },
-        mood: {
-          title: 'Humor de hoje',
-          body: 'Em Percebida: toque no cartão pra registrar o humor.',
-          ai: 'O cartão mostra a carinha do dia e um traço dos últimos 14 dias; "Ver histórico" abre o calendário.',
+          body: 'Em Percebida, no fim: atualize como você se vê ou refaça o questionário.',
+          ai: 'São linhas de um cartão embaixo das áreas. A autoavaliação leva 1 minuto; o questionário, de 5 a 10. Antes do primeiro questionário, um cartão no topo convida a fazer. Depois dele aparecem "Refazer questionário", com há quanto tempo foi o último, e "Comparar com o questionário".',
         },
         period: {
           title: 'Período',
@@ -1341,15 +1338,15 @@ const pt: Translations = {
           body: 'Em Praticada: o botão "Até 300" sobe a régua do hex pra 600 e 900.',
           ai: 'A régua é o XP que enche uma área do hex no período; vale só enquanto você está na tela.',
         },
-        cards: {
-          title: 'Cartões das áreas',
-          body: 'Em Praticada: toque num cartão pra ver os dias de cada sub-área.',
-          ai: 'Na barra de cada sub-área, o traço marca a régua, o trecho aceso é o que passou dela e o entalhe aparece depois de 3 vezes a régua. O cartão aberto mostra o nível e um link pro histórico da área.',
+        history: {
+          title: 'Histórico',
+          body: 'Em Praticada, no fim: "Histórico completo" abre o calendário.',
+          ai: 'O calendário abre na frente Rotina, no mês. O histórico de uma área só fica no cartão aberto dela.',
         },
         north: {
           title: 'Norte',
           body: 'Em Desejada: trace uma meta pra cada área; o contorno mostra onde você está hoje.',
-          ai: '"Traçar meu norte" abre a autoavaliação no modo meta. O ✓ aparece quando a meta não passa de onde você já está.',
+          ai: 'Sem meta, um cartão no topo convida a traçar o norte; depois, "Atualizar meu norte" fica no fim. Os dois abrem a autoavaliação no modo meta.',
         },
         path: {
           title: 'Caminho',
@@ -1605,7 +1602,7 @@ const pt: Translations = {
       notEnoughTitle: 'Moedas insuficientes',
       notEnoughBody: 'Faltam {{deficit}} moedas pra essa.',
       buyTitle: 'Resgatar "{{title}}"?',
-      buyBody: 'Gastar {{cost}} moedas. Vale agora — pra desfazer, segure o resgate em Resgates ou no calendário.',
+      buyBody: 'Gastar {{cost}} moedas. Vale agora — pra desfazer, use o calendário.',
       buyOk: 'Resgatar',
       buyFail: 'Não consegui resgatar',
       archiveTitle: 'Arquivar "{{title}}"?',
@@ -1789,6 +1786,11 @@ const pt: Translations = {
         },
         days: {
           title: 'Trocar de dia',
+          body: 'Use as setas. Tocar na data abre o calendário; a pílula Hoje volta pra hoje.',
+          ai: 'Deslizar o topo da tela troca entre as páginas Hoje e Todas. O app nunca vai pro futuro. Num dia passado dá pra registrar o que você esqueceu: conclusões, humor e resgates ficam naquele dia, e práticas criadas depois dele aparecem num bloco à parte. Puxar a tela pra baixo recarrega.',
+        },
+        daysClassic: {
+          title: 'Trocar de dia',
           body: 'Use as setas ou deslize o topo da tela. Toque na data pra voltar pra hoje.',
           ai: 'O app nunca vai pro futuro. Num dia passado dá pra registrar o que você esqueceu: conclusões, humor e resgates ficam naquele dia, e práticas criadas depois dele aparecem num bloco à parte. Puxar a tela pra baixo recarrega.',
         },
@@ -1822,10 +1824,17 @@ const pt: Translations = {
           body: 'O + resgata uma recompensa naquele dia; a seta desfaz.',
           ai: 'O resgate paga com o saldo de hoje, mesmo num dia passado. Desfazer devolve as moedas pagas.',
         },
+        // `buttons` is the default layout's, `buttonsClassic` the classic
+        // one's (Ajustes › Preferências); the guide shows only the active one.
         buttons: {
+          title: 'Botão flutuante',
+          body: 'O + dourado é onde você cria e organiza as práticas.',
+          ai: 'Ele abre "Adicionar e organizar": "Criar a minha" monta uma prática do zero e "Escolher sugerida" adota uma do catálogo. Embaixo ficam as suas práticas: toque numa pra editar, arraste pela alça pra mudar a ordem, e as arquivadas ficam no fim da lista. O calendário não tem botão flutuante: ele abre quando você toca na data, no topo.',
+        },
+        buttonsClassic: {
           title: 'Botões flutuantes',
-          body: 'O roxo abre todas as práticas; o de cima, o calendário.',
-          ai: 'Em Todas as práticas você cria, adota do catálogo, edita, ordena e arquiva. A linha "Todas as práticas", no fim da lista, abre o mesmo lugar; num dia passado, registra naquele dia.',
+          body: 'O dourado abre todas as práticas; o de cima, o calendário.',
+          ai: 'Em Todas as práticas aparecem também as que não são do dia, pra concluir; o + no topo de lá cria, adota do catálogo, edita, ordena e arquiva. A linha "Todas as práticas", no fim da lista, abre o mesmo lugar; num dia passado, registra naquele dia.',
         },
         quests: {
           title: 'Missões e metas',
@@ -2132,7 +2141,81 @@ const pt: Translations = {
   },
   tasksHub: {
     title: 'Adicionar e organizar',
-    newTask: 'Nova prática',
+    calendarA11y: 'Abrir o calendário',
+    /** The screen's guide (its (i)) — ManagePracticesGuide,
+     *  docs/informativo-de-tela.md. `items` follow
+     *  MANAGE_PRACTICES_GUIDE_ITEMS: title + body on the sheet, `ai` only in
+     *  the AI prompt. No personal data here. */
+    help: {
+      title: 'Como adicionar e organizar',
+      a11y: 'Como usar esta tela',
+      screenName: 'Adicionar e organizar (as minhas práticas)',
+      purpose: 'É onde eu crio, adoto do catálogo, edito, ordeno e arquivo as minhas práticas.',
+      examples: 'das minhas próprias práticas',
+      listLabel: 'Na lista',
+      tryIt: 'Experimente nestas práticas',
+      screenLabel: 'Na tela',
+      sampleA: 'Beber 2 L de água',
+      sampleB: 'Meditar 10 minutos',
+      sampleC: 'Ligar pra um amigo',
+      sampleArchived: 'Treino de força',
+      demoEdit: 'Aqui abriria a edição: nome, ícone, áreas, estrelas e frequência.',
+      demoReorder: 'Nova ordem! Na tela, é só arrastar pela alça. A tela Hoje segue essa ordem.',
+      demoPeriodic: 'Caiu em Periódicas. Na tela, viria a pergunta: quais dias ou quantas vezes.',
+      demoDaily: 'Caiu em Diárias: agora ela aparece todo dia em Hoje.',
+      items: {
+        edit: {
+          title: 'Toque na prática',
+          body: 'Abre a edição.',
+          ai: 'Na edição dá pra mudar nome, ícone, as áreas que ela treina com as estrelas de cada uma, a frequência e as moedas. É lá também que se arquiva.',
+        },
+        drag: {
+          title: 'Arraste pela alça',
+          body: 'As três linhas à direita mudam a ordem.',
+          ai: 'Só a alça arrasta: tocar no resto da linha edita, e deslizar rola a lista. A tela Hoje mostra as práticas nessa mesma ordem.',
+        },
+        regroup: {
+          title: 'Solte no outro grupo',
+          body: 'Muda quando a prática acontece.',
+          ai: 'Soltar em Diárias deixa a prática todo dia, na hora. Soltar em Periódicas abre a pergunta: quais dias da semana, quantas vezes por semana ou por mês. Cancelar devolve a prática pro lugar.',
+        },
+        create: {
+          title: 'Criar a minha',
+          body: 'Uma prática do zero, do seu jeito.',
+          ai: 'O formulário pede nome, ícone, as áreas que ela treina com as estrelas de cada uma e a frequência. Também dá pra criar uma prática só de moedas, sem área.',
+        },
+        suggested: {
+          title: 'Escolher sugerida',
+          body: 'O catálogo, por área. As do catálogo não contam no limite grátis.',
+          ai: 'No catálogo, o + adiciona a sugestão como está, depois de escolher a frequência. Tocar na sugestão abre o formulário pra ajustar antes: aí ela vira sua e conta no limite. Os chips filtram por área, e "Suas práticas" volta pra lista.',
+        },
+        groups: {
+          title: 'Diárias e Periódicas',
+          body: 'Diárias aparecem todo dia em Hoje; Periódicas, nos dias combinados.',
+          ai: 'Periódicas são as de dias da semana marcados, de algumas vezes por semana ou por mês. Tocar no cabeçalho recolhe ou abre o grupo. Puxar a lista pra baixo atualiza.',
+        },
+        search: {
+          title: 'Buscar',
+          body: 'A lupa procura pelo nome, na lista ou no catálogo.',
+          ai: 'No catálogo, a busca olha também a descrição. O X fecha a busca e limpa o texto.',
+        },
+        calendar: {
+          title: 'Calendário',
+          body: 'Abre o histórico do que você fez, dia a dia.',
+          ai: 'O calendário abre na frente Rotina: cada dia mostra o quanto você treinou, e tocar num dia mostra o que foi feito, com a opção de registrar o que você esqueceu.',
+        },
+        archived: {
+          title: 'Arquivadas',
+          body: 'No fim da lista. Toque pra ver e restaurar.',
+          ai: 'Arquiva-se pela edição da prática: ela sai de Hoje, mas o histórico fica. Restaurar traz de volta. A lixeira apaga pra sempre só a prática que nunca foi concluída nem está numa missão; com histórico, arquivar é a saída.',
+        },
+        limit: {
+          title: 'Plano gratuito',
+          body: 'Até 10 práticas criadas por você. As do catálogo são ilimitadas.',
+          ai: 'Perto do limite, um contador (8/10) aparece em Criar a minha. Arquivar libera vaga; restaurar uma arquivada volta a contar. O Premium tira o limite.',
+        },
+      },
+    },
     doors: {
       create: 'Criar a minha',
       createDesc: 'Nome, o que treina e com que frequência.',
@@ -2150,9 +2233,6 @@ const pt: Translations = {
       placeholderMine: 'Buscar nas suas práticas…',
       placeholderCatalog: 'Buscar no catálogo…',
     },
-    // Uma linha só, abaixo das abas: os dois gestos da lista. Concluir mora
-    // em Todas as práticas; mudar detalhe é abrir a prática.
-    lead: 'Toque pra editar. Pela alça, arraste pra ordenar; solte no outro grupo pra mudar quando acontece.',
     buckets: {
       daily: 'Diárias',
       dailyDesc: 'Todo dia, na tela Hoje',
@@ -2203,7 +2283,7 @@ const pt: Translations = {
       noMatchesBody: 'Nada corresponde a "{{query}}".',
       noMatchesCatalog: 'Nada no catálogo corresponde a "{{query}}".',
       noTasksTitle: 'Sem práticas ainda',
-      noTasksBody: 'Adicione sua primeira prática ou navegue pela aba Sugeridas.',
+      noTasksBody: 'Crie a sua ou escolha uma sugerida, aqui em cima.',
       cta: 'Nova prática',
     },
     errors: {
@@ -2214,7 +2294,76 @@ const pt: Translations = {
 
   rewardsHub: {
     title: 'Gerenciar recompensas',
-    newReward: 'Nova recompensa',
+    calendarA11y: 'Abrir o calendário',
+    doors: {
+      create: 'Criar a minha',
+      createDesc: 'Nome, preço em moedas e categoria.',
+      suggested: 'Escolher sugerida',
+      suggestedDesc: '{{count}} no catálogo, por categoria.',
+      back: 'Suas recompensas',
+    },
+    /** The screen's guide (its (i)) — ManageRewardsGuide,
+     *  docs/informativo-de-tela.md. `items` follow
+     *  MANAGE_REWARDS_GUIDE_ITEMS: title + body on the sheet, `ai` only in
+     *  the AI prompt. No personal data here. */
+    help: {
+      title: 'Como gerenciar recompensas',
+      a11y: 'Como usar esta tela',
+      screenName: 'Gerenciar recompensas',
+      purpose: 'É onde eu crio, adoto do catálogo, edito, ordeno e arquivo as recompensas da minha loja.',
+      examples: 'das minhas próprias recompensas',
+      listLabel: 'Na lista',
+      tryIt: 'Experimente nestas recompensas',
+      screenLabel: 'Na tela',
+      sampleA: 'Café especial',
+      sampleB: 'Episódio de série',
+      sampleC: 'Jantar fora',
+      sampleArchived: 'Pizza no sábado',
+      demoEdit: 'Aqui abriria a edição: nome, preço, ícone, categoria e compra única.',
+      demoReorder: 'Nova ordem! Na tela, é só arrastar pela alça. Na Loja, Disponíveis agora segue essa ordem.',
+      items: {
+        edit: {
+          title: 'Toque na recompensa',
+          body: 'Abre a edição.',
+          ai: 'Na edição dá pra mudar nome, preço em moedas, ícone, categoria e se é compra única. É lá também que se arquiva.',
+        },
+        drag: {
+          title: 'Arraste pela alça',
+          body: 'As três linhas à direita mudam a ordem.',
+          ai: 'Só a alça arrasta: tocar no resto da linha edita, e deslizar rola a lista. Na Loja, Disponíveis agora segue essa ordem; Quase lá e Grandes metas se ordenam pela distância do preço.',
+        },
+        create: {
+          title: 'Criar a minha',
+          body: 'Uma recompensa do zero, com o preço que você decidir.',
+          ai: 'O formulário pede nome, preço em moedas, ícone e categoria (Indulgência, Bem ou Experiência). Uma compra única sai da Loja depois do primeiro resgate.',
+        },
+        suggested: {
+          title: 'Escolher sugerida',
+          body: 'O catálogo, por categoria.',
+          ai: 'No catálogo, o + adiciona a sugestão como está; tocar nela abre o formulário pra ajustar antes. Os chips filtram por categoria, e "Suas recompensas" volta pra lista.',
+        },
+        search: {
+          title: 'Buscar',
+          body: 'A lupa procura pelo nome, na lista ou no catálogo.',
+          ai: 'No catálogo, a busca olha também a descrição. O X fecha a busca e limpa o texto.',
+        },
+        calendar: {
+          title: 'Calendário',
+          body: 'Abre os seus resgates, dia a dia.',
+          ai: 'O calendário abre na frente Vault: tocar num dia lista os resgates, com Desfazer (as moedas voltam) e "Resgatar neste dia" pra lançar um que passou. A visão Lista mostra todos em sequência.',
+        },
+        archived: {
+          title: 'Arquivadas',
+          body: 'No fim da lista. Toque pra ver e restaurar.',
+          ai: 'Arquiva-se pela edição ou segurando a recompensa na Loja: ela sai da Loja e o histórico fica. Restaurar traz de volta. A lixeira apaga pra sempre só a recompensa que nunca foi resgatada; com resgate, arquivar é a saída.',
+        },
+        limit: {
+          title: 'Plano gratuito',
+          body: 'Até 5 recompensas ativas.',
+          ai: 'As adotadas do catálogo também contam. Perto do limite, um contador (4/5) aparece em Criar a minha. Arquivar libera vaga; restaurar volta a contar. O Premium tira o limite.',
+        },
+      },
+    },
     tabs: {
       mine: 'Minhas',
       suggested: 'Sugeridas',
@@ -2225,10 +2374,6 @@ const pt: Translations = {
       placeholderMine: 'Buscar nas suas recompensas…',
       placeholderCatalog: 'Buscar no catálogo…',
     },
-    // Uma linha só, abaixo das abas: os dois gestos da lista. Comprar mora
-    // na Loja; mudar detalhe é abrir a recompensa. Só "Disponíveis agora"
-    // segue a ordem — Quase lá e Grandes metas ordenam por distância.
-    lead: 'Toque pra editar. Pela alça, arraste pra ordenar as disponíveis na Loja.',
     customChip: 'PRÓPRIA',
     // Mesmo nome do formulário ("Compra única") — "ÚNICA" sozinha lia como
     // "exclusiva".
@@ -2273,7 +2418,7 @@ const pt: Translations = {
       noMatchesBody: 'Nada corresponde a "{{query}}".',
       noMatchesCatalog: 'Nada no catálogo corresponde a "{{query}}".',
       noRewardsTitle: 'Sem recompensas ainda',
-      noRewardsBody: 'Crie sua primeira recompensa ou navegue pela aba Sugeridas.',
+      noRewardsBody: 'Crie a sua ou escolha uma sugerida, aqui em cima.',
       cta: 'Nova recompensa',
     },
     errors: {
@@ -2331,20 +2476,15 @@ const pt: Translations = {
           body: 'Disponíveis agora, Quase lá e Grandes metas.',
           ai: 'Disponíveis agora são as que o saldo paga, na ordem que você define em Gerenciar. Quase lá são as que faltam até 30% do preço. Grandes metas são o resto, das mais caras pras mais baratas.',
         },
-        add: {
-          title: 'Nova recompensa',
-          body: 'O último cartão cria uma recompensa sua.',
-          ai: 'No plano grátis cabem 5 recompensas ativas; arquivar abre espaço. Com a loja vazia, aparecem sugestões prontas pra adotar.',
-        },
         undo: {
           title: 'Desfazer depois',
-          body: 'Passou da comemoração? Desfaça no calendário ou em Resgates.',
-          ai: 'No calendário, na frente Vault, e no cartão "Resgates do dia" das Práticas, toque na seta do resgate. Em Gerenciar, o relógio abre Resgates: segure um resgate pra desfazer. Desfazer devolve o que foi pago.',
+          body: 'Passou da comemoração? Desfaça no calendário.',
+          ai: 'No calendário, na frente Vault, e no cartão "Resgates do dia" das Práticas, toque na seta do resgate. O calendário abre pelo ícone no topo de Gerenciar. Desfazer devolve o que foi pago.',
         },
         buttons: {
-          title: 'Botões flutuantes',
-          body: 'O dourado abre Gerenciar; o de cima, o calendário.',
-          ai: 'Em Gerenciar você cria, adota sugestões, edita, ordena, arquiva e vê os resgates. O calendário já abre na frente Vault.',
+          title: 'Botão flutuante',
+          body: 'O + dourado abre Gerenciar: criar a sua, escolher uma sugerida, editar e ordenar.',
+          ai: 'Em Gerenciar também ficam as arquivadas e, no topo, ao lado da busca, o calendário, que abre na frente Vault com os seus resgates.',
         },
       },
     },
@@ -2414,8 +2554,6 @@ const pt: Translations = {
       emptyBody: 'Comece pelas sugestões ou crie uma recompensa sua.',
       seeSuggestions: 'Ver sugestões',
       createOwn: 'Criar a minha',
-      addReward: 'Nova recompensa',
-      addRewardSub: 'Adicionar uma sua',
     },
     celebration: {
       eyebrow: 'RESGATADA',
@@ -3203,6 +3341,8 @@ const pt: Translations = {
     rimLabel: 'Até {{xp}}',
     rimShow: 'Mostrar o hex até {{xp}} XP',
     levelTotal: 'Nível {{level}} · {{xp}} XP no total',
+    dimHistory: 'Histórico de {{dim}}',
+    fullHistory: 'Histórico completo',
     activeDays: '{{n}} de {{total}} dias',
     activeWeeks: '{{n}} de {{total}} semanas',
     activeMonths: '{{n}} de {{total}} meses',

@@ -2,13 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import Animated, { LinearTransition, useReducedMotion } from 'react-native-reanimated';
 
 import { HexGrainToggle, HexPill, useHexGrain } from '@/components/HexGrainToggle';
 import { PeriodSelector } from '@/components/dedicacao/PeriodSelector';
 import { DayStrip } from '@/components/dedicacao/DayStrip';
 import { SubBar } from '@/components/dedicacao/SubBar';
 import { XpHexChart } from '@/components/dedicacao/XpHexChart';
+import { DimensionPillarCard } from '@/components/pillars/DimensionPillarCard';
+import { PillarActions } from '@/components/pillars/PillarActions';
 import { type SubWindow } from '@/lib/api/dedicacao';
 import { HEX_RIMS, type HexRim } from '@/lib/dedicacao/scale';
 import type { CharacterDimension, DimensionId } from '@/lib/db/types';
@@ -42,7 +43,9 @@ function byWindowXp(perDimWindow: Map<DimensionId, DimWindow>): DimensionId[] {
 /**
  * Sub-pillar **Dedicação** (Praticada). The hex leads, then the period
  * selector (the one input, sitting between the two surfaces it drives),
- * then the six dimension cards, then the history link.
+ * then the six dimension cards, then the closing card with the full history.
+ * The card anatomy born here (DimensionPillarCard) is the one Percebida and
+ * Desejada now share.
  *
  * One ruler on the whole screen — the saturation (lib/saturation.ts, 300 XP
  * per 30 days per sub, prorated to the days elapsed):
@@ -60,10 +63,9 @@ function byWindowXp(perDimWindow: Map<DimensionId, DimWindow>): DimensionId[] {
  */
 export function DedicacaoPanel({ dimensions }: Props) {
   const router = useRouter();
-  const { t, locale } = useT();
+  const { t } = useT();
   const metaLookup = useMetaLookup();
   const { width: screenWidth } = useWindowDimensions();
-  const reduceMotion = useReducedMotion();
 
   const {
     spec,
@@ -270,149 +272,101 @@ export function DedicacaoPanel({ dimensions }: Props) {
               b.windowXp - a.windowXp ||
               SUBS_BY_DIM[id].indexOf(a.subId) - SUBS_BY_DIM[id].indexOf(b.subId),
           );
-          const isExpanded = expanded.has(id);
 
+          // Header: the period's XP, big and neutral — a sum of two areas,
+          // never read against one area's 300. One row per sub: the bar with
+          // the ruler's tick, and the number lights with the same threshold
+          // that fills a hex vertex.
           return (
-            <Animated.View
+            <DimensionPillarCard
               key={id}
-              layout={reduceMotion ? undefined : LinearTransition.duration(220)}
+              dimId={id}
+              value={winXp.toLocaleString()}
+              unit=" XP"
+              faint={winXp === 0}
+              onPress={() => toggleExpand(id)}
+              expanded={expanded.has(id)}
+              subs={subs.map((sub) => {
+                const reached = sub.windowXp >= subCap && sub.windowXp > 0;
+                return {
+                  subId: sub.subId,
+                  value: sub.windowXp.toLocaleString(),
+                  reached,
+                  faint: sub.windowXp === 0,
+                  bar: <SubBar xp={sub.windowXp} cap={subCap} color={meta.color} />,
+                  a11yLabel: t(
+                    reached ? 'dedicacao.subA11yOver' : 'dedicacao.subA11yUnder',
+                    {
+                      sub: metaLookup.sub(sub.subId).label,
+                      xp: sub.windowXp.toLocaleString(),
+                      cap: capLabel,
+                    },
+                  ),
+                };
+              })}
             >
-              <Pressable
-                onPress={() => toggleExpand(id)}
-                style={({ pressed }) => [
-                  styles.attribute,
-                  pressed && { opacity: 0.85 },
-                ]}
-                accessibilityRole="button"
-                accessibilityState={{ expanded: isExpanded }}
-              >
-                {/* Header: icon + name + the period's XP, big and neutral —
-                    a sum of two areas, never read against one area's 300. */}
-                <View style={styles.attributeTop}>
-                  <View style={[styles.iconHalo, { backgroundColor: meta.bg }]}>
-                    <Ionicons name={meta.iconName as never} size={16} color={meta.color} />
-                  </View>
-                  <Text style={styles.attributeName} numberOfLines={1}>
-                    {dimLabel}
+              {/* Expanded: when the XP came in — one strip per sub, one cell
+                  per day, both painted on the same scale — plus the all-time
+                  reading and the calendar link. */}
+              <SubStrips
+                subs={subs}
+                bucketCount={bucketStarts.length}
+                elapsed={elapsedBuckets}
+                activeKey={activeKey}
+                color={meta.color}
+              />
+              <View style={styles.footerRow}>
+                <Text style={styles.levelTotal} numberOfLines={1}>
+                  {t('dedicacao.levelTotal', {
+                    level: lp.level,
+                    xp: xp.toLocaleString(),
+                  })}
+                </Text>
+                <Pressable
+                  onPress={() =>
+                    // Straight to the calendar, pre-filtered on this
+                    // dimension. Front and view travel too, because the
+                    // calendar's store is session-scoped: without them this
+                    // link could land on the Vault quarter map. The window
+                    // (granularity/offset) does not travel — the calendar's
+                    // period is navigation, not filter state.
+                    router.push({
+                      pathname: '/history',
+                      params: { dims: id, front: 'rotina', view: 'month' },
+                    })
+                  }
+                  style={({ pressed }) => [styles.detailLink, pressed && { opacity: 0.7 }]}
+                  hitSlop={4}
+                >
+                  <Text style={[styles.detailLinkText, { color: meta.color }]}>
+                    {t('dedicacao.dimHistory', { dim: dimLabel })}
                   </Text>
-                  <Text style={[styles.dimTotal, winXp === 0 && styles.faint]}>
-                    {winXp.toLocaleString()}
-                    <Text style={styles.dimTotalUnit}> XP</Text>
-                  </Text>
-                  <Ionicons
-                    name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                    size={14}
-                    color={tokens.text.dim}
-                  />
-                </View>
-
-                {/* One row per sub: name and XP above, the bar with the
-                    ruler's tick below. The number lights with the same
-                    threshold that fills a hex vertex. */}
-                {subs.map((sub) => {
-                  const subLabel = metaLookup.sub(sub.subId).label;
-                  const reached = sub.windowXp >= subCap && sub.windowXp > 0;
-                  return (
-                    <View
-                      key={sub.subId}
-                      style={styles.subBlock}
-                      accessible
-                      accessibilityLabel={t(
-                        reached ? 'dedicacao.subA11yOver' : 'dedicacao.subA11yUnder',
-                        { sub: subLabel, xp: sub.windowXp.toLocaleString(), cap: capLabel },
-                      )}
-                    >
-                      <View style={styles.subLabelRow}>
-                        <Text style={styles.subName} numberOfLines={1}>
-                          {subLabel}
-                        </Text>
-                        <Text
-                          style={[
-                            styles.subXp,
-                            reached && [styles.subXpReached, { color: meta.color }],
-                            sub.windowXp === 0 && styles.faint,
-                          ]}
-                        >
-                          {sub.windowXp.toLocaleString()}
-                        </Text>
-                      </View>
-                      <SubBar xp={sub.windowXp} cap={subCap} color={meta.color} />
-                    </View>
-                  );
-                })}
-
-                {/* Expanded: when the XP came in — one strip per sub, one
-                    cell per day, both painted on the same scale — plus the
-                    all-time reading and the calendar link. */}
-                {isExpanded && (
-                  <View style={styles.expandWrap}>
-                    <View style={styles.divider} />
-                    <SubStrips
-                      subs={subs}
-                      bucketCount={bucketStarts.length}
-                      elapsed={elapsedBuckets}
-                      activeKey={activeKey}
-                      color={meta.color}
-                    />
-                    <View style={styles.footerRow}>
-                      <Text style={styles.levelTotal} numberOfLines={1}>
-                        {t('dedicacao.levelTotal', {
-                          level: lp.level,
-                          xp: xp.toLocaleString(),
-                        })}
-                      </Text>
-                      <Pressable
-                        onPress={() =>
-                          // Straight to the calendar, pre-filtered on this
-                          // dimension. Front and view travel too, because the
-                          // calendar's store is session-scoped: without them
-                          // this link could land on the Vault quarter map. The
-                          // window (granularity/offset) does not travel — the
-                          // calendar's period is navigation, not filter state.
-                          router.push({
-                            pathname: '/history',
-                            params: { dims: id, front: 'rotina', view: 'month' },
-                          })
-                        }
-                        style={({ pressed }) => [
-                          styles.detailLink,
-                          pressed && { opacity: 0.7 },
-                        ]}
-                        hitSlop={4}
-                      >
-                        <Text style={[styles.detailLinkText, { color: meta.color }]}>
-                          {locale === 'pt' ? `Histórico de ${dimLabel}` : `${dimLabel} history`}
-                        </Text>
-                        <Ionicons name="arrow-forward" size={12} color={meta.color} />
-                      </Pressable>
-                    </View>
-                  </View>
-                )}
-              </Pressable>
-            </Animated.View>
+                  <Ionicons name="arrow-forward" size={12} color={meta.color} />
+                </Pressable>
+              </View>
+            </DimensionPillarCard>
           );
         })}
       </View>
 
-      {/* History link — after the cards, matching Avaliação's CTA position. */}
-      <View style={styles.historyLinkWrap}>
-        <Pressable
-          onPress={() =>
-            router.push({
-              pathname: '/history',
-              params: { front: 'rotina', view: 'month' },
-            })
-          }
-          hitSlop={6}
-          style={({ pressed }) => [styles.historyLink, pressed && { opacity: 0.6 }]}
-          accessibilityRole="link"
-        >
-          <Text style={styles.historyLinkText}>
-            {locale === 'pt' ? 'Ver histórico completo' : 'Open full history'}
-          </Text>
-          <Ionicons name="arrow-forward" size={12} color={tokens.text.mid} />
-        </Pressable>
-      </View>
+      {/* The full history closes the panel as a row of the same card the
+          other portraits end with — it used to be a loose link under the
+          list, a fourth visual language on one tab. */}
+      <PillarActions
+        accent={tokens.semantic.xp2}
+        actions={[
+          {
+            key: 'history',
+            icon: 'calendar-outline',
+            label: t('dedicacao.fullHistory'),
+            onPress: () =>
+              router.push({
+                pathname: '/history',
+                params: { front: 'rotina', view: 'month' },
+              }),
+          },
+        ]}
+      />
     </View>
   );
 }
@@ -483,94 +437,7 @@ const styles = StyleSheet.create({
   },
   wrap: { gap: tokens.space[3] },
   hexWrap: { alignItems: 'center', gap: tokens.space[2] },
-  historyLinkWrap: { alignItems: 'center' },
-  historyLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-  },
-  historyLinkText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
-    color: tokens.text.mid,
-    letterSpacing: 0.3,
-  },
   list: { gap: tokens.space[2] },
-  attribute: {
-    paddingVertical: tokens.space[3],
-    paddingHorizontal: tokens.space[3],
-    borderRadius: tokens.radius.md,
-    gap: tokens.space[2],
-    backgroundColor: 'rgba(255,255,255,0.025)',
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  attributeTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[2],
-  },
-  iconHalo: {
-    width: 28,
-    height: 28,
-    borderRadius: tokens.radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  attributeName: {
-    flex: 1,
-    minWidth: 0,
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 15,
-    color: tokens.text.hi,
-  },
-  dimTotal: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 18,
-    letterSpacing: -0.2,
-    color: tokens.text.hi,
-    fontVariant: ['tabular-nums'],
-  },
-  dimTotalUnit: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 11,
-    letterSpacing: 0,
-    color: tokens.text.dim,
-  },
-  faint: { color: tokens.text.faint },
-  subBlock: { gap: 3 },
-  subLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: tokens.space[2],
-  },
-  subName: {
-    flex: 1,
-    minWidth: 0,
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 12,
-    color: tokens.text.mid,
-  },
-  subXp: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
-    color: tokens.text.mid,
-    fontVariant: ['tabular-nums'],
-  },
-  subXpReached: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 13,
-  },
-  expandWrap: {
-    gap: tokens.space[2],
-    marginTop: 2,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: tokens.border.divider,
-  },
   stripBlock: { gap: 4 },
   stripLabelRow: {
     flexDirection: 'row',

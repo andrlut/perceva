@@ -16,6 +16,8 @@ import { HexChart } from '@/components/HexChart';
 import { HexGrainToggle, HexPill } from '@/components/HexGrainToggle';
 import { HexSeriesLegend } from '@/components/HexSeriesLegend';
 import { PillarSwitcher, type PillarKey } from '@/components/PillarSwitcher';
+import { DimensionPillarCard, ScoreBar } from '@/components/pillars/DimensionPillarCard';
+import { PillarActions } from '@/components/pillars/PillarActions';
 import type { WindowSpec } from '@/lib/api/dedicacao';
 import type { DimensionId, SubId } from '@/lib/db/types';
 import { windowChipLabels } from '@/lib/dedicacao/windowLabel';
@@ -24,7 +26,9 @@ import { useT } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { useModules, type ModuleKey } from '@/lib/modules';
 import type { HexGrain } from '@/lib/settings';
+import { formatScore } from '@/lib/util/formatScore';
 import { tokens } from '@/theme';
+import { DIMENSION_META } from '@/theme/dimensions';
 
 /**
  * The guide of the Eu tab — docs/informativo-de-tela.md.
@@ -42,18 +46,20 @@ import { tokens } from '@/theme';
 
 const HELP = 'hero.help';
 
-/** Every option of the Eu tab, in the guide's order. */
+/** Every option of the Eu tab, in the guide's order. The area cards come
+ *  right after the legend: all three portraits share them now. Mood left the
+ *  tab (Home and the calendar keep it), so it has no item here. */
 export const HERO_GUIDE_ITEMS = [
   'pillars',
   'grain',
   'hexIcons',
   'profile',
   'legend',
+  'cards',
   'assessment',
-  'mood',
   'period',
   'ruler',
-  'cards',
+  'history',
   'north',
   'path',
 ] as const;
@@ -160,8 +166,8 @@ export function HeroGuide() {
         />
       ),
     },
+    cards: { icon: 'albums-outline', replica: <CardReplica /> },
     assessment: { icon: 'create-outline', replica: <AssessmentReplica /> },
-    mood: { icon: 'happy-outline' },
     period: {
       icon: 'calendar-outline',
       iconColor: tokens.semantic.xp2,
@@ -183,7 +189,11 @@ export function HeroGuide() {
         </View>
       ),
     },
-    cards: { icon: 'albums-outline', iconColor: tokens.semantic.xp2 },
+    history: {
+      icon: 'time-outline',
+      iconColor: tokens.semantic.xp2,
+      replica: <HistoryReplica />,
+    },
     north: { icon: 'compass-outline', iconColor: tokens.semantic.coin },
     path: { icon: 'flag-outline', iconColor: tokens.semantic.coin },
   };
@@ -292,18 +302,66 @@ function PeriodReplica() {
   );
 }
 
-/** The Avaliação buttons: update the self-assessment, take the questionnaire. */
+const noop = () => {};
+
+/** One area card, Percebida's reading — the real card, on sample scores.
+ *  Full-width on the tab, so it goes in as a miniature (GuideFit). */
+function CardReplica() {
+  const naturalWidth = useWindowDimensions().width - 32;
+  const color = DIMENSION_META.health.color;
+  return (
+    <GuideFit naturalWidth={naturalWidth}>
+      <DimensionPillarCard
+        dimId="health"
+        value={formatScore(6.5)}
+        unit="/10"
+        onPress={noop}
+        subs={[
+          { subId: 'sleep', value: formatScore(3.5), bar: <ScoreBar fill={3.5 / 5} color={color} /> },
+          { subId: 'nutrition', value: formatScore(3), bar: <ScoreBar fill={3 / 5} color={color} /> },
+        ]}
+      />
+    </GuideFit>
+  );
+}
+
+/** Percebida's closing card, as it reads once the questionnaire was taken. */
 function AssessmentReplica() {
   const { t } = useT();
+  const naturalWidth = useWindowDimensions().width - 32;
   return (
-    <View style={styles.assess}>
-      <View style={styles.assessMain}>
-        <Text style={styles.assessMainText}>{t('avaliacao.selfAssessmentCta')}</Text>
-      </View>
-      <View style={styles.assessDashed}>
-        <Text style={styles.assessDashedText}>{t('avaliacao.questionnaireFirst')}</Text>
-      </View>
-    </View>
+    <GuideFit naturalWidth={naturalWidth}>
+      <PillarActions
+        accent={tokens.brand.violet2}
+        actions={[
+          { key: 'self', icon: 'create-outline', label: t('avaliacao.actions.self'), onPress: noop },
+          {
+            key: 'questionnaire',
+            icon: 'clipboard-outline',
+            label: t('avaliacao.actions.questionnaire'),
+            value: t('avaliacao.actions.daysAgo', { count: 12 }),
+            onPress: noop,
+          },
+          { key: 'mirror', icon: 'git-compare-outline', label: t('avaliacao.actions.mirror'), onPress: noop },
+        ]}
+      />
+    </GuideFit>
+  );
+}
+
+/** Praticada's closing card: the full history. */
+function HistoryReplica() {
+  const { t } = useT();
+  const naturalWidth = useWindowDimensions().width - 32;
+  return (
+    <GuideFit naturalWidth={naturalWidth}>
+      <PillarActions
+        accent={tokens.semantic.xp2}
+        actions={[
+          { key: 'history', icon: 'calendar-outline', label: t('dedicacao.fullHistory'), onPress: noop },
+        ]}
+      />
+    </GuideFit>
   );
 }
 
@@ -317,34 +375,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
     color: tokens.text.hi,
-  },
-  assess: { gap: 8 },
-  assessMain: {
-    minHeight: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: tokens.radius.md,
-    backgroundColor: tokens.brand.violet,
-    paddingHorizontal: 10,
-  },
-  assessMainText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 13,
-    color: tokens.text.hi,
-  },
-  assessDashed: {
-    minHeight: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: tokens.radius.md,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: tokens.border.strong,
-    paddingHorizontal: 10,
-  },
-  assessDashedText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 12,
-    color: tokens.text.base,
   },
 });

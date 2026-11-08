@@ -1016,7 +1016,8 @@ export default function CalendarScreen() {
             },
             accessibilityLabel: t('calendar.filter.open'),
             size: FILTER_FAB_SIZE,
-            tone: 'violet',
+            // Gold, like every primary floating button in the app.
+            tone: 'gold',
             wrap: (node) => (
               <View>
                 {node}
@@ -1187,6 +1188,9 @@ const styles = StyleSheet.create({
     color: tokens.brand.violet2,
     fontFamily: 'Manrope_700Bold',
   },
+  // The active-filter count on the gold filter button. Gold on gold would
+  // vanish, so it flips to the deep violet (the same in both themes) with
+  // white digits: ~8:1, AA at 11px.
   badge: {
     position: 'absolute',
     top: -2,
@@ -1197,13 +1201,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: tokens.semantic.coin,
+    backgroundColor: tokens.brand.violetDeep,
     borderWidth: 2,
     borderColor: tokens.bg.deep,
   },
   badgeText: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 11,
-    color: '#1A1400',
+    color: '#FFFFFF',
   },
 });
