@@ -88,11 +88,12 @@ function pensar(t: number, prop: Proporcao, o: PoseOpts): Pose {
   // mão no queixo: IK do braço da frente até um ponto logo abaixo do queixo
   const pose: Pose = { ...base, vista, cabeca: 9 + Math.sin(t / 40) * 2, tronco: 3 };
   const j = fk(prop, pose);
-  // o punho logo abaixo do queixo, o nó dos dedos no queixo
-  const alvo: P = [j.boca[0] + prop.cabecaLarg * 0.25, j.queixo[1] + prop.mao * 0.6];
-  const [b, a] = ik2(j.ombro[1], alvo, prop.braco, prop.antebraco, 'mais-x');
-  // o outro braço cruza o peito (segura o cotovelo)
-  return { ...pose, ombro: [12, b + (pose.tronco ?? 0)], cotovelo: [70, a - b], punho: [0, -20], mao: ['solta', 'fechada'], bracoNaFrente: [false, true] };
+  // o punho logo abaixo do queixo (o nó dos dedos encosta nele); de 3/4 a mão da frente vem do
+  // lado −x, cruza o peito, e o cotovelo fica embaixo
+  const alvo: P = [j.boca[0], j.queixo[1] + prop.mao * 0.7];
+  const [b, a] = ik2(j.ombro[1], alvo, prop.braco, prop.antebraco, 'baixo');
+  // o outro braço solto ao lado do corpo
+  return { ...pose, ombro: [4, b + (pose.tronco ?? 0)], cotovelo: [10, a - b], punho: [0, -25], mao: ['solta', 'fechada'], bracoNaFrente: [false, true] };
 }
 
 // ------------------------------------------------------------------ andar / correr
@@ -260,35 +261,72 @@ function beber(t: number, prop: Proporcao, o: PoseOpts): Pose {
   const baixo: P = ao(j.ombro[1], 18, prop.braco + prop.antebraco * 0.75);
   const alvo: P = [lerp(baixo[0], boca[0], u), lerp(baixo[1], boca[1], u)];
   const tr = pose.tronco ?? 0;
-  const [b, a] = ik2(j.ombro[1], alvo, prop.braco, prop.antebraco, 'mais-x');
+  // cotovelo EMBAIXO (com 'mais-x' ele subia até o ombro e o gole virava brinde)
+  const [b, a] = ik2(j.ombro[1], alvo, prop.braco, prop.antebraco, 'baixo');
   return { ...pose, ombro: [base.ombro![0], b + tr], cotovelo: [base.cotovelo![0], a - b], punho: [0, -50 * u - 10], mao: ['solta', 'segura'], bracoNaFrente: [false, u > 0.3] };
 }
 
 /**
  * Tocar o rosto (o dedo que aperta a pele e ela cede — o detalhe que o André elogiou no
  * colágeno). Ciclo de 48 quadros: a mão sobe, o indicador encosta na bochecha, aperta 2 vezes
- * (a pele afunda e volta), a mão desce. `toque` (0..1) sai em `fecha`? Não: o estilo lê a
- * força do aperto pela distância do dedo ao ponto da bochecha (`pontoBochecha`).
+ * (a pele afunda e volta; mais fundo nos quadros 18 e 31), a mão desce. A força sai em
+ * `Pose.aperto` e a ponta do dedo (`j.dedos[1]`, punho reto) cai EXATAMENTE na bochecha: 5% da
+ * cabeça fora com o dedo parado, 3% pra dentro no fundo do aperto, na direção do centro da cabeça.
  */
 function tocarRosto(t: number, prop: Proporcao, o: PoseOpts): Pose {
-  // de 3/4: de frente o cotovelo teria que vir pra câmera (o 2D não encurta osso)
-  const vista = o.vista ?? 'tres-quartos';
+  const vista = o.vista ?? 'frente';
   const base = parado(t, prop, { ...o, vista });
   const T = 48;
   const k = (((t + (o.fase ?? 0)) % T) + T) % T;
   const sobe = k < 10 ? ease(k / 10) : k < 40 ? 1 : 1 - ease((k - 40) / 8);
-  const aperto = k >= 12 && k < 38 ? Math.max(0, Math.sin(((k - 12) / 13) * Math.PI)) : 0;
+  // dois apertos (fundo nos quadros ~18 e ~31)
+  const aperto = k >= 12 && k < 38 ? Math.abs(Math.sin(((k - 12) / 13) * Math.PI)) : 0;
   const pose: Pose = { ...base, vista, cabeca: -3 - aperto * 2 };
   const j = fk(prop, pose);
-  const alvoBochecha = j.bochecha;
-  // o dedo para 5% da cabeça FORA da bochecha e entra até 3% quando aperta
-  const fora = prop.cabecaLarg * (0.05 - 0.08 * aperto);
-  const alvo: P = [alvoBochecha[0] + fora, alvoBochecha[1] + prop.cabeca * 0.02];
-  const baixo: P = ao(j.ombro[1], 8, prop.braco + prop.antebraco + prop.mao * 0.6);
-  const meta: P = [lerp(baixo[0], alvo[0], sobe), lerp(baixo[1], alvo[1], sobe)];
-  // IK até a PONTA do dedo: o antebraço + a mão viram um osso só (punho reto)
-  const [b, a] = ik2(j.ombro[1], meta, prop.braco, prop.antebraco + prop.mao * 0.85, 'mais-x');
-  return { ...pose, ombro: [base.ombro![0], b + (pose.tronco ?? 0)], cotovelo: [base.cotovelo![0], a - b], punho: [base.punho?.[0] ?? 0, 0], mao: ['solta', sobe > 0.6 ? 'aponta' : 'solta'], bracoNaFrente: [false, sobe > 0.2] };
+  const bo = j.bochecha;
+  // pra fora = do centro da cabeça pra bochecha (de frente, pra +x; de 3/4, a bochecha que vem
+  // pra câmera fica no meio do rosto: o "fora" é pra câmera, que no 2D é ficar em cima do ponto)
+  const nx = bo[0] - j.cabeca[0];
+  const ny = bo[1] - j.cabeca[1];
+  const nn = Math.hypot(nx, ny) || 1;
+  const borda = vista === 'frente' ? 1 : 0.35;
+  const fora = prop.cabecaLarg * (0.05 - 0.08 * aperto) * borda;
+  const alvo: P = [bo[0] + (nx / nn) * fora, bo[1] + (ny / nn) * fora];
+  const baixo: P = ao(j.ombro[1], vista === 'frente' ? 8 : -4, prop.braco + prop.antebraco + prop.mao * 0.6);
+  let ombroAbs: number;
+  let anteAbs: number;
+  let dobra = 0;
+  let enc = 1;
+  if (vista === 'frente') {
+    // De frente: o braço aponta pra câmera (escorço até 0,55), o cotovelo fica um pouco pra fora e
+    // abaixo do ombro, o PUNHO abaixo e pra fora da bochecha e a mão dobra pra cima até ela. Sem o
+    // escorço, o cotovelo só tinha como subir acima do ombro.
+    enc = lerp(1, 0.55, sobe);
+    const inc = 32 * (Math.PI / 180);
+    const punhoAlvo: P = [alvo[0] + Math.sin(inc) * prop.mao, alvo[1] + Math.cos(inc) * prop.mao];
+    const meta: P = [lerp(baixo[0], punhoAlvo[0], sobe), lerp(baixo[1], punhoAlvo[1], sobe)];
+    [ombroAbs, anteAbs] = ik2(j.ombro[1], meta, prop.braco * enc, prop.antebraco, 'mais-x');
+    const punhoP: P = ao(ao(j.ombro[1], ombroAbs, prop.braco * enc), anteAbs, prop.antebraco);
+    dobra = angDe(punhoP, alvo) - anteAbs;
+    dobra = (((((dobra + 180) % 360) + 360) % 360) - 180) * sobe;
+  } else {
+    // De 3/4: a mão da frente (lado −x) cruza o peito com o cotovelo embaixo; punho reto, IK até a
+    // ponta do dedo (antebraço + mão inteira viram um osso só, j.dedos cai na bochecha)
+    const meta: P = [lerp(baixo[0], alvo[0], sobe), lerp(baixo[1], alvo[1], sobe)];
+    [ombroAbs, anteAbs] = ik2(j.ombro[1], meta, prop.braco, prop.antebraco + prop.mao, 'baixo');
+  }
+  return {
+    ...pose,
+    ombro: [base.ombro![0], ombroAbs + (pose.tronco ?? 0)],
+    cotovelo: [base.cotovelo![0], anteAbs - ombroAbs],
+    punho: [base.punho?.[0] ?? 0, dobra],
+    encurta: [1, enc],
+    // o indicador só estica quando a mão já está no rosto (no meio do caminho, dedo em riste
+    // com o dorso pra câmera lê como gesto feio)
+    mao: ['solta', sobe > 0.9 ? 'aponta' : 'solta'],
+    bracoNaFrente: [false, sobe > 0.2],
+    aperto: sobe > 0.9 ? aperto : 0,
+  };
 }
 
 

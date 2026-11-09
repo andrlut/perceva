@@ -16,7 +16,10 @@
 // esquerda, o desenho espelha inteiro (`espelho`), a pose não muda.
 //
 // Membros: índice 0 = o de TRÁS (desenhado antes do tronco) e 1 = o da FRENTE (depois do
-// tronco). De frente, 0 = o da esquerda da tela, 1 = o da direita.
+// tronco). De frente, 0 = o da esquerda da tela, 1 = o da direita. De 3/4 e de perfil (olhando
+// pra +x) o da FRENTE — o lado que vem pra câmera — fica em −x e o de TRÁS em +x, atrás do peito
+// (rodada 2, 2026-11-09: era o contrário, e todo gesto no rosto saía com o cotovelo na altura do
+// ombro; agora a mão da frente cruza o peito até a boca/queixo, com o cotovelo embaixo).
 
 export type P = [number, number];
 export type Vista = 'frente' | 'tres-quartos' | 'perfil';
@@ -83,8 +86,20 @@ export type Pose = {
   mao?: [Mao, Mao];
   /** 0..1: olhos fechados (piscar, dormir, careta de esforço) */
   fecha?: number;
+  /**
+   * 0..1: o quanto o dedo afunda a pele em `bochecha` (só no `tocarRosto`). A pose diz a força; o
+   * estilo desenha a pele cedendo (anel de sombra, a borda que estufa) proporcional a ela.
+   */
+  aperto?: number;
   /** o braço passa NA FRENTE da cabeça (mão na boca, dedo no rosto) */
   bracoNaFrente?: [boolean, boolean];
+  /**
+   * Escorço do BRAÇO (ombro → cotovelo), 0,45..1: o braço que aponta pra câmera aparece mais curto.
+   * É o truque do 2D pra mão no rosto de frente (o cotovelo vem pra câmera); sem ele, o cotovelo
+   * só tem como ir pra cima do ombro. O estilo desenha o braço entre as juntas como sempre (a
+   * largura não muda) e pode escurecer um tico a dobra do cotovelo quando `encurta` < 0,8.
+   */
+  encurta?: [number, number];
 };
 
 /** Saída do FK: onde fica cada junta (unidades, chão y = 0) e o ângulo absoluto de cada osso. */
@@ -137,6 +152,10 @@ export type Juntas = {
   amassa: number;
   mao: [Mao, Mao];
   fecha: number;
+  /** 0..1: a força do dedo na bochecha (ver Pose.aperto) */
+  aperto: number;
+  /** escorço de cada braço (ver Pose.encurta): 1 = comprimento inteiro */
+  encurta: [number, number];
   bracoNaFrente: [boolean, boolean];
   /** altura de pé do boneco (unidades) — pra caixa do desenho */
   altura: number;
@@ -151,13 +170,16 @@ export const acima = (o: P, a: number, len: number): P => [o[0] + Math.sin(a * R
 export const LARGURA: Record<Vista, number> = { frente: 1, 'tres-quartos': 0.55, perfil: 0.18 };
 
 /**
- * Onde ficam boca, bochecha da frente e olhos, em frações da cabeça (x × cabecaLarg a partir do
- * centro, y × cabeca a partir do centro, pra baixo). De 3/4 o rosto gira pra +x; de perfil, mais.
+ * Onde ficam boca, bochecha e olhos, em frações da cabeça (x × cabecaLarg a partir do centro,
+ * y × cabeca a partir do centro, pra baixo). De 3/4 o rosto gira pra +x; de perfil, mais.
+ * `bochecha` é a que a MÃO DA FRENTE (1) aperta: de frente, a da direita da tela, perto da borda
+ * (a borda do rosto cede junto); de 3/4 e perfil, a bochecha que vem pra câmera, entre o nariz e
+ * a orelha. Sempre na altura da ponta do nariz (0,16 abaixo do centro), nunca colada no olho.
  */
 export const ROSTO: Record<Vista, { boca: P; bochecha: P; olhos: P }> = {
-  frente: { boca: [0, 0.27], bochecha: [0.34, 0.12], olhos: [0, 0.02] },
-  'tres-quartos': { boca: [0.2, 0.27], bochecha: [0.38, 0.1], olhos: [0.16, 0.02] },
-  perfil: { boca: [0.4, 0.27], bochecha: [0.3, 0.1], olhos: [0.3, 0.02] },
+  frente: { boca: [0, 0.27], bochecha: [0.36, 0.16], olhos: [0, 0.02] },
+  'tres-quartos': { boca: [0.2, 0.27], bochecha: [-0.08, 0.17], olhos: [0.16, 0.02] },
+  perfil: { boca: [0.4, 0.27], bochecha: [0.12, 0.17], olhos: [0.3, 0.02] },
 };
 
 /** Pose → juntas. Puro e barato (chamado a cada quadro). */
@@ -194,11 +216,13 @@ export function fk(prop: Proporcao, pose: Pose = {}): Juntas {
   const bochecha = naCabeca(rosto.bochecha[0] * W, rosto.bochecha[1] * Hc);
   const olhos = naCabeca(rosto.olhos[0] * W, rosto.olhos[1] * Hc);
 
-  // ombros e quadris: perpendiculares à coluna, abertos pela vista. De perfil/3-4 o de trás
-  // fica um tico atrás (−x) e o da frente um tico à frente: o corpo tem volume.
+  // ombros e quadris: perpendiculares à coluna, abertos pela vista. De frente, 0 à esquerda e 1
+  // à direita; de 3/4 e perfil (olhando pra +x) o da frente (1) vem pra câmera do lado −x e o de
+  // trás (0) fica em +x, atrás do peito.
   // a linha dos ombros é perpendicular à coluna (gira com o tronco); a dos quadris é horizontal
+  const lado = vista === 'frente' ? 1 : -1;
   const perp = (o: P, half: number, i: number, giro: number): P => {
-    const s = i === 0 ? -1 : 1;
+    const s = (i === 0 ? -1 : 1) * lado;
     return [o[0] + Math.cos(giro * RAD) * half * s, o[1] + Math.sin(giro * RAD) * half * s];
   };
   const halfO = prop.ombros * w * (1 + 0.05 * amassa);
@@ -213,7 +237,8 @@ export function fk(prop: Proporcao, pose: Pose = {}): Juntas {
   const braco: [number, number] = [ombroR[0] - tronco, ombroR[1] - tronco];
   const antebraco: [number, number] = [braco[0] + cotov[0], braco[1] + cotov[1]];
   const mao: [number, number] = [antebraco[0] + punhoR[0], antebraco[1] + punhoR[1]];
-  const cotovelo: [P, P] = [ao(ombro[0], braco[0], prop.braco), ao(ombro[1], braco[1], prop.braco)];
+  const enc: [number, number] = [Math.max(0.45, Math.min(1, pose.encurta?.[0] ?? 1)), Math.max(0.45, Math.min(1, pose.encurta?.[1] ?? 1))];
+  const cotovelo: [P, P] = [ao(ombro[0], braco[0], prop.braco * enc[0]), ao(ombro[1], braco[1], prop.braco * enc[1])];
   const punho: [P, P] = [ao(cotovelo[0], antebraco[0], prop.antebraco), ao(cotovelo[1], antebraco[1], prop.antebraco)];
   const dedos: [P, P] = [ao(punho[0], mao[0], prop.mao), ao(punho[1], mao[1], prop.mao)];
 
@@ -254,6 +279,8 @@ export function fk(prop: Proporcao, pose: Pose = {}): Juntas {
     amassa,
     mao: pose.mao ?? ['solta', 'solta'],
     fecha: pose.fecha ?? 0,
+    aperto: pose.aperto ?? 0,
+    encurta: enc,
     bracoNaFrente: pose.bracoNaFrente ?? [false, false],
     altura: alturaDe(prop),
   };
@@ -280,6 +307,8 @@ export function mistura(a: Pose, b: Pose, t: number): Pose {
     amassa: n(a.amassa, b.amassa),
     mao: k < 0.5 ? a.mao : b.mao,
     fecha: n(a.fecha, b.fecha),
+    aperto: n(a.aperto, b.aperto),
+    encurta: [n(a.encurta?.[0] ?? 1, b.encurta?.[0] ?? 1), n(a.encurta?.[1] ?? 1, b.encurta?.[1] ?? 1)],
     bracoNaFrente: k < 0.5 ? a.bracoNaFrente : b.bracoNaFrente,
   };
 }

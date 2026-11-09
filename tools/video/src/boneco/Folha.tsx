@@ -46,12 +46,8 @@ export const Boneco: React.FC<BonecoProps> = ({ estilo, pessoa, roupa, acao, t, 
   // caixa: sobra pra braço levantado e salto em cima, e pros lados
   const top = -H * 1.45;
   const w = H * 1.1;
-  let toque: { ponto: [number, number]; forca: number } | undefined;
-  if (acao === 'tocarRosto' && j.mao[1] === 'aponta') {
-    const ponto = j.bochecha;
-    const d = Math.hypot(j.dedos[1][0] - ponto[0], j.dedos[1][1] - ponto[1]);
-    toque = { ponto, forca: Math.max(0, Math.min(1, 1 - d / (prop.cabecaLarg * 0.09))) };
-  }
+  // o dedo na bochecha: a força vem da pose (Pose.aperto), o ponto do esqueleto
+  const toque = acao === 'tocarRosto' && j.mao[1] === 'aponta' ? { ponto: j.bochecha, forca: j.aperto } : undefined;
   const elev = Math.max(0, -(pose.y ?? 0));
   return (
     <svg
@@ -190,7 +186,7 @@ export const BonecoAcoes: React.FC<FolhaProps> = ({ estilo: id }) => {
       <Rotulo y={1250}>O DEDO NA PELE · HUMOR</Rotulo>
       {/* close: o boneco grande, cortado no peito (o recorte é a caixa) */}
       <div style={{ position: 'absolute', left: 60, top: 1300, width: 420, height: 560, overflow: 'hidden', borderRadius: 28, background: C.surface }}>
-        <Boneco estilo={e} pessoa={marina} roupa={roupaDe(marina, 'casa')} acao="tocarRosto" t={25} humor="ok" altura={1250} x={210} y={1375} uid="toque" sombra={false} />
+        <Boneco estilo={e} pessoa={marina} roupa={roupaDe(marina, 'casa')} acao="tocarRosto" t={18} opts={{ vista: 'frente' }} humor="ok" altura={1250} x={210} y={1375} uid="toque" sombra={false} />
       </div>
       {humores.map((h, i) => {
         const col = i % 3;
@@ -264,7 +260,7 @@ export const BonecoClip: React.FC<FolhaProps> = ({ estilo: id }) => {
   return (
     <AbsoluteFill style={{ background: C.deep }}>
       <LugarNitido lugar={banheiro} p={p} parte="fundo" />
-      <Boneco estilo={e} pessoa={marina} roupa={roupaDe(marina, 'casa')} acao="tocarRosto" t={t} opts={{ vista: 'tres-quartos' }} humor="ok" altura={2300} x={540} y={1920 + 2300 * 0.42} uid="clip-marina" sombra={false} />
+      <Boneco estilo={e} pessoa={marina} roupa={roupaDe(marina, 'casa')} acao="tocarRosto" t={t} opts={{ vista: 'frente' }} humor="ok" altura={2300} x={540} y={1920 + 2300 * 0.42} uid="clip-marina" sombra={false} />
       <Etiqueta texto={e.nome} />
     </AbsoluteFill>
   );

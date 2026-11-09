@@ -67,7 +67,8 @@ export const COR = {
   violetaFundo: '#4B2FCC',
   branco: '#F4F5FF',
   grafite: '#2B3050',
-  marinho: '#1C2350',
+  // clareado na rodada 2: #1C2350 sumia nos fundos #0A0E26–#1A1F44 (os três estilos clareavam por conta)
+  marinho: '#283272',
   jeans: '#3E5BA8',
   jeansClaro: '#6F8FD6',
   bege: '#E9D8B8',
