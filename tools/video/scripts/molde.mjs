@@ -518,7 +518,7 @@ function lintFase3(where, l, lines, i, lang, fase3, errors, warns) {
   only(['lente'], ['cena', 'dentro'], 'só cena e dentro');
   only(['passos', 'medidor', 'elenco'], ['faz'], 'só faz');
   only(['fluxos', 'divide', 'regioes', 'origem', 'reserva'], ['dentro'], 'só dentro, plano corpo');
-  only(['plano'], ['cena', 'dentro', 'pensa'], 'cena e pensa: fechado; dentro: corpo ou lupa');
+  only(['plano'], ['cena', 'dentro', 'pensa', 'faz'], 'cena, pensa e faz: fechado; dentro: corpo ou lupa');
   only(['pessoa'], ['dentro'], 'só dentro, plano lupa');
   if (l.scene === 'cena' && p.plano !== undefined) {
     if (p.plano !== 'fechado') errors.push(where(id, `plano "${p.plano}" na cena: só "fechado" (corpo e lupa são do dentro)`));
@@ -526,12 +526,28 @@ function lintFase3(where, l, lines, i, lang, fase3, errors, warns) {
   }
   // pensa fechado (rodada 2): ela do peito pra cima atrás do balcão do lugar, o balão junto da cabeça
   if (l.scene === 'pensa' && p.plano !== undefined && p.plano !== 'fechado') errors.push(where(id, `plano "${p.plano}" no pensa: só "fechado"`));
+  // faz fechado (acabamento): a câmera perto (zoom 1,35); o x do elenco passa a ser o x na tela
+  if (l.scene === 'faz' && p.plano !== undefined && p.plano !== 'fechado') errors.push(where(id, `plano "${p.plano}" no faz: só "fechado"`));
   // run.casas (rodada 2): o calendário para nessa casa ("uns dias" = 4–7, "semanas" = 35)
   for (const [j, o] of (Array.isArray(p.objects) ? p.objects : []).entries()) {
     const casas = o?.run?.casas;
     if (casas === undefined) continue;
     if (o.p !== 'calendario') errors.push(where(id, `objects[${j}].run.casas só na peça calendario (é a casa onde ele para), não em "${o.p}"`));
     if (!isInt(casas, ...catalog.calendarioCasas)) errors.push(where(id, `objects[${j}].run.casas ${casas} (inteiro de ${catalog.calendarioCasas.join(' a ')})`));
+  }
+  // acabamento: `run` no relógio para os ponteiros numa hora só ("o mesmo horário"); deixa nele não anda nada
+  for (const [j, o] of (Array.isArray(p.objects) ? p.objects : []).entries())
+    if (o?.p === 'relogio' && o.run && (o.run.cue !== undefined || o.run.ate !== undefined))
+      warns.push(where(id, `objects[${j}]: run no relogio só PARA os ponteiros (8 h, a fala inteira) — run.cue/run.ate não fazem nada aqui (use "run": {})`));
+  // acabamento: a pessoa da frente do card do verso (sem, feliz de braços pra cima — como sempre)
+  if (p.frente !== undefined) {
+    if (l.scene !== 'verso') errors.push(where(id, `frente não existe na cena "${l.scene}" (só no verso: a pessoa da frente do card)`));
+    if (!p.frente || typeof p.frente !== 'object' || Array.isArray(p.frente)) errors.push(where(id, 'frente precisa de { mood?, arms? }'));
+    else {
+      for (const k of Object.keys(p.frente)) if (!['mood', 'arms'].includes(k)) errors.push(where(id, `frente.${k} não existe (mood, arms)`));
+      if (p.frente.mood !== undefined && !MOODS.includes(p.frente.mood)) errors.push(where(id, `frente.mood "${p.frente.mood}" (${MOODS.join(', ')})`));
+      if (p.frente.arms !== undefined && !catalog.arms.includes(p.frente.arms)) errors.push(where(id, `frente.arms "${p.frente.arms}" (${catalog.arms.join(', ')})`));
+    }
   }
   const nextAmb = lines[i + 1]?.props?.ambiente;
   const ctx = { holding: p.holding, amb: p.ambiente, nextAmb };

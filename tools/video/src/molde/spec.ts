@@ -21,6 +21,8 @@ export type PieceName = string;
  * (default: a deixa da própria peça, ou o começo da fala) e a deixa `ate` (default: o fim da fala).
  * O calendário marca casas, o reservatório enche: é como o tempo passa sem lapso.
  * `casas` (calendário, 1..35): o progresso para nessa casa — "uns dias" = 4–7, "semanas" = 35.
+ * No `relogio`, `run` (pode ser `{}`) PARA os ponteiros numa hora só (8 h): "o mesmo horário" —
+ * sem `run`, o relógio gira como sempre (1 volta do ponteiro grande a cada 2 s).
  */
 export type Obj = { p: PieceName; cue?: string; out?: string; stay?: boolean; run?: { cue?: string; ate?: string; casas?: number } };
 
@@ -222,12 +224,18 @@ export type SceneProps = {
   semana?: string;
   // verso: o selo dourado depois da leitura (default "IDEIA ABSORVIDA"; as portas trocam)
   done?: string;
+  /**
+   * verso (fase 3, acabamento): a pessoa da frente do card (identidades com `frenteElenco`). Sem,
+   * a de sempre: feliz de braços pra cima — que no pré-treino lê euforia (régua do parceiro: alerta,
+   * não comemoração). Ex.: `{ "mood": "focado", "arms": "down" }`.
+   */
+  frente?: { mood?: Mood; arms?: 'none' | 'down' | 'up' | 'out' };
   // ---------------------------------------------------------------- fase 3
   /** pessoa / cena / dentro (lupa): o que ela FAZ, preso às deixas — sem acoes, a cena sai como antes */
   acoes?: AcaoSpec[];
   /** toda cena: palavras escritas na imagem (o Stage desenha) */
   rotulos?: RotuloSpec[];
-  /** dentro: `corpo` (o corpo de vidro) ou `lupa` (a lente sobre ela num lugar); cena: `fechado` (do peito pra cima) */
+  /** dentro: `corpo` (o corpo de vidro) ou `lupa` (a lente sobre ela num lugar); cena/pensa: `fechado` (do peito pra cima); faz: `fechado` (a câmera perto, zoom 1,35) */
   plano?: 'corpo' | 'lupa' | 'fechado';
   /** dentro (lupa): `canto` (default, ~330 px no canto) ou `grande` (~480 px, cortada na borda de baixo à esquerda) */
   pessoa?: 'canto' | 'grande';

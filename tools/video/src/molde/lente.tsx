@@ -16,7 +16,8 @@
 //    novo, mais claro, e a célula encolhe e volta com a mola (cabe no fim da fala, mesmo devagar);
 //    as lascas soltam do topo e a rede sobe devagar como antes;
 //  - reserva: o Reservatorio (src/elenco/reservatorio.tsx) no centro, com 0,8 da altura.
-// Os rótulos de camada, partícula e reserva usam o Rotulo, dentro do círculo ou colados no aro.
+// Os rótulos de camada, partícula e reserva usam o Rotulo, dentro do círculo ou colados no aro (o da
+// banda que o cordão `atravessa` fica encostado à DIREITA: a cascata desce pela esquerda primeiro).
 // `atras` (elipses): o cone passa por trás delas — a cabeça da pessoa grande da lupa, quando a âncora
 // fica embaixo do rosto (a seta da barriga não corta a cara dela).
 //
@@ -817,10 +818,13 @@ export const Lente: React.FC<{
     cam.camadas.forEach((cm, i) => {
       if (!cm.rotulo || !bs[i]) return;
       const ys = toScreen((bs[i].y0 + bs[i].y1) / 2);
-      // a banda que as partículas atravessam leva o rótulo encostado na parede, à esquerda
+      // a banda que as partículas atravessam leva o rótulo encostado na parede do lado OPOSTO à travessia:
+      // a cascata do cordão desce pela esquerda primeiro (o pedaço 0 abre a fila) e a correnteza leva pra
+      // direita por BAIXO da parede — à direita o rótulo nasce no vazio e a travessia fica à vista
+      // (à esquerda ele era escrito em cima dos primeiros pedaços que cruzavam)
       const lado = p?.atravessa?.camada === i;
-      const x = lado ? Math.max(40, ox - chord(ys) + 34) : ox;
-      rotulos.push(<Rotulo key={`c${i}`} s={s} text={cm.rotulo.text} cue={cm.rotulo.cue} x={x} y={ys - lh / 2} size={S} align={lado ? 'left' : 'center'} accent={accent} />);
+      const x = lado ? Math.min(1040, ox + chord(ys) - 34) : ox;
+      rotulos.push(<Rotulo key={`c${i}`} s={s} text={cm.rotulo.text} cue={cm.rotulo.cue} x={x} y={ys - lh / 2} size={S} align={lado ? 'right' : 'center'} accent={accent} />);
     });
     if (p?.rotulo) {
       let y: number;

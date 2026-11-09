@@ -1,5 +1,5 @@
 {
-  "_doc": "Piloto r3 (fase 3 do molde) da ideia creatina-alem-da-musculacao. A FALA (ids, pt, en, ordem) é a da r2 em learning-drops/video-specs/paker-health-energia-pele-forca.json — só a tela muda, pra --voz-de reaproveitar a voz aprovada. Assinatura: o tanque dourado é o fio da história — enche DENTRO do corpo (reserve: o corpo já guarda um pouco, sobe a ~3/4 com a lente crescendo até a tela, gasta dois jatos e assenta no nível em que o medidor do parque abre), vira o medidor no PARQUE (efforts2: dois tiros com pausa, salto, séries — um gole por esforço, nunca perto do vazio; everyone2: ela só em arrancadas, sem halter; a musculação é UM figurante com o rótulo, o outro sobe no caixote) e aparece CHEIO na LUPA do parque depois do treino (stock: a lente abre ANTES do gole, o gole é um fio que pinga e o nível não muda — o estoque é que conta, não a hora). Sem brilho/feliz no stock (lia power-up). Régua Paker: estoque no músculo, sem bateria/raio/carga, sem número fora do verso, rótulo só com palavra da fala, pele escura nunca no lado que perde (aqui ela é a protagonista).",
+  "_doc": "Piloto r3 (fase 3 do molde) da ideia creatina-alem-da-musculacao. A FALA (ids, pt, en, ordem) é a da r2 em learning-drops/video-specs/paker-health-energia-pele-forca.json — só a tela muda, pra --voz-de reaproveitar a voz aprovada. Assinatura: o tanque dourado é o fio da história — enche DENTRO do corpo (reserve: o corpo já guarda um pouco, sobe a ~3/4 com a lente crescendo até a tela, gasta dois jatos e assenta no nível em que o medidor do parque abre), vira o medidor no PARQUE (efforts2: dois tiros com pausa, salto, séries — um gole por esforço, nunca perto do vazio; everyone2: ela só em arrancadas, sem halter; a musculação é UM figurante com o rótulo, o outro sobe no caixote) e aparece CHEIO na LUPA do parque depois do treino (stock: a lente abre ANTES do gole, o gole é um fio que pinga e o nível não muda — o estoque é que conta, não a hora). Sem brilho/feliz no stock (lia power-up). Régua Paker: estoque no músculo, sem bateria/raio/carga, sem número fora do verso, rótulo só com palavra da fala, pele escura nunca no lado que perde (aqui ela é a protagonista). Acabamento: efforts2 e everyone2 em plano fechado no faz (x do elenco = x na tela, figurantes no tamanho default 240); o medidor ao lado dela com o jato do gole; a frente do card do verso com ela calma (ok, braços pra baixo) — braços erguidos liam power-up, e o fecho é manter o estoque, não comemorar.",
   "slug": "paker-health-energia-pele-forca",
   "ideas": {
     "creatina-alem-da-musculacao": {
@@ -231,6 +231,7 @@
             "ambiente": "parque",
             "hora": "manha",
             "gente": "nenhuma",
+            "plano": "fechado",
             "mood": "focado",
             "medidor": {
               "nivel": 0.66,
@@ -323,6 +324,7 @@
           "props": {
             "ambiente": "parque",
             "hora": "manha",
+            "plano": "fechado",
             "transicao": "corte",
             "camera": {
               "move": "pull",
@@ -356,7 +358,6 @@
               {
                 "seed": 1,
                 "x": 220,
-                "size": 280,
                 "acao": "saltar",
                 "ritmo": "rapido",
                 "cue": {
@@ -371,7 +372,6 @@
               {
                 "seed": 5,
                 "x": 905,
-                "size": 280,
                 "acao": "levantar",
                 "ritmo": "lento",
                 "cue": {
@@ -514,6 +514,12 @@
           },
           "en": {
             "say": "Take three to five grams of creatine every day, at any time, to keep your muscle stores full."
+          },
+          "props": {
+            "frente": {
+              "mood": "ok",
+              "arms": "down"
+            }
           }
         }
       ]

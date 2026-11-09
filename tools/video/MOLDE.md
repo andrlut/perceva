@@ -414,6 +414,9 @@ pixel 0 nos vídeos publicados — é a régua de toda mudança aqui).
   que é "ela" em todas as cenas (pessoa, semana, virada, lista, cena, pensa, mapa, dentro, faz e a
   frente do card do verso). A blusa continua violeta (a marca). O ajudante nunca tem o rosto dela.
   Não escolha pele escura justo pro vídeo cujo gancho é o mais "derrotado" (o lint avisa).
+- **`frente`** (acabamento, só no verso): `{ "mood": "focado", "arms": "down" }` muda a pessoa da
+  frente do card (mood: ok/feliz/cansado/focado; arms: none/down/up/out). Sem `frente`, feliz de
+  braços pra cima, como sempre. Use quando a régua do assunto veta comemoração (o pré-treino).
 
 ### Ações (`acoes`, em `pessoa`, `cena` mesa/chão e `dentro` lupa)
 
@@ -505,7 +508,10 @@ a caneta, sai em 8 q):
   **`pessoa: "grande"`** (só aqui, rodada 2): em vez de encolher pro canto ela CRESCE e chega perto
   da câmera (480 px, x 215, pés em 1500), cortada pela faixa da legenda na altura do quadril (no
   banheiro, pela moldura do espelho); rosto inteiro embaixo da lente. Com a âncora embaixo do rosto
-  (barriga, peito, mão), o cone passa por trás da cabeça (`Lente atras`). `canto` é o default.
+  (barriga, peito, mão), o cone passa por trás da cabeça (`Lente atras`). Com `grande` (acabamento) o
+  véu escurece só 0,3 (o lugar continua à vista: azulejo, armário, árvore) e uma vinheta redonda em
+  volta da lente faz o foco; o corpo dela some num fade de 1380 a 1440 px da tela, antes da legenda
+  (vale com push). `canto` é o default (véu 0,55, como antes).
 
 ### Lente (`lente`, no `dentro` e na `cena`)
 
@@ -532,7 +538,9 @@ a caneta, sai em 8 q):
   última palavra, dê `hold` (~0,8) pra onda terminar — pela metade lê "quebrada".
 - Partículas: `ponto` (`boiam`, `destaque` = o ponto vai pro centro, fica dourado com a estrelinha) ou
   `cordao` (`de: "topo"`, `quebra` em pedaços, `atravessa: {camada, cue}` a parede — precisa de uma
-  banda embaixo —, `correnteza`). `n` 6..24, `cor` uma área/ouro ou uma lista (sem `mista`).
+  banda embaixo —, `correnteza`). `n` 6..24, `cor` uma área/ouro ou uma lista (sem `mista`). Pra
+  nomear a parede que o cordão atravessa, dê `rotulo` à camada dela (não um rótulo solto): com
+  `atravessa`, ele encosta à DIREITA da banda (a cascata desce pela esquerda) e não cobre a travessia.
 - `conteudo: { reserva }` em vez de camadas: o tanque dentro do círculo.
 - **Na `cena`** a lente é só callout (sem `cresce`): 520 px em [760, 560] (no chão [790, 560]; no plano
   fechado 460 px em [800, 470]), fora do zoom; o cenário e os rótulos saem dali.
@@ -562,8 +570,10 @@ sempre dourada: o mesmo tanque da lente e do medidor.
 
 - `passos` 1..4 (só o 1º sem cue; as deixas na ordem da fala), cada um uma ação (mesmos campos de
   `acoes`) + `rotulo`. Sem lugar por passo nesta leva.
-- `medidor`: o tanque pequeno numa ficha, um gole por passo; `nivel − gasta × passos ≥ 0,25` (nunca
-  perto do vazio). `elenco` ≤ 3 figurantes (`seed`, `x`, `acao`, `cue`, `ate`, `size` ≥ 200, `reps`
+- `medidor`: o tanque numa ficha de 260 px **ao lado dela** (do lado `lado`, o centro na altura do
+  topo da cabeça, nunca acima de y 330; é da tela, fora do zoom), um gole por passo: um jato de 14
+  grãos sai da válvula em arco e cai até o pé da ficha em 22 q (dourado só nos grãos);
+  `nivel − gasta × passos ≥ 0,25` (nunca perto do vazio). `elenco` ≤ 3 figurantes (`seed`, `x`, `acao`, `cue`, `ate`, `size` ≥ 200, `reps`
   1..4, `ritmo`): cada um num esforço diferente, ninguém correndo junto com ela (lê disputa), nenhum
   na caixa dela; o filtro do figurante é só saturação (não escurece pele). **Sem `reps`, saltar e
   levantar repetem em laço até o `ate`** (sem `ate`, até o fim da fala — figurante não congela); no
@@ -572,7 +582,15 @@ sempre dourada: o mesmo tanque da lente e do medidor.
   cena inteira, na ordem da fala — o centro no alto; não cabendo, o lado sem o medidor; por último,
   embaixo do medidor —, 54 → 48 → 44 px, 14 px entre cápsulas, sempre fora do medidor, do corpo dela,
   dos figurantes e da zona do salto enquanto ela está no ar. A palavra que entra quando a anterior sai
-  fica no lugar dela. Palavra longa na coluna do lado quebra em duas linhas.
+  fica no lugar dela. Palavra longa na coluna do lado quebra em duas linhas. A zona do salto é
+  estreita (0,3 da largura do corpo): no voo os braços ficam no peito.
+- **`plano: "fechado"`** (acabamento): a câmera perto — o lugar, ela, os figurantes e as peças crescem
+  1,35× em volta de (540, 1014) (o `zoom` do Stage, nada redesenhado). Ela com 540 px (520 com
+  elenco), pés em ~1400, logo acima da legenda. O **`x` do elenco passa a ser o x na tela** e cada
+  figurante fica inteiro no quadro (o halter no alto também); 240 (o default) é o tamanho certo — 280
+  aperta. `correr` com `para` vem pra câmera só até 1,2× e os pés descem metade. A lista de rótulos
+  começa em y 340, coluna do lado de 220 px; o medidor e os rótulos ficam fora do zoom. Com push
+  forte no fim, um figurante na borda sai cortado: é a câmera chegando nela.
 
 ### `plano: "fechado"` (cena mesa)
 
@@ -594,7 +612,10 @@ pra faixa 1020–1390 com texto de 56 px e os cantos do primeiro plano saem — 
 
 ### Peças novas
 
-`peso` (halter sextavado), `pote` (branco, sem rótulo; com `run` a tampa abre e a colher dosadora sai),
+`peso` (halter sextavado), `pote` (branco, sem rótulo; tampa clara com frisos e o aro na cor da área;
+com `run` a tampa sobe num arco, tomba e pousa DE PÉ encostada no pote com a boca pra câmera, e a
+colher dosadora, na cor da área, sai com o montinho), `relogio` (com `run`, mesmo vazio `"run": {}`,
+os ponteiros PARAM às 8 h a fala inteira — "o mesmo horário"; sem `run`, giram como sempre),
 `calendario` (sem algarismo; `run` 0 → 1 = 5 semanas: marca as casas e rola uma linha na 5ª — é como o
 tempo passa sem lapso; **`run.casas`** 1..35 para nessa casa e ele fica na tela: "uns dias" = 4–7, sem
 `out`), `coqueteleira` (sem marca; a mão faz a bebida balançar), `copo-agua` e
@@ -610,7 +631,8 @@ deixa nova fora da fala (`ate`, `cresce`, `quebra`, `fecha`, `divide`, `toque`, 
 lista: acoes, passos, elenco, fluxos, regioes, nivel, gasta, pinga, rotulos); ações fora da ordem da
 fala; `acao`/`reps`/`ritmo` fora do catálogo; `de`/`para` fora de andar/correr; beber/mexer sem peça;
 prop nova na cena errada (acoes, lente, passos/medidor/elenco, fluxos/regioes/divide/origem/reserva,
-plano); `plano: "fechado"` fora da mesa; dentro corpo com lugar/holding/acoes, dentro lupa sem lugar ou
+plano); `plano: "fechado"` fora da mesa; `plano` no faz que não é `fechado`; `frente` fora do verso
+ou com chave/mood/arms fora do catálogo; dentro corpo com lugar/holding/acoes, dentro lupa sem lugar ou
 lente; fluxos 1..3, regioes ≤ 3, divide com < 2 fluxos; lente sobre `peca` sem peça, camadas 1..3,
 textura/tom/then/forma/cor fora do catálogo, partículas 6..24, `atravessa` sem banda embaixo, `cresce`
 na cena; reserva com `v` fora de 0..1 ou o 1º nível com cue; faz com 0 ou > 4 passos, passo sem cue
@@ -622,7 +644,8 @@ fora de ok/feliz/cansado/focado; `fase` fora de 1..3, `protagonista` sem seed in
 **na fase 3**, peça ou ícone de energia-como-carga (`battery*`, `flash*`, `flame*`, `thunderstorm*`,
 `rocket*`, `nuclear*`).
 
-AVISO (não barra): energia-como-carga fora da fase 3; `correr` com `para` longe do `de` (não atravessa:
+AVISO (não barra): energia-como-carga fora da fase 3; `run` do relógio com cue/ate (ele só para os
+ponteiros); `correr` com `para` longe do `de` (não atravessa:
 vem pra câmera); `para` fora do quadro sem troca de lugar na fala seguinte; ação sem laço (saltar,
 levantar, beber) que não cabe até a próxima deixa ou o fim + hold (use `ritmo: "rapido"`, menos `reps`
 ou `hold`); figurantes no mesmo esforço, correndo junto com ela ou na caixa dela; push com deixa em

@@ -80,19 +80,34 @@ export const Peso: React.FC<{ size: number; accent?: string }> = ({ size, accent
 
 // ------------------------------------------------------------------ pote
 /**
- * Pote de suplemento: branco, liso (nenhum rótulo nem palavra), tampa de rosca na cor da área.
- * `progress`: a tampa sobe e vai pro lado, encostando de pé no pote com a face pra câmera (0 → 0,3),
- * e a colher dosadora sai do pote com o pó por cima (0,2 → 0,7). Sem progress, fechado.
+ * Pote de suplemento: branco, liso (nenhum rótulo nem palavra), tampa de rosca CLARA com o aro na cor
+ * da área. `progress`: a tampa sobe, tomba e pousa de pé encostada no pé do pote, com a boca pra câmera
+ * (0 → 0,3) — o oco, o aro e a lateral frisada é o que diz "tampa" (de frente e chapada ela lia
+ * moeda/prato); a colher dosadora, na cor da área, sai do pó com o montinho e fica com o cabo pra fora
+ * da boca (0,2 → 0,7). Sem progress, fechado. Só os pilotos da fase 3 usam o pote (fora do diff 0).
  */
+const TAMPA = { lado: '#DCDFF7', topo: '#F2F3FF', oco: '#9EA5D6', fundo: '#CDD1EE' };
 export const Pote: React.FC<{ size: number; accent?: string; progress?: number }> = ({ size, accent = C.gold, progress = 0 }) => {
   const p = clamp01(progress);
   const m = easeInOut(p / 0.3);
   const scoop = easeOut((p - 0.2) / 0.5);
   const open = p > 0.02;
-  const lerp = (a: number, b: number) => a + (b - a) * m;
-  // a tampa: da boca (fechada, vista de lado) até encostada à direita (de frente), num arco
-  const L = { cx: lerp(80, 136), cy: lerp(44, 124) - 34 * Math.sin(Math.PI * m), rx: lerp(66, 40), ry: lerp(11, 58), h: lerp(20, 9), rot: lerp(0, 12) };
-  const sy = 96 - 86 * scoop; // topo da colher (dentro do pote em 96, fora em 10)
+  // a tampa fechada sai num arco e tomba pra direita; perto do fim troca pela tampa de pé (a boca
+  // pra câmera), que assenta com uma molinha de 3°
+  const troca = clamp01((m - 0.8) / 0.12);
+  const voa = { x: 72 * m, y: 98 * m - 46 * Math.sin(Math.PI * Math.min(1, m * 1.1)), rot: 80 * m, k: 1 - 0.42 * m };
+  const assenta = Math.sin(Math.PI * clamp01((m - 0.86) / 0.14)) * 3;
+  // a colher: a concha sobe de dentro do pó (y 92) até pousar no alto da boca (y 30), cabo pra fora
+  const cy = 92 - 62 * scoop;
+  // a tampa de pé: centro da boca em (0, 0) no desenho dela; a lateral aparece à direita (o fundo
+  // fechado fica atrás, encostado no pote) — frisos ao longo do aro
+  // fundo `d` fundo: a tampa é funda (1/3 do diâmetro) — moeda é fina, é a espessura que separa as duas
+  const R = { rx: 30, ry: 36, d: 20 };
+  const friso = [-0.72, -0.36, 0, 0.36, 0.72].map((k) => {
+    const y = k * R.ry;
+    const x = R.rx * Math.sqrt(1 - k * k);
+    return { x, y };
+  });
   return (
     <svg width={size * 0.8} height={size} viewBox="0 0 160 200" style={{ overflow: 'visible' }}>
       <ellipse cx={80} cy={195} rx={62} ry={6} fill={GROUND} />
@@ -101,13 +116,15 @@ export const Pote: React.FC<{ size: number; accent?: string; progress?: number }
           {/* boca aberta: o pó lá dentro */}
           <ellipse cx={80} cy={62} rx={56} ry={11} fill="#C9CDEB" />
           <ellipse cx={80} cy={64} rx={50} ry={8} fill="#E6E8FA" />
-          {/* colher dosadora: cabo inclinado + concha com o montinho */}
-          <g opacity={scoop > 0 ? 1 : 0} transform={`rotate(-14 80 ${sy + 30})`}>
-            <rect x={100} y={sy - 18} width={9} height={74} rx={4.5} fill={C.mid} transform={`rotate(28 104 ${sy + 18})`} />
-            <path d={`M56 ${sy + 4} h46 v18 a12 12 0 0 1 -12 12 h-22 a12 12 0 0 1 -12 -12z`} fill={C.mid} />
-            <path d={`M79 ${sy + 4} h23 v18 a12 12 0 0 1 -12 12 h-11z`} fill={SHADE} />
-            <path d={`M54 ${sy + 5} q25 -22 50 0z`} fill={C.hi} />
-            <path d={`M79 ${sy - 6} q14 4 25 11 h-25z`} fill="rgba(10,14,38,0.1)" />
+          {/* colher dosadora na cor da área: concha cheia (montinho branco) e o cabo inclinado pra
+              fora da boca, à direita — a mão sabe onde pegar */}
+          <g opacity={scoop > 0 ? 1 : 0} transform={`rotate(-8 70 ${cy + 12})`}>
+            <rect x={82} y={cy + 3} width={60} height={11} rx={5.5} fill={accent} transform={`rotate(-38 86 ${cy + 8})`} />
+            <rect x={82} y={cy + 8.5} width={60} height={5.5} rx={2.75} fill={SHADE} transform={`rotate(-38 86 ${cy + 8})`} />
+            <path d={`M46 ${cy} h44 v14 a14 14 0 0 1 -14 14 h-16 a14 14 0 0 1 -14 -14z`} fill={accent} />
+            <path d={`M70 ${cy} h20 v14 a14 14 0 0 1 -14 14 h-6z`} fill={SHADE} />
+            <path d={`M44 ${cy + 1} q24 -24 48 0z`} fill={C.hi} />
+            <path d={`M68 ${cy - 10} q14 4 24 11 h-24z`} fill="rgba(10,14,38,0.1)" />
           </g>
         </>
       ) : null}
@@ -117,19 +134,41 @@ export const Pote: React.FC<{ size: number; accent?: string; progress?: number }
       <rect x={22} y={166} width={116} height={7} fill="rgba(10,14,38,0.08)" />
       <rect x={34} y={78} width={10} height={84} rx={5} fill="rgba(255,255,255,0.7)" />
       <ellipse cx={80} cy={62} rx={58} ry={11} fill="none" stroke="#DADDF6" strokeWidth={5} />
-      {/* tampa de rosca na cor da área: lateral com os frisos (some quando ela vira) e a face de cima */}
-      <g transform={`rotate(${L.rot} ${L.cx} ${L.cy})`}>
-        <ellipse cx={L.cx} cy={L.cy + L.h} rx={L.rx} ry={L.ry} fill={accent} />
-        <rect x={L.cx - L.rx} y={L.cy} width={2 * L.rx} height={L.h} fill={accent} />
-        <path d={`M${L.cx} ${L.cy} H${L.cx + L.rx} V${L.cy + L.h} A${L.rx} ${L.ry} 0 0 1 ${L.cx} ${L.cy + L.h + L.ry} Z`} fill={SHADE} />
-        {[-0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75].map((k) => (
-          <rect key={k} x={L.cx + k * L.rx - 2.5} y={L.cy + 4} width={5} height={L.h + L.ry * 0.6} rx={2.5} fill="rgba(10,14,38,0.16)" opacity={1 - m} />
-        ))}
-        <ellipse cx={L.cx} cy={L.cy} rx={L.rx} ry={L.ry} fill={accent} />
-        <ellipse cx={L.cx} cy={L.cy} rx={L.rx} ry={L.ry} fill="rgba(255,255,255,0.24)" />
-        <ellipse cx={L.cx} cy={L.cy} rx={L.rx * 0.72} ry={L.ry * 0.72} fill="none" stroke="rgba(10,14,38,0.12)" strokeWidth={3} opacity={m} />
-        <ellipse cx={L.cx - L.rx * 0.33} cy={L.cy - L.ry * 0.3} rx={L.rx * 0.33} ry={Math.max(4, L.ry * 0.2)} fill={SHINE} />
-      </g>
+      {/* tampa fechada (e voando): lateral clara com frisos, o aro da cor da área embaixo, a face de cima */}
+      {troca < 1 ? (
+        <g opacity={1 - troca} transform={`translate(${voa.x} ${voa.y}) rotate(${voa.rot} 80 56) translate(80 56) scale(${voa.k}) translate(-80 -56)`}>
+          <ellipse cx={80} cy={64} rx={66} ry={11} fill={accent} />
+          <rect x={14} y={54} width={132} height={10} fill={accent} />
+          <ellipse cx={80} cy={56} rx={66} ry={11} fill={TAMPA.lado} />
+          <rect x={14} y={44} width={132} height={12} fill={TAMPA.lado} />
+          <path d="M80 44 H146 V64 A66 11 0 0 1 80 75 Z" fill={SHADE} opacity={0.55} />
+          {[-0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75].map((k) => (
+            <rect key={k} x={80 + k * 66 - 2} y={47} width={4} height={14 + 11 * Math.sqrt(1 - k * k) * 0.7} rx={2} fill="rgba(10,14,38,0.14)" />
+          ))}
+          <ellipse cx={80} cy={44} rx={66} ry={11} fill={TAMPA.topo} />
+          <ellipse cx={58} cy={41} rx={22} ry={4} fill="rgba(255,255,255,0.6)" />
+        </g>
+      ) : null}
+      {/* tampa de pé encostada no pé do pote, a boca pra câmera: lateral frisada atrás, aro da área,
+          o oco (com o fundo mais claro deslocado: profundidade) e a vedação */}
+      {troca > 0 ? (
+        <g opacity={troca} transform={`translate(146 154) rotate(${-12 + assenta} 0 ${R.ry})`}>
+          <ellipse cx={R.d} cy={0} rx={R.rx} ry={R.ry} fill={TAMPA.lado} />
+          <rect x={0} y={-R.ry} width={R.d} height={2 * R.ry} fill={TAMPA.lado} />
+          <path d={`M${R.d} ${-R.ry} A${R.rx} ${R.ry} 0 0 1 ${R.d} ${R.ry} H0 V${-R.ry}Z`} fill={SHADE} opacity={0.5} />
+          {friso.map(({ x, y }, i) => (
+            <rect key={i} x={x - 1} y={y - 1.8} width={R.d + 2} height={3.6} rx={1.8} fill="rgba(10,14,38,0.2)" />
+          ))}
+          <ellipse cx={0} cy={0} rx={R.rx} ry={R.ry} fill={accent} />
+          <ellipse cx={0} cy={0} rx={R.rx - 5} ry={R.ry - 5} fill={TAMPA.oco} />
+          {/* o fundo de dentro, deslocado pra trás (direita): a parede de dentro aparece à esquerda */}
+          <ellipse cx={8} cy={3} rx={R.rx - 13} ry={R.ry - 13} fill={TAMPA.fundo} />
+          <ellipse cx={8} cy={3} rx={R.rx - 18} ry={R.ry - 18} fill="none" stroke="rgba(10,14,38,0.13)" strokeWidth={2.5} />
+          {/* côncavo: a luz de cima-esquerda deixa a borda de dentro do alto na sombra (moeda é convexa) */}
+          <path d={`M${-R.rx + 6} 4 A${R.rx - 6} ${R.ry - 6} 0 0 1 ${R.rx - 10} ${-R.ry + 12}`} stroke="rgba(10,14,38,0.22)" strokeWidth={5} fill="none" strokeLinecap="round" />
+          <path d={`M${-R.rx + 4} -6 A${R.rx - 4} ${R.ry - 4} 0 0 1 -6 ${-R.ry + 4}`} stroke="rgba(255,255,255,0.45)" strokeWidth={3} fill="none" strokeLinecap="round" />
+        </g>
+      ) : null}
     </svg>
   );
 };

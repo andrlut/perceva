@@ -367,14 +367,46 @@ export const reservaAt = (s: MS, spec: ReservaSpec, frame: number): { nivel: num
 
 // ------------------------------------------------------------------ o medidor do `faz`
 
+/** O tanque dentro da ficha do Medidor: largura e canto (frações da largura da ficha). */
+const MED = { tanque: 0.66, left: 0.07, top: 0.08 };
 /**
- * O tanque pequeno do `faz`, numa ficha navy. `x`,`y` = canto de cima à esquerda da ficha;
- * `size` = largura da ficha (altura = 1,35 ×; ≥ 170 px de largura pra ler). O tanque fica um pouco
- * à esquerda pra o borrifo da válvula caber do lado direito.
+ * O gole do Medidor (acabamento da fase 3): o borrifo do tanque é de grão de 7 px — na ficha ele
+ * some. Por cima dele, um JATO de 14 cápsulas 2,3× maiores sai da válvula num arco curto e cai até o
+ * pé da ficha, uma atrás da outra (cada uma voa 0,5 da fase), e some no chão da ficha. Dourado só
+ * nos grãos; sem brilho em volta.
+ */
+const JATO_MED = { n: 14, passo: 0.036, voo: 0.5, escala: 2.3 };
+
+/**
+ * O tanque do `faz`, numa ficha navy, ao lado dela. `x`,`y` = canto de cima à esquerda da ficha;
+ * `size` = largura da ficha (altura = 1,35 ×; ≥ 240 px pra ler o gole). O tanque fica à esquerda e
+ * no alto da ficha: a válvula embaixo à direita e, entre ela e a borda, o espaço do jato.
  */
 export const Medidor: React.FC<{ t: number; x: number; y: number; size: number; nivel: number; jato: number; accent?: string }> = ({ t, x, y, size, nivel, jato, accent = C.gold }) => {
   const h = size * 1.35;
-  const tw = size * 0.64;
+  const tw = size * MED.tanque;
+  const tl = size * MED.left;
+  const tt = size * MED.top;
+  // a válvula na ficha (px): o mesmo `spout` do Reservatorio, na escala do tanque
+  const u = tw / 200;
+  const sx = tl + (X.r + 15) * u;
+  const sy = tt + (BASE - DZ - 17) * u;
+  const light = mix(accent, '#FFFFFF', 0.32);
+  const dark = mix(accent, C.deep, 0.26);
+  const chao = h - size * 0.07;
+  const graos: React.ReactNode[] = [];
+  if (jato > 0 && jato < 1) {
+    for (let j = 0; j < JATO_MED.n; j++) {
+      const tau = clamp01((jato - j * JATO_MED.passo) / JATO_MED.voo);
+      if (tau <= 0 || tau >= 1) continue;
+      // sai pra fora (o arco abre de grão em grão) e cai até o pé da ficha
+      const alcance = size - sx - size * 0.1 - (j % 3) * size * 0.025;
+      const gx = sx + size * 0.02 + alcance * tau;
+      const gy = sy - size * 0.05 * Math.sin(Math.PI * Math.min(1, tau * 1.6)) + (chao - sy) * tau * tau;
+      const op = tau < 0.82 ? 1 : 1 - (tau - 0.82) / 0.18;
+      graos.push(<Capsula key={j} x={gx} y={gy} a={j * 47 + tau * 320} fill={j % 4 === 3 ? light : j % 4 === 1 ? dark : accent} s={JATO_MED.escala * u} op={op} />);
+    }
+  }
   return (
     <div style={{ position: 'absolute', left: x, top: y, width: size, height: h }}>
       <div
@@ -386,9 +418,14 @@ export const Medidor: React.FC<{ t: number; x: number; y: number; size: number; 
           boxShadow: '0 18px 40px rgba(0,0,0,0.38), inset 0 0 0 2px rgba(255,255,255,0.07)',
         }}
       />
-      <div style={{ position: 'absolute', left: size * 0.12, top: (h - tw * 1.35) / 2 + size * 0.02 }}>
+      <div style={{ position: 'absolute', left: tl, top: tt }}>
         <Reservatorio t={t} size={tw} nivel={nivel} jato={jato} accent={accent} />
       </div>
+      {graos.length ? (
+        <svg style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible' }} width={size} height={h}>
+          {graos}
+        </svg>
+      ) : null}
     </div>
   );
 };

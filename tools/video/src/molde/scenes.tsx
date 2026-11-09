@@ -28,7 +28,7 @@ import { useIdentity } from '../identidade/context';
 import { CORPO, SKINS as PELES, type Arms } from '../identidade/types';
 import { Ion, Peca, pieceBox } from './Peca';
 import catalog from './catalog.json';
-import type { AcaoKind, AcaoSpec, Bloco, Chip, Feel, MoldeLine, MoldeSpec, Mood, Obj, Panel, PieceName, Regiao } from './spec';
+import type { AcaoKind, AcaoSpec, Bloco, Chip, Feel, MoldeLine, MoldeSpec, Mood, Obj, Panel, PieceName, Regiao, SceneProps } from './spec';
 // fase 3: a tela demonstra o que a voz diz (ações, rótulos, corpo por dentro, lugares novos)
 import { Ator, cicloDe, corridaDe, maoNaTela, pontoNaTela, poseDe } from '../elenco/acao';
 import { Lente, lenteRect } from './lente';
@@ -303,6 +303,9 @@ export const Stage: React.FC<{
   );
 };
 
+/** O `t` do relógio parado (Obj.run no relogio): 8 h em ponto (Relogio: minutos = 6t°, horas = t/2°). */
+const RELOGIO_PARADO = 480;
+
 /**
  * Peça que cai do alto quando a fala chega na deixa (e some na `out`, se houver).
  * Num ambiente, ela "pousa" (queda curta, cresce um pouco). `base` = `top` é a
@@ -355,6 +358,9 @@ const Drop: React.FC<{
   // casas e fica, sem precisar tirar a peça cedo
   const fim = run?.casas && p === 'calendario' ? Math.max(1, Math.min(35, run.casas)) / 35 : 1;
   const progress = run ? fim * Math.max(0, Math.min(1, (frame - runFrom) / Math.max(1, runTo - runFrom))) : undefined;
+  // acabamento da fase 3: `run` no relógio PARA os ponteiros numa hora só ("o mesmo horário"): o
+  // relógio desenha a hora pelo `t`, e t = 480 é 8 h em ponto (ponteiro grande no 12, pequeno no 8)
+  const tPeca = run && p === 'relogio' ? RELOGIO_PARADO : frame;
   // desenho que flutua por cima de móvel (estante, mesa): vai numa ficha redonda, como o ícone do app,
   // pra não sumir no colorido do cenário
   const piece =
@@ -371,10 +377,10 @@ const Drop: React.FC<{
           justifyContent: 'center',
         }}
       >
-        <Peca name={p} t={frame} size={size * 0.72} accent={accent} progress={progress} />
+        <Peca name={p} t={tPeca} size={size * 0.72} accent={accent} progress={progress} />
       </div>
     ) : (
-      <Peca name={p} t={frame} size={size} accent={accent} progress={progress} />
+      <Peca name={p} t={tPeca} size={size} accent={accent} progress={progress} />
     );
   return (
     <div
@@ -1133,8 +1139,11 @@ export const Cena: React.FC<P> = ({ s }) => {
   // fase 3: a lente callout (na mesa e no chão) — um círculo na tela ligado por um cone à peça da
   // mão ou a uma parte do corpo; fica fora do zoom (é da tela), o cenário e os rótulos saem dali
   const lenteSpec = pr.lente && (setting === 'mesa' || setting === 'chao') ? pr.lente : undefined;
-  const lenteC: [number, number] = fechado ? [800, 470] : setting === 'chao' ? [790, 560] : [760, 560];
-  const lenteD = fechado ? 460 : 520;
+  // fechado (acabamento): 460 px em [800, 470] encostava o topo (240, e o aro dourado passa ~12 px do
+  // disco) na sobrancelha, que termina em ~235. Agora 440 px em [800, 525]: topo em 305 (o aro em
+  // ~293; com o drift da câmera, ~280 no fim da fala) e o fundo em 745, acima de um rótulo em y 770
+  const lenteC: [number, number] = fechado ? [800, 525] : setting === 'chao' ? [790, 560] : [760, 560];
+  const lenteD = fechado ? 440 : 520;
   const lenteAncora: [number, number] | null = (() => {
     if (!lenteSpec) return null;
     if (lenteSpec.sobre === 'peca') {
@@ -1990,7 +1999,7 @@ const easeOut = (frame: number, from: number, dur: number) => {
 };
 
 // ===================================================================== verso
-const IdeaCard: React.FC<{ width: number; flip: number; absorbed: boolean; words?: number[] }> = ({ width, flip, absorbed, words }) => {
+const IdeaCard: React.FC<{ width: number; flip: number; absorbed: boolean; words?: number[]; frente?: SceneProps['frente'] }> = ({ width, flip, absorbed, words, frente }) => {
   const spec = useSpec();
   const accent = useAccent();
   const frame = useCurrentFrame();
@@ -2018,7 +2027,8 @@ const IdeaCard: React.FC<{ width: number; flip: number; absorbed: boolean; words
         <div style={{ ...face, background: `linear-gradient(160deg, ${C.surface2} 0%, ${C.base} 100%)` }}>
           {elencoFront ? (
             <div style={{ position: 'absolute', left: 0, right: 0, bottom: -width * 0.02, display: 'flex', justifyContent: 'center' }}>
-              <Pessoa t={frame} size={width * 0.6} mood="feliz" arms="up" since={40} seed={who.seed} skin={who.skin} accent={C.violet} />
+              {/* fase 3 (acabamento): `frente` troca o humor/braços; sem ela, feliz de braços pra cima (diff 0) */}
+              <Pessoa t={frame} size={width * 0.6} mood={frente?.mood ?? 'feliz'} arms={frente?.arms ?? 'up'} since={40} seed={who.seed} skin={who.skin} accent={C.violet} />
             </div>
           ) : spec.image ? (
             <Img src={staticFile(spec.image)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -2106,7 +2116,7 @@ export const Verso: React.FC<P> = ({ s }) => {
   return (
     <Stage s={s} kicker={s.props?.kicker ?? L.kicker} focus={{ pessoa: [540, 750] }}>
       <div style={{ position: 'absolute', top: 300, left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
-        <IdeaCard width={720} flip={flip} absorbed={absorbed} words={words} />
+        <IdeaCard width={720} flip={flip} absorbed={absorbed} words={words} frente={s.props?.frente} />
       </div>
       <div style={{ opacity: ramp(frame, sela, 10) }}>
         <Glyph size={176} cx={368} cy={1446} rings={ramp(frame, sela, 22)} path={ramp(frame, sela + 8, 20)} glow={1} />

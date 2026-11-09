@@ -17,7 +17,8 @@
 //    baixo à esquerda, o lugar escurece e a lente grande abre da âncora (a peça da mão ou a parte do
 //    corpo, seguida a cada quadro). Com `fecha`, ela volta pro centro e o véu sai. `pessoa: "grande"`:
 //    em vez de encolher pro canto ela cresce (480 px, cortada pela faixa da legenda), e com a âncora
-//    embaixo do rosto o cone passa por trás da cabeça dela.
+//    embaixo do rosto o cone passa por trás da cabeça dela. Com ela grande o véu é leve (0,3, o lugar se
+//    lê; uma vinheta só em volta da lente) e o corpo some num fade antes da faixa da legenda.
 //
 // Contrato: design.json → synth.blocks "dentro", com os cortes do PLANO-FINAL (efeitos só `acende` e
 // `anel`, sem lapso) e as correções da crítica (músculo não pulsa; rótulo não cai no rosto nem na
@@ -39,6 +40,7 @@ import { faceAt, hits, type EnvGeo, type Rect } from '../ambientes';
 import { Lente, lenteRect } from '../lente';
 import { pieceBox } from '../Peca';
 import { Rotulo, Rotulos, achaVaga, discoRects, rotuloRect, useFontesDoRotulo, type Ocupa, type Vaga } from '../rotulo';
+import { useCam } from '../camera';
 import { Stage, at, bracoDe, useAccent, useSpec, type MS } from '../scenes';
 import { Sfx } from '../sfx';
 import type { CorFluxo, Mood, Regiao, RegiaoFx, RotuloSpec, SceneProps } from '../spec';
@@ -801,6 +803,50 @@ const RotulosCorpo: React.FC<{
  */
 const LUPA = { meio: { x: 540, pes: 1340, size: 360 }, canto: { x: 230, pes: 1370, size: 330 }, grande: { x: 215, pes: 1500, size: 480 }, centro: [610, 720] as Pt, diam: 760 };
 
+/**
+ * O véu da lupa com a pessoa grande (acabamento da fase 3): o de 0,55 deixava o banheiro, a cozinha e
+ * o parque quase pretos (o lugar só se lia pela silhueta). Aqui o lugar escurece só 0,3 e uma vinheta
+ * redonda em volta da lente (0,4 colada no aro, some 260 px pra fora) mantém o círculo como o foco.
+ * Os dois passam 80 px da borda: a câmera na mão não mostra a beira do véu.
+ */
+const VEU_GRANDE = { lugar: 0.3, aro: 0.4, some: 260, sobra: 80 };
+const VeuGrande: React.FC<{ k: number }> = ({ k }) => {
+  const { sobra: o, some } = VEU_GRANDE;
+  const r = LUPA.diam / 2;
+  const box: React.CSSProperties = { position: 'absolute', left: -o, top: -o, width: 1080 + 2 * o, height: 1920 + 2 * o };
+  return (
+    <>
+      <div style={{ ...box, background: `rgba(10,14,38,${(VEU_GRANDE.lugar * k).toFixed(3)})` }} />
+      <div
+        style={{
+          ...box,
+          background: `radial-gradient(circle ${r + some}px at ${LUPA.centro[0] + o}px ${LUPA.centro[1] + o}px, rgba(10,14,38,${(VEU_GRANDE.aro * k).toFixed(3)}) ${r}px, rgba(10,14,38,0) ${r + some}px)`,
+        }}
+      />
+    </>
+  );
+};
+
+/**
+ * A pessoa grande da lupa some num fade antes da faixa da legenda (acabamento da fase 3): o quadril e
+ * as pernas passavam por baixo da legenda. O corte é da TELA (1380 → 1440, onde a vinheta aberta
+ * fecha) e o Ator mora na camada da câmera: a linha volta pela câmera do quadro (o inverso do Layer
+ * de profundidade 1; o giro da mão, ±0,2°, fica de fora). A máscara passa 200 px da borda pra não
+ * cortar o cabelo que sai do quadro quando a câmera anda.
+ */
+const CORTE = { de: 1380, ate: 1440, sobra: 200 };
+const CorteDaLegenda: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const c = useCam();
+  const o = CORTE.sobra;
+  const y = (sy: number) => c.oy + (sy - c.oy - c.y - (c.hy ?? 0)) / c.scale + o;
+  const g = `linear-gradient(180deg, #000 ${y(CORTE.de).toFixed(1)}px, rgba(0,0,0,0) ${y(CORTE.ate).toFixed(1)}px)`;
+  return (
+    <div style={{ position: 'absolute', left: -o, top: -o, width: 1080 + 2 * o, height: 1920 + 2 * o, WebkitMaskImage: g, maskImage: g }}>
+      <div style={{ position: 'absolute', left: o, top: o, width: 1080, height: 1920 }}>{children}</div>
+    </div>
+  );
+};
+
 const pontosDe = (box: Box, pose?: Pose): Partial<Record<Regiao, Pt>> => {
   const P = (r: keyof typeof CORPO.pontos) => pontoNaTela(r, box, pose);
   return {
@@ -890,6 +936,22 @@ const Lupa: React.FC<{ s: MS }> = ({ s }) => {
     show: [mao],
   };
   const veu = 0.55 * clamp01(k);
+  const ator = (
+    <Ator
+      t={frame}
+      x={cx}
+      y={pes}
+      size={size}
+      pose={pd.pose}
+      mood={mood}
+      since={since}
+      seed={who.seed}
+      skin={who.skin}
+      accent={C.violet}
+      mao={mao ? { p: mao, progress: work } : undefined}
+      maos={pd.maos}
+    />
+  );
   return (
     <Stage
       s={sObj}
@@ -899,21 +961,9 @@ const Lupa: React.FC<{ s: MS }> = ({ s }) => {
     >
       {positive ? <Sfx at={turnAt} name="chime" /> : null}
       {/* o lugar escurece (véu navy) quando a lente abre: o assunto passa a ser o que está dentro dela */}
-      {veu > 0.001 ? <div style={{ position: 'absolute', inset: 0, background: `rgba(10,14,38,${veu.toFixed(3)})` }} /> : null}
-      <Ator
-        t={frame}
-        x={cx}
-        y={pes}
-        size={size}
-        pose={pd.pose}
-        mood={mood}
-        since={since}
-        seed={who.seed}
-        skin={who.skin}
-        accent={C.violet}
-        mao={mao ? { p: mao, progress: work } : undefined}
-        maos={pd.maos}
-      />
+      {/* com a pessoa grande: véu mais leve (o lugar se lê) e a vinheta só em volta da lente */}
+      {veu > 0.001 ? grande ? <VeuGrande k={clamp01(k)} /> : <div style={{ position: 'absolute', inset: 0, background: `rgba(10,14,38,${veu.toFixed(3)})` }} /> : null}
+      {grande ? <CorteDaLegenda>{ator}</CorteDaLegenda> : ator}
       {positive && !(idHalo && mood === 'feliz') ? (
         <div style={{ position: 'absolute', top: pes - size * 1.3, left: cx - size * 0.6 }}>
           <Brilho t={frame} size={size * 1.2} on={ramp(frame, turnAt, 10)} />

@@ -67,6 +67,7 @@
   "ritmos": ["lento", "rapido"],
   "planos": ["corpo", "lupa", "fechado"],
   "pessoas": ["canto", "grande"],
+  "arms": ["none", "down", "up", "out"],
   "calendarioCasas": [1, 35],
   "origens": ["boca", "tronco", "barriga"],
   "regioes": ["cabeca", "rosto", "boca", "peito", "tronco", "barriga", "braco", "perna", "vasos", "musculos", "pele"],

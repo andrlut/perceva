@@ -10,6 +10,9 @@
 //    FRENTE da cabeça (Pose.frente). Nenhum raio, rastro no corpo, brilho de "power-up": a velocidade
 //    é dita pelo CHÃO que anda (`corridaDe` → EnvGeo.anda) e pela poeira no pé. Sem pose, a Pessoa
 //    sai idêntica (diff 0 nos vídeos publicados).
+//  - Acabamento: o salto é de ATLETA (régua da parceira: nada de braços em V, que lê comemoração) —
+//    braços pra trás no agachamento, punhos no peito no voo (o cotovelo dobra, como na corrida).
+//    `desce` na pose: quanto os pés descem ao vir pra câmera (o `faz` fechado passa menos).
 //  - Rodada 2: a corrida LÊ como corrida de frente — joelho que vem pra câmera passando na frente da
 //    roupa, a outra perna chutando pra trás, cotovelo dobrado (punho no peito × mão no quadril),
 //    quique com voo (os dois pés no ar), cabelo atrasado, cabeça baixa. E ninguém congela: sem ação,
@@ -46,6 +49,9 @@ export type PoseAtor = PoseRig & {
   mistura?: number;
   /** escala em volta dos pés: o correr que vem pra câmera (fica depois que a ação termina) */
   escala?: number;
+  /** quanto os pés descem ao crescer (× size × (escala − 1)); sem = VEM_DESCE. O `faz` no plano
+   *  fechado passa menos: a câmera já está perto e os pés não entram na faixa da legenda */
+  desce?: number;
   /** giro da peça da mão direita, graus (+ horário): o copo inclina na boca, mexe de leve */
   giro?: number;
   /** pousos recentes do correr — pé (0 esq, 1 dir) e quadros desde o pouso — pra poeira */
@@ -98,6 +104,13 @@ const COPO_PEITO = 62;
 const COPO_BOCA = 110;
 /** altura do salto (un.): com as pernas encolhidas, os pés sobem ~100 un. (≥ 180 px no Ator de 360) */
 const SALTO = 94;
+/**
+ * Os braços do salto (graus no ombro, + = pra fora; `dobra` = o cotovelo, como na corrida): soltos
+ * (16°, cotovelo quase reto), pra trás no agachamento (30°, retos — de frente, as mãos atrás do
+ * quadril), pra frente no voo (12° com o cotovelo dobrado em 132°: o punho em ~(74, 172) da caixa,
+ * na altura do peito, abaixo do ombro em 158) e `abre` = quanto voltam na queda (0,45 do caminho).
+ */
+const SALTO_BRACO = { solto: 16, tras: 30, frente: 12, dobraSolta: 6, dobraPeito: 132, abre: 0.45 };
 
 /** Quadros que a poeira de um pouso dura no chão. */
 const POEIRA = 14;
@@ -202,6 +215,11 @@ export function poseAt(
       };
     }
     case 'saltar': {
+      // salto de ATLETA, não de comemoração (régua da parceira: nada de braços em V no ar). No
+      // agachamento os braços vão pra trás (retos, um tico abertos, as mãos atrás do quadril) e o
+      // tronco vem pra frente; no voo eles vêm pra frente com o cotovelo dobrado — os punhos na
+      // altura do PEITO, na frente do tronco (o impulso de quem salta pra cima) — e abrem um tico na
+      // queda pra pousar. As mãos nunca passam da linha do ombro (muito menos da cabeça).
       const q = n / 22;
       const rep = Math.min(reps - 1, Math.floor(f / n));
       const g = f - rep * n;
@@ -210,32 +228,48 @@ export function poseAt(
       // o pouso da rep anterior ainda assentando (entra no agachamento da seguinte sem pular)
       const sobra = rep > 0 ? 1 - spring({ frame: g + n - A1, fps: FPS, config: MOLA.peso }) : 0;
       if (g < A0) {
-        // agacha e puxa os braços (o "pra trás" de quem vai pular)
         const k = sm(g / A0);
-        return { acao, braco: [lerp(16, 34, k), lerp(-16, -34, k)], y: 7 * k, amassa: Math.max(sobra, 0.35 * k), fim };
+        return {
+          acao,
+          braco: [lerp(SALTO_BRACO.solto, SALTO_BRACO.tras, k), -lerp(SALTO_BRACO.solto, SALTO_BRACO.tras, k)],
+          dobra: [SALTO_BRACO.dobraSolta, SALTO_BRACO.dobraSolta],
+          y: 7 * k,
+          curva: 0.7 * k,
+          amassa: Math.max(sobra, 0.35 * k),
+          fim,
+        };
       }
       if (g < A1) {
         const tau = (g - A0) / (A1 - A0);
         const h = 4 * tau * (1 - tau);
-        // os braços sobem rápido no impulso e descem um pouco na queda
-        const a = tau < 0.45 ? lerp(34, 155, out2(tau / 0.45)) : lerp(155, 70, sm((tau - 0.45) / 0.55));
+        // os braços vêm pra frente rápido no impulso (punhos no peito) e abrem um tico na queda
+        const up = tau < 0.4 ? out2(tau / 0.4) : 1 - SALTO_BRACO.abre * sm((tau - 0.55) / 0.45);
+        const a = lerp(SALTO_BRACO.tras, SALTO_BRACO.frente, up);
+        const d = lerp(SALTO_BRACO.dobraSolta, SALTO_BRACO.dobraPeito, up);
         const tuck = 13 * Math.sin(Math.PI * tau);
         return {
           acao,
           braco: [a, -a],
+          dobra: [d, d],
           y: -SALTO * h,
           ergue: [tuck, tuck],
           perna: [-3 * h, 3 * h],
+          // o tronco endireita na decolagem
+          curva: 0.7 * (1 - sm(tau / 0.3)),
           // estica na decolagem
           amassa: tau < 0.2 ? -0.25 * (1 - tau / 0.2) : 0,
           fim,
         };
       }
-      // pouso: amassa e assenta na mola de peso (MOLA.peso), os braços voltam
+      // pouso: amassa e assenta na mola de peso (MOLA.peso), os braços descem soltos
       const gl = g - A1;
       const am = 1 - spring({ frame: gl, fps: FPS, config: MOLA.peso });
-      const a = lerp(70, 16, sm(gl / (4 * q)));
-      return { acao, braco: [a, -a], y: 5 * Math.max(0, am), amassa: am, fim };
+      const k = sm(gl / (4 * q));
+      const a0 = lerp(SALTO_BRACO.tras, SALTO_BRACO.frente, 1 - SALTO_BRACO.abre);
+      const d0 = lerp(SALTO_BRACO.dobraSolta, SALTO_BRACO.dobraPeito, 1 - SALTO_BRACO.abre);
+      const a = lerp(a0, SALTO_BRACO.solto, k);
+      const d = lerp(d0, SALTO_BRACO.dobraSolta, k);
+      return { acao, braco: [a, -a], dobra: [d, d], y: 5 * Math.max(0, am), curva: 0.25 * Math.max(0, am), amassa: am, fim };
     }
     case 'levantar': {
       // os dois halteres sobem do lado do ombro até o V acima da cabeça (nunca por cima do rosto)
@@ -641,11 +675,11 @@ const maoUn = (eff: PoseRig | undefined, arms: Arms, lado: 0 | 1, vida?: Vida, t
 };
 
 /** A escala do correr (em volta dos pés, que descem um tico) aplicada a um ponto da tela. */
-const naEscala = ([X, Y]: Par, box: Box, escala = 1): Par => {
+const naEscala = ([X, Y]: Par, box: Box, escala = 1, desce = VEM_DESCE): Par => {
   if (escala === 1) return [X, Y];
   const fx = box.left + box.size / 2;
   const fy = box.top + box.size * 1.26;
-  return [fx + (X - fx) * escala, fy + (escala - 1) * box.size * VEM_DESCE + (Y - fy) * escala];
+  return [fx + (X - fx) * escala, fy + (escala - 1) * box.size * desce + (Y - fy) * escala];
 };
 
 /** Centro da mão `lado` (0 = esq, 1 = dir) na tela, e o ângulo do braço (graus, com a inclinação do corpo). */
@@ -653,7 +687,7 @@ export function maoNaTela(pose: Pose | undefined, arms: Arms, lado: 0 | 1, box: 
   const pa = pose as PoseAtor | undefined;
   const { p, ang } = maoUn(efetiva(pa, arms), arms, lado);
   const k = box.size / 200;
-  const [x, y] = naEscala([box.left + p[0] * k, box.top + p[1] * k], box, pa?.escala);
+  const [x, y] = naEscala([box.left + p[0] * k, box.top + p[1] * k], box, pa?.escala, pa?.desce);
   return { x, y, ang };
 }
 
@@ -672,7 +706,7 @@ export function pontoNaTela(r: keyof typeof CORPO.pontos, box: Box, pose?: Pose)
   if (eff?.curva && (r === 'cabeca' || r === 'rosto' || r === 'boca')) pt = [pt[0], pt[1] + 5 * eff.curva];
   const p = noCorpo(pt, eff);
   const k = box.size / 200;
-  return naEscala([box.left + p[0] * k, box.top + p[1] * k], box, pa?.escala);
+  return naEscala([box.left + p[0] * k, box.top + p[1] * k], box, pa?.escala, pa?.desce);
 }
 
 // ------------------------------------------------------------------ Ator
@@ -768,7 +802,8 @@ export const Ator: React.FC<AtorProps> = ({
   const k = size / 200;
   const box: Box = { left: x - size / 2, top: y - size * 1.26, size };
   const escala = pa?.escala ?? 1;
-  const drop = (escala - 1) * size * VEM_DESCE;
+  const desce = pa?.desce ?? VEM_DESCE;
+  const drop = (escala - 1) * size * desce;
   const pele = skin ?? (figurante ? SKINS[seed % SKINS.length] : PELE_PADRAO);
   const tinta = figurante ? FIG_ACCENT : accent;
   const tintaPeca = figurante ? FIG_ACCENT : (corPeca ?? accent);
@@ -817,7 +852,7 @@ export const Ator: React.FC<AtorProps> = ({
   const dust =
     poeira && pa?.pouso?.length
       ? pa.pouso.map(({ pe, f }, i) => {
-          const [fx, fy] = naEscala([box.left + (pe ? 117.5 : 82.5) * k, y], box, escala);
+          const [fx, fy] = naEscala([box.left + (pe ? 117.5 : 82.5) * k, y], box, escala, desce);
           const e = out2(f / POEIRA);
           const o = 0.3 * (1 - sm(f / POEIRA)) * Math.min(1, (f + 1) / 2);
           const lado = pe ? 1 : -1;

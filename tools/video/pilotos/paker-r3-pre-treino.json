@@ -1,5 +1,5 @@
 {
-  "_doc": "Piloto r3 (fase 3) do pré-treino: só a TELA muda; ids, ordem e texto falado (pt/en) são os da r2 (learning-drops/video-specs/paker-health-energia-pele-forca.json), então --voz-de reaproveita a voz aprovada. Assinatura deste vídeo: a academia abre (cansada, andando devagar) e fecha (anda, corre, fica focada); a cozinha de dia é onde ela toma; o corpo de vidro (dentro plano corpo) é o recurso de 'dentro' só deste vídeo. Régua do parceiro: alerta/foco apenas (sem raio, chama, bateria, músculo crescendo, vaso alargando, pulo de alegria), sem marca, sem número fora do verso, rótulos só com palavras da fala. 'Misture na água' = copo (lição da r1). Rodada 2 (r3b): o gancho ganha a academia viva — dois figurantes treinando em laço (levantar à esquerda, saltar à direita, sem reps: não congelam) enquanto ela entra arrastando o passo, cansada, a fala inteira; a chegada corre de frente vindo pra câmera com o chão andando e o push forte na deixa fecha nela focada (a estrela fica sem push: a câmera leva o callout da lente pra fora da borda). Rodada 3 (r3c): o gancho com o push lento sem deixa e os figurantes pra dentro; a estrela fecha a lente em 'ficar alerta' e a câmera chega nela em 'se concentrar' ('concentrar' fixo acima de 'alerta'); as 3 frentes em 3 lugares do corpo (coração = vasos, braços em cor fria = esforço, cabeça = foco) e hold 0,6 (rótulos com seta da cena: vasos à direita, esforço e foco à esquerda); a prática com o pote abrindo em 'Misture' e o relógio na ponta direita com a seta do rótulo; o aviso sério com 'evite' em ouro e pull lento; a chegada na academia do gancho (mesmos figurantes) com 'Na academia' na sobrancelha e 'alerta' fixo à esquerda, com seta na cabeça.",
+  "_doc": "Piloto r3 (fase 3) do pré-treino: só a TELA muda; ids, ordem e texto falado (pt/en) são os da r2 (learning-drops/video-specs/paker-health-energia-pele-forca.json), então --voz-de reaproveita a voz aprovada. Assinatura deste vídeo: a academia abre (cansada, andando devagar) e fecha (anda, corre, fica focada); a cozinha de dia é onde ela toma; o corpo de vidro (dentro plano corpo) é o recurso de 'dentro' só deste vídeo. Régua do parceiro: alerta/foco apenas (sem raio, chama, bateria, músculo crescendo, vaso alargando, pulo de alegria), sem marca, sem número fora do verso, rótulos só com palavras da fala. 'Misture na água' = copo (lição da r1). Rodada 2 (r3b): o gancho ganha a academia viva — dois figurantes treinando em laço (levantar à esquerda, saltar à direita, sem reps: não congelam) enquanto ela entra arrastando o passo, cansada, a fala inteira; a chegada corre de frente vindo pra câmera com o chão andando e o push forte na deixa fecha nela focada (a estrela fica sem push: a câmera leva o callout da lente pra fora da borda). Rodada 3 (r3c): o gancho com o push lento sem deixa e os figurantes pra dentro; a estrela fecha a lente em 'ficar alerta' e a câmera chega nela em 'se concentrar' ('concentrar' fixo acima de 'alerta'); as 3 frentes em 3 lugares do corpo (coração = vasos, braços em cor fria = esforço, cabeça = foco) e hold 0,6 (rótulos com seta da cena: vasos à direita, esforço e foco à esquerda); a prática com o pote abrindo em 'Misture' e o relógio na ponta direita com a seta do rótulo; o aviso sério com 'evite' em ouro e pull lento; a chegada na academia do gancho (mesmos figurantes) com 'Na academia' na sobrancelha e 'alerta' fixo à esquerda, com seta na cabeça. Acabamento: gancho e chegada em plano fechado no faz (a câmera perto); 'alerta' sem posição fixa (acha a vaga no alto, seta no contorno da cabeça — fixo cobria o cabelo); a frente do card focada, de braços pra baixo (sem euforia).",
   "slug": "paker-health-energia-pele-forca",
   "ideas": {
     "pre-treino-energia": {
@@ -23,6 +23,7 @@
           "props": {
             "ambiente": "academia",
             "hora": "dia",
+            "plano": "fechado",
             "mood": "cansado",
             "passos": [
               {
@@ -432,6 +433,7 @@
           "props": {
             "ambiente": "academia",
             "hora": "dia",
+            "plano": "fechado",
             "mood": "ok",
             "turn": {
               "pt": "ajuda a ficar alerta",
@@ -471,9 +473,7 @@
                   "pt": "ficar alerta",
                   "en": "stay alert"
                 },
-                "seta": "cabeca",
-                "x": 290,
-                "y": 725
+                "seta": "cabeca"
               }
             ],
             "kicker": {
@@ -506,6 +506,10 @@
           "id": "do",
           "scene": "verso",
           "props": {
+            "frente": {
+              "mood": "focado",
+              "arms": "down"
+            },
             "camera": {
               "move": "push",
               "forca": "leve"

@@ -1,5 +1,5 @@
 {
-  "_doc": "Piloto r3 (fase 3 do molde) do colágeno. A FALA é a da r2 (mesmos ids, textos e ordem; a voz vem por --voz-de). Assinatura deste vídeo: o espelho do banheiro (plano fechado na pia: a câmera é o espelho), a LUPA na pele (a rede de colágeno) e na barriga (o cordão que já chega em pedaços), com ela GRANDE na lupa (pessoa: grande). Cada fala num lugar: banheiro (days, hook2), cozinha (peptides), a mesa de casa à noite (weeks: ela toma de novo enquanto o calendário corre as semanas) e o escritório (habit2: o mesmo horário no meio da rotina, fora de casa — nenhum outro vídeo da Paker usa). O pote branco (sem rótulo) diz que o copo é o colágeno. Régua do parceiro: estrutura da pele e semanas de constância, nada instantâneo (sem brilho nem comemoração), sem antes/depois, sem marca, sem número fora do verso; rótulos só com palavras da própria fala; a palavra 'pele' nunca aponta pro rosto dela no gancho 'continua igual'.",
+  "_doc": "Piloto r3 (fase 3 do molde) do colágeno. A FALA é a da r2 (mesmos ids, textos e ordem; a voz vem por --voz-de). Assinatura deste vídeo: o espelho do banheiro (plano fechado na pia: a câmera é o espelho), a LUPA na pele (a rede de colágeno) e na barriga (o cordão que já chega em pedaços), com ela GRANDE na lupa (pessoa: grande). Cada fala num lugar: banheiro (days, hook2), cozinha (peptides), a mesa de casa à noite (weeks: ela toma de novo enquanto o calendário corre as semanas) e o escritório (habit2: o mesmo horário no meio da rotina, fora de casa — nenhum outro vídeo da Paker usa). O pote branco (sem rótulo) diz que o copo é o colágeno. Régua do parceiro: estrutura da pele e semanas de constância, nada instantâneo (sem brilho nem comemoração), sem antes/depois, sem marca, sem número fora do verso; rótulos só com palavras da própria fala; a palavra 'pele' nunca aponta pro rosto dela no gancho 'continua igual'. Acabamento: o rótulo 'intestino' é da camada que o cordão atravessa (encosta à direita, fora da travessia); o relógio do habit2 parado às 8 h (\"run\": {}); a frente do card do verso com ela calma, de braços pra baixo (frente: ok/down — nada de comemoração).",
   "slug": "paker-health-energia-pele-forca",
   "ideas": {
     "colageno-constancia": {
@@ -105,7 +105,7 @@
               "conteudo": {
                 "camadas": [
                   { "textura": "liso", "tom": "fundo" },
-                  { "textura": "dobras", "tom": "violeta" },
+                  { "textura": "dobras", "tom": "violeta", "rotulo": { "text": { "pt": "intestino", "en": "gut" }, "cue": { "pt": "intestino absorve", "en": "gut can absorb" } } },
                   { "textura": "fluxo", "tom": "violeta" }
                 ],
                 "particulas": {
@@ -119,10 +119,7 @@
                   "correnteza": true
                 }
               }
-            },
-            "rotulos": [
-              { "text": { "pt": "intestino", "en": "gut" }, "cue": { "pt": "intestino absorve", "en": "gut can absorb" }, "x": 800, "y": 1170, "seta": [850, 690] }
-            ]
+            }
           }
         },
         {
@@ -193,7 +190,7 @@
                 "cue": { "pt": "O segredo", "en": "The secret" },
                 "run": { "cue": { "pt": "O segredo", "en": "The secret" }, "ate": { "pt": "virar hábito", "en": "making it a habit" } }
               },
-              { "p": "relogio", "cue": { "pt": "mesmo horário", "en": "same time" } }
+              { "p": "relogio", "cue": { "pt": "mesmo horário", "en": "same time" }, "run": {} }
             ],
             "rotulos": [
               { "text": { "pt": "mesmo horário", "en": "same time" }, "cue": { "pt": "mesmo horário", "en": "same time" } }
@@ -206,7 +203,8 @@
           "pt": { "say": "Tome colágeno todo dia por pelo menos oito semanas, junto com vitamina C, que ajuda o corpo a formar colágeno." },
           "en": { "say": "Take collagen every day for at least eight weeks, with vitamin C, which helps your body form collagen." },
           "props": {
-            "camera": { "move": "push", "forca": "leve" }
+            "camera": { "move": "push", "forca": "leve" },
+            "frente": { "mood": "ok", "arms": "down" }
           }
         }
       ]
