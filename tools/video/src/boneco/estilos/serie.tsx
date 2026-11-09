@@ -86,7 +86,7 @@ const SerieDesenho: React.FC<DesenhoProps> = ({ j, pessoa, roupa, humor, t, uid,
 export const serie: Estilo = {
   id: 'serie',
   nome: 'Animação de série',
-  descricao: 'Série animada adulta: corpo de gente, traço marinho, cor viva com uma sombra, rosto que fala.',
+  descricao: 'Série animada adulta: corpo de gente, contorno na cor de cada peça, cor viva com uma sombra, rosto que fala.',
   prop: PROP,
   propDe,
   Desenho: SerieDesenho,

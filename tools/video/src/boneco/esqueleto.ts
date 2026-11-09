@@ -178,11 +178,11 @@ export const LARGURA: Record<Vista, number> = { frente: 1, 'tres-quartos': 0.55,
  * y × cabeca a partir do centro, pra baixo). De 3/4 o rosto gira pra +x; de perfil, mais.
  * `bochecha` é a que a MÃO DA FRENTE (1) aperta: de frente, a maçã do rosto da direita da tela
  * (rodada 3: em 0,36 o painel via o dedo "colado na orelha"); de 3/4 e perfil, a bochecha que vem
- * pra câmera, entre o nariz e a orelha. Sempre na altura da asa do nariz (0,17 abaixo do centro),
- * nunca colada no olho.
+ * pra câmera, entre o nariz e a orelha. De frente na altura da asa do nariz, meio olho abaixo da
+ * versão anterior (0,21; rodada 4: em 0,17 ainda encostava no olho), nunca colada no olho.
  */
 export const ROSTO: Record<Vista, { boca: P; bochecha: P; olhos: P }> = {
-  frente: { boca: [0, 0.27], bochecha: [0.29, 0.17], olhos: [0, 0.02] },
+  frente: { boca: [0, 0.27], bochecha: [0.29, 0.21], olhos: [0, 0.02] },
   'tres-quartos': { boca: [0.2, 0.27], bochecha: [-0.08, 0.17], olhos: [0.16, 0.02] },
   perfil: { boca: [0.4, 0.27], bochecha: [0.2, 0.17], olhos: [0.3, 0.02] },
 };

@@ -162,8 +162,10 @@ const ciclo = (ks: Chave[], u: number) => {
   const t3 = t2 * tt;
   return 0.5 * (2 * p1 + (-p0 + p2) * tt + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 + (-p0 + 3 * p1 - 3 * p2 + p3) * t3);
 };
-const COXA: Chave[] = [[0, 24], [0.1, 6], [0.25, -24], [0.35, -20], [0.45, -6], [0.6, 48], [0.75, 52], [0.9, 34]];
-const JOELHO: Chave[] = [[0, 14], [0.1, 34], [0.25, 12], [0.35, 70], [0.45, 118], [0.6, 108], [0.75, 52], [0.9, 18]];
+// rodada 4 (painel final: "perna da frente esticada, tronco em pé"): o pé pousa mais embaixo do corpo,
+// o joelho da frente sobe mais e a canela só abre perto do contato
+const COXA: Chave[] = [[0, 18], [0.1, 4], [0.25, -24], [0.35, -20], [0.45, -4], [0.6, 56], [0.75, 58], [0.9, 32]];
+const JOELHO: Chave[] = [[0, 24], [0.1, 40], [0.25, 14], [0.35, 74], [0.45, 120], [0.6, 112], [0.75, 72], [0.9, 32]];
 const PE: Chave[] = [[0, 4], [0.1, 0], [0.25, -32], [0.35, -22], [0.45, -14], [0.6, 8], [0.75, 6], [0.9, 6]];
 /** quanto o braço do MESMO lado está à frente (1) ou atrás (0): à frente quando a perna dele está no apoio */
 const BRACO_FRENTE: Chave[] = [[0, 0.9], [0.1, 1], [0.25, 0.75], [0.45, 0.15], [0.6, 0], [0.75, 0.2], [0.9, 0.6]];
@@ -183,7 +185,8 @@ function correr(t: number, prop: Proporcao, o: PoseOpts): Pose {
   });
   const braco = (u: number) => {
     const f = Math.max(0, Math.min(1, ciclo(BRACO_FRENTE, u)));
-    return { ombro: lerp(-52, 44, f) * (0.7 + 0.3 * amp), cotovelo: lerp(56, 102, f) };
+    // cotovelo perto de 90° o ciclo todo (atrás 78°, na frente 104°): o braço nunca estica
+    return { ombro: lerp(-50, 46, f) * (0.7 + 0.3 * amp), cotovelo: lerp(78, 104, f) };
   };
   // perna 1 (a da frente, lado da câmera) em u0, a de trás em u0 + 0,5; cada braço acompanha a perna do mesmo lado
   const l0 = perna(u0 + 0.5);
@@ -196,7 +199,7 @@ function correr(t: number, prop: Proporcao, o: PoseOpts): Pose {
   return {
     vista: o.vista ?? 'tres-quartos',
     espelho: o.espelho,
-    tronco: rapido ? 14 : lento ? 7 : 10,
+    tronco: rapido ? 18 : lento ? 8 : 12,
     cabeca: rapido ? -9 : -6,
     y: -bob * sobe,
     quadril: [l0.coxa, l1.coxa],
@@ -266,7 +269,9 @@ function alongar(t: number, prop: Proporcao, o: PoseOpts): Pose {
   const base = parado(t, prop, { ...o, vista: o.vista ?? 'frente' });
   const s = Math.sin(t / 24);
   // as mãos se encontram em cima da cabeça (V aberto com riso lia como comemoração)
-  return { ...base, tronco: s * 8, cabeca: s * 4, ombro: [-166 + s * 5, 166 + s * 5], cotovelo: [-26, 26], mao: ['aberta', 'aberta'], fecha: 0.6 };
+  // as mãos se ENCONTRAM em cima da cabeça (braço quase em pé, antebraço fechando pra dentro): com as
+  // mãos afastadas o painel leu comemoração; inclinação lateral calma
+  return { ...base, tronco: s * 8, cabeca: s * 4, ombro: [-172 + s * 4, 172 + s * 4], cotovelo: [-46, 46], punho: [-20, 20], mao: ['aberta', 'aberta'], fecha: 0.6 };
 }
 
 /** Comemorar: braços pra cima e um pulinho curto. NÃO usar onde o tema veta euforia (pré-treino). */
