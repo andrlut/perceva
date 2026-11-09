@@ -13,6 +13,10 @@ import type { MoldeSpec } from './spec';
 import { SfxContext, Sfx } from './sfx';
 import { passagem, passagens } from './transicao';
 import { VisualContext, visualDe } from './visual';
+import { setV5, v5De } from '../boneco/ativo';
+import { identidadeV5 } from '../boneco/identidade';
+import { CenaV5Context } from '../boneco/naCaixa';
+import { enquadraDe, lugarDe } from '../boneco/ativo';
 
 /** Teto do vídeo de ideia: passou disso, o render falha (corte o roteiro). */
 export const MOLDE_MAX_SECONDS = 60;
@@ -60,7 +64,11 @@ export const calculateMoldeMetadata: CalculateMetadataFunction<MoldeProps> = asy
 export const Molde: React.FC<MoldeProps> = ({ specKey, spec, scenes, captions, identity, sfx = false, visual }) => {
   if (!spec) return null;
   const skip = scenes.filter((s) => s.scene === 'verso').map((s) => s.id);
-  const who = identity ? OPTIONS.find((o) => o.id === identity) : ACTIVE;
+  // boneco v5 (spec.boneco): liga o registro (pontoNaTela, maoNaTela, Ator) e troca a identidade de
+  // todas as cenas. Sem a chave, setV5(null): o vídeo sai idêntico ao publicado.
+  const v5 = v5De(spec);
+  setV5(v5);
+  const who = v5 ? identidadeV5 : identity ? OPTIONS.find((o) => o.id === identity) : ACTIVE;
   if (!who) throw new Error(`identidade desconhecida: ${identity} (tem: ${OPTIONS.map((o) => o.id).join(', ')})`);
   const kinds = passagens(scenes);
   return (
@@ -82,7 +90,22 @@ export const Molde: React.FC<MoldeProps> = ({ specKey, spec, scenes, captions, i
                     <TransitionSeries.Transition presentation={passagem(kinds[i] ?? 'fade', s.props?.camera)} timing={linearTiming({ durationInFrames: FADE })} />
                   ) : null}
                   <TransitionSeries.Sequence durationInFrames={s.frames} name={`${s.id}·${s.scene}`}>
-                    <Comp s={s} />
+                    {v5 ? (
+                      // a cena que a Pessoa v5 está: o lugar e as ações dela escolhem a roupa
+                      <CenaV5Context.Provider
+                        value={{
+                          lugar: lugarDe(s.props?.ambiente),
+                          hora: s.props?.hora as 'manha' | 'dia' | 'noite' | undefined,
+                          acoes: [...(s.props?.passos ?? []).map((a) => a.acao), ...(s.props?.acoes ?? []).map((a) => a.acao)],
+                          roupa: s.props?.roupa,
+                          enquadra: enquadraDe(s.scene, s.props),
+                        }}
+                      >
+                        <Comp s={s} />
+                      </CenaV5Context.Provider>
+                    ) : (
+                      <Comp s={s} />
+                    )}
                   </TransitionSeries.Sequence>
                 </React.Fragment>
               );

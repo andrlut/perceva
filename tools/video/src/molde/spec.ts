@@ -171,6 +171,11 @@ export type MedidorSpec = { nivel: number; gasta?: number; lado?: 'esquerda' | '
 
 /** Props de cada cena, já no idioma resolvido (os {pt,en} viraram string). */
 export type SceneProps = {
+  /**
+   * boneco v5: força o contexto da roupa nesta cena ('esporte' | 'casa' | 'trabalho' | 'rua' |
+   * 'dormir'). Sem ele, a roupa sai da cena (ação + lugar, src/boneco/elenco.ts → contextoDe).
+   */
+  roupa?: 'esporte' | 'casa' | 'trabalho' | 'rua' | 'dormir';
   kicker?: string;
   // valem pra todas as cenas (menos verso): câmera e passagem
   camera?: CameraSpec;
@@ -276,8 +281,14 @@ export type MoldeSpec = {
   silent?: boolean;
   /** régua do molde (fase 3 = base do quadro aberta, Vinheta só atrás da legenda); sem = a de antes */
   fase?: number;
-  /** a protagonista do vídeo (Pessoa e Ator de todas as cenas); sem = seed 0 com a pele de sempre */
-  protagonista?: { seed: number; skin?: string };
+  /**
+   * a protagonista do vídeo (Pessoa e Ator de todas as cenas); sem = seed 0 com a pele de sempre.
+   * `pessoa` (boneco v5): o id de quem ela é no elenco novo (src/boneco/elenco.ts → PESSOAS); o
+   * `seed` continua sendo como as cenas a chamam.
+   */
+  protagonista?: { seed: number; skin?: string; pessoa?: string };
+  /** boneco v5 (src/boneco): o estilo que desenha todo mundo ('serie'); sem = a identidade de antes */
+  boneco?: string;
   /** acabamento do fundo (src/molde/visual.ts): 'v5' = nítido + cor viva; sem = o de antes */
   visual?: string;
   lines: MoldeLine[];

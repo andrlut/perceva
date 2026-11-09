@@ -34,6 +34,14 @@ export type DesenhoProps = {
    * dedo só em pé: 4 de 5 jurados leram "dedo do meio".
    */
   toque?: { ponto: [number, number]; forca: number; marca: number };
+  /**
+   * 0..1: o CORPO DE VIDRO da cena `dentro` (plano corpo). Com 1, tronco, braços e pernas — roupa e
+   * pele — viram vidro: um preenchimento azul-noite translúcido e opaco o bastante pra o mapa de
+   * dentro (órgãos, músculos, fluxos) ler por cima, um contorno claro e frio na silhueta, um reflexo
+   * vertical do lado da luz. Cabeça, pescoço, mãos e pés ficam como são (o rosto continua vivo). Entre
+   * 0 e 1, a roupa esmaece pro vidro (a cena entra em 10 quadros).
+   */
+  vidro?: number;
 };
 
 export type Estilo = {

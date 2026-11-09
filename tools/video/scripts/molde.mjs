@@ -866,6 +866,9 @@ async function build(ctx) {
         // fase 3 (por ideia, opcionais): a régua do molde e a protagonista do vídeo — sem eles, o de sempre
         ...((src.fase ?? ctx.vs.fase) != null ? { fase: src.fase ?? ctx.vs.fase } : {}),
         ...(src.protagonista ? { protagonista: src.protagonista } : {}),
+        // boneco v5 (src/boneco) e acabamento do fundo (src/molde/visual.ts), por ideia ou na raiz
+        ...((src.boneco ?? ctx.vs.boneco) ? { boneco: src.boneco ?? ctx.vs.boneco } : {}),
+        ...((src.visual ?? ctx.vs.visual) ? { visual: src.visual ?? ctx.vs.visual } : {}),
         lines,
       };
       // --voz-de: a voz aprovada vem pra chave do piloto ANTES de conferir o que falta gravar

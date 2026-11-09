@@ -8,7 +8,7 @@
 // braço pra cima é outra pose (`comemorar`) e o roteiro escolhe.
 import { type Mao, type P, type Pose, type Proporcao, type Vista, ao, acima, alturaDe, fk } from './esqueleto';
 
-export type Acao = 'parado' | 'andar' | 'correr' | 'saltar' | 'rosca' | 'beber' | 'tocarRosto' | 'acenar' | 'alongar' | 'comemorar' | 'pensar';
+export type Acao = 'parado' | 'andar' | 'correr' | 'saltar' | 'rosca' | 'beber' | 'mexer' | 'tocarRosto' | 'acenar' | 'alongar' | 'comemorar' | 'pensar';
 
 export type PoseOpts = {
   vista?: Vista;
@@ -285,6 +285,21 @@ function comemorar(t: number, prop: Proporcao, o: PoseOpts): Pose {
 // ------------------------------------------------------------------ beber / tocar o rosto (IK)
 
 /** Beber: a mão da frente leva o copo até a boca e volta (ciclo de 60 quadros, 2 goles). */
+/**
+ * Mexer (o molde: a coqueteleira sacode, o copo mexe): a mão da frente segura o copo na frente do
+ * peito, um pouco abaixo, e sacode em vaivém curto (ciclo de 10 quadros); a outra solta.
+ */
+function mexer(t: number, prop: Proporcao, o: PoseOpts): Pose {
+  const vista = o.vista ?? 'tres-quartos';
+  const base = parado(t, prop, { ...o, vista });
+  const pose: Pose = { ...base, vista, cabeca: 4 };
+  const j = fk(prop, pose);
+  const sac = Math.sin((((t + (o.fase ?? 0)) % 10) / 10) * TAU);
+  const alvo: P = [j.peito[0] + prop.cabecaLarg * 0.55, j.peito[1] + prop.cabeca * 0.95 + sac * prop.cabeca * 0.09];
+  const [b, a] = ik2(j.ombro[1], alvo, prop.braco, prop.antebraco, 'baixo');
+  return { ...pose, ombro: [base.ombro![0], b + (pose.tronco ?? 0)], cotovelo: [base.cotovelo![0], a - b], punho: [0, -60], mao: ['solta', 'segura'], bracoNaFrente: [false, false] };
+}
+
 function beber(t: number, prop: Proporcao, o: PoseOpts): Pose {
   const vista = o.vista ?? 'tres-quartos';
   const base = parado(t, prop, { ...o, vista });
@@ -404,6 +419,7 @@ const TABELA: Record<Acao, (t: number, prop: Proporcao, o: PoseOpts) => Pose> = 
   alongar,
   comemorar,
   pensar,
+  mexer,
 };
 
 /** A pose da ação no quadro `t`. */
@@ -413,7 +429,7 @@ export const poseDe = (acao: Acao, t: number, prop: Proporcao, o: PoseOpts = {})
 };
 
 /** Mão: o que cada ação segura (o estilo desenha a peça na mão `segura`). */
-export const SEGURA: Partial<Record<Acao, 'halter' | 'copo'>> = { rosca: 'halter', beber: 'copo' };
+export const SEGURA: Partial<Record<Acao, 'halter' | 'copo'>> = { rosca: 'halter', beber: 'copo', mexer: 'copo' };
 
 export type { Mao };
 // acima é reexportado pra quem precisa calcular pontos no corpo (setas de rótulo, lente)
