@@ -37,7 +37,7 @@ const Desenho: React.FC<DesenhoProps> = ({ j, pessoa, roupa, humor, t, uid, luz,
   // corrida: o cabelo vai pra trás com o corpo inclinado
   const arrasto = j.vista !== 'frente' ? clamp((j.ang.tronco - 5) / 8) : 0;
   const mc = { k, j, prop, med, pessoa, roupa, segura, t, toque };
-  const cab = cabeca({ k, j, prop, med, pessoa, roupa, humor, t, uid, toque, arrasto });
+  const cab = cabeca({ k, j, prop, med, pessoa, roupa, humor, t, uid, toque, arrasto, segura });
   const W = prop.cabecaLarg;
   const H = prop.cabeca;
   const nx = j.vista === 'frente' ? 0 : j.vista === 'tres-quartos' ? -0.1 : -0.16;
@@ -84,9 +84,13 @@ const Desenho: React.FC<DesenhoProps> = ({ j, pessoa, roupa, humor, t, uid, luz,
 
   return (
     <g>
+      {cab.bordaCabelo}
       {cab.tras}
+      {/* de 3/4 e perfil o braço de trás fica atrás de TUDO (pélvis e coxa de trás inclusive):
+          no balanço da corrida a mão passa atrás do quadril, nunca na frente da virilha */}
+      {j.vista !== 'frente' && !j.bracoNaFrente[0] && b0.el}
       {p0.el}
-      {!j.bracoNaFrente[0] && b0.el}
+      {j.vista === 'frente' && !j.bracoNaFrente[0] && b0.el}
       {sombraTroncoNoLonge}
       {p1.el}
       {quad.el}

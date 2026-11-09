@@ -22,5 +22,5 @@ export type Ctx = {
   peleSombra: string;
   seed: number;
   segura?: 'halter' | 'copo';
-  toque?: { ponto: [number, number]; forca: number };
+  toque?: { ponto: [number, number]; forca: number; marca?: number };
 };

@@ -74,14 +74,17 @@ export type Mat = { luz: string; base: string; sombra: string; fundo: string; re
  */
 export function material(c: string, tipo: 'pele' | 'tecido' | 'cabelo' | 'metal' = 'tecido', longe = 0): Mat {
   const L = lum(c);
-  const base = longe ? ajusta(c, -0.07 * longe, 0.02, tipo === 'pele' ? 10 : 255, 6 * longe) : c;
+  const base = longe ? (tipo === 'pele' ? ajusta(c, -0.06 * longe, -0.02) : ajusta(c, -0.07 * longe, 0.02, 255, 6 * longe)) : c;
   if (tipo === 'pele') {
+    // pele: a sombra fica NO MESMO MATIZ, 6–15% mais escura e com a saturação contida (o painel:
+    // o degradê girava pro laranja-avermelhado no queixo, no pescoço e nas mãos da pele clara —
+    // "queimado de sol"; nos tons escuros não acontecia). A mesma regra pra todo tom.
     return {
-      luz: ajusta(base, 0.07, 0.04, 35, 4),
+      luz: ajusta(base, 0.045, -0.02),
       base,
-      sombra: ajusta(base, -0.13, 0.1, 352, 12),
-      fundo: ajusta(base, -0.22, 0.12, 345, 16),
-      rebate: ajusta(base, -0.06, 0.06, 330, 10),
+      sombra: ajusta(base, -0.08, -0.04),
+      fundo: ajusta(base, -0.14, -0.06),
+      rebate: ajusta(base, -0.05, -0.04),
     };
   }
   if (tipo === 'cabelo') {

@@ -150,6 +150,57 @@ export class Kit {
     ]);
   }
 
+  /**
+   * TECIDO num tubo (manga, perna da calça): chapado com UMA sombra de borda dura do lado de lá
+   * (o painel: o degradê inflava a roupa, "balão" com brilho no meio). A luz de borda continua.
+   */
+  tecido(a: P, b: P, r: number, m: Mat): string {
+    const eixo = dist(a, b) < 1e-3 ? ([0, 1] as P) : sub(b, a);
+    const { n } = this.ladoLuz(eixo);
+    const meio = mixP(a, b, 0.5);
+    return this.lin(soma(meio, esc(n, r)), soma(meio, esc(n, -r)), [
+      [0, mistura(m.base, m.luz, 0.45)],
+      [0.14, m.base],
+      [0.6, m.base],
+      [0.6, m.sombra],
+      [1, mistura(m.sombra, m.fundo, 0.3)],
+    ]);
+  }
+
+  /** TECIDO no tronco: chapado, sombra dura no lado de lá (a faixa do lado oposto à luz) */
+  caixaTecido(m: Mat, corte = 0.8): string {
+    const [x1, x2] = this.espelho ? [1, 0] : [0, 1];
+    return this.linCaixa(
+      x1,
+      0.3,
+      x2,
+      0.36,
+      [
+        [0, mistura(m.base, m.luz, 0.4)],
+        [0.1, m.base],
+        [corte, m.base],
+        [corte, m.sombra],
+        [1, mistura(m.sombra, m.fundo, 0.3)],
+      ],
+      `tecido${m.base}${corte}${this.espelho}`,
+    );
+  }
+
+  /** estampa de listras (pijama): listras verticais finas em unidades do boneco */
+  listras(cor: string, passo = 3.2, larg = 1): string {
+    const chave = `listra${cor}${passo}`;
+    if (this.cache.has(chave)) return this.cache.get(chave)!;
+    const id = this.id('p');
+    this.defs.push(
+      <pattern key={id} id={id} patternUnits="userSpaceOnUse" width={passo} height={20}>
+        <rect x={0} y={0} width={larg} height={20} fill={cor} />
+      </pattern>,
+    );
+    const u = `url(#${id})`;
+    this.cache.set(chave, u);
+    return u;
+  }
+
   /** preenchimento de um volume redondo (cabeça, tronco, mão, sapato): radial com o foco na luz */
   bolha(m: Mat, forte = 1): string {
     const cx = this.espelho ? 0.66 : 0.34;
@@ -194,16 +245,25 @@ export type Peca = { d: string; fill: string; op?: number; sem?: boolean };
  * por baixo, as peças por cima. `giro` = rotação do grupo (a cabeça) pra o deslocamento da
  * lasca continuar apontando pra luz do mundo.
  */
-export const Vol: React.FC<{ k: Kit; pecas: Peca[]; giro?: number; forca?: number; children?: React.ReactNode; largura?: number }> = ({ k, pecas, giro = 0, forca = 1, children, largura = 0.55 }) => {
+/**
+ * `parte`: 'borda' desenha só as lascas de luz (pra ir ANTES de uma peça que deve cobri-las — o
+ * cabelo da frente põe a borda antes do rosto, assim a lasca só sobra no contorno de fora, nunca
+ * em cima da testa ou da orelha); 'corpo' desenha só as peças.
+ */
+export const Vol: React.FC<{ k: Kit; pecas: Peca[]; giro?: number; forca?: number; children?: React.ReactNode; largura?: number; parte?: 'borda' | 'corpo'; frio?: number }> = ({ k, pecas, giro = 0, forca = 1, children, largura = 0.55, parte, frio = 1 }) => {
   const a = (-giro * Math.PI) / 180;
   const L = k.paraLuz;
   const l: P = [L[0] * Math.cos(a) - L[1] * Math.sin(a), L[0] * Math.sin(a) + L[1] * Math.cos(a)];
   const d = largura;
   const visiveis = pecas.filter((p) => p.d);
   const comBorda = visiveis.filter((p) => !p.sem);
+  const borda = parte !== 'corpo';
+  const corpo = parte !== 'borda';
   return (
     <g>
-      <g transform={`translate(${-l[0] * d * 0.7} ${-l[1] * d * 0.7})`} opacity={0.2 * forca}>
+      {borda && (
+        <>
+      <g transform={`translate(${-l[0] * d * 0.7} ${-l[1] * d * 0.7})`} opacity={0.2 * forca * frio}>
         {comBorda.map((p, i) => (
           <path key={i} d={p.d} fill="#8E9BFF" />
         ))}
@@ -213,10 +273,10 @@ export const Vol: React.FC<{ k: Kit; pecas: Peca[]; giro?: number; forca?: numbe
           <path key={i} d={p.d} fill={k.luz} />
         ))}
       </g>
-      {visiveis.map((p, i) => (
-        <path key={i} d={p.d} fill={p.fill} opacity={p.op} />
-      ))}
-      {children}
+        </>
+      )}
+      {corpo && visiveis.map((p, i) => <path key={i} d={p.d} fill={p.fill} opacity={p.op} />)}
+      {corpo && children}
     </g>
   );
 };

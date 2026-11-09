@@ -1,16 +1,19 @@
 // "Animação de série" — a base: vetores, cores, caminhos suaves e o PINTOR (tinta + cel).
 //
 // Técnica de desenho (o que faz o estilo parecer série de TV bem feita):
-//  1. CAMADA = um conjunto de formas que se desenha junto. Primeiro um "forro" de tinta (cada
-//     forma com traço grosso da cor da tinta), depois os preenchimentos por cima. O resultado:
-//     o contorno de FORA da camada sai grosso e as emendas internas (coxa → canela, ombro →
-//     braço) somem — junta contínua em qualquer ângulo, sem costura.
+//  1. LINHA COLORIDA (rodada 3, painel): cada peça tem o contorno num tom escuro e saturado da
+//     PRÓPRIA cor (marrom na pele, roxo-escuro na roupa roxa); peça muito escura (marinho, cabelo
+//     preto) ganha um tom MAIS CLARO dela, pra não sumir no fundo marinho. A silhueta externa é
+//     grossa e mais pesada do lado da sombra (passe `silhueta`, antes de tudo); dentro, onde um
+//     membro passa na frente do corpo, a linha é FINA (o forro de cada camada).
+//     CAMADA = um conjunto de formas que se desenha junto: forro fino de todas, depois os
+//     preenchimentos — as emendas internas (coxa → canela, ombro → braço) somem.
 //  2. GRUPO dentro da camada = peça de roupa: tem o seu forro FINO (a bainha, a gola, a borda do
 //     tênis aparecem como linha interna, mais leve que a silhueta).
 //  3. CEL: cada forma pinta a sombra inteira e por cima a cópia DESLOCADA PRA LUZ na cor base —
 //     sobra uma meia-lua de sombra no lado oposto à luz.
-//  4. RECORTE: no fim, um fio da cor da LUZ do lugar só na SILHUETA (a união de todas as formas
-//     menos ela mesma deslocada pra luz) — separa a pessoa do fundo escuro sem riscar o miolo.
+//  4. RECORTE: no fim, um fio da cor da LUZ do lugar só na SILHUETA e só do LADO DA LUZ, por
+//     dentro do contorno (nunca uma segunda linha por fora).
 import React from 'react';
 
 export type P = [number, number];
@@ -88,6 +91,42 @@ export const luma = (c: string) => {
   const [r, g, b] = hexRgb(c);
   return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
 };
+const rgbHsl = ([r, g, b]: [number, number, number]): [number, number, number] => {
+  const R = r / 255;
+  const G = g / 255;
+  const B = b / 255;
+  const mx = Math.max(R, G, B);
+  const mn = Math.min(R, G, B);
+  const l = (mx + mn) / 2;
+  if (mx === mn) return [0, 0, l];
+  const d = mx - mn;
+  const s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
+  let h = mx === R ? (G - B) / d + (G < B ? 6 : 0) : mx === G ? (B - R) / d + 2 : (R - G) / d + 4;
+  h /= 6;
+  return [h, s, l];
+};
+const hslHex = (h: number, s: number, l: number) => {
+  const f = (n: number) => {
+    const k = (n + h * 12) % 12;
+    const a = s * Math.min(l, 1 - l);
+    return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+  };
+  return rgbHex(f(0) * 255, f(8) * 255, f(4) * 255);
+};
+/**
+ * A cor do CONTORNO de uma peça: um tom escuro e saturado da própria cor. Peça muito escura
+ * (marinho, grafite, cabelo preto) vira o contrário — um tom médio dela, mais claro, que separa
+ * do fundo marinho do app sem virar halo.
+ */
+export const contornoDe = (c: string) => {
+  const rgb = hexRgb(c);
+  const [h, s, l] = rgbHsl(rgb);
+  const croma = (Math.max(...rgb) - Math.min(...rgb)) / 255;
+  if (luma(c) < 0.2) return hslHex(h, croma < 0.08 ? 0.16 : Math.min(0.5, s), Math.max(l + 0.1, 0.29));
+  const s2 = croma < 0.12 ? 0.32 : Math.min(0.78, s * 1.05 + 0.1);
+  return hslHex(h, s2, Math.max(0.12, Math.min(0.28, l * 0.42)));
+};
+
 /** sombra de tecido/objeto: puxa pro violeta-marinho (sombra fria, a cor continua viva) */
 export const sombraDe = (c: string, k = 0.3) => mix(c, '#2A1C6E', k);
 /** sombra de pele: puxa pro vinho quente (pele na sombra não fica cinza) */
@@ -155,7 +194,7 @@ export function capsula(
   b: P,
   ra: number,
   rb: number,
-  o: { bn?: [number, number]; bm?: [number, number]; fimA?: 'redondo' | 'reto'; fimB?: 'redondo' | 'reto' } = {},
+  o: { bn?: [number, number]; bm?: [number, number]; fimA?: 'redondo' | 'reto'; fimB?: 'redondo' | 'reto' | 'boca' } = {},
 ): string {
   const d = sub(b, a);
   const L = len(d) || 1e-3;
@@ -173,7 +212,12 @@ export function capsula(
   const d1 = at(0.66, -(lerp(ra, rb, 0.66) + bm[1]));
   const d2 = at(0.33, -(lerp(ra, rb, 0.33) + bm[0]));
   let s = `M${f(p0)} C${f(c1)} ${f(c2)} ${f(p3)}`;
-  s += o.fimB === 'reto' ? ` L${f(q0)}` : ` A${rb.toFixed(2)} ${rb.toFixed(2)} 0 0 0 ${f(q0)}`;
+  if (o.fimB === 'boca') {
+    // boca de manga: oval e inclinada (um lado desce mais), nunca o corte reto de tesoura
+    const k1 = add(p3, add(mul(u, rb * 0.62), mul(n, -rb * 0.25)));
+    const k2 = add(q0, add(mul(u, rb * 0.18), mul(n, rb * 0.25)));
+    s += ` C${f(k1)} ${f(k2)} ${f(q0)}`;
+  } else s += o.fimB === 'reto' ? ` L${f(q0)}` : ` A${rb.toFixed(2)} ${rb.toFixed(2)} 0 0 0 ${f(q0)}`;
   s += ` C${f(d1)} ${f(d2)} ${f(q3)}`;
   s += o.fimA === 'reto' ? ' Z' : ` A${ra.toFixed(2)} ${ra.toFixed(2)} 0 0 0 ${f(p0)} Z`;
   return s;
@@ -209,7 +253,11 @@ export type Forma = {
   op?: number;
   /** formas seguidas com a mesma `uniao` e a mesma cor são sombreadas como UMA (sem arco na junta) */
   uniao?: string;
+  /** cor do contorno (default: contornoDe(cor)) */
+  linhaCor?: string;
 };
+
+const linhaDe = (fm: Forma) => fm.linhaCor ?? contornoDe(fm.cor);
 
 export type Grupo = {
   formas: Forma[];
@@ -225,8 +273,8 @@ export type Grupo = {
 
 export class Pintor {
   private n = 0;
-  /** as formas que fazem a silhueta (pro fio de recorte), com a transformação da camada */
-  sil: { d: string; tf?: string }[] = [];
+  /** as formas que fazem a silhueta (contorno grosso de fora + fio de recorte), com a transformação da camada */
+  sil: { d: string; tf?: string; cor: string; op?: number; rim: boolean }[] = [];
   /** transformação corrente (a cabeça desenha num quadro local) */
   tf?: string;
   constructor(
@@ -295,21 +343,25 @@ export class Pintor {
     return runs.map((r, i) => (r.length === 1 ? this.pinta(r[0], `p${i}`, L) : this.pintaUniao(r, `p${i}`, L)));
   }
 
-  /** a camada: forro grosso de tinta de TODAS as formas, depois cada grupo (forro fino + pintura + detalhes) */
-  camada(grupos: Grupo[], key: string | number, L: P = this.L, fora = LINHA.fora): React.ReactNode {
+  /**
+   * A camada: forro FINO colorido de todas as formas (é a linha que aparece onde esta camada passa
+   * na frente de outra), depois cada grupo (forro da peça + pintura + detalhes). O contorno grosso
+   * de fora não mora aqui: é o passe `silhueta`, desenhado antes de tudo.
+   */
+  camada(grupos: Grupo[], key: string | number, L: P = this.L, interna = LINHA.dentro * 0.85): React.ReactNode {
     const todas = grupos.flatMap((g) => g.formas);
-    for (const fm of todas) if ((fm.op ?? 1) >= 0.99 && fm.rim !== false) this.sil.push({ d: fm.d, tf: this.tf });
+    for (const fm of todas) this.sil.push({ d: fm.d, tf: this.tf, cor: linhaDe(fm), op: fm.op, rim: fm.rim !== false && (fm.op ?? 1) >= 0.99 });
     return (
       <g key={key}>
         {todas.map((fm, i) => (
-          <path key={`u${i}`} d={fm.d} fill={TINTA} stroke={TINTA} style={sw(fora * 2)} strokeLinejoin="round" opacity={fm.op} />
+          <path key={`u${i}`} d={fm.d} fill={linhaDe(fm)} stroke={linhaDe(fm)} style={sw(interna * 2)} strokeLinejoin="round" opacity={fm.op} />
         ))}
         {grupos.map((g, gi) => (
           <g key={`g${gi}`}>
             {g.antes}
             {g.linha
               ? g.formas.map((fm, i) => (
-                  <path key={`l${i}`} d={fm.d} fill={TINTA} stroke={TINTA} style={sw(g.linha! * 2)} strokeLinejoin="round" opacity={fm.op} />
+                  <path key={`l${i}`} d={fm.d} fill={linhaDe(fm)} stroke={linhaDe(fm)} style={sw(g.linha! * 2)} strokeLinejoin="round" opacity={fm.op} />
                 ))
               : null}
             {g.meio}
@@ -327,9 +379,32 @@ export const Traco: React.FC<{ d: string; w?: number; cor?: string; op?: number;
   <path d={d} fill="none" stroke={cor} style={sw(w)} strokeLinecap="round" strokeLinejoin="round" opacity={op} strokeDasharray={tracejado} />
 );
 
-/** o fio de luz de recorte, só na silhueta do boneco (desenhado por último) */
-export function recorte(pt: Pintor, largura = 1.15, op = 0.92): React.ReactNode {
+const desloca = (x: number, y: number): React.CSSProperties => ({
+  transform: `translate(calc(var(--sk, 1) * ${x.toFixed(3)}px), calc(var(--sk, 1) * ${y.toFixed(3)}px))`,
+});
+
+/**
+ * O contorno GROSSO, só por fora: todas as formas do boneco com traço largo na cor de contorno de
+ * cada uma, desenhadas ANTES de tudo (os preenchimentos cobrem o miolo). Uma segunda cópia,
+ * deslocada pro lado oposto à luz, deixa a linha mais pesada embaixo e do lado da sombra.
+ */
+export function silhueta(pt: Pintor, fora = LINHA.fora): React.ReactNode {
   if (!pt.sil.length) return null;
+  const [lx, ly] = pt.L;
+  const todas = (k: string) =>
+    pt.sil.map((s, i) => <path key={`${k}${i}`} d={s.d} transform={s.tf} fill={s.cor} stroke={s.cor} style={sw(fora * 2)} strokeLinejoin="round" opacity={s.op} />);
+  return (
+    <g key="silhueta">
+      <g style={desloca(-lx * 0.7, -ly * 0.7)}>{todas('b')}</g>
+      <g>{todas('a')}</g>
+    </g>
+  );
+}
+
+/** o fio de luz de recorte: só na silhueta, só do LADO DA LUZ e por dentro do contorno (desenhado por último) */
+export function recorte(pt: Pintor, largura = 0.95, op = 0.85): React.ReactNode {
+  const sil = pt.sil.filter((s) => s.rim);
+  if (!sil.length) return null;
   const id = pt.id('rec');
   const [lx, ly] = pt.L;
   const R = { x: -700, y: -1000, w: 1400, h: 1200 };
@@ -337,12 +412,12 @@ export function recorte(pt: Pintor, largura = 1.15, op = 0.92): React.ReactNode 
     <g key="recorte">
       <mask id={id} maskUnits="userSpaceOnUse" x={R.x} y={R.y} width={R.w} height={R.h}>
         <g fill="#FFFFFF">
-          {pt.sil.map((s, i) => (
+          {sil.map((s, i) => (
             <path key={i} d={s.d} transform={s.tf} />
           ))}
         </g>
-        <g fill="#000000" style={{ transform: `translate(calc(var(--sk, 1) * ${(lx * largura).toFixed(3)}px), calc(var(--sk, 1) * ${(ly * largura).toFixed(3)}px))` }}>
-          {pt.sil.map((s, i) => (
+        <g fill="#000000" style={desloca(-lx * largura, -ly * largura)}>
+          {sil.map((s, i) => (
             <path key={i} d={s.d} transform={s.tf} />
           ))}
         </g>

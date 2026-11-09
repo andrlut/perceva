@@ -156,7 +156,7 @@ export const BonecoAcoes: React.FC<FolhaProps> = ({ estilo: id }) => {
   const e = estiloDe(id);
   // [pessoa, contexto, ação, quadro da ação (o momento que lê melhor), opts, legenda]
   const acoes: [string, Contexto, Acao, number, PoseOpts, string][] = [
-    ['bia', 'esporte', 'correr', 4, { vista: 'tres-quartos', ritmo: 'rapido' }, 'tiro de corrida'],
+    ['bia', 'esporte', 'correr', 10, { vista: 'tres-quartos', ritmo: 'rapido' }, 'tiro de corrida'],
     ['caio', 'esporte', 'saltar', 20, { vista: 'tres-quartos' }, 'salto'],
     ['theo', 'esporte', 'rosca', 18, { vista: 'tres-quartos' }, 'série de força'],
     ['lucia', 'casa', 'beber', 26, { vista: 'tres-quartos' }, 'beber'],

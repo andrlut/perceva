@@ -52,16 +52,23 @@ type Manga = { ate: 'nada' | 'curta' | 'cotovelo' | 'dobrada' | 'longa'; folga: 
 const mangaDe = (c: Ctx): Manga => {
   const tp = c.roupa.cima.tipo;
   if (tp === 'top' || tp === 'regata') return { ate: 'nada', folga: 0 };
-  if (tp === 'camiseta') return { ate: 'curta', folga: 1.7 };
-  if (tp === 'blusa') return { ate: 'cotovelo', folga: 1.5 };
-  if (tp === 'manga-longa') return { ate: 'longa', folga: 0.9 };
-  if (tp === 'moletom') return { ate: 'longa', folga: 2.3, punho: 'canelado' };
-  if (tp === 'camisa') return c.roupa.contexto === 'trabalho' ? { ate: 'longa', folga: 1.5, punho: 'camisa' } : { ate: 'dobrada', folga: 1.6 };
-  if (tp === 'blazer') return { ate: 'longa', folga: 2.0, punho: 'blazer' };
-  return { ate: 'longa', folga: 2.1, punho: 'viés' };
+  // volume moderado (rodada 3: as mangas liam boia/ombreira com o braço fino saindo)
+  if (tp === 'camiseta') return { ate: 'curta', folga: 0.9 };
+  if (tp === 'blusa') return { ate: 'cotovelo', folga: 0.9 };
+  if (tp === 'manga-longa') return { ate: 'longa', folga: 0.7 };
+  if (tp === 'moletom') return { ate: 'longa', folga: 1.25, punho: 'canelado' };
+  if (tp === 'camisa') return c.roupa.contexto === 'trabalho' ? { ate: 'longa', folga: 1.1, punho: 'camisa' } : { ate: 'dobrada', folga: 1.1 };
+  if (tp === 'blazer') return { ate: 'longa', folga: 1.4, punho: 'blazer' };
+  return { ate: 'longa', folga: 1.5, punho: 'viés' };
 };
 
 const contraste = (c: string) => (luma(c) > 0.62 ? escurece(c, 0.55) : '#F4F5FF');
+
+/** a borda de trás da boca da manga (o oval visto por dentro), um tico pra dentro da bainha */
+function bocaManga(fim: P, u: P, r: number): string {
+  const n = perp(u);
+  return linha([add(add(fim, mul(n, r * 0.9)), mul(u, -0.2)), add(fim, mul(u, -r * 0.32)), add(add(fim, mul(n, -r * 0.9)), mul(u, -0.05))]);
+}
 
 // ------------------------------------------------------------------ pernas
 
@@ -298,7 +305,19 @@ export function camadaPerna(c: Ctx, i: 0 | 1, key: string): React.ReactNode {
   grupos.push({ formas: p.pe.formas, linha: LINHA.dentro, depois: p.pe.detalhes, antes: p.pele.length ? null : mascara });
   const calca = [...p.calca];
   if (pel && i === 0) calca.unshift({ ...pel, uniao: 'calca', k: p.calca[0]?.k ?? pel.k });
-  if (calca.length) grupos.push({ formas: calca, linha: LINHA.dentro, meio: mascara2, depois: p.detalhes });
+  const listras = c.roupa.baixo.tipo === 'pijama' ? calca.map((f, k) => <path key={`l${k}`} d={f.d} fill={`url(#${c.uid}-listra)`} />) : null;
+  if (calca.length)
+    grupos.push({
+      formas: calca,
+      linha: LINHA.dentro,
+      meio: mascara2,
+      depois: (
+        <g>
+          {listras}
+          {p.detalhes}
+        </g>
+      ),
+    });
   else grupos.push({ formas: [], depois: p.detalhes });
   return c.pt.camada(grupos, key);
 }
@@ -388,15 +407,31 @@ export function camadaSaia(c: Ctx, key: string): React.ReactNode {
 // ------------------------------------------------------------------ tronco
 
 /** contorno do tronco (pele ou peça de cima), de `de` (vf da barra) até os ombros */
-function contornoTronco(c: Ctx, o: { e: number; eBarra?: number; de: number; alca?: boolean; reto?: boolean }): string {
-  const { tr } = c;
+function contornoTronco(c: Ctx, o: { e: number; eBarra?: number; de: number; alca?: boolean; reto?: boolean; cai?: boolean }): string {
+  const { tr, j } = c;
   const e = o.e;
   const eb = o.eBarra ?? e;
   const ef = (vf: number) => lerp(eb, e, clamp((vf - o.de) / 0.45));
   const lv = [o.de, ...[-0.08, 0, 0.1, 0.2, 0.32, 0.42, 0.54, 0.66, 0.76].filter((v) => v > o.de + 0.04)];
-  const dir: PQ[] = lv.map((v) => tr.P(tr.xr(v, ef(v)), v));
+  // corpo grande: o pano CAI reto do peito (a barriga não vira uma bola baixa — lia gravidez)
+  const peitoR = tr.xr(0.64, e);
+  const xr = (v: number) => (o.cai && v < 0.64 ? Math.max(tr.xr(v, ef(v)), peitoR - (0.64 - v) * 5) : tr.xr(v, ef(v)));
+  const dir: PQ[] = lv.map((v) => tr.P(xr(v), v));
   const esq: PQ[] = lv.map((v) => tr.P(tr.xl(v, ef(v)), v)).reverse();
   const vC = 0.975;
+  // o ombro SOBE quando o braço daquele lado sobe (no alongar a manga não fica apontando pra baixo)
+  const sobeDe = (lado: 1 | -1) => {
+    const i = (j.vista === 'frente' ? lado > 0 : lado < 0) ? 1 : 0;
+    return clamp((Math.abs(j.ang.braco[i] - j.ang.tronco) - 70) / 90);
+  };
+  const sR = sobeDe(1);
+  const sL = sobeDe(-1);
+  // de frente, com manga, o ombro da peça vai até a borda de fora do braço (a manga sai dali com
+  // costura reta — sem a bola de manga bufante); o braço levantado volta pro canto normal
+  const ombroFora = (lado: 1 | -1, s: number) =>
+    j.vista === 'frente' && o.e > 0.5 && !o.alca ? lerp(Math.max(lado > 0 ? tr.cantoR(e) : -tr.cantoL(e), c.fis.ombros + c.fis.braco[0] * 0.72 + e), lado > 0 ? tr.cantoR(e) : -tr.cantoL(e), s) : lado > 0 ? tr.cantoR(e) : -tr.cantoL(e);
+  const cR = ombroFora(1, sR);
+  const cL = -ombroFora(-1, sL);
   let topo: PQ[];
   if (o.alca) {
     const a = tr.nr + 4.4;
@@ -414,12 +449,12 @@ function contornoTronco(c: Ctx, o: { e: number; eBarra?: number; de: number; alc
     esq.splice(0, 1);
   } else {
     topo = [
-      tr.P(tr.cantoR(e), vC),
-      tr.P(lerp(tr.cantoR(e), tr.nc + tr.nr, 0.55), 1.025),
+      tr.P(cR - 5 * sR, vC - 0.03 + 0.09 * sR),
+      tr.P(lerp(cR - 5 * sR, tr.nc + tr.nr, 0.55), 1.025 + 0.05 * sR),
       tr.P(tr.nc + tr.nr * 0.95, 1.06),
       tr.P(tr.nc - tr.nr * 0.95, 1.06),
-      tr.P(lerp(tr.cantoL(e), tr.nc - tr.nr, 0.55), 1.025),
-      tr.P(tr.cantoL(e), vC),
+      tr.P(lerp(cL + 5 * sL, tr.nc - tr.nr, 0.55), 1.025 + 0.05 * sL),
+      tr.P(cL + 5 * sL, vC - 0.03 + 0.09 * sL),
     ];
   }
   dir[0] = [...(dir[0] as P), 1] as PQ;
@@ -490,11 +525,14 @@ export function camadaTronco(c: Ctx, key: string): React.ReactNode {
   const de = barraCima(c);
   const e = folgaCima(tp);
   const solta = tp === 'moletom' || tp === 'pijama' || tp === 'blazer' || tp === 'camisa';
-  const corpoD = contornoTronco(c, { e, eBarra: solta ? e + 0.8 : e, de, alca: tp === 'regata' || tp === 'top' });
+  const cai = fis.barriga > 0.3 && tp !== 'top' && tp !== 'regata';
+  const corpoD = contornoTronco(c, { e, eBarra: solta ? e + 0.8 : e, de, alca: tp === 'regata' || tp === 'top', cai });
   const det: React.ReactNode[] = [];
   const formasCima: Forma[] = [{ d: corpoD, cor, k: 6 }];
   const L = LINHA.fino;
   const peleChapada = (d: string, k: string) => <path key={k} d={d} fill={c.pele} />;
+  // pijama: listra fina na cor2 (lê "pijama" de primeira, nunca agasalho nem jaleco)
+  if (tp === 'pijama') det.push(<path key="lis" d={corpoD} fill={`url(#${c.uid}-listra)`} />);
   // estampa de bolinhas da blusa (cor2)
   if (tp === 'blusa' && cor2) {
     const pid = `${c.uid}-poa`;
@@ -613,7 +651,7 @@ export function camadaTronco(c: Ctx, key: string): React.ReactNode {
   // dobras: embaixo do braço, e a barriga empurrando a camiseta
   if (tp !== 'top' && tp !== 'regata') {
     det.push(<Traco key="ax" d={linha([tr.P(tr.xr(0.8, e) - 1.2, 0.8), tr.P(tr.xr(0.72, e) - 3.6, 0.7)])} w={L} op={0.55} />);
-    if (fis.barriga > 0.3 && tp !== 'blazer') det.push(<Traco key="bar" d={linha([tr.frente(-tr.W(0.3) * 0.55, 0.28, e), tr.frente(-tr.W(0.3) * 0.1, 0.24, e), tr.frente(tr.W(0.3) * 0.3, 0.27, e)])} w={L} op={0.5} />);
+
   }
   grupos.push({ formas: formasCima, linha: LINHA.dentro, depois: <g>{det}</g> });
   // extras do tronco: avental, crachá
@@ -682,7 +720,10 @@ export function camadaBraco(c: Ctx, i: 0 | 1, key: string): React.ReactNode {
   const kE = 1 + 0.2 * (1 - enc);
   const r: [number, number, number] = [fis.braco[0] * kE, fis.braco[1] * kE, fis.braco[2]];
   const peleF = (d: string): Forma => ({ d, cor: c.pele, sombra: c.peleSombra, k: 2.6, uniao: 'pele' });
-  const peleBraco = peleF(capsula(o, co, r[0], r[1], { bn: [0.6, 0.1], bm: [1.0, 0.3] }));
+  const m0 = mangaDe(c);
+  const costura = j.vista === 'frente' && m0.ate !== 'nada' && Math.abs(j.ang.braco[i] - j.ang.tronco) < 55 && !escorco;
+  const oS = costura ? add(o, mul(norm(sub(co, o)), r[0] * 0.55)) : o;
+  const peleBraco = peleF(capsula(oS, co, r[0], r[1], { bn: [0.6, 0.1], bm: [1.0, 0.3], fimA: costura ? 'reto' : 'redondo' }));
   const peleAnte = peleF(capsula(co, pu, r[1], r[2], { bn: [0.9, 0.2], bm: [0.6, 0.1] }));
   // a garrafinha vai na mão livre que APARECE: a da frente (1) se estiver solta, senão a de trás
   const ex = roupa.extras ?? [];
@@ -723,26 +764,29 @@ export function camadaBraco(c: Ctx, i: 0 | 1, key: string): React.ReactNode {
   const pano = (d: string, k = 2.8, cc = cor): Forma => ({ d, cor: cc, k, uniao: 'manga' });
   if (m.ate === 'curta') {
     const fim = lerpP(o, co, escorco ? 0.62 : 0.5);
-    const rr = lerp(r[0], r[1], 0.5) + m.folga + 0.5;
-    mc.push(pano(capsula(o, fim, r[0] + m.folga, rr, { fimB: 'reto' })));
+    const rr = lerp(r[0], r[1], 0.5) + m.folga + 0.2;
+    mc.push(pano(capsula(oS, fim, r[0] + m.folga, rr, { fimB: 'boca', fimA: costura ? 'reto' : 'redondo' })));
+    det.push(<Traco key="bo" d={bocaManga(fim, du, rr)} w={LINHA.fino} op={0.55} />);
     if (cor2) {
       const n = perp(du);
       const p = add(fim, mul(du, -1));
       det.push(<Traco key="bm" d={linha([add(p, mul(n, rr)), add(p, mul(n, -rr))])} w={1.8} cor={cor2} />);
     }
   } else if (m.ate === 'cotovelo') {
-    mc.push(pano(capsula(o, co, r[0] + m.folga, r[1] + m.folga + 0.8)));
+    mc.push(pano(capsula(oS, co, r[0] + m.folga, r[1] + m.folga + 0.4, { fimA: costura ? 'reto' : 'redondo' })));
     const fim = lerpP(co, pu, 0.22);
-    mb.push(pano(capsula(co, fim, r[1] + m.folga + 0.8, lerp(r[1], r[2], 0.22) + m.folga + 1.4, { fimB: 'reto' })));
+    const rr = lerp(r[1], r[2], 0.22) + m.folga + 0.6;
+    mb.push(pano(capsula(co, fim, r[1] + m.folga + 0.4, rr, { fimB: 'boca' })));
+    det.push(<Traco key="bo" d={bocaManga(fim, df, rr)} w={LINHA.fino} op={0.55} />);
   } else if (m.ate === 'dobrada') {
     // manga arregaçada: até o meio do antebraço, com a dobra mais clara
-    mc.push(pano(capsula(o, co, r[0] + m.folga, r[1] + m.folga + 0.4)));
+    mc.push(pano(capsula(oS, co, r[0] + m.folga, r[1] + m.folga + 0.4, { fimA: costura ? 'reto' : 'redondo' })));
     const fim = lerpP(co, pu, 0.36);
     mb.push(pano(capsula(co, fim, r[1] + m.folga + 0.4, lerp(r[1], r[2], 0.36) + m.folga + 0.9, { fimB: 'reto' })));
     const ini = lerpP(co, pu, 0.16);
     mb.push(pano(capsula(ini, fim, lerp(r[1], r[2], 0.16) + m.folga + 1.1, lerp(r[1], r[2], 0.36) + m.folga + 1.1, { fimA: 'reto', fimB: 'reto' }), 1.2, clareia(cor, 0.12)));
   } else if (m.ate === 'longa') {
-    mc.push(pano(capsula(o, co, r[0] + m.folga, r[1] + m.folga + 0.3)));
+    mc.push(pano(capsula(oS, co, r[0] + m.folga, r[1] + m.folga + 0.3, { fimA: costura ? 'reto' : 'redondo' })));
     const fimP = add(pu, mul(df, m.punho === 'canelado' ? 0.6 : 1.2));
     mb.push(pano(capsula(co, fimP, r[1] + m.folga + 0.3, r[2] + m.folga * 0.75, { fimB: 'reto' })));
     const n = perp(df);
@@ -783,7 +827,17 @@ export function camadaBraco(c: Ctx, i: 0 | 1, key: string): React.ReactNode {
     grupos.push(...gruposMao());
     if (!mao.frente?.length && mao.detalhesPalma) grupos.push({ formas: [], depois: mao.detalhes });
     const manga = [...mc, ...mb];
-    if (manga.length) grupos.push({ formas: manga, linha: LINHA.dentro, depois: <g>{det}</g> });
+    if (manga.length)
+    grupos.push({
+      formas: manga,
+      linha: LINHA.dentro,
+      depois: (
+        <g>
+          {roupa.cima.tipo === 'pijama' && manga.map((f, k) => <path key={`l${k}`} d={f.d} fill={`url(#${c.uid}-listra)`} />)}
+          {det}
+        </g>
+      ),
+    });
     else if (det.length) grupos.push({ formas: [], depois: <g>{det}</g> });
   } else {
     // ESCORÇO: braço (e a manga dele) atrás; antebraço + mão por cima, com linha própria

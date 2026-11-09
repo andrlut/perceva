@@ -58,8 +58,12 @@ function projetaAneis(aneis: Anel[], g: Giro, W: number): { tras: P[]; frente: P
     let dMn = Infinity;
     let dMx = -Infinity;
     const dx = a.dx ?? 0;
-    for (let f = -180; f <= 180; f += 3) {
-      if (a.gap && f > a.gap[0] && f < a.gap[1]) continue;
+    // amostra fina + as bordas EXATAS da abertura (sem isso a franja saía em degraus)
+    const fs: number[] = [];
+    for (let f = -180; f <= 180; f += 2) fs.push(f);
+    if (a.gap) fs.push(a.gap[0], a.gap[1]);
+    for (const f of fs) {
+      if (a.gap && f > a.gap[0] + 1e-6 && f < a.gap[1] - 1e-6) continue;
       const x = a.rx * Math.sin(f * RAD);
       const cf = Math.cos(f * RAD);
       const z = (cf >= 0 ? a.rz : a.rzT ?? a.rz) * cf + cz;
@@ -137,7 +141,7 @@ export function cabeloGeo(tipo: Cabelo, W: number, H: number, g: Giro, o: { grav
     const d = y - y0;
     return (d * o.grav[0]) / Math.max(0.3, o.grav[1]) - d * 0.28 * o.arrasto + balanco * d * 0.04;
   };
-  const passo = H * 0.025;
+  const passo = H * 0.016;
   const faixa = (y0: number, y1: number, f: (y: number) => Anel | null): Anel[] => {
     const out: Anel[] = [];
     for (let y = y0; y <= y1 + 1e-6; y += passo) {
@@ -188,7 +192,7 @@ export function cabeloGeo(tipo: Cabelo, W: number, H: number, g: Giro, o: { grav
     case 'chanel': {
       aneis = faixa(topoDe(vol) + 0.4, 0.47 * H, (y) => {
         const x = fr(y);
-        const queda = x > -0.06 ? 2.2 * suaviza(-0.06, 0.3, x) - 2.4 * suaviza(0.36, 0.47, x) : 0;
+        const queda = x > -0.06 ? 2.2 * suaviza(-0.06, 0.3, x) - 7.5 * suaviza(0.33, 0.47, x) ** 1.6 : 0;
         const r = raio(y, vol, queda);
         // franja lateral: a abertura nasce mais pra direita (o cabelo cai da risca pra esquerda)
         const gap = x < -0.37 ? null : x < -0.1 ? abertura(y, -0.37, 56, -0.12, 0.35) : ([-56, 62] as [number, number]);

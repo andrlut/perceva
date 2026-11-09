@@ -130,9 +130,30 @@ export function troncoEls(c: RCtx) {
     topo = [ombroDf, trapD, ...anel(cfg.nw, T + 1.3, cfg.dip, forma), trapE, ombroEf];
   }
   const barra = cfg.barra;
-  const roupaPts = [...tr.lado(barra, vLadoTopo, 1, f), ...M(topo), ...tr.lado(vLadoTopo, barra, -1, f), tr.mapa(tr.meio(barra) * 0.5, barra - 1.4)];
+  // o tecido CAI: das peças soltas, abaixo do busto o lado desce quase reto (não segue a cintura
+  // nem a barriga — o painel via "balão" e, de perfil, barriga de grávida)
+  const solta = ['camiseta', 'manga-longa', 'moletom', 'blusa', 'pijama', 'blazer'].includes(cima.tipo) || (cima.tipo === 'camisa' && roupa.contexto !== 'trabalho');
+  const vB = 0.72 * T;
+  const ladoCaido = (v0: number, v1: number, ld: 1 | -1): P[] => {
+    if (!solta) return tr.lado(v0, v1, ld, f);
+    const uB = tr.borda(vB, ld, f);
+    const out: P[] = [];
+    const N = 10;
+    for (let q = 0; q <= N; q++) {
+      const v = lerp(v0, v1, q / N);
+      const u0 = tr.borda(v, ld, f);
+      let u = u0;
+      if (v < vB) {
+        const reto = uB * (1 - 0.035 * ((vB - v) / vB));
+        u = ld > 0 ? Math.max(u0, reto) : Math.min(u0, reto);
+      }
+      out.push(tr.mapa(u, v));
+    }
+    return out;
+  };
+  const roupaPts = [...ladoCaido(barra, vLadoTopo, 1), ...M(topo), ...ladoCaido(vLadoTopo, barra, -1), tr.mapa(tr.meio(barra) * 0.5, barra - 1.4)];
   const dRoupa = suave(roupaPts);
-  const fRoupa = k.caixa(mt);
+  const fRoupa = k.caixaTecido(mt);
 
   const pecas: Peca[] = [{ d: dPele, fill: k.caixa(mP) }];
   const antes: React.ReactNode[] = [];
@@ -144,14 +165,16 @@ export function troncoEls(c: RCtx) {
     const corC = cima.cor2 ?? '#F4F5FF';
     const mc = material(corC);
     const insert = [...anel(cfg.nw - 0.4, T + 1.6, 3, 'u', 95, -95, 8), [tr.meio(0.5 * T), 0.5 * T] as P];
-    pecas.push({ d: suave(M(insert)), fill: k.caixa(mc) });
+    pecas.push({ d: suave(M(insert)), fill: k.caixaTecido(mc) });
     // a gola da camisa
     const gD = anel(cfg.nw - 0.4, T + 1.6, 3, 'u', 95, 20, 4);
     const gE = anel(cfg.nw - 0.4, T + 1.6, 3, 'u', -20, -95, 4);
-    pecas.push({ d: suave(M([...gD, [meioT + 1.6 * w, T - 6]])), fill: k.caixa(material(ajusta(corC, 0.03))) });
-    pecas.push({ d: suave(M([[meioT - 1.6 * w, T - 6], ...gE])), fill: k.caixa(material(ajusta(corC, -0.02))) });
+    pecas.push({ d: suave(M([...gD, [meioT + 1.6 * w, T - 6]])), fill: k.caixaTecido(material(ajusta(corC, 0.03))) });
+    pecas.push({ d: suave(M([[meioT - 1.6 * w, T - 6], ...gE])), fill: k.caixaTecido(material(ajusta(corC, -0.02))) });
   }
   pecas.push({ d: dRoupa, fill: fRoupa });
+  // pijama lê como pijama: listra fina (cor2) por cima do tecido
+  if (cima.tipo === 'pijama' && m2) pecas.push({ d: dRoupa, fill: k.listras(m2.base, 3.4, 1.0), op: 0.55, sem: true });
 
   // ---- detalhes por peça
   const decote = (dip: number, nw: number, forma: 'u' | 'v', v0: number) => anel(nw, v0, dip, forma);
@@ -165,7 +188,7 @@ export function troncoEls(c: RCtx) {
     if (cima.tipo === 'top' && m2) {
       // a faixa elástica embaixo do busto
       const fx = [...tr.lado(barra, barra + 3.2, 1, f + 0.15, 3), ...tr.lado(barra + 3.2, barra, -1, f + 0.15, 3), tr.mapa(tr.meio(barra) * 0.5, barra - 1.4)];
-      pecas.push({ d: suave(fx), fill: k.caixa(m2) });
+      pecas.push({ d: suave(fx), fill: k.caixaTecido(m2) });
     }
   }
   if (cfg.gola === 'colarinho' || cfg.gola === 'pijama') {
@@ -179,7 +202,7 @@ export function troncoEls(c: RCtx) {
     const mg = material(corGola);
     const abaD: P[] = [ab[0], [ab[0][0], ab[0][1] + 1.6], ab[3], [ab[5][0] + ponta * w * 0.5 + meioT * 0.1, ab[5][1] - ponta]];
     const abaE: P[] = [ab[12], [ab[12][0], ab[12][1] + 1.6], ab[9], [ab[7][0] - ponta * w * 0.5 + meioT * 0.1, ab[7][1] - ponta]];
-    pecas.push({ d: suave(M(abaD)), fill: k.caixa(mg) }, { d: suave(M(abaE)), fill: k.caixa(mg) });
+    pecas.push({ d: suave(M(abaD)), fill: k.caixaTecido(mg) }, { d: suave(M(abaE)), fill: k.caixaTecido(mg) });
     if (pj && m2) {
       det.push(linha([abaD[2], abaD[3]], m2.base, 0.75), linha([abaE[2], abaE[3]], m2.base, 0.75));
     }
@@ -221,7 +244,7 @@ export function troncoEls(c: RCtx) {
     const lapD: P[] = [ab[0], ab[2], [tr.meio(vFundo), vFundo], [tr.meio(vFundo) + 2.5 * w, vFundo + 4], [ab[3][0] + larg * w, ab[3][1] - 3], [ab[1][0] + larg * w * 0.9, ab[1][1] - 2.2], [ab[0][0] + 1.6 * w, ab[0][1] - 1.2]];
     const lapE: P[] = [ab[12], ab[10], [tr.meio(vFundo), vFundo], [tr.meio(vFundo) - 2.5 * w, vFundo + 4], [ab[9][0] - larg * w, ab[9][1] - 3], [ab[11][0] - larg * w * 0.9, ab[11][1] - 2.2], [ab[12][0] - 1.6 * w, ab[12][1] - 1.2]];
     const ml = material(ajusta(cima.cor, 0.05));
-    pecas.push({ d: suave(M(lapD)), fill: k.caixa(ml) }, { d: suave(M(lapE)), fill: k.caixa(ml) });
+    pecas.push({ d: suave(M(lapD)), fill: k.caixaTecido(ml) }, { d: suave(M(lapE)), fill: k.caixaTecido(ml) });
     const bt = tr.mapa(tr.meio(0.3 * T) + 0.4, 0.3 * T);
     det.push(<circle key="botao" cx={bt[0]} cy={bt[1]} r={1.0} fill={mt.fundo} />, <circle key="botao2" cx={bt[0] - 0.3} cy={bt[1] - 0.3} r={0.35} fill={mt.luz} opacity={0.7} />);
     // bolsos (lapelinhas)
@@ -234,7 +257,7 @@ export function troncoEls(c: RCtx) {
   }
   if (cima.tipo === 'moletom') {
     const rib = [...tr.lado(barra, barra + 3.2, 1, f + 0.1, 2), ...tr.lado(barra + 3.2, barra, -1, f + 0.1, 2), tr.mapa(tr.meio(barra) * 0.5, barra - 1.4)];
-    pecas.push({ d: suave(rib), fill: k.caixa(material(ajusta(cima.cor, -0.07))) });
+    pecas.push({ d: suave(rib), fill: k.caixaTecido(material(ajusta(cima.cor, -0.07))) });
     // bolso canguru
     const u0 = tr.meio(0.2 * T) * 0.7;
     const bw = tr.borda(0.2 * T, 1, f) * 0.55 + Math.abs(tr.borda(0.2 * T, -1, f)) * 0.55;
@@ -264,7 +287,7 @@ export function troncoEls(c: RCtx) {
       [(cfg.nw + 4.5) * Math.max(w, 0.5) + cz, T + 3.5],
       [(cfg.nw + 4.5) * w + cz, T - 1],
     ];
-    antes.push(<Vol key="capuz" k={k} pecas={[{ d: suave(M(capuz)), fill: k.caixa(material(ajusta(cima.cor, -0.1))) }]} />);
+    antes.push(<Vol key="capuz" k={k} pecas={[{ d: suave(M(capuz)), fill: k.caixaTecido(material(ajusta(cima.cor, -0.1))) }]} />);
   }
   if (cima.tipo === 'blusa') {
     // a barra com um tico de godê e as dobras do caimento
@@ -276,20 +299,6 @@ export function troncoEls(c: RCtx) {
     const u1 = tr.borda(0.72 * T, ld as 1 | -1, f) * 0.72;
     const u2 = tr.borda(0.32 * T, ld as 1 | -1, f) * 0.55;
     det.push(linha([[u1, 0.72 * T], [lerp(u1, u2, 0.5) - ld * 0.6, 0.52 * T], [u2, 0.3 * T]], mt.sombra, 0.7, 0.35));
-  }
-
-  // corpo largo: a barriga lê de cara (um volume claro em cima e a sombra embaixo, dentro da roupa)
-  if (med.largo && cfg.barra < 0.3 * T) {
-    const rec = k.recorte([dRoupa]);
-    const c0 = tr.mapa(tr.meio(0.3 * T) * 1.05, 0.3 * T);
-    const c1 = tr.mapa(tr.meio(0.12 * T) * 1.1, 0.1 * T);
-    const lw = (tr.borda(0.3 * T, 1, f) - tr.borda(0.3 * T, -1, f)) * 0.36;
-    det.push(
-      <g key="barriga" clipPath={rec}>
-        <ellipse cx={c0[0] - (k.espelho ? -1 : 1) * lw * 0.15} cy={c0[1] - 1} rx={lw} ry={0.15 * T} fill={mt.luz} opacity={0.3} filter={k.desfoque(1.6)} />
-        <ellipse cx={c1[0]} cy={c1[1] + 1} rx={lw * 1.15} ry={0.07 * T} fill={mt.fundo} opacity={0.4} filter={k.desfoque(1.4)} />
-      </g>,
-    );
   }
 
   // ---- extras do peito
@@ -316,7 +325,7 @@ export function troncoEls(c: RCtx) {
       <g key="avental">
         {linha([[mc - bw * 0.85, 0.84 * T], [nb[0] - rN * 0.9, T + 2]], pessoa.cor, 0.9)}
         {linha([[mc + bw * 0.85, 0.84 * T], [nb[0] + rN * 0.9, T + 2]], pessoa.cor, 0.9)}
-        <Vol k={k} pecas={[{ d: dA, fill: k.caixa(ma) }]}>
+        <Vol k={k} pecas={[{ d: dA, fill: k.caixaTecido(ma) }]}>
           <path d={suave(M([[mc - 4.2 * w, 0.06 * T], [mc + 4.2 * w, 0.06 * T], [mc + 3.8 * w, -0.12 * T], [mc - 3.8 * w, -0.12 * T]]))} fill={pessoa.cor} opacity={0.75} />
           {linha([[mc - 4.2 * w, 0.06 * T], [mc + 4.2 * w, 0.06 * T]], ajusta(pessoa.cor, -0.12), 0.6)}
           {linha([[tr.borda(0.36 * T, -1, f + 0.5) * 0.92, 0.36 * T], [tr.borda(0.36 * T, 1, f + 0.5) * 0.92, 0.36 * T]], pessoa.cor, 1.2, 0.9)}
@@ -385,7 +394,7 @@ export function quadrilEls(c: RCtx) {
       <path key="dob1" d={`M${fmt(hip[0] + 3)} ${fmt(hip[1])}Q${fmt(xR - 6)} ${fmt(yH - 6)} ${fmt(xR - 4)} ${fmt(yH)}`} stroke={mt.sombra} strokeWidth={0.7} fill="none" opacity={0.4} />,
       <path key="dob2" d={`M${fmt(hip[0] - 3)} ${fmt(hip[1])}Q${fmt(xL + 7)} ${fmt(yH - 6)} ${fmt(xL + 6)} ${fmt(yH)}`} stroke={mt.sombra} strokeWidth={0.7} fill="none" opacity={0.4} />,
     );
-    return { el: <Vol k={k} pecas={[{ d, fill: k.caixa(mt) }]}>{det}</Vol>, ds: [d] };
+    return { el: <Vol k={k} pecas={[{ d, fill: k.caixaTecido(mt) }]}>{det}</Vol>, ds: [d] };
   }
   const vC = COS[b.tipo] * T;
   const fo = { legging: 0.45, jeans: 1.1, calca: 1.25, moletom: 2.2, short: 1.6, pijama: 2.3 }[b.tipo as 'jeans'];
@@ -443,10 +452,11 @@ export function quadrilEls(c: RCtx) {
   const xR = tr.mapa(tr.borda(0.1 * T, 1, fo), 0.1 * T);
   const [la, lb] = k.espelho ? [xR, xL] : [xL, xR];
   const fill = k.lin(la, lb, [
-    [0, mistura(mt.base, mt.luz, 0.8)],
-    [0.4, mt.base],
-    [0.85, mt.sombra],
-    [1, mt.rebate],
+    [0, mistura(mt.base, mt.luz, 0.4)],
+    [0.1, mt.base],
+    [0.74, mt.base],
+    [0.74, mt.sombra],
+    [1, mistura(mt.sombra, mt.fundo, 0.3)],
   ]);
   // o quadril esmaece embaixo: a calça continua nas coxas sem emenda (as coxas vêm antes)
   return {

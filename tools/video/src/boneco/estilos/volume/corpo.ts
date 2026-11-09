@@ -62,7 +62,7 @@ export function medidas(p: Pessoa, prop: Proporcao): Med {
   const Q = prop.quadris;
   const hipA = Q + rCoxa(0) * 0.9 + (f ? 1.2 : 0);
   const cintura = f ? hipA * (largo ? 1.0 : 0.74) : lerp(hipA, S, 0.3) * (largo ? 1.12 : forte ? 0.8 : 0.88);
-  const barriga = largo ? 11 : 0;
+  const barriga = largo ? 6 : 0;
   const busto = f ? (largo ? 4.6 : 3.2) : forte ? 1.2 : 0;
   const bumbum = f ? 2.4 : 0.6;
   const corcunda = idoso ? 2.6 : 0;
@@ -70,7 +70,7 @@ export function medidas(p: Pessoa, prop: Proporcao): Med {
   const chaves = [
     { v: 1.04, A: rPescoco + 1.4, F: rPescoco * 0.9, B: rPescoco * 1.05 + corcunda * 0.4 },
     { v: 0.99, A: S - 1.5, F: 0.42 * S, B: 0.46 * S + corcunda },
-    { v: 0.91, A: S + del, F: 0.5 * S, B: 0.5 * S + corcunda },
+    { v: 0.91, A: S + del, F: 0.5 * S + (largo ? 1.5 : 0), B: 0.5 * S + corcunda + (largo ? 1.5 : 0) },
     { v: 0.77, A: S - 0.4 + (largo ? 1.5 : 0), F: 0.55 * S + busto + (largo ? 2 : 0), B: 0.5 * S + corcunda * 0.7 },
     { v: 0.6, A: lerp(S - 1.2, cintura, 0.3) + (largo ? 1.5 : 0), F: 0.55 * S + busto * 0.75 + barriga * 0.45, B: 0.47 * S },
     { v: 0.36, A: cintura, F: 0.47 * S + barriga, B: 0.43 * S },

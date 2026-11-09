@@ -11,7 +11,7 @@
 // O código mora em ./serie/: base (tinta + cel), fisico, corpo, maos, objetos, cabeca, cabelos.
 import React from 'react';
 import type { DesenhoProps, Estilo } from '../estilo';
-import { Pintor, hash, norm, recorte, sombraPele } from './serie/base';
+import { Pintor, hash, norm, recorte, silhueta, sombraPele } from './serie/base';
 import { cabeloPronto, camadaCabeca, camadaCabeloAtras } from './serie/cabeca';
 import { camadaBraco, camadaPerna, camadaSaia, camadaTronco, detalhesCintura } from './serie/corpo';
 import type { Ctx } from './serie/ctx';
@@ -60,6 +60,19 @@ const SerieDesenho: React.FC<DesenhoProps> = ({ j, pessoa, roupa, humor, t, uid,
   camadas.push(camadaCabeca(c, cab, 'cab'));
   if (j.bracoNaFrente[0]) camadas.push(camadaBraco(c, 0, 'b0f'));
   if (j.bracoNaFrente[1]) camadas.push(camadaBraco(c, 1, 'b1f'));
+  // estampa do pijama (listra fina na cor2), usada pelo tronco, mangas e calça
+  if (roupa.cima.tipo === 'pijama' || roupa.baixo.tipo === 'pijama') {
+    const cor2 = roupa.cima.cor2 ?? roupa.baixo.cor2 ?? '#F4F5FF';
+    camadas.unshift(
+      <defs key="estampa">
+        <pattern id={`${uid}-listra`} patternUnits="userSpaceOnUse" width={4.6} height={12} patternTransform={`rotate(${(j.ang.tronco * 0.6).toFixed(1)})`}>
+          <rect x={0} y={0} width={1.15} height={12} fill={cor2} opacity={0.6} />
+        </pattern>
+      </defs>,
+    );
+  }
+  // o contorno grosso de fora vem ANTES de tudo (as camadas já registraram as formas)
+  camadas.unshift(silhueta(pt));
   camadas.push(recorte(pt));
   return (
     <g ref={raiz}>

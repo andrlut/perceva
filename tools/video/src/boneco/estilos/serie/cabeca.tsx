@@ -19,6 +19,7 @@ import {
   amostra,
   clamp,
   dist,
+  elipse,
   escurece,
   gira,
   linha,
@@ -27,7 +28,9 @@ import {
   norm,
   perp,
   sub,
-  suave, sw } from './base';
+  suave,
+  sw,
+} from './base';
 import { type CabeloDesenho, type VistaCab, cabeloDe } from './cabelos';
 import type { Ctx } from './ctx';
 
@@ -84,22 +87,22 @@ function contorno(v: VistaCab, f: boolean, largo: boolean): P[] {
 }
 
 /**
- * A borda do rosto cede quando o dedo aperta perto dela (de frente a bochecha fica a ~5 un da
- * borda): o contorno mais perto da ponta entra um tico e a pele de volta estufa pra fora.
- * Proporcional à força da pose; longe da borda (3/4, perfil) não mexe.
+ * A bochecha apertada ESTUFA pra fora do lado do dedo (a pele empurrada vai pra borda): o contorno
+ * mais perto do ponto sai um tico, proporcional à força e à proximidade. A maçã do rosto (rodada 3)
+ * fica a ~8 un da borda, então é uma estufada sutil — o afundado mesmo é desenhado por dentro.
  */
-function cedeBorda(pts: P[], ponta: P, forca: number): P[] {
+function cedeBorda(pts: P[], ponto: P, forca: number): P[] {
   if (forca <= 0.01) return pts;
   let bi = 0;
   let bd = 1e9;
   pts.forEach((p, i) => {
-    const d = dist(p, ponta);
+    const d = dist(p, ponto);
     if (d < bd) {
       bd = d;
       bi = i;
     }
   });
-  const perto = clamp(1 - (bd - 2.5) / 6.5);
+  const perto = clamp(1 - (bd - 4) / 10);
   if (perto <= 0) return pts;
   const p0 = pts[bi];
   const n = pts.length;
@@ -107,9 +110,7 @@ function cedeBorda(pts: P[], ponta: P, forca: number): P[] {
     const tg = norm(sub(pts[(i + 1) % n], pts[(i - 1 + n) % n]));
     const nOut: P = [tg[1], -tg[0]];
     const d = dist(p, p0);
-    const entra = Math.exp(-((d / 3.8) ** 2)) * 1.15;
-    const estufa = Math.exp(-(((d - 6.6) / 2.4) ** 2)) * 0.5;
-    return add(p, mul(nOut, forca * perto * (estufa - entra)));
+    return add(p, mul(nOut, forca * perto * 1.1 * Math.exp(-((d / 5) ** 2))));
   });
 }
 
@@ -149,8 +150,10 @@ function olho(c: Ctx, o: Olho, key: string, humor: string, cil: boolean): React.
   const inf: P[] = [out, [cx + (s * w) / 5, fundo - baixo * 1.2], [cx - (s * w) / 4, fundo - baixo * 0.4]];
   const branco = suave([...sup, ...inf.slice(1)] as PQ[]);
   const id = c.pt.id('olho');
-  const ri = Math.min(h * 0.36, w * 0.34) * (humor === 'surpresa' ? 0.86 : 1);
-  const ic = add([cx, cy], o.iris);
+  // íris grande e um tico pra cima: a pálpebra de cima cobre o topo dela (esclera em volta da íris
+  // inteira lia "assustado"); só na surpresa o branco aparece em volta
+  const ri = Math.min(h * 0.4, w * 0.37) * (humor === 'surpresa' ? 0.8 : 1);
+  const ic = add([cx, cy - (humor === 'surpresa' ? 0 : 0.35)], o.iris);
   return (
     <g key={key}>
       <clipPath id={id}>
@@ -164,7 +167,7 @@ function olho(c: Ctx, o: Olho, key: string, humor: string, cil: boolean): React.
         <circle cx={ic[0] + ri * 0.38} cy={ic[1] - ri * 0.42} r={ri * 0.3} fill="#FFFFFF" />
         <circle cx={ic[0] - ri * 0.35} cy={ic[1] + ri * 0.35} r={ri * 0.13} fill="#FFFFFF" opacity={0.8} />
         {/* sombra da pálpebra de cima no branco */}
-        <path d={linha(sup)} stroke="#C4BFE2" style={sw(1.1)} fill="none" opacity={0.4} transform="translate(0 0.75)" />
+        <path d={linha(sup)} stroke="#C4BFE2" style={sw(0.9)} fill="none" opacity={0.25} transform="translate(0 0.6)" />
       </g>
       {/* linha da pálpebra de cima (grossa) + cílio no canto de fora */}
       <Traco d={linha(sup)} w={1.35} />
@@ -177,11 +180,11 @@ function olho(c: Ctx, o: Olho, key: string, humor: string, cil: boolean): React.
 }
 
 /** sobrancelha: forma afinada (grossa no meio, fina na ponta), altura/inclinação pelo humor */
-function sobrancelha(ini: P, fim: P, arco: number, grossura: number, cor: string, key: string): React.ReactNode {
+function sobrancelha(ini: P, fim: P, arco: number, grossura: number, cor: string, key: string, meio = 0.12): React.ReactNode {
   const m = mul(add(ini, fim), 0.5);
   const n = perp(norm(sub(fim, ini)));
   const up: P = n[1] < 0 ? n : mul(n, -1);
-  const pico = add(add(m, mul(sub(fim, ini), 0.12)), mul(up, arco));
+  const pico = add(add(m, mul(sub(fim, ini), meio)), mul(up, arco));
   const a = add(ini, mul(up, grossura * 0.5));
   const b = add(pico, mul(up, grossura * 0.55));
   const cc = add(pico, mul(up, -grossura * 0.5));
@@ -193,7 +196,7 @@ export function camadaCabeloAtras(c: Ctx, cab: CabeloDesenho, key: string): Reac
   if (!cab.atras.length) return null;
   const q = quadroCabeca(c);
   c.pt.tf = q.transform;
-  const camada = c.pt.camada([{ formas: cab.atras, depois: cab.detalhesAtras }], 'ca', q.L, LINHA.fora * 0.95);
+  const camada = c.pt.camada([{ formas: cab.atras, depois: cab.detalhesAtras }], 'ca', q.L);
   c.pt.tf = undefined;
   return (
     <g key={key} transform={q.transform}>
@@ -223,20 +226,24 @@ export function camadaCabeca(c: Ctx, cab: CabeloDesenho, key: string): React.Rea
 
   // ---- contorno (com o dedo, a pele cede)
   let pts = amostra(contorno(v, f, pessoa.corpo === 'largo'), 5);
-  // o dedo na bochecha: a FORÇA vem da pose (toque.forca = j.aperto), a ponta é j.dedos[1]
+  // o dedo na bochecha: a FORÇA vem da pose (toque.forca = j.aperto), a ponta é j.dedos[1]; a
+  // MARCA rosada fica depois que o dedo sai (toque.marca, some devagar)
   const forca = c.toque ? clamp(c.toque.forca) : 0;
+  const marca = c.toque ? clamp(c.toque.marca ?? 0) : 0;
   let pontaL: P | null = null;
   let dirL: P = [1, 0];
+  const pontoL: P | null = c.toque ? q.paraLocal(c.toque.ponto) : null;
   if (c.toque && j.mao[1] === 'aponta') {
     pontaL = q.paraLocal(j.dedos[1]);
     dirL = q.dirLocal(sub(j.dedos[1], j.punho[1]));
-    // de frente a bochecha fica perto da borda: o contorno cede junto
     pts = cedeBorda(pts, pontaL, forca);
   }
-  // a pálpebra de baixo do olho do lado apertado sobe (a bochecha empurra)
-  const sobeLado = forca * 0.32;
+  // o olho do lado apertado APERTA (a bochecha empurra a pálpebra de baixo e a de cima desce um tico)
+  const sobeLado = forca * 0.36;
+  const fechaLado = forca * 0.24;
   const rostoD = suave(pts);
   const formasRosto: Forma[] = [{ d: rostoD, cor: pele, sombra: ps, k: 5.2 }];
+  const idRosto = c.pt.id('rosto');
 
   // ---- orelhas
   const orelhaD = (s: number): string =>
@@ -257,36 +264,44 @@ export function camadaCabeca(c: Ctx, cab: CabeloDesenho, key: string): React.Rea
   const brincoPos: P[] = v === 'frente' ? [[-24.4, 10.6], [24.4, 10.6]] : v === 'tq' ? [[-9.6, 11.2]] : [[-5.6, 11]];
 
   // ---- olhos (piscar + fecha da pose + humor)
-  const per = 118 + Math.floor(c.seed * 40);
-  const fase = (c.t + c.seed * 300) % per;
-  const pisca = fase < 5 ? Math.sin((fase / 5) * Math.PI) : 0;
+  // piscar: 4 quadros a cada ~150, numa janela que nunca cai em t < 55 (as folhas paradas usam
+  // quadros baixos e pegavam gente no meio da piscada — lia "pálpebra pesada")
+  const per = 150;
+  const fase = (((c.t - 55 - c.seed * 40) % per) + per) % per;
+  const pisca = fase < 4 ? Math.sin((fase / 4) * Math.PI) : 0;
   const fecha = clamp(Math.max(j.fecha, pisca));
   const H = {
-    ok: { abre: 1.0, baixo: 0.06, bro: 0, bIn: 0, arco: 1.4 },
+    ok: { abre: 0.86, baixo: 0.1, bro: 0, bIn: 0, arco: 1.5 },
     feliz: { abre: 0.86, baixo: 0.42, bro: -1.1, bIn: 0, arco: 1.9 },
     cansado: { abre: 0.42, baixo: 0.05, bro: 0.6, bIn: -1.8, arco: 0.6 },
-    focado: { abre: 0.76, baixo: 0.2, bro: 0.5, bIn: -0.2, arco: 0.8 },
-    surpresa: { abre: 1.18, baixo: 0, bro: -3.2, bIn: -0.6, arco: 2.6 },
+    focado: { abre: 0.8, baixo: 0.22, bro: 0.9, bIn: 0.2, arco: 0.45 },
+    surpresa: { abre: 1.12, baixo: 0, bro: -3.6, bIn: -1.2, arco: 2.2 },
   }[humor];
   const abre = H.abre * (1 - fecha);
   const olhar: P = v === 'frente' ? [0.3, 0.2] : [1.2, 0.2];
-  const els: React.ReactNode[] = [];
+  const els: React.ReactNode[] = [
+    <clipPath key="cr" id={idRosto}>
+      <path d={rostoD} />
+    </clipPath>,
+  ];
   const corSob = pessoa.cabelo === 'grisalho' || pessoa.cabelo === 'calvo' ? mix(pessoa.corCabelo, '#6E74A8', 0.3) : escurece(pessoa.corCabelo, 0.15);
   const gr = f ? 1.7 : 2.3;
   const oy = olhos[1];
   if (v === 'frente') {
     for (const s of [-1, 1]) {
-      els.push(olho(c, { cx: 9.8 * s, cy: oy, w: 10, h: 8.6, esq: s < 0, abre, baixo: Math.min(0.6, H.baixo + (s > 0 ? sobeLado : 0)), iris: olhar }, `o${s}`, humor, f));
-      const ini: P = [4.4 * s, oy - 9.4 + H.bro + H.bIn];
-      const fim: P = [15 * s, oy - 9.6 + H.bro - H.bIn * 0.3];
-      els.push(sobrancelha(ini, fim, H.arco, gr, corSob, `b${s}`));
+      const lado = s > 0;
+      els.push(olho(c, { cx: 9.8 * s, cy: oy, w: 10, h: 8.6, esq: s < 0, abre: abre * (lado ? 1 - fechaLado : 1), baixo: Math.min(0.62, H.baixo + (lado ? sobeLado : 0)), iris: olhar }, `o${s}`, humor, f));
+      const ini: P = [4.4 * s, oy - 9.4 + H.bro + H.bIn + (lado ? forca * 0.7 : 0)];
+      const fim: P = [15 * s, oy - 9.6 + H.bro - H.bIn * 0.3 + (lado ? forca * 0.4 : 0)];
+      els.push(sobrancelha(ini, fim, H.arco, gr, corSob, `b${s}`, humor === 'surpresa' ? 0 : 0.12));
     }
   } else if (v === 'tq') {
     const xo = olhos[0];
-    els.push(olho(c, { cx: xo - 8.8, cy: oy, w: 10, h: 8.6, esq: true, abre, baixo: Math.min(0.6, H.baixo + sobeLado), iris: olhar }, 'o0', humor, f));
-    els.push(olho(c, { cx: xo + 7.6, cy: oy - 0.3, w: 6.4, h: 7.8, esq: false, abre, baixo: H.baixo, iris: [olhar[0] * 0.7, olhar[1]], far: true }, 'o1', humor, f));
-    els.push(sobrancelha([xo - 4.4, oy - 9.4 + H.bro + H.bIn], [xo - 14.4, oy - 9.6 + H.bro - H.bIn * 0.3], H.arco, gr, corSob, 'b0'));
-    els.push(sobrancelha([xo + 3.0, oy - 9.2 + H.bro + H.bIn], [xo + 10.8, oy - 9.0 + H.bro - H.bIn * 0.3], H.arco * 0.8, gr * 0.9, corSob, 'b1'));
+    els.push(olho(c, { cx: xo - 8.8, cy: oy, w: 10, h: 8.6, esq: true, abre: abre * (1 - fechaLado), baixo: Math.min(0.62, H.baixo + sobeLado), iris: olhar }, 'o0', humor, f));
+    // o olho de lá fica DENTRO do contorno do rosto (recortado nele)
+    els.push(<g key="o1c" clipPath={`url(#${idRosto})`}>{olho(c, { cx: xo + 7.2, cy: oy - 0.3, w: 6.0, h: 7.8, esq: false, abre, baixo: H.baixo, iris: [olhar[0] * 0.7, olhar[1]], far: true }, 'o1', humor, f)}</g>);
+    els.push(sobrancelha([xo - 4.4, oy - 9.4 + H.bro + H.bIn], [xo - 14.4, oy - 9.6 + H.bro - H.bIn * 0.3], H.arco, gr, corSob, 'b0', humor === 'surpresa' ? 0 : 0.12));
+    els.push(sobrancelha([xo + 3.0, oy - 9.2 + H.bro + H.bIn], [xo + 10.4, oy - 9.0 + H.bro - H.bIn * 0.3], H.arco * 0.8, gr * 0.9, corSob, 'b1', humor === 'surpresa' ? 0 : 0.12));
   } else {
     const xo = olhos[0];
     els.push(olho(c, { cx: xo + 1.4, cy: oy, w: 5.4, h: 8, esq: false, abre, baixo: Math.min(0.6, H.baixo + sobeLado), iris: [1.2, 0.2], far: true }, 'o0', humor, f));
@@ -306,9 +321,10 @@ export function camadaCabeca(c: Ctx, cab: CabeloDesenho, key: string): React.Rea
     nariz.push(<Traco key="nl" d={linha([[-3.4, 8.6], [-2.4, 10.4], [0, 10.9], [2.4, 10.4], [3.4, 8.6]])} w={0.95} />);
   } else if (v === 'tq') {
     const xn = boca[0];
-    nariz.push(<path key="ns" d={suave([[xn + 1.6, 2.2], [xn + 2.6, 8.4], [xn + 1.4, 10.4], [xn + 0.6, 6]])} fill={ps} opacity={0.6} />);
-    nariz.push(<Traco key="nl" d={linha([[xn + 3.2, 0.8], [xn + 6, 7.4], [xn + 6.2, 9.4], [xn + 4.4, 10.8], [xn + 2.4, 10.4]])} w={0.95} />);
-    nariz.push(<Traco key="nn" d={linha([[xn + 2.6, 10.4], [xn + 1.6, 9.2]])} w={0.8} />);
+    // cunha pequena: a sombra do lado de cá faz a ponte, a ponta é uma curva curta com a asa
+    nariz.push(<path key="ns" d={suave([[xn + 1.4, 3.6], [xn + 2.6, 8.8], [xn + 1.6, 10.6], [xn + 0.4, 7.4]])} fill={ps} opacity={0.55} />);
+    nariz.push(<Traco key="nl" d={linha([[xn + 4.2, 6.4], [xn + 4.9, 9.0], [xn + 4.2, 10.5], [xn + 2.6, 10.7]])} w={0.9} />);
+    nariz.push(<Traco key="nn" d={linha([[xn + 2.0, 10.5], [xn + 1.3, 9.7]])} w={0.75} op={0.8} />);
   } else {
     nariz.push(<Traco key="nn" d={linha([[22.6, 9.6], [21.2, 8.8], [20.6, 9.8]])} w={0.8} />);
   }
@@ -366,10 +382,16 @@ export function camadaCabeca(c: Ctx, cab: CabeloDesenho, key: string): React.Rea
   } else if (humor === 'cansado') {
     bocaEls.push(<Traco key="bc" d={linha([[bx - wl * 0.8, by + 0.9], [bx - wl * 0.2, by + 0.2], [bx + wr * 0.4, by + 0.4], [bx + wr * 0.8, by + 1.1]])} w={0.95} />);
   } else if (humor === 'focado') {
-    bocaEls.push(<Traco key="bc" d={linha([[bx - wl * 0.55, by + 0.4], [bx, by], [bx + wr * 0.55, by - 0.2]])} w={1.05} />);
-    bocaEls.push(<Traco key="bc2" d={linha([[bx + wr * 0.55, by - 0.6], [bx + wr * 0.7, by + 0.2]])} w={0.7} />);
+    // determinação, não bravo: boca neutra com o canto um tico pra cima; correndo, entreaberta (respira)
+    if (c.mov.corrida > 0.5) {
+      bocaEls.push(<ellipse key="bc" cx={bx} cy={by + 0.6} rx={wl * 0.32 + wr * 0.18} ry={1.3} fill="#4A1830" />);
+      bocaEls.push(<Traco key="bc2" d={linha([[bx - wl * 0.5, by + 0.3], [bx, by - 0.3], [bx + wr * 0.5, by + 0.1]])} w={0.85} />);
+    } else {
+      bocaEls.push(<Traco key="bc" d={linha([[bx - wl * 0.55, by + 0.5], [bx, by + 0.45], [bx + wr * 0.55, by - 0.15]])} w={1.0} />);
+      bocaEls.push(<Traco key="bc2" d={linha([[bx + wr * 0.55, by - 0.15], [bx + wr * 0.72, by - 0.7]])} w={0.65} />);
+    }
   } else {
-    bocaEls.push(<Traco key="bc" d={linha([[bx - wl, by - 0.6], [bx - wl * 0.3, by + 1.0], [bx + wr * 0.4, by + 0.9], [bx + wr, by - 0.9]])} w={1.05} />);
+    bocaEls.push(<Traco key="bc" d={linha([[bx - wl, by - 1.0], [bx - wl * 0.3, by + 1.15], [bx + wr * 0.4, by + 1.05], [bx + wr, by - 1.35]])} w={1.05} />);
     bocaEls.push(<Traco key="bl" d={linha([[bx - wl * 0.35, by + 3.2], [bx + wr * 0.25, by + 3.1]])} w={0.8} cor={lab} op={0.9} />);
   }
   if (f && humor !== 'surpresa' && humor !== 'feliz') {
@@ -386,10 +408,10 @@ export function camadaCabeca(c: Ctx, cab: CabeloDesenho, key: string): React.Rea
     let big = '';
     if (v === 'frente') {
       d = suave([[-22.6, 1], [-22.4, 9], [-19.6, 17], [-13.6, 25.4], [-5.4, 30.2], [0, 30.8], [5.4, 30.2], [13.6, 25.4], [19.6, 17], [22.4, 9], [22.6, 1], [20.4, 2.6], [19, 9], [15, 13.6], [8, 15.6], [0, 15.2], [-8, 15.6], [-15, 13.6], [-19, 9], [-20.4, 2.6]]);
-      big = suave([[-7.8, 14.6], [-4, 11.8], [0, 12.6], [4, 11.8], [7.8, 14.6], [4, 13.8], [0, 14.2], [-4, 13.8]]);
+      big = suave([[-7.4, 13.6], [-4, 11.2], [0, 12.0], [4, 11.2], [7.4, 13.6], [4, 13.0], [0, 13.4], [-4, 13.0]]);
     } else if (v === 'tq') {
       d = suave([[-10.6, 4], [-12.6, 14], [-10.8, 21.6], [-4, 27.6], [4.2, 30.4], [10.6, 28.6], [15.4, 24], [18.2, 17.8], [19.4, 12], [17, 13], [14, 15.4], [9.6, 15.2], [4, 15.4], [-1, 13.6], [-4.6, 9], [-6.6, 2]]);
-      big = suave([[bx - 6.8, by - 0.6], [bx - 3, by - 4], [bx + 1, by - 3.4], [bx + 5, by - 3.6], [bx + 6.4, by - 0.8], [bx + 2, by - 1.8], [bx - 3, by - 1.6]]);
+      big = suave([[bx - 6.4, by - 1.9], [bx - 3, by - 4.9], [bx + 1, by - 4.3], [bx + 5, by - 4.5], [bx + 6.0, by - 2.1], [bx + 2, by - 2.9], [bx - 3, by - 2.7]]);
     } else {
       d = suave([[-3, 4], [-6, 16], [0, 24], [8, 28.4], [16, 29.4], [21.8, 25], [21.2, 19.6], [17, 17], [14, 16], [8, 12], [2, 6]]);
       big = suave([[16, by - 0.8], [19, by - 3.2], [22.4, by - 2.8], [22, by - 0.8]]);
@@ -406,38 +428,71 @@ export function camadaCabeca(c: Ctx, cab: CabeloDesenho, key: string): React.Rea
   }
 
   // ---- o dedo na pele: sombra macia do afundado, vinco e o brilho da bochecha estufada
-  // ---- o dedo na pele (efeito INTERNO): anel de sombra macia em volta da ponta, a pele que estufa à
-  // frente dela (brilho em crescente) e os vincos dos lados — tudo na força da pose (0 = só encostado)
+  // ---- o dedo na pele (rodada 3, régua do painel): a bochecha AFUNDA — meia-lua de sombra quente
+  // do lado oposto à luz, a borda estufada pegando luz do lado da luz, 2 vincos curtos; a ponta do
+  // dedo achata (maos.tsx) e o olho daquele lado aperta (acima). A marca rosada FICA depois que o
+  // dedo sai (toque.marca) e some devagar. Nada de anel simétrico (lia espinha).
   const toqueEls: React.ReactNode[] = [];
-  if (c.toque && pontaL) {
-    const fz = 0.28 + 0.72 * forca;
-    const cen = pontaL;
-    const id = c.pt.id('toq');
+  if (c.toque && pontoL) {
+    const cen = pontaL ?? pontoL;
     const ang = (Math.atan2(dirL[1], dirL[0]) * 180) / Math.PI;
     const tg = perp(dirL);
+    const Lr = q.L;
+    const partes: React.ReactNode[] = [];
+    const M = { x: -70, y: -70, w: 140, h: 140 };
+    if (marca > 0.01) {
+      const idM = c.pt.id('marca');
+      const rosa = mix(pele, '#FF4F72', 0.5);
+      partes.push(
+        <radialGradient key="gm" id={idM}>
+          <stop offset="0%" stopColor={rosa} stopOpacity={0.9} />
+          <stop offset="60%" stopColor={rosa} stopOpacity={0.45} />
+          <stop offset="100%" stopColor={rosa} stopOpacity={0} />
+        </radialGradient>,
+        <path key="m" d={elipse(add(cen, mul(dirL, 0.6)), 5.0, 6.2, ang)} fill={`url(#${idM})`} opacity={0.8 * marca} />,
+      );
+    }
+    if (forca > 0.02 && pontaL) {
+      // o afundado: elipse em volta da polpa, um tico além da ponta (ao longo do dedo × atravessado)
+      const dc = add(cen, mul(dirL, 0.5));
+      const along = 1.9 + 1.0 * forca;
+      const across = 2.4 + 1.5 * forca;
+      const el = (k: number, off: P = [0, 0]) => elipse(add(dc, off), along * k, across * k, ang);
+      const idS = c.pt.id('sulco');
+      const idB = c.pt.id('borda');
+      const desl = mul(Lr, 1.0 + 0.8 * forca);
+      partes.push(
+        <mask key="ms" id={idS} maskUnits="userSpaceOnUse" x={M.x} y={M.y} width={M.w} height={M.h}>
+          <path d={el(1)} fill="#FFFFFF" />
+          <path d={el(1, desl)} fill="#000000" />
+        </mask>,
+        <mask key="mb" id={idB} maskUnits="userSpaceOnUse" x={M.x} y={M.y} width={M.w} height={M.h}>
+          <path d={el(1.42)} fill="#FFFFFF" />
+          <path d={el(1.42, mul(Lr, -0.95))} fill="#000000" />
+          <path d={el(1.1)} fill="#000000" />
+        </mask>,
+        // o miolo do afundado escurece um tico
+        <path key="f" d={el(0.95)} fill={ps} opacity={0.3 * forca} />,
+        // meia-lua de sombra quente, do lado oposto à luz
+        <path key="s" d={el(1)} fill={escurece(ps, 0.2)} mask={`url(#${idS})`} opacity={Math.min(1, 0.4 + 0.75 * forca)} />,
+        // a pele empurrada estufa em volta e pega luz do lado da luz
+        <path key="b" d={el(1.42)} fill={mix(pele, '#FFF4E8', 0.32)} mask={`url(#${idB})`} opacity={0.75 * forca} />,
+      );
+      // dois vincos curtos, um de cada lado do dedo
+      for (const sg of [-1, 1]) {
+        const b0 = add(dc, mul(tg, sg * across * 1.12));
+        partes.push(
+          <Traco key={`v${sg}`} d={linha([add(b0, mul(dirL, -1.6)), add(add(b0, mul(tg, sg * 0.5)), mul(dirL, 0.1)), add(b0, mul(dirL, 1.5))])} w={0.6} cor={escurece(ps, 0.3)} op={0.95 * forca} />,
+        );
+      }
+    }
     const idClip = c.pt.id('toqc');
-    const rA = 3.2 + 1.6 * forca;
-    const frente = add(cen, mul(dirL, 1.9 + 0.7 * forca));
     toqueEls.push(
       <g key="toque">
-        <defs>
-          <radialGradient id={id}>
-            <stop offset="0%" stopColor={escurece(ps, 0.12)} stopOpacity={0.95} />
-            <stop offset="50%" stopColor={ps} stopOpacity={0.6} />
-            <stop offset="100%" stopColor={ps} stopOpacity={0} />
-          </radialGradient>
-        </defs>
         <clipPath id={idClip}>
           <path d={rostoD} />
         </clipPath>
-        <g clipPath={`url(#${idClip})`}>
-          <ellipse cx={cen[0]} cy={cen[1]} rx={rA} ry={rA * 0.8} transform={`rotate(${ang.toFixed(1)} ${cen[0].toFixed(2)} ${cen[1].toFixed(2)})`} fill={`url(#${id})`} opacity={fz} />
-          {/* a pele empurrada estufa à frente da ponta */}
-          <path d={linha([add(frente, add(mul(tg, -2.3), mul(dirL, -0.6))), add(frente, mul(dirL, 0.7 + 0.4 * forca)), add(frente, add(mul(tg, 2.3), mul(dirL, -0.6)))])} fill="none" stroke={mix(pele, '#FFFFFF', 0.55)} style={sw(1.1)} strokeLinecap="round" opacity={0.5 * forca} />
-          {/* vincos dos dois lados do dedo */}
-          <Traco d={linha([add(cen, add(mul(tg, 2.7), mul(dirL, -1.2))), add(cen, add(mul(tg, 2.4), mul(dirL, 0.6))), add(cen, add(mul(tg, 1.4), mul(dirL, 1.8)))])} w={0.55} cor={escurece(ps, 0.25)} op={0.9 * forca} />
-          <Traco d={linha([add(cen, add(mul(tg, -2.7), mul(dirL, -1.2))), add(cen, add(mul(tg, -2.4), mul(dirL, 0.6))), add(cen, add(mul(tg, -1.4), mul(dirL, 1.8)))])} w={0.55} cor={escurece(ps, 0.25)} op={0.9 * forca} />
-        </g>
+        <g clipPath={`url(#${idClip})`}>{partes}</g>
       </g>,
     );
   }
@@ -482,7 +537,8 @@ export function camadaCabeca(c: Ctx, cab: CabeloDesenho, key: string): React.Rea
   const ex = roupa.extras ?? [];
   const acess: Grupo[] = [];
   if (ex.includes('bone')) {
-    const copa = mix('#262C5E', pessoa.cor, 0.12);
+    // sem marinho (no fundo marinho o boné virava buraco): copa na cor da pessoa, aba num tom abaixo
+    const copa = pessoa.cor;
     if (v === 'frente') {
       acess.push({
         formas: [

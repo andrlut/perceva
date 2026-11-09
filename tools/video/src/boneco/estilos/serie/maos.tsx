@@ -70,28 +70,40 @@ export function maoDe(c: Ctx, i: 0 | 1, pose: Mao): MaoDesenho {
     };
   }
   if (pose === 'aponta') {
-    // indicador esticado no eixo da mão: a ponta cai EXATAMENTE em j.dedos (a pose põe ali a
-    // bochecha); o resto da mão fechado, o dedo médio dobrado embaixo e o polegar encostado
-    const punho = suave(pts(M, [[0, -3.4], [3.8, -4.6], [7.8, -4.9], [10.4, -4.1], [11.7, -2.4], [11.5, -0.4], [10.3, 1.4], [8.2, 3.8], [4.6, 4.6], [1.8, 4.1], [0, 3.4]]));
-    const indicador = cap([7.2, 1.5], [16.75, 0.12], 1.62, 1.25);
-    const polegar = cap([2.8, 4.0], [8.9, 3.7], 1.95, 1.45);
+    // Rodada 3 (painel: 4 de 5 leram "dedo do meio" no punho de costas com um dedo em pé): indicador
+    // e médio JUNTOS, vistos pelo lado do POLEGAR — o polegar à vista ao longo da palma, anelar e
+    // mínimo dobrados (a linha dos nós aparece embaixo dos dedos). A ponta do médio é j.dedos; no
+    // fundo do aperto as polpas ACHATAM contra a pele (ficam mais largas e recuam um tico).
+    const f = c.toque && i === 1 ? Math.max(0, Math.min(1, c.toque.forca)) : 0;
+    const ach = 1 + 0.32 * f;
+    const recua = 0.6 * f;
+    const palma = suave(pts(M, [[0, -3.1], [4.2, -3.6], [8.8, -3.7], [10.6, -2.9], [11.4, -1.0], [11.0, 1.4], [10.6, 3.4], [8.6, 4.6], [5.2, 4.6], [2.4, 4.0], [0, 3.2]]));
+    const medio = cap([9.8, -1.6], [18 - recua - 1.2 * ach, -1.15], 1.42, 1.22 * ach);
+    const indicador = cap([9.2, 0.3], [17.0 - recua - 1.3 * ach, 0.45], 1.52, 1.3 * ach);
+    const polegar = cap([2.6, 3.8], [10.0, 5.6], 2.0, 1.5);
     const { u } = quadroMao(c, i);
     const ua = (Math.atan2(u[1], u[0]) * 180) / Math.PI;
-    const unha = M(16.3, 0.62);
+    const unha = (x: number, y: number, k: string) => (
+      <path key={k} d={elipse(M(x, y), 1.05 * sy, 0.42 * sy, ua)} fill="#FFFFFF" opacity={0.38} stroke="#14173D" style={sw(0.28)} strokeOpacity={0.45} />
+    );
     return {
-      formas: [fm(punho)],
+      formas: [fm(palma), fm(medio)],
       frente: [fm(polegar), fm(indicador)],
       detalhesPalma: (
         <g>
-          {tr([[11.6, -0.8], [10.8, 1.6], [8.6, 3.6]], LINHA.fino * 0.85)}
-          {tr([[8.4, -4.6], [10.9, -3.4]], LINHA.fino * 0.6)}
+          {/* anelar e mínimo dobrados: a linha dos nós embaixo dos dedos esticados */}
+          {tr([[9.3, 1.8], [10.5, 2.7], [10.6, 3.8]], LINHA.fino * 0.85)}
+          {tr([[7.9, 3.0], [9.0, 3.9], [8.9, 4.7]], LINHA.fino * 0.75)}
+          {tr([[8.4, -3.5], [10.4, -2.5]], LINHA.fino * 0.55)}
+          {unha(16.4 - recua, -2.0, 'um')}
         </g>
       ),
       detalhes: (
         <g>
-          <path d={elipse(unha, 1.0 * sy, 0.56 * sy, ua)} fill="#FFFFFF" opacity={0.35} stroke="#14173D" style={sw(0.3)} strokeOpacity={0.5} />
-          {tr([[12.6, 1.4], [12.8, -0.9]], LINHA.fino * 0.6)}
-          {tr([[14.6, 1.1], [14.7, -0.7]], LINHA.fino * 0.5)}
+          {unha(15.4 - recua, -0.55, 'ui')}
+          {unha(9.4, 6.5, 'up')}
+          {tr([[12.2, 1.75], [12.3, -0.8]], LINHA.fino * 0.6)}
+          {tr([[14.3, 1.6], [14.4, -0.6]], LINHA.fino * 0.5)}
         </g>
       ),
       M,

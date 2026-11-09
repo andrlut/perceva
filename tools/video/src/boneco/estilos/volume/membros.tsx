@@ -59,28 +59,40 @@ function maoDe(c: MCtx, i: 0 | 1, mp: Mat, chave: string): MaoOut {
   const fill = k.tubo(w, loc(1, 0), W2, mp);
   const vinco = (pts: P[], op = 0.5) => <path key={`v${det.length}`} d={suave(pts, false)} stroke={mp.fundo} strokeWidth={0.32} strokeLinecap="round" fill="none" opacity={op} />;
   const dedo = (de: [number, number], ate: [number, number], r: number) => ({ d: suave(tubo(loc(...de), loc(...ate), () => r * W2, { n: 4 })), fill });
+  // os nós dos dedos (fileira de calombos na borda do punho) — mão fechada, segurando, apontando
+  const nos = (u: number, vs: number[], r = 0.27) => {
+    for (const v of vs) pecas.push({ d: suave(elipse(loc(u, v), r * W2, r * W2 * 0.95, 0, 12)), fill });
+  };
   if (modo === 'fechada' || modo === 'segura') {
-    pecas.push({ d: suave([loc(-0.05, -0.85), loc(0.3, -1.02), loc(0.58, -0.98), loc(0.7, -0.6), loc(0.72, 0.1), loc(0.66, 0.8), loc(0.4, 1.02), loc(0.08, 0.86)]), fill });
-    pecas.push(dedo([0.28, 0.95], [0.5, 0.35], 0.3));
-    det.push(vinco([loc(0.48, -0.85), loc(0.66, -0.75)]), vinco([loc(0.5, -0.4), loc(0.69, -0.3)]), vinco([loc(0.5, 0.05), loc(0.7, 0.12)]));
+    pecas.push({ d: suave([loc(-0.05, -0.85), loc(0.3, -1.02), loc(0.56, -0.98), loc(0.66, -0.55), loc(0.68, 0.1), loc(0.62, 0.8), loc(0.4, 1.02), loc(0.08, 0.86)]), fill });
+    nos(0.62, [-0.68, -0.24, 0.18, 0.56]);
+    // os dedos dobrados por cima (o que abraça o cabo) e o polegar cruzando
+    det.push(vinco([loc(0.44, -0.9), loc(0.47, 0.75)], 0.45), vinco([loc(0.62, -0.46), loc(0.64, -0.46)], 0.6), vinco([loc(0.62, -0.03), loc(0.64, -0.03)], 0.6), vinco([loc(0.61, 0.37), loc(0.63, 0.37)], 0.6));
+    pecas.push(dedo([0.24, 0.98], [0.46, 0.3], 0.31));
   } else if (modo === 'aponta') {
-    // punho com os nós dos três dedos dobrados de um lado e o INDICADOR saindo do lado do
-    // polegar (assimétrico de propósito: dedo do meio levantado no meio do punho lê como gesto)
-    pecas.push({ d: suave([loc(-0.05, -0.85), loc(0.3, -1.0), loc(0.52, -0.96), loc(0.6, -0.5), loc(0.6, 0.35), loc(0.48, 0.95), loc(0.1, 0.86)]), fill });
-    for (const [q, v] of [[0, -0.66], [1, -0.22], [2, 0.18]] as [number, number][]) {
-      const c0 = loc(0.6 - q * 0.015, v);
-      pecas.push({ d: suave(tubo(loc(0.5, v), c0, () => 0.3 * W2, { n: 3 })), fill });
-    }
+    // INDICADOR + MÉDIO juntos, vistos pelo lado do polegar (o médio aparece um tico atrás do
+    // indicador); anelar e mínimo dobrados numa massa só, com a linha dos nós; polegar à vista,
+    // apoiado na base. A polpa do indicador pousa em j.dedos e ACHATA quando aperta.
+    const ap = c.toque && i === 1 ? clamp(c.toque.forca) : 0;
+    pecas.push({ d: suave([loc(-0.05, -0.85), loc(0.3, -1.0), loc(0.5, -0.96), loc(0.58, -0.4), loc(0.56, 0.42), loc(0.44, 0.95), loc(0.1, 0.86)]), fill });
+    // anelar + mínimo dobrados (uma massa, com a linha dos nós)
+    pecas.push({ d: suave(elipse(loc(0.6, -0.52), 0.17 * L, 0.5 * W2, j.ang.mao[i] > -999 ? -(Math.atan2(a[0], a[1]) * 180) / Math.PI : 0, 16)), fill });
+    det.push(vinco([loc(0.6, -0.92), loc(0.66, -0.52), loc(0.6, -0.12)], 0.55));
     const r = 0.27 * W2;
-    // a polpa do dedo pousa exatamente em j.dedos (é ali que a pose põe a bochecha)
     const ponta = soma(j.dedos[i], esc(a, -r * 0.9));
-    pecas.push({ d: suave(tubo(loc(0.4, 0.6), ponta, (t) => lerp(0.36, 0.28, t) * W2, { n: 5 })), fill });
-    // o polegar aberto pro lado (a mão lê como "apontar", em L)
-    pecas.push(dedo([0.2, 0.85], [0.5, 1.45], 0.3));
-    det.push(vinco([loc(0.56, -0.44), loc(0.62, -0.44)], 0.6), vinco([loc(0.56, -0.0), loc(0.62, -0.02)], 0.6));
-    // unha (um brilho na ponta)
-    const un = soma(j.dedos[i], esc(a, -r * 1.6));
-    det.push(<circle key="unha" cx={un[0]} cy={un[1]} r={r * 0.45} fill="#FFFFFF" opacity={0.25} />);
+    const pontaM = soma(soma(j.dedos[i], esc(a, -r * 2.2)), esc(s, -0.36 * W2));
+    pecas.push({ d: suave(tubo(loc(0.42, -0.02), pontaM, (t) => lerp(0.34, 0.28, t) * W2, { n: 5 })), fill });
+    pecas.push({ d: suave(tubo(loc(0.4, 0.42), ponta, (t) => lerp(0.36, 0.28, t) * W2, { n: 5 })), fill });
+    // a polpa achatando no fundo do aperto (mais larga, mais curta)
+    const pc = soma(j.dedos[i], esc(a, -r * (0.7 + 0.15 * ap)));
+    const giroP = -(Math.atan2(a[0], a[1]) * 180) / Math.PI;
+    pecas.push({ d: suave(elipse(pc, r * (1 + 0.38 * ap), r * (1 - 0.22 * ap), giroP, 14)), fill });
+    det.push(vinco([soma(pc, esc(s, -r * 0.3)), soma(soma(pc, esc(a, -r * 1.4)), esc(s, -r * 0.35))], 0.35));
+    // o polegar, apoiado ao longo da base do indicador
+    pecas.push(dedo([0.16, 0.92], [0.5, 0.78], 0.3));
+    // unha (um brilho na ponta, do lado de cá)
+    const un = soma(soma(j.dedos[i], esc(a, -r * 1.7)), esc(s, r * 0.35));
+    det.push(<ellipse key="unha" cx={un[0]} cy={un[1]} rx={r * 0.42} ry={r * 0.3} fill="#FFFFFF" opacity={0.22} />);
   } else if (modo === 'aberta') {
     pecas.push({ d: suave([loc(-0.05, -0.85), loc(0.3, -1.0), loc(0.56, -0.95), loc(0.6, 0), loc(0.56, 0.95), loc(0.3, 1.0), loc(0.05, 0.85)]), fill });
     const base = [-0.7, -0.24, 0.22, 0.66];
@@ -93,10 +105,13 @@ function maoDe(c: MCtx, i: 0 | 1, mp: Mat, chave: string): MaoOut {
     });
     pecas.push(dedo([0.18, 0.8], [0.42, 1.55], 0.28));
   } else {
-    // solta: palma + dedos juntos num bloco curvo, polegar na frente
-    pecas.push({ d: suave([loc(-0.05, -0.86), loc(0.28, -1.0), loc(0.62, -0.92), loc(0.9, -0.62), loc(1.0, -0.15), loc(0.96, 0.3), loc(0.76, 0.62), loc(0.45, 0.92), loc(0.1, 0.86)]), fill });
-    pecas.push(dedo([0.24, 0.72], [0.55, 1.02], 0.29));
-    det.push(vinco([loc(0.66, -0.45), loc(0.93, -0.38)], 0.4), vinco([loc(0.66, 0.05), loc(0.92, 0.08)], 0.4));
+    // solta: a palma, quatro dedos lado a lado (as pontas separam) e o polegar destacado
+    pecas.push({ d: suave([loc(-0.05, -0.86), loc(0.3, -1.0), loc(0.56, -0.94), loc(0.6, 0.0), loc(0.54, 0.9), loc(0.1, 0.86)]), fill });
+    const vs = [0.56, 0.16, -0.24, -0.62];
+    const fim = [0.93, 0.99, 0.95, 0.84];
+    vs.forEach((v, q) => pecas.push(dedo([0.5, v], [fim[q], v * 0.94 - 0.04], q === 3 ? 0.2 : 0.22)));
+    pecas.push(dedo([0.14, 0.86], [0.44, 1.36], 0.27));
+    for (const v of [0.36, -0.04, -0.43]) det.push(vinco([loc(0.62, v), loc(0.9, v * 0.94 - 0.04)], 0.55));
   }
   return { pecas, det, palma: loc(0.4, 0), eixo: a, lado: s };
 }
@@ -135,7 +150,7 @@ export function braco(c: MCtx, i: 0 | 1): { el: React.ReactNode; ds: string[] } 
     if (m.ate <= 1) {
       const fim = mixP(a0, el, m.ate);
       const r = (t: number) => med.rBraco(t * m.ate) + f + 0.6 * suaviza(0.6, 1, t);
-      supM.push({ d: suave(tubo(ini, fim, r, { pontaB: 'reta' })), fill: k.tubo(ini, fim, r(0.5), mt) });
+      supM.push({ d: suave(tubo(ini, fim, r, { pontaB: 'reta' })), fill: k.tecido(ini, fim, r(0.5), mt) });
       // a barra: a boca da manga por dentro (sombra) + o friso da barra
       const dd = unit(sub(fim, ini));
       const n = perp(dd);
@@ -144,28 +159,40 @@ export function braco(c: MCtx, i: 0 | 1): { el: React.ReactNode; ds: string[] } 
     } else {
       const rS = (t: number) => med.rBraco(t) + f;
       const rgM = (rS(0.3) + med.rAnte(0.3) + f) / 2;
-      supM.push({ d: suave(tubo(ini, el, rS)), fill: k.tubo(ini, el, rgM, mt) });
+      supM.push({ d: suave(tubo(ini, el, rS)), fill: k.tecido(ini, el, rgM, mt) });
       const q = m.ate - 1;
       const fim = mixP(el, wr, q);
       const rib = m.punho === 'rib';
       const rA = (t: number) => (med.rAnte(t * q) + f * (rib ? 1 - 0.55 * suaviza(0.75, 1, t) : 1)) + (m.punho === 'vies' ? 0.5 * suaviza(0.6, 1, t) : 0);
-      antM.push({ d: suave(tubo(el, fim, rA, { pontaB: 'reta' })), fill: k.tubo(el, fim, rgM, mt) });
+      antM.push({ d: suave(tubo(el, fim, rA, { pontaB: 'reta' })), fill: k.tecido(el, fim, rgM, mt) });
       const dd = unit(sub(fim, el));
       const n = perp(dd);
       if (rib || m.punho === 'camisa' || m.punho === 'vies') {
-        const cor = m.punho === 'camisa' ? m.cor ?? '#F4F5FF' : m.punho === 'vies' ? m.cor ?? mt.sombra : mt.sombra;
+        const cor = m.punho === 'camisa' ? m.cor ?? '#F4F5FF' : m.punho === 'vies' ? m.cor ?? mt.sombra : roupa.cima.cor2 ?? mt.sombra;
         const larg = m.punho === 'camisa' ? 2.2 : m.punho === 'vies' ? 1.1 : 2.6;
         const a = soma(fim, esc(dd, -larg));
         const rr = rA(1) * (m.punho === 'camisa' ? 0.82 : 1);
         const cm = material(cor, 'tecido', longe);
         const pts = tubo(m.punho === 'camisa' ? fim : a, m.punho === 'camisa' ? soma(fim, esc(dd, larg)) : fim, () => rr, { pontaA: 'reta', pontaB: 'reta', n: 3 });
-        antM.push({ d: suave(pts), fill: k.tubo(a, fim, rr, cm) });
+        antM.push({ d: suave(pts), fill: k.tecido(a, fim, rr, cm) });
         if (rib) {
           for (let q2 = -2; q2 <= 2; q2++) {
             const p = soma(soma(a, esc(dd, larg * 0.5)), esc(n, q2 * rr * 0.32));
             det.push(<path key={`rib${q2}`} d={`M${fmt(p[0] - dd[0] * larg * 0.4)} ${fmt(p[1] - dd[1] * larg * 0.4)}l${fmt(dd[0] * larg * 0.8)} ${fmt(dd[1] * larg * 0.8)}`} stroke={mt.fundo} strokeWidth={0.3} opacity={0.6} />);
           }
         }
+      }
+      // pijama: listras ao longo da manga
+      if (roupa.cima.tipo === 'pijama' && roupa.cima.cor2) {
+        const recM = k.recorte([...supM, ...antM].map((p) => p.d));
+        const ls: string[] = [];
+        for (const q of [-0.6, -0.2, 0.2, 0.6]) {
+          const p1 = soma(ini, esc(perp(d1), q * rS(0)));
+          const p2 = soma(el, esc(perp(d1), q * rS(1)));
+          const p3 = soma(fim, esc(n, q * rA(1)));
+          ls.push(suave([p1, p2, p3], false));
+        }
+        det.push(<g key="listrasM" clipPath={recM} opacity={0.55}>{ls.map((d, q) => <path key={q} d={d} stroke={roupa.cima.cor2} strokeWidth={1} fill="none" />)}</g>);
       }
       // listra lateral da manga (camiseta de treino de manga longa)
       if (roupa.cima.tipo === 'manga-longa' && roupa.cima.cor2) {
@@ -196,35 +223,41 @@ export function braco(c: MCtx, i: 0 | 1): { el: React.ReactNode; ds: string[] } 
   const depois: Peca[] = [];
   const detProp: React.ReactNode[] = [];
   if (segura === 'halter') {
-    // o halter atravessa o punho: o eixo aponta meio pra câmera (encurta), as anilhas são discos
-    // vistos de lado (elipse + a espessura), a de trás antes da mão e a da frente depois
-    const g = mao.palma;
+    // um halter de verdade: a barra atravessa o punho, de cada lado uma anilha grande e uma menor
+    // (cinza-chumbo fosco, a borda de cima pegando luz), o colar dourado e a ponta; o punho fecha
+    // por cima da barra (os nós à vista). Nada de disco brilhante (lia lanterna/carretel).
+    const g = soma(mao.palma, esc(mao.eixo, 0.05 * c.prop.mao));
     const ax = mao.lado;
+    const up = mao.eixo;
     const giro = (Math.atan2(ax[1], ax[0]) * 180) / Math.PI;
-    const ferro = material('#33395E', 'tecido', longe);
-    const cor = material(pessoa.cor, 'tecido', longe);
-    const cromo = material('#C9CEE8', 'metal', longe);
-    const anilha = (lado: number): Peca[] => {
-      const c0 = soma(g, esc(ax, lado * 4.9));
-      const c1 = soma(c0, esc(ax, lado * 2.2));
-      const corpo = suave(casco([...elipse(c0, 2.3, 5.8, giro, 20), ...elipse(c1, 2.3, 5.8, giro, 20)]));
-      const face = suave(elipse(c1, 2.3, 5.8, giro, 24));
-      const aro = suave(elipse(c1, 1.75, 4.5, giro, 20));
-      const cubo = suave(elipse(c1, 0.9, 1.9, giro, 14));
-      const fio = esc(perp(ax), 1);
-      return [
-        { d: corpo, fill: k.tubo(soma(c0, esc(fio, -6)), soma(c0, esc(fio, 6)), 6, ferro) },
-        { d: face, fill: k.bolha(ferro, 1.2) },
-        { d: aro, fill: k.bolha(cor, 1) },
-        { d: cubo, fill: k.bolha(cromo, 1) },
-      ];
+    const ferro = material('#3B4060', 'tecido', longe);
+    const cromo = material('#C3C8E0', 'metal', longe);
+    const ouro = material('#FFC83D', 'metal', longe);
+    const ret = (c0: P, meiaL: number, meiaA: number) => {
+      // retângulo arredondado ao longo da barra (meiaL) e de través (meiaA)
+      const pts: P[] = [];
+      const rr = Math.min(meiaL, meiaA) * 0.55;
+      for (const [sx, sy] of [[1, 1], [-1, 1], [-1, -1], [1, -1]] as [number, number][]) {
+        for (let q = 0; q <= 4; q++) {
+          const an = ((q / 4) * 90 + (sx > 0 ? (sy > 0 ? 0 : 270) : sy > 0 ? 90 : 180)) * (Math.PI / 180);
+          const cx = sx * (meiaL - rr);
+          const cy = sy * (meiaA - rr);
+          pts.push(soma(c0, soma(esc(ax, cx + Math.cos(an) * rr), esc(up, cy + Math.sin(an) * rr))));
+        }
+      }
+      return suave(pts);
     };
-    const ca = soma(g, esc(ax, -5));
-    const cb = soma(g, esc(ax, 5));
-    antes.push({ d: suave(tubo(ca, cb, () => 1.15, { n: 2 })), fill: k.tubo(ca, cb, 1.15, cromo) });
-    const [tras, frente] = ax[0] * (k.espelho ? -1 : 1) > 0 ? [-1, 1] : [1, -1];
-    antes.push(...anilha(tras));
-    depois.push(...anilha(frente));
+    const E = 1.3;
+    const fFerro = k.tecido(soma(g, esc(up, 6.6 * E)), soma(g, esc(up, -6.6 * E)), 6.6 * E, ferro);
+    const ca = soma(g, esc(ax, -10.2 * E));
+    const cb = soma(g, esc(ax, 10.2 * E));
+    antes.push({ d: suave(tubo(ca, cb, () => 1.0 * E, { n: 2 })), fill: k.tubo(ca, cb, 1.0 * E, cromo) });
+    for (const ld of [-1, 1]) {
+      antes.push({ d: ret(soma(g, esc(ax, ld * 6.4 * E)), 1.25 * E, 6.6 * E), fill: fFerro });
+      antes.push({ d: ret(soma(g, esc(ax, ld * 8.8 * E)), 1.05 * E, 5.0 * E), fill: fFerro });
+      antes.push({ d: ret(soma(g, esc(ax, ld * 4.7 * E)), 0.4 * E, 1.8 * E), fill: k.tubo(soma(g, esc(up, 1.8 * E)), soma(g, esc(up, -1.8 * E)), 1.8 * E, ouro) });
+    }
+    void giro;
   } else if (segura === 'copo' || garrafa) {
     const g = mao.palma;
     const up: P = [0, -1];
@@ -291,7 +324,8 @@ export function braco(c: MCtx, i: 0 | 1): { el: React.ReactNode; ds: string[] } 
   }
 
   const foge = enc < 0.85;
-  const forcaRec = longe ? 0.45 : 1;
+  // a mão no rosto ganha pouca luz de recorte (o fio dourado na ponta do dedo virava risco no aperto)
+  const forcaRec = longe ? 0.45 : j.bracoNaFrente[i] ? 0.4 : 1;
   if (!foge) {
     const todas = [...supP, ...antP, ...supM, ...antM, ...antes, ...mao.pecas, ...depois];
     return {
@@ -486,8 +520,8 @@ export function perna(c: MCtx, i: 0 | 1): { el: React.ReactNode; ds: string[]; c
       pijama: { c: (t: number) => med.rCoxa(t) + 2.4, s: (t: number) => lerp(8.2, 7.9, t) },
     }[b.tipo as 'jeans'];
     const rgC = (R.s(0.3) + R.c(0.5)) / 2;
-    pecas.push({ d: suave(tubo(kn, fimCanela, R.s, { pontaB: 'reta' })), fill: k.tubo(kn, fimCanela, rgC, mt) });
-    pecas.push({ d: suave(tubo(hip, kn, R.c)), fill: k.tubo(hip, kn, rgC, mt) });
+    pecas.push({ d: suave(tubo(kn, fimCanela, R.s, { pontaB: 'reta' })), fill: k.tecido(kn, fimCanela, rgC, mt) });
+    pecas.push({ d: suave(tubo(hip, kn, R.c)), fill: k.tecido(hip, kn, rgC, mt) });
     calca.push(pecas[pecas.length - 1].d, pecas[pecas.length - 2].d);
     const nC = perp(unit(sub(kn, hip)));
     const nS = perp(dS);
@@ -496,12 +530,25 @@ export function perna(c: MCtx, i: 0 | 1): { el: React.ReactNode; ds: string[]; c
     const ladoS = j.vista === 'frente' ? (i === 0 ? -1 : 1) * Math.sign(nS[0] || 1) : -Math.sign(nS[0] || 1);
     const costura = [soma(hip, esc(nC, ladoC * R.c(0) * 0.7)), soma(kn, esc(nC, ladoC * R.c(1) * 0.7)), soma(fimCanela, esc(nS, ladoS * R.s(1) * 0.7))];
     if (b.tipo === 'legging' && b.cor2) det.push(<path key="lst" d={suave(costura, false)} stroke={b.cor2} strokeWidth={1.1} strokeLinecap="round" fill="none" />);
-    if (b.tipo === 'pijama' && b.cor2) det.push(<path key="vies" d={suave(costura, false)} stroke={b.cor2} strokeWidth={0.8} strokeLinecap="round" fill="none" />);
+    if (b.tipo === 'pijama' && b.cor2) {
+      // listras ao longo da perna (recortadas na calça) e o viés na barra
+      const rec = k.recorte([pecas[pecas.length - 1].d, pecas[pecas.length - 2].d]);
+      const linhasP: string[] = [];
+      for (const q of [-0.66, -0.22, 0.22, 0.66]) {
+        const a1 = soma(hip, esc(nC, q * R.c(0)));
+        const a2 = soma(kn, esc(nC, q * R.c(1)));
+        const a3 = soma(fimCanela, esc(nS, q * R.s(1)));
+        linhasP.push(suave([a1, a2, a3], false));
+      }
+      det.push(<g key="listras" clipPath={rec} opacity={0.55}>{linhasP.map((d, q) => <path key={q} d={d} stroke={b.cor2} strokeWidth={1} fill="none" />)}</g>);
+      const bar = soma(fimCanela, esc(dS, -0.9));
+      det.push(<path key="vies" d={`M${fmt(bar[0] + nS[0] * R.s(1))} ${fmt(bar[1] + nS[1] * R.s(1))}L${fmt(bar[0] - nS[0] * R.s(1))} ${fmt(bar[1] - nS[1] * R.s(1))}`} stroke={b.cor2} strokeWidth={1.1} strokeLinecap="round" />);
+    }
     if (b.tipo === 'jeans') {
       det.push(<path key="pesp" d={suave(costura, false)} stroke={mistura(b.cor, '#FFD58A', 0.55)} strokeWidth={0.4} strokeDasharray="1 0.9" fill="none" opacity={0.85} />);
       // barra dobrada
       const a = soma(fimCanela, esc(dS, -2.2));
-      pecas.push({ d: suave(tubo(a, fimCanela, () => R.s(1) + 0.3, { pontaA: 'reta', pontaB: 'reta', n: 2 })), fill: k.tubo(a, fimCanela, R.s(1), material(ajusta(b.cor, 0.08), 'tecido', longe)) });
+      pecas.push({ d: suave(tubo(a, fimCanela, () => R.s(1) + 0.3, { pontaA: 'reta', pontaB: 'reta', n: 2 })), fill: k.tecido(a, fimCanela, R.s(1), material(ajusta(b.cor, 0.08), 'tecido', longe)) });
     }
     if (b.tipo === 'calca') {
       // o vinco da calça social
@@ -511,7 +558,7 @@ export function perna(c: MCtx, i: 0 | 1): { el: React.ReactNode; ds: string[]; c
     if (b.tipo === 'moletom') {
       const a = soma(fimCanela, esc(dS, -2.6));
       const rr = med.rCanela(1) + 0.9;
-      pecas.push({ d: suave(tubo(a, fimCanela, () => rr, { pontaA: 'reta', pontaB: 'reta', n: 2 })), fill: k.tubo(a, fimCanela, rr, material(ajusta(b.cor, -0.06), 'tecido', longe)) });
+      pecas.push({ d: suave(tubo(a, fimCanela, () => rr, { pontaA: 'reta', pontaB: 'reta', n: 2 })), fill: k.tecido(a, fimCanela, rr, material(ajusta(b.cor, -0.06), 'tecido', longe)) });
     }
     // dobras atrás do joelho quando dobra
     const dob = j.ang.coxa[i] - j.ang.canela[i];
@@ -525,7 +572,7 @@ export function perna(c: MCtx, i: 0 | 1): { el: React.ReactNode; ds: string[]; c
   } else if (b.tipo === 'short') {
     const fim = mixP(hip, kn, 0.5);
     const r = (t: number) => med.rCoxa(t * 0.5) + 1.5 + 0.9 * suaviza(0.5, 1, t);
-    pecas.push({ d: suave(tubo(soma(hip, esc(unit(sub(hip, kn)), 1)), fim, r, { pontaB: 'reta' })), fill: k.tubo(hip, fim, r(0.5), mt) });
+    pecas.push({ d: suave(tubo(soma(hip, esc(unit(sub(hip, kn)), 1)), fim, r, { pontaB: 'reta' })), fill: k.tecido(hip, fim, r(0.5), mt) });
     calca.push(pecas[pecas.length - 1].d);
     if (b.cor2) {
       const nC = perp(unit(sub(kn, hip)));

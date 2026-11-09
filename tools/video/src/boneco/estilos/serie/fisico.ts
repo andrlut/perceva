@@ -110,12 +110,15 @@ export function fisicoDe(p: Pessoa, prop: Proporcao): Fisico {
     mult(1.0, 1.18, 1.1, 1.18);
   }
   if (c === 'largo') {
-    mult(-0.17, 1.06, 1.1, 1.1);
-    mult(0.2, 1.18, 2.0, 1.14);
-    mult(0.42, 1.42, 2.35, 1.18);
-    mult(0.66, 1.16, 1.28, 1.14);
-    mult(0.84, 1.1, 1.14, 1.12);
-    mult(1.0, 1.18, 1.12, 1.12);
+    // volume distribuído (peito, costas, quadril, cintura) com a curva ALTA — uma bola baixa na
+    // barriga, de perfil, lia gravidez
+    mult(-0.17, 1.08, 1.12, 1.16);
+    mult(0, 1.04, 1.14, 1.16);
+    mult(0.2, 1.18, 1.45, 1.2);
+    mult(0.42, 1.34, 1.62, 1.24);
+    mult(0.66, 1.2, 1.4, 1.22);
+    mult(0.84, 1.12, 1.2, 1.16);
+    mult(1.0, 1.18, 1.12, 1.14);
     barriga = 1;
   }
   if (p.idade === 'maduro') {
