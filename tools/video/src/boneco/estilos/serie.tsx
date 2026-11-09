@@ -54,9 +54,15 @@ const SerieDesenho: React.FC<DesenhoProps> = ({ j, pessoa, roupa, humor, t, uid,
   camadas.push(camadaPerna(c, 1, 'p1'));
   camadas.push(<g key="cint">{detalhesCintura(c)}</g>);
   camadas.push(camadaSaia(c, 'saia'));
+  // de frente, braço CAÍDO com manga vem antes do tronco: o ombro arredondado da peça cobre a
+  // cabeça da manga e ela nasce na cava (sem o topo reto de papelão por cima do ombro)
+  const comManga = roupa.cima.tipo !== 'top' && roupa.cima.tipo !== 'regata';
+  const caido = (i: 0 | 1) => frente && comManga && !j.bracoNaFrente[i] && Math.abs(j.ang.braco[i] - j.ang.tronco) < 50 && (j.encurta?.[i] ?? 1) >= 0.8;
+  if (caido(0)) camadas.push(camadaBraco(c, 0, 'b0'));
+  if (caido(1)) camadas.push(camadaBraco(c, 1, 'b1'));
   camadas.push(camadaTronco(c, 'tr'));
-  if (frente && !j.bracoNaFrente[0]) camadas.push(camadaBraco(c, 0, 'b0'));
-  if (!j.bracoNaFrente[1]) camadas.push(camadaBraco(c, 1, 'b1'));
+  if (frente && !j.bracoNaFrente[0] && !caido(0)) camadas.push(camadaBraco(c, 0, 'b0'));
+  if (!j.bracoNaFrente[1] && !caido(1)) camadas.push(camadaBraco(c, 1, 'b1'));
   camadas.push(camadaCabeca(c, cab, 'cab'));
   if (j.bracoNaFrente[0]) camadas.push(camadaBraco(c, 0, 'b0f'));
   if (j.bracoNaFrente[1]) camadas.push(camadaBraco(c, 1, 'b1f'));
@@ -73,7 +79,9 @@ const SerieDesenho: React.FC<DesenhoProps> = ({ j, pessoa, roupa, humor, t, uid,
   }
   // o contorno grosso de fora vem ANTES de tudo (as camadas já registraram as formas)
   camadas.unshift(silhueta(pt));
-  camadas.push(recorte(pt));
+  // o fio lilás de recorte saiu (rodada 4: lia como segunda linha dentro do contorno); a separação
+  // do fundo agora é a linha colorida da silhueta
+  void recorte;
   return (
     <g ref={raiz}>
       {camadas.map((x, i) => (

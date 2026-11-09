@@ -75,8 +75,8 @@ export function maoDe(c: Ctx, i: 0 | 1, pose: Mao): MaoDesenho {
     // mínimo dobrados (a linha dos nós aparece embaixo dos dedos). A ponta do médio é j.dedos; no
     // fundo do aperto as polpas ACHATAM contra a pele (ficam mais largas e recuam um tico).
     const f = c.toque && i === 1 ? Math.max(0, Math.min(1, c.toque.forca)) : 0;
-    const ach = 1 + 0.32 * f;
-    const recua = 0.6 * f;
+    const ach = 1 + 0.45 * f;
+    const recua = 0.9 * f;
     const palma = suave(pts(M, [[0, -3.1], [4.2, -3.6], [8.8, -3.7], [10.6, -2.9], [11.4, -1.0], [11.0, 1.4], [10.6, 3.4], [8.6, 4.6], [5.2, 4.6], [2.4, 4.0], [0, 3.2]]));
     const medio = cap([9.8, -1.6], [18 - recua - 1.2 * ach, -1.15], 1.42, 1.22 * ach);
     const indicador = cap([9.2, 0.3], [17.0 - recua - 1.3 * ach, 0.45], 1.52, 1.3 * ach);

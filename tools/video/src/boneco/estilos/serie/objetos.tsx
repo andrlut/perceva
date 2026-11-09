@@ -21,26 +21,27 @@ export function halter(c: Ctx, i: 0 | 1): Grupo {
   const b = t;
   const k = sy;
   const at = (s: number): P => add(g, mul(b, s * k));
+  // escuro: grafite com colar dourado (o azul-claro sumia na regata azul)
   const ferro = '#D9DDF2';
-  const cab = '#59618F';
+  const cab = '#2E3247';
   const formas: Forma[] = [
     { d: capsula(at(-10.5), at(10.5), 1.3 * k, 1.3 * k), cor: ferro, k: 0.8 },
-    { d: placa(at(-9.6), b, 5.6 * k, 11.6 * k, 1.8 * k), cor: cab, k: 2.6 },
-    { d: placa(at(9.6), b, 5.6 * k, 11.6 * k, 1.8 * k), cor: cab, k: 2.6 },
+    { d: placa(at(-10.4), b, 6.4 * k, 13.4 * k, 2 * k), cor: cab, k: 2.6, linhaCor: '#8A90B8' },
+    { d: placa(at(10.4), b, 6.4 * k, 13.4 * k, 2 * k), cor: cab, k: 2.6, linhaCor: '#8A90B8' },
   ];
   const faixa = (s: number) => {
     const n = perp(b);
-    return linha([add(at(s), mul(n, 5.0 * k)), add(at(s), mul(n, -5.0 * k))]);
+    return linha([add(at(s), mul(n, 2.2 * k)), add(at(s), mul(n, -2.2 * k))]);
   };
   return {
     formas,
     linha: LINHA.dentro,
     depois: (
       <g>
-        <Traco d={faixa(-9.6)} w={1.6 * k} cor={c.pessoa.cor} />
-        <Traco d={faixa(9.6)} w={1.6 * k} cor={c.pessoa.cor} />
-        <Traco d={linha([add(at(-11.0), mul(perp(b), -4.2 * k)), add(at(-11.0), mul(perp(b), 1.5 * k))])} w={0.9 * k} cor="#FFFFFF" op={0.5} />
-        <Traco d={linha([add(at(8.2), mul(perp(b), -4.2 * k)), add(at(8.2), mul(perp(b), 1.5 * k))])} w={0.9 * k} cor="#FFFFFF" op={0.5} />
+        <Traco d={faixa(-6.6)} w={1.8 * k} cor="#FFC83D" />
+        <Traco d={faixa(6.6)} w={1.8 * k} cor="#FFC83D" />
+        <Traco d={linha([add(at(-12.0), mul(perp(b), -5.0 * k)), add(at(-12.0), mul(perp(b), 1.8 * k))])} w={0.9 * k} cor="#FFFFFF" op={0.4} />
+        <Traco d={linha([add(at(8.8), mul(perp(b), -5.0 * k)), add(at(8.8), mul(perp(b), 1.8 * k))])} w={0.9 * k} cor="#FFFFFF" op={0.4} />
       </g>
     ),
   };

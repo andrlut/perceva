@@ -33,6 +33,7 @@ import {
 } from './base';
 import { type CabeloDesenho, type VistaCab, cabeloDe } from './cabelos';
 import type { Ctx } from './ctx';
+import { quadroMao } from './maos';
 
 const BW = 48;
 const BH = 58;
@@ -170,7 +171,7 @@ function olho(c: Ctx, o: Olho, key: string, humor: string, cil: boolean): React.
         <path d={linha(sup)} stroke="#C4BFE2" style={sw(0.9)} fill="none" opacity={0.25} transform="translate(0 0.6)" />
       </g>
       {/* linha da pálpebra de cima (grossa) + cílio no canto de fora */}
-      <Traco d={linha(sup)} w={1.35} />
+      <Traco d={linha(sup)} w={1.12} />
       {cil && <Traco d={linha([out, [out[0] + s * 1.6, out[1] - 0.9]])} w={0.95} />}
       <Traco d={linha(inf)} w={0.6} op={0.55} />
       {/* dobra da pálpebra */}
@@ -273,12 +274,13 @@ export function camadaCabeca(c: Ctx, cab: CabeloDesenho, key: string): React.Rea
   const H = {
     ok: { abre: 0.86, baixo: 0.1, bro: 0, bIn: 0, arco: 1.5 },
     feliz: { abre: 0.86, baixo: 0.42, bro: -1.1, bIn: 0, arco: 1.9 },
-    cansado: { abre: 0.42, baixo: 0.05, bro: 0.6, bIn: -1.8, arco: 0.6 },
-    focado: { abre: 0.8, baixo: 0.22, bro: 0.9, bIn: 0.2, arco: 0.45 },
+    cansado: { abre: 0.4, baixo: 0.08, bro: 0.7, bIn: 0.15, arco: 0.5 },
+    focado: { abre: 0.64, baixo: 0.3, bro: 1.5, bIn: 0.25, arco: 0.25 },
     surpresa: { abre: 1.12, baixo: 0, bro: -3.6, bIn: -1.2, arco: 2.2 },
   }[humor];
   const abre = H.abre * (1 - fecha);
-  const olhar: P = v === 'frente' ? [0.3, 0.2] : [1.2, 0.2];
+  const esforco = c.segura === 'halter';
+  const olhar: P = esforco ? (v === 'frente' ? [0.6, 0.9] : [1.0, 1.0]) : v === 'frente' ? [0.3, 0.2] : [0.8, 0.15];
   const els: React.ReactNode[] = [
     <clipPath key="cr" id={idRosto}>
       <path d={rostoD} />
@@ -322,9 +324,10 @@ export function camadaCabeca(c: Ctx, cab: CabeloDesenho, key: string): React.Rea
   } else if (v === 'tq') {
     const xn = boca[0];
     // cunha pequena: a sombra do lado de cá faz a ponte, a ponta é uma curva curta com a asa
-    nariz.push(<path key="ns" d={suave([[xn + 1.4, 3.6], [xn + 2.6, 8.8], [xn + 1.6, 10.6], [xn + 0.4, 7.4]])} fill={ps} opacity={0.55} />);
-    nariz.push(<Traco key="nl" d={linha([[xn + 4.2, 6.4], [xn + 4.9, 9.0], [xn + 4.2, 10.5], [xn + 2.6, 10.7]])} w={0.9} />);
-    nariz.push(<Traco key="nn" d={linha([[xn + 2.0, 10.5], [xn + 1.3, 9.7]])} w={0.75} op={0.8} />);
+    // cunha pequena: só a sombra do lado de cá + a asa e a narina embaixo (sem traço subindo pro olho)
+    nariz.push(<path key="ns" d={suave([[xn + 2.0, 5.6], [xn + 3.9, 10.2], [xn + 1.4, 10.7], [xn + 0.9, 8.4]])} fill={ps} opacity={0.6} />);
+    nariz.push(<Traco key="nl" d={linha([[xn + 4.3, 9.3], [xn + 3.9, 10.5], [xn + 2.5, 10.8]])} w={0.75} />);
+    nariz.push(<ellipse key="nh" cx={xn + 3.4} cy={8.6} rx={0.9} ry={0.6} fill="#FFFFFF" opacity={0.2} />);
   } else {
     nariz.push(<Traco key="nn" d={linha([[22.6, 9.6], [21.2, 8.8], [20.6, 9.8]])} w={0.8} />);
   }
@@ -332,12 +335,16 @@ export function camadaCabeca(c: Ctx, cab: CabeloDesenho, key: string): React.Rea
   // ---- bochechas coradas e marcas de idade
   const rosado = mix(pele, '#FF6B7A', 0.45);
   const bochechas: React.ReactNode[] = [];
-  const bOp = humor === 'feliz' ? 0.42 : 0.26;
-  if (v === 'frente') for (const s of [-1, 1]) bochechas.push(<ellipse key={`bc${s}`} cx={13.4 * s} cy={9.6} rx={4.4} ry={2.6} fill={rosado} opacity={bOp} />);
+  // blush só com emoção (feliz): fixo nas duas bochechas ele apagava a marca do aperto e, na pele
+  // escura e sobre barba, lia mancha
+  const bOp = humor === 'feliz' ? 0.4 : 0;
+  if (bOp === 0) {
+    // sem blush
+  } else if (v === 'frente') for (const s of [-1, 1]) bochechas.push(<ellipse key={`bc${s}`} cx={13.4 * s} cy={9.6} rx={4.4} ry={2.6} fill={rosado} opacity={bOp} />);
   else if (v === 'tq') {
     bochechas.push(<ellipse key="bc0" cx={-3.4} cy={9.8} rx={4.2} ry={2.6} fill={rosado} opacity={bOp} />);
     bochechas.push(<ellipse key="bc1" cx={16.6} cy={9.4} rx={2.4} ry={2.2} fill={rosado} opacity={bOp} />);
-  } else bochechas.push(<ellipse key="bc0" cx={12} cy={9.6} rx={4} ry={2.6} fill={rosado} opacity={bOp} />);
+  } else if (v === 'perfil') bochechas.push(<ellipse key="bc0" cx={12} cy={9.6} rx={4} ry={2.6} fill={rosado} opacity={bOp} />);
   const idade: React.ReactNode[] = [];
   if (idoso) {
     const op = 0.6;
@@ -379,19 +386,27 @@ export function camadaCabeca(c: Ctx, cab: CabeloDesenho, key: string): React.Rea
   } else if (humor === 'surpresa') {
     bocaEls.push(<ellipse key="bs" cx={bx + (v === 'tq' ? -0.4 : 0)} cy={by + 1.2} rx={2.6 * (v === 'frente' ? 1 : 0.8)} ry={3.4} fill="#4A1830" stroke={TINTA} style={sw(0.95)} />);
     bocaEls.push(<ellipse key="bs2" cx={bx} cy={by + 3} rx={1.5} ry={0.9} fill="#E2677E" />);
+  } else if (esforco) {
+    // esforço: mandíbula firme — dentes cerrados à mostra, cantos retos
+    const d = suave([[...[bx - wl * 0.62, by - 0.5], 1] as PQ, [...[bx + wr * 0.62, by - 0.7], 1] as PQ, [...[bx + wr * 0.6, by + 1.3], 1] as PQ, [...[bx - wl * 0.6, by + 1.4], 1] as PQ]);
+    bocaEls.push(<path key="be" d={d} fill="#FBFAFF" stroke={TINTA} style={sw(0.8)} strokeLinejoin="round" />);
+    bocaEls.push(<Traco key="be2" d={linha([[bx - wl * 0.6, by + 0.35], [bx + wr * 0.6, by + 0.25]])} w={0.45} op={0.7} />);
   } else if (humor === 'cansado') {
-    bocaEls.push(<Traco key="bc" d={linha([[bx - wl * 0.8, by + 0.9], [bx - wl * 0.2, by + 0.2], [bx + wr * 0.4, by + 0.4], [bx + wr * 0.8, by + 1.1]])} w={0.95} />);
+    // cansado sem tristeza: boca reta e mole, os cantos no nível do meio
+    bocaEls.push(<Traco key="bc" d={linha([[bx - wl * 0.7, by + 0.5], [bx - wl * 0.2, by + 0.7], [bx + wr * 0.4, by + 0.65], [bx + wr * 0.7, by + 0.35]])} w={0.85} />);
   } else if (humor === 'focado') {
     // determinação, não bravo: boca neutra com o canto um tico pra cima; correndo, entreaberta (respira)
     if (c.mov.corrida > 0.5) {
-      bocaEls.push(<ellipse key="bc" cx={bx} cy={by + 0.6} rx={wl * 0.32 + wr * 0.18} ry={1.3} fill="#4A1830" />);
-      bocaEls.push(<Traco key="bc2" d={linha([[bx - wl * 0.5, by + 0.3], [bx, by - 0.3], [bx + wr * 0.5, by + 0.1]])} w={0.85} />);
+      // correndo: boca entreaberta LARGA e baixa (respira com força), cantos retos — determinação, não susto
+      const d = suave([[bx - wl * 0.6, by - 0.1], [bx, by - 0.5], [bx + wr * 0.6, by - 0.3], [bx + wr * 0.35, by + 1.5], [bx - wl * 0.3, by + 1.6]]);
+      bocaEls.push(<path key="bc" d={d} fill="#4A1830" stroke={TINTA} style={sw(0.75)} strokeLinejoin="round" />);
+      bocaEls.push(<path key="bc2" d={`M${(bx - wl * 0.5).toFixed(2)} ${(by - 0.2).toFixed(2)} L${(bx + wr * 0.5).toFixed(2)} ${(by - 0.35).toFixed(2)}`} stroke="#FBFAFF" style={sw(0.7)} strokeLinecap="round" />);
     } else {
       bocaEls.push(<Traco key="bc" d={linha([[bx - wl * 0.55, by + 0.5], [bx, by + 0.45], [bx + wr * 0.55, by - 0.15]])} w={1.0} />);
       bocaEls.push(<Traco key="bc2" d={linha([[bx + wr * 0.55, by - 0.15], [bx + wr * 0.72, by - 0.7]])} w={0.65} />);
     }
   } else {
-    bocaEls.push(<Traco key="bc" d={linha([[bx - wl, by - 1.0], [bx - wl * 0.3, by + 1.15], [bx + wr * 0.4, by + 1.05], [bx + wr, by - 1.35]])} w={1.05} />);
+    bocaEls.push(<Traco key="bc" d={linha([[bx - wl, by - 1.0], [bx - wl * 0.3, by + 1.15], [bx + wr * 0.4, by + 1.05], [bx + wr, by - 1.35]])} w={0.92} />);
     bocaEls.push(<Traco key="bl" d={linha([[bx - wl * 0.35, by + 3.2], [bx + wr * 0.25, by + 3.1]])} w={0.8} cor={lab} op={0.9} />);
   }
   if (f && humor !== 'surpresa' && humor !== 'feliz') {
@@ -434,7 +449,10 @@ export function camadaCabeca(c: Ctx, cab: CabeloDesenho, key: string): React.Rea
   // dedo sai (toque.marca) e some devagar. Nada de anel simétrico (lia espinha).
   const toqueEls: React.ReactNode[] = [];
   if (c.toque && pontoL) {
-    const cen = pontaL ?? pontoL;
+    // o afundado fica CENTRADO nas polpas (o fim dos dois dedos desenhados), com o dedo dentro dele
+    const recuaP = 0.9 * forca;
+    const polpa = pontaL ? q.paraLocal(quadroMao(c, 1).M(16.3 - recuaP, -0.35)) : null;
+    const cen = polpa ?? pontoL;
     const ang = (Math.atan2(dirL[1], dirL[0]) * 180) / Math.PI;
     const tg = perp(dirL);
     const Lr = q.L;
@@ -452,9 +470,11 @@ export function camadaCabeca(c: Ctx, cab: CabeloDesenho, key: string): React.Rea
         <path key="m" d={elipse(add(cen, mul(dirL, 0.6)), 5.0, 6.2, ang)} fill={`url(#${idM})`} opacity={0.8 * marca} />,
       );
     }
-    if (forca > 0.02 && pontaL) {
+    // tudo do afundado vai a ZERO junto com a força (sem degrau: no meio dos dois apertos a força
+    // passa por 0 num quadro só, e um piso de opacidade fazia a meia-lua piscar)
+    if (forca > 0.005 && pontaL) {
       // o afundado: elipse em volta da polpa, um tico além da ponta (ao longo do dedo × atravessado)
-      const dc = add(cen, mul(dirL, 0.5));
+      const dc = cen;
       const along = 1.9 + 1.0 * forca;
       const across = 2.4 + 1.5 * forca;
       const el = (k: number, off: P = [0, 0]) => elipse(add(dc, off), along * k, across * k, ang);
@@ -472,9 +492,9 @@ export function camadaCabeca(c: Ctx, cab: CabeloDesenho, key: string): React.Rea
           <path d={el(1.1)} fill="#000000" />
         </mask>,
         // o miolo do afundado escurece um tico
-        <path key="f" d={el(0.95)} fill={ps} opacity={0.3 * forca} />,
+        <path key="f" d={el(0.95)} fill={mix(pele, '#C9665E', 0.32)} opacity={0.45 * forca} />,
         // meia-lua de sombra quente, do lado oposto à luz
-        <path key="s" d={el(1)} fill={escurece(ps, 0.2)} mask={`url(#${idS})`} opacity={Math.min(1, 0.4 + 0.75 * forca)} />,
+        <path key="s" d={el(1)} fill={mix(pele, '#9A3F3A', 0.5)} mask={`url(#${idS})`} opacity={Math.min(0.95, 1.7 * forca)} />,
         // a pele empurrada estufa em volta e pega luz do lado da luz
         <path key="b" d={el(1.42)} fill={mix(pele, '#FFF4E8', 0.32)} mask={`url(#${idB})`} opacity={0.75 * forca} />,
       );
@@ -482,7 +502,7 @@ export function camadaCabeca(c: Ctx, cab: CabeloDesenho, key: string): React.Rea
       for (const sg of [-1, 1]) {
         const b0 = add(dc, mul(tg, sg * across * 1.12));
         partes.push(
-          <Traco key={`v${sg}`} d={linha([add(b0, mul(dirL, -1.6)), add(add(b0, mul(tg, sg * 0.5)), mul(dirL, 0.1)), add(b0, mul(dirL, 1.5))])} w={0.6} cor={escurece(ps, 0.3)} op={0.95 * forca} />,
+          <Traco key={`v${sg}`} d={linha([add(b0, mul(dirL, -1.6)), add(add(b0, mul(tg, sg * 0.5)), mul(dirL, 0.1)), add(b0, mul(dirL, 1.5))])} w={0.5} cor={mix(pele, '#7E2E33', 0.6)} op={0.9 * forca} />,
         );
       }
     }

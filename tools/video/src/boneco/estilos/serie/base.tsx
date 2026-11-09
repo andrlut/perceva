@@ -30,7 +30,7 @@ export const sw = (x: number): React.CSSProperties => ({ strokeWidth: `calc(var(
 /** a tinta: azul-marinho fundo, nunca preto */
 export const TINTA = '#14173D';
 /** espessuras (unidades do boneco; ~1,1 px por unidade num boneco de 330 px) */
-export const LINHA = { fora: 1.85, dentro: 0.95, fino: 0.7 };
+export const LINHA = { fora: 1.8, dentro: 0.68, fino: 0.5 };
 
 // ------------------------------------------------------------------ vetores
 
@@ -217,11 +217,22 @@ export function capsula(
     const k1 = add(p3, add(mul(u, rb * 0.62), mul(n, -rb * 0.25)));
     const k2 = add(q0, add(mul(u, rb * 0.18), mul(n, rb * 0.25)));
     s += ` C${f(k1)} ${f(k2)} ${f(q0)}`;
-  } else s += o.fimB === 'reto' ? ` L${f(q0)}` : ` A${rb.toFixed(2)} ${rb.toFixed(2)} 0 0 0 ${f(q0)}`;
+  } else s += o.fimB === 'reto' ? ` L${f(q0)}` : meiaVolta(p3, q0, add(b, mul(u, rb)), rb);
   s += ` C${f(d1)} ${f(d2)} ${f(q3)}`;
-  s += o.fimA === 'reto' ? ' Z' : ` A${ra.toFixed(2)} ${ra.toFixed(2)} 0 0 0 ${f(p0)} Z`;
+  s += o.fimA === 'reto' ? ' Z' : meiaVolta(q3, p0, add(a, mul(u, -ra)), ra) + ' Z';
   return s;
 }
+
+/**
+ * A ponta redonda da cápsula em DOIS quartos de arco (até o ponto `meio`, depois até `fim`). Um arco
+ * único de exatos 180° é ambíguo (a distância entre as pontas ≈ 2r, e o arredondamento decide pra
+ * que lado ele vai): no Chrome isso fazia um pedaço do braço sumir da pintura em quadros soltos.
+ */
+const meiaVolta = (ini: P, fim: P, meio: P, r: number) => {
+  void ini;
+  const R = r.toFixed(3);
+  return ` A${R} ${R} 0 0 0 ${f(meio)} A${R} ${R} 0 0 0 ${f(fim)}`;
+};
 
 export const circulo = (c: P, r: number) =>
   `M${f([c[0] - r, c[1]])} A${r} ${r} 0 1 0 ${f([c[0] + r, c[1]])} A${r} ${r} 0 1 0 ${f([c[0] - r, c[1]])} Z`;
@@ -307,7 +318,12 @@ export class Pintor {
     );
   }
 
-  /** várias formas de mesma cor como uma só: sombra e luz recortadas na UNIÃO delas */
+  /**
+   * Várias formas de mesma cor como uma só: sombra e luz recortadas na UNIÃO delas. A união é uma
+   * MÁSCARA (pintada), não um clipPath de vários filhos: o Chrome faz a união de clipPath por
+   * operação de caminho e, com bordas quase coincidentes (manga de cima × de baixo no cotovelo),
+   * ela falhava em quadros soltos — o antebraço sumia e aparecia a cor do contorno (rodada 4).
+   */
   pintaUniao(fs: Forma[], key: string | number, L: P = this.L): React.ReactNode {
     const id = this.id('u');
     const f0 = fs[0];
@@ -316,12 +332,12 @@ export class Pintor {
     const tf = `translate(${(L[0] * k).toFixed(2)} ${(L[1] * k).toFixed(2)})`;
     return (
       <g key={key}>
-        <clipPath id={id}>
+        <mask id={id} maskUnits="userSpaceOnUse" x={-900} y={-1200} width={1800} height={1500}>
           {fs.map((fm, i) => (
-            <path key={i} d={fm.d} />
+            <path key={i} d={fm.d} fill="#FFFFFF" />
           ))}
-        </clipPath>
-        <g clipPath={`url(#${id})`}>
+        </mask>
+        <g mask={`url(#${id})`}>
           {fs.map((fm, i) => (
             <path key={`s${i}`} d={fm.d} fill={sh} />
           ))}
@@ -348,7 +364,7 @@ export class Pintor {
    * na frente de outra), depois cada grupo (forro da peça + pintura + detalhes). O contorno grosso
    * de fora não mora aqui: é o passe `silhueta`, desenhado antes de tudo.
    */
-  camada(grupos: Grupo[], key: string | number, L: P = this.L, interna = LINHA.dentro * 0.85): React.ReactNode {
+  camada(grupos: Grupo[], key: string | number, L: P = this.L, interna = LINHA.dentro * 0.8): React.ReactNode {
     const todas = grupos.flatMap((g) => g.formas);
     for (const fm of todas) this.sil.push({ d: fm.d, tf: this.tf, cor: linhaDe(fm), op: fm.op, rim: fm.rim !== false && (fm.op ?? 1) >= 0.99 });
     return (
