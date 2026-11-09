@@ -45,7 +45,9 @@ emit-migration.mjs --videos  →  ideas[].video.{pt,en}
 9. **Lugar e câmera servem à história.** Ambiente quando a fala se passa em
    algum lugar (o trabalho, a aula, a casa, a rua); câmera quando a fala tem
    um movimento (aproximar no que importa, revelar o lugar, acompanhar o
-   caminho). Nunca os dois só pra enfeitar. *(revisor)*
+   caminho). Nunca os dois só pra enfeitar. *(revisor)* Na fase 3 todo vídeo
+   tem lugar em toda fala (3 a 4 fundos, a cena de tela cheia conta como um):
+   o lugar é parte da demonstração, não enfeite.
 
 ## Formato
 
@@ -797,7 +799,9 @@ se cada coisa continuar lendo:
 - Câmera em 2 a 4 falas por vídeo; o resto parado deixa o movimento contar.
   Não ponha `push` com deixa em duas falas seguidas.
 - Ambiente pode se repetir em falas seguidas (é o mesmo lugar): a passagem
-  fica contínua. Trocar de lugar a cada fala cansa; 2 a 3 lugares por vídeo.
+  fica contínua. Trocar de lugar a cada fala cansa; 2 a 3 lugares por vídeo
+  (fase 3: 3 a 4 fundos contando o corpo de vidro/lupa de tela cheia — ver
+  "## Fase 3", que prevalece quando as duas seções discordam).
 
 ## Comandos
 
@@ -835,7 +839,9 @@ anterior continua lá.
 
 A folha de contato (`out/molde/<key>/sheet.png`, um quadro por cena) é o
 que o revisor olha. É mais rápido que assistir e pega peça errada, cena
-vazia e coisa pequena.
+vazia e coisa pequena. Na fase 3 o revisor também lê os quadros com a legenda
+tapada (leitura cega: descreve a imagem antes de saber a fala) — ver
+.claude/agents/learning-video-reviewer.md.
 
 ## Onde está cada coisa
 

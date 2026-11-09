@@ -5,10 +5,14 @@ description: |
   vídeo próprio em Remotion). Everything learning-publisher (v2) does —
   planner → researcher → drafter → reviewer → blind reader → ideas-spec →
   text migration → art-director → images — PLUS, per idea, a reviewed video
-  made with the generic Remotion template (tools/video/MOLDE.md): the
-  video-director writes the script, the video-reviewer gates it (fidelity,
-  no research data), the voice is recorded and transcribed back (QA), the
-  contact sheet is reviewed, and the PT+EN videos go into the SAME ideas
+  made with the generic Remotion template (tools/video/MOLDE.md) in its
+  "fase 3" formula (the screen demonstrates each line: action, the
+  mechanism from inside, the spoken word on the image, varied places, a
+  protagonist per video): the video-director writes the script and
+  previews its frames, the video-reviewer gates it (fidelity, no research
+  data), the voice is recorded and transcribed back (QA), the frames are
+  reviewed (blind read first, then the fase 3 bar) with one guided fix
+  pass, and the PT+EN videos go into the SAME ideas
   migration (emit-migration --videos). Triggered by the LOCAL scheduled task
   `learning-publisher-remotion-cron` (replaces `learning-publisher-cron`,
   which is kept but disabled). Fails closed like v2; a video that fails its
@@ -32,6 +36,15 @@ errors and cannot be corrected one scene at a time; partner campaigns need
 content that is *exactly* what the idea says, with a review that can be
 audited line by line. The Notebook runner keeps doing the **audio deep
 dive** (and only fills a video when an idea shipped without one).
+
+**Since 2026-11-09 every video ships in the "fase 3" formula**
+(`tools/video/MOLDE.md`, "## Fase 3"; canonical example
+`learning-drops/video-specs/paker-health-energia-pele-forca.json`). The
+maintainer approved it on the three Paker videos — "tá detalhado, tá
+animado, tem vários fundos e as explicações ficaram excelentes" — and asked
+for every video to come out like that. The video-director and the
+video-reviewer carry the formula; you do not re-explain it to them, you
+give them the inputs below and enforce the budgets.
 
 Since the "ideias primeiro" redesign (2026-09-07) a material is:
 
@@ -120,6 +133,20 @@ First run on a machine only: `cd tools/content-media && npm install` and
 purpose). The video steps also need `ffmpeg`/`ffprobe` on the PATH — check
 with `ffprobe -version` here; if missing, the run continues **without
 videos** (step 9d) and says so.
+
+**Check that this checkout carries fase 3** (the formula, its lint and the
+canonical script live on `main` only after the `feat/molde-fase3` merge;
+before it, the director would read the rejected r2 as its "canonical
+example"):
+
+```bash
+f3=$(grep -c '"fase": 3' learning-drops/video-specs/paker-health-energia-pele-forca.json 2>/dev/null)
+grep -q '^## Fase 3' tools/video/MOLDE.md && [ "${f3:-0}" -gt 0 ] && echo "FASE3 OK" || echo "FASE3 MISSING — video steps skipped"
+```
+
+`FASE3 MISSING` → the run goes on **without videos** (skip 9d–9h, every
+idea ships `video: null`) and the report says "vídeos: fase 3 ausente no
+main". Never make a video in the old formula.
 
 ### 2. Spawn the planner
 
@@ -462,8 +489,7 @@ node tools/content-media/generate.mjs --slug <slug> --only ideas --idea <id>
 
 and test that image once more. **At most one re-render per idea**: a second
 failure ships the image as it is and goes into the report and the commit/PR
-body as "revisar imagem: `<id>` (o leitor leu '<puxa_pra>')"
-- Vídeos (Remotion): <x>/<n> ideias × PT+EN no ar; roteiro <pass|issues>, voz QA <tentativas>, quadros <pass|issues>; sem vídeo: <ids + motivo>. No loop —
+body as "revisar imagem: `<id>` (o leitor leu '<puxa_pra>')". No loop —
 every render costs money, and the maintainer judges the image in the app.
 
 ### 9c. The trio — compare the answers, do not run a new test
@@ -495,20 +521,63 @@ adjust the title), still capped at one re-render.
 Only after the ideas-spec is final (5b passed, 9c done — the video reads the
 card verbatim, so any later change to a title or claim means a new video).
 
-Spawn `learning-video-director` with the `slug` (and, in rewrite mode, a
-note that the existing `learning-drops/video-specs/<slug>.json` must keep
-the line ids that did not change). It writes the script and returns only
-after `node tools/video/scripts/molde.mjs lint --slug <slug>` is clean.
+**At most 3 ideas with video per run** — the first 3 by ordinal. A
+`book` with 4–5 ideas multiplies the cost of every step below (see
+"Cost"); the others ship with `video: null` and the report lists them as
+"vídeo pendente: <ids>" (a later run or the maintainer fills them — never
+this run). Pass the director only the ideas in the video steps.
+
+Spawn `learning-video-director` with the `slug` and that idea list (and, in
+rewrite mode, a note that the existing `learning-drops/video-specs/<slug>.json`
+must keep the line ids that did not change — an old idea that gets
+re-rendered moves to fase 3 with the same spoken text, so its voice stays).
+It writes every idea in **fase 3** (`fase: 3`, a `protagonista` and a "por
+dentro" signature — it lists the recent videos itself), returns only after
+`node tools/video/scripts/molde.mjs lint --slug <slug>` is clean, and
+previews its own frames without voice (`build --lang both --silent` +
+`stills --at`, at most 2 rounds). The silent build it leaves behind is
+harmless: step 9f's `build` (without `--silent`) restores the keys, and
+`voice` refuses a silent build. If it returns `error` (the canonical fase 3
+script is not in this checkout), skip the video steps as in Bootstrap.
+
+**The recency rule** (the same sentence in the director and the reviewer):
+the protagonist differs from the last 3 published ideas and the sibling
+ideas; no line repeats the frame (scene + plan + place + time + piece in
+hand) of a line in the recent videos; the "por dentro" signature differs
+from the idea video published **immediately before** (by convention the
+first line of the recent listing outside this slug — a material's ideas
+ship together) and from the siblings' while another one fits. It is not
+"a signature no recent video used" — the Paker used all three body ones
+(corpo, lupa, tanque), and that reading would make the next body video
+impossible.
+
+From its return, `protagonista`, `por_dentro`, `small_scene`, `places`,
+`vs_recent`, `warnings_kept` and `gaps` go into the report (a `gaps`
+entry — a metaphor or action the template lacks for a topic without a
+body — is a request to the maintainer, never something to improvise in this
+run); `preview.left` goes to the frames reviewer in 9g.
 
 ### 9e. Script gate — the video reviewer (before spending on voice)
 
-Spawn `learning-video-reviewer` in **mode script** with the `slug`. It
-checks every line, per language: fidelity to the body, no research data,
-story → verso, scene/piece shows the line, PT/EN parity, speakable.
+First collect `recent` — one line per recently published idea video
+(protagonist and the frame of each line, most recent first) — with the
+command in `.claude/agents/learning-video-director.md` ("Leia antes", step
+4), leaving out this `slug`. It is a handful of lines; never hand the
+reviewer the other scripts whole.
+
+Spawn `learning-video-reviewer` in **mode script** with the `slug` and
+`recent`. It checks every line, per language: fidelity to the body (what
+the screen demonstrates counts as a claim; the partner rules — no brand,
+no before × after, nothing instantaneous), no research data, story →
+verso, scene/piece shows the line, the fase 3 rules (fase + own
+protagonist, places, she is never small in the hook, the recency rule,
+something demonstrates the mechanism or method, words on screen from the
+line, no vetoed celebration), PT/EN parity, speakable.
 
 - `pass: true` → step 9f.
-- `pass: false` → hand the `issues` back to the director as `fix_notes`,
-  then lint + review **once more**. Shared budget: **2 reviews per
+- `pass: false` → hand the `issues` back to the director as `fix_notes`
+  (it previews at most once, `--idea <id>`), then lint + review **once
+  more**. Shared budget: **2 reviews per
   material**. An idea that still fails is **dropped from the video steps**
   — it ships without video (`video: null`) and the report lists it with the
   reviewer's issues. Text never waits for the video.
@@ -520,9 +589,15 @@ same check as 9c, for the video. A mismatch is a `historia` failure.
 
 ```bash
 cd tools/video
-node scripts/molde.mjs build --slug <slug> --lang both
-node scripts/molde.mjs voice --slug <slug> --lang both
+for id in <ids still in the video steps>; do
+  node scripts/molde.mjs build --slug <slug> --idea $id --lang both
+  node scripts/molde.mjs voice --slug <slug> --idea $id --lang both
+done
 ```
+
+Per idea from here to 9h: without `--idea` every command takes every idea
+of the script, the ones a gate already dropped included (TTS and render
+spent on a video that will not ship).
 
 `voice` records every line with Gemini TTS (voice Kore), transcribes it back
 and re-records what does not match — similarity ≥ 86% **and every content
@@ -531,38 +606,116 @@ app"). It exits non-zero when a line fails 4 takes: send that line back to
 the director as a `voz` fix (a different word, not the same one again), then
 `build` + `voice` once more. Second failure → that idea ships without video.
 
-### 9g. Frames gate — contact sheet
+### 9g. Frames gate — blind read, fase 3 bar, one guided fix
 
 ```bash
-node scripts/molde.mjs stills --slug <slug> --lang both
+for idea in <ids still in the video steps>; do
+  node scripts/molde.mjs stills --slug <slug> --idea $idea --lang both --at 0.15,0.5,0.85 --scale 0.5
+  # the PT frames again with the caption band masked, for the reviewer's blind pass
+  d=out/molde/<slug>.$idea.pt; rm -rf "$d/cego"; mkdir -p "$d/cego"
+  for f in "$d"/stills/*.png; do
+    ffmpeg -hide_banner -loglevel error -y -i "$f" \
+      -vf "drawbox=x=0:y=ih*0.735:w=iw:h=ih*0.15:color=0x0A0E26:t=fill" "$d/cego/$(basename "$f")"
+  done
+done
 ```
 
-One frame per scene at the end of its line (every cue already in), tiled in
-`tools/video/out/molde/<slug>.<idea>.<lang>/sheet.png`, with
-`stills/index.json` mapping frame → line. Spawn `learning-video-reviewer`
-in **mode frames** with the sheet paths (PT and EN of every idea). Failure
-→ the fix is in the script (another piece, another scene, fewer objects):
-director → `build` → `stills` → review again, **once**. Still failing →
-ship without that video and list it.
+Three frames per line, at 15%, 50% and 85% of the speech — a fase 3 line
+moves (an action starts, a lens opens and closes, one label replaces
+another), and a single frame at the end misses most of it. They land in
+`tools/video/out/molde/<slug>.<idea>.<lang>/stills/NN.png` (line `n` =
+frames `3n−2`…`3n`; `stills/index.json` maps lines), and `cego/` holds the
+PT copies with the caption masked (rows ~74–89% of the height).
+
+Spawn `learning-video-reviewer` in **mode frames**, **one call per idea**
+(54-odd frames per idea; one context per idea keeps it readable), with:
+`cego` (the PT masked dir), `frames` (the PT and EN `stills/` dirs), `at:
+"0.15,0.5,0.85"`, `scale: 0.5` (its px limits are on the 1080 frame — it
+divides by the scale), `index`, `spec`, `recent` (the 9e lines plus the sibling
+ideas of this material; add the `sheet.png` path of the last published idea
+video when it exists on this machine) and the director's `preview.left` (as
+`preview_left`; the reviewer reads it only after its blind pass).
+**Pass paths, not words**: never paste the captions, the line text or the
+director's notes about what a scene shows into the prompt — the blind pass
+only works if the reviewer meets the frames before the words.
+
+- `pass: true` → 9h.
+- `pass: false` → **one guided fix pass** for that idea, then give up on its
+  video:
+  1. hand the reviewer's `issues` (line, frame, rule, problem, fix) and the
+     `cego` readings marked `bate: false`, verbatim, to the director as
+     `fix_notes`, with the idea id. It fixes through the screen (props,
+     place, plan, label, action); changing a spoken line costs a
+     re-recording, so it does that only when the line itself is the
+     problem. Its preview here is **one** round, `--idea <id>`, built on
+     the real key **without** `--silent` (the voice exists, so the frames
+     carry the real timing) — or none, when it changed spoken text;
+  2. `build --slug <slug> --idea <id> --lang both` — lines whose text did not
+     change stay "voz em dia"; if any changed, `voice --slug <slug> --idea
+     <id> --lang both` re-records only those (same QA and 4-take limit as
+     9f);
+  3. the same `stills` (`--idea <id>`, same `--at`/`--scale`) and the masked
+     copies again;
+  4. the reviewer in mode frames once more, same inputs plus
+     `previous_issues` — it re-checks the flagged lines (blind pass
+     included) and the whole video for "mesma cara";
+  5. `pass: true` → 9h (render). Still failing → the idea ships **without
+     video** (`video: null`) and the report lists the remaining issues.
+
+**Cost — do not multiply reviews.** In the Paker pilots, writing + render +
+review came to roughly **0.5–0.9 M tokens per video** (two independent
+reviewers and several fix rounds). The routine affords one of each, per
+idea: director (lint + ≤ 2 preview rounds) → script review (+ 1 fix, the
+shared budget above, ≤ 1 preview) → voice → frames review (+ 1 guided fix,
+≤ 1 preview) → render. Never a second independent reviewer, never a third
+frames round, never a re-render "to see if it got better". A material with
+more ideas multiplies this cost — one more reason to keep one idea by
+default, and the reason for the 3-videos-per-run ceiling in 9d.
 
 ### 9h. Render + upload
 
+**Only the ideas that passed every gate, one at a time.** Without
+`--idea`, `render` and `upload` take every idea in the script — including
+one a gate dropped — and `videos` lists every `out/molde/<slug>.*` folder
+that holds a `video.json`, stale ones included. So:
+
 ```bash
-node scripts/molde.mjs render --slug <slug> --lang both        # out/molde/<key>/pub/idea.<n>.<lang>.r1.mp4 + poster
-node scripts/molde.mjs upload --slug <slug> --lang both        # supabase storage cp, run from the repo root by the script
+for id in <ids that passed 9e, 9f and 9g>; do
+  node scripts/molde.mjs render --slug <slug> --idea $id --lang both   # out/molde/<key>/pub/idea.<n>.<lang>.r1.mp4 + poster
+done
+# the length check below; then, for every idea of this slug NOT shipping a video this run:
+rm -f out/molde/<slug>.<that-id>.pt/video.json out/molde/<slug>.<that-id>.en/video.json
+for id in <ids that also passed the length check>; do
+  node scripts/molde.mjs upload --slug <slug> --idea $id --lang both  # supabase storage cp, run from the main checkout by the script
+done
 node scripts/molde.mjs videos --slug <slug> --out ../../learning-drops/inbox/<slug>/videos.json
 supabase storage ls ss:///learning-media/<slug>/ --experimental --linked
 ```
 
-The render fails closed on a video over 60 s (cut a line, back to 9d). Each
-video is ~2 MB at 720p. Every `.mp4` and `.poster.webp` in `videos.json`
+(`videos` without `--idea`: with it, each call rewrites the slug's entry
+and only the last idea would survive. The `video.json` files are local,
+gitignored render outputs.)
+
+**The length check is yours: `render` does not stop on its own.** It
+prints `✓ <key>: NN.N s` per video (also `duration_seconds` in
+`out/molde/<key>/video.json`); the lint only bars > 58 s *estimated*, and
+the real voice can run longer. A video over 60 s counts as a frames
+failure, **with no loop**: if the idea's guided fix of 9g is still unused,
+spend it here (the director cuts a `hold` or a line → build → voice if a
+line changed → stills → frames review → render once more); if it was
+already spent, the idea ships **without video** and the report says "acima
+de 60 s". Each video is ~2 MB at 720p. It also prints a `ritmo:` line per video (share of
+near-stillness and the gaps of more than 1 s with nothing big moving;
+reference 16–55%, no gap outside the end): copy it into the report. It only
+warns — never loop on it. Every `.mp4` and `.poster.webp` in `videos.json`
 must appear in `storage ls` before step 11. A rewrite that changes a video
 renders `--rev N+1` (the bucket never overwrites; the old revision stays,
 unreferenced).
 
-`videos.json` only lists the ideas that passed every gate; the others are
-simply not in it, and `emit-migration.mjs` gives them `video: null` (the
-Notebook runner may fill them later — say so in the report).
+`videos.json` then lists only the ideas that passed every gate (open it and
+check the ids before step 11); the others are simply not in it, and
+`emit-migration.mjs` gives them `video: null` (the Notebook runner may fill
+them later — say so in the report).
 
 ### 10. Upload every manifest asset
 
@@ -692,6 +845,7 @@ gh pr create --title "feat(learning): <category> — <title>" --body "$(cat <<'E
 - Cover: yes | FAILED (shipped without hero)
 - Reviewer: PASSED (or PASSED with N warnings)
 - Leitor cego: títulos <x>/<n>, versos <x>/<n>, imagens <x>/<n> — e, se houver, "revisar imagem: <id> (o leitor leu '<puxa_pra>')"
+- Vídeos (Remotion, fase 3): <x>/<n> ideias × PT+EN no ar; roteiro <pass|issues>, voz QA <tentativas>, quadros <pass|issues> (<passadas de conserto>), duração e ritmo <s · % parada · buracos>; protagonista, assinatura e cena pequena por ideia; gaps do diretor; sem vídeo: <ids + motivo>; vídeo pendente (acima do teto de 3): <ids>
 
 ## Reasoning log
 <paste the drafter's reasoning_log here for audit>
@@ -728,11 +882,17 @@ the git push did not land).
 - Cover failed after one retry → publish anyway (`--with-cover` finds no
   cover in the manifest, warns, and leaves `hero_image_url` alone); flag
   it in the report.
-- Video gates (9e/9f/9g) fail twice for an idea → that idea ships with
-  `video: null`; list it with the reviewer's issues. **Never** publish a
-  video that did not pass both reviews.
-- `ffmpeg` missing, `npm install` failing in `tools/video`, or the render
-  crashing → ship the material without videos, flag it in the report.
+- Video gates (9e/9f/9g) fail twice for an idea (in 9g: after the one
+  guided fix pass) → that idea ships with `video: null`; list it with the
+  reviewer's issues. **Never** publish a video that did not pass both
+  reviews.
+- `ffmpeg` missing, `npm install` failing in `tools/video`, the render
+  crashing, or the Bootstrap check printing `FASE3 MISSING` (the
+  checkout lacks the fase 3 formula) → ship the material without videos,
+  flag it in the report.
+- A video over 60 s after the render → the 9h rule (the unused guided fix,
+  or no video). Ideas beyond the 3-per-run ceiling → `video: null`, listed
+  as "vídeo pendente".
 - A video uploaded but the db push failed → harmless (nothing references it).
 - `emit-migration.mjs` dies → the ideas-spec violates the contract; fix
   the spec (through the drafter if it is text), never the SQL.
