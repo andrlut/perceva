@@ -47,7 +47,7 @@ export const Boneco: React.FC<BonecoProps> = ({ estilo, pessoa, roupa, acao, t, 
   const top = -H * 1.45;
   const w = H * 1.1;
   // o dedo na bochecha: a força vem da pose (Pose.aperto), o ponto do esqueleto
-  const toque = acao === 'tocarRosto' && j.mao[1] === 'aponta' ? { ponto: j.bochecha, forca: j.aperto } : undefined;
+  const toque = acao === 'tocarRosto' && (j.mao[1] === 'aponta' || j.marca > 0) ? { ponto: j.bochecha, forca: j.aperto, marca: j.marca } : undefined;
   const elev = Math.max(0, -(pose.y ?? 0));
   return (
     <svg

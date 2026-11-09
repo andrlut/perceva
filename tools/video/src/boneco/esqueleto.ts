@@ -91,6 +91,8 @@ export type Pose = {
    * estilo desenha a pele cedendo (anel de sombra, a borda que estufa) proporcional a ela.
    */
   aperto?: number;
+  /** 0..1: a marca rosada que FICA na pele depois do aperto e some devagar (só no `tocarRosto`) */
+  marca?: number;
   /** o braço passa NA FRENTE da cabeça (mão na boca, dedo no rosto) */
   bracoNaFrente?: [boolean, boolean];
   /**
@@ -154,6 +156,8 @@ export type Juntas = {
   fecha: number;
   /** 0..1: a força do dedo na bochecha (ver Pose.aperto) */
   aperto: number;
+  /** 0..1: a marca que fica depois do aperto (ver Pose.marca) */
+  marca: number;
   /** escorço de cada braço (ver Pose.encurta): 1 = comprimento inteiro */
   encurta: [number, number];
   bracoNaFrente: [boolean, boolean];
@@ -172,12 +176,13 @@ export const LARGURA: Record<Vista, number> = { frente: 1, 'tres-quartos': 0.55,
 /**
  * Onde ficam boca, bochecha e olhos, em frações da cabeça (x × cabecaLarg a partir do centro,
  * y × cabeca a partir do centro, pra baixo). De 3/4 o rosto gira pra +x; de perfil, mais.
- * `bochecha` é a que a MÃO DA FRENTE (1) aperta: de frente, a da direita da tela, perto da borda
- * (a borda do rosto cede junto); de 3/4 e perfil, a bochecha que vem pra câmera, entre o nariz e
- * a orelha. Sempre na altura da ponta do nariz (0,16 abaixo do centro), nunca colada no olho.
+ * `bochecha` é a que a MÃO DA FRENTE (1) aperta: de frente, a maçã do rosto da direita da tela
+ * (rodada 3: em 0,36 o painel via o dedo "colado na orelha"); de 3/4 e perfil, a bochecha que vem
+ * pra câmera, entre o nariz e a orelha. Sempre na altura da asa do nariz (0,17 abaixo do centro),
+ * nunca colada no olho.
  */
 export const ROSTO: Record<Vista, { boca: P; bochecha: P; olhos: P }> = {
-  frente: { boca: [0, 0.27], bochecha: [0.36, 0.16], olhos: [0, 0.02] },
+  frente: { boca: [0, 0.27], bochecha: [0.29, 0.17], olhos: [0, 0.02] },
   'tres-quartos': { boca: [0.2, 0.27], bochecha: [-0.08, 0.17], olhos: [0.16, 0.02] },
   perfil: { boca: [0.4, 0.27], bochecha: [0.2, 0.17], olhos: [0.3, 0.02] },
 };
@@ -280,6 +285,7 @@ export function fk(prop: Proporcao, pose: Pose = {}): Juntas {
     mao: pose.mao ?? ['solta', 'solta'],
     fecha: pose.fecha ?? 0,
     aperto: pose.aperto ?? 0,
+    marca: pose.marca ?? 0,
     encurta: enc,
     bracoNaFrente: pose.bracoNaFrente ?? [false, false],
     altura: alturaDe(prop),
@@ -308,6 +314,7 @@ export function mistura(a: Pose, b: Pose, t: number): Pose {
     mao: k < 0.5 ? a.mao : b.mao,
     fecha: n(a.fecha, b.fecha),
     aperto: n(a.aperto, b.aperto),
+    marca: n(a.marca, b.marca),
     encurta: [n(a.encurta?.[0] ?? 1, b.encurta?.[0] ?? 1), n(a.encurta?.[1] ?? 1, b.encurta?.[1] ?? 1)],
     bracoNaFrente: k < 0.5 ? a.bracoNaFrente : b.bracoNaFrente,
   };

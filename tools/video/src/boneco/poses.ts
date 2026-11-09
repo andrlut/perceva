@@ -131,53 +131,81 @@ function andar(t: number, prop: Proporcao, o: PoseOpts): Pose {
 }
 
 /**
- * Corrida (vista de 3/4 ou perfil). Ciclo clássico: contato → apoio (o joelho de apoio dobra,
- * o corpo desce) → impulso (perna de trás estica) → voo (os dois pés no ar, o corpo no alto).
- * O calcanhar da perna que volta sobe até perto do glúteo; braço a ~90°, contra a perna.
+ * Corrida (vista de 3/4 ou perfil), por QUADROS-CHAVE de uma passada de tiro de verdade (rodada 3,
+ * painel às cegas: a versão senoidal lia "salto de balé" — perna da frente esticada lá na frente,
+ * a de trás na horizontal, braço de bandeja na cintura). Fase u de cada perna (0..1, a outra em
+ * u + 0,5):
+ *   0,00 contato   — o pé pousa quase embaixo do quadril (nunca esticado lá na frente)
+ *   0,10 apoio     — o joelho cede e o corpo está no ponto mais baixo
+ *   0,25 impulso   — a perna de trás estica, ~25° pra trás, ponta do pé empurrando
+ *   0,45 calcanhar — o calcanhar sobe até perto do glúteo
+ *   0,60 joelho    — o joelho vem alto na frente, canela dobrada
+ *   0,75–0,90      — a canela abre e "pata" pra trás antes do contato
+ * Braço contrário à perna, cotovelo sempre dobrado: na frente a mão chega à altura do queixo
+ * (~100°), atrás o cotovelo abre (~55°) e a mão passa ATRÁS do quadril, nunca na frente dele.
  */
+type Chave = [number, number];
+/** valor periódico por quadros-chave [fase, valor] (fase 0..1, ordenadas), cúbico suave (Catmull-Rom) */
+const ciclo = (ks: Chave[], u: number) => {
+  const n = ks.length;
+  const x = ((u % 1) + 1) % 1;
+  let i = n - 1;
+  for (let k = 0; k < n; k++) if (ks[k][0] <= x) i = k;
+  const k0 = ks[(i - 1 + n) % n];
+  const k1 = ks[i];
+  const k2 = ks[(i + 1) % n];
+  const k3 = ks[(i + 2) % n];
+  const span = (((k2[0] - k1[0]) % 1) + 1) % 1 || 1;
+  const tt = ((((x - k1[0]) % 1) + 1) % 1) / span;
+  const [p0, p1, p2, p3] = [k0[1], k1[1], k2[1], k3[1]];
+  const t2 = tt * tt;
+  const t3 = t2 * tt;
+  return 0.5 * (2 * p1 + (-p0 + p2) * tt + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 + (-p0 + 3 * p1 - 3 * p2 + p3) * t3);
+};
+const COXA: Chave[] = [[0, 24], [0.1, 6], [0.25, -24], [0.35, -20], [0.45, -6], [0.6, 48], [0.75, 52], [0.9, 34]];
+const JOELHO: Chave[] = [[0, 14], [0.1, 34], [0.25, 12], [0.35, 70], [0.45, 118], [0.6, 108], [0.75, 52], [0.9, 18]];
+const PE: Chave[] = [[0, 4], [0.1, 0], [0.25, -32], [0.35, -22], [0.45, -14], [0.6, 8], [0.75, 6], [0.9, 6]];
+/** quanto o braço do MESMO lado está à frente (1) ou atrás (0): à frente quando a perna dele está no apoio */
+const BRACO_FRENTE: Chave[] = [[0, 0.9], [0.1, 1], [0.25, 0.75], [0.45, 0.15], [0.6, 0], [0.75, 0.2], [0.9, 0.6]];
+
 function correr(t: number, prop: Proporcao, o: PoseOpts): Pose {
   const h = alturaDe(prop);
   const rapido = o.ritmo === 'rapido';
-  const T = rapido ? 15 : o.ritmo === 'lento' ? 22 : 18;
-  const f = ((t + (o.fase ?? 0)) / T) * TAU;
-  const leg = (i: 0 | 1) => {
-    const p = f + i * Math.PI;
-    const amp = rapido ? 44 : 36;
-    const coxa = amp * Math.sin(p) + 6;
-    // balanço: dobra muito logo antes de passar por baixo (calcanhar no glúteo)
-    const balanco = (rapido ? 112 : 96) * Math.max(0, Math.cos(p + 0.45)) ** 1.35;
-    // apoio: dobra um pouco no meio (amortece)
-    const apoio = 24 * Math.max(0, -Math.cos(p)) ** 2;
-    const joelho = 10 + balanco + apoio;
-    // pé: ponta caída no balanço, plano no apoio
-    const pe = -22 * Math.max(0, Math.cos(p + 0.2)) + 6 * Math.max(0, -Math.cos(p));
-    return { coxa, joelho, pe };
+  const lento = o.ritmo === 'lento';
+  const T = rapido ? 16 : lento ? 24 : 20;
+  // amplitude: tiro = passada inteira; corrida normal 80%; trote 62%
+  const amp = rapido ? 1 : lento ? 0.62 : 0.8;
+  const u0 = (((t + (o.fase ?? 0)) / T) % 1 + 1) % 1;
+  const perna = (u: number) => ({
+    coxa: ciclo(COXA, u) * amp,
+    joelho: Math.max(4, ciclo(JOELHO, u) * (0.55 + 0.45 * amp)),
+    pe: ciclo(PE, u) * amp,
+  });
+  const braco = (u: number) => {
+    const f = Math.max(0, Math.min(1, ciclo(BRACO_FRENTE, u)));
+    return { ombro: lerp(-52, 44, f) * (0.7 + 0.3 * amp), cotovelo: lerp(56, 102, f) };
   };
-  const l0 = leg(0);
-  const l1 = leg(1);
-  const arm = (i: 0 | 1) => {
-    const p = f + i * Math.PI;
-    // braço do lado i vai pra frente quando a perna i vai pra trás
-    const ombro = -(rapido ? 50 : 40) * Math.sin(p) + 8;
-    const cotovelo = 82 + 18 * Math.max(0, -Math.sin(p));
-    return { ombro, cotovelo };
-  };
-  const a0 = arm(0);
-  const a1 = arm(1);
-  // corpo: mais baixo no apoio (sin(p)≈0 com a perna de apoio embaixo), no alto no voo
-  const bob = (Math.cos(2 * f) * 0.5 + 0.5) * (rapido ? 0.03 : 0.024);
+  // perna 1 (a da frente, lado da câmera) em u0, a de trás em u0 + 0,5; cada braço acompanha a perna do mesmo lado
+  const l0 = perna(u0 + 0.5);
+  const l1 = perna(u0);
+  const a0 = braco(u0 + 0.5);
+  const a1 = braco(u0);
+  // corpo: no ponto mais baixo no meio do apoio (u = 0,1 de qualquer perna), no alto no voo (0,35 / 0,85)
+  const sobe = 0.5 - 0.5 * Math.cos((u0 - 0.1) * 2 * Math.PI * 2);
+  const bob = h * (rapido ? 0.022 : 0.016) * amp;
   return {
     vista: o.vista ?? 'tres-quartos',
     espelho: o.espelho,
-    tronco: rapido ? 13 : 9,
-    cabeca: rapido ? -8 : -6,
-    y: -h * (rapido ? 0.03 : 0.024) + h * bob,
+    tronco: rapido ? 14 : lento ? 7 : 10,
+    cabeca: rapido ? -9 : -6,
+    y: -bob * sobe,
     quadril: [l0.coxa, l1.coxa],
     joelho: [l0.joelho, l1.joelho],
     pe: [l0.pe, l1.pe],
     ombro: [a0.ombro, a1.ombro],
     cotovelo: [a0.cotovelo, a1.cotovelo],
     mao: ['fechada', 'fechada'],
+    // esforço: a boca entreabre no tiro (o estilo lê `fecha` baixo como olho atento; nada de careta)
   };
 }
 
@@ -236,7 +264,8 @@ function rosca(t: number, prop: Proporcao, o: PoseOpts): Pose {
 function alongar(t: number, prop: Proporcao, o: PoseOpts): Pose {
   const base = parado(t, prop, { ...o, vista: o.vista ?? 'frente' });
   const s = Math.sin(t / 24);
-  return { ...base, tronco: s * 9, cabeca: s * 4, ombro: [-168 + s * 6, 168 + s * 6], cotovelo: [18, -18], mao: ['aberta', 'aberta'], fecha: 0.6 };
+  // as mãos se encontram em cima da cabeça (V aberto com riso lia como comemoração)
+  return { ...base, tronco: s * 8, cabeca: s * 4, ombro: [-166 + s * 5, 166 + s * 5], cotovelo: [-26, 26], mao: ['aberta', 'aberta'], fecha: 0.6 };
 }
 
 /** Comemorar: braços pra cima e um pulinho curto. NÃO usar onde o tema veta euforia (pré-treino). */
@@ -284,6 +313,8 @@ function tocarRosto(t: number, prop: Proporcao, o: PoseOpts): Pose {
   const sobe = k < 10 ? ease(k / 10) : k < 40 ? 1 : 1 - ease((k - 40) / 8);
   // dois apertos (fundo nos quadros ~18 e ~31)
   const aperto = k >= 12 && k < 38 ? Math.abs(Math.sin(((k - 12) / 13) * Math.PI)) : 0;
+  // a marca que FICA: depois de cada fundo, o rubor some em ~10 quadros (o painel: o aperto "piscava")
+  const marca = Math.max(aperto * 0.85, ...[18.5, 31.5].map((pk) => (k >= pk && k < 46 ? 0.75 * Math.exp(-(k - pk) / 10) : 0)));
   const pose: Pose = { ...base, vista, cabeca: -3 - aperto * 2 };
   const j = fk(prop, pose);
   const bo = j.bochecha;
@@ -331,6 +362,7 @@ function tocarRosto(t: number, prop: Proporcao, o: PoseOpts): Pose {
     mao: ['solta', sobe > 0.9 ? 'aponta' : 'solta'],
     bracoNaFrente: [false, sobe > 0.2],
     aperto: sobe > 0.9 ? aperto : 0,
+    marca: sobe > 0.5 ? marca : 0,
   };
 }
 

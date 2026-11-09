@@ -52,6 +52,12 @@ export type Cima = {
 export type Baixo = { tipo: 'short' | 'legging' | 'calca' | 'jeans' | 'moletom' | 'saia' | 'pijama'; cor: string; cor2?: string };
 export type Calcado = { tipo: 'tenis' | 'sapato' | 'chinelo' | 'meia' | 'bota'; cor: string; sola?: string };
 export type Extra = 'relogio' | 'fone' | 'bone' | 'faixa' | 'avental' | 'cracha' | 'garrafa';
+/**
+ * Uma roupa completa. Régua do painel (rodada 3) pro estilo desenhar: cada contexto tem que ler À
+ * PRIMEIRA VISTA, pequeno — pijama tem estampa (listra ou poá), carcela de botões e viés, e cai
+ * folgado (nunca agasalho nem jaleco); blazer vai SOBRE uma blusa/camisa (`cor2`), nunca sobre a
+ * pele; tecido cai reto com 1–2 dobras (sem balão inflado, sem brilho no meio da barriga).
+ */
 export type Roupa = { contexto: Contexto; cima: Cima; baixo: Baixo; calcado: Calcado; extras?: Extra[] };
 
 // Paleta: as 6 áreas e o violeta do app + neutros de roupa (jeans, branco, grafite, bege).
@@ -103,10 +109,13 @@ export const pessoa = (id: string): Pessoa => {
 const GUARDA: Record<string, Record<Contexto, Roupa>> = {
   marina: {
     esporte: { contexto: 'esporte', cima: { tipo: 'regata', cor: COR.violeta, cor2: COR.branco }, baixo: { tipo: 'legging', cor: COR.marinho, cor2: COR.violeta }, calcado: { tipo: 'tenis', cor: COR.branco, sola: COR.violeta }, extras: ['relogio'] },
-    casa: { contexto: 'casa', cima: { tipo: 'camiseta', cor: COR.mente }, baixo: { tipo: 'moletom', cor: COR.cinza }, calcado: { tipo: 'meia', cor: COR.branco } },
-    trabalho: { contexto: 'trabalho', cima: { tipo: 'blazer', cor: COR.violetaFundo, cor2: COR.branco }, baixo: { tipo: 'calca', cor: COR.marinho }, calcado: { tipo: 'sapato', cor: COR.grafite }, extras: ['cracha'] },
+    // rodada 3 (painel): os 4 contextos da Marina eram todos violeta e a roupa não contava a cena;
+    // o violeta dela fica no esporte e na rua, a casa é mescla clara, o trabalho é marinho com branco e
+    // o pijama é azul-claro listrado
+    casa: { contexto: 'casa', cima: { tipo: 'moletom', cor: COR.bege, cor2: COR.mente }, baixo: { tipo: 'moletom', cor: COR.cinza }, calcado: { tipo: 'meia', cor: COR.branco } },
+    trabalho: { contexto: 'trabalho', cima: { tipo: 'blazer', cor: COR.marinho, cor2: COR.branco }, baixo: { tipo: 'calca', cor: COR.marinho }, calcado: { tipo: 'sapato', cor: COR.grafite }, extras: ['cracha'] },
     rua: { contexto: 'rua', cima: { tipo: 'blusa', cor: COR.violeta }, baixo: { tipo: 'jeans', cor: COR.jeans }, calcado: { tipo: 'tenis', cor: COR.branco, sola: COR.cinza } },
-    dormir: { contexto: 'dormir', cima: { tipo: 'pijama', cor: COR.mente, cor2: COR.branco }, baixo: { tipo: 'pijama', cor: COR.mente, cor2: COR.branco }, calcado: { tipo: 'meia', cor: COR.branco } },
+    dormir: { contexto: 'dormir', cima: { tipo: 'pijama', cor: COR.jeansClaro, cor2: COR.branco }, baixo: { tipo: 'pijama', cor: COR.jeansClaro, cor2: COR.branco }, calcado: { tipo: 'meia', cor: COR.branco } },
   },
   caio: {
     esporte: { contexto: 'esporte', cima: { tipo: 'camiseta', cor: COR.corpo, cor2: COR.marinho }, baixo: { tipo: 'short', cor: COR.marinho, cor2: COR.corpo }, calcado: { tipo: 'tenis', cor: COR.corpo, sola: COR.branco }, extras: ['fone'] },
