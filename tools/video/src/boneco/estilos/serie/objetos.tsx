@@ -2,7 +2,7 @@
 // O copo ENCOSTA na boca: se a borda passa perto de j.boca, o copo gira (e escorrega um tico na
 // mão) até a quina da borda pousar exatamente no lábio — o detalhe tátil que a cena pede.
 import React from 'react';
-import { type Forma, type Grupo, type P, LINHA, TINTA, Traco, add, capsula, clamp, dist, linha, mix, mul, norm, perp, sub, suave } from './base';
+import { type Forma, type Grupo, type P, LINHA, TINTA, Traco, add, capsula, clamp, dist, linha, mix, mul, norm, perp, sub, suave, sw } from './base';
 import type { Ctx } from './ctx';
 import { quadroMao } from './maos';
 
@@ -92,9 +92,9 @@ export function copo(c: Ctx, i: 0 | 1): Grupo {
         </clipPath>
         <g clipPath={`url(#${id})`}>
           <path d={agua} fill="#4DD0FF" opacity={0.75} />
-          <path d={`M${nivel[0] - R} ${nivel[1]} L${nivel[0] + R} ${nivel[1]}`} stroke="#E6FAFF" strokeWidth={0.9 * k} opacity={0.95} />
+          <path d={`M${nivel[0] - R} ${nivel[1]} L${nivel[0] + R} ${nivel[1]}`} stroke="#E6FAFF" style={sw(0.9 * k)} opacity={0.95} />
         </g>
-        <path d={boca} fill="#E6FAFF" fillOpacity={0.35} stroke={TINTA} strokeWidth={LINHA.fino * 0.8} />
+        <path d={boca} fill="#E6FAFF" fillOpacity={0.35} stroke={TINTA} style={sw(LINHA.fino * 0.8)} />
         <Traco d={brilho} w={1.3 * k} cor="#FFFFFF" op={0.8} />
         <Traco d={brilho2} w={0.8 * k} cor="#FFFFFF" op={0.55} />
       </g>

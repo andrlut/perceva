@@ -72,19 +72,14 @@ function maoDe(c: MCtx, i: 0 | 1, mp: Mat, chave: string): MaoOut {
       pecas.push({ d: suave(tubo(loc(0.5, v), c0, () => 0.3 * W2, { n: 3 })), fill });
     }
     const r = 0.27 * W2;
-    // com toque, a polpa do dedo pousa no ponto de contato (a projeção dele no eixo da mão)
-    let alcance = L;
-    if (c.toque && i === 1) {
-      const rel = sub(c.toque.ponto, w);
-      alcance = clamp(rel[0] * a[0] + rel[1] * a[1] + r * 0.5, 0.62 * L, 1.05 * L);
-    }
-    const ponta = soma(soma(w, esc(a, alcance - r * 0.9)), esc(s, 0.18 * W2));
+    // a polpa do dedo pousa exatamente em j.dedos (é ali que a pose põe a bochecha)
+    const ponta = soma(j.dedos[i], esc(a, -r * 0.9));
     pecas.push({ d: suave(tubo(loc(0.4, 0.6), ponta, (t) => lerp(0.36, 0.28, t) * W2, { n: 5 })), fill });
     // o polegar aberto pro lado (a mão lê como "apontar", em L)
     pecas.push(dedo([0.2, 0.85], [0.5, 1.45], 0.3));
     det.push(vinco([loc(0.56, -0.44), loc(0.62, -0.44)], 0.6), vinco([loc(0.56, -0.0), loc(0.62, -0.02)], 0.6));
     // unha (um brilho na ponta)
-    const un = soma(soma(w, esc(a, alcance - r * 1.6)), esc(s, 0.18 * W2));
+    const un = soma(j.dedos[i], esc(a, -r * 1.6));
     det.push(<circle key="unha" cx={un[0]} cy={un[1]} r={r * 0.45} fill="#FFFFFF" opacity={0.25} />);
   } else if (modo === 'aberta') {
     pecas.push({ d: suave([loc(-0.05, -0.85), loc(0.3, -1.0), loc(0.56, -0.95), loc(0.6, 0), loc(0.56, 0.95), loc(0.3, 1.0), loc(0.05, 0.85)]), fill });
@@ -108,21 +103,28 @@ function maoDe(c: MCtx, i: 0 | 1, mp: Mat, chave: string): MaoOut {
 
 // ------------------------------------------------------------------ braço
 
-export function braco(c: MCtx, i: 0 | 1, naFrente = false): { el: React.ReactNode; ds: string[] } {
+export function braco(c: MCtx, i: 0 | 1): { el: React.ReactNode; ds: string[] } {
   const { k, j, med, pessoa, roupa } = c;
-  const longe = naFrente ? 0.15 : j.vista === 'frente' ? (i === 0 ? 0.25 : 0) : i === 0 ? 1 : 0;
+  const longe = j.vista === 'frente' ? (i === 0 ? 0.25 : 0) : i === 0 ? 1 : 0;
   const mp = material(pessoa.pele, 'pele', longe);
   const sh = j.ombro[i];
   const el = j.cotovelo[i];
   const wr = j.punho[i];
   const d1 = dist(sh, el) > 1e-3 ? unit(sub(el, sh)) : ([0, 1] as P);
   const a0 = soma(sh, esc(d1, 2.4));
-  const pecas: Peca[] = [];
+  // as peças em 4 camadas: braço (pele, manga) e antebraço (pele, manga). Com escorço (o braço
+  // aponta pra câmera) o antebraço vem POR CIMA do braço inteiro, com sombra na dobra.
+  const supP: Peca[] = [];
+  const antP: Peca[] = [];
+  const supM: Peca[] = [];
+  const antM: Peca[] = [];
   const det: React.ReactNode[] = [];
+  const detSup: React.ReactNode[] = [];
+  const enc = j.encurta[i];
   // o mesmo raio de gradiente no braço e no antebraço: com o braço reto, a luz corre contínua
   const rgP = (med.rBraco(0.3) + med.rAnte(0.3)) / 2;
-  pecas.push({ d: suave(tubo(a0, el, med.rBraco)), fill: k.tubo(a0, el, rgP, mp) });
-  pecas.push({ d: suave(tubo(el, wr, med.rAnte)), fill: k.tubo(el, wr, rgP, mp) });
+  supP.push({ d: suave(tubo(a0, el, med.rBraco)), fill: k.tubo(a0, el, rgP, mp) });
+  antP.push({ d: suave(tubo(el, wr, med.rAnte)), fill: k.tubo(el, wr, rgP, mp) });
 
   // manga
   const m = mangaDe(roupa);
@@ -133,21 +135,21 @@ export function braco(c: MCtx, i: 0 | 1, naFrente = false): { el: React.ReactNod
     if (m.ate <= 1) {
       const fim = mixP(a0, el, m.ate);
       const r = (t: number) => med.rBraco(t * m.ate) + f + 0.6 * suaviza(0.6, 1, t);
-      pecas.push({ d: suave(tubo(ini, fim, r, { pontaB: 'reta' })), fill: k.tubo(ini, fim, r(0.5), mt) });
+      supM.push({ d: suave(tubo(ini, fim, r, { pontaB: 'reta' })), fill: k.tubo(ini, fim, r(0.5), mt) });
       // a barra: a boca da manga por dentro (sombra) + o friso da barra
       const dd = unit(sub(fim, ini));
       const n = perp(dd);
       const rr = r(1);
-      det.push(<path key="mbar" d={`M${fmt(fim[0] + n[0] * rr)} ${fmt(fim[1] + n[1] * rr)}L${fmt(fim[0] - n[0] * rr)} ${fmt(fim[1] - n[1] * rr)}`} stroke={m.cor ?? mt.sombra} strokeWidth={m.cor ? 1.1 : 0.7} strokeLinecap="round" opacity={m.cor ? 0.95 : 0.6} transform={`translate(${fmt(-dd[0] * 1.1)} ${fmt(-dd[1] * 1.1)})`} />);
+      detSup.push(<path key="mbar" d={`M${fmt(fim[0] + n[0] * rr)} ${fmt(fim[1] + n[1] * rr)}L${fmt(fim[0] - n[0] * rr)} ${fmt(fim[1] - n[1] * rr)}`} stroke={m.cor ?? mt.sombra} strokeWidth={m.cor ? 1.1 : 0.7} strokeLinecap="round" opacity={m.cor ? 0.95 : 0.6} transform={`translate(${fmt(-dd[0] * 1.1)} ${fmt(-dd[1] * 1.1)})`} />);
     } else {
       const rS = (t: number) => med.rBraco(t) + f;
       const rgM = (rS(0.3) + med.rAnte(0.3) + f) / 2;
-      pecas.push({ d: suave(tubo(ini, el, rS)), fill: k.tubo(ini, el, rgM, mt) });
+      supM.push({ d: suave(tubo(ini, el, rS)), fill: k.tubo(ini, el, rgM, mt) });
       const q = m.ate - 1;
       const fim = mixP(el, wr, q);
       const rib = m.punho === 'rib';
       const rA = (t: number) => (med.rAnte(t * q) + f * (rib ? 1 - 0.55 * suaviza(0.75, 1, t) : 1)) + (m.punho === 'vies' ? 0.5 * suaviza(0.6, 1, t) : 0);
-      pecas.push({ d: suave(tubo(el, fim, rA, { pontaB: 'reta' })), fill: k.tubo(el, fim, rgM, mt) });
+      antM.push({ d: suave(tubo(el, fim, rA, { pontaB: 'reta' })), fill: k.tubo(el, fim, rgM, mt) });
       const dd = unit(sub(fim, el));
       const n = perp(dd);
       if (rib || m.punho === 'camisa' || m.punho === 'vies') {
@@ -157,7 +159,7 @@ export function braco(c: MCtx, i: 0 | 1, naFrente = false): { el: React.ReactNod
         const rr = rA(1) * (m.punho === 'camisa' ? 0.82 : 1);
         const cm = material(cor, 'tecido', longe);
         const pts = tubo(m.punho === 'camisa' ? fim : a, m.punho === 'camisa' ? soma(fim, esc(dd, larg)) : fim, () => rr, { pontaA: 'reta', pontaB: 'reta', n: 3 });
-        pecas.push({ d: suave(pts), fill: k.tubo(a, fim, rr, cm) });
+        antM.push({ d: suave(pts), fill: k.tubo(a, fim, rr, cm) });
         if (rib) {
           for (let q2 = -2; q2 <= 2; q2++) {
             const p = soma(soma(a, esc(dd, larg * 0.5)), esc(n, q2 * rr * 0.32));
@@ -282,22 +284,57 @@ export function braco(c: MCtx, i: 0 | 1, naFrente = false): { el: React.ReactNod
     const b = soma(wr, esc(dd, -0.6));
     const rr = med.rAnte(0.9) + 0.45;
     const pul = material(pessoa.cor, 'tecido', longe);
-    pecas.push({ d: suave(tubo(a, b, () => rr, { pontaA: 'reta', pontaB: 'reta', n: 2 })), fill: k.tubo(a, b, rr, pul) });
+    antM.push({ d: suave(tubo(a, b, () => rr, { pontaA: 'reta', pontaB: 'reta', n: 2 })), fill: k.tubo(a, b, rr, pul) });
     const s = j.vista === 'frente' ? perp(dd) : ([dd[1], -dd[0]] as P);
     const fc = soma(mixP(a, b, 0.5), esc(s, rr * 0.35));
     det.push(<circle key="mostr" cx={fc[0]} cy={fc[1]} r={rr * 0.7} fill="#1A1630" />, <circle key="vid" cx={fc[0] - 0.3} cy={fc[1] - 0.3} r={rr * 0.28} fill="#FFFFFF" opacity={0.5} />);
   }
 
-  const todas = [...pecas, ...antes, ...mao.pecas, ...depois];
+  const foge = enc < 0.85;
+  const forcaRec = longe ? 0.45 : 1;
+  if (!foge) {
+    const todas = [...supP, ...antP, ...supM, ...antM, ...antes, ...mao.pecas, ...depois];
+    return {
+      el: (
+        <Vol k={k} pecas={todas} forca={forcaRec}>
+          {detSup}
+          {det}
+          {mao.det}
+          {detProp}
+        </Vol>
+      ),
+      ds: todas.map((p) => p.d),
+    };
+  }
+  // escorço: o braço foge pra trás (aponta pra câmera) e o antebraço vem POR CIMA dele, com a
+  // dobra do cotovelo escurecida (a sombra que o antebraço faz no braço)
+  const baixo = [...supP, ...supM];
+  const cima = [...antP, ...antM, ...antes, ...mao.pecas, ...depois];
+  const recSup = k.recorte(baixo.map((p) => p.d));
+  const rr = med.rBraco(1) * 2.1;
+  const forte = clamp((0.85 - enc) / 0.3);
+  const fAO = k.radCaixa(0.5, 0.5, 0.5, [
+    [0, '#140A24', 0.6],
+    [0.55, '#140A24', 0.3],
+    [1, '#140A24', 0],
+  ], 'aoCotovelo');
   return {
     el: (
-      <Vol k={k} pecas={todas} forca={longe ? 0.45 : 1}>
-        {det}
-        {mao.det}
-        {detProp}
-      </Vol>
+      <g>
+        <Vol k={k} pecas={baixo} forca={forcaRec}>
+          {detSup}
+          <g clipPath={recSup} opacity={0.45 + 0.55 * forte}>
+            <ellipse cx={el[0] - d1[0] * 1.2} cy={el[1] - d1[1] * 1.2} rx={rr} ry={rr * 0.9} fill={fAO} />
+          </g>
+        </Vol>
+        <Vol k={k} pecas={cima} forca={forcaRec}>
+          {det}
+          {mao.det}
+          {detProp}
+        </Vol>
+      </g>
     ),
-    ds: todas.map((p) => p.d),
+    ds: [...baixo, ...cima].map((p) => p.d),
   };
 }
 
@@ -325,6 +362,7 @@ function calcado(c: MCtx, i: 0 | 1, longe: number): { pecas: Peca[]; det: React.
   const fSola = k.tubo(F(0.5, 0), F(0.5, 2.4), 1.4, ms);
   const mpe = material(pessoa.pele, 'pele', longe);
   const linha = (pts: P[], cor: string, w: number, op = 1) => <path key={`l${det.length}`} d={suave(pts, false)} stroke={cor} strokeWidth={w} strokeLinecap="round" fill="none" opacity={op} />;
+  if (v === 'frente') return calcadoFrente(c, i, longe, sola0);
   if (cal.tipo === 'tenis' || cal.tipo === 'bota') {
     const bota = cal.tipo === 'bota';
     const meia = roupa.baixo.tipo === 'short' || roupa.baixo.tipo === 'saia';
@@ -354,6 +392,63 @@ function calcado(c: MCtx, i: 0 | 1, longe: number): { pecas: Peca[]; det: React.
     // meia (em casa / pijama): o pé de meia com o punho canelado
     pecas.push({ d: suave([F(-0.02, 1.0), F(-0.04, 5.0), F(0.06, 11.5), F(0.4, 11.5), F(0.44, 7.0), F(0.68, 4.6), F(0.9, 3.4), F(1.0, 1.8), F(0.96, 0.4), F(0.4, 0.1), F(0.05, 0.2)]), fill: k.tubo(F(0.5, 0), F(0.5, 10), 4, mc) });
     for (const h of [9.6, 10.6]) det.push(linha([F(0.06, h), F(0.4, h)], mc.sombra, 0.35, 0.7));
+  }
+  return { pecas, det };
+}
+
+/**
+ * O calçado DE FRENTE: o bico vem pra câmera (biqueira redonda embaixo, o peito do pé subindo
+ * até o tornozelo, a sola aparecendo como uma faixa), um tico virado pra fora.
+ */
+function calcadoFrente(c: MCtx, i: 0 | 1, longe: number, g0: P): { pecas: Peca[]; det: React.ReactNode[] } {
+  const { k, med, pessoa, roupa } = c;
+  const cal = roupa.calcado;
+  const lado = i === 0 ? -1 : 1;
+  const w = med.rCanela(1) + 2.3;
+  // x = pra fora (do lado do pé), h = altura acima da sola; o bico abre um tico pra fora
+  const F = (x: number, h: number): P => [g0[0] + lado * x + lado * 1.3 * Math.max(0, 1 - h / 8), g0[1] - h];
+  const pecas: Peca[] = [];
+  const det: React.ReactNode[] = [];
+  const mc = material(cal.cor, 'tecido', longe);
+  const ms = material(cal.sola ?? ajusta(cal.cor, -0.2), 'tecido', longe);
+  const mpe = material(pessoa.pele, 'pele', longe);
+  const f = (m: Mat, r = w) => k.tubo(F(-r, 4), F(r, 4), r, m);
+  const linha = (pts: P[], cor: string, wd: number, op = 1) => <path key={`l${det.length}`} d={suave(pts, false)} stroke={cor} strokeWidth={wd} strokeLinecap="round" fill="none" opacity={op} />;
+  const biqueira = (h0: number, h1: number, larg: number): P[] => [F(-larg, h0), F(-larg - 0.3, (h0 + h1) / 2), F(-larg * 0.55, h1), F(larg * 0.55, h1), F(larg + 0.3, (h0 + h1) / 2), F(larg, h0)];
+  if (cal.tipo === 'tenis' || cal.tipo === 'bota') {
+    const bota = cal.tipo === 'bota';
+    const cano = bota ? 15 : 9.2;
+    const meia = !bota && (roupa.baixo.tipo === 'short' || roupa.baixo.tipo === 'saia');
+    if (meia) pecas.push({ d: suave([F(-w * 0.62, 7), F(-w * 0.6, 11), F(w * 0.6, 11), F(w * 0.62, 7)]), fill: f(material('#F4F5FF', 'tecido', longe), w * 0.6) });
+    pecas.push({ d: suave([F(-w, 1.4), F(-w - 0.4, 4.4), F(-w + 1.4, 7.2), F(-w * 0.5, cano), F(w * 0.5, cano), F(w - 1.4, 7.2), F(w + 0.4, 4.4), F(w, 1.4)]), fill: f(mc) });
+    // a língua e o cadarço
+    pecas.push({ d: suave([F(-w * 0.36, 4.6), F(-w * 0.4, cano + 0.4), F(w * 0.4, cano + 0.4), F(w * 0.36, 4.6)]), fill: f(material(ajusta(cal.cor, 0.06), 'tecido', longe), w * 0.4) });
+    for (const h of [5.4, 6.6, 7.8]) det.push(linha([F(-w * 0.42, h), F(w * 0.42, h + 0.2)], '#FFFFFF', 0.6, 0.9));
+    // a biqueira que vem pra câmera (mais clara) e a sola em faixa
+    pecas.push({ d: suave(biqueira(1.6, 4.6, w * 0.82)), fill: f(material(ajusta(cal.cor, 0.05), 'tecido', longe), w * 0.82) });
+    pecas.push({ d: suave([F(-w - 0.7, 0), F(-w - 0.8, 2.0), F(w + 0.8, 2.0), F(w + 0.7, 0), F(0, -0.3)]), fill: f(ms, w + 0.8) });
+    det.push(linha([F(w * 0.75, 3.2), F(w * 0.98, 5.8)], ms.base, 0.8, 0.9));
+    det.push(<ellipse key="b" cx={F(-w * 0.25, 3.6)[0]} cy={F(-w * 0.25, 3.6)[1]} rx={w * 0.3} ry={0.8} fill="#FFFFFF" opacity={0.35} />);
+  } else if (cal.tipo === 'sapato') {
+    pecas.push({ d: suave([F(-w + 0.4, 1.0), F(-w - 0.1, 3.4), F(-w * 0.5, 6.4), F(w * 0.5, 6.4), F(w + 0.1, 3.4), F(w - 0.4, 1.0)]), fill: f(mc) });
+    pecas.push({ d: suave([F(-w, 0), F(-w - 0.1, 1.2), F(w + 0.1, 1.2), F(w, 0), F(0, -0.2)]), fill: f(material(ajusta(cal.cor, -0.15), 'tecido', longe)) });
+    det.push(<ellipse key="b" cx={F(-w * 0.2, 3.0)[0]} cy={F(-w * 0.2, 3.0)[1]} rx={w * 0.35} ry={0.7} fill="#FFFFFF" opacity={0.42} />);
+    det.push(linha([F(-w * 0.45, 5.6), F(w * 0.45, 5.6)], mc.fundo, 0.45, 0.6));
+  } else if (cal.tipo === 'chinelo') {
+    // o pé de verdade em cima da sola, com os dedos pra câmera e a tira
+    pecas.push({ d: suave([F(-w + 0.6, 1.2), F(-w * 0.55, 6.5), F(-w * 0.4, 9.6), F(w * 0.4, 9.6), F(w * 0.6, 6.5), F(w - 0.4, 1.2)]), fill: f(mpe) });
+    for (let q = 0; q < 5; q++) {
+      const x = lerp(-w * 0.62, w * 0.66, q / 4);
+      const r = q === 4 ? 0.95 : q === 0 ? 0.7 : 0.8;
+      pecas.push({ d: suave(elipse(F(x * (lado > 0 ? 1 : 1), 1.8), r, 1.0, 0, 12)), fill: f(mpe) });
+    }
+    pecas.push({ d: suave([F(-w - 0.4, 0), F(-w - 0.4, 1.3), F(w + 0.4, 1.3), F(w + 0.4, 0)]), fill: f(mc, w + 0.4) });
+    det.push(linha([F(-w * 0.6, 3.6), F(0, 5.4), F(w * 0.6, 3.6)], mc.base, 1.4));
+  } else {
+    // meia: o pé de meia de frente, com o punho canelado
+    pecas.push({ d: suave([F(-w + 0.3, 0.4), F(-w - 0.2, 3.6), F(-w * 0.6, 8), F(-w * 0.55, 11.5), F(w * 0.55, 11.5), F(w * 0.6, 8), F(w + 0.2, 3.6), F(w - 0.3, 0.4), F(0, 0)]), fill: f(mc) });
+    for (const h of [9.8, 10.8]) det.push(linha([F(-w * 0.55, h), F(w * 0.55, h)], mc.sombra, 0.35, 0.7));
+    det.push(<ellipse key="b" cx={F(-w * 0.2, 3)[0]} cy={F(-w * 0.2, 3)[1]} rx={w * 0.35} ry={0.9} fill="#FFFFFF" opacity={0.25} />);
   }
   return { pecas, det };
 }

@@ -39,7 +39,7 @@ const SombraNoRosto: React.FC<{ c: Ctx }> = ({ c }) => {
   const w = mundo(c);
   const cont = contornoLocal(c).map(w);
   const d = dirDe(j.ang.mao[1]);
-  const ponta = add(j.punho[1], mul(d, (j.mao[1] === 'aponta' ? 0.85 : 0.6) * prop.mao));
+  const ponta = add(j.punho[1], mul(d, (j.mao[1] === 'aponta' ? 1 : 0.6) * prop.mao));
   const off: P = [-c.L[0] * 1.0, -c.L[1] * 1.0];
   const sh = (p: P) => add(p, off);
   const k = corpo.braco[0][1] / 3.7;
@@ -91,13 +91,9 @@ export const traco: Estilo = {
     };
     const pn = pernas(c);
     const frenteCabeca = j.bracoNaFrente[1];
-    // o braço de TRÁS que cruza o peito (pensar: segura o cotovelo) passa na frente do tronco —
-    // o esqueleto não tem essa flag; o sinal é o antebraço de trás apontando pra frente com a mão
-    // solta (na corrida o braço de trás vai pra frente com o punho fechado e fica atrás do tronco)
-    const cruza = j.vista !== 'frente' && j.mao[0] === 'solta' && j.ang.antebraco[0] > 45 && j.ang.antebraco[0] < 150;
     return (
       <g>
-        {!cruza ? <Braco c={c} i={0} /> : null}
+        <Braco c={c} i={0} />
         {pn.tras}
         <CabecaAtras c={c} humor={humor} />
         <Cima c={c} parte="pele" />
@@ -105,7 +101,6 @@ export const traco: Estilo = {
         <Cima c={c} parte="roupa" />
         <Pescoco c={c} sombraQueixo={sombraQueixo(c)} />
         <Cima c={c} parte="gola" />
-        {cruza ? <Braco c={c} i={0} /> : null}
         {!frenteCabeca ? <Braco c={c} i={1} segura={segura} /> : null}
         <Cabeca c={c} humor={humor} toque={toque} />
         {frenteCabeca ? <SombraNoRosto c={c} /> : null}

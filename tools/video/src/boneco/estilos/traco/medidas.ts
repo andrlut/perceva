@@ -24,8 +24,8 @@ export function propDe(p: Pessoa): Proporcao {
   const m = p.genero === 'm';
   const idoso = p.idade === 'idoso';
   const c = p.corpo;
-  const ombroExtra = c === 'esguio' ? -1 : c === 'forte' ? 2 : c === 'largo' ? 1.6 : 0;
-  const quadrilExtra = c === 'esguio' ? -0.6 : c === 'largo' ? 1.8 : c === 'forte' ? 0.3 : 0;
+  const ombroExtra = c === 'esguio' ? -1 : c === 'forte' ? 2 : c === 'largo' ? (m ? 3.4 : 2) : 0;
+  const quadrilExtra = c === 'esguio' ? -0.6 : c === 'largo' ? 2.2 : c === 'forte' ? 0.3 : 0;
   return {
     ...PROP,
     cabeca: m ? 27.5 : 26.5,
@@ -68,8 +68,8 @@ export function corpoDe(p: Pessoa, prop: Proporcao): Corpo {
   const idoso = p.idade === 'idoso';
   const maduro = p.idade === 'maduro';
   // fator de largura dos membros
-  const k = (m ? 1.32 : 1.2) * (c === 'esguio' ? 0.9 : c === 'forte' ? 1.16 : c === 'largo' ? 1.24 : 1) * (idoso ? 0.92 : 1) * (m ? 1.08 : 1);
-  const kc = 1.2 * (c === 'esguio' ? 0.9 : c === 'forte' ? 1.1 : c === 'largo' ? 1.24 : 1) * (m ? 0.97 : 1.03) * (idoso ? 0.93 : 1);
+  const k = (m ? 1.32 : 1.2) * (c === 'esguio' ? 0.9 : c === 'forte' ? 1.16 : c === 'largo' ? 1.34 : 1) * (idoso ? 0.92 : 1) * (m ? 1.08 : 1);
+  const kc = 1.2 * (c === 'esguio' ? 0.9 : c === 'forte' ? 1.1 : c === 'largo' ? 1.32 : 1) * (m ? 0.97 : 1.03) * (idoso ? 0.93 : 1);
   const T = prop.tronco;
   const O = prop.ombros;
   // ombro (deltoide) → cotovelo
@@ -100,18 +100,19 @@ export function corpoDe(p: Pessoa, prop: Proporcao): Corpo {
   ];
   const busto = m ? 0.25 : idoso ? 0.6 : 1;
   const barriga = c === 'largo' ? (m ? 1.7 : 1.3) : idoso || maduro ? 0.4 : 0;
-  const larg = (c === 'largo' ? 1.24 : c === 'esguio' ? 0.94 : c === 'forte' ? 1.05 : 1) * 1.05;
+  const larg = (c === 'largo' ? 1.34 : c === 'esguio' ? 0.94 : c === 'forte' ? 1.05 : 1) * 1.05;
   const cint = (m ? (c === 'forte' ? 0.8 : 0.9) : c === 'largo' ? 0.88 : 0.8) + (idoso ? 0.1 : 0);
   const quad = m ? 0.92 : c === 'esguio' ? 1.0 : 1.1;
   const P = prop.quadris;
   // [v, a, bf, bb]  — v sobe da pélvis; a = meia largura de frente
   const aneis: [number, number, number, number][] = [
-    [-13, (P + 3.2) * quad * larg, 6.2 * larg, (m ? 6.6 : 7.6) * larg],
-    [-5, (P + 4.6) * quad * larg, 7 * larg, (m ? 8 : 9.6) * larg],
-    [6, (P + 4.1) * quad * larg * (m ? 1 : 0.97), (7.2 + barriga * 4.6) * larg, (m ? 7.4 : 8) * larg],
-    [T * 0.3, O * cint * larg * (m ? 0.72 : 0.68) + 2, (7 + barriga * 5.6) * larg, 6.2 * larg],
-    [T * 0.5, O * 0.8 * larg + (m ? 0.6 : 0), (7.8 + barriga * 3.2 + busto * 0.6) * larg, 6.6 * larg],
-    [T * 0.66, O * 0.84 * larg + (m ? 1.4 : 0.6), (8.4 + busto * 2.6 + barriga) * larg, (7 + (idoso ? 1.2 : 0)) * larg],
+    // a barriga do corpo largo é baixa e larga (passa por cima do cós), e o peito acompanha
+    [-13, (P + 3.2) * quad * larg, (6.2 + barriga * 0.8) * larg, (m ? 6.6 : 7.6) * larg],
+    [-5, (P + 4.6) * quad * larg, (7 + barriga * 2.8) * larg, (m ? 8 : 9.6) * larg],
+    [6, (P + 4.1) * quad * larg * (m ? 1 : 0.97), (7.2 + barriga * 4.2) * larg, (m ? 7.4 : 8) * larg],
+    [T * 0.3, O * cint * larg * (m ? 0.72 : 0.68) + 2, (7 + barriga * 4.3) * larg, 6.2 * larg],
+    [T * 0.5, O * 0.8 * larg + (m ? 0.6 : 0), (7.8 + barriga * 3.3 + busto * 0.6) * larg, 6.6 * larg],
+    [T * 0.66, O * 0.84 * larg + (m ? 1.4 : 0.6), (8.4 + busto * 2.6 + barriga * 2.0) * larg, (7 + (idoso ? 1.2 : 0)) * larg],
     [T * 0.8, O * 0.88 * larg + (m ? 1.6 : 0.8), (7.6 + busto * 0.8) * larg, (7.4 + (idoso ? 2.2 : 0)) * larg],
     [T * 0.92, O + 1.2, 6 * larg, (7 + (idoso ? 2.4 : 0)) * larg],
   ];
@@ -122,7 +123,7 @@ export function corpoDe(p: Pessoa, prop: Proporcao): Corpo {
     coxa,
     canela,
     aneis,
-    pescoco: (m ? 0.3 : 0.26) * prop.cabecaLarg * (c === 'forte' ? 1.08 : c === 'largo' ? 1.1 : 1),
+    pescoco: (m ? 0.3 : 0.26) * prop.cabecaLarg * (c === 'forte' ? 1.08 : c === 'largo' ? 1.18 : 1),
     busto,
     barriga,
     corcunda: idoso ? 1 : 0,

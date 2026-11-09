@@ -5,7 +5,7 @@
 // rabo, cachos compridos — balança atrasado em relação ao corpo (mov.balanco, sem tremer).
 import React from 'react';
 import type { Cabelo } from '../../elenco';
-import { type Forma, type P, type PQ, LINHA, TINTA, Traco, add, dirDe, gira, linha, luma, mix, mul, suave } from './base';
+import { type Forma, type P, type PQ, LINHA, TINTA, Traco, add, dirDe, gira, linha, luma, mix, mul, suave, sw } from './base';
 
 export type VistaCab = 'frente' | 'tq' | 'perfil';
 
@@ -88,22 +88,23 @@ function tranca(raiz: P, comp: number, ang: number, ondas: number, cor: ReturnTy
     p = q;
   }
   // ponteira dourada
-  det.push(<circle key="pt" cx={p[0]} cy={p[1]} r={1.5} fill="#FFC83D" stroke={TINTA} strokeWidth={0.45} />);
+  det.push(<circle key="pt" cx={p[0]} cy={p[1]} r={1.5} fill="#FFC83D" stroke={TINTA} style={sw(0.45)} />);
   return { formas, det };
 }
 
 export function cabeloDe(o: CabeloOpts): CabeloDesenho {
+  if (o.vista === 'perfil') return cabeloPerfil(o);
   const c = corDe(o.cor);
   const fm = (pts: PQ[], k = 2.6): Forma => ({ d: suave(pts), cor: c.base, sombra: c.sombra, k });
   // brilho especular: traços quebrados acompanhando o fio (um arco inteiro vira capacete)
   const brilho = (pts: P[], w = 2.2, op = 0.85) => (
-    <path d={linha(pts)} fill="none" stroke={c.brilho} strokeWidth={w} strokeLinecap="round" opacity={op} pathLength={100} strokeDasharray="34 12 20 100" />
+    <path d={linha(pts)} fill="none" stroke={c.brilho} style={sw(w)} strokeLinecap="round" opacity={op} pathLength={100} strokeDasharray="34 12 20 100" />
   );
   const fio = (pts: P[], op = 0.55) => <Traco d={linha(pts)} w={LINHA.fino * 0.85} cor={c.sombra} op={op} />;
   const v = o.vista;
   const tq = v !== 'frente';
   const bal = o.balanco;
-  const sw = (y: number) => Math.sin((bal * Math.PI) / 180) * Math.max(0, y) * 0.9;
+  const pend = (y: number) => Math.sin((bal * Math.PI) / 180) * Math.max(0, y) * 0.9;
   const out: CabeloDesenho = { atras: [], frente: [], soltas: [], orelha: 'toda' };
 
   switch (o.tipo) {
@@ -189,7 +190,7 @@ export function cabeloDe(o: CabeloOpts): CabeloDesenho {
       break;
     }
     case 'chanel': {
-      const ponta = sw(26);
+      const ponta = pend(26);
       if (!tq) {
         out.atras = [fm([[-29.6, -6], [-30.2, 10], [-28.4 + ponta, 24.6], [-24.4 + ponta, 28.4], [-12, 24.6], [0, 23.6], [12, 24.6], [24.4 + ponta, 28.4], [28.4 + ponta, 24.6], [30.2, 10], [29.6, -6], [24, -26], [0, -34], [-24, -26]], 3)];
         out.frente = [
@@ -223,7 +224,7 @@ export function cabeloDe(o: CabeloOpts): CabeloDesenho {
       break;
     }
     case 'longo': {
-      const ponta = sw(60);
+      const ponta = pend(60);
       const cx = tq ? -4 : 0;
       out.atras = [fm([[cx - 30, -8], [cx - 31, 20], [cx - 30 + ponta, 52], [cx - 24 + ponta, 76], [cx + ponta, 80], [cx + 24 + ponta, 76], [cx + 30 + ponta, 52], [cx + 31, 20], [cx + 30, -8], [cx + 24, -27], [cx, -35], [cx - 24, -27]], 4)];
       if (!tq) {
@@ -253,7 +254,7 @@ export function cabeloDe(o: CabeloOpts): CabeloDesenho {
     case 'cacheado':
     case 'black': {
       const black = o.tipo === 'black';
-      const bal2 = sw(20) * 0.5;
+      const bal2 = pend(20) * 0.5;
       const cx = tq ? -5 : 0;
       const atras = black ? nuvem(cx, -15, 43, 38, Math.PI * 0.6, Math.PI * 2.4, 13, 3.8) : nuvem(cx, -2, 36, 38, Math.PI * 0.58, Math.PI * 2.42, 12, 4);
       const atrasP: P[] = atras.map(([x, y]) => [x + (y > 0 ? bal2 * (y / 30) : 0), y] as P);
@@ -369,7 +370,7 @@ export function cabeloDe(o: CabeloOpts): CabeloDesenho {
         }
         pts.push(...lados[0], p, ...lados[1].reverse());
         out.atras.push({ d: suave(pts), cor: c.base, sombra: c.sombra, k: 2.4 });
-        if (tq) det.push(<circle key="pr" cx={raiz[0]} cy={raiz[1]} r={2.4} fill="#FFC83D" stroke={TINTA} strokeWidth={0.6} />);
+        if (tq) det.push(<circle key="pr" cx={raiz[0]} cy={raiz[1]} r={2.4} fill="#FFC83D" stroke={TINTA} style={sw(0.6)} />);
       }
       det.push(<g key="br">{brilho(tq ? [[-12, -27], [-2, -30], [8, -29.4]] : [[-10, -28.4], [0, -30], [10, -28.4]], 2, 0.7)}</g>);
       out.detalhesFrente = <g>{det}</g>;
@@ -406,6 +407,188 @@ export function cabeloDe(o: CabeloOpts): CabeloDesenho {
       out.detalhesFrente = <g>{brilho(tq ? [[-10, -25], [-1, -27.6], [7, -27]] : [[-8, -26.4], [0, -27.6], [8, -26.4]], 2.4, 0.55)}</g>;
       break;
     }
+  }
+  return out;
+}
+
+// ------------------------------------------------------------------ perfil (formas próprias)
+// Referência do crânio de perfil (base): testa (20.6,−14.6), topo (−2,−29.2), nuca (−25.2,−2.4)
+// → (−17,15.2); orelha entre x −10.6 e −2.4, y −5.8 e 10. A franja nasce uns 3 atrás da testa.
+function cabeloPerfil(o: CabeloOpts): CabeloDesenho {
+  const c = corDe(o.cor);
+  const fm = (pts: PQ[], k = 2.6): Forma => ({ d: suave(pts), cor: c.base, sombra: c.sombra, k });
+  const brilho = (pts: P[], w = 2.2, op = 0.85) => (
+    <path d={linha(pts)} fill="none" stroke={c.brilho} style={sw(w)} strokeLinecap="round" opacity={op} pathLength={100} strokeDasharray="34 12 20 100" />
+  );
+  const fio = (pts: P[], op = 0.55) => <Traco d={linha(pts)} w={LINHA.fino * 0.85} cor={c.sombra} op={op} />;
+  const bal = o.balanco;
+  const sw2 = (y: number) => Math.sin((bal * Math.PI) / 180) * Math.max(0, y) * 0.9;
+  const out: CabeloDesenho = { atras: [], frente: [], soltas: [], orelha: 'toda' };
+  // touca lisa de perfil (curto liso, presos, tranças): da franja por cima até a nuca, a orelha livre
+  const touca = (v: number): P[] => [
+    [17.2, -15.6], [18.8 + v * 0.3, -22.4], [14.6 + v * 0.3, -30 - v * 0.5], [4.6, -34 - v], [-7.4, -33.8 - v], [-18 - v * 0.4, -29.4 - v * 0.6],
+    [-24.8 - v * 0.6, -20.4], [-27 - v * 0.6, -8.6], [-26.2 - v * 0.5, 2.4], [-22.4 - v * 0.3, 9.6], [-17.4, 13.4], [-15, 8.6], [-13.4, 0.6],
+    [-11.8, -5.6], [-6.4, -7.4], [-2, -5.2], [0.4, -1.4], [2.6, -1.8], [3.4, -8.2], [7, -13.6], [12.6, -15.6],
+  ];
+  switch (o.tipo) {
+    case 'curto':
+      out.frente = [fm(touca(0.6))];
+      out.detalhesFrente = (
+        <g>
+          {fio([[12, -27.6], [3, -24], [-7, -22.6]])}
+          {fio([[-2, -32], [-12, -27], [-19, -17]])}
+          {fio([[-21, -12], [-21.6, -2], [-19.6, 6]])}
+          {brilho([[-4, -32.4], [5, -32.2], [12, -28.6]], 2)}
+        </g>
+      );
+      break;
+    case 'fade': {
+      const toda = touca(-1.4);
+      out.frente = [
+        { ...fm(toda), op: 0.55 },
+        fm([[17, -15.6], [18, -21.6], [13.6, -28.6], [4, -32.4], [-7, -32.4], [-16.6, -28.4], [-22.6, -21.4], [-12, -22.8], [-2, -21], [7, -17], [12.6, -16]]),
+      ];
+      const cs: P[] = [[-14, -26], [-5, -29], [4, -29.4], [11, -25.6], [-9, -23.4], [1, -24.6]];
+      out.detalhesFrente = (
+        <g>
+          {cs.map(([x, y], k) => (
+            <Traco key={k} d={linha([[x - 1, y + 0.6], [x, y - 0.4], [x + 1, y + 0.4]])} w={0.6} cor={c.sombra} op={0.8} />
+          ))}
+          {brilho([[-8, -30], [2, -31.4], [10, -28.6]], 1.6, 0.6)}
+        </g>
+      );
+      break;
+    }
+    case 'ondulado':
+      out.frente = [fm([[17.6, -13.6], [20.4, -21], [16, -30.6], [5, -36], [-8, -36.4], [-19.6, -31], [-27, -20], [-29, -6], [-27.6, 6], [-23.6, 13.6], [-18, 16.4], [-15, 10], [-13.4, 2], [-11.6, -4.6], [-5.6, -6.4], [-1.6, -4], [0.6, 1], [3, 0], [3.6, -7], [8, -11.4], [12, -11], [15, -14.6]])];
+      out.detalhesFrente = (
+        <g>
+          {fio([[12, -31], [8, -25], [12, -19], [9, -14]])}
+          {fio([[-2, -34], [-6, -27], [-2, -20], [-5, -14]])}
+          {fio([[-16, -31], [-20, -23], [-17, -15], [-21, -6]])}
+          {fio([[-25, -10], [-22, -2], [-25, 6], [-21, 12]])}
+          {brilho([[-10, -32.6], [0, -34.2], [10, -32]])}
+        </g>
+      );
+      out.orelha = 'meia';
+      break;
+    case 'chanel':
+    case 'longo': {
+      const longo = o.tipo === 'longo';
+      const p = sw2(longo ? 60 : 26);
+      out.atras = [fm([[14, -16], [17.6, -25], [10, -33.6], [-4, -35.6], [-18, -31], [-27.6, -19], [-30.4, -3], [-29.6, 13], ...((longo ? [[-29 + p * 0.5, 40], [-25 + p, 70], [-16 + p, 78], [-8 + p * 0.6, 62]] : [[-27 + p, 23.6], [-21 + p, 28], [-12 + p * 0.6, 27.6]]) as P[]), [-6, 25.2], [-2, 20]], 3)];
+      out.frente = [
+        fm([[21.8, -10], [22.6, -17], [18.6, -27], [8, -34.4], [-6, -35.6], [-18.6, -31], [-27.6, -19], [-30.4, -3], [-29.6, 13], ...((longo ? [[-28 + p * 0.5, 44], [-23 + p, 70], [-14 + p, 76], [-7 + p * 0.6, 56], [-2.6, 32]] : [[-27 + p, 23.6], [-21.4 + p, 28.2], [-12 + p * 0.6, 28], [-5 + p * 0.3, 25.6], [-1.6, 22]]) as P[]), [-0.4, 12], [0.6, 0], [3.6, -8.6], [9, -11.4], [15, -11], [19, -9.4]], 3),
+      ];
+      out.detalhesFrente = (
+        <g>
+          {fio([[14, -30], [8, -22], [2, -12]])}
+          {fio([[-10, -33], [-18, -22], [-22, -4], [-22, 16]])}
+          {fio([[-4, -26], [-6, -8], [-6, 14]])}
+          {brilho([[-14, -29], [-2, -33.4], [10, -31.6]], 2.4)}
+        </g>
+      );
+      out.orelha = 'nada';
+      break;
+    }
+    case 'cacheado':
+    case 'black': {
+      const black = o.tipo === 'black';
+      const b2 = sw2(20) * 0.5;
+      const atras = black ? nuvem(-8, -15, 40, 37, Math.PI * 0.42, Math.PI * 2.22, 13, 3.8) : nuvem(-9, -2, 32, 37, Math.PI * 0.35, Math.PI * 2.05, 12, 4);
+      out.atras = [{ d: suave(atras.map(([x, y]) => [x + (y > 0 ? b2 * (y / 30) : 0), y] as P)), cor: c.base, sombra: c.sombra, k: 4 }];
+      const topo = black ? nuvem(-6, -15, 38, 35, Math.PI * 1.02, Math.PI * 1.86, 9, 3.6) : nuvem(-5, -6, 28.6, 30, Math.PI * 0.98, Math.PI * 1.86, 8, 3.2);
+      out.frente = [{ d: suave([...topo, [20.4, -15], [14, -15.6], [6, -12], [2, -4], [-1, 4], [-6, 9], [-14, 9], [-22, 6]]), cor: c.base, sombra: c.sombra, k: 3 }];
+      const pos: P[] = [[-14, -24], [-2, -28], [8, -26], [-22, -10], [-28, 6], [-34, 14], [-24, 22]];
+      out.detalhesFrente = (
+        <g>
+          {pos.slice(0, 4).map(([x, y], k) => (
+            <Traco key={k} d={linha([[x - 1.6, y + 1], [x - 1, y - 1.2], [x + 1, y - 1.4], [x + 1.6, y + 0.4], [x + 0.2, y + 1.2]])} w={0.7} cor={c.sombra} op={0.85} />
+          ))}
+          {brilho([[-12, -27], [-2, -30], [8, -29]], 2.2, 0.7)}
+        </g>
+      );
+      out.detalhesAtras = (
+        <g>
+          {pos.slice(4).map(([x, y], k) => (
+            <Traco key={k} d={linha([[x - 1.8, y + 1.2], [x - 1.2, y - 1.4], [x + 1.2, y - 1.6], [x + 1.8, y + 0.4], [x + 0.2, y + 1.4]])} w={0.8} cor={c.sombra} op={0.85} />
+          ))}
+        </g>
+      );
+      out.orelha = black ? 'meia' : 'nada';
+      break;
+    }
+    case 'trancas': {
+      out.frente = [fm(touca(-1), 2)];
+      const detA: React.ReactNode[] = [];
+      const raizes: P[] = [[-25, -6], [-24, 2], [-21, 8], [-17, 11], [-26, -14]];
+      raizes.forEach((r, k) => {
+        const t2 = tranca(r, 50 + ((k * 7) % 11), bal * 0.9 - 6, o.t / 7 + k, c);
+        out.atras.push(...t2.formas);
+        detA.push(<g key={k}>{t2.det}</g>);
+      });
+      out.detalhesAtras = <g>{detA}</g>;
+      out.detalhesFrente = (
+        <g>
+          {fio([[12, -29], [-2, -26], [-16, -20]], 0.9)}
+          {fio([[4, -33], [-6, -20], [-12, -8]], 0.9)}
+          {fio([[-10, -33], [-18, -22], [-22, -8]], 0.9)}
+          {brilho([[-8, -31], [2, -32.6], [10, -30]], 1.8, 0.7)}
+        </g>
+      );
+      break;
+    }
+    case 'coque':
+    case 'rabo': {
+      out.frente = [fm(touca(-1), 2)];
+      const alvo: P = o.tipo === 'coque' ? [-16, -30] : [-24, -14];
+      const de: P[] = [[16, -17], [10, -15], [4, -11], [12, -25], [2, -30], [-8, -32]];
+      const det: React.ReactNode[] = de.map((p, k) => <g key={`fp${k}`}>{fio([p, [(p[0] * 2 + alvo[0]) / 3, (p[1] * 2 + alvo[1]) / 3 - 2.4], alvo], 0.5)}</g>);
+      if (o.tipo === 'coque') {
+        const pts: P[] = [];
+        for (let k = 0; k < 12; k++) {
+          const a = (k / 12) * Math.PI * 2;
+          pts.push([alvo[0] - 2 + Math.cos(a) * 9.6, alvo[1] - 2 + Math.sin(a) * 8.6]);
+        }
+        out.atras.push(fm(pts, 2.4));
+      } else {
+        const n = 7;
+        const lados: [P[], P[]] = [[], []];
+        let p = alvo;
+        for (let k = 0; k <= n; k++) {
+          const a = -16 + bal * (0.3 + (0.5 * k) / n) + Math.sin(o.t / 8 - k * 0.6) * (2 + 6 * o.corrida) * (k / n);
+          const d = dirDe(a);
+          const w = 6.2 * (1 - (k / n) * 0.75);
+          lados[0].push(add(p, mul([d[1], -d[0]], w)));
+          lados[1].push(add(p, mul([-d[1], d[0]], w)));
+          p = add(p, mul(d, 40 / n));
+        }
+        out.atras.push({ d: suave([...lados[0], p, ...lados[1].reverse()]), cor: c.base, sombra: c.sombra, k: 2.4 });
+        det.push(<circle key="pr" cx={alvo[0]} cy={alvo[1]} r={2.4} fill="#FFC83D" stroke={TINTA} style={sw(0.6)} />);
+      }
+      det.push(<g key="br">{brilho([[-8, -31], [2, -32.6], [10, -30]], 2, 0.7)}</g>);
+      out.detalhesFrente = <g>{det}</g>;
+      break;
+    }
+    case 'grisalho': {
+      const cap = [...nuvem(-3, -7, 25.6, 26, Math.PI * 0.62, Math.PI * 1.84, 8, 2.4), [17.6, -15.6], [12, -14.6], [6, -11], [2.4, -6], [-2, -6.4], [-6, -7.6], [-12, -6.4], [-15.6, -1], [-18.6, 6]] as P[];
+      out.frente = [{ d: suave(cap), cor: c.base, sombra: c.sombra, k: 3 }];
+      const ond: P[] = [[-16, -22], [-6, -27], [6, -26], [-22, -10]];
+      out.detalhesFrente = (
+        <g>
+          {ond.map(([x, y], k) => (
+            <Traco key={k} d={linha([[x - 2.6, y + 1.4], [x - 0.6, y - 0.8], [x + 2, y + 0.2]])} w={0.65} cor={c.sombra} op={0.85} />
+          ))}
+          {brilho([[-12, -27], [-2, -30], [8, -28.6]], 2.2, 0.9)}
+        </g>
+      );
+      out.orelha = 'meia';
+      break;
+    }
+    case 'calvo':
+      out.frente = [fm([[-2, -6], [-6, -11], [-14, -15], [-23, -12], [-26.4, -2], [-24, 8], [-18, 14], [-15, 6], [-12.6, -5.6], [-5, -7.4]], 1.6)];
+      out.detalhesFrente = <g>{brilho([[-6, -25.6], [4, -27.4], [12, -25]], 2.4, 0.55)}</g>;
+      break;
   }
   return out;
 }

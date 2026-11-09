@@ -186,7 +186,8 @@ export class Kit {
   }
 }
 
-export type Peca = { d: string; fill: string; op?: number };
+/** `sem` = sem luz de recorte (sombra interna, que não tem borda própria) */
+export type Peca = { d: string; fill: string; op?: number; sem?: boolean };
 
 /**
  * Um grupo com volume: a luz de recorte (quente, pra luz) e o rebatido (frio, do outro lado)
@@ -199,15 +200,16 @@ export const Vol: React.FC<{ k: Kit; pecas: Peca[]; giro?: number; forca?: numbe
   const l: P = [L[0] * Math.cos(a) - L[1] * Math.sin(a), L[0] * Math.sin(a) + L[1] * Math.cos(a)];
   const d = largura;
   const visiveis = pecas.filter((p) => p.d);
+  const comBorda = visiveis.filter((p) => !p.sem);
   return (
     <g>
       <g transform={`translate(${-l[0] * d * 0.7} ${-l[1] * d * 0.7})`} opacity={0.2 * forca}>
-        {visiveis.map((p, i) => (
+        {comBorda.map((p, i) => (
           <path key={i} d={p.d} fill="#8E9BFF" />
         ))}
       </g>
       <g transform={`translate(${l[0] * d} ${l[1] * d})`} opacity={0.88 * forca}>
-        {visiveis.map((p, i) => (
+        {comBorda.map((p, i) => (
           <path key={i} d={p.d} fill={k.luz} />
         ))}
       </g>

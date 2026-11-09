@@ -179,7 +179,7 @@ export const LARGURA: Record<Vista, number> = { frente: 1, 'tres-quartos': 0.55,
 export const ROSTO: Record<Vista, { boca: P; bochecha: P; olhos: P }> = {
   frente: { boca: [0, 0.27], bochecha: [0.36, 0.16], olhos: [0, 0.02] },
   'tres-quartos': { boca: [0.2, 0.27], bochecha: [-0.08, 0.17], olhos: [0.16, 0.02] },
-  perfil: { boca: [0.4, 0.27], bochecha: [0.12, 0.17], olhos: [0.3, 0.02] },
+  perfil: { boca: [0.4, 0.27], bochecha: [0.2, 0.17], olhos: [0.3, 0.02] },
 };
 
 /** Pose → juntas. Puro e barato (chamado a cada quadro). */

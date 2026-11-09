@@ -3,9 +3,11 @@
 // tipos, com volume, sombra e brilho) e os acessórios de cabeça (boné, faixa, fone).
 // Tudo é desenhado no espaço LOCAL da cabeça (centro na origem, y pra baixo, gira com ela).
 //
-// O DEDO NA PELE: quando a mão da frente aponta e encosta na bochecha, o contorno da bochecha
-// afunda em volta da ponta do dedo (e estufa um tico dos lados), aparece a covinha de sombra em
-// volta da ponta e o olho daquele lado aperta um pouco — a pele cede de verdade.
+// O DEDO NA PELE: quando a mão da frente aponta e encosta na bochecha (j.bochecha, força em
+// toque.forca = j.aperto), a pele cede pra DENTRO do rosto: um vinco escuro colado na frente da
+// ponta do dedo, o calombo que estufa logo depois pegando luz, o rubor da pressão, a sombra que a
+// mão joga no rosto e o olho daquele lado apertando. Perto da borda (de frente) o contorno também
+// cede. Nada de anéis concêntricos: as formas abraçam o dedo só do lado pra onde ele empurra.
 import React from 'react';
 import type { Humor } from '../../esqueleto';
 import { type Ctx, rimDe } from './ctx';
@@ -40,7 +42,7 @@ export const contornoLocal = (c: Ctx): P[] => {
   const H = c.prop.cabeca;
   const m = c.pessoa.genero === 'm';
   const magro = c.pessoa.idade === 'idoso' ? 0.97 : 1;
-  const largo = c.pessoa.corpo === 'largo' ? 1.07 : c.pessoa.corpo === 'forte' && m ? 1.03 : 1;
+  const largo = c.pessoa.corpo === 'largo' ? 1.12 : c.pessoa.corpo === 'forte' && m ? 1.03 : 1;
   return denso(
     // rosto mais cheio embaixo (bochecha/mandíbula) no corpo largo, sem quina
     CONTORNO[c.j.vista](m).map(([x, y]) => [x * W * magro * (1 + (largo - 1) * Math.max(0, Math.min(1, (y + 0.05) / 0.35))), y * H] as P),
@@ -55,19 +57,10 @@ export const sombraQueixo = (c: Ctx): string => {
   return linhaFechada(contornoLocal(c).map((p) => w([p[0] + dx, p[1] + 1.2])));
 };
 
-/** quanto a pele cede no toque (0..1) e onde — calculado pela PONTA do dedo desenhado */
+/** o toque: a força vem da pose (j.aperto → toque.forca), o ponto do esqueleto (j.bochecha) */
 export const toqueDe = (c: Ctx, toque?: { ponto: [number, number]; forca: number }) => {
-  if (!toque) return null;
-  const { j, prop } = c;
-  const W = prop.cabecaLarg;
-  if (j.mao[1] !== 'aponta') return null;
-  const d = dirDe(j.ang.mao[1]);
-  const ponta = add(j.punho[1], mul(d, 0.85 * prop.mao));
-  // a pose para o dedo 5% de W fora do ponto e afunda até 3% pra dentro (poses.tocarRosto)
-  const fora = ponta[0] - toque.ponto[0];
-  if (fora > 0.08 * W) return null;
-  const aperto = clamp01((0.05 * W - fora) / (0.08 * W));
-  return { ponta, d, aperto };
+  if (!toque || c.j.mao[1] !== 'aponta') return null;
+  return { ponto: toque.ponto, forca: clamp01(toque.forca) };
 };
 
 // ------------------------------------------------------------------ olhos, boca, nariz
@@ -275,70 +268,61 @@ export const Cabeca: React.FC<CabecaProps> = ({ c, humor, toque }) => {
   const tq = toqueDe(c, toque);
   let cova: React.ReactNode = null;
   let apertaOlho = 0;
-  if (tq && tq.aperto > 0) {
+  if (tq) {
+    // A pele cede pra DENTRO do rosto em volta da ponta do dedo: uma covinha só (sombra do lado
+    // da luz, onde a borda faz sombra; brilho na borda que estufa; um rubor da pressão). Perto da
+    // borda do rosto (vista de frente) o contorno também cede e estufa dos lados.
     const lc = local(c);
-    const pontaL = lc(tq.ponta);
-    const dDedo = gira(tq.d, -j.ang.cabeca);
-    // o ponto de contato: o ponto do contorno mais perto da ponta do dedo
-    let best = 0;
-    let bd = Infinity;
-    cont.forEach((p, k) => {
-      const dd = dist(p, pontaL);
-      if (dd < bd) {
-        bd = dd;
-        best = k;
-      }
-    });
-    const contato = cont[best];
-    // a pele afunda entre a direção do dedo e a normal da bochecha (pra dentro)
-    const nx = contato[0];
-    const ny = contato[1] - 0.05 * H;
+    const pL = lc(tq.ponto);
+    const f = tq.forca;
+    const nx = -pL[0];
+    const ny = -(pL[1] - 0.05 * H);
     const nn = Math.hypot(nx, ny) || 1;
-    const mx = dDedo[0] * 0.5 - (nx / nn) * 0.5;
-    const my = dDedo[1] * 0.5 - (ny / nn) * 0.5;
-    const mm = Math.hypot(mx, my) || 1;
-    const dl: P = [mx / mm, my / mm];
-    // o contorno cede em volta da ponta (mais largo que o dedo, pra a curva aparecer dos dois
-    // lados) e estufa um tico logo depois — a pele foi empurrada, não cortada
-    const fundo = 0.45 + tq.aperto * 2.3;
-    const sig = 2.0;
+    const dentro: P = [nx / nn, ny / nn];
+    const fundo = 0.2 + 1.9 * f;
+    const sig = 2.2;
     cont = cont.map((p) => {
-      const r = dist(p, contato);
+      const r = dist(p, pL);
       const g = Math.exp(-((r / sig) ** 2));
       const b = Math.exp(-(((r - 2.3 * sig) / (0.9 * sig)) ** 2));
-      return add(p, mul(dl, fundo * g - 0.45 * fundo * b));
+      return add(p, mul(dentro, fundo * g - 0.45 * fundo * b));
     });
-    apertaOlho = tq.aperto * 0.6;
-    const fundoP = add(contato, mul(dl, fundo));
-    const pp: P = [-dl[1], dl[0]];
-    const ang = Math.atan2(dl[1], dl[0]) / RAD;
-    const a = tq.aperto;
-    // vincos: arcos em volta da ponta do dedo (do lado do rosto), como pele que amassa
-    const pontaD = add(pontaL, mul(dDedo, -0.2));
-    const angD = Math.atan2(dl[1], dl[0]);
-    const vinco = (k: number) => {
-      const r = 1.55 + k * 0.85;
-      const abre = (0.95 - k * 0.25) * Math.PI * 0.5;
-      const p0: P = [pontaD[0] + Math.cos(angD - abre) * r, pontaD[1] + Math.sin(angD - abre) * r];
-      const p1: P = [pontaD[0] + Math.cos(angD + abre) * r, pontaD[1] + Math.sin(angD + abre) * r];
-      return `M${p0[0]} ${p0[1]}A${r} ${r} 0 0 1 ${p1[0]} ${p1[1]}`;
+    apertaOlho = f * 0.6;
+    // a ponta do dedo (j.dedos) e pra onde ele aponta, no espaço da cabeça
+    const pontaL = lc(c.j.dedos[1]);
+    const dDedo = gira(dirDe(c.j.ang.mao[1]), -c.j.ang.cabeca);
+    const aD = Math.atan2(dDedo[1], dDedo[0]);
+    const rDedo = 0.62 * (c.corpo.braco[0][1] / 3.7);
+    /** lua que abraça a ponta do dedo pelo lado da frente (fina nas pontas, cheia no meio) */
+    const lua = (r: number, grossura: number, abre: number, desloca: number) => {
+      const fora: P[] = [];
+      const dentro: P[] = [];
+      for (let k = 0; k <= 10; k++) {
+        const u = -1 + (2 * k) / 10;
+        const a = aD + u * abre;
+        const g = grossura * (1 - u * u);
+        const cx = pontaL[0] + Math.cos(aD) * desloca;
+        const cy = pontaL[1] + Math.sin(aD) * desloca;
+        dentro.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]);
+        fora.push([cx + Math.cos(a) * (r + g), cy + Math.sin(a) * (r + g)]);
+      }
+      return suave([...fora, ...dentro.reverse()], true, 0.8);
     };
     cova = (
       <g>
-        {/* a covinha: um anel de sombra em volta da ponta do dedo */}
-        <path d={elipse(add(fundoP, mul(dl, -0.5)), 1.7 + a * 0.5, 2.3 + a * 0.4, ang)} fill={sombraPele(pele, 1.1)} opacity={0.4 + a * 0.4} />
-        {/* a pele amassando: dois vincos na frente do dedo, que aparecem com a força */}
-        <path d={vinco(0)} stroke={sombraPele(pele, 1.0)} strokeWidth={0.32 + a * 0.18} fill="none" strokeLinecap="round" opacity={clamp01(a * 1.6) * 0.85} />
-        <path d={vinco(1)} stroke={sombraPele(pele, 0.9)} strokeWidth={0.26 + a * 0.12} fill="none" strokeLinecap="round" opacity={clamp01(a * 1.6 - 0.4) * 0.7} />
-        {/* o brilho da pele esticada entre os vincos */}
-        <path d={vinco(0.5)} stroke={clara(pele, 0.3)} strokeWidth={0.3} fill="none" strokeLinecap="round" opacity={clamp01(a * 1.6) * 0.6} />
+        {/* rubor da pressão: largo, deslocado pra bochecha (não é um alvo em volta do dedo) */}
+        <path d={elipse(add(pL, mul(dentro, 1.2)), 3.4, 2.4, -8)} fill={mix(pele, '#FF5F73', 0.55)} opacity={0.1 + 0.25 * f} />
+        {/* a pele dobra na frente da ponta: um vinco escuro colado no dedo... */}
+        <path d={lua(rDedo + 0.02, 0.5 + 0.55 * f, 1.3, -0.2)} fill={sombraPele(pele, 1.3)} opacity={0.5 + 0.45 * f} />
+        {/* ...e o calombo que estufa logo depois pega a luz */}
+        <path d={lua(rDedo + 0.75 + 0.55 * f, 0.35 + 0.4 * f, 0.95, -0.1)} fill={clara(pele, 0.28)} opacity={0.25 + 0.45 * f} />
       </g>
     );
   }
   const cabecaD = linhaFechada(cont);
   const e = EXPR[humor];
   // não pisca enquanto o dedo aperta (o quadro-chave do toque é de olho aberto)
-  const fecha = Math.max(j.fecha, tq && tq.aperto > 0 ? 0 : piscar(c.t, pessoa.id));
+  const fecha = Math.max(j.fecha, tq ? 0 : piscar(c.t, pessoa.id));
   const abre = e.abre * (1 - fecha);
   const corSobr = lum(pessoa.corCabelo) > 0.6 ? mix(pessoa.corCabelo, '#6B6577', 0.45) : mix(pessoa.corCabelo, '#000000', 0.15);
   const orelhas = ORELHAS[v];
@@ -369,6 +353,8 @@ export const Cabeca: React.FC<CabecaProps> = ({ c, humor, toque }) => {
     );
   };
   const olhos = OLHOS[v];
+  // o olho do lado da bochecha apertada (de frente a da direita; de 3/4 a de perto da câmera)
+  const olhoToque = v === 'frente' ? 1 : 0;
   const blush = mix(pele, '#FF5A6E', 0.4);
   const blushes: P[] = v === 'frente' ? [[-0.27, 0.16], [0.27, 0.16]] : v === 'tres-quartos' ? [[0.0, 0.17], [0.37, 0.15]] : [[0.22, 0.16]];
 
@@ -422,7 +408,7 @@ export const Cabeca: React.FC<CabecaProps> = ({ c, humor, toque }) => {
       {orelhas.filter((o) => !o.atras).map((o, k) => orelha(o, k + 2))}
       <Nariz c={c} W={W} H={H} />
       {olhos.map((o, k) => (
-        <OlhoEl key={`ol${k}`} c={c} o={o} abre={abre * (k === olhos.length - 1 && v !== 'frente' ? 1 - apertaOlho * 0.5 : 1)} sobe={Math.min(0.9, e.sobeBaixo + (k === olhos.length - 1 ? apertaOlho : 0))} humor={humor} id={`${id}-ol${k}`} W={W} H={H} />
+        <OlhoEl key={`ol${k}`} c={c} o={o} abre={abre * (k === olhoToque ? 1 - apertaOlho * 0.4 : 1)} sobe={Math.min(0.9, e.sobeBaixo + (k === olhoToque ? apertaOlho : 0))} humor={humor} id={`${id}-ol${k}`} W={W} H={H} />
       ))}
       {olhos.map((o, k) => (
         <Sobrancelha key={`sb${k}`} o={o} e={e} cor={corSobr} W={W} H={H} m={m} />

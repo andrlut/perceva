@@ -38,8 +38,9 @@ export function troncoDe(j: Juntas, prop: Proporcao, corpo: Corpo): Tronco {
   const tr = j.ang.tronco;
   // o tronco "avança" pra +x na vista de 3/4: o ombro da frente (o braço que passa por cima) fica
   // no LADO do tronco, não na frente do peito
-  const avanco = j.vista === 'tres-quartos' ? 0.2 * prop.ombros : j.vista === 'perfil' ? 0.12 * prop.ombros : 0;
-  const desl = (v: number) => avanco * lerp(0.45, 1, suave01(v / (0.6 * T)));
+  // (rodada 2: o esqueleto pôs o ombro da frente em −x na vista de 3/4 — o tronco não precisa mais
+  // "avançar" pra +x pra o braço da frente cair no lado do corpo)
+  const desl = (_v: number) => 0;
   const giro = (v: number) => (v >= 0 ? lerp(tr * 0.35, tr, suave01(v / (0.5 * T))) : tr * 0.35);
   const cima = (v: number): P => {
     const a = giro(v) * RAD;
@@ -89,6 +90,6 @@ export function troncoDe(j: Juntas, prop: Proporcao, corpo: Corpo): Tronco {
   };
   const meio = (v: number, e = 0) => (anel(v)[1] + e) * sphi;
   // o pescoço sai um tico atrás do meio (de 3/4 e perfil), sempre perto da cabeça
-  const pescoco = { u: -desl(T) * 0.55 + (j.vista === 'frente' ? 0 : -0.04 * prop.cabecaLarg), v: T, r: corpo.pescoco };
+  const pescoco = { u: j.vista === 'frente' ? 0 : -0.04 * prop.cabecaLarg, v: T, r: corpo.pescoco };
   return { T, cphi, sphi, pt, anel, xM, xm, sup, meio, pescoco, giro, cima };
 }

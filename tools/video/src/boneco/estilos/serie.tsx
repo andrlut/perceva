@@ -11,8 +11,7 @@
 // O código mora em ./serie/: base (tinta + cel), fisico, corpo, maos, objetos, cabeca, cabelos.
 import React from 'react';
 import type { DesenhoProps, Estilo } from '../estilo';
-import type { Roupa } from '../elenco';
-import { Pintor, hash, luma, mix, norm, recorte, sombraPele } from './serie/base';
+import { Pintor, hash, norm, recorte, sombraPele } from './serie/base';
 import { cabeloPronto, camadaCabeca, camadaCabeloAtras } from './serie/cabeca';
 import { camadaBraco, camadaPerna, camadaSaia, camadaTronco, detalhesCintura } from './serie/corpo';
 import type { Ctx } from './serie/ctx';
@@ -21,17 +20,22 @@ import { PROP, fisicoDe, movDe, propDe, troncoDe } from './serie/fisico';
 /** a luz de recorte quando o lugar não manda a dele: um lilás frio que separa do azul-marinho */
 const LUZ_PADRAO = '#A99BFF';
 
-/** azul-marinho de roupa some no fundo marinho do app: sobe um tico (sem acinzentar) */
-const viva = (cor: string) => (luma(cor) < 0.16 ? mix(cor, '#6C78C8', 0.24) : cor);
-const roupaViva = (r: Roupa): Roupa => ({
-  ...r,
-  cima: { ...r.cima, cor: viva(r.cima.cor) },
-  baixo: { ...r.baixo, cor: viva(r.baixo.cor) },
-  calcado: { ...r.calcado, cor: viva(r.calcado.cor) },
-});
+/**
+ * Escala do traço: px por unidade medidos no quadro (getScreenCTM) → --sk na raiz. A 330 px de
+ * altura (~1,1 px/un) vale 1; num close de 2300 px (~7,7 px/un) cai pra ~0,42 (a linha engrossa
+ * devagar em px, não 7×); a 150 px sobe até ~1,5 (continua legível).
+ */
+const escalaTraco = (pxPorUn: number) => Math.max(0.42, Math.min(1.6, Math.sqrt(1.1 / pxPorUn)));
 
-const SerieDesenho: React.FC<DesenhoProps> = ({ j, pessoa, roupa: roupaIn, humor, t, uid, luz, segura, toque }) => {
-  const roupa = roupaViva(roupaIn);
+const SerieDesenho: React.FC<DesenhoProps> = ({ j, pessoa, roupa, humor, t, uid, luz, segura, toque }) => {
+  const raiz = React.useRef<SVGGElement>(null);
+  React.useLayoutEffect(() => {
+    const el = raiz.current;
+    const m = el?.getScreenCTM?.();
+    if (!el || !m) return;
+    const s = Math.hypot(m.a, m.b);
+    if (s > 0) el.style.setProperty('--sk', escalaTraco(s).toFixed(3));
+  });
   const prop = propDe(pessoa);
   const fis = fisicoDe(pessoa, prop);
   const tr = troncoDe(j, fis);
@@ -58,7 +62,7 @@ const SerieDesenho: React.FC<DesenhoProps> = ({ j, pessoa, roupa: roupaIn, humor
   if (j.bracoNaFrente[1]) camadas.push(camadaBraco(c, 1, 'b1f'));
   camadas.push(recorte(pt));
   return (
-    <g>
+    <g ref={raiz}>
       {camadas.map((x, i) => (
         <React.Fragment key={i}>{x}</React.Fragment>
       ))}

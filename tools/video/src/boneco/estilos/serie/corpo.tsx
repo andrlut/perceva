@@ -29,8 +29,7 @@ import {
   perp,
   sombraDe,
   sub,
-  suave,
-} from './base';
+  suave, sw } from './base';
 import type { Ctx } from './ctx';
 import { maoDe } from './maos';
 import { copo, garrafa, halter } from './objetos';
@@ -328,7 +327,7 @@ export function detalhesCintura(c: Ctx): React.ReactNode {
       // cinto com fivela dourada
       out.push(<Traco key="cin" d={faixa(top - 0.025)} w={2.6} cor={escurece('#5A3A2A', 0.15)} />);
       const fv = tr.frente(0, top - 0.025, e + 0.4);
-      out.push(<rect key="fiv" x={fv[0] - 1.7} y={fv[1] - 1.6} width={3.4} height={3.2} rx={0.6} fill="none" stroke="#FFC83D" strokeWidth={0.9} />);
+      out.push(<rect key="fiv" x={fv[0] - 1.7} y={fv[1] - 1.6} width={3.4} height={3.2} rx={0.6} fill="none" stroke="#FFC83D" style={sw(0.9)} />);
     }
   } else {
     // elástico com cordão (moletom, pijama, short)
@@ -531,7 +530,7 @@ export function camadaTronco(c: Ctx, key: string): React.ReactNode {
     const g = (s: number): P[] => [tr.frente(s * (tr.nr + 1.6), 1.035), tr.frente(s * (tr.nr + 3.6), 0.93, 0.6), tr.frente(s * 1.2, 0.875, 0.8)];
     for (const s of [-1, 1]) {
       const [p0, p1, p2] = g(s);
-      det.push(<path key={`g${s}`} d={suave([[...p0, 1] as PQ, [...p1, 1] as PQ, [...p2, 1] as PQ, tr.frente(s * (tr.nr * 0.5), 0.97, 0.4)])} fill={cor} stroke={TINTA} strokeWidth={L} strokeLinejoin="round" />);
+      det.push(<path key={`g${s}`} d={suave([[...p0, 1] as PQ, [...p1, 1] as PQ, [...p2, 1] as PQ, tr.frente(s * (tr.nr * 0.5), 0.97, 0.4)])} fill={cor} stroke={TINTA} style={sw(L)} strokeLinejoin="round" />);
     }
     det.push(<Traco key="car" d={linha([frente0(0.875), frente0(de + 0.02)])} w={L} />);
     for (const v of [0.74, 0.58, 0.42, 0.26].filter((x) => x > de + 0.05)) {
@@ -539,13 +538,13 @@ export function camadaTronco(c: Ctx, key: string): React.ReactNode {
       det.push(<circle key={`b${v}`} cx={p[0]} cy={p[1]} r={0.75} fill={cor2 ?? contraste(cor)} />);
     }
     const bo = (lado: number, vf: number) => tr.frente(lado, vf, 0.3);
-    det.push(<path key="bol" d={suave([[...bo(-tr.W(0.7) * 0.25, 0.75), 1] as PQ, [...bo(-tr.W(0.7) * 0.68, 0.75), 1] as PQ, [...bo(-tr.W(0.7) * 0.68, 0.62), 1] as PQ, [...bo(-tr.W(0.7) * 0.25, 0.62), 1] as PQ], false)} fill="none" stroke={cor2 ?? escurece(cor, 0.35)} strokeWidth={L} />);
+    det.push(<path key="bol" d={suave([[...bo(-tr.W(0.7) * 0.25, 0.75), 1] as PQ, [...bo(-tr.W(0.7) * 0.68, 0.75), 1] as PQ, [...bo(-tr.W(0.7) * 0.68, 0.62), 1] as PQ, [...bo(-tr.W(0.7) * 0.25, 0.62), 1] as PQ], false)} fill="none" stroke={cor2 ?? escurece(cor, 0.35)} style={sw(L)} />);
   } else if (tp === 'blazer') {
     // a camisa (cor2) no V, a gola dela, e as lapelas com o entalhe
     const sh = cor2 ?? '#F4F5FF';
     const vb = 0.5;
     const v: P[] = [tr.frente(-(tr.nr + 1.6), 1.02), tr.frente(-1.2, vb, 0.4), tr.frente(1.2, vb, 0.4), tr.frente(tr.nr + 1.6, 1.02)];
-    det.push(<path key="cam" d={suave([...v.map((p) => [...p, 1] as PQ), tr.P(tr.nc, 1.08)])} fill={sh} stroke={TINTA} strokeWidth={L} strokeLinejoin="round" />);
+    det.push(<path key="cam" d={suave([...v.map((p) => [...p, 1] as PQ), tr.P(tr.nc, 1.08)])} fill={sh} stroke={TINTA} style={sw(L)} strokeLinejoin="round" />);
     const dc = decote(c, 0.93, tr.nr + 0.8, true);
     det.push(peleChapada(dc.d, 'dec'), <Traco key="db" d={dc.borda} w={L} />);
     for (const s of [-1, 1]) {
@@ -555,7 +554,7 @@ export function camadaTronco(c: Ctx, key: string): React.ReactNode {
       const pt = tr.frente(s * (tr.nr + 7.4), 0.79, 1.2);
       const fim = tr.frente(s * 0.9, vb - 0.02, 0.6);
       const lap: PQ[] = [[...p0, 1], [...ent, 1], [...ent2, 1], [...pt, 1], fim, [...tr.frente(s * 2.2, vb + 0.12, 0.6), 1] as PQ, tr.frente(s * (tr.nr + 0.2), 0.94, 0.5)] as PQ[];
-      det.push(<path key={`lap${s}`} d={suave(lap)} fill={sombraDe(cor, 0.12)} stroke={TINTA} strokeWidth={LINHA.dentro} strokeLinejoin="round" />);
+      det.push(<path key={`lap${s}`} d={suave(lap)} fill={sombraDe(cor, 0.12)} stroke={TINTA} style={sw(LINHA.dentro)} strokeLinejoin="round" />);
     }
     // fechamento e botões
     det.push(<Traco key="fec" d={linha([tr.frente(0, vb - 0.02, 0.6), tr.frente(0.6, de + 0.06, 0.6), tr.frente(2.4, de + 0.01, 0.6)])} w={L} />);
@@ -573,8 +572,8 @@ export function camadaTronco(c: Ctx, key: string): React.ReactNode {
     const vies = cor2 ?? '#F4F5FF';
     for (const s of [-1, 1]) {
       const g: PQ[] = [[...tr.frente(s * (tr.nr + 1.4), 1.03), 1] as PQ, [...tr.frente(s * (tr.nr + 4.4), 0.9, 0.8), 1] as PQ, [...tr.frente(s * 1.4, 0.83, 0.8), 1] as PQ, tr.frente(s * tr.nr * 0.5, 0.96, 0.4)];
-      det.push(<path key={`g${s}`} d={suave(g)} fill={cor} stroke={vies} strokeWidth={1.1} strokeLinejoin="round" />);
-      det.push(<path key={`gl${s}`} d={suave(g)} fill="none" stroke={TINTA} strokeWidth={0.45} strokeLinejoin="round" />);
+      det.push(<path key={`g${s}`} d={suave(g)} fill={cor} stroke={vies} style={sw(1.1)} strokeLinejoin="round" />);
+      det.push(<path key={`gl${s}`} d={suave(g)} fill="none" stroke={TINTA} style={sw(0.45)} strokeLinejoin="round" />);
     }
     det.push(<Traco key="car" d={linha([frente0(0.83), frente0(de + 0.01)])} w={1.1} cor={vies} />);
     for (const v of [0.72, 0.52, 0.32, 0.12]) {
@@ -595,10 +594,10 @@ export function camadaTronco(c: Ctx, key: string): React.ReactNode {
     if (tp === 'moletom') {
       // cordões do capuz (balançam), bolso canguru, barra canelada
       const cord = cor2 ?? '#F4F5FF';
-      const sw = c.mov.osc * 1.6 + Math.sin(c.t / 11) * 0.3;
+      const ba = c.mov.osc * 1.6 + Math.sin(c.t / 11) * 0.3;
       for (const s of [-1, 1]) {
         const p0 = tr.frente(s * 2.2, 0.96, 0.4);
-        const p1: P = add(p0, [sw + s * 0.3 + c.mov.balanco * 0.04, 8.6]);
+        const p1: P = add(p0, [ba + s * 0.3 + c.mov.balanco * 0.04, 8.6]);
         det.push(<Traco key={`cd${s}`} d={linha([p0, lerpP(p0, p1, 0.5), p1])} w={0.95} cor={cord} />, <rect key={`ag${s}`} x={p1[0] - 0.55} y={p1[1]} width={1.1} height={1.8} fill={escurece(cord, 0.3)} />);
       }
       const bk: PQ[] = [
@@ -607,7 +606,7 @@ export function camadaTronco(c: Ctx, key: string): React.ReactNode {
         [...tr.frente(tr.W(0.1) * 0.78, 0.04, 0.6), 1] as PQ,
         [...tr.frente(-tr.W(0.1) * 0.78, 0.04, 0.6), 1] as PQ,
       ];
-      det.push(<path key="bk" d={suave(bk)} fill={escurece(cor, 0.06)} stroke={TINTA} strokeWidth={L} strokeLinejoin="round" />);
+      det.push(<path key="bk" d={suave(bk)} fill={escurece(cor, 0.06)} stroke={TINTA} style={sw(L)} strokeLinejoin="round" />);
       det.push(<Traco key="bar" d={linha([tr.P(tr.xl(de + 0.05, e + 0.8), de + 0.05), tr.frente(0, de + 0.04, e), tr.P(tr.xr(de + 0.05, e + 0.8), de + 0.05)])} w={L} />);
     }
   }
@@ -637,7 +636,7 @@ export function camadaTronco(c: Ctx, key: string): React.ReactNode {
       linha: LINHA.dentro,
       depois: (
         <g>
-          <path d={suave(bolso)} fill="none" stroke={c.pessoa.cor} strokeWidth={1} />
+          <path d={suave(bolso)} fill="none" stroke={c.pessoa.cor} style={sw(1)} />
           <Traco d={linha([tr.frente(-tr.W(0.42) * 0.72, 0.48, e + 0.8), tr.P(tr.xl(0.46, e) - 1.5, 0.43)])} w={1.2} cor={ac} />
           <Traco d={linha([tr.frente(-tr.nr, 0.82, e + 0.5), tr.P(tr.nc - tr.nr * 0.7, 1.06)])} w={1.2} cor={ac} />
           <Traco d={linha([tr.frente(tr.nr, 0.82, e + 0.5), tr.P(tr.nc + tr.nr * 0.7, 1.06)])} w={1.2} cor={ac} />
@@ -656,7 +655,7 @@ export function camadaTronco(c: Ctx, key: string): React.ReactNode {
         <Traco d={linha([tr.P(tr.nc - tr.nr * 0.8, 1.04), lerpP(tr.P(tr.nc - tr.nr * 0.8, 1.04), card, 0.5), add(card, [0, -ch / 2])])} w={0.9} cor={c.pessoa.cor} />
         <Traco d={linha([tr.P(tr.nc + tr.nr * 0.8, 1.04), tr.frente(0, 0.8, e), add(card, [0.6, -ch / 2])])} w={0.9} cor={c.pessoa.cor} />
         <g transform={`rotate(${ang} ${card[0]} ${card[1]})`}>
-          <rect x={card[0] - cw / 2} y={card[1] - ch / 2} width={cw} height={ch} rx={1} fill="#F4F5FF" stroke={TINTA} strokeWidth={LINHA.fino} />
+          <rect x={card[0] - cw / 2} y={card[1] - ch / 2} width={cw} height={ch} rx={1} fill="#F4F5FF" stroke={TINTA} style={sw(LINHA.fino)} />
           <rect x={card[0] - cw / 2} y={card[1] - ch / 2} width={cw} height={2.2} rx={0.6} fill={c.pessoa.cor} />
           <rect x={card[0] - 1.6} y={card[1] - 0.6} width={3.2} height={3.2} rx={0.5} fill={mix(c.pessoa.cor, '#FFFFFF', 0.55)} />
         </g>
@@ -668,19 +667,28 @@ export function camadaTronco(c: Ctx, key: string): React.ReactNode {
 
 // ------------------------------------------------------------------ braços
 
+/**
+ * Um braço. Com `encurta` < 0,8 (o braço aponta pra câmera, ex.: mão no rosto de frente) vira
+ * ESCORÇO de animação: o braço fica um tico mais grosso (vem pra perto), o antebraço é desenhado
+ * POR CIMA do começo dele com linha própria e a dobra do cotovelo leva o traço.
+ */
 export function camadaBraco(c: Ctx, i: 0 | 1, key: string): React.ReactNode {
   const { j, fis, roupa } = c;
   const o = j.ombro[i];
   const co = j.cotovelo[i];
   const pu = j.punho[i];
-  const r = fis.braco;
-  const pele: Forma[] = [];
+  const enc = j.encurta?.[i] ?? 1;
+  const escorco = enc < 0.8;
+  const kE = 1 + 0.2 * (1 - enc);
+  const r: [number, number, number] = [fis.braco[0] * kE, fis.braco[1] * kE, fis.braco[2]];
   const peleF = (d: string): Forma => ({ d, cor: c.pele, sombra: c.peleSombra, k: 2.6, uniao: 'pele' });
-  pele.push(peleF(capsula(o, co, r[0], r[1], { bn: [0.6, 0.1], bm: [1.0, 0.3] })));
-  pele.push(peleF(capsula(co, pu, r[1], r[2], { bn: [0.9, 0.2], bm: [0.6, 0.1] })));
-  // a mão: com garrafa na mão de trás, ela segura
+  const peleBraco = peleF(capsula(o, co, r[0], r[1], { bn: [0.6, 0.1], bm: [1.0, 0.3] }));
+  const peleAnte = peleF(capsula(co, pu, r[1], r[2], { bn: [0.9, 0.2], bm: [0.6, 0.1] }));
+  // a garrafinha vai na mão livre que APARECE: a da frente (1) se estiver solta, senão a de trás
   const ex = roupa.extras ?? [];
-  const comGarrafa = i === 0 && ex.includes('garrafa') && (j.mao[0] === 'solta' || j.mao[0] === 'fechada');
+  const livre = (k: 0 | 1) => (j.mao[k] === 'solta' || j.mao[k] === 'fechada') && !(k === 1 && c.segura);
+  const maoGarrafa = ex.includes('garrafa') ? (livre(1) ? 1 : livre(0) ? 0 : -1) : -1;
+  const comGarrafa = i === maoGarrafa;
   const maoPose = comGarrafa ? 'segura' : j.mao[i];
   const mao = maoDe(c, i, maoPose);
   const grupos: Grupo[] = [];
@@ -691,8 +699,8 @@ export function camadaBraco(c: Ctx, i: 0 | 1, key: string): React.ReactNode {
     else if (c.segura === 'copo' && i === 1) grupos.push(copo(c, i));
   }
   const palma = mao.formas.map((f) => ({ ...f, uniao: 'pele' }));
-  if (mao.frente?.length) {
-    grupos.push({ formas: [...pele, ...palma], depois: mao.detalhesPalma });
+  const gruposMao = (): Grupo[] => {
+    if (!mao.frente?.length) return [];
     // polegar/indicador: linha fina própria, mas a base some dentro da palma (máscara)
     const masc = (
       <g>
@@ -700,54 +708,55 @@ export function camadaBraco(c: Ctx, i: 0 | 1, key: string): React.ReactNode {
         {mao.detalhesPalma}
       </g>
     );
-    grupos.push({ formas: mao.frente.map((f) => ({ ...f, rim: true })), linha: LINHA.fino, meio: masc, depois: mao.detalhes });
-  } else grupos.push({ formas: [...pele, ...palma], depois: mao.detalhes });
-  // manga
+    return [{ formas: mao.frente, linha: LINHA.fino, meio: masc, depois: mao.detalhes }];
+  };
+  // manga: pedaço de cima (ombro → cotovelo) e de baixo (cotovelo → punho)
   const m = mangaDe(c);
   const cor = roupa.cima.cor;
   const cor2 = roupa.cima.cor2;
   const dob = j.ang.antebraco[i] - j.ang.braco[i];
   const det: React.ReactNode[] = [];
-  const manga: Forma[] = [];
+  const mc: Forma[] = [];
+  const mb: Forma[] = [];
   const du = norm(sub(co, o));
   const df = norm(sub(pu, co));
   const pano = (d: string, k = 2.8, cc = cor): Forma => ({ d, cor: cc, k, uniao: 'manga' });
   if (m.ate === 'curta') {
-    const fim = lerpP(o, co, 0.5);
-    manga.push(pano(capsula(o, fim, r[0] + m.folga, lerp(r[0], r[1], 0.5) + m.folga + 0.5, { fimB: 'reto' })));
+    const fim = lerpP(o, co, escorco ? 0.62 : 0.5);
+    const rr = lerp(r[0], r[1], 0.5) + m.folga + 0.5;
+    mc.push(pano(capsula(o, fim, r[0] + m.folga, rr, { fimB: 'reto' })));
     if (cor2) {
       const n = perp(du);
-      const rr = lerp(r[0], r[1], 0.5) + m.folga + 0.5;
       const p = add(fim, mul(du, -1));
       det.push(<Traco key="bm" d={linha([add(p, mul(n, rr)), add(p, mul(n, -rr))])} w={1.8} cor={cor2} />);
     }
   } else if (m.ate === 'cotovelo') {
-    manga.push(pano(capsula(o, co, r[0] + m.folga, r[1] + m.folga + 0.8)));
+    mc.push(pano(capsula(o, co, r[0] + m.folga, r[1] + m.folga + 0.8)));
     const fim = lerpP(co, pu, 0.22);
-    manga.push(pano(capsula(co, fim, r[1] + m.folga + 0.8, lerp(r[1], r[2], 0.22) + m.folga + 1.4, { fimB: 'reto' })));
+    mb.push(pano(capsula(co, fim, r[1] + m.folga + 0.8, lerp(r[1], r[2], 0.22) + m.folga + 1.4, { fimB: 'reto' })));
   } else if (m.ate === 'dobrada') {
     // manga arregaçada: até o meio do antebraço, com a dobra mais clara
-    manga.push(pano(capsula(o, co, r[0] + m.folga, r[1] + m.folga + 0.4)));
+    mc.push(pano(capsula(o, co, r[0] + m.folga, r[1] + m.folga + 0.4)));
     const fim = lerpP(co, pu, 0.36);
-    manga.push(pano(capsula(co, fim, r[1] + m.folga + 0.4, lerp(r[1], r[2], 0.36) + m.folga + 0.9, { fimB: 'reto' })));
+    mb.push(pano(capsula(co, fim, r[1] + m.folga + 0.4, lerp(r[1], r[2], 0.36) + m.folga + 0.9, { fimB: 'reto' })));
     const ini = lerpP(co, pu, 0.16);
-    manga.push(pano(capsula(ini, fim, lerp(r[1], r[2], 0.16) + m.folga + 1.1, lerp(r[1], r[2], 0.36) + m.folga + 1.1, { fimA: 'reto', fimB: 'reto' }), 1.2, clareia(cor, 0.12)));
+    mb.push(pano(capsula(ini, fim, lerp(r[1], r[2], 0.16) + m.folga + 1.1, lerp(r[1], r[2], 0.36) + m.folga + 1.1, { fimA: 'reto', fimB: 'reto' }), 1.2, clareia(cor, 0.12)));
   } else if (m.ate === 'longa') {
-    manga.push(pano(capsula(o, co, r[0] + m.folga, r[1] + m.folga + 0.3)));
+    mc.push(pano(capsula(o, co, r[0] + m.folga, r[1] + m.folga + 0.3)));
     const fimP = add(pu, mul(df, m.punho === 'canelado' ? 0.6 : 1.2));
-    manga.push(pano(capsula(co, fimP, r[1] + m.folga + 0.3, r[2] + m.folga * 0.75, { fimB: 'reto' })));
+    mb.push(pano(capsula(co, fimP, r[1] + m.folga + 0.3, r[2] + m.folga * 0.75, { fimB: 'reto' })));
     const n = perp(df);
     const rr = r[2] + m.folga * 0.75;
     if (m.punho === 'canelado') {
       const p0 = add(fimP, mul(df, -2.6));
-      manga.push(pano(capsula(p0, fimP, rr, rr - 0.3, { fimA: 'reto', fimB: 'reto' }), 1, escurece(cor, 0.1)));
+      mb.push(pano(capsula(p0, fimP, rr, rr - 0.3, { fimA: 'reto', fimB: 'reto' }), 1, escurece(cor, 0.1)));
     } else if (m.punho === 'camisa' || m.punho === 'blazer') {
       const p0 = add(fimP, mul(df, -2.4));
       det.push(<Traco key="pc" d={linha([add(p0, mul(n, rr)), add(p0, mul(n, -rr))])} w={LINHA.fino} />);
       if (m.punho === 'blazer') {
         // o punho da camisa (cor2) aparecendo
         const sh = cor2 ?? '#F4F5FF';
-        manga.push(pano(capsula(add(fimP, mul(df, -0.6)), add(fimP, mul(df, 0.9)), r[2] + 1.2, r[2] + 1.0, { fimA: 'reto', fimB: 'reto' }), 0.6, sh));
+        mb.push(pano(capsula(add(fimP, mul(df, -0.6)), add(fimP, mul(df, 0.9)), r[2] + 1.2, r[2] + 1.0, { fimA: 'reto', fimB: 'reto' }), 0.6, sh));
       }
     } else if (m.punho === 'viés') {
       const p0 = add(fimP, mul(df, -1.1));
@@ -760,16 +769,35 @@ export function camadaBraco(c: Ctx, i: 0 | 1, key: string): React.ReactNode {
     }
   }
   // dobra do cotovelo (pano junta na parte de dentro)
+  const vestido = m.ate === 'longa' || m.ate === 'cotovelo' || m.ate === 'dobrada';
   if (Math.abs(dob) > 30) {
     const bis = norm(add(mul(du, -1), df));
-    const rr = r[1] + (m.ate === 'longa' || m.ate === 'cotovelo' || m.ate === 'dobrada' ? m.folga : 0);
+    const rr = r[1] + (vestido ? m.folga : 0);
     const p = add(co, mul(bis, rr * 0.75));
     const tg = perp(bis);
     det.push(<Traco key="cot" d={linha([add(p, mul(tg, -rr * 0.4)), add(p, mul(bis, rr * 0.2)), add(p, mul(tg, rr * 0.4))])} w={LINHA.fino} op={0.75} />);
-    if (m.ate === 'longa') det.push(<Traco key="cot2" d={linha([add(add(co, mul(du, -4)), mul(perp(du), (rr + 0.4) * Math.sign(-dob))), add(add(co, mul(du, -1.5)), mul(perp(du), rr * 0.4 * Math.sign(-dob)))])} w={LINHA.fino} op={0.55} />);
+    if (m.ate === 'longa' && !escorco) det.push(<Traco key="cot2" d={linha([add(add(co, mul(du, -4)), mul(perp(du), (rr + 0.4) * Math.sign(-dob))), add(add(co, mul(du, -1.5)), mul(perp(du), rr * 0.4 * Math.sign(-dob)))])} w={LINHA.fino} op={0.55} />);
   }
-  if (manga.length) grupos.push({ formas: manga, linha: LINHA.dentro, depois: <g>{det}</g> });
-  else if (det.length) grupos.push({ formas: [], depois: <g>{det}</g> });
+  if (!escorco) {
+    grupos.push({ formas: [peleBraco, peleAnte, ...palma], depois: mao.detalhesPalma ?? (mao.frente?.length ? null : mao.detalhes) });
+    grupos.push(...gruposMao());
+    if (!mao.frente?.length && mao.detalhesPalma) grupos.push({ formas: [], depois: mao.detalhes });
+    const manga = [...mc, ...mb];
+    if (manga.length) grupos.push({ formas: manga, linha: LINHA.dentro, depois: <g>{det}</g> });
+    else if (det.length) grupos.push({ formas: [], depois: <g>{det}</g> });
+  } else {
+    // ESCORÇO: braço (e a manga dele) atrás; antebraço + mão por cima, com linha própria
+    grupos.push({ formas: [peleBraco] });
+    if (mc.length) grupos.push({ formas: mc, linha: LINHA.dentro });
+    grupos.push({ formas: [peleAnte, ...palma], linha: LINHA.dentro * 1.1, depois: mao.detalhesPalma ?? (mao.frente?.length ? null : mao.detalhes) });
+    grupos.push(...gruposMao());
+    if (mb.length) grupos.push({ formas: mb, linha: LINHA.dentro });
+    // o cotovelo que vem pra câmera: um arco de dobra na ponta e um brilho
+    const pc = add(co, mul(norm(sub(o, co)), r[1] * 0.2));
+    const tg = perp(df);
+    det.push(<Traco key="esc" d={linha([add(pc, mul(tg, r[1] * 0.75)), add(pc, mul(df, -r[1] * 0.55)), add(pc, mul(tg, -r[1] * 0.75))])} w={LINHA.fino} op={0.7 * (1 - enc) / 0.45} />);
+    grupos.push({ formas: [], depois: <g>{det}</g> });
+  }
   // relógio no braço da frente
   if (i === 1 && ex.includes('relogio') && !(m.ate === 'longa')) {
     const a0 = add(pu, mul(df, -3.6));
@@ -784,7 +812,7 @@ export function camadaBraco(c: Ctx, i: 0 | 1, key: string): React.ReactNode {
       linha: LINHA.fino,
       depois: (
         <g>
-          <circle cx={face[0]} cy={face[1]} r={2.1} fill={esporte ? '#1C2350' : '#F4F5FF'} stroke="#FFC83D" strokeWidth={0.7} />
+          <circle cx={face[0]} cy={face[1]} r={2.1} fill={esporte ? '#1C2350' : '#F4F5FF'} stroke="#FFC83D" style={sw(0.7)} />
           {esporte && <circle cx={face[0]} cy={face[1]} r={1} fill={c.pessoa.cor} opacity={0.9} />}
         </g>
       ),

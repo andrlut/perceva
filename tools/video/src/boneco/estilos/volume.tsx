@@ -47,16 +47,12 @@ const Desenho: React.FC<DesenhoProps> = ({ j, pessoa, roupa, humor, t, uid, luz,
   const quad = quadrilEls(rc);
   const p0 = perna(mc, 0);
   const p1 = perna(mc, 1);
-  // o braço de trás que CRUZA o peito (pensar: a mão segura o outro cotovelo) passa na frente do
-  // tronco — a pose não diz isso (índice 0 = sempre atrás), então o estilo deduz: o braço da
-  // frente está no rosto e o punho de trás passou pro lado da frente do corpo
-  const cruza = j.vista !== 'frente' && j.bracoNaFrente[1] && !j.bracoNaFrente[0] && j.punho[0][0] > j.peito[0] + prop.ombros * 0.2;
-  const b0 = braco(mc, 0, cruza);
+  const b0 = braco(mc, 0);
   const b1 = braco(mc, 1);
 
   // sombras de contato (recortadas onde caem)
   const desf = k.desfoque(1.6);
-  const recLonge = k.recorte([...p0.ds, ...(j.bracoNaFrente[0] || cruza ? [] : b0.ds)]);
+  const recLonge = k.recorte([...p0.ds, ...(j.bracoNaFrente[0] ? [] : b0.ds)]);
   const recTronco = k.recorte(tro.ds);
   const recCalca = k.recorte([...quad.ds, ...p0.calca, ...p1.calca]);
   const sombraTroncoNoLonge = (
@@ -90,7 +86,7 @@ const Desenho: React.FC<DesenhoProps> = ({ j, pessoa, roupa, humor, t, uid, luz,
     <g>
       {cab.tras}
       {p0.el}
-      {!j.bracoNaFrente[0] && !cruza && b0.el}
+      {!j.bracoNaFrente[0] && b0.el}
       {sombraTroncoNoLonge}
       {p1.el}
       {quad.el}
@@ -99,7 +95,6 @@ const Desenho: React.FC<DesenhoProps> = ({ j, pessoa, roupa, humor, t, uid, luz,
       {tro.el}
       {sombraCabeca}
       {sombraBraco}
-      {cruza && b0.el}
       {!j.bracoNaFrente[1] && b1.el}
       {cab.frente}
       {j.bracoNaFrente[0] && b0.el}

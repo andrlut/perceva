@@ -71,8 +71,10 @@ function parado(t: number, prop: Proporcao, o: PoseOpts): Pose {
     // braços soltos, um tico afastados do quadril, cotovelo quase reto (dobra pra dentro)
     return { vista, ...v, ombro: [-7, 7], cotovelo: [7, -7], punho: [3, -3], mao: ['solta', 'solta'] };
   }
-  // 3/4 e perfil: o braço da frente um pouco à frente, o de trás atrás; peso numa perna
-  return { vista, ...v, ombro: [-6, 6], cotovelo: [10, 14], quadril: [-3, 4], joelho: [4, 0], mao: ['solta', 'solta'] };
+  // 3/4 e perfil: o braço da frente (lado −x) cai ao longo da coxa de perto, o de trás um tico à
+  // frente atrás do peito; peso numa perna. (Rodada 3: com o lado novo, ombro +6 levava a mão da
+  // frente pra frente da virilha.)
+  return { vista, ...v, ombro: [4, -3], cotovelo: [10, 6], quadril: [-3, 4], joelho: [4, 0], mao: ['solta', 'solta'] };
 }
 
 function acenar(t: number, prop: Proporcao, o: PoseOpts): Pose {
@@ -221,8 +223,9 @@ function rosca(t: number, prop: Proporcao, o: PoseOpts): Pose {
     vista,
     espelho: o.espelho,
     tronco: -2 - esforco * 2,
-    ombro: [-4, 6 + u * 10],
-    cotovelo: [12, 8 + u * 132],
+    // o cotovelo da frente colado no lado de perto (com ombro positivo a rosca cruzava o peito)
+    ombro: [4, -5 + u * 4],
+    cotovelo: [10, 8 + u * 132],
     punho: [0, -u * 10],
     mao: ['solta', 'segura'],
     fecha: esforco * 0.35,
@@ -292,35 +295,37 @@ function tocarRosto(t: number, prop: Proporcao, o: PoseOpts): Pose {
   const borda = vista === 'frente' ? 1 : 0.35;
   const fora = prop.cabecaLarg * (0.05 - 0.08 * aperto) * borda;
   const alvo: P = [bo[0] + (nx / nn) * fora, bo[1] + (ny / nn) * fora];
-  const baixo: P = ao(j.ombro[1], vista === 'frente' ? 8 : -4, prop.braco + prop.antebraco + prop.mao * 0.6);
+  // A pose do braço NO ROSTO (sobe = 1) e a de repouso; o caminho entre as duas interpola os
+  // ÂNGULOS (o IK de um alvo intermediário trocava de solução no meio e o cotovelo balançava).
   let ombroAbs: number;
   let anteAbs: number;
   let dobra = 0;
-  let enc = 1;
+  const encFim = vista === 'frente' ? 0.55 : 1;
   if (vista === 'frente') {
-    // De frente: o braço aponta pra câmera (escorço até 0,55), o cotovelo fica um pouco pra fora e
+    // De frente: o braço aponta pra câmera (escorço 0,55), o cotovelo fica um pouco pra fora e
     // abaixo do ombro, o PUNHO abaixo e pra fora da bochecha e a mão dobra pra cima até ela. Sem o
     // escorço, o cotovelo só tinha como subir acima do ombro.
-    enc = lerp(1, 0.55, sobe);
     const inc = 32 * (Math.PI / 180);
     const punhoAlvo: P = [alvo[0] + Math.sin(inc) * prop.mao, alvo[1] + Math.cos(inc) * prop.mao];
-    const meta: P = [lerp(baixo[0], punhoAlvo[0], sobe), lerp(baixo[1], punhoAlvo[1], sobe)];
-    [ombroAbs, anteAbs] = ik2(j.ombro[1], meta, prop.braco * enc, prop.antebraco, 'mais-x');
-    const punhoP: P = ao(ao(j.ombro[1], ombroAbs, prop.braco * enc), anteAbs, prop.antebraco);
+    [ombroAbs, anteAbs] = ik2(j.ombro[1], punhoAlvo, prop.braco * encFim, prop.antebraco, 'mais-x');
+    const punhoP: P = ao(ao(j.ombro[1], ombroAbs, prop.braco * encFim), anteAbs, prop.antebraco);
     dobra = angDe(punhoP, alvo) - anteAbs;
-    dobra = (((((dobra + 180) % 360) + 360) % 360) - 180) * sobe;
   } else {
     // De 3/4: a mão da frente (lado −x) cruza o peito com o cotovelo embaixo; punho reto, IK até a
     // ponta do dedo (antebraço + mão inteira viram um osso só, j.dedos cai na bochecha)
-    const meta: P = [lerp(baixo[0], alvo[0], sobe), lerp(baixo[1], alvo[1], sobe)];
-    [ombroAbs, anteAbs] = ik2(j.ombro[1], meta, prop.braco, prop.antebraco + prop.mao, 'baixo');
+    [ombroAbs, anteAbs] = ik2(j.ombro[1], alvo, prop.braco, prop.antebraco + prop.mao, 'baixo');
   }
+  const tr = pose.tronco ?? 0;
+  const perto = (de: number, para: number) => de + ((((para - de + 180) % 360) + 360) % 360) - 180;
+  const ombroFim = perto(base.ombro![1], ombroAbs + tr);
+  const cotFim = perto(base.cotovelo![1], anteAbs - ombroAbs);
+  const punhoFim = perto(base.punho?.[1] ?? 0, dobra);
   return {
     ...pose,
-    ombro: [base.ombro![0], ombroAbs + (pose.tronco ?? 0)],
-    cotovelo: [base.cotovelo![0], anteAbs - ombroAbs],
-    punho: [base.punho?.[0] ?? 0, dobra],
-    encurta: [1, enc],
+    ombro: [base.ombro![0], lerp(base.ombro![1], ombroFim, sobe)],
+    cotovelo: [base.cotovelo![0], lerp(base.cotovelo![1], cotFim, sobe)],
+    punho: [base.punho?.[0] ?? 0, lerp(base.punho?.[1] ?? 0, punhoFim, sobe)],
+    encurta: [1, lerp(1, encFim, sobe)],
     // o indicador só estica quando a mão já está no rosto (no meio do caminho, dedo em riste
     // com o dorso pra câmera lê como gesto feio)
     mao: ['solta', sobe > 0.9 ? 'aponta' : 'solta'],
@@ -328,7 +333,6 @@ function tocarRosto(t: number, prop: Proporcao, o: PoseOpts): Pose {
     aperto: sobe > 0.9 ? aperto : 0,
   };
 }
-
 
 // ------------------------------------------------------------------ util
 

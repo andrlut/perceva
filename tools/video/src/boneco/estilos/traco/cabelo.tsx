@@ -149,10 +149,12 @@ const cabeloDe = (c: Ctx, Ll: P): Cabelo => {
         );
       }
       if (tipo === 'rabo') {
-        const tie: P = v === 'frente' ? [0, -0.42 * H] : [-0.5 * W, -0.2 * H];
-        const ang = (v === 'frente' ? 0 : 18) + balanço - j.ang.tronco * 0.6;
+        // o rabo cai da nuca um tico pra TRÁS (−x) e balança; de frente ele some atrás da cabeça e
+        // aparece dos lados do pescoço quando balança
+        const tie: P = v === 'frente' ? [0, -0.36 * H] : [-0.53 * W, -0.2 * H];
+        const ang = (v === 'frente' ? balanço * 4 : -16) + balanço - j.ang.tronco * 0.6;
         const dir = gira([0, 1], -ang);
-        const fim = add(tie, [dir[0] * 0.95 * H, dir[1] * 0.95 * H]);
+        const fim = add(tie, [dir[0] * 1.05 * H, dir[1] * 1.05 * H]);
         const n: P = [dir[1], -dir[0]];
         const rabo = suave([
           add(tie, [n[0] * 2.2, n[1] * 2.2]),

@@ -73,21 +73,45 @@ const formaMao = (c: Ctx, i: 0 | 1, g: MaoGeo, tipo: string): { ds: string[]; ri
     return { ds, riscos, frente, unha };
   }
   if (tipo === 'solta') {
-    ds.push(suave([b(0, -1.45 * w), b(0.45 * L, -2.0 * w), b(0.8 * L, -1.55 * w), b(1.0 * L, -0.55 * w), b(0.97 * L, 0.55 * w), b(0.62 * L, 1.35 * w), b(0.38 * L, 1.75 * w), b(0.08 * L, 1.45 * w)]));
-    ds.push(cap(b(0.16 * L, 1.25 * w), b(0.5 * L, 2.25 * w), 0.82 * w, 0.62 * w));
-    riscos.push([b(0.66 * L, -0.45 * w), b(0.95 * L, -0.15 * w)]);
-    riscos.push([b(0.64 * L, 0.45 * w), b(0.9 * L, 0.6 * w)]);
+    // mão relaxada: palma + quatro dedos lado a lado (comprimentos diferentes, pontas curvando de
+    // leve pro lado do polegar) + o polegar separado — os dedos aparecem nas pontas recortadas e
+    // nos vãos entre eles, sem virar luva
+    ds.push(suave([b(0, -1.35 * w), b(0.47 * L, -1.85 * w), b(0.52 * L, 1.55 * w), b(0.06 * L, 1.4 * w)]));
+    const dedos: [number, number, number][] = [
+      // [y no nó, comprimento (fração de L), raio]
+      [1.0, 0.5, 0.44],
+      [0.33, 0.55, 0.45],
+      [-0.36, 0.51, 0.43],
+      [-1.05, 0.41, 0.38],
+    ];
+    dedos.forEach(([y, len, r], k) => {
+      const x0 = 0.44 * L;
+      const a = b(x0, y * w);
+      const m = b(x0 + len * L * 0.55, y * w + 0.12 * w);
+      const z = b(x0 + len * L - r * w, y * w + 0.5 * w);
+      ds.push(suave(membro(a, m, [[0, r * w * 1.05, r * w * 1.05], [1, r * w, r * w]])));
+      ds.push(suave(membro(m, z, [[0, r * w, r * w], [1, r * w * 0.9, r * w * 0.9]])));
+      if (k < 3) {
+        const yv = (y + dedos[k + 1][0]) / 2;
+        riscos.push([b(x0 + 0.18 * L, yv * w + 0.05 * w), b(x0 + Math.min(len, dedos[k + 1][1]) * L * 0.92 - 0.3 * w, yv * w + 0.42 * w)]);
+      }
+    });
+    // polegar: sai da base da palma, encosta do lado do indicador
+    ds.push(cap(b(0.12 * L, 1.2 * w), b(0.4 * L, 1.95 * w), 0.66 * w, 0.56 * w));
+    ds.push(cap(b(0.4 * L, 1.95 * w), b(0.58 * L, 1.95 * w), 0.56 * w, 0.48 * w));
+    riscos.push([b(0.3 * L, 1.15 * w), b(0.44 * L, 1.35 * w)]);
     return { ds, riscos, frente, unha };
   }
   // punho fechado (base de fechada, aponta e segura)
   ds.push(suave([b(0, -1.5 * w), b(0.32 * L, -2.15 * w), b(0.6 * L, -1.95 * w), b(0.7 * L, -0.6 * w), b(0.68 * L, 1.1 * w), b(0.56 * L, 1.95 * w), b(0.3 * L, 1.95 * w), b(0.05 * L, 1.5 * w)]));
   if (tipo === 'aponta') {
-    // o indicador esticado: a ponta cai a 0,85 da mão (é o alvo do IK do toque)
-    frente.push(cap(b(0.42 * L, 0.75 * w), b(0.85 * L - 0.55 * w, 0.15 * w), 0.7 * w, 0.58 * w));
+    // o indicador esticado: a ponta cai em j.dedos (o fim da mão — é o ponto que o IK do toque
+    // leva até a bochecha)
+    frente.push(cap(b(0.42 * L, 0.75 * w), b(L - 0.55 * w, 0.15 * w), 0.7 * w, 0.58 * w));
     frente.push(cap(b(0.2 * L, 1.75 * w), b(0.5 * L, 1.55 * w), 0.72 * w, 0.6 * w));
     riscos.push([b(0.58 * L, -1.2 * w), b(0.66 * L, -0.4 * w)]);
     // a unha (do lado de cima do dedo)
-    unha.push(b(0.85 * L - 0.95 * w, -0.25 * w));
+    unha.push(b(L - 0.95 * w, -0.25 * w));
   } else {
     frente.push(cap(b(0.18 * L, 1.7 * w), b(0.54 * L, 1.15 * w), 0.78 * w, 0.62 * w));
     riscos.push([b(0.5 * L, -1.35 * w), b(0.66 * L, -1.0 * w)]);
@@ -239,7 +263,24 @@ export const Braco: React.FC<{ c: Ctx; i: 0 | 1; segura?: 'halter' | 'copo' }> =
   const ante = suave(membro(cot, pu, corpo.antebraco));
   const el: React.ReactNode[] = [];
   const precisaPele = manga !== 'longa';
-  if (precisaPele) el.push(<Vol key="p" id={`${id}p`} ds={[braco, ante]} cor={pele} sombra={sombraPele(pele)} s={1.2} luzDir={c.L} rim={rimP} />);
+  // ESCORÇO (Juntas.encurta < 0,8): o braço aponta pra câmera — ele fica atrás, mais escuro, e o
+  // antebraço passa POR CIMA dele saindo do cotovelo, com a dobra escurecida
+  const kEsc = clamp01((0.85 - j.encurta[i]) / 0.3);
+  const escorco = kEsc > 0;
+  const peleBraco = escorco ? mix(pele, sombraPele(pele), 0.45 * kEsc) : pele;
+  if (precisaPele) {
+    if (escorco) el.push(<Vol key="p" id={`${id}p`} ds={[braco]} cor={peleBraco} sombra={sombraPele(pele, 1.1)} s={1.2} luzDir={c.L} rim={rimP} />);
+    else el.push(<Vol key="p" id={`${id}p`} ds={[braco, ante]} cor={pele} sombra={sombraPele(pele)} s={1.2} luzDir={c.L} rim={rimP} />);
+  }
+  /** a dobra do cotovelo em escorço + o antebraço por cima (pele ou manga) */
+  const antebracoPorCima = (ds: string[], corA: string, idA: string, rimA: { cor: string; r: number }) => {
+    const dA: P = [(pu[0] - cot[0]) / (dist(cot, pu) || 1), (pu[1] - cot[1]) / (dist(cot, pu) || 1)];
+    const rr = corpo.antebraco[0][1] * 1.25;
+    return [
+      <path key={`${idA}-dob`} d={elipse(add(cot, mul(dA, 0.6)), rr * 1.15, rr * 0.95, angDe(cot, pu) * -1)} fill={sombraPele(pele, 1.2)} opacity={0.55 * kEsc} />,
+      <Vol key={idA} id={`${id}${idA}`} ds={ds} cor={corA} sombra={idA === 'a' ? sombraPele(corA) : sombra(corA)} s={1.2} luzDir={c.L} rim={rimA} />,
+    ];
+  };
   const e = cima.tipo === 'moletom' || cima.tipo === 'pijama' ? 1.0 : cima.tipo === 'blazer' ? 0.85 : 0.55;
   if (manga === 'curta' || manga === 'blusa') {
     const fim = manga === 'blusa' ? 0.56 : 0.46;
@@ -278,7 +319,10 @@ export const Braco: React.FC<{ c: Ctx; i: 0 | 1; segura?: 'halter' | 'copo' }> =
       el.push(<Vol key="pc" id={`${id}pc`} ds={[suave(membro(cot, pu, folga(corpo.antebraco, 0.45, 0.7, 0.98)))]} cor={cor2} sombra={sombra(cor2)} s={0.8} luzDir={c.L} />);
     }
     const ds = [suave(membro(ombro, cot, folga(corpo.braco, e))), suave(membro(cot, pu, folga(corpo.antebraco, e, 0, cima.tipo === 'blazer' ? 0.86 : fimAnte)))];
-    el.push(<Vol key="m" id={`${id}m`} ds={ds} cor={cor} sombra={sombra(cor)} s={1.3} luzDir={c.L} rim={rimR} />);
+    if (escorco) {
+      el.push(<Vol key="m" id={`${id}m`} ds={[ds[0]]} cor={mix(cor, sombra(cor), 0.45 * kEsc)} sombra={sombra(cor, 1.2)} s={1.3} luzDir={c.L} rim={rimR} />);
+      el.push(...antebracoPorCima([ds[1]], cor, 'ma', rimR));
+    } else el.push(<Vol key="m" id={`${id}m`} ds={ds} cor={cor} sombra={sombra(cor)} s={1.3} luzDir={c.L} rim={rimR} />);
     // punho (ribana do moletom, viés do pijama, debrum da manga longa)
     const L = dist(cot, pu);
     const d: P = [(pu[0] - cot[0]) / L, (pu[1] - cot[1]) / L];
@@ -296,6 +340,7 @@ export const Braco: React.FC<{ c: Ctx; i: 0 | 1; segura?: 'halter' | 'copo' }> =
       el.push(<path key="li" d={`M${s0[0]} ${s0[1]}L${cot[0]} ${cot[1]}L${a0[0]} ${a0[1]}`} stroke={cor2} strokeWidth={0.6} fill="none" strokeLinejoin="round" opacity={0.9} />);
     }
   }
+  if (escorco && precisaPele) el.push(...antebracoPorCima([ante], pele, 'a', rimP));
   // relógio no punho da frente
   if (i === 1 && roupa.extras?.includes('relogio') && manga !== 'longa') {
     const L = dist(cot, pu);

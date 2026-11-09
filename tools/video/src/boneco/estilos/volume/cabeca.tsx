@@ -10,7 +10,7 @@
 import React from 'react';
 import { type Humor, type Juntas, type Proporcao, type Vista, ROSTO } from '../../esqueleto';
 import type { Pessoa, Roupa } from '../../elenco';
-import { type P, RAD, casco, cachos, clamp, dist, elipse, gira, hash, lerp, poli, soma, suave, sub, suaviza } from './geo';
+import { type P, RAD, casco, cachos, clamp, dist, elipse, gira, hash, lerp, poli, reamostra, soma, suave, sub, suaviza } from './geo';
 import { type Mat, ajusta, lum, material, mistura } from './cor';
 import { type Kit, Vol } from './kit';
 import type { Med } from './corpo';
@@ -99,25 +99,27 @@ export function contornoCabeca(vista: Vista, W: number, H: number, med: Med, g: 
 }
 
 /** o olho: a íris visível entre as pálpebras, a linha dos cílios e os brilhos */
-function olho(c: P, rx: number, ry: number, abre: number, baixo: number) {
+function olho(c: P, rx: number, ry: number, abre: number, baixo: number, ref?: { c: P; rx: number; ry: number }) {
+  // as pálpebras são as do branco do olho (`ref`): a íris é cortada pelas mesmas linhas
+  const R = ref ?? { c, rx, ry };
   const N = 14;
   const topo: P[] = [];
   const base: P[] = [];
-  const Ly = -ry + (1 - abre) * 2 * ry;
-  const Ky = ry - baixo * 1.7 * ry;
+  const Ly = R.c[1] - R.ry + (1 - abre) * 2 * R.ry;
+  const Ky = R.c[1] + R.ry - baixo * 1.7 * R.ry;
   for (let i = 0; i <= N; i++) {
     const x = -rx + (2 * rx * i) / N;
     const e = Math.sqrt(Math.max(0, 1 - (x / rx) ** 2));
-    const u = x / rx;
-    const top = Math.max(-ry * e, Ly + 0.32 * ry * u * u);
-    const bot = Math.min(ry * e, Ky + (ry - Ky) * u * u);
+    const u = clamp((c[0] + x - R.c[0]) / R.rx, -1, 1);
+    const top = Math.max(c[1] - ry * e, Ly + 0.32 * R.ry * u * u);
+    const bot = Math.min(c[1] + ry * e, Ky + (R.c[1] + R.ry - Ky) * u * u);
     if (bot - top > 0.04 * ry) {
-      topo.push([c[0] + x, c[1] + top]);
-      base.push([c[0] + x, c[1] + bot]);
+      topo.push([c[0] + x, top]);
+      base.push([c[0] + x, bot]);
     }
   }
-  const alturaMeio = Math.min(ry, Ky) - Math.max(-ry, Ly);
-  return { fechado: topo.length < 3 || alturaMeio < 0.22 * ry, topo, base, alturaMeio, Ly };
+  const alturaMeio = Math.min(c[1] + ry, Ky) - Math.max(c[1] - ry, Ly);
+  return { fechado: topo.length < 3 || alturaMeio < 0.22 * ry, topo, base, alturaMeio, topoY: Math.max(c[1] - ry, Ly) };
 }
 
 const fmt = (x: number) => Math.round(x * 100) / 100;
@@ -141,18 +143,22 @@ export function cabeca(c: CabCtx) {
 
   // ---- contorno (com a bochecha cedendo ao dedo)
   let cont = contornoCabeca(vista, W, H, med, g);
-  const toqueLocal = c.toque && c.toque.forca > 0.02 ? paraCabeca(j, c.toque.ponto) : null;
-  const forca = c.toque ? clamp((c.toque.forca - 0.15) / 0.45) : 0;
-  if (toqueLocal && forca > 0) {
-    // a borda perto do dedo estufa um tico pra fora (a bochecha empurrada)
-    cont = cont.map((p) => {
+  const toqueLocal = c.toque ? paraCabeca(j, c.toque.ponto) : null;
+  // o dedo encostado já marca a pele de leve; o aperto da pose (0..1) afunda
+  const aperto = c.toque ? clamp(c.toque.forca) : 0;
+  const forca = c.toque ? 0.2 + 0.8 * aperto : 0;
+  if (toqueLocal) {
+    // a borda do rosto perto do dedo cede pra dentro (a bochecha comprimida) e estufa um tico
+    // logo em volta (a pele deslocada) — de frente a bochecha fica perto da borda
+    const centro: P = [0, 0.05 * H];
+    cont = reamostra(cont, 0.8).map((p) => {
       const d = dist(p, toqueLocal);
-      const R = 0.2 * W;
-      if (d > R) return p;
-      const q = 1 - d / R;
-      const dir = sub(p, [0, 0.05 * H]);
+      const dir = sub(p, centro);
       const n = Math.hypot(dir[0], dir[1]) || 1;
-      return soma(p, [(dir[0] / n) * q * q * 0.035 * W * forca, (dir[1] / n) * q * q * 0.035 * W * forca]);
+      const dentro = 0.055 * W * (0.25 + 0.75 * aperto) * Math.exp(-((d / (0.15 * W)) ** 2));
+      const fora = 0.024 * W * forca * Math.exp(-(((d - 0.25 * W) / (0.08 * W)) ** 2));
+      const k2 = fora - dentro;
+      return soma(p, [(dir[0] / n) * k2, (dir[1] / n) * k2]);
     });
   }
   const dCab = suave(cont);
@@ -163,6 +169,15 @@ export function cabeca(c: CabCtx) {
   const grav: P = [Math.sin(ang * RAD), Math.cos(ang * RAD)];
   const cg: CabeloGeo = cabeloGeo(pessoa.cabelo, W, H, g, { grav, arrasto: c.arrasto, t, idoso: med.idoso, esp });
   const borda = (pts: P[]) => (cg.cacho ? suave(cachos(pts, cg.cacho, cg.ondaCacho, hash(pessoa.id) * 4)) : suave(pts));
+  const curtoFill =
+    pessoa.cabelo === 'curto'
+      ? k.linCaixa(esp > 0 ? 0.15 : 0.85, 0, esp > 0 ? 0.6 : 0.4, 1, [
+          [0, cab.luz],
+          [0.45, cab.base],
+          [0.82, cab.base, 0.96],
+          [1, cab.sombra, 0.62],
+        ])
+      : null;
   const fadeFill = cg.fade
     ? k.linCaixa(0, 0, 0, 1, [
         [0, cab.luz],
@@ -171,11 +186,11 @@ export function cabeca(c: CabCtx) {
         [1, cab.base, 0.18],
       ])
     : null;
-  const fillCab = fadeFill ?? (cg.calvo
+  const fillCab = fadeFill ?? curtoFill ?? (cg.calvo
     ? k.linCaixa(0, 0, 0, 1, [
-        [0, cab.luz, 0.35],
-        [0.3, cab.base, 0.92],
-        [1, cab.sombra, 1],
+        [0, cab.base, 0.3],
+        [0.3, cab.sombra, 0.95],
+        [1, cab.fundo, 1],
       ])
     : k.bolha(cab, 0.9));
   const fillTras = k.linCaixa(esp > 0 ? 0.2 : 0.8, 0, esp > 0 ? 0.8 : 0.2, 1, [
@@ -200,6 +215,11 @@ export function cabeca(c: CabCtx) {
     [1, '#120A16'],
   ], 'iris');
   const corCilio = '#160E1A';
+  const corBranco = k.linCaixa(0, 0, 0, 1, [
+    [0, '#D8D2EA'],
+    [0.42, '#FFFFFF'],
+    [1, '#F4F1FA'],
+  ], 'branco');
   const corSobr = grisalho ? '#8D8A9C' : ajusta(pessoa.corCabelo, lum(pessoa.corCabelo) < 0.2 ? 0.02 : -0.08, 0.05);
   const olhos: React.ReactNode[] = [];
   const sobrs: React.ReactNode[] = [];
@@ -215,31 +235,35 @@ export function cabeca(c: CabCtx) {
     const perto = toqueLocal ? clamp(1 - dist(centro, toqueLocal) / (0.45 * W)) : 0;
     const baixo = clamp(ex.baixo + perto * forca * 0.16);
     const abre = abreBase * (1 - fecha);
-    const o = olho(centro, rx, ery, abre, baixo);
-    const ext = lado * (vista === 'frente' ? 1 : lado > 0 ? 1 : 1);
+    // o branco do olho (mais largo) e a íris escura por dentro, olhando pra onde o rosto vira
+    const rxB = rx * 1.32;
+    const o = olho(centro, rxB, ery, abre, baixo);
+    const cIris: P = [centro[0] + (vista === 'frente' ? 0 : 0.14 * rx), centro[1] + 0.02 * ery];
+    const oi = olho(cIris, rx * 0.98, ery * 0.94, abre, baixo, { c: centro, rx: rxB, ry: ery });
+    const ext = lado;
     if (o.fechado) {
       // olho fechado: um arco suave pra baixo (piscar, dormir, esforço)
       const y0 = centro[1] + ery * 0.25;
-      olhos.push(<path key={`f${lado}`} d={`M${fmt(centro[0] - rx)} ${fmt(y0)}Q${fmt(centro[0])} ${fmt(y0 + ery * 0.5)} ${fmt(centro[0] + rx)} ${fmt(y0)}`} stroke={corCilio} strokeWidth={0.62} strokeLinecap="round" fill="none" />);
+      olhos.push(<path key={`f${lado}`} d={`M${fmt(centro[0] - rxB)} ${fmt(y0)}Q${fmt(centro[0])} ${fmt(y0 + ery * 0.5)} ${fmt(centro[0] + rxB)} ${fmt(y0)}`} stroke={corCilio} strokeWidth={0.7} strokeLinecap="round" fill="none" />);
     } else {
-      const d = poli([...o.topo, ...[...o.base].reverse()]);
-      olhos.push(<path key={`i${lado}`} d={d} fill={corOlho} />);
+      olhos.push(<path key={`w${lado}`} d={poli([...o.topo, ...[...o.base].reverse()])} fill={corBranco} />);
+      if (oi.topo.length > 2) olhos.push(<path key={`i${lado}`} d={poli([...oi.topo, ...[...oi.base].reverse()])} fill={corOlho} />);
       // brilho (do lado da luz) e um pontinho do outro lado
-      const topoY = Math.max(centro[1] - ery, centro[1] + o.Ly);
-      const hb = o.alturaMeio;
+      const topoY = oi.topoY;
+      const hb = oi.alturaMeio;
       if (hb > 0.45 * ery) {
-        const bx = centro[0] - esp * 0.3 * rx;
+        const bx = cIris[0] - esp * 0.3 * rx;
         const by = topoY + hb * 0.3;
-        olhos.push(<ellipse key={`b${lado}`} cx={bx} cy={by} rx={rx * 0.36} ry={rx * 0.4} fill="#FFFFFF" opacity={0.95} />);
-        olhos.push(<circle key={`b2${lado}`} cx={centro[0] + esp * 0.32 * rx} cy={topoY + hb * 0.72} r={rx * 0.15} fill="#FFFFFF" opacity={0.7} />);
+        olhos.push(<ellipse key={`b${lado}`} cx={bx} cy={by} rx={rx * 0.34} ry={rx * 0.38} fill="#FFFFFF" opacity={0.95} />);
+        olhos.push(<circle key={`b2${lado}`} cx={cIris[0] + esp * 0.32 * rx} cy={topoY + hb * 0.72} r={rx * 0.14} fill="#FFFFFF" opacity={0.7} />);
       }
       // cílios: a linha da pálpebra de cima (mais grossa e com um risquinho no canto nas mulheres)
       const tp = o.topo;
       if (tp.length > 1) {
         const ultimo = lado > 0 ? tp[tp.length - 1] : tp[0];
-        const flick = med.f ? `L${fmt(ultimo[0] + ext * rx * 0.32)} ${fmt(ultimo[1] - ery * 0.22)}` : '';
+        const flick = med.f ? `L${fmt(ultimo[0] + ext * rx * 0.36)} ${fmt(ultimo[1] - ery * 0.24)}` : '';
         const dc = lado > 0 ? `${poli(tp, false)}${flick}` : `${poli([...tp].reverse(), false)}${flick}`;
-        olhos.push(<path key={`c${lado}`} d={dc} stroke={corCilio} strokeWidth={med.f ? 0.75 : 0.55} strokeLinecap="round" strokeLinejoin="round" fill="none" />);
+        olhos.push(<path key={`c${lado}`} d={dc} stroke={corCilio} strokeWidth={med.f ? 0.95 : 0.75} strokeLinecap="round" strokeLinejoin="round" fill="none" />);
       }
     }
     // sobrancelha: afina pra fora; inclina com o humor (cansado: ponta de dentro sobe)
@@ -438,7 +462,7 @@ export function cabeca(c: CabCtx) {
     orelhas.push({ c: [0.5 * W, 0.07 * H], lado: 1, atras: true, rx: 0.08 * W, ry: 0.11 * H, giro: -8 });
   } else {
     const q = P3(-0.49, 0.07, -0.03);
-    orelhas.push({ c: [q.p[0] + (vista === 'perfil' ? 0 : 0.02 * W), q.p[1]], lado: -1, atras: false, rx: (vista === 'perfil' ? 0.085 : 0.07) * W, ry: 0.115 * H, giro: -10 });
+    orelhas.push({ c: [q.p[0] + (vista === 'perfil' ? -0.07 * W : 0.02 * W), q.p[1]], lado: -1, atras: false, rx: (vista === 'perfil' ? 0.085 : 0.07) * W, ry: 0.115 * H, giro: -10 });
   }
   for (const o of orelhas) {
     const d = suave(elipse(o.c, o.rx, o.ry, o.giro, 18));
@@ -473,7 +497,7 @@ export function cabeca(c: CabCtx) {
 
   // ---- o dedo na pele
   const toque: React.ReactNode[] = [];
-  if (toqueLocal && forca > 0) {
+  if (toqueLocal) {
     const [tx, ty] = toqueLocal;
     const r = 0.05 * W * (0.8 + 0.4 * forca);
     const corRub = escura ? '#D84464' : '#FF5470';

@@ -16,7 +16,7 @@ export const PROP: Proporcao = {
   quadris: 13,
   braco: 50,
   antebraco: 45,
-  mao: 18,
+  mao: 19.5,
   coxa: 72,
   canela: 66,
   tornozelo: 7,

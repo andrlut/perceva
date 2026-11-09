@@ -26,14 +26,14 @@ export type Med = {
 export function propDaPessoa(base: Proporcao, p: Pessoa): Proporcao {
   const f = p.genero === 'f';
   const idoso = p.idade === 'idoso';
-  const OMB = { esguio: 19.5, medio: 21.5, forte: 25, largo: 25 }[p.corpo];
-  const QUA = { esguio: 10, medio: 11, forte: 11.4, largo: 14 }[p.corpo];
+  const OMB = { esguio: 19.5, medio: 21.5, forte: 25, largo: 27 }[p.corpo];
+  const QUA = { esguio: 10, medio: 11, forte: 11.4, largo: 14.6 }[p.corpo];
   const alt = (f ? -2.5 : 1) + (idoso ? -3 : 0) + (p.idade === 'jovem' ? 0.5 : 0);
   return {
     ...base,
     ombros: OMB - (f ? 2.2 : 0) - (idoso ? 0.8 : 0),
     quadris: QUA + (f ? 1.4 : 0),
-    cabecaLarg: base.cabecaLarg + (p.corpo === 'largo' ? 1 : 0) + (f ? -0.6 : 0),
+    cabecaLarg: base.cabecaLarg + (p.corpo === 'largo' ? 2.2 : 0) + (f ? -0.6 : 0),
     tronco: base.tronco - (idoso ? 2 : 0) + (f ? -1.2 : 0),
     pescoco: base.pescoco - (idoso ? 1.2 : 0) + (f ? 0.6 : 0),
     coxa: base.coxa + alt * 0.5,
@@ -49,7 +49,7 @@ export function medidas(p: Pessoa, prop: Proporcao): Med {
   const forte = p.corpo === 'forte';
   const largo = p.corpo === 'largo';
   const esguio = p.corpo === 'esguio';
-  const k = { esguio: 0.95, medio: 1.1, forte: 1.22, largo: 1.26 }[p.corpo] * (idoso ? 0.95 : 1);
+  const k = { esguio: 0.95, medio: 1.1, forte: 1.22, largo: 1.34 }[p.corpo] * (idoso ? 0.95 : 1);
   const kb = k * (f ? 0.88 : 1) * (forte ? 1.08 : 1);
   const kp = k * (f ? 1.03 : 1) * (largo ? 1.06 : 1);
   const bi = forte ? 1.7 : f ? 0.6 : 1;
@@ -57,12 +57,12 @@ export function medidas(p: Pessoa, prop: Proporcao): Med {
   const rAnte = (t: number) => kb * (4.3 + 0.55 * Math.sin(Math.PI * clamp(t * 1.5)) - 1.25 * t);
   const rCoxa = (t: number) => kp * (8.5 - 2.9 * t + 0.5 * Math.sin(Math.PI * t));
   const rCanela = (t: number) => kp * (5.3 + 1.0 * Math.sin(Math.PI * clamp(t * 1.9)) - 1.85 * t);
-  const rPescoco = (f ? 5.0 : 6.0) * (forte ? 1.12 : esguio ? 0.94 : largo ? 1.08 : 1);
+  const rPescoco = (f ? 5.0 : 6.0) * (forte ? 1.12 : esguio ? 0.94 : largo ? 1.2 : 1);
   const S = prop.ombros;
   const Q = prop.quadris;
   const hipA = Q + rCoxa(0) * 0.9 + (f ? 1.2 : 0);
-  const cintura = f ? hipA * (largo ? 0.96 : 0.74) : lerp(hipA, S, 0.3) * (largo ? 1.14 : forte ? 0.8 : 0.88);
-  const barriga = largo ? 8 : 0;
+  const cintura = f ? hipA * (largo ? 1.0 : 0.74) : lerp(hipA, S, 0.3) * (largo ? 1.12 : forte ? 0.8 : 0.88);
+  const barriga = largo ? 11 : 0;
   const busto = f ? (largo ? 4.6 : 3.2) : forte ? 1.2 : 0;
   const bumbum = f ? 2.4 : 0.6;
   const corcunda = idoso ? 2.6 : 0;
@@ -71,8 +71,8 @@ export function medidas(p: Pessoa, prop: Proporcao): Med {
     { v: 1.04, A: rPescoco + 1.4, F: rPescoco * 0.9, B: rPescoco * 1.05 + corcunda * 0.4 },
     { v: 0.99, A: S - 1.5, F: 0.42 * S, B: 0.46 * S + corcunda },
     { v: 0.91, A: S + del, F: 0.5 * S, B: 0.5 * S + corcunda },
-    { v: 0.77, A: S - 0.4, F: 0.55 * S + busto, B: 0.5 * S + corcunda * 0.7 },
-    { v: 0.6, A: lerp(S - 1.2, cintura, 0.3), F: 0.55 * S + busto * 0.75, B: 0.47 * S },
+    { v: 0.77, A: S - 0.4 + (largo ? 1.5 : 0), F: 0.55 * S + busto + (largo ? 2 : 0), B: 0.5 * S + corcunda * 0.7 },
+    { v: 0.6, A: lerp(S - 1.2, cintura, 0.3) + (largo ? 1.5 : 0), F: 0.55 * S + busto * 0.75 + barriga * 0.45, B: 0.47 * S },
     { v: 0.36, A: cintura, F: 0.47 * S + barriga, B: 0.43 * S },
     { v: 0.15, A: lerp(cintura, hipA, 0.72), F: 0.46 * S + barriga * 0.65, B: 0.48 * S + bumbum },
     { v: 0.0, A: hipA, F: 0.45 * S + barriga * 0.25, B: 0.52 * S + bumbum },

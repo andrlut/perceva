@@ -27,11 +27,9 @@ import {
   norm,
   perp,
   sub,
-  suave,
-} from './base';
+  suave, sw } from './base';
 import { type CabeloDesenho, type VistaCab, cabeloDe } from './cabelos';
 import type { Ctx } from './ctx';
-import { dedoToque } from './maos';
 
 const BW = 48;
 const BH = 58;
@@ -85,10 +83,13 @@ function contorno(v: VistaCab, f: boolean, largo: boolean): P[] {
   ];
 }
 
-/** a pele cede ao dedo: o contorno empurrado na direção do dedo, com a bochecha estufando em volta */
-function amassa(pts: P[], ponta: P, dirIn: P, forca: number): { pts: P[]; contato: P | null; fundo: number } {
-  let dir = dirIn;
-  // ponto do contorno mais perto da ponta do dedo
+/**
+ * A borda do rosto cede quando o dedo aperta perto dela (de frente a bochecha fica a ~5 un da
+ * borda): o contorno mais perto da ponta entra um tico e a pele de volta estufa pra fora.
+ * Proporcional à força da pose; longe da borda (3/4, perfil) não mexe.
+ */
+function cedeBorda(pts: P[], ponta: P, forca: number): P[] {
+  if (forca <= 0.01) return pts;
   let bi = 0;
   let bd = 1e9;
   pts.forEach((p, i) => {
@@ -98,30 +99,18 @@ function amassa(pts: P[], ponta: P, dirIn: P, forca: number): { pts: P[]; contat
       bi = i;
     }
   });
-  // o dedo está DENTRO do rosto (passou do contorno)? quanto
+  const perto = clamp(1 - (bd - 2.5) / 6.5);
+  if (perto <= 0) return pts;
   const p0 = pts[bi];
   const n = pts.length;
-  const tg0 = norm(sub(pts[(bi + 1) % n], pts[(bi - 1 + n) % n]));
-  const dentro: P = [-tg0[1], tg0[0]];
-  // a pele afunda pra DENTRO do rosto (normal), puxada um pouco pela direção do dedo
-  const dd = norm(add(mul(dentro, 0.7), mul(dir, 0.3)));
-  const pen = (ponta[0] - p0[0]) * dd[0] + (ponta[1] - p0[1]) * dd[1];
-  if (bd > 4.5 || pen <= -0.8) return { pts, contato: bd < 6 ? p0 : null, fundo: 0 };
-  // o afundado acompanha o dedo até ~2,8 (além disso o dedo, por cima, cobre)
-  const fundo = Math.min(2.8, Math.max(0, pen) + 0.5) * (0.6 + 0.4 * forca);
-  const R = 2.9;
-  dir = dd;
-  const out = pts.map((p, i) => {
-    const prev = pts[(i - 1 + pts.length) % pts.length];
-    const next = pts[(i + 1) % pts.length];
-    const tg = norm(sub(next, prev));
+  return pts.map((p, i) => {
+    const tg = norm(sub(pts[(i + 1) % n], pts[(i - 1 + n) % n]));
     const nOut: P = [tg[1], -tg[0]];
     const d = dist(p, p0);
-    const g = Math.exp(-((d / R) ** 2));
-    const bojo = Math.exp(-(((d - R * 1.7) / (R * 0.55)) ** 2)) * fundo * 0.3;
-    return add(add(p, mul(dir, fundo * g)), mul(nOut, bojo));
+    const entra = Math.exp(-((d / 3.8) ** 2)) * 1.15;
+    const estufa = Math.exp(-(((d - 6.6) / 2.4) ** 2)) * 0.5;
+    return add(p, mul(nOut, forca * perto * (estufa - entra)));
   });
-  return { pts: out, contato: p0, fundo };
 }
 
 const IRIS: Record<string, string> = {
@@ -175,7 +164,7 @@ function olho(c: Ctx, o: Olho, key: string, humor: string, cil: boolean): React.
         <circle cx={ic[0] + ri * 0.38} cy={ic[1] - ri * 0.42} r={ri * 0.3} fill="#FFFFFF" />
         <circle cx={ic[0] - ri * 0.35} cy={ic[1] + ri * 0.35} r={ri * 0.13} fill="#FFFFFF" opacity={0.8} />
         {/* sombra da pálpebra de cima no branco */}
-        <path d={linha(sup)} stroke="#C4BFE2" strokeWidth={1.1} fill="none" opacity={0.4} transform="translate(0 0.75)" />
+        <path d={linha(sup)} stroke="#C4BFE2" style={sw(1.1)} fill="none" opacity={0.4} transform="translate(0 0.75)" />
       </g>
       {/* linha da pálpebra de cima (grossa) + cílio no canto de fora */}
       <Traco d={linha(sup)} w={1.35} />
@@ -234,20 +223,18 @@ export function camadaCabeca(c: Ctx, cab: CabeloDesenho, key: string): React.Rea
 
   // ---- contorno (com o dedo, a pele cede)
   let pts = amostra(contorno(v, f, pessoa.corpo === 'largo'), 5);
-  let contato: P | null = null;
-  let fundo = 0;
+  // o dedo na bochecha: a FORÇA vem da pose (toque.forca = j.aperto), a ponta é j.dedos[1]
+  const forca = c.toque ? clamp(c.toque.forca) : 0;
   let pontaL: P | null = null;
   let dirL: P = [1, 0];
   if (c.toque && j.mao[1] === 'aponta') {
-    // a ponta do indicador desenhado e a direção em que ele entra (ver maos.tsx → dedoToque)
-    const dd = dedoToque(c, 1);
-    pontaL = q.paraLocal(dd.T);
-    dirL = q.dirLocal(dd.fd);
-    const am = amassa(pts, pontaL, dirL, 1);
-    pts = am.pts;
-    contato = am.contato;
-    fundo = am.fundo;
+    pontaL = q.paraLocal(j.dedos[1]);
+    dirL = q.dirLocal(sub(j.dedos[1], j.punho[1]));
+    // de frente a bochecha fica perto da borda: o contorno cede junto
+    pts = cedeBorda(pts, pontaL, forca);
   }
+  // a pálpebra de baixo do olho do lado apertado sobe (a bochecha empurra)
+  const sobeLado = forca * 0.32;
   const rostoD = suave(pts);
   const formasRosto: Forma[] = [{ d: rostoD, cor: pele, sombra: ps, k: 5.2 }];
 
@@ -286,26 +273,23 @@ export function camadaCabeca(c: Ctx, cab: CabeloDesenho, key: string): React.Rea
   const els: React.ReactNode[] = [];
   const corSob = pessoa.cabelo === 'grisalho' || pessoa.cabelo === 'calvo' ? mix(pessoa.corCabelo, '#6E74A8', 0.3) : escurece(pessoa.corCabelo, 0.15);
   const gr = f ? 1.7 : 2.3;
-  // a linha dos olhos um tico acima da âncora: de 3/4 a âncora da bochecha fica logo embaixo do
-  // olho de lá, e o dedo que aperta a bochecha não pode parecer cutucar o olho
-  const oy = olhos[1] - 1.3;
+  const oy = olhos[1];
   if (v === 'frente') {
     for (const s of [-1, 1]) {
-      els.push(olho(c, { cx: 9.8 * s, cy: oy, w: 10, h: 8.6, esq: s < 0, abre, baixo: H.baixo, iris: olhar }, `o${s}`, humor, f));
+      els.push(olho(c, { cx: 9.8 * s, cy: oy, w: 10, h: 8.6, esq: s < 0, abre, baixo: Math.min(0.6, H.baixo + (s > 0 ? sobeLado : 0)), iris: olhar }, `o${s}`, humor, f));
       const ini: P = [4.4 * s, oy - 9.4 + H.bro + H.bIn];
       const fim: P = [15 * s, oy - 9.6 + H.bro - H.bIn * 0.3];
       els.push(sobrancelha(ini, fim, H.arco, gr, corSob, `b${s}`));
     }
   } else if (v === 'tq') {
     const xo = olhos[0];
-    els.push(olho(c, { cx: xo - 8.8, cy: oy, w: 10, h: 8.6, esq: true, abre, baixo: H.baixo, iris: olhar }, 'o0', humor, f));
-    // a bochecha empurrada pelo dedo sobe a pálpebra de baixo do olho de lá
-    els.push(olho(c, { cx: xo + 7.2, cy: oy - 0.3, w: 6.2, h: 7.6, esq: false, abre, baixo: Math.min(0.6, H.baixo + (fundo / 2.6) * 0.32), iris: [olhar[0] * 0.7, olhar[1]], far: true }, 'o1', humor, f));
+    els.push(olho(c, { cx: xo - 8.8, cy: oy, w: 10, h: 8.6, esq: true, abre, baixo: Math.min(0.6, H.baixo + sobeLado), iris: olhar }, 'o0', humor, f));
+    els.push(olho(c, { cx: xo + 7.6, cy: oy - 0.3, w: 6.4, h: 7.8, esq: false, abre, baixo: H.baixo, iris: [olhar[0] * 0.7, olhar[1]], far: true }, 'o1', humor, f));
     els.push(sobrancelha([xo - 4.4, oy - 9.4 + H.bro + H.bIn], [xo - 14.4, oy - 9.6 + H.bro - H.bIn * 0.3], H.arco, gr, corSob, 'b0'));
     els.push(sobrancelha([xo + 3.0, oy - 9.2 + H.bro + H.bIn], [xo + 10.8, oy - 9.0 + H.bro - H.bIn * 0.3], H.arco * 0.8, gr * 0.9, corSob, 'b1'));
   } else {
     const xo = olhos[0];
-    els.push(olho(c, { cx: xo + 1.4, cy: oy, w: 5.4, h: 8, esq: false, abre, baixo: H.baixo, iris: [1.2, 0.2], far: true }, 'o0', humor, f));
+    els.push(olho(c, { cx: xo + 1.4, cy: oy, w: 5.4, h: 8, esq: false, abre, baixo: Math.min(0.6, H.baixo + sobeLado), iris: [1.2, 0.2], far: true }, 'o0', humor, f));
     els.push(sobrancelha([xo + 4.6, oy - 9.2 + H.bro + H.bIn], [xo - 3.4, oy - 9.6 + H.bro], H.arco, gr, corSob, 'b0'));
   }
   // olheira de cansaço
@@ -377,7 +361,7 @@ export function camadaCabeca(c: Ctx, cab: CabeloDesenho, key: string): React.Rea
       </g>,
     );
   } else if (humor === 'surpresa') {
-    bocaEls.push(<ellipse key="bs" cx={bx + (v === 'tq' ? -0.4 : 0)} cy={by + 1.2} rx={2.6 * (v === 'frente' ? 1 : 0.8)} ry={3.4} fill="#4A1830" stroke={TINTA} strokeWidth={0.95} />);
+    bocaEls.push(<ellipse key="bs" cx={bx + (v === 'tq' ? -0.4 : 0)} cy={by + 1.2} rx={2.6 * (v === 'frente' ? 1 : 0.8)} ry={3.4} fill="#4A1830" stroke={TINTA} style={sw(0.95)} />);
     bocaEls.push(<ellipse key="bs2" cx={bx} cy={by + 3} rx={1.5} ry={0.9} fill="#E2677E" />);
   } else if (humor === 'cansado') {
     bocaEls.push(<Traco key="bc" d={linha([[bx - wl * 0.8, by + 0.9], [bx - wl * 0.2, by + 0.2], [bx + wr * 0.4, by + 0.4], [bx + wr * 0.8, by + 1.1]])} w={0.95} />);
@@ -422,20 +406,24 @@ export function camadaCabeca(c: Ctx, cab: CabeloDesenho, key: string): React.Rea
   }
 
   // ---- o dedo na pele: sombra macia do afundado, vinco e o brilho da bochecha estufada
+  // ---- o dedo na pele (efeito INTERNO): anel de sombra macia em volta da ponta, a pele que estufa à
+  // frente dela (brilho em crescente) e os vincos dos lados — tudo na força da pose (0 = só encostado)
   const toqueEls: React.ReactNode[] = [];
-  if (c.toque && pontaL && (fundo > 0 || c.toque.forca > 0.3)) {
-    const fz = clamp(fundo > 0 ? 0.45 + fundo / 2.6 : c.toque.forca * 0.8);
-    const cen = contato && fundo > 0 ? add(contato, mul(dirL, fundo * 0.6)) : pontaL;
+  if (c.toque && pontaL) {
+    const fz = 0.28 + 0.72 * forca;
+    const cen = pontaL;
     const id = c.pt.id('toq');
     const ang = (Math.atan2(dirL[1], dirL[0]) * 180) / Math.PI;
     const tg = perp(dirL);
     const idClip = c.pt.id('toqc');
+    const rA = 3.2 + 1.6 * forca;
+    const frente = add(cen, mul(dirL, 1.9 + 0.7 * forca));
     toqueEls.push(
       <g key="toque">
         <defs>
           <radialGradient id={id}>
-            <stop offset="0%" stopColor={ps} stopOpacity={0.95} />
-            <stop offset="55%" stopColor={ps} stopOpacity={0.55} />
+            <stop offset="0%" stopColor={escurece(ps, 0.12)} stopOpacity={0.95} />
+            <stop offset="50%" stopColor={ps} stopOpacity={0.6} />
             <stop offset="100%" stopColor={ps} stopOpacity={0} />
           </radialGradient>
         </defs>
@@ -443,10 +431,12 @@ export function camadaCabeca(c: Ctx, cab: CabeloDesenho, key: string): React.Rea
           <path d={rostoD} />
         </clipPath>
         <g clipPath={`url(#${idClip})`}>
-          <ellipse cx={cen[0] - dirL[0] * 0.4} cy={cen[1] - dirL[1] * 0.4} rx={4.6} ry={3.6} transform={`rotate(${ang} ${cen[0]} ${cen[1]})`} fill={`url(#${id})`} opacity={fz} />
+          <ellipse cx={cen[0]} cy={cen[1]} rx={rA} ry={rA * 0.8} transform={`rotate(${ang.toFixed(1)} ${cen[0].toFixed(2)} ${cen[1].toFixed(2)})`} fill={`url(#${id})`} opacity={fz} />
+          {/* a pele empurrada estufa à frente da ponta */}
+          <path d={linha([add(frente, add(mul(tg, -2.3), mul(dirL, -0.6))), add(frente, mul(dirL, 0.7 + 0.4 * forca)), add(frente, add(mul(tg, 2.3), mul(dirL, -0.6)))])} fill="none" stroke={mix(pele, '#FFFFFF', 0.55)} style={sw(1.1)} strokeLinecap="round" opacity={0.5 * forca} />
           {/* vincos dos dois lados do dedo */}
-          <Traco d={linha([add(cen, add(mul(tg, 2.9), mul(dirL, -0.8))), add(cen, add(mul(tg, 2.4), mul(dirL, 0.9))), add(cen, add(mul(tg, 1.2), mul(dirL, 1.9)))])} w={0.5} cor={escurece(ps, 0.25)} op={0.85 * fz} />
-          <Traco d={linha([add(cen, add(mul(tg, -2.9), mul(dirL, -0.8))), add(cen, add(mul(tg, -2.4), mul(dirL, 0.9))), add(cen, add(mul(tg, -1.2), mul(dirL, 1.9)))])} w={0.5} cor={escurece(ps, 0.25)} op={0.85 * fz} />
+          <Traco d={linha([add(cen, add(mul(tg, 2.7), mul(dirL, -1.2))), add(cen, add(mul(tg, 2.4), mul(dirL, 0.6))), add(cen, add(mul(tg, 1.4), mul(dirL, 1.8)))])} w={0.55} cor={escurece(ps, 0.25)} op={0.9 * forca} />
+          <Traco d={linha([add(cen, add(mul(tg, -2.7), mul(dirL, -1.2))), add(cen, add(mul(tg, -2.4), mul(dirL, 0.6))), add(cen, add(mul(tg, -1.4), mul(dirL, 1.8)))])} w={0.55} cor={escurece(ps, 0.25)} op={0.9 * forca} />
         </g>
       </g>,
     );
@@ -459,8 +449,8 @@ export function camadaCabeca(c: Ctx, cab: CabeloDesenho, key: string): React.Rea
     const esp = pessoa.id === 'antonio' ? 0.75 : 1.15;
     const lente = (cx: number, cy: number, w: number, h: number, k: string) => (
       <g key={k}>
-        <rect x={cx - w / 2} y={cy - h / 2} width={w} height={h} rx={h * 0.38} fill="#FFFFFF" fillOpacity={0.08} stroke={corA} strokeWidth={esp} />
-        <path d={linha([[cx - w * 0.28, cy + h * 0.2], [cx + w * 0.05, cy - h * 0.32]])} stroke="#FFFFFF" strokeWidth={0.9} opacity={0.45} strokeLinecap="round" />
+        <rect x={cx - w / 2} y={cy - h / 2} width={w} height={h} rx={h * 0.38} fill="#FFFFFF" fillOpacity={0.08} stroke={corA} style={sw(esp)} />
+        <path d={linha([[cx - w * 0.28, cy + h * 0.2], [cx + w * 0.05, cy - h * 0.32]])} stroke="#FFFFFF" style={sw(0.9)} opacity={0.45} strokeLinecap="round" />
       </g>
     );
     if (v === 'frente') {
@@ -483,8 +473,8 @@ export function camadaCabeca(c: Ctx, cab: CabeloDesenho, key: string): React.Rea
   const brincos: React.ReactNode[] = [];
   if (pessoa.brinco) {
     brincoPos.forEach(([x, y], k) => {
-      if (pessoa.id === 'bia') brincos.push(<circle key={k} cx={x} cy={y + 3.6} r={3.6} fill="none" stroke="#FFC83D" strokeWidth={1.1} />);
-      else brincos.push(<g key={k}><circle cx={x} cy={y} r={1} fill="#FFC83D" /><ellipse cx={x} cy={y + 3} rx={1.3} ry={2} fill="#FFC83D" stroke={TINTA} strokeWidth={0.4} /></g>);
+      if (pessoa.id === 'bia') brincos.push(<circle key={k} cx={x} cy={y + 3.6} r={3.6} fill="none" stroke="#FFC83D" style={sw(1.1)} />);
+      else brincos.push(<g key={k}><circle cx={x} cy={y} r={1} fill="#FFC83D" /><ellipse cx={x} cy={y + 3} rx={1.3} ry={2} fill="#FFC83D" stroke={TINTA} style={sw(0.4)} /></g>);
     });
   }
 

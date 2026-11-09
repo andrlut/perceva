@@ -9,7 +9,8 @@
 import type { Cabelo } from '../../elenco';
 import { type P, RAD, clamp, lerp, suaviza } from './geo';
 
-type Anel = { y: number; rx: number; rz: number; gap?: [number, number] | null; dx?: number };
+/** rzT = raio de trás (o cabelo curto cola na nuca; sem ele, o de trás é igual ao da frente) */
+type Anel = { y: number; rx: number; rz: number; rzT?: number; gap?: [number, number] | null; dx?: number };
 
 export type Tranca = { pts: P[]; r: number; frente: boolean };
 export type CabeloGeo = {
@@ -60,7 +61,8 @@ function projetaAneis(aneis: Anel[], g: Giro, W: number): { tras: P[]; frente: P
     for (let f = -180; f <= 180; f += 3) {
       if (a.gap && f > a.gap[0] && f < a.gap[1]) continue;
       const x = a.rx * Math.sin(f * RAD);
-      const z = a.rz * Math.cos(f * RAD) + cz;
+      const cf = Math.cos(f * RAD);
+      const z = (cf >= 0 ? a.rz : a.rzT ?? a.rz) * cf + cz;
       const xp = x * g.c + z * g.s + dx;
       const zp = -x * g.s + z * g.c;
       mn = Math.min(mn, xp);
@@ -159,7 +161,7 @@ export function cabeloGeo(tipo: Cabelo, W: number, H: number, g: Giro, o: { grav
   };
 
   let aneis: Anel[] = [];
-  const vol = { curto: 2.6, chanel: 2.8, ondulado: 4.0, cacheado: 6.5, black: 12, trancas: 1.5, coque: 1.4, rabo: 1.4, longo: 2.2, calvo: 1.9, grisalho: 3.4, fade: 1.3 }[tipo];
+  const vol = { curto: 2.6, chanel: 2.8, ondulado: 4.0, cacheado: 6.5, black: 12, trancas: 1.5, coque: 1.4, rabo: 1.4, longo: 2.2, calvo: 1.4, grisalho: 3.4, fade: 1.3 }[tipo];
   geo.topo = topoDe(vol);
 
   switch (tipo) {
@@ -171,14 +173,15 @@ export function cabeloGeo(tipo: Cabelo, W: number, H: number, g: Giro, o: { grav
         const x = fr(y);
         const v = fade ? lerp(vol, 0.5, suaviza(-0.3, -0.05, x)) : lerp(vol, 1, suaviza(-0.1, 0.15, x));
         const r = raio(y, v, -suaviza(0, 0.16, x) * 1.6);
+        const rzT = r.rz - v * 0.7 - 1.2 * suaviza(-0.25, 0.1, x);
         let gap: [number, number] | null;
         if (x < (fade ? -0.38 : -0.4)) gap = null;
-        else if (x < 0.02) gap = abertura(y, fade ? -0.38 : -0.4, fade ? 72 : 76, fade ? -0.26 : -0.16, fade ? 0 : 0.18);
+        else if (x < 0.02) gap = abertura(y, fade ? -0.38 : -0.4, fade ? 76 : 82, fade ? -0.26 : -0.16, fade ? 0 : 0.14);
         else {
           const gg = lerp(96, 128, suaviza(0.03, 0.12, x)) + 46 * suaviza(0.1, 0.16, x) ** 1.5;
           gap = [-gg, gg];
         }
-        return { y, ...r, gap };
+        return { y, ...r, rzT, gap };
       });
       break;
     }
@@ -225,7 +228,9 @@ export function cabeloGeo(tipo: Cabelo, W: number, H: number, g: Giro, o: { grav
     case 'grisalho': {
       aneis = faixa(topoDe(vol) + 0.4, 0.2 * H, (y) => {
         const x = fr(y);
-        const r = raio(y, lerp(vol, 1.4, suaviza(-0.1, 0.2, x)), -1.4 * suaviza(0.05, 0.2, x));
+        const vg = lerp(vol, 1.4, suaviza(-0.1, 0.2, x));
+        const r0 = raio(y, vg, -1.4 * suaviza(0.05, 0.2, x));
+        const r = { ...r0, rzT: r0.rz - vg * 0.4 };
         let gap: [number, number] | null;
         if (x < -0.37) gap = null;
         else if (x < 0.02) gap = abertura(y, -0.37, 72, -0.12, 0.1);
@@ -245,7 +250,8 @@ export function cabeloGeo(tipo: Cabelo, W: number, H: number, g: Giro, o: { grav
       aneis = faixa(-0.24 * H, 0.2 * H, (y) => {
         const x = fr(y);
         const v = vol * suaviza(-0.24, -0.15, x) ** 0.7;
-        const r = raio(y, v, -0.8 * suaviza(0.05, 0.2, x));
+        const r0 = raio(y, v, -0.8 * suaviza(0.05, 0.2, x));
+        const r = { ...r0, rzT: r0.rz - v * 0.55 };
         const lado = x < -0.06 ? lerp(132, 82, suaviza(-0.24, -0.06, x)) : x < 0.02 ? lerp(82, 104, suaviza(-0.06, 0.02, x)) : lerp(104, 150, suaviza(0.02, 0.2, x));
         return { y, ...r, gap: [-lado, lado] as [number, number] };
       });
@@ -309,7 +315,7 @@ export function cabeloGeo(tipo: Cabelo, W: number, H: number, g: Giro, o: { grav
   if (['curto', 'chanel', 'ondulado', 'longo', 'coque', 'rabo', 'trancas'].includes(tipo)) {
     const ATE: Record<string, number> = { curto: -0.22, chanel: 0.44, ondulado: 0.2, longo: 1.6, coque: -0.2, rabo: -0.2, trancas: -0.2 };
     const ate = ATE[tipo] ?? 0;
-    const meridianos = tipo === 'chanel' ? [-150, -120, -96, -70, 66, 92] : tipo === 'longo' ? [-150, -118, -92, -70, 68, 94, 120] : [-120, -80, -40, 0, 40, 80];
+    const meridianos = tipo === 'chanel' ? [-150, -120, -96, -70, 66, 92] : tipo === 'longo' ? [-150, -118, -92, -70, 68, 94, 120] : tipo === 'curto' ? [-150, -125, -100, -75, -50, -25, 0, 25, 50, 75] : [-120, -80, -40, 0, 40, 80];
     for (const f of meridianos) {
       const linha: P[] = [];
       for (let y = geo.topo + 0.08 * H; y <= ate * H; y += passo) {
@@ -330,7 +336,8 @@ export function cabeloGeo(tipo: Cabelo, W: number, H: number, g: Giro, o: { grav
   // tranças: saem da linha de trás/lados e caem com a gravidade; as das têmporas caem na frente do ombro
   if (tipo === 'trancas') {
     const angs = [-168, -146, -124, -104, -86, -70, 70, 86, 104, 124, 146, 168, 180];
-    angs.forEach((f, i) => {
+    angs.forEach((f0, i) => {
+      const f = g.s > 0.9 && Math.abs(f0) < 106 ? Math.sign(f0) * (106 + (Math.abs(f0) - 70) * 0.4) : f0;
       const y0 = Math.abs(f) < 80 ? -0.1 * H : Math.abs(f) < 110 ? 0.0 * H : 0.08 * H;
       const r = raio(y0, vol);
       const q = projeta3(g, r.rx * Math.sin(f * RAD), y0, r.rz * Math.cos(f * RAD) + CZ * W);

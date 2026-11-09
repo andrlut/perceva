@@ -278,6 +278,20 @@ export function troncoEls(c: RCtx) {
     det.push(linha([[u1, 0.72 * T], [lerp(u1, u2, 0.5) - ld * 0.6, 0.52 * T], [u2, 0.3 * T]], mt.sombra, 0.7, 0.35));
   }
 
+  // corpo largo: a barriga lê de cara (um volume claro em cima e a sombra embaixo, dentro da roupa)
+  if (med.largo && cfg.barra < 0.3 * T) {
+    const rec = k.recorte([dRoupa]);
+    const c0 = tr.mapa(tr.meio(0.3 * T) * 1.05, 0.3 * T);
+    const c1 = tr.mapa(tr.meio(0.12 * T) * 1.1, 0.1 * T);
+    const lw = (tr.borda(0.3 * T, 1, f) - tr.borda(0.3 * T, -1, f)) * 0.36;
+    det.push(
+      <g key="barriga" clipPath={rec}>
+        <ellipse cx={c0[0] - (k.espelho ? -1 : 1) * lw * 0.15} cy={c0[1] - 1} rx={lw} ry={0.15 * T} fill={mt.luz} opacity={0.3} filter={k.desfoque(1.6)} />
+        <ellipse cx={c1[0]} cy={c1[1] + 1} rx={lw * 1.15} ry={0.07 * T} fill={mt.fundo} opacity={0.4} filter={k.desfoque(1.4)} />
+      </g>,
+    );
+  }
+
   // ---- extras do peito
   const extras = roupa.extras ?? [];
   const sobre: React.ReactNode[] = [];

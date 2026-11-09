@@ -116,11 +116,14 @@ const quadrilRoupa = (c: Ctx, k: Corte): string => {
     const r = (lado > 0 ? rf : rb) + e;
     return add(add(q, mul(d, L * t)), mul(n, r * lado));
   };
-  pts.push(coxaPt(1, 0.22, 1, p.coxa));
+  // a coxa do lado +x (de frente a 1; de 3/4 a de trás, 0, que fica atrás do peito em +x)
+  const iM = c.j.vista === 'frente' ? 1 : 0;
+  const im = (1 - iM) as 0 | 1;
+  pts.push(coxaPt(iM as 0 | 1, 0.22, 1, iM === 1 ? p.coxa : p0.coxa));
   // gancho: entre as duas coxas
   const g = lerpP(add(j.quadril[0], mul(sub(j.joelho[0], j.quadril[0]), 0.2)), add(j.quadril[1], mul(sub(j.joelho[1], j.quadril[1]), 0.2)), 0.5);
   pts.push(g);
-  pts.push(coxaPt(0, 0.22, -1, p0.coxa));
+  pts.push(coxaPt(im, 0.22, -1, im === 1 ? p.coxa : p0.coxa));
   for (const v of [-2, wv * 0.45]) pts.push(tr.pt(tr.xm(v, e), v));
   return suave(pts);
 };

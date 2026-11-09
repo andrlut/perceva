@@ -53,18 +53,20 @@ const contorno = (c: Ctx, vh: number, e: number, eBarra = e, topo = true): P[] =
   const eDe = (v: number) => lerp(eBarra, e, Math.min(1, Math.max(0, (v - vh) / 14)));
   const cima = tr.cima(T);
   const lado: P = [-cima[1], cima[0]];
+  // o ombro do lado +x e o do lado −x (de 3/4 o da frente, índice 1, fica em −x)
+  const [oMenos, oMais] = j.vista === 'frente' ? [j.ombro[0], j.ombro[1]] : [j.ombro[1], j.ombro[0]];
   const pts: P[] = [];
   // barra: de −x pra +x, com a frente um tico mais baixa (é a frente de uma elipse)
   pts.push(tr.pt(tr.xm(vh, eBarra), vh));
   pts.push(tr.pt(tr.meio(vh, eBarra) * 0.7, vh - 0.5 - 1.1 * tr.sphi));
   for (const v of niveis) pts.push(tr.pt(tr.xM(v, eDe(v)), v));
   if (topo) {
-    pts.push(add(add(j.ombro[1], mul(cima, 3.0 + e * 0.6)), mul(lado, 0.6 + e * 0.5)));
+    pts.push(add(add(oMais, mul(cima, 3.0 + e * 0.6)), mul(lado, 0.6 + e * 0.5)));
     pts.push(naGola(c, 76, bg(c, 75) - 2.2, tr.pescoco.r + 2.6));
     pts.push(naGola(c, 70, bg(c, 75), tr.pescoco.r + 0.3));
     pts.push(naGola(c, -70, bg(c, -75), tr.pescoco.r + 0.3));
     pts.push(naGola(c, -76, bg(c, -75) - 2.2, tr.pescoco.r + 2.6));
-    pts.push(add(add(j.ombro[0], mul(cima, 3.0 + e * 0.6)), mul(lado, -0.6 - e * 0.5)));
+    pts.push(add(add(oMenos, mul(cima, 3.0 + e * 0.6)), mul(lado, -0.6 - e * 0.5)));
   }
   for (const v of [...niveis].reverse()) if (v > vh) pts.push(tr.pt(tr.xm(v, eDe(v)), v));
   return pts;
@@ -115,8 +117,15 @@ export const Pescoco: React.FC<{ c: Ctx; sombraQueixo: string }> = ({ c, sombraQ
   const n: P = [dir[1] / L, -dir[0] / L];
   const dn: P = [-dir[0] / L, -dir[1] / L];
   const pesc = suave([add(add(baseP, mul(n, r * 1.06)), mul(dn, -0.2)), add(baseP, mul(dn, 1.0)), add(add(baseP, mul(n, -r * 1.06)), mul(dn, -0.2)), add(topo, mul(n, -r * 0.98)), add(topo, mul(n, r * 0.92))]);
-  const ab = suave(aberturaDecote(c, d));
+  const abPts = aberturaDecote(c, d);
+  const ab = suave(abPts);
   const id = `${uid}-pesc`;
+  // o pescoço só existe ACIMA do decote (senão a base dele aparece por baixo da gola redonda)
+  const sobe = tr.cima(T);
+  const lado: P = [-sobe[1], sobe[0]];
+  const ini: P = [abPts[0][0], abPts[0][1]];
+  const fim: P = [abPts[abPts.length - 2][0], abPts[abPts.length - 2][1]];
+  const recorte = suave([...abPts.slice(0, -1), add(add(fim, mul(lado, 12)), mul(sobe, 40)), add(add(ini, mul(lado, -12)), mul(sobe, 40))], true, 0.3);
   const pele = c.pele;
   return (
     <g>
@@ -128,9 +137,16 @@ export const Pescoco: React.FC<{ c: Ctx; sombraQueixo: string }> = ({ c, sombraQ
       {/* o colo (pele do decote) na luz do peito; o pescoço meio-tom mais escuro, embaixo da
           cabeça — é o que separa cabeça e pescoço sem contorno */}
       <Vol id={`${id}-ab`} ds={[ab]} cor={pele} sombra={c.peleS} s={1.0} luzDir={c.L} />
-      <Vol id={id} ds={[pesc]} cor={mix(pele, c.peleS, 0.42)} sombra={c.peleS} s={1.1} luzDir={c.L} />
-      <g clipPath={`url(#${id}-q)`}>
-        <path d={sombraQueixo} fill={sombraPele(pele, 1.15)} opacity={0.7} />
+      <defs>
+        <clipPath id={`${id}-rc`}>
+          <path d={recorte} />
+        </clipPath>
+      </defs>
+      <g clipPath={`url(#${id}-rc)`}>
+        <Vol id={id} ds={[pesc]} cor={mix(pele, c.peleS, 0.42)} sombra={c.peleS} s={1.1} luzDir={c.L} />
+        <g clipPath={`url(#${id}-q)`}>
+          <path d={sombraQueixo} fill={sombraPele(pele, 1.15)} opacity={0.7} />
+        </g>
       </g>
     </g>
   );
@@ -377,10 +393,12 @@ export const Cima: React.FC<{ c: Ctx; parte: 'pele' | 'roupa' | 'gola' }> = ({ c
       tr.sup(44, 0.3 * T, e + 0.4),
       tr.sup(70, 0.02 * T, e + 1.2),
     ];
-    const q1 = j.quadril[1];
-    const k1 = j.joelho[1];
-    const q0 = j.quadril[0];
-    const k0 = j.joelho[0];
+    // a perna do lado +x e a do lado −x
+    const [iM, im] = j.vista === 'frente' ? [1, 0] : [0, 1];
+    const q1 = j.quadril[iM];
+    const k1 = j.joelho[iM];
+    const q0 = j.quadril[im];
+    const k0 = j.joelho[im];
     const fr1: P = add(q1, mul(sub(k1, q1), 0.78));
     const fr0: P = add(q0, mul(sub(k0, q0), 0.78));
     pts.push(add(fr1, [3.2, 0]));

@@ -16,6 +16,14 @@ import React from 'react';
 export type P = [number, number];
 export const RAD = Math.PI / 180;
 
+/**
+ * Espessura de traço que acompanha a ESCALA do desenho: `--sk` é posto na raiz do boneco (serie.tsx)
+ * a partir dos px por unidade medidos no quadro — boneco grande (close de 1250–2300 px) ganha
+ * traço proporcionalmente mais fino, boneco pequeno (150 px) um tico mais grosso. Sem a variável
+ * (fora do navegador), vale 1.
+ */
+export const sw = (x: number): React.CSSProperties => ({ strokeWidth: `calc(var(--sk, 1) * ${x.toFixed(3)}px)` });
+
 /** a tinta: azul-marinho fundo, nunca preto */
 export const TINTA = '#14173D';
 /** espessuras (unidades do boneco; ~1,1 px por unidade num boneco de 330 px) */
@@ -294,14 +302,14 @@ export class Pintor {
     return (
       <g key={key}>
         {todas.map((fm, i) => (
-          <path key={`u${i}`} d={fm.d} fill={TINTA} stroke={TINTA} strokeWidth={fora * 2} strokeLinejoin="round" opacity={fm.op} />
+          <path key={`u${i}`} d={fm.d} fill={TINTA} stroke={TINTA} style={sw(fora * 2)} strokeLinejoin="round" opacity={fm.op} />
         ))}
         {grupos.map((g, gi) => (
           <g key={`g${gi}`}>
             {g.antes}
             {g.linha
               ? g.formas.map((fm, i) => (
-                  <path key={`l${i}`} d={fm.d} fill={TINTA} stroke={TINTA} strokeWidth={g.linha! * 2} strokeLinejoin="round" opacity={fm.op} />
+                  <path key={`l${i}`} d={fm.d} fill={TINTA} stroke={TINTA} style={sw(g.linha! * 2)} strokeLinejoin="round" opacity={fm.op} />
                 ))
               : null}
             {g.meio}
@@ -316,7 +324,7 @@ export class Pintor {
 
 /** traço de detalhe (dobra, costura, ruga) */
 export const Traco: React.FC<{ d: string; w?: number; cor?: string; op?: number; tracejado?: string }> = ({ d, w = LINHA.dentro, cor = TINTA, op, tracejado }) => (
-  <path d={d} fill="none" stroke={cor} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" opacity={op} strokeDasharray={tracejado} />
+  <path d={d} fill="none" stroke={cor} style={sw(w)} strokeLinecap="round" strokeLinejoin="round" opacity={op} strokeDasharray={tracejado} />
 );
 
 /** o fio de luz de recorte, só na silhueta do boneco (desenhado por último) */
@@ -333,7 +341,7 @@ export function recorte(pt: Pintor, largura = 1.15, op = 0.92): React.ReactNode 
             <path key={i} d={s.d} transform={s.tf} />
           ))}
         </g>
-        <g fill="#000000" transform={`translate(${(lx * largura).toFixed(2)} ${(ly * largura).toFixed(2)})`}>
+        <g fill="#000000" style={{ transform: `translate(calc(var(--sk, 1) * ${(lx * largura).toFixed(3)}px), calc(var(--sk, 1) * ${(ly * largura).toFixed(3)}px))` }}>
           {pt.sil.map((s, i) => (
             <path key={i} d={s.d} transform={s.tf} />
           ))}
