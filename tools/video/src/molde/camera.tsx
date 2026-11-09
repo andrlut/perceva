@@ -9,6 +9,7 @@ import React, { createContext, useContext } from 'react';
 import { AbsoluteFill, Easing, interpolate, spring } from 'remotion';
 import { MOLA } from '../components';
 import type { CameraFocus, CameraSpec } from './spec';
+import { focoMax, useVisual } from './visual';
 
 export type Cam = {
   x: number;
@@ -126,11 +127,12 @@ const isStill = (c: Cam) => c.scale === 1 && c.x === 0 && c.y === 0 && !c.hx && 
  */
 export const Layer: React.FC<{ depth: number; children: React.ReactNode; style?: React.CSSProperties }> = ({ depth, children, style }) => {
   const c = useCam();
+  const visual = useVisual();
   if (isStill(c)) return <AbsoluteFill style={style}>{children}</AbsoluteFill>;
   const over = depth === 1 ? 1 : 1.015;
   const dolly = depth < 1 ? 1 + 0.28 * (c.dolly ?? 0) * (1 - depth) : 1;
   const s = (1 + (c.scale - 1) * depth) * over * dolly;
-  const blur = depth < 1 ? (1 - depth) * 7 * (c.focus ?? 0) : 0;
+  const blur = depth < 1 ? (1 - depth) * focoMax(visual) * (c.focus ?? 0) : 0;
   const filters = [style?.filter, blur > 0.15 ? `blur(${blur.toFixed(2)}px)` : null].filter(Boolean).join(' ');
   return (
     <AbsoluteFill

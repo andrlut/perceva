@@ -12,6 +12,7 @@ import { MOLDE_SCENES, MS, SpecContext } from './scenes';
 import type { MoldeSpec } from './spec';
 import { SfxContext, Sfx } from './sfx';
 import { passagem, passagens } from './transicao';
+import { VisualContext, visualDe } from './visual';
 
 /** Teto do vídeo de ideia: passou disso, o render falha (corte o roteiro). */
 export const MOLDE_MAX_SECONDS = 60;
@@ -26,6 +27,8 @@ export type MoldeProps = {
   identity?: string;
   /** Efeitos sonoros por baixo da voz (src/molde/sfx.tsx). Sem ele, silêncio como sempre. */
   sfx?: boolean;
+  /** Acabamento do fundo (src/molde/visual.ts) por cima do spec — pra comparar o mesmo quadro. */
+  visual?: string;
 };
 
 /** A legenda da abertura na porta fica onde fica a do tutorial (Tour.tsx CAPTION_TOP). */
@@ -54,7 +57,7 @@ export const calculateMoldeMetadata: CalculateMetadataFunction<MoldeProps> = asy
 };
 
 /** Vídeo de ideia montado a partir de um spec: cenas do molde + voz por fala + legenda. */
-export const Molde: React.FC<MoldeProps> = ({ specKey, spec, scenes, captions, identity, sfx = false }) => {
+export const Molde: React.FC<MoldeProps> = ({ specKey, spec, scenes, captions, identity, sfx = false, visual }) => {
   if (!spec) return null;
   const skip = scenes.filter((s) => s.scene === 'verso').map((s) => s.id);
   const who = identity ? OPTIONS.find((o) => o.id === identity) : ACTIVE;
@@ -64,6 +67,7 @@ export const Molde: React.FC<MoldeProps> = ({ specKey, spec, scenes, captions, i
     <IdentityContext.Provider value={who}>
     <SfxContext.Provider value={sfx && !spec.silent}>
     <SpecContext.Provider value={spec}>
+    <VisualContext.Provider value={visualDe(visual ?? spec.visual)}>
       <VariantContext.Provider value="app">
         <AbsoluteFill>
           <Background />
@@ -100,7 +104,7 @@ export const Molde: React.FC<MoldeProps> = ({ specKey, spec, scenes, captions, i
             ) : null,
           )}
           {/* grão + vinheta presos ao quadro (na porta, quem põe é a Porta, por cima das duas partes) */}
-          {captions === 'door' ? null : <Lente />}
+          {captions === 'door' ? null : <Lente canto={visualDe(visual ?? spec.visual).vivo ? 0.15 : 0.3} />}
           {captions === 'door' ? (
             <Captions scenes={scenes} skip={skip} top={DOOR_CAPTION_TOP} frame="door" />
           ) : (
@@ -108,6 +112,7 @@ export const Molde: React.FC<MoldeProps> = ({ specKey, spec, scenes, captions, i
           )}
         </AbsoluteFill>
       </VariantContext.Provider>
+    </VisualContext.Provider>
     </SpecContext.Provider>
     </SfxContext.Provider>
     </IdentityContext.Provider>

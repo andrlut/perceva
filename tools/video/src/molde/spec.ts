@@ -278,5 +278,7 @@ export type MoldeSpec = {
   fase?: number;
   /** a protagonista do vídeo (Pessoa e Ator de todas as cenas); sem = seed 0 com a pele de sempre */
   protagonista?: { seed: number; skin?: string };
+  /** acabamento do fundo (src/molde/visual.ts): 'v5' = nítido + cor viva; sem = o de antes */
+  visual?: string;
   lines: MoldeLine[];
 };

@@ -48,6 +48,7 @@ import {
 import { Caneca, Planta, Quadro } from '../elenco/objetos';
 import { C } from '../theme';
 import type { AmbienteKind, Gente, Hora } from './spec';
+import { filtroCamada, useVisual } from './visual';
 
 /** Retângulo [x0, y0, x1, y1]. */
 export type Rect = [number, number, number, number];
@@ -631,8 +632,9 @@ export const Ambiente: React.FC<{ amb: AmbSpec; geo: EnvGeo; part: 'back' | 'mid
     ...(geo.anda ? { anda: geo.anda } : {}),
   };
   const s = part === 'front' ? 0 : shift;
+  const visual = useVisual();
   return (
-    <AbsoluteFill style={{ filter: FILTER[part] }}>
+    <AbsoluteFill style={{ filter: filtroCamada(part, visual, FILTER[part]) }}>
       <div style={{ position: 'absolute', left: 0, top: 0, width: 1080, height: 1920, transform: s ? `translateY(${s}px)` : undefined }}>
         <Part {...p} />
       </div>
@@ -714,10 +716,11 @@ export const Luz: React.FC<{ amb: AmbSpec; geo: EnvGeo; t: number }> = ({ amb, g
 /** Foco de luz na protagonista: um halo da cor da cena atrás dela e o resto um pouco mais escuro. */
 export const Spot: React.FC<{ geo: EnvGeo; accent: string }> = ({ geo, accent }) => {
   const [x, y, r] = geo.spot;
+  const ring = useVisual().vivo ? 0.18 : 0.42;
   return (
     <AbsoluteFill
       style={{
-        background: `radial-gradient(circle ${r * 0.75}px at ${x}px ${y}px, ${accent}3A 0%, ${accent}00 100%), radial-gradient(circle ${r * 1.6}px at ${x}px ${y}px, rgba(8,11,32,0) 0%, rgba(8,11,32,0) 45%, rgba(8,11,32,0.42) 100%)`,
+        background: `radial-gradient(circle ${r * 0.75}px at ${x}px ${y}px, ${accent}3A 0%, ${accent}00 100%), radial-gradient(circle ${r * 1.6}px at ${x}px ${y}px, rgba(8,11,32,0) 0%, rgba(8,11,32,0) 45%, rgba(8,11,32,${ring}) 100%)`,
       }}
     />
   );
@@ -732,15 +735,19 @@ export const Spot: React.FC<{ geo: EnvGeo; accent: string }> = ({ geo, accent })
  * chão de cada lugar: um lugar novo desenha o piso claro até y ≈ 1000 + 900 (o "perto da câmera"). Antes, de 1480 pra baixo era navy chapado
  * (23% do quadro). Sem `aberta`, a de sempre (o vídeo publicado sai idêntico).
  */
-export const Vinheta: React.FC<{ aberta?: boolean }> = ({ aberta = false }) => (
+export const Vinheta: React.FC<{ aberta?: boolean }> = ({ aberta = false }) => {
+  // cor viva (visual.ts): as laterais escurecem 0,12 em vez de 0,35
+  const lado = useVisual().vivo ? 0.12 : 0.35;
+  return (
   <AbsoluteFill
     style={{
       background: aberta
-        ? 'linear-gradient(180deg, rgba(10,14,38,0.97) 0px, rgba(10,14,38,0.8) 170px, rgba(10,14,38,0) 380px, rgba(10,14,38,0) 1290px, rgba(10,14,38,0.8) 1420px, rgba(10,14,38,0.8) 1600px, rgba(10,14,38,0.3) 1680px, rgba(10,14,38,0.08) 1800px, rgba(10,14,38,0) 1920px), linear-gradient(90deg, rgba(10,14,38,0.35) 0px, rgba(10,14,38,0) 140px, rgba(10,14,38,0) 940px, rgba(10,14,38,0.35) 1080px)'
-        : 'linear-gradient(180deg, rgba(10,14,38,0.97) 0px, rgba(10,14,38,0.8) 170px, rgba(10,14,38,0) 380px, rgba(10,14,38,0) 1270px, rgba(10,14,38,0.82) 1410px, #0A0E26 1480px), linear-gradient(90deg, rgba(10,14,38,0.35) 0px, rgba(10,14,38,0) 140px, rgba(10,14,38,0) 940px, rgba(10,14,38,0.35) 1080px)',
+        ? `linear-gradient(180deg, rgba(10,14,38,0.97) 0px, rgba(10,14,38,0.8) 170px, rgba(10,14,38,0) 380px, rgba(10,14,38,0) 1290px, rgba(10,14,38,0.8) 1420px, rgba(10,14,38,0.8) 1600px, rgba(10,14,38,0.3) 1680px, rgba(10,14,38,0.08) 1800px, rgba(10,14,38,0) 1920px), linear-gradient(90deg, rgba(10,14,38,${lado}) 0px, rgba(10,14,38,0) 140px, rgba(10,14,38,0) 940px, rgba(10,14,38,${lado}) 1080px)`
+        : `linear-gradient(180deg, rgba(10,14,38,0.97) 0px, rgba(10,14,38,0.8) 170px, rgba(10,14,38,0) 380px, rgba(10,14,38,0) 1270px, rgba(10,14,38,0.82) 1410px, #0A0E26 1480px), linear-gradient(90deg, rgba(10,14,38,${lado}) 0px, rgba(10,14,38,0) 140px, rgba(10,14,38,0) 940px, rgba(10,14,38,${lado}) 1080px)`,
     }}
   />
-);
+  );
+};
 
 /**
  * Miniatura do ambiente pra dentro de um painel do `comparar` (só back + mid,
