@@ -1,5 +1,5 @@
 {
-  "_doc": "Piloto r3 (fase 3 do molde) do colágeno. A FALA é a da r2 (mesmos ids, textos e ordem; a voz vem por --voz-de). Assinatura deste vídeo: o espelho do banheiro (plano fechado na pia: a câmera é o espelho), a cozinha onde ela toma (plano fechado no balcão) e a LUPA na pele (a rede de colágeno), recurso de 'dentro' só deste vídeo — com ela GRANDE na lupa (pessoa: grande), não no canto. O tempo passa pelo calendário: no 'days' ele marca cinco casas e fica (uns dias, run.casas); no 'weeks' ele corre as cinco semanas. Régua do parceiro: estrutura da pele e semanas de constância, nada instantâneo, sem antes/depois, sem marca, sem número fora do verso; rótulos só com palavras da própria fala.",
+  "_doc": "Piloto r3 (fase 3 do molde) do colágeno. A FALA é a da r2 (mesmos ids, textos e ordem; a voz vem por --voz-de). Assinatura deste vídeo: o espelho do banheiro (plano fechado na pia: a câmera é o espelho), a LUPA na pele (a rede de colágeno) e na barriga (o cordão que já chega em pedaços), com ela GRANDE na lupa (pessoa: grande). Cada fala num lugar: banheiro (days, hook2), cozinha (peptides), a mesa de casa à noite (weeks: ela toma de novo enquanto o calendário corre as semanas) e o escritório (habit2: o mesmo horário no meio da rotina, fora de casa — nenhum outro vídeo da Paker usa). O pote branco (sem rótulo) diz que o copo é o colágeno. Régua do parceiro: estrutura da pele e semanas de constância, nada instantâneo (sem brilho nem comemoração), sem antes/depois, sem marca, sem número fora do verso; rótulos só com palavras da própria fala; a palavra 'pele' nunca aponta pro rosto dela no gancho 'continua igual'.",
   "slug": "paker-health-energia-pele-forca",
   "ideas": {
     "colageno-constancia": {
@@ -23,9 +23,15 @@
             "turn": { "pt": "continua igual", "en": "looks the same" },
             "to": "cansado",
             "acoes": [
+              { "acao": "mexer", "cue": { "pt": "Começou", "en": "Started" } },
               { "acao": "beber", "cue": { "pt": "tomar colágeno", "en": "taking collagen" } }
             ],
             "objects": [
+              {
+                "p": "pote",
+                "cue": { "pt": "Começou", "en": "Started" },
+                "run": { "cue": { "pt": "Começou", "en": "Started" }, "ate": { "pt": "tomar colágeno", "en": "taking collagen" } }
+              },
               {
                 "p": "calendario",
                 "cue": { "pt": "depois de uns dias", "en": "a few days in" },
@@ -33,7 +39,7 @@
               }
             ],
             "rotulos": [
-              { "text": { "pt": "pele", "en": "skin" }, "cue": { "pt": "a pele", "en": "your skin" }, "seta": "rosto" }
+              { "text": { "pt": "uns dias", "en": "a few days" }, "cue": { "pt": "depois de uns dias", "en": "a few days in" } }
             ],
             "camera": { "move": "push", "focus": "pessoa", "cue": { "pt": "continua igual", "en": "looks the same" } }
           }
@@ -74,7 +80,7 @@
               }
             },
             "rotulos": [
-              { "text": { "pt": "com a idade", "en": "as you age" }, "cue": { "pt": "com a idade", "en": "as you age" } }
+              { "text": { "pt": "com a idade", "en": "as you age" }, "cue": { "pt": "com a idade", "en": "as you age" }, "seta": "cabeca" }
             ]
           }
         },
@@ -96,15 +102,10 @@
             ],
             "lente": {
               "sobre": "barriga",
-              "cue": { "pt": "trazem o colágeno", "en": "bring collagen" },
               "conteudo": {
                 "camadas": [
                   { "textura": "liso", "tom": "fundo" },
-                  {
-                    "textura": "dobras",
-                    "tom": "violeta",
-                    "rotulo": { "text": { "pt": "intestino", "en": "gut" }, "cue": { "pt": "intestino absorve", "en": "gut can absorb" } }
-                  },
+                  { "textura": "dobras", "tom": "violeta" },
                   { "textura": "fluxo", "tom": "violeta" }
                 ],
                 "particulas": {
@@ -112,13 +113,16 @@
                   "cor": "body",
                   "de": "topo",
                   "cue": { "pt": "trazem o colágeno", "en": "bring collagen" },
-                  "quebra": { "pt": "peptídeos", "en": "peptides" },
+                  "quebra": { "pt": "quebrado", "en": "broken down" },
                   "rotulo": { "text": { "pt": "peptídeos", "en": "peptides" }, "cue": { "pt": "peptídeos", "en": "peptides" } },
                   "atravessa": { "camada": 1, "cue": { "pt": "intestino absorve", "en": "gut can absorb" } },
                   "correnteza": true
                 }
               }
-            }
+            },
+            "rotulos": [
+              { "text": { "pt": "intestino", "en": "gut" }, "cue": { "pt": "intestino absorve", "en": "gut can absorb" }, "x": 800, "y": 1170, "seta": [850, 690] }
+            ]
           }
         },
         {
@@ -129,23 +133,27 @@
           "en": { "caption": "Results show up *in weeks*, not days, because skin renews itself slowly." },
           "props": {
             "kicker": { "pt": "Com o tempo", "en": "Over time" },
-            "ambiente": "banheiro",
-            "hora": "dia",
+            "ambiente": "casa",
+            "hora": "noite",
             "setting": "mesa",
             "plano": "fechado",
+            "holding": "copo-agua",
             "mood": "ok",
             "camera": { "move": "drift", "forca": "leve" },
+            "acoes": [
+              { "acao": "beber", "cue": { "pt": "aparece", "en": "show up" }, "reps": 3 }
+            ],
             "objects": [
               {
                 "p": "calendario",
-                "cue": { "pt": "em semanas", "en": "in weeks" },
-                "run": { "cue": { "pt": "em semanas", "en": "in weeks" }, "ate": { "pt": "porque a pele", "en": "because skin" } }
+                "cue": { "pt": "O resultado", "en": "Results" },
+                "run": { "cue": { "pt": "aparece", "en": "show up" }, "ate": { "pt": "porque a pele", "en": "because skin" } }
               }
             ],
             "lente": {
               "sobre": "rosto",
-              "cue": { "pt": "porque a pele", "en": "because skin" },
-              "turn": { "pt": "se renova devagar", "en": "renews itself slowly" },
+              "cue": { "pt": "não em dias", "en": "not days" },
+              "turn": { "pt": "porque a pele", "en": "because skin" },
               "conteudo": {
                 "camadas": [
                   { "textura": "liso", "tom": "pele" },
@@ -155,7 +163,7 @@
               }
             },
             "rotulos": [
-              { "text": { "pt": "se renova devagar", "en": "renews itself slowly" }, "cue": { "pt": "se renova devagar", "en": "renews itself slowly" }, "x": 300, "y": 340 }
+              { "text": { "pt": "se renova devagar", "en": "renews itself slowly" }, "cue": { "pt": "se renova devagar", "en": "renews itself slowly" }, "x": 825, "y": 770 }
             ]
           }
         },
@@ -167,25 +175,28 @@
           "en": { "caption": "The secret is making it a habit: *same time every day*, in water or juice." },
           "props": {
             "kicker": { "pt": "Na prática", "en": "In practice" },
-            "ambiente": "cozinha",
-            "hora": "manha",
+            "ambiente": "escritorio",
+            "gente": "pouca",
+            "hora": "dia",
             "setting": "mesa",
             "plano": "fechado",
             "holding": "copo-agua",
             "mood": "ok",
-            "turn": { "pt": "virar hábito", "en": "making it a habit" },
-            "to": "feliz",
-            "glow": { "pt": "virar hábito", "en": "making it a habit" },
             "acoes": [
-              { "acao": "mexer", "cue": { "pt": "mesmo horário", "en": "same time" }, "ate": { "pt": "na água", "en": "in water" } },
-              { "acao": "beber", "cue": { "pt": "na água", "en": "in water" } }
+              { "acao": "mexer", "cue": { "pt": "O segredo", "en": "The secret" } },
+              { "acao": "beber", "cue": { "pt": "todo dia", "en": "every day" } },
+              { "acao": "beber", "cue": { "pt": "no suco", "en": "juice" }, "peca": "copo-suco" }
             ],
             "objects": [
-              { "p": "relogio", "cue": { "pt": "mesmo horário", "en": "same time" } },
-              { "p": "copo-suco", "cue": { "pt": "no suco", "en": "juice" } }
+              {
+                "p": "pote",
+                "cue": { "pt": "O segredo", "en": "The secret" },
+                "run": { "cue": { "pt": "O segredo", "en": "The secret" }, "ate": { "pt": "virar hábito", "en": "making it a habit" } }
+              },
+              { "p": "relogio", "cue": { "pt": "mesmo horário", "en": "same time" } }
             ],
             "rotulos": [
-              { "text": { "pt": "todo dia", "en": "every day" }, "cue": { "pt": "todo dia", "en": "every day" } }
+              { "text": { "pt": "mesmo horário", "en": "same time" }, "cue": { "pt": "mesmo horário", "en": "same time" } }
             ]
           }
         },
