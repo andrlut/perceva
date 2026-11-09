@@ -66,6 +66,8 @@
   "acoes": ["pronta", "andar", "correr", "saltar", "levantar", "mexer", "beber"],
   "ritmos": ["lento", "rapido"],
   "planos": ["corpo", "lupa", "fechado"],
+  "pessoas": ["canto", "grande"],
+  "calendarioCasas": [1, 35],
   "origens": ["boca", "tronco", "barriga"],
   "regioes": ["cabeca", "rosto", "boca", "peito", "tronco", "barriga", "braco", "perna", "vasos", "musculos", "pele"],
   "cores": ["health", "body", "mind", "wealth", "bonds", "craft", "ouro"],

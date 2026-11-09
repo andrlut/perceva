@@ -386,7 +386,7 @@ continua sendo a `Fraunces_600` estática (nada aprovado muda de desenho).
 O destaque do verso continua sendo a cor: trocar de estilo enquanto a voz lê
 faria a linha pular.
 
-## Fase 3 — a tela demonstra o que a voz diz (leva 1, 2026-11-08)
+## Fase 3 — a tela demonstra o que a voz diz (leva 1 + rodada 2, 2026-11-08)
 
 O André achou os 3 vídeos da Paker "com a mesma cara": pessoa pequena parada num fundo vazio, ícone
 de 60 px no lugar do mecanismo, sempre o quarto. A fase 3 troca "ilustrar" por **demonstrar**: ela
@@ -426,9 +426,9 @@ pixel 0 nos vídeos publicados — é a régua de toda mudança aqui).
 
 | `acao` | o que ela faz | quadros por rep (normal / lento / rápido) |
 |---|---|---|
-| `pronta` | parada, pronta (base de quem vai começar) | — (laço) |
+| `pronta` | parada, pronta (base de quem vai começar), quicando de leve | — (laço) |
 | `andar` | pêndulo, quica e inclina pro trajeto; **o único com trajeto de lado** (`de` → `para`, x na tela; chegando, ela FICA lá) | 26 / 32 / 20 (laço) |
-| `correr` | **no lugar**: joelho alto, braço oposto, voo, amassa no pouso, poeira no pé que pousa. Com `para`, ela **vem pra câmera** (escala 1 → 1,1) — de frente atravessando o quadro lia "deslizando" | 16 / 20 / 12 (laço) |
+| `correr` | **no lugar, de frente**: o joelho vem pra câmera (sai da sombra e passa na frente da barra da roupa), o cotovelo dobra com o punho subindo ao peito do lado oposto à perna, a perna de trás chuta e mostra a sola, voo com quique e cabelo que atrasa — nunca os dois pés no chão; poeira no pé que pousa. **O chão anda** (raias no parque, juntas na academia); no corpo, nenhum rastro (a régua veta). Com `para`, ela **vem pra câmera** até a escala 1,25 na cena (dividida entre as arrancadas), os pés descendo ~40 px — de frente atravessando o quadro lia "deslizando" | 16 / 20 / 12 (laço) |
 | `saltar` | agacha, sobe em parábola (pés ~190 px no ar no Ator de 360), pousa com mola | 22 / 26 / 18 |
 | `levantar` | halteres (`peso`) nas duas mãos, de 80° a 127°: no topo acima do ombro, fora do rosto | 30 / 36 / 22 |
 | `mexer` | o copo na frente do peito, colher girando (com coqueteleira: sacode na vertical) | 10 / 14 / 8 (laço) |
@@ -442,6 +442,12 @@ por cima da peça) e na cor da área (`corPeca`). Sem `acoes`, a Pessoa de sempr
 moram em `src/elenco/acao.tsx` (CICLO) e são espelhados em `catalog.json → acaoQuadros` pro lint
 (o render quebra se divergirem). Na mesa, com ações, ela fica 60 px mais alta em relação ao tampo
 (o tampo passa pela cintura, o copo do peito aparece inteiro).
+
+**Ninguém congela** (rodada 2): sem ação, o Ator com humor respira e troca o peso de pé a cada ~1,5 s
+(ok/focado); cansada, suspira a cada ~1,8 s e os ombros caem de uma vez. Vale pra todo Ator (a mesa
+fechada, a lupa, o figurante); seta, âncora da lente e `busy` medem o corpo sem esse balanço.
+**O chão anda**: com `correr` (no `faz` e na `pessoa`), `corridaDe` (acao.tsx) põe `anda = { v, d }`
+no `EnvGeo` e o lugar passa por baixo dela; sem corrida, o piso é o de sempre.
 
 ### Rótulos (`rotulos`, toda cena menos o verso)
 
@@ -461,7 +467,17 @@ a caneta, sai em 8 q):
   84, depois os lados); com seta, a coluna do lado do alvo, perto da altura dele (os das `regioes` do
   corpo alternam de lado). **Nunca** em cima do rosto dela, das peças, do balão, do medidor, nem da
   lente enquanto ela está aberta (o Stage passa `busy` + `ocupa`), e dois rótulos só se evitam se
-  estão na tela ao mesmo tempo. Linha > 620 px quebra em duas equilibradas.
+  estão na tela ao mesmo tempo (com 16 px de folga). Linha > 620 px quebra em duas equilibradas.
+- **São da tela** (rodada 2): o Stage desenha os rótulos fora das camadas da câmera, por cima do
+  primeiro plano, dentro de `<NaTela>` (rotulo.tsx). A vaga é achada na cena; a cada quadro o centro
+  da cápsula e a ponta da seta passam pela câmera (push, pull, pan, giro, mão: `projeta`) e só então
+  a cápsula se ajusta à margem (28 px; faixa 250–1400). Um push não corta mais a palavra. Cena de
+  arquivo próprio passa os seus `<Rotulo>` na prop `tela` do Stage (o `faz` e o `dentro` passam).
+- A ponta: `cabeca` pousa no **contorno** da cabeça do lado do rótulo (o círculo sai dos pontos
+  `cabeca`/`boca`, com pose e escala); `rosto`/`pele` vão pra **bochecha do lado do rótulo** (a seta
+  não atravessa mais o rosto; `CORPO.pontos.rosto` = (126, 113)); `braco`/`vasos`/`musculos` com a
+  peça na mão (braço estendido) caem no **braço de cima** (0,3 do ombro à mão, `bracoDe`) — o ponto
+  do braço pendurado caía na cintura. A lente `sobre: "braco"` (cena, mesa fechada e lupa) também.
 
 ### Corpo por dentro (`dentro`)
 
@@ -476,10 +492,20 @@ a caneta, sai em 8 q):
   = 760 px em [540, 760]); com `cresce`, o corpo apaga pra 30% e os rótulos das regiões saem.
   `reserva` faz o tanque crescer do músculo até o centro do palco (aparece na deixa mais cedo entre
   nivel/gasta/pinga/rotulo; o rótulo dele fica embaixo do tanque).
+  **Na fase 3 o corpo é maior** (rodada 2): 940 px, pés em 1500, rosto inteiro; as pernas passam por
+  trás da faixa escura da legenda. O callout da lente vai pro canto de cima do lado da âncora (290 px
+  em [925, 410]). Grãos e pontos 1,6× maiores num **fio denso** (uma partícula por ramo a cada 7 q,
+  grão, ou 8, ponto; antes do `divide`, uma de cada vez no fio comum) que começa até 0,6 s antes da
+  palavra. Rótulo de seta procura a coluna do lado do alvo (quebrando, encolhendo até 170 px) antes
+  da fila — nunca o centro, onde a seta cruzaria o rosto.
 - **`plano: "lupa"`** (com `ambiente` e `lente`): ela num lugar com a peça e a ação; na deixa da lente
   ela desliza pro canto (x 230, 330 px), um véu navy escurece o lugar e a lente de 760 px abre em
   [610, 720], ligada por um cone à âncora (a peça da mão ou a parte do corpo, seguida a cada quadro).
   `fecha` traz ela de volta e tira o véu; `turn`/`to` viram o humor (brilho só no feliz).
+  **`pessoa: "grande"`** (só aqui, rodada 2): em vez de encolher pro canto ela CRESCE e chega perto
+  da câmera (480 px, x 215, pés em 1500), cortada pela faixa da legenda na altura do quadril (no
+  banheiro, pela moldura do espelho); rosto inteiro embaixo da lente. Com a âncora embaixo do rosto
+  (barriga, peito, mão), o cone passa por trás da cabeça (`Lente atras`). `canto` é o default.
 
 ### Lente (`lente`, no `dentro` e na `cena`)
 
@@ -499,6 +525,11 @@ a caneta, sai em 8 q):
 - Camada: `textura`, `tom` (`pele`/`area`/`violeta`/`fundo`/`ouro`), `peso` 1..3, `cresce` (a rede se
   tece), `then` (`rareia`/`renova`, na deixa `turn` da lente), `rotulo {text, cue}`. `toque` (deixa):
   o dedo aperta a pele. `ritmo: "devagar"`.
+- `rareia` (rodada 2): a rede **perde pedaços** — 1 célula em 5 murcha e some levando os fios dela, e
+  mais fios soltos recolhem de ponta a ponta: some ~metade das ligações em ~1 s, o resto fica inteiro.
+  `renova`: **uma onda sobe** pela camada uma vez; onde passa, o fio se desfaz e se tece de novo mais
+  claro e a célula encolhe e volta com a mola. Dura 34/√ritmo q (~2,4 s no devagar): com o `turn` na
+  última palavra, dê `hold` (~0,8) pra onda terminar — pela metade lê "quebrada".
 - Partículas: `ponto` (`boiam`, `destaque` = o ponto vai pro centro, fica dourado com a estrelinha) ou
   `cordao` (`de: "topo"`, `quebra` em pedaços, `atravessa: {camada, cue}` a parede — precisa de uma
   banda embaixo —, `correnteza`). `n` 6..24, `cor` uma área/ouro ou uma lista (sem `mista`).
@@ -532,9 +563,16 @@ sempre dourada: o mesmo tanque da lente e do medidor.
 - `passos` 1..4 (só o 1º sem cue; as deixas na ordem da fala), cada um uma ação (mesmos campos de
   `acoes`) + `rotulo`. Sem lugar por passo nesta leva.
 - `medidor`: o tanque pequeno numa ficha, um gole por passo; `nivel − gasta × passos ≥ 0,25` (nunca
-  perto do vazio). `elenco` ≤ 3 figurantes (`seed`, `x`, `acao`, `cue`, `size` ≥ 200): cada um num
-  esforço diferente, ninguém correndo junto com ela (lê disputa), nenhum na caixa dela; o filtro do
-  figurante é só saturação (não escurece pele).
+  perto do vazio). `elenco` ≤ 3 figurantes (`seed`, `x`, `acao`, `cue`, `ate`, `size` ≥ 200, `reps`
+  1..4, `ritmo`): cada um num esforço diferente, ninguém correndo junto com ela (lê disputa), nenhum
+  na caixa dela; o filtro do figurante é só saturação (não escurece pele). **Sem `reps`, saltar e
+  levantar repetem em laço até o `ate`** (sem `ate`, até o fim da fala — figurante não congela); no
+  caixote do parque, sobe numa rep e desce na outra.
+- **Rótulos em lista** (rodada 2): os sem posição nem seta (os dos passos também) viram UMA coluna pra
+  cena inteira, na ordem da fala — o centro no alto; não cabendo, o lado sem o medidor; por último,
+  embaixo do medidor —, 54 → 48 → 44 px, 14 px entre cápsulas, sempre fora do medidor, do corpo dela,
+  dos figurantes e da zona do salto enquanto ela está no ar. A palavra que entra quando a anterior sai
+  fica no lugar dela. Palavra longa na coluna do lado quebra em duas linhas.
 
 ### `plano: "fechado"` (cena mesa)
 
@@ -544,11 +582,22 @@ Ela do peito pra cima, o cômodo cortado: o mundo da cena (lugar, balcão, ela, 
 duas no alto (até 4). Ela sempre segura a peça (`holding`) na mão, com ou sem `acoes`. Use no balcão
 da cozinha e na pia do banheiro (o espelho): é o plano que o Notebook usa — a coisa, perto.
 
+**No `pensa` também** (rodada 2, sem `setting`): o mesmo zoom, ela grande atrás do balcão do lugar;
+o balão é da tela (540 px) com a bolinha menor logo acima do lado direito da cabeça, a peça do
+pensamento com 175 px; as peças (até 2) pousam nas pontas do tampo (a 1ª à direita, a 2ª à esquerda).
+
+### `lista` com lugar na fase 3
+
+Ela de pé (430 px, pés em 990) do lado oposto à janela do lugar (no centro sem janela); os itens descem
+pra faixa 1020–1390 com texto de 56 px e os cantos do primeiro plano saem — a janela (a lua da cozinha
+à noite) aparece inteira. Sem fase 3, a lista de sempre.
+
 ### Peças novas
 
 `peso` (halter sextavado), `pote` (branco, sem rótulo; com `run` a tampa abre e a colher dosadora sai),
 `calendario` (sem algarismo; `run` 0 → 1 = 5 semanas: marca as casas e rola uma linha na 5ª — é como o
-tempo passa sem lapso), `coqueteleira` (sem marca; a mão faz a bebida balançar), `copo-agua` e
+tempo passa sem lapso; **`run.casas`** 1..35 para nessa casa e ele fica na tela: "uns dias" = 4–7, sem
+`out`), `coqueteleira` (sem marca; a mão faz a bebida balançar), `copo-agua` e
 `copo-suco` (o copo com a bebida na cor dela, não na da área), `reservatorio` (dourado; nível =
 `run`). Pousam na mesa (`ON_DESK`: pote, copos, coqueteleira, reservatório, calendário) ou no chão
 (`peso`). `Obj.run: { cue?, ate? }`: a peça anda (progress 0 → 1) entre a deixa e o `ate` (default: a
@@ -565,7 +614,10 @@ plano); `plano: "fechado"` fora da mesa; dentro corpo com lugar/holding/acoes, d
 lente; fluxos 1..3, regioes ≤ 3, divide com < 2 fluxos; lente sobre `peca` sem peça, camadas 1..3,
 textura/tom/then/forma/cor fora do catálogo, partículas 6..24, `atravessa` sem banda embaixo, `cresce`
 na cena; reserva com `v` fora de 0..1 ou o 1º nível com cue; faz com 0 ou > 4 passos, passo sem cue
-depois do 1º, figurante sem cue ou < 200 px, medidor perto do vazio, `objects` no faz; `mood`/`to`
+depois do 1º, figurante sem cue ou < 200 px, figurante com `reps` fora de 1..4 ou `ritmo` fora do
+catálogo, medidor perto do vazio, `objects` no faz; `run.casas` fora de 1..35 ou numa peça que não é o
+`calendario`; `pessoa` fora do dentro lupa (só `canto`/`grande`); `plano` no pensa que não é
+`fechado`; `mood`/`to`
 fora de ok/feliz/cansado/focado; `fase` fora de 1..3, `protagonista` sem seed inteiro ou pele #rrggbb;
 **na fase 3**, peça ou ícone de energia-como-carga (`battery*`, `flash*`, `flame*`, `thunderstorm*`,
 `rocket*`, `nuclear*`).

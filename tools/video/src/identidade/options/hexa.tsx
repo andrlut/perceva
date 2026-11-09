@@ -670,6 +670,118 @@ const poseT = (pose: Pose, legs: boolean) => {
 /** Sombra no chão com a pose: encolhe quando o corpo sobe (até 55% no topo do salto). */
 const shadowK = (pose?: Pose) => 1 - Math.min(0.45, Math.max(0, -(pose?.y ?? 0)) / 130);
 
+/**
+ * Os campos da corrida (fase 3, rodada 2 — src/elenco/acao.tsx) que só o rig do Hexa Limpo/Cor lê.
+ * Sem eles, a pose desenha como antes; sem pose nenhuma, a Pessoa de sempre.
+ *  - `dobra`: graus que o antebraço DOBRA pra dentro no cotovelo (o braço de quem corre: o punho
+ *    sobe na frente do peito, o outro desce até o quadril). Com dobra, o braço vira dois segmentos.
+ *  - `joelho`: 0..1, o joelho que vem PRA CÂMERA (de frente): a coxa encurta e aparece NA FRENTE da
+ *    barra da roupa, a canela fica curta embaixo do joelho e o pé sobe (≈ 18 un. com o joelho todo).
+ *  - `chuta`: 0..1, a perna de trás chutando pra trás: ela encurta e a sola aparece.
+ *  - `apoio`: 0..1, o pé que está NO CHÃO enquanto o corpo sobe (a impulsão): a perna estica o que o
+ *    corpo subiu, o pé fica plantado (sem isso, no quique os dois pés flutuariam).
+ *  - `cabelo`: un., o cabelo atrasado em relação à cabeça (o quique da corrida).
+ *  - `curva`: 0..1, o tronco pra frente — de frente, a cabeça baixa um tico sobre os ombros.
+ */
+export type PoseRig = Pose & {
+  dobra?: [number, number];
+  joelho?: [number, number];
+  chuta?: [number, number];
+  apoio?: [number, number];
+  cabelo?: number;
+  curva?: number;
+};
+
+/** Braço com cotovelo (só com `dobra`): o de cima até o cotovelo (27 un.), o antebraço até a mão (25). */
+const BRACO_CIMA = 27;
+const BRACO_BAIXO = 25;
+/** O antebraço que cruza o tronco (aponta pra dentro mais que 30°): vai claro, com a sombra dele embaixo. */
+const forearmAng = (side: 'l' | 'r', a: number, d: number) => (side === 'l' ? a - d : a + d);
+const forearmCrosses = (side: 'l' | 'r', a: number, d: number) => (side === 'l' ? forearmAng(side, a, d) < -30 : forearmAng(side, a, d) > 30);
+const armUpper = (side: 'l' | 'r', a: number, accent: string, shade: boolean) => {
+  const px = side === 'l' ? 58 : 142;
+  return (
+    <g transform={`rotate(${a} ${px} 158)`} key={`${side}u`}>
+      <rect x={px - 10} y={150} width={20} height={BRACO_CIMA + 16} rx={10} fill={accent} />
+      {shade && <rect x={px - 10} y={150} width={20} height={BRACO_CIMA + 16} rx={10} fill={SHADE} opacity={side === 'r' ? 1 : 0.5} />}
+    </g>
+  );
+};
+const armLower = (side: 'l' | 'r', a: number, d: number, accent: string, skin: string, shade: boolean) => {
+  const px = side === 'l' ? 58 : 142;
+  const ey = 158 + BRACO_CIMA;
+  // o antebraço que cruza o peito vai CLARO (pega a luz de cima): da cor da roupa, ele sumiria nela
+  const cor = shade ? accent : mix(accent, '#FFFFFF', 0.16);
+  return (
+    <g transform={`rotate(${a} ${px} 158) rotate(${side === 'l' ? -d : d} ${px} ${ey})`} key={`${side}f`}>
+      <rect x={px - 10} y={ey - 9} width={20} height={BRACO_BAIXO + 18} rx={10} fill={cor} />
+      {shade && <rect x={px - 10} y={ey - 9} width={20} height={BRACO_BAIXO + 18} rx={10} fill={SHADE} opacity={side === 'r' ? 1 : 0.5} />}
+      <circle cx={px} cy={ey + BRACO_BAIXO} r={9.5} fill={skin} />
+      {shade && side === 'r' && <circle cx={px} cy={ey + BRACO_BAIXO} r={9.5} fill={SHADE} opacity={0.35} />}
+    </g>
+  );
+};
+/** A sombra do antebraço que cruza, no tronco (o mesmo recurso do `armCast`). */
+const forearmCast = (side: 'l' | 'r', a: number, d: number, uid: string) => {
+  const px = side === 'l' ? 58 : 142;
+  const ey = 158 + BRACO_CIMA;
+  return (
+    <g clipPath={`url(#${uid}t)`} key={`${side}fc`}>
+      <g transform={`translate(0 6) rotate(${a} ${px} 158) rotate(${side === 'l' ? -d : d} ${px} ${ey})`}>
+        <rect x={px - 11} y={ey - 10} width={22} height={BRACO_BAIXO + 20} rx={11} fill="rgba(10,14,38,0.4)" />
+      </g>
+    </g>
+  );
+};
+
+const lerpN = (a: number, b: number, k: number) => a + (b - a) * k;
+/**
+ * A perna da corrida, de frente (caixa 200×260, antes da pose). `j` = joelho pra câmera, `c` = chute
+ * pra trás. Em j = c = 0 é a perna de sempre (coxa+canela 210..244, pé 238..252); com o joelho todo,
+ * o joelho (coxa encurtada, 15,5 de meia largura) vai de 190 a 222, a canela curta embaixo dele e o
+ * pé de 220 a 234 (18 un. acima do chão, antes do quique do corpo).
+ */
+const legRun = (i: 0 | 1, j: number, c: number, e = 0) => {
+  const cx = i ? 115.5 : 84.5;
+  const fx = i ? 117.5 : 82.5;
+  // de frente, o joelho que vem é o ponto mais perto da câmera: coxa e canela ficam atrás dele, as duas
+  // descendo — então a perna toda SOBE como uma coluna só (mais larga, perspectiva), com o joelho
+  // redondo no alto pegando luz, na frente da roupa; o pé de 222 a 236 (16 un. acima do chão)
+  const hw = lerpN(12.5, 14.5, j);
+  const uTop = lerpN(210, 192, j);
+  const uBot = lerpN(232, 222, j);
+  const sw = lerpN(12.5, 13.5, j);
+  const sTop = lerpN(214, 200, j);
+  // `e` = quanto a perna de apoio estica pra o pé ficar no chão com o corpo no alto
+  const sBot = lerpN(244, 230, j) - 8 * c + e;
+  const fw = lerpN(33, 30, j) - 5 * c;
+  const fcx = lerpN(fx, cx, j);
+  const fTop = lerpN(238, 222, j) - 12 * c + e;
+  // a perna da direita na sombra: a cor já misturada com o SHADE (0,28 de navy) — duas camadas
+  // translúcidas dobrariam a sombra onde a coxa encosta na canela. A que vem pra câmera sai da sombra.
+  const sh = i === 1 ? 0.28 * (1 - 0.6 * j) : 0;
+  const calca = mix(C.faint, C.deep, sh);
+  // a sola aparece no chute (o calcanhar vem pra câmera): o pé escurece
+  const sola = mix(C.surface3, C.deep, sh + 0.35 * Math.min(1, c * 1.6) * (1 - sh));
+  const knee = (
+    <>
+      <rect x={cx - hw} y={uTop} width={2 * hw} height={uBot - uTop} rx={lerpN(9, 14, j)} fill={calca} />
+      {/* o joelho que vem pra câmera pega a luz de cima */}
+      {j > 0.05 && <rect x={cx - hw + 6} y={uTop + 4} width={2 * hw - 12} height={4.5} rx={2.25} fill={SHINE} opacity={Math.min(1, j * 1.5) * 0.7} />}
+    </>
+  );
+  // o pé sempre por cima da canela; o joelho passa por cima do pé quando sobe (em j = 0,5 os dois não
+  // se encostam: a troca de ordem não aparece)
+  return (
+    <>
+      <rect x={cx - sw} y={sTop} width={2 * sw} height={sBot - sTop} rx={9} fill={calca} />
+      {j <= 0.5 && knee}
+      <rect x={fcx - fw / 2} y={fTop} width={fw} height={14} rx={6.5} fill={sola} />
+      {j > 0.5 && knee}
+    </>
+  );
+};
+
 const armOf = (side: 'l' | 'r', a: number, accent: string, skin: string, shade: boolean) => {
   const px = side === 'l' ? 58 : 142;
   return (
@@ -731,7 +843,18 @@ const makeGente = (style: 'limpo' | 'cor'): React.FC<PessoaProps> => {
     const crL = !!pose?.braco && crosses('l', la);
     const crR = !!pose?.braco && crosses('r', ra);
     const blink = Math.max(still ? 0 : blinkAt(t, seed), pose?.fecha ?? 0);
-    const HX = `rotate(${TILT[mood] + (pose?.cabeca ?? 0)} 100 142) ${HEAD_V4}`;
+    // fase 3 (rodada 2): os campos da corrida — só com eles o desenho muda (sem, tudo como antes)
+    const rig = pose as PoseRig | undefined;
+    const dobra = rig?.dobra && Math.max(Math.abs(rig.dobra[0]), Math.abs(rig.dobra[1])) > 1 ? rig.dobra : null;
+    const joelho = rig?.joelho ?? [0, 0];
+    const chuta = rig?.chuta ?? [0, 0];
+    // a perna de apoio estica o que o corpo subiu (o pé plantado no chão durante a impulsão)
+    const estica = (i: 0 | 1) => (rig?.apoio?.[i] ?? 0) * Math.max(0, -(pose?.y ?? 0));
+    const corre = !!pose && joelho[0] + joelho[1] + chuta[0] + chuta[1] > 0.005;
+    const cab = rig?.cabelo ?? 0;
+    const desce = 5 * (rig?.curva ?? 0);
+    const HX = `${desce ? `translate(0 ${desce.toFixed(2)}) ` : ''}rotate(${TILT[mood] + (pose?.cabeca ?? 0)} 100 142) ${HEAD_V4}`;
+    const comCabelo = (el: React.ReactNode, k: number) => (cab ? <g transform={`translate(0 ${(cab * k).toFixed(2)})`}>{el}</g> : el);
     const hideTop = Boolean(cap);
     const backVisible = hair.back && !(hideTop && (who.hair === 'afro' || who.hair === 'bun'));
     const facet = style === 'cor' ? 0.3 : 0.42;
@@ -763,12 +886,21 @@ const makeGente = (style: 'limpo' | 'cor'): React.FC<PessoaProps> => {
     const body = (
         <g transform={life.body}>
           <g transform={`translate(0 ${life.lift})`}>
-            {showArms && !frL && !crL && armOf('l', la, accent, skin, true)}
+            {showArms && !dobra && !frL && !crL && armOf('l', la, accent, skin, true)}
+            {/* corrida (dobra): o braço esquerdo de cima fica atrás do tronco, como sempre; o antebraço só
+                vem pra frente quando cruza o peito (o punho subindo) */}
+            {showArms && dobra && armUpper('l', la, accent, true)}
+            {showArms && dobra && !forearmCrosses('l', la, dobra[0]) && armLower('l', la, dobra[0], accent, skin, true)}
             {backVisible && (
               <g transform={HX}>
-                <Shaded id={`${uid}b`} d={hair.back!} fill={hairColor} hole={hair.hole} />
-                {hair.texture && <path d={hair.texture} stroke={SHADE} strokeWidth={2} strokeLinecap="round" fill="none" />}
-                {hair.cuffs?.slice(0, 2).map(([x, y]) => <rect key={x} x={x - 3.5} y={y} width={7} height={5} rx={1.5} fill={C.gold} />)}
+                {comCabelo(
+                  <>
+                    <Shaded id={`${uid}b`} d={hair.back!} fill={hairColor} hole={hair.hole} />
+                    {hair.texture && <path d={hair.texture} stroke={SHADE} strokeWidth={2} strokeLinecap="round" fill="none" />}
+                    {hair.cuffs?.slice(0, 2).map(([x, y]) => <rect key={x} x={x - 3.5} y={y} width={7} height={5} rx={1.5} fill={C.gold} />)}
+                  </>,
+                  1,
+                )}
               </g>
             )}
             <rect x={89} y={124} width={22} height={34} rx={7} fill={skin} />
@@ -780,10 +912,19 @@ const makeGente = (style: 'limpo' | 'cor'): React.FC<PessoaProps> => {
             <GarmentDetail g={who.garment} accent={accent} skin={skin} uid={uid} />
             <path d={TORSO_PLANE} fill={SHADE} clipPath={`url(#${uid}t)`} />
             <GoldHex x={PIN[0]} y={PIN[1]} r={9} onGold={onGold} />
-            {showArms && crL && armCast('l', la, uid)}
-            {showArms && crR && armCast('r', ra, uid)}
-            {showArms && crL && !frL && armOf('l', la, accent, skin, false)}
-            {showArms && !frR && armOf('r', ra, accent, skin, !crR)}
+            {showArms && !dobra && crL && armCast('l', la, uid)}
+            {showArms && !dobra && crR && armCast('r', ra, uid)}
+            {showArms && !dobra && crL && !frL && armOf('l', la, accent, skin, false)}
+            {showArms && !dobra && !frR && armOf('r', ra, accent, skin, !crR)}
+            {showArms && dobra && (
+              <>
+                {forearmCrosses('l', la, dobra[0]) && forearmCast('l', la, dobra[0], uid)}
+                {forearmCrosses('l', la, dobra[0]) && armLower('l', la, dobra[0], accent, skin, false)}
+                {forearmCrosses('r', ra, dobra[1]) && forearmCast('r', ra, dobra[1], uid)}
+                {armUpper('r', ra, accent, true)}
+                {armLower('r', ra, dobra[1], accent, skin, !forearmCrosses('r', ra, dobra[1]))}
+              </>
+            )}
 
             <g transform={HX}>
               {hair.drape && (
@@ -803,16 +944,21 @@ const makeGente = (style: 'limpo' | 'cor'): React.FC<PessoaProps> => {
               {hair.beard && <Shaded id={`${uid}d`} d={hair.beard} fill={hairColor} hole={[92, 96, 54, 52]} />}
               {hair.stache && <path d={hair.stache} fill={hairColor} />}
               {mood === 'feliz' && hair.beard && <path d="M87 113 Q100 116.5 113 113 Q111 126 100 126 Q89 126 87 113Z" fill={INK} />}
-              {!hideTop && hair.front && (
-                <g clipPath={`url(#${uid}h)`} opacity={0.8}>
-                  <path d={hair.front} fill={SHADE} transform="translate(1.5 3.5)" />
-                </g>
+              {comCabelo(
+                <>
+                  {!hideTop && hair.front && (
+                    <g clipPath={`url(#${uid}h)`} opacity={0.8}>
+                      <path d={hair.front} fill={SHADE} transform="translate(1.5 3.5)" />
+                    </g>
+                  )}
+                  {!hideTop && hair.front && <Shaded id={`${uid}f`} d={hair.front} fill={hairColor} hole={hair.hole} />}
+                  {!hideTop && hair.front && !hair.back && hair.texture && <path d={hair.texture} stroke={mix(hairColor, C.deep, 0.3)} strokeWidth={2} strokeLinecap="round" fill="none" />}
+                  {!hideTop && hair.part && <path d={hair.part} stroke={mix(skin, C.deep, 0.15)} strokeWidth={2.2} strokeLinecap="round" />}
+                  {!hideTop && hair.strands && <path d={hair.strands} stroke={hairColor} strokeWidth={2.6} strokeLinecap="round" fill="none" />}
+                  {!hideTop && <path d={hair.shine} stroke={SHINE} strokeWidth={4} strokeLinecap="round" fill="none" />}
+                </>,
+                0.5,
               )}
-              {!hideTop && hair.front && <Shaded id={`${uid}f`} d={hair.front} fill={hairColor} hole={hair.hole} />}
-              {!hideTop && hair.front && !hair.back && hair.texture && <path d={hair.texture} stroke={mix(hairColor, C.deep, 0.3)} strokeWidth={2} strokeLinecap="round" fill="none" />}
-              {!hideTop && hair.part && <path d={hair.part} stroke={mix(skin, C.deep, 0.15)} strokeWidth={2.2} strokeLinecap="round" />}
-              {!hideTop && hair.strands && <path d={hair.strands} stroke={hairColor} strokeWidth={2.6} strokeLinecap="round" fill="none" />}
-              {!hideTop && <path d={hair.shine} stroke={SHINE} strokeWidth={4} strokeLinecap="round" fill="none" />}
               {who.glasses && (
                 <g stroke={INK} strokeWidth={2.4} fill="rgba(255,255,255,0.10)" strokeLinejoin="round">
                   <path d={softPoly(hexPts(85, 94, 11.5, 1, true), 2.5)} />
@@ -850,10 +996,27 @@ const makeGente = (style: 'limpo' | 'cor'): React.FC<PessoaProps> => {
           // fase 3: tudo menos a sombra gira/sobe/amassa em volta dos pés
           <>
             <g transform={poseT(pose, true)}>
-              {legPose(0, legL)}
-              {legPose(1, legR)}
+              {legPose(0, corre ? legRun(0, joelho[0], chuta[0], estica(0)) : legL)}
+              {legPose(1, corre ? legRun(1, joelho[1], chuta[1], estica(1)) : legR)}
             </g>
             <g transform={poseT(pose, false)}>{body}</g>
+            {/* corrida: o joelho que vem pra câmera passa NA FRENTE da barra da roupa. A mesma perna de novo,
+                cortada da barra pra baixo — a linha de corte sobe com o joelho (em 0 ela coincide com a
+                perna de trás: sem pulo na troca) */}
+            {corre && joelho[0] + joelho[1] > 0.005 && (
+              <g transform={poseT(pose, true)}>
+                {([0, 1] as const).map((i) =>
+                  joelho[i] > 0.005 ? (
+                    <g key={i}>
+                      <clipPath id={`${uid}k${i}`}>
+                        <rect x={-100} y={222 + life.lift + Math.max(0, pose.y ?? 0) + 2 - 36 * joelho[i]} width={400} height={400} />
+                      </clipPath>
+                      <g clipPath={`url(#${uid}k${i})`}>{legPose(i, legRun(i, joelho[i], chuta[i], estica(i)))}</g>
+                    </g>
+                  ) : null,
+                )}
+              </g>
+            )}
           </>
         ) : (
           <>

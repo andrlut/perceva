@@ -13,9 +13,13 @@
 //    Cada passo que não é `pronta` solta um jato pela válvula 4 q depois da deixa e tira `gasta`
 //    (default 0,07) do nível.
 //  - Elenco: atrás dela, pés em y 1170, ≥ 200 px (default 240), pele e roupa pelo seed, filtro só de
-//    saturação (não escurece pele). Cada um fica em `pronta` até a deixa, faz a ação até o `ate`
-//    (saltar/levantar repetem até lá) e volta a `pronta`. Nunca cruza o corpo dela: quem cairia em
-//    cima é empurrado pro lado. No parque, quem salta perto do caixote da estação SOBE nele.
+//    saturação (não escurece pele). Cada um fica em `pronta` até a deixa, faz a ação até o `ate` e
+//    volta a `pronta`. `reps`/`ritmo` valem como nos passos; saltar/levantar SEM `reps` repetem em
+//    laço até o `ate` (sem `ate`, até o fim da fala — figurante não congela). Nunca cruza o corpo
+//    dela: quem cairia em cima é empurrado pro lado. No parque, quem salta perto do caixote da
+//    estação SOBE nele (e desce na rep seguinte: sobe, desce, sobe…).
+//  - O chão anda (rodada 2): enquanto um passo `correr` vale, o lugar recebe `geo.anda`
+//    (acao.tsx → corridaDe) e as raias/juntas do piso descem pra câmera.
 //  - Rótulos: os da cena + o `rotulo` de cada passo (escrito na deixa do passo). A cena acha a vaga
 //    de cada um (fora do medidor, do corpo dela no salto e dos figurantes) e põe as vagas no `busy`
 //    do cenário: nada do lugar fica embaixo do medidor nem das palavras.
@@ -27,7 +31,7 @@
 import React from 'react';
 import { useCurrentFrame } from 'remotion';
 import { ramp, sai } from '../../components';
-import { Ator, cicloDe, maoNaTela, pontoNaTela, poseDe, type PoseAtor } from '../../elenco/acao';
+import { Ator, VEM_DESCE, VEM_MAX, cicloDe, corridaDe, maoNaTela, pontoNaTela, poseDe, type AcaoPlano, type PoseAtor } from '../../elenco/acao';
 import { Brilho } from '../../elenco/cast';
 import { SHIRTS, SKINS } from '../../elenco/cenario';
 import { JATO, Medidor } from '../../elenco/reservatorio';
@@ -38,7 +42,7 @@ import { cue } from '../../timeline';
 import { free, hits, type EnvGeo, type Rect } from '../ambientes';
 import { PARQUE_POSTOS, parque } from '../lugares/parque';
 import { Peca, pieceBox } from '../Peca';
-import { Rotulo, achaVaga, rotuloRect, useFontesDoRotulo, type Vaga } from '../rotulo';
+import { Rotulo, achaVaga, bochechaDoLado, cabecaDe, pontaNaCabeca, rotuloRect, useFontesDoRotulo, type Vaga } from '../rotulo';
 import { Stage, at, useAccent, useProtagonista, useSpr, type MS } from '../scenes';
 import { Sfx } from '../sfx';
 import type { AcaoKind, AcaoSpec, Extra, MedidorSpec, Mood, Passo, PieceName, Regiao, RotuloSpec } from '../spec';
@@ -54,8 +58,15 @@ const FAZ = {
   medidor: { w: 180, top: 316, margem: 56 },
 };
 
-/** A lista das palavras no alto (rótulos sem posição nem seta): de y 400 em diante, de 96 em 96 (a cápsula tem 86). */
-const LISTA = { y: 400, passo: 96, fim: 820 };
+/**
+ * A lista das palavras (rótulos sem posição nem seta, os dos passos inclusive): uma embaixo da outra,
+ * na ordem da fala, na MESMA coluna — 14 px entre cápsulas (100 px de linha a linha com a cápsula de
+ * uma linha, 86). A coluna é escolhida pra cena inteira: o centro no alto; não cabendo (ela saltando
+ * na escala de quem veio pra câmera ocupa o alto), o lado sem o medidor; por último embaixo do medidor.
+ * Em cada coluna tenta 54, 48 e 44 px. A palavra que entra quando a anterior SAI (`out` na deixa
+ * dela) fica no lugar dela (troca); senão entra embaixo da última que está na tela.
+ */
+const LISTA = { y: 400, passo: 96, folga: 14, topo: 290, fundo: 1340, margem: 36, coluna: 300, sizes: [54, 48, 44] };
 
 const cl = (v: number, a = 0, b = 1) => Math.max(a, Math.min(b, v));
 const sm = (x: number) => {
@@ -123,10 +134,11 @@ const faixaDe = (passos: Passo[]) => {
       cur = p.para;
       xs.push(cur);
     }
-    if (p.acao === 'correr' && p.para !== undefined) esc *= 1.1;
+    // as arrancadas pra câmera dividem o caminho até VEM_MAX (acao.tsx): o espaço é o do fim
+    if (p.acao === 'correr' && p.para !== undefined) esc = VEM_MAX;
   }
   const dentro = xs.map((x) => cl(x, 0, 1080));
-  return { x0: Math.min(...dentro), x1: Math.max(...dentro), esc: Math.min(1.2, esc), salta: passos.some((p) => p.acao === 'saltar') };
+  return { x0: Math.min(...dentro), x1: Math.max(...dentro), esc, salta: passos.some((p) => p.acao === 'saltar') };
 };
 
 /**
@@ -135,7 +147,7 @@ const faixaDe = (passos: Passo[]) => {
  */
 const corpoRect = (x0: number, x1: number, y: number, size: number, esc = 1, salta = false, meia = 0.45): Rect => {
   const k = (size / 200) * esc;
-  const drop = (esc - 1) * size * 0.4;
+  const drop = (esc - 1) * size * VEM_DESCE;
   return [x0 - meia * size * esc, y + drop - (252 + (salta ? 94 : 0)) * k, x1 + meia * size * esc, y + drop + 12];
 };
 
@@ -155,26 +167,59 @@ type Fig = {
   x: number;
   y: number;
   size: number;
-  plano: AcaoSpec[];
+  plano: AcaoPlano[];
   mao?: PieceName;
   maos?: PieceName;
-  /** salto no caixote: do chão (y) até o tampo (topo) durante o voo do 1º salto [quadros] */
-  caixote?: { topo: number; voo: [number, number] };
+  /** salto no caixote: do chão (y) ao tampo (topo) no voo da 1ª rep, de volta ao chão na 2ª, e assim
+   *  por diante; `a` = quadro do começo do salto, `n` = quadros por rep, `reps` = quantas (Infinity em laço),
+   *  `fim` = o `ate` dele (Infinity sem) */
+  caixote?: { topo: number; a: number; n: number; reps: number; fim: number };
 };
 
 /**
- * O plano de um figurante: `pronta` até a deixa, a ação até o `ate` (saltar/levantar repetem as reps
- * que cabem, até 4) e `pronta` de novo. Andar com `para` e sem `ate` anda até o fim da fala.
+ * O plano de um figurante: `pronta` até a deixa, a ação até o `ate` e `pronta` de novo. `ritmo` e
+ * `reps` valem como nos passos dela. Saltar/levantar sem `reps` repetem EM LAÇO até o `ate` (a última
+ * rep não volta pra `pronta` antes da deixa final); sem `ate`, até o fim da fala. Andar com `para` e
+ * sem `ate` anda até o fim da fala.
  */
-const planoExtra = (s: MS, e: Extra): AcaoSpec[] => {
-  const ini = cue(s, e.cue);
-  const n = cicloDe(e.acao);
-  const reps = !LACO.has(e.acao) && e.ate ? cl(Math.round((cue(s, e.ate) - ini) / n), 1, 4) : 1;
+const planoExtra = (e: Extra): AcaoPlano[] => {
   // figurante corre NO LUGAR (nunca na mesma direção que ela: leria corrida, comparação); só o andar atravessa
   const trajeto = e.acao === 'andar' ? { de: e.x, para: e.para } : e.acao === 'correr' ? { de: e.x } : {};
-  const acao: AcaoSpec = { acao: e.acao, cue: e.cue, ate: e.ate, reps, ...trajeto };
+  const laco = !LACO.has(e.acao) && e.reps === undefined;
+  const acao: AcaoPlano = {
+    acao: e.acao,
+    cue: e.cue,
+    ate: e.ate,
+    ...(e.ritmo ? { ritmo: e.ritmo } : {}),
+    ...(e.reps !== undefined ? { reps: e.reps } : {}),
+    ...(laco ? { laco: true } : {}),
+    ...trajeto,
+  };
   const anda = e.acao === 'andar' && e.para !== undefined && !e.ate;
-  return [{ acao: 'pronta' }, acao, ...(anda ? [] : [{ acao: 'pronta' } as AcaoSpec])];
+  // em laço sem `ate`, ele não para (sem a `pronta` do fim: ela entraria 1,5 s depois)
+  const semFim = anda || ((laco || LACO.has(e.acao)) && !e.ate);
+  return [{ acao: 'pronta' }, acao, ...(semFim ? [] : [{ acao: 'pronta' } as AcaoPlano])];
+};
+
+/**
+ * Onde estão os pés de quem salta no caixote: a rep par sobe do chão ao tampo, a ímpar desce do tampo
+ * ao chão, sempre durante o voo do salto (5/22 a 18/22 da rep: o poseAt do saltar). O `ate` corta a
+ * pose, não o lugar — quem estava em cima fica em cima.
+ */
+const caixoteY = (c: NonNullable<Fig['caixote']>, chao: number, frame: number) => {
+  const f = frame - c.a;
+  if (f <= 0) return chao;
+  // a última rep que decola antes do `ate` (a que o `ate` pega ainda no agachamento não conta)
+  const gFim = c.fim - c.a;
+  const ultima = Math.min(c.reps - 1, Number.isFinite(gFim) ? Math.floor(gFim / c.n) - (gFim % c.n < (5 * c.n) / 22 ? 1 : 0) : Infinity);
+  if (ultima < 0) return chao;
+  const r = Math.floor(f / c.n);
+  const rep = Math.min(ultima, r);
+  // passou da última: pousado onde ela deixou
+  const g = r > rep ? c.n : f - rep * c.n;
+  const k = sm((g - (5 * c.n) / 22) / ((13 * c.n) / 22));
+  const [de, para] = rep % 2 ? [c.topo, chao] : [chao, c.topo];
+  return de + (para - de) * k;
 };
 
 // ------------------------------------------------------------------ a peça que sai da mão
@@ -286,18 +331,17 @@ export const Faz: React.FC<{ s: MS }> = ({ s }) => {
       const dir = corpoDela[1] + meia + 8;
       fx = cl(Math.abs(fx - esq) <= Math.abs(fx - dir) ? esq : dir, 0.3 * fs, 1080 - 0.3 * fs);
     }
-    const plano = planoExtra(s, e);
+    const plano = planoExtra(e);
     const pecas: Pick<Fig, 'mao' | 'maos'> = e.acao === 'levantar' ? { maos: 'peso' } : e.acao === 'mexer' || e.acao === 'beber' ? { mao: pr.holding ?? 'copo-agua' } : {};
     const fig: Fig = { e, x: fx, y: FAZ.fundo, size: fs, plano, ...pecas };
     // no parque, quem salta perto do caixote sobe nele (box jump): do chão na frente dele até o tampo
     const cx = PARQUE_POSTOS.caixote.x;
     const estacaoAli = free(clear, estacao[0], estacao[2]) && !hits(medRect ? [medRect] : [], [estacao[0] - 10, estacao[1] - 10, estacao[2] + 10, estacao[3] + 10]);
     if (amb === 'parque' && e.acao === 'saltar' && Math.abs(e.x - cx) <= 100 && estacaoAli) {
-      const q = cicloDe('saltar') / 22;
-      const a = cue(s, e.cue);
       fig.x = cx;
       fig.y = CAIXOTE_CHAO + shiftParque;
-      fig.caixote = { topo: PARQUE_POSTOS.caixote.topo + shiftParque, voo: [a + 5 * q, a + 18 * q] };
+      const reps = e.reps !== undefined ? Math.max(1, Math.min(4, Math.round(e.reps))) : Infinity;
+      fig.caixote = { topo: PARQUE_POSTOS.caixote.topo + shiftParque, a: cue(s, e.cue), n: cicloDe('saltar', e.ritmo), reps, fim: e.ate ? cue(s, e.ate) : Infinity };
     }
     return fig;
   });
@@ -317,21 +361,73 @@ export const Faz: React.FC<{ s: MS }> = ({ s }) => {
     const n = cicloDe('saltar', p.ritmo);
     return [[ini[i] + (5 * n) / 22, ini[i] + n * (repsDe(p) - 1) + (18 * n) / 22 + 2] as [number, number]];
   });
-  const placed: { v: Vaga; win: [number, number] }[] = [];
-  const vagas = rotulos.map((r) => {
-    const win: [number, number] = [r.at, r.out ? cue(s, r.out) + 8 : Infinity];
-    const cruza = ([a, b]: [number, number]) => a < win[1] && win[0] < b;
-    const outros = placed.filter((p) => cruza(p.win)).map((p) => p.v.rect);
-    const busy = [...busyRot, ...(saltos.some(cruza) ? [ela] : []), ...outros];
-    let v: Vaga | null = null;
-    if (r.x !== undefined || r.y !== undefined) {
-      const rx = r.x ?? 540;
-      const ry = r.y ?? 480;
-      v = { x: rx, y: ry, align: 'center', max: 620, rect: rotuloRect(r.text, rx, ry) };
-    } else if (!r.seta) {
-      // sem seta, as palavras dos passos viram uma LISTA no alto, centrada, uma embaixo da outra
-      // (a ordem da fala); não coube, a fila de sempre (achaVaga)
-      for (let y = LISTA.y; y <= LISTA.fim && !v; y += LISTA.passo) {
+  type VagaL = Vaga & { size?: number };
+  type Janela = [number, number];
+  const cruzaJ = (a: Janela, b: Janela) => a[0] < b[1] && b[0] < a[1];
+  /** na tela da deixa até a saída (+8 q da saída, `cauda`); sem `out`, até o fim */
+  const janelaDe = (r: Rot, cauda = 8): Janela => [r.at, r.out ? cue(s, r.out) + cauda : Infinity];
+  const noAr = (w: Janela) => saltos.some((j) => cruzaJ(j, w));
+  /** os rótulos que dividem a tela não encostam (a mesma folga de 16 px da fila do Stage) */
+  const folga = (r: Rect): Rect => [r[0] - 16, r[1] - 16, r[2] + 16, r[3] + 16];
+  const vagas: (VagaL | null)[] = rotulos.map(() => null);
+  const placed: { v: Vaga; win: Janela }[] = [];
+  // 1) as de posição fixa
+  rotulos.forEach((r, i) => {
+    if (r.x === undefined && r.y === undefined) return;
+    const rx = r.x ?? 540;
+    const ry = r.y ?? 480;
+    vagas[i] = { x: rx, y: ry, align: 'center', max: 620, rect: rotuloRect(r.text, rx, ry) };
+    placed.push({ v: vagas[i]!, win: janelaDe(r) });
+  });
+  // 2) a lista (sem posição nem seta): uma coluna pra cena inteira
+  const lista = rotulos.map((r, i) => i).filter((i) => rotulos[i].x === undefined && rotulos[i].y === undefined && !rotulos[i].seta);
+  if (lista.length) {
+    const ladoLivre = m?.lado === 'esquerda' ? 'direita' : 'esquerda';
+    const colDe = (lado: 'esquerda' | 'direita', y0: number) =>
+      lado === 'esquerda'
+        ? { x: LISTA.margem, align: 'left' as const, max: LISTA.coluna, y0 }
+        : { x: 1080 - LISTA.margem, align: 'right' as const, max: LISTA.coluna, y0 };
+    const cols = [
+      { x: 540, align: 'center' as const, max: 620, y0: LISTA.y },
+      colDe(ladoLivre, LISTA.y),
+      ...(medRect ? [colDe(ladoLivre === 'esquerda' ? 'direita' : 'esquerda', medRect[3] + 24)] : []),
+    ];
+    const tenta = (c: (typeof cols)[number], size: number) => {
+      const out: { i: number; v: VagaL; vivo: Janela }[] = [];
+      for (const i of lista) {
+        const r = rotulos[i];
+        const win = janelaDe(r);
+        const vivo = janelaDe(r, 0);
+        // entra embaixo da última que ainda está na tela; a que SAI na deixa desta libera o lugar (troca)
+        const acima = out.filter((o) => cruzaJ(o.vivo, vivo));
+        const y = acima.length ? Math.max(...acima.map((o) => o.v.rect[3])) + LISTA.folga : c.y0;
+        const rect = rotuloRect(r.text, c.x, y, size, c.align, c.max);
+        const busy = [...busyRot, ...(noAr(win) ? [ela] : []), ...placed.filter((p) => cruzaJ(p.win, win)).map((p) => folga(p.v.rect))];
+        if (rect[1] < LISTA.topo || rect[3] > LISTA.fundo || rect[0] < LISTA.margem - 8.5 || rect[2] > 1080 - LISTA.margem + 8.5 || hits(busy, rect)) return null;
+        out.push({ i, v: { x: c.x, y, align: c.align, max: c.max, rect, size }, vivo });
+      }
+      return out;
+    };
+    let achou: ReturnType<typeof tenta> = null;
+    for (const c of cols) {
+      for (const size of LISTA.sizes) if ((achou = tenta(c, size))) break;
+      if (achou) break;
+    }
+    if (achou) {
+      for (const o of achou) {
+        vagas[o.i] = o.v;
+        placed.push({ v: o.v, win: janelaDe(rotulos[o.i]) });
+      }
+    }
+  }
+  // 3) o resto (com seta, ou a lista que não coube em coluna nenhuma): uma por uma, como antes
+  rotulos.forEach((r, i) => {
+    if (vagas[i]) return;
+    const win = janelaDe(r);
+    const busy = [...busyRot, ...(noAr(win) ? [ela] : []), ...placed.filter((p) => cruzaJ(p.win, win)).map((p) => folga(p.v.rect))];
+    let v: VagaL | null = null;
+    if (!r.seta) {
+      for (let y = LISTA.y; y + 86 <= LISTA.fundo && !v; y += LISTA.passo) {
         const rect = rotuloRect(r.text, 540, y);
         if (!hits(busy, rect)) v = { x: 540, y, align: 'center', max: 620, rect };
       }
@@ -342,12 +438,13 @@ export const Faz: React.FC<{ s: MS }> = ({ s }) => {
       const alvo = Array.isArray(r.seta) ? r.seta : p0 ? pontoNaTela(r.seta as keyof typeof CORPO.pontos, boxAt(p0).box, p0.pose) : undefined;
       v = achaVaga(r.text, busy, { alvo });
     }
+    vagas[i] = v;
     placed.push({ v, win });
-    return v;
   });
+  const vagasOk = vagas as VagaL[];
   // rótulo que caiu em cima da estação tira ela do lugar (o `decor`): ninguém salta num caixote que sumiu
   for (const g of figs) {
-    if (g.caixote && hits(vagas.map((v) => v.rect), [estacao[0] - 10, estacao[1] - 10, estacao[2] + 10, estacao[3] + 10])) {
+    if (g.caixote && hits(vagasOk.map((v) => v.rect), [estacao[0] - 10, estacao[1] - 10, estacao[2] + 10, estacao[3] + 10])) {
       g.caixote = undefined;
       g.y = FAZ.fundo;
     }
@@ -356,14 +453,27 @@ export const Faz: React.FC<{ s: MS }> = ({ s }) => {
   // ---------------------------------------------------------------- geometria pro Stage
   const pontos = Object.fromEntries((Object.keys(CORPO.pontos) as (keyof typeof CORPO.pontos)[]).map((r) => [r, pontoNaTela(r, box, pd.pose)])) as Partial<Record<Regiao, [number, number]>>;
   // a ponta da seta acompanha ela (a vaga do rótulo, não)
-  const setaDe = (r: Rot): [number, number] | undefined => (Array.isArray(r.seta) ? r.seta : r.seta ? pontos[r.seta] : undefined);
+  // cabeca: a ponta pousa no contorno do lado do rótulo; rosto/pele: a bochecha do lado do rótulo
+  const setaDe = (r: Rot, v: Vaga): [number, number] | undefined => {
+    if (Array.isArray(r.seta)) return r.seta;
+    if (!r.seta) return undefined;
+    if (r.seta === 'cabeca') {
+      const cab = cabecaDe(pontos);
+      return cab ? pontaNaCabeca(cab, v.rect) : pontos.cabeca;
+    }
+    if (r.seta === 'rosto' || r.seta === 'pele') return bochechaDoLado(pontos, v.rect);
+    return pontos[r.seta];
+  };
   const show = [...passos.map((p) => p.peca), ...(passos.some((p) => p.acao === 'levantar') ? ['peso'] : []), pr.holding];
+  // o chão que anda: enquanto um passo `correr` vale, a câmera vai junto e o lugar passa por baixo
+  const anda = corridaDe(s, passos, frame);
   const geo: EnvGeo = {
     ground,
     clear,
     spot: [x, ground - size * 0.7, size],
-    busy: [...(medRect ? [medRect] : []), ...vagas.map((v) => v.rect)],
+    busy: [...(medRect ? [medRect] : []), ...vagasOk.map((v) => v.rect)],
     show,
+    ...(anda ? { anda } : {}),
   };
   // com elenco, o lugar fica sem a gente dele (o corredor da trilha cruzaria os figurantes)
   const sx: MS = { ...s, props: { ...pr, rotulos: undefined, ...(elenco.length ? { gente: 'nenhuma' as const } : {}) } };
@@ -375,7 +485,21 @@ export const Faz: React.FC<{ s: MS }> = ({ s }) => {
   const pecaAparece = passos.flatMap((p, i) => (i > 0 && ini[i] > s.lead + 2 && (p.peca || p.acao === 'levantar') ? [ini[i]] : []));
 
   return (
-    <Stage s={sx} geo={geo} focus={{ pessoa: pontos.rosto, peca: medRect ? [(medRect[0] + medRect[2]) / 2, (medRect[1] + medRect[3]) / 2] : undefined }} pontos={pontos}>
+    <Stage
+      s={sx}
+      geo={geo}
+      focus={{ pessoa: pontos.rosto, peca: medRect ? [(medRect[0] + medRect[2]) / 2, (medRect[1] + medRect[3]) / 2] : undefined }}
+      pontos={pontos}
+      // os rótulos são da tela: fora da câmera (um push não corta a palavra), por cima do primeiro plano
+      tela={
+        rotulos.length
+          ? rotulos.map((r, i) => {
+              const v = vagasOk[i];
+              return <Rotulo key={i} s={s} text={r.text} cue={r.cue} out={r.out} x={v.x} y={v.y} size={v.size} align={v.align} max={v.max} tom={r.tom} seta={setaDe(r, v)} accent={accent} />;
+            })
+          : undefined
+      }
+    >
       {feliz ? <Sfx at={turnAt} name="chime" /> : null}
       {pecaAparece.map((f, i) => (
         <Sfx key={`a${i}`} at={f} name="pop2" gain={0.8} />
@@ -390,8 +514,7 @@ export const Faz: React.FC<{ s: MS }> = ({ s }) => {
         {figs.map((g, i) => {
           const ed = poseDe(s, g.plano, frame);
           const fx = (ed.ativa?.de ?? g.x) + ed.x;
-          // o salto no caixote: os pés vão do chão ao tampo durante o voo do 1º salto
-          const fy = g.caixote ? g.y + (g.caixote.topo - g.y) * sm((frame - g.caixote.voo[0]) / (g.caixote.voo[1] - g.caixote.voo[0])) : g.y;
+          const fy = g.caixote ? caixoteY(g.caixote, g.y, frame) : g.y;
           return (
             <div key={i} style={{ position: 'absolute', inset: 0, filter: 'saturate(0.75)' }}>
               <Ator
@@ -443,10 +566,6 @@ export const Faz: React.FC<{ s: MS }> = ({ s }) => {
           <Medidor t={frame} x={medRect[0]} y={medRect[1]} size={FAZ.medidor.w} nivel={med.nivel} jato={med.jato} />
         </div>
       ) : null}
-      {rotulos.map((r, i) => {
-        const v = vagas[i];
-        return <Rotulo key={i} s={s} text={r.text} cue={r.cue} out={r.out} x={v.x} y={v.y} align={v.align} max={v.max} tom={r.tom} seta={setaDe(r)} accent={accent} />;
-      })}
     </Stage>
   );
 };

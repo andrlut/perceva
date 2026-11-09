@@ -1,5 +1,5 @@
 {
-  "_doc": "Piloto r3 (fase 3 do molde) do colágeno. A FALA é a da r2 (mesmos ids, textos e ordem; a voz vem por --voz-de). Assinatura deste vídeo: o espelho do banheiro (plano fechado na pia: a câmera é o espelho), a cozinha onde ela toma (plano fechado no balcão) e a LUPA na pele (a rede de colágeno), recurso de 'dentro' só deste vídeo. O tempo passa pelo calendário: no 'days' ele marca poucas casas e sai cedo (uns dias); no 'weeks' ele corre as cinco semanas. Régua do parceiro: estrutura da pele e semanas de constância, nada instantâneo, sem antes/depois, sem marca, sem número fora do verso; rótulos só com palavras da própria fala.",
+  "_doc": "Piloto r3 (fase 3 do molde) do colágeno. A FALA é a da r2 (mesmos ids, textos e ordem; a voz vem por --voz-de). Assinatura deste vídeo: o espelho do banheiro (plano fechado na pia: a câmera é o espelho), a cozinha onde ela toma (plano fechado no balcão) e a LUPA na pele (a rede de colágeno), recurso de 'dentro' só deste vídeo — com ela GRANDE na lupa (pessoa: grande), não no canto. O tempo passa pelo calendário: no 'days' ele marca cinco casas e fica (uns dias, run.casas); no 'weeks' ele corre as cinco semanas. Régua do parceiro: estrutura da pele e semanas de constância, nada instantâneo, sem antes/depois, sem marca, sem número fora do verso; rótulos só com palavras da própria fala.",
   "slug": "paker-health-energia-pele-forca",
   "ideas": {
     "colageno-constancia": {
@@ -29,8 +29,7 @@
               {
                 "p": "calendario",
                 "cue": { "pt": "depois de uns dias", "en": "a few days in" },
-                "run": { "cue": { "pt": "dias", "en": "days in" } },
-                "out": { "pt": "a pele", "en": "your skin" }
+                "run": { "cue": { "pt": "dias", "en": "days in" }, "casas": 5 }
               }
             ],
             "rotulos": [
@@ -47,6 +46,7 @@
           "props": {
             "kicker": { "pt": "Na pele", "en": "In your skin" },
             "plano": "lupa",
+            "pessoa": "grande",
             "transicao": "zoom",
             "ambiente": "banheiro",
             "hora": "manha",
@@ -86,6 +86,7 @@
           "props": {
             "kicker": { "pt": "Dentro do corpo", "en": "Inside your body" },
             "plano": "lupa",
+            "pessoa": "grande",
             "ambiente": "cozinha",
             "hora": "manha",
             "mood": "ok",
@@ -123,7 +124,7 @@
         {
           "id": "weeks",
           "scene": "cena",
-          "hold": 0.3,
+          "hold": 0.8,
           "pt": { "caption": "O resultado aparece *em semanas*, não em dias, porque a pele se renova devagar." },
           "en": { "caption": "Results show up *in weeks*, not days, because skin renews itself slowly." },
           "props": {

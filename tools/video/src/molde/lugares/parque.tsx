@@ -10,6 +10,10 @@
 //          (de frente, crescendo: lê "correndo", não "deslizando"); quem caminha vai de lado,
 //          atrás da estação
 //   front  folhagem desfocada (esquerda) e cerca baixa (direita)
+//   anda   (rodada 2, `EnvP.anda`) ela corre e a câmera vai junto: o CHÃO passa — as marcas das raias
+//          (os risquinhos transversais de cada linha) descem pra câmera, crescendo e acelerando com a
+//          perspectiva, e esticam em riscos com a velocidade; grãos do piso viram riscos de velocidade
+//          no chão. Nada no corpo dela (sem rastro): a velocidade é do chão.
 //
 // Geometria: o chão é uma perspectiva de verdade (y = 1000 + F/Z, x = 540 + F·X/Z, F = 2000), com
 // os pés da protagonista em Z = 10 (y 1200 = 1000 + depth). A raia tem 1,22 m: 244 px nos pés dela.
@@ -22,7 +26,7 @@ import { Ator, poseAt } from '../../elenco/acao';
 import { Arvore, Nuvem, Predios, SET, SkyDefs, noise } from '../../elenco/cenario';
 import { C } from '../../theme';
 import type { Hora } from '../spec';
-import { ArtSvg, decor, free, hits, howMany, type EnvP, type Lugar, type Rect } from '../ambientes';
+import { ArtSvg, decor, free, hits, howMany, type Anda, type EnvP, type Lugar, type Rect } from '../ambientes';
 
 const F = 2000;
 const px = (X: number, Z: number): [number, number] => [540 + (F * X) / Z, 1000 + F / Z];
@@ -130,6 +134,7 @@ const ParqueBack: React.FC<EnvP> = (p) => {
       {[-raia / 2, raia / 2].map((X) => (
         <polygon key={X} points={linha(X, 0.055)} fill={C.hi} opacity={0.26} />
       ))}
+      {p.anda ? <PistaAnda anda={p.anda} /> : null}
       {/* a raia do meio um pouco mais clara: é onde ela pisa */}
       <polygon points={quad(-raia / 2 + 0.05, raia / 2 - 0.05, longe, perto)} fill={C.hi} opacity={0.025} />
       {/* trilha de terra: sai de trás da sebe e vem pra câmera, pela direita da pista */}
@@ -139,6 +144,59 @@ const ParqueBack: React.FC<EnvP> = (p) => {
       <polygon points="905,1043 931,1043 925,1074 897,1074" fill={C.hi} opacity={0.12} />
       {hora === 'noite' ? <rect x={-400} y={640} width={1880} height={1960} fill="#070A22" opacity={0.3} /> : null}
     </ArtSvg>
+  );
+};
+
+// ------------------------------------------------------------------ o chão que anda
+/** Metros que a pista anda por quadro-de-corrida (≈ 7 m/s: o passo dela é de tiro). */
+const VEL = 0.23;
+/** A cada quantos metros cada linha tem a sua marca transversal, e até onde (longe) elas vão. */
+const MARCA = { cada: 2.4, perto: 1.25, longe: 46 };
+const smooth = (x: number) => {
+  const k = Math.max(0, Math.min(1, x));
+  return k * k * (3 - 2 * k);
+};
+/**
+ * As raias descendo pra câmera: um risquinho transversal em cada linha a cada 2,4 m (parado, é a
+ * marca de sempre da pista; correndo, desce e estica em risco — o borrão da velocidade) e grãos do
+ * piso que só aparecem correndo, como riscos de velocidade no chão. Some com a distância.
+ */
+const PistaAnda: React.FC<{ anda: Anda }> = ({ anda }) => {
+  const { meia, raia } = PISTA;
+  const zs = anda.d * VEL;
+  const v = Math.max(0, Math.min(1, anda.v));
+  const span = MARCA.longe - MARCA.perto;
+  const K = Math.ceil(span / MARCA.cada);
+  const KP = K * MARCA.cada;
+  const linhas = [-meia - 0.05, -raia / 2, raia / 2, meia + 0.05];
+  const zDe = (off: number) => MARCA.perto + ((((off - zs) % KP) + KP) % KP);
+  // some com a distância e também bem perto da câmera (lá embaixo ele seria um borrão do tamanho da tela)
+  const longe = (z: number) => (1 - smooth((z - 20) / 24)) * smooth((z - 2.2) / 1.8);
+  const marcas: React.ReactNode[] = [];
+  for (let k = 0; k < K; k++) {
+    const z = zDe(k * MARCA.cada);
+    const len = 0.09 + 0.6 * v;
+    const o = (0.3 - 0.13 * v) * longe(z);
+    if (o < 0.01) continue;
+    // as guias das bordas levam a marca mais apagada: quem lê o movimento são as duas linhas da raia dela
+    for (const X of linhas) marcas.push(<polygon key={`${k}:${X}`} points={quad(X - 0.14, X + 0.14, z + len, z)} fill={C.hi} opacity={Math.abs(X) > 1 ? o * 0.6 : o} />);
+  }
+  const graos: React.ReactNode[] = [];
+  if (v > 0.02) {
+    for (let i = 0; i < 28; i++) {
+      const X = -1.72 + 3.44 * noise(i * 3 + 1);
+      const z = zDe(noise(i * 7 + 2) * KP);
+      const len = 0.05 + 1.1 * v;
+      const o = 0.2 * v * longe(z);
+      if (o < 0.01) continue;
+      graos.push(<polygon key={`g${i}`} points={quad(X - 0.022, X + 0.022, z + len, z)} fill={i % 3 ? C.hi : '#1A1030'} opacity={i % 3 ? o : o * 1.6} />);
+    }
+  }
+  return (
+    <>
+      {graos}
+      {marcas}
+    </>
   );
 };
 

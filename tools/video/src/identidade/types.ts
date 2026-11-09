@@ -56,16 +56,24 @@ export const CORPO = {
   /** do pivô do quadril à sola */
   perna: 40,
   pes: [100, 252] as [number, number],
+  /**
+   * Pontos do corpo (setas dos rótulos, âncora da lente, fluxos do corpo de vidro). `cabeca` e `boca`
+   * também dão o círculo da cabeça (centro a meio caminho, raio 50/56 da distância — rotulo.tsx →
+   * cabecaDe): mexeu num, confira a seta pra cabeça. `rosto` = a bochecha direita (abaixo e ao lado
+   * do olho, entre a boca e a borda do rosto), não o olho. `ombro` = o pivô do ombro direito (o braço
+   * da mão que segura): com o braço estendido, a lente/seta de `braco` vai pro meio do braço de cima.
+   */
   pontos: {
     cabeca: [100, 62],
-    rosto: [120, 104],
+    rosto: [126, 113],
     boca: [100, 118],
     peito: [112, 176],
     tronco: [100, 188],
     barriga: [100, 208],
     braco: [147, 186],
     perna: [116, 232],
-  } as Record<'cabeca' | 'rosto' | 'boca' | 'peito' | 'tronco' | 'barriga' | 'braco' | 'perna', [number, number]>,
+    ombro: [142, 158],
+  } as Record<'cabeca' | 'rosto' | 'boca' | 'peito' | 'tronco' | 'barriga' | 'braco' | 'perna' | 'ombro', [number, number]>,
   tronco: [
     [80, 147],
     [120, 147],

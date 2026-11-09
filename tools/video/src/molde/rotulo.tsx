@@ -1,6 +1,6 @@
 // Rótulo (fase 3): a palavra escrita na imagem, como o Notebook faz. Toda cena aceita `rotulos`;
-// quem desenha é o Stage (Layer depth 1, depois da cena), com o `busy` da cena pra não cair em cima
-// de lente, medidor, balão ou rosto.
+// quem desenha é o Stage (fora da câmera, por cima da cena e do primeiro plano — ver "Rodada 2"
+// abaixo), com o `busy` da cena pra não cair em cima de lente, medidor, balão ou rosto.
 //
 // Regras (design.json, bloco rotulo + crítica):
 //  - Fraunces itálico 600 (WONK 0), ≥ 44 px (default 54), cor clara / ouro / área;
@@ -13,16 +13,26 @@
 //    corpo) quebra antes e, se ainda não couber, encolhe até 44 px;
 //  - seta: traço de 4 px que se desenha da borda da cápsula até o ponto, com um ponto r 7 na ponta
 //    (termina NO ponto); um contorno navy por baixo segura o traço sobre qualquer fundo;
-//  - a fila nunca sobrepõe dois rótulos que estão na tela ao mesmo tempo, e sai do `busy` da cena.
+//  - a fila nunca sobrepõe dois rótulos que estão na tela ao mesmo tempo (com folga de 16 px entre
+//    eles), e sai do `busy` da cena;
+//  - seta pra `cabeca` termina no CONTORNO da cabeça, do lado do rótulo (não no meio da testa).
+//
+// Rodada 2: o rótulo é da TELA, como a legenda. O Stage desenha os rótulos FORA das camadas da
+// câmera (dentro de <NaTela>): a vaga é achada nas coordenadas da cena (o mesmo `busy` de sempre), e
+// a cada quadro o centro do rótulo e a ponta da seta passam pela câmera (push, pull, pan, a câmera na
+// mão); só DEPOIS da projeção o rótulo é empurrado pra dentro da margem de 28 px. Assim um push nunca
+// corta a palavra na borda, e a seta continua acertando o corpo. Fora do <NaTela> (quem desenha o
+// rótulo dentro da cena, nas camadas da câmera) ele sai como antes.
 //
 // Importa só TIPOS de scenes.tsx (sem ciclo de import).
-import React, { useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { continueRender, delayRender, spring, useCurrentFrame, useVideoConfig } from 'remotion';
 import { MOLA, Mascara, ramp, sai } from '../components';
 import { fontsReady } from '../fonts';
 import { C, FONT } from '../theme';
 import { cue } from '../timeline';
 import { hits, type Rect } from './ambientes';
+import { useCam, type Cam } from './camera';
 import type { MS } from './scenes';
 import type { Regiao, RotuloSpec } from './spec';
 
@@ -46,6 +56,89 @@ const FILA = { y: 480, passo: 84 };
 const ESCREVE = 13;
 /** Folga entre a cápsula e o começo da seta. */
 const FOLGA = 10;
+/** Folga entre dois rótulos que dividem a tela (a fila não encosta um no outro). */
+const ENTRE = 16;
+/** Faixa da TELA onde o rótulo projetado pode ficar: abaixo da sobrancelha, acima da legenda. */
+const TELA = { topo: 250, fundo: 1400 };
+
+// ------------------------------------------------------------------ fora da câmera
+
+const TelaCtx = createContext(false);
+/**
+ * O que vai aqui dentro é desenhado FORA das camadas da câmera (o Stage põe os rótulos aqui): cada
+ * Rotulo projeta a própria âncora e a ponta da seta pela câmera e só então se ajusta à margem.
+ */
+export const NaTela: React.FC<{ children: React.ReactNode }> = ({ children }) => <TelaCtx.Provider value>{children}</TelaCtx.Provider>;
+
+/**
+ * Um ponto da camada da pessoa (Layer depth 1) na tela, com a câmera do quadro: o mesmo transform do
+ * Layer — translate(x + mão) rotate(giro) scale(escala) em volta de (ox, oy).
+ */
+export const projeta = (c: Cam, [px, py]: [number, number]): [number, number] => {
+  const s = c.scale;
+  const a = ((c.rot ?? 0) * Math.PI) / 180;
+  const dx = (px - c.ox) * s;
+  const dy = (py - c.oy) * s;
+  return [c.ox + c.x + (c.hx ?? 0) + dx * Math.cos(a) - dy * Math.sin(a), c.oy + c.y + (c.hy ?? 0) + dx * Math.sin(a) + dy * Math.cos(a)];
+};
+
+/** O retângulo empurrado pra dentro da margem da tela (sem mudar de tamanho). */
+const naMargem = (r: Rect): Rect => {
+  const w = r[2] - r[0];
+  const h = r[3] - r[1];
+  const x0 = Math.min(Math.max(r[0], MARGEM), 1080 - MARGEM - w);
+  const y0 = Math.min(Math.max(r[1], TELA.topo), TELA.fundo - h);
+  return [x0, y0, x0 + w, y0 + h];
+};
+
+// ------------------------------------------------------------------ a cabeça
+
+/**
+ * A cabeça (círculo) a partir dos pontos `cabeca` e `boca` do corpo (CORPO.pontos: testa em y 62 e
+ * boca em y 118 na caixa 200×260; o centro do rosto do Hexa fica a meio caminho, em y 90, e o
+ * contorno — rosto + cabelo — a ~50 un. dele). Dos dois pontos já na tela sai o centro, o raio e a
+ * inclinação da cabeça, com qualquer pose ou escala.
+ */
+export const cabecaDe = (pontos: Partial<Record<Regiao, [number, number]>>): { c: [number, number]; r: number } | null => {
+  const a = pontos.cabeca;
+  const b = pontos.boca;
+  if (!a || !b) return null;
+  const L = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  if (L < 1) return null;
+  return { c: [a[0] + (b[0] - a[0]) * 0.5, a[1] + (b[1] - a[1]) * 0.5], r: (L * 50) / 56 };
+};
+
+/**
+ * A bochecha do lado do rótulo: `rosto` (CORPO) é a bochecha direita; com o rótulo do outro lado da
+ * cabeça, a seta vai pra esquerda — o espelho dela no eixo da cabeça (a reta testa → boca, que já
+ * vem inclinada com a pose). Sem isso a seta atravessava o rosto inteiro.
+ */
+export const bochechaDoLado = (pontos: Partial<Record<Regiao, [number, number]>>, rect: Rect): [number, number] | undefined => {
+  const p = pontos.rosto;
+  const a = pontos.cabeca;
+  const b = pontos.boca;
+  if (!p || !a || !b) return p;
+  const L = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  if (L < 1) return p;
+  const d: [number, number] = [(b[0] - a[0]) / L, (b[1] - a[1]) / L];
+  const t = (p[0] - a[0]) * d[0] + (p[1] - a[1]) * d[1];
+  const proj: [number, number] = [a[0] + d[0] * t, a[1] + d[1] * t];
+  const espelho: [number, number] = [2 * proj[0] - p[0], 2 * proj[1] - p[1]];
+  // de que lado do eixo fica o centro do rótulo (o mesmo sinal da bochecha direita = fica nela)
+  const lado = (q: [number, number]) => (q[0] - a[0]) * d[1] - (q[1] - a[1]) * d[0];
+  const c: [number, number] = [(rect[0] + rect[2]) / 2, (rect[1] + rect[3]) / 2];
+  return Math.sign(lado(c)) === Math.sign(lado(p)) || lado(c) === 0 ? p : espelho;
+};
+
+/** O ponto do contorno da cabeça virado pro rótulo (pro centro da cápsula). */
+export const pontaNaCabeca = (cab: { c: [number, number]; r: number }, rect: Rect): [number, number] => {
+  const cx = (rect[0] + rect[2]) / 2;
+  const cy = (rect[1] + rect[3]) / 2;
+  const dx = cx - cab.c[0];
+  const dy = cy - cab.c[1];
+  const d = Math.hypot(dx, dy) || 1;
+  return [cab.c[0] + (dx / d) * cab.r, cab.c[1] + (dy / d) * cab.r];
+};
 
 type Align = 'left' | 'center' | 'right';
 type Tom = 'claro' | 'ouro' | 'area';
@@ -209,9 +302,11 @@ export const Rotulo: React.FC<{
   accent: string;
   /** largura máxima de uma linha (default 620); coluna estreita = quebra/encolhe antes */
   max?: number;
-}> = ({ s, text, cue: deixa, out, x, y, size = SIZE, align = 'center', tom, seta, accent, max = LINHA }) => {
+}> = ({ s, text, cue: deixa, out, x, y, size = SIZE, align = 'center', tom, seta: setaCena, accent, max = LINHA }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const naTela = useContext(TelaCtx);
+  const cam = useCam();
   const at = deixa ? cue(s, deixa) : s.lead;
   if (frame < at) return null;
   const gone = out ? sai(frame, cue(s, out), 8) : 0;
@@ -219,7 +314,16 @@ export const Rotulo: React.FC<{
   const p = ramp(frame, at, ESCREVE);
   const L = rotuloLayout(text, size, max);
   const x0 = x0Of(x, L.w, align);
-  const r: Rect = [x0, y, x0 + L.w, y + L.h];
+  const r0: Rect = [x0, y, x0 + L.w, y + L.h];
+  // fora da câmera: o centro da cápsula e a ponta da seta passam pela câmera do quadro, e a
+  // cápsula (do mesmo tamanho: é da tela) só depois se ajusta à margem
+  const r: Rect = naTela
+    ? (() => {
+        const [cx, cy] = projeta(cam, [(r0[0] + r0[2]) / 2, (r0[1] + r0[3]) / 2]);
+        return naMargem([cx - L.w / 2, cy - L.h / 2, cx + L.w / 2, cy + L.h / 2]);
+      })()
+    : r0;
+  const seta = setaCena && naTela ? projeta(cam, setaCena) : setaCena;
   const color = tomDe(tom, accent);
   const alfa = alfaDe(color);
   // a cápsula vem um pouco à frente da tinta, da esquerda pra direita
@@ -385,13 +489,16 @@ export const Rotulos: React.FC<{
 }> = ({ s, rotulos, pontos = {}, busy = [], ocupa = [], accent }) => {
   useFontesDoRotulo();
   const placed: { rect: Rect; win: [number, number] }[] = [];
+  const cab = cabecaDe(pontos);
   return (
     <>
       {rotulos.map((r, i) => {
         const win = janela(s, r);
-        const seta = Array.isArray(r.seta) ? r.seta : r.seta ? pontos[r.seta] : undefined;
-        // só atrapalha o que divide a tela com este rótulo
-        const outros = placed.filter((p) => p.win[0] < win[1] && win[0] < p.win[1]).map((p) => p.rect);
+        // seta pra cabeça: a vaga mira o centro dela, e a ponta pousa no contorno do lado do rótulo
+        const naCabeca = r.seta === 'cabeca' ? cab : null;
+        const alvo = Array.isArray(r.seta) ? r.seta : naCabeca ? naCabeca.c : r.seta ? pontos[r.seta] : undefined;
+        // só atrapalha o que divide a tela com este rótulo — e com folga, pra fila não encostar
+        const outros = placed.filter((p) => p.win[0] < win[1] && win[0] < p.win[1]).map((p) => [p.rect[0] - ENTRE, p.rect[1] - ENTRE, p.rect[2] + ENTRE, p.rect[3] + ENTRE] as Rect);
         const agora = ocupa.filter((o) => (o.de ?? -Infinity) < win[1] && win[0] < (o.ate ?? Infinity)).map((o) => o.rect);
         let v: Vaga;
         if (r.x !== undefined || r.y !== undefined) {
@@ -399,9 +506,11 @@ export const Rotulos: React.FC<{
           const y = r.y ?? FILA.y;
           v = { x, y, align: 'center', max: LINHA, rect: rotuloRect(r.text, x, y) };
         } else {
-          v = achaVaga(r.text, [...busy, ...agora, ...outros], { alvo: seta });
+          v = achaVaga(r.text, [...busy, ...agora, ...outros], { alvo });
         }
         placed.push({ rect: v.rect, win });
+        // a ponta: o contorno da cabeça / a bochecha do lado do rótulo; o resto, o ponto do corpo
+        const seta = naCabeca ? pontaNaCabeca(naCabeca, v.rect) : r.seta === 'rosto' || r.seta === 'pele' ? (bochechaDoLado(pontos, v.rect) ?? alvo) : alvo;
         return <Rotulo key={i} s={s} text={r.text} cue={r.cue} out={r.out} x={v.x} y={v.y} align={v.align} max={v.max} tom={r.tom} seta={seta} accent={accent} />;
       })}
     </>

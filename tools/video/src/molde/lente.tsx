@@ -9,9 +9,16 @@
 // Dentro, um de dois conteúdos:
 //  - camadas (1..3 bandas horizontais, altura pelo `peso`): liso | rede | dobras | fluxo | agua, com
 //    `then` rareia | renova na deixa `turn` da lente (sem turn, na deixa dela), o dedo do `toque` e
-//    partículas ponto | cordao (topo, quebra, atravessa, correnteza, boiam, destaque);
+//    partículas ponto | cordao (topo, quebra, atravessa, correnteza, boiam, destaque).
+//    `rareia` (rede): a rede PERDE pedaços em ~1 s — 1 em 5 células murcha e some com os fios dela,
+//    mais uns fios soltos recolhem até sumir; os que ficam seguem inteiros (o buraco é o que se vê).
+//    `renova` (rede): uma onda sobe pela camada uma vez — onde passa, o fio se desfaz e se tece de
+//    novo, mais claro, e a célula encolhe e volta com a mola (cabe no fim da fala, mesmo devagar);
+//    as lascas soltam do topo e a rede sobe devagar como antes;
 //  - reserva: o Reservatorio (src/elenco/reservatorio.tsx) no centro, com 0,8 da altura.
 // Os rótulos de camada, partícula e reserva usam o Rotulo, dentro do círculo ou colados no aro.
+// `atras` (elipses): o cone passa por trás delas — a cabeça da pessoa grande da lupa, quando a âncora
+// fica embaixo do rosto (a seta da barriga não corta a cara dela).
 //
 // Não confundir com a `Lente` de src/components.tsx (vinheta redonda presa ao quadro).
 // Importa só TIPOS de scenes.tsx (sem ciclo de import).
@@ -303,6 +310,25 @@ export const Camadas: React.FC<{
     const celulas: React.ReactNode[] = [];
     const cellColor = mix(tone, '#FFFFFF', 0.42);
     const nucleo = mix(tone, C.deep, 0.3);
+    // rareia: a rede PERDE pedaços (não só afina) — 1 em 5 células murcha e some levando os fios dela,
+    // e mais uns fios soltos se desfazem (recolhem de uma ponta à outra), um de cada vez em ~1 s: some
+    // perto de metade das ligações. Os que ficam continuam inteiros: o buraco é o que se vê.
+    const celMorre = (kc: number) => rareia && rnd(kc, 45) < 0.2;
+    const celQuando = (kc: number) => turnAt + (5 + rnd(kc, 46) * 19) / sp;
+    const MURCHA = 12 / sp;
+    const RECOLHE = 10 / sp;
+    // renova: uma onda de reconstrução sobe devagar pela camada — onde ela passa, o fio se desfaz e se
+    // tece de novo (mais claro, assentando) e a célula encolhe e volta. Uma vez só (não é "carregando").
+    // a onda tem que caber no fim da fala (a deixa costuma ser a última palavra): o ritmo devagar
+    // alonga menos que o resto (raiz do fator)
+    const lento = Math.sqrt(sp);
+    const ONDA = 34 / lento;
+    const REFAZ = 16 / lento;
+    const refazDe = (y: number) => {
+      if (!renova) return null;
+      const tau = clamp01((b.y1 + 0.08 * bh - y) / (1.16 * bh));
+      return frame - (turnAt + tau * ONDA);
+    };
     for (let tile = kMin; tile <= kMax; tile++) {
       const ty = b.y0 - off + tile * bh;
       const at = (r: number, cc: number) => {
@@ -324,9 +350,38 @@ export const Camadas: React.FC<{
             const li = A.k * 3 + kind;
             const p = cresceAt == null ? 1 : ramp(frame, cresceAt + rnd(li, 43) * 26 / sp, 16 / sp);
             if (p <= 0) return;
+            // o trecho visível do fio [de, ate] (0..1 ao longo dele), a espessura e o brilho
+            let de = 0;
+            let ate = p;
             let wf = 1;
-            if (rareia) wf = rnd(li, 41) < 0.6 ? 1 - ramp(frame, turnAt + (rnd(li, 42) * 30) / sp, 40 / sp) : 1 - 0.3 * ramp(frame, turnAt, 40 / sp);
-            if (wf <= 0.02) return;
+            let cor = tone;
+            if (rareia) {
+              const kb = B.k;
+              let quando = rnd(li, 41) < 0.16 ? turnAt + (rnd(li, 42) * 24) / sp : Infinity;
+              if (celMorre(A.k)) quando = Math.min(quando, celQuando(A.k) - 3 / sp);
+              if (celMorre(kb)) quando = Math.min(quando, celQuando(kb) - 3 / sp);
+              if (quando < Infinity) {
+                const q = ramp(frame, quando, RECOLHE);
+                if (q >= 0.99) return;
+                // recolhe pra uma das pontas (sorteada): o fio encurta até sumir
+                if (rnd(li, 47) < 0.5) de = q;
+                else ate = Math.min(ate, 1 - q);
+                wf = 1 - 0.35 * q;
+              }
+            }
+            const refaz = refazDe((A.sy + B.sy) / 2);
+            if (refaz !== null && refaz > 0) {
+              // desfaz em 5 q e se tece de novo no resto, mais claro, assentando no tom
+              const tece = ease(clamp01((refaz - 4) / (REFAZ - 4)));
+              if (refaz < 4) wf = 1 - 0.85 * clamp01(refaz / 4);
+              else {
+                ate = Math.min(ate, Math.max(0.001, tece));
+                const novo = 1 - ramp(frame, frame - refaz + REFAZ, 40 / lento);
+                cor = mix(tone, '#FFFFFF', 0.5 * novo);
+                wf = 1 + 0.45 * novo;
+              }
+            }
+            if (ate - de <= 0.005) return;
             const mx = (A.sx + B.sx) / 2;
             const my = (A.sy + B.sy) / 2;
             const dx = B.sx - A.sx;
@@ -336,26 +391,42 @@ export const Camadas: React.FC<{
               <path
                 key={`f${tile}.${li}`}
                 d={`M${f1(A.sx)} ${f1(A.sy)} Q${f1(mx - dy * bend)} ${f1(my + dx * bend)} ${f1(B.sx)} ${f1(B.sy)}`}
-                stroke={tone}
+                stroke={cor}
                 strokeWidth={5 * u * wf}
                 strokeLinecap="round"
                 fill="none"
-                opacity={0.55 + 0.45 * wf}
+                opacity={Math.min(1, 0.55 + 0.45 * wf)}
                 pathLength={1}
-                strokeDasharray={1}
-                strokeDashoffset={1 - p}
+                strokeDasharray={`${(ate - de).toFixed(4)} 2`}
+                strokeDashoffset={(-de).toFixed(4)}
               />,
             );
           });
           // a célula respira; renovando, as que entram por baixo nascem pequenas e crescem subindo
           const born = renova && tile > 0 ? clamp01((b.y1 - A.sy) / (0.32 * bh)) : 1;
-          const sc = born * (1 + 0.05 * Math.sin(te / 16 + A.k));
+          let sc = born * (1 + 0.05 * Math.sin(te / 16 + A.k));
+          let op = 1;
+          let fill = cellColor;
+          if (celMorre(A.k)) {
+            // murcha: encolhe com um tico de fôlego no começo e some
+            const q = ramp(frame, celQuando(A.k), MURCHA);
+            if (q >= 0.99) continue;
+            sc *= (1 + 0.08 * Math.sin(Math.PI * Math.min(1, q * 3))) * (1 - q);
+            op = 1 - 0.5 * q;
+          }
+          const refaz = refazDe(A.sy);
+          if (refaz !== null && refaz > 0) {
+            // encolhe junto com os fios e volta com a mola, clara, assentando no tom
+            const volta = refaz < 4 ? 1 - 0.6 * clamp01(refaz / 4) : 0.4 + 0.6 * spring({ frame: (refaz - 4) * lento, fps, config: MOLA.pousa });
+            sc *= volta;
+            fill = mix(cellColor, '#FFFFFF', 0.55 * (1 - ramp(frame, frame - refaz + REFAZ, 40 / lento)));
+          }
           if (sc <= 0.02) continue;
           const rx = A.r * 1.15;
           const ry = A.r * 0.85;
           celulas.push(
-            <g key={`c${tile}.${A.k}`} transform={`translate(${f1(A.sx)} ${f1(A.sy)}) rotate(${f1(A.a)}) scale(${sc.toFixed(3)})`}>
-              <ellipse rx={rx} ry={ry} fill={cellColor} />
+            <g key={`c${tile}.${A.k}`} transform={`translate(${f1(A.sx)} ${f1(A.sy)}) rotate(${f1(A.a)}) scale(${sc.toFixed(3)})`} opacity={op}>
+              <ellipse rx={rx} ry={ry} fill={fill} />
               <path d={`M${rx} 0 A${rx} ${ry} 0 0 1 ${-rx} 0 Z`} fill={SHADE} />
               <circle cx={-0.1 * A.r} cy={-0.06 * A.r} r={0.32 * A.r} fill={nucleo} />
               <circle cx={-0.48 * rx} cy={-0.42 * ry} r={0.16 * A.r} fill="rgba(255,255,255,0.4)" />
@@ -622,17 +693,23 @@ const arco = (cx: number, cy: number, r: number, a0: number, a1: number) => {
   return `M${f1(x0)} ${f1(y0)} A${f1(r)} ${f1(r)} 0 0 1 ${f1(x1)} ${f1(y1)}`;
 };
 
-export const Lente: React.FC<{ s: MS; spec: LenteSpec; ancora: [number, number]; centro: [number, number]; diametro: number; accent: string; pele: string }> = ({
-  s,
-  spec,
-  ancora,
-  centro,
-  diametro,
-  accent,
-  pele,
-}) => {
+export const Lente: React.FC<{
+  s: MS;
+  spec: LenteSpec;
+  ancora: [number, number];
+  centro: [number, number];
+  diametro: number;
+  accent: string;
+  pele: string;
+  /**
+   * Elipses [cx, cy, rx, ry] por TRÁS das quais o cone passa (a cabeça dela, quando a âncora está
+   * embaixo do rosto: a pessoa grande da lupa com a lente na barriga). Sem: o cone de sempre.
+   */
+  atras?: [number, number, number, number][];
+}> = ({ s, spec, ancora, centro, diametro, accent, pele, atras }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const mid = `ln${React.useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   const openAt = spec.cue ? cue(s, spec.cue) : s.lead;
   const k = spring({ frame: frame - openAt, fps, config: MOLA.entra });
   const growAt = spec.cresce ? cue(s, spec.cresce) : null;
@@ -670,11 +747,24 @@ export const Lente: React.FC<{ s: MS; spec: LenteSpec; ancora: [number, number];
     const th = Math.atan2(ancora[1] - oy, ancora[0] - ox);
     const t1 = [ox + R * Math.cos(th + al), oy + R * Math.sin(th + al)];
     const t2 = [ox + R * Math.cos(th - al), oy + R * Math.sin(th - al)];
+    const mascara = atras && atras.length ? `url(#${mid}m)` : undefined;
     cone = (
       <svg width={1080} height={1920} viewBox="0 0 1080 1920" style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible' }}>
-        <polygon points={`${f1(ancora[0])},${f1(ancora[1])} ${f1(t1[0])},${f1(t1[1])} ${f1(t2[0])},${f1(t2[1])}`} fill={C.violet} opacity={0.12 * coneOp} />
-        <line x1={ancora[0]} y1={ancora[1]} x2={t1[0]} y2={t1[1]} stroke={C.violet2} strokeWidth={3} strokeLinecap="round" opacity={0.55 * coneOp} />
-        <line x1={ancora[0]} y1={ancora[1]} x2={t2[0]} y2={t2[1]} stroke={C.violet2} strokeWidth={3} strokeLinecap="round" opacity={0.55 * coneOp} />
+        {mascara ? (
+          <defs>
+            <mask id={`${mid}m`} maskUnits="userSpaceOnUse" x={-200} y={-200} width={1480} height={2320}>
+              <rect x={-200} y={-200} width={1480} height={2320} fill="#FFFFFF" />
+              {atras!.map(([cx, cy, rx, ry], i) => (
+                <ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} fill="#000000" />
+              ))}
+            </mask>
+          </defs>
+        ) : null}
+        <g mask={mascara}>
+          <polygon points={`${f1(ancora[0])},${f1(ancora[1])} ${f1(t1[0])},${f1(t1[1])} ${f1(t2[0])},${f1(t2[1])}`} fill={C.violet} opacity={0.12 * coneOp} />
+          <line x1={ancora[0]} y1={ancora[1]} x2={t1[0]} y2={t1[1]} stroke={C.violet2} strokeWidth={3} strokeLinecap="round" opacity={0.55 * coneOp} />
+          <line x1={ancora[0]} y1={ancora[1]} x2={t2[0]} y2={t2[1]} stroke={C.violet2} strokeWidth={3} strokeLinecap="round" opacity={0.55 * coneOp} />
+        </g>
         <circle cx={ancora[0]} cy={ancora[1]} r={13} fill="rgba(10,14,38,0.55)" stroke={C.gold} strokeWidth={4.5} opacity={coneOp} />
         <circle cx={ancora[0]} cy={ancora[1]} r={4.5} fill={C.gold} opacity={coneOp} />
       </svg>

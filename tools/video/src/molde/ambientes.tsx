@@ -71,7 +71,15 @@ export type EnvGeo = {
   seat?: { x: number; y: number; size: number };
   /** o pedaço do quadro que aparece (a miniatura do comparar mostra só o painel) */
   view?: Rect;
+  /**
+   * fase 3 (rodada 2): o chão que anda — ela corre no lugar (ou vindo pra câmera) e a câmera vai junto.
+   * `v` = quanto a corrida vale agora (0..1), `d` = quadros-de-corrida acumulados (src/elenco/acao.tsx →
+   * corridaDe). Cada lugar converte `d` na própria velocidade (o parque: as raias descem; a academia:
+   * as juntas do piso). Sem `anda`, o chão parado de sempre.
+   */
+  anda?: Anda;
 };
+export type Anda = { v: number; d: number };
 export type AmbSpec = { tipo: AmbienteKind; gente?: Gente; hora?: Hora };
 
 /** Os 4 lugares que moram neste arquivo; os da fase 3 vêm do registro (`registerLugares`). */
@@ -142,6 +150,8 @@ export type EnvP = {
   show: string[];
   seat?: { x: number; y: number; size: number };
   view: Rect;
+  /** fase 3: o chão que anda (EnvGeo.anda); undefined = parado */
+  anda?: Anda;
 };
 
 /** x livre? (o intervalo [a,b] não encosta na faixa da protagonista) */
@@ -618,6 +628,7 @@ export const Ambiente: React.FC<{ amb: AmbSpec; geo: EnvGeo; part: 'back' | 'mid
     show: (geo.show ?? []).filter((x): x is string => !!x),
     seat: geo.seat ? { ...geo.seat, y: geo.seat.y - shift } : undefined,
     view: toScene(geo.view ?? FULL),
+    ...(geo.anda ? { anda: geo.anda } : {}),
   };
   const s = part === 'front' ? 0 : shift;
   return (

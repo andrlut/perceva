@@ -304,7 +304,7 @@ function lintAcoes(where, l, list, what, ctx, lang, errors, warns) {
     }
     // correr de frente atravessando o quadro lê "deslizando" (crítica): o `para` do correr é o "vem pra câmera"
     if (a.acao === 'correr' && isNum(a.para) && Math.abs(a.para - (a.de ?? 540)) > 40)
-      warns.push(where(id, `${t}: correr não atravessa o quadro de lado (de frente, lê "deslizando") — o para liga o "vem pra câmera" (escala 1 → 1,1) e o de só ancora o x; trajeto de lado é do andar`));
+      warns.push(where(id, `${t}: correr não atravessa o quadro de lado (de frente, lê "deslizando") — o para liga o "vem pra câmera" (até a escala 1,25 na cena) e o de só ancora o x; trajeto de lado é do andar`));
     if ((a.acao === 'mexer' || a.acao === 'beber') && !(a.peca || ctx.holding || list.slice(0, i).some((b) => b?.peca && b.acao !== 'levantar')))
       errors.push(where(id, `${t}: ${a.acao} pede peça na mão (holding da cena ou peca da ação) — não se bebe de mão vazia`));
     if (a.acao === 'levantar' && a.peca && a.peca !== 'peso') warns.push(where(id, `${t}: levantar com "${a.peca}" — o halter é o peso, nas duas mãos`));
@@ -401,7 +401,9 @@ function lintDentro(where, l, p, errors, warns) {
   const plano = p.plano ?? 'corpo';
   if (!['corpo', 'lupa'].includes(plano)) return errors.push(where(id, `dentro: plano "${plano}" (corpo ou lupa)`));
   const corpo = ['fluxos', 'divide', 'regioes', 'origem', 'reserva'].filter((k) => p[k] !== undefined);
+  if (p.pessoa !== undefined && !catalog.pessoas.includes(p.pessoa)) errors.push(where(id, `pessoa "${p.pessoa}" (${catalog.pessoas.join(', ')})`));
   if (plano === 'corpo') {
+    if (p.pessoa !== undefined) errors.push(where(id, 'dentro (corpo) não aceita pessoa: canto/grande é de onde ela fica no plano lupa'));
     if (p.ambiente) errors.push(where(id, 'dentro (corpo) não aceita ambiente: o corpo de vidro enche a tela'));
     if (p.holding) errors.push(where(id, 'dentro (corpo) não aceita holding'));
     if (p.acoes) errors.push(where(id, 'dentro (corpo) não aceita acoes (ela fica de frente, de vidro): acoes são do plano lupa'));
@@ -457,6 +459,9 @@ function lintFaz(where, l, p, ctx, lang, errors, warns) {
       if (typeof e?.cue !== 'string') errors.push(where(id, `${t} precisa de cue (o figurante entra na deixa)`));
       if (e?.size !== undefined && !(isNum(e.size) && e.size >= catalog.faz.elencoSize)) errors.push(where(id, `${t}: size ${e.size} (≥ ${catalog.faz.elencoSize}: nada pequeno na tela)`));
       if (e?.para !== undefined && e.acao !== 'andar') errors.push(where(id, `${t}: para só no andar`));
+      // rodada 2: reps (sem: saltar/levantar repetem em laço até o ate) e ritmo, como nos passos
+      if (e?.reps !== undefined && !isInt(e.reps, 1, 4)) errors.push(where(id, `${t}: reps ${e.reps} (inteiro de 1 a 4; sem reps, saltar/levantar repetem até o ate)`));
+      if (e?.ritmo !== undefined && !catalog.ritmos.includes(e.ritmo)) errors.push(where(id, `${t}: ritmo "${e.ritmo}" (${catalog.ritmos.join(', ')})`));
       // cada um num esforço diferente; ninguém correndo junto com ela (lê disputa); ninguém na caixa dela
       if (seen.has(e?.acao)) warns.push(where(id, `${t}: ${e.acao} de novo (elenco[${seen.get(e.acao)}] já faz) — cada figurante num esforço diferente`));
       else seen.set(e?.acao, i);
@@ -513,10 +518,20 @@ function lintFase3(where, l, lines, i, lang, fase3, errors, warns) {
   only(['lente'], ['cena', 'dentro'], 'só cena e dentro');
   only(['passos', 'medidor', 'elenco'], ['faz'], 'só faz');
   only(['fluxos', 'divide', 'regioes', 'origem', 'reserva'], ['dentro'], 'só dentro, plano corpo');
-  only(['plano'], ['cena', 'dentro'], 'cena: fechado; dentro: corpo ou lupa');
+  only(['plano'], ['cena', 'dentro', 'pensa'], 'cena e pensa: fechado; dentro: corpo ou lupa');
+  only(['pessoa'], ['dentro'], 'só dentro, plano lupa');
   if (l.scene === 'cena' && p.plano !== undefined) {
     if (p.plano !== 'fechado') errors.push(where(id, `plano "${p.plano}" na cena: só "fechado" (corpo e lupa são do dentro)`));
     else if ((p.setting ?? 'chao') !== 'mesa') errors.push(where(id, 'plano "fechado" só com setting mesa (o balcão, a pia): ela do peito pra cima'));
+  }
+  // pensa fechado (rodada 2): ela do peito pra cima atrás do balcão do lugar, o balão junto da cabeça
+  if (l.scene === 'pensa' && p.plano !== undefined && p.plano !== 'fechado') errors.push(where(id, `plano "${p.plano}" no pensa: só "fechado"`));
+  // run.casas (rodada 2): o calendário para nessa casa ("uns dias" = 4–7, "semanas" = 35)
+  for (const [j, o] of (Array.isArray(p.objects) ? p.objects : []).entries()) {
+    const casas = o?.run?.casas;
+    if (casas === undefined) continue;
+    if (o.p !== 'calendario') errors.push(where(id, `objects[${j}].run.casas só na peça calendario (é a casa onde ele para), não em "${o.p}"`));
+    if (!isInt(casas, ...catalog.calendarioCasas)) errors.push(where(id, `objects[${j}].run.casas ${casas} (inteiro de ${catalog.calendarioCasas.join(' a ')})`));
   }
   const nextAmb = lines[i + 1]?.props?.ambiente;
   const ctx = { holding: p.holding, amb: p.ambiente, nextAmb };

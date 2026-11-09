@@ -16,6 +16,7 @@
           "props": {
             "ambiente": "cozinha",
             "hora": "manha",
+            "plano": "fechado",
             "camera": { "move": "drift", "forca": "leve" },
             "mood": "ok",
             "thought": "peso",
@@ -28,9 +29,7 @@
               {
                 "text": { "pt": "creatina", "en": "creatine" },
                 "cue": { "pt": "Creatina", "en": "creatine" },
-                "out": { "pt": "antes do treino", "en": "before training" },
-                "x": 665,
-                "y": 930
+                "out": { "pt": "antes do treino", "en": "before training" }
               }
             ]
           }

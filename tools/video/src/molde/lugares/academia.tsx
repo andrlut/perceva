@@ -13,13 +13,17 @@
 //
 // A esteira foi cortada desta leva (quem corre aqui corre no lugar, no piso).
 //
+// Rodada 2 (`EnvP.anda`): ela corre no lugar e a câmera vai junto — as juntas das placas do piso
+// descem pra câmera (as mesmas 6 linhas de sempre em u = 0..5, andando em u; parado, o piso de
+// sempre) e grãos de borracha esticam em riscos de velocidade no chão.
+//
 // Contrato: `Lugar` em ../ambientes (helpers de lá). Nunca importado pelo ambientes.tsx.
 import React from 'react';
 import { Ator, cicloDe, poseAt } from '../../elenco/acao';
 import { Relogio } from '../../elenco/cast';
 import { Janela, SET, SkyDefs } from '../../elenco/cenario';
 import { C, dimColor } from '../../theme';
-import { ArtSvg, decor, free, hits, howMany, inside, type EnvP, type Lugar, type Rect } from '../ambientes';
+import { ArtSvg, decor, free, hits, howMany, inside, type Anda, type EnvP, type Lugar, type Rect } from '../ambientes';
 
 /** Pose em laço de uma ação que tem fim (saltar/levantar): faz uma rep e descansa `pausa` quadros. */
 const lacoDe = (acao: 'saltar' | 'levantar', f: number, pausa: number) => {
@@ -168,10 +172,30 @@ const Espelho: React.FC<{ id: string; t: number }> = ({ id, t }) => {
   );
 };
 
+/** As juntas do piso (y abaixo do horizonte) em u = -1..6; u = 0..5 são as 6 de sempre. */
+const JUNTAS = [18, 42, 96, 168, 262, 388, 556, 790];
+/** y da junta em u (log-linear entre os nós: perto da câmera elas andam mais rápido, como perspectiva). */
+const juntaY = (u: number) => {
+  const i = Math.max(0, Math.min(JUNTAS.length - 2, Math.floor(u + 1)));
+  const k = u + 1 - i;
+  return Math.exp(Math.log(JUNTAS[i]) + (Math.log(JUNTAS[i + 1]) - Math.log(JUNTAS[i])) * k);
+};
+/** Juntas por quadro-de-corrida (≈ 5,6 px/quadro nos pés dela, mais perto da câmera mais rápido). */
+const VEL_JUNTA = 0.06;
+const sm01 = (x: number) => {
+  const k = Math.max(0, Math.min(1, x));
+  return k * k * (3 - 2 * k);
+};
+/** x de uma linha de fuga do piso (a k-ésima, como as do Borracha) na altura y (abaixo do horizonte). */
+const fugaX = (k: number, r: number) => 540 + k * (150 + (230 * r) / 900);
+
 /** Piso de borracha: placas em perspectiva (mesma fuga do Piso), juntas escuras e um respingo de flocos. */
-const Borracha: React.FC<{ id: string }> = ({ id }) => {
+const Borracha: React.FC<{ id: string; anda?: Anda }> = ({ id, anda }) => {
   const vx = 540;
   const rows = [42, 96, 168, 262, 388, 556];
+  // o chão que anda: as juntas descem em u (a que nasce no horizonte entra apagada, a que sai embaixo some)
+  const fi = anda ? (((anda.d * VEL_JUNTA) % 1) + 1) % 1 : 0;
+  const v = anda ? Math.max(0, Math.min(1, anda.v)) : 0;
   return (
     <g>
       <defs>
@@ -181,9 +205,36 @@ const Borracha: React.FC<{ id: string }> = ({ id }) => {
         </linearGradient>
       </defs>
       <rect x={-500} y={1000} width={2100} height={1600} fill={`url(#${id}-borracha)`} />
-      {rows.map((r) => (
-        <rect key={r} x={-500} y={1000 + r} width={2100} height={3} fill="rgba(5,7,26,0.24)" />
-      ))}
+      {anda
+        ? [-1, 0, 1, 2, 3, 4, 5].map((k) => {
+            const u = k + fi;
+            const r = juntaY(u);
+            const o = 0.24 * sm01(u + 1) * (1 - sm01((u - 5.4) / 0.6));
+            // a junta estica no sentido do movimento (o borrão da velocidade), mais perto mais; e a borda
+            // de cima dela pega a luz das luminárias (o piso é escuro: sem isso a junta que anda não se vê)
+            const h = 3 + v * 0.05 * (juntaY(u + 0.25) - r);
+            return (
+              <g key={k}>
+                <rect x={-500} y={1000 + r} width={2100} height={h} fill={`rgba(5,7,26,${(o * (1 + 0.6 * v)).toFixed(3)})`} />
+                {v > 0.02 ? <rect x={-500} y={1000 + r - 2} width={2100} height={2} fill={C.hi} opacity={0.07 * v * (o / 0.24)} /> : null}
+              </g>
+            );
+          })
+        : rows.map((r) => <rect key={r} x={-500} y={1000 + r} width={2100} height={3} fill="rgba(5,7,26,0.24)" />)}
+      {anda && v > 0.02
+        ? Array.from({ length: 40 }, (_, i) => {
+            // grãos da borracha: só aparecem correndo, como riscos curtos descendo pra câmera
+            const lane = -5.5 + 11 * ((Math.sin(i * 91.7 + 3.1) * 43758.5453) % 1 + 1) % 1;
+            const u = (((((i * 0.618) % 1) * 6.4 + anda.d * VEL_JUNTA) % 6.4) + 6.4) % 6.4 - 1;
+            const r0 = juntaY(u);
+            const r1 = juntaY(u + 0.12 + 0.5 * v);
+            const o = 0.34 * v * sm01(u + 1) * (1 - sm01((u - 5) / 0.8));
+            const x0 = fugaX(lane, r0);
+            const x1 = fugaX(lane, r1);
+            const w = 1.6 + r0 / 110;
+            return <path key={`g${i}`} d={`M${(x0 - w).toFixed(1)} ${1000 + r0} L${(x0 + w).toFixed(1)} ${1000 + r0} L${(x1 + w * 1.6).toFixed(1)} ${(1000 + r1).toFixed(1)} L${(x1 - w * 1.6).toFixed(1)} ${(1000 + r1).toFixed(1)}Z`} fill={i % 3 ? C.hi : '#0B0F30'} opacity={i % 3 ? o : o * 1.4} />;
+          })
+        : null}
       {[-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6].map((k) => (
         <path key={k} d={`M${vx + 150 * k} 1000 L${vx + 380 * k} 1900`} stroke="rgba(5,7,26,0.22)" strokeWidth={3} />
       ))}
@@ -219,7 +270,7 @@ const AcademiaBack: React.FC<EnvP> = (p) => {
         <Espelho id={id} t={t} />
         {gaiola === null ? null : <Gaiola dx={gaiola} />}
         {rack === null ? null : <Rack dx={rack} />}
-        <Borracha id={id} />
+        <Borracha id={id} anda={p.anda} />
       </ArtSvg>
       {clock === null ? null : (
         <div style={{ position: 'absolute', left: ACA.relogio[0] + clock, top: ACA.relogio[1], opacity: 0.75 }}>
