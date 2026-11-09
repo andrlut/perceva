@@ -375,7 +375,7 @@ const Pessoa: React.FC<PessoaProps> = ({
         <ellipse cx={100} cy={92} rx={40} ry={46} fill={skin} />
         <path d="M100 46 a40 46 0 0 1 0 92 a30 46 0 0 0 0 -92z" fill={shade} opacity={0.5} />
         <circle cx={80} cy={70} r={7} fill={shine} />
-        <Face t={t} seed={seed} mood={mood} skin={skin} brow={brow} glasses={s === 5 && !alt} />
+        <Face t={t} seed={seed} mood={mood === 'focado' ? 'ok' : mood} skin={skin} brow={brow} glasses={s === 5 && !alt} />
         <g transform={alt ? 'translate(200 0) scale(-1 1)' : undefined}>
           <HairFront {...hp} brow={brow} />
         </g>

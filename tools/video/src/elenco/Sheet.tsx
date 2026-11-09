@@ -17,7 +17,7 @@ const Cell: React.FC<{ name: string; children: React.ReactNode }> = ({ name, chi
 );
 
 /** Tamanho de cada peça na folha (cabe na célula de 190 px; as altas e as largas encolhem). */
-const SIZE: Record<string, number> = { cama: 190, computador: 180, celular: 200, lampada: 150, quadro: 150, caderno: 160, agenda: 160, caneta: 180, vassoura: 180, livro: 170 };
+const SIZE: Record<string, number> = { cama: 190, computador: 180, celular: 200, lampada: 150, quadro: 150, caderno: 160, agenda: 160, caneta: 180, vassoura: 180, livro: 170, reservatorio: 140 };
 
 export const ElencoSheet: React.FC = () => {
   const t = useCurrentFrame();

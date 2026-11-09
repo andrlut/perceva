@@ -296,7 +296,8 @@ const ALT = [HAIR_C.chestnut, HAIR_C.auburn, HAIR_C.espresso, HAIR_C.chestnut, H
 // ombros mais largos que a cabeça = proporção de adulto, não de boneco.
 const HEAD_SCALE = 'translate(100 92) scale(0.9) translate(-100 -92)';
 // O humor também inclina a cabeça (em volta do pescoço): lê de longe.
-const TILT = { ok: 0, feliz: -4, cansado: 6 } as const;
+// focado (fase 3) = ok nesta opção (só o Hexa v4 desenha o rosto focado)
+const TILT = { ok: 0, feliz: -4, cansado: 6, focado: 0 } as const;
 
 // Tronco: peça única até o meio da coxa — gola reta, ombros caídos, barra.
 const TORSO = softPoly(

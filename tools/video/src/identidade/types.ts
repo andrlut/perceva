@@ -13,7 +13,76 @@
 import type React from 'react';
 
 export type Arms = 'none' | 'down' | 'up' | 'out';
-export type Mood = 'ok' | 'feliz' | 'cansado';
+/** `focado` (fase 3): atenta sem ler brava. Identidade que não o desenha trata como `ok`. */
+export type Mood = 'ok' | 'feliz' | 'cansado' | 'focado';
+
+/**
+ * Pose do corpo (fase 3, src/elenco/acao.tsx): a pessoa FAZENDO alguma coisa. Unidades da caixa
+ * 200×260. Sem `pose`, a Pessoa sai idêntica à de antes (a régua dos vídeos publicados).
+ */
+export type Pose = {
+  /** graus no ombro [esq, dir]; 0 = pendurado; + = horário na tela. Se existir, substitui `arms` */
+  braco?: [number, number];
+  /** graus no quadril [esq, dir]; 0 = em pé */
+  perna?: [number, number];
+  /** 0..14 un.: quanto cada perna sobe (o joelho vem pra câmera; a barra da roupa cobre o topo) */
+  ergue?: [number, number];
+  /** corpo todo, de -70 a +10 un. (negativo = sobe); a sombra fica no chão e encolhe */
+  y?: number;
+  /** -10..10 graus, girando em volta dos pés (100, 252) */
+  inclina?: number;
+  /** -10..10 graus, somados à inclinação do humor */
+  cabeca?: number;
+  /** 0..1: olhos fechados */
+  fecha?: number;
+  /** 0..1: pouso (achata 10%, alarga 8%) */
+  amassa?: number;
+  /** braço desenhado DEPOIS da cabeça (mão na boca ao beber): sem isto a mão some atrás do queixo */
+  frente?: [boolean, boolean];
+};
+
+/** Pivôs e pontos do corpo na caixa 200×260 (o Ator e a cena `dentro` medem por aqui). */
+export const CORPO = {
+  ombro: [
+    [58, 158],
+    [142, 158],
+  ] as [number, number][],
+  /** do pivô do ombro ao centro da mão (r 9,5) */
+  braco: 52,
+  quadril: [
+    [84.5, 212],
+    [115.5, 212],
+  ] as [number, number][],
+  /** do pivô do quadril à sola */
+  perna: 40,
+  pes: [100, 252] as [number, number],
+  /**
+   * Pontos do corpo (setas dos rótulos, âncora da lente, fluxos do corpo de vidro). `cabeca` e `boca`
+   * também dão o círculo da cabeça (centro a meio caminho, raio 50/56 da distância — rotulo.tsx →
+   * cabecaDe): mexeu num, confira a seta pra cabeça. `rosto` = a bochecha direita (abaixo e ao lado
+   * do olho, entre a boca e a borda do rosto), não o olho. `ombro` = o pivô do ombro direito (o braço
+   * da mão que segura): com o braço estendido, a lente/seta de `braco` vai pro meio do braço de cima.
+   */
+  pontos: {
+    cabeca: [100, 62],
+    rosto: [126, 113],
+    boca: [100, 118],
+    peito: [112, 176],
+    tronco: [100, 188],
+    barriga: [100, 208],
+    braco: [147, 186],
+    perna: [116, 232],
+    ombro: [142, 158],
+  } as Record<'cabeca' | 'rosto' | 'boca' | 'peito' | 'tronco' | 'barriga' | 'braco' | 'perna' | 'ombro', [number, number]>,
+  tronco: [
+    [80, 147],
+    [120, 147],
+    [153, 162],
+    [146, 222],
+    [54, 222],
+    [47, 162],
+  ] as [number, number][],
+};
 
 export type PessoaProps = {
   t?: number;
@@ -38,6 +107,8 @@ export type PessoaProps = {
   halo?: boolean | 'cabeca';
   cap?: string;
   sweat?: boolean;
+  /** fase 3: a pessoa fazendo (src/elenco/acao.tsx). Sem pose = idêntica à de antes. */
+  pose?: Pose;
 };
 
 export type IdentityOption = {

@@ -4,7 +4,7 @@
 import React, { useId } from 'react';
 import { random } from 'remotion';
 import { C, DIMS, DimId, dimColor } from '../../theme';
-import type { IdentityOption, PessoaProps } from '../types';
+import type { IdentityOption, PessoaProps, Pose } from '../types';
 
 type Pt = [number, number];
 
@@ -284,7 +284,8 @@ const ALT = [HAIR_C.chestnut, HAIR_C.auburn, HAIR_C.espresso, HAIR_C.chestnut, H
 // ombros mais largos que a cabeça = proporção de adulto, não de boneco.
 const HEAD_SCALE = 'translate(100 92) scale(0.9) translate(-100 -92)';
 // O humor também inclina a cabeça (em volta do pescoço): lê de longe.
-const TILT = { ok: 0, feliz: -4, cansado: 6 } as const;
+// focado (fase 3): um tico pra frente, atenta (o rosto é o do Face, abaixo)
+const TILT = { ok: 0, feliz: -4, cansado: 6, focado: -1 } as const;
 
 // Tronco: peça única até o meio da coxa — gola reta, ombros caídos, barra.
 const TORSO = softPoly(
@@ -562,6 +563,17 @@ const Face: React.FC<{ mood: PessoaProps['mood']; blink: number; glasses?: boole
         </g>
       );
     }
+    if (mood === 'focado') {
+      // fase 3: atenta, sem ler brava — o olho do ok um tico mais aberto e SEMPRE com o ponto de luz
+      // (é o brilho no olho que separa "atenta" de "séria"; sem ele, a sobrancelha reta lê dura)
+      const fy = ry * 1.06;
+      return (
+        <g key={x}>
+          <ellipse cx={x} cy={EY} rx={rx} ry={Math.max(1.1, fy * (1 - blink))} fill={INK} />
+          {blink < 0.4 && <circle cx={x + rx * 0.38} cy={EY - fy * 0.42} r={rx * 0.28} fill="#FFFFFF" opacity={0.85} />}
+        </g>
+      );
+    }
     return (
       <g key={x}>
         <ellipse cx={x} cy={EY} rx={rx} ry={Math.max(1.1, ry * (1 - blink))} fill={INK} />
@@ -576,7 +588,10 @@ const Face: React.FC<{ mood: PessoaProps['mood']; blink: number; glasses?: boole
       ? [`M76 ${78 + dy} Q84 ${73 + dy} 92 ${76 + dy}`, `M108 ${76 + dy} Q116 ${73 + dy} 124 ${78 + dy}`]
       : mood === 'cansado'
         ? [`M76 ${83 + dy} Q84 ${81 + dy} 92 ${77 + dy}`, `M108 ${77 + dy} Q116 ${81 + dy} 124 ${83 + dy}`]
-        : [`M77 ${81 + dy} Q84 ${78 + dy} 91 ${80 + dy}`, `M109 ${80 + dy} Q116 ${78 + dy} 123 ${81 + dy}`];
+        : mood === 'focado'
+          ? // retas, a ponta de dentro meio ponto MAIS ALTA que a de fora: brava é a de dentro descendo
+            [`M77 ${80 + dy} L91 ${79.5 + dy}`, `M109 ${79.5 + dy} L123 ${80 + dy}`]
+          : [`M77 ${81 + dy} Q84 ${78 + dy} 91 ${80 + dy}`, `M109 ${80 + dy} Q116 ${78 + dy} 123 ${81 + dy}`];
   const my = big ? 3 : 0;
   return (
     <g>
@@ -593,7 +608,14 @@ const Face: React.FC<{ mood: PessoaProps['mood']; blink: number; glasses?: boole
         </g>
       ) : (
         <path
-          d={mood === 'cansado' ? `M93 ${121 + my} Q100 ${117.5 + my} 107 ${121 + my}` : `M92.5 ${117.5 + my} Q100 ${122 + my} 107.5 ${117.5 + my}`}
+          d={
+            mood === 'cansado'
+              ? `M93 ${121 + my} Q100 ${117.5 + my} 107 ${121 + my}`
+              : mood === 'focado'
+                ? // boca quase reta (um fio de sorriso): concentrada, não emburrada
+                  `M93.5 ${118 + my} Q100 ${119.5 + my} 106.5 ${118 + my}`
+                : `M92.5 ${117.5 + my} Q100 ${122 + my} 107.5 ${117.5 + my}`
+          }
           stroke={INK}
           strokeWidth={big ? 4.2 : 4}
           strokeLinecap="round"
@@ -611,10 +633,153 @@ const lifeOf = (t: number, seed: number, mood: PessoaProps['mood'], since: numbe
   const slump = mood === 'cansado' ? 2.2 * strength * clamp01(since / 10) : 0;
   // squash de aterrissagem do pulinho (mantém volume)
   const land = mood === 'feliz' && since >= 14 && since < 22 ? Math.sin((Math.PI * (since - 14)) / 8) : 0;
+  const sx = 1 - 0.006 * strength * breath + 0.05 * land;
+  const sy = 1 + 0.014 * strength * breath - 0.06 * land;
   return {
-    body: `translate(100 244) scale(${1 - 0.006 * strength * breath + 0.05 * land} ${1 + 0.014 * strength * breath - 0.06 * land}) translate(-100 -244)`,
+    body: `translate(100 244) scale(${sx} ${sy}) translate(-100 -244)`,
     lift: hop + slump + (still ? 0 : Math.sin((t + seed * 11) / 14) * 1.4),
+    sx,
+    sy,
   };
+};
+
+/**
+ * A vida do tronco em números (fase 3): o Ator (src/elenco/acao.tsx) põe a peça e a mão por cima
+ * dela, então precisa saber onde a mão está DE VERDADE — com a respiração (escala em volta de
+ * 100,244) e o sobe-desce (lift) que o corpo do Hexa Limpo faz sozinho.
+ */
+export const vidaDe = (t: number, seed: number, mood: PessoaProps['mood'], since: number, still = false) => {
+  const l = lifeOf(t, seed, mood, since, still);
+  return { lift: l.lift, sx: l.sx, sy: l.sy };
+};
+
+/**
+ * Transformação da pose (fase 3) em volta dos pés (100,252): sobe/desce `y`, inclina, amassa no
+ * pouso. As pernas não descem com o corpo (y > 0 = agacha: o tronco cobre mais perna, o pé fica no
+ * chão), e a inclinação levanta o corpo o que o pé de baixo afundaria — nada passa da linha do chão.
+ */
+const poseT = (pose: Pose, legs: boolean) => {
+  const y = pose.y ?? 0;
+  const inc = pose.inclina ?? 0;
+  const a = pose.amassa ?? 0;
+  const lift = -34 * Math.sin((Math.abs(inc) * Math.PI) / 180);
+  const Y = (legs ? Math.min(0, y) : y) + lift;
+  return `translate(0 ${Y.toFixed(2)}) rotate(${inc.toFixed(2)} 100 252) translate(100 252) scale(${(1 + 0.08 * a).toFixed(4)} ${(1 - 0.1 * a).toFixed(4)}) translate(-100 -252)`;
+};
+
+/** Sombra no chão com a pose: encolhe quando o corpo sobe (até 55% no topo do salto). */
+const shadowK = (pose?: Pose) => 1 - Math.min(0.45, Math.max(0, -(pose?.y ?? 0)) / 130);
+
+/**
+ * Os campos da corrida (fase 3, rodada 2 — src/elenco/acao.tsx) que só o rig do Hexa Limpo/Cor lê.
+ * Sem eles, a pose desenha como antes; sem pose nenhuma, a Pessoa de sempre.
+ *  - `dobra`: graus que o antebraço DOBRA pra dentro no cotovelo (o braço de quem corre: o punho
+ *    sobe na frente do peito, o outro desce até o quadril). Com dobra, o braço vira dois segmentos.
+ *  - `joelho`: 0..1, o joelho que vem PRA CÂMERA (de frente): a coxa encurta e aparece NA FRENTE da
+ *    barra da roupa, a canela fica curta embaixo do joelho e o pé sobe (≈ 18 un. com o joelho todo).
+ *  - `chuta`: 0..1, a perna de trás chutando pra trás: ela encurta e a sola aparece.
+ *  - `apoio`: 0..1, o pé que está NO CHÃO enquanto o corpo sobe (a impulsão): a perna estica o que o
+ *    corpo subiu, o pé fica plantado (sem isso, no quique os dois pés flutuariam).
+ *  - `cabelo`: un., o cabelo atrasado em relação à cabeça (o quique da corrida).
+ *  - `curva`: 0..1, o tronco pra frente — de frente, a cabeça baixa um tico sobre os ombros.
+ */
+export type PoseRig = Pose & {
+  dobra?: [number, number];
+  joelho?: [number, number];
+  chuta?: [number, number];
+  apoio?: [number, number];
+  cabelo?: number;
+  curva?: number;
+};
+
+/** Braço com cotovelo (só com `dobra`): o de cima até o cotovelo (27 un.), o antebraço até a mão (25). */
+const BRACO_CIMA = 27;
+const BRACO_BAIXO = 25;
+/** O antebraço que cruza o tronco (aponta pra dentro mais que 30°): vai claro, com a sombra dele embaixo. */
+const forearmAng = (side: 'l' | 'r', a: number, d: number) => (side === 'l' ? a - d : a + d);
+const forearmCrosses = (side: 'l' | 'r', a: number, d: number) => (side === 'l' ? forearmAng(side, a, d) < -30 : forearmAng(side, a, d) > 30);
+const armUpper = (side: 'l' | 'r', a: number, accent: string, shade: boolean) => {
+  const px = side === 'l' ? 58 : 142;
+  return (
+    <g transform={`rotate(${a} ${px} 158)`} key={`${side}u`}>
+      <rect x={px - 10} y={150} width={20} height={BRACO_CIMA + 16} rx={10} fill={accent} />
+      {shade && <rect x={px - 10} y={150} width={20} height={BRACO_CIMA + 16} rx={10} fill={SHADE} opacity={side === 'r' ? 1 : 0.5} />}
+    </g>
+  );
+};
+const armLower = (side: 'l' | 'r', a: number, d: number, accent: string, skin: string, shade: boolean) => {
+  const px = side === 'l' ? 58 : 142;
+  const ey = 158 + BRACO_CIMA;
+  // o antebraço que cruza o peito vai CLARO (pega a luz de cima): da cor da roupa, ele sumiria nela
+  const cor = shade ? accent : mix(accent, '#FFFFFF', 0.16);
+  return (
+    <g transform={`rotate(${a} ${px} 158) rotate(${side === 'l' ? -d : d} ${px} ${ey})`} key={`${side}f`}>
+      <rect x={px - 10} y={ey - 9} width={20} height={BRACO_BAIXO + 18} rx={10} fill={cor} />
+      {shade && <rect x={px - 10} y={ey - 9} width={20} height={BRACO_BAIXO + 18} rx={10} fill={SHADE} opacity={side === 'r' ? 1 : 0.5} />}
+      <circle cx={px} cy={ey + BRACO_BAIXO} r={9.5} fill={skin} />
+      {shade && side === 'r' && <circle cx={px} cy={ey + BRACO_BAIXO} r={9.5} fill={SHADE} opacity={0.35} />}
+    </g>
+  );
+};
+/** A sombra do antebraço que cruza, no tronco (o mesmo recurso do `armCast`). */
+const forearmCast = (side: 'l' | 'r', a: number, d: number, uid: string) => {
+  const px = side === 'l' ? 58 : 142;
+  const ey = 158 + BRACO_CIMA;
+  return (
+    <g clipPath={`url(#${uid}t)`} key={`${side}fc`}>
+      <g transform={`translate(0 6) rotate(${a} ${px} 158) rotate(${side === 'l' ? -d : d} ${px} ${ey})`}>
+        <rect x={px - 11} y={ey - 10} width={22} height={BRACO_BAIXO + 20} rx={11} fill="rgba(10,14,38,0.4)" />
+      </g>
+    </g>
+  );
+};
+
+const lerpN = (a: number, b: number, k: number) => a + (b - a) * k;
+/**
+ * A perna da corrida, de frente (caixa 200×260, antes da pose). `j` = joelho pra câmera, `c` = chute
+ * pra trás. Em j = c = 0 é a perna de sempre (coxa+canela 210..244, pé 238..252); com o joelho todo,
+ * o joelho (coxa encurtada, 15,5 de meia largura) vai de 190 a 222, a canela curta embaixo dele e o
+ * pé de 220 a 234 (18 un. acima do chão, antes do quique do corpo).
+ */
+const legRun = (i: 0 | 1, j: number, c: number, e = 0) => {
+  const cx = i ? 115.5 : 84.5;
+  const fx = i ? 117.5 : 82.5;
+  // de frente, o joelho que vem é o ponto mais perto da câmera: coxa e canela ficam atrás dele, as duas
+  // descendo — então a perna toda SOBE como uma coluna só (mais larga, perspectiva), com o joelho
+  // redondo no alto pegando luz, na frente da roupa; o pé de 222 a 236 (16 un. acima do chão)
+  const hw = lerpN(12.5, 14.5, j);
+  const uTop = lerpN(210, 192, j);
+  const uBot = lerpN(232, 222, j);
+  const sw = lerpN(12.5, 13.5, j);
+  const sTop = lerpN(214, 200, j);
+  // `e` = quanto a perna de apoio estica pra o pé ficar no chão com o corpo no alto
+  const sBot = lerpN(244, 230, j) - 8 * c + e;
+  const fw = lerpN(33, 30, j) - 5 * c;
+  const fcx = lerpN(fx, cx, j);
+  const fTop = lerpN(238, 222, j) - 12 * c + e;
+  // a perna da direita na sombra: a cor já misturada com o SHADE (0,28 de navy) — duas camadas
+  // translúcidas dobrariam a sombra onde a coxa encosta na canela. A que vem pra câmera sai da sombra.
+  const sh = i === 1 ? 0.28 * (1 - 0.6 * j) : 0;
+  const calca = mix(C.faint, C.deep, sh);
+  // a sola aparece no chute (o calcanhar vem pra câmera): o pé escurece
+  const sola = mix(C.surface3, C.deep, sh + 0.35 * Math.min(1, c * 1.6) * (1 - sh));
+  const knee = (
+    <>
+      <rect x={cx - hw} y={uTop} width={2 * hw} height={uBot - uTop} rx={lerpN(9, 14, j)} fill={calca} />
+      {/* o joelho que vem pra câmera pega a luz de cima */}
+      {j > 0.05 && <rect x={cx - hw + 6} y={uTop + 4} width={2 * hw - 12} height={4.5} rx={2.25} fill={SHINE} opacity={Math.min(1, j * 1.5) * 0.7} />}
+    </>
+  );
+  // o pé sempre por cima da canela; o joelho passa por cima do pé quando sobe (em j = 0,5 os dois não
+  // se encostam: a troca de ordem não aparece)
+  return (
+    <>
+      <rect x={cx - sw} y={sTop} width={2 * sw} height={sBot - sTop} rx={9} fill={calca} />
+      {j <= 0.5 && knee}
+      <rect x={fcx - fw / 2} y={fTop} width={fw} height={14} rx={6.5} fill={sola} />
+      {j > 0.5 && knee}
+    </>
+  );
 };
 
 const armOf = (side: 'l' | 'r', a: number, accent: string, skin: string, shade: boolean) => {
@@ -625,6 +790,23 @@ const armOf = (side: 'l' | 'r', a: number, accent: string, skin: string, shade: 
       {shade && <rect x={px - 10} y={152} width={20} height={62} rx={10} fill={SHADE} opacity={side === 'r' ? 1 : 0.5} />}
       <circle cx={px} cy={210} r={9.5} fill={skin} />
       {shade && side === 'r' && <circle cx={px} cy={210} r={9.5} fill={SHADE} opacity={0.35} />}
+    </g>
+  );
+};
+
+/**
+ * Fase 3: o braço que CRUZA o tronco (o copo na frente do peito, a mão na boca) é da mesma cor da
+ * roupa — sem nada, ele some. Vai claro (pega a luz de cima) e deixa a sombra dele no tronco, logo
+ * abaixo: a regra "sombra num lado só", sem contorno.
+ */
+const crosses = (side: 'l' | 'r', a: number) => (side === 'r' ? a > 30 && a < 150 : a < -30 && a > -150);
+const armCast = (side: 'l' | 'r', a: number, uid: string) => {
+  const px = side === 'l' ? 58 : 142;
+  return (
+    <g clipPath={`url(#${uid}t)`} key={`${side}c`}>
+      <g transform={`translate(0 6) rotate(${a} ${px} 158)`}>
+        <rect x={px - 11} y={152} width={22} height={64} rx={11} fill="rgba(10,14,38,0.4)" />
+      </g>
     </g>
   );
 };
@@ -641,7 +823,7 @@ const Sweat: React.FC<{ t: number; seed: number; x?: number }> = ({ t, seed, x =
 // ------------------------------------------------------------- limpo e cor
 
 const makeGente = (style: 'limpo' | 'cor'): React.FC<PessoaProps> => {
-  const Comp: React.FC<PessoaProps> = ({ t = 0, size = 260, accent = C.violet, skin: skinIn = '#F2C9A0', mood = 'ok', seed = 0, arms = 'none', still = false, cap, sweat = false, since, halo = true }) => {
+  const Comp: React.FC<PessoaProps> = ({ t = 0, size = 260, accent = C.violet, skin: skinIn = '#F2C9A0', mood = 'ok', seed = 0, arms = 'none', still = false, cap, sweat = false, since, halo = true, pose }) => {
     const uid = 'hv' + useId().replace(/[^a-zA-Z0-9]/g, '');
     const n = CAST.length;
     const who = CAST[((seed % n) + n) % n];
@@ -652,31 +834,73 @@ const makeGente = (style: 'limpo' | 'cor'): React.FC<PessoaProps> => {
     const onGold = nearGold(accent);
     const sinceM = since ?? t;
     const life = lifeOf(t, seed, mood, sinceM, still);
-    const [la, ra] = armAngles(arms, t, seed);
-    const blink = still ? 0 : blinkAt(t, seed);
-    const HX = `rotate(${TILT[mood]} 100 142) ${HEAD_V4}`;
+    // fase 3: a pose (src/elenco/acao.tsx) manda nos braços; sem pose, tudo como antes
+    const [la, ra] = pose?.braco ?? armAngles(arms, t, seed);
+    const showArms = arms !== 'none' || !!pose?.braco;
+    // braço na FRENTE da cabeça (a mão na boca ao beber): desenhado depois do grupo da cabeça
+    const [frL, frR] = pose?.frente ?? [false, false];
+    // braço que cruza o tronco (só com pose): vai pra frente do tronco, claro, com a sombra dele embaixo
+    const crL = !!pose?.braco && crosses('l', la);
+    const crR = !!pose?.braco && crosses('r', ra);
+    const blink = Math.max(still ? 0 : blinkAt(t, seed), pose?.fecha ?? 0);
+    // fase 3 (rodada 2): os campos da corrida — só com eles o desenho muda (sem, tudo como antes)
+    const rig = pose as PoseRig | undefined;
+    const dobra = rig?.dobra && Math.max(Math.abs(rig.dobra[0]), Math.abs(rig.dobra[1])) > 1 ? rig.dobra : null;
+    const joelho = rig?.joelho ?? [0, 0];
+    const chuta = rig?.chuta ?? [0, 0];
+    // a perna de apoio estica o que o corpo subiu (o pé plantado no chão durante a impulsão)
+    const estica = (i: 0 | 1) => (rig?.apoio?.[i] ?? 0) * Math.max(0, -(pose?.y ?? 0));
+    const corre = !!pose && joelho[0] + joelho[1] + chuta[0] + chuta[1] > 0.005;
+    const cab = rig?.cabelo ?? 0;
+    const desce = 5 * (rig?.curva ?? 0);
+    const HX = `${desce ? `translate(0 ${desce.toFixed(2)}) ` : ''}rotate(${TILT[mood] + (pose?.cabeca ?? 0)} 100 142) ${HEAD_V4}`;
+    const comCabelo = (el: React.ReactNode, k: number) => (cab ? <g transform={`translate(0 ${(cab * k).toFixed(2)})`}>{el}</g> : el);
     const hideTop = Boolean(cap);
     const backVisible = hair.back && !(hideTop && (who.hair === 'afro' || who.hair === 'bun'));
     const facet = style === 'cor' ? 0.3 : 0.42;
-    return (
-      <svg width={size} height={size * 1.3} viewBox="0 0 200 260" style={{ overflow: 'visible' }}>
-        {RADAR && mood === 'feliz' && halo && <Halo since={sinceM} t={t} seed={seed} small={size < 170} {...(halo === 'cabeca' ? { cy: 82, R: 98 } : { cy: 128, R: 150 })} />}
-        <ellipse cx={100} cy={252} rx={56} ry={7} fill="rgba(0,0,0,0.25)" />
+    // as duas pernas, cada uma girando no quadril e subindo (o joelho vem pra câmera; a barra cobre o topo)
+    const legL = (
+      <>
         <rect x={72} y={210} width={25} height={34} rx={9} fill={C.faint} />
+        <rect x={66} y={238} width={33} height={14} rx={6.5} fill={C.surface3} />
+      </>
+    );
+    const legR = (
+      <>
         <rect x={103} y={210} width={25} height={34} rx={9} fill={C.faint} />
         <rect x={103} y={210} width={25} height={34} rx={9} fill={SHADE} />
-        <rect x={66} y={238} width={33} height={14} rx={6.5} fill={C.surface3} />
         <rect x={101} y={238} width={33} height={14} rx={6.5} fill={C.surface3} />
         <rect x={101} y={238} width={33} height={14} rx={6.5} fill={SHADE} />
-
+      </>
+    );
+    // o joelho que sobe vem pra câmera: a perna cresce um tico (perspectiva) em volta do quadril
+    const legPose = (i: 0 | 1, el: React.ReactNode) => {
+      const e = pose?.ergue?.[i] ?? 0;
+      const r = pose?.perna?.[i] ?? 0;
+      const qx = i ? 115.5 : 84.5;
+      const s = 1 + 0.012 * e;
+      // a perna que abre gira a sola: o canto de dentro desceria do chão — sobe o que ele desceria
+      const up = e + 15 * Math.sin((Math.abs(r) * Math.PI) / 180);
+      return <g transform={`translate(0 ${(-up).toFixed(2)}) rotate(${r} ${qx} 212) translate(${qx} 212) scale(${s.toFixed(4)}) translate(${-qx} -212)`}>{el}</g>;
+    };
+    const body = (
         <g transform={life.body}>
           <g transform={`translate(0 ${life.lift})`}>
-            {arms !== 'none' && armOf('l', la, accent, skin, true)}
+            {showArms && !dobra && !frL && !crL && armOf('l', la, accent, skin, true)}
+            {/* corrida (dobra): o braço esquerdo de cima fica atrás do tronco, como sempre; o antebraço só
+                vem pra frente quando cruza o peito (o punho subindo) */}
+            {showArms && dobra && armUpper('l', la, accent, true)}
+            {showArms && dobra && !forearmCrosses('l', la, dobra[0]) && armLower('l', la, dobra[0], accent, skin, true)}
             {backVisible && (
               <g transform={HX}>
-                <Shaded id={`${uid}b`} d={hair.back!} fill={hairColor} hole={hair.hole} />
-                {hair.texture && <path d={hair.texture} stroke={SHADE} strokeWidth={2} strokeLinecap="round" fill="none" />}
-                {hair.cuffs?.slice(0, 2).map(([x, y]) => <rect key={x} x={x - 3.5} y={y} width={7} height={5} rx={1.5} fill={C.gold} />)}
+                {comCabelo(
+                  <>
+                    <Shaded id={`${uid}b`} d={hair.back!} fill={hairColor} hole={hair.hole} />
+                    {hair.texture && <path d={hair.texture} stroke={SHADE} strokeWidth={2} strokeLinecap="round" fill="none" />}
+                    {hair.cuffs?.slice(0, 2).map(([x, y]) => <rect key={x} x={x - 3.5} y={y} width={7} height={5} rx={1.5} fill={C.gold} />)}
+                  </>,
+                  1,
+                )}
               </g>
             )}
             <rect x={89} y={124} width={22} height={34} rx={7} fill={skin} />
@@ -688,7 +912,19 @@ const makeGente = (style: 'limpo' | 'cor'): React.FC<PessoaProps> => {
             <GarmentDetail g={who.garment} accent={accent} skin={skin} uid={uid} />
             <path d={TORSO_PLANE} fill={SHADE} clipPath={`url(#${uid}t)`} />
             <GoldHex x={PIN[0]} y={PIN[1]} r={9} onGold={onGold} />
-            {arms !== 'none' && armOf('r', ra, accent, skin, true)}
+            {showArms && !dobra && crL && armCast('l', la, uid)}
+            {showArms && !dobra && crR && armCast('r', ra, uid)}
+            {showArms && !dobra && crL && !frL && armOf('l', la, accent, skin, false)}
+            {showArms && !dobra && !frR && armOf('r', ra, accent, skin, !crR)}
+            {showArms && dobra && (
+              <>
+                {forearmCrosses('l', la, dobra[0]) && forearmCast('l', la, dobra[0], uid)}
+                {forearmCrosses('l', la, dobra[0]) && armLower('l', la, dobra[0], accent, skin, false)}
+                {forearmCrosses('r', ra, dobra[1]) && forearmCast('r', ra, dobra[1], uid)}
+                {armUpper('r', ra, accent, true)}
+                {armLower('r', ra, dobra[1], accent, skin, !forearmCrosses('r', ra, dobra[1]))}
+              </>
+            )}
 
             <g transform={HX}>
               {hair.drape && (
@@ -708,16 +944,21 @@ const makeGente = (style: 'limpo' | 'cor'): React.FC<PessoaProps> => {
               {hair.beard && <Shaded id={`${uid}d`} d={hair.beard} fill={hairColor} hole={[92, 96, 54, 52]} />}
               {hair.stache && <path d={hair.stache} fill={hairColor} />}
               {mood === 'feliz' && hair.beard && <path d="M87 113 Q100 116.5 113 113 Q111 126 100 126 Q89 126 87 113Z" fill={INK} />}
-              {!hideTop && hair.front && (
-                <g clipPath={`url(#${uid}h)`} opacity={0.8}>
-                  <path d={hair.front} fill={SHADE} transform="translate(1.5 3.5)" />
-                </g>
+              {comCabelo(
+                <>
+                  {!hideTop && hair.front && (
+                    <g clipPath={`url(#${uid}h)`} opacity={0.8}>
+                      <path d={hair.front} fill={SHADE} transform="translate(1.5 3.5)" />
+                    </g>
+                  )}
+                  {!hideTop && hair.front && <Shaded id={`${uid}f`} d={hair.front} fill={hairColor} hole={hair.hole} />}
+                  {!hideTop && hair.front && !hair.back && hair.texture && <path d={hair.texture} stroke={mix(hairColor, C.deep, 0.3)} strokeWidth={2} strokeLinecap="round" fill="none" />}
+                  {!hideTop && hair.part && <path d={hair.part} stroke={mix(skin, C.deep, 0.15)} strokeWidth={2.2} strokeLinecap="round" />}
+                  {!hideTop && hair.strands && <path d={hair.strands} stroke={hairColor} strokeWidth={2.6} strokeLinecap="round" fill="none" />}
+                  {!hideTop && <path d={hair.shine} stroke={SHINE} strokeWidth={4} strokeLinecap="round" fill="none" />}
+                </>,
+                0.5,
               )}
-              {!hideTop && hair.front && <Shaded id={`${uid}f`} d={hair.front} fill={hairColor} hole={hair.hole} />}
-              {!hideTop && hair.front && !hair.back && hair.texture && <path d={hair.texture} stroke={mix(hairColor, C.deep, 0.3)} strokeWidth={2} strokeLinecap="round" fill="none" />}
-              {!hideTop && hair.part && <path d={hair.part} stroke={mix(skin, C.deep, 0.15)} strokeWidth={2.2} strokeLinecap="round" />}
-              {!hideTop && hair.strands && <path d={hair.strands} stroke={hairColor} strokeWidth={2.6} strokeLinecap="round" fill="none" />}
-              {!hideTop && <path d={hair.shine} stroke={SHINE} strokeWidth={4} strokeLinecap="round" fill="none" />}
               {who.glasses && (
                 <g stroke={INK} strokeWidth={2.4} fill="rgba(255,255,255,0.10)" strokeLinejoin="round">
                   <path d={softPoly(hexPts(85, 94, 11.5, 1, true), 2.5)} />
@@ -742,8 +983,53 @@ const makeGente = (style: 'limpo' | 'cor'): React.FC<PessoaProps> => {
               )}
               {sweat && <Sweat t={t} seed={seed} />}
             </g>
+            {showArms && frL && armOf('l', la, accent, skin, !crL)}
+            {showArms && frR && armOf('r', ra, accent, skin, !crR)}
           </g>
         </g>
+    );
+    return (
+      <svg width={size} height={size * 1.3} viewBox="0 0 200 260" style={{ overflow: 'visible' }}>
+        {RADAR && mood === 'feliz' && halo && <Halo since={sinceM} t={t} seed={seed} small={size < 170} {...(halo === 'cabeca' ? { cy: 82, R: 98 } : { cy: 128, R: 150 })} />}
+        <ellipse cx={100} cy={252} rx={pose ? 56 * shadowK(pose) : 56} ry={7} fill="rgba(0,0,0,0.25)" />
+        {pose ? (
+          // fase 3: tudo menos a sombra gira/sobe/amassa em volta dos pés
+          <>
+            <g transform={poseT(pose, true)}>
+              {legPose(0, corre ? legRun(0, joelho[0], chuta[0], estica(0)) : legL)}
+              {legPose(1, corre ? legRun(1, joelho[1], chuta[1], estica(1)) : legR)}
+            </g>
+            <g transform={poseT(pose, false)}>{body}</g>
+            {/* corrida: o joelho que vem pra câmera passa NA FRENTE da barra da roupa. A mesma perna de novo,
+                cortada da barra pra baixo — a linha de corte sobe com o joelho (em 0 ela coincide com a
+                perna de trás: sem pulo na troca) */}
+            {corre && joelho[0] + joelho[1] > 0.005 && (
+              <g transform={poseT(pose, true)}>
+                {([0, 1] as const).map((i) =>
+                  joelho[i] > 0.005 ? (
+                    <g key={i}>
+                      <clipPath id={`${uid}k${i}`}>
+                        <rect x={-100} y={222 + life.lift + Math.max(0, pose.y ?? 0) + 2 - 36 * joelho[i]} width={400} height={400} />
+                      </clipPath>
+                      <g clipPath={`url(#${uid}k${i})`}>{legPose(i, legRun(i, joelho[i], chuta[i], estica(i)))}</g>
+                    </g>
+                  ) : null,
+                )}
+              </g>
+            )}
+          </>
+        ) : (
+          <>
+            <rect x={72} y={210} width={25} height={34} rx={9} fill={C.faint} />
+            <rect x={103} y={210} width={25} height={34} rx={9} fill={C.faint} />
+            <rect x={103} y={210} width={25} height={34} rx={9} fill={SHADE} />
+            <rect x={66} y={238} width={33} height={14} rx={6.5} fill={C.surface3} />
+            <rect x={101} y={238} width={33} height={14} rx={6.5} fill={C.surface3} />
+            <rect x={101} y={238} width={33} height={14} rx={6.5} fill={SHADE} />
+
+            {body}
+          </>
+        )}
       </svg>
     );
   };
@@ -769,7 +1055,7 @@ const M_TORSO = softPoly(
 );
 const M_PIN: Pt = [119, 186];
 
-const Mascote: React.FC<PessoaProps> = ({ t = 0, size = 260, accent = C.violet, skin = '#F2C9A0', mood = 'ok', seed = 0, arms = 'none', still = false, cap, sweat = false, since, halo = true }) => {
+const Mascote: React.FC<PessoaProps> = ({ t = 0, size = 260, accent = C.violet, skin = '#F2C9A0', mood = 'ok', seed = 0, arms = 'none', still = false, cap, sweat = false, since, halo = true, pose }) => {
   const uid = 'hm' + useId().replace(/[^a-zA-Z0-9]/g, '');
   const n = CAST.length;
   const who = CAST[((seed % n) + n) % n];
@@ -778,7 +1064,9 @@ const Mascote: React.FC<PessoaProps> = ({ t = 0, size = 260, accent = C.violet, 
   const hair = HAIRS[who.hair];
   const sinceM = since ?? t;
   const life = lifeOf(t, seed, mood, sinceM, still, 1.4);
-  const [la, ra] = armAngles(arms, t, seed);
+  // o Mascote só lê os braços da pose (fase 3)
+  const [la, ra] = pose?.braco ?? armAngles(arms, t, seed);
+  const showArms = arms !== 'none' || !!pose?.braco;
   const blink = still ? 0 : blinkAt(t, seed);
   const HX = M_HX(mood);
   const hideTop = Boolean(cap);
@@ -793,7 +1081,7 @@ const Mascote: React.FC<PessoaProps> = ({ t = 0, size = 260, accent = C.violet, 
       <rect x={100} y={238} width={30} height={14} rx={7} fill={C.surface3} />
       <g transform={life.body}>
         <g transform={`translate(0 ${life.lift})`}>
-          {arms !== 'none' && armOf('l', la, accent, skin, false)}
+          {showArms && armOf('l', la, accent, skin, false)}
           {backVisible && (
             <g transform={HX}>
               <path d={hair.back!} fill={hairColor} />
@@ -803,7 +1091,7 @@ const Mascote: React.FC<PessoaProps> = ({ t = 0, size = 260, accent = C.violet, 
           <path d={M_TORSO} fill={accent} />
           <path d={M_TORSO} fill="rgba(255,255,255,0.08)" transform="translate(100 186) scale(0.82 0.7) translate(-100 -186)" />
           <GoldHex x={M_PIN[0]} y={M_PIN[1]} r={9.5} onGold={nearGold(accent)} />
-          {arms !== 'none' && armOf('r', ra, accent, skin, false)}
+          {showArms && armOf('r', ra, accent, skin, false)}
           <g transform={HX}>
             <path d={M_HEAD} fill={skin} />
             <path d={FACE_SHINE} stroke={SHINE} strokeWidth={3.4} strokeLinecap="round" fill="none" />
