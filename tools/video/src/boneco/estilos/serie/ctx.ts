@@ -23,4 +23,8 @@ export type Ctx = {
   seed: number;
   segura?: 'halter' | 'copo';
   toque?: { ponto: [number, number]; forca: number; marca?: number };
+  /** 0..1: o corpo de vidro (ver estilo.ts) */
+  vidro: number;
+  /** mãos (com o que seguram) e pés redesenhados POR CIMA do vidro */
+  extremidades: import('react').ReactNode[];
 };

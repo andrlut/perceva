@@ -106,6 +106,8 @@ export const poseV5 = (pessoa: Pessoa, props: { t: number; pose?: unknown; arms?
  */
 const BUSTO_TOPO = 26;
 const BUSTO_CINTURA = 214;
+/** onde o busto corta (unidades da caixa): um tico abaixo dela */
+const BUSTO_CORTE = 268;
 type Encaixe = { s: number; o: [number, number] };
 const encaixe = (j: Juntas, prop: Proporcao, enquadra: Enquadra | undefined): Encaixe => {
   if (enquadra !== 'busto') return { s: ALT_CAIXA / j.altura, o: PES };
@@ -212,6 +214,17 @@ export const PessoaV5: React.FC<PessoaProps & { segura?: string; vidro?: number;
   return (
     <svg width={size} height={size * 1.3} viewBox="0 0 200 260" style={{ overflow: 'visible', display: 'block' }}>
       {e.o[1] === PES[1] ? <ellipse cx={PES[0] + (pose.x ?? 0) * s} cy={PES[1] + 1} rx={34 * (1 - Math.min(0.5, elev))} ry={5} fill="#05071A" opacity={0.4 - Math.min(0.25, elev)} /> : null}
+      {/* no busto as pernas passam da caixa: o desenho corta um tico abaixo dela (o balcão, a faixa da
+          legenda ou o corte do quadro já escondem a cintura pra baixo; sem o corte os pés apareciam
+          embaixo do balcão) */}
+      {e.o[1] !== PES[1] ? (
+        <defs>
+          <clipPath id={`${uid}-busto`}>
+            <rect x={-600} y={-600} width={1400} height={600 + BUSTO_CORTE} />
+          </clipPath>
+        </defs>
+      ) : null}
+      <g clipPath={e.o[1] !== PES[1] ? `url(#${uid}-busto)` : undefined}>
       <g transform={`translate(${e.o[0]} ${e.o[1]}) scale(${(j.espelho ? -1 : 1) * s} ${s})`}>
         <D
           j={j}
@@ -223,6 +236,7 @@ export const PessoaV5: React.FC<PessoaProps & { segura?: string; vidro?: number;
           segura={segura ? SEGURA_V5[segura] : undefined}
           vidro={vidro}
         />
+      </g>
       </g>
     </svg>
   );

@@ -97,7 +97,7 @@ export function pelvisForma(c: Ctx): Forma | null {
     [...tr.P(tr.xl(top, e), top), 1] as PQ,
     tr.P(tr.uFrente(0, top, e), top - 0.012),
   ];
-  return { d: suave(pts), cor: b.cor, k: 5 };
+  return { d: suave(pts), cor: b.cor, k: 5, corpo: true };
 }
 
 type PartesPerna = { pele: Forma[]; calca: Forma[]; pe: { formas: Forma[]; detalhes: React.ReactNode }; detalhes: React.ReactNode };
@@ -126,8 +126,8 @@ function pernaPartes(c: Ctx, i: 0 | 1): PartesPerna {
   };
   const pele: Forma[] = [];
   const calca: Forma[] = [];
-  const peleF = (d: string): Forma => ({ d, cor: c.pele, sombra: c.peleSombra, k: 3.6, uniao: 'pele' });
-  const pano = (d: string, cor = b.cor, k = 3.8): Forma => ({ d, cor, k, uniao: 'calca' });
+  const peleF = (d: string): Forma => ({ d, cor: c.pele, sombra: c.peleSombra, k: 3.6, uniao: 'pele', corpo: true });
+  const pano = (d: string, cor = b.cor, k = 3.8): Forma => ({ d, cor, k, uniao: 'calca', corpo: true });
   const det: React.ReactNode[] = [];
   const dirCoxa = norm(sub(jo, q));
   const dirCan = norm(sub(to, jo));
@@ -302,7 +302,9 @@ export function camadaPerna(c: Ctx, i: 0 | 1, key: string): React.ReactNode {
   const p = pernaPartes(c, i);
   const pel = pelvisForma(c);
   const grupos: Grupo[] = [];
-  const mascara = pel && i === 1 ? c.pt.pinta(pel, 'mask') : null;
+  const mascara0 = pel && i === 1 ? c.pt.pinta(pel, 'mask') : null;
+  // a máscara da pélvis é corpo: esmaece com o vidro mesmo quando mora no grupo do sapato
+  const mascara = mascara0 && c.vidro > 0 ? <g opacity={1 - c.vidro}>{mascara0}</g> : mascara0;
   const mascara2 = pel && i === 1 ? c.pt.pinta(pel, 'mask2') : null;
   if (p.pele.length) grupos.push({ formas: p.pele, antes: mascara });
   grupos.push({ formas: p.pe.formas, linha: LINHA.dentro, depois: p.pe.detalhes, antes: p.pele.length ? null : mascara });
@@ -321,7 +323,9 @@ export function camadaPerna(c: Ctx, i: 0 | 1, key: string): React.ReactNode {
         </g>
       ),
     });
-  else grupos.push({ formas: [], depois: p.detalhes });
+  else grupos.push({ formas: [], depois: p.detalhes, corpo: true });
+  // com vidro, o sapato é redesenhado por cima do corpo de vidro
+  if (c.vidro > 0) c.extremidades.push(c.pt.camada([{ formas: p.pe.formas, linha: LINHA.dentro, depois: p.pe.detalhes }], `${key}-pe`));
   return c.pt.camada(grupos, key);
 }
 
@@ -393,7 +397,7 @@ export function camadaSaia(c: Ctx, key: string): React.ReactNode {
   return c.pt.camada(
     [
       {
-        formas: [{ d, cor: b.cor, k: 5 }],
+        formas: [{ d, cor: b.cor, k: 5, corpo: true }],
         depois: (
           <g>
             <Traco d={prega(0.33)} w={LINHA.fino} op={0.45} />
@@ -498,7 +502,7 @@ export function camadaTronco(c: Ctx, key: string): React.ReactNode {
       [cc[0] + rx, cc[1] + 2],
       [cc[0], cc[1] + 5],
     ]);
-    grupos.push({ formas: [{ d, cor: escurece(cor, 0.12), k: 2.5 }] });
+    grupos.push({ formas: [{ d, cor: escurece(cor, 0.12), k: 2.5, corpo: true }] });
   }
   // pescoço: da base (um tico pra trás) até dentro da cabeça
   const W = prop.cabecaLarg;
@@ -506,7 +510,8 @@ export function camadaTronco(c: Ctx, key: string): React.ReactNode {
   const a = (j.ang.cabeca * Math.PI) / 180;
   const naCab = (lx: number, ly: number): P => [j.cabeca[0] + lx * Math.cos(a) - ly * Math.sin(a), j.cabeca[1] + lx * Math.sin(a) + ly * Math.cos(a)];
   const topoPesc = naCab(-tr.s * W * 0.12, Hc * 0.18);
-  const basePesc = tr.P(tr.nc, 0.86);
+  // com o corpo de vidro o pescoço não desce pra dentro do tronco (aparecia através do vidro)
+  const basePesc = tr.P(tr.nc, lerp(0.86, 1.0, c.vidro));
   const pesc = capsula(basePesc, topoPesc, fis.pescoco * 1.08, fis.pescoco * 0.95);
   const idP = c.pt.id('pesc');
   const queixo = naCab(tr.s * W * 0.12, Hc * 0.5);
@@ -523,7 +528,7 @@ export function camadaTronco(c: Ctx, key: string): React.ReactNode {
   });
   const topoCintura = TOPO_CINTURA[roupa.baixo.tipo] ?? 0.2;
   // pele do tronco (aparece no top, na regata e no decote)
-  grupos.push({ formas: [{ d: contornoTronco(c, { e: 0, de: topoCintura - 0.015, reto: true }), cor: c.pele, sombra: c.peleSombra, k: 5 }] });
+  grupos.push({ formas: [{ d: contornoTronco(c, { e: 0, de: topoCintura - 0.015, reto: true }), cor: c.pele, sombra: c.peleSombra, k: 5, corpo: true }] });
   // a peça de cima
   const de = barraCima(c);
   const e = folgaCima(tp);
@@ -531,7 +536,7 @@ export function camadaTronco(c: Ctx, key: string): React.ReactNode {
   const cai = fis.barriga > 0.3 && tp !== 'top' && tp !== 'regata';
   const corpoD = contornoTronco(c, { e, eBarra: solta ? e + 0.8 : e, de, alca: tp === 'regata' || tp === 'top', cai });
   const det: React.ReactNode[] = [];
-  const formasCima: Forma[] = [{ d: corpoD, cor, k: 6 }];
+  const formasCima: Forma[] = [{ d: corpoD, cor, k: 6, corpo: true }];
   const L = LINHA.fino;
   const peleChapada = (d: string, k: string) => <path key={k} d={d} fill={c.pele} />;
   // pijama: listra fina na cor2 (lê "pijama" de primeira, nunca agasalho nem jaleco)
@@ -673,7 +678,7 @@ export function camadaTronco(c: Ctx, key: string): React.ReactNode {
     ];
     const bolso: PQ[] = [[...tr.frente(-5, 0.16, e + 1.2), 1] as PQ, [...tr.frente(5, 0.16, e + 1.2), 1] as PQ, [...tr.frente(5, 0.02, e + 1.2), 1] as PQ, [...tr.frente(-5, 0.02, e + 1.2), 1] as PQ];
     grupos.push({
-      formas: [{ d: suave(pts), cor: ac, k: 4 }],
+      formas: [{ d: suave(pts), cor: ac, k: 4, corpo: true }],
       linha: LINHA.dentro,
       depois: (
         <g>
@@ -722,7 +727,7 @@ export function camadaBraco(c: Ctx, i: 0 | 1, key: string): React.ReactNode {
   const escorco = enc < 0.8;
   const kE = 1;
   const r: [number, number, number] = [fis.braco[0] * kE, fis.braco[1] * kE, fis.braco[2]];
-  const peleF = (d: string): Forma => ({ d, cor: c.pele, sombra: c.peleSombra, k: 2.6, uniao: 'pele' });
+  const peleF = (d: string): Forma => ({ d, cor: c.pele, sombra: c.peleSombra, k: 2.6, uniao: 'pele', corpo: true });
   const m0 = mangaDe(c);
   const costura = false;
   void m0;
@@ -738,11 +743,13 @@ export function camadaBraco(c: Ctx, i: 0 | 1, key: string): React.ReactNode {
   const mao = maoDe(c, i, maoPose);
   const grupos: Grupo[] = [];
   // o objeto vai ANTES da mão: os dedos fecham por cima dele
+  let objeto: Grupo | null = null;
   if (maoPose === 'segura') {
-    if (comGarrafa) grupos.push(garrafa(c, i));
-    else if (c.segura === 'halter' && i === 1) grupos.push(halter(c, i));
-    else if (c.segura === 'copo' && i === 1) grupos.push(copo(c, i));
+    if (comGarrafa) objeto = garrafa(c, i);
+    else if (c.segura === 'halter' && i === 1) objeto = halter(c, i);
+    else if (c.segura === 'copo' && i === 1) objeto = copo(c, i);
   }
+  if (objeto) grupos.push(objeto);
   const palma = mao.formas.map((f) => ({ ...f, uniao: 'pele' }));
   const gruposMao = (): Grupo[] => {
     if (!mao.frente?.length) return [];
@@ -765,7 +772,7 @@ export function camadaBraco(c: Ctx, i: 0 | 1, key: string): React.ReactNode {
   const mb: Forma[] = [];
   const du = norm(sub(co, o));
   const df = norm(sub(pu, co));
-  const pano = (d: string, k = 2.8, cc = cor): Forma => ({ d, cor: cc, k, uniao: 'manga' });
+  const pano = (d: string, k = 2.8, cc = cor): Forma => ({ d, cor: cc, k, uniao: 'manga', corpo: true });
   if (m.ate === 'curta') {
     const fim = lerpP(o, co, escorco ? 0.62 : 0.5);
     const rr = lerp(r[0], r[1], 0.5) + m.folga + 0.2;
@@ -826,7 +833,19 @@ export function camadaBraco(c: Ctx, i: 0 | 1, key: string): React.ReactNode {
     det.push(<Traco cor={contornoDe(cor)} key="cot" d={linha([add(p, mul(tg, -rr * 0.4)), add(p, mul(bis, rr * 0.2)), add(p, mul(tg, rr * 0.4))])} w={LINHA.fino} op={0.75} />);
     if (m.ate === 'longa' && !escorco) det.push(<Traco cor={contornoDe(cor)} key="cot2" d={linha([add(add(co, mul(du, -4)), mul(perp(du), (rr + 0.4) * Math.sign(-dob))), add(add(co, mul(du, -1.5)), mul(perp(du), rr * 0.4 * Math.sign(-dob)))])} w={LINHA.fino} op={0.55} />);
   }
-  if (!escorco) {
+  const detMao = mao.detalhesPalma ?? (mao.frente?.length ? null : mao.detalhes);
+  if (c.vidro > 0) {
+    // corpo de vidro: a mão (com o que segura) é redesenhada por cima do vidro, inteira
+    c.extremidades.push(c.pt.camada([...(objeto ? [objeto] : []), { formas: palma, depois: detMao }, ...gruposMao()], `${key}-mao`));
+  }
+  if (!escorco && c.vidro > 0) {
+    grupos.push({ formas: [peleBraco, peleAnte] });
+    grupos.push({ formas: palma, depois: detMao });
+    grupos.push(...gruposMao());
+    const manga = [...mc, ...mb];
+    if (manga.length) grupos.push({ formas: manga, linha: LINHA.dentro, depois: <g>{det}</g> });
+    else if (det.length) grupos.push({ formas: [], depois: <g>{det}</g>, corpo: true });
+  } else if (!escorco) {
     grupos.push({ formas: [peleBraco, peleAnte, ...palma], depois: mao.detalhesPalma ?? (mao.frente?.length ? null : mao.detalhes) });
     grupos.push(...gruposMao());
     if (!mao.frente?.length && mao.detalhesPalma) grupos.push({ formas: [], depois: mao.detalhes });
@@ -842,7 +861,7 @@ export function camadaBraco(c: Ctx, i: 0 | 1, key: string): React.ReactNode {
         </g>
       ),
     });
-    else if (det.length) grupos.push({ formas: [], depois: <g>{det}</g> });
+    else if (det.length) grupos.push({ formas: [], depois: <g>{det}</g>, corpo: true });
   } else {
     // ESCORÇO: braço (e a manga dele) atrás; antebraço + mão por cima, com linha própria
     grupos.push({ formas: [peleBraco] });
@@ -859,7 +878,7 @@ export function camadaBraco(c: Ctx, i: 0 | 1, key: string): React.ReactNode {
     const b1 = add(pc, mul(tg, -lado * r[1] * 0.3));
     det.push(<Traco key="esc1" d={linha([add(b1, mul(df, -1.4)), add(add(b1, mul(tg, lado * 2.0)), mul(df, 0.2)), add(b1, mul(df, 1.6))])} w={LINHA.fino} cor={lc} op={0.85} />);
     det.push(<Traco key="esc2" d={linha([add(b1, mul(df, 2.6)), add(add(b1, mul(tg, lado * 1.4)), mul(df, 3.4))])} w={LINHA.fino * 0.85} cor={lc} op={0.7} />);
-    grupos.push({ formas: [], depois: <g>{det}</g> });
+    grupos.push({ formas: [], depois: <g>{det}</g>, corpo: true });
   }
   // relógio no braço da frente
   if (i === 1 && ex.includes('relogio') && !(m.ate === 'longa')) {

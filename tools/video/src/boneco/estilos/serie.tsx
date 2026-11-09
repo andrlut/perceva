@@ -11,7 +11,7 @@
 // O código mora em ./serie/: base (tinta + cel), fisico, corpo, maos, objetos, cabeca, cabelos.
 import React from 'react';
 import type { DesenhoProps, Estilo } from '../estilo';
-import { Pintor, hash, norm, recorte, silhueta, sombraPele } from './serie/base';
+import { Pintor, capsula, hash, norm, recorte, silhueta, sombraPele, vidroCorpo } from './serie/base';
 import { cabeloPronto, camadaCabeca, camadaCabeloAtras } from './serie/cabeca';
 import { camadaBraco, camadaPerna, camadaSaia, camadaTronco, detalhesCintura } from './serie/corpo';
 import type { Ctx } from './serie/ctx';
@@ -27,7 +27,7 @@ const LUZ_PADRAO = '#A99BFF';
  */
 const escalaTraco = (pxPorUn: number) => Math.max(0.42, Math.min(1.6, Math.sqrt(1.1 / pxPorUn)));
 
-const SerieDesenho: React.FC<DesenhoProps> = ({ j, pessoa, roupa, humor, t, uid, luz, segura, toque }) => {
+const SerieDesenho: React.FC<DesenhoProps> = ({ j, pessoa, roupa, humor, t, uid, luz, segura, toque, vidro }) => {
   const raiz = React.useRef<SVGGElement>(null);
   React.useLayoutEffect(() => {
     const el = raiz.current;
@@ -44,7 +44,9 @@ const SerieDesenho: React.FC<DesenhoProps> = ({ j, pessoa, roupa, humor, t, uid,
   // com espelho o desenho inteiro é virado: a luz vira junto pra continuar vindo do mesmo lado da TELA
   const luzX = j.espelho ? -1 : 1;
   const pt = new Pintor(uid, luz ?? LUZ_PADRAO, norm([luzX * 0.6, -0.8]));
-  const c: Ctx = { j, prop, fis, tr, mov, pessoa, roupa, humor, t, uid, pt, luzX, pele: pessoa.pele, peleSombra: sombraPele(pessoa.pele), seed, segura, toque };
+  const v = Math.max(0, Math.min(1, vidro ?? 0));
+  pt.vidro = v;
+  const c: Ctx = { j, prop, fis, tr, mov, pessoa, roupa, humor, t, uid, pt, luzX, pele: pessoa.pele, peleSombra: sombraPele(pessoa.pele), seed, segura, toque, vidro: v, extremidades: [] };
   const cab = cabeloPronto(c);
   const frente = j.vista === 'frente';
   const camadas: React.ReactNode[] = [];
@@ -52,7 +54,11 @@ const SerieDesenho: React.FC<DesenhoProps> = ({ j, pessoa, roupa, humor, t, uid,
   if (!frente && !j.bracoNaFrente[0]) camadas.push(camadaBraco(c, 0, 'b0'));
   camadas.push(camadaPerna(c, 0, 'p0'));
   camadas.push(camadaPerna(c, 1, 'p1'));
-  camadas.push(<g key="cint">{detalhesCintura(c)}</g>);
+  camadas.push(
+    <g key="cint" opacity={v > 0 ? 1 - v : undefined}>
+      {detalhesCintura(c)}
+    </g>,
+  );
   camadas.push(camadaSaia(c, 'saia'));
   // de frente, braço CAÍDO com manga vem antes do tronco: o ombro arredondado da peça cobre a
   // cabeça da manga e ela nasce na cava (sem o topo reto de papelão por cima do ombro)
@@ -63,9 +69,17 @@ const SerieDesenho: React.FC<DesenhoProps> = ({ j, pessoa, roupa, humor, t, uid,
   camadas.push(camadaTronco(c, 'tr'));
   if (frente && !j.bracoNaFrente[0] && !caido(0)) camadas.push(camadaBraco(c, 0, 'b0'));
   if (!j.bracoNaFrente[1] && !caido(1)) camadas.push(camadaBraco(c, 1, 'b1'));
+  // o corpo de vidro entra AQUI (depois de todo o corpo, antes da cabeça); mãos e pés por cima dele
+  const iVidro = camadas.length;
   camadas.push(camadaCabeca(c, cab, 'cab'));
   if (j.bracoNaFrente[0]) camadas.push(camadaBraco(c, 0, 'b0f'));
   if (j.bracoNaFrente[1]) camadas.push(camadaBraco(c, 1, 'b1f'));
+  if (v > 0) {
+    // o filete vertical do reflexo no tronco, do lado da luz
+    const u = (vf: number) => (luzX > 0 ? tr.xr(vf) : tr.xl(vf)) * 0.6;
+    const filete = <path d={capsula(tr.P(u(0.78), 0.78), tr.P(u(0.14), 0.14), 1.3, 0.9)} fill="#DDE5FF" opacity={0.16} />;
+    camadas.splice(iVidro, 0, vidroCorpo(pt, v, filete, [tr.P(0, 1.0)[1], tr.P(0, 0.15)[1]]), ...c.extremidades.map((x, k) => <g key={`ext${k}`}>{x}</g>));
+  }
   // estampa do pijama (listra fina na cor2), usada pelo tronco, mangas e calça
   if (roupa.cima.tipo === 'pijama' || roupa.baixo.tipo === 'pijama') {
     const cor2 = roupa.cima.cor2 ?? roupa.baixo.cor2 ?? '#F4F5FF';

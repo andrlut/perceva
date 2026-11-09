@@ -791,6 +791,8 @@ export type AtorProps = {
   halo?: boolean | 'cabeca';
   /** poeira no pé que pousa (correr); default: sim */
   poeira?: boolean;
+  /** boneco v5: 0..1, o corpo de vidro (cena `dentro`, plano corpo) — a Pessoa v5 desenha o vidro */
+  vidro?: number;
 };
 
 /** A cor da pele que a Pessoa vai usar (pra mão por cima da peça). */
@@ -823,6 +825,7 @@ export const Ator: React.FC<AtorProps> = ({
   figurante = false,
   halo,
   poeira = true,
+  vidro,
 }) => {
   const pa: PoseAtor | undefined = pose ?? (laco ? poseLaco(laco, t + fase) : undefined);
   const armsIn: Arms = arms ?? (mao || maos ? 'out' : 'down');
@@ -947,7 +950,7 @@ export const Ator: React.FC<AtorProps> = ({
             arms={armsIn}
             pose={v5() ? (pa ?? { mistura: 0 }) : eff}
             halo={figurante ? false : halo}
-            {...(v5() ? { segura: mao?.p ?? maos, figurante } : {})}
+            {...(v5() ? { segura: mao?.p ?? maos, figurante, vidro } : {})}
           />
         </div>
         {v5() ? (

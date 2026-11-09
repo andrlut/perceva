@@ -266,6 +266,8 @@ export type Forma = {
   uniao?: string;
   /** cor do contorno (default: contornoDe(cor)) */
   linhaCor?: string;
+  /** é CORPO (tronco, braço, perna — pele ou roupa): vira vidro com `vidro` */
+  corpo?: boolean;
 };
 
 const linhaDe = (fm: Forma) => fm.linhaCor ?? contornoDe(fm.cor);
@@ -280,12 +282,16 @@ export type Grupo = {
   meio?: React.ReactNode;
   /** detalhes por cima (costura, dobra, cadarço) */
   depois?: React.ReactNode;
+  /** o grupo inteiro é corpo (detalhes de roupa sem forma própria): esmaece com o vidro */
+  corpo?: boolean;
 };
 
 export class Pintor {
   private n = 0;
   /** as formas que fazem a silhueta (contorno grosso de fora + fio de recorte), com a transformação da camada */
-  sil: { d: string; tf?: string; cor: string; op?: number; rim: boolean }[] = [];
+  sil: { d: string; tf?: string; cor: string; op?: number; rim: boolean; corpo: boolean }[] = [];
+  /** 0..1: o corpo de vidro (as formas de corpo esmaecem por 1 − vidro; o vidro vem por cima) */
+  vidro = 0;
   /** transformação corrente (a cabeça desenha num quadro local) */
   tf?: string;
   constructor(
@@ -366,14 +372,17 @@ export class Pintor {
    */
   camada(grupos: Grupo[], key: string | number, L: P = this.L, interna = LINHA.dentro * 0.8): React.ReactNode {
     const todas = grupos.flatMap((g) => g.formas);
-    for (const fm of todas) this.sil.push({ d: fm.d, tf: this.tf, cor: linhaDe(fm), op: fm.op, rim: fm.rim !== false && (fm.op ?? 1) >= 0.99 });
+    for (const fm of todas) this.sil.push({ d: fm.d, tf: this.tf, cor: linhaDe(fm), op: fm.op, rim: fm.rim !== false && (fm.op ?? 1) >= 0.99, corpo: !!fm.corpo });
+    const v = this.vidro;
+    const esm = (fm: Forma) => (v > 0 && fm.corpo ? (fm.op ?? 1) * (1 - v) : fm.op);
+    const grupoCorpo = (g: Grupo) => v > 0 && (g.corpo || (g.formas.length > 0 && g.formas.every((f) => f.corpo)));
     return (
       <g key={key}>
         {todas.map((fm, i) => (
-          <path key={`u${i}`} d={fm.d} fill={linhaDe(fm)} stroke={linhaDe(fm)} style={sw(interna * 2)} strokeLinejoin="round" opacity={fm.op} />
+          <path key={`u${i}`} d={fm.d} fill={linhaDe(fm)} stroke={linhaDe(fm)} style={sw(interna * 2)} strokeLinejoin="round" opacity={esm(fm)} />
         ))}
         {grupos.map((g, gi) => (
-          <g key={`g${gi}`}>
+          <g key={`g${gi}`} opacity={grupoCorpo(g) ? 1 - v : undefined}>
             {g.antes}
             {g.linha
               ? g.formas.map((fm, i) => (
@@ -408,7 +417,9 @@ export function silhueta(pt: Pintor, fora = LINHA.fora): React.ReactNode {
   if (!pt.sil.length) return null;
   const [lx, ly] = pt.L;
   const todas = (k: string) =>
-    pt.sil.map((s, i) => <path key={`${k}${i}`} d={s.d} transform={s.tf} fill={s.cor} stroke={s.cor} style={sw(fora * 2)} strokeLinejoin="round" opacity={s.op} />);
+    pt.sil.map((s, i) => (
+      <path key={`${k}${i}`} d={s.d} transform={s.tf} fill={s.cor} stroke={s.cor} style={sw(fora * 2)} strokeLinejoin="round" opacity={s.corpo && pt.vidro > 0 ? (s.op ?? 1) * (1 - pt.vidro) : s.op} />
+    ));
   return (
     <g key="silhueta">
       <g style={desloca(-lx * 0.7, -ly * 0.7)}>{todas('b')}</g>
@@ -439,6 +450,63 @@ export function recorte(pt: Pintor, largura = 0.95, op = 0.85): React.ReactNode 
         </g>
       </mask>
       <rect x={R.x} y={R.y} width={R.w} height={R.h} fill={pt.luz} opacity={op} mask={`url(#${id})`} />
+    </g>
+  );
+}
+
+/** a cor do contorno do vidro: lilás-claro gelado (o do corpo de vidro da fase 3) */
+const GELO = '#B6C2FF';
+
+/**
+ * O CORPO DE VIDRO (cena `dentro`): tronco, braços e pernas — pele e roupa — como UMA peça só:
+ *  - o preenchimento azul-noite OPACO (#1C1C4D, o rgba(14,18,48,0.86) da fase 3 já composto, com o
+ *    #262761 no alto): as formas se sobrepõem sem emenda no ombro, no quadril, na coxa;
+ *  - o contorno claro e frio só POR FORA (máscara: tudo menos a união);
+ *  - o reflexo do lado da luz, por dentro (a união menos ela mesma deslocada pro lado oposto à luz) e
+ *    o filete vertical que a cena passa em `extra` (recortado na união).
+ * Cabeça, pescoço, cabelo, mãos e pés NÃO são corpo: ficam como são (desenhados depois).
+ */
+export function vidroCorpo(pt: Pintor, v: number, extra?: React.ReactNode, faixa?: [number, number], fora = LINHA.fora): React.ReactNode {
+  const corpo = pt.sil.filter((s) => s.corpo);
+  if (v <= 0.002 || !corpo.length) return null;
+  const [lx, ly] = pt.L;
+  const R = { x: -900, y: -1200, w: 1800, h: 1500 };
+  const idFora = pt.id('vf');
+  const idRef = pt.id('vr');
+  const idFio = pt.id('vfio');
+  const idDentro = pt.id('vd');
+  const idGrad = pt.id('vg');
+  const todas = (k: string, props: React.SVGProps<SVGPathElement>) => corpo.map((s, i) => <path key={`${k}${i}`} d={s.d} transform={s.tf} {...props} />);
+  const crescente = (id: string, w: number) => (
+    <mask id={id} maskUnits="userSpaceOnUse" x={R.x} y={R.y} width={R.w} height={R.h}>
+      <g fill="#FFFFFF">{todas('w', {})}</g>
+      <g fill="#000000" style={desloca(-lx * w, -ly * w)}>
+        {todas('b', {})}
+      </g>
+    </mask>
+  );
+  return (
+    <g key="vidro" opacity={v}>
+      <mask id={idFora} maskUnits="userSpaceOnUse" x={R.x} y={R.y} width={R.w} height={R.h}>
+        <rect x={R.x} y={R.y} width={R.w} height={R.h} fill="#FFFFFF" />
+        {todas('m', { fill: '#000000' })}
+      </mask>
+      <mask id={idDentro} maskUnits="userSpaceOnUse" x={R.x} y={R.y} width={R.w} height={R.h}>
+        {todas('d', { fill: '#FFFFFF' })}
+      </mask>
+      {crescente(idRef, 3.6)}
+      {crescente(idFio, 1.0)}
+      <g mask={`url(#${idFora})`}>{todas('o', { fill: 'none', stroke: GELO, style: sw(fora * 2), strokeLinejoin: 'round' })}</g>
+      {/* opaco, a cor do vidro da fase 3 já composta (rgba(14,18,48,0.86) sobre a roupa): nada de
+          dentro do corpo (cabelo de trás, pescoço) aparece através; um degradê só, do ombro pra baixo */}
+      <linearGradient id={idGrad} gradientUnits="userSpaceOnUse" x1={0} x2={0} y1={faixa?.[0] ?? -260} y2={faixa?.[1] ?? -150}>
+        <stop offset="0%" stopColor="#262761" />
+        <stop offset="100%" stopColor="#1C1C4D" />
+      </linearGradient>
+      {todas('f', { fill: `url(#${idGrad})` })}
+      <rect x={R.x} y={R.y} width={R.w} height={R.h} fill="#C9D3FF" opacity={0.12} mask={`url(#${idRef})`} />
+      <rect x={R.x} y={R.y} width={R.w} height={R.h} fill="#E4EAFF" opacity={0.3} mask={`url(#${idFio})`} />
+      {extra ? <g mask={`url(#${idDentro})`}>{extra}</g> : null}
     </g>
   );
 }
