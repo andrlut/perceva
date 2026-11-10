@@ -1,0 +1,917 @@
+{
+  "_doc": "Piloto r5 da ideia colageno-constancia (2026-11-10, no modelo da creatina r5 que o André aprovou): sem card no fim (fim: cena — o card é coletado na tela do app), o tempo do card vira conteúdo e o vídeo fecha na ação do verso demonstrada. Mesma Lúcia, boneco v5 (serie) e visual v5 da r4. Voz: days, hook2 e do (o say do do é o texto que a r4 leu no verso) ficam com a tomada da r4 nos dois idiomas; as outras seis regravam. Entram as batidas do corpo que faltavam: o colágeno HIDROLISADO (na lupa da barriga, na cozinha de manhã, ela bebe e o cordão já entra em pedaços na deixa \"hidrolisado\", com o rótulo; os pedaços atravessam a parede do intestino em \"consegue absorver\"), a vitamina C que auxilia na formação do colágeno (no escritório à noite, ela só mexe o copo, sem gole: a lente da bochecha é o mecanismo, não o efeito da dose; os pontos amarelos chegam e a faixa de baixo da rede se tece devagar a partir de \"porque auxilia\": enche o que falta, a faixa de cima já estava lá), o zinco na manutenção da pele, dos cabelos e das unhas (ela andando no parque de dia e as três palavras com seta pro rosto, o cabelo e a mão), o tempo como o detalhe que conta (a onda lenta do renova na lupa, em casa à noite), as semanas e a constância do título (o calendário correndo na mesa do escritório de manhã), o hábito no mesmo horário, na água ou no suco (o relógio parado, o pote, o copo d'água e o de suco, em casa de dia), e o fim: todo dia por pelo menos oito semanas junto com vitamina C (o calendário correndo, o rótulo \"semanas\" sai quando a lente abre com os pontos amarelos e a rede renovando, numa mesa ao ar livre na cidade de manhã). Fora, de propósito: o estudo (idade, dose, rugas, placebo), a marca, gramas e os ingredientes que só aparecem na frase do produto (selênio, ácido hialurônico). O dedo apertando a pele (o detalhe favorito do André) fica no hook2, e a camada de pele da lente é sempre a pele dela (tom pele). Assinatura: a lupa (a rede da pele que rareia → o cordão em pedaços no intestino → a rede que se tece com a vitamina C → a onda lenta → a rede renovando no fim). Balcão fechado só no hook (a pia do banheiro). Lugares sem repetir quadro da creatina r5 (cozinha manhã pensa, casa manhã e noite fechado, escritório de dia fechado, parque com corrida e lupa, cidade andando de dia): banheiro · cozinha (lupa) · escritório à noite · parque (andando, de dia) · casa à noite (lupa) · escritório de manhã · casa de dia · cidade de manhã.",
+  "slug": "paker-health-energia-pele-forca",
+  "ideas": {
+    "colageno-constancia": {
+      "dimension": "body",
+      "fase": 3,
+      "fim": "cena",
+      "protagonista": {
+        "seed": 4,
+        "pessoa": "lucia"
+      },
+      "lines": [
+        {
+          "id": "days",
+          "scene": "cena",
+          "hold": 0.3,
+          "pt": {
+            "caption": "Começou a tomar colágeno e, *depois de uns dias*, a pele continua igual?"
+          },
+          "en": {
+            "caption": "Started taking collagen and, *a few days in*, your skin looks the same?"
+          },
+          "props": {
+            "ambiente": "banheiro",
+            "hora": "manha",
+            "setting": "mesa",
+            "plano": "fechado",
+            "holding": "copo-agua",
+            "mood": "ok",
+            "turn": {
+              "pt": "continua igual",
+              "en": "looks the same"
+            },
+            "to": "cansado",
+            "acoes": [
+              {
+                "acao": "mexer",
+                "cue": {
+                  "pt": "Começou",
+                  "en": "Started"
+                }
+              },
+              {
+                "acao": "beber",
+                "cue": {
+                  "pt": "tomar colágeno",
+                  "en": "taking collagen"
+                }
+              }
+            ],
+            "objects": [
+              {
+                "p": "pote",
+                "cue": {
+                  "pt": "Começou",
+                  "en": "Started"
+                },
+                "run": {
+                  "cue": {
+                    "pt": "Começou",
+                    "en": "Started"
+                  },
+                  "ate": {
+                    "pt": "tomar colágeno",
+                    "en": "taking collagen"
+                  }
+                }
+              },
+              {
+                "p": "calendario",
+                "cue": {
+                  "pt": "depois de uns dias",
+                  "en": "a few days in"
+                },
+                "run": {
+                  "cue": {
+                    "pt": "dias",
+                    "en": "days in"
+                  },
+                  "casas": 5
+                }
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "uns dias",
+                  "en": "a few days"
+                },
+                "cue": {
+                  "pt": "depois de uns dias",
+                  "en": "a few days in"
+                }
+              },
+              {
+                "text": {
+                  "pt": "pele",
+                  "en": "skin"
+                },
+                "cue": {
+                  "pt": "a pele",
+                  "en": "your skin"
+                },
+                "seta": "rosto",
+                "x": 800,
+                "y": 700
+              }
+            ],
+            "camera": {
+              "move": "push",
+              "focus": "centro",
+              "cue": {
+                "pt": "continua igual",
+                "en": "looks the same"
+              }
+            }
+          }
+        },
+        {
+          "id": "hook2",
+          "scene": "dentro",
+          "hold": 0.5,
+          "pt": {
+            "caption": "O colágeno é a proteína que dá *estrutura à pele*, e o corpo passa a fabricar menos dele com a idade."
+          },
+          "en": {
+            "caption": "Collagen is the protein that gives *skin its structure*, and your body makes less of it as you age."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Na pele",
+              "en": "In your skin"
+            },
+            "plano": "lupa",
+            "pessoa": "grande",
+            "transicao": "zoom",
+            "ambiente": "banheiro",
+            "hora": "manha",
+            "mood": "ok",
+            "lente": {
+              "sobre": "rosto",
+              "turn": {
+                "pt": "fabricar menos",
+                "en": "makes less of it"
+              },
+              "conteudo": {
+                "camadas": [
+                  {
+                    "textura": "liso",
+                    "tom": "pele",
+                    "rotulo": {
+                      "text": {
+                        "pt": "pele",
+                        "en": "skin"
+                      },
+                      "cue": {
+                        "pt": "à pele",
+                        "en": "skin its structure"
+                      }
+                    }
+                  },
+                  {
+                    "textura": "rede",
+                    "tom": "area",
+                    "peso": 2,
+                    "cresce": {
+                      "pt": "O colágeno",
+                      "en": "Collagen"
+                    },
+                    "then": "rareia",
+                    "rotulo": {
+                      "text": {
+                        "pt": "colágeno",
+                        "en": "collagen"
+                      },
+                      "cue": {
+                        "pt": "O colágeno",
+                        "en": "Collagen"
+                      }
+                    }
+                  }
+                ],
+                "toque": {
+                  "pt": "estrutura à pele",
+                  "en": "skin its structure"
+                }
+              }
+            },
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "com a idade",
+                  "en": "as you age"
+                },
+                "cue": {
+                  "pt": "menos dele",
+                  "en": "less of it"
+                },
+                "seta": [
+                  380,
+                  770
+                ],
+                "x": 700,
+                "y": 1250
+              }
+            ]
+          }
+        },
+        {
+          "id": "peptides",
+          "scene": "dentro",
+          "pt": {
+            "caption": "Os suplementos trazem colágeno hidrolisado, já quebrado em *peptídeos*, pedaços pequenos que o intestino consegue absorver."
+          },
+          "en": {
+            "caption": "Supplements bring hydrolyzed collagen, already broken down into *peptides*, small pieces your gut can absorb."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Dentro do corpo",
+              "en": "Inside your body"
+            },
+            "plano": "lupa",
+            "pessoa": "grande",
+            "ambiente": "cozinha",
+            "hora": "manha",
+            "mood": "ok",
+            "holding": "copo-agua",
+            "acoes": [
+              {
+                "acao": "beber",
+                "cue": {
+                  "pt": "Os suplementos",
+                  "en": "Supplements"
+                },
+                "ate": {
+                  "pt": "já quebrado",
+                  "en": "already broken"
+                }
+              }
+            ],
+            "lente": {
+              "sobre": "barriga",
+              "conteudo": {
+                "camadas": [
+                  {
+                    "textura": "liso",
+                    "tom": "fundo"
+                  },
+                  {
+                    "textura": "dobras",
+                    "tom": "violeta",
+                    "rotulo": {
+                      "text": {
+                        "pt": "intestino",
+                        "en": "gut"
+                      },
+                      "cue": {
+                        "pt": "o intestino",
+                        "en": "gut can absorb"
+                      }
+                    }
+                  },
+                  {
+                    "textura": "fluxo",
+                    "tom": "violeta"
+                  }
+                ],
+                "particulas": {
+                  "forma": "cordao",
+                  "cor": "body",
+                  "de": "topo",
+                  "cue": {
+                    "pt": "hidrolisado",
+                    "en": "hydrolyzed"
+                  },
+                  "quebra": {
+                    "pt": "hidrolisado",
+                    "en": "hydrolyzed"
+                  },
+                  "rotulo": {
+                    "text": {
+                      "pt": "peptídeos",
+                      "en": "peptides"
+                    },
+                    "cue": {
+                      "pt": "peptídeos",
+                      "en": "peptides"
+                    }
+                  },
+                  "atravessa": {
+                    "camada": 1,
+                    "cue": {
+                      "pt": "consegue absorver",
+                      "en": "can absorb"
+                    }
+                  },
+                  "correnteza": true
+                }
+              }
+            },
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "hidrolisado",
+                  "en": "hydrolyzed"
+                },
+                "cue": {
+                  "pt": "hidrolisado",
+                  "en": "hydrolyzed"
+                },
+                "out": {
+                  "pt": "pedaços pequenos",
+                  "en": "small pieces"
+                },
+                "x": 720,
+                "y": 1250
+              }
+            ]
+          }
+        },
+        {
+          "id": "vitc",
+          "scene": "cena",
+          "hold": 0.8,
+          "pt": {
+            "caption": "E a *vitamina C* também entra, porque auxilia na formação do colágeno."
+          },
+          "en": {
+            "caption": "And *vitamin C* is there too, because it helps form collagen."
+          },
+          "props": {
+            "ambiente": "escritorio",
+            "hora": "noite",
+            "setting": "mesa",
+            "plano": "fechado",
+            "holding": "copo-agua",
+            "mood": "ok",
+            "acoes": [
+              {
+                "acao": "mexer",
+                "cue": {
+                  "pt": "vitamina C",
+                  "en": "vitamin C"
+                }
+              }
+            ],
+            "lente": {
+              "sobre": "rosto",
+              "cue": {
+                "pt": "vitamina C",
+                "en": "vitamin C"
+              },
+              "conteudo": {
+                "camadas": [
+                  {
+                    "textura": "liso",
+                    "tom": "pele"
+                  },
+                  {
+                    "textura": "rede",
+                    "tom": "area",
+                    "peso": 1,
+                    "rotulo": {
+                      "text": {
+                        "pt": "colágeno",
+                        "en": "collagen"
+                      },
+                      "cue": {
+                        "pt": "do colágeno",
+                        "en": "form collagen"
+                      }
+                    }
+                  },
+                  {
+                    "textura": "rede",
+                    "tom": "area",
+                    "peso": 1,
+                    "cresce": {
+                      "pt": "porque auxilia",
+                      "en": "because it helps"
+                    }
+                  }
+                ],
+                "particulas": {
+                  "forma": "ponto",
+                  "cor": "wealth",
+                  "n": 10,
+                  "de": "topo",
+                  "boiam": true,
+                  "cue": {
+                    "pt": "vitamina C",
+                    "en": "vitamin C"
+                  },
+                  "rotulo": {
+                    "text": {
+                      "pt": "vitamina C",
+                      "en": "vitamin C"
+                    },
+                    "cue": {
+                      "pt": "vitamina C",
+                      "en": "vitamin C"
+                    }
+                  }
+                },
+                "ritmo": "devagar"
+              }
+            },
+            "gente": "nenhuma"
+          }
+        },
+        {
+          "id": "zinc",
+          "scene": "faz",
+          "hold": 0.3,
+          "pt": {
+            "caption": "Já o *zinco* contribui para a manutenção da pele, dos cabelos e das unhas."
+          },
+          "en": {
+            "caption": "And *zinc* helps maintain your skin, hair and nails."
+          },
+          "props": {
+            "ambiente": "parque",
+            "hora": "dia",
+            "gente": "nenhuma",
+            "plano": "fechado",
+            "mood": "ok",
+            "passos": [
+              {
+                "acao": "andar",
+                "de": 380,
+                "para": 560,
+                "ritmo": "lento",
+                "ate": {
+                  "pt": "manutenção",
+                  "en": "maintain"
+                }
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "zinco",
+                  "en": "zinc"
+                },
+                "cue": {
+                  "pt": "zinco",
+                  "en": "zinc"
+                }
+              },
+              {
+                "text": {
+                  "pt": "pele",
+                  "en": "skin"
+                },
+                "cue": {
+                  "pt": "da pele",
+                  "en": "your skin"
+                },
+                "seta": "rosto",
+                "x": 860,
+                "y": 800
+              },
+              {
+                "text": {
+                  "pt": "cabelos",
+                  "en": "hair"
+                },
+                "cue": {
+                  "pt": "dos cabelos",
+                  "en": "hair"
+                },
+                "seta": "cabeca",
+                "x": 860,
+                "y": 640
+              },
+              {
+                "text": {
+                  "pt": "unhas",
+                  "en": "nails"
+                },
+                "cue": {
+                  "pt": "das unhas",
+                  "en": "nails"
+                },
+                "seta": [
+                  640,
+                  1110
+                ],
+                "x": 860,
+                "y": 1000
+              }
+            ]
+          }
+        },
+        {
+          "id": "slow",
+          "scene": "dentro",
+          "hold": 0.8,
+          "pt": {
+            "caption": "Mas o detalhe que conta mesmo é o tempo, porque *a pele se renova devagar*."
+          },
+          "en": {
+            "caption": "But the detail that matters is time, because *skin renews itself slowly*."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Com o tempo",
+              "en": "Over time"
+            },
+            "plano": "lupa",
+            "pessoa": "grande",
+            "ambiente": "casa",
+            "hora": "manha",
+            "mood": "ok",
+            "lente": {
+              "sobre": "rosto",
+              "turn": {
+                "pt": "a pele",
+                "en": "because skin"
+              },
+              "conteudo": {
+                "camadas": [
+                  {
+                    "textura": "liso",
+                    "tom": "pele"
+                  },
+                  {
+                    "textura": "rede",
+                    "tom": "area",
+                    "peso": 2,
+                    "then": "renova"
+                  }
+                ],
+                "ritmo": "devagar"
+              }
+            },
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "o tempo",
+                  "en": "time"
+                },
+                "cue": {
+                  "pt": "o tempo",
+                  "en": "is time"
+                },
+                "out": {
+                  "pt": "se renova",
+                  "en": "renews itself"
+                },
+                "x": 720,
+                "y": 1250
+              },
+              {
+                "text": {
+                  "pt": "se renova devagar",
+                  "en": "renews itself slowly"
+                },
+                "cue": {
+                  "pt": "se renova",
+                  "en": "renews itself"
+                },
+                "x": 720,
+                "y": 1250,
+                "max": 420
+              }
+            ]
+          }
+        },
+        {
+          "id": "weeks",
+          "scene": "cena",
+          "hold": 0.4,
+          "pt": {
+            "caption": "Por isso o resultado aparece *em semanas*, não em dias, e o colágeno pede constância."
+          },
+          "en": {
+            "caption": "That's why results show up *in weeks*, not days, and collagen needs consistency."
+          },
+          "props": {
+            "ambiente": "escritorio",
+            "hora": "manha",
+            "gente": "pouca",
+            "setting": "mesa",
+            "plano": "fechado",
+            "holding": "copo-agua",
+            "mood": "ok",
+            "camera": {
+              "move": "drift",
+              "forca": "leve"
+            },
+            "acoes": [
+              {
+                "acao": "beber",
+                "cue": {
+                  "pt": "aparece",
+                  "en": "show up"
+                }
+              },
+              {
+                "acao": "beber",
+                "cue": {
+                  "pt": "não em dias",
+                  "en": "not days"
+                }
+              }
+            ],
+            "objects": [
+              {
+                "p": "calendario",
+                "cue": {
+                  "pt": "Por isso",
+                  "en": "That's why"
+                },
+                "run": {
+                  "cue": {
+                    "pt": "em semanas",
+                    "en": "in weeks"
+                  },
+                  "ate": {
+                    "pt": "constância",
+                    "en": "consistency"
+                  }
+                }
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "em semanas",
+                  "en": "in weeks"
+                },
+                "cue": {
+                  "pt": "em semanas",
+                  "en": "in weeks"
+                },
+                "out": {
+                  "pt": "constância",
+                  "en": "consistency"
+                },
+                "x": 840,
+                "y": 500
+              },
+              {
+                "text": {
+                  "pt": "constância",
+                  "en": "consistency"
+                },
+                "cue": {
+                  "pt": "constância",
+                  "en": "consistency"
+                },
+                "x": 840,
+                "y": 500
+              }
+            ]
+          }
+        },
+        {
+          "id": "habit2",
+          "scene": "cena",
+          "hold": 0.5,
+          "pt": {
+            "caption": "O segredo é virar hábito, *o mesmo horário todo dia*, misturado na água ou no suco."
+          },
+          "en": {
+            "caption": "The secret is making it a habit, *same time every day*, mixed into water or juice."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Na prática",
+              "en": "In practice"
+            },
+            "ambiente": "casa",
+            "hora": "dia",
+            "setting": "mesa",
+            "plano": "fechado",
+            "holding": "copo-agua",
+            "mood": "ok",
+            "acoes": [
+              {
+                "acao": "mexer",
+                "cue": {
+                  "pt": "O segredo",
+                  "en": "The secret"
+                }
+              },
+              {
+                "acao": "beber",
+                "cue": {
+                  "pt": "todo dia",
+                  "en": "every day"
+                }
+              },
+              {
+                "acao": "beber",
+                "cue": {
+                  "pt": "no suco",
+                  "en": "or juice"
+                },
+                "peca": "copo-suco"
+              }
+            ],
+            "objects": [
+              {
+                "p": "pote",
+                "cue": {
+                  "pt": "O segredo",
+                  "en": "The secret"
+                },
+                "run": {
+                  "cue": {
+                    "pt": "O segredo",
+                    "en": "The secret"
+                  },
+                  "ate": {
+                    "pt": "virar hábito",
+                    "en": "a habit"
+                  }
+                }
+              },
+              {
+                "p": "relogio",
+                "cue": {
+                  "pt": "mesmo horário",
+                  "en": "same time"
+                },
+                "run": {}
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "mesmo horário",
+                  "en": "same time"
+                },
+                "cue": {
+                  "pt": "mesmo horário",
+                  "en": "same time"
+                },
+                "x": 800,
+                "y": 420
+              },
+              {
+                "text": {
+                  "pt": "todo dia",
+                  "en": "every day"
+                },
+                "cue": {
+                  "pt": "todo dia",
+                  "en": "every day"
+                },
+                "x": 840,
+                "y": 540
+              }
+            ],
+            "gente": "nenhuma"
+          }
+        },
+        {
+          "id": "do",
+          "scene": "cena",
+          "hold": 1,
+          "pt": {
+            "caption": "Tome colágeno todo dia por pelo menos oito semanas, junto com *vitamina C*, que ajuda o corpo a formar colágeno.",
+            "say": "Tome colágeno todo dia por pelo menos oito semanas, junto com vitamina C, que ajuda o corpo a formar colágeno."
+          },
+          "en": {
+            "caption": "Take collagen every day for at least eight weeks, with *vitamin C*, which helps your body form collagen.",
+            "say": "Take collagen every day for at least eight weeks, with vitamin C, which helps your body form collagen."
+          },
+          "props": {
+            "kicker": {
+              "pt": "O que fazer",
+              "en": "What to do"
+            },
+            "ambiente": "cidade",
+            "hora": "manha",
+            "setting": "mesa",
+            "plano": "fechado",
+            "holding": "copo-agua",
+            "mood": "ok",
+            "acoes": [
+              {
+                "acao": "mexer",
+                "cue": {
+                  "pt": "Tome",
+                  "en": "Take"
+                }
+              },
+              {
+                "acao": "beber",
+                "cue": {
+                  "pt": "todo dia",
+                  "en": "every day"
+                }
+              }
+            ],
+            "objects": [
+              {
+                "p": "pote",
+                "cue": {
+                  "pt": "Tome",
+                  "en": "Take"
+                },
+                "run": {
+                  "cue": {
+                    "pt": "Tome",
+                    "en": "Take"
+                  },
+                  "ate": {
+                    "pt": "todo dia",
+                    "en": "every day"
+                  }
+                }
+              },
+              {
+                "p": "calendario",
+                "cue": {
+                  "pt": "todo dia",
+                  "en": "every day"
+                },
+                "run": {
+                  "cue": {
+                    "pt": "pelo menos",
+                    "en": "at least"
+                  },
+                  "ate": {
+                    "pt": "junto com",
+                    "en": "with vitamin C"
+                  }
+                }
+              }
+            ],
+            "lente": {
+              "sobre": "rosto",
+              "cue": {
+                "pt": "junto com",
+                "en": "with vitamin C"
+              },
+              "turn": {
+                "pt": "formar colágeno",
+                "en": "form collagen"
+              },
+              "conteudo": {
+                "camadas": [
+                  {
+                    "textura": "liso",
+                    "tom": "pele"
+                  },
+                  {
+                    "textura": "rede",
+                    "tom": "area",
+                    "peso": 2,
+                    "then": "renova"
+                  }
+                ],
+                "particulas": {
+                  "forma": "ponto",
+                  "cor": "wealth",
+                  "n": 10,
+                  "de": "topo",
+                  "boiam": true,
+                  "cue": {
+                    "pt": "vitamina C",
+                    "en": "vitamin C"
+                  },
+                  "rotulo": {
+                    "text": {
+                      "pt": "vitamina C",
+                      "en": "vitamin C"
+                    },
+                    "cue": {
+                      "pt": "vitamina C",
+                      "en": "vitamin C"
+                    }
+                  }
+                }
+              }
+            },
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "todo dia",
+                  "en": "every day"
+                },
+                "cue": {
+                  "pt": "todo dia",
+                  "en": "every day"
+                },
+                "x": 210,
+                "y": 340
+              },
+              {
+                "text": {
+                  "pt": "semanas",
+                  "en": "weeks"
+                },
+                "cue": {
+                  "pt": "semanas",
+                  "en": "weeks"
+                },
+                "x": 540,
+                "y": 340
+              }
+            ],
+            "gente": "nenhuma"
+          }
+        }
+      ],
+      "boneco": "serie",
+      "visual": "v5"
+    }
+  }
+}
