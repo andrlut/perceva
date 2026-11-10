@@ -19,8 +19,12 @@ export function localDate(at: Date): string {
   return LOCAL_DATE_FMT.format(at);
 }
 
+/** A real calendar day as YYYY-MM-DD ("2026-10-41" is not one). */
 export function isDateKey(s: unknown): s is string {
-  return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
+  if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const [y, m, d] = s.split('-').map(Number);
+  const t = new Date(Date.UTC(y, m - 1, d));
+  return t.getUTCFullYear() === y && t.getUTCMonth() === m - 1 && t.getUTCDate() === d;
 }
 
 export function daysBetween(from: string, to: string): number {
