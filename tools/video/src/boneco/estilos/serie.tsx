@@ -27,7 +27,12 @@ const LUZ_PADRAO = '#A99BFF';
  */
 const escalaTraco = (pxPorUn: number) => Math.max(0.42, Math.min(1.6, Math.sqrt(1.1 / pxPorUn)));
 
-const SerieDesenho: React.FC<DesenhoProps> = ({ j, pessoa, roupa, humor, t, uid, luz, segura, toque, vidro }) => {
+const SerieDesenho: React.FC<DesenhoProps> = (props) => {
+  const { j, pessoa, roupa, humor, t, uid, luz, toque, vidro } = props;
+  // `segura` ganhou 'coqueteleira' e veio `seguraDuas` (rodada 6): lidos largos pra valer antes e depois
+  const extra = props as DesenhoProps & { segura?: string; seguraDuas?: boolean };
+  const segura = extra.segura as Ctx['segura'];
+  const seguraDuas = !!extra.seguraDuas;
   const raiz = React.useRef<SVGGElement>(null);
   React.useLayoutEffect(() => {
     const el = raiz.current;
@@ -46,7 +51,7 @@ const SerieDesenho: React.FC<DesenhoProps> = ({ j, pessoa, roupa, humor, t, uid,
   const pt = new Pintor(uid, luz ?? LUZ_PADRAO, norm([luzX * 0.6, -0.8]));
   const v = Math.max(0, Math.min(1, vidro ?? 0));
   pt.vidro = v;
-  const c: Ctx = { j, prop, fis, tr, mov, pessoa, roupa, humor, t, uid, pt, luzX, pele: pessoa.pele, peleSombra: sombraPele(pessoa.pele), seed, segura, toque, vidro: v, extremidades: [] };
+  const c: Ctx = { j, prop, fis, tr, mov, pessoa, roupa, humor, t, uid, pt, luzX, pele: pessoa.pele, peleSombra: sombraPele(pessoa.pele), seed, segura, seguraDuas, toque, vidro: v, extremidades: [] };
   const cab = cabeloPronto(c);
   const frente = j.vista === 'frente';
   const camadas: React.ReactNode[] = [];
@@ -63,7 +68,11 @@ const SerieDesenho: React.FC<DesenhoProps> = ({ j, pessoa, roupa, humor, t, uid,
   // de frente, braço CAÍDO com manga vem antes do tronco: o ombro arredondado da peça cobre a
   // cabeça da manga e ela nasce na cava (sem o topo reto de papelão por cima do ombro)
   const comManga = roupa.cima.tipo !== 'top' && roupa.cima.tipo !== 'regata';
-  const caido = (i: 0 | 1) => frente && comManga && !j.bracoNaFrente[i] && Math.abs(j.ang.braco[i] - j.ang.tronco) < 50 && (j.encurta?.[i] ?? 1) >= 0.8;
+  // só o braço CAÍDO DE VERDADE: reto, sem segurar nada (a rosca de frente com dois halteres dobra o
+  // cotovelo e passa na frente do corpo; atrás do tronco o halter sumia)
+  const segurando = (i: 0 | 1) => j.mao[i] === 'segura' || (i === 0 && seguraDuas && !!segura);
+  const caido = (i: 0 | 1) =>
+    frente && comManga && !j.bracoNaFrente[i] && !segurando(i) && Math.abs(j.ang.braco[i] - j.ang.tronco) < 50 && Math.abs(j.ang.antebraco[i] - j.ang.braco[i]) < 40 && (j.encurta?.[i] ?? 1) >= 0.8;
   if (caido(0)) camadas.push(camadaBraco(c, 0, 'b0'));
   if (caido(1)) camadas.push(camadaBraco(c, 1, 'b1'));
   camadas.push(camadaTronco(c, 'tr'));

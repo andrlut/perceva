@@ -281,8 +281,9 @@ function rosca(t: number, prop: Proporcao, o: PoseOpts): Pose {
     tronco: -2 - esforco * 2,
     // o cotovelo da frente colado no lado de perto (com ombro positivo a rosca cruzava o peito);
     // `duas` = o braço de trás sobe junto (um halter em cada mão, a série lê como série)
-    ombro: o.duas ? [-2 + u * 8, -5 + u * 11] : [4, -5 + u * 11],
-    cotovelo: o.duas ? [8 + u * 140, 8 + u * 146] : [10, 8 + u * 146],
+    // de frente, o braço de trás (o da esquerda da tela) é o espelho: sobe pelo lado de fora, sem cruzar o peito
+    ombro: o.duas ? (vista === 'frente' ? [5 - u * 11, -5 + u * 11] : [-2 + u * 8, -5 + u * 11]) : [4, -5 + u * 11],
+    cotovelo: o.duas ? (vista === 'frente' ? [-(8 + u * 140), 8 + u * 146] : [8 + u * 140, 8 + u * 146]) : [10, 8 + u * 146],
     punho: [0, -u * 10],
     mao: ['solta', 'segura'],
     fecha: esforco * 0.35,

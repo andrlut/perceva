@@ -35,7 +35,7 @@ import {
 } from './base';
 import type { Ctx } from './ctx';
 import { maoDe } from './maos';
-import { copo, garrafa, halter } from './objetos';
+import { copo, coqueteleira, garrafa, halter } from './objetos';
 
 // ------------------------------------------------------------------ roupa: leitura do contrato
 
@@ -739,15 +739,18 @@ export function camadaBraco(c: Ctx, i: 0 | 1, key: string): React.ReactNode {
   const livre = (k: 0 | 1) => (j.mao[k] === 'solta' || j.mao[k] === 'fechada') && !(k === 1 && c.segura);
   const maoGarrafa = ex.includes('garrafa') ? (livre(1) ? 1 : livre(0) ? 0 : -1) : -1;
   const comGarrafa = i === maoGarrafa;
-  const maoPose = comGarrafa ? 'segura' : j.mao[i];
+  // com seguraDuas a mão de trás também fecha na peça
+  const duas = !!c.seguraDuas && !!c.segura && i === 0;
+  const maoPose = comGarrafa || duas ? 'segura' : j.mao[i];
   const mao = maoDe(c, i, maoPose);
   const grupos: Grupo[] = [];
   // o objeto vai ANTES da mão: os dedos fecham por cima dele
   let objeto: Grupo | null = null;
   if (maoPose === 'segura') {
     if (comGarrafa) objeto = garrafa(c, i);
-    else if (c.segura === 'halter' && i === 1) objeto = halter(c, i);
+    else if (c.segura === 'halter' && (i === 1 || duas)) objeto = halter(c, i);
     else if (c.segura === 'copo' && i === 1) objeto = copo(c, i);
+    else if (c.segura === 'coqueteleira' && i === 1) objeto = coqueteleira(c, i);
   }
   if (objeto) grupos.push(objeto);
   const palma = mao.formas.map((f) => ({ ...f, uniao: 'pele' }));

@@ -21,7 +21,9 @@ export type Ctx = {
   pele: string;
   peleSombra: string;
   seed: number;
-  segura?: 'halter' | 'copo';
+  segura?: 'halter' | 'copo' | 'coqueteleira';
+  /** a mão de TRÁS também segura (halter: um em cada mão; copo/coqueteleira: as duas na mesma peça) */
+  seguraDuas?: boolean;
   toque?: { ponto: [number, number]; forca: number; marca?: number };
   /** 0..1: o corpo de vidro (ver estilo.ts) */
   vidro: number;
