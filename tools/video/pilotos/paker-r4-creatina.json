@@ -296,9 +296,9 @@
                   "pt": "tiros de corrida",
                   "en": "sprints"
                 },
-                "x": 200,
+                "x": 170,
                 "y": 400,
-                "max": 300
+                "max": 240
               },
               {
                 "text": {
@@ -309,9 +309,9 @@
                   "pt": "tiros de corrida",
                   "en": "sprints"
                 },
-                "x": 200,
+                "x": 170,
                 "y": 400,
-                "max": 300
+                "max": 240
               },
               {
                 "text": {
@@ -322,9 +322,9 @@
                   "pt": "saltos",
                   "en": "jumps"
                 },
-                "x": 200,
+                "x": 170,
                 "y": 545,
-                "max": 300
+                "max": 240
               },
               {
                 "text": {
@@ -335,9 +335,9 @@
                   "pt": "séries de força",
                   "en": "strength sets"
                 },
-                "x": 200,
+                "x": 170,
                 "y": 670,
-                "max": 300
+                "max": 240
               }
             ]
           }
@@ -387,7 +387,7 @@
             "elenco": [
               {
                 "seed": 1,
-                "x": 220,
+                "x": 300,
                 "acao": "saltar",
                 "ritmo": "rapido",
                 "cue": {

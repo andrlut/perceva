@@ -194,8 +194,13 @@ export function pontoV5(r: string, pose: unknown, arms?: Arms): [number, number]
     boca: [c[0], c[1] + prop.cabeca * 0.27],
     peito: lerp(j.peito, j.pelvis, 0.22),
     tronco: lerp(j.peito, j.pelvis, 0.42),
-    // a 0,62 (era 0,74): no busto da lupa a 0,74 caía no esmaecido de baixo e o anel sumia (revisor do colágeno)
-    barriga: lerp(j.peito, j.pelvis, 0.62),
+    // a 0,62 (era 0,74): no busto da lupa a 0,74 caía no esmaecido de baixo e o anel sumia; e meio
+    // caminho pro quadril 0 — no meio, com o copo na mão, o cotovelo cruzava a barriga e o anel caía
+    // nele (revisor do colágeno, rodada 4)
+    barriga: (() => {
+      const b = lerp(j.peito, j.pelvis, 0.62);
+      return [lerp(b, j.quadril[0], 0.55)[0], b[1]] as [number, number];
+    })(),
     // a 0,35 do ombro: com o braço da frente cruzando o peito (copo, coqueteleira), o meio do braço
     // caía no meio do peito e a lente lia "estoque no peito"
     braco: lerp(j.ombro[1], j.cotovelo[1], 0.35),

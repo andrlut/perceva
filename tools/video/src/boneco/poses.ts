@@ -148,8 +148,9 @@ function andar(t: number, prop: Proporcao, o: PoseOpts): Pose {
     quadril: [l0.coxa, l1.coxa],
     joelho: [l0.joelho, l1.joelho],
     pe: [l0.pe, l1.pe],
-    // braço balança contra a perna do mesmo lado
-    ombro: [-18 * Math.sin(f), -18 * Math.sin(f + Math.PI)],
+    // braço balança contra a perna do mesmo lado; o de PERTO (1) não vai além de +8 pra frente — no 3/4
+    // a mão dele parava na frente do short e lia "mão na virilha" (revisor do pré-treino)
+    ombro: [-18 * Math.sin(f), Math.min(8, -18 * Math.sin(f + Math.PI))],
     cotovelo: [16 + 8 * Math.max(0, -Math.sin(f)), 16 + 8 * Math.max(0, -Math.sin(f + Math.PI))],
     mao: ['solta', 'solta'],
   };
@@ -493,9 +494,12 @@ function deFrente(lado: Pose, prop: Proporcao, vigor = 1, bomba = true): Pose {
     const x = Math.max(0, Math.min(1, (om[i] + 6) / 22));
     return x * x * (3 - 2 * x);
   };
+  // o de trás: o antebraço desce um tico PRA FORA (o punho ao lado do quadril, por fora do contorno) —
+  // atrás do tronco ele virava um "toco" que acabava no cotovelo, e pousado no quadril lia "mão na
+  // cintura" (revisor, rodadas 3 e 4); o da frente sobe pra dentro, punho na frente do peito
   const ante = (i: 0 | 1) => {
     const s = frenteDe(i);
-    const abs = 14 + 146 * s;
+    const abs = bomba ? -16 + 176 * s : 14 + 146 * s;
     const lado = i === 0 ? 1 : -1;
     return lado * abs - (ombro[i] - ginga);
   };
@@ -521,7 +525,7 @@ function deFrente(lado: Pose, prop: Proporcao, vigor = 1, bomba = true): Pose {
     // atrás do tronco e o antebraço que cruzava a barriga sumia — o "toco" do Caio); o que vai pra trás
     // fica ATRÁS do tronco, a mão some atrás do quadril (na frente ela lia "mão na cintura")
     bracoNaFrente: [bomba && frenteDe(0) > 0.5, bomba && frenteDe(1) > 0.5],
-    bracoAtras: [bomba && frenteDe(0) <= 0.5, bomba && frenteDe(1) <= 0.5],
+    bracoAtras: [false, false],
   };
 }
 
