@@ -277,6 +277,8 @@ export type MoldeSpec = {
   dimensionLabel: string;
   title: string;
   claim: string;
+  /** sem o card no fim ("cena"): o vídeo fecha na ação do verso demonstrada; teto de 80 s no total */
+  fim?: 'cena';
   /** imagem 4:5 da ideia, relativa a public/ (frente do card no verso) — null = card sem imagem */
   image: string | null;
   /** prévia sem voz (`build --silent`): tempos estimados, nenhum <Audio> */

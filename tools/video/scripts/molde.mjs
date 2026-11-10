@@ -119,7 +119,9 @@ const BANNED = {
 };
 // fase 3: `ate` (fim de ação/run), `cresce`/`fecha`/`toque` (lente), `quebra` (partículas), `divide` (corpo)
 const CUE_KEYS = ['cue', 'turn', 'from', 'until', 'at', 'win', 'glow', 'out', 'arrives', 'leaves', 'semana', 'ate', 'cresce', 'quebra', 'fecha', 'divide', 'toque'];
-const LIMITS = { caption: 150, kicker: 24, label: 22, chip: 30, pill: 22, bloco: 16, lines: [4, 8], seconds: 58, bridgeLines: [2, 4], bridgeSeconds: 24 };
+// `fim: "cena"` (2026-11-10, André): sem o card no fim — ele é coletado na tela do app, ao fim da ideia; o
+// vídeo usa o tempo do card pra conteúdo (perto de 60 s de fala) e fecha na ação do verso, demonstrada
+const LIMITS = { caption: 150, kicker: 24, label: 22, chip: 30, pill: 22, bloco: 16, lines: [4, 8], seconds: 58, bridgeLines: [2, 4], bridgeSeconds: 24, semCardLines: [6, 12], semCardSeconds: 70 };
 
 /** câmera, passagem e ambiente: valem pra qualquer cena (o ambiente só nas que têm pessoa de pé) */
 function lintStage(where, l, i, errors, warns) {
@@ -646,12 +648,15 @@ function lintIdea(ideaId, spec, card, lang, errors, warns, root = {}) {
   const resolved = lines.map((raw) => resolveLine(raw, lang));
   // abertura de porta (bridge "tour"): a história do porquê que emenda no tutorial da tela, sem verso
   const bridge = spec.bridge === 'tour';
-  const range = bridge ? LIMITS.bridgeLines : LIMITS.lines;
+  const semCard = spec.fim === 'cena';
+  const range = bridge ? LIMITS.bridgeLines : semCard ? LIMITS.semCardLines : LIMITS.lines;
   if (spec.bridge !== undefined && !bridge) errors.push(`${ideaId}: bridge "${spec.bridge}" (só "tour")`);
+  if (spec.fim !== undefined && !semCard) errors.push(`${ideaId}: fim "${spec.fim}" (só "cena")`);
+  if (semCard && lines.some((l) => l.scene === 'verso')) errors.push(`${ideaId}: fim "cena" não tem verso (o card é coletado na tela do app)`);
   if (lines.length < range[0] || lines.length > range[1]) errors.push(`${ideaId}: ${lines.length} falas (faixa ${range.join('–')})`);
   const last = lines[lines.length - 1];
   if (bridge && lines.some((l) => l.scene === 'verso')) errors.push(`${ideaId}: abertura de porta não tem verso (ela emenda na tela: tools/video/TOUR.md)`);
-  if (!bridge && last.scene !== 'verso') errors.push(`${ideaId}: a última cena tem que ser "verso" (a voz lê o card)`);
+  if (!bridge && !semCard && last.scene !== 'verso') errors.push(`${ideaId}: a última cena tem que ser "verso" (a voz lê o card)`);
   // passagens (requinte fase 1, src/molde/transicao.tsx `passagens`): o padrão é o mergulho, o
   // hexágono só abre o verso, e só UMA passagem que anda (chicote/desliza/zoom) vale por vídeo
   let socoAt = null;
@@ -739,7 +744,7 @@ function lintIdea(ideaId, spec, card, lang, errors, warns, root = {}) {
   }
   if (fase3) lintIdeaFase3(ideaId, resolved, lang, warns);
   const est = chars / (lang === 'en' ? 15.5 : 14.5) + extra + lines.length * 0.6;
-  const cap = bridge ? LIMITS.bridgeSeconds : LIMITS.seconds;
+  const cap = bridge ? LIMITS.bridgeSeconds : semCard ? LIMITS.semCardSeconds : LIMITS.seconds;
   if (est > cap) errors.push(`${ideaId}/${lang}: ~${est.toFixed(0)} s estimados (teto ${cap} s${bridge ? ' na abertura: o tutorial vem depois' : ''}) — corte falas`);
   else if (est > cap - (bridge ? 3 : 6)) warns.push(`${ideaId}/${lang}: ~${est.toFixed(0)} s estimados, perto do teto`);
 }
@@ -869,6 +874,8 @@ async function build(ctx) {
         // boneco v5 (src/boneco) e acabamento do fundo (src/molde/visual.ts), por ideia ou na raiz
         ...((src.boneco ?? ctx.vs.boneco) ? { boneco: src.boneco ?? ctx.vs.boneco } : {}),
         ...((src.visual ?? ctx.vs.visual) ? { visual: src.visual ?? ctx.vs.visual } : {}),
+        // sem o card no fim (o render deixa passar de 60 s: o tempo do card virou conteúdo)
+        ...(src.fim ? { fim: src.fim } : {}),
         lines,
       };
       // --voz-de: a voz aprovada vem pra chave do piloto ANTES de conferir o que falta gravar

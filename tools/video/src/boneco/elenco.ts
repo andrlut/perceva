@@ -95,6 +95,9 @@ export const PESSOAS: Pessoa[] = [
   { id: 'rafa', nome: 'Rafa', genero: 'm', idade: 'adulto', corpo: 'largo', pele: PELE.p1, cabelo: 'curto', corCabelo: '#2A2A33', oculos: true, cor: COR.prosperidade },
   { id: 'celia', nome: 'Dona Célia', genero: 'f', idade: 'idoso', corpo: 'medio', pele: PELE.p5, cabelo: 'grisalho', corCabelo: '#E4E4EE', oculos: true, cor: COR.mente },
   { id: 'antonio', nome: 'Seu Antônio', genero: 'm', idade: 'idoso', corpo: 'esguio', pele: PELE.p2, cabelo: 'calvo', corCabelo: '#CFCFD8', barba: 'bigode', oculos: true, cor: COR.verde },
+  // 2026-11-10: o adolescente (o "de adolescentes a idosos" da creatina). Sem barba, esguio, de boné; no
+  // FIM da lista pra os seeds 0–7 seguirem nas mesmas pessoas — o seed 8 é ele. No molde, pequeno (size ~205)
+  { id: 'leo', nome: 'Léo', genero: 'm', idade: 'jovem', corpo: 'esguio', pele: PELE.p3, cabelo: 'curto', corCabelo: '#2A1A12', cor: COR.verde },
 ];
 
 export const pessoa = (id: string): Pessoa => {
@@ -160,6 +163,13 @@ const GUARDA: Record<string, Record<Contexto, Roupa>> = {
     trabalho: { contexto: 'trabalho', cima: { tipo: 'blusa', cor: COR.mente, cor2: COR.prosperidade }, baixo: { tipo: 'saia', cor: COR.marinho }, calcado: { tipo: 'sapato', cor: COR.grafite } },
     rua: { contexto: 'rua', cima: { tipo: 'blusa', cor: COR.mente, cor2: COR.prosperidade }, baixo: { tipo: 'calca', cor: COR.marinho }, calcado: { tipo: 'sapato', cor: COR.bege } },
     dormir: { contexto: 'dormir', cima: { tipo: 'pijama', cor: COR.mente, cor2: COR.branco }, baixo: { tipo: 'pijama', cor: COR.mente, cor2: COR.branco }, calcado: { tipo: 'chinelo', cor: COR.mente } },
+  },
+  leo: {
+    esporte: { contexto: 'esporte', cima: { tipo: 'camiseta', cor: COR.verde, cor2: COR.branco }, baixo: { tipo: 'short', cor: COR.marinho, cor2: COR.verde }, calcado: { tipo: 'tenis', cor: COR.branco, sola: COR.verde }, extras: ['bone'] },
+    casa: { contexto: 'casa', cima: { tipo: 'moletom', cor: COR.verde }, baixo: { tipo: 'short', cor: COR.grafite }, calcado: { tipo: 'chinelo', cor: COR.verde } },
+    trabalho: { contexto: 'trabalho', cima: { tipo: 'camisa', cor: COR.branco, cor2: COR.verde }, baixo: { tipo: 'jeans', cor: COR.jeans }, calcado: { tipo: 'tenis', cor: COR.branco, sola: COR.grafite } },
+    rua: { contexto: 'rua', cima: { tipo: 'moletom', cor: COR.verde }, baixo: { tipo: 'jeans', cor: COR.jeansClaro }, calcado: { tipo: 'tenis', cor: COR.branco, sola: COR.verde }, extras: ['bone'] },
+    dormir: { contexto: 'dormir', cima: { tipo: 'camiseta', cor: COR.cinza }, baixo: { tipo: 'short', cor: COR.grafite }, calcado: { tipo: 'meia', cor: COR.branco } },
   },
   antonio: {
     esporte: { contexto: 'esporte', cima: { tipo: 'camiseta', cor: COR.verde, cor2: COR.branco }, baixo: { tipo: 'moletom', cor: COR.grafite }, calcado: { tipo: 'tenis', cor: COR.branco, sola: COR.cinza }, extras: ['bone'] },

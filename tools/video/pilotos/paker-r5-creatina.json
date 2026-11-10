@@ -1,0 +1,1023 @@
+{
+  "_doc": "Piloto r5 da ideia creatina-alem-da-musculacao (2026-11-10, pedido do André: o vídeo do Notebook tem ~60 s de conteúdo e o nosso ~31 s de fala + ~10 s de card e logo; e o PT no ElevenLabs 'fala e para'). Sem card no fim (fim: cena — o card é coletado na tela do app, ao fim da ideia): o tempo do card vira conteúdo, e o vídeo fecha na ação do verso demonstrada. Mesma Bia, mesmo boneco v5 (serie) e visual v5 da r4. Voz: o EN da r4 (que ele achou natural) fica em hook, efforts2, everyone2 e stock; no PT, as falas que quebravam no meio com dois-pontos (efforts2, everyone2, stock) ganharam uma ligação que corre ('como em', 'e ajuda', 'porque') e regravam só o PT — o hook fica com a tomada da r4 nos dois idiomas. Entram as batidas do corpo que faltavam: a creatina vira FOSFOCREATINA dentro do músculo (palavra no tanque da lente), os benefícios de adolescentes a idosos (o elenco: o Caio, o mais novo, saltando; a Dona Célia na série de força — idoso não corre nem salta, elenco.ts → cabe; no everyone2 quem salta é a Marina, pra o Caio do 'adolescentes' não ler 'o mesmo de antes'), segura pra pessoas saudáveis sem efeitos colaterais graves (dito assim, numa frase só, nada mais; ela andando na rua, longe da mesa), o estoque enchendo dose a dose em algumas semanas (o calendário para entre a 3ª e a 4ª semana, casas 25, e o tanque da lente sobe do nível que o corpo já tem, ~0,62 → 0,8 → cheio: enche o que falta, não sai do zero; a fala usa 'reserva', a palavra do reserve, e guarda 'todo dia'/'estoque do músculo' pro fim), e misture na água, no suco ou no shake (sem marca, sem 'micronizada', sem o 'fácil' — a facilidade é argumento do produto, não do ingrediente). Nenhum dado de pesquisa; o único número é a dose, por extenso, na última fala. Assinatura: o tanque (enche no corpo → medidor no parque → enche com as semanas → cheio na lupa → cheio no fim). O balcão fechado é só o hook (cozinha); o mix foi pro escritório (coqueteleira na mão, peça diferente do habit2 do colágeno). O 'qualquer horário' é a montagem do fim: a dose de manhã em casa, depois do treino no parque, de dia no escritório e à noite em casa com o relógio girando.",
+  "slug": "paker-health-energia-pele-forca",
+  "ideas": {
+    "creatina-alem-da-musculacao": {
+      "dimension": "body",
+      "fase": 3,
+      "fim": "cena",
+      "protagonista": {
+        "seed": 3,
+        "pessoa": "bia"
+      },
+      "lines": [
+        {
+          "id": "hook",
+          "scene": "pensa",
+          "hold": 0.4,
+          "pt": {
+            "caption": "Creatina é *só pra quem faz musculação*, e tem que ser antes do treino?"
+          },
+          "en": {
+            "caption": "Is creatine *just for bodybuilders*, and does it have to be before training?"
+          },
+          "props": {
+            "ambiente": "cozinha",
+            "hora": "manha",
+            "plano": "fechado",
+            "camera": {
+              "move": "push",
+              "forca": "leve",
+              "focus": "centro"
+            },
+            "mood": "ok",
+            "thought": "peso",
+            "at": {
+              "pt": "só pra",
+              "en": "just for"
+            },
+            "objects": [
+              {
+                "p": "pote",
+                "cue": {
+                  "pt": "Creatina",
+                  "en": "creatine"
+                },
+                "run": {
+                  "ate": {
+                    "pt": "musculação",
+                    "en": "bodybuilders"
+                  }
+                }
+              },
+              {
+                "p": "relogio",
+                "cue": {
+                  "pt": "antes do treino",
+                  "en": "before training"
+                }
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "creatina",
+                  "en": "creatine"
+                },
+                "cue": {
+                  "pt": "Creatina",
+                  "en": "creatine"
+                },
+                "seta": [
+                  950,
+                  1030
+                ],
+                "out": {
+                  "pt": "antes do treino",
+                  "en": "before training"
+                }
+              },
+              {
+                "text": {
+                  "pt": "antes do treino",
+                  "en": "before training"
+                },
+                "cue": {
+                  "pt": "antes do treino",
+                  "en": "before training"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "reserve",
+          "scene": "dentro",
+          "pt": {
+            "caption": "Seu corpo já produz creatina e guarda no músculo, onde ela vira *fosfocreatina*, a reserva de energia dos esforços curtos e intensos."
+          },
+          "en": {
+            "caption": "Your body already makes creatine and stores it in muscle, where it becomes *phosphocreatine*, the energy reserve for quick bursts of hard effort."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Dentro do músculo",
+              "en": "Inside your muscles"
+            },
+            "plano": "corpo",
+            "transicao": "zoom",
+            "mood": "ok",
+            "origem": "tronco",
+            "fluxos": [
+              {
+                "para": "musculos",
+                "cor": "ouro",
+                "particula": "grao",
+                "cue": {
+                  "pt": "produz creatina",
+                  "en": "makes creatine"
+                }
+              }
+            ],
+            "regioes": [
+              {
+                "parte": "musculos",
+                "cue": {
+                  "pt": "guarda no músculo",
+                  "en": "stores it in muscle"
+                },
+                "efeito": "acende",
+                "cor": "body"
+              }
+            ],
+            "lente": {
+              "sobre": "braco",
+              "cue": {
+                "pt": "onde ela vira",
+                "en": "where it becomes"
+              },
+              "cresce": {
+                "pt": "fosfocreatina",
+                "en": "phosphocreatine"
+              },
+              "conteudo": {
+                "reserva": {
+                  "conteudo": "grao",
+                  "nivel": [
+                    {
+                      "v": 0.25
+                    },
+                    {
+                      "v": 0.8,
+                      "cue": {
+                        "pt": "fosfocreatina",
+                        "en": "phosphocreatine"
+                      }
+                    }
+                  ],
+                  "gasta": [
+                    {
+                      "cue": {
+                        "pt": "esforços curtos",
+                        "en": "quick bursts"
+                      }
+                    },
+                    {
+                      "cue": {
+                        "pt": "e intensos",
+                        "en": "hard effort"
+                      }
+                    }
+                  ],
+                  "rotulo": {
+                    "text": {
+                      "pt": "fosfocreatina",
+                      "en": "phosphocreatine"
+                    },
+                    "cue": {
+                      "pt": "fosfocreatina",
+                      "en": "phosphocreatine"
+                    }
+                  }
+                }
+              }
+            },
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "creatina",
+                  "en": "creatine"
+                },
+                "cue": {
+                  "pt": "produz creatina",
+                  "en": "makes creatine"
+                },
+                "seta": "tronco",
+                "out": {
+                  "pt": "onde ela vira",
+                  "en": "where it becomes"
+                },
+                "x": 190,
+                "y": 960
+              },
+              {
+                "text": {
+                  "pt": "reserva de energia",
+                  "en": "energy reserve"
+                },
+                "cue": {
+                  "pt": "reserva de energia",
+                  "en": "energy reserve"
+                },
+                "x": 540,
+                "y": 410,
+                "max": 600
+              },
+              {
+                "text": {
+                  "pt": "esforços curtos",
+                  "en": "quick bursts"
+                },
+                "cue": {
+                  "pt": "esforços curtos",
+                  "en": "quick bursts"
+                },
+                "seta": [
+                  800,
+                  1090
+                ],
+                "x": 930,
+                "y": 900,
+                "max": 230
+              }
+            ]
+          }
+        },
+        {
+          "id": "efforts2",
+          "scene": "faz",
+          "hold": 0.6,
+          "pt": {
+            "caption": "Por isso ela ajuda o desempenho quando o esforço se repete, como em *tiros de corrida*, saltos e séries de força."
+          },
+          "en": {
+            "caption": "That's why it helps performance in repeated bursts: *sprints*, jumps and strength sets."
+          },
+          "props": {
+            "ambiente": "parque",
+            "hora": "manha",
+            "gente": "nenhuma",
+            "plano": "fechado",
+            "mood": "focado",
+            "medidor": {
+              "nivel": 0.66,
+              "gasta": 0.09,
+              "lado": "direita"
+            },
+            "passos": [
+              {
+                "acao": "correr",
+                "para": 540,
+                "ate": {
+                  "pt": "quando o esforço",
+                  "en": "in repeated"
+                },
+                "ritmo": "rapido"
+              },
+              {
+                "acao": "correr",
+                "para": 540,
+                "cue": {
+                  "pt": "se repete",
+                  "en": "repeated bursts"
+                },
+                "ritmo": "rapido"
+              },
+              {
+                "acao": "saltar",
+                "cue": {
+                  "pt": "saltos",
+                  "en": "jumps"
+                },
+                "ritmo": "rapido"
+              },
+              {
+                "acao": "levantar",
+                "cue": {
+                  "pt": "séries de força",
+                  "en": "strength sets"
+                },
+                "reps": 2,
+                "ritmo": "rapido",
+                "peca": "peso"
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "se repete",
+                  "en": "repeated"
+                },
+                "cue": {
+                  "pt": "se repete",
+                  "en": "repeated bursts"
+                },
+                "out": {
+                  "pt": "tiros de corrida",
+                  "en": "sprints"
+                },
+                "x": 150,
+                "y": 400,
+                "max": 240
+              },
+              {
+                "text": {
+                  "pt": "tiros de corrida",
+                  "en": "sprints"
+                },
+                "cue": {
+                  "pt": "tiros de corrida",
+                  "en": "sprints"
+                },
+                "x": 150,
+                "y": 400,
+                "max": 240
+              },
+              {
+                "text": {
+                  "pt": "saltos",
+                  "en": "jumps"
+                },
+                "cue": {
+                  "pt": "saltos",
+                  "en": "jumps"
+                },
+                "x": 150,
+                "y": 545,
+                "max": 240
+              },
+              {
+                "text": {
+                  "pt": "séries de força",
+                  "en": "strength sets"
+                },
+                "cue": {
+                  "pt": "séries de força",
+                  "en": "strength sets"
+                },
+                "x": 150,
+                "y": 670,
+                "max": 240
+              }
+            ]
+          }
+        },
+        {
+          "id": "everyone2",
+          "scene": "faz",
+          "pt": {
+            "caption": "Então não é só pra musculação, ela ajuda em treinos de *arrancadas curtas e fortes*."
+          },
+          "en": {
+            "caption": "So it's not just for bodybuilders: it helps training built on *short, explosive efforts*."
+          },
+          "props": {
+            "ambiente": "parque",
+            "hora": "manha",
+            "plano": "fechado",
+            "transicao": "corte",
+            "camera": {
+              "move": "pull",
+              "forca": "leve"
+            },
+            "mood": "focado",
+            "passos": [
+              {
+                "acao": "correr",
+                "para": 540,
+                "ritmo": "rapido"
+              },
+              {
+                "acao": "pronta",
+                "cue": {
+                  "pt": "ela ajuda",
+                  "en": "it helps"
+                }
+              },
+              {
+                "acao": "correr",
+                "para": 540,
+                "ritmo": "rapido",
+                "cue": {
+                  "pt": "arrancadas curtas",
+                  "en": "short, explosive"
+                }
+              }
+            ],
+            "elenco": [
+              {
+                "seed": 0,
+                "x": 220,
+                "acao": "saltar",
+                "ritmo": "rapido",
+                "cue": {
+                  "pt": "não é só",
+                  "en": "not just"
+                },
+                "ate": {
+                  "pt": "fortes",
+                  "en": "efforts"
+                }
+              },
+              {
+                "seed": 5,
+                "x": 860,
+                "acao": "levantar",
+                "ritmo": "lento",
+                "cue": {
+                  "pt": "não é só",
+                  "en": "not just"
+                },
+                "ate": {
+                  "pt": "fortes",
+                  "en": "efforts"
+                }
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "musculação",
+                  "en": "bodybuilders"
+                },
+                "cue": {
+                  "pt": "musculação",
+                  "en": "bodybuilders"
+                },
+                "x": 860,
+                "y": 1250,
+                "seta": [
+                  920,
+                  940
+                ],
+                "out": {
+                  "pt": "ela ajuda",
+                  "en": "it helps"
+                }
+              },
+              {
+                "text": {
+                  "pt": "arrancadas",
+                  "en": "explosive"
+                },
+                "cue": {
+                  "pt": "arrancadas curtas",
+                  "en": "short, explosive"
+                },
+                "x": 860,
+                "y": 1320,
+                "seta": "perna"
+              }
+            ]
+          }
+        },
+        {
+          "id": "ages",
+          "scene": "faz",
+          "hold": 0.5,
+          "pt": {
+            "caption": "E os benefícios vão *de adolescentes a idosos*."
+          },
+          "en": {
+            "caption": "And its benefits span *from teenagers to older adults*."
+          },
+          "props": {
+            "ambiente": "academia",
+            "hora": "noite",
+            "plano": "fechado",
+            "mood": "focado",
+            "passos": [
+              {
+                "acao": "pronta"
+              },
+              {
+                "acao": "levantar",
+                "cue": {
+                  "pt": "benefícios vão",
+                  "en": "benefits span"
+                },
+                "peca": "peso",
+                "reps": 4,
+                "ritmo": "rapido"
+              }
+            ],
+            "elenco": [
+              {
+                "seed": 8,
+                "x": 180,
+                "acao": "saltar",
+                "ritmo": "rapido",
+                "cue": {
+                  "pt": "E os benefícios",
+                  "en": "And its benefits"
+                },
+                "size": 205
+              },
+              {
+                "seed": 6,
+                "x": 900,
+                "acao": "levantar",
+                "ritmo": "lento",
+                "cue": {
+                  "pt": "E os benefícios",
+                  "en": "And its benefits"
+                }
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "adolescentes",
+                  "en": "teenagers"
+                },
+                "cue": {
+                  "pt": "de adolescentes",
+                  "en": "from teenagers"
+                },
+                "seta": [
+                  190,
+                  960
+                ]
+              },
+              {
+                "text": {
+                  "pt": "idosos",
+                  "en": "older adults"
+                },
+                "cue": {
+                  "pt": "a idosos",
+                  "en": "to older adults"
+                },
+                "seta": [
+                  900,
+                  820
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "safe",
+          "scene": "faz",
+          "pt": {
+            "caption": "Ela é segura *pra pessoas saudáveis*, sem efeitos colaterais graves."
+          },
+          "en": {
+            "caption": "It's safe *for healthy people*, with no serious side effects."
+          },
+          "props": {
+            "ambiente": "cidade",
+            "hora": "dia",
+            "gente": "nenhuma",
+            "plano": "fechado",
+            "mood": "ok",
+            "camera": {
+              "move": "pan-right",
+              "forca": "leve"
+            },
+            "passos": [
+              {
+                "acao": "andar",
+                "de": 340,
+                "para": 560,
+                "ritmo": "lento"
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "segura pra pessoas saudáveis",
+                  "en": "safe for healthy people"
+                },
+                "cue": {
+                  "pt": "é segura",
+                  "en": "It's safe"
+                },
+                "tom": "ouro"
+              }
+            ]
+          }
+        },
+        {
+          "id": "weeks",
+          "scene": "cena",
+          "hold": 0.6,
+          "pt": {
+            "caption": "Dose a dose, o músculo vai guardando até a reserva encher *em algumas semanas*."
+          },
+          "en": {
+            "caption": "Dose by dose, your muscles take in a bit more, until that reserve fills up *over a few weeks*."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Aos poucos",
+              "en": "Bit by bit"
+            },
+            "ambiente": "casa",
+            "hora": "manha",
+            "setting": "mesa",
+            "plano": "fechado",
+            "holding": "copo-agua",
+            "mood": "ok",
+            "acoes": [
+              {
+                "acao": "beber",
+                "cue": {
+                  "pt": "Dose a dose",
+                  "en": "Dose by dose"
+                }
+              },
+              {
+                "acao": "beber",
+                "cue": {
+                  "pt": "até a reserva",
+                  "en": "until that"
+                }
+              }
+            ],
+            "objects": [
+              {
+                "p": "pote",
+                "cue": {
+                  "pt": "Dose a dose",
+                  "en": "Dose by dose"
+                },
+                "run": {
+                  "cue": {
+                    "pt": "Dose a dose",
+                    "en": "Dose by dose"
+                  },
+                  "ate": {
+                    "pt": "o músculo",
+                    "en": "your muscles"
+                  }
+                }
+              },
+              {
+                "p": "calendario",
+                "cue": {
+                  "pt": "vai guardando",
+                  "en": "take in"
+                },
+                "run": {
+                  "cue": {
+                    "pt": "vai guardando",
+                    "en": "take in"
+                  },
+                  "ate": {
+                    "pt": "algumas semanas",
+                    "en": "a few weeks"
+                  },
+                  "casas": 25
+                }
+              }
+            ],
+            "lente": {
+              "sobre": "braco",
+              "cue": {
+                "pt": "o músculo",
+                "en": "your muscles"
+              },
+              "conteudo": {
+                "reserva": {
+                  "conteudo": "grao",
+                  "nivel": [
+                    {
+                      "v": 0.62
+                    },
+                    {
+                      "v": 0.8,
+                      "cue": {
+                        "pt": "vai guardando",
+                        "en": "a bit more"
+                      }
+                    },
+                    {
+                      "v": 1,
+                      "cue": {
+                        "pt": "encher",
+                        "en": "fills up"
+                      }
+                    }
+                  ],
+                  "rotulo": {
+                    "text": {
+                      "pt": "reserva",
+                      "en": "reserve"
+                    },
+                    "cue": {
+                      "pt": "a reserva",
+                      "en": "that reserve"
+                    }
+                  }
+                }
+              }
+            },
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "em algumas semanas",
+                  "en": "over a few weeks"
+                },
+                "cue": {
+                  "pt": "algumas semanas",
+                  "en": "a few weeks"
+                },
+                "x": 300,
+                "y": 300,
+                "max": 520
+              }
+            ]
+          }
+        },
+        {
+          "id": "stock",
+          "scene": "dentro",
+          "hold": 0.5,
+          "pt": {
+            "caption": "Não precisa tomar antes do treino, porque *o efeito vem do estoque cheio* e não da hora da dose."
+          },
+          "en": {
+            "caption": "You don't need it before training: *the effect comes from full stores*, not from the timing."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Na prática",
+              "en": "In practice"
+            },
+            "plano": "lupa",
+            "pessoa": "grande",
+            "ambiente": "parque",
+            "hora": "dia",
+            "camera": {
+              "move": "push",
+              "focus": "peca",
+              "forca": "leve"
+            },
+            "holding": "coqueteleira",
+            "mood": "ok",
+            "acoes": [
+              {
+                "acao": "mexer"
+              },
+              {
+                "acao": "beber",
+                "cue": {
+                  "pt": "antes do treino",
+                  "en": "before training"
+                }
+              }
+            ],
+            "lente": {
+              "sobre": "braco",
+              "cue": {
+                "pt": "tomar",
+                "en": "need it"
+              },
+              "conteudo": {
+                "reserva": {
+                  "conteudo": "grao",
+                  "nivel": [
+                    {
+                      "v": 1
+                    }
+                  ],
+                  "pinga": [
+                    {
+                      "cue": {
+                        "pt": "treino",
+                        "en": "training"
+                      }
+                    },
+                    {
+                      "cue": {
+                        "pt": "da dose",
+                        "en": "the timing"
+                      }
+                    }
+                  ],
+                  "rotulo": {
+                    "text": {
+                      "pt": "estoque cheio",
+                      "en": "full stores"
+                    },
+                    "cue": {
+                      "pt": "estoque cheio",
+                      "en": "full stores"
+                    }
+                  }
+                }
+              }
+            },
+            "rotulos": [],
+            "roupa": "esporte"
+          }
+        },
+        {
+          "id": "mix",
+          "scene": "cena",
+          "hold": 0.3,
+          "pt": {
+            "caption": "Misture na água, no suco ou no shake."
+          },
+          "en": {
+            "caption": "Mix it into water, juice or a shake."
+          },
+          "props": {
+            "ambiente": "escritorio",
+            "hora": "dia",
+            "setting": "mesa",
+            "plano": "fechado",
+            "holding": "coqueteleira",
+            "mood": "ok",
+            "acoes": [
+              {
+                "acao": "mexer",
+                "cue": {
+                  "pt": "Misture",
+                  "en": "Mix it"
+                }
+              }
+            ],
+            "objects": [
+              {
+                "p": "copo-agua",
+                "cue": {
+                  "pt": "na água",
+                  "en": "water"
+                }
+              },
+              {
+                "p": "copo-suco",
+                "cue": {
+                  "pt": "no suco",
+                  "en": "juice"
+                }
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "água",
+                  "en": "water"
+                },
+                "cue": {
+                  "pt": "na água",
+                  "en": "water"
+                },
+                "seta": [
+                  180,
+                  960
+                ]
+              },
+              {
+                "text": {
+                  "pt": "suco",
+                  "en": "juice"
+                },
+                "cue": {
+                  "pt": "no suco",
+                  "en": "juice"
+                },
+                "seta": [
+                  900,
+                  960
+                ]
+              },
+              {
+                "text": {
+                  "pt": "shake",
+                  "en": "shake"
+                },
+                "cue": {
+                  "pt": "no shake",
+                  "en": "a shake"
+                },
+                "seta": [
+                  600,
+                  940
+                ],
+                "x": 760,
+                "y": 600
+              }
+            ]
+          }
+        },
+        {
+          "id": "do",
+          "scene": "cena",
+          "hold": 1,
+          "pt": {
+            "caption": "Tome três a cinco gramas de creatina todo dia, *em qualquer horário*, para manter o estoque do músculo cheio."
+          },
+          "en": {
+            "caption": "Take three to five grams of creatine every day, *at any time*, to keep your muscle stores full."
+          },
+          "props": {
+            "kicker": {
+              "pt": "O que fazer",
+              "en": "What to do"
+            },
+            "ambiente": "casa",
+            "hora": "noite",
+            "setting": "mesa",
+            "plano": "fechado",
+            "holding": "copo-suco",
+            "mood": "ok",
+            "acoes": [
+              {
+                "acao": "mexer",
+                "cue": {
+                  "pt": "Tome",
+                  "en": "Take"
+                }
+              },
+              {
+                "acao": "beber",
+                "cue": {
+                  "pt": "todo dia",
+                  "en": "every day"
+                }
+              }
+            ],
+            "objects": [
+              {
+                "p": "pote",
+                "cue": {
+                  "pt": "Tome",
+                  "en": "Take"
+                },
+                "run": {
+                  "cue": {
+                    "pt": "Tome",
+                    "en": "Take"
+                  },
+                  "ate": {
+                    "pt": "de creatina",
+                    "en": "of creatine"
+                  }
+                }
+              },
+              {
+                "p": "relogio",
+                "cue": {
+                  "pt": "qualquer horário",
+                  "en": "any time"
+                }
+              }
+            ],
+            "lente": {
+              "sobre": "braco",
+              "cue": {
+                "pt": "para manter",
+                "en": "to keep"
+              },
+              "conteudo": {
+                "reserva": {
+                  "conteudo": "grao",
+                  "nivel": [
+                    {
+                      "v": 1
+                    }
+                  ],
+                  "pinga": [
+                    {
+                      "cue": {
+                        "pt": "do músculo",
+                        "en": "muscle stores"
+                      }
+                    }
+                  ],
+                  "rotulo": {
+                    "text": {
+                      "pt": "músculo cheio",
+                      "en": "muscle stores full"
+                    },
+                    "cue": {
+                      "pt": "estoque do músculo",
+                      "en": "muscle stores"
+                    }
+                  }
+                }
+              }
+            },
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "todo dia",
+                  "en": "every day"
+                },
+                "cue": {
+                  "pt": "todo dia",
+                  "en": "every day"
+                }
+              },
+              {
+                "text": {
+                  "pt": "qualquer horário",
+                  "en": "any time"
+                },
+                "cue": {
+                  "pt": "qualquer horário",
+                  "en": "any time"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "boneco": "serie",
+      "visual": "v5"
+    }
+  }
+}

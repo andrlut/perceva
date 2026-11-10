@@ -20,6 +20,7 @@ import { type CenaV5, enquadraDe, lugarDe } from '../boneco/ativo';
 
 /** Teto do vídeo de ideia: passou disso, o render falha (corte o roteiro). */
 export const MOLDE_MAX_SECONDS = 60;
+export const MOLDE_MAX_SECONDS_SEM_CARD = 80;
 
 export type MoldeProps = {
   specKey: string;
@@ -54,8 +55,10 @@ export const calculateMoldeMetadata: CalculateMetadataFunction<MoldeProps> = asy
     return !!v && !!t && v.dur !== undefined && Math.abs(v.dur - t.seconds) <= 0.05;
   };
   const { scenes, total } = buildTimeline(spec.lines.map((l) => (fresh(l.id) ? { ...l, voice: voices[l.id] } : l)), timings);
-  if (total > MOLDE_MAX_SECONDS * FPS) {
-    throw new Error(`${props.specKey}: ${(total / FPS).toFixed(1)} s passa do teto de ${MOLDE_MAX_SECONDS} s — corte o roteiro`);
+  // `fim: "cena"` (sem o card): o tempo do card virou conteúdo — perto de 60 s de fala, teto de 80 no total
+  const teto = spec.fim === 'cena' ? MOLDE_MAX_SECONDS_SEM_CARD : MOLDE_MAX_SECONDS;
+  if (total > teto * FPS) {
+    throw new Error(`${props.specKey}: ${(total / FPS).toFixed(1)} s passa do teto de ${teto} s — corte o roteiro`);
   }
   return { durationInFrames: total, props: { ...props, spec, scenes: scenes as MS[] } };
 };
