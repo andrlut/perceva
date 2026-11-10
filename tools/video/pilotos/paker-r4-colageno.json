@@ -223,7 +223,7 @@
               }
             ],
             "lente": {
-              "sobre": "tronco",
+              "sobre": "barriga",
               "conteudo": {
                 "camadas": [
                   {
@@ -316,7 +316,7 @@
                   "pt": "aparece",
                   "en": "show up"
                 },
-                "reps": 3
+                "reps": 2
               }
             ],
             "objects": [
@@ -374,8 +374,9 @@
                   "pt": "se renova devagar",
                   "en": "renews itself slowly"
                 },
-                "x": 825,
-                "y": 770
+                "x": 890,
+                "y": 830,
+                "max": 300
               }
             ]
           }

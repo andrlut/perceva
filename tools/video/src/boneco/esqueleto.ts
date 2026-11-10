@@ -95,6 +95,8 @@ export type Pose = {
   marca?: number;
   /** o braço passa NA FRENTE da cabeça (mão na boca, dedo no rosto) */
   bracoNaFrente?: [boolean, boolean];
+  /** o braço vai ATRÁS do tronco (de frente: o braço que balança pra trás na corrida — a mão some atrás do quadril) */
+  bracoAtras?: [boolean, boolean];
   /**
    * Escorço do BRAÇO (ombro → cotovelo), 0,45..1: o braço que aponta pra câmera aparece mais curto.
    * É o truque do 2D pra mão no rosto de frente (o cotovelo vem pra câmera); sem ele, o cotovelo
@@ -174,6 +176,7 @@ export type Juntas = {
   /** a fase da colher no copo (ver Pose.colher); undefined = sem colher */
   colher?: number;
   bracoNaFrente: [boolean, boolean];
+  bracoAtras: [boolean, boolean];
   /** altura de pé do boneco (unidades) — pra caixa do desenho */
   altura: number;
 };
@@ -307,6 +310,7 @@ export function fk(prop: Proporcao, pose: Pose = {}): Juntas {
     encurta: enc,
     colher: pose.colher,
     bracoNaFrente: pose.bracoNaFrente ?? [false, false],
+    bracoAtras: pose.bracoAtras ?? [false, false],
     altura: alturaDe(prop),
   };
 }
@@ -340,5 +344,6 @@ export function mistura(a: Pose, b: Pose, t: number): Pose {
     encurtaAnte: [n(a.encurtaAnte?.[0] ?? 1, b.encurtaAnte?.[0] ?? 1), n(a.encurtaAnte?.[1] ?? 1, b.encurtaAnte?.[1] ?? 1)],
     colher: k < 0.5 ? a.colher : b.colher,
     bracoNaFrente: k < 0.5 ? a.bracoNaFrente : b.bracoNaFrente,
+    bracoAtras: k < 0.5 ? a.bracoAtras : b.bracoAtras,
   };
 }

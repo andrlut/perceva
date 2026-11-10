@@ -355,8 +355,8 @@
                 "para": 540,
                 "ritmo": "rapido",
                 "cue": {
-                  "pt": "treinos",
-                  "en": "training"
+                  "pt": "arrancadas curtas",
+                  "en": "short, explosive"
                 }
               }
             ],
@@ -403,8 +403,8 @@
                 "x": 860,
                 "y": 1250,
                 "seta": [
-                  860,
-                  1075
+                  920,
+                  940
                 ],
                 "out": {
                   "pt": "ela ajuda",

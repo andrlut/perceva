@@ -1310,6 +1310,11 @@ const RotulosCorpo: React.FC<{
  * o rosto inteiro embaixo da lente e a barriga ainda acima da legenda (a âncora tem que aparecer).
  */
 const LUPA = { meio: { x: 540, pes: 1340, size: 360 }, canto: { x: 230, pes: 1370, size: 330 }, grande: { x: 215, pes: 1500, size: 480 }, centro: [610, 720] as Pt, diam: 760 };
+/** Máscara com furos redondos (o disco da lente, o anel da âncora): a camada aparece em tudo, menos neles. */
+const foraDe = (furos: [Pt, number][]): React.CSSProperties => {
+  const g = furos.map(([c, r]) => `radial-gradient(circle ${r.toFixed(1)}px at ${c[0].toFixed(1)}px ${c[1].toFixed(1)}px, rgba(0,0,0,0) 98%, #000 100%)`).join(', ');
+  return { WebkitMaskImage: g, maskImage: g, WebkitMaskComposite: 'source-in', maskComposite: 'intersect' } as React.CSSProperties;
+};
 /** Boneco v5, pessoa grande: quantos quadros antes da lente ela começa a ir pro canto (a mola assenta em ≈ 15). */
 const ANTES5 = 18;
 
@@ -1548,19 +1553,13 @@ const Lupa: React.FC<{ s: MS }> = ({ s }) => {
           <Lente s={s} spec={lente} ancora={ancora} centro={LUPA.centro} diametro={LUPA.diam} accent={accent} pele={pele} atras={atras} />
         )
       ) : null}
-      {/* v5 com a pessoa grande: a cabeça dela vem por CIMA da lente (uma cópia dela recortada na elipse
-          da cabeça) — a lente nasce no ombro e passa por trás da cabeça até o lugar dela, nunca no rosto.
-          Com a âncora NA cabeça (lente no rosto) não: a cópia cobriria o anel da âncora */}
-      {primeiroEla && !naCabeca && abre > 0.002 ? (
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            WebkitMaskImage: `radial-gradient(ellipse ${cabeca[2].toFixed(1)}px ${cabeca[3].toFixed(1)}px at ${cabeca[0].toFixed(1)}px ${cabeca[1].toFixed(1)}px, #000 97%, rgba(0,0,0,0) 100%)`,
-            maskImage: `radial-gradient(ellipse ${cabeca[2].toFixed(1)}px ${cabeca[3].toFixed(1)}px at ${cabeca[0].toFixed(1)}px ${cabeca[1].toFixed(1)}px, #000 97%, rgba(0,0,0,0) 100%)`,
-          }}
-        >
-          {ator}
+      {/* v5 com a pessoa grande: ELA INTEIRA vem por cima do cone (uma cópia dela, furada no disco da
+          lente e no anel da âncora) — o cone sai de trás do corpo e nunca cruza rosto, olho, mão ou copo.
+          Antes só a cabeça vinha por cima, e só quando a âncora não estava nela: com a lente no rosto o
+          cone tingia o olho de violeta, e na barriga cortava o punho e o copo (revisor do colágeno r4) */}
+      {v5() && grande && abre > 0.002 ? (
+        <div style={{ position: 'absolute', inset: 0, ...foraDe([[LUPA.centro, LUPA.diam / 2 + 4], [ancora, 30]]) }}>
+          <CorteDaLegenda>{ator}</CorteDaLegenda>
         </div>
       ) : null}
     </Stage>

@@ -36,7 +36,7 @@
             "camera": {
               "move": "push",
               "focus": "pessoa",
-              "forca": "forte"
+              "forca": "leve"
             },
             "elenco": [
               {
@@ -50,7 +50,7 @@
               },
               {
                 "seed": 3,
-                "x": 900,
+                "x": 860,
                 "acao": "saltar",
                 "cue": {
                   "pt": "Hora do treino",
@@ -159,9 +159,10 @@
               "move": "push",
               "focus": "pessoa",
               "cue": {
-                "pt": "se concentrar",
-                "en": "concentrate"
-              }
+                "pt": "ficar alerta",
+                "en": "stay alert"
+              },
+              "forca": "forte"
             }
           }
         },
@@ -482,7 +483,7 @@
               },
               {
                 "seed": 3,
-                "x": 900,
+                "x": 860,
                 "acao": "saltar",
                 "cue": {
                   "pt": "Você se troca",

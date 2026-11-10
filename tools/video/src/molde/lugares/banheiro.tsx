@@ -18,6 +18,7 @@ import React from 'react';
 import { SET, SkyDefs } from '../../elenco/cenario';
 import { C } from '../../theme';
 import type { Hora } from '../spec';
+import { v5 } from '../../boneco/ativo';
 import { ArtSvg, decor, free, hits, inside, type EnvP, type Lugar, type Rect } from '../ambientes';
 import { Ladrilho } from './cozinha';
 
@@ -370,11 +371,14 @@ const Balcao: NonNullable<Lugar['Balcao']> = ({ t, accent, part, x, w, top }) =>
       <ellipse cx={cx} cy={-40} rx={92} ry={9} fill="#A2ABDF" />
       <ellipse cx={cx} cy={-39} rx={78} ry={5.5} fill="#3B4783" />
       {ring >= 0 ? <ellipse cx={tipX} cy={-39} rx={6 + 26 * ring} ry={1.2 + 2.6 * ring} fill="none" stroke="#A9BCEB" strokeWidth={2} opacity={0.7 * (1 - ring)} /> : null}
-      {/* copo de escovas ao lado da cuba */}
+      {/* copo de escovas ao lado da cuba — fora no boneco v5: o copo d'água da mão descansava em cima
+          dele e as escovas atravessavam o copo ("bebendo do porta-escovas", revisor do colágeno) */}
+      {v5() ? null : <>
       <rect x={cup - 4} y={-100} width={7} height={68} rx={3.5} fill={accent} opacity={0.75} transform={`rotate(-10 ${cup} -40)`} />
       <rect x={cup + 6} y={-94} width={7} height={62} rx={3.5} fill={C.violet2} opacity={0.75} transform={`rotate(9 ${cup + 9} -40)`} />
       <path d={`M${cup - 20} -48 h46 l-5 48 h-36z`} fill="rgba(170,185,240,0.32)" />
       <path d={`M${cup + 3} -48 h23 l-5 48 h-18z`} fill="rgba(5,7,26,0.18)" />
+      </>}
     </svg>
   );
 };

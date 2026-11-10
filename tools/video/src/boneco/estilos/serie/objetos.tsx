@@ -134,8 +134,10 @@ function recipiente(c: Ctx, i: 0 | 1, tipo: 'copo' | 'coqueteleira' | 'suco'): G
           const cabo = pt(alt + 9, Math.sin(a) * r1 * 0.55 + r1 * 0.2);
           return (
             <g>
-              <Traco d={linha([fundo, cabo])} w={2.2} cor="#2B2F45" op={0.9} />
-              <Traco d={linha([fundo, cabo])} w={1.2} cor="#E4E9F7" op={1} />
+              {/* rodada 2: o traço fino lia canudo — cabo grosso de metal e a ponta alargada pra fora */}
+              <Traco d={linha([fundo, cabo])} w={4.2} cor="#2B2F45" op={0.95} />
+              <Traco d={linha([fundo, cabo])} w={2.6} cor="#E4E9F7" op={1} />
+              <circle cx={cabo[0]} cy={cabo[1]} r={2.6} fill="#E4E9F7" stroke="#2B2F45" strokeWidth={1.1} />
             </g>
           );
         })()

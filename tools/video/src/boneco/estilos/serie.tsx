@@ -72,7 +72,8 @@ const SerieDesenho: React.FC<DesenhoProps> = (props) => {
   // cotovelo e passa na frente do corpo; atrás do tronco o halter sumia)
   const segurando = (i: 0 | 1) => j.mao[i] === 'segura' || (i === 0 && seguraDuas && !!segura);
   const caido = (i: 0 | 1) =>
-    frente && comManga && !j.bracoNaFrente[i] && !segurando(i) && Math.abs(j.ang.braco[i] - j.ang.tronco) < 50 && Math.abs(j.ang.antebraco[i] - j.ang.braco[i]) < 40 && (j.encurta?.[i] ?? 1) >= 0.8;
+    (frente && !!j.bracoAtras?.[i]) ||
+    (frente && comManga && !j.bracoNaFrente[i] && !segurando(i) && Math.abs(j.ang.braco[i] - j.ang.tronco) < 50 && Math.abs(j.ang.antebraco[i] - j.ang.braco[i]) < 40 && (j.encurta?.[i] ?? 1) >= 0.8);
   if (caido(0)) camadas.push(camadaBraco(c, 0, 'b0'));
   if (caido(1)) camadas.push(camadaBraco(c, 1, 'b1'));
   camadas.push(camadaTronco(c, 'tr'));
