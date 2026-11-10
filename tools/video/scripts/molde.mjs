@@ -929,7 +929,7 @@ function voice(ctx) {
       if (spec.silent) die(`${k}: o build foi --silent — rode build sem --silent antes da voz`);
       const pending = pendingLines(pubDir(k), spec.lines);
       const changed = only ? only.split(',') : pending.map((l) => l.id);
-      if (changed.length) node(tts, ['--dir', dir, '--lang', lang, ...extra, '--only', changed.join(',')]);
+      if (changed.length) node(tts, ['--dir', dir, '--lang', lang, ...extra, ...(argv.includes('--inteiro') ? ['--inteiro'] : []), '--only', changed.join(',')]);
       else node('tts-gemini.mjs', ['--dir', dir, '--lang', lang, '--measure']);
       try {
         // QA de tudo que foi gravado agora (as falas antigas já passaram antes)

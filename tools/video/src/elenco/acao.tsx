@@ -559,7 +559,10 @@ export function corridaDe(s: MS, acoes: AcaoSpec[] | undefined, frame: number): 
   const ini = Math.min(...corre.map((p) => p.ini));
   let d = 0;
   for (let f = Math.ceil(ini); f < frame; f++) d += vAt(f);
-  return { v: vAt(frame), d };
+  // boneco v5 correndo DE FRENTE (vindo pra câmera): a câmera recua junto, então o chão RECUA pro fundo
+  // (as marcas sobem). Descendo pra câmera, como no boneco antigo, ela lia "correndo de costas" (André)
+  const frente = v5() && vistaDaCena(acoes.map((a) => a.acao), { trajeto: planoDe(s, acoes).some((p) => p.traj) }) === 'frente';
+  return { v: vAt(frame), d: frente ? -d : d };
 }
 
 // ------------------------------------------------------------------ geometria (o mesmo caminho do hexa.tsx)

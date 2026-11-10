@@ -141,6 +141,43 @@ const seconds = (f) => Math.round(Number(execFileSync('ffprobe', ['-v', 'error',
 const only = arg('only', '').split(',').filter(Boolean);
 const timings = [];
 let gastos = 0;
+
+// --inteiro (2026-11-10): o roteiro INTEIRO numa tomada só e cortado em falas pelo tempo de cada letra
+// (/with-timestamps). Fala por fala a entonação recomeça a cada corte — o "fala e para" que o André
+// ouviu no PT. Grava todas as falas (ignora --only); o QA com --fix regrava só a que falhar, sozinha.
+if (process.argv.includes('--inteiro') && !measureOnly) {
+  const partes = lines.map(texto);
+  const full = partes.join(' ');
+  const body = { text: full, model_id: MODEL, voice_settings: settings, ...(MODEL === 'eleven_multilingual_v2' ? {} : { language_code: LANG === 'en' ? 'en' : 'pt' }) };
+  const r = await fetch(`${API}/v1/text-to-speech/${VOICE}/with-timestamps?output_format=mp3_44100_128`, { method: 'POST', headers: H, body: JSON.stringify(body) });
+  if (!r.ok) throw new Error(`ElevenLabs ${r.status}: ${(await r.text()).slice(0, 400)}`);
+  const res = await r.json();
+  const al = res.alignment;
+  const inteiro = path.join(voDir, '_inteiro.mp3');
+  fs.writeFileSync(inteiro, Buffer.from(res.audio_base64, 'base64'));
+  gastos += full.length;
+  // o começo e o fim de cada fala no texto inteiro → em segundos; o corte é no MEIO do silêncio entre as falas
+  let pos = 0;
+  const faixa = partes.map((t) => {
+    const a0 = pos;
+    const a1 = pos + t.length - 1;
+    pos += t.length + 1;
+    return { ini: al.character_start_times_seconds[a0], fim: al.character_end_times_seconds[a1] };
+  });
+  const dur = seconds(inteiro);
+  // o alinhamento fica salvo: dá pra recortar uma fala de novo sem pagar outra tomada
+  fs.writeFileSync(path.join(voDir, '_inteiro.json'), JSON.stringify({ faixa, dur }, null, 2));
+  for (let i = 0; i < lines.length; i++) {
+    const de = i === 0 ? 0 : (faixa[i - 1].fim + faixa[i].ini) / 2;
+    const ate = i === lines.length - 1 ? dur : (faixa[i].fim + faixa[i + 1].ini) / 2;
+    const raw = path.join(voDir, `${lines[i].id}.raw.wav`);
+    execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', inteiro, '-ss', de.toFixed(3), '-to', ate.toFixed(3), raw]);
+    master(raw, path.join(voDir, `${lines[i].id}.mp3`));
+  }
+  only.length = 0;
+  only.push('__nenhuma__');
+  console.log(`tomada única: ${dur.toFixed(1)} s, ${lines.length} falas cortadas pelo tempo de cada letra`);
+}
 for (let i = 0; i < lines.length; i++) {
   const l = lines[i];
   const file = path.join(voDir, `${l.id}.mp3`);

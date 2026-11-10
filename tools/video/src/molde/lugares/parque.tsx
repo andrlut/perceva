@@ -170,6 +170,9 @@ const PistaAnda: React.FC<{ anda: Anda }> = ({ anda }) => {
   const KP = K * MARCA.cada;
   const linhas = [-meia - 0.05, -raia / 2, raia / 2, meia + 0.05];
   const zDe = (off: number) => MARCA.perto + ((((off - zs) % KP) + KP) % KP);
+  // o rastro da velocidade fica do lado de onde a marca vem: descendo (d > 0) ele é pro fundo; recuando
+  // (d < 0, quem corre vem de frente pra câmera) ele é pro lado da câmera
+  const rastro = anda.d < 0 ? -1 : 1;
   // some com a distância e também bem perto da câmera (lá embaixo ele seria um borrão do tamanho da tela)
   const longe = (z: number) => (1 - smooth((z - 20) / 24)) * smooth((z - 2.2) / 1.8);
   const marcas: React.ReactNode[] = [];
@@ -179,7 +182,7 @@ const PistaAnda: React.FC<{ anda: Anda }> = ({ anda }) => {
     const o = (0.3 - 0.13 * v) * longe(z);
     if (o < 0.01) continue;
     // as guias das bordas levam a marca mais apagada: quem lê o movimento são as duas linhas da raia dela
-    for (const X of linhas) marcas.push(<polygon key={`${k}:${X}`} points={quad(X - 0.14, X + 0.14, z + len, z)} fill={C.hi} opacity={Math.abs(X) > 1 ? o * 0.6 : o} />);
+    for (const X of linhas) marcas.push(<polygon key={`${k}:${X}`} points={quad(X - 0.14, X + 0.14, z + len * rastro, z)} fill={C.hi} opacity={Math.abs(X) > 1 ? o * 0.6 : o} />);
   }
   const graos: React.ReactNode[] = [];
   if (v > 0.02) {
@@ -189,7 +192,7 @@ const PistaAnda: React.FC<{ anda: Anda }> = ({ anda }) => {
       const len = 0.05 + 1.1 * v;
       const o = 0.2 * v * longe(z);
       if (o < 0.01) continue;
-      graos.push(<polygon key={`g${i}`} points={quad(X - 0.022, X + 0.022, z + len, z)} fill={i % 3 ? C.hi : '#1A1030'} opacity={i % 3 ? o : o * 1.6} />);
+      graos.push(<polygon key={`g${i}`} points={quad(X - 0.022, X + 0.022, z + len * rastro, z)} fill={i % 3 ? C.hi : '#1A1030'} opacity={i % 3 ? o : o * 1.6} />);
     }
   }
   return (
