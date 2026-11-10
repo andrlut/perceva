@@ -501,6 +501,9 @@ export function poseDe(
     }
   }
   escala = Math.min(VEM_MAX, escala);
+  // boneco v5: ela corre de 3/4 (não vem de frente pra câmera) — crescer 25% lia "deslizando" e os pés
+  // afundavam na faixa da legenda; cresce só um quarto do caminho
+  if (v5()) escala = 1 + (escala - 1) * 0.25;
 
   const ativa = ref >= 0 ? { ...plano[ref].a, de: anchor } : { ...plano[0].a, de: anchor };
   const x = pos !== undefined && anchor !== undefined ? pos - anchor : 0;
@@ -923,7 +926,7 @@ export const Ator: React.FC<AtorProps> = ({
       : null;
 
   return (
-    <div style={{ position: 'absolute', inset: 0, filter: figurante ? 'saturate(0.75)' : undefined }}>
+    <div style={{ position: 'absolute', inset: 0, filter: figurante ? (v5() ? 'saturate(0.6) brightness(0.92)' : 'saturate(0.75)') : undefined }}>
       {dust ? (
         <svg style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible' }} width={1} height={1}>
           {dust}
@@ -950,7 +953,7 @@ export const Ator: React.FC<AtorProps> = ({
             arms={armsIn}
             pose={v5() ? (pa ?? { mistura: 0 }) : eff}
             halo={figurante ? false : halo}
-            {...(v5() ? { segura: mao?.p ?? maos, figurante, vidro } : {})}
+            {...(v5() ? { segura: mao?.p ?? maos, seguraDuas: !!maos, figurante, vidro } : {})}
           />
         </div>
         {v5() ? (

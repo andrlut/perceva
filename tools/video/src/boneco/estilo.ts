@@ -19,8 +19,13 @@ export type DesenhoProps = {
   uid: string;
   /** cor da luz de recorte (a luz do lugar: janela dourada, céu frio); undefined = a do estilo */
   luz?: string;
-  /** o que a mão `segura` carrega (o estilo desenha a peça) */
-  segura?: 'halter' | 'copo';
+  /**
+   * o que a mão `segura` carrega (o estilo desenha a peça). Régua do revisor (rodada 6): peça na mão
+   * com ≥ 120 px no quadro de 1080 — halter com anilhas de verdade, coqueteleira com tampa e bico
+   */
+  segura?: 'halter' | 'copo' | 'coqueteleira';
+  /** a mão de TRÁS segura a mesma peça (os dois halteres da série de força) */
+  seguraDuas?: boolean;
   /**
    * o dedo apertando a pele: ponto de contato (unidades), força 0..1 e a marca que fica depois (0..1).
    * O estilo desenha a pele cedendo ali (o detalhe do colágeno que o André elogiou: "o dedo tocando

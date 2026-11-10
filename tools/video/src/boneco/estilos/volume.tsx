@@ -29,7 +29,9 @@ const PROP: Proporcao = { cabeca: 40, cabecaLarg: 32, pescoco: 10, tronco: 58, o
 /** a luz de recorte padrão: o dourado quente da marca */
 const LUZ = '#FFD98A';
 
-const Desenho: React.FC<DesenhoProps> = ({ j, pessoa, roupa, humor, t, uid, luz, segura, toque }) => {
+const Desenho: React.FC<DesenhoProps> = ({ j, pessoa, roupa, humor, t, uid, luz, segura: seguraIn, toque }) => {
+  // estilo fora do molde (o André escolheu o 'serie'): coqueteleira vira copo aqui
+  const segura = seguraIn === 'coqueteleira' ? 'copo' : seguraIn;
   const prop = propDaPessoa(PROP, pessoa);
   const med = medidas(pessoa, prop);
   const k = new Kit(uid, luz ?? LUZ, j.espelho);

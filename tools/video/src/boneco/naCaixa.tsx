@@ -73,7 +73,7 @@ export const quemV5 = (seed: number | undefined, figurante?: boolean): Pessoa =>
 };
 
 /** A pose v5 do quadro: o repouso dos braços da cena + as ações do Ator (pesadas e misturadas). */
-export const poseV5 = (pessoa: Pessoa, props: { t: number; pose?: unknown; arms?: Arms; still?: boolean; segura?: string }): Pose => {
+export const poseV5 = (pessoa: Pessoa, props: { t: number; pose?: unknown; arms?: Arms; still?: boolean; segura?: string; seguraDuas?: boolean }): Pose => {
   const at = v5();
   if (!at) throw new Error('poseV5 sem o v5 ligado');
   const prop = at.estilo.propDe(pessoa);
@@ -92,7 +92,7 @@ export const poseV5 = (pessoa: Pessoa, props: { t: number; pose?: unknown; arms?
     const ciclo = CICLO_V5[acao];
     const f = ciclo ? (it.f * ciclo) / Math.max(1, it.n) : it.f;
     const ritmo = it.ritmo === 'lento' ? 'lento' : it.ritmo === 'rapido' ? 'rapido' : 'normal';
-    return { p: poseDe(acao, f, prop, { vista, ritmo }), w: it.w };
+    return { p: poseDe(acao, f, prop, { vista, ritmo, duas: acao === 'rosca' && !!props.seguraDuas }), w: it.w };
   });
   const p = media([{ p: base, w: 1 - W }, ...ps]);
   return props.segura ? { ...p, mao: [p.mao?.[0] ?? 'solta', 'segura'] } : p;
@@ -104,8 +104,9 @@ export const poseV5 = (pessoa: Pessoa, props: { t: number; pose?: unknown; arms?
  * pélvis) em (100, BUSTO_CINTURA) e o topo da cabeça em BUSTO_TOPO — fica ~1,6× maior e as pernas
  * passam da caixa (o balcão, a faixa da legenda ou o corte do quadro escondem).
  */
-const BUSTO_TOPO = 26;
-const BUSTO_CINTURA = 214;
+// rodada 6 (revisor): o rosto no busto estava ~170 px no quadro fechado; ~1,18× maior agora
+const BUSTO_TOPO = 18;
+const BUSTO_CINTURA = 240;
 /** onde o busto corta (unidades da caixa): um tico abaixo dela */
 const BUSTO_CORTE = 268;
 type Encaixe = { s: number; o: [number, number] };
@@ -177,7 +178,9 @@ export function pontoV5(r: string, pose: unknown, arms?: Arms): [number, number]
     peito: lerp(j.peito, j.pelvis, 0.22),
     tronco: lerp(j.peito, j.pelvis, 0.42),
     barriga: lerp(j.peito, j.pelvis, 0.74),
-    braco: meio(j.ombro[1], j.cotovelo[1]),
+    // a 0,35 do ombro: com o braço da frente cruzando o peito (copo, coqueteleira), o meio do braço
+    // caía no meio do peito e a lente lia "estoque no peito"
+    braco: lerp(j.ombro[1], j.cotovelo[1], 0.35),
     perna: meio(j.quadril[1], j.joelho[1]),
     ombro: j.ombro[1],
   };
@@ -192,15 +195,15 @@ export function maoV5(pose: unknown, arms: Arms, lado: 0 | 1): { p: [number, num
 }
 
 /** A Pessoa do molde desenhada pelo v5 (mesma caixa e props da antiga). */
-export const PessoaV5: React.FC<PessoaProps & { segura?: string; vidro?: number; figurante?: boolean }> = (props) => {
+export const PessoaV5: React.FC<PessoaProps & { segura?: string; seguraDuas?: boolean; vidro?: number; figurante?: boolean }> = (props) => {
   const at = v5();
   const cena = useContext(CenaV5Context);
   const uid = `v5${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   if (!at) return null;
-  const { size = 260, mood = 'ok', seed, t = 0, segura, vidro, figurante } = props;
+  const { size = 260, mood = 'ok', seed, t = 0, segura, seguraDuas, vidro, figurante } = props;
   const pessoa = quemV5(seed, figurante);
   const prop = at.estilo.propDe(pessoa);
-  const pose = poseV5(pessoa, { t, pose: props.pose, arms: props.arms, still: props.still, segura });
+  const pose = poseV5(pessoa, { t, pose: props.pose, arms: props.arms, still: props.still, segura, seguraDuas });
   const j = fk(prop, pose);
   // o enquadramento: o da pose (Ator) ou o da cena; figurante é sempre de corpo inteiro
   const prot = !figurante && pessoa.id === at.protagonista.id;
@@ -234,6 +237,7 @@ export const PessoaV5: React.FC<PessoaProps & { segura?: string; vidro?: number;
           t={t}
           uid={uid}
           segura={segura ? SEGURA_V5[segura] : undefined}
+          seguraDuas={!!seguraDuas}
           vidro={vidro}
         />
       </g>

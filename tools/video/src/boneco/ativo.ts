@@ -38,7 +38,7 @@ export const pessoaDoSeed = (seed: number): Pessoa => PESSOAS[((seed % PESSOAS.l
 
 /** As ações do molde (AcaoKind) → as da biblioteca v5. */
 export const ACAO_V5: Record<string, Acao> = {
-  pronta: 'parado',
+  pronta: 'pronta',
   andar: 'andar',
   correr: 'correr',
   saltar: 'saltar',
@@ -53,12 +53,12 @@ const DE_LADO = new Set(['andar', 'correr', 'saltar', 'levantar', 'mexer', 'bebe
 export const vistaDaCena = (acoes: string[]): Vista => (acoes.some((a) => DE_LADO.has(a)) ? 'tres-quartos' : 'frente');
 
 /** Peças do molde que a mão do v5 segura desenhando ela mesma (o estilo põe os dedos por cima). */
-export const SEGURA_V5: Record<string, 'halter' | 'copo'> = {
+export const SEGURA_V5: Record<string, 'halter' | 'copo' | 'coqueteleira'> = {
   peso: 'halter',
   copo: 'copo',
   'copo-agua': 'copo',
   'copo-suco': 'copo',
-  coqueteleira: 'copo',
+  coqueteleira: 'coqueteleira',
   caneca: 'copo',
 };
 

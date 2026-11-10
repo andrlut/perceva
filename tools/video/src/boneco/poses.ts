@@ -8,7 +8,7 @@
 // braço pra cima é outra pose (`comemorar`) e o roteiro escolhe.
 import { type Mao, type P, type Pose, type Proporcao, type Vista, ao, acima, alturaDe, fk } from './esqueleto';
 
-export type Acao = 'parado' | 'andar' | 'correr' | 'saltar' | 'rosca' | 'beber' | 'mexer' | 'tocarRosto' | 'acenar' | 'alongar' | 'comemorar' | 'pensar';
+export type Acao = 'parado' | 'pronta' | 'andar' | 'correr' | 'saltar' | 'rosca' | 'beber' | 'mexer' | 'tocarRosto' | 'acenar' | 'alongar' | 'comemorar' | 'pensar';
 
 export type PoseOpts = {
   vista?: Vista;
@@ -16,6 +16,8 @@ export type PoseOpts = {
   ritmo?: 'lento' | 'normal' | 'rapido';
   /** deslocamento de fase (quadros): duas pessoas na mesma ação não andam em sincronia */
   fase?: number;
+  /** rosca: os dois braços sobem juntos (um halter em cada mão) */
+  duas?: boolean;
   espelho?: boolean;
 };
 
@@ -75,6 +77,29 @@ function parado(t: number, prop: Proporcao, o: PoseOpts): Pose {
   // frente atrás do peito; peso numa perna. (Rodada 3: com o lado novo, ombro +6 levava a mão da
   // frente pra frente da virilha.)
   return { vista, ...v, ombro: [4, -3], cotovelo: [10, 6], quadril: [-3, 4], joelho: [4, 0], mao: ['solta', 'solta'] };
+}
+
+/**
+ * Pronta (o `pronta` do molde, entre dois tiros): base atlética — joelhos macios, tronco um tico pra
+ * frente, punhos na altura do peito, peso quicando de leve. Nunca "em posição de sentido".
+ */
+function pronta(t: number, prop: Proporcao, o: PoseOpts): Pose {
+  const h = alturaDe(prop);
+  const vista = o.vista ?? 'tres-quartos';
+  const q = Math.sin((t + (o.fase ?? 0)) / 4.2);
+  return {
+    vista,
+    espelho: o.espelho,
+    tronco: 9,
+    cabeca: -4,
+    y: h * (0.022 + 0.005 * q),
+    quadril: [-8, 16],
+    joelho: [22, 20],
+    pe: [6, 4],
+    ombro: [-6, 16],
+    cotovelo: [96, 100],
+    mao: ['fechada', 'fechada'],
+  };
 }
 
 function acenar(t: number, prop: Proporcao, o: PoseOpts): Pose {
@@ -254,10 +279,10 @@ function rosca(t: number, prop: Proporcao, o: PoseOpts): Pose {
     vista,
     espelho: o.espelho,
     tronco: -2 - esforco * 2,
-    // o cotovelo da frente colado no lado de perto (com ombro positivo a rosca cruzava o peito)
-    // no alto o antebraço fica quase em pé NA FRENTE do mesmo ombro (com 140° ele cruzava o peito no 3/4)
-    ombro: [4, -5 + u * 11],
-    cotovelo: [10, 8 + u * 146],
+    // o cotovelo da frente colado no lado de perto (com ombro positivo a rosca cruzava o peito);
+    // `duas` = o braço de trás sobe junto (um halter em cada mão, a série lê como série)
+    ombro: o.duas ? [-2 + u * 8, -5 + u * 11] : [4, -5 + u * 11],
+    cotovelo: o.duas ? [8 + u * 140, 8 + u * 146] : [10, 8 + u * 146],
     punho: [0, -u * 10],
     mao: ['solta', 'segura'],
     fecha: esforco * 0.35,
@@ -420,6 +445,7 @@ const TABELA: Record<Acao, (t: number, prop: Proporcao, o: PoseOpts) => Pose> = 
   comemorar,
   pensar,
   mexer,
+  pronta,
 };
 
 /** A pose da ação no quadro `t`. */
@@ -429,7 +455,7 @@ export const poseDe = (acao: Acao, t: number, prop: Proporcao, o: PoseOpts = {})
 };
 
 /** Mão: o que cada ação segura (o estilo desenha a peça na mão `segura`). */
-export const SEGURA: Partial<Record<Acao, 'halter' | 'copo'>> = { rosca: 'halter', beber: 'copo', mexer: 'copo' };
+export const SEGURA: Partial<Record<Acao, 'halter' | 'copo' | 'coqueteleira'>> = { rosca: 'halter', beber: 'copo', mexer: 'copo' };
 
 export type { Mao };
 // acima é reexportado pra quem precisa calcular pontos no corpo (setas de rótulo, lente)

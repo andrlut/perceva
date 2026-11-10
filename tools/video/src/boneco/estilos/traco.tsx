@@ -69,7 +69,9 @@ export const traco: Estilo = {
   descricao: 'Ilustração vetorial de revista: proporção adulta, formas chapadas com uma sombra e luz de recorte, roupa de verdade.',
   prop: PROP,
   propDe,
-  Desenho: ({ j, pessoa, roupa, humor, t, uid, luz, segura, toque }) => {
+  Desenho: ({ j, pessoa, roupa, humor, t, uid, luz, segura: seguraIn, toque }) => {
+    // estilo fora do molde (o André escolheu o 'serie'): coqueteleira vira copo aqui
+    const segura = seguraIn === 'coqueteleira' ? 'copo' : seguraIn;
     const prop = propDe(pessoa);
     const corpo = corpoDe(pessoa, prop);
     const tr = troncoDe(j, prop, corpo);

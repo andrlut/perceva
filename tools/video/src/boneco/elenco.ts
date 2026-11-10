@@ -125,7 +125,8 @@ const GUARDA: Record<string, Record<Contexto, Roupa>> = {
     dormir: { contexto: 'dormir', cima: { tipo: 'camiseta', cor: COR.grafite }, baixo: { tipo: 'short', cor: COR.cinza }, calcado: { tipo: 'meia', cor: COR.cinza } },
   },
   bia: {
-    esporte: { contexto: 'esporte', cima: { tipo: 'top', cor: COR.oficio, cor2: COR.branco }, baixo: { tipo: 'legging', cor: COR.grafite, cor2: COR.oficio }, calcado: { tipo: 'tenis', cor: COR.oficio, sola: COR.branco }, extras: ['relogio', 'faixa'] },
+    // regata (não top curto): barriga de fora ao lado de "o efeito vem do estoque" puxava pro "suplemento → corpo"
+    esporte: { contexto: 'esporte', cima: { tipo: 'regata', cor: COR.oficio, cor2: COR.branco }, baixo: { tipo: 'legging', cor: COR.grafite, cor2: COR.oficio }, calcado: { tipo: 'tenis', cor: COR.oficio, sola: COR.branco }, extras: ['relogio', 'faixa'] },
     casa: { contexto: 'casa', cima: { tipo: 'camiseta', cor: COR.oficio }, baixo: { tipo: 'short', cor: COR.bege }, calcado: { tipo: 'meia', cor: COR.branco } },
     trabalho: { contexto: 'trabalho', cima: { tipo: 'blusa', cor: COR.branco, cor2: COR.oficio }, baixo: { tipo: 'saia', cor: COR.oficio }, calcado: { tipo: 'sapato', cor: COR.grafite } },
     rua: { contexto: 'rua', cima: { tipo: 'camiseta', cor: COR.prosperidade }, baixo: { tipo: 'jeans', cor: COR.jeansClaro }, calcado: { tipo: 'tenis', cor: COR.branco, sola: COR.oficio } },

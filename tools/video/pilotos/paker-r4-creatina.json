@@ -26,7 +26,8 @@
             "plano": "fechado",
             "camera": {
               "move": "push",
-              "forca": "leve"
+              "forca": "leve",
+              "focus": "centro"
             },
             "mood": "ok",
             "thought": "peso",
@@ -146,7 +147,9 @@
                 "out": {
                   "pt": "reserva de energia",
                   "en": "an energy reserve"
-                }
+                },
+                "x": 190,
+                "y": 960
               },
               {
                 "text": {
@@ -160,7 +163,9 @@
                 "seta": [
                   800,
                   1090
-                ]
+                ],
+                "x": 900,
+                "y": 920
               }
             ],
             "lente": {
@@ -379,8 +384,8 @@
                   "en": "not just"
                 },
                 "ate": {
-                  "pt": "ela ajuda",
-                  "en": "it helps"
+                  "pt": "fortes",
+                  "en": "efforts"
                 }
               }
             ],
