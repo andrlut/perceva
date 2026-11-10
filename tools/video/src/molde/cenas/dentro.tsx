@@ -358,8 +358,11 @@ const Particula: React.FC<{ p: Pt; ang: number; forma: 'ponto' | 'grao'; cor: st
 const CORPO5 = { size: 1240, pes: 1760 };
 /** O que é medido em px no plano v5 (traço, brilho, velocidade, hélice): a régua da fase 3 (940/660). */
 const KK5 = 1.45;
-/** Onde o corpo v5 some, na tela: dentro da faixa escura da legenda (o joelho ainda aparece). */
-const CORTE5 = { de: 1430, ate: 1530 };
+/**
+ * Onde o corpo v5 some, na tela: acaba de sumir quando a faixa escura da legenda fecha (1425) — nada
+ * do corpo nem do mapa aceso brilha através da legenda (a panturrilha acesa tirava o contraste dela).
+ */
+const CORTE5 = { de: 1370, ate: 1430 };
 
 type Par5 = [Pt, Pt];
 /** As juntas da protagonista no quadro, em unidades da caixa (as do corpoV5, com o `t`). */
@@ -541,8 +544,8 @@ const mapa5 = (g: G5): Mapa5 => {
     return [
       fuso5(g.ombro[i], g.cotovelo[i], 0.16, 0.86, R.braco, false),
       fuso5(g.cotovelo[i], g.punho[i], 0.08, 0.6, R.ante, false),
-      fuso5(g.quadril[i], g.joelho[i], 0.12, 0.82, R.coxa, true),
-      fuso5(g.joelho[i], g.tornozelo[i], 0.06, 0.5, R.canela, true),
+      // sem a panturrilha: ela mora atrás da legenda (CORTE5), a coxa basta pra perna acender
+      fuso5(g.quadril[i], g.joelho[i], 0.12, 0.8, R.coxa, true),
     ];
   });
   // as rotas: sobem pelo peito até a cava e descem o braço; descem até a bacia e entram na coxa
@@ -551,7 +554,6 @@ const mapa5 = (g: G5): Mapa5 => {
   const noBraco = (i: 0 | 1, f: number) => seg(g.ombro[i], g.cotovelo[i], f, fora(i) * 0.1, R.braco);
   const noAnte = (i: 0 | 1, f: number) => seg(g.cotovelo[i], g.punho[i], f, fora(i) * 0.1, R.ante);
   const naCoxa = (i: 0 | 1, f: number) => seg(g.quadril[i], g.joelho[i], f, fora(i) * 0.08, R.coxa);
-  const naCanela = (i: 0 | 1, f: number) => seg(g.joelho[i], g.tornozelo[i], f, fora(i) * 0.08, R.canela);
   const queixo = lerp(g.peito, g.queixo, 0.85);
   const ramos: Record<Regiao, Pt[][]> = {
     vasos: [
@@ -560,7 +562,7 @@ const mapa5 = (g: G5): Mapa5 => {
     ],
     musculos: [...lados.map((i) => peloOmbro(i, [noBraco(i, 0.3), noBraco(i, 0.86), noAnte(i, 0.34)])), ...lados.map((i) => pelaBacia(i, [naCoxa(i, 0.12), naCoxa(i, 0.62)]))],
     braco: lados.map((i) => peloOmbro(i, [noBraco(i, 0.3), noBraco(i, 0.95), noAnte(i, 0.85)])),
-    perna: lados.map((i) => pelaBacia(i, [naCoxa(i, 0.1), naCoxa(i, 0.95), naCanela(i, 0.8)])),
+    perna: lados.map((i) => pelaBacia(i, [naCoxa(i, 0.1), naCoxa(i, 0.9)])),
     cabeca: [[TT(0, 0.9), g.peito, queixo]],
     rosto: [[TT(0, 0.9), g.peito, queixo]],
     boca: [[g.peito, lerp(g.queixo, boca, 0.4)]],
@@ -1276,6 +1278,21 @@ const RotulosCorpo: React.FC<{
  * o rosto inteiro embaixo da lente e a barriga ainda acima da legenda (a âncora tem que aparecer).
  */
 const LUPA = { meio: { x: 540, pes: 1340, size: 360 }, canto: { x: 230, pes: 1370, size: 330 }, grande: { x: 215, pes: 1500, size: 480 }, centro: [610, 720] as Pt, diam: 760 };
+/** Boneco v5, pessoa grande: quantos quadros antes da lente ela começa a ir pro canto (a mola assenta em ≈ 15). */
+const ANTES5 = 18;
+
+/**
+ * Boneco v5: o ponto do braço que segura a peça é o DELTOIDE — o ombro da peça um quinto pra dentro do
+ * braço, empurrado pra borda de fora. O meio do caminho ombro → mão (bracoDe) e até o meio do braço de
+ * cima caem no meio do peito quando o braço da frente cruza o corpo de 3/4 (o cone lia "no peito").
+ */
+const deltoide5 = (c5: ReturnType<typeof corpoV5>, box: Box): Pt => {
+  const [S, E] = [c5.ombro[1], c5.cotovelo[1]];
+  const fora = Math.sign(S[0] - c5.peito[0]) || 1;
+  const r = 0.15 * Math.hypot(E[0] - S[0], E[1] - S[1]);
+  const kb = box.size / 200;
+  return [box.left + (S[0] + 0.2 * (E[0] - S[0]) + fora * 0.5 * r) * kb, box.top + (S[1] + 0.2 * (E[1] - S[1])) * kb];
+};
 
 /**
  * O véu da lupa com a pessoa grande (acabamento da fase 3): o de 0,55 deixava o banheiro, a cozinha e
@@ -1357,9 +1374,14 @@ const Lupa: React.FC<{ s: MS }> = ({ s }) => {
   const { meio } = LUPA;
   const grande = pr.pessoa === 'grande';
   const canto = grande ? LUPA.grande : LUPA.canto;
-  const x = meio.x + (canto.x - meio.x) * k;
-  const pes = meio.pes + (canto.pes - meio.pes) * k;
-  const size = meio.size + (canto.size - meio.size) * k;
+  // boneco v5 com a pessoa grande: ela vai pro canto ANTES da lente (ANTES5 quadros) — a lente abrindo
+  // com ela ainda no meio nascia em cima da cabeça dela ("um tanque no lugar da cabeça")
+  const primeiroEla = !!v5() && grande && !!lente?.cue;
+  const elaAt = lente?.cue ? cue(s, lente.cue) - (primeiroEla ? ANTES5 : 0) : -Infinity;
+  const kEla = primeiroEla ? spring({ frame: frame - elaAt, fps, config: MOLA.entra }) * (1 - volta) : k;
+  const x = meio.x + (canto.x - meio.x) * kEla;
+  const pes = meio.pes + (canto.pes - meio.pes) * kEla;
+  const size = meio.size + (canto.size - meio.size) * kEla;
   const pd0 = poseDe(s, pr.acoes, frame);
   // boneco v5 sem ações: a pose vazia não carrega o enquadramento, e os pontos do corpo (pontoNaTela,
   // maoNaTela, corpoV5) sairiam do corpo inteiro enquanto a Pessoa desenha o busto da cena (o anel da
@@ -1370,10 +1392,11 @@ const Lupa: React.FC<{ s: MS }> = ({ s }) => {
   const mao = pd.peca ?? pr.holding;
   // com a peça na mão o braço fica estendido: braço/vasos/músculos no braço de cima (o ponto `braco`
   // de CORPO é do braço pendurado e cairia na cintura)
+  const c5 = v5() ? corpoV5(pd.pose, mao || pd.maos ? 'out' : 'down') : null;
   const pontos = (() => {
     const p = pontosDe(box, pd.pose);
     if (!mao) return p;
-    const br = bracoDe(box, 'out', pd.pose);
+    const br = c5 ? deltoide5(c5, box) : bracoDe(box, 'out', pd.pose);
     return { ...p, braco: br, vasos: br, musculos: br };
   })();
   const work = ramp(frame, s.lead, Math.max(20, speechEnd(s) - s.lead));
@@ -1391,7 +1414,7 @@ const Lupa: React.FC<{ s: MS }> = ({ s }) => {
   // cone leva o cabelo (sobe 1,45 raio, desce 1,15 — o queixo, não o ombro); "a âncora está na cabeça"
   // é medido no crânio só: bebendo, o ombro fica colado no queixo e a elipse com cabelo engolia a âncora
   // (sem máscara, o cone cortava o rosto dela)
-  const cab5 = v5() ? corpoV5(pd.pose, mao || pd.maos ? 'out' : 'down') : null;
+  const cab5 = c5;
   const cabeca: [number, number, number, number] = (() => {
     if (!cab5) return [box.left + 0.5 * size, box.top + 0.46 * size, 0.31 * size, 0.35 * size];
     const kb = size / 200;
@@ -1402,6 +1425,28 @@ const Lupa: React.FC<{ s: MS }> = ({ s }) => {
     ? Math.hypot(ancora[0] - (box.left + (cab5.cabeca[0] * size) / 200), ancora[1] - (box.top + (cab5.cabeca[1] * size) / 200)) < (cab5.raioCabeca * size) / 200
     : ((ancora[0] - cabeca[0]) / cabeca[2]) ** 2 + ((ancora[1] - cabeca[1]) / cabeca[3]) ** 2 < 1;
   const atras = grande && !naCabeca ? [cabeca] : undefined;
+  // v5 com a pessoa grande: a lente nasce no ombro e o caminho até o lugar dela cruza a cabeça — pequena
+  // ali, ela lia "um tanque no lugar da cabeça". Ela só aparece (fade de 3 quadros) quando já abriu
+  // 60% e o disco (o mesmo centro e raio que a Lente calcula) deixou o ROSTO de fora: grande e indo pro
+  // canto de cima, ela passa por trás da cabeça (a cópia da cabeça vem por cima). Sem achar, aparece
+  // quando a mola assenta (12 quadros).
+  const lenteVis = (() => {
+    if (!primeiroEla || !lente?.cue || !cab5) return 1;
+    const openAt = cue(s, lente.cue);
+    const kb = size / 200;
+    const H: Pt = [box.left + cab5.cabeca[0] * kb, box.top + cab5.cabeca[1] * kb];
+    const rosto = cab5.raioCabeca * kb;
+    let f0 = openAt + 12;
+    for (let f = openAt; f < openAt + 12; f++) {
+      const kl = spring({ frame: f - openAt, fps, config: MOLA.entra });
+      const C: Pt = [ancora[0] + (LUPA.centro[0] - ancora[0]) * kl, ancora[1] + (LUPA.centro[1] - ancora[1]) * kl];
+      if (kl >= 0.6 && Math.hypot(C[0] - H[0], C[1] - H[1]) >= (LUPA.diam * kl) / 2 + 0.6 * rosto) {
+        f0 = f;
+        break;
+      }
+    }
+    return clamp01((frame - f0 + 1) / 3);
+  })();
   // as duas posições dela (o primeiro plano sai das duas; o rótulo, de onde ela está naquele trecho)
   const corpoEm = (p: typeof meio): Rect => [p.x - 0.4 * p.size, p.pes - 1.22 * p.size, p.x + 0.62 * p.size, p.pes];
   const ela: Rect[] = lente ? (lente.cue ? [corpoEm(meio), corpoEm(canto)] : [corpoEm(canto)]) : [corpoEm(meio)];
@@ -1411,8 +1456,8 @@ const Lupa: React.FC<{ s: MS }> = ({ s }) => {
   const ocupa: Ocupa[] = !lente
     ? [{ rect: corpoEm(meio) }]
     : [
-        ...(lente.cue ? [{ rect: corpoEm(meio), ate: abreAt + 17 }] : []),
-        { rect: corpoEm(canto), de: abreAt, ate: fechaAt + 17 },
+        ...(lente.cue ? [{ rect: corpoEm(meio), ate: elaAt + 17 }] : []),
+        { rect: corpoEm(canto), de: elaAt, ate: fechaAt + 17 },
         ...(lente.fecha ? [{ rect: corpoEm(meio), de: fechaAt }] : []),
         ...discoRects(LUPA.centro, LUPA.diam).map((rect) => ({ rect, de: abreAt, ate: fechaAt + 8 })),
       ];
@@ -1420,7 +1465,7 @@ const Lupa: React.FC<{ s: MS }> = ({ s }) => {
   const geo: EnvGeo = {
     ground: meio.pes,
     clear: comLente ? (lente!.cue ? [grande ? 0 : 60, 740] : grande ? [0, 520] : [60, 420]) : [350, 740],
-    spot: [cx, pes - size * 0.66, 380 + (grande ? 40 : -80) * k],
+    spot: [cx, pes - size * 0.66, 380 + (grande ? 40 : -80) * kEla],
     busy: [...(comLente ? [lr] : []), ...ela],
     // com a lente o lugar fica escuro: o primeiro plano (que o véu não pega) sai dos dois cantos
     frontOff: comLente ? ['left', 'right'] : [],
@@ -1460,7 +1505,32 @@ const Lupa: React.FC<{ s: MS }> = ({ s }) => {
           <Brilho t={frame} size={size * 1.2} on={ramp(frame, turnAt, 10)} />
         </div>
       ) : null}
-      {lente ? <Lente s={s} spec={lente} ancora={ancora} centro={LUPA.centro} diametro={LUPA.diam} accent={accent} pele={pele} atras={atras} /> : null}
+      {lente ? (
+        primeiroEla ? (
+          lenteVis > 0 ? (
+            <div style={{ position: 'absolute', inset: 0, opacity: lenteVis }}>
+              <Lente s={s} spec={lente} ancora={ancora} centro={LUPA.centro} diametro={LUPA.diam} accent={accent} pele={pele} atras={atras} />
+            </div>
+          ) : null
+        ) : (
+          <Lente s={s} spec={lente} ancora={ancora} centro={LUPA.centro} diametro={LUPA.diam} accent={accent} pele={pele} atras={atras} />
+        )
+      ) : null}
+      {/* v5 com a pessoa grande: a cabeça dela vem por CIMA da lente (uma cópia dela recortada na elipse
+          da cabeça) — a lente nasce no ombro e passa por trás da cabeça até o lugar dela, nunca no rosto.
+          Com a âncora NA cabeça (lente no rosto) não: a cópia cobriria o anel da âncora */}
+      {primeiroEla && !naCabeca && abre > 0.002 ? (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            WebkitMaskImage: `radial-gradient(ellipse ${cabeca[2].toFixed(1)}px ${cabeca[3].toFixed(1)}px at ${cabeca[0].toFixed(1)}px ${cabeca[1].toFixed(1)}px, #000 97%, rgba(0,0,0,0) 100%)`,
+            maskImage: `radial-gradient(ellipse ${cabeca[2].toFixed(1)}px ${cabeca[3].toFixed(1)}px at ${cabeca[0].toFixed(1)}px ${cabeca[1].toFixed(1)}px, #000 97%, rgba(0,0,0,0) 100%)`,
+          }}
+        >
+          {ator}
+        </div>
+      ) : null}
     </Stage>
   );
 };
