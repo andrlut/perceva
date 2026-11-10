@@ -22,7 +22,7 @@ import { tokens } from '@/theme';
 
 const KEY_PREFIX = 'rpgtasks.tips.v1.';
 
-export type ScreenTipId = 'tasks' | 'rewardsManage' | 'history' | 'allPractices';
+export type ScreenTipId = 'tasks' | 'rewardsManage' | 'history' | 'allPractices' | 'dayVoice';
 
 function key(uid: string | null, id: ScreenTipId): string {
   return `${KEY_PREFIX}${uid ?? 'anonymous'}.${id}`;

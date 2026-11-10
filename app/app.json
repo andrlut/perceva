@@ -64,6 +64,13 @@
       "@react-native-google-signin/google-signin",
       "expo-video",
       [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "O Perceva usa o microfone pra você contar o seu dia por voz.",
+          "speechRecognitionPermission": "O Perceva usa o reconhecimento de fala do celular pra transformar em texto o que você conta sobre o seu dia."
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "ios": {
