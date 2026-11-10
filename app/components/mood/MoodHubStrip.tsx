@@ -2,6 +2,7 @@ import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { Alert, StyleSheet, View } from 'react-native';
 
+import { DayVoiceEntry } from '@/components/dayVoice/DayVoiceEntry';
 import { MoodCardHeader } from '@/components/mood/MoodCardHeader';
 import { MoodEntrySummary } from '@/components/mood/MoodEntrySummary';
 import { MoodFaceRow } from '@/components/mood/MoodFaceRow';
@@ -87,6 +88,7 @@ export function MoodHubStrip() {
               showLabels={false}
             />
           </View>
+          <DayVoiceEntry />
         </View>
       </View>
     );
@@ -105,6 +107,7 @@ export function MoodHubStrip() {
           onPress={openCheckin}
         />
         <MoodEntrySummary entry={entry} />
+        <DayVoiceEntry />
       </View>
     </View>
   );

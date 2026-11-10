@@ -291,6 +291,10 @@ export default function RootLayout() {
               name="mood-checkin"
               options={{ presentation: 'modal', headerShown: false }}
             />
+            <Stack.Screen
+              name="day-voice"
+              options={{ presentation: 'modal', headerShown: false }}
+            />
             <Stack.Screen name="insights" options={{ headerShown: false }} />
             <Stack.Screen name="perfil" options={{ headerShown: false }} />
             <Stack.Screen name="conector" options={{ headerShown: false }} />
