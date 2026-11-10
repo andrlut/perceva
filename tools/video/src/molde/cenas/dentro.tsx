@@ -796,7 +796,7 @@ const Corpo: React.FC<{ s: MS }> = ({ s }) => {
   const pr = s.props ?? {};
   const { mood, since, turnAt, positive } = useHumor(s);
   const who = { seed: spec.protagonista?.seed ?? 0, skin: spec.protagonista?.skin };
-  const pele = who.skin ?? SKINS[0];
+  const pele = v5()?.protagonista.pele ?? who.skin ?? SKINS[0];
   // fase 3: o corpo maior (pés em 1500); sem ela, a medida de antes. Boneco v5: a caixa do CORPO5
   const f3 = (spec.fase ?? 0) >= 3;
   const com5 = !!v5();
@@ -1402,7 +1402,9 @@ const Lupa: React.FC<{ s: MS }> = ({ s }) => {
   const pr = s.props ?? {};
   const { mood, since, turnAt, positive } = useHumor(s);
   const who = { seed: spec.protagonista?.seed ?? 0, skin: spec.protagonista?.skin };
-  const pele = who.skin ?? SKINS[0];
+  // boneco v5: a camada "pele" da lente (e o dedo do toque) é a pele da protagonista — com o tom padrão
+  // claro, um zoom da bochecha marrom da Lúcia mostrava pele clara ("colágeno clareia", revisor)
+  const pele = v5()?.protagonista.pele ?? who.skin ?? SKINS[0];
   const lente = pr.lente;
   // a lente abre na deixa (sem deixa, a cena já começa assim); com `fecha`, tudo volta
   const abre = lente ? (lente.cue ? spring({ frame: frame - cue(s, lente.cue), fps, config: MOLA.entra }) : 1) : 0;

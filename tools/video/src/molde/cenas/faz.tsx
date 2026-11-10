@@ -451,14 +451,17 @@ export const Faz: React.FC<{ s: MS }> = ({ s }) => {
   if (lista.length) {
     const ladoLivre = m?.lado === 'esquerda' ? 'direita' : 'esquerda';
     // no plano fechado o corpo dela chega perto da borda: a coluna do lado é mais estreita (quebra antes)
+    // (340 no v5 não coube ao lado dela e a lista virou fila fora de ordem: fica 220, quebrando em 2 linhas)
     const colunaMax = z ? LISTA.colunaFechado : LISTA.coluna;
     const colDe = (lado: 'esquerda' | 'direita', y0: number) =>
       lado === 'esquerda'
         ? { x: LISTA.margem, align: 'left' as const, max: colunaMax, y0 }
         : { x: 1080 - LISTA.margem, align: 'right' as const, max: colunaMax, y0 };
+    const centro = { x: 540, align: 'center' as const, max: 620, y0: listaY };
+    // boneco v5: a coluna do LADO primeiro (a mesma nas duas línguas) — no centro, as palavras curtas do
+    // inglês ficavam em cima da cabeça dela e "jumps" pousava no medidor como título dele
     const cols = [
-      { x: 540, align: 'center' as const, max: 620, y0: listaY },
-      colDe(ladoLivre, listaY),
+      ...(v5() ? [colDe(ladoLivre, listaY), centro] : [centro, colDe(ladoLivre, listaY)]),
       ...(medRect ? [colDe(ladoLivre === 'esquerda' ? 'direita' : 'esquerda', medRect[3] + 24)] : []),
     ];
     const tenta = (c: (typeof cols)[number], size: number) => {

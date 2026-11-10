@@ -342,7 +342,7 @@
               "sobre": "rosto",
               "cue": {
                 "pt": "não em dias",
-                "en": "not days"
+                "en": "because skin"
               },
               "turn": {
                 "pt": "porque a pele",
@@ -374,8 +374,8 @@
                   "pt": "se renova devagar",
                   "en": "renews itself slowly"
                 },
-                "x": 890,
-                "y": 830,
+                "x": 900,
+                "y": 1000,
                 "max": 300
               }
             ]
@@ -463,7 +463,9 @@
                 "cue": {
                   "pt": "mesmo horário",
                   "en": "same time"
-                }
+                },
+                "x": 860,
+                "y": 520
               }
             ]
           }

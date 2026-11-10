@@ -1153,7 +1153,9 @@ export const Cena: React.FC<P> = ({ s }) => {
   // fechado (acabamento): 460 px em [800, 470] encostava o topo (240, e o aro dourado passa ~12 px do
   // disco) na sobrancelha, que termina em ~235. Agora 440 px em [800, 525]: topo em 305 (o aro em
   // ~293; com o drift da câmera, ~280 no fim da fala) e o fundo em 745, acima de um rótulo em y 770
-  const lenteC: [number, number] = fechado ? [800, 525] : setting === 'chao' ? [790, 560] : [760, 560];
+  // boneco v5: no fechado o centro desce pra 650 (a âncora é a maçã de baixo da bochecha) — em 525 o
+  // cone subia em diagonal por cima do olho e o tingia de violeta (revisor do colágeno, "com o tempo")
+  const lenteC: [number, number] = fechado ? (v5() ? [800, 650] : [800, 525]) : setting === 'chao' ? [790, 560] : [760, 560];
   const lenteD = fechado ? 440 : 520;
   const lenteAncora: [number, number] | null = (() => {
     if (!lenteSpec) return null;
@@ -1215,7 +1217,7 @@ export const Cena: React.FC<P> = ({ s }) => {
       busy={[rostoDe(caixa)]}
       pontos={pontosComBraco(caixa, caixaArms)}
       ocupa={ocupa}
-      overlay={lenteSpec && lenteAncora ? <Lente s={s} spec={lenteSpec} ancora={lenteAncora} centro={lenteC} diametro={lenteD} accent={accent} pele={who.skin ?? '#F2C9A0'} /> : undefined}
+      overlay={lenteSpec && lenteAncora ? <Lente s={s} spec={lenteSpec} ancora={lenteAncora} centro={lenteC} diametro={lenteD} accent={accent} pele={v5()?.protagonista.pele ?? who.skin ?? '#F2C9A0'} /> : undefined}
     >
       {turnGlow ? <Sfx at={turnAt} name="chime" /> : null}
       {amb ? null : <div style={{ position: 'absolute', top: 1180, left: 60, right: 60, height: 6, borderRadius: 3, background: C.surface2 }} />}

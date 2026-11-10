@@ -461,10 +461,15 @@ function deFrente(lado: Pose, prop: Proporcao, vigor = 1, bomba = true): Pose {
   const co = lado.cotovelo ?? [0, 0];
   // perna: a coxa pela inclinação dela; a canela pela inclinação absoluta (coxa − dobra do joelho)
   const coxa: [number, number] = [Math.max(0.3, cos(q[0])), Math.max(0.3, cos(q[1]))];
-  // a canela que chuta pra trás (coxa atrás) não some inteira: com as duas pernas curtas no voo ela lia
-  // "pulinho no lugar" (revisor, rodada 2) — a de trás fica comprida, a da frente com o joelho alto
-  const minCanela = (i: 0 | 1) => (q[i] < 0 ? 0.62 : 0.18);
-  const canela: [number, number] = [Math.max(minCanela(0), cos(q[0] - Math.max(0, jb[0]))), Math.max(minCanela(1), cos(q[1] - Math.max(0, jb[1])))];
+  // oposição das pernas (revisor, rodada 3): a da FRENTE (coxa subindo pra câmera) tem a canela quase
+  // em pé — o pé dela fica BAIXO, mais perto da câmera; a de TRÁS chuta o calcanhar e a canela some atrás
+  // do joelho — o pé dela fica ALTO. Pela inclinação inteira da canela as duas davam o mesmo tamanho e,
+  // no voo, os dois pés subiam juntos ("pulinho no lugar")
+  const canelaDe = (i: 0 | 1) => {
+    const fi = q[i] - Math.max(0, jb[i]);
+    return q[i] > 4 ? Math.max(0.5, cos(fi * 0.45)) : Math.max(0.18, cos(fi));
+  };
+  const canela: [number, number] = [canelaDe(0), canelaDe(1)];
   // o corpo desce o que a perna de apoio (a mais longa) encurtou: o pé dela continua no chão
   const len = (i: 0 | 1) => prop.coxa * coxa[i] + prop.canela * canela[i];
   const desce = (prop.coxa + prop.canela - Math.max(len(0), len(1))) * 0.85;
@@ -539,21 +544,23 @@ function prontaFrente(t: number, prop: Proporcao, o: PoseOpts): Pose {
     cabeca: 0,
     y: desce,
     // pés afastados e canela EM PÉ (joelho com a mesma abertura da coxa): com a canela voltando pra
-    // dentro a perna arqueava ("caubói")
+    // dentro a perna arqueava ("caubói"). Profundidade (rodada 3): a perna 1 (direita da tela) é a de
+    // trás — mais curta, o pé dela fica mais ALTO no quadro, longe da câmera; a 0 é a da frente
     quadril: [-12, 12],
     joelho: [-12, 12],
     pe: [0, 0],
-    encurtaCoxa: [coxa, coxa],
-    encurtaCanela: [canela, canela],
-    // braço 0 (esquerda da tela) com o punho na altura do queixo; o 1 atrás do tronco (a mão some atrás do quadril)
-    ombro: [-12, 14],
-    cotovelo: [162, -24],
-    encurta: [0.66, 0.82],
-    encurtaAnte: [0.8, 0.9],
+    encurtaCoxa: [coxa, coxa * 0.86],
+    encurtaCanela: [canela, canela * 0.9],
+    // o braço da frente é o oposto da perna da frente (o 1): dobrado, o punho na frente da BARRIGA (não
+    // no queixo — punho no queixo lia "pensando"); o 0 atrás do tronco, a mão some atrás do quadril
+    ombro: [-12, 10],
+    cotovelo: [-20, -128],
+    encurta: [0.82, 0.62],
+    encurtaAnte: [0.9, 0.72],
     punho: [0, 0],
     mao: ['fechada', 'fechada'],
-    bracoNaFrente: [true, false],
-    bracoAtras: [false, true],
+    bracoNaFrente: [false, true],
+    bracoAtras: [true, false],
   };
 }
 /** As ações que viram escorço de frente (as outras têm o "de frente" delas, ou não vão de frente). */

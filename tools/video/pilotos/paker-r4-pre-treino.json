@@ -333,7 +333,10 @@
                 "seta": [
                   935,
                   1010
-                ]
+                ],
+                "x": 820,
+                "y": 480,
+                "max": 380
               }
             ]
           },
@@ -443,15 +446,16 @@
             },
             "passos": [
               {
-                "acao": "andar"
+                "acao": "correr",
+                "ritmo": "lento"
               },
               {
                 "acao": "correr",
+                "para": 540,
                 "cue": {
                   "pt": "treino começa",
                   "en": "workout starts"
-                },
-                "para": 540
+                }
               }
             ],
             "rotulos": [

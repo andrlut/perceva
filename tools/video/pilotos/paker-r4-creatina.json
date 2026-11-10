@@ -269,11 +269,7 @@
                   "pt": "saltos",
                   "en": "jumps"
                 },
-                "ritmo": "rapido",
-                "rotulo": {
-                  "pt": "saltos",
-                  "en": "jumps"
-                }
+                "ritmo": "rapido"
               },
               {
                 "acao": "levantar",
@@ -283,11 +279,7 @@
                 },
                 "reps": 2,
                 "ritmo": "rapido",
-                "peca": "peso",
-                "rotulo": {
-                  "pt": "séries de força",
-                  "en": "strength sets"
-                }
+                "peca": "peso"
               }
             ],
             "rotulos": [
@@ -303,7 +295,10 @@
                 "out": {
                   "pt": "tiros de corrida",
                   "en": "sprints"
-                }
+                },
+                "x": 200,
+                "y": 400,
+                "max": 300
               },
               {
                 "text": {
@@ -313,7 +308,36 @@
                 "cue": {
                   "pt": "tiros de corrida",
                   "en": "sprints"
-                }
+                },
+                "x": 200,
+                "y": 400,
+                "max": 300
+              },
+              {
+                "text": {
+                  "pt": "saltos",
+                  "en": "jumps"
+                },
+                "cue": {
+                  "pt": "saltos",
+                  "en": "jumps"
+                },
+                "x": 200,
+                "y": 545,
+                "max": 300
+              },
+              {
+                "text": {
+                  "pt": "séries de força",
+                  "en": "strength sets"
+                },
+                "cue": {
+                  "pt": "séries de força",
+                  "en": "strength sets"
+                },
+                "x": 200,
+                "y": 670,
+                "max": 300
               }
             ]
           }
