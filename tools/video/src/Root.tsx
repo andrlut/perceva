@@ -7,7 +7,7 @@ import { FPS, Timing, buildTimeline } from './timeline';
 import { ElencoSheet } from './elenco/Sheet';
 import { Molde, calculateMoldeMetadata } from './molde/Molde';
 import { IdentidadeSheet } from './identidade/Sheet';
-import { BonecoAcoes, BonecoClip, BonecoElenco } from './boneco/Folha';
+import { BonecoAcoes, BonecoClip, BonecoElenco, BonecoFrente } from './boneco/Folha';
 import { Tour, calculateTourMetadata } from './tutorial/Tour';
 import { Porta, calculatePortaMetadata } from './tutorial/Porta';
 import { Vitrine, calculateVitrineMetadata } from './tutorial/Vitrine';
@@ -63,6 +63,7 @@ export const RemotionRoot: React.FC = () => (
     {/* Boneco v5 (2026-11-09): folhas de comparação dos estilos + clip de 5 s (scripts/boneco.mjs). */}
     <Composition id="BonecoElenco" component={BonecoElenco} width={1080} height={1920} fps={FPS} durationInFrames={FPS * 2} defaultProps={{ estilo: 'debug' }} />
     <Composition id="BonecoAcoes" component={BonecoAcoes} width={1080} height={1920} fps={FPS} durationInFrames={FPS * 2} defaultProps={{ estilo: 'debug' }} />
+    <Composition id="BonecoFrente" component={BonecoFrente} width={1080} height={1920} fps={FPS} durationInFrames={1} defaultProps={{ estilo: 'debug' }} />
     <Composition id="BonecoClip" component={BonecoClip} width={1080} height={1920} fps={FPS} durationInFrames={FPS * 5} defaultProps={{ estilo: 'debug' }} />
     <Composition id="Identidade" component={IdentidadeSheet} width={1080} height={1920} fps={FPS} durationInFrames={FPS * 4} defaultProps={{ option: 'atual' }} />
     {/* Tutorial de tela (réplica + câmera + destaque + dedo), roteiro em tours/<tela>.json

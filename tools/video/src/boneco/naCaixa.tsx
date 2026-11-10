@@ -68,7 +68,13 @@ export const quemV5 = (seed: number | undefined, figurante?: boolean): Pessoa =>
   const prot = at?.protagonista;
   if (prot && !figurante && (seed === undefined || seed === at?.seedProtagonista)) return prot;
   let p = pessoaDoSeed(seed ?? 0);
-  if (prot && p.id === prot.id) p = pessoaDoSeed((seed ?? 0) + 1);
+  if (prot && p.id === prot.id) {
+    // o figurante caiu na protagonista (o roteiro escolheu ela por nome, não pelo seed): troca pela
+    // pessoa que o seed DELA ocuparia — com `seed + 1` dois figurantes de seeds vizinhos viravam a
+    // mesma pessoa (pré-treino: seeds 1 e 2 com o Caio de protagonista = duas Bias)
+    const livre = pessoaDoSeed(at?.seedProtagonista ?? 0);
+    p = livre.id !== prot.id ? livre : pessoaDoSeed((seed ?? 0) + 1);
+  }
   return p;
 };
 

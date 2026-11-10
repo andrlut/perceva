@@ -16,7 +16,7 @@ import { VisualContext, visualDe } from './visual';
 import { setV5, v5De } from '../boneco/ativo';
 import { identidadeV5 } from '../boneco/identidade';
 import { CenaV5Context } from '../boneco/naCaixa';
-import { enquadraDe, lugarDe } from '../boneco/ativo';
+import { type CenaV5, enquadraDe, lugarDe } from '../boneco/ativo';
 
 /** Teto do vídeo de ideia: passou disso, o render falha (corte o roteiro). */
 export const MOLDE_MAX_SECONDS = 60;
@@ -71,6 +71,27 @@ export const Molde: React.FC<MoldeProps> = ({ specKey, spec, scenes, captions, i
   const who = v5 ? identidadeV5 : identity ? OPTIONS.find((o) => o.id === identity) : ACTIVE;
   if (!who) throw new Error(`identidade desconhecida: ${identity} (tem: ${OPTIONS.map((o) => o.id).join(', ')})`);
   const kinds = passagens(scenes);
+  // a cena que a Pessoa v5 está: o lugar e as ações dela escolhem a roupa. Cena sem lugar e sem ação
+  // (o corpo de vidro do `dentro`, a lista) HERDA a anterior: sem isso caía em "rua" e o boné de rua
+  // aparecia na cabeça do corpo de vidro, no meio de uma história que se passa em casa
+  const cenasV5: CenaV5[] = [];
+  if (v5) {
+    let prev: CenaV5 | undefined;
+    for (const s of scenes) {
+      const acoes = [...(s.props?.passos ?? []).map((a) => a.acao), ...(s.props?.acoes ?? []).map((a) => a.acao)];
+      const lugar = lugarDe(s.props?.ambiente);
+      const herda = !lugar && !acoes.length && !s.props?.roupa ? prev : undefined;
+      const c: CenaV5 = {
+        lugar: herda ? herda.lugar : lugar,
+        hora: herda ? herda.hora : (s.props?.hora as 'manha' | 'dia' | 'noite' | undefined),
+        acoes: herda ? herda.acoes : acoes,
+        roupa: s.props?.roupa ?? herda?.roupa,
+        enquadra: enquadraDe(s.scene, s.props),
+      };
+      cenasV5.push(c);
+      prev = c;
+    }
+  }
   return (
     <IdentityContext.Provider value={who}>
     <SfxContext.Provider value={sfx && !spec.silent}>
@@ -91,16 +112,7 @@ export const Molde: React.FC<MoldeProps> = ({ specKey, spec, scenes, captions, i
                   ) : null}
                   <TransitionSeries.Sequence durationInFrames={s.frames} name={`${s.id}·${s.scene}`}>
                     {v5 ? (
-                      // a cena que a Pessoa v5 está: o lugar e as ações dela escolhem a roupa
-                      <CenaV5Context.Provider
-                        value={{
-                          lugar: lugarDe(s.props?.ambiente),
-                          hora: s.props?.hora as 'manha' | 'dia' | 'noite' | undefined,
-                          acoes: [...(s.props?.passos ?? []).map((a) => a.acao), ...(s.props?.acoes ?? []).map((a) => a.acao)],
-                          roupa: s.props?.roupa,
-                          enquadra: enquadraDe(s.scene, s.props),
-                        }}
-                      >
+                      <CenaV5Context.Provider value={cenasV5[i]}>
                         <Comp s={s} />
                       </CenaV5Context.Provider>
                     ) : (

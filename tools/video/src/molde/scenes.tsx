@@ -31,6 +31,7 @@ import catalog from './catalog.json';
 import type { AcaoKind, AcaoSpec, Bloco, Chip, Feel, MoldeLine, MoldeSpec, Mood, Obj, Panel, PieceName, Regiao, SceneProps } from './spec';
 // fase 3: a tela demonstra o que a voz diz (ações, rótulos, corpo por dentro, lugares novos)
 import { Ator, cicloDe, corridaDe, maoNaTela, pontoNaTela, poseDe } from '../elenco/acao';
+import { v5 } from '../boneco/ativo';
 import { Lente, lenteRect } from './lente';
 import { NaTela, Rotulos, discoRects, type Ocupa } from './rotulo';
 import { LUGARES } from './lugares';
@@ -1020,6 +1021,16 @@ const FECHADO_SLOTS = {
     { top: 320, left: 40, size: 210 },
   ] as Slot[],
 };
+/**
+ * Boneco v5: o encaixe da TELA a ≥ 90 px das bordas. Os encaixes do plano fechado ficam a 22–30 px da
+ * borda; com o push da câmera o pote e o relógio saíam colados nela (revisor da creatina r4).
+ */
+const RECUO_V5 = 90;
+const recuo = (sl: Slot): Slot => {
+  if (!v5()) return sl;
+  const left = Math.max(RECUO_V5, Math.min(sl.left, 1080 - RECUO_V5 - sl.size));
+  return { ...sl, left };
+};
 /** Um encaixe da tela levado pro mundo da cena (a peça cresce de volta com o zoom). */
 const slotDaTela = (z: Zoom, sl: Slot): Slot => {
   const [left, top] = unPt(z, [sl.left, sl.top]);
@@ -1031,8 +1042,8 @@ const MESA_ATOR = { x: 420, y: 1058, size: 300 };
 
 /** Peças da cena no plano fechado: pontas do tampo e o alto, todas medidas na tela. */
 const fechadoPlaced = (objects: Obj[]): { o: Obj; slot: Slot }[] => {
-  const ground = FECHADO_SLOTS.chao.map((sl) => slotDaTela(FECHADO, sl));
-  const float = FECHADO_SLOTS.alto.map((sl) => slotDaTela(FECHADO, sl));
+  const ground = FECHADO_SLOTS.chao.map((sl) => slotDaTela(FECHADO, recuo(sl)));
+  const float = FECHADO_SLOTS.alto.map((sl) => slotDaTela(FECHADO, recuo(sl)));
   const out: { o: Obj; slot: Slot }[] = [];
   const up: Obj[] = [];
   for (const o of objects.slice(0, 4)) {
@@ -1420,7 +1431,7 @@ const PensaFechado: React.FC<P> = ({ s }) => {
   const pc: [number, number] = [bx + 140 * k, by + 84 * k];
   const thoughtSize = Math.round(81 * k);
   const [tw, th] = pr.thought ? pieceBox(pr.thought, thoughtSize) : [0, 0];
-  const slots = PENSA_FECHADO.pontas.map((sl) => slotDaTela(z, sl));
+  const slots = PENSA_FECHADO.pontas.map((sl) => slotDaTela(z, recuo(sl)));
   const Balcao = pr.ambiente ? lugarOf(pr.ambiente)?.Balcao : undefined;
   const D = { x: 100, w: 880 };
   const geo: EnvGeo = {

@@ -49,8 +49,18 @@ export const ACAO_V5: Record<string, Acao> = {
 
 /** Ações que pedem a vista de três-quartos (o corpo de lado mostra o movimento). */
 const DE_LADO = new Set(['andar', 'correr', 'saltar', 'levantar', 'mexer', 'beber']);
-/** A vista da cena: com qualquer ação de movimento, 3/4 a cena inteira (trocar no meio estala). */
-export const vistaDaCena = (acoes: string[]): Vista => (acoes.some((a) => DE_LADO.has(a)) ? 'tres-quartos' : 'frente');
+/** O que acompanha a corrida de frente na mesma cena (cada uma tem o seu "de frente"). */
+const COM_A_CORRIDA = new Set(['correr', 'saltar', 'pronta', 'levantar', 'andar', 'parado']);
+/**
+ * A vista da cena (trocar no meio estala): com qualquer ação de movimento, 3/4 a cena inteira — MENOS
+ * a cena que corre no lugar ou vindo pra câmera (o chão anda pra câmera, faz → corridaDe): essa vai
+ * DE FRENTE (poses.ts → deFrente), com o salto, a série e a base atlética de frente junto. Andar com
+ * trajeto (de lado pelo quadro) segura a cena em 3/4.
+ */
+export const vistaDaCena = (acoes: string[], opts: { trajeto?: boolean } = {}): Vista => {
+  if (acoes.includes('correr') && !opts.trajeto && acoes.every((a) => COM_A_CORRIDA.has(a))) return 'frente';
+  return acoes.some((a) => DE_LADO.has(a)) ? 'tres-quartos' : 'frente';
+};
 
 /** Peças do molde que a mão do v5 segura desenhando ela mesma (o estilo põe os dedos por cima). */
 export const SEGURA_V5: Record<string, 'halter' | 'copo' | 'coqueteleira'> = {
@@ -72,9 +82,17 @@ export const lugarDe = (amb?: string): Lugar | undefined => (amb ? (amb as Lugar
  * ficava com o rosto pequeno e as pernas na frente do balcão.
  */
 export type Enquadra = 'corpo' | 'busto';
-/** Quais cenas pedem o busto: pensa/cena fechadas (atrás do balcão) e a pessoa grande da lupa. */
-export const enquadraDe = (scene: string, props: { plano?: string; pessoa?: string } | undefined): Enquadra =>
-  ((scene === 'pensa' || scene === 'cena') && props?.plano === 'fechado') || (scene === 'dentro' && props?.plano === 'lupa' && props?.pessoa === 'grande') ? 'busto' : 'corpo';
+/**
+ * Quais cenas pedem o busto: pensa/cena fechadas (atrás do balcão), a cena da MESA em qualquer plano
+ * (de corpo inteiro na caixa dela, os pés caíam no tampo e ela lia "em pé em cima do balcão") e a
+ * pessoa grande da lupa.
+ */
+export const enquadraDe = (scene: string, props: { plano?: string; pessoa?: string; setting?: string } | undefined): Enquadra =>
+  ((scene === 'pensa' || scene === 'cena') && props?.plano === 'fechado') ||
+  (scene === 'cena' && props?.setting === 'mesa') ||
+  (scene === 'dentro' && props?.plano === 'lupa' && props?.pessoa === 'grande')
+    ? 'busto'
+    : 'corpo';
 
 /** A cena que a Pessoa está (o Molde provê): o lugar, as ações, a roupa forçada e o enquadramento. */
 export type CenaV5 = { lugar?: Lugar; hora?: 'manha' | 'dia' | 'tarde' | 'noite'; acoes: string[]; roupa?: Contexto; enquadra?: Enquadra };

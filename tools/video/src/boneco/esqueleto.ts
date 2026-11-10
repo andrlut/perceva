@@ -102,6 +102,15 @@ export type Pose = {
    * largura não muda) e pode escurecer um tico a dobra do cotovelo quando `encurta` < 0,8.
    */
   encurta?: [number, number];
+  /**
+   * Escorço da PERNA, 0,18..1 (coxa e canela): de frente, a coxa que sobe pra câmera fica curta (o
+   * joelho vem pra frente) e a canela que chuta pra trás some atrás do joelho. É assim que o v5 corre
+   * DE FRENTE com o rig de ângulos no plano (poses.ts → deFrente).
+   */
+  encurtaCoxa?: [number, number];
+  encurtaCanela?: [number, number];
+  /** escorço do ANTEBRAÇO, 0,2..1 (de frente, o punho que aponta pra câmera fica colado no cotovelo) */
+  encurtaAnte?: [number, number];
 };
 
 /** Saída do FK: onde fica cada junta (unidades, chão y = 0) e o ângulo absoluto de cada osso. */
@@ -244,14 +253,19 @@ export function fk(prop: Proporcao, pose: Pose = {}): Juntas {
   const mao: [number, number] = [antebraco[0] + punhoR[0], antebraco[1] + punhoR[1]];
   const enc: [number, number] = [Math.max(0.45, Math.min(1, pose.encurta?.[0] ?? 1)), Math.max(0.45, Math.min(1, pose.encurta?.[1] ?? 1))];
   const cotovelo: [P, P] = [ao(ombro[0], braco[0], prop.braco * enc[0]), ao(ombro[1], braco[1], prop.braco * enc[1])];
-  const punho: [P, P] = [ao(cotovelo[0], antebraco[0], prop.antebraco), ao(cotovelo[1], antebraco[1], prop.antebraco)];
+  const ea = (i: 0 | 1) => Math.max(0.2, Math.min(1, pose.encurtaAnte?.[i] ?? 1));
+  const punho: [P, P] = [ao(cotovelo[0], antebraco[0], prop.antebraco * ea(0)), ao(cotovelo[1], antebraco[1], prop.antebraco * ea(1))];
   const dedos: [P, P] = [ao(punho[0], mao[0], prop.mao), ao(punho[1], mao[1], prop.mao)];
 
   const coxa: [number, number] = [quadR[0], quadR[1]];
-  const canela: [number, number] = [coxa[0] - Math.max(0, joel[0]), coxa[1] - Math.max(0, joel[1])];
+  // de lado o joelho só dobra pra trás (≥ 0); de frente, com escorço, a canela volta pra DENTRO nas
+  // duas pernas (joelhos pra fora, pés embaixo do quadril) — a perna da esquerda dobra com sinal −
+  const dob = (i: 0 | 1) => (vista === 'frente' ? joel[i] : Math.max(0, joel[i]));
+  const canela: [number, number] = [coxa[0] - dob(0), coxa[1] - dob(1)];
   const pe: [number, number] = [canela[0] + 90 + peR[0], canela[1] + 90 + peR[1]];
-  const joelho: [P, P] = [ao(quadril[0], coxa[0], prop.coxa * sy), ao(quadril[1], coxa[1], prop.coxa * sy)];
-  const tornozelo: [P, P] = [ao(joelho[0], canela[0], prop.canela * sy), ao(joelho[1], canela[1], prop.canela * sy)];
+  const ec = (v: [number, number] | undefined, i: 0 | 1) => Math.max(0.18, Math.min(1, v?.[i] ?? 1));
+  const joelho: [P, P] = [ao(quadril[0], coxa[0], prop.coxa * sy * ec(pose.encurtaCoxa, 0)), ao(quadril[1], coxa[1], prop.coxa * sy * ec(pose.encurtaCoxa, 1))];
+  const tornozelo: [P, P] = [ao(joelho[0], canela[0], prop.canela * sy * ec(pose.encurtaCanela, 0)), ao(joelho[1], canela[1], prop.canela * sy * ec(pose.encurtaCanela, 1))];
   // o tornozelo fica acima do meio do pé: calcanhar um quarto pra trás, ponta três quartos pra frente
   const planta = (i: 0 | 1): [P, P] => {
     const sola = ao(tornozelo[i], canela[i], prop.tornozelo);
@@ -316,6 +330,9 @@ export function mistura(a: Pose, b: Pose, t: number): Pose {
     aperto: n(a.aperto, b.aperto),
     marca: n(a.marca, b.marca),
     encurta: [n(a.encurta?.[0] ?? 1, b.encurta?.[0] ?? 1), n(a.encurta?.[1] ?? 1, b.encurta?.[1] ?? 1)],
+    encurtaCoxa: [n(a.encurtaCoxa?.[0] ?? 1, b.encurtaCoxa?.[0] ?? 1), n(a.encurtaCoxa?.[1] ?? 1, b.encurtaCoxa?.[1] ?? 1)],
+    encurtaCanela: [n(a.encurtaCanela?.[0] ?? 1, b.encurtaCanela?.[0] ?? 1), n(a.encurtaCanela?.[1] ?? 1, b.encurtaCanela?.[1] ?? 1)],
+    encurtaAnte: [n(a.encurtaAnte?.[0] ?? 1, b.encurtaAnte?.[0] ?? 1), n(a.encurtaAnte?.[1] ?? 1, b.encurtaAnte?.[1] ?? 1)],
     bracoNaFrente: k < 0.5 ? a.bracoNaFrente : b.bracoNaFrente,
   };
 }

@@ -433,6 +433,72 @@ function mix(a: Pose, b: Pose, k: number): Pose {
   };
 }
 
+// ------------------------------------------------------------------ de frente (vindo pra câmera)
+
+/**
+ * A corrida, o salto, a caminhada e a base atlética DE FRENTE, vindo pra câmera. No molde o chão anda
+ * pra câmera enquanto ela corre (faz → corridaDe): de 3/4, com a perna balançando de lado, ela lia
+ * "deslizando de lado na pista" (revisor da creatina r4). Em vez de outra tabela de quadros-chave, a
+ * pose de 3/4 (a validada) vira ESCORÇO: o ângulo de cada osso no plano de lado é o quanto ele aponta
+ * pra câmera. A coxa que sobe pra frente fica curta (o joelho vem pra câmera), a canela que chuta pra
+ * trás some atrás do joelho, o braço que bombeia pra frente encurta e o punho sobe na frente do
+ * peito, o de trás desce pro quadril. No plano da tela só sobra o balanço — os pés perto da linha do
+ * meio, o tronco gingando um tico com a passada.
+ */
+function deFrente(lado: Pose, prop: Proporcao): Pose {
+  const cos = (a: number) => Math.cos(a * RAD);
+  const q = lado.quadril ?? [0, 0];
+  const jb = lado.joelho ?? [0, 0];
+  const om = lado.ombro ?? [0, 0];
+  const co = lado.cotovelo ?? [0, 0];
+  // perna: a coxa pela inclinação dela; a canela pela inclinação absoluta (coxa − dobra do joelho)
+  const coxa: [number, number] = [Math.max(0.3, cos(q[0])), Math.max(0.3, cos(q[1]))];
+  const canela: [number, number] = [Math.max(0.18, cos(q[0] - Math.max(0, jb[0]))), Math.max(0.18, cos(q[1] - Math.max(0, jb[1])))];
+  // o corpo desce o que a perna de apoio (a mais longa) encurtou: o pé dela continua no chão
+  const len = (i: 0 | 1) => prop.coxa * coxa[i] + prop.canela * canela[i];
+  const desce = (prop.coxa + prop.canela - Math.max(len(0), len(1))) * 0.85;
+  // joelho que sobe ou dobra abre pra fora e a canela volta pra dentro, o pé embaixo do quadril: de
+  // frente é isso que lê "joelho dobrado" (com a perna reta e só curta ela lia "encolheu")
+  const abre = (i: 0 | 1) => (i === 0 ? -1 : 1) * (2.5 + Math.max(0, q[i]) * 0.2);
+  const volta = (i: 0 | 1) => (i === 0 ? -1 : 1) * 2 * (Math.abs(abre(i)) - 2.5) * Math.min(1, Math.max(0, jb[i]) / 70);
+  // braço: o de cima encurta pela inclinação (o cotovelo que vai pra frente ou pra trás sobe um
+  // tico) e abre um pouco pra fora. O antebraço NÃO varre a barriga: ele aponta pra baixo quando o
+  // braço está atrás (o punho no quadril), some no cotovelo quando aponta pra câmera e sobe na frente
+  // do peito quando o braço vem pra frente — o escorço é o que conta o bombear
+  const ginga = ((q[1] - q[0]) / 90) * 2.5;
+  const enc: [number, number] = [Math.max(0.55, cos(om[0])), Math.max(0.55, cos(om[1]))];
+  const ombro: [number, number] = [-11, 11];
+  const ante = (i: 0 | 1) => {
+    const p = om[i] + co[i];
+    // o punho sobe cedo (a partir de ~50°): no meio do caminho ele apontava pra câmera, virava um toco no
+    // cotovelo e o bombear não aparecia na folha
+    const s = Math.max(0, Math.min(1, (p - 48) / 44));
+    const abs = 14 + 150 * s * s * (3 - 2 * s);
+    const lado = i === 0 ? 1 : -1;
+    return lado * abs - (ombro[i] - ginga);
+  };
+  const ea = (i: 0 | 1) => Math.max(0.5, Math.abs(cos(om[i] + co[i])));
+  return {
+    ...lado,
+    vista: 'frente',
+    tronco: ginga,
+    cabeca: -ginga * 0.6,
+    y: (lado.y ?? 0) + desce,
+    quadril: [abre(0), abre(1)],
+    joelho: [volta(0), volta(1)],
+    pe: [0, 0],
+    encurtaCoxa: coxa,
+    encurtaCanela: canela,
+    ombro,
+    cotovelo: [ante(0), ante(1)],
+    encurta: enc,
+    encurtaAnte: [ea(0), ea(1)],
+    punho: [0, 0],
+  };
+}
+/** As ações que viram escorço de frente (as outras têm o "de frente" delas, ou não vão de frente). */
+const DE_FRENTE: Partial<Record<Acao, true>> = { correr: true, andar: true, saltar: true, pronta: true };
+
 const TABELA: Record<Acao, (t: number, prop: Proporcao, o: PoseOpts) => Pose> = {
   parado,
   andar,
@@ -451,7 +517,7 @@ const TABELA: Record<Acao, (t: number, prop: Proporcao, o: PoseOpts) => Pose> = 
 
 /** A pose da ação no quadro `t`. */
 export const poseDe = (acao: Acao, t: number, prop: Proporcao, o: PoseOpts = {}): Pose => {
-  const p = TABELA[acao](t, prop, o);
+  const p = o.vista === 'frente' && DE_FRENTE[acao] ? deFrente(TABELA[acao](t, prop, { ...o, vista: 'tres-quartos' }), prop) : TABELA[acao](t, prop, o);
   return o.espelho != null ? { ...p, espelho: o.espelho } : p;
 };
 

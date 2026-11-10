@@ -41,6 +41,7 @@ import React from 'react';
 import { useCurrentFrame } from 'remotion';
 import { ramp, sai } from '../../components';
 import { Ator, VEM_DESCE, VEM_MAX, cicloDe, corridaDe, maoNaTela, pontoNaTela, poseDe, type AcaoPlano, type PoseAtor } from '../../elenco/acao';
+import { v5 } from '../../boneco/ativo';
 import type { Zoom } from '../scenes';
 import { Brilho } from '../../elenco/cast';
 import { SHIRTS, SKINS } from '../../elenco/cenario';
@@ -73,6 +74,12 @@ const FAZ = {
    * `desce` (× size × (escala − 1)).
    */
   fechado: { k: 1.35, o: [540, (1.35 * 1300 - 1400) / 0.35] as [number, number], size: 400, sizeElenco: 385, vem: 1.2, desce: 0.2 },
+  /**
+   * Boneco v5 no plano fechado: os pés na tela em 1360 (não 1400) e sem descer no correr — o v5 tem
+   * pé e tênis de verdade embaixo do corpo, e em 1400+ eles entravam na faixa da legenda (revisor
+   * da creatina r4: everyone2).
+   */
+  fechadoV5: { o: [540, (1.35 * 1300 - 1360) / 0.35] as [number, number], desce: 0 },
 };
 
 // o zoom do plano fechado (o mesmo do Stage: o mundo da cena → a tela, e a volta)
@@ -292,11 +299,11 @@ export const Faz: React.FC<{ s: MS }> = ({ s }) => {
   // ---------------------------------------------------------------- ela
   const who = useProtagonista();
   // plano fechado: a câmera perto (o mundo da cena com zoom); a cena mede no mundo e acha na tela
-  const z: Zoom | undefined = pr.plano === 'fechado' ? { k: FAZ.fechado.k, o: FAZ.fechado.o } : undefined;
+  const z: Zoom | undefined = pr.plano === 'fechado' ? { k: FAZ.fechado.k, o: v5() ? FAZ.fechadoV5.o : FAZ.fechado.o } : undefined;
   const size = z ? (elenco.length ? FAZ.fechado.sizeElenco : FAZ.fechado.size) : elenco.length ? FAZ.sizeElenco : FAZ.size;
   const ground = FAZ.ground;
   const vemMax = z ? FAZ.fechado.vem : VEM_MAX;
-  const desce = z ? FAZ.fechado.desce : VEM_DESCE;
+  const desce = z ? (v5() ? FAZ.fechadoV5.desce : FAZ.fechado.desce) : VEM_DESCE;
   const ini = iniciosDe(s, passos);
   const faixa = faixaDe(passos, vemMax);
   /** A pose dela no quadro: no plano fechado o correr pra câmera cresce até `vem` (não VEM_MAX) e os pés descem menos. */

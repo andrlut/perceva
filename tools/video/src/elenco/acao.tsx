@@ -501,17 +501,18 @@ export function poseDe(
     }
   }
   escala = Math.min(VEM_MAX, escala);
-  // boneco v5: ela corre de 3/4 (não vem de frente pra câmera) — crescer 25% lia "deslizando" e os pés
-  // afundavam na faixa da legenda; cresce só um quarto do caminho
-  if (v5()) escala = 1 + (escala - 1) * 0.25;
+  // boneco v5: a vista é da CENA (sem estalo no meio). Correndo no lugar ou vindo pra câmera = DE
+  // FRENTE (o chão anda pra câmera); andar com trajeto segura 3/4
+  const vista5 = v5() ? vistaDaCena(plano.map((p) => p.a.acao), { trajeto: plano.some((p) => p.traj) }) : undefined;
+  // de 3/4 crescer lia "deslizando" (cresce um quarto do caminho); de frente, vindo pra câmera, crescer
+  // é o que diz que ela vem — mais da metade (os pés não descem no plano fechado do v5: faz.tsx)
+  if (vista5) escala = 1 + (escala - 1) * (vista5 === 'frente' ? 0.6 : 0.25);
 
   const ativa = ref >= 0 ? { ...plano[ref].a, de: anchor } : { ...plano[0].a, de: anchor };
   const x = pos !== undefined && anchor !== undefined ? pos - anchor : 0;
   const pecas = ref >= 0 ? pecaDe(ref) : {};
   const ciclo0 = ref >= 0 ? plano[ref].ini : plano[0].ini;
 
-  // boneco v5: a vista é da CENA (qualquer ação de movimento → 3/4 do começo ao fim, sem estalo)
-  const vista5 = v5() ? vistaDaCena(plano.map((p) => p.a.acao)) : undefined;
   if (W <= 0) {
     if (vista5) return { pose: { mistura: 0, escala, pouso, v5: { vista: vista5, enquadra: enquadraDe(s.scene, s.props), itens: [] } }, ...pecas, x, ativa, ciclo0 };
     const resto: PoseAtor | undefined = escala !== 1 || pouso.length ? { mistura: 0, escala, pouso } : undefined;
@@ -547,9 +548,13 @@ export function poseDe(
  * ações, undefined (o chão fica parado como sempre).
  */
 export function corridaDe(s: MS, acoes: AcaoSpec[] | undefined, frame: number): { v: number; d: number } | undefined {
-  if (!acoes?.some((a) => a.acao === 'correr')) return undefined;
-  const corre = planoDe(s, acoes).filter((p) => p.a.acao === 'correr');
-  const vAt = (f: number) => Math.min(1, corre.reduce((a, p) => a + pesoDe(p, f), 0));
+  // boneco v5: andar NO LUGAR (sem `para`) também é vir pra câmera, de frente — o chão anda devagar
+  // (sem isso ela andava parada no piso, e o "sai de casa e chega" lia esteira)
+  const andaV5 = (a: AcaoPlano) => v5() && a.acao === 'andar' && a.para === undefined;
+  if (!acoes?.some((a) => a.acao === 'correr' || andaV5(a))) return undefined;
+  const corre = planoDe(s, acoes).filter((p) => p.a.acao === 'correr' || andaV5(p.a));
+  const vel = (p: Plano) => (p.a.acao === 'correr' ? 1 : 0.45);
+  const vAt = (f: number) => Math.min(1, corre.reduce((a, p) => a + pesoDe(p, f) * vel(p), 0));
   const ini = Math.min(...corre.map((p) => p.ini));
   let d = 0;
   for (let f = Math.ceil(ini); f < frame; f++) d += vAt(f);
