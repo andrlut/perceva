@@ -35,7 +35,7 @@ import {
 } from './base';
 import type { Ctx } from './ctx';
 import { maoDe } from './maos';
-import { copo, coqueteleira, garrafa, halter } from './objetos';
+import { copo, coqueteleira, garrafa, halter, suco } from './objetos';
 
 // ------------------------------------------------------------------ roupa: leitura do contrato
 
@@ -750,6 +750,7 @@ export function camadaBraco(c: Ctx, i: 0 | 1, key: string): React.ReactNode {
     if (comGarrafa) objeto = garrafa(c, i);
     else if (c.segura === 'halter' && (i === 1 || duas)) objeto = halter(c, i);
     else if (c.segura === 'copo' && i === 1) objeto = copo(c, i);
+    else if (c.segura === 'suco' && i === 1) objeto = suco(c, i);
     else if (c.segura === 'coqueteleira' && i === 1) objeto = coqueteleira(c, i);
   }
   if (objeto) grupos.push(objeto);

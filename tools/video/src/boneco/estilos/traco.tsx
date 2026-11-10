@@ -71,7 +71,7 @@ export const traco: Estilo = {
   propDe,
   Desenho: ({ j, pessoa, roupa, humor, t, uid, luz, segura: seguraIn, toque }) => {
     // estilo fora do molde (o André escolheu o 'serie'): coqueteleira vira copo aqui
-    const segura = seguraIn === 'coqueteleira' ? 'copo' : seguraIn;
+    const segura = seguraIn === 'coqueteleira' || seguraIn === 'suco' ? 'copo' : seguraIn;
     const prop = propDe(pessoa);
     const corpo = corpoDe(pessoa, prop);
     const tr = troncoDe(j, prop, corpo);

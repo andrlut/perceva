@@ -35,6 +35,7 @@ import { hits, type Rect } from './ambientes';
 import { useCam, type Cam } from './camera';
 import type { MS } from './scenes';
 import type { Regiao, RotuloSpec } from './spec';
+import { v5 } from '../boneco/ativo';
 
 const SIZE = 54;
 const MIN = 44;
@@ -46,7 +47,9 @@ const LINHA = 620;
 /** Coluna dos lados do corpo: rótulo que não cabe nela quebra/encolhe antes de invadir o meio. */
 const COLUNA = 300;
 /** Margem lateral do quadro. */
-const MARGEM = 28;
+const MARGEM_ANTES = 28;
+/** margem da tela: 28 px no boneco antigo (vídeos no ar), 60 no v5 (revisor: rótulo a ~30 px da borda) */
+const margem = () => (v5() ? 60 : MARGEM_ANTES);
 /** Faixa vertical onde rótulo pode morar (abaixo da sobrancelha, acima da legenda). */
 const TOPO = 290;
 const FUNDO = 1360;
@@ -86,7 +89,7 @@ export const projeta = (c: Cam, [px, py]: [number, number]): [number, number] =>
 const naMargem = (r: Rect): Rect => {
   const w = r[2] - r[0];
   const h = r[3] - r[1];
-  const x0 = Math.min(Math.max(r[0], MARGEM), 1080 - MARGEM - w);
+  const x0 = Math.min(Math.max(r[0], margem()), 1080 - margem() - w);
   const y0 = Math.min(Math.max(r[1], TELA.topo), TELA.fundo - h);
   return [x0, y0, x0 + w, y0 + h];
 };
@@ -409,12 +412,12 @@ export const achaVaga = (
   const size = o.size ?? SIZE;
   const cols: { x: number; align: Align; max: number; lado: 'esquerda' | 'direita' | 'centro' }[] = [
     { x: 540, align: 'center', max: LINHA, lado: 'centro' },
-    { x: MARGEM, align: 'left', max: LINHA, lado: 'esquerda' },
-    { x: MARGEM, align: 'left', max: COLUNA, lado: 'esquerda' },
-    { x: 1080 - MARGEM, align: 'right', max: LINHA, lado: 'direita' },
-    { x: 1080 - MARGEM, align: 'right', max: COLUNA, lado: 'direita' },
+    { x: margem(), align: 'left', max: LINHA, lado: 'esquerda' },
+    { x: margem(), align: 'left', max: COLUNA, lado: 'esquerda' },
+    { x: 1080 - margem(), align: 'right', max: LINHA, lado: 'direita' },
+    { x: 1080 - margem(), align: 'right', max: COLUNA, lado: 'direita' },
   ];
-  const livre = (r: Rect) => r[0] >= MARGEM - 0.5 && r[2] <= 1080 - MARGEM + 0.5 && r[1] >= TOPO && r[3] <= FUNDO && !hits(busy, r);
+  const livre = (r: Rect) => r[0] >= margem() - 0.5 && r[2] <= 1080 - margem() + 0.5 && r[1] >= TOPO && r[3] <= FUNDO && !hits(busy, r);
   const tenta = (c: (typeof cols)[number], y: number): Vaga | null => {
     const r = rotuloRect(text, c.x, y, size, c.align, c.max);
     return livre(r) ? { x: c.x, y, align: c.align, max: c.max, rect: r } : null;
@@ -504,7 +507,7 @@ export const Rotulos: React.FC<{
         if (r.x !== undefined || r.y !== undefined) {
           const x = r.x ?? 540;
           const y = r.y ?? FILA.y;
-          v = { x, y, align: 'center', max: LINHA, rect: rotuloRect(r.text, x, y) };
+          v = { x, y, align: 'center', max: r.max ?? LINHA, rect: rotuloRect(r.text, x, y) };
         } else {
           v = achaVaga(r.text, [...busy, ...agora, ...outros], { alvo });
         }

@@ -62,7 +62,7 @@ export function halter(c: Ctx, i: 0 | 1): Grupo {
  * do copo (ou o BICO da coqueteleira) pousa no lábio de baixo e a peça se alinha da boca pra pegada
  * — contínuo pela distância, sem pulo. A água do copo fica sempre horizontal.
  */
-function recipiente(c: Ctx, i: 0 | 1, tipo: 'copo' | 'coqueteleira'): Grupo {
+function recipiente(c: Ctx, i: 0 | 1, tipo: 'copo' | 'coqueteleira' | 'suco'): Grupo {
   const { M, t } = quadroMao(c, i);
   const shaker = tipo === 'coqueteleira';
   const g = M(7.4, 0.6);
@@ -123,6 +123,23 @@ function recipiente(c: Ctx, i: 0 | 1, tipo: 'copo' | 'coqueteleira'): Grupo {
     ? `M${nivel[0] - R} ${nivel[1]} L${nivel[0] + R} ${nivel[1]} L${nivel[0] + R} ${nivel[1] + R} L${nivel[0] - R} ${nivel[1] + R} Z`
     : `M${nivel[0] - R} ${nivel[1]} L${nivel[0] + R} ${nivel[1]} L${nivel[0] + R} ${nivel[1] - R} L${nivel[0] - R} ${nivel[1] - R} Z`;
   const brilho = linha([pt(alt * 0.12, r0 * 0.55), pt(alt * 0.88, r1 * 0.6)]);
+  // a colher do mexer (Pose.colher): o cabo sai pela boca do copo e gira em círculo — é o que diz
+  // "misture" sem precisar de outra mão (só com o copo em pé, longe da boca)
+  const fase = c.j.colher;
+  const colher =
+    fase !== undefined && i === 1 && kb < 0.05
+      ? (() => {
+          const a = fase * Math.PI * 2;
+          const fundo = pt(alt * 0.32, Math.cos(a) * r0 * 0.45);
+          const cabo = pt(alt + 9, Math.sin(a) * r1 * 0.55 + r1 * 0.2);
+          return (
+            <g>
+              <Traco d={linha([fundo, cabo])} w={2.2} cor="#2B2F45" op={0.9} />
+              <Traco d={linha([fundo, cabo])} w={1.2} cor="#E4E9F7" op={1} />
+            </g>
+          );
+        })()
+      : null;
   const brilho2 = linha([pt(alt * 0.2, r0 * 0.25), pt(alt * 0.5, r1 * 0.32)]);
   const boca = suave([pt(alt, -r1), pt(alt + 1.5, 0), pt(alt, r1), pt(alt - 1.5, 0)]);
   return {
@@ -134,10 +151,11 @@ function recipiente(c: Ctx, i: 0 | 1, tipo: 'copo' | 'coqueteleira'): Grupo {
           <path d={corpo} />
         </clipPath>
         <g clipPath={`url(#${id})`}>
-          <path d={agua} fill="#4DD0FF" opacity={0.8} />
+          <path d={agua} fill={tipo === 'suco' ? '#FF9F3D' : '#4DD0FF'} opacity={tipo === 'suco' ? 0.92 : 0.8} />
           <path d={`M${nivel[0] - R} ${nivel[1]} L${nivel[0] + R} ${nivel[1]}`} stroke="#E6FAFF" style={sw(1.1)} opacity={0.95} />
         </g>
         <path d={boca} fill="#E6FAFF" fillOpacity={0.35} stroke={contornoDe('#4DD0FF')} style={sw(LINHA.fino)} />
+        {colher}
         <Traco d={brilho} w={1.6} cor="#FFFFFF" op={0.8} />
         <Traco d={brilho2} w={1.0} cor="#FFFFFF" op={0.55} />
       </g>
@@ -147,6 +165,7 @@ function recipiente(c: Ctx, i: 0 | 1, tipo: 'copo' | 'coqueteleira'): Grupo {
 
 export const copo = (c: Ctx, i: 0 | 1): Grupo => recipiente(c, i, 'copo');
 export const coqueteleira = (c: Ctx, i: 0 | 1): Grupo => recipiente(c, i, 'coqueteleira');
+export const suco = (c: Ctx, i: 0 | 1): Grupo => recipiente(c, i, 'suco');
 
 /** garrafinha de treino na mão de trás (extra 'garrafa') */
 export function garrafa(c: Ctx, i: 0 | 1): Grupo {

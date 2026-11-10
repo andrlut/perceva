@@ -164,8 +164,9 @@
                   800,
                   1090
                 ],
-                "x": 900,
-                "y": 920
+                "x": 905,
+                "y": 900,
+                "max": 260
               }
             ],
             "lente": {
@@ -333,7 +334,7 @@
             "transicao": "corte",
             "camera": {
               "move": "pull",
-              "forca": "forte"
+              "forca": "leve"
             },
             "mood": "focado",
             "passos": [
@@ -354,8 +355,8 @@
                 "para": 540,
                 "ritmo": "rapido",
                 "cue": {
-                  "pt": "arrancadas curtas",
-                  "en": "short, explosive"
+                  "pt": "treinos",
+                  "en": "training"
                 }
               }
             ],
@@ -376,7 +377,7 @@
               },
               {
                 "seed": 5,
-                "x": 905,
+                "x": 860,
                 "acao": "levantar",
                 "ritmo": "lento",
                 "cue": {
@@ -399,10 +400,10 @@
                   "pt": "musculação",
                   "en": "bodybuilders"
                 },
-                "x": 900,
+                "x": 860,
                 "y": 1250,
                 "seta": [
-                  905,
+                  860,
                   1075
                 ],
                 "out": {
@@ -491,24 +492,21 @@
                         "en": "the timing"
                       }
                     }
-                  ]
+                  ],
+                  "rotulo": {
+                    "text": {
+                      "pt": "estoque cheio",
+                      "en": "full stores"
+                    },
+                    "cue": {
+                      "pt": "estoque cheio",
+                      "en": "full stores"
+                    }
+                  }
                 }
               }
             },
-            "rotulos": [
-              {
-                "text": {
-                  "pt": "estoque cheio",
-                  "en": "full stores"
-                },
-                "cue": {
-                  "pt": "estoque cheio",
-                  "en": "full stores"
-                },
-                "x": 700,
-                "y": 1175
-              }
-            ],
+            "rotulos": [],
             "roupa": "esporte"
           }
         },

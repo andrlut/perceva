@@ -111,6 +111,8 @@ export type Pose = {
   encurtaCanela?: [number, number];
   /** escorço do ANTEBRAÇO, 0,2..1 (de frente, o punho que aponta pra câmera fica colado no cotovelo) */
   encurtaAnte?: [number, number];
+  /** 0..1: a fase da colher girando no copo da mão da frente (só no `mexer`; sem = sem colher) */
+  colher?: number;
 };
 
 /** Saída do FK: onde fica cada junta (unidades, chão y = 0) e o ângulo absoluto de cada osso. */
@@ -169,6 +171,8 @@ export type Juntas = {
   marca: number;
   /** escorço de cada braço (ver Pose.encurta): 1 = comprimento inteiro */
   encurta: [number, number];
+  /** a fase da colher no copo (ver Pose.colher); undefined = sem colher */
+  colher?: number;
   bracoNaFrente: [boolean, boolean];
   /** altura de pé do boneco (unidades) — pra caixa do desenho */
   altura: number;
@@ -301,6 +305,7 @@ export function fk(prop: Proporcao, pose: Pose = {}): Juntas {
     aperto: pose.aperto ?? 0,
     marca: pose.marca ?? 0,
     encurta: enc,
+    colher: pose.colher,
     bracoNaFrente: pose.bracoNaFrente ?? [false, false],
     altura: alturaDe(prop),
   };
@@ -333,6 +338,7 @@ export function mistura(a: Pose, b: Pose, t: number): Pose {
     encurtaCoxa: [n(a.encurtaCoxa?.[0] ?? 1, b.encurtaCoxa?.[0] ?? 1), n(a.encurtaCoxa?.[1] ?? 1, b.encurtaCoxa?.[1] ?? 1)],
     encurtaCanela: [n(a.encurtaCanela?.[0] ?? 1, b.encurtaCanela?.[0] ?? 1), n(a.encurtaCanela?.[1] ?? 1, b.encurtaCanela?.[1] ?? 1)],
     encurtaAnte: [n(a.encurtaAnte?.[0] ?? 1, b.encurtaAnte?.[0] ?? 1), n(a.encurtaAnte?.[1] ?? 1, b.encurtaAnte?.[1] ?? 1)],
+    colher: k < 0.5 ? a.colher : b.colher,
     bracoNaFrente: k < 0.5 ? a.bracoNaFrente : b.bracoNaFrente,
   };
 }

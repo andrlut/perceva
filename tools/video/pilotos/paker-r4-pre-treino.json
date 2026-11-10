@@ -35,8 +35,8 @@
             ],
             "camera": {
               "move": "push",
-              "focus": "centro",
-              "forca": "leve"
+              "focus": "pessoa",
+              "forca": "forte"
             },
             "elenco": [
               {
@@ -309,12 +309,6 @@
                 "cue": {
                   "pt": "Misture",
                   "en": "Mix it"
-                },
-                "run": {
-                  "ate": {
-                    "pt": "e tome",
-                    "en": "drink it"
-                  }
                 }
               },
               {
@@ -466,8 +460,8 @@
                   "en": "alert"
                 },
                 "cue": {
-                  "pt": "ficar alerta",
-                  "en": "stay alert"
+                  "pt": "a cafeína já",
+                  "en": "the caffeine is already"
                 },
                 "seta": "cabeca"
               }

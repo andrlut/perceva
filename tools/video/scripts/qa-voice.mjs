@@ -123,9 +123,12 @@ for (const line of lines) {
     );
     if (ok) break;
     if (!fix || t === tries) { failed++; break; }
-    // regrava com a MESMA voz da gravação (--voice): sem isso o tts-gemini caía no padrão (Kore)
+    // regrava com a MESMA voz da gravação (--voice): sem isso o tts-gemini caía no padrão (Kore);
+    // --tts eleven regrava pela ElevenLabs (tts-eleven.mjs, mesmo contrato), com o mesmo --model
     const voiceArg = arg('voice');
-    execFileSync('node', [path.join(root, 'scripts/tts-gemini.mjs'), ...(dir ? ['--dir', dir, '--lang', lang] : name ? ['--script', name] : []), ...(voiceArg ? ['--voice', voiceArg] : []), '--only', line.id], { stdio: 'ignore' });
+    const modelArg = arg('model');
+    const ttsScript = arg('tts') === 'eleven' ? 'tts-eleven.mjs' : 'tts-gemini.mjs';
+    execFileSync('node', [path.join(root, 'scripts', ttsScript), ...(dir ? ['--dir', dir, '--lang', lang] : name ? ['--script', name] : []), ...(voiceArg ? ['--voice', voiceArg] : []), ...(modelArg ? ['--model', modelArg] : []), '--only', line.id], { stdio: 'ignore' });
   }
 }
 } catch (e) {

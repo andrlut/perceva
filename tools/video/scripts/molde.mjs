@@ -906,6 +906,12 @@ const node = (script, args) => execFileSync('node', [path.join(root, 'scripts', 
 
 function voice(ctx) {
   const only = arg('only');
+  // --tts eleven --voice <voice_id> [--model eleven_v3] [--sex male]: grava pela ElevenLabs (teste de
+  // vozes, 2026-11-09). O QA por transcrição e a medida das pausas são os mesmos; o --measure segue no
+  // tts-gemini (só mede o arquivo, não importa quem gravou).
+  const tts = arg('tts') === 'eleven' ? 'tts-eleven.mjs' : 'tts-gemini.mjs';
+  const extra = [...(arg('voice') ? ['--voice', arg('voice')] : []), ...(arg('model') ? ['--model', arg('model')] : [])];
+  const qaExtra = [...extra, ...(arg('tts') ? ['--tts', arg('tts')] : []), ...(arg('sex') ? ['--sex', arg('sex')] : [])];
   for (const id of ctx.ideaIds)
     for (const lang of LANGS) {
       const k = key(id, lang);
@@ -916,11 +922,11 @@ function voice(ctx) {
       if (spec.silent) die(`${k}: o build foi --silent — rode build sem --silent antes da voz`);
       const pending = pendingLines(pubDir(k), spec.lines);
       const changed = only ? only.split(',') : pending.map((l) => l.id);
-      if (changed.length) node('tts-gemini.mjs', ['--dir', dir, '--lang', lang, '--only', changed.join(',')]);
+      if (changed.length) node(tts, ['--dir', dir, '--lang', lang, ...extra, '--only', changed.join(',')]);
       else node('tts-gemini.mjs', ['--dir', dir, '--lang', lang, '--measure']);
       try {
         // QA de tudo que foi gravado agora (as falas antigas já passaram antes)
-        if (changed.length) node('qa-voice.mjs', ['--dir', dir, '--lang', lang, '--fix', '--only', changed.join(',')]);
+        if (changed.length) node('qa-voice.mjs', ['--dir', dir, '--lang', lang, '--fix', ...qaExtra, '--only', changed.join(',')]);
       } catch (e) {
         if (e.status === 2) die(`${k}: o QA da voz ficou sem resposta da API (nada foi reprovado) — rode voice de novo daqui a pouco`);
         die(`${k}: QA da voz reprovou depois das tentativas — reescreva a fala (homófono, palavra difícil) e rode de novo`);

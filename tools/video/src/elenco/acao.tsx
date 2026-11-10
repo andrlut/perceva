@@ -553,7 +553,8 @@ export function corridaDe(s: MS, acoes: AcaoSpec[] | undefined, frame: number): 
   const andaV5 = (a: AcaoPlano) => v5() && a.acao === 'andar' && a.para === undefined;
   if (!acoes?.some((a) => a.acao === 'correr' || andaV5(a))) return undefined;
   const corre = planoDe(s, acoes).filter((p) => p.a.acao === 'correr' || andaV5(p.a));
-  const vel = (p: Plano) => (p.a.acao === 'correr' ? 1 : 0.45);
+  // no tiro (v5, `rapido`) as raias passam mais rápido que no trote: é metade do que diz "arrancada"
+  const vel = (p: Plano) => (p.a.acao === 'correr' ? (v5() && p.a.ritmo === 'rapido' ? 1.35 : 1) : 0.45);
   const vAt = (f: number) => Math.min(1, corre.reduce((a, p) => a + pesoDe(p, f) * vel(p), 0));
   const ini = Math.min(...corre.map((p) => p.ini));
   let d = 0;

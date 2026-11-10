@@ -23,7 +23,7 @@ export type DesenhoProps = {
    * o que a mão `segura` carrega (o estilo desenha a peça). Régua do revisor (rodada 6): peça na mão
    * com ≥ 120 px no quadro de 1080 — halter com anilhas de verdade, coqueteleira com tampa e bico
    */
-  segura?: 'halter' | 'copo' | 'coqueteleira';
+  segura?: 'halter' | 'copo' | 'coqueteleira' | 'suco';
   /** a mão de TRÁS segura a mesma peça (os dois halteres da série de força) */
   seguraDuas?: boolean;
   /**

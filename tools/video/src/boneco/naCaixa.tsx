@@ -79,7 +79,7 @@ export const quemV5 = (seed: number | undefined, figurante?: boolean): Pessoa =>
 };
 
 /** A pose v5 do quadro: o repouso dos braços da cena + as ações do Ator (pesadas e misturadas). */
-export const poseV5 = (pessoa: Pessoa, props: { t: number; pose?: unknown; arms?: Arms; still?: boolean; segura?: string; seguraDuas?: boolean }): Pose => {
+export const poseV5 = (pessoa: Pessoa, props: { t: number; pose?: unknown; arms?: Arms; still?: boolean; segura?: string; seguraDuas?: boolean; mood?: string }): Pose => {
   const at = v5();
   if (!at) throw new Error('poseV5 sem o v5 ligado');
   const prop = at.estilo.propDe(pessoa);
@@ -100,7 +100,10 @@ export const poseV5 = (pessoa: Pessoa, props: { t: number; pose?: unknown; arms?
     const ritmo = it.ritmo === 'lento' ? 'lento' : it.ritmo === 'rapido' ? 'rapido' : 'normal';
     return { p: poseDe(acao, f, prop, { vista, ritmo, duas: acao === 'rosca' && !!props.seguraDuas }), w: it.w };
   });
-  const p = media([{ p: base, w: 1 - W }, ...ps]);
+  const p0 = media([{ p: base, w: 1 - W }, ...ps]);
+  // cansado de 3/4: o corpo conta antes do rosto (revisor do pré-treino: "a disposição não veio"
+  // só lia no olho meio fechado) — tronco cai pra frente e a cabeça pende
+  const p = props.mood === 'cansado' && vista !== 'frente' ? { ...p0, tronco: (p0.tronco ?? 0) + 6, cabeca: (p0.cabeca ?? 0) + 10 } : p0;
   return props.segura ? { ...p, mao: [p.mao?.[0] ?? 'solta', 'segura'] } : p;
 };
 
@@ -179,7 +182,15 @@ export function pontoV5(r: string, pose: unknown, arms?: Arms): [number, number]
   const c = j.cabeca;
   const pt: Record<string, [number, number]> = {
     cabeca: [c[0], c[1] - prop.cabeca * 0.27],
-    rosto: j.bochecha,
+    // a âncora da LENTE no rosto: na maçã de baixo do lado de fora (o lado da lente, à direita da tela),
+    // abaixo da linha do olho — em j.bochecha (a do dedo) o anel ficava colado no olho e o cone o
+    // tingia de violeta; de 3/4 a bochecha do dedo é a de longe e o cone atravessava o rosto inteiro
+    rosto: (() => {
+      const a = (j.ang.cabeca * Math.PI) / 180;
+      const lx = (j.vista === 'frente' ? 0.34 : 0.28) * prop.cabecaLarg;
+      const ly = (j.vista === 'frente' ? 0.3 : 0.22) * prop.cabeca;
+      return [c[0] + lx * Math.cos(a) - ly * Math.sin(a), c[1] + lx * Math.sin(a) + ly * Math.cos(a)] as [number, number];
+    })(),
     boca: [c[0], c[1] + prop.cabeca * 0.27],
     peito: lerp(j.peito, j.pelvis, 0.22),
     tronco: lerp(j.peito, j.pelvis, 0.42),
@@ -209,7 +220,7 @@ export const PessoaV5: React.FC<PessoaProps & { segura?: string; seguraDuas?: bo
   const { size = 260, mood = 'ok', seed, t = 0, segura, seguraDuas, vidro, figurante } = props;
   const pessoa = quemV5(seed, figurante);
   const prop = at.estilo.propDe(pessoa);
-  const pose = poseV5(pessoa, { t, pose: props.pose, arms: props.arms, still: props.still, segura, seguraDuas });
+  const pose = poseV5(pessoa, { t, pose: props.pose, arms: props.arms, still: props.still, segura, seguraDuas, mood });
   const j = fk(prop, pose);
   // o enquadramento: o da pose (Ator) ou o da cena; figurante é sempre de corpo inteiro
   const prot = !figurante && pessoa.id === at.protagonista.id;

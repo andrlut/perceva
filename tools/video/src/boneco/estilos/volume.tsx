@@ -31,7 +31,7 @@ const LUZ = '#FFD98A';
 
 const Desenho: React.FC<DesenhoProps> = ({ j, pessoa, roupa, humor, t, uid, luz, segura: seguraIn, toque }) => {
   // estilo fora do molde (o André escolheu o 'serie'): coqueteleira vira copo aqui
-  const segura = seguraIn === 'coqueteleira' ? 'copo' : seguraIn;
+  const segura = seguraIn === 'coqueteleira' || seguraIn === 'suco' ? 'copo' : seguraIn;
   const prop = propDaPessoa(PROP, pessoa);
   const med = medidas(pessoa, prop);
   const k = new Kit(uid, luz ?? LUZ, j.espelho);

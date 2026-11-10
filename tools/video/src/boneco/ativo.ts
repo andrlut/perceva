@@ -63,11 +63,12 @@ export const vistaDaCena = (acoes: string[], opts: { trajeto?: boolean } = {}): 
 };
 
 /** Peças do molde que a mão do v5 segura desenhando ela mesma (o estilo põe os dedos por cima). */
-export const SEGURA_V5: Record<string, 'halter' | 'copo' | 'coqueteleira'> = {
+export const SEGURA_V5: Record<string, 'halter' | 'copo' | 'coqueteleira' | 'suco'> = {
   peso: 'halter',
   copo: 'copo',
   'copo-agua': 'copo',
-  'copo-suco': 'copo',
+  // o copo de suco tem suco (laranja): copo d'água no lugar dele, o "ou no suco" não aparecia
+  'copo-suco': 'suco',
   coqueteleira: 'coqueteleira',
   caneca: 'copo',
 };

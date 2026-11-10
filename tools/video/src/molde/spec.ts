@@ -111,6 +111,8 @@ export type RotuloSpec = {
   /** seta até uma região do corpo ou um ponto da tela */
   seta?: Regiao | [number, number];
   tom?: 'claro' | 'ouro' | 'area';
+  /** largura máxima de uma linha (px; default 620): menor quebra em duas linhas ("esforços / curtos") */
+  max?: number;
 };
 
 /** Fluxo de partículas da origem até uma região (cena dentro, plano corpo). */

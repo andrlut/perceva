@@ -646,16 +646,43 @@ const suave = (ps: Pt[]) => {
   }
   return d;
 };
-/** O fuso do músculo entre a e b, com barriga de `w` (o mesmo desenho de `fuso`, em qualquer direção). */
-const fusoAB = (a: Pt, b: Pt, w: number) => {
+/**
+ * O ventre do músculo no corpo v5: ponta ARREDONDADA (a largura não chega a zero) e barriga cheia —
+ * o fuso de ponta fina, aceso em laranja com o miolo claro, lia "chama" ao lado de "energia" (revisor
+ * da creatina r4). As fibras (2 traços finos ao longo do eixo) dizem "músculo".
+ */
+const ventreAB = (a: Pt, b: Pt, w: number) => {
   const dx = b[0] - a[0];
   const dy = b[1] - a[1];
   const n = Math.hypot(dx, dy) || 1e-6;
-  const nx = (dy / n) * 2 * w;
-  const ny = (-dx / n) * 2 * w;
-  const mx = (a[0] + b[0]) / 2;
-  const my = (a[1] + b[1]) / 2;
-  return `M${f2(a)} Q${f2([mx + nx, my + ny])} ${f2(b)} Q${f2([mx - nx, my - ny])} ${f2(a)}Z`;
+  const ux = dx / n;
+  const uy = dy / n;
+  const N = 14;
+  const lado = (sgn: 1 | -1) =>
+    Array.from({ length: N + 1 }, (_, i) => {
+      const s = i / N;
+      const meia = w * 1.15 * (0.42 + 0.58 * Math.sin(Math.PI * s) ** 0.7);
+      return [a[0] + dx * s - uy * meia * sgn, a[1] + dy * s + ux * meia * sgn] as Pt;
+    });
+  const cima = lado(1);
+  const baixo = lado(-1).reverse();
+  // as pontas fecham em arco (meio círculo da largura que sobrou)
+  const capB = `A${(w * 1.15 * 0.42).toFixed(2)} ${(w * 1.15 * 0.42).toFixed(2)} 0 0 1 ${f2(baixo[0])}`;
+  const capA = `A${(w * 1.15 * 0.42).toFixed(2)} ${(w * 1.15 * 0.42).toFixed(2)} 0 0 1 ${f2(cima[0])}`;
+  return `M${f2(cima[0])} ${cima.slice(1).map((q) => `L${f2(q)}`).join(' ')} ${capB} ${baixo.slice(1).map((q) => `L${f2(q)}`).join(' ')} ${capA}Z`;
+};
+const fibrasAB = (a: Pt, b: Pt, w: number) => {
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  const n = Math.hypot(dx, dy) || 1e-6;
+  const px = -dy / n;
+  const py = dx / n;
+  return [-0.38, 0.38].map((o) => {
+    const p0: Pt = [a[0] + dx * 0.18 + px * w * o * 0.6, a[1] + dy * 0.18 + py * w * o * 0.6];
+    const p1: Pt = [a[0] + dx * 0.82 + px * w * o * 0.6, a[1] + dy * 0.82 + py * w * o * 0.6];
+    const m: Pt = [(a[0] + b[0]) / 2 + px * w * o * 1.1, (a[1] + b[1]) / 2 + py * w * o * 1.1];
+    return `M${f2(p0)} Q${f2(m)} ${f2(p1)}`;
+  });
 };
 /** Os desenhos antigos dos órgãos e o centro de cada um (é por ele que eles vão pro corpo novo). */
 const O_CORACAO: Pt = [112, 175.5];
@@ -681,7 +708,12 @@ const Orgaos5: React.FC<{ r: Regiao; m: Mapa5; cor: string; k: number }> = ({ r,
       {m.musc
         .filter((f) => (f.perna ? legs : arms))
         .map((f, i) => (
-          <path key={i} d={fusoAB(f.a, f.b, f.w)} />
+          <React.Fragment key={i}>
+            <path d={ventreAB(f.a, f.b, f.w)} />
+            {fibrasAB(f.a, f.b, f.w).map((d, k2) => (
+              <path key={k2} d={d} fill="none" stroke="#3A1606" strokeOpacity={0.32} strokeWidth={2.2 / k} strokeLinecap="round" />
+            ))}
+          </React.Fragment>
         ))}
     </g>
   );
@@ -1261,7 +1293,7 @@ const RotulosCorpo: React.FC<{
         if (r.x !== undefined || r.y !== undefined) {
           const x = r.x ?? 540;
           const y = r.y ?? 480;
-          v = { x, y, align: 'center', max: 620, rect: rotuloRect(r.text, x, y) };
+          v = { x, y, align: 'center', max: r.max ?? 620, rect: rotuloRect(r.text, x, y) };
         } else v = (alvo ? vagaDoLado(r.text, alvo, bz) : null) ?? achaVaga(r.text, bz, { alvo });
         placed.push({ rect: v.rect, win });
         return <Rotulo key={i} s={s} text={r.text} cue={r.cue} out={r.out} x={v.x} y={v.y} align={v.align} max={v.max} tom={r.tom} seta={seta} accent={accent} />;

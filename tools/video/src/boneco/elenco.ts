@@ -119,7 +119,8 @@ const GUARDA: Record<string, Record<Contexto, Roupa>> = {
   },
   caio: {
     esporte: { contexto: 'esporte', cima: { tipo: 'camiseta', cor: COR.corpo, cor2: COR.marinho }, baixo: { tipo: 'short', cor: COR.marinho, cor2: COR.corpo }, calcado: { tipo: 'tenis', cor: COR.corpo, sola: COR.branco }, extras: ['fone'] },
-    casa: { contexto: 'casa', cima: { tipo: 'regata', cor: COR.cinza }, baixo: { tipo: 'short', cor: COR.grafite }, calcado: { tipo: 'chinelo', cor: COR.corpo } },
+    // camiseta (não regata): no busto, a regata de decote fundo com a dobra na diagonal lia camisola
+    casa: { contexto: 'casa', cima: { tipo: 'camiseta', cor: COR.cinza }, baixo: { tipo: 'short', cor: COR.grafite }, calcado: { tipo: 'chinelo', cor: COR.corpo } },
     trabalho: { contexto: 'trabalho', cima: { tipo: 'camisa', cor: COR.branco, cor2: COR.corpo }, baixo: { tipo: 'calca', cor: COR.grafite }, calcado: { tipo: 'sapato', cor: '#5A3A2A' } },
     rua: { contexto: 'rua', cima: { tipo: 'moletom', cor: COR.corpo }, baixo: { tipo: 'jeans', cor: COR.jeans }, calcado: { tipo: 'tenis', cor: COR.branco, sola: COR.corpo }, extras: ['bone'] },
     dormir: { contexto: 'dormir', cima: { tipo: 'camiseta', cor: COR.grafite }, baixo: { tipo: 'short', cor: COR.cinza }, calcado: { tipo: 'meia', cor: COR.cinza } },

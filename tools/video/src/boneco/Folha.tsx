@@ -247,7 +247,8 @@ export const BonecoFrente: React.FC<FolhaProps> = ({ estilo: id }) => {
     [bia, 'correr', [0, 2, 4, 6, 8, 10, 12, 14], { vista: 'frente', ritmo: 'rapido' }],
     [caio, 'correr', [0, 2.5, 5, 7.5, 10, 12.5, 15, 17.5], { vista: 'frente' }],
     [bia, 'saltar', [2, 8, 12, 16, 22, 28, 34, 40], { vista: 'frente' }],
-    [caio, 'pronta', [0], { vista: 'frente' }],
+    [caio, 'pronta', [0, 3, 6], { vista: 'frente' }],
+    [caio, 'correr', [0, 2, 4, 6, 8, 10, 12, 14], { vista: 'frente', ritmo: 'rapido' }],
   ];
   return (
     <AbsoluteFill style={{ background: FUNDO }}>

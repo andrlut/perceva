@@ -21,7 +21,7 @@ export type Ctx = {
   pele: string;
   peleSombra: string;
   seed: number;
-  segura?: 'halter' | 'copo' | 'coqueteleira';
+  segura?: 'halter' | 'copo' | 'coqueteleira' | 'suco';
   /** a mão de TRÁS também segura (halter: um em cada mão; copo/coqueteleira: as duas na mesma peça) */
   seguraDuas?: boolean;
   toque?: { ponto: [number, number]; forca: number; marca?: number };

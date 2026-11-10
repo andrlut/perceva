@@ -179,13 +179,19 @@
                   "en": "as you age"
                 },
                 "cue": {
-                  "pt": "com a idade",
-                  "en": "as you age"
+                  "pt": "menos dele",
+                  "en": "less of it"
                 },
-                "seta": "cabeca"
+                "seta": [
+                  330,
+                  930
+                ],
+                "x": 700,
+                "y": 1250
               }
             ]
-          }
+          },
+          "hold": 0.5
         },
         {
           "id": "peptides",
@@ -217,7 +223,7 @@
               }
             ],
             "lente": {
-              "sobre": "barriga",
+              "sobre": "tronco",
               "conteudo": {
                 "camadas": [
                   {
@@ -377,7 +383,7 @@
         {
           "id": "habit2",
           "scene": "cena",
-          "hold": 0.5,
+          "hold": 0.8,
           "pt": {
             "caption": "O segredo é virar hábito: *mesmo horário todo dia*, na água ou no suco."
           },
@@ -414,8 +420,8 @@
               {
                 "acao": "beber",
                 "cue": {
-                  "pt": "no suco",
-                  "en": "juice"
+                  "pt": "ou no",
+                  "en": "or"
                 },
                 "peca": "copo-suco"
               }
