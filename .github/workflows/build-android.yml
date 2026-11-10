@@ -18,6 +18,9 @@ on:
         options:
           - preview
           - production
+          # "Perceva Dev" (perceva.app.dev) — dev client that installs next
+          # to the Play Store app; see app/app.config.ts.
+          - development
   push:
     branches: [main]
     paths:
@@ -40,10 +43,14 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
+      # 22, not 20: `eas-version: latest` pulls an eas-cli whose deps declare
+      # engines.node >= 22 (same failure promote-production.yml hit). On 20
+      # the eas-cli install aborts and no build is ever queued — this
+      # workflow failed that way from 2026-08 until this bump.
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
 
       - name: Setup EAS CLI
