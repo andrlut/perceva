@@ -98,9 +98,15 @@ const plain = (s) => s.replace(/\*/g, '');
 const texto = (l) => plain(l.say ?? l.caption);
 
 // v3 aceita estabilidade 0 (criativa), 0,5 (natural) ou 1 (robusta); os outros modelos, contínua
-const settings = MODEL === 'eleven_v3'
-  ? { stability: Number(arg('stability', '0.5')), similarity_boost: 0.75, use_speaker_boost: true }
-  : { stability: Number(arg('stability', '0.45')), similarity_boost: 0.8, style: Number(arg('style', '0.35')), use_speaker_boost: true };
+// 2026-11-11 (pesquisa, o PT soava "fala e para" e com sotaque): a documentação manda o exagero de
+// ESTILO em 0 sempre (0,35 aqui deixava a entonação estranha e o sotaque escorregar); a comunidade usa
+// stability 0,7–0,8 pra segurar o sotaque no multilingual_v2; speed 0,9–1,0. O v4 (e o v3) recebem o
+// language_code e a estabilidade vem em degraus (0 criativa, 0,5 natural, 1 robusta).
+const V3 = MODEL === 'eleven_v3' || MODEL.startsWith('eleven_v4');
+const speed = arg('speed') ? { speed: Number(arg('speed')) } : {};
+const settings = V3
+  ? { stability: Number(arg('stability', '0.5')), similarity_boost: 0.75, use_speaker_boost: true, ...speed }
+  : { stability: Number(arg('stability', '0.75')), similarity_boost: 0.8, style: Number(arg('style', '0')), use_speaker_boost: true, ...speed };
 
 async function synth(i) {
   const l = lines[i];
@@ -110,7 +116,7 @@ async function synth(i) {
     voice_settings: settings,
     ...(MODEL === 'eleven_multilingual_v2' ? {} : { language_code: LANG === 'en' ? 'en' : 'pt' }),
     // emenda de prosódia com as falas vizinhas (sem cobrar por elas); o v3 não aceita
-    ...(MODEL === 'eleven_v3' ? {} : { previous_text: i > 0 ? texto(lines[i - 1]) : undefined, next_text: i < lines.length - 1 ? texto(lines[i + 1]) : undefined }),
+    ...(V3 ? {} : { previous_text: i > 0 ? texto(lines[i - 1]) : undefined, next_text: i < lines.length - 1 ? texto(lines[i + 1]) : undefined }),
   };
   for (let t = 1; t <= 5; t++) {
     const r = await fetch(`${API}/v1/text-to-speech/${VOICE}?output_format=mp3_44100_128`, { method: 'POST', headers: { ...H, accept: 'audio/mpeg' }, body: JSON.stringify(body) });
@@ -145,7 +151,21 @@ let gastos = 0;
 // --inteiro (2026-11-10): o roteiro INTEIRO numa tomada só e cortado em falas pelo tempo de cada letra
 // (/with-timestamps). Fala por fala a entonação recomeça a cada corte — o "fala e para" que o André
 // ouviu no PT. Grava todas as falas (ignora --only); o QA com --fix regrava só a que falhar, sozinha.
-if (process.argv.includes('--inteiro') && !measureOnly) {
+// --recortar: corta de novo a tomada única salva (_inteiro.mp3 + _inteiro.json), sem pagar outra
+if (process.argv.includes('--recortar')) {
+  const { faixa, dur } = JSON.parse(fs.readFileSync(path.join(voDir, '_inteiro.json'), 'utf8'));
+  const inteiro = path.join(voDir, '_inteiro.mp3');
+  for (let i = 0; i < lines.length; i++) {
+    const de = i === 0 ? 0 : (faixa[i - 1].fim + faixa[i].ini) / 2;
+    const ate = i === lines.length - 1 ? dur : (faixa[i].fim + faixa[i + 1].ini) / 2;
+    const raw = path.join(voDir, `${lines[i].id}.raw.wav`);
+    execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', inteiro, '-ss', de.toFixed(3), '-to', ate.toFixed(3), raw]);
+    master(raw, path.join(voDir, `${lines[i].id}.mp3`));
+  }
+  only.length = 0;
+  only.push('__nenhuma__');
+  console.log(`recortada a tomada única salva (${dur.toFixed(1)} s)`);
+} else if (process.argv.includes('--inteiro') && !measureOnly) {
   const partes = lines.map(texto);
   const full = partes.join(' ');
   const body = { text: full, model_id: MODEL, voice_settings: settings, ...(MODEL === 'eleven_multilingual_v2' ? {} : { language_code: LANG === 'en' ? 'en' : 'pt' }) };
