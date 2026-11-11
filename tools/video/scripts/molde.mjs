@@ -911,14 +911,42 @@ const measurePauses = (k) => measurePausesIn(pubDir(k));
 // ------------------------------------------------------------------ voice
 const node = (script, args) => execFileSync('node', [path.join(root, 'scripts', script), ...args], { stdio: 'inherit', cwd: root });
 
+/**
+ * Quem narra a chave. Em ordem:
+ *  1. --voz <chave> do elenco (vozes.json, escolha do André em 2026-11-11): ElevenLabs no eleven_v4, o
+ *     roteiro numa tomada só; voz vetada ou de outro idioma para aqui;
+ *  2. os flags crus --tts eleven --voice <id> [--model] [--sex] [--inteiro] (testes de voz);
+ *  3. a voz que JÁ gravou a chave (voz.json): regravar uma fala sem dizer a voz nunca troca de narrador
+ *     no meio do vídeo — em 10/11 um `voice` sem --tts regravou as falas pendentes com a Kore por cima
+ *     da ElevenLabs;
+ *  4. a Kore (Gemini), a de sempre.
+ */
+const ELENCO = readJson(path.join(root, 'vozes.json'));
+function vozDaChave(k, lang) {
+  const nome = arg('voz');
+  if (nome) {
+    if (ELENCO.vetadas[nome]) die(`--voz ${nome}: vetada (${ELENCO.vetadas[nome]})`);
+    const v = ELENCO.vozes[nome];
+    if (!v) die(`--voz ${nome}: não está em vozes.json (${Object.keys(ELENCO.vozes).join(', ')})`);
+    if (!v.lang.split(',').includes(lang)) die(`--voz ${nome}: é voz de ${v.lang}, não de ${lang} — rode com --lang ${v.lang.split(',')[0]}`);
+    return v.provedor === 'elevenlabs'
+      ? { tts: 'eleven', voice: v.id, model: v.modelo, sex: v.sexo, inteiro: true }
+      : { tts: 'gemini', voice: v.id, sex: v.sexo };
+  }
+  if (arg('tts') || arg('voice'))
+    return { tts: arg('tts') === 'eleven' ? 'eleven' : 'gemini', voice: arg('voice'), model: arg('model'), sex: arg('sex'), inteiro: argv.includes('--inteiro') };
+  const gravada = path.join(pubDir(k), 'voz.json');
+  if (fs.existsSync(gravada)) {
+    const g = readJson(gravada);
+    const sexo = Object.values(ELENCO.vozes).find((v) => v.id === g.voice_id)?.sexo ?? 'any';
+    if (g.provedor === 'elevenlabs') return { tts: 'eleven', voice: g.voice_id, model: g.model, sex: sexo };
+    if (g.voice_id) return { tts: 'gemini', voice: g.voice_id, sex: sexo };
+  }
+  return { tts: 'gemini' };
+}
+
 function voice(ctx) {
   const only = arg('only');
-  // --tts eleven --voice <voice_id> [--model eleven_v3] [--sex male]: grava pela ElevenLabs (teste de
-  // vozes, 2026-11-09). O QA por transcrição e a medida das pausas são os mesmos; o --measure segue no
-  // tts-gemini (só mede o arquivo, não importa quem gravou).
-  const tts = arg('tts') === 'eleven' ? 'tts-eleven.mjs' : 'tts-gemini.mjs';
-  const extra = [...(arg('voice') ? ['--voice', arg('voice')] : []), ...(arg('model') ? ['--model', arg('model')] : [])];
-  const qaExtra = [...extra, ...(arg('tts') ? ['--tts', arg('tts')] : []), ...(arg('sex') ? ['--sex', arg('sex')] : [])];
   for (const id of ctx.ideaIds)
     for (const lang of LANGS) {
       const k = key(id, lang);
@@ -927,10 +955,20 @@ function voice(ctx) {
       if (!fs.existsSync(specFile)) die(`${k}: rode build antes`);
       const spec = readJson(specFile);
       if (spec.silent) die(`${k}: o build foi --silent — rode build sem --silent antes da voz`);
+      // O QA por transcrição e a medida das pausas são os mesmos pra qualquer voz; o --measure segue no
+      // tts-gemini (só mede o arquivo, não importa quem gravou).
+      const v = vozDaChave(k, lang);
+      const tts = v.tts === 'eleven' ? 'tts-eleven.mjs' : 'tts-gemini.mjs';
+      const extra = [...(v.voice ? ['--voice', v.voice] : []), ...(v.model ? ['--model', v.model] : [])];
+      const qaExtra = [...extra, '--tts', v.tts, ...(v.sex ? ['--sex', v.sex] : [])];
       const pending = pendingLines(pubDir(k), spec.lines);
       const changed = only ? only.split(',') : pending.map((l) => l.id);
-      if (changed.length) node(tts, ['--dir', dir, '--lang', lang, ...extra, ...(argv.includes('--inteiro') ? ['--inteiro'] : []), '--only', changed.join(',')]);
-      else node('tts-gemini.mjs', ['--dir', dir, '--lang', lang, '--measure']);
+      if (changed.length) {
+        node(tts, ['--dir', dir, '--lang', lang, ...extra, ...(v.inteiro ? ['--inteiro'] : []), '--only', changed.join(',')]);
+        // o tts-eleven anota a voz; a do Gemini anota aqui (senão um voz.json velho da ElevenLabs mandaria na próxima regravação)
+        if (v.tts === 'gemini') fs.writeFileSync(path.join(pubDir(k), 'voz.json'), JSON.stringify({ provedor: 'gemini', voice_id: v.voice ?? 'Kore' }, null, 2));
+        console.log(`  voz de ${k}: ${Object.values(ELENCO.vozes).find((x) => x.id === (v.voice ?? 'Kore'))?.nome ?? v.voice}${v.inteiro ? ' (tomada única)' : ''}`);
+      } else node('tts-gemini.mjs', ['--dir', dir, '--lang', lang, '--measure']);
       try {
         // QA de tudo que foi gravado agora (as falas antigas já passaram antes)
         if (changed.length) node('qa-voice.mjs', ['--dir', dir, '--lang', lang, '--fix', ...qaExtra, '--only', changed.join(',')]);

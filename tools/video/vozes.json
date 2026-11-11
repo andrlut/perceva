@@ -1,0 +1,79 @@
+{
+  "_doc": "Elenco de vozes do molde (`molde.mjs voice --voz <chave>`). Escolha do André em 2026-11-11, depois de ouvir o mesmo trecho em 8 vozes brasileiras no eleven_v4 e a creatina inteira com Dani e Will. ElevenLabs grava o roteiro inteiro numa tomada só (inteiro), modelo eleven_v4 com language_code pt, sem exagero de estilo — o que fez o PT parar de 'falar e parar'. Alterne a voz entre vídeos seguidos; o uso diz onde cada uma cabe.",
+  "vozes": {
+    "lendario": {
+      "nome": "Lendário",
+      "provedor": "elevenlabs",
+      "id": "4za2kOXGgUd57HRSQ1fn",
+      "modelo": "eleven_v4",
+      "sexo": "male",
+      "lang": "pt",
+      "uso": "geral",
+      "nota": "a preferida ('o melhor, acho'); animada, de rede social"
+    },
+    "dani": {
+      "nome": "Dani",
+      "provedor": "elevenlabs",
+      "id": "PznTnBc8X6pvixs9UkQm",
+      "modelo": "eleven_v4",
+      "sexo": "female",
+      "lang": "pt",
+      "uso": "geral",
+      "nota": "aprovada na creatina inteira ('ficou ótimo'); calma e clara"
+    },
+    "will": {
+      "nome": "Will",
+      "provedor": "elevenlabs",
+      "id": "NNbmtunmMPGBeyrKu6KD",
+      "modelo": "eleven_v4",
+      "sexo": "male",
+      "lang": "pt",
+      "uso": "geral",
+      "nota": "aprovado na creatina inteira ('ficou ótimo também'); jovem e dinâmico"
+    },
+    "roberta": {
+      "nome": "Roberta",
+      "provedor": "elevenlabs",
+      "id": "RGymW84CSmfVugnA5tvA",
+      "modelo": "eleven_v4",
+      "sexo": "female",
+      "lang": "pt",
+      "uso": "geral",
+      "nota": "'alternativa pra várias'; jovem e casual"
+    },
+    "juliano": {
+      "nome": "Juliano",
+      "provedor": "elevenlabs",
+      "id": "wHnxjlY53t8X9Oi14Awz",
+      "modelo": "eleven_v4",
+      "sexo": "male",
+      "lang": "pt",
+      "uso": "relacoes",
+      "nota": "passa menos credibilidade: vínculos, relações, convivência — nunca tema científico (suplemento, corpo, estudo)"
+    },
+    "kore": {
+      "nome": "Kore",
+      "provedor": "gemini",
+      "id": "Kore",
+      "sexo": "female",
+      "lang": "pt,en",
+      "uso": "geral",
+      "nota": "a voz de sempre: boa, mas cansa por ser sempre a mesma — fica como reserva e pro inglês"
+    },
+    "liam": {
+      "nome": "Liam",
+      "provedor": "elevenlabs",
+      "id": "TX3LPaxmHKxFdv7VOQHJ",
+      "modelo": "eleven_v4",
+      "sexo": "male",
+      "lang": "en",
+      "uso": "geral",
+      "nota": "inglês natural de primeira (teste de 10/11)"
+    }
+  },
+  "vetadas": {
+    "paulo": "sotaque estranho",
+    "amandoca": "tem um tratamento que imita alguém falando de verdade",
+    "fernanda": "quase igual à Kore — não diversifica"
+  }
+}
