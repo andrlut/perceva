@@ -1,0 +1,677 @@
+<title>Publisher do Recanto</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Manrope:wght@400;600;700;800&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: a linha de montagem — o ciclo executivo em cima (faixas por fase), o exemplo da creatina no meio, a régua e o texto longo no fim. */
+:root {
+  --bg: #0A0E26;
+  --panel: #141A3D;
+  --panel2: #1B2150;
+  --line: #2A3266;
+  --fg: #EEF0FF;
+  --muted: #A3A9D6;
+  --faint: #6F76A8;
+  --violet: #8D73FF;
+  --gold: #F5B83D;
+  --ok: #5FD3A2;
+  --alert: #FF8A6B;
+  /* uma cor por fase */
+  --f-pauta: #8D73FF;
+  --f-texto: #6FA8FF;
+  --f-imagem: #4FD1C5;
+  --f-video: #F5B83D;
+  --f-pub: #7BD88F;
+  --display: "Fraunces", Georgia, "Times New Roman", serif;
+  --body: "Manrope", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 40px 80px; display: grid; gap: 64px; }
+a { color: var(--violet); }
+h1 { font-family: var(--display); font-weight: 650; font-size: clamp(36px, 6vw, 56px); line-height: 1.02; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 650; font-size: clamp(26px, 4vw, 34px); line-height: 1.1; margin: 0; text-wrap: balance; }
+h3 { font-size: 16px; font-weight: 800; margin: 0; }
+p { margin: 0; }
+.eyebrow { font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+.lede { color: var(--muted); font-size: 17px; max-width: 62ch; }
+.sec { display: grid; gap: 20px; }
+.sec-head { display: grid; gap: 8px; }
+.sec-head p { color: var(--muted); max-width: 64ch; }
+.mono { font-family: var(--mono); font-size: 12.5px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+.chip b { color: var(--fg); font-weight: 700; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.nav { display: flex; flex-wrap: wrap; gap: 8px; }
+.nav a { text-decoration: none; color: var(--fg); border: 1px solid var(--line); background: var(--panel); padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+.nav a:hover, .nav a:focus-visible { border-color: var(--violet); outline: none; }
+
+/* topo */
+.hero { display: grid; gap: 16px; }
+.status { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.stat { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: grid; gap: 2px; }
+.stat .k { font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); font-weight: 700; }
+.stat .v { font-weight: 700; }
+.alert { border: 1px solid color-mix(in srgb, var(--alert) 55%, transparent); background: color-mix(in srgb, var(--alert) 10%, var(--panel)); border-radius: 14px; padding: 14px 16px; display: grid; gap: 4px; }
+.alert .t { color: var(--alert); font-weight: 800; }
+.alert p { color: var(--fg); }
+
+/* o ciclo */
+.fase { display: grid; grid-template-columns: 132px 1fr; gap: 14px; align-items: start; }
+.fase-nome { position: sticky; top: env(safe-area-inset-top, 0px); padding-top: 14px; display: grid; gap: 4px; }
+.fase-nome span { font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--c); }
+.fase-nome small { color: var(--faint); font-size: 12.5px; }
+.passos { display: grid; gap: 10px; border-left: 2px solid var(--c); padding-left: 14px; }
+.passo { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: grid; grid-template-columns: 34px 1fr; gap: 10px 12px; }
+.passo .n { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; color: var(--bg); background: var(--c); font-size: 14px; font-variant-numeric: tabular-nums; }
+.passo .corpo { display: grid; gap: 6px; min-width: 0; }
+.passo p { color: var(--muted); }
+.flow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.flow .ag { border-color: color-mix(in srgb, var(--c) 60%, transparent); color: var(--fg); }
+.flow .seta { color: var(--faint); font-size: 13px; }
+.flow .sai { background: color-mix(in srgb, var(--c) 16%, transparent); border-color: transparent; color: var(--fg); }
+.cycle-foot { display: flex; flex-wrap: wrap; gap: 8px; color: var(--muted); font-size: 13.5px; }
+
+/* agentes */
+.grid3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.card .top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.card .mono { color: var(--fg); }
+.card p { color: var(--muted); font-size: 14px; }
+.model { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 2px 8px; border-radius: 6px; background: var(--panel2); color: var(--muted); }
+.card.pai { border-color: var(--violet); }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--c); display: inline-block; }
+
+/* ferramentas */
+.tools { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.tool { border: 1px dashed var(--line); border-radius: 12px; padding: 12px; display: grid; gap: 4px; }
+.tool h3 { font-size: 14.5px; }
+.tool p { color: var(--muted); font-size: 13.5px; }
+
+/* exemplo creatina */
+.ex-top { display: grid; grid-template-columns: minmax(0, 300px) 1fr; gap: 20px; align-items: start; }
+.ideacard { background: linear-gradient(180deg, #1C2254, #12163A); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; display: grid; max-width: 300px; }
+.ideacard img { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
+.ideacard .txt { padding: 14px 16px 16px; display: grid; gap: 8px; }
+.ideacard .kick { font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+.ideacard .ti { font-family: var(--display); font-size: 20px; line-height: 1.15; font-weight: 650; }
+.ideacard .verso { font-size: 13.5px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px; }
+.ideacard .verso b { color: var(--gold); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; display: block; margin-bottom: 2px; }
+.body-quote { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; font-size: 14.5px; color: var(--muted); line-height: 1.65; }
+.body-quote .k { color: var(--fg); background: color-mix(in srgb, var(--ok) 22%, transparent); border-radius: 4px; padding: 0 3px; }
+.body-quote .x { color: var(--faint); text-decoration: line-through; text-decoration-color: var(--alert); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--muted); }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 6px; }
+
+.tabwrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; }
+table { border-collapse: collapse; width: 100%; min-width: 720px; font-size: 14px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); background: var(--panel); font-weight: 800; }
+tr:last-child td { border-bottom: 0; }
+td.n { color: var(--gold); font-weight: 800; font-variant-numeric: tabular-nums; width: 34px; }
+td .q { color: var(--muted); }
+td .cena { white-space: nowrap; }
+tr.fim td { background: color-mix(in srgb, var(--gold) 8%, transparent); }
+
+.cortes { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.corte { border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid; gap: 6px; background: var(--panel); }
+.corte .de { color: var(--faint); text-decoration: line-through; text-decoration-color: var(--alert); font-size: 13.5px; }
+.corte .para { font-size: 14px; }
+.corte .por { font-size: 12px; color: var(--alert); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+
+.strip { display: grid; grid-auto-flow: column; grid-auto-columns: 150px; gap: 10px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory; }
+.frame { display: grid; gap: 6px; scroll-snap-align: start; }
+.frame img { width: 150px; aspect-ratio: 9 / 16; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); display: block; max-width: 100%; }
+.frame .id { font-size: 12px; font-weight: 800; color: var(--gold); font-variant-numeric: tabular-nums; }
+.frame .c { font-size: 12px; color: var(--muted); line-height: 1.35; }
+
+/* conferências */
+.gates { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+.gate { border-top: 3px solid var(--c); background: var(--panel); border-radius: 12px; padding: 14px; display: grid; gap: 8px; align-content: start; }
+.gate ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; color: var(--muted); font-size: 14px; }
+.gate .quem { font-size: 12px; color: var(--faint); }
+
+/* tela */
+.layers { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 20px; align-items: center; }
+.layers svg { width: 100%; height: auto; display: block; }
+.places { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.places figure { margin: 0; display: grid; gap: 6px; }
+.places img { width: 100%; aspect-ratio: 9 / 16; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); display: block; }
+.places figcaption { font-size: 12.5px; color: var(--muted); }
+.places figcaption b { color: var(--fg); }
+.kv { display: grid; gap: 10px; }
+.kv > div { display: grid; grid-template-columns: 120px 1fr; gap: 10px; align-items: baseline; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+.kv > div:last-child { border-bottom: 0; }
+.kv .k { font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+.kv .v { color: var(--muted); font-size: 14px; }
+.kv .v b { color: var(--fg); }
+
+/* hoje × escolhido */
+.vs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.vs .col { border-radius: 14px; padding: 16px; display: grid; gap: 10px; align-content: start; }
+.vs .hoje { background: var(--panel); border: 1px solid var(--line); }
+.vs .nova { background: color-mix(in srgb, var(--gold) 8%, var(--panel)); border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent); }
+.vs .lbl { font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.vs .hoje .lbl { color: var(--faint); }
+.vs .nova .lbl { color: var(--gold); }
+.vs ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14px; color: var(--muted); }
+.vs ul b { color: var(--fg); }
+.voices { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.voice { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: grid; gap: 2px; background: var(--panel); }
+.voice b { font-size: 14.5px; }
+.voice span { font-size: 12.5px; color: var(--muted); }
+.voice.top { border-color: var(--gold); }
+.voice.no { opacity: .55; }
+.voice.no b { text-decoration: line-through; text-decoration-color: var(--alert); }
+
+/* decisões */
+.timeline { display: grid; gap: 0; border-left: 2px solid var(--line); margin-left: 6px; }
+.tl { position: relative; padding: 0 0 16px 20px; display: grid; gap: 2px; }
+.tl::before { content: ""; position: absolute; left: -7px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: var(--bg); border: 2px solid var(--violet); }
+.tl .d { font-size: 12px; color: var(--faint); font-weight: 700; font-variant-numeric: tabular-nums; }
+.tl .t { font-weight: 700; }
+.tl .w { color: var(--muted); font-size: 14px; }
+
+.limits { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.lim { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid; gap: 2px; }
+.lim .v { font-family: var(--display); font-size: 24px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.lim .k { color: var(--muted); font-size: 13px; }
+
+/* texto longo */
+details { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 0 16px; }
+details + details { margin-top: 8px; }
+summary { cursor: pointer; padding: 14px 0; font-weight: 700; list-style: none; display: flex; justify-content: space-between; gap: 10px; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: "+"; color: var(--violet); font-weight: 800; }
+details[open] summary::after { content: "–"; }
+summary:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; border-radius: 6px; }
+.long { padding-bottom: 16px; display: grid; gap: 10px; color: var(--muted); max-width: 72ch; font-size: 14.5px; line-height: 1.65; }
+.long b { color: var(--fg); }
+pre.tree { margin: 0; overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; font-family: var(--mono); font-size: 12.5px; line-height: 1.7; color: var(--muted); }
+pre.tree b { color: var(--fg); font-weight: 500; }
+.foot { color: var(--faint); font-size: 13px; }
+
+@media (max-width: 720px) {
+  .fase { grid-template-columns: 1fr; gap: 8px; }
+  .fase-nome { position: static; padding-top: 0; display: flex; gap: 10px; align-items: baseline; }
+  .ex-top, .layers, .vs { grid-template-columns: 1fr; }
+  .ideacard { margin-inline: auto; }
+  .places { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kv > div { grid-template-columns: 1fr; gap: 2px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="wrap">
+
+  <header class="hero">
+    <span class="eyebrow">Recanto · como um material nasce</span>
+    <h1>Publisher do Recanto</h1>
+    <p class="lede">Uma rotina que roda sozinha e entrega, de cada vez, um material novo: ideias, artigo, imagens e um vídeo por ideia em PT e EN.</p>
+    <div class="status">
+      <div class="stat"><span class="k">Rotina</span><span class="v">publisher v3 (Remotion)</span></div>
+      <div class="stat"><span class="k">Quando</span><span class="v">domingo e quarta, 10:00</span></div>
+      <div class="stat"><span class="k">Por rodada</span><span class="v">1 material · até 3 vídeos</span></div>
+      <div class="stat"><span class="k">Onde publica</span><span class="v">commit direto no main</span></div>
+    </div>
+    <div class="alert" role="note">
+      <span class="t">Parada desde 04/11</span>
+      <p>As rodadas de 08/11 e 11/11 travaram no primeiro comando, esperando uma permissão que ninguém deu. O último material publicado foi "treinar perto da falha" (04/11). Conserto: deixar a tarefa em modo sem permissão (Bypass) na tela de tarefas agendadas.</p>
+    </div>
+    <nav class="nav" aria-label="Seções">
+      <a href="#ciclo">O ciclo</a>
+      <a href="#agentes">Agentes</a>
+      <a href="#ferramentas">Ferramentas</a>
+      <a href="#exemplo">Exemplo: creatina</a>
+      <a href="#confere">O que conferimos</a>
+      <a href="#tela">Como a tela é feita</a>
+      <a href="#escolhido">Antes × hoje</a>
+      <a href="#decisoes">Decisões</a>
+      <a href="#detalhe">Para ler com calma</a>
+    </nav>
+  </header>
+
+  <!-- ============ O CICLO ============ -->
+  <section class="sec" id="ciclo">
+    <div class="sec-head">
+      <span class="eyebrow">Passo a passo</span>
+      <h2>O ciclo em 11 passos</h2>
+      <p>Cada passo tem um dono, uma ferramenta e uma saída. Reprovou num portão: volta uma vez; reprovou de novo, aquela parte não sai.</p>
+    </div>
+
+    <div class="fase" style="--c: var(--f-pauta)">
+      <div class="fase-nome"><span>Pauta</span><small>o que escrever</small></div>
+      <div class="passos">
+        <article class="passo"><span class="n">1</span><div class="corpo">
+          <h3>Escolher o tema</h3>
+          <p>Olha o catálogo e as áreas com menos material e sorteia: 70% Pesquisa, 30% Livro.</p>
+          <div class="flow"><span class="chip ag">planner</span><span class="chip">catálogo · fila de temas</span><span class="seta">→</span><span class="chip sai">brief: tema, ângulo, 1 achado</span></div>
+        </div></article>
+        <article class="passo"><span class="n">2</span><div class="corpo">
+          <h3>Pesquisar</h3>
+          <p>8 a 12 fatos com fonte primária, as ressalvas, e quantos achados independentes o tema sustenta.</p>
+          <div class="flow"><span class="chip ag">researcher</span><span class="chip">busca na web</span><span class="seta">→</span><span class="chip sai">dossiê com fontes</span></div>
+        </div></article>
+      </div>
+    </div>
+
+    <div class="fase" style="--c: var(--f-texto)">
+      <div class="fase-nome"><span>Texto</span><small>o card e o artigo</small></div>
+      <div class="passos">
+        <article class="passo"><span class="n">3</span><div class="corpo">
+          <h3>Escrever</h3>
+          <p>Primeiro as ideias (uma por padrão), depois o artigo. PT e EN escritos lado a lado.</p>
+          <div class="flow"><span class="chip ag">drafter</span><span class="chip">modelo da categoria</span><span class="seta">→</span><span class="chip sai">ideias + artigo</span></div>
+        </div></article>
+        <article class="passo"><span class="n">4</span><div class="corpo">
+          <h3>Revisar o texto</h3>
+          <p>Checklist editorial, e um leitor apressado que vê só o título, ou só o verso, e diz do que trata.</p>
+          <div class="flow"><span class="chip ag">reviewer</span><span class="chip ag">leitor cego</span><span class="chip">lint --ideas</span><span class="seta">→</span><span class="chip sai">texto aprovado</span></div>
+        </div></article>
+      </div>
+    </div>
+
+    <div class="fase" style="--c: var(--f-imagem)">
+      <div class="fase-nome"><span>Imagem</span><small>capa e cards</small></div>
+      <div class="passos">
+        <article class="passo"><span class="n">5</span><div class="corpo">
+          <h3>Gerar as imagens</h3>
+          <p>Capa 2:3 e uma imagem 4:5 por ideia, sem texto. O leitor cego confere que a imagem não puxa pra outro assunto.</p>
+          <div class="flow"><span class="chip ag">art-director</span><span class="chip">Gemini 3.1 imagem</span><span class="seta">→</span><span class="chip sai">capa + imagens</span></div>
+        </div></article>
+      </div>
+    </div>
+
+    <div class="fase" style="--c: var(--f-video)">
+      <div class="fase-nome"><span>Vídeo</span><small>um por ideia</small></div>
+      <div class="passos">
+        <article class="passo"><span class="n">6</span><div class="corpo">
+          <h3>Roteiro</h3>
+          <p>A ideia inteira em 6 a 12 falas, cada uma vira uma cena. Escolhe a protagonista e a voz (alternando). Antes de gastar voz, faz uma prévia muda dos quadros.</p>
+          <div class="flow"><span class="chip ag">video-director</span><span class="chip">molde.mjs lint · build --silent</span><span class="seta">→</span><span class="chip sai">roteiro JSON</span></div>
+        </div></article>
+        <article class="passo"><span class="n">7</span><div class="corpo">
+          <h3>Revisar o roteiro</h3>
+          <p>Fiel ao corpo da ideia, sem número de pesquisa, sem marca, termina no que fazer.</p>
+          <div class="flow"><span class="chip ag">video-reviewer</span><span class="chip">modo roteiro</span><span class="seta">→</span><span class="chip sai">aprovado ou 1 conserto</span></div>
+        </div></article>
+        <article class="passo"><span class="n">8</span><div class="corpo">
+          <h3>Gravar a voz</h3>
+          <p>Grava com a voz que o roteiro escolheu (o roteiro inteiro numa tomada só) e o Gemini ouve de volta. Faltou palavra, regrava (até 4 vezes). Sem crédito na ElevenLabs, a Kore grava e o relatório avisa.</p>
+          <div class="flow"><span class="chip ag">voz do elenco</span><span class="chip">qa-voice.mjs</span><span class="seta">→</span><span class="chip sai">falas conferidas</span></div>
+        </div></article>
+        <article class="passo"><span class="n">9</span><div class="corpo">
+          <h3>Revisar os quadros</h3>
+          <p>3 quadros por fala. O revisor descreve o que vê sem ler a legenda, depois compara com a fala.</p>
+          <div class="flow"><span class="chip ag">video-reviewer</span><span class="chip">molde.mjs stills</span><span class="seta">→</span><span class="chip sai">aprovado ou 1 conserto</span></div>
+        </div></article>
+        <article class="passo"><span class="n">10</span><div class="corpo">
+          <h3>Renderizar e subir</h3>
+          <p>MP4 em PT e EN (~2 MB cada) com pôster, direto pro bucket do app.</p>
+          <div class="flow"><span class="chip ag">Remotion</span><span class="chip">molde.mjs render · upload</span><span class="seta">→</span><span class="chip sai">vídeos no bucket</span></div>
+        </div></article>
+      </div>
+    </div>
+
+    <div class="fase" style="--c: var(--f-pub)">
+      <div class="fase-nome"><span>Publicação</span><small>no app</small></div>
+      <div class="passos">
+        <article class="passo"><span class="n">11</span><div class="corpo">
+          <h3>Publicar</h3>
+          <p>Duas migrations (texto, depois ideias e mídia) num só envio ao banco, com a conferência antes. Commit no main.</p>
+          <div class="flow"><span class="chip ag">publisher</span><span class="chip">Supabase CLI</span><span class="seta">→</span><span class="chip sai">material no Recanto</span></div>
+        </div></article>
+      </div>
+    </div>
+
+    <div class="cycle-foot">
+      <span class="chip"><b>Fora da rotina:</b> o runner do Notebook faz só o áudio de aprofundamento (todo dia, 09:00)</span>
+      <span class="chip"><b>Sob demanda:</b> /content-drop roda o mesmo ciclo agora</span>
+    </div>
+  </section>
+
+  <!-- ============ AGENTES ============ -->
+  <section class="sec" id="agentes">
+    <div class="sec-head">
+      <span class="eyebrow">Quem faz</span>
+      <h2>Os agentes</h2>
+      <p>Um orquestrador chama cada especialista na ordem. Nenhum revisor reescreve: ele aponta, quem escreveu conserta.</p>
+    </div>
+    <div class="grid3">
+      <div class="card pai" style="--c: var(--violet)"><div class="top"><span class="mono">publisher-remotion</span><span class="model">Opus</span></div><p>O maestro. Segue o roteiro dos 11 passos, controla os limites e escreve o relatório.</p></div>
+      <div class="card" style="--c: var(--f-pauta)"><div class="top"><span class="mono"><i class="dot"></i> planner</span><span class="model">Sonnet</span></div><p>Escolhe o tema: área com menos material, tema popular ou estudo recente.</p></div>
+      <div class="card" style="--c: var(--f-pauta)"><div class="top"><span class="mono"><i class="dot"></i> researcher</span><span class="model">Sonnet</span></div><p>Monta o dossiê. Prefere meta-análise e fonte primária; diz "não consegui confirmar" em vez de inventar.</p></div>
+      <div class="card" style="--c: var(--f-texto)"><div class="top"><span class="mono"><i class="dot"></i> drafter</span><span class="model">Opus</span></div><p>Escreve as ideias e o artigo, com o registro do raciocínio pra auditoria.</p></div>
+      <div class="card" style="--c: var(--f-texto)"><div class="top"><span class="mono"><i class="dot"></i> reviewer</span><span class="model">Sonnet</span></div><p>Checklist editorial com regra por ideia. Devolve falha ou aviso, nunca reescreve.</p></div>
+      <div class="card" style="--c: var(--f-texto)"><div class="top"><span class="mono"><i class="dot"></i> card-tester</span><span class="model">Haiku</span></div><p>O leitor apressado. Vê uma superfície por vez (título, verso ou imagem) e diz do que acha que se trata.</p></div>
+      <div class="card" style="--c: var(--f-imagem)"><div class="top"><span class="mono"><i class="dot"></i> art-director</span><span class="model">Opus</span></div><p>Transforma o pedido de imagem de cada ideia no prompt que vai pro Gemini.</p></div>
+      <div class="card" style="--c: var(--f-video)"><div class="top"><span class="mono"><i class="dot"></i> video-director</span><span class="model">Opus</span></div><p>Escreve o roteiro: falas, cenas, peças, lugares e a protagonista do vídeo.</p></div>
+      <div class="card" style="--c: var(--f-video)"><div class="top"><span class="mono"><i class="dot"></i> video-reviewer</span><span class="model">Opus</span></div><p>Dois modos: lê o roteiro antes da voz e os quadros antes do render.</p></div>
+      <div class="card" style="--c: var(--faint)"><div class="top"><span class="mono"><i class="dot"></i> notebook-runner</span><span class="model">Opus</span></div><p>Rotina à parte: o áudio de aprofundamento pelo Gemini Notebook, no Chrome.</p></div>
+    </div>
+  </section>
+
+  <!-- ============ FERRAMENTAS ============ -->
+  <section class="sec" id="ferramentas">
+    <div class="sec-head">
+      <span class="eyebrow">Com o quê</span>
+      <h2>As ferramentas</h2>
+      <p>Tudo roda nesta máquina: as chaves de API e o Supabase CLI só existem aqui, e por isso a rotina é local.</p>
+    </div>
+    <div class="tools">
+      <div class="tool"><h3>Supabase</h3><p>Banco (catálogo, migrations) e o bucket <span class="mono">learning-media</span>, onde ficam imagens e vídeos.</p></div>
+      <div class="tool"><h3>Gemini</h3><p>Imagem 3.1 (capa e cards), voz Kore (TTS) e o ouvido do QA, que transcreve a voz de volta.</p></div>
+      <div class="tool"><h3>Remotion</h3><p>O vídeo é código React em <span class="mono">tools/video</span>. O roteiro JSON vira cenas, e cada cena é desenhada quadro a quadro.</p></div>
+      <div class="tool"><h3>molde.mjs</h3><p>O comando do vídeo: lint → build → voice → stills → render → upload.</p></div>
+      <div class="tool"><h3>generate.mjs</h3><p>Gera capa e imagens a partir do pedido de imagem de cada ideia.</p></div>
+      <div class="tool"><h3>emit-migration</h3><p>Escreve o SQL a partir dos arquivos aprovados. Ninguém escreve SQL de conteúdo à mão.</p></div>
+      <div class="tool"><h3>lint.mjs</h3><p>Barra o que é regra mecânica: tamanho, campos, fontes, imagem sem texto.</p></div>
+      <div class="tool"><h3>ffmpeg</h3><p>Corta, mede e mascara os quadros (a legenda tapada pra leitura cega).</p></div>
+      <div class="tool"><h3>ElevenLabs <span class="chip" style="margin-left:4px">desde 13/11</span></h3><p>Vozes brasileiras que alternam entre vídeos (e o Liam no inglês). Na rotina desde 13/11; sem crédito, a Kore grava.</p></div>
+    </div>
+  </section>
+
+  <!-- ============ EXEMPLO ============ -->
+  <section class="sec" id="exemplo">
+    <div class="sec-head">
+      <span class="eyebrow">Exemplo real</span>
+      <h2>Da ideia ao vídeo: a creatina</h2>
+      <p>O vídeo só conta o que está no corpo da ideia. A pauta sai dele: cada frase que ensina algo vira uma fala.</p>
+    </div>
+
+    <div class="ex-top">
+      <div class="ideacard">
+        <img src="img/card.webp" alt="Colher de pó branco caindo num copo de água, com tênis e mochila ao fundo">
+        <div class="txt">
+          <span class="kick">Corpo · a ideia no app</span>
+          <span class="ti">Creatina não é só para quem faz musculação</span>
+          <div class="verso"><b>Verso</b>Tome 3 a 5 g de creatina todo dia, em qualquer horário, para manter o estoque do músculo cheio.</div>
+        </div>
+      </div>
+      <div style="display:grid; gap:12px; min-width:0">
+        <h3>O corpo da ideia, marcado</h3>
+        <div class="body-quote">
+          <span class="x">A creatina é um dos suplementos mais estudados do mundo.</span>
+          <span class="k">O corpo já produz e guarda creatina nos músculos, onde ela vira fosfocreatina, a reserva de energia dos esforços curtos e intensos.</span>
+          <span class="k">Por isso ela auxilia no aumento do desempenho físico em exercícios repetidos de curta duração e alta intensidade, como tiros, saltos e séries de força.</span>
+          <span class="x">O posicionamento da International Society of Sports Nutrition (Kreider e colegas, 2017) concluiu que</span>
+          <span class="k">a creatina monoidratada traz benefícios de adolescentes a idosos e é segura para pessoas saudáveis, sem efeitos colaterais graves.</span>
+          <span class="k">Com 3 a 5 g por dia, os estoques do músculo enchem em</span> <span class="x">3 a 4</span> <span class="k">semanas.</span>
+          <span class="k">Não precisa tomar antes do treino: o efeito vem do estoque cheio, não da hora da dose.</span>
+          <span class="x">A CreaPaker é creatina monoidratada micronizada,</span>
+          <span class="k">que se mistura fácil na água, no suco ou no shake.</span>
+        </div>
+        <div class="legend"><span><i style="background: color-mix(in srgb, var(--ok) 45%, transparent)"></i>vira fala</span><span><i style="background: var(--alert)"></i>fica só no texto do card</span></div>
+      </div>
+    </div>
+
+    <h3>O que fica de fora do vídeo, e por quê</h3>
+    <div class="cortes">
+      <div class="corte"><span class="por">estudo</span><span class="de">International Society of Sports Nutrition (Kreider, 2017)</span><span class="para">O vídeo afirma o que o estudo concluiu, sem citar o estudo.</span></div>
+      <div class="corte"><span class="por">número de pesquisa</span><span class="de">enchem em 3 a 4 semanas</span><span class="para">"até a reserva encher <b>em algumas semanas</b>"</span></div>
+      <div class="corte"><span class="por">marca</span><span class="de">CreaPaker, monoidratada micronizada</span><span class="para">"Misture na água, no suco ou no shake."</span></div>
+      <div class="corte"><span class="por">fica, por extenso</span><span class="de" style="text-decoration:none">3 a 5 g</span><span class="para">É o verso, a instrução do card: "<b>três a cinco gramas</b>".</span></div>
+    </div>
+
+    <h3>A pauta: frase do corpo → fala → cena</h3>
+    <div class="tabwrap">
+      <table>
+        <thead><tr><th>#</th><th>Fala (PT)</th><th>Cena</th><th>O que a tela demonstra</th></tr></thead>
+        <tbody>
+          <tr><td class="n">1</td><td>Creatina é <b>só pra quem faz musculação</b>, e tem que ser antes do treino?<br><span class="q">o gancho junta os dois mitos que o corpo derruba</span></td><td class="cena"><span class="chip">pensa · cozinha</span></td><td class="q">ela no balcão, o pote, o relógio: a dúvida</td></tr>
+          <tr><td class="n">2</td><td>…guarda no músculo, onde ela vira <b>fosfocreatina</b>, a reserva de energia dos esforços curtos e intensos.</td><td class="cena"><span class="chip">dentro · corpo</span></td><td class="q">o tanque de grãos dentro do músculo</td></tr>
+          <tr><td class="n">3</td><td>…quando o esforço se repete, como em <b>tiros de corrida</b>, saltos e séries de força.</td><td class="cena"><span class="chip">faz · parque</span></td><td class="q">ela correndo de frente, o tanque gastando</td></tr>
+          <tr><td class="n">4</td><td>Então não é só pra musculação, ajuda em <b>arrancadas curtas e fortes</b>.</td><td class="cena"><span class="chip">faz · parque</span></td><td class="q">figurantes em esforços diferentes</td></tr>
+          <tr><td class="n">5</td><td>E os benefícios vão <b>de adolescentes a idosos</b>.</td><td class="cena"><span class="chip">faz · academia</span></td><td class="q">um adolescente e uma idosa treinando, um em cada ponta, com o nome em cima</td></tr>
+          <tr><td class="n">6</td><td>Ela é segura <b>pra pessoas saudáveis</b>, sem efeitos colaterais graves.</td><td class="cena"><span class="chip">faz · cidade</span></td><td class="q">ela andando na rua, o rótulo da palavra</td></tr>
+          <tr><td class="n">7</td><td>Dose a dose, o músculo vai guardando até a reserva encher <b>em algumas semanas</b>.</td><td class="cena"><span class="chip">cena · cozinha</span></td><td class="q">lupa no tanque enchendo e o calendário passando</td></tr>
+          <tr><td class="n">8</td><td>Não precisa tomar antes do treino, porque <b>o efeito vem do estoque cheio</b>.</td><td class="cena"><span class="chip">dentro · corpo</span></td><td class="q">o tanque cheio, não a hora da dose</td></tr>
+          <tr><td class="n">9</td><td>Misture na água, no suco ou no shake.</td><td class="cena"><span class="chip">cena · mesa</span></td><td class="q">os três copos, cada um com o nome</td></tr>
+          <tr class="fim"><td class="n">10</td><td>Tome três a cinco gramas de creatina todo dia, <b>em qualquer horário</b>, para manter o estoque do músculo cheio.</td><td class="cena"><span class="chip">cena · cozinha</span></td><td class="q">o verso demonstrado: ela toma, o relógio solto, o tanque cheio. Sem o card no fim</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Os 10 quadros</h3>
+    <div class="strip" role="list" aria-label="Um quadro por fala do vídeo da creatina">
+      <figure class="frame" role="listitem"><img src="img/cr01.webp" alt="Quadro 1, a dúvida no balcão" loading="lazy"><span class="id">01 · gancho</span><span class="c">o mito na cabeça</span></figure>
+      <figure class="frame" role="listitem"><img src="img/cr02.webp" alt="Quadro 2, o tanque de fosfocreatina" loading="lazy"><span class="id">02 · por dentro</span><span class="c">a reserva</span></figure>
+      <figure class="frame" role="listitem"><img src="img/cr03.webp" alt="Quadro 3, corrida na pista" loading="lazy"><span class="id">03 · faz</span><span class="c">tiros, saltos, força</span></figure>
+      <figure class="frame" role="listitem"><img src="img/cr04.webp" alt="Quadro 4, arrancadas no parque" loading="lazy"><span class="id">04 · faz</span><span class="c">arrancadas</span></figure>
+      <figure class="frame" role="listitem"><img src="img/cr05.webp" alt="Quadro 5, adolescente e idosa" loading="lazy"><span class="id">05 · faz</span><span class="c">de adolescentes a idosos</span></figure>
+      <figure class="frame" role="listitem"><img src="img/cr06.webp" alt="Quadro 6, segura pra pessoas saudáveis" loading="lazy"><span class="id">06 · faz</span><span class="c">segura</span></figure>
+      <figure class="frame" role="listitem"><img src="img/cr07.webp" alt="Quadro 7, lupa no tanque e calendário" loading="lazy"><span class="id">07 · cena</span><span class="c">algumas semanas</span></figure>
+      <figure class="frame" role="listitem"><img src="img/cr08.webp" alt="Quadro 8, estoque cheio" loading="lazy"><span class="id">08 · por dentro</span><span class="c">estoque cheio</span></figure>
+      <figure class="frame" role="listitem"><img src="img/cr09.webp" alt="Quadro 9, água, suco ou shake" loading="lazy"><span class="id">09 · cena</span><span class="c">água, suco, shake</span></figure>
+      <figure class="frame" role="listitem"><img src="img/cr10.webp" alt="Quadro 10, todo dia em qualquer horário" loading="lazy"><span class="id">10 · fim</span><span class="c">o verso feito</span></figure>
+    </div>
+  </section>
+
+  <!-- ============ CONFERÊNCIAS ============ -->
+  <section class="sec" id="confere">
+    <div class="sec-head">
+      <span class="eyebrow">Os portões</span>
+      <h2>O que a gente confere</h2>
+      <p>Cada portão tem regras curtas e um dono. O que dá pra medir, o lint barra; o resto, um revisor lê.</p>
+    </div>
+    <div class="gates">
+      <div class="gate" style="--c: var(--f-texto)"><h3>A ideia</h3><span class="quem">reviewer + lint</span><ul>
+        <li>Título nomeia o assunto. Nunca charada.</li>
+        <li>Verso = a resposta que dá pra usar, com o número que vale.</li>
+        <li>Verso sem autor, estudo ou amostra.</li>
+        <li>Corpo de 100 a 180 palavras; todo número com o estudo nomeado.</li>
+        <li>Uma ideia por padrão; a 2ª precisa dizer o que a torna independente.</li>
+      </ul></div>
+      <div class="gate" style="--c: var(--f-texto)"><h3>O leitor cego</h3><span class="quem">card-tester (Haiku)</span><ul>
+        <li>Só o título: acerta o assunto?</li>
+        <li>Só o verso: dá pra usar amanhã?</li>
+        <li>Só a imagem: puxa pra outro assunto? (só isso reprova)</li>
+        <li>Título e imagem contam a mesma coisa?</li>
+      </ul></div>
+      <div class="gate" style="--c: var(--f-video)"><h3>O roteiro</h3><span class="quem">video-reviewer, modo roteiro</span><ul>
+        <li>Nada além do corpo. O que a tela mostra também é afirmação.</li>
+        <li>Sem número de pesquisa, estudo, amostra ou marca.</li>
+        <li>Onde o texto pede cautela, a fala fala com cautela.</li>
+        <li>Gancho → mecanismo → o que fazer. PT e EN paralelos.</li>
+      </ul></div>
+      <div class="gate" style="--c: var(--f-video)"><h3>A voz</h3><span class="quem">qa-voice (Gemini ouvindo)</span><ul>
+        <li>Transcrição ≥ 86% igual ao roteiro.</li>
+        <li>Toda palavra de 5+ letras e todo número presentes.</li>
+        <li>A voz é a esperada (pegou tomada com outra voz).</li>
+        <li>4 tentativas; depois disso a palavra é trocada no roteiro.</li>
+      </ul></div>
+      <div class="gate" style="--c: var(--f-video)"><h3>Os quadros</h3><span class="quem">video-reviewer, modo quadros</span><ul>
+        <li>Lê às cegas primeiro: a imagem conta a fala sem som?</li>
+        <li>Ela grande e fazendo; o mecanismo mostrado, não um ícone.</li>
+        <li>A palavra da fala escrita na imagem; rótulo fora do rosto.</li>
+        <li>Lugares variados; nada cortado, minúsculo ou sobreposto.</li>
+        <li>Nada de cara repetida com os vídeos recentes.</li>
+      </ul></div>
+      <div class="gate" style="--c: var(--f-pub)"><h3>A publicação</h3><span class="quem">publisher</span><ul>
+        <li>Todo arquivo aparece no bucket antes do SQL.</li>
+        <li>Dry-run lista exatamente as duas migrations da rodada.</li>
+        <li>Depois do envio, confere no banco: ideias, imagens, capa e vídeos.</li>
+        <li>HEAD = origin/main; se o banco foi e o git não, alerta de DRIFT.</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <!-- ============ A TELA ============ -->
+  <section class="sec" id="tela">
+    <div class="sec-head">
+      <span class="eyebrow">O visual</span>
+      <h2>Como a tela é feita</h2>
+      <p>Nenhuma imagem do vídeo é gerada por IA: tudo é desenho em código, em camadas, e cada fala do roteiro liga peças da cena.</p>
+    </div>
+    <div class="layers">
+      <svg viewBox="0 0 420 330" role="img" aria-label="As camadas de um quadro, de trás pra frente">
+        <g font-family="Manrope, system-ui, sans-serif" font-size="13">
+          <rect x="70" y="20" width="250" height="60" rx="10" fill="#1B2150" stroke="#2A3266"/>
+          <text x="86" y="46" fill="#EEF0FF" font-weight="700">Fundo</text><text x="86" y="64" fill="#A3A9D6" font-size="12">parede, janela, céu · anda pouco</text>
+          <rect x="55" y="70" width="250" height="60" rx="10" fill="#202760" stroke="#2A3266"/>
+          <text x="71" y="96" fill="#EEF0FF" font-weight="700">Meio</text><text x="71" y="114" fill="#A3A9D6" font-size="12">móveis, figurantes · o movimento</text>
+          <rect x="40" y="120" width="250" height="60" rx="10" fill="#28307A" stroke="#8D73FF"/>
+          <text x="56" y="146" fill="#EEF0FF" font-weight="700">Protagonista</text><text x="56" y="164" fill="#A3A9D6" font-size="12">boneco articulado + foco de luz</text>
+          <rect x="25" y="170" width="250" height="60" rx="10" fill="#2E2A55" stroke="#F5B83D"/>
+          <text x="41" y="196" fill="#EEF0FF" font-weight="700">Peças, lente, rótulos</text><text x="41" y="214" fill="#A3A9D6" font-size="12">entram nas deixas da fala</text>
+          <rect x="10" y="220" width="250" height="60" rx="10" fill="#1A2045" stroke="#2A3266"/>
+          <text x="26" y="246" fill="#EEF0FF" font-weight="700">Primeiro plano</text><text x="26" y="264" fill="#A3A9D6" font-size="12">folha, quina · leve desfoque</text>
+          <rect x="0" y="290" width="270" height="34" rx="8" fill="#0A0E26" stroke="#2A3266"/>
+          <text x="16" y="312" fill="#EEF0FF" font-weight="700">Legenda</text><text x="84" y="312" fill="#A3A9D6" font-size="12">a fala, com 1 destaque</text>
+          <path d="M340 50 C380 120 380 220 300 306" fill="none" stroke="#8D73FF" stroke-width="2" stroke-dasharray="4 5"/>
+          <text x="332" y="160" fill="#8D73FF" font-size="12" font-weight="700" transform="rotate(78 362 160)">câmera: parallax</text>
+        </g>
+      </svg>
+      <div class="kv">
+        <div><span class="k">Cenas</span><span class="v"><b>13 tipos</b>: pessoa, faz, dentro, cena, pensa, lista, comparar, multidão, mapa, caderno, semana, virada, verso.</span></div>
+        <div><span class="k">Lugares</span><span class="v"><b>8</b>: academia, parque, cozinha, banheiro, casa, cidade, escritório, treinamento. Manhã, dia ou noite.</span></div>
+        <div><span class="k">Boneco</span><span class="v"><b>Esqueleto articulado</b> (cotovelo, joelho, mão, tronco), corre de frente com escorço, roupa escolhida pela cena.</span></div>
+        <div><span class="k">Elenco</span><span class="v"><b>9 pessoas</b>: Marina, Caio, Bia, Theo, Lúcia, Rafa, Dona Célia, Seu Antônio e Léo. Uma protagonista por vídeo, diferente dos últimos 3.</span></div>
+        <div><span class="k">Acabamento</span><span class="v"><b>Nítido e vivo</b>: fundo sem desfoque, +35% de cor, +12% de luz, menos sombra em volta dela.</span></div>
+        <div><span class="k">Por dentro</span><span class="v"><b>Uma assinatura por vídeo</b>: corpo de vidro, lupa ou tanque. Diferente da do vídeo publicado antes.</span></div>
+      </div>
+    </div>
+    <div class="places">
+      <figure><img src="img/pt01.webp" alt="Caio entrando na academia" loading="lazy"><figcaption><b>Academia</b> · pré-treino, o gancho</figcaption></figure>
+      <figure><img src="img/co02.webp" alt="Lúcia bebendo o colágeno na pia do banheiro" loading="lazy"><figcaption><b>Banheiro</b> · colágeno, a câmera é o espelho</figcaption></figure>
+      <figure><img src="img/cr03.webp" alt="Bia correndo de frente na pista do parque" loading="lazy"><figcaption><b>Parque</b> · creatina, corrida de frente</figcaption></figure>
+      <figure><img src="img/co07.webp" alt="A lupa sobre a pele mostrando a rede de colágeno" loading="lazy"><figcaption><b>Por dentro</b> · colágeno, a lupa na pele</figcaption></figure>
+    </div>
+  </section>
+
+  <!-- ============ HOJE × ESCOLHIDO ============ -->
+  <section class="sec" id="escolhido">
+    <div class="sec-head">
+      <span class="eyebrow">Onde estamos</span>
+      <h2>Antes × hoje na rotina</h2>
+      <p>O modelo de 60 s foi aprovado nos três vídeos da Paker e virou o padrão da rotina em 13/11. Os três da Paker já estão no app nele (r4).</p>
+    </div>
+    <div class="vs">
+      <div class="col hoje"><span class="lbl">Antes (até 12/11)</span><ul>
+        <li><b>Fase 3</b>: a tela demonstra o que a voz diz.</li>
+        <li>Boneco antigo (rosto hexagonal), fundo com desfoque.</li>
+        <li>4 a 8 falas, até 58 s, <b>termina no card virando</b>.</li>
+        <li>Voz sempre a mesma: <b>Kore</b> (Gemini).</li>
+      </ul></div>
+      <div class="col nova"><span class="lbl">Hoje (desde 13/11)</span><ul>
+        <li><b>Fase 3</b> continua, e soma:</li>
+        <li><b>Boneco v5 "Animação de série"</b>, roupa pela cena.</li>
+        <li><b>Fundo nítido e vivo</b> (o acabamento v5).</li>
+        <li><b>~60 s, a ideia inteira, sem o card no fim</b>: 6 a 12 falas, termina no verso demonstrado.</li>
+        <li><b>Vozes alternando, sem padrão</b>: a voz é escolhida no roteiro e nunca repete a dos 2 vídeos anteriores.</li>
+        <li>Vídeos antigos (com card) ficam como estão.</li>
+      </ul></div>
+    </div>
+    <p class="foot">Escolhido e ainda não ligado: nada no momento. A próxima decisão entra aqui até virar rotina.</p>
+    <h3>O elenco de vozes (11/11)</h3>
+    <div class="voices">
+      <div class="voice top"><b>Lendário</b><span>a preferida · geral</span></div>
+      <div class="voice"><b>Dani</b><span>calma · geral</span></div>
+      <div class="voice"><b>Will</b><span>jovem · geral</span></div>
+      <div class="voice"><b>Roberta</b><span>casual · geral</span></div>
+      <div class="voice"><b>Juliano</b><span>só relações, nada científico</span></div>
+      <div class="voice"><b>Kore</b><span>reserva e inglês</span></div>
+      <div class="voice"><b>Liam</b><span>inglês</span></div>
+      <div class="voice no"><b>Paulo</b><span>sotaque estranho</span></div>
+      <div class="voice no"><b>Amandoca</b><span>imita fala real</span></div>
+      <div class="voice no"><b>Fernanda</b><span>igual à Kore</span></div>
+    </div>
+    <p class="foot">ElevenLabs no modelo eleven_v4, idioma travado em português, sem exagero de estilo, o roteiro numa tomada só. Está em <span class="mono">tools/video/vozes.json</span>; no molde: <span class="mono">voice --voz lendario</span>.</p>
+  </section>
+
+  <!-- ============ DECISÕES ============ -->
+  <section class="sec" id="decisoes">
+    <div class="sec-head">
+      <span class="eyebrow">A régua</span>
+      <h2>Decisões que valem</h2>
+      <p>O que já foi escolhido e não se rediscute sem motivo novo.</p>
+    </div>
+    <div class="timeline">
+      <div class="tl"><span class="d">07/09</span><span class="t">Ideias primeiro</span><span class="w">A unidade do Recanto é a ideia: título, verso, corpo curto, uma imagem, fontes.</span></div>
+      <div class="tl"><span class="d">set</span><span class="t">Verso que dá pra usar</span><span class="w">A instrução com o número, ou a conclusão seca. Calibrado com 59 votos seus.</span></div>
+      <div class="tl"><span class="d">set</span><span class="t">Uma ideia por padrão</span><span class="w">Mais de uma só quando o dossiê sustenta achados independentes.</span></div>
+      <div class="tl"><span class="d">04/11</span><span class="t">Vídeo próprio em Remotion</span><span class="w">O Notebook errava ~5% e não corrige uma cena. Aqui, corrigir é trocar uma frase.</span></div>
+      <div class="tl"><span class="d">04/11</span><span class="t">Sem dado no vídeo</span><span class="w">Número, estudo e ressalva ficam no texto e no áudio. O vídeo conta a história.</span></div>
+      <div class="tl"><span class="d">09/11</span><span class="t">Fase 3: a tela demonstra</span><span class="w">Ela faz, o mecanismo aparece por dentro, a palavra da fala está na imagem.</span></div>
+      <div class="tl"><span class="d">09/11</span><span class="t">Boneco v5 e fundo nítido</span><span class="w">"Animação de série", roupa pela cena, cor mais viva.</span></div>
+      <div class="tl"><span class="d">10/11</span><span class="t">60 s de conteúdo, sem card</span><span class="w">O card é coletado na tela do app; o vídeo termina no verso feito.</span></div>
+      <div class="tl"><span class="d">11/11</span><span class="t">O elenco de vozes</span><span class="w">Lendário, Dani, Will, Roberta; Juliano só em relações; Paulo, Amandoca e Fernanda fora.</span></div>
+      <div class="tl"><span class="d">13/11</span><span class="t">Modelo de 60 s na rotina, vozes sem padrão</span><span class="w">Todo vídeo novo sai assim. A voz nunca repete a dos 2 vídeos anteriores. Paker r4 no app.</span></div>
+    </div>
+  </section>
+
+  <!-- ============ LIMITES ============ -->
+  <section class="sec" id="limites">
+    <div class="sec-head">
+      <span class="eyebrow">Limites e custo</span>
+      <h2>Os tetos de cada rodada</h2>
+    </div>
+    <div class="limits">
+      <div class="lim"><span class="v">1</span><span class="k">material por rodada</span></div>
+      <div class="lim"><span class="v">3</span><span class="k">vídeos no máximo por rodada</span></div>
+      <div class="lim"><span class="v">2</span><span class="k">voltas de redação (texto + lint)</span></div>
+      <div class="lim"><span class="v">1</span><span class="k">conserto guiado nos quadros</span></div>
+      <div class="lim"><span class="v">0,5–0,9 M</span><span class="k">tokens por vídeo</span></div>
+      <div class="lim"><span class="v">~US$ 0,05</span><span class="k">por imagem gerada</span></div>
+      <div class="lim"><span class="v">~1.000</span><span class="k">créditos ElevenLabs num vídeo de 60 s</span></div>
+    </div>
+  </section>
+
+  <!-- ============ TEXTO LONGO ============ -->
+  <section class="sec" id="detalhe">
+    <div class="sec-head">
+      <span class="eyebrow">Para ler com calma</span>
+      <h2>Cada passo por extenso</h2>
+    </div>
+    <div>
+      <details><summary>1 · Como o tema é escolhido</summary><div class="long">
+        <p>O <b>planner</b> consulta três coisas no banco: os materiais publicados (os 80 mais recentes), quantos materiais cada uma das 12 áreas tem, e a fila de temas sugeridos (<span class="mono">material_topic_seed</span>). A partir disso ele sorteia, de propósito, pra não ficar previsível: 60% das vezes cobre a área com menos material, 30% aprofunda uma área popular, 10% traz um estudo recente (sempre escrito pra durar, nunca "saiu essa semana"). Um tema da fila com prioridade 8 ou mais passa na frente.</p>
+        <p>Ele devolve um <b>brief</b> com a categoria (Pesquisa ou Livro; Fundamentos só por pedido seu, via /content-drop), o ângulo em PT e EN, o teto de ideias da categoria e <b>um</b> achado principal. Uma lista de três rótulos fazia todo material sair com três ideias; por isso ele só dá um.</p>
+      </div></details>
+      <details><summary>2 · Como a pesquisa é feita</summary><div class="long">
+        <p>O <b>researcher</b> busca 8 a 12 fatos com número e citação completa (autores, revista, ano), preferindo meta-análise, diretriz de agência de saúde e estudo de referência. Separa humano de camundongo, sinaliza o que é contestado (ex.: auditoria do "Why We Sleep") e nunca inventa: o que não confirma, diz que não confirmou.</p>
+        <p>No fim ele conta os <b>achados independentes</b>: dois achados só são independentes se diferem no estudo, no mecanismo ou na ação que pedem. Começa assumindo um. Menos de 5 fatos sólidos = a rodada aborta.</p>
+      </div></details>
+      <details><summary>3 e 4 · Escrita e revisão do texto</summary><div class="long">
+        <p>O <b>drafter</b> escreve as ideias primeiro e depois o artigo, cujas seções são exatamente as ideias, na mesma ordem. Cada ideia tem título de até 48 caracteres que nomeia o assunto, verso de até 140 caracteres (a resposta usável), corpo de 100 a 180 palavras, um pedido de imagem sem texto e 1 a 3 fontes.</p>
+        <p>O <b>reviewer</b> roda o checklist e devolve falhas com regra, lugar e sugestão. Depois, o <b>leitor cego</b> (Haiku, de propósito: um modelo forte adivinha contexto que uma pessoa rolando o feed não adivinha) recebe uma superfície por vez. O orquestrador compara a resposta dele com a ideia. Reprovou: volta ao drafter uma vez; reprovou de novo, a rodada não publica.</p>
+      </div></details>
+      <details><summary>5 · Imagens</summary><div class="long">
+        <p>O <b>art-director</b> transforma cada pedido de imagem em prompt pro Gemini 3.1 Flash Image, com referências de estilo. O leitor cego lê o prompt <b>antes</b> de gerar (custa quase nada) e a imagem pronta depois. Só reprova quando puxa pra outro assunto. Cada imagem pode ser refeita uma vez; a segunda falha sai assim mesmo e vai pro relatório.</p>
+        <p>Por fim o orquestrador compara título e imagem lado a lado (o "trio"): os dois podem passar sozinhos e mesmo assim contar coisas diferentes. Foi o caso do aperto de mão × agachamento.</p>
+      </div></details>
+      <details><summary>6 a 10 · O vídeo</summary><div class="long">
+        <p>O <b>video-director</b> lê a ideia aprovada, acha a história no corpo (a tensão, o que pesa, o que muda, o que fazer), tira a máquina do estudo e escolhe uma cena por fala a partir do repertório: <b>faz</b> quando ela faz um esforço, <b>dentro</b> quando algo entra no corpo e vai pra algum lugar, <b>cena</b> com lupa quando é um tecido de perto, <b>caderno → mapa</b> quando o método é anotar. Ele escolhe a protagonista (diferente das 3 últimas), os lugares e a assinatura por dentro (diferente do vídeo anterior), roda o lint e faz uma prévia muda.</p>
+        <p>O <b>video-reviewer</b> lê o roteiro antes da voz. Aprovado, o molde grava a voz fala por fala e o Gemini transcreve de volta. Depois o molde tira 3 quadros por fala, e o revisor faz duas leituras: às cegas, com a legenda tapada, descreve o que vê; só então compara com a fala e passa a régua da fase 3. Há um conserto guiado, feito pela tela sempre que der (trocar a fala custa regravar). Vídeo acima de 60 s conta como falha. Ideia que não passa sai sem vídeo, e o texto nunca espera o vídeo.</p>
+      </div></details>
+      <details><summary>11 · Publicação e o que pode dar errado</summary><div class="long">
+        <p>Tudo sobe pro bucket antes do SQL, pra o app nunca apontar pra arquivo que não existe. As duas migrations vão num único <span class="mono">db push</span>, mas só depois de um dry-run que lista exatamente as duas. O banco casa migration só pelo número, e outra sessão pode ter usado o mesmo número no meio da rodada. Depois do envio, o publisher confere no banco o nome das versões, as ideias, as imagens, a capa e os vídeos.</p>
+        <p>Falhas que param a rodada: sem chave do Gemini, sem tema, pesquisa rala, texto reprovado duas vezes. Falhas que <b>não</b> param: imagem, capa ou vídeo que falharam (o material sai sem eles e o relatório lista). E uma que trava tudo em silêncio: a rotina esperando permissão, como em 08/11 e 11/11.</p>
+      </div></details>
+    </div>
+
+    <h3>Onde está cada coisa</h3>
+    <pre class="tree"><b>.claude/agents/</b>
+  learning-publisher-remotion.md   o maestro (os 11 passos)
+  learning-planner.md · learning-researcher.md
+  learning-drafter.md · learning-reviewer.md · learning-card-tester.md
+  learning-art-director.md
+  learning-video-director.md · learning-video-reviewer.md
+<b>learning-drops/</b>
+  ideas-specs/&lt;slug&gt;.json    o texto das ideias (o que você lê)
+  media-specs/&lt;slug&gt;.json    os prompts das imagens
+  video-specs/&lt;slug&gt;.json    o roteiro do vídeo
+<b>tools/video/</b>
+  MOLDE.md                    cenas, lugares, peças, regras
+  scripts/molde.mjs           lint · build · voice · stills · render · upload
+  vozes.json                  o elenco de vozes
+  src/molde/ · src/boneco/    as cenas e o boneco em código
+<b>tools/content-media/</b>       generate.mjs · emit-migration.mjs
+<b>~/.claude/scheduled-tasks/</b>  learning-publisher-remotion-cron (dom/qua 10:00)</pre>
+    <p class="foot">Atualizado em 11/11/2026. Quando mudar uma regra, esta página muda junto.</p>
+  </section>
+
+</div>

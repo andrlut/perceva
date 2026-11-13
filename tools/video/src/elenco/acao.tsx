@@ -34,6 +34,8 @@ import { C } from '../theme';
 import { FPS, cue, speechEnd } from '../timeline';
 import { Pessoa } from './cast';
 import { FIG_ACCENT, SKINS } from './cenario';
+import { SEGURA_V5, enquadraDe, v5, vistaDaCena } from '../boneco/ativo';
+import { maoV5, pontoV5, type PoseV5Info } from '../boneco/naCaixa';
 
 // ------------------------------------------------------------------ tipos
 
@@ -56,6 +58,8 @@ export type PoseAtor = PoseRig & {
   giro?: number;
   /** pousos recentes do correr — pé (0 esq, 1 dir) e quadros desde o pouso — pra poeira */
   pouso?: { pe: 0 | 1; f: number }[];
+  /** boneco v5: a vista da cena e as ações pesadas do quadro (o v5 refaz a pose com a biblioteca dele) */
+  v5?: PoseV5Info;
 };
 
 type Box = { left: number; top: number; size: number };
@@ -309,7 +313,8 @@ export function poseAt(
 const poseLaco = (acao: AcaoKind, f: number) => {
   const n = cicloDe(acao);
   const ff = CICLO[acao].laco ? f : ((f % n) + n) % n;
-  return poseAt(acao, Math.max(0, ff));
+  const p: PoseAtor = poseAt(acao, Math.max(0, ff));
+  return v5() ? { ...p, v5: { vista: vistaDaCena([acao]), itens: [{ acao, f: Math.max(0, ff), w: 1, n }] } } : p;
 };
 
 // ------------------------------------------------------------------ roteiro → pose
@@ -496,6 +501,12 @@ export function poseDe(
     }
   }
   escala = Math.min(VEM_MAX, escala);
+  // boneco v5: a vista é da CENA (sem estalo no meio). Correndo no lugar ou vindo pra câmera = DE
+  // FRENTE (o chão anda pra câmera); andar com trajeto segura 3/4
+  const vista5 = v5() ? vistaDaCena(plano.map((p) => p.a.acao), { trajeto: plano.some((p) => p.traj) }) : undefined;
+  // de 3/4 crescer lia "deslizando" (cresce um quarto do caminho); de frente, vindo pra câmera, crescer
+  // é o que diz que ela vem — mais da metade (os pés não descem no plano fechado do v5: faz.tsx)
+  if (vista5) escala = 1 + (escala - 1) * (vista5 === 'frente' ? 0.6 : 0.25);
 
   const ativa = ref >= 0 ? { ...plano[ref].a, de: anchor } : { ...plano[0].a, de: anchor };
   const x = pos !== undefined && anchor !== undefined ? pos - anchor : 0;
@@ -503,6 +514,7 @@ export function poseDe(
   const ciclo0 = ref >= 0 ? plano[ref].ini : plano[0].ini;
 
   if (W <= 0) {
+    if (vista5) return { pose: { mistura: 0, escala, pouso, v5: { vista: vista5, enquadra: enquadraDe(s.scene, s.props), itens: [] } }, ...pecas, x, ativa, ciclo0 };
     const resto: PoseAtor | undefined = escala !== 1 || pouso.length ? { mistura: 0, escala, pouso } : undefined;
     return { pose: resto, ...pecas, x, ativa, ciclo0 };
   }
@@ -515,6 +527,16 @@ export function poseDe(
       return { p: pose as PoseAtor, w };
     });
   const pose: PoseAtor = { ...misturar(ps, [12, -12]), acao: plano[ref].a.acao, mistura: Math.min(1, W), escala, pouso };
+  if (vista5) {
+    pose.v5 = {
+      vista: vista5,
+      enquadra: enquadraDe(s.scene, s.props),
+      itens: plano
+        .map((p, i) => ({ p, i, w: ws[i] }))
+        .filter((e) => e.w > 0)
+        .map(({ p, i, w }) => ({ acao: p.a.acao, f: p.a.acao === 'andar' && p.traj ? fAndar[i] : frame - p.ini, ritmo: p.a.ritmo, w, n: cicloDe(p.a.acao, p.a.ritmo) })),
+    };
+  }
   return { pose, ...pecas, x, ativa, ciclo0 };
 }
 
@@ -526,13 +548,21 @@ export function poseDe(
  * ações, undefined (o chão fica parado como sempre).
  */
 export function corridaDe(s: MS, acoes: AcaoSpec[] | undefined, frame: number): { v: number; d: number } | undefined {
-  if (!acoes?.some((a) => a.acao === 'correr')) return undefined;
-  const corre = planoDe(s, acoes).filter((p) => p.a.acao === 'correr');
-  const vAt = (f: number) => Math.min(1, corre.reduce((a, p) => a + pesoDe(p, f), 0));
+  // boneco v5: andar NO LUGAR (sem `para`) também é vir pra câmera, de frente — o chão anda devagar
+  // (sem isso ela andava parada no piso, e o "sai de casa e chega" lia esteira)
+  const andaV5 = (a: AcaoPlano) => v5() && a.acao === 'andar' && a.para === undefined;
+  if (!acoes?.some((a) => a.acao === 'correr' || andaV5(a))) return undefined;
+  const corre = planoDe(s, acoes).filter((p) => p.a.acao === 'correr' || andaV5(p.a));
+  // no tiro (v5, `rapido`) as raias passam mais rápido que no trote: é metade do que diz "arrancada"
+  const vel = (p: Plano) => (p.a.acao === 'correr' ? (v5() && p.a.ritmo === 'rapido' ? 1.35 : 1) : 0.45);
+  const vAt = (f: number) => Math.min(1, corre.reduce((a, p) => a + pesoDe(p, f) * vel(p), 0));
   const ini = Math.min(...corre.map((p) => p.ini));
   let d = 0;
   for (let f = Math.ceil(ini); f < frame; f++) d += vAt(f);
-  return { v: vAt(frame), d };
+  // boneco v5 correndo DE FRENTE (vindo pra câmera): a câmera recua junto, então o chão RECUA pro fundo
+  // (as marcas sobem). Descendo pra câmera, como no boneco antigo, ela lia "correndo de costas" (André)
+  const frente = v5() && vistaDaCena(acoes.map((a) => a.acao), { trajeto: planoDe(s, acoes).some((p) => p.traj) }) === 'frente';
+  return { v: vAt(frame), d: frente ? -d : d };
 }
 
 // ------------------------------------------------------------------ geometria (o mesmo caminho do hexa.tsx)
@@ -685,6 +715,12 @@ const naEscala = ([X, Y]: Par, box: Box, escala = 1, desce = VEM_DESCE): Par => 
 /** Centro da mão `lado` (0 = esq, 1 = dir) na tela, e o ângulo do braço (graus, com a inclinação do corpo). */
 export function maoNaTela(pose: Pose | undefined, arms: Arms, lado: 0 | 1, box: Box): { x: number; y: number; ang: number } {
   const pa = pose as PoseAtor | undefined;
+  if (v5()) {
+    const m = maoV5(pa, arms, lado);
+    const k5 = box.size / 200;
+    const [x5, y5] = naEscala([box.left + m.p[0] * k5, box.top + m.p[1] * k5], box, pa?.escala, pa?.desce);
+    return { x: x5, y: y5, ang: m.ang };
+  }
   const { p, ang } = maoUn(efetiva(pa, arms), arms, lado);
   const k = box.size / 200;
   const [x, y] = naEscala([box.left + p[0] * k, box.top + p[1] * k], box, pa?.escala, pa?.desce);
@@ -694,6 +730,11 @@ export function maoNaTela(pose: Pose | undefined, arms: Arms, lado: 0 | 1, box: 
 /** Um ponto do corpo (CORPO.pontos) na tela, com a pose (a cabeça gira com `cabeca`). */
 export function pontoNaTela(r: keyof typeof CORPO.pontos, box: Box, pose?: Pose): [number, number] {
   const pa = pose as PoseAtor | undefined;
+  if (v5()) {
+    const p5 = pontoV5(r, pa, 'down');
+    const k5 = box.size / 200;
+    return naEscala([box.left + p5[0] * k5, box.top + p5[1] * k5], box, pa?.escala, pa?.desce);
+  }
   const eff = efetiva(pa, 'down');
   let pt = CORPO.pontos[r];
   if (eff?.cabeca && (r === 'cabeca' || r === 'rosto' || r === 'boca')) {
@@ -762,6 +803,8 @@ export type AtorProps = {
   halo?: boolean | 'cabeca';
   /** poeira no pé que pousa (correr); default: sim */
   poeira?: boolean;
+  /** boneco v5: 0..1, o corpo de vidro (cena `dentro`, plano corpo) — a Pessoa v5 desenha o vidro */
+  vidro?: number;
 };
 
 /** A cor da pele que a Pessoa vai usar (pra mão por cima da peça). */
@@ -794,6 +837,7 @@ export const Ator: React.FC<AtorProps> = ({
   figurante = false,
   halo,
   poeira = true,
+  vidro,
 }) => {
   const pa: PoseAtor | undefined = pose ?? (laco ? poseLaco(laco, t + fase) : undefined);
   const armsIn: Arms = arms ?? (mao || maos ? 'out' : 'down');
@@ -847,6 +891,19 @@ export const Ator: React.FC<AtorProps> = ({
     );
   };
 
+  // boneco v5: a peça que o estilo não sabe segurar vai no centro da mão dele, sem a mão por cima
+  const pecaV5 = (name: PieceName, progress?: number) => {
+    const m = maoV5(pa, armsIn, 1);
+    const pg = PEGA[name] ?? PEGA_PADRAO;
+    const ps = size * pg.k;
+    const [w, h] = pieceBox(name, ps);
+    return (
+      <div key={`v5-${name}`} style={{ position: 'absolute', left: box.left + m.p[0] * k - w * pg.g[0], top: box.top + m.p[1] * k - h * pg.g[1] }}>
+        <Peca name={name} t={t} size={ps} accent={tintaPeca} progress={progress} />
+      </div>
+    );
+  };
+
   // poeira: o pé que pousa levanta um tufo — 4 bolotas claras que abrem pra fora e pra trás, crescem
   // e somem em POEIRA quadros (fica no chão, não segue o corpo; cresce com a escala de quem vem)
   const dust =
@@ -878,7 +935,7 @@ export const Ator: React.FC<AtorProps> = ({
       : null;
 
   return (
-    <div style={{ position: 'absolute', inset: 0, filter: figurante ? 'saturate(0.75)' : undefined }}>
+    <div style={{ position: 'absolute', inset: 0, filter: figurante ? (v5() ? 'saturate(0.6) brightness(0.92)' : 'saturate(0.75)') : undefined }}>
       {dust ? (
         <svg style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible' }} width={1} height={1}>
           {dust}
@@ -903,12 +960,22 @@ export const Ator: React.FC<AtorProps> = ({
             accent={tinta}
             cap={cap}
             arms={armsIn}
-            pose={eff}
+            pose={v5() ? (pa ?? { mistura: 0 }) : eff}
             halo={figurante ? false : halo}
+            {...(v5() ? { segura: mao?.p ?? maos, seguraDuas: !!maos, figurante, vidro } : {})}
           />
         </div>
-        {maos ? [pecaEm(maos, 0), pecaEm(maos, 1)] : null}
-        {mao ? pecaEm(mao.p, 1, mao.progress) : null}
+        {v5() ? (
+          // boneco v5: halter e copo a mão do estilo desenha (os dedos por cima); o resto vai na mão sem a bolinha
+          <>
+            {mao && !SEGURA_V5[mao.p] ? pecaV5(mao.p, mao.progress) : null}
+          </>
+        ) : (
+          <>
+            {maos ? [pecaEm(maos, 0), pecaEm(maos, 1)] : null}
+            {mao ? pecaEm(mao.p, 1, mao.progress) : null}
+          </>
+        )}
       </div>
     </div>
   );

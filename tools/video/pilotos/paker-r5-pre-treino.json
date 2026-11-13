@@ -1,0 +1,771 @@
+{
+  "_doc": "Piloto r5 da ideia pre-treino-energia (2026-11-10), no modelo que o André aprovou na creatina r5: perto de 60 s de fala, sem card no fim (fim: cena — o card é coletado na tela do app), cada batida do corpo da ideia demonstrada, a palavra na imagem e o mecanismo por dentro. Mesmo Caio (seed 1, pessoa caio), boneco v5 (serie) e visual v5 da r4. Voz: hook e careful ficam com a tomada da r4 nos dois idiomas; star regrava só o PT (os dois-pontos que 'falam e param' no ElevenLabs viraram 'que'); take e arrive mudam o texto nos dois idiomas; levels, vessels, buffer e focus são novas. Entram as batidas que faltavam: a cafeína ajuda tanto quem treina há anos quanto quem está começando (sem a sociedade nem o ano; no parque à noite, o Caio é quem treina há anos e salta, e quem está começando é o Theo, adulto de corpo médio, nos halteres devagar à ESQUERDA — revisão do roteiro: nem idoso nem adolescente num vídeo de estimulante, e a composição não repete o 'ages' da creatina, que era ela pronta → halteres com um figurante de cada lado); e cada frente por dentro do corpo de vidro, uma por fala, três frentes pros três caminhos do divide: arginina → óxido nítrico → os vasos acendem (as três palavras numa coluna à esquerda, encostadas no braço dos vasos); beta-alanina → carnosina → os músculos acendem, e a acidez aponta pro músculo do braço direito; tirosina → dopamina e noradrenalina → o anel do foco na cabeça (no fim, foco entra no lugar da tirosina, do lado do ponto do anel: do outro lado a seta cruzava o rosto). A taurina SAIU (revisão do roteiro): o único efeito dela no corpo é a resistência da meta-análise, que é dado de pesquisa, e sem ele ela era um nome solto que a tela juntava ao foco. buffer e focus entram com transicao corte (é a mesma cena de vidro continuando; o mergulho entre dois corpos iguais parecia um soluço). O cuidado com a cafeína (a mesma fala da r4) passa pra sala de casa à noite, a janela com a lua: 'perto da hora de dormir'. A ação do card fecha o vídeo em duas falas: na cozinha de dia (o único balcão fechado do vídeo), ele mistura na coqueteleira e toma, o relógio girando (de trinta a sessenta minutos antes — o único número, por extenso, é o do card; o qa-voice.mjs aprendeu as dezenas, trinta/sessenta = 30/60, porque o transcritor escreve algarismo); e 'nesse tempo' ele se troca e chega na academia andando firme, levanta os halteres e vira pra focado em 'com disposição' (sem comemoração: tema de dose). O 'nesse tempo' amarra a disposição à espera do card, e o fim não espelha o gancho: outros figurantes (Rafa nos halteres, Marina saltando) e sem câmera (o push com deixa em cima do efeito lia soco). Câmera em 4 falas: hook, star (a do canônico, push com deixa em 'se concentrar'), focus e careful. Marca e gramas fora. Assinatura: o corpo de vidro (três falas seguidas, uma frente por fala). Sem corrida (o chão que anda ao contrário ainda está aberto na creatina). Fundos: academia · cozinha · parque · corpo · casa · cozinha · academia.",
+  "slug": "paker-health-energia-pele-forca",
+  "ideas": {
+    "pre-treino-energia": {
+      "dimension": "body",
+      "fase": 3,
+      "fim": "cena",
+      "protagonista": {
+        "seed": 1,
+        "pessoa": "caio"
+      },
+      "lines": [
+        {
+          "id": "hook",
+          "scene": "faz",
+          "hold": 0.3,
+          "pt": {
+            "caption": "Hora do treino, e *a disposição não veio junto*?"
+          },
+          "en": {
+            "caption": "Time to train, and *your energy hasn't shown up*?"
+          },
+          "props": {
+            "ambiente": "academia",
+            "hora": "dia",
+            "plano": "fechado",
+            "mood": "cansado",
+            "passos": [
+              {
+                "acao": "andar",
+                "ritmo": "lento",
+                "de": 460,
+                "para": 560
+              }
+            ],
+            "camera": {
+              "move": "push",
+              "focus": "pessoa",
+              "forca": "leve"
+            },
+            "elenco": [
+              {
+                "seed": 5,
+                "x": 160,
+                "acao": "levantar",
+                "cue": {
+                  "pt": "Hora do treino",
+                  "en": "Time to train"
+                }
+              },
+              {
+                "seed": 0,
+                "x": 860,
+                "acao": "saltar",
+                "cue": {
+                  "pt": "Hora do treino",
+                  "en": "Time to train"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "star",
+          "scene": "cena",
+          "pt": {
+            "caption": "No pré-treino, a estrela é a *cafeína*, que ajuda a ficar alerta e a se concentrar melhor."
+          },
+          "en": {
+            "caption": "In a pre-workout, the star is *caffeine*: it helps you stay alert and concentrate better."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Dentro do pré-treino",
+              "en": "Inside a pre-workout"
+            },
+            "ambiente": "cozinha",
+            "hora": "dia",
+            "setting": "mesa",
+            "holding": "copo-agua",
+            "mood": "cansado",
+            "turn": {
+              "pt": "ficar alerta",
+              "en": "stay alert"
+            },
+            "to": "focado",
+            "acoes": [
+              {
+                "acao": "mexer",
+                "ate": {
+                  "pt": "a estrela",
+                  "en": "the star"
+                }
+              }
+            ],
+            "lente": {
+              "sobre": "peca",
+              "cue": {
+                "pt": "a estrela",
+                "en": "the star"
+              },
+              "conteudo": {
+                "camadas": [
+                  {
+                    "textura": "agua"
+                  }
+                ],
+                "particulas": {
+                  "forma": "ponto",
+                  "cor": [
+                    "health",
+                    "body",
+                    "mind"
+                  ],
+                  "n": 12,
+                  "boiam": true,
+                  "destaque": {
+                    "cue": {
+                      "pt": "cafeína",
+                      "en": "caffeine"
+                    },
+                    "rotulo": {
+                      "pt": "cafeína",
+                      "en": "caffeine"
+                    }
+                  }
+                }
+              },
+              "fecha": {
+                "pt": "ficar alerta",
+                "en": "stay alert"
+              }
+            },
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "alerta",
+                  "en": "alert"
+                },
+                "cue": {
+                  "pt": "ficar alerta",
+                  "en": "stay alert"
+                },
+                "seta": "cabeca"
+              },
+              {
+                "text": {
+                  "pt": "concentrar",
+                  "en": "concentrate"
+                },
+                "cue": {
+                  "pt": "se concentrar",
+                  "en": "concentrate"
+                },
+                "seta": "cabeca"
+              }
+            ],
+            "camera": {
+              "move": "push",
+              "focus": "pessoa",
+              "cue": {
+                "pt": "se concentrar",
+                "en": "concentrate"
+              }
+            }
+          }
+        },
+        {
+          "id": "levels",
+          "scene": "faz",
+          "hold": 0.6,
+          "pt": {
+            "caption": "E ela melhora o desempenho tanto de quem treina há anos quanto de quem *está começando*."
+          },
+          "en": {
+            "caption": "And it improves performance both for people who've trained for years and for those *just starting out*."
+          },
+          "props": {
+            "ambiente": "parque",
+            "hora": "manha",
+            "gente": "nenhuma",
+            "plano": "fechado",
+            "mood": "focado",
+            "passos": [
+              {
+                "acao": "pronta"
+              },
+              {
+                "acao": "saltar",
+                "cue": {
+                  "pt": "treina há anos",
+                  "en": "trained for years"
+                },
+                "reps": 4
+              }
+            ],
+            "elenco": [
+              {
+                "seed": 3,
+                "x": 180,
+                "acao": "levantar",
+                "ritmo": "lento",
+                "cue": {
+                  "pt": "o desempenho",
+                  "en": "performance"
+                }
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "há anos",
+                  "en": "for years"
+                },
+                "cue": {
+                  "pt": "há anos",
+                  "en": "for years"
+                },
+                "seta": "peito",
+                "x": 870,
+                "y": 900
+              },
+              {
+                "text": {
+                  "pt": "está começando",
+                  "en": "just starting out"
+                },
+                "cue": {
+                  "pt": "está começando",
+                  "en": "just starting"
+                },
+                "x": 240,
+                "y": 640
+              }
+            ]
+          }
+        },
+        {
+          "id": "vessels",
+          "scene": "dentro",
+          "hold": 0.6,
+          "pt": {
+            "caption": "Os outros ingredientes trabalham em frentes diferentes, e a arginina dá origem ao *óxido nítrico*, ligado à dilatação dos vasos."
+          },
+          "en": {
+            "caption": "The other ingredients work on different fronts, and your body uses arginine to make *nitric oxide*, which is linked to widening blood vessels."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Por dentro",
+              "en": "On the inside"
+            },
+            "plano": "corpo",
+            "mood": "ok",
+            "origem": "barriga",
+            "divide": {
+              "pt": "frentes diferentes",
+              "en": "different fronts"
+            },
+            "fluxos": [
+              {
+                "para": "vasos",
+                "cor": "health",
+                "particula": "grao"
+              },
+              {
+                "para": "musculos",
+                "cor": "craft",
+                "particula": "ponto"
+              },
+              {
+                "para": "cabeca",
+                "cor": "mind",
+                "particula": "ponto"
+              }
+            ],
+            "regioes": [
+              {
+                "parte": "vasos",
+                "cue": {
+                  "pt": "ligado à dilatação",
+                  "en": "linked to widening"
+                },
+                "efeito": "acende",
+                "cor": "health"
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "arginina",
+                  "en": "arginine"
+                },
+                "cue": {
+                  "pt": "a arginina",
+                  "en": "arginine"
+                },
+                "x": 200,
+                "y": 500,
+                "max": 280
+              },
+              {
+                "text": {
+                  "pt": "óxido nítrico",
+                  "en": "nitric oxide"
+                },
+                "cue": {
+                  "pt": "óxido nítrico",
+                  "en": "nitric oxide"
+                },
+                "x": 190,
+                "y": 700,
+                "max": 230
+              },
+              {
+                "text": {
+                  "pt": "vasos",
+                  "en": "blood vessels"
+                },
+                "cue": {
+                  "pt": "dilatação dos vasos",
+                  "en": "widening blood vessels"
+                },
+                "seta": "vasos",
+                "x": 170,
+                "y": 950,
+                "max": 230
+              }
+            ],
+            "transicao": "zoom"
+          }
+        },
+        {
+          "id": "buffer",
+          "scene": "dentro",
+          "pt": {
+            "caption": "Já a beta-alanina forma *carnosina* no músculo, que ajuda a segurar a acidez do esforço intenso."
+          },
+          "en": {
+            "caption": "Beta-alanine builds *carnosine* in your muscles, which helps buffer the acidity of hard efforts."
+          },
+          "props": {
+            "plano": "corpo",
+            "mood": "focado",
+            "origem": "barriga",
+            "fluxos": [
+              {
+                "para": "musculos",
+                "cor": "craft",
+                "particula": "ponto",
+                "cue": {
+                  "pt": "beta-alanina",
+                  "en": "Beta-alanine"
+                }
+              }
+            ],
+            "regioes": [
+              {
+                "parte": "musculos",
+                "cue": {
+                  "pt": "no músculo",
+                  "en": "in your muscles"
+                },
+                "efeito": "acende",
+                "cor": "craft"
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "beta-alanina",
+                  "en": "beta-alanine"
+                },
+                "cue": {
+                  "pt": "beta-alanina",
+                  "en": "Beta-alanine"
+                },
+                "out": {
+                  "pt": "que ajuda",
+                  "en": "which helps"
+                },
+                "x": 860,
+                "y": 520
+              },
+              {
+                "text": {
+                  "pt": "carnosina",
+                  "en": "carnosine"
+                },
+                "cue": {
+                  "pt": "carnosina",
+                  "en": "carnosine"
+                },
+                "seta": "musculos"
+              },
+              {
+                "text": {
+                  "pt": "segurar a acidez",
+                  "en": "buffer the acidity"
+                },
+                "cue": {
+                  "pt": "segurar a acidez",
+                  "en": "buffer the acidity"
+                },
+                "seta": [
+                  760,
+                  790
+                ],
+                "x": 860,
+                "y": 1010,
+                "max": 260
+              }
+            ],
+            "transicao": "corte"
+          }
+        },
+        {
+          "id": "focus",
+          "scene": "dentro",
+          "hold": 1.2,
+          "pt": {
+            "caption": "E a tirosina é matéria-prima da *dopamina* e da noradrenalina, ligadas ao foco."
+          },
+          "en": {
+            "caption": "And tyrosine is the raw material for *dopamine* and noradrenaline, both linked to focus."
+          },
+          "props": {
+            "plano": "corpo",
+            "mood": "focado",
+            "origem": "barriga",
+            "camera": {
+              "move": "push",
+              "focus": "topo",
+              "forca": "leve",
+              "cue": {
+                "pt": "ligadas ao foco",
+                "en": "linked to focus"
+              }
+            },
+            "fluxos": [
+              {
+                "para": "cabeca",
+                "cor": "mind",
+                "particula": "ponto",
+                "cue": {
+                  "pt": "a tirosina",
+                  "en": "tyrosine"
+                }
+              }
+            ],
+            "regioes": [
+              {
+                "parte": "cabeca",
+                "cue": {
+                  "pt": "ligadas ao foco",
+                  "en": "linked to focus"
+                },
+                "efeito": "anel",
+                "cor": "mind"
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "tirosina",
+                  "en": "tyrosine"
+                },
+                "cue": {
+                  "pt": "a tirosina",
+                  "en": "tyrosine"
+                },
+                "x": 180,
+                "y": 580,
+                "out": {
+                  "pt": "ligadas ao foco",
+                  "en": "linked to focus"
+                }
+              },
+              {
+                "text": {
+                  "pt": "dopamina",
+                  "en": "dopamine"
+                },
+                "cue": {
+                  "pt": "dopamina",
+                  "en": "dopamine"
+                },
+                "x": 870,
+                "y": 580
+              },
+              {
+                "text": {
+                  "pt": "foco",
+                  "en": "focus"
+                },
+                "cue": {
+                  "pt": "ao foco",
+                  "en": "to focus"
+                },
+                "seta": "cabeca",
+                "x": 180,
+                "y": 580
+              }
+            ],
+            "transicao": "corte"
+          }
+        },
+        {
+          "id": "careful",
+          "scene": "lista",
+          "pt": {
+            "caption": "Como tem cafeína, *evite* perto da hora de dormir, na gravidez ou se você for sensível a estimulantes."
+          },
+          "en": {
+            "caption": "It has caffeine, so *avoid it* near bedtime, during pregnancy, or if you're sensitive to stimulants."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Atenção",
+              "en": "Careful"
+            },
+            "ambiente": "casa",
+            "hora": "noite",
+            "mood": "focado",
+            "items": [
+              {
+                "icon": "moon",
+                "text": {
+                  "pt": "perto de dormir",
+                  "en": "near bedtime"
+                },
+                "cue": {
+                  "pt": "hora de dormir",
+                  "en": "near bedtime"
+                }
+              },
+              {
+                "icon": "woman",
+                "text": {
+                  "pt": "na gravidez",
+                  "en": "pregnancy"
+                },
+                "cue": {
+                  "pt": "na gravidez",
+                  "en": "during pregnancy"
+                }
+              },
+              {
+                "icon": "alert-circle",
+                "text": {
+                  "pt": "sensível a estimulantes",
+                  "en": "sensitive to stimulants"
+                },
+                "cue": {
+                  "pt": "sensível a estimulantes",
+                  "en": "sensitive to stimulants"
+                }
+              }
+            ],
+            "camera": {
+              "move": "pull",
+              "focus": "centro",
+              "forca": "leve"
+            },
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "evite",
+                  "en": "avoid"
+                },
+                "cue": {
+                  "pt": "evite",
+                  "en": "avoid it"
+                },
+                "tom": "ouro",
+                "x": 760,
+                "y": 925
+              }
+            ]
+          },
+          "hold": 0.8
+        },
+        {
+          "id": "take",
+          "scene": "cena",
+          "hold": 0.4,
+          "pt": {
+            "caption": "Misture na água e tome *de trinta a sessenta minutos antes* do treino."
+          },
+          "en": {
+            "caption": "Mix it in water and take it *thirty to sixty minutes before* training."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Antes do treino",
+              "en": "Before training"
+            },
+            "ambiente": "cozinha",
+            "hora": "dia",
+            "setting": "mesa",
+            "plano": "fechado",
+            "holding": "coqueteleira",
+            "mood": "ok",
+            "acoes": [
+              {
+                "acao": "mexer",
+                "cue": {
+                  "pt": "Misture",
+                  "en": "Mix it"
+                },
+                "ate": {
+                  "pt": "e tome",
+                  "en": "take it"
+                }
+              },
+              {
+                "acao": "beber",
+                "cue": {
+                  "pt": "e tome",
+                  "en": "take it"
+                }
+              }
+            ],
+            "objects": [
+              {
+                "p": "pote",
+                "cue": {
+                  "pt": "Misture",
+                  "en": "Mix it"
+                },
+                "run": {
+                  "cue": {
+                    "pt": "Misture",
+                    "en": "Mix it"
+                  },
+                  "ate": {
+                    "pt": "na água",
+                    "en": "in water"
+                  }
+                }
+              },
+              {
+                "p": "relogio",
+                "cue": {
+                  "pt": "minutos antes",
+                  "en": "minutes before"
+                }
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "água",
+                  "en": "water"
+                },
+                "cue": {
+                  "pt": "na água",
+                  "en": "in water"
+                },
+                "out": {
+                  "pt": "sessenta",
+                  "en": "sixty"
+                },
+                "x": 820,
+                "y": 480
+              },
+              {
+                "text": {
+                  "pt": "minutos antes",
+                  "en": "minutes before"
+                },
+                "cue": {
+                  "pt": "minutos antes",
+                  "en": "minutes before"
+                },
+                "seta": [
+                  935,
+                  1010
+                ],
+                "x": 820,
+                "y": 480,
+                "max": 380
+              }
+            ]
+          }
+        },
+        {
+          "id": "arrive",
+          "scene": "faz",
+          "hold": 0.8,
+          "pt": {
+            "caption": "Nesse tempo, você se troca e sai de casa pra chegar no treino *com disposição*."
+          },
+          "en": {
+            "caption": "In that time, you get changed and head out to start training *ready to go*."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Na academia",
+              "en": "At the gym"
+            },
+            "ambiente": "academia",
+            "hora": "dia",
+            "plano": "fechado",
+            "mood": "ok",
+            "turn": {
+              "pt": "com disposição",
+              "en": "ready to go"
+            },
+            "to": "focado",
+            "passos": [
+              {
+                "acao": "andar",
+                "de": 460,
+                "para": 540,
+                "ritmo": "rapido"
+              },
+              {
+                "acao": "levantar",
+                "cue": {
+                  "pt": "chegar no treino",
+                  "en": "start training"
+                },
+                "peca": "peso",
+                "reps": 3,
+                "ritmo": "rapido"
+              }
+            ],
+            "elenco": [
+              {
+                "seed": 5,
+                "x": 160,
+                "acao": "levantar",
+                "cue": {
+                  "pt": "você se troca",
+                  "en": "you get changed"
+                }
+              },
+              {
+                "seed": 0,
+                "x": 860,
+                "acao": "saltar",
+                "cue": {
+                  "pt": "você se troca",
+                  "en": "you get changed"
+                }
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "disposição",
+                  "en": "ready to go"
+                },
+                "cue": {
+                  "pt": "com disposição",
+                  "en": "ready to go"
+                },
+                "x": 540,
+                "y": 570
+              }
+            ]
+          }
+        }
+      ],
+      "boneco": "serie",
+      "visual": "v5"
+    }
+  }
+}

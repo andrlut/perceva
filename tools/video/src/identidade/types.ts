@@ -85,6 +85,14 @@ export const CORPO = {
 };
 
 export type PessoaProps = {
+  /** boneco v5: a peça que a mão da frente segura (o estilo desenha os dedos por cima); as outras identidades ignoram */
+  segura?: string;
+  /** boneco v5: as duas mãos seguram (os halteres da série de força) */
+  seguraDuas?: boolean;
+  /** boneco v5: 0..1, o corpo de vidro da cena `dentro`; as outras identidades ignoram */
+  vidro?: number;
+  /** boneco v5: figurante (nunca vira a protagonista pelo seed) */
+  figurante?: boolean;
   t?: number;
   size?: number;
   accent?: string;

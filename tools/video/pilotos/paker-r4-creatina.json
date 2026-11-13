@@ -1,0 +1,558 @@
+{
+  "_doc": "Piloto r4 da ideia creatina-alem-da-musculacao: o MESMO roteiro e a MESMA voz da r3, desenhado pelo boneco v5 (estilo 'serie', escolhido pelo André em 09/11 depois do painel às cegas), com o fundo nítido e vivo (visual v5) e a roupa saindo da cena. A protagonista vira a Bia (jovem, atlética): tiro de corrida e salto pedem quem faz isso — a r3 tinha uma senhora de cardigã correndo.",
+  "slug": "paker-health-energia-pele-forca",
+  "ideas": {
+    "creatina-alem-da-musculacao": {
+      "dimension": "body",
+      "fase": 3,
+      "protagonista": {
+        "seed": 3,
+        "pessoa": "bia"
+      },
+      "lines": [
+        {
+          "id": "hook",
+          "scene": "pensa",
+          "hold": 0.5,
+          "pt": {
+            "caption": "Creatina é *só pra quem faz musculação*, e tem que ser antes do treino?"
+          },
+          "en": {
+            "caption": "Is creatine *just for bodybuilders*, and does it have to be before training?"
+          },
+          "props": {
+            "ambiente": "cozinha",
+            "hora": "manha",
+            "plano": "fechado",
+            "camera": {
+              "move": "push",
+              "forca": "leve",
+              "focus": "centro"
+            },
+            "mood": "ok",
+            "thought": "peso",
+            "at": {
+              "pt": "só pra",
+              "en": "just for"
+            },
+            "objects": [
+              {
+                "p": "pote",
+                "cue": {
+                  "pt": "Creatina",
+                  "en": "creatine"
+                },
+                "run": {
+                  "ate": {
+                    "pt": "musculação",
+                    "en": "bodybuilders"
+                  }
+                }
+              },
+              {
+                "p": "relogio",
+                "cue": {
+                  "pt": "antes do treino",
+                  "en": "before training"
+                }
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "creatina",
+                  "en": "creatine"
+                },
+                "cue": {
+                  "pt": "Creatina",
+                  "en": "creatine"
+                },
+                "seta": [
+                  950,
+                  1030
+                ],
+                "out": {
+                  "pt": "antes do treino",
+                  "en": "before training"
+                }
+              },
+              {
+                "text": {
+                  "pt": "antes do treino",
+                  "en": "before training"
+                },
+                "cue": {
+                  "pt": "antes do treino",
+                  "en": "before training"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "reserve",
+          "scene": "dentro",
+          "pt": {
+            "caption": "Seu corpo já produz creatina e guarda no músculo, onde ela vira *reserva de energia* pra esforços curtos e intensos."
+          },
+          "en": {
+            "caption": "Your body already makes creatine and stores it in muscle, where it becomes *an energy reserve* for quick bursts of hard effort."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Dentro do músculo",
+              "en": "Inside your muscles"
+            },
+            "plano": "corpo",
+            "transicao": "zoom",
+            "mood": "ok",
+            "origem": "tronco",
+            "fluxos": [
+              {
+                "para": "musculos",
+                "cor": "ouro",
+                "particula": "grao",
+                "cue": {
+                  "pt": "produz creatina",
+                  "en": "makes creatine"
+                }
+              }
+            ],
+            "regioes": [
+              {
+                "parte": "musculos",
+                "cue": {
+                  "pt": "guarda no músculo",
+                  "en": "stores it in muscle"
+                },
+                "efeito": "acende",
+                "cor": "body",
+                "rotulo": {
+                  "pt": "no músculo",
+                  "en": "in muscle"
+                }
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "creatina",
+                  "en": "creatine"
+                },
+                "cue": {
+                  "pt": "produz creatina",
+                  "en": "makes creatine"
+                },
+                "seta": "tronco",
+                "out": {
+                  "pt": "reserva de energia",
+                  "en": "an energy reserve"
+                },
+                "x": 190,
+                "y": 960
+              },
+              {
+                "text": {
+                  "pt": "esforços curtos",
+                  "en": "quick bursts"
+                },
+                "cue": {
+                  "pt": "esforços curtos",
+                  "en": "quick bursts"
+                },
+                "seta": [
+                  800,
+                  1090
+                ],
+                "x": 905,
+                "y": 900,
+                "max": 260
+              }
+            ],
+            "lente": {
+              "sobre": "braco",
+              "cue": {
+                "pt": "onde ela vira",
+                "en": "where it becomes"
+              },
+              "cresce": {
+                "pt": "reserva de energia",
+                "en": "an energy reserve"
+              },
+              "conteudo": {
+                "reserva": {
+                  "conteudo": "grao",
+                  "nivel": [
+                    {
+                      "v": 0.25
+                    },
+                    {
+                      "v": 0.78,
+                      "cue": {
+                        "pt": "onde ela vira",
+                        "en": "where it becomes"
+                      }
+                    }
+                  ],
+                  "gasta": [
+                    {
+                      "cue": {
+                        "pt": "esforços curtos",
+                        "en": "quick bursts"
+                      }
+                    },
+                    {
+                      "cue": {
+                        "pt": "curtos e intensos",
+                        "en": "hard effort"
+                      }
+                    }
+                  ],
+                  "rotulo": {
+                    "text": {
+                      "pt": "reserva",
+                      "en": "reserve"
+                    },
+                    "cue": {
+                      "pt": "reserva de energia",
+                      "en": "an energy reserve"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "efforts2",
+          "scene": "faz",
+          "hold": 0.6,
+          "pt": {
+            "caption": "Por isso ela ajuda o desempenho quando o esforço se repete: em *tiros de corrida*, saltos e séries de força."
+          },
+          "en": {
+            "caption": "That's why it helps performance in repeated bursts: *sprints*, jumps and strength sets."
+          },
+          "props": {
+            "ambiente": "parque",
+            "hora": "manha",
+            "gente": "nenhuma",
+            "plano": "fechado",
+            "mood": "focado",
+            "medidor": {
+              "nivel": 0.66,
+              "gasta": 0.09,
+              "lado": "direita"
+            },
+            "passos": [
+              {
+                "acao": "correr",
+                "para": 540,
+                "ate": {
+                  "pt": "quando o esforço",
+                  "en": "in repeated"
+                },
+                "ritmo": "rapido"
+              },
+              {
+                "acao": "correr",
+                "para": 540,
+                "cue": {
+                  "pt": "se repete",
+                  "en": "repeated bursts"
+                },
+                "ritmo": "rapido"
+              },
+              {
+                "acao": "saltar",
+                "cue": {
+                  "pt": "saltos",
+                  "en": "jumps"
+                },
+                "ritmo": "rapido"
+              },
+              {
+                "acao": "levantar",
+                "cue": {
+                  "pt": "séries de força",
+                  "en": "strength sets"
+                },
+                "reps": 2,
+                "ritmo": "rapido",
+                "peca": "peso"
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "se repete",
+                  "en": "repeated"
+                },
+                "cue": {
+                  "pt": "se repete",
+                  "en": "repeated bursts"
+                },
+                "out": {
+                  "pt": "tiros de corrida",
+                  "en": "sprints"
+                },
+                "x": 170,
+                "y": 400,
+                "max": 240
+              },
+              {
+                "text": {
+                  "pt": "tiros de corrida",
+                  "en": "sprints"
+                },
+                "cue": {
+                  "pt": "tiros de corrida",
+                  "en": "sprints"
+                },
+                "x": 170,
+                "y": 400,
+                "max": 240
+              },
+              {
+                "text": {
+                  "pt": "saltos",
+                  "en": "jumps"
+                },
+                "cue": {
+                  "pt": "saltos",
+                  "en": "jumps"
+                },
+                "x": 170,
+                "y": 545,
+                "max": 240
+              },
+              {
+                "text": {
+                  "pt": "séries de força",
+                  "en": "strength sets"
+                },
+                "cue": {
+                  "pt": "séries de força",
+                  "en": "strength sets"
+                },
+                "x": 170,
+                "y": 670,
+                "max": 240
+              }
+            ]
+          }
+        },
+        {
+          "id": "everyone2",
+          "scene": "faz",
+          "pt": {
+            "caption": "Então não é só pra musculação: ela ajuda em treinos feitos de *arrancadas curtas e fortes*."
+          },
+          "en": {
+            "caption": "So it's not just for bodybuilders: it helps training built on *short, explosive efforts*."
+          },
+          "props": {
+            "ambiente": "parque",
+            "hora": "manha",
+            "plano": "fechado",
+            "transicao": "corte",
+            "camera": {
+              "move": "pull",
+              "forca": "leve"
+            },
+            "mood": "focado",
+            "passos": [
+              {
+                "acao": "correr",
+                "para": 540,
+                "ritmo": "rapido"
+              },
+              {
+                "acao": "pronta",
+                "cue": {
+                  "pt": "ela ajuda",
+                  "en": "it helps"
+                }
+              },
+              {
+                "acao": "correr",
+                "para": 540,
+                "ritmo": "rapido",
+                "cue": {
+                  "pt": "arrancadas curtas",
+                  "en": "short, explosive"
+                }
+              }
+            ],
+            "elenco": [
+              {
+                "seed": 1,
+                "x": 300,
+                "acao": "saltar",
+                "ritmo": "rapido",
+                "cue": {
+                  "pt": "não é só",
+                  "en": "not just"
+                },
+                "ate": {
+                  "pt": "fortes",
+                  "en": "efforts"
+                }
+              },
+              {
+                "seed": 5,
+                "x": 860,
+                "acao": "levantar",
+                "ritmo": "lento",
+                "cue": {
+                  "pt": "não é só",
+                  "en": "not just"
+                },
+                "ate": {
+                  "pt": "fortes",
+                  "en": "efforts"
+                }
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "musculação",
+                  "en": "bodybuilders"
+                },
+                "cue": {
+                  "pt": "musculação",
+                  "en": "bodybuilders"
+                },
+                "x": 860,
+                "y": 1250,
+                "seta": [
+                  920,
+                  940
+                ],
+                "out": {
+                  "pt": "ela ajuda",
+                  "en": "it helps"
+                }
+              },
+              {
+                "text": {
+                  "pt": "arrancadas",
+                  "en": "explosive"
+                },
+                "cue": {
+                  "pt": "arrancadas curtas",
+                  "en": "short, explosive"
+                },
+                "x": 860,
+                "y": 1320,
+                "seta": "perna"
+              }
+            ]
+          }
+        },
+        {
+          "id": "stock",
+          "scene": "dentro",
+          "hold": 0.5,
+          "pt": {
+            "caption": "Não precisa tomar antes do treino: *o efeito vem do estoque cheio*, não da hora da dose."
+          },
+          "en": {
+            "caption": "You don't need it before training: *the effect comes from full stores*, not from the timing."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Na prática",
+              "en": "In practice"
+            },
+            "plano": "lupa",
+            "pessoa": "grande",
+            "ambiente": "parque",
+            "hora": "dia",
+            "camera": {
+              "move": "push",
+              "focus": "peca",
+              "forca": "leve"
+            },
+            "holding": "coqueteleira",
+            "mood": "ok",
+            "acoes": [
+              {
+                "acao": "mexer"
+              },
+              {
+                "acao": "beber",
+                "cue": {
+                  "pt": "antes do treino",
+                  "en": "before training"
+                }
+              }
+            ],
+            "lente": {
+              "sobre": "braco",
+              "cue": {
+                "pt": "tomar",
+                "en": "need it"
+              },
+              "conteudo": {
+                "reserva": {
+                  "conteudo": "grao",
+                  "nivel": [
+                    {
+                      "v": 1
+                    }
+                  ],
+                  "pinga": [
+                    {
+                      "cue": {
+                        "pt": "treino",
+                        "en": "training"
+                      }
+                    },
+                    {
+                      "cue": {
+                        "pt": "da dose",
+                        "en": "the timing"
+                      }
+                    }
+                  ],
+                  "rotulo": {
+                    "text": {
+                      "pt": "estoque cheio",
+                      "en": "full stores"
+                    },
+                    "cue": {
+                      "pt": "estoque cheio",
+                      "en": "full stores"
+                    }
+                  }
+                }
+              }
+            },
+            "rotulos": [],
+            "roupa": "esporte"
+          }
+        },
+        {
+          "id": "do",
+          "scene": "verso",
+          "pt": {
+            "say": "Tome três a cinco gramas de creatina todo dia, em qualquer horário, para manter o estoque do músculo cheio."
+          },
+          "en": {
+            "say": "Take three to five grams of creatine every day, at any time, to keep your muscle stores full."
+          },
+          "props": {
+            "frente": {
+              "mood": "ok",
+              "arms": "down"
+            }
+          }
+        }
+      ],
+      "boneco": "serie",
+      "visual": "v5"
+    }
+  }
+}

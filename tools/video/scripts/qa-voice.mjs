@@ -22,8 +22,9 @@ const scriptFile = dir ? path.join(voDir, 'spec.json') : path.join(root, 'src', 
 const { lines } = JSON.parse(fs.readFileSync(scriptFile, 'utf8'));
 const key = process.env.GEMINI_API_KEY;
 
-// "5" e "cinco" contam como a mesma palavra (o transcritor escreve algarismo)
-const NUM = { um: '1', uma: '1', dois: '2', duas: '2', tres: '3', quatro: '4', cinco: '5', seis: '6', sete: '7', oito: '8', nove: '9', dez: '10', one: '1', two: '2', three: '3', four: '4', five: '5', six: '6', seven: '7', eight: '8', nine: '9', ten: '10' };
+// "5" e "cinco" contam como a mesma palavra (o transcritor escreve algarismo); as dezenas também
+// ("de trinta a sessenta minutos" do card do pré-treino: o transcritor escreve "30 a 60")
+const NUM = { um: '1', uma: '1', dois: '2', duas: '2', tres: '3', quatro: '4', cinco: '5', seis: '6', sete: '7', oito: '8', nove: '9', dez: '10', vinte: '20', trinta: '30', quarenta: '40', cinquenta: '50', sessenta: '60', setenta: '70', oitenta: '80', noventa: '90', one: '1', two: '2', three: '3', four: '4', five: '5', six: '6', seven: '7', eight: '8', nine: '9', ten: '10', twenty: '20', thirty: '30', forty: '40', fifty: '50', sixty: '60', seventy: '70', eighty: '80', ninety: '90' };
 const norm = (s) =>
   s
     .toLowerCase()
@@ -123,9 +124,21 @@ for (const line of lines) {
     );
     if (ok) break;
     if (!fix || t === tries) { failed++; break; }
-    // regrava com a MESMA voz da gravação (--voice): sem isso o tts-gemini caía no padrão (Kore)
+    // regrava com a MESMA voz da gravação (--voice): sem isso o tts-gemini caía no padrão (Kore);
+    // --tts eleven regrava pela ElevenLabs (tts-eleven.mjs, mesmo contrato), com o mesmo --model
     const voiceArg = arg('voice');
-    execFileSync('node', [path.join(root, 'scripts/tts-gemini.mjs'), ...(dir ? ['--dir', dir, '--lang', lang] : name ? ['--script', name] : []), ...(voiceArg ? ['--voice', voiceArg] : []), '--only', line.id], { stdio: 'ignore' });
+    const modelArg = arg('model');
+    const ttsScript = arg('tts') === 'eleven' ? 'tts-eleven.mjs' : 'tts-gemini.mjs';
+    try {
+      execFileSync('node', [path.join(root, 'scripts', ttsScript), ...(dir ? ['--dir', dir, '--lang', lang] : name ? ['--script', name] : []), ...(voiceArg ? ['--voice', voiceArg] : []), ...(modelArg ? ['--model', modelArg] : []), '--only', line.id], { stdio: 'ignore' });
+    } catch (e) {
+      // a cota da ElevenLabs acabou na regravação: sai com 3 (não é reprovação) e o molde regrava tudo com a Kore
+      if (e.status === 3) {
+        console.error(`✗ ${line.id}: ElevenLabs sem cota na regravação`);
+        process.exit(3);
+      }
+      throw e;
+    }
   }
 }
 } catch (e) {

@@ -209,8 +209,8 @@ export const Footnote: React.FC<{ text: string; from?: number; top?: number; siz
  * passagens (não anda com a câmera nem cresce no hexágono), por baixo da legenda. A fase 1 tinha
  * também um grão fixo; o André viu no celular e achou que parecia baixa resolução — saiu na 1.1.
  */
-export const Lente: React.FC = () => (
-  <AbsoluteFill style={{ pointerEvents: 'none', background: 'radial-gradient(ellipse 82% 64% at 50% 46%, rgba(5,7,26,0) 58%, rgba(5,7,26,0.3) 100%)' }} />
+export const Lente: React.FC<{ canto?: number }> = ({ canto = 0.3 }) => (
+  <AbsoluteFill style={{ pointerEvents: 'none', background: `radial-gradient(ellipse 82% 64% at 50% 46%, rgba(5,7,26,0) 58%, rgba(5,7,26,${canto}) 100%)` }} />
 );
 
 /**

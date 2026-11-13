@@ -12,6 +12,7 @@ import React from 'react';
 import { useIdentity } from '../identidade/context';
 import { C, dimColor } from '../theme';
 import { Arms, Pessoa } from './cast';
+import { filtroFigurante, useVisual } from '../molde/visual';
 
 /**
  * Vistas opcionais da identidade ativa (contrato em src/identidade/types.ts),
@@ -75,10 +76,11 @@ export const Figurante: React.FC<{
 }> = ({ t, x, y, size, seed, arms = 'none', mood = 'ok', dim = DIM, flip = false, accent = FIG_ACCENT }) => {
   // virado: a vista espelhada da identidade (o Topo Iris não sai ao contrário); sem ela, scaleX(-1)
   const { Virada } = useIdentity();
+  const visual = useVisual();
   const Mirror = flip ? Virada : undefined;
   const P = Mirror ?? Pessoa;
   return (
-    <div style={{ position: 'absolute', left: x - size / 2, top: y - size * 1.26, filter: dim, transform: flip && !Mirror ? 'scaleX(-1)' : undefined }}>
+    <div style={{ position: 'absolute', left: x - size / 2, top: y - size * 1.26, filter: filtroFigurante(visual, dim), transform: flip && !Mirror ? 'scaleX(-1)' : undefined }}>
       <P t={t} size={size} seed={seed} skin={SKINS[seed % SKINS.length]} accent={accent} arms={arms} mood={mood} halo={false} />
     </div>
   );
@@ -109,6 +111,7 @@ export const DeCostas: React.FC<{ t: number; x: number; y: number; size: number;
   const shirt = SHIRTS[seed % SHIRTS.length];
   const rot = Math.sin((t + seed * 23) / 40) * 1.2 * sway;
   const Back = useIdentity().Costas;
+  const visual = useVisual();
   return (
     <div
       style={{
@@ -117,7 +120,7 @@ export const DeCostas: React.FC<{ t: number; x: number; y: number; size: number;
         top: y - size * 1.26,
         width: size,
         height: size * 1.3,
-        filter: dim,
+        filter: filtroFigurante(visual, dim),
         transform: `rotate(${rot}deg)`,
         transformOrigin: '50% 100%',
       }}
@@ -610,6 +613,7 @@ export const postoPartes = (x: number, top: number, size = 170, flip = false): [
   const pTop = top - size * 1.3 * 0.7;
   const mx = flip ? x - size * 0.95 : x + size * 0.32;
   const deskW = size * 2.1;
+  const visual = useVisual();
   return [
     [x - 0.34 * size, pTop + 0.12 * size, x + 0.34 * size, pTop + 0.8 * size],
     [x - 0.4 * size, pTop + 0.8 * size, x + 0.4 * size, top],
@@ -638,9 +642,10 @@ export const Posto: React.FC<{ t: number; x: number; top: number; seed: number; 
   const flick = 0.5 + 0.25 * noise(Math.floor(t / 5) + seed * 9);
   const mx = flip ? x - size * 0.95 : x + size * 0.32;
   const deskW = size * 2.1;
+  const visual = useVisual();
   return (
     <>
-      <div style={{ position: 'absolute', left: x - size / 2, top: pTop, filter: DIM }}>
+      <div style={{ position: 'absolute', left: x - size / 2, top: pTop, filter: filtroFigurante(visual, DIM) }}>
         <Pessoa t={t} size={size} seed={seed} skin={skin} accent={FIG_ACCENT} arms="none" mood="ok" />
       </div>
       <svg style={{ position: 'absolute', left: x - deskW / 2, top: top - 120, overflow: 'visible' }} width={deskW} height={240} viewBox={`0 0 ${deskW} 240`}>

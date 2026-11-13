@@ -46,6 +46,17 @@ for every video to come out like that. The video-director and the
 video-reviewer carry the formula; you do not re-explain it to them, you
 give them the inputs below and enforce the budgets.
 
+**Since 2026-11-13 every NEW idea video is the 60 s model** (approved on
+the same three Paker videos, r4 of the canonical file): fase 3 **plus** the
+boneco v5 ("Animação de série"), no card at the end (`"fim": "cena"` — the
+card is collected on the app screen), the whole body of the idea told in
+6–12 lines, and a narrator picked from the voice cast
+(`tools/video/vozes.json`) that **rotates** — the maintainer: "pode ir
+rodando as vozes, quero que não seja um padrão". Everything below about
+fase 3, fidelity, "sem dado de pesquisa", PT/EN, the reviews, the voice QA,
+the 3-per-run ceiling and the recency rule still holds. Old videos (no
+`fim`) keep their model: 4–8 lines, ≤ 58 s, the card turning.
+
 Since the "ideias primeiro" redesign (2026-09-07) a material is:
 
 - **Its ideias — one by default, each extra one justified** — the unit of
@@ -147,6 +158,40 @@ grep -q '^## Fase 3' tools/video/MOLDE.md && [ "${f3:-0}" -gt 0 ] && echo "FASE3
 `FASE3 MISSING` → the run goes on **without videos** (skip 9d–9h, every
 idea ships `video: null`) and the report says "vídeos: fase 3 ausente no
 main". Never make a video in the old formula.
+
+**Then check that it carries the 60 s model** (the voice cast, the v5
+boneco and the canonical script in r4):
+
+```bash
+fc=$(grep -c '"fim": "cena"' learning-drops/video-specs/paker-health-energia-pele-forca.json 2>/dev/null)
+[ -f tools/video/vozes.json ] && [ -f tools/video/src/boneco/estilos/serie.tsx ] && [ "${fc:-0}" -gt 0 ] && echo "MODELO60 OK" || echo "MODELO60 MISSING — video steps skipped"
+```
+
+`MODELO60 MISSING` → the same as `FASE3 MISSING`: no videos this run,
+every idea ships `video: null`, and the report says "vídeos: modelo de
+60 s ausente no main". Never make a new video in the older model.
+
+**Then the ElevenLabs credits** (only when both checks print OK):
+
+```bash
+q=$(node tools/video/scripts/tts-eleven.mjs --quota 2>&1); printf '%s\n' "$q"
+livre=$(printf '%s' "$q" | sed -n 's/.*: \([0-9]*\) de \([0-9]*\) .*/\2 \1/p' | awk '{print $1-$2}')
+case "$q" in "plano free:"*) livre=0 ;; esac
+[ "${livre:-0}" -ge 3000 ] && echo "ELEVEN OK ($livre créditos)" || echo "ELEVEN BAIXA — Kore nesta rodada"
+```
+
+The key is the Windows **user** variable `ELEVENLABS_API_KEY`;
+`tts-eleven.mjs` reads it from the registry when the process env lacks it.
+**Never print it** — no `echo`, no `env | grep`: `--quota` is the check,
+and it prints only the plan line (`plano <tier>: N de M créditos usados`)
+or `✗ ELEVENLABS_API_KEY não encontrada`. (A libuv `Assertion failed` line
+after it on Windows is noise.) `ELEVEN BAIXA` — no key, the free plan (no
+commercial license, says the script header) or fewer than ~3,000 credits
+left — means **Kore this run**: tell the director in 9d to write
+`"voz": {"pt": "kore", "en": "kore"}` (Liam is ElevenLabs too), tell the
+reviewer in 9e the voice was forced, and put "vozes: Kore nesta rodada
+(<motivo>)" in the report. Keep `livre` for the report (credits before →
+after).
 
 ### 2. Spawn the planner
 
@@ -527,15 +572,62 @@ card verbatim, so any later change to a title or claim means a new video).
 "vídeo pendente: <ids>" (a later run or the maintainer fills them — never
 this run). Pass the director only the ideas in the video steps.
 
-Spawn `learning-video-director` with the `slug` and that idea list (and, in
-rewrite mode, a note that the existing `learning-drops/video-specs/<slug>.json`
-must keep the line ids that did not change — an old idea that gets
-re-rendered moves to fase 3 with the same spoken text, so its voice stays).
-It writes every idea in **fase 3** (`fase: 3`, a `protagonista` and a "por
-dentro" signature — it lists the recent videos itself), returns only after
-`node tools/video/scripts/molde.mjs lint --slug <slug>` is clean, and
-previews its own frames without voice (`build --lang both --silent` +
-`stills --at`, at most 2 rounds). The silent build it leaves behind is
+First collect `vozes_recentes` — the narrator of each recently published
+idea video, most recent first (it goes to the director here and to the
+reviewer in 9e):
+
+```bash
+slug=<slug>
+cd "$(git rev-parse --show-toplevel)"
+git log --diff-filter=AM --name-only --format= -- learning-drops/video-specs/ \
+  | grep -v -e doors.json -e marca.json -e "/$slug.json" | awk 'NF && !seen[$0]++' | head -4 \
+  | xargs node -e '
+const fs = require("fs");
+for (const f of process.argv.slice(1)) { if (!fs.existsSync(f)) continue; const j = JSON.parse(fs.readFileSync(f, "utf8"));
+  for (const [id, i] of Object.entries(j.ideas)) { const v = i.voz ?? j.voz;
+    console.log(f.split("/").pop(), id, "dim", i.dimension ?? j.dimension ?? "-", "| voz pt", v?.pt ?? "kore", "· en", v?.en ?? "kore", v ? "" : "(sem voz = Kore)"); } }'
+```
+
+One line per idea; an idea without `voz` was recorded with Kore.
+
+**The voice rule** (the same sentence in the director and the reviewer):
+the PT voice of a new idea differs from the PT voice of the **2 most
+recently published** idea videos (the first 2 lines of the listing) and
+from its sibling ideas' (when no voice is left — 3 siblings, 4 general
+voices, 2 recent — the last sibling may repeat the older recent one, line
+2, never line 1); the EN differs from the EN of the video published
+**immediately before** when it can. No fixed order (not a predictable
+rotation), and no pairing of the voice's sex with the protagonist's — the
+voice is a narrator; either sex fits any protagonist. The cast (`tools/video/vozes.json`): PT `lendario` (the
+preferred), `dani`, `will`, `roberta` for any topic; `juliano` ONLY for an
+idea with `dimension` `"bonds"`, never a scientific topic; `kore` is the PT
+reserve. EN: `kore` (Gemini) or `liam` (ElevenLabs). Vetoed: `paulo`,
+`amandoca`, `fernanda`. The lint bars a vetoed voice and Juliano outside
+`bonds`; the rotation is the reviewer's to check. After `ELEVEN BAIXA` in
+Bootstrap the voice is Kore in both languages and the rotation yields.
+
+Spawn `learning-video-director` with the `slug`, that idea list,
+`vozes_recentes` and the Bootstrap voice state (`ELEVEN OK`, or "Kore
+nesta rodada") — and, in rewrite mode, a note that the existing
+`learning-drops/video-specs/<slug>.json` must keep the line ids that did
+not change (an old idea that gets re-rendered moves to fase 3 with the same
+spoken text, so its voice stays; it keeps its model — the 60 s model is for
+new videos). It writes every NEW idea in the **60 s model**: `"fase": 3`,
+`"boneco": "serie"`, `"visual": "v5"`, `"fim": "cena"`, `"protagonista":
+{ "seed", "pessoa" }` (`pessoa` = an id of the v5 cast,
+`tools/video/src/boneco/elenco.ts`), a "por dentro" signature (it lists the
+recent videos itself) and `"voz": { "pt", "en" }` by the voice rule. Every
+sentence of the body that teaches something becomes a line (6–12 lines);
+out of the video: study, author, institution, "one of the most studied",
+research numbers (they become words) and the partner's brand or product.
+No `verso` scene: the last line(s) say the card's instruction, its numbers
+**spelled out**, while the screen shows her doing it (worked example:
+`docs/publisher/index.html`, section `id="exemplo"`). It returns only after
+`node tools/video/scripts/molde.mjs lint --slug <slug>` is clean (for
+`fim: "cena"`: 6–12 lines and ≤ 70 s estimated, `LIMITS.semCardLines` /
+`LIMITS.semCardSeconds`), and previews its own frames without voice
+(`build --lang both --silent` + `stills --at`, at most 2 rounds). The
+silent build it leaves behind is
 harmless: step 9f's `build` (without `--silent`) restores the keys, and
 `voice` refuses a silent build. If it returns `error` (the canonical fase 3
 script is not in this checkout), skip the video steps as in Bootstrap.
@@ -555,7 +647,9 @@ From its return, `protagonista`, `por_dentro`, `small_scene`, `places`,
 `vs_recent`, `warnings_kept` and `gaps` go into the report (a `gaps`
 entry — a metaphor or action the template lacks for a topic without a
 body — is a request to the maintainer, never something to improvise in this
-run); `preview.left` goes to the frames reviewer in 9g.
+run); so does the `voz` of each idea, PT and EN, read from the script it
+wrote (`learning-drops/video-specs/<slug>.json`); `preview.left` goes to
+the frames reviewer in 9g.
 
 ### 9e. Script gate — the video reviewer (before spending on voice)
 
@@ -565,14 +659,19 @@ command in `.claude/agents/learning-video-director.md` ("Leia antes", step
 4), leaving out this `slug`. It is a handful of lines; never hand the
 reviewer the other scripts whole.
 
-Spawn `learning-video-reviewer` in **mode script** with the `slug` and
-`recent`. It checks every line, per language: fidelity to the body (what
+Spawn `learning-video-reviewer` in **mode script** with the `slug`,
+`recent` and `vozes_recentes` (the 9d listing; after `ELEVEN BAIXA`, also
+the note that the voice was forced to Kore this run). It checks every line,
+per language: fidelity to the body (what
 the screen demonstrates counts as a claim; the partner rules — no brand,
 no before × after, nothing instantaneous), no research data, story →
 verso, scene/piece shows the line, the fase 3 rules (fase + own
 protagonist, places, she is never small in the hook, the recency rule,
 something demonstrates the mechanism or method, words on screen from the
-line, no vetoed celebration), PT/EN parity, speakable.
+line, no vetoed celebration), PT/EN parity, speakable — and, in the 60 s
+model, that the body is covered line by line, the video ends on the verso
+demonstrated (the card's numbers spelled out, no `verso` scene) and the
+`voz` follows the voice rule of 9d.
 
 - `pass: true` → step 9f.
 - `pass: false` → hand the `issues` back to the director as `fix_notes`
@@ -599,12 +698,35 @@ Per idea from here to 9h: without `--idea` every command takes every idea
 of the script, the ones a gate already dropped included (TTS and render
 spent on a video that will not ship).
 
-`voice` records every line with Gemini TTS (voice Kore), transcribes it back
-and re-records what does not match — similarity ≥ 86% **and every content
-word of the script present** (this is what caught "provável" heard as "pro
-app"). It exits non-zero when a line fails 4 takes: send that line back to
-the director as a `voz` fix (a different word, not the same one again), then
-`build` + `voice` once more. Second failure → that idea ships without video.
+`voice` records with **the voice of the script**: `build` copies the
+idea's `voz.<lang>` into the key's `spec.json` and `voice` looks it up in
+`tools/video/vozes.json`. Order (`vozDaChave` in `molde.mjs`): `--voz
+<chave>` > raw `--tts`/`--voice` > the script's `voz` > the `voz.json`
+already recorded for the key > Kore. **Pass neither `--voz` nor `--tts`
+here** — the script's `voz` is the choice the reviewer passed. An
+ElevenLabs voice records the whole script **in one take** (`eleven_v4` with
+the `language_code`, no style exaggeration), cut into lines by the timing
+of each character; Kore (Gemini) records line by line. Changing the voice
+re-records the whole script — never two narrators in one video. A 9g fix
+that changes one line re-records only that line, with the same voice.
+
+Then it transcribes every take back and re-records what does not match —
+the same QA for any voice: similarity ≥ 86% **and every content word of
+the script present** (this is what caught "provável" heard as "pro app"),
+plus the narrator's sex. It exits non-zero when a line fails 4 takes: send
+that line back to the director as a `voz` fix (a different word, not the
+same one again), then `build` + `voice` once more. Second failure → that
+idea ships without video.
+
+**Quota fallback.** When the ElevenLabs credits run out, `tts-eleven.mjs`
+exits with code 3 and `voice` re-records that key's whole script with Kore:
+it prints `! <key>: ElevenLabs sem cota — gravando com a Kore (diga no
+relatório)` and `tools/video/public/molde/<key>/voz.json` gets
+`"fallback": "cota da ElevenLabs"`. The run goes on; the video ships with
+Kore and the report says which key fell back. (A quota that ends during a
+QA re-take does not fall back — it surfaces as a QA failure; run
+`node scripts/tts-eleven.mjs --quota` before blaming the line.) Each
+`voice` prints `voz de <key>: <nome>` — copy it into the report.
 
 ### 9g. Frames gate — blind read, fase 3 bar, one guided fix
 
@@ -672,6 +794,14 @@ frames round, never a re-render "to see if it got better". A material with
 more ideas multiplies this cost — one more reason to keep one idea by
 default, and the reason for the 3-videos-per-run ceiling in 9d.
 
+**Voice credits.** ElevenLabs costs ~1 credit per character: ~1,000 for a
+60 s PT video, about the same in EN with Liam. A QA re-take spends that
+line's characters again; a voice change re-records the whole script. A
+full run (3 ideas × PT + EN on ElevenLabs) spends up to ~6,000; Kore
+spends no credits. At the end run `node tools/video/scripts/tts-eleven.mjs
+--quota` again and put "créditos ElevenLabs: <livre antes> → <livre
+depois>" in the report.
+
 ### 9h. Render + upload
 
 **Only the ideas that passed every gate, one at a time.** Without
@@ -696,15 +826,22 @@ supabase storage ls ss:///learning-media/<slug>/ --experimental --linked
 and only the last idea would survive. The `video.json` files are local,
 gitignored render outputs.)
 
-**The length check is yours: `render` does not stop on its own.** It
-prints `✓ <key>: NN.N s` per video (also `duration_seconds` in
-`out/molde/<key>/video.json`); the lint only bars > 58 s *estimated*, and
-the real voice can run longer. A video over 60 s counts as a frames
-failure, **with no loop**: if the idea's guided fix of 9g is still unused,
-spend it here (the director cuts a `hold` or a line → build → voice if a
-line changed → stills → frames review → render once more); if it was
-already spent, the idea ships **without video** and the report says "acima
-de 60 s". Each video is ~2 MB at 720p. It also prints a `ritmo:` line per video (share of
+**The length check is yours.** The ceiling depends on the model: **≤ 80 s
+with `"fim": "cena"`** (`MOLDE_MAX_SECONDS_SEM_CARD` in
+`tools/video/src/molde/Molde.tsx`; the lint bars > 70 s *estimated*) and
+**≤ 60 s for a video with the card** (`MOLDE_MAX_SECONDS`; the lint
+bars > 58 s estimated). The real voice can run longer than the estimate. Over
+its ceiling the composition refuses to open: `stills` (9g) or `render`
+dies with `<key>: NN.N s passa do teto de N s — corte o roteiro` — that is
+this length failure, not "the render crashing". `render` prints
+`✓ <key>: NN.N s` per video (also `duration_seconds` in
+`out/molde/<key>/video.json`); copy it into the report. A video over its
+ceiling counts as a frames failure, **with no loop**: if the idea's guided
+fix of 9g is still unused, spend it here (the director cuts a `hold` or a
+line → build → voice if a line changed → stills → frames review → render
+once more); if it was already spent, the idea ships **without video** and
+the report says "acima de 80 s" ("acima de 60 s" for a video with the
+card). Each video is ~2 MB at 720p. It also prints a `ritmo:` line per video (share of
 near-stillness and the gaps of more than 1 s with nothing big moving;
 reference 16–55%, no gap outside the end): copy it into the report. It only
 warns — never loop on it. Every `.mp4` and `.poster.webp` in `videos.json`
@@ -845,7 +982,8 @@ gh pr create --title "feat(learning): <category> — <title>" --body "$(cat <<'E
 - Cover: yes | FAILED (shipped without hero)
 - Reviewer: PASSED (or PASSED with N warnings)
 - Leitor cego: títulos <x>/<n>, versos <x>/<n>, imagens <x>/<n> — e, se houver, "revisar imagem: <id> (o leitor leu '<puxa_pra>')"
-- Vídeos (Remotion, fase 3): <x>/<n> ideias × PT+EN no ar; roteiro <pass|issues>, voz QA <tentativas>, quadros <pass|issues> (<passadas de conserto>), duração e ritmo <s · % parada · buracos>; protagonista, assinatura e cena pequena por ideia; gaps do diretor; sem vídeo: <ids + motivo>; vídeo pendente (acima do teto de 3): <ids>
+- Vídeos (Remotion, modelo de 60 s — fase 3 + boneco v5, sem card): <x>/<n> ideias × PT+EN no ar; roteiro <pass|issues>, voz QA <tentativas>, quadros <pass|issues> (<passadas de conserto>), duração e ritmo <s · % parada · buracos>; protagonista, assinatura e cena pequena por ideia; gaps do diretor; sem vídeo: <ids + motivo>; vídeo pendente (acima do teto de 3): <ids>
+- Vozes: <id> PT <voz> · EN <voz> (uma linha por ideia); caiu na Kore por cota: <chaves> | nenhuma; Kore nesta rodada: <motivo do Bootstrap> | não; créditos ElevenLabs: <livre antes> → <livre depois>
 
 ## Reasoning log
 <paste the drafter's reasoning_log here for audit>
@@ -887,12 +1025,17 @@ the git push did not land).
   reviewer's issues. **Never** publish a video that did not pass both
   reviews.
 - `ffmpeg` missing, `npm install` failing in `tools/video`, the render
-  crashing, or the Bootstrap check printing `FASE3 MISSING` (the
-  checkout lacks the fase 3 formula) → ship the material without videos,
-  flag it in the report.
-- A video over 60 s after the render → the 9h rule (the unused guided fix,
-  or no video). Ideas beyond the 3-per-run ceiling → `video: null`, listed
-  as "vídeo pendente".
+  crashing, or the Bootstrap checks printing `FASE3 MISSING` (the
+  checkout lacks the fase 3 formula) or `MODELO60 MISSING` (it lacks the
+  60 s model) → ship the material without videos, flag it in the report.
+- `ELEVEN BAIXA` in Bootstrap (no key, free plan, < ~3,000 credits) → the
+  videos are made with Kore in PT and EN; the report says why. Credits
+  ending mid-run → `voice` falls back to Kore for that key (9f); the video
+  ships, the report names the key. Never print the key.
+- A video over its ceiling (80 s with `"fim": "cena"`, 60 s with the card;
+  `stills`/`render` die with "passa do teto") → the 9h rule (the unused
+  guided fix, or no video). Ideas beyond the 3-per-run ceiling →
+  `video: null`, listed as "vídeo pendente".
 - A video uploaded but the db push failed → harmless (nothing references it).
 - `emit-migration.mjs` dies → the ideas-spec violates the contract; fix
   the spec (through the drafter if it is text), never the SQL.
