@@ -2,19 +2,23 @@
 
 O vídeo que aparece dentro do card do Recanto, feito por código em vez do
 Gemini Notebook. A ideia é contada como **história ilustrada com o elenco
-Perceva** e termina com o card virando e a voz lendo o verso.
+Perceva**. O vídeo com card (sem `fim`) termina com o card virando e a voz
+lendo o verso. O vídeo de 60 s (`"fim": "cena"`, o padrão de todo vídeo novo
+desde 2026-11-13) não tem card: termina no verso **demonstrado** — ver
+"## Modelo de 60 s (v5)".
 
 Por que existe: o Notebook erra em ~5% dos vídeos e não corrige uma cena só.
 Aqui o vídeo é **texto revisável**: cada fala é uma linha de JSON, e corrigir
 um erro é trocar uma frase e regravar aquela fala.
 
 ```
-learning-drops/ideas-specs/<slug>.json    título + verso (VERBATIM no vídeo)
-learning-drops/video-specs/<slug>.json    o roteiro: falas + cenas + peças + deixas   ← o que se escreve e revisa
+learning-drops/ideas-specs/<slug>.json    título + verso (VERBATIM no card; com fim "cena", a última fala diz a instrução dele)
+learning-drops/video-specs/<slug>.json    o roteiro: falas + cenas + peças + deixas (+ fase/boneco/visual/fim/protagonista/voz)   ← o que se escreve e revisa
         │  node tools/video/scripts/molde.mjs build
         ▼
-public/molde/<slug>.<idea>.<lang>/        spec resolvido + voz (gitignored)
-        │  voice (TTS Gemini Kore + QA por transcrição) → stills (folha de contato) → render
+public/molde/<slug>.<idea>.<lang>/        spec resolvido + voz + voz.json (gitignored)
+        │  voice (a voz do roteiro, de tools/video/vozes.json: ElevenLabs numa tomada só ou Gemini Kore
+        │         + QA por transcrição) → stills (folha de contato) → render
         ▼
 out/molde/<slug>.<idea>.<lang>/pub/idea.<n>.<lang>.r<rev>.mp4 (+ .poster.webp)
         │  upload → bucket learning-media/<slug>/…
@@ -26,16 +30,23 @@ emit-migration.mjs --videos  →  ideas[].video.{pt,en}
 
 1. **Sem dado de pesquisa.** Nenhum número, %, estudo, pesquisa, amostra,
    participante, universidade, revista, "experimento", "comprovado". Isso
-   fica no texto da ideia e no deep dive em áudio. *(lint)*
+   fica no texto da ideia e no deep dive em áudio. *(lint)* No vídeo de 60 s
+   (`"fim": "cena"`) só os números do verso entram, por extenso na fala
+   final: são a instrução, não dado.
 2. **Fidelidade.** Toda fala sai do corpo da ideia. Onde o texto pede
    cautela, o vídeo fala com cautela ("tende a", "um pouco", "parece render
    mais"). Nunca promete mais do que o texto. *(revisor)*
 3. **História, não resumo.** Gancho (a tensão) → o que pesa → a virada → o
    que fazer → verso. Pessoas e objetos fazendo coisas, não slides.
-4. **Termina no verso**, que é a cena `verso`, sempre a última, lida
-   palavra por palavra do ideas-spec. O roteiro não escreve o verso. *(lint)*
-5. **4 a 8 falas, ≤ 58 s estimados**, legenda ≤ 150 caracteres, no máximo
-   um `*destaque*` por fala. *(lint)*
+4. **Termina no verso.** No vídeo com card (sem `fim`), o verso é a cena
+   `verso`, sempre a última, lida palavra por palavra do ideas-spec; o
+   roteiro não escreve o verso. *(lint)* Com `"fim": "cena"` não existe
+   cena `verso` (o lint barra): o vídeo termina no verso **demonstrado** —
+   ver "## Modelo de 60 s (v5)".
+5. **Com card (sem `fim`): 4 a 8 falas, ≤ 58 s estimados.** Com
+   `"fim": "cena"`: 6 a 12 falas, ≤ 70 s estimados (`LIMITS.semCardLines` /
+   `semCardSeconds` em `scripts/molde.mjs`). Nos dois: legenda ≤ 150
+   caracteres, no máximo um `*destaque*` por fala. *(lint)*
 6. **Nada pequeno na tela.** As cenas já garantem tamanho. Não force
    multidão em lista nem chip com frase longa (chip ≤ 30 caracteres).
 7. **PT e EN são versões nativas paralelas**, não tradução palavra por
@@ -48,6 +59,224 @@ emit-migration.mjs --videos  →  ideas[].video.{pt,en}
    caminho). Nunca os dois só pra enfeitar. *(revisor)* Na fase 3 todo vídeo
    tem lugar em toda fala (3 a 4 fundos, a cena de tela cheia conta como um):
    o lugar é parte da demonstração, não enfeite.
+
+## Modelo de 60 s (v5) — o padrão de todo vídeo novo (2026-11-13)
+
+O André aprovou este modelo nos 3 vídeos da Paker: os pilotos
+`pilotos/paker-r5-*.json` viraram a r4 de
+`learning-drops/video-specs/paker-health-energia-pele-forca.json` (o exemplo
+canônico: as 3 ideias neste modelo, com voz). Desde 2026-11-13 **todo vídeo
+de ideia NOVO** da rotina (`.claude/agents/learning-publisher-remotion.md`)
+sai assim. Tudo o que este manual já diz continua: a fase 3 (a tela demonstra
+o que a voz diz), fidelidade, sem dado de pesquisa, PT e EN paralelos,
+revisão de roteiro e de quadros, QA da voz. O teto de 3 vídeos por rodada e a
+recência (protagonista/assinatura) são regras da rotina. O modelo **soma**
+o que segue.
+
+### Os campos, por ideia
+
+```jsonc
+"creatina-alem-da-musculacao": {
+  "dimension": "body",
+  "fase": 3,
+  "boneco": "serie",                              // o boneco v5, "Animação de série" (src/boneco/)
+  "visual": "v5",                                 // fundo nítido + cor viva (src/molde/visual.ts)
+  "fim": "cena",                                  // sem o card no fim
+  "protagonista": { "seed": 3, "pessoa": "bia" }, // pessoa = id do elenco v5
+  "voz": { "pt": "dani", "en": "liam" },          // chaves de vozes.json, uma por idioma
+  "lines": [ … ]
+}
+```
+
+- `fase`, `boneco`, `visual` e `voz` valem na ideia ou na raiz do roteiro;
+  `fim` e `protagonista`, só na ideia. O `build` leva tudo pro `spec.json` da
+  chave (da `voz`, só a do idioma).
+- Sem `boneco` e `visual`, o vídeo sai como antes (diff de pixel 0 nos
+  publicados). Boneco desconhecido quebra o render (`v5De` em
+  `src/boneco/ativo.ts`; os estilos estão em `src/boneco/estilos/`, e só o
+  `serie` vai pro app). `visual` fora de `v5`/`nitido` sai como antes, em
+  silêncio.
+- `protagonista.pessoa` decide quem ela é: pele, cabelo, corpo e
+  guarda-roupa. Com o boneco v5 o `skin` não vale. O `seed` continua
+  obrigatório (o lint pede inteiro): é por ele que as cenas acham "ela" (a
+  Pessoa sem seed ou com o seed dela é a protagonista). O lint não confere o
+  id da `pessoa`; id fora do elenco quebra o render.
+
+### `fim: "cena"` — a régua
+
+- Sem cena `verso` (o lint barra): o card é coletado na tela do app, ao fim
+  da ideia.
+- 6 a 12 falas e ≤ 70 s estimados no lint (`LIMITS.semCardLines` /
+  `LIMITS.semCardSeconds` em `scripts/molde.mjs`). O render aceita até 80 s
+  no total (`MOLDE_MAX_SECONDS_SEM_CARD` em `src/molde/Molde.tsx`; com card,
+  `MOLDE_MAX_SECONDS` = 60).
+- **Termina no verso demonstrado.** A(s) última(s) fala(s) dizem a instrução
+  do verso enquanto a tela mostra ela fazendo. Os números do card vão **por
+  extenso** ("três a cinco gramas"): algarismo na fala ou na tela o lint
+  barra, e o QA da voz casa "cinco" com o "5" da transcrição. Na creatina, a
+  última fala (`do`, cena na casa à noite): "Tome três a cinco gramas de
+  creatina todo dia, *em qualquer horário*, para manter o estoque do músculo
+  cheio."
+- O vídeo antigo (sem `fim`) segue com 4–8 falas, ≤ 58 s e o card virando:
+  o lint mantém as duas réguas.
+
+### A pauta: o corpo inteiro da ideia
+
+Em 60 s cabe o corpo inteiro da ideia. **Toda frase do corpo que ensina
+algo vira uma fala.** Fica FORA do vídeo:
+
+- estudo, autor, instituição ("International Society of Sports Nutrition",
+  "Kreider 2017") e "um dos mais estudados";
+- número de pesquisa: vira palavra ("3 a 4 semanas" → "algumas semanas");
+- marca ou produto do parceiro ("CreaPaker").
+
+Números, só os do verso, por extenso. A creatina em 10 falas: `hook` pensa
+(cozinha) → `reserve` dentro (corpo) → `efforts2`, `everyone2` faz (parque)
+→ `ages` faz (academia) → `safe` faz (cidade) → `weeks` cena (casa) →
+`stock` dentro (lupa, parque) → `mix` cena (escritório) → `do` cena (casa).
+Com 10 falas cabem mais lugares que os 3 a 4 da regra 9 (a creatina usa 6,
+mais o corpo de vidro); os avisos de "mesma cara" do lint continuam. O
+exemplo completo (corpo marcado → 10 falas → cenas) está em
+`docs/publisher/index.html`, seção `id="exemplo"`.
+
+### O elenco v5 e o "cabe"
+
+`PESSOAS` em `src/boneco/elenco.ts`. O roteiro guarda o `id`:
+
+| `pessoa` | quem | idade · corpo | pele |
+|---|---|---|---|
+| `marina` | Marina | adulta · média | clara |
+| `caio` | Caio | jovem · forte | escura |
+| `bia` | Bia | jovem · esguia | a mais escura |
+| `theo` | Theo | adulto · médio | média |
+| `lucia` | Lúcia | madura · larga | morena |
+| `rafa` | Rafa | adulto · largo | a mais clara |
+| `celia` | Dona Célia | idosa · média | escura |
+| `antonio` | Seu Antônio | idoso · esguio | clara |
+| `leo` | Léo | adolescente · esguio | média |
+
+- Figurante: o `seed` escolhe alguém pela ordem da lista (0 `marina` … 8
+  `leo`; o seed 8 é o Léo, pequeno no molde, size ~205). Figurante que cai
+  na protagonista é trocado (`quemV5` em `src/boneco/naCaixa.tsx`).
+- **Cabe** (`cabe()` em `elenco.ts`; o diretor escolhe por ela, o lint não
+  confere): idoso (`celia`, `antonio`) não corre nem salta; corpo largo
+  (`lucia`, `rafa`) não faz tiro (correr rápido) nem salto. Idosos aparecem
+  andando, cozinhando, pensando.
+- A régua da pele: a pele escura nunca SEMPRE no papel de quem perde. O
+  pré-treino abre com o Caio (pele escura) sem disposição e foi aprovado;
+  gire as peles entre os vídeos. Com `pessoa`, o lint não avisa (ele olha
+  o `skin`): confira na mão.
+- **Roupa pela cena** (`contextoDe` em `elenco.ts`): correr, saltar ou
+  levantar, ou a academia → esporte; escritório e treinamento → trabalho;
+  cozinha, banheiro e casa → casa; o resto → rua. O roteiro nunca escolhe
+  peça de roupa.
+- **Corpo**: esqueleto articulado (cotovelo, joelho, mão, tronco:
+  `src/boneco/esqueleto.ts`, poses em `poses.ts`). A cena com ação de
+  movimento vai de três-quartos inteira; a corrida no lugar ou vindo pra
+  câmera vai **de frente, com escorço** (`vistaDaCena` em `ativo.ts`), e a
+  pista recua (o chão descendo lia "correndo de costas").
+- **A pele dentro da lente é a pele dela** (`v5()?.protagonista.pele`, em
+  `scenes.tsx` e `cenas/dentro.tsx`): tom claro numa protagonista marrom leu
+  "colágeno clareia", bloqueio de parceiro.
+- A folha de comparação dos estilos: `node scripts/boneco.mjs serie`.
+
+### Acabamento v5 (`visual: "v5"`)
+
+`visualDe` em `src/molde/visual.ts` liga as duas chaves:
+
+- **nítido**: o lugar sem desfoque; o primeiro plano com desfoque leve (só
+  profundidade); o rack focus do push vai a 2 px no máximo (era 7).
+- **vivo**: o lugar com +35% de saturação e +12% de luz; figurantes menos
+  apagados; o escuro em volta dela, das laterais e dos cantos pela metade.
+
+`visual: "nitido"` liga só a primeira. Antes × depois no mesmo quadro:
+`node scripts/visual-ab.mjs <specKey> --visual v5`.
+
+### Régua dos quadros no v5 (as revisões ensinaram)
+
+- Rótulo nunca no rosto, na borda nem sobre outro rótulo.
+- Nada de halo de sol atrás de figurante.
+- Parque com `hora: "dia"` pode ler como noite: use `"manha"`.
+- Na corrida, o braço de trás passa **por fora do quadril** (atrás do
+  tronco vira "toco"; no quadril, "mão na cintura").
+- A pronta-pra-correr não pode ler "pensativa" nem "caubói".
+- Ela nunca pequena no gancho.
+
+### A voz (`vozes.json`)
+
+| chave | provedor | uso |
+|---|---|---|
+| `lendario` | ElevenLabs | PT, qualquer tema — a preferida |
+| `dani` | ElevenLabs | PT, qualquer tema |
+| `will` | ElevenLabs | PT, qualquer tema |
+| `roberta` | ElevenLabs | PT, qualquer tema |
+| `juliano` | ElevenLabs | PT, **só `dimension: "bonds"`** (relações; nunca tema científico) |
+| `kore` | Gemini | PT e EN: a reserva no PT |
+| `liam` | ElevenLabs | EN |
+
+Vetadas: `paulo`, `amandoca`, `fernanda`. O lint barra as vetadas, a voz
+de outro idioma e o Juliano fora de `bonds`; o `voice` também recusa as
+duas primeiras. O lint lê a `dimension` do roteiro (não do manifest): com o
+Juliano, ponha `"dimension": "bonds"` na ideia. Com `voz`, os dois idiomas são
+obrigatórios; sem `voz` num `fim: "cena"`, o lint avisa (grava com a Kore).
+
+**Alterne** (André, 2026-11-13: "pode ir rodando as vozes, quero que não
+seja um padrão"):
+
+- a voz PT de uma ideia nova ≠ a dos 2 vídeos de ideia publicados mais
+  recentemente, e ≠ a das ideias irmãs do mesmo material;
+- quando não sobra voz (3 irmãs, 4 vozes gerais, 2 recentes), a última
+  irmã pode repetir a do recente mais antigo, nunca a do imediatamente
+  antes;
+- a EN ≠ a do vídeo publicado logo antes, quando der;
+- sem ordem fixa (não é rodízio previsível) e sem casar o sexo da voz com o
+  da protagonista: a voz é narradora;
+- as vozes recentes saem do git: o campo `voz` das ideias dos
+  `learning-drops/video-specs/*.json` mudados por último
+  (`git log --format=%H -- learning-drops/video-specs`). Ideia sem `voz` foi
+  gravada com a Kore.
+
+**Quem narra a chave** (`vozDaChave` em `scripts/molde.mjs`), nesta ordem:
+
+1. `voice --voz <chave>` (do elenco);
+2. os flags crus `--tts eleven --voice <id> [--model] [--sex] [--inteiro]`
+   (teste de voz);
+3. a `voz` do roteiro;
+4. o `voz.json` já gravado na chave (regravar uma fala sem dizer a voz nunca
+   troca de narrador);
+5. a Kore.
+
+- **Trocar a voz regrava o roteiro inteiro**: nunca dois narradores num
+  vídeo. `--only` com a voz trocada é erro. Trocar só o modelo da mesma voz
+  (v2 → v4) também conta como troca.
+- O que vai ser gravado sai do "em dia" (`voiced.json`) **antes** da
+  gravação: se a tomada ou o QA morrerem no meio, o próximo `voice` regrava
+  e confere de novo.
+- O `build` avisa quando a voz gravada não é a do roteiro ("voz a trocar")
+  ou é a Kore da cota; o `render` de verdade **recusa** voz diferente da do
+  roteiro (o rodízio lê a `voz` dos roteiros no git, então ela tem que ser a
+  verdade) e só avisa no caso da cota.
+- `--voz-de` (piloto) copia também o `voz.json` e a tomada única
+  (`_inteiro.*`) da chave de origem.
+- A ElevenLabs grava o **roteiro inteiro numa tomada só**
+  (`tts-eleven.mjs --inteiro`: `eleven_v4` com `language_code`, sem exagero
+  de estilo), cortada em falas pelo tempo de cada letra. Regravar só algumas
+  falas (`--only`, uma fala que mudou) vai fala por fala. O QA por
+  transcrição (`qa-voice.mjs --fix`, que o `voice` sempre roda) confere
+  igual e regrava só a fala que falhar.
+  `tts-eleven.mjs --recortar` corta de novo a tomada salva (`_inteiro.mp3`
+  + `_inteiro.json`) sem pagar outra.
+- **Cota**: sem cota (na tomada ou numa regravação do QA), o `tts-eleven`
+  sai com código 3 e o `voice` regrava o roteiro inteiro com a Kore (o `voz.json` ganha
+  `"fallback": "cota da ElevenLabs"`). A rodada segue, e o relatório diz
+  isso. Com a cota de volta, rodar `voice` de novo regrava com a voz do
+  roteiro (a gravada é a Kore, a escolhida é outra).
+- Testar a queda pra Kore sem gastar crédito: `TTS_ELEVEN_SIMULA_COTA=1`
+  no `voice` (o `tts-eleven` sai com 3 na hora). Use num piloto (`--tag`).
+- Custo: ~1 crédito por caractere (~1.000 num vídeo PT de 60 s).
+  `node scripts/tts-eleven.mjs --quota` mostra o uso (não gasta).
+- A chave é a variável de USUÁRIO do Windows `ELEVENLABS_API_KEY` (o script
+  lê do registro quando o ambiente não tem). **Nunca imprimir.**
 
 ## Formato
 
@@ -71,7 +300,7 @@ emit-migration.mjs --videos  →  ideas[].video.{pt,en}
             "objects": [{ "p": "vassoura", "cue": { "pt": "dia não cabe", "en": "won't fit" } }]
           }
         },
-        { "id": "do", "scene": "verso" }     // sempre a última; o texto vem do card
+        { "id": "do", "scene": "verso" }     // com card: sempre a última, o texto vem do card (com "fim": "cena" não existe)
       ]
     }
   }
@@ -416,6 +645,8 @@ pixel 0 nos vídeos publicados — é a régua de toda mudança aqui).
   que é "ela" em todas as cenas (pessoa, semana, virada, lista, cena, pensa, mapa, dentro, faz e a
   frente do card do verso). A blusa continua violeta (a marca). O ajudante nunca tem o rosto dela.
   Não escolha pele escura justo pro vídeo cujo gancho é o mais "derrotado" (o lint avisa).
+  Com o boneco v5 (`"boneco": "serie"`) quem ela é sai de `protagonista.pessoa` (id do elenco v5) e o
+  `skin` não vale — ver "## Modelo de 60 s (v5)".
 - **`frente`** (acabamento, só no verso): `{ "mood": "focado", "arms": "down" }` muda a pessoa da
   frente do card (mood: ok/feliz/cansado/focado; arms: none/down/up/out). Sem `frente`, feliz de
   braços pra cima, como sempre. Use quando a régua do assunto veta comemoração (o pré-treino).
@@ -784,7 +1015,8 @@ espelhada da identidade ativa: `COMP=Elenco node scripts/stills.mjs 60`.
 
 ## Densidade × legibilidade
 
-O vídeo é visto num celular, sem som, em ~50 s. Mais coisa na tela só vale
+O vídeo é visto num celular, sem som, em ~50 s (no modelo v5, perto de
+60 s). Mais coisa na tela só vale
 se cada coisa continuar lendo:
 
 - **Um assunto por cena.** O ambiente é o lugar, não o assunto: o olho tem
@@ -809,6 +1041,9 @@ se cada coisa continuar lendo:
 cd tools/video
 node scripts/molde.mjs lint   --slug <slug>                # grátis: roda antes de tudo
 node scripts/molde.mjs all    --slug <slug> --lang both    # build → voz+QA → quadros → vídeo
+node scripts/molde.mjs voice  --slug <slug> --lang both    # a "voz" do roteiro; sem ela, o voz.json da chave; sem nada, a Kore
+node scripts/molde.mjs voice  --slug <slug> --idea <id> --lang pt --voz <chave>   # uma voz de vozes.json por cima de tudo (outra voz que a gravada regrava o roteiro inteiro)
+node scripts/tts-eleven.mjs --quota                        # créditos da ElevenLabs usados / do plano (não gasta)
 node scripts/molde.mjs upload --slug <slug> --lang both    # do checkout principal (CLI do supabase)
 node scripts/molde.mjs videos --slug <slug> --out ../../learning-drops/inbox/<slug>/videos.json
 node ../content-media/emit-migration.mjs --slug <slug> --videos learning-drops/inbox/<slug>/videos.json
@@ -861,3 +1096,7 @@ tapada (leitura cega: descreve a imagem antes de saber a fala) — ver
 | `src/elenco/cenario.tsx` | as partes do cenário e os figurantes (de frente, de costas, a cadeira da plateia) |
 | `src/identidade/types.ts` | o contrato da identidade: `Pessoa` + as vistas opcionais `Costas` e `Virada` |
 | `src/molde/catalog.json` | cenas, peças e enums que o lint e o render leem |
+| `vozes.json` | (v5) o elenco de vozes: chave → provedor, id, idioma, uso; e as vetadas. O lint e o `voice` leem daqui |
+| `src/boneco/` | (v5) o boneco "Animação de série": `elenco.ts` (as pessoas, o guarda-roupa, `contextoDe`, `cabe`), `esqueleto.ts` e `poses.ts` (o corpo articulado e as ações), `ativo.ts` (liga o v5 pelo spec, vista e enquadramento da cena), `naCaixa.tsx` (o boneco na caixa do molde, quem é quem), `estilos/` (`serie` e os de comparação) |
+| `src/molde/visual.ts` | (v5) o acabamento do fundo: `nitido` e `vivo` (`visual: "v5"` liga os dois) |
+| `scripts/tts-eleven.mjs` | (v5) a voz da ElevenLabs: tomada única (`--inteiro`), `--recortar`, `--quota`; sai com código 3 sem cota |

@@ -228,7 +228,7 @@ pre.tree b { color: var(--fg); font-weight: 500; }
       <a href="#exemplo">Exemplo: creatina</a>
       <a href="#confere">O que conferimos</a>
       <a href="#tela">Como a tela é feita</a>
-      <a href="#escolhido">Hoje × escolhido</a>
+      <a href="#escolhido">Antes × hoje</a>
       <a href="#decisoes">Decisões</a>
       <a href="#detalhe">Para ler com calma</a>
     </nav>
@@ -290,7 +290,7 @@ pre.tree b { color: var(--fg); font-weight: 500; }
       <div class="passos">
         <article class="passo"><span class="n">6</span><div class="corpo">
           <h3>Roteiro</h3>
-          <p>Cada fala vira uma cena. Antes de gastar voz, faz uma prévia muda dos quadros.</p>
+          <p>A ideia inteira em 6 a 12 falas, cada uma vira uma cena. Escolhe a protagonista e a voz (alternando). Antes de gastar voz, faz uma prévia muda dos quadros.</p>
           <div class="flow"><span class="chip ag">video-director</span><span class="chip">molde.mjs lint · build --silent</span><span class="seta">→</span><span class="chip sai">roteiro JSON</span></div>
         </div></article>
         <article class="passo"><span class="n">7</span><div class="corpo">
@@ -300,8 +300,8 @@ pre.tree b { color: var(--fg); font-weight: 500; }
         </div></article>
         <article class="passo"><span class="n">8</span><div class="corpo">
           <h3>Gravar a voz</h3>
-          <p>Grava cada fala e o Gemini ouve de volta. Faltou palavra, regrava (até 4 vezes).</p>
-          <div class="flow"><span class="chip ag">voz (Kore)</span><span class="chip">qa-voice.mjs</span><span class="seta">→</span><span class="chip sai">falas conferidas</span></div>
+          <p>Grava com a voz que o roteiro escolheu (o roteiro inteiro numa tomada só) e o Gemini ouve de volta. Faltou palavra, regrava (até 4 vezes). Sem crédito na ElevenLabs, a Kore grava e o relatório avisa.</p>
+          <div class="flow"><span class="chip ag">voz do elenco</span><span class="chip">qa-voice.mjs</span><span class="seta">→</span><span class="chip sai">falas conferidas</span></div>
         </div></article>
         <article class="passo"><span class="n">9</span><div class="corpo">
           <h3>Revisar os quadros</h3>
@@ -370,7 +370,7 @@ pre.tree b { color: var(--fg); font-weight: 500; }
       <div class="tool"><h3>emit-migration</h3><p>Escreve o SQL a partir dos arquivos aprovados. Ninguém escreve SQL de conteúdo à mão.</p></div>
       <div class="tool"><h3>lint.mjs</h3><p>Barra o que é regra mecânica: tamanho, campos, fontes, imagem sem texto.</p></div>
       <div class="tool"><h3>ffmpeg</h3><p>Corta, mede e mascara os quadros (a legenda tapada pra leitura cega).</p></div>
-      <div class="tool"><h3>ElevenLabs <span class="chip" style="margin-left:4px">novo</span></h3><p>Vozes brasileiras pra alternar entre vídeos. Já está ligada no molde, mas ainda não na rotina.</p></div>
+      <div class="tool"><h3>ElevenLabs <span class="chip" style="margin-left:4px">desde 13/11</span></h3><p>Vozes brasileiras que alternam entre vídeos (e o Liam no inglês). Na rotina desde 13/11; sem crédito, a Kore grava.</p></div>
     </div>
   </section>
 
@@ -546,25 +546,26 @@ pre.tree b { color: var(--fg); font-weight: 500; }
   <section class="sec" id="escolhido">
     <div class="sec-head">
       <span class="eyebrow">Onde estamos</span>
-      <h2>O que a rotina faz hoje × o que já escolhemos</h2>
-      <p>O lado da direita foi aprovado nos três vídeos da Paker e vive no branch <span class="mono">feat/boneco-v5</span>. Falta levar pra rotina.</p>
+      <h2>Antes × hoje na rotina</h2>
+      <p>O modelo de 60 s foi aprovado nos três vídeos da Paker e virou o padrão da rotina em 13/11. Os três da Paker já estão no app nele (r4).</p>
     </div>
     <div class="vs">
-      <div class="col hoje"><span class="lbl">Rotina hoje (main)</span><ul>
+      <div class="col hoje"><span class="lbl">Antes (até 12/11)</span><ul>
         <li><b>Fase 3</b>: a tela demonstra o que a voz diz.</li>
         <li>Boneco antigo (rosto hexagonal), fundo com desfoque.</li>
         <li>4 a 8 falas, até 58 s, <b>termina no card virando</b>.</li>
         <li>Voz sempre a mesma: <b>Kore</b> (Gemini).</li>
-        <li>Diretor e revisor escrevem nesse molde.</li>
       </ul></div>
-      <div class="col nova"><span class="lbl">Escolhido (aprovado, falta ligar)</span><ul>
+      <div class="col nova"><span class="lbl">Hoje (desde 13/11)</span><ul>
+        <li><b>Fase 3</b> continua, e soma:</li>
         <li><b>Boneco v5 "Animação de série"</b>, roupa pela cena.</li>
         <li><b>Fundo nítido e vivo</b> (o acabamento v5).</li>
-        <li><b>~60 s de conteúdo, sem o card no fim</b>: termina no verso demonstrado (6 a 12 falas).</li>
-        <li><b>Vozes alternando</b> do elenco de vozes (abaixo).</li>
-        <li>Falta: PR do branch, diretor/revisor/rotina no modelo novo.</li>
+        <li><b>~60 s, a ideia inteira, sem o card no fim</b>: 6 a 12 falas, termina no verso demonstrado.</li>
+        <li><b>Vozes alternando, sem padrão</b>: a voz é escolhida no roteiro e nunca repete a dos 2 vídeos anteriores.</li>
+        <li>Vídeos antigos (com card) ficam como estão.</li>
       </ul></div>
     </div>
+    <p class="foot">Escolhido e ainda não ligado: nada no momento. A próxima decisão entra aqui até virar rotina.</p>
     <h3>O elenco de vozes (11/11)</h3>
     <div class="voices">
       <div class="voice top"><b>Lendário</b><span>a preferida · geral</span></div>
@@ -597,7 +598,8 @@ pre.tree b { color: var(--fg); font-weight: 500; }
       <div class="tl"><span class="d">09/11</span><span class="t">Fase 3: a tela demonstra</span><span class="w">Ela faz, o mecanismo aparece por dentro, a palavra da fala está na imagem.</span></div>
       <div class="tl"><span class="d">09/11</span><span class="t">Boneco v5 e fundo nítido</span><span class="w">"Animação de série", roupa pela cena, cor mais viva.</span></div>
       <div class="tl"><span class="d">10/11</span><span class="t">60 s de conteúdo, sem card</span><span class="w">O card é coletado na tela do app; o vídeo termina no verso feito.</span></div>
-      <div class="tl"><span class="d">11/11</span><span class="t">Vozes alternando</span><span class="w">Lendário, Dani, Will, Roberta; Juliano só em relações.</span></div>
+      <div class="tl"><span class="d">11/11</span><span class="t">O elenco de vozes</span><span class="w">Lendário, Dani, Will, Roberta; Juliano só em relações; Paulo, Amandoca e Fernanda fora.</span></div>
+      <div class="tl"><span class="d">13/11</span><span class="t">Modelo de 60 s na rotina, vozes sem padrão</span><span class="w">Todo vídeo novo sai assim. A voz nunca repete a dos 2 vídeos anteriores. Paker r4 no app.</span></div>
     </div>
   </section>
 

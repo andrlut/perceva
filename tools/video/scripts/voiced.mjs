@@ -30,6 +30,19 @@ export function pendingLines(dir, lines, prevSpec) {
 }
 
 /**
+ * ANTES de gravar: as falas `ids` deixam de estar em dia. Se a gravação ou o QA morrerem no meio, elas
+ * continuam pendentes e o próximo `voice` regrava e confere de novo — sem isso, uma troca de voz, um
+ * --only ou a queda pra Kore que morresse no meio deixava tomada sem QA (ou dois narradores) "em dia".
+ */
+export function unmarkVoiced(dir, ids) {
+  const f = path.join(dir, 'voiced.json');
+  if (!fs.existsSync(f)) return;
+  const voiced = readJson(f);
+  for (const id of ids) delete voiced[id];
+  fs.writeFileSync(f, JSON.stringify(voiced, null, 2));
+}
+
+/**
  * Depois do QA: as falas `ids` passam a ter voz em dia com o texto do spec atual. Sem voiced.json
  * ainda, as falas que NÃO estavam pendentes também entram (estavam em dia pela régua antiga).
  */

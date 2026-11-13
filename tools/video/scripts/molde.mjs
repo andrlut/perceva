@@ -26,7 +26,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { markVoiced, pendingLines } from './voiced.mjs';
+import { markVoiced, pendingLines, unmarkVoiced } from './voiced.mjs';
 import { measurePauses as measurePausesIn } from './pauses.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
@@ -121,6 +121,8 @@ const BANNED = {
 const CUE_KEYS = ['cue', 'turn', 'from', 'until', 'at', 'win', 'glow', 'out', 'arrives', 'leaves', 'semana', 'ate', 'cresce', 'quebra', 'fecha', 'divide', 'toque'];
 // `fim: "cena"` (2026-11-10, André): sem o card no fim — ele é coletado na tela do app, ao fim da ideia; o
 // vídeo usa o tempo do card pra conteúdo (perto de 60 s de fala) e fecha na ação do verso, demonstrada
+// o elenco de vozes (escolha do André, 2026-11-11): a `voz` do roteiro e o --voz do `voice` saem daqui
+const ELENCO = readJson(path.join(root, 'vozes.json'));
 const LIMITS = { caption: 150, kicker: 24, label: 22, chip: 30, pill: 22, bloco: 16, lines: [4, 8], seconds: 58, bridgeLines: [2, 4], bridgeSeconds: 24, semCardLines: [6, 12], semCardSeconds: 70 };
 
 /** câmera, passagem e ambiente: valem pra qualquer cena (o ambiente só nas que têm pessoa de pé) */
@@ -657,6 +659,18 @@ function lintIdea(ideaId, spec, card, lang, errors, warns, root = {}) {
   const last = lines[lines.length - 1];
   if (bridge && lines.some((l) => l.scene === 'verso')) errors.push(`${ideaId}: abertura de porta não tem verso (ela emenda na tela: tools/video/TOUR.md)`);
   if (!bridge && !semCard && last.scene !== 'verso') errors.push(`${ideaId}: a última cena tem que ser "verso" (a voz lê o card)`);
+  // a voz (vozes.json): uma por idioma, do elenco aprovado; o Juliano só em relações (bonds)
+  const voz = spec.voz ?? root.voz;
+  if (voz !== undefined) {
+    const nome = voz?.[lang];
+    const v = ELENCO.vozes[nome];
+    const dim = spec.dimension ?? root.dimension;
+    if (nome === undefined) errors.push(`${ideaId}: voz.${lang} ausente (uma voz por idioma, de vozes.json)`);
+    else if (ELENCO.vetadas[nome]) errors.push(`${ideaId}: voz.${lang} "${nome}" vetada (${ELENCO.vetadas[nome]})`);
+    else if (!v) errors.push(`${ideaId}: voz.${lang} "${nome}" não está em vozes.json (${Object.keys(ELENCO.vozes).join(', ')})`);
+    else if (!v.lang.split(',').includes(lang)) errors.push(`${ideaId}: voz.${lang} "${nome}" é voz de ${v.lang}`);
+    else if (v.uso === 'relacoes' && dim !== 'bonds') errors.push(`${ideaId}: voz.${lang} "${nome}" é só pra relações (dimension "bonds"; esta é "${dim ?? '?'}") — ${v.nota}`);
+  } else if (semCard && lang === LANGS[0]) warns.push(`${ideaId}: sem "voz" — grava com a Kore; o vídeo de 60 s alterna o elenco de vozes (vozes.json)`);
   // passagens (requinte fase 1, src/molde/transicao.tsx `passagens`): o padrão é o mergulho, o
   // hexágono só abre o verso, e só UMA passagem que anda (chicote/desliza/zoom) vale por vídeo
   let socoAt = null;
@@ -770,7 +784,8 @@ function load() {
       continue;
     }
     cards[id] = card;
-    for (const lang of LANGS) lintIdea(id, vs.ideas[id], card, lang, errors, warns, vs);
+    // a dimensão também vem do manifest (como no build): a régua do Juliano (só bonds) precisa dela
+    for (const lang of LANGS) lintIdea(id, vs.ideas[id], card, lang, errors, warns, { ...vs, dimension: vs.dimension ?? manifest?.dimension_id });
   }
   lintSlugFase3(vs, ideaIds, warns);
   for (const w of warns) console.warn(`! ${w}`);
@@ -824,6 +839,12 @@ function copiaVoz(from, to, lines) {
     }
   }
   for (const f of ['timings.json', 'pauses.json']) if (fs.existsSync(path.join(src, f))) fs.copyFileSync(path.join(src, f), path.join(dst, f));
+  // quem gravou (voz.json) e a tomada única da ElevenLabs (_inteiro.*) vão junto: sem o voz.json, a chave do
+  // piloto "achava" a Kore (ou o voz.json de um piloto anterior) e trocava de narrador nas falas mudadas
+  for (const f of ['voz.json', '_inteiro.json', '_inteiro.mp3']) {
+    if (fs.existsSync(path.join(src, f))) fs.copyFileSync(path.join(src, f), path.join(dst, f));
+    else if (fs.existsSync(path.join(dst, f))) fs.rmSync(path.join(dst, f));
+  }
   // voiced.json: o texto que cada tomada leu. Chave anterior ao voiced.json (a régua antiga): sai do
   // spec dela — toda fala com mp3 que não estava na fila (changed.json) leu o texto daquele spec
   if (fs.existsSync(path.join(src, 'voiced.json'))) fs.copyFileSync(path.join(src, 'voiced.json'), path.join(dst, 'voiced.json'));
@@ -876,6 +897,8 @@ async function build(ctx) {
         ...((src.visual ?? ctx.vs.visual) ? { visual: src.visual ?? ctx.vs.visual } : {}),
         // sem o card no fim (o render deixa passar de 60 s: o tempo do card virou conteúdo)
         ...(src.fim ? { fim: src.fim } : {}),
+        // a voz do vídeo neste idioma (chave de vozes.json), por ideia ou na raiz; o `voice` grava com ela
+        ...((src.voz ?? ctx.vs.voz)?.[lang] ? { voz: (src.voz ?? ctx.vs.voz)[lang] } : {}),
         lines,
       };
       // --voz-de: a voz aprovada vem pra chave do piloto ANTES de conferir o que falta gravar
@@ -899,7 +922,16 @@ async function build(ctx) {
         console.log(`✓ ${k}: ${lines.length} cenas · PRÉVIA SEM VOZ (~${secs.toFixed(0)} s de fala estimados) — rode build sem --silent antes da voz`);
         continue;
       }
-      console.log(`✓ ${k}: ${lines.length} cenas${changed.length ? ` · voz a gravar: ${changed.map((l) => l.id).join(', ')}` : ' · voz em dia'}`);
+      // a voz gravada × a do roteiro: o pendingLines só olha o texto, e uma queda pra Kore (cota) ou uma
+      // troca de `voz` passariam como "em dia" — o `voice` regrava, mas só se alguém rodar
+      const vr = spec.voz ? ELENCO.vozes[spec.voz] : null;
+      const g = vozGravada(k);
+      const aviso = g?.fallback
+        ? ` · ! gravada com a Kore (${g.fallback}): rode voice pra regravar com ${vr?.nome ?? 'a voz do roteiro'}`
+        : vr && g && !mesmaVoz(g, { voice: vr.id, model: vr.modelo })
+          ? ` · voz a trocar (${nomeDaVoz(g.voice)} → ${vr.nome}): o voice regrava o roteiro inteiro`
+          : '';
+      console.log(`✓ ${k}: ${lines.length} cenas${changed.length ? ` · voz a gravar: ${changed.map((l) => l.id).join(', ')}` : ' · voz em dia'}${aviso}`);
     }
   }
 }
@@ -911,42 +943,72 @@ const measurePauses = (k) => measurePausesIn(pubDir(k));
 // ------------------------------------------------------------------ voice
 const node = (script, args) => execFileSync('node', [path.join(root, 'scripts', script), ...args], { stdio: 'inherit', cwd: root });
 
+/** Uma voz do elenco (vozes.json) no formato do `voice`. A ElevenLabs grava o roteiro numa tomada só. */
+const vozDoElenco = (nome, v) =>
+  v.provedor === 'elevenlabs'
+    ? { nome: v.nome, tts: 'eleven', voice: v.id, model: v.modelo, sex: v.sexo, inteiro: true }
+    : { nome: v.nome, tts: 'gemini', voice: v.id, sex: v.sexo };
+const KORE = vozDoElenco('kore', ELENCO.vozes.kore);
+
+/**
+ * A voz que já gravou a chave: o voz.json ({voice, model, fallback}); sem ele mas com fala gravada, a Kore
+ * (as chaves de antes do elenco). null = nada gravado.
+ */
+function vozGravada(k) {
+  const f = path.join(pubDir(k), 'voz.json');
+  if (fs.existsSync(f)) {
+    const g = readJson(f);
+    return { voice: g.voice_id ?? 'Kore', model: g.provedor === 'elevenlabs' ? (g.model ?? null) : null, fallback: g.fallback };
+  }
+  return fs.existsSync(path.join(pubDir(k), 'timings.json')) ? { voice: 'Kore', model: null } : null;
+}
+/** Mesma voz = mesmo id e, na ElevenLabs, mesmo modelo (a Roberta no v2 e no v4 soam diferentes). */
+const mesmaVoz = (g, v) => g.voice === (v.voice ?? 'Kore') && (!g.model || !v.model || g.model === v.model);
+const nomeDaVoz = (id) => Object.values(ELENCO.vozes).find((x) => x.id === id)?.nome ?? id;
+
 /**
  * Quem narra a chave. Em ordem:
- *  1. --voz <chave> do elenco (vozes.json, escolha do André em 2026-11-11): ElevenLabs no eleven_v4, o
- *     roteiro numa tomada só; voz vetada ou de outro idioma para aqui;
+ *  1. --voz <chave> do elenco (vozes.json, escolha do André em 2026-11-11);
  *  2. os flags crus --tts eleven --voice <id> [--model] [--sex] [--inteiro] (testes de voz);
- *  3. a voz que JÁ gravou a chave (voz.json): regravar uma fala sem dizer a voz nunca troca de narrador
+ *  3. a `voz` do roteiro, por ideia e idioma (`"voz": {"pt": "lendario", "en": "kore"}`) — é assim que a
+ *     rotina alterna as vozes entre vídeos (2026-11-13, André: "quero que não seja um padrão");
+ *  4. a voz que JÁ gravou a chave (voz.json): regravar uma fala sem dizer a voz nunca troca de narrador
  *     no meio do vídeo — em 10/11 um `voice` sem --tts regravou as falas pendentes com a Kore por cima
  *     da ElevenLabs;
- *  4. a Kore (Gemini), a de sempre.
+ *  5. a Kore (Gemini), a de sempre.
+ * `escolhida`: veio de 1–3 (uma escolha), não do que já está gravado.
  */
-const ELENCO = readJson(path.join(root, 'vozes.json'));
-function vozDaChave(k, lang) {
-  const nome = arg('voz');
-  if (nome) {
-    if (ELENCO.vetadas[nome]) die(`--voz ${nome}: vetada (${ELENCO.vetadas[nome]})`);
+function vozDaChave(k, lang, spec) {
+  const doElenco = (nome, origem) => {
+    if (ELENCO.vetadas[nome]) die(`${origem} "${nome}": vetada (${ELENCO.vetadas[nome]})`);
     const v = ELENCO.vozes[nome];
-    if (!v) die(`--voz ${nome}: não está em vozes.json (${Object.keys(ELENCO.vozes).join(', ')})`);
-    if (!v.lang.split(',').includes(lang)) die(`--voz ${nome}: é voz de ${v.lang}, não de ${lang} — rode com --lang ${v.lang.split(',')[0]}`);
-    return v.provedor === 'elevenlabs'
-      ? { tts: 'eleven', voice: v.id, model: v.modelo, sex: v.sexo, inteiro: true }
-      : { tts: 'gemini', voice: v.id, sex: v.sexo };
+    if (!v) die(`${origem} "${nome}": não está em vozes.json (${Object.keys(ELENCO.vozes).join(', ')})`);
+    if (!v.lang.split(',').includes(lang)) die(`${origem} "${nome}": é voz de ${v.lang}, não de ${lang}`);
+    if (v.uso === 'relacoes' && spec.dimension !== 'bonds') die(`${origem} "${nome}": é só pra relações (dimension "bonds"; esta é "${spec.dimension}") — ${v.nota}`);
+    return { ...vozDoElenco(nome, v), escolhida: true };
+  };
+  if (arg('voz')) return doElenco(arg('voz'), '--voz');
+  if (arg('tts') || arg('voice')) {
+    const eleven = arg('tts') === 'eleven';
+    if (eleven && !arg('voice')) die('--tts eleven pede --voice <voice_id> (ou use --voz <chave do elenco>)');
+    return { tts: eleven ? 'eleven' : 'gemini', voice: arg('voice') ?? 'Kore', model: arg('model'), sex: arg('sex'), inteiro: argv.includes('--inteiro'), escolhida: true };
   }
-  if (arg('tts') || arg('voice'))
-    return { tts: arg('tts') === 'eleven' ? 'eleven' : 'gemini', voice: arg('voice'), model: arg('model'), sex: arg('sex'), inteiro: argv.includes('--inteiro') };
-  const gravada = path.join(pubDir(k), 'voz.json');
-  if (fs.existsSync(gravada)) {
-    const g = readJson(gravada);
+  if (spec.voz) return doElenco(spec.voz, `${k}: voz do roteiro`);
+  const f = path.join(pubDir(k), 'voz.json');
+  if (fs.existsSync(f)) {
+    const g = readJson(f);
     const sexo = Object.values(ELENCO.vozes).find((v) => v.id === g.voice_id)?.sexo ?? 'any';
     if (g.provedor === 'elevenlabs') return { tts: 'eleven', voice: g.voice_id, model: g.model, sex: sexo };
     if (g.voice_id) return { tts: 'gemini', voice: g.voice_id, sex: sexo };
   }
-  return { tts: 'gemini' };
+  return KORE;
 }
 
 function voice(ctx) {
   const only = arg('only');
+  // --voz de outro idioma morre ANTES de gravar qualquer coisa (senão o PT da 1ª ideia era pago e o EN morria)
+  const vf = arg('voz') && ELENCO.vozes[arg('voz')];
+  if (vf && LANGS.some((l) => !vf.lang.split(',').includes(l))) die(`--voz ${arg('voz')}: é voz de ${vf.lang} — rode com --lang ${vf.lang.split(',')[0]}`);
   for (const id of ctx.ideaIds)
     for (const lang of LANGS) {
       const k = key(id, lang);
@@ -957,21 +1019,59 @@ function voice(ctx) {
       if (spec.silent) die(`${k}: o build foi --silent — rode build sem --silent antes da voz`);
       // O QA por transcrição e a medida das pausas são os mesmos pra qualquer voz; o --measure segue no
       // tts-gemini (só mede o arquivo, não importa quem gravou).
-      const v = vozDaChave(k, lang);
-      const tts = v.tts === 'eleven' ? 'tts-eleven.mjs' : 'tts-gemini.mjs';
-      const extra = [...(v.voice ? ['--voice', v.voice] : []), ...(v.model ? ['--model', v.model] : [])];
-      const qaExtra = [...extra, '--tts', v.tts, ...(v.sex ? ['--sex', v.sex] : [])];
+      let v = vozDaChave(k, lang, spec);
+      const todas = spec.lines.map((l) => l.id);
       const pending = pendingLines(pubDir(k), spec.lines);
-      const changed = only ? only.split(',') : pending.map((l) => l.id);
-      if (changed.length) {
-        node(tts, ['--dir', dir, '--lang', lang, ...extra, ...(v.inteiro ? ['--inteiro'] : []), '--only', changed.join(',')]);
+      let changed = only ? only.split(',') : pending.map((l) => l.id);
+      // trocar de voz (ou de modelo) regrava o roteiro inteiro: duas vozes no mesmo vídeo, nunca
+      const g = vozGravada(k);
+      if (v.escolhida && g && !mesmaVoz(g, v) && pending.length < spec.lines.length) {
+        if (only) die(`${k}: a voz mudou (${nomeDaVoz(g.voice)} → ${nomeDaVoz(v.voice)}) — grave o roteiro inteiro (sem --only)`);
+        console.log(`  ${k}: a voz mudou (${nomeDaVoz(g.voice)} → ${nomeDaVoz(v.voice)}) — regravando o roteiro inteiro`);
+        changed = todas;
+      }
+      // a tomada única é pro roteiro inteiro; regravar algumas falas (--only, uma fala que mudou) é fala por fala
+      if (v.inteiro && changed.length < spec.lines.length) v = { ...v, inteiro: false };
+      const argsDa = (x) => [...(x.voice ? ['--voice', x.voice] : []), ...(x.model ? ['--model', x.model] : [])];
+      // o que vai ser gravado sai do "em dia" ANTES: se a gravação ou o QA morrerem no meio, a próxima
+      // rodada regrava e confere de novo (nunca uma tomada sem QA, nunca dois narradores "em dia")
+      const grava = (x) => {
+        unmarkVoiced(pubDir(k), changed);
+        node(x.tts === 'eleven' ? 'tts-eleven.mjs' : 'tts-gemini.mjs', ['--dir', dir, '--lang', lang, ...argsDa(x), ...(x.inteiro ? ['--inteiro'] : []), '--only', changed.join(',')]);
         // o tts-eleven anota a voz; a do Gemini anota aqui (senão um voz.json velho da ElevenLabs mandaria na próxima regravação)
-        if (v.tts === 'gemini') fs.writeFileSync(path.join(pubDir(k), 'voz.json'), JSON.stringify({ provedor: 'gemini', voice_id: v.voice ?? 'Kore' }, null, 2));
-        console.log(`  voz de ${k}: ${Object.values(ELENCO.vozes).find((x) => x.id === (v.voice ?? 'Kore'))?.nome ?? v.voice}${v.inteiro ? ' (tomada única)' : ''}`);
+        if (x.tts === 'gemini')
+          fs.writeFileSync(path.join(pubDir(k), 'voz.json'), JSON.stringify({ provedor: 'gemini', voice_id: x.voice ?? 'Kore', ...(x.fallback ? { fallback: x.fallback } : {}) }, null, 2));
+        console.log(`  voz de ${k}: ${x.nome ?? nomeDaVoz(x.voice)}${x.inteiro ? ' (tomada única)' : ''}${x.fallback ? ` — ${x.fallback}` : ''}`);
+      };
+      const qa = (x) => node('qa-voice.mjs', ['--dir', dir, '--lang', lang, '--fix', ...argsDa(x), '--tts', x.tts, ...(x.sex ? ['--sex', x.sex] : []), '--only', changed.join(',')]);
+      // a cota da ElevenLabs acabou (tts-eleven sai com 3, na tomada ou numa regravação do QA): a Kore grava
+      // o roteiro INTEIRO e o vídeo sai — a rodada não para por isso, e o relatório diz
+      const naKore = () => {
+        console.warn(`! ${k}: ElevenLabs sem cota — gravando o roteiro inteiro com a Kore (diga no relatório)`);
+        v = { ...KORE, fallback: 'cota da ElevenLabs' };
+        changed = todas;
+        grava(v);
+      };
+      const semCota = (e) => e?.status === 3 && v.tts === 'eleven';
+      if (changed.length) {
+        try {
+          grava(v);
+        } catch (e) {
+          if (!semCota(e)) throw e;
+          naKore();
+        }
       } else node('tts-gemini.mjs', ['--dir', dir, '--lang', lang, '--measure']);
       try {
         // QA de tudo que foi gravado agora (as falas antigas já passaram antes)
-        if (changed.length) node('qa-voice.mjs', ['--dir', dir, '--lang', lang, '--fix', ...qaExtra, '--only', changed.join(',')]);
+        if (changed.length) {
+          try {
+            qa(v);
+          } catch (e) {
+            if (!semCota(e)) throw e;
+            naKore();
+            qa(v);
+          }
+        }
       } catch (e) {
         if (e.status === 2) die(`${k}: o QA da voz ficou sem resposta da API (nada foi reprovado) — rode voice de novo daqui a pouco`);
         die(`${k}: QA da voz reprovou depois das tentativas — reescreva a fala (homófono, palavra difícil) e rode de novo`);
@@ -1066,7 +1166,14 @@ async function render(ctx) {
       const dir = outDir(k);
       // abertura de porta: nunca sai sozinha — vai dentro do vídeo da porta (tour.mjs render, composição Porta)
       const bridge = ctx.vs.ideas[id].bridge === 'tour';
-      const preview = bridge || !!tag || !!readJson(path.join(pubDir(k), 'spec.json')).silent;
+      const built = readJson(path.join(pubDir(k), 'spec.json'));
+      const preview = bridge || !!tag || !!built.silent;
+      // a voz que vai pro vídeo × a do roteiro (o rodízio lê a `voz` dos roteiros no git: ela tem que ser a verdade)
+      const vr = built.voz ? ELENCO.vozes[built.voz] : null;
+      const gv = vozGravada(k);
+      if (!built.silent && vr && gv?.fallback) console.warn(`! ${k}: a voz é a Kore (${gv.fallback}), não ${vr.nome} — diga no relatório; com a cota de volta, rode voice e render --rev N+1`);
+      else if (!preview && vr && gv && !mesmaVoz(gv, { voice: vr.id, model: vr.modelo }))
+        die(`${k}: a voz gravada (${nomeDaVoz(gv.voice)}) não é a do roteiro (${vr.nome}) — rode voice antes do render`);
       fs.mkdirSync(path.join(dir, 'pub'), { recursive: true });
       // prévia sem voz: só o mp4 de conferência, sem pub/ nem video.json (não tem como ir pro bucket)
       if (identity) fs.mkdirSync(path.join(dir, 'identidade'), { recursive: true });

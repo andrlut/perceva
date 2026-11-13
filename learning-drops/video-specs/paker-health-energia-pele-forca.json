@@ -1,13 +1,20 @@
 {
-  "_doc": "Roteiro do vídeo (molde genérico, tools/video/MOLDE.md). Cada fala = uma cena do catálogo + peças do elenco + deixas (trechos da fala em que algo entra). {pt,en} em qualquer texto. A cena 'verso' fala o card VERBATIM (vem do ideas-spec). Material patrocinado: as falas tratam do ingrediente e do hábito, sem nome de marca, sem resultado de estudo, sem número fora do verso. r2 (2026-11-08, molde novo): o TEXTO falado e os ids são os da r1 (aprovada no revisor de roteiro e de quadros em 2026-11-05; voz no QA com 100%), então nenhuma fala precisa regravar; mudou só o visual (lugar, câmera, passagem, sobrancelha, peças) e, no colágeno, a ordem de 'weeks' e 'habit2'. Lições de parceiro que valem aqui: a ressalva da cafeína é fala própria e neutra (lista sem brilho nem virada); virada sempre comemora; 'misture na água' = peça copo; nada de raio, bateria carregando nem chama junto de energia (as baterias da creatina são estáticas, meia → cheia, e foram aprovadas assim na r1). Números do verso e o QA da voz (scripts/qa-voice.mjs): o QA troca 'um'..'dez' / 'one'..'ten' por algarismo e cobra todo algarismo na transcrição, então número até dez vai por extenso no 'say' (oito, três, cinco); acima de dez NÃO tem 'say' (trinta/sessenta não viram algarismo, o QA cobraria a palavra e o transcritor escreve 30/60), a voz lê o algarismo do próprio card. Unidade abreviada no card (3 a 5 g): o 'say' diz a unidade por extenso nos dois idiomas ('gramas' / 'grams') e o QA passou com 100% nos dois (2026-11-05). Sem cena 'comparar' neste material: o molde ainda põe a figura de pele escura no painel que perde (PanelBox, seed 3 → skin #8D5A3B, conferido em 2026-11-08), o que lê como 'pele escura = jeito errado'.\n\nr3 (2026-11-09, fase 3 do molde — tools/video/MOLDE.md \"## Fase 3\"): a tela DEMONSTRA a fala (ações, lugares cozinha/banheiro/parque/academia, corpo de vidro, lupa, tanque, rótulos escritos), uma protagonista por ideia; mesma fala e mesma voz da r1/r2. Aprovado pelo André em 09/11. Pilotos e revisões em tools/video/pilotos/paker-r3-*.json.",
+  "_doc": "Roteiro do vídeo (molde genérico, tools/video/MOLDE.md). Cada fala = uma cena do catálogo + peças do elenco + deixas (trechos da fala em que algo entra). {pt,en} em qualquer texto. A cena 'verso' fala o card VERBATIM (vem do ideas-spec). Material patrocinado: as falas tratam do ingrediente e do hábito, sem nome de marca, sem resultado de estudo, sem número fora do verso. r2 (2026-11-08, molde novo): o TEXTO falado e os ids são os da r1 (aprovada no revisor de roteiro e de quadros em 2026-11-05; voz no QA com 100%), então nenhuma fala precisa regravar; mudou só o visual (lugar, câmera, passagem, sobrancelha, peças) e, no colágeno, a ordem de 'weeks' e 'habit2'. Lições de parceiro que valem aqui: a ressalva da cafeína é fala própria e neutra (lista sem brilho nem virada); virada sempre comemora; 'misture na água' = peça copo; nada de raio, bateria carregando nem chama junto de energia (as baterias da creatina são estáticas, meia → cheia, e foram aprovadas assim na r1). Números do verso e o QA da voz (scripts/qa-voice.mjs): o QA troca 'um'..'dez' / 'one'..'ten' por algarismo e cobra todo algarismo na transcrição, então número até dez vai por extenso no 'say' (oito, três, cinco); acima de dez NÃO tem 'say' (trinta/sessenta não viram algarismo, o QA cobraria a palavra e o transcritor escreve 30/60), a voz lê o algarismo do próprio card. Unidade abreviada no card (3 a 5 g): o 'say' diz a unidade por extenso nos dois idiomas ('gramas' / 'grams') e o QA passou com 100% nos dois (2026-11-05). Sem cena 'comparar' neste material: o molde ainda põe a figura de pele escura no painel que perde (PanelBox, seed 3 → skin #8D5A3B, conferido em 2026-11-08), o que lê como 'pele escura = jeito errado'.\n\nr3 (2026-11-09, fase 3 do molde — tools/video/MOLDE.md \"## Fase 3\"): a tela DEMONSTRA a fala (ações, lugares cozinha/banheiro/parque/academia, corpo de vidro, lupa, tanque, rótulos escritos), uma protagonista por ideia; mesma fala e mesma voz da r1/r2. Aprovado pelo André em 09/11. Pilotos e revisões em tools/video/pilotos/paker-r3-*.json. r4 (2026-11-13): o modelo de ~60 s que o André aprovou nos pilotos r5 (tools/video/pilotos/paker-r5-*.json) — boneco \"serie\" (v5), fundo nítido e vivo (visual v5), sem o card no fim (fim: \"cena\": o vídeo termina no verso DEMONSTRADO; o card é coletado na tela do app), 9 a 10 falas cobrindo todos os assuntos do corpo, e a voz de cada ideia do elenco de vozes (tools/video/vozes.json), alternada entre vídeos.",
   "slug": "paker-health-energia-pele-forca",
   "ideas": {
     "pre-treino-energia": {
       "dimension": "body",
       "fase": 3,
+      "fim": "cena",
       "protagonista": {
-        "seed": 0,
-        "skin": "#E0AC7E"
+        "seed": 1,
+        "pessoa": "caio"
+      },
+      "boneco": "serie",
+      "visual": "v5",
+      "voz": {
+        "pt": "lendario",
+        "en": "kore"
       },
       "lines": [
         {
@@ -35,12 +42,12 @@
             ],
             "camera": {
               "move": "push",
-              "focus": "centro",
+              "focus": "pessoa",
               "forca": "leve"
             },
             "elenco": [
               {
-                "seed": 2,
+                "seed": 5,
                 "x": 160,
                 "acao": "levantar",
                 "cue": {
@@ -49,8 +56,8 @@
                 }
               },
               {
-                "seed": 1,
-                "x": 900,
+                "seed": 0,
+                "x": 860,
                 "acao": "saltar",
                 "cue": {
                   "pt": "Hora do treino",
@@ -64,7 +71,7 @@
           "id": "star",
           "scene": "cena",
           "pt": {
-            "caption": "No pré-treino, a estrela é a *cafeína*: ela ajuda a ficar alerta e a se concentrar melhor."
+            "caption": "No pré-treino, a estrela é a *cafeína*, que ajuda a ficar alerta e a se concentrar melhor."
           },
           "en": {
             "caption": "In a pre-workout, the star is *caffeine*: it helps you stay alert and concentrate better."
@@ -152,9 +159,7 @@
                   "pt": "se concentrar",
                   "en": "concentrate"
                 },
-                "seta": "cabeca",
-                "x": 175,
-                "y": 680
+                "seta": "cabeca"
               }
             ],
             "camera": {
@@ -168,31 +173,105 @@
           }
         },
         {
-          "id": "fronts2",
-          "scene": "dentro",
+          "id": "levels",
+          "scene": "faz",
+          "hold": 0.6,
           "pt": {
-            "caption": "E outros ingredientes trabalham *em frentes diferentes*: um ligado aos vasos, outro ao esforço intenso e outro ligado ao foco."
+            "caption": "E ela melhora o desempenho tanto de quem treina há anos quanto de quem *está começando*."
           },
           "en": {
-            "caption": "And other ingredients work *on different fronts*: one linked to blood vessels, another to hard efforts, and another linked to focus."
+            "caption": "And it improves performance both for people who've trained for years and for those *just starting out*."
           },
           "props": {
+            "ambiente": "parque",
+            "hora": "manha",
+            "gente": "nenhuma",
+            "plano": "fechado",
+            "mood": "focado",
+            "passos": [
+              {
+                "acao": "pronta"
+              },
+              {
+                "acao": "saltar",
+                "cue": {
+                  "pt": "treina há anos",
+                  "en": "trained for years"
+                },
+                "reps": 4
+              }
+            ],
+            "elenco": [
+              {
+                "seed": 3,
+                "x": 180,
+                "acao": "levantar",
+                "ritmo": "lento",
+                "cue": {
+                  "pt": "o desempenho",
+                  "en": "performance"
+                }
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "há anos",
+                  "en": "for years"
+                },
+                "cue": {
+                  "pt": "há anos",
+                  "en": "for years"
+                },
+                "seta": "peito",
+                "x": 870,
+                "y": 900
+              },
+              {
+                "text": {
+                  "pt": "está começando",
+                  "en": "just starting out"
+                },
+                "cue": {
+                  "pt": "está começando",
+                  "en": "just starting"
+                },
+                "x": 240,
+                "y": 640
+              }
+            ]
+          }
+        },
+        {
+          "id": "vessels",
+          "scene": "dentro",
+          "hold": 0.6,
+          "pt": {
+            "caption": "Os outros ingredientes trabalham em frentes diferentes, e a arginina dá origem ao *óxido nítrico*, ligado à dilatação dos vasos."
+          },
+          "en": {
+            "caption": "The other ingredients work on different fronts, and your body uses arginine to make *nitric oxide*, which is linked to widening blood vessels."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Por dentro",
+              "en": "On the inside"
+            },
             "plano": "corpo",
-            "transicao": "zoom",
             "mood": "ok",
             "origem": "barriga",
             "divide": {
-              "pt": "em frentes diferentes",
-              "en": "on different fronts"
+              "pt": "frentes diferentes",
+              "en": "different fronts"
             },
             "fluxos": [
               {
-                "para": "peito",
+                "para": "vasos",
                 "cor": "health",
                 "particula": "grao"
               },
               {
-                "para": "braco",
+                "para": "musculos",
                 "cor": "craft",
                 "particula": "ponto"
               },
@@ -204,27 +283,183 @@
             ],
             "regioes": [
               {
-                "parte": "peito",
+                "parte": "vasos",
                 "cue": {
-                  "pt": "ligado aos vasos",
-                  "en": "blood vessels"
+                  "pt": "ligado à dilatação",
+                  "en": "linked to widening"
                 },
                 "efeito": "acende",
                 "cor": "health"
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "arginina",
+                  "en": "arginine"
+                },
+                "cue": {
+                  "pt": "a arginina",
+                  "en": "arginine"
+                },
+                "x": 200,
+                "y": 500,
+                "max": 280
               },
               {
-                "parte": "braco",
+                "text": {
+                  "pt": "óxido nítrico",
+                  "en": "nitric oxide"
+                },
                 "cue": {
-                  "pt": "esforço intenso",
-                  "en": "hard efforts"
+                  "pt": "óxido nítrico",
+                  "en": "nitric oxide"
+                },
+                "x": 190,
+                "y": 700,
+                "max": 230
+              },
+              {
+                "text": {
+                  "pt": "vasos",
+                  "en": "blood vessels"
+                },
+                "cue": {
+                  "pt": "dilatação dos vasos",
+                  "en": "widening blood vessels"
+                },
+                "seta": "vasos",
+                "x": 170,
+                "y": 950,
+                "max": 230
+              }
+            ],
+            "transicao": "zoom"
+          }
+        },
+        {
+          "id": "buffer",
+          "scene": "dentro",
+          "pt": {
+            "caption": "Já a beta-alanina forma *carnosina* no músculo, que ajuda a segurar a acidez do esforço intenso."
+          },
+          "en": {
+            "caption": "Beta-alanine builds *carnosine* in your muscles, which helps buffer the acidity of hard efforts."
+          },
+          "props": {
+            "plano": "corpo",
+            "mood": "focado",
+            "origem": "barriga",
+            "fluxos": [
+              {
+                "para": "musculos",
+                "cor": "craft",
+                "particula": "ponto",
+                "cue": {
+                  "pt": "beta-alanina",
+                  "en": "Beta-alanine"
+                }
+              }
+            ],
+            "regioes": [
+              {
+                "parte": "musculos",
+                "cue": {
+                  "pt": "no músculo",
+                  "en": "in your muscles"
                 },
                 "efeito": "acende",
                 "cor": "craft"
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "beta-alanina",
+                  "en": "beta-alanine"
+                },
+                "cue": {
+                  "pt": "beta-alanina",
+                  "en": "Beta-alanine"
+                },
+                "out": {
+                  "pt": "que ajuda",
+                  "en": "which helps"
+                },
+                "x": 860,
+                "y": 520
               },
+              {
+                "text": {
+                  "pt": "carnosina",
+                  "en": "carnosine"
+                },
+                "cue": {
+                  "pt": "carnosina",
+                  "en": "carnosine"
+                },
+                "seta": "musculos"
+              },
+              {
+                "text": {
+                  "pt": "segurar a acidez",
+                  "en": "buffer the acidity"
+                },
+                "cue": {
+                  "pt": "segurar a acidez",
+                  "en": "buffer the acidity"
+                },
+                "seta": [
+                  760,
+                  790
+                ],
+                "x": 860,
+                "y": 1010,
+                "max": 260
+              }
+            ],
+            "transicao": "corte"
+          }
+        },
+        {
+          "id": "focus",
+          "scene": "dentro",
+          "hold": 1.2,
+          "pt": {
+            "caption": "E a tirosina é matéria-prima da *dopamina* e da noradrenalina, ligadas ao foco."
+          },
+          "en": {
+            "caption": "And tyrosine is the raw material for *dopamine* and noradrenaline, both linked to focus."
+          },
+          "props": {
+            "plano": "corpo",
+            "mood": "focado",
+            "origem": "barriga",
+            "camera": {
+              "move": "push",
+              "focus": "topo",
+              "forca": "leve",
+              "cue": {
+                "pt": "ligadas ao foco",
+                "en": "linked to focus"
+              }
+            },
+            "fluxos": [
+              {
+                "para": "cabeca",
+                "cor": "mind",
+                "particula": "ponto",
+                "cue": {
+                  "pt": "a tirosina",
+                  "en": "tyrosine"
+                }
+              }
+            ],
+            "regioes": [
               {
                 "parte": "cabeca",
                 "cue": {
-                  "pt": "ligado ao foco",
+                  "pt": "ligadas ao foco",
                   "en": "linked to focus"
                 },
                 "efeito": "anel",
@@ -234,25 +469,31 @@
             "rotulos": [
               {
                 "text": {
-                  "pt": "vasos",
-                  "en": "blood vessels"
+                  "pt": "tirosina",
+                  "en": "tyrosine"
                 },
                 "cue": {
-                  "pt": "ligado aos vasos",
-                  "en": "blood vessels"
+                  "pt": "a tirosina",
+                  "en": "tyrosine"
                 },
-                "seta": "peito"
+                "x": 180,
+                "y": 580,
+                "out": {
+                  "pt": "ligadas ao foco",
+                  "en": "linked to focus"
+                }
               },
               {
                 "text": {
-                  "pt": "esforço intenso",
-                  "en": "hard efforts"
+                  "pt": "dopamina",
+                  "en": "dopamine"
                 },
                 "cue": {
-                  "pt": "esforço intenso",
-                  "en": "hard efforts"
+                  "pt": "dopamina",
+                  "en": "dopamine"
                 },
-                "seta": "braco"
+                "x": 870,
+                "y": 580
               },
               {
                 "text": {
@@ -260,91 +501,16 @@
                   "en": "focus"
                 },
                 "cue": {
-                  "pt": "ligado ao foco",
-                  "en": "linked to focus"
+                  "pt": "ao foco",
+                  "en": "to focus"
                 },
-                "seta": "cabeca"
-              }
-            ]
-          },
-          "hold": 0.6
-        },
-        {
-          "id": "take",
-          "scene": "cena",
-          "pt": {
-            "caption": "Misture na água e tome *com antecedência*."
-          },
-          "en": {
-            "caption": "Mix it in water and drink it *ahead of time*."
-          },
-          "props": {
-            "kicker": {
-              "pt": "Na prática",
-              "en": "In practice"
-            },
-            "ambiente": "cozinha",
-            "hora": "dia",
-            "setting": "mesa",
-            "plano": "fechado",
-            "holding": "copo-agua",
-            "mood": "ok",
-            "acoes": [
-              {
-                "acao": "mexer",
-                "ate": {
-                  "pt": "e tome",
-                  "en": "drink it"
-                }
-              },
-              {
-                "acao": "beber",
-                "cue": {
-                  "pt": "e tome",
-                  "en": "drink it"
-                }
+                "seta": "cabeca",
+                "x": 180,
+                "y": 580
               }
             ],
-            "objects": [
-              {
-                "p": "pote",
-                "cue": {
-                  "pt": "Misture",
-                  "en": "Mix it"
-                },
-                "run": {
-                  "ate": {
-                    "pt": "e tome",
-                    "en": "drink it"
-                  }
-                }
-              },
-              {
-                "p": "relogio",
-                "cue": {
-                  "pt": "com antecedência",
-                  "en": "ahead of time"
-                }
-              }
-            ],
-            "rotulos": [
-              {
-                "text": {
-                  "pt": "com antecedência",
-                  "en": "ahead of time"
-                },
-                "cue": {
-                  "pt": "com antecedência",
-                  "en": "ahead of time"
-                },
-                "seta": [
-                  935,
-                  1010
-                ]
-              }
-            ]
-          },
-          "hold": 0.4
+            "transicao": "corte"
+          }
         },
         {
           "id": "careful",
@@ -360,7 +526,7 @@
               "pt": "Atenção",
               "en": "Careful"
             },
-            "ambiente": "cozinha",
+            "ambiente": "casa",
             "hora": "noite",
             "mood": "focado",
             "items": [
@@ -418,102 +584,189 @@
                 "y": 925
               }
             ]
-          }
+          },
+          "hold": 0.8
         },
         {
-          "id": "arrive",
-          "scene": "faz",
-          "hold": 0.5,
+          "id": "take",
+          "scene": "cena",
+          "hold": 0.4,
           "pt": {
-            "caption": "Você se troca, sai de casa e, quando o treino começa, *a cafeína já ajuda a ficar alerta*."
+            "caption": "Misture na água e tome *de trinta a sessenta minutos antes* do treino."
           },
           "en": {
-            "caption": "You get changed, head out, and when the workout starts, *the caffeine is already helping you stay alert*."
+            "caption": "Mix it in water and take it *thirty to sixty minutes before* training."
           },
           "props": {
-            "ambiente": "academia",
+            "kicker": {
+              "pt": "Antes do treino",
+              "en": "Before training"
+            },
+            "ambiente": "cozinha",
             "hora": "dia",
+            "setting": "mesa",
             "plano": "fechado",
+            "holding": "coqueteleira",
             "mood": "ok",
-            "turn": {
-              "pt": "ajuda a ficar alerta",
-              "en": "helping you stay alert"
-            },
-            "to": "focado",
-            "camera": {
-              "move": "push",
-              "cue": {
-                "pt": "ajuda a ficar alerta",
-                "en": "helping you stay alert"
-              },
-              "forca": "forte"
-            },
-            "passos": [
+            "acoes": [
               {
-                "acao": "andar",
-                "de": 460,
-                "para": 540
-              },
-              {
-                "acao": "correr",
+                "acao": "mexer",
                 "cue": {
-                  "pt": "treino começa",
-                  "en": "workout starts"
+                  "pt": "Misture",
+                  "en": "Mix it"
                 },
-                "para": 540
+                "ate": {
+                  "pt": "e tome",
+                  "en": "take it"
+                }
+              },
+              {
+                "acao": "beber",
+                "cue": {
+                  "pt": "e tome",
+                  "en": "take it"
+                }
+              }
+            ],
+            "objects": [
+              {
+                "p": "pote",
+                "cue": {
+                  "pt": "Misture",
+                  "en": "Mix it"
+                },
+                "run": {
+                  "cue": {
+                    "pt": "Misture",
+                    "en": "Mix it"
+                  },
+                  "ate": {
+                    "pt": "na água",
+                    "en": "in water"
+                  }
+                }
+              },
+              {
+                "p": "relogio",
+                "cue": {
+                  "pt": "minutos antes",
+                  "en": "minutes before"
+                }
               }
             ],
             "rotulos": [
               {
                 "text": {
-                  "pt": "alerta",
-                  "en": "alert"
+                  "pt": "água",
+                  "en": "water"
                 },
                 "cue": {
-                  "pt": "ficar alerta",
-                  "en": "stay alert"
+                  "pt": "na água",
+                  "en": "in water"
                 },
-                "seta": "cabeca"
-              }
-            ],
-            "kicker": {
-              "pt": "Na academia",
-              "en": "At the gym"
-            },
-            "elenco": [
-              {
-                "seed": 2,
-                "x": 160,
-                "acao": "levantar",
-                "cue": {
-                  "pt": "Você se troca",
-                  "en": "You get changed"
-                }
+                "out": {
+                  "pt": "sessenta",
+                  "en": "sixty"
+                },
+                "x": 820,
+                "y": 480
               },
               {
-                "seed": 1,
-                "x": 900,
-                "acao": "saltar",
+                "text": {
+                  "pt": "minutos antes",
+                  "en": "minutes before"
+                },
                 "cue": {
-                  "pt": "Você se troca",
-                  "en": "You get changed"
-                }
+                  "pt": "minutos antes",
+                  "en": "minutes before"
+                },
+                "seta": [
+                  935,
+                  1010
+                ],
+                "x": 820,
+                "y": 480,
+                "max": 380
               }
             ]
           }
         },
         {
-          "id": "do",
-          "scene": "verso",
+          "id": "arrive",
+          "scene": "faz",
+          "hold": 0.8,
+          "pt": {
+            "caption": "Nesse tempo, você se troca e sai de casa pra chegar no treino *com disposição*."
+          },
+          "en": {
+            "caption": "In that time, you get changed and head out to start training *ready to go*."
+          },
           "props": {
-            "frente": {
-              "mood": "focado",
-              "arms": "down"
+            "kicker": {
+              "pt": "Na academia",
+              "en": "At the gym"
             },
-            "camera": {
-              "move": "push",
-              "forca": "leve"
-            }
+            "ambiente": "academia",
+            "hora": "dia",
+            "plano": "fechado",
+            "mood": "ok",
+            "turn": {
+              "pt": "com disposição",
+              "en": "ready to go"
+            },
+            "to": "focado",
+            "passos": [
+              {
+                "acao": "andar",
+                "de": 460,
+                "para": 540,
+                "ritmo": "rapido"
+              },
+              {
+                "acao": "levantar",
+                "cue": {
+                  "pt": "chegar no treino",
+                  "en": "start training"
+                },
+                "peca": "peso",
+                "reps": 3,
+                "ritmo": "rapido"
+              }
+            ],
+            "elenco": [
+              {
+                "seed": 5,
+                "x": 160,
+                "acao": "levantar",
+                "cue": {
+                  "pt": "você se troca",
+                  "en": "you get changed"
+                }
+              },
+              {
+                "seed": 0,
+                "x": 860,
+                "acao": "saltar",
+                "cue": {
+                  "pt": "você se troca",
+                  "en": "you get changed"
+                }
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "disposição",
+                  "en": "ready to go"
+                },
+                "cue": {
+                  "pt": "com disposição",
+                  "en": "ready to go"
+                },
+                "x": 540,
+                "y": 570
+              }
+            ]
           }
         }
       ]
@@ -521,9 +774,16 @@
     "colageno-constancia": {
       "dimension": "body",
       "fase": 3,
+      "fim": "cena",
       "protagonista": {
         "seed": 4,
-        "skin": "#C68B5E"
+        "pessoa": "lucia"
+      },
+      "boneco": "serie",
+      "visual": "v5",
+      "voz": {
+        "pt": "roberta",
+        "en": "liam"
       },
       "lines": [
         {
@@ -607,11 +867,24 @@
                   "pt": "depois de uns dias",
                   "en": "a few days in"
                 }
+              },
+              {
+                "text": {
+                  "pt": "pele",
+                  "en": "skin"
+                },
+                "cue": {
+                  "pt": "a pele",
+                  "en": "your skin"
+                },
+                "seta": "rosto",
+                "x": 800,
+                "y": 700
               }
             ],
             "camera": {
               "move": "push",
-              "focus": "pessoa",
+              "focus": "centro",
               "cue": {
                 "pt": "continua igual",
                 "en": "looks the same"
@@ -622,6 +895,7 @@
         {
           "id": "hook2",
           "scene": "dentro",
+          "hold": 0.5,
           "pt": {
             "caption": "O colágeno é a proteína que dá *estrutura à pele*, e o corpo passa a fabricar menos dele com a idade."
           },
@@ -695,10 +969,15 @@
                   "en": "as you age"
                 },
                 "cue": {
-                  "pt": "com a idade",
-                  "en": "as you age"
+                  "pt": "menos dele",
+                  "en": "less of it"
                 },
-                "seta": "cabeca"
+                "seta": [
+                  380,
+                  770
+                ],
+                "x": 700,
+                "y": 1250
               }
             ]
           }
@@ -707,10 +986,10 @@
           "id": "peptides",
           "scene": "dentro",
           "pt": {
-            "caption": "Os suplementos trazem o colágeno quebrado em *peptídeos*, pedacinhos que o intestino absorve."
+            "caption": "Os suplementos trazem colágeno hidrolisado, já quebrado em *peptídeos*, pedaços pequenos que o intestino consegue absorver."
           },
           "en": {
-            "caption": "Supplements bring collagen broken down into *peptides*, small pieces your gut can absorb."
+            "caption": "Supplements bring hydrolyzed collagen, already broken down into *peptides*, small pieces your gut can absorb."
           },
           "props": {
             "kicker": {
@@ -729,6 +1008,10 @@
                 "cue": {
                   "pt": "Os suplementos",
                   "en": "Supplements"
+                },
+                "ate": {
+                  "pt": "já quebrado",
+                  "en": "already broken"
                 }
               }
             ],
@@ -749,7 +1032,7 @@
                         "en": "gut"
                       },
                       "cue": {
-                        "pt": "intestino absorve",
+                        "pt": "o intestino",
                         "en": "gut can absorb"
                       }
                     }
@@ -764,12 +1047,12 @@
                   "cor": "body",
                   "de": "topo",
                   "cue": {
-                    "pt": "trazem o colágeno",
-                    "en": "bring collagen"
+                    "pt": "hidrolisado",
+                    "en": "hydrolyzed"
                   },
                   "quebra": {
-                    "pt": "quebrado",
-                    "en": "broken down"
+                    "pt": "hidrolisado",
+                    "en": "hydrolyzed"
                   },
                   "rotulo": {
                     "text": {
@@ -784,78 +1067,232 @@
                   "atravessa": {
                     "camada": 1,
                     "cue": {
-                      "pt": "intestino absorve",
-                      "en": "gut can absorb"
+                      "pt": "consegue absorver",
+                      "en": "can absorb"
                     }
                   },
                   "correnteza": true
                 }
               }
-            }
+            },
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "hidrolisado",
+                  "en": "hydrolyzed"
+                },
+                "cue": {
+                  "pt": "hidrolisado",
+                  "en": "hydrolyzed"
+                },
+                "out": {
+                  "pt": "pedaços pequenos",
+                  "en": "small pieces"
+                },
+                "x": 720,
+                "y": 1250
+              }
+            ]
           }
         },
         {
-          "id": "weeks",
+          "id": "vitc",
           "scene": "cena",
           "hold": 0.8,
           "pt": {
-            "caption": "O resultado aparece *em semanas*, não em dias, porque a pele se renova devagar."
+            "caption": "E a *vitamina C* também entra, porque auxilia na formação do colágeno."
           },
           "en": {
-            "caption": "Results show up *in weeks*, not days, because skin renews itself slowly."
+            "caption": "And *vitamin C* is there too, because it helps form collagen."
           },
           "props": {
-            "kicker": {
-              "pt": "Com o tempo",
-              "en": "Over time"
-            },
-            "ambiente": "casa",
+            "ambiente": "escritorio",
             "hora": "noite",
             "setting": "mesa",
             "plano": "fechado",
             "holding": "copo-agua",
             "mood": "ok",
-            "camera": {
-              "move": "drift",
-              "forca": "leve"
-            },
             "acoes": [
               {
-                "acao": "beber",
+                "acao": "mexer",
                 "cue": {
-                  "pt": "aparece",
-                  "en": "show up"
-                },
-                "reps": 3
-              }
-            ],
-            "objects": [
-              {
-                "p": "calendario",
-                "cue": {
-                  "pt": "O resultado",
-                  "en": "Results"
-                },
-                "run": {
-                  "cue": {
-                    "pt": "aparece",
-                    "en": "show up"
-                  },
-                  "ate": {
-                    "pt": "porque a pele",
-                    "en": "because skin"
-                  }
+                  "pt": "vitamina C",
+                  "en": "vitamin C"
                 }
               }
             ],
             "lente": {
               "sobre": "rosto",
               "cue": {
-                "pt": "não em dias",
-                "en": "not days"
+                "pt": "vitamina C",
+                "en": "vitamin C"
               },
+              "conteudo": {
+                "camadas": [
+                  {
+                    "textura": "liso",
+                    "tom": "pele"
+                  },
+                  {
+                    "textura": "rede",
+                    "tom": "area",
+                    "peso": 1,
+                    "rotulo": {
+                      "text": {
+                        "pt": "colágeno",
+                        "en": "collagen"
+                      },
+                      "cue": {
+                        "pt": "do colágeno",
+                        "en": "form collagen"
+                      }
+                    }
+                  },
+                  {
+                    "textura": "rede",
+                    "tom": "area",
+                    "peso": 1,
+                    "cresce": {
+                      "pt": "porque auxilia",
+                      "en": "because it helps"
+                    }
+                  }
+                ],
+                "particulas": {
+                  "forma": "ponto",
+                  "cor": "wealth",
+                  "n": 10,
+                  "de": "topo",
+                  "boiam": true,
+                  "cue": {
+                    "pt": "vitamina C",
+                    "en": "vitamin C"
+                  },
+                  "rotulo": {
+                    "text": {
+                      "pt": "vitamina C",
+                      "en": "vitamin C"
+                    },
+                    "cue": {
+                      "pt": "vitamina C",
+                      "en": "vitamin C"
+                    }
+                  }
+                },
+                "ritmo": "devagar"
+              }
+            },
+            "gente": "nenhuma"
+          }
+        },
+        {
+          "id": "zinc",
+          "scene": "faz",
+          "hold": 0.3,
+          "pt": {
+            "caption": "Já o *zinco* contribui para a manutenção da pele, dos cabelos e das unhas."
+          },
+          "en": {
+            "caption": "And *zinc* helps maintain your skin, hair and nails."
+          },
+          "props": {
+            "ambiente": "parque",
+            "hora": "dia",
+            "gente": "nenhuma",
+            "plano": "fechado",
+            "mood": "ok",
+            "passos": [
+              {
+                "acao": "andar",
+                "de": 380,
+                "para": 560,
+                "ritmo": "lento",
+                "ate": {
+                  "pt": "manutenção",
+                  "en": "maintain"
+                }
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "zinco",
+                  "en": "zinc"
+                },
+                "cue": {
+                  "pt": "zinco",
+                  "en": "zinc"
+                }
+              },
+              {
+                "text": {
+                  "pt": "pele",
+                  "en": "skin"
+                },
+                "cue": {
+                  "pt": "da pele",
+                  "en": "your skin"
+                },
+                "seta": "rosto",
+                "x": 860,
+                "y": 800
+              },
+              {
+                "text": {
+                  "pt": "cabelos",
+                  "en": "hair"
+                },
+                "cue": {
+                  "pt": "dos cabelos",
+                  "en": "hair"
+                },
+                "seta": "cabeca",
+                "x": 860,
+                "y": 640
+              },
+              {
+                "text": {
+                  "pt": "unhas",
+                  "en": "nails"
+                },
+                "cue": {
+                  "pt": "das unhas",
+                  "en": "nails"
+                },
+                "seta": [
+                  640,
+                  1110
+                ],
+                "x": 860,
+                "y": 1000
+              }
+            ]
+          }
+        },
+        {
+          "id": "slow",
+          "scene": "dentro",
+          "hold": 0.8,
+          "pt": {
+            "caption": "Mas o detalhe que conta mesmo é o tempo, porque *a pele se renova devagar*."
+          },
+          "en": {
+            "caption": "But the detail that matters is time, because *skin renews itself slowly*."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Com o tempo",
+              "en": "Over time"
+            },
+            "plano": "lupa",
+            "pessoa": "grande",
+            "ambiente": "casa",
+            "hora": "manha",
+            "mood": "ok",
+            "lente": {
+              "sobre": "rosto",
               "turn": {
-                "pt": "porque a pele",
+                "pt": "a pele",
                 "en": "because skin"
               },
               "conteudo": {
@@ -877,15 +1314,121 @@
             "rotulos": [
               {
                 "text": {
+                  "pt": "o tempo",
+                  "en": "time"
+                },
+                "cue": {
+                  "pt": "o tempo",
+                  "en": "is time"
+                },
+                "out": {
+                  "pt": "se renova",
+                  "en": "renews itself"
+                },
+                "x": 720,
+                "y": 1250
+              },
+              {
+                "text": {
                   "pt": "se renova devagar",
                   "en": "renews itself slowly"
                 },
                 "cue": {
-                  "pt": "se renova devagar",
-                  "en": "renews itself slowly"
+                  "pt": "se renova",
+                  "en": "renews itself"
                 },
-                "x": 825,
-                "y": 770
+                "x": 720,
+                "y": 1250,
+                "max": 420
+              }
+            ]
+          }
+        },
+        {
+          "id": "weeks",
+          "scene": "cena",
+          "hold": 0.4,
+          "pt": {
+            "caption": "Por isso o resultado aparece *em semanas*, não em dias, e o colágeno pede constância."
+          },
+          "en": {
+            "caption": "That's why results show up *in weeks*, not days, and collagen needs consistency."
+          },
+          "props": {
+            "ambiente": "escritorio",
+            "hora": "manha",
+            "gente": "pouca",
+            "setting": "mesa",
+            "plano": "fechado",
+            "holding": "copo-agua",
+            "mood": "ok",
+            "camera": {
+              "move": "drift",
+              "forca": "leve"
+            },
+            "acoes": [
+              {
+                "acao": "beber",
+                "cue": {
+                  "pt": "aparece",
+                  "en": "show up"
+                }
+              },
+              {
+                "acao": "beber",
+                "cue": {
+                  "pt": "não em dias",
+                  "en": "not days"
+                }
+              }
+            ],
+            "objects": [
+              {
+                "p": "calendario",
+                "cue": {
+                  "pt": "Por isso",
+                  "en": "That's why"
+                },
+                "run": {
+                  "cue": {
+                    "pt": "em semanas",
+                    "en": "in weeks"
+                  },
+                  "ate": {
+                    "pt": "constância",
+                    "en": "consistency"
+                  }
+                }
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "em semanas",
+                  "en": "in weeks"
+                },
+                "cue": {
+                  "pt": "em semanas",
+                  "en": "in weeks"
+                },
+                "out": {
+                  "pt": "constância",
+                  "en": "consistency"
+                },
+                "x": 840,
+                "y": 500
+              },
+              {
+                "text": {
+                  "pt": "constância",
+                  "en": "consistency"
+                },
+                "cue": {
+                  "pt": "constância",
+                  "en": "consistency"
+                },
+                "x": 840,
+                "y": 500
               }
             ]
           }
@@ -895,18 +1438,17 @@
           "scene": "cena",
           "hold": 0.5,
           "pt": {
-            "caption": "O segredo é virar hábito: *mesmo horário todo dia*, na água ou no suco."
+            "caption": "O segredo é virar hábito, *o mesmo horário todo dia*, misturado na água ou no suco."
           },
           "en": {
-            "caption": "The secret is making it a habit: *same time every day*, in water or juice."
+            "caption": "The secret is making it a habit, *same time every day*, mixed into water or juice."
           },
           "props": {
             "kicker": {
               "pt": "Na prática",
               "en": "In practice"
             },
-            "ambiente": "escritorio",
-            "gente": "pouca",
+            "ambiente": "casa",
             "hora": "dia",
             "setting": "mesa",
             "plano": "fechado",
@@ -931,7 +1473,7 @@
                 "acao": "beber",
                 "cue": {
                   "pt": "no suco",
-                  "en": "juice"
+                  "en": "or juice"
                 },
                 "peca": "copo-suco"
               }
@@ -950,7 +1492,7 @@
                   },
                   "ate": {
                     "pt": "virar hábito",
-                    "en": "making it a habit"
+                    "en": "a habit"
                   }
                 }
               },
@@ -972,29 +1514,174 @@
                 "cue": {
                   "pt": "mesmo horário",
                   "en": "same time"
-                }
+                },
+                "x": 800,
+                "y": 420
+              },
+              {
+                "text": {
+                  "pt": "todo dia",
+                  "en": "every day"
+                },
+                "cue": {
+                  "pt": "todo dia",
+                  "en": "every day"
+                },
+                "x": 840,
+                "y": 540
               }
-            ]
+            ],
+            "gente": "nenhuma"
           }
         },
         {
           "id": "do",
-          "scene": "verso",
+          "scene": "cena",
+          "hold": 1,
           "pt": {
+            "caption": "Tome colágeno todo dia por pelo menos oito semanas, junto com *vitamina C*, que ajuda o corpo a formar colágeno.",
             "say": "Tome colágeno todo dia por pelo menos oito semanas, junto com vitamina C, que ajuda o corpo a formar colágeno."
           },
           "en": {
+            "caption": "Take collagen every day for at least eight weeks, with *vitamin C*, which helps your body form collagen.",
             "say": "Take collagen every day for at least eight weeks, with vitamin C, which helps your body form collagen."
           },
           "props": {
-            "camera": {
-              "move": "push",
-              "forca": "leve"
+            "kicker": {
+              "pt": "O que fazer",
+              "en": "What to do"
             },
-            "frente": {
-              "mood": "ok",
-              "arms": "down"
-            }
+            "ambiente": "cidade",
+            "hora": "manha",
+            "setting": "mesa",
+            "plano": "fechado",
+            "holding": "copo-agua",
+            "mood": "ok",
+            "acoes": [
+              {
+                "acao": "mexer",
+                "cue": {
+                  "pt": "Tome",
+                  "en": "Take"
+                }
+              },
+              {
+                "acao": "beber",
+                "cue": {
+                  "pt": "todo dia",
+                  "en": "every day"
+                }
+              }
+            ],
+            "objects": [
+              {
+                "p": "pote",
+                "cue": {
+                  "pt": "Tome",
+                  "en": "Take"
+                },
+                "run": {
+                  "cue": {
+                    "pt": "Tome",
+                    "en": "Take"
+                  },
+                  "ate": {
+                    "pt": "todo dia",
+                    "en": "every day"
+                  }
+                }
+              },
+              {
+                "p": "calendario",
+                "cue": {
+                  "pt": "todo dia",
+                  "en": "every day"
+                },
+                "run": {
+                  "cue": {
+                    "pt": "pelo menos",
+                    "en": "at least"
+                  },
+                  "ate": {
+                    "pt": "junto com",
+                    "en": "with vitamin C"
+                  }
+                }
+              }
+            ],
+            "lente": {
+              "sobre": "rosto",
+              "cue": {
+                "pt": "junto com",
+                "en": "with vitamin C"
+              },
+              "turn": {
+                "pt": "formar colágeno",
+                "en": "form collagen"
+              },
+              "conteudo": {
+                "camadas": [
+                  {
+                    "textura": "liso",
+                    "tom": "pele"
+                  },
+                  {
+                    "textura": "rede",
+                    "tom": "area",
+                    "peso": 2,
+                    "then": "renova"
+                  }
+                ],
+                "particulas": {
+                  "forma": "ponto",
+                  "cor": "wealth",
+                  "n": 10,
+                  "de": "topo",
+                  "boiam": true,
+                  "cue": {
+                    "pt": "vitamina C",
+                    "en": "vitamin C"
+                  },
+                  "rotulo": {
+                    "text": {
+                      "pt": "vitamina C",
+                      "en": "vitamin C"
+                    },
+                    "cue": {
+                      "pt": "vitamina C",
+                      "en": "vitamin C"
+                    }
+                  }
+                }
+              }
+            },
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "todo dia",
+                  "en": "every day"
+                },
+                "cue": {
+                  "pt": "todo dia",
+                  "en": "every day"
+                },
+                "x": 210,
+                "y": 340
+              },
+              {
+                "text": {
+                  "pt": "semanas",
+                  "en": "weeks"
+                },
+                "cue": {
+                  "pt": "semanas",
+                  "en": "weeks"
+                },
+                "x": 540,
+                "y": 340
+              }
+            ],
+            "gente": "nenhuma"
           }
         }
       ]
@@ -1002,15 +1689,22 @@
     "creatina-alem-da-musculacao": {
       "dimension": "body",
       "fase": 3,
+      "fim": "cena",
       "protagonista": {
         "seed": 3,
-        "skin": "#5C3A24"
+        "pessoa": "bia"
+      },
+      "boneco": "serie",
+      "visual": "v5",
+      "voz": {
+        "pt": "dani",
+        "en": "liam"
       },
       "lines": [
         {
           "id": "hook",
           "scene": "pensa",
-          "hold": 0.5,
+          "hold": 0.4,
           "pt": {
             "caption": "Creatina é *só pra quem faz musculação*, e tem que ser antes do treino?"
           },
@@ -1023,7 +1717,8 @@
             "plano": "fechado",
             "camera": {
               "move": "push",
-              "forca": "leve"
+              "forca": "leve",
+              "focus": "centro"
             },
             "mood": "ok",
             "thought": "peso",
@@ -1089,10 +1784,10 @@
           "id": "reserve",
           "scene": "dentro",
           "pt": {
-            "caption": "Seu corpo já produz creatina e guarda no músculo, onde ela vira *reserva de energia* pra esforços curtos e intensos."
+            "caption": "Seu corpo já produz creatina e guarda no músculo, onde ela vira *fosfocreatina*, a reserva de energia dos esforços curtos e intensos."
           },
           "en": {
-            "caption": "Your body already makes creatine and stores it in muscle, where it becomes *an energy reserve* for quick bursts of hard effort."
+            "caption": "Your body already makes creatine and stores it in muscle, where it becomes *phosphocreatine*, the energy reserve for quick bursts of hard effort."
           },
           "props": {
             "kicker": {
@@ -1122,13 +1817,61 @@
                   "en": "stores it in muscle"
                 },
                 "efeito": "acende",
-                "cor": "body",
-                "rotulo": {
-                  "pt": "no músculo",
-                  "en": "in muscle"
-                }
+                "cor": "body"
               }
             ],
+            "lente": {
+              "sobre": "braco",
+              "cue": {
+                "pt": "onde ela vira",
+                "en": "where it becomes"
+              },
+              "cresce": {
+                "pt": "fosfocreatina",
+                "en": "phosphocreatine"
+              },
+              "conteudo": {
+                "reserva": {
+                  "conteudo": "grao",
+                  "nivel": [
+                    {
+                      "v": 0.25
+                    },
+                    {
+                      "v": 0.8,
+                      "cue": {
+                        "pt": "fosfocreatina",
+                        "en": "phosphocreatine"
+                      }
+                    }
+                  ],
+                  "gasta": [
+                    {
+                      "cue": {
+                        "pt": "esforços curtos",
+                        "en": "quick bursts"
+                      }
+                    },
+                    {
+                      "cue": {
+                        "pt": "e intensos",
+                        "en": "hard effort"
+                      }
+                    }
+                  ],
+                  "rotulo": {
+                    "text": {
+                      "pt": "fosfocreatina",
+                      "en": "phosphocreatine"
+                    },
+                    "cue": {
+                      "pt": "fosfocreatina",
+                      "en": "phosphocreatine"
+                    }
+                  }
+                }
+              }
+            },
             "rotulos": [
               {
                 "text": {
@@ -1141,9 +1884,24 @@
                 },
                 "seta": "tronco",
                 "out": {
+                  "pt": "onde ela vira",
+                  "en": "where it becomes"
+                },
+                "x": 190,
+                "y": 960
+              },
+              {
+                "text": {
                   "pt": "reserva de energia",
-                  "en": "an energy reserve"
-                }
+                  "en": "energy reserve"
+                },
+                "cue": {
+                  "pt": "reserva de energia",
+                  "en": "energy reserve"
+                },
+                "x": 540,
+                "y": 410,
+                "max": 600
               },
               {
                 "text": {
@@ -1157,61 +1915,12 @@
                 "seta": [
                   800,
                   1090
-                ]
+                ],
+                "x": 930,
+                "y": 900,
+                "max": 230
               }
-            ],
-            "lente": {
-              "sobre": "braco",
-              "cue": {
-                "pt": "onde ela vira",
-                "en": "where it becomes"
-              },
-              "cresce": {
-                "pt": "reserva de energia",
-                "en": "an energy reserve"
-              },
-              "conteudo": {
-                "reserva": {
-                  "conteudo": "grao",
-                  "nivel": [
-                    {
-                      "v": 0.25
-                    },
-                    {
-                      "v": 0.78,
-                      "cue": {
-                        "pt": "onde ela vira",
-                        "en": "where it becomes"
-                      }
-                    }
-                  ],
-                  "gasta": [
-                    {
-                      "cue": {
-                        "pt": "esforços curtos",
-                        "en": "quick bursts"
-                      }
-                    },
-                    {
-                      "cue": {
-                        "pt": "curtos e intensos",
-                        "en": "hard effort"
-                      }
-                    }
-                  ],
-                  "rotulo": {
-                    "text": {
-                      "pt": "reserva",
-                      "en": "reserve"
-                    },
-                    "cue": {
-                      "pt": "reserva de energia",
-                      "en": "an energy reserve"
-                    }
-                  }
-                }
-              }
-            }
+            ]
           }
         },
         {
@@ -1219,7 +1928,7 @@
           "scene": "faz",
           "hold": 0.6,
           "pt": {
-            "caption": "Por isso ela ajuda o desempenho quando o esforço se repete: em *tiros de corrida*, saltos e séries de força."
+            "caption": "Por isso ela ajuda o desempenho quando o esforço se repete, como em *tiros de corrida*, saltos e séries de força."
           },
           "en": {
             "caption": "That's why it helps performance in repeated bursts: *sprints*, jumps and strength sets."
@@ -1260,11 +1969,7 @@
                   "pt": "saltos",
                   "en": "jumps"
                 },
-                "ritmo": "rapido",
-                "rotulo": {
-                  "pt": "saltos",
-                  "en": "jumps"
-                }
+                "ritmo": "rapido"
               },
               {
                 "acao": "levantar",
@@ -1274,11 +1979,7 @@
                 },
                 "reps": 2,
                 "ritmo": "rapido",
-                "peca": "peso",
-                "rotulo": {
-                  "pt": "séries de força",
-                  "en": "strength sets"
-                }
+                "peca": "peso"
               }
             ],
             "rotulos": [
@@ -1294,7 +1995,10 @@
                 "out": {
                   "pt": "tiros de corrida",
                   "en": "sprints"
-                }
+                },
+                "x": 150,
+                "y": 400,
+                "max": 240
               },
               {
                 "text": {
@@ -1304,7 +2008,36 @@
                 "cue": {
                   "pt": "tiros de corrida",
                   "en": "sprints"
-                }
+                },
+                "x": 150,
+                "y": 400,
+                "max": 240
+              },
+              {
+                "text": {
+                  "pt": "saltos",
+                  "en": "jumps"
+                },
+                "cue": {
+                  "pt": "saltos",
+                  "en": "jumps"
+                },
+                "x": 150,
+                "y": 545,
+                "max": 240
+              },
+              {
+                "text": {
+                  "pt": "séries de força",
+                  "en": "strength sets"
+                },
+                "cue": {
+                  "pt": "séries de força",
+                  "en": "strength sets"
+                },
+                "x": 150,
+                "y": 670,
+                "max": 240
               }
             ]
           }
@@ -1313,7 +2046,7 @@
           "id": "everyone2",
           "scene": "faz",
           "pt": {
-            "caption": "Então não é só pra musculação: ela ajuda em treinos feitos de *arrancadas curtas e fortes*."
+            "caption": "Então não é só pra musculação, ela ajuda em treinos de *arrancadas curtas e fortes*."
           },
           "en": {
             "caption": "So it's not just for bodybuilders: it helps training built on *short, explosive efforts*."
@@ -1325,7 +2058,7 @@
             "transicao": "corte",
             "camera": {
               "move": "pull",
-              "forca": "forte"
+              "forca": "leve"
             },
             "mood": "focado",
             "passos": [
@@ -1353,7 +2086,7 @@
             ],
             "elenco": [
               {
-                "seed": 1,
+                "seed": 0,
                 "x": 220,
                 "acao": "saltar",
                 "ritmo": "rapido",
@@ -1368,7 +2101,7 @@
               },
               {
                 "seed": 5,
-                "x": 905,
+                "x": 860,
                 "acao": "levantar",
                 "ritmo": "lento",
                 "cue": {
@@ -1376,8 +2109,8 @@
                   "en": "not just"
                 },
                 "ate": {
-                  "pt": "ela ajuda",
-                  "en": "it helps"
+                  "pt": "fortes",
+                  "en": "efforts"
                 }
               }
             ],
@@ -1391,11 +2124,11 @@
                   "pt": "musculação",
                   "en": "bodybuilders"
                 },
-                "x": 900,
+                "x": 860,
                 "y": 1250,
                 "seta": [
-                  905,
-                  1075
+                  920,
+                  940
                 ],
                 "out": {
                   "pt": "ela ajuda",
@@ -1419,11 +2152,270 @@
           }
         },
         {
+          "id": "ages",
+          "scene": "faz",
+          "hold": 0.5,
+          "pt": {
+            "caption": "E os benefícios vão *de adolescentes a idosos*."
+          },
+          "en": {
+            "caption": "And its benefits span *from teenagers to older adults*."
+          },
+          "props": {
+            "ambiente": "academia",
+            "hora": "noite",
+            "plano": "fechado",
+            "mood": "focado",
+            "passos": [
+              {
+                "acao": "pronta"
+              },
+              {
+                "acao": "levantar",
+                "cue": {
+                  "pt": "benefícios vão",
+                  "en": "benefits span"
+                },
+                "peca": "peso",
+                "reps": 4,
+                "ritmo": "rapido"
+              }
+            ],
+            "elenco": [
+              {
+                "seed": 8,
+                "x": 180,
+                "acao": "saltar",
+                "ritmo": "rapido",
+                "cue": {
+                  "pt": "E os benefícios",
+                  "en": "And its benefits"
+                },
+                "size": 205
+              },
+              {
+                "seed": 6,
+                "x": 900,
+                "acao": "levantar",
+                "ritmo": "lento",
+                "cue": {
+                  "pt": "E os benefícios",
+                  "en": "And its benefits"
+                }
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "adolescentes",
+                  "en": "teenagers"
+                },
+                "cue": {
+                  "pt": "de adolescentes",
+                  "en": "from teenagers"
+                },
+                "seta": [
+                  190,
+                  960
+                ]
+              },
+              {
+                "text": {
+                  "pt": "idosos",
+                  "en": "older adults"
+                },
+                "cue": {
+                  "pt": "a idosos",
+                  "en": "to older adults"
+                },
+                "seta": [
+                  900,
+                  820
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "safe",
+          "scene": "faz",
+          "pt": {
+            "caption": "Ela é segura *pra pessoas saudáveis*, sem efeitos colaterais graves."
+          },
+          "en": {
+            "caption": "It's safe *for healthy people*, with no serious side effects."
+          },
+          "props": {
+            "ambiente": "cidade",
+            "hora": "dia",
+            "gente": "nenhuma",
+            "plano": "fechado",
+            "mood": "ok",
+            "camera": {
+              "move": "pan-right",
+              "forca": "leve"
+            },
+            "passos": [
+              {
+                "acao": "andar",
+                "de": 340,
+                "para": 560,
+                "ritmo": "lento"
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "segura pra pessoas saudáveis",
+                  "en": "safe for healthy people"
+                },
+                "cue": {
+                  "pt": "é segura",
+                  "en": "It's safe"
+                },
+                "tom": "ouro"
+              }
+            ]
+          }
+        },
+        {
+          "id": "weeks",
+          "scene": "cena",
+          "hold": 0.6,
+          "pt": {
+            "caption": "Dose a dose, o músculo vai guardando até a reserva encher *em algumas semanas*."
+          },
+          "en": {
+            "caption": "Dose by dose, your muscles take in a bit more, until that reserve fills up *over a few weeks*."
+          },
+          "props": {
+            "kicker": {
+              "pt": "Aos poucos",
+              "en": "Bit by bit"
+            },
+            "ambiente": "casa",
+            "hora": "manha",
+            "setting": "mesa",
+            "plano": "fechado",
+            "holding": "copo-agua",
+            "mood": "ok",
+            "acoes": [
+              {
+                "acao": "beber",
+                "cue": {
+                  "pt": "Dose a dose",
+                  "en": "Dose by dose"
+                }
+              },
+              {
+                "acao": "beber",
+                "cue": {
+                  "pt": "até a reserva",
+                  "en": "until that"
+                }
+              }
+            ],
+            "objects": [
+              {
+                "p": "pote",
+                "cue": {
+                  "pt": "Dose a dose",
+                  "en": "Dose by dose"
+                },
+                "run": {
+                  "cue": {
+                    "pt": "Dose a dose",
+                    "en": "Dose by dose"
+                  },
+                  "ate": {
+                    "pt": "o músculo",
+                    "en": "your muscles"
+                  }
+                }
+              },
+              {
+                "p": "calendario",
+                "cue": {
+                  "pt": "vai guardando",
+                  "en": "take in"
+                },
+                "run": {
+                  "cue": {
+                    "pt": "vai guardando",
+                    "en": "take in"
+                  },
+                  "ate": {
+                    "pt": "algumas semanas",
+                    "en": "a few weeks"
+                  },
+                  "casas": 25
+                }
+              }
+            ],
+            "lente": {
+              "sobre": "braco",
+              "cue": {
+                "pt": "o músculo",
+                "en": "your muscles"
+              },
+              "conteudo": {
+                "reserva": {
+                  "conteudo": "grao",
+                  "nivel": [
+                    {
+                      "v": 0.62
+                    },
+                    {
+                      "v": 0.8,
+                      "cue": {
+                        "pt": "vai guardando",
+                        "en": "a bit more"
+                      }
+                    },
+                    {
+                      "v": 1,
+                      "cue": {
+                        "pt": "encher",
+                        "en": "fills up"
+                      }
+                    }
+                  ],
+                  "rotulo": {
+                    "text": {
+                      "pt": "reserva",
+                      "en": "reserve"
+                    },
+                    "cue": {
+                      "pt": "a reserva",
+                      "en": "that reserve"
+                    }
+                  }
+                }
+              }
+            },
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "em algumas semanas",
+                  "en": "over a few weeks"
+                },
+                "cue": {
+                  "pt": "algumas semanas",
+                  "en": "a few weeks"
+                },
+                "x": 300,
+                "y": 300,
+                "max": 520
+              }
+            ]
+          }
+        },
+        {
           "id": "stock",
           "scene": "dentro",
           "hold": 0.5,
           "pt": {
-            "caption": "Não precisa tomar antes do treino: *o efeito vem do estoque cheio*, não da hora da dose."
+            "caption": "Não precisa tomar antes do treino, porque *o efeito vem do estoque cheio* e não da hora da dose."
           },
           "en": {
             "caption": "You don't need it before training: *the effect comes from full stores*, not from the timing."
@@ -1483,40 +2475,234 @@
                         "en": "the timing"
                       }
                     }
-                  ]
+                  ],
+                  "rotulo": {
+                    "text": {
+                      "pt": "estoque cheio",
+                      "en": "full stores"
+                    },
+                    "cue": {
+                      "pt": "estoque cheio",
+                      "en": "full stores"
+                    }
+                  }
                 }
               }
             },
+            "rotulos": [],
+            "roupa": "esporte"
+          }
+        },
+        {
+          "id": "mix",
+          "scene": "cena",
+          "hold": 0.3,
+          "pt": {
+            "caption": "Misture na água, no suco ou no shake."
+          },
+          "en": {
+            "caption": "Mix it into water, juice or a shake."
+          },
+          "props": {
+            "ambiente": "escritorio",
+            "hora": "dia",
+            "setting": "mesa",
+            "plano": "fechado",
+            "holding": "coqueteleira",
+            "mood": "ok",
+            "acoes": [
+              {
+                "acao": "mexer",
+                "cue": {
+                  "pt": "Misture",
+                  "en": "Mix it"
+                }
+              }
+            ],
+            "objects": [
+              {
+                "p": "copo-agua",
+                "cue": {
+                  "pt": "na água",
+                  "en": "water"
+                }
+              },
+              {
+                "p": "copo-suco",
+                "cue": {
+                  "pt": "no suco",
+                  "en": "juice"
+                }
+              }
+            ],
             "rotulos": [
               {
                 "text": {
-                  "pt": "estoque cheio",
-                  "en": "full stores"
+                  "pt": "água",
+                  "en": "water"
                 },
                 "cue": {
-                  "pt": "estoque cheio",
-                  "en": "full stores"
+                  "pt": "na água",
+                  "en": "water"
                 },
-                "x": 700,
-                "y": 1175
+                "seta": [
+                  180,
+                  960
+                ]
+              },
+              {
+                "text": {
+                  "pt": "suco",
+                  "en": "juice"
+                },
+                "cue": {
+                  "pt": "no suco",
+                  "en": "juice"
+                },
+                "seta": [
+                  900,
+                  960
+                ]
+              },
+              {
+                "text": {
+                  "pt": "shake",
+                  "en": "shake"
+                },
+                "cue": {
+                  "pt": "no shake",
+                  "en": "a shake"
+                },
+                "seta": [
+                  600,
+                  940
+                ],
+                "x": 760,
+                "y": 600
               }
             ]
           }
         },
         {
           "id": "do",
-          "scene": "verso",
+          "scene": "cena",
+          "hold": 1,
           "pt": {
-            "say": "Tome três a cinco gramas de creatina todo dia, em qualquer horário, para manter o estoque do músculo cheio."
+            "caption": "Tome três a cinco gramas de creatina todo dia, *em qualquer horário*, para manter o estoque do músculo cheio."
           },
           "en": {
-            "say": "Take three to five grams of creatine every day, at any time, to keep your muscle stores full."
+            "caption": "Take three to five grams of creatine every day, *at any time*, to keep your muscle stores full."
           },
           "props": {
-            "frente": {
-              "mood": "ok",
-              "arms": "down"
-            }
+            "kicker": {
+              "pt": "O que fazer",
+              "en": "What to do"
+            },
+            "ambiente": "casa",
+            "hora": "noite",
+            "setting": "mesa",
+            "plano": "fechado",
+            "holding": "copo-suco",
+            "mood": "ok",
+            "acoes": [
+              {
+                "acao": "mexer",
+                "cue": {
+                  "pt": "Tome",
+                  "en": "Take"
+                }
+              },
+              {
+                "acao": "beber",
+                "cue": {
+                  "pt": "todo dia",
+                  "en": "every day"
+                }
+              }
+            ],
+            "objects": [
+              {
+                "p": "pote",
+                "cue": {
+                  "pt": "Tome",
+                  "en": "Take"
+                },
+                "run": {
+                  "cue": {
+                    "pt": "Tome",
+                    "en": "Take"
+                  },
+                  "ate": {
+                    "pt": "de creatina",
+                    "en": "of creatine"
+                  }
+                }
+              },
+              {
+                "p": "relogio",
+                "cue": {
+                  "pt": "qualquer horário",
+                  "en": "any time"
+                }
+              }
+            ],
+            "lente": {
+              "sobre": "braco",
+              "cue": {
+                "pt": "para manter",
+                "en": "to keep"
+              },
+              "conteudo": {
+                "reserva": {
+                  "conteudo": "grao",
+                  "nivel": [
+                    {
+                      "v": 1
+                    }
+                  ],
+                  "pinga": [
+                    {
+                      "cue": {
+                        "pt": "do músculo",
+                        "en": "muscle stores"
+                      }
+                    }
+                  ],
+                  "rotulo": {
+                    "text": {
+                      "pt": "músculo cheio",
+                      "en": "muscle stores full"
+                    },
+                    "cue": {
+                      "pt": "estoque do músculo",
+                      "en": "muscle stores"
+                    }
+                  }
+                }
+              }
+            },
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "todo dia",
+                  "en": "every day"
+                },
+                "cue": {
+                  "pt": "todo dia",
+                  "en": "every day"
+                }
+              },
+              {
+                "text": {
+                  "pt": "qualquer horário",
+                  "en": "any time"
+                },
+                "cue": {
+                  "pt": "qualquer horário",
+                  "en": "any time"
+                }
+              }
+            ]
           }
         }
       ]

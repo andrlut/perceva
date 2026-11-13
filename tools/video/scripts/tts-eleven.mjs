@@ -108,6 +108,18 @@ const settings = V3
   ? { stability: Number(arg('stability', '0.5')), similarity_boost: 0.75, use_speaker_boost: true, ...speed }
   : { stability: Number(arg('stability', '0.75')), similarity_boost: 0.8, style: Number(arg('style', '0')), use_speaker_boost: true, ...speed };
 
+/** A cota do plano acabou: sai com código 3 — o molde (voice) cai pra Kore e o vídeo sai mesmo assim. */
+// TTS_ELEVEN_SIMULA_COTA=1: teste da queda pra Kore sem gastar crédito (a gravação sai com 3 na hora)
+if (process.env.TTS_ELEVEN_SIMULA_COTA && !measureOnly && !process.argv.includes('--recortar')) {
+  console.error('✗ ElevenLabs sem cota (simulado: TTS_ELEVEN_SIMULA_COTA)');
+  process.exit(3);
+}
+function paraNaCota(status, err) {
+  if (!/quota/i.test(err)) return;
+  console.error(`✗ ElevenLabs sem cota (${status}): ${err.slice(0, 200)}`);
+  process.exit(3);
+}
+
 async function synth(i) {
   const l = lines[i];
   const body = {
@@ -127,6 +139,7 @@ async function synth(i) {
       await new Promise((ok) => setTimeout(ok, 4000 * t));
       continue;
     }
+    paraNaCota(r.status, err);
     throw new Error(`ElevenLabs ${r.status}: ${err.slice(0, 400)}`);
   }
   throw new Error('ElevenLabs: sem resposta após 5 tentativas');
@@ -170,7 +183,11 @@ if (process.argv.includes('--recortar')) {
   const full = partes.join(' ');
   const body = { text: full, model_id: MODEL, voice_settings: settings, ...(MODEL === 'eleven_multilingual_v2' ? {} : { language_code: LANG === 'en' ? 'en' : 'pt' }) };
   const r = await fetch(`${API}/v1/text-to-speech/${VOICE}/with-timestamps?output_format=mp3_44100_128`, { method: 'POST', headers: H, body: JSON.stringify(body) });
-  if (!r.ok) throw new Error(`ElevenLabs ${r.status}: ${(await r.text()).slice(0, 400)}`);
+  if (!r.ok) {
+    const err = await r.text();
+    paraNaCota(r.status, err);
+    throw new Error(`ElevenLabs ${r.status}: ${err.slice(0, 400)}`);
+  }
   const res = await r.json();
   const al = res.alignment;
   const inteiro = path.join(voDir, '_inteiro.mp3');
@@ -212,6 +229,7 @@ for (let i = 0; i < lines.length; i++) {
   console.log(`${l.id.padEnd(10)} ${s.toFixed(2)}s`);
 }
 fs.writeFileSync(path.join(voDir, 'timings.json'), JSON.stringify(timings, null, 2));
-if (!measureOnly) fs.writeFileSync(path.join(voDir, 'voz.json'), JSON.stringify({ provedor: 'elevenlabs', voice_id: VOICE, model: MODEL, settings }, null, 2));
+// --recortar não chamou a API: o voz.json de quem gravou fica (reescrevê-lo punha o modelo padrão, v3, no lugar do v4)
+if (!measureOnly && !process.argv.includes('--recortar')) fs.writeFileSync(path.join(voDir, 'voz.json'), JSON.stringify({ provedor: 'elevenlabs', voice_id: VOICE, model: MODEL, settings }, null, 2));
 const total = timings.reduce((a, t) => a + t.seconds, 0);
 console.log(`voz ElevenLabs ${VOICE} (${MODEL}) — total de fala: ${total.toFixed(1)}s · ~${gastos} créditos nesta rodada`);

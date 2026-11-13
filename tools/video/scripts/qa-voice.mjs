@@ -129,7 +129,16 @@ for (const line of lines) {
     const voiceArg = arg('voice');
     const modelArg = arg('model');
     const ttsScript = arg('tts') === 'eleven' ? 'tts-eleven.mjs' : 'tts-gemini.mjs';
-    execFileSync('node', [path.join(root, 'scripts', ttsScript), ...(dir ? ['--dir', dir, '--lang', lang] : name ? ['--script', name] : []), ...(voiceArg ? ['--voice', voiceArg] : []), ...(modelArg ? ['--model', modelArg] : []), '--only', line.id], { stdio: 'ignore' });
+    try {
+      execFileSync('node', [path.join(root, 'scripts', ttsScript), ...(dir ? ['--dir', dir, '--lang', lang] : name ? ['--script', name] : []), ...(voiceArg ? ['--voice', voiceArg] : []), ...(modelArg ? ['--model', modelArg] : []), '--only', line.id], { stdio: 'ignore' });
+    } catch (e) {
+      // a cota da ElevenLabs acabou na regravação: sai com 3 (não é reprovação) e o molde regrava tudo com a Kore
+      if (e.status === 3) {
+        console.error(`✗ ${line.id}: ElevenLabs sem cota na regravação`);
+        process.exit(3);
+      }
+      throw e;
+    }
   }
 }
 } catch (e) {
