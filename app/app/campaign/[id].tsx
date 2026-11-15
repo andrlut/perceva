@@ -7,10 +7,8 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
-  Platform,
   Pressable,
   ScrollView,
-  Share,
   StyleSheet,
   Text,
   View,
@@ -18,14 +16,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useBottomSafeClearance } from '@/components/BottomNavBar';
+import { PartnerTierRow } from '@/components/PartnerRewardCard';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { GOLD_BADGE_BG, GOLD_TINT_BG } from '@/components/week/gold';
 import { track } from '@/lib/analytics';
 import { useLearningMaterial } from '@/lib/api/learning';
 import {
   useAdoptCampaignPractice,
-  useAutoClaimPartnerCoupon,
-  useClaimPartnerCoupon,
+  useAutoSecurePartnerUnlock,
   useJoinPartnerCampaign,
   usePartnerCampaign,
   usePartnerCampaignStatus,
@@ -33,8 +31,9 @@ import {
 import type { PartnerCampaignSource } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useLocalizedPick } from '@/lib/i18n/catalog';
-import { hasPercevaReward, rewardCount } from '@/lib/partnerCampaign';
-import { freeLimitEntity, useIsPremium } from '@/lib/premium';
+import { campaignTiers, tierPct } from '@/lib/partnerCampaign';
+import { usePartnerRedeem } from '@/lib/partnerRedeem';
+import { freeLimitEntity } from '@/lib/premium';
 import { tokens } from '@/theme';
 
 /**
@@ -84,7 +83,7 @@ const SOURCES: readonly PartnerCampaignSource[] = [
   'app',
 ];
 
-type Running = 'join' | 'adopt' | 'claim';
+type Running = 'join' | 'adopt';
 
 /** "https://www.pakerhealth.com.br/x" → "pakerhealth.com.br" — shown next
  *  to the partner link so it says where it goes. */
@@ -96,19 +95,20 @@ function hostOf(url: string): string | null {
 export default function CampaignScreen() {
   const router = useRouter();
   const { t } = useT();
-  const { pick, pickCascadeNullable } = useLocalizedPick();
+  const { pick } = useLocalizedPick();
   const params = useLocalSearchParams<{ id: string; source?: string }>();
   const bottomClearance = useBottomSafeClearance();
-  const isPremium = useIsPremium();
 
   const campaign = usePartnerCampaign(params.id);
   const c = campaign.data ?? null;
   const status = usePartnerCampaignStatus(c?.id, { enabled: c != null });
-  useAutoClaimPartnerCoupon(status.data);
+  useAutoSecurePartnerUnlock(status.data);
   const material = useLearningMaterial(c?.material_slug);
   const join = useJoinPartnerCampaign();
   const adopt = useAdoptCampaignPractice();
-  const claim = useClaimPartnerCoupon();
+  // The coupon's two redemption options and their dialogs (last Premium
+  // offer, the invite) — shared with the Vault card.
+  const { redeem, running: redeeming } = usePartnerRedeem(c, status.data);
   // `running` drives the spinner and disables the other pills; the ref is
   // the hard guard — a same-frame double tap lands before the re-render.
   const [running, setRunning] = useState<Running | null>(null);
@@ -242,19 +242,6 @@ export default function CampaignScreen() {
       },
     );
 
-  const handleClaim = () =>
-    run(
-      'claim',
-      async () => {
-        await ensureMember();
-        await claim.mutateAsync({ campaignId: c.id });
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-      },
-      // `streak_not_reached` (the day turned, an undo elsewhere) converges
-      // on its own: the status refetch puts the lock back.
-      () => Alert.alert(t('common.error')),
-    );
-
   const title = pick(c.title_en, c.title_pt);
   const ratio = s.goal > 0 ? Math.min(1, s.streak_days / s.goal) : 0;
   const practice = c.practice?.title ?? null;
@@ -262,78 +249,9 @@ export default function CampaignScreen() {
   const partnerHost = partnerUrl ? hostOf(partnerUrl) : null;
   const m = material.data ?? null;
   const showSkips = s.adopted && !s.claimed && s.max_skips > 0;
-  // How many rewards the one claim delivers — every line that counts them
-  // is a plural fed with this (a campaign without the Premium discount
-  // promises one, never "two").
-  const count = rewardCount(c);
+  const tiers = campaignTiers(c);
 
-  // The rewards: the Perceva Premium discount (when the campaign has one),
-  // then the partner's coupon — the program's own order of the two.
-  // A code only comes back once claimed AND released, so `code` alone says
-  // "in hand"; `ready` lets the copy tell the truth before the claim.
-  const rewards: Reward[] = [];
-  if (hasPercevaReward(c)) {
-    const percevaCode = s.claimed ? s.perceva_code : null;
-    rewards.push({
-      key: 'perceva',
-      icon: 'sparkles',
-      title: pickCascadeNullable(c.perceva_reward_en, c.perceva_reward_pt) ?? '',
-      ready: s.perceva_code_ready,
-      code: percevaCode,
-      howTo: percevaCode
-        ? t(
-            Platform.OS === 'ios'
-              ? 'campaign.screen.premiumHowTo.ios'
-              : 'campaign.screen.premiumHowTo.android',
-          )
-        : null,
-      // The paywall has no code field and preselects the annual plan at
-      // full price, so it is only a path once the code is in hand — and
-      // only where the store sheet takes it (Play; the App Store redeems
-      // offer codes on its own) and for someone who isn't Premium yet.
-      link:
-        percevaCode && !isPremium && Platform.OS !== 'ios'
-          ? {
-              icon: 'sparkles-outline',
-              label: t('campaign.screen.seePremium'),
-              external: false,
-              onPress: () => router.push('/premium?source=partner'),
-            }
-          : null,
-    });
-  }
-  rewards.push({
-    key: 'partner',
-    icon: 'pricetag',
-    title: pick(c.reward_en, c.reward_pt),
-    ready: s.coupon_ready,
-    code: s.claimed ? s.coupon_code : null,
-    howTo: null,
-    link: partnerUrl
-      ? {
-          icon: 'globe-outline',
-          label: t('campaign.screen.visitPartner', { name: c.partner_name }),
-          meta: partnerHost,
-          external: true,
-          onPress: () => {
-            Linking.openURL(partnerUrl).catch(() => {});
-          },
-        }
-      : null,
-  });
-  const allReady = rewards.every((r) => r.ready);
 
-  /** A reward row's state line; null once its code is in hand (the code
-   *  box takes the line's place) and while locked (the card says "unlocks
-   *  at N" once, above both rows, and each row's lock disc says the rest). */
-  const rewardState = (r: Reward): string | null => {
-    if (r.code) return null;
-    if (s.claimed) return t('campaign.screen.couponPending');
-    if (s.unlocked) {
-      return r.ready ? t('campaign.screen.rewardReady') : t('campaign.screen.rewardOnItsWay');
-    }
-    return null;
-  };
 
   const howCard = (
     <View style={styles.card}>
@@ -343,7 +261,7 @@ export default function CampaignScreen() {
         done={s.member}
         title={t('campaign.screen.step1Title')}
         body={
-          s.member ? t('campaign.screen.step1Done') : t('campaign.screen.step1Body', { count })
+          s.member ? t('campaign.screen.step1Done') : t('campaign.screen.step1Body')
         }
         action={
           s.member
@@ -394,9 +312,7 @@ export default function CampaignScreen() {
   const rewardCard = (
     <View style={[styles.card, styles.rewardCard]}>
       <Text style={[styles.cardLabel, styles.cardLabelGold]}>
-        {rewards.length > 1
-          ? t('campaign.screen.rewardsTitle')
-          : t('campaign.screen.couponTitle')}
+        {t('campaign.screen.couponTitle')}
       </Text>
 
       {/* The bar only while it decides something: after the claim the
@@ -423,49 +339,56 @@ export default function CampaignScreen() {
         </View>
       )}
 
-      {/* Locked: said once for both rows (each row's lock disc says it). */}
-      {!s.unlocked && (
-        <Text style={styles.stateText}>
-          {t('campaign.screen.couponLocked', { goal: s.goal })}
-        </Text>
-      )}
-
-      {/* The claim — one tap for every reward. Without some code yet, say
-         so before the tap, and why it is worth it: claiming is what keeps
-         the rewards if the streak breaks. */}
+      {/* The choice is open: said once, above both rows. */}
       {s.unlocked && !s.claimed && (
-        <>
-          {!allReady && (
-            <Text style={styles.stateText}>
-              {t('campaign.screen.couponNotReady', { count })}
-            </Text>
-          )}
-          <View style={styles.claimRow}>
-            <ActionPill
-              icon="gift"
-              label={
-                allReady
-                  ? t('campaign.screen.couponClaim', { count })
-                  : t('campaign.screen.couponSecure', { count })
-              }
-              onPress={handleClaim}
-              busy={running === 'claim'}
-              disabled={running != null}
-            />
-          </View>
-        </>
+        <Text style={styles.stateText}>{t('campaign.screen.choose')}</Text>
+      )}
+      {/* Claimed, the chosen tier's code not filled in yet by the partner. */}
+      {s.claimed && !s.coupon_code && (
+        <Text style={styles.stateText}>{t('campaign.screen.couponPending')}</Text>
       )}
 
-      {rewards.map((r) => (
-        <RewardRow
-          key={r.key}
-          reward={r}
+      {tiers.map((tier) => (
+        <PartnerTierRow
+          key={tier}
+          tier={tier}
+          pct={tierPct(c, tier) ?? 0}
+          partner={c.partner_name}
+          goal={s.goal}
           unlocked={s.unlocked}
-          state={rewardState(r)}
-          copyLabel={t('campaign.screen.couponCopy')}
-          copyA11yLabel={t('campaign.screen.couponCopyA11y', { reward: r.title })}
+          claimed={s.claimed}
+          chosen={s.claimed && s.tier === tier}
+          code={s.claimed && s.tier === tier ? s.coupon_code : null}
+          isPremium={s.is_premium}
+          busy={redeeming === tier}
+          disabled={redeeming != null || running != null}
+          onRedeem={() => redeem(tier)}
         />
       ))}
+
+      {partnerUrl && (
+        <Pressable
+          onPress={() => {
+            Linking.openURL(partnerUrl).catch(() => {});
+          }}
+          style={({ pressed }) => [styles.linkRow, pressed && styles.pressed]}
+          accessibilityRole="link"
+          accessibilityHint={partnerHost ?? undefined}
+        >
+          <View style={styles.linkIcon}>
+            <Ionicons name="globe-outline" size={16} color={tokens.semantic.coinLight} />
+          </View>
+          <Text style={styles.linkText} numberOfLines={1}>
+            {t('campaign.screen.visitPartner', { name: c.partner_name })}
+          </Text>
+          {partnerHost && (
+            <Text style={styles.linkMeta} numberOfLines={1}>
+              {partnerHost}
+            </Text>
+          )}
+          <Ionicons name="open-outline" size={15} color={tokens.text.dim} />
+        </Pressable>
+      )}
     </View>
   );
 
@@ -619,118 +542,6 @@ function StepRow({
         {body && <Text style={styles.stepText}>{body}</Text>}
       </View>
       {action && <ActionPill {...action} />}
-    </View>
-  );
-}
-
-interface RewardLink {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  meta?: string | null;
-  /** Leaves the app (the partner's site) or opens a screen (the paywall). */
-  external: boolean;
-  onPress: () => void;
-}
-
-interface Reward {
-  key: 'perceva' | 'partner';
-  icon: keyof typeof Ionicons.glyphMap;
-  title: string;
-  /** The code was already released (the server's `*_ready`). */
-  ready: boolean;
-  /** In hand: claimed AND released. */
-  code: string | null;
-  /** Under the code box: where the code is used (null = nothing to add). */
-  howTo: string | null;
-  link: RewardLink | null;
-}
-
-/** One reward — the two are siblings with this same anatomy, which is also
- *  a StepRow's: disc (a lock until unlocked, then the reward's glyph on
- *  solid gold) · title over the state line; the code box + copy pill (and
- *  the how-to line, when the reward has one) once the code is in hand; then
- *  the reward's link row. */
-function RewardRow({
-  reward,
-  unlocked,
-  state,
-  copyLabel,
-  copyA11yLabel,
-}: {
-  reward: Reward;
-  unlocked: boolean;
-  state: string | null;
-  copyLabel: string;
-  copyA11yLabel: string;
-}) {
-  const { code, howTo, link } = reward;
-  return (
-    <View style={styles.reward}>
-      <View style={styles.step}>
-        <View style={[styles.stepDisc, unlocked && styles.stepDiscDone]}>
-          <Ionicons
-            name={unlocked ? reward.icon : 'lock-closed'}
-            size={14}
-            color={unlocked ? tokens.semantic.coinInk : tokens.semantic.coinLight}
-          />
-        </View>
-        <View style={styles.stepBody}>
-          <Text style={styles.stepTitle}>{reward.title}</Text>
-          {state && <Text style={styles.stepText}>{state}</Text>}
-        </View>
-      </View>
-
-      {code && (
-        <View style={styles.codeRow}>
-          <View style={styles.codeBox}>
-            <Text
-              style={styles.codeText}
-              selectable
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.6}
-            >
-              {code}
-            </Text>
-          </View>
-          <ActionPill
-            icon="share-outline"
-            label={copyLabel}
-            a11yLabel={copyA11yLabel}
-            onPress={() => {
-              Share.share({ message: code }).catch(() => {});
-            }}
-          />
-        </View>
-      )}
-
-      {code && howTo && <Text style={styles.stepText}>{howTo}</Text>}
-
-      {link && (
-        <Pressable
-          onPress={link.onPress}
-          style={({ pressed }) => [styles.linkRow, pressed && styles.pressed]}
-          accessibilityRole={link.external ? 'link' : 'button'}
-          accessibilityHint={link.meta ?? undefined}
-        >
-          <View style={styles.linkIcon}>
-            <Ionicons name={link.icon} size={16} color={tokens.semantic.coinLight} />
-          </View>
-          <Text style={styles.linkText} numberOfLines={1}>
-            {link.label}
-          </Text>
-          {link.meta && (
-            <Text style={styles.linkMeta} numberOfLines={1}>
-              {link.meta}
-            </Text>
-          )}
-          <Ionicons
-            name={link.external ? 'open-outline' : 'chevron-forward'}
-            size={15}
-            color={tokens.text.dim}
-          />
-        </Pressable>
-      )}
     </View>
   );
 }

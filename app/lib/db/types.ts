@@ -1086,10 +1086,16 @@ export interface PartnerCampaign {
   /** The PARTNER's reward (its coupon). */
   reward_pt: string;
   reward_en: string;
-  /** The Perceva Premium discount that comes with it; null = the campaign
-   *  gives only the partner's reward. */
+  /** Legacy (until 2026-11-15): the Perceva Premium discount. Always
+   *  null now — the Premium incentive is the coupon's bigger tier. */
   perceva_reward_pt: string | null;
   perceva_reward_en: string | null;
+  /** Discount (%) of the basic coupon tier — anyone who closed the
+   *  streak. Null = the campaign has no basic tier. */
+  reward_free_pct: number | null;
+  /** Discount (%) of the bigger tier — Premium subscribers only. Null =
+   *  no Premium tier. */
+  reward_premium_pct: number | null;
   /** Sponsored Learning material of the campaign, or null. */
   material_slug: string | null;
   /** `task_template.id` of the practice the streak is counted on. */
@@ -1104,7 +1110,12 @@ export interface PartnerCampaign {
   created_at: string;
 }
 
-/** Return shape of `partner_campaign_status` and `claim_partner_coupon`. */
+/** The two redemption options of a partner coupon (migration
+ *  partner_campaign_tiers). One choice per campaign; the first claim is final. */
+export type PartnerCouponTier = 'free' | 'premium';
+
+/** Return shape of `partner_campaign_status`, `secure_partner_unlock` and
+ *  `claim_partner_coupon`. */
 export interface PartnerCampaignStatus {
   campaign_id: string;
   member: boolean;
@@ -1122,13 +1133,27 @@ export interface PartnerCampaignStatus {
   skips_used: number;
   max_skips: number;
   goal: number;
-  /** `claimed` or `streak_days >= goal`. */
+  /** `claimed`, `secured` or `streak_days >= goal`. */
   unlocked: boolean;
+  /** The unlock was written down (`member.unlocked_at`): the choice can
+   *  wait, the streak may break. */
+  secured: boolean;
   claimed: boolean;
   claimed_at: string | null;
-  /** The partner already released its coupon code. */
+  /** The tier chosen at the claim; null before it. */
+  tier: PartnerCouponTier | null;
+  /** The caller's own tier — decides whether the Premium coupon is within
+   *  reach (the server refuses it otherwise: `premium_required`). */
+  is_premium: boolean;
+  reward_free_pct: number | null;
+  reward_premium_pct: number | null;
+  /** Each tier's code was already filled in by the partner. */
+  free_code_ready: boolean;
+  premium_code_ready: boolean;
+  /** The chosen tier's code was already released (before the claim: the
+   *  basic tier's). */
   coupon_ready: boolean;
-  /** Only when `claimed` and `coupon_ready`; null otherwise. */
+  /** The chosen tier's code — only when `claimed` and released. */
   coupon_code: string | null;
   /** The Perceva Premium discount code was already released. */
   perceva_code_ready: boolean;

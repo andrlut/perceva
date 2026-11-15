@@ -1105,36 +1105,19 @@ const pt: Translations = {
      *  parceiro, então o rótulo só diz que é pago. */
     sponsored: 'Patrocinado',
     card: {
-      join: {
-        one: 'Entre e ganhe um desconto com {{goal}} dias seguidos',
-        other: 'Entre e ganhe dois descontos com {{goal}} dias seguidos',
-      },
+      join: 'Entre e ganhe um cupom de desconto com {{goal}} dias seguidos',
       adopt: 'Falta adicionar a prática',
       progress: '{{days}} de {{goal}} dias seguidos',
-      unlocked: {
-        one: 'Você chegou lá! Toque para garantir seu desconto',
-        other: 'Você chegou lá! Toque para garantir seus dois descontos',
-      },
-      claimed: {
-        one: 'Seu código está pronto · toque para ver',
-        other: 'Seus dois códigos estão prontos · toque para ver',
-      },
-      /** Claim feito, um código liberado e o outro ainda não (só com dois). */
-      claimedPartial: 'Um código liberado · o outro a caminho',
-      claimedPending: {
-        one: 'Desconto garantido · código a caminho',
-        other: 'Descontos garantidos · códigos a caminho',
-      },
+      unlocked: 'Você chegou lá! Toque para escolher seu cupom',
+      claimed: 'Seu cupom de {{pct}}% está pronto · toque para ver',
+      claimedPending: 'Cupom garantido · código a caminho',
       a11y: '{{sponsored}}. {{title}}',
       dismissA11y: 'Esconder este cartão',
     },
     screen: {
       how: 'Como funciona',
       step1Title: 'Entre no programa',
-      step1Body: {
-        one: 'Não custa nada. O desconto é só pra quem entra.',
-        other: 'Não custa nada. Os dois descontos são só pra quem entra.',
-      },
+      step1Body: 'Não custa nada. O cupom é só pra quem entra.',
       step1Done: 'Você está no programa',
       step1Cta: 'Entrar',
       step2Title: 'Adicione a prática diária',
@@ -1156,48 +1139,39 @@ const pt: Translations = {
         one: '{{used}} de {{count}} pulo usado',
         other: '{{used}} de {{count}} pulos usados',
       },
-      /** Rótulo do cartão com uma recompensa só; `rewardsTitle` com as duas. */
-      couponTitle: 'Sua recompensa',
-      rewardsTitle: 'Suas recompensas',
-      /** Trancado: dito uma vez só, acima das linhas (o cadeado de cada
-       *  linha já diz o resto). */
+      couponTitle: 'Seu cupom',
+      /** Trancado: dito uma vez só, acima das duas opções. */
       couponLocked: 'Libera com {{goal}} dias seguidos',
-      /** A linha de estado de cada recompensa — igual nas duas linhas. */
-      rewardReady: 'Liberado',
-      rewardOnItsWay: 'Liberado · código a caminho',
+      /** As duas opções de resgate. pct = o desconto; partner = o nome. */
+      tierFree: '{{pct}}% de desconto na {{partner}}',
+      tierFreeSub: 'Pra todo mundo que fechar os {{goal}} dias',
+      tierPremium: '{{pct}}% de desconto na {{partner}}',
+      tierPremiumSub: 'Só pra assinantes Premium',
+      tierPremiumLocked: 'Assine o Premium pra liberar este',
+      choose: 'Escolha uma das duas opções. A escolha é definitiva.',
+      redeem: 'Resgatar',
+      notChosen: 'Você escolheu o outro cupom',
       couponPending: 'O código está a caminho e aparece aqui assim que for liberado.',
-      /** Um claim só vale pelas duas recompensas. */
-      couponClaim: {
-        one: 'Pegar meu desconto',
-        other: 'Pegar meus descontos',
-      },
-      couponSecure: {
-        one: 'Garantir meu desconto',
-        other: 'Garantir meus descontos',
-      },
-      couponNotReady: {
-        one: 'Garanta agora: o desconto fica seu mesmo se a sequência quebrar depois, e o código aparece aqui assim que for liberado.',
-        other:
-          'Garanta agora: os dois descontos ficam seus mesmo se a sequência quebrar depois, e cada código aparece aqui assim que for liberado.',
-      },
       couponCopy: 'Copiar ou enviar',
-      /** Rótulo de leitor de tela do botão de cada linha (são dois iguais). */
+      /** Rótulo de leitor de tela do botão de cada linha. */
       couponCopyA11y: 'Copiar ou enviar o código: {{reward}}',
-      /** Embaixo do código do Premium: onde ele entra (o paywall não tem
-       *  campo de código; quem aplica é a loja). */
-      premiumHowTo: {
-        android:
-          'Use o código ao assinar o plano anual: na tela de pagamento da Play Store, toque na forma de pagamento e depois em Resgatar código.',
-        ios: 'Use o código no plano anual: na App Store, toque na sua foto e depois em Resgatar Cartão-Presente ou Código.',
-      },
-      /** Link embaixo do código do Premium (Android, quem ainda não é
-       *  Premium). */
-      seePremium: 'Ver o plano anual',
       visitPartner: 'Site da {{name}}',
       materialTitle: 'Leia o material',
       disclosure:
         'Conteúdo patrocinado. {{name}} recebe só números gerais do programa (quantas pessoas entraram), nunca quem você é.',
       notFound: 'Esta campanha não está disponível.',
+    },
+    /** Os diálogos do resgate (lib/partnerRedeem). */
+    redeem: {
+      freeConfirmTitle: 'Tem certeza?',
+      freeConfirmBody:
+        'Esta é a sua última chance de trocar de ideia e pegar um bônus maior: assinantes Premium levam {{premium}}% em vez de {{free}}%. A escolha é definitiva.',
+      freeConfirmOk: 'Pegar os {{free}}%',
+      seePremium: 'Ver o Premium',
+      premiumRequiredTitle: 'Esse cupom é dos assinantes Premium',
+      premiumRequiredBody:
+        'Assine o Premium e leve {{premium}}% de desconto na {{partner}}, além do app completo.',
+      notNow: 'Agora não',
     },
   },
 
@@ -2456,6 +2430,7 @@ const pt: Translations = {
   },
 
   rewards: {
+    partnerChip: 'Parceria',
     /** The tab's guide (its (i)) — RewardsGuide, docs/informativo-de-tela.md.
      *  `items` follow REWARDS_GUIDE_ITEMS: title + body on the sheet, `ai`
      *  only in the AI prompt. No personal data here. */

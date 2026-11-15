@@ -59,7 +59,13 @@ export type AppEventName =
   /** Adotou a prática da campanha. */
   | 'campaign_practice_adopted'
   /** Pegou o cupom (`claim_partner_coupon`). */
-  | 'campaign_coupon_claimed';
+  | 'campaign_coupon_claimed'
+  /** The unlock was written down (secure_partner_unlock), tier still open. */
+  | 'campaign_unlock_secured'
+  /** A free member tapped the Premium coupon tier (the invite showed). */
+  | 'campaign_premium_tier_blocked'
+  /** The last offer before the basic claim sent the person to the paywall. */
+  | 'campaign_upsell_accepted';
 
 export type AppEventProps = Record<string, string | number | boolean | null>;
 

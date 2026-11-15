@@ -21,12 +21,14 @@ import { FabStack, fabStackClearance, type FabSize } from '@/components/FabStack
 import { ScreenInfoButton } from '@/components/guide/ScreenInfoButton';
 import { RewardsGuide, useRewardsGuidePrompt } from '@/components/guide/screens/RewardsGuide';
 import { InfoSheet } from '@/components/InfoSheet';
+import { PartnerRewardCard } from '@/components/PartnerRewardCard';
 import { RewardActionSheet } from '@/components/RewardActionSheet';
 import { RewardCard } from '@/components/RewardCard';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { TrackedRewardCard } from '@/components/TrackedRewardCard';
 import { TrackPickerSheet } from '@/components/TrackPickerSheet';
 import { VaultHero } from '@/components/VaultHero';
+import { useActivePartnerCampaign } from '@/lib/api/partners';
 import { useCharacter } from '@/lib/api/character';
 import {
   useArchiveReward,
@@ -108,6 +110,12 @@ function RewardsScreenContent() {
     () => new Set(),
   );
   const filterActive = selectedCategories.size > 0;
+  // The partner coupon (Programa Paker Health) lives in the Vault too, under
+  // its own gold chip: selected = only the partner card; at rest it sits
+  // above the sections; a category filter hides it.
+  const partnerCampaign = useActivePartnerCampaign();
+  const hasPartner = partnerCampaign.data != null;
+  const [partnerOnly, setPartnerOnly] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   // The (i) top right: the tab's guide.
   const [helpOpen, setHelpOpen] = useState(false);
@@ -198,7 +206,14 @@ function RewardsScreenContent() {
     return t('rewards.vault.heroStatusIdle');
   }, [trackedReward, coins, t]);
 
+  const togglePartner = () => {
+    Haptics.selectionAsync().catch(() => {});
+    setPartnerOnly((v) => !v);
+    setSelectedCategories(new Set());
+  };
+
   const toggleCategory = (cat: RewardCategory) => {
+    setPartnerOnly(false);
     setSelectedCategories((prev) => {
       const next = new Set(prev);
       if (next.has(cat)) {
@@ -467,9 +482,50 @@ function RewardsScreenContent() {
                   </Pressable>
                 );
               })}
+              {hasPartner && (
+                <Pressable
+                  onPress={togglePartner}
+                  style={[
+                    styles.chip,
+                    partnerOnly
+                      ? {
+                          backgroundColor: 'rgba(255, 200, 61, 0.16)',
+                          borderTopColor: 'rgba(255, 200, 61, 0.5)',
+                          borderColor: 'rgba(255, 200, 61, 0.45)',
+                        }
+                      : filterActive
+                        ? styles.chipGhosted
+                        : styles.chipRest,
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: partnerOnly }}
+                >
+                  <Ionicons
+                    name="ribbon"
+                    size={14}
+                    color={filterActive && !partnerOnly ? tokens.text.faint : tokens.semantic.coin}
+                  />
+                  <Text
+                    style={[
+                      styles.chipText,
+                      {
+                        color: partnerOnly
+                          ? tokens.semantic.coin
+                          : filterActive
+                            ? tokens.text.faint
+                            : tokens.text.mid,
+                      },
+                    ]}
+                  >
+                    {t('rewards.partnerChip')}
+                  </Text>
+                </Pressable>
+              )}
             </View>
 
-            {rewards.isLoading ? (
+            {hasPartner && (partnerOnly || !filterActive) && <PartnerRewardCard />}
+
+            {partnerOnly ? null : rewards.isLoading ? (
               <View style={styles.loadingBox}>
                 <ActivityIndicator color={tokens.brand.violet2} />
               </View>

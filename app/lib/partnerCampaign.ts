@@ -1,99 +1,83 @@
-import type { PartnerCampaign, PartnerCampaignStatus } from '@/lib/db/types';
+import type { PartnerCampaign, PartnerCampaignStatus, PartnerCouponTier } from '@/lib/db/types';
 import type { TranslateOptions } from '@/lib/i18n';
 
 type Translator = (key: string, options?: TranslateOptions) => string;
 
-/** The bit of the campaign row these rules read: whether it also gives a
- *  Perceva Premium discount on top of the partner's coupon. */
-export type CampaignRewards = Pick<PartnerCampaign, 'perceva_reward_pt' | 'perceva_reward_en'>;
+/** The bit of the campaign row these rules read: the two coupon tiers. */
+export type CampaignRewards = Pick<PartnerCampaign, 'reward_free_pct' | 'reward_premium_pct'>;
 
 /**
  * Partner campaign display rules shared by every surface that shows the
- * user's progress — the Home card and the sponsored material's campaign
- * row — so both say the same thing word for word. The numbers are the
- * server's (`partner_campaign_status`); nothing here decides an unlock.
+ * user's progress — the Home card, the Vault card and the sponsored
+ * material's campaign row — so all say the same thing word for word. The
+ * numbers are the server's (`partner_campaign_status`); nothing here
+ * decides an unlock.
  *
- * A campaign gives the partner's coupon and, when its row carries
- * `perceva_reward_*`, a Perceva Premium discount too (migration
- * 20261105000001). One claim covers both; each code shows up on its own
- * once released.
+ * Since 2026-11-15 (migration partner_campaign_tiers) a campaign gives ONE
+ * coupon from the partner with TWO redemption options: the basic tier
+ * (`reward_free_pct`, anyone who closed the streak) and the Premium tier
+ * (`reward_premium_pct`, subscribers only). One choice per campaign — the
+ * first claim is final. The streak unlocks the choice; `secured` means the
+ * unlock was written down, so breaking the streak afterwards changes
+ * nothing.
  */
 
-/** Whether the campaign also gives the Perceva Premium discount. */
-export function hasPercevaReward(c: CampaignRewards): boolean {
-  return !!(c.perceva_reward_pt?.trim() || c.perceva_reward_en?.trim());
+/** The tiers the campaign offers, basic first. */
+export function campaignTiers(c: CampaignRewards): PartnerCouponTier[] {
+  const tiers: PartnerCouponTier[] = [];
+  if (c.reward_free_pct != null) tiers.push('free');
+  if (c.reward_premium_pct != null) tiers.push('premium');
+  return tiers;
 }
 
-/** How many rewards (and codes) the one claim delivers: the partner's
- *  coupon, plus the Premium discount when the row has one. Every copy line
- *  that counts them is a `{ one, other }` plural fed with this. */
-export function rewardCount(c: CampaignRewards): 1 | 2 {
-  return hasPercevaReward(c) ? 2 : 1;
+export function tierPct(c: CampaignRewards, tier: PartnerCouponTier): number | null {
+  return tier === 'premium' ? c.reward_premium_pct : c.reward_free_pct;
 }
 
-/** Codes the claim delivers, and how many of them are already in hand
- *  (claimed AND released — the server only returns a code after both). */
-function codesInHand(c: CampaignRewards, s: PartnerCampaignStatus) {
-  const perceva = hasPercevaReward(c);
-  const expected = rewardCount(c);
-  const inHand = (s.coupon_code ? 1 : 0) + (perceva && s.perceva_code ? 1 : 0);
-  return { expected, inHand };
+/** The percentage the person ended up with (after the claim), or the best
+ *  one they could still get. */
+export function pctInHand(c: CampaignRewards, s: PartnerCampaignStatus): number | null {
+  if (s.claimed && s.tier) return tierPct(c, s.tier);
+  return null;
 }
 
 /**
  * The one state line, most advanced state first:
  *
- *   claimed, every code → "your codes are ready, tap to see"
- *   claimed, some code  → "one code released, the other on its way"
- *   claimed, no code    → "discounts secured, codes on their way"
- *   unlocked, unclaimed → "you made it, tap to secure them" (claiming is
- *                         what makes them permanent; the streak alone can
- *                         still break, so this works with or without codes)
- *   practice adopted    → "X of N days in a row" (members or not: a practice
- *                         adopted from Sugeridas before joining counts)
- *   member              → "add the practice"
- *   otherwise           → "join and earn the discounts after N days in a row"
- *
- * The codes themselves only show on `/campaign/[id]` — the card and the
- * material row point there ("tap to see"), they never say "here". The
- * codes only come back once claimed, so their presence is the "in hand"
- * test. The goal is always the server's `goal`; `count` is `rewardCount`.
+ *   claimed, code in hand → "your X% coupon is ready, tap to see"
+ *   claimed, no code yet  → "coupon secured, code on its way"
+ *   unlocked, unclaimed   → "you made it, tap to choose your coupon"
+ *   practice adopted      → "X of N days in a row"
+ *   member                → "add the practice"
+ *   otherwise             → "join and earn a coupon after N days in a row"
  */
 export function campaignStateLine(
   c: CampaignRewards,
   s: PartnerCampaignStatus,
   t: Translator,
 ): string {
-  const count = rewardCount(c);
   if (s.claimed) {
-    const { expected, inHand } = codesInHand(c, s);
-    if (inHand >= expected) return t('campaign.card.claimed', { count });
-    // Only reachable with two codes, so it needs no plural.
-    if (inHand > 0) return t('campaign.card.claimedPartial');
-    return t('campaign.card.claimedPending', { count });
+    const pct = pctInHand(c, s);
+    if (s.coupon_code) return t('campaign.card.claimed', { pct: pct ?? '' });
+    return t('campaign.card.claimedPending');
   }
-  if (s.unlocked) return t('campaign.card.unlocked', { count });
+  if (s.unlocked) return t('campaign.card.unlocked');
   if (s.adopted) {
     return t('campaign.card.progress', { days: s.streak_days, goal: s.goal });
   }
   if (s.member) return t('campaign.card.adopt');
-  return t('campaign.card.join', { goal: s.goal, count });
+  return t('campaign.card.join', { goal: s.goal });
 }
 
 /**
  * Whether the Home card may offer its X. Only when there is no live
  * progress to hide: before any involvement (not a member, no practice), or
- * once it is all over (claimed AND every code in hand). A member mid-run,
- * a non-member whose adopted practice is counting, or a claim still
- * waiting on a code never loses the card.
+ * once it is all over (claimed AND the code in hand).
  */
 export function canDismissCampaignCard(
-  c: CampaignRewards,
+  _c: CampaignRewards,
   s: PartnerCampaignStatus,
 ): boolean {
-  if (s.claimed) {
-    const { expected, inHand } = codesInHand(c, s);
-    return inHand >= expected;
-  }
+  if (s.claimed) return !!s.coupon_code;
   return !s.member && !s.adopted;
 }
