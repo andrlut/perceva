@@ -12,6 +12,7 @@ import type {
   PartnerCampaign,
   PartnerCampaignSource,
   PartnerCampaignStatus,
+  PartnerCouponTier,
 } from '@/lib/db/types';
 import { supabase } from '@/lib/supabase';
 
@@ -63,7 +64,7 @@ export interface PartnerCampaignWithPractice extends PartnerCampaign {
 // embed rides along in the same round-trip.
 const CAMPAIGN_SELECT = `id, partner_name, partner_url, title_pt, title_en,
   pitch_pt, pitch_en, reward_pt, reward_en, perceva_reward_pt,
-  perceva_reward_en, material_slug, template_id,
+  perceva_reward_en, reward_free_pct, reward_premium_pct, material_slug, template_id,
   streak_goal, max_skips, starts_at, ends_at, is_active, created_at,
   practice:task_template ( title, icon )`;
 
@@ -236,22 +237,48 @@ export function useAdoptCampaignPractice() {
 }
 
 /**
- * Claim the rewards (one claim covers both). The server recomputes the
- * streak with the same walk as the status read and refuses below the goal
- * (`streak_not_reached`) or without membership (`not_a_member`). The claim
- * is permanent: undoing a completion afterwards doesn't take the rewards
- * back. Returns the status object (now `claimed`), with each code once it
- * was released.
- * `auto` marks the claim useAutoClaimPartnerCoupon fires, in analytics.
+ * Claim the coupon in the chosen tier. The server accepts a secured unlock
+ * (`member.unlocked_at`) or a live streak at the goal, refuses the Premium
+ * tier for a non-subscriber (`premium_required`), below the goal
+ * (`streak_not_reached`) and without membership (`not_a_member`). The
+ * claim is permanent and the choice final. Returns the status object (now
+ * `claimed`, with the chosen tier's code once released).
  */
 export function useClaimPartnerCoupon() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (params: {
       campaignId: string;
-      auto?: boolean;
+      tier: PartnerCouponTier;
     }): Promise<PartnerCampaignStatus> => {
       const { data, error } = await supabase.rpc('claim_partner_coupon', {
+        p_campaign_id: params.campaignId,
+        p_today: dateKeyFromLocal(new Date()),
+        p_tier: params.tier,
+      });
+      if (error) throw error;
+      return data as PartnerCampaignStatus;
+    },
+    onSuccess: (data, params) => {
+      patchStatus(queryClient, params.campaignId, data);
+      track('campaign_coupon_claimed', { campaign: params.campaignId, tier: params.tier });
+    },
+    onSettled: (_data, _err, params) => {
+      queryClient.invalidateQueries({ queryKey: partnerKeys.status(params.campaignId) });
+    },
+  });
+}
+
+/**
+ * Write the unlock down (`member.unlocked_at`) without choosing a tier.
+ * `secure_partner_unlock` is idempotent; it refuses below the goal
+ * (`streak_not_reached`) and without membership (`not_a_member`).
+ */
+export function useSecurePartnerUnlock() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { campaignId: string }): Promise<PartnerCampaignStatus> => {
+      const { data, error } = await supabase.rpc('secure_partner_unlock', {
         p_campaign_id: params.campaignId,
         p_today: dateKeyFromLocal(new Date()),
       });
@@ -260,12 +287,7 @@ export function useClaimPartnerCoupon() {
     },
     onSuccess: (data, params) => {
       patchStatus(queryClient, params.campaignId, data);
-      track(
-        'campaign_coupon_claimed',
-        params.auto
-          ? { campaign: params.campaignId, auto: true }
-          : { campaign: params.campaignId },
-      );
+      track('campaign_unlock_secured', { campaign: params.campaignId });
     },
     onSettled: (_data, _err, params) => {
       queryClient.invalidateQueries({ queryKey: partnerKeys.status(params.campaignId) });
@@ -273,35 +295,33 @@ export function useClaimPartnerCoupon() {
   });
 }
 
-/** Campaigns with an auto-claim already fired this session — one request
- *  per campaign even with the Home card and the screen mounted together. */
-const autoClaimFired = new Set<string>();
+/** Campaigns with a secure already fired this session — one request per
+ *  campaign even with the Home card, the Vault card and the screen mounted
+ *  together. */
+const secureFired = new Set<string>();
 
 /**
- * Make an unlock permanent the moment the server reports it. `unlocked` is
- * recomputed on every read (`claimed or streak >= goal`), so an unlock that
- * nobody claims lasts only as long as the streak: reach the goal, miss the
- * next day, and it is gone. For a MEMBER the claim needs nothing more from them, so it
- * is sent on their behalf as soon as `member && unlocked && !claimed` shows
- * up — the claim tap is left with revealing the codes. A
- * non-member still has to join first (membership is the partner's tracking
- * base, never implied), which the screen's claim button does in the same
- * tap.
+ * Make an unlock permanent the moment the server reports it — WITHOUT
+ * choosing the tier (that is the person's call, with the Premium offer in
+ * between). `unlocked` is recomputed on every read, so an unlock nobody
+ * writes down lasts only as long as the streak: reach the goal, miss the
+ * next day, and it is gone. For a MEMBER securing needs nothing more from
+ * them, so it is sent on their behalf as soon as
+ * `member && unlocked && !secured && !claimed` shows up. A non-member still
+ * has to join first (membership is the partner's tracking base, never
+ * implied), which the redeem flow does in the same tap.
  *
  * A failure clears the mark so a later mount can retry; it can't loop: the
- * claim's onSettled refetches the status, and a refused claim
- * (`streak_not_reached`) comes back no longer unlocked.
+ * onSettled refetch of a refused call comes back no longer unlocked.
  */
-export function useAutoClaimPartnerCoupon(status: PartnerCampaignStatus | null | undefined) {
-  const { mutate } = useClaimPartnerCoupon();
+export function useAutoSecurePartnerUnlock(status: PartnerCampaignStatus | null | undefined) {
+  const { mutate } = useSecurePartnerUnlock();
   const campaignId = status?.campaign_id ?? null;
-  const due = status != null && status.member && status.unlocked && !status.claimed;
+  const due =
+    status != null && status.member && status.unlocked && !status.secured && !status.claimed;
   useEffect(() => {
-    if (!due || !campaignId || autoClaimFired.has(campaignId)) return;
-    autoClaimFired.add(campaignId);
-    mutate(
-      { campaignId, auto: true },
-      { onError: () => autoClaimFired.delete(campaignId) },
-    );
+    if (!due || !campaignId || secureFired.has(campaignId)) return;
+    secureFired.add(campaignId);
+    mutate({ campaignId }, { onError: () => secureFired.delete(campaignId) });
   }, [due, campaignId, mutate]);
 }

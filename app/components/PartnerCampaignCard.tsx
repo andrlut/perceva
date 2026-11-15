@@ -8,7 +8,7 @@ import { GOLD_BADGE_BG, GOLD_TINT_BG } from '@/components/week/gold';
 import { trackOnce } from '@/lib/analytics';
 import {
   useActivePartnerCampaign,
-  useAutoClaimPartnerCoupon,
+  useAutoSecurePartnerUnlock,
   usePartnerCampaignStatus,
 } from '@/lib/api/partners';
 import { useT } from '@/lib/i18n';
@@ -26,10 +26,10 @@ import { tokens } from '@/theme';
  *
  * The eyebrow says "Patrocinado" — paid content says so (the title already
  * names the partner). The whole card opens `/campaign/<id>`, where every
- * action lives — no inline CTA. A member's unlock is claimed here on sight
- * (`useAutoClaimPartnerCoupon`): an unclaimed unlock dies with the streak.
- * The program gives two rewards (a Perceva Premium discount and the
- * partner's coupon); the line talks about both.
+ * action lives — no inline CTA. A member's unlock is SECURED here on sight
+ * (`useAutoSecurePartnerUnlock`): an unlock nobody writes down dies with
+ * the streak; the tier choice itself waits for the person. The program
+ * gives one coupon with two tiers (basic / Premium); the line says so.
  *
  * The X only shows while there is no progress to hide — before any
  * involvement, or once every code is in hand (`canDismissCampaignCard`). A
@@ -73,7 +73,7 @@ export function PartnerCampaignCard({ enabled }: Props) {
   }, [campaignId]);
 
   const s = status.data ?? null;
-  useAutoClaimPartnerCoupon(s);
+  useAutoSecurePartnerUnlock(s);
 
   const canDismiss =
     s != null && campaign.data != null && canDismissCampaignCard(campaign.data, s);

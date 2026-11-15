@@ -1108,36 +1108,19 @@ const en = {
      *  names the partner, so the label only says it is paid. */
     sponsored: 'Sponsored',
     card: {
-      join: {
-        one: 'Join and earn a discount after {{goal}} days in a row',
-        other: 'Join and earn two discounts after {{goal}} days in a row',
-      },
+      join: 'Join and earn a discount coupon after {{goal}} days in a row',
       adopt: 'Add the practice to start',
       progress: '{{days}} of {{goal}} days in a row',
-      unlocked: {
-        one: 'You made it! Tap to secure your discount',
-        other: 'You made it! Tap to secure your two discounts',
-      },
-      claimed: {
-        one: 'Your code is ready · tap to see',
-        other: 'Your two codes are ready · tap to see',
-      },
-      /** Claimed, one code released and the other not yet (two only). */
-      claimedPartial: 'One code released · the other on its way',
-      claimedPending: {
-        one: 'Discount secured · code on its way',
-        other: 'Discounts secured · codes on their way',
-      },
+      unlocked: 'You made it! Tap to choose your coupon',
+      claimed: 'Your {{pct}}% coupon is ready · tap to see',
+      claimedPending: 'Coupon secured · code on its way',
       a11y: '{{sponsored}}. {{title}}',
       dismissA11y: 'Hide this card',
     },
     screen: {
       how: 'How it works',
       step1Title: 'Join the program',
-      step1Body: {
-        one: "It's free. The discount is for members only.",
-        other: "It's free. The two discounts are for members only.",
-      },
+      step1Body: "It's free. The coupon is for members only.",
       step1Done: "You're in",
       step1Cta: 'Join',
       step2Title: 'Add the daily practice',
@@ -1160,47 +1143,39 @@ const en = {
         one: '{{used}} of {{count}} skip used',
         other: '{{used}} of {{count}} skips used',
       },
-      /** Card label with a single reward; `rewardsTitle` with both. */
-      couponTitle: 'Your reward',
-      rewardsTitle: 'Your rewards',
-      /** Locked: said once, above the rows (each row's lock says the
-       *  rest). */
+      couponTitle: 'Your coupon',
+      /** Locked: said once, above the two options. */
       couponLocked: 'Unlocks at {{goal}} days in a row',
-      /** One reward row's state line — the same in both rows. */
-      rewardReady: 'Unlocked',
-      rewardOnItsWay: 'Unlocked · code on its way',
+      /** The two redemption options. pct = the discount; partner = the name. */
+      tierFree: '{{pct}}% off at {{partner}}',
+      tierFreeSub: 'For everyone who closes the {{goal}} days',
+      tierPremium: '{{pct}}% off at {{partner}}',
+      tierPremiumSub: 'Premium subscribers only',
+      tierPremiumLocked: 'Subscribe to Premium to unlock this one',
+      choose: 'Pick one of the two options. The choice is final.',
+      redeem: 'Redeem',
+      notChosen: 'You picked the other coupon',
       couponPending: "The code is on its way and shows up here as soon as it's released.",
-      /** The one claim covers both rewards. */
-      couponClaim: {
-        one: 'Get my discount',
-        other: 'Get my discounts',
-      },
-      couponSecure: {
-        one: 'Secure my discount',
-        other: 'Secure my discounts',
-      },
-      couponNotReady: {
-        one: 'Secure it now: the discount stays yours even if the streak breaks later, and the code shows up here as soon as it is released.',
-        other:
-          'Secure them now: the two discounts stay yours even if the streak breaks later, and each code shows up here as soon as it is released.',
-      },
       couponCopy: 'Copy or share',
-      /** Screen-reader label of each row's button (there are two alike). */
+      /** Screen-reader label of each row's button. */
       couponCopyA11y: 'Copy or share the code: {{reward}}',
-      /** Under the Premium code: where it goes (the paywall has no code
-       *  field; the store applies it). */
-      premiumHowTo: {
-        android:
-          'Use the code when you subscribe to the annual plan: on the Play Store payment sheet, tap the payment method, then Redeem code.',
-        ios: 'Use the code for the annual plan: in the App Store, tap your photo, then Redeem Gift Card or Code.',
-      },
-      /** Link under the Premium code (Android, not yet Premium). */
-      seePremium: 'See the annual plan',
       visitPartner: '{{name}} website',
       materialTitle: 'Read the material',
       disclosure:
         'Sponsored content. {{name}} only gets program totals (how many people joined), never who you are.',
       notFound: "This campaign isn't available.",
+    },
+    /** The redemption dialogs (lib/partnerRedeem). */
+    redeem: {
+      freeConfirmTitle: 'Are you sure?',
+      freeConfirmBody:
+        'This is your last chance to change your mind and get the bigger bonus: Premium subscribers take {{premium}}% instead of {{free}}%. The choice is final.',
+      freeConfirmOk: 'Take the {{free}}%',
+      seePremium: 'See Premium',
+      premiumRequiredTitle: 'This coupon is for Premium subscribers',
+      premiumRequiredBody:
+        'Subscribe to Premium and take {{premium}}% off at {{partner}}, plus the full app.',
+      notNow: 'Not now',
     },
   },
 
@@ -2453,6 +2428,7 @@ const en = {
   },
 
   rewards: {
+    partnerChip: 'Partner',
     /** The tab's guide (its (i)) — RewardsGuide, docs/informativo-de-tela.md.
      *  `items` follow REWARDS_GUIDE_ITEMS: title + body on the sheet, `ai`
      *  only in the AI prompt. No personal data here. */
