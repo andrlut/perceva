@@ -431,7 +431,16 @@ function RewardsScreenContent() {
               </Pressable>
             )}
 
-            <View style={styles.chipsRow}>
+            {/* One horizontal strip, bleeding to the screen edges: the
+               chips keep their natural width and the strip scrolls
+               sideways (Artur, 2026-11-15) instead of squeezing six
+               chips into the row. */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.chipsScroll}
+              contentContainerStyle={styles.chipsRow}
+            >
               {REWARD_CATEGORY_ORDER.map((cat) => {
                 const m = REWARD_CATEGORY_META[cat];
                 const selected = selectedCategories.has(cat);
@@ -521,7 +530,7 @@ function RewardsScreenContent() {
                   </Text>
                 </Pressable>
               )}
-            </View>
+            </ScrollView>
 
             {hasPartner && (partnerOnly || !filterActive) && <PartnerRewardCard />}
 
@@ -731,19 +740,26 @@ const styles = StyleSheet.create({
     marginRight: 0,
     zIndex: 2,
   },
+  // Bleeds past the content padding so the strip runs edge to edge;
+  // the padding comes back inside, so the first and last chip align
+  // with the rest of the screen.
+  chipsScroll: {
+    marginHorizontal: -tokens.space[4],
+    marginBottom: tokens.space[5],
+  },
   chipsRow: {
     flexDirection: 'row',
     gap: tokens.space[2],
-    marginBottom: tokens.space[5],
+    paddingHorizontal: tokens.space[4],
   },
   chip: {
-    flex: 1,
+    flexShrink: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 10,
-    paddingHorizontal: tokens.space[2],
+    paddingHorizontal: tokens.space[3],
     borderRadius: 12,
     borderWidth: 1,
     borderColor: tokens.border.base,
