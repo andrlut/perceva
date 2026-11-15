@@ -1160,6 +1160,8 @@ const en = {
       tierPremiumSub: 'Premium subscribers only',
       tierPremiumLocked: 'Subscribe to Premium to unlock this one',
       choose: 'Pick one of the two options. The choice is final.',
+      /** Premium only sees the bigger coupon: nothing to pick. */
+      chooseSingle: 'Your coupon is unlocked. Redeem it whenever you like.',
       redeem: 'Redeem',
       notChosen: 'You picked the other coupon',
       couponPending: "The code is on its way and shows up here as soon as it's released.",
@@ -1178,10 +1180,6 @@ const en = {
       freeConfirmBody:
         'This is your last chance to change your mind and get the bigger bonus: Premium subscribers take {{premium}}% instead of {{free}}%. The choice is final.',
       freeConfirmOk: 'Take the {{free}}%',
-      /** The same pause for someone already Premium: the bigger one is theirs. */
-      freeConfirmBodyPremium:
-        "You're Premium and the {{premium}}% is already yours. Sure you want the {{free}}%? The choice is final.",
-      takePremium: 'Take the {{premium}}%',
       seePremium: 'See Premium',
       premiumRequiredTitle: 'This coupon is for Premium subscribers',
       premiumRequiredBody:

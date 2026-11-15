@@ -11,7 +11,7 @@ import {
 import type { PartnerCouponTier } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useLocalizedPick } from '@/lib/i18n/catalog';
-import { campaignStateLine, campaignTiers, tierPct } from '@/lib/partnerCampaign';
+import { campaignStateLine, tierPct, visibleTiers } from '@/lib/partnerCampaign';
 import { usePartnerRedeem } from '@/lib/partnerRedeem';
 import { tokens } from '@/theme';
 
@@ -39,7 +39,7 @@ export function PartnerRewardCard({ enabled = true }: { enabled?: boolean }) {
   const { redeem, running } = usePartnerRedeem(c, s);
 
   if (!enabled || !c || !s) return null;
-  const tiers = campaignTiers(c);
+  const tiers = visibleTiers(c, s);
   if (tiers.length === 0) return null;
 
   const title = pick(c.title_en, c.title_pt);
@@ -81,7 +81,9 @@ export function PartnerRewardCard({ enabled = true }: { enabled?: boolean }) {
       </Pressable>
 
       {s.unlocked && !s.claimed && (
-        <Text style={styles.choose}>{t('campaign.screen.choose')}</Text>
+        <Text style={styles.choose}>
+          {t(tiers.length > 1 ? 'campaign.screen.choose' : 'campaign.screen.chooseSingle')}
+        </Text>
       )}
 
       {tiers.map((tier) => (

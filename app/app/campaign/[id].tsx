@@ -33,7 +33,7 @@ import {
 import type { PartnerCampaignSource } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useLocalizedPick } from '@/lib/i18n/catalog';
-import { campaignTiers, tierPct } from '@/lib/partnerCampaign';
+import { tierPct, visibleTiers } from '@/lib/partnerCampaign';
 import { usePartnerRedeem } from '@/lib/partnerRedeem';
 import { freeLimitEntity } from '@/lib/premium';
 import { tokens } from '@/theme';
@@ -263,7 +263,7 @@ export default function CampaignScreen() {
   const partnerHost = partnerUrl ? hostOf(partnerUrl) : null;
   const m = material.data ?? null;
   const showSkips = s.adopted && !s.claimed && s.max_skips > 0;
-  const tiers = campaignTiers(c);
+  const tiers = visibleTiers(c, s);
 
 
 
@@ -368,7 +368,9 @@ export default function CampaignScreen() {
 
       {/* The choice is open: said once, above both rows. */}
       {s.unlocked && !s.claimed && (
-        <Text style={styles.stateText}>{t('campaign.screen.choose')}</Text>
+        <Text style={styles.stateText}>
+          {t(tiers.length > 1 ? 'campaign.screen.choose' : 'campaign.screen.chooseSingle')}
+        </Text>
       )}
       {/* Claimed, the chosen tier's code not filled in yet by the partner. */}
       {s.claimed && !s.coupon_code && (
