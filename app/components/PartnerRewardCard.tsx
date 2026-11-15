@@ -216,7 +216,7 @@ export function PartnerTierRow({
             accessibilityLabel={t('campaign.screen.couponCopy')}
           >
             <Ionicons name="share-outline" size={14} color={tokens.semantic.coinInk} />
-            <Text style={styles.pillText}>{t('campaign.screen.couponCopy')}</Text>
+            <Text style={styles.pillText}>{t('campaign.screen.couponCopyShort')}</Text>
           </Pressable>
         </View>
       )}
@@ -351,8 +351,9 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     justifyContent: 'center',
-    paddingVertical: 9,
-    paddingHorizontal: tokens.space[3],
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: tokens.space[2],
     borderRadius: tokens.radius.sm,
     borderWidth: 1,
     borderStyle: 'dashed',
@@ -361,9 +362,9 @@ const styles = StyleSheet.create({
   },
   codeText: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 15,
-    lineHeight: 20,
-    letterSpacing: 1.5,
+    fontSize: 13,
+    lineHeight: 18,
+    letterSpacing: 0.8,
     color: tokens.semantic.coinLight,
     includeFontPadding: false,
     textAlignVertical: 'center',

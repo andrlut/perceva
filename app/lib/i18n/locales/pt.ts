@@ -1162,6 +1162,8 @@ const pt: Translations = {
       notChosen: 'Você escolheu o outro cupom',
       couponPending: 'O código está a caminho e aparece aqui assim que for liberado.',
       couponCopy: 'Copiar ou enviar',
+      /** O botão ao lado do código: curto pra sobrar largura pro código. */
+      couponCopyShort: 'Copiar',
       /** Rótulo de leitor de tela do botão de cada linha. */
       couponCopyA11y: 'Copiar ou enviar o código: {{reward}}',
       visitPartner: 'Site da {{name}}',
