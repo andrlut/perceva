@@ -15,7 +15,11 @@ import { tierPct, type CampaignRewards } from '@/lib/partnerCampaign';
  *
  *   basic tier, not Premium → one last offer before the claim: "sure? this
  *       is your last chance to change your mind and get the bigger bonus"
- *       — [See Premium] / [Take the X%]. Premium members claim it straight.
+ *       — [See Premium] / [Take the X%].
+ *   basic tier, Premium → the same pause, since the bigger one is already
+ *       theirs: "you are Premium, the Y% is yours — sure you want the X%?"
+ *       — [Take the Y%] (claims the Premium tier) / [Take the X%].
+ *       (Artur, 2026-11-15: the pause is for everyone.)
  *   Premium tier, not Premium → the invite: "this coupon is for Premium
  *       subscribers" — [Not now] / [See Premium]. Nothing is claimed.
  *   Premium tier, Premium → claim.
@@ -87,10 +91,27 @@ export function usePartnerRedeem(
       void doClaim('premium');
       return;
     }
-    // Basic tier: the last offer, only when there is a bigger one to miss.
+    // Basic tier: the last pause, whenever there is a bigger one to miss.
     const premiumPct = tierPct(campaign, 'premium');
-    if (premiumPct != null && !status.is_premium) {
-      const freePct = tierPct(campaign, 'free') ?? '';
+    const freePct = tierPct(campaign, 'free') ?? '';
+    if (premiumPct != null && status.is_premium) {
+      Alert.alert(
+        t('campaign.redeem.freeConfirmTitle'),
+        t('campaign.redeem.freeConfirmBodyPremium', { free: freePct, premium: premiumPct }),
+        [
+          {
+            text: t('campaign.redeem.takePremium', { premium: premiumPct }),
+            onPress: () => void doClaim('premium'),
+          },
+          {
+            text: t('campaign.redeem.freeConfirmOk', { free: freePct }),
+            onPress: () => void doClaim('free'),
+          },
+        ],
+      );
+      return;
+    }
+    if (premiumPct != null) {
       Alert.alert(
         t('campaign.redeem.freeConfirmTitle'),
         t('campaign.redeem.freeConfirmBody', { free: freePct, premium: premiumPct }),
