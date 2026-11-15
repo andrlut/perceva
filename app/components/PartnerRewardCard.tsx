@@ -201,7 +201,7 @@ export function PartnerTierRow({
       {code && (
         <View style={styles.codeRow}>
           <View style={styles.codeBox}>
-            <Text style={styles.codeText} selectable numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
+            <Text style={styles.codeText} selectable numberOfLines={1}>
               {code}
             </Text>
           </View>
@@ -348,8 +348,8 @@ const styles = StyleSheet.create({
   codeBox: {
     flex: 1,
     minWidth: 0,
-    height: 40,
     justifyContent: 'center',
+    paddingVertical: 9,
     paddingHorizontal: tokens.space[3],
     borderRadius: tokens.radius.sm,
     borderWidth: 1,
@@ -359,8 +359,11 @@ const styles = StyleSheet.create({
   },
   codeText: {
     fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 16,
-    letterSpacing: 2,
+    fontSize: 15,
+    lineHeight: 20,
+    letterSpacing: 1.5,
     color: tokens.semantic.coinLight,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
 });

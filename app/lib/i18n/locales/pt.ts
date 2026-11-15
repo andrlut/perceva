@@ -1174,6 +1174,10 @@ const pt: Translations = {
       freeConfirmBody:
         'Esta é a sua última chance de trocar de ideia e pegar um bônus maior: assinantes Premium levam {{premium}}% em vez de {{free}}%. A escolha é definitiva.',
       freeConfirmOk: 'Pegar os {{free}}%',
+      /** A mesma pausa pra quem já é Premium: o maior está ao alcance. */
+      freeConfirmBodyPremium:
+        'Você é Premium e os {{premium}}% já são seus. Tem certeza que quer os {{free}}%? A escolha é definitiva.',
+      takePremium: 'Pegar os {{premium}}%',
       seePremium: 'Ver o Premium',
       premiumRequiredTitle: 'Esse cupom é dos assinantes Premium',
       premiumRequiredBody:
