@@ -1166,6 +1166,8 @@ const en = {
       notChosen: 'You picked the other coupon',
       couponPending: "The code is on its way and shows up here as soon as it's released.",
       couponCopy: 'Copy or share',
+      /** The pill beside the code: short so the code keeps the width. */
+      couponCopyShort: 'Copy',
       /** Screen-reader label of each row's button. */
       couponCopyA11y: 'Copy or share the code: {{reward}}',
       visitPartner: '{{name}} website',
