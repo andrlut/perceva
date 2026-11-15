@@ -54,10 +54,35 @@ export const partnerKeys = {
     [...partnerKeys.status(campaignId), today] as const,
 };
 
-/** A campaign row plus its practice's catalog title (embedded through the
- *  `template_id` FK — the catalog is pt-only, like Sugeridas). */
+/** A campaign row plus its practices' catalog titles (the catalog is
+ *  pt-only, like Sugeridas): `practice` is the main one (through the
+ *  `template_id` FK), `tracks` every track the streak counts on, main
+ *  included (migration 20261115000002). Read them through
+ *  `campaignTracks`, which falls back to the main practice. */
 export interface PartnerCampaignWithPractice extends PartnerCampaign {
-  practice: { title: string; icon: string | null } | null;
+  practice: CampaignPractice | null;
+  tracks: PartnerCampaignTrack[] | null;
+}
+
+export interface CampaignPractice {
+  title: string;
+  icon: string | null;
+}
+
+export interface PartnerCampaignTrack {
+  template_id: string;
+  sort_order: number;
+  practice: CampaignPractice | null;
+}
+
+/** The practices the person can pick from, in screen order: the tracks,
+ *  or the main practice alone for a campaign without rows (older data). */
+export function campaignTracks(
+  c: Pick<PartnerCampaignWithPractice, 'template_id' | 'practice' | 'tracks'>,
+): PartnerCampaignTrack[] {
+  const tracks = (c.tracks ?? []).slice().sort((a, b) => a.sort_order - b.sort_order);
+  if (tracks.length > 0) return tracks;
+  return [{ template_id: c.template_id, sort_order: 0, practice: c.practice }];
 }
 
 // Explicit list instead of `*`: the row type above is the contract, and the
@@ -66,7 +91,8 @@ const CAMPAIGN_SELECT = `id, partner_name, partner_url, title_pt, title_en,
   pitch_pt, pitch_en, reward_pt, reward_en, perceva_reward_pt,
   perceva_reward_en, reward_free_pct, reward_premium_pct, material_slug, template_id,
   streak_goal, max_skips, starts_at, ends_at, is_active, created_at,
-  practice:task_template ( title, icon )`;
+  practice:task_template ( title, icon ),
+  tracks:partner_campaign_track ( template_id, sort_order, practice:task_template ( title, icon ) )`;
 
 /**
  * The campaign the Home card advertises: the newest one RLS lets through,
@@ -202,8 +228,9 @@ export function useJoinPartnerCampaign() {
 }
 
 /**
- * Adopt the campaign's practice — `start_task_from_template` with the bare
- * template id and NO overrides. Deliberately not the periodicity sheet of
+ * Adopt one of the campaign's practices (a track; any of them counts the
+ * day) — `start_task_from_template` with the bare template id and NO
+ * overrides. Deliberately not the periodicity sheet of
  * Sugeridas: the streak is judged per calendar day, so the practice keeps
  * the template's daily cadence. Same invalidations as
  * useStartTaskFromTemplate (task surfaces + character), which already
@@ -215,11 +242,14 @@ export function useJoinPartnerCampaign() {
 export function useAdoptCampaignPractice() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (
-      campaign: Pick<PartnerCampaign, 'id' | 'template_id'>,
-    ): Promise<string> => {
+    mutationFn: async ({
+      templateId,
+    }: {
+      campaign: Pick<PartnerCampaign, 'id'>;
+      templateId: string;
+    }): Promise<string> => {
       const { data, error } = await supabase.rpc('start_task_from_template', {
-        p_template_id: campaign.template_id,
+        p_template_id: templateId,
         p_task_type_override: null,
         p_recurrence_override: null,
         p_target_count_override: null,
@@ -227,9 +257,13 @@ export function useAdoptCampaignPractice() {
       if (error) throw error;
       return data as string;
     },
-    onSuccess: (taskId, campaign) => {
-      patchStatus(queryClient, campaign.id, { adopted: true, task_id: taskId });
-      track('campaign_practice_adopted', { campaign: campaign.id });
+    onSuccess: (taskId, { campaign, templateId }) => {
+      patchStatus(queryClient, campaign.id, {
+        adopted: true,
+        task_id: taskId,
+        track_template_id: templateId,
+      });
+      track('campaign_practice_adopted', { campaign: campaign.id, track: templateId });
       invalidateTaskSurfaces(queryClient);
       queryClient.invalidateQueries({ queryKey: characterKeys.me() });
     },

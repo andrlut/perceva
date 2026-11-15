@@ -1098,7 +1098,9 @@ export interface PartnerCampaign {
   reward_premium_pct: number | null;
   /** Sponsored Learning material of the campaign, or null. */
   material_slug: string | null;
-  /** `task_template.id` of the practice the streak is counted on. */
+  /** `task_template.id` of the MAIN practice (compat). Every track the
+   *  streak counts on — this one included — is in `partner_campaign_track`
+   *  (migration 20261115000002); any of them counts the day. */
   template_id: string;
   /** Days in a row that unlock the rewards. */
   streak_goal: number;
@@ -1126,6 +1128,8 @@ export interface PartnerCampaignStatus {
   adopted: boolean;
   /** Newest non-archived such practice; null when not adopted. */
   task_id: string | null;
+  /** The track (`task_template.id`) that practice was born from. */
+  track_template_id: string | null;
   done_today: boolean;
   /** Days in a row, counted over every practice born from the template
    *  (edited and archived included). Today only counts once it is done. */

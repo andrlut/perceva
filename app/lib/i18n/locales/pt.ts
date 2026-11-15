@@ -1106,7 +1106,7 @@ const pt: Translations = {
     sponsored: 'Patrocinado',
     card: {
       join: 'Entre e ganhe um cupom de desconto com {{goal}} dias seguidos',
-      adopt: 'Falta adicionar a prática',
+      adopt: 'Falta escolher a prática',
       progress: '{{days}} de {{goal}} dias seguidos',
       unlocked: 'Você chegou lá! Toque para escolher seu cupom',
       claimed: 'Seu cupom de {{pct}}% está pronto · toque para ver',
@@ -1123,8 +1123,15 @@ const pt: Translations = {
       step2Title: 'Adicione a prática diária',
       step2Body: '"{{practice}}" entra nas suas práticas.',
       step2BodyJoin: '"{{practice}}" entra nas suas práticas e você já entra no programa.',
+      /** Campanha com mais de uma trilha: a pessoa escolhe UMA; qualquer
+       *  uma conta o dia. */
+      step2TitlePick: 'Escolha a sua prática diária',
+      step2PickBody: 'Uma das duas basta: a que você adicionar entra nas suas práticas e conta o dia.',
+      step2PickBodyJoin:
+        'Uma das duas basta: a que você adicionar entra nas suas práticas, conta o dia e você já entra no programa.',
       step2Cta: 'Adicionar',
       step2Done: 'Já está nas suas práticas',
+      step2DoneNamed: '"{{practice}}" já está nas suas práticas',
       step3Title: 'Marque todo dia',
       // count = max_skips (zero: sem a frase do pulo)
       step3Body: {
