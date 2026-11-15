@@ -30,6 +30,20 @@ export function campaignTiers(c: CampaignRewards): PartnerCouponTier[] {
   return tiers;
 }
 
+/**
+ * The tiers the person actually sees (Artur, 2026-11-15): a Premium member
+ * never sees the smaller coupon — less to misread, nothing to regret — so
+ * for them it is the Premium tier alone (or, once claimed, whichever tier
+ * the claim holds, e.g. a basic one from before). Everyone else sees every
+ * tier: the basic one to take and the Premium one as the invite.
+ */
+export function visibleTiers(c: CampaignRewards, s: PartnerCampaignStatus): PartnerCouponTier[] {
+  const tiers = campaignTiers(c);
+  if (!s.is_premium || !tiers.includes('premium')) return tiers;
+  if (s.claimed && s.tier) return tiers.includes(s.tier) ? [s.tier] : tiers;
+  return ['premium'];
+}
+
 export function tierPct(c: CampaignRewards, tier: PartnerCouponTier): number | null {
   return tier === 'premium' ? c.reward_premium_pct : c.reward_free_pct;
 }

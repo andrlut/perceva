@@ -1156,6 +1156,8 @@ const pt: Translations = {
       tierPremiumSub: 'Só pra assinantes Premium',
       tierPremiumLocked: 'Assine o Premium pra liberar este',
       choose: 'Escolha uma das duas opções. A escolha é definitiva.',
+      /** Premium só vê o cupom maior: nada a escolher. */
+      chooseSingle: 'Seu cupom está liberado. Resgate quando quiser.',
       redeem: 'Resgatar',
       notChosen: 'Você escolheu o outro cupom',
       couponPending: 'O código está a caminho e aparece aqui assim que for liberado.',
@@ -1174,10 +1176,6 @@ const pt: Translations = {
       freeConfirmBody:
         'Esta é a sua última chance de trocar de ideia e pegar um bônus maior: assinantes Premium levam {{premium}}% em vez de {{free}}%. A escolha é definitiva.',
       freeConfirmOk: 'Pegar os {{free}}%',
-      /** A mesma pausa pra quem já é Premium: o maior está ao alcance. */
-      freeConfirmBodyPremium:
-        'Você é Premium e os {{premium}}% já são seus. Tem certeza que quer os {{free}}%? A escolha é definitiva.',
-      takePremium: 'Pegar os {{premium}}%',
       seePremium: 'Ver o Premium',
       premiumRequiredTitle: 'Esse cupom é dos assinantes Premium',
       premiumRequiredBody:
