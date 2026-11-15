@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppIcon } from '@/components/AppIcon';
 import { useBottomSafeClearance } from '@/components/BottomNavBar';
 import { PartnerTierRow } from '@/components/PartnerRewardCard';
 import { ScreenBackground } from '@/components/ScreenBackground';
@@ -22,6 +23,7 @@ import { GOLD_BADGE_BG, GOLD_TINT_BG } from '@/components/week/gold';
 import { track } from '@/lib/analytics';
 import { useLearningMaterial } from '@/lib/api/learning';
 import {
+  campaignTracks,
   useAdoptCampaignPractice,
   useAutoSecurePartnerUnlock,
   useJoinPartnerCampaign,
@@ -42,7 +44,9 @@ import { tokens } from '@/theme';
  * row and the deep link `rpgtasks://campaign/<id>`.
  *
  *   hero         eyebrow "Patrocinado" + title + pitch
- *   Como funciona  3 sibling steps: join · add the practice · check it daily
+ *   Como funciona  3 sibling steps: join · pick ONE of the campaign's
+ *                  practices (its tracks — any counts the day) · check it
+ *                  daily
  *   Suas recompensas progress bar (until the claim — after it the rewards
  *                  are secured and the live streak would only alarm) →
  *                  "unlocks at N" once while locked → the claim (when
@@ -112,6 +116,8 @@ export default function CampaignScreen() {
   // `running` drives the spinner and disables the other pills; the ref is
   // the hard guard — a same-frame double tap lands before the re-render.
   const [running, setRunning] = useState<Running | null>(null);
+  // Which track's pill spins while adopting (the others just disable).
+  const [adopting, setAdopting] = useState<string | null>(null);
   const busy = useRef(false);
 
   // One `campaign_opened` per visit, once the campaign is known to exist.
@@ -222,12 +228,17 @@ export default function CampaignScreen() {
       () => Alert.alert(t('common.error')),
     );
 
-  const handleAdopt = () =>
+  const handleAdopt = (templateId: string) =>
     run(
       'adopt',
       async () => {
-        await ensureMember();
-        await adopt.mutateAsync(c);
+        setAdopting(templateId);
+        try {
+          await ensureMember();
+          await adopt.mutateAsync({ campaign: c, templateId });
+        } finally {
+          setAdopting(null);
+        }
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
       },
       (err) => {
@@ -244,7 +255,10 @@ export default function CampaignScreen() {
 
   const title = pick(c.title_en, c.title_pt);
   const ratio = s.goal > 0 ? Math.min(1, s.streak_days / s.goal) : 0;
-  const practice = c.practice?.title ?? null;
+  const tracks = campaignTracks(c);
+  const adoptedTrack = s.adopted
+    ? (tracks.find((k) => k.template_id === s.track_template_id) ?? null)
+    : null;
   const partnerUrl = c.partner_url;
   const partnerHost = partnerUrl ? hostOf(partnerUrl) : null;
   const m = material.data ?? null;
@@ -277,28 +291,41 @@ export default function CampaignScreen() {
       <StepRow
         n={2}
         done={s.adopted}
-        title={t('campaign.screen.step2Title')}
+        title={t(tracks.length > 1 ? 'campaign.screen.step2TitlePick' : 'campaign.screen.step2Title')}
         body={
           s.adopted
-            ? t('campaign.screen.step2Done')
-            : practice
-              ? // "Adicionar" joins too when needed — the copy says so.
-                t(s.member ? 'campaign.screen.step2Body' : 'campaign.screen.step2BodyJoin', {
-                  practice,
-                })
-              : null
+            ? adoptedTrack?.practice
+              ? t('campaign.screen.step2DoneNamed', { practice: adoptedTrack.practice.title })
+              : t('campaign.screen.step2Done')
+            : // "Adicionar" joins too when needed — the copy says so.
+              t(
+                tracks.length > 1
+                  ? s.member
+                    ? 'campaign.screen.step2PickBody'
+                    : 'campaign.screen.step2PickBodyJoin'
+                  : s.member
+                    ? 'campaign.screen.step2Body'
+                    : 'campaign.screen.step2BodyJoin',
+                { practice: tracks[0]?.practice?.title ?? '' },
+              )
         }
-        action={
-          s.adopted
-            ? null
-            : {
+        action={null}
+      >
+        {!s.adopted &&
+          tracks.map((k) => (
+            <TrackRow
+              key={k.template_id}
+              icon={k.practice?.icon ?? null}
+              title={k.practice?.title ?? k.template_id}
+              action={{
                 label: t('campaign.screen.step2Cta'),
-                onPress: handleAdopt,
-                busy: running === 'adopt',
+                onPress: () => handleAdopt(k.template_id),
+                busy: running === 'adopt' && adopting === k.template_id,
                 disabled: running != null,
-              }
-        }
-      />
+              }}
+            />
+          ))}
+      </StepRow>
       <StepRow
         n={3}
         done={s.done_today}
@@ -521,12 +548,15 @@ function StepRow({
   title,
   body,
   action,
+  children,
 }: {
   n: number;
   done: boolean;
   title: string;
   body: string | null;
   action: PillAction | null;
+  /** Rows under the body — the campaign's tracks to pick from. */
+  children?: ReactNode;
 }) {
   return (
     <View style={styles.step}>
@@ -540,8 +570,34 @@ function StepRow({
       <View style={styles.stepBody}>
         <Text style={styles.stepTitle}>{title}</Text>
         {body && <Text style={styles.stepText}>{body}</Text>}
+        {children}
       </View>
       {action && <ActionPill {...action} />}
+    </View>
+  );
+}
+
+/** One of the campaign's practices to pick (step 2): catalog icon + title
+ *  + its own "Adicionar" pill. Any track counts the day, so the rows are
+ *  siblings with the same anatomy. */
+function TrackRow({
+  icon,
+  title,
+  action,
+}: {
+  icon: string | null;
+  title: string;
+  action: PillAction;
+}) {
+  return (
+    <View style={styles.trackRow}>
+      <View style={styles.trackIcon}>
+        <AppIcon name={icon} size={16} color={tokens.semantic.coinLight} />
+      </View>
+      <Text style={styles.trackTitle} numberOfLines={2}>
+        {title}
+      </Text>
+      <ActionPill {...action} />
     </View>
   );
 }
@@ -689,6 +745,35 @@ const styles = StyleSheet.create({
     fontFamily: tokens.font.familyHeavy,
     fontSize: 13,
     color: tokens.semantic.coinLight,
+  },
+  trackRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[2],
+    marginTop: tokens.space[2],
+    paddingVertical: tokens.space[2],
+    paddingLeft: tokens.space[2],
+    paddingRight: tokens.space[2],
+    borderRadius: tokens.radius.md,
+    borderWidth: 1,
+    borderColor: tokens.border.base,
+    backgroundColor: tokens.bg.surface,
+  },
+  trackIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: GOLD_BADGE_BG,
+  },
+  trackTitle: {
+    flex: 1,
+    minWidth: 0,
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 13,
+    lineHeight: 18,
+    color: tokens.text.hi,
   },
   stepBody: {
     flex: 1,

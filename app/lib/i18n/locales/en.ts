@@ -1109,7 +1109,7 @@ const en = {
     sponsored: 'Sponsored',
     card: {
       join: 'Join and earn a discount coupon after {{goal}} days in a row',
-      adopt: 'Add the practice to start',
+      adopt: 'Pick a practice to start',
       progress: '{{days}} of {{goal}} days in a row',
       unlocked: 'You made it! Tap to choose your coupon',
       claimed: 'Your {{pct}}% coupon is ready · tap to see',
@@ -1127,8 +1127,15 @@ const en = {
       // en drops the quoted practice title: task_template is pt-only.
       step2Body: 'This adds it to your practices.',
       step2BodyJoin: 'This adds the practice and joins you to the program.',
+      /** A campaign with more than one track: pick ONE; any counts the day. */
+      step2TitlePick: 'Pick your daily practice',
+      step2PickBody: 'One of the two is enough: the one you add joins your practices and counts the day.',
+      step2PickBodyJoin:
+        'One of the two is enough: the one you add joins your practices, counts the day, and joins you to the program.',
       step2Cta: 'Add',
       step2Done: 'Already in your practices',
+      // en keeps the pt catalog title: task_template is pt-only.
+      step2DoneNamed: '"{{practice}}" is already in your practices',
       step3Title: 'Check it off every day',
       // count = max_skips (zero: no skip sentence at all)
       step3Body: {
