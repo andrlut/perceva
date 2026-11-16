@@ -21,7 +21,7 @@ import { FabStack, fabStackClearance, type FabSize } from '@/components/FabStack
 import { ScreenInfoButton } from '@/components/guide/ScreenInfoButton';
 import { RewardsGuide, useRewardsGuidePrompt } from '@/components/guide/screens/RewardsGuide';
 import { InfoSheet } from '@/components/InfoSheet';
-import { PartnerCouponSection } from '@/components/PartnerCouponGrid';
+import { PartnerProgramRow } from '@/components/PartnerCouponGrid';
 import { RewardActionSheet } from '@/components/RewardActionSheet';
 import { RewardCard } from '@/components/RewardCard';
 import { ScreenBackground } from '@/components/ScreenBackground';
@@ -110,9 +110,10 @@ function RewardsScreenContent() {
     () => new Set(),
   );
   const filterActive = selectedCategories.size > 0;
-  // The partner coupon (Programa Paker Health) lives in the Vault too, under
-  // its own gold chip: selected = only the partner card; at rest it sits
-  // above the sections; a category filter hides it.
+  // The partnership (Programa Paker Health) shows in the Vault as one
+  // compact row that leads to the program, where the coupons are, under
+  // its own gold chip: selected = only the row; at rest it sits above the
+  // sections; a category filter hides it.
   const partnerCampaign = useActivePartnerCampaign();
   const hasPartner = partnerCampaign.data != null;
   const [partnerOnly, setPartnerOnly] = useState(false);
@@ -532,7 +533,7 @@ function RewardsScreenContent() {
               )}
             </ScrollView>
 
-            {hasPartner && (partnerOnly || !filterActive) && <PartnerCouponSection />}
+            {hasPartner && (partnerOnly || !filterActive) && <PartnerProgramRow />}
 
             {partnerOnly ? null : rewards.isLoading ? (
               <View style={styles.loadingBox}>

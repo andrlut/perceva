@@ -2437,9 +2437,12 @@ const en = {
 
   rewards: {
     partnerChip: 'Partner',
-    /** The partner's coupon section in the Vault (2026-11-16). */
+    /** The partnership row in the Vault (2026-11-16): leads to the program,
+     *  where the coupons live. */
     partnerSection: 'Partnership · {{partner}}',
     partnerSeeProgram: 'See the program',
+    partnerRowOpen: '{{free}}% and {{premium}}% coupons to redeem',
+    partnerRowClaimed: '{{claimed}} of {{total}} coupons redeemed',
     /** The tab's guide (its (i)) — RewardsGuide, docs/informativo-de-tela.md.
      *  `items` follow REWARDS_GUIDE_ITEMS: title + body on the sheet, `ai`
      *  only in the AI prompt. No personal data here. */
