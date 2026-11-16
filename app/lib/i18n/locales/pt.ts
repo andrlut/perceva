@@ -1101,23 +1101,44 @@ const pt: Translations = {
    * o cartão e a linha do material nunca dizem "aqui".
    */
   campaign: {
-    /** Eyebrow do cartão da Home e do topo da tela — o título já nomeia o
-     *  parceiro, então o rótulo só diz que é pago. */
+    /** Eyebrow do cartão da Home, dos cupons e do topo da tela — o título
+     *  já nomeia o parceiro, então o rótulo só diz que é pago. */
     sponsored: 'Patrocinado',
+    /** O cartão da Home fala do DESAFIO (extra); os cupons moram na aba
+     *  Recompensas e não dependem dele (2026-11-16). */
     card: {
-      join: 'Entre e ganhe um cupom de desconto com {{goal}} dias seguidos',
-      adopt: 'Falta escolher a prática',
+      join: 'Cupons na aba Recompensas · desafio de {{goal}} dias como extra',
+      adopt: 'Falta escolher a prática do desafio',
       progress: '{{days}} de {{goal}} dias seguidos',
-      unlocked: 'Você chegou lá! Toque para escolher seu cupom',
-      claimed: 'Seu cupom de {{pct}}% está pronto · toque para ver',
-      claimedPending: 'Cupom garantido · código a caminho',
+      done: 'Desafio concluído! Seus cupons estão em Recompensas',
       a11y: '{{sponsored}}. {{title}}',
       dismissA11y: 'Esconder este cartão',
     },
     screen: {
+      /** Os cupons, primeiro: abertos, um resgate por cupom. */
+      couponsTitle: 'Seus cupons',
+      couponsHint: 'Resgate agora, sem desafio. Um resgate por cupom; o de 17% é dos assinantes Premium.',
+      /** Título do card do cupom. pct = o desconto; o parceiro vai no eyebrow. */
+      tierTitle: '{{pct}}% de desconto',
+      tierFreeSub: 'Pra todo mundo',
+      tierPremiumSub: 'Só pra assinantes Premium',
+      tierPremiumLocked: 'Assine o Premium pra liberar',
+      premiumCta: 'Premium',
+      redeem: 'Resgatar',
+      claimed: 'Resgatado',
+      couponPending: 'O código está a caminho e aparece aqui assim que for liberado.',
+      couponCopy: 'Copiar ou enviar',
+      /** O botão ao lado do código: curto pra sobrar largura pro código. */
+      couponCopyShort: 'Copiar',
+      /** Rótulo de leitor de tela do botão de cada linha. */
+      couponCopyA11y: 'Copiar ou enviar o código: {{reward}}',
+      visitPartner: 'Site da {{name}}',
+      /** O desafio, extra: entrar, escolher a prática, marcar todo dia. */
+      challengeTitle: 'O desafio (extra)',
       how: 'Como funciona',
+      challengeDone: 'Desafio concluído!',
       step1Title: 'Entre no programa',
-      step1Body: 'Não custa nada. O cupom é só pra quem entra.',
+      step1Body: 'Não custa nada. Entrar já conta pro parceiro saber que você veio pelo Perceva.',
       step1Done: 'Você está no programa',
       step1Cta: 'Entrar',
       step2Title: 'Adicione a prática diária',
@@ -1146,38 +1167,14 @@ const pt: Translations = {
         one: '{{used}} de {{count}} pulo usado',
         other: '{{used}} de {{count}} pulos usados',
       },
-      couponTitle: 'Seu cupom',
-      /** Trancado: dito uma vez só, acima das duas opções. */
-      couponLocked: 'Libera com {{goal}} dias seguidos',
-      /** As duas opções de resgate. pct = o desconto; partner = o nome. */
-      tierFree: '{{pct}}% de desconto na {{partner}}',
-      tierFreeSub: 'Pra todo mundo que fechar os {{goal}} dias',
-      tierPremium: '{{pct}}% de desconto na {{partner}}',
-      tierPremiumSub: 'Só pra assinantes Premium',
-      tierPremiumLocked: 'Assine o Premium pra liberar este',
-      choose: 'Escolha uma das duas opções. A escolha é definitiva.',
-      /** Premium só vê o cupom maior: nada a escolher. */
-      chooseSingle: 'Seu cupom está liberado. Resgate quando quiser.',
-      redeem: 'Resgatar',
-      notChosen: 'Você escolheu o outro cupom',
-      couponPending: 'O código está a caminho e aparece aqui assim que for liberado.',
-      couponCopy: 'Copiar ou enviar',
-      /** O botão ao lado do código: curto pra sobrar largura pro código. */
-      couponCopyShort: 'Copiar',
-      /** Rótulo de leitor de tela do botão de cada linha. */
-      couponCopyA11y: 'Copiar ou enviar o código: {{reward}}',
-      visitPartner: 'Site da {{name}}',
       materialTitle: 'Leia o material',
       disclosure:
         'Conteúdo patrocinado. {{name}} recebe só números gerais do programa (quantas pessoas entraram), nunca quem você é.',
       notFound: 'Esta campanha não está disponível.',
     },
-    /** Os diálogos do resgate (lib/partnerRedeem). */
+    /** O convite pro Premium quando um free toca no cupom de 17%
+     *  (lib/partnerRedeem). */
     redeem: {
-      freeConfirmTitle: 'Tem certeza?',
-      freeConfirmBody:
-        'Esta é a sua última chance de trocar de ideia e pegar um bônus maior: assinantes Premium levam {{premium}}% em vez de {{free}}%. A escolha é definitiva.',
-      freeConfirmOk: 'Pegar os {{free}}%',
       seePremium: 'Ver o Premium',
       premiumRequiredTitle: 'Esse cupom é dos assinantes Premium',
       premiumRequiredBody:
@@ -2442,6 +2439,9 @@ const pt: Translations = {
 
   rewards: {
     partnerChip: 'Parceria',
+    /** A seção dos cupons do parceiro na Vault (2026-11-16). */
+    partnerSection: 'Parceria · {{partner}}',
+    partnerSeeProgram: 'Ver o programa',
     /** The tab's guide (its (i)) — RewardsGuide, docs/informativo-de-tela.md.
      *  `items` follow REWARDS_GUIDE_ITEMS: title + body on the sheet, `ai`
      *  only in the AI prompt. No personal data here. */

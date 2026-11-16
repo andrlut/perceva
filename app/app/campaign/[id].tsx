@@ -17,7 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppIcon } from '@/components/AppIcon';
 import { useBottomSafeClearance } from '@/components/BottomNavBar';
-import { PartnerTierRow } from '@/components/PartnerRewardCard';
+import { PartnerCouponGrid } from '@/components/PartnerCouponGrid';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { GOLD_BADGE_BG, GOLD_TINT_BG } from '@/components/week/gold';
 import { track } from '@/lib/analytics';
@@ -33,7 +33,6 @@ import {
 import type { PartnerCampaignSource } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useLocalizedPick } from '@/lib/i18n/catalog';
-import { tierPct, visibleTiers } from '@/lib/partnerCampaign';
 import { usePartnerRedeem } from '@/lib/partnerRedeem';
 import { freeLimitEntity } from '@/lib/premium';
 import { tokens } from '@/theme';
@@ -43,6 +42,10 @@ import { tokens } from '@/theme';
  * from the Home card (`?source=banner`), the sponsored material's campaign
  * row and the deep link `rpgtasks://campaign/<id>`.
  *
+ *   (2026-11-16: the coupons are OPEN. "Seus cupons" comes first — the
+ *   same PartnerCouponCards as the Vault, one claim per tier, the Premium
+ *   one the invite for a free member — and the challenge below it is an
+ *   extra, with its own bar. The older notes below describe the steps.)
  *   hero         eyebrow "Patrocinado" + title + pitch
  *   Como funciona  3 sibling steps: join · pick ONE of the campaign's
  *                  practices (its tracks — any counts the day) · check it
@@ -262,14 +265,34 @@ export default function CampaignScreen() {
   const partnerUrl = c.partner_url;
   const partnerHost = partnerUrl ? hostOf(partnerUrl) : null;
   const m = material.data ?? null;
-  const showSkips = s.adopted && !s.claimed && s.max_skips > 0;
-  const tiers = visibleTiers(c, s);
+  const showSkips = s.adopted && !s.unlocked && s.max_skips > 0;
 
 
 
   const howCard = (
     <View style={styles.card}>
-      <Text style={styles.cardLabel}>{t('campaign.screen.how')}</Text>
+      <Text style={styles.cardLabel}>{t('campaign.screen.challengeTitle')}</Text>
+      {s.adopted && (
+        <View
+          style={styles.progress}
+          accessibilityRole="progressbar"
+          accessibilityValue={{ min: 0, max: s.goal, now: Math.min(s.streak_days, s.goal) }}
+        >
+          <View style={styles.track}>
+            <View style={[styles.fill, { width: `${Math.round(ratio * 100)}%` }]} />
+          </View>
+          <Text style={styles.progressText}>
+            {s.unlocked
+              ? t('campaign.screen.challengeDone')
+              : t('campaign.screen.progress', { days: s.streak_days, goal: s.goal })}
+          </Text>
+          {showSkips && (
+            <Text style={styles.skipsText}>
+              {t('campaign.screen.skipsUsed', { used: s.skips_used, count: s.max_skips })}
+            </Text>
+          )}
+        </View>
+      )}
       <StepRow
         n={1}
         done={s.member}
@@ -336,64 +359,20 @@ export default function CampaignScreen() {
     </View>
   );
 
-  const rewardCard = (
+  const couponsCard = (
     <View style={[styles.card, styles.rewardCard]}>
       <Text style={[styles.cardLabel, styles.cardLabelGold]}>
-        {t('campaign.screen.couponTitle')}
+        {t('campaign.screen.couponsTitle')}
       </Text>
+      <Text style={styles.stateText}>{t('campaign.screen.couponsHint')}</Text>
 
-      {/* The bar only while it decides something: after the claim the
-         rewards are secured, and a live streak that broke ("0 de 7")
-         above codes already in hand would read as if they were at risk —
-         the Home card hides its bar on the same rule. */}
-      {!s.claimed && (
-        <View
-          style={styles.progress}
-          accessibilityRole="progressbar"
-          accessibilityValue={{ min: 0, max: s.goal, now: Math.min(s.streak_days, s.goal) }}
-        >
-          <View style={styles.track}>
-            <View style={[styles.fill, { width: `${Math.round(ratio * 100)}%` }]} />
-          </View>
-          <Text style={styles.progressText}>
-            {t('campaign.screen.progress', { days: s.streak_days, goal: s.goal })}
-          </Text>
-          {showSkips && (
-            <Text style={styles.skipsText}>
-              {t('campaign.screen.skipsUsed', { used: s.skips_used, count: s.max_skips })}
-            </Text>
-          )}
-        </View>
-      )}
-
-      {/* The choice is open: said once, above both rows. */}
-      {s.unlocked && !s.claimed && (
-        <Text style={styles.stateText}>
-          {t(tiers.length > 1 ? 'campaign.screen.choose' : 'campaign.screen.chooseSingle')}
-        </Text>
-      )}
-      {/* Claimed, the chosen tier's code not filled in yet by the partner. */}
-      {s.claimed && !s.coupon_code && (
-        <Text style={styles.stateText}>{t('campaign.screen.couponPending')}</Text>
-      )}
-
-      {tiers.map((tier) => (
-        <PartnerTierRow
-          key={tier}
-          tier={tier}
-          pct={tierPct(c, tier) ?? 0}
-          partner={c.partner_name}
-          goal={s.goal}
-          unlocked={s.unlocked}
-          claimed={s.claimed}
-          chosen={s.claimed && s.tier === tier}
-          code={s.claimed && s.tier === tier ? s.coupon_code : null}
-          isPremium={s.is_premium}
-          busy={redeeming === tier}
-          disabled={redeeming != null || running != null}
-          onRedeem={() => redeem(tier)}
-        />
-      ))}
+      <PartnerCouponGrid
+        campaign={c}
+        status={s}
+        redeem={redeem}
+        running={redeeming}
+        disabled={running != null}
+      />
 
       {partnerUrl && (
         <Pressable
@@ -441,18 +420,9 @@ export default function CampaignScreen() {
         <Text style={styles.pitch}>{pick(c.pitch_en, c.pitch_pt)}</Text>
       </View>
 
-      {/* ── Sua recompensa / Como funciona — the bar first mid-run ───── */}
-      {s.adopted ? (
-        <>
-          {rewardCard}
-          {howCard}
-        </>
-      ) : (
-        <>
-          {howCard}
-          {rewardCard}
-        </>
-      )}
+      {/* ── Seus cupons, then the challenge (an extra) ─────────────── */}
+      {couponsCard}
+      {howCard}
 
       {/* ── Leia o material ──────────────────────────────────────────── */}
       {m && (

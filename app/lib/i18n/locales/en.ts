@@ -1104,23 +1104,44 @@ const en = {
    * campaign screen: the card and the material row never say "here".
    */
   campaign: {
-    /** Eyebrow of the Home card and the screen's hero — the title already
-     *  names the partner, so the label only says it is paid. */
+    /** Eyebrow of the Home card, the coupons and the screen's hero — the
+     *  title already names the partner, so the label only says it is paid. */
     sponsored: 'Sponsored',
+    /** The Home card is about the CHALLENGE (an extra); the coupons live in
+     *  the Rewards tab and don't depend on it (2026-11-16). */
     card: {
-      join: 'Join and earn a discount coupon after {{goal}} days in a row',
-      adopt: 'Pick a practice to start',
+      join: 'Coupons in the Rewards tab · {{goal}}-day challenge as an extra',
+      adopt: 'Pick the challenge practice to start',
       progress: '{{days}} of {{goal}} days in a row',
-      unlocked: 'You made it! Tap to choose your coupon',
-      claimed: 'Your {{pct}}% coupon is ready · tap to see',
-      claimedPending: 'Coupon secured · code on its way',
+      done: 'Challenge complete! Your coupons are in Rewards',
       a11y: '{{sponsored}}. {{title}}',
       dismissA11y: 'Hide this card',
     },
     screen: {
+      /** The coupons first: open, one claim per coupon. */
+      couponsTitle: 'Your coupons',
+      couponsHint: 'Redeem now, no challenge needed. One claim per coupon; the 17% one is for Premium subscribers.',
+      /** Coupon card title. pct = the discount; the partner is the eyebrow. */
+      tierTitle: '{{pct}}% off',
+      tierFreeSub: 'For everyone',
+      tierPremiumSub: 'Premium subscribers only',
+      tierPremiumLocked: 'Subscribe to Premium to unlock',
+      premiumCta: 'Premium',
+      redeem: 'Redeem',
+      claimed: 'Redeemed',
+      couponPending: 'The code is on its way and shows up here as soon as it is released.',
+      couponCopy: 'Copy or share',
+      /** The pill beside the code: short so the code keeps the width. */
+      couponCopyShort: 'Copy',
+      /** Screen-reader label of each row's button. */
+      couponCopyA11y: 'Copy or share the code: {{reward}}',
+      visitPartner: "{{name}}'s website",
+      /** The challenge, an extra: join, pick the practice, check it daily. */
+      challengeTitle: 'The challenge (extra)',
       how: 'How it works',
+      challengeDone: 'Challenge complete!',
       step1Title: 'Join the program',
-      step1Body: "It's free. The coupon is for members only.",
+      step1Body: "It's free. Joining lets the partner know you came through Perceva.",
       step1Done: "You're in",
       step1Cta: 'Join',
       step2Title: 'Add the daily practice',
@@ -1150,38 +1171,14 @@ const en = {
         one: '{{used}} of {{count}} skip used',
         other: '{{used}} of {{count}} skips used',
       },
-      couponTitle: 'Your coupon',
-      /** Locked: said once, above the two options. */
-      couponLocked: 'Unlocks at {{goal}} days in a row',
-      /** The two redemption options. pct = the discount; partner = the name. */
-      tierFree: '{{pct}}% off at {{partner}}',
-      tierFreeSub: 'For everyone who closes the {{goal}} days',
-      tierPremium: '{{pct}}% off at {{partner}}',
-      tierPremiumSub: 'Premium subscribers only',
-      tierPremiumLocked: 'Subscribe to Premium to unlock this one',
-      choose: 'Pick one of the two options. The choice is final.',
-      /** Premium only sees the bigger coupon: nothing to pick. */
-      chooseSingle: 'Your coupon is unlocked. Redeem it whenever you like.',
-      redeem: 'Redeem',
-      notChosen: 'You picked the other coupon',
-      couponPending: "The code is on its way and shows up here as soon as it's released.",
-      couponCopy: 'Copy or share',
-      /** The pill beside the code: short so the code keeps the width. */
-      couponCopyShort: 'Copy',
-      /** Screen-reader label of each row's button. */
-      couponCopyA11y: 'Copy or share the code: {{reward}}',
-      visitPartner: '{{name}} website',
       materialTitle: 'Read the material',
       disclosure:
-        'Sponsored content. {{name}} only gets program totals (how many people joined), never who you are.',
-      notFound: "This campaign isn't available.",
+        'Sponsored content. {{name}} only gets overall program numbers (how many people joined), never who you are.',
+      notFound: 'This campaign is not available.',
     },
-    /** The redemption dialogs (lib/partnerRedeem). */
+    /** The Premium invite when a free member taps the 17% coupon
+     *  (lib/partnerRedeem). */
     redeem: {
-      freeConfirmTitle: 'Are you sure?',
-      freeConfirmBody:
-        'This is your last chance to change your mind and get the bigger bonus: Premium subscribers take {{premium}}% instead of {{free}}%. The choice is final.',
-      freeConfirmOk: 'Take the {{free}}%',
       seePremium: 'See Premium',
       premiumRequiredTitle: 'This coupon is for Premium subscribers',
       premiumRequiredBody:
@@ -2440,6 +2437,9 @@ const en = {
 
   rewards: {
     partnerChip: 'Partner',
+    /** The partner's coupon section in the Vault (2026-11-16). */
+    partnerSection: 'Partnership · {{partner}}',
+    partnerSeeProgram: 'See the program',
     /** The tab's guide (its (i)) — RewardsGuide, docs/informativo-de-tela.md.
      *  `items` follow REWARDS_GUIDE_ITEMS: title + body on the sheet, `ai`
      *  only in the AI prompt. No personal data here. */
