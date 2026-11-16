@@ -10,7 +10,7 @@ description: |
   pick different topics even from the same state. Returns null category if
   there is nothing worth publishing right now.
 tools: ["Bash", "Read", "WebSearch", "WebFetch"]
-model: sonnet
+model: opus
 ---
 
 # Learning planner — what to write next
