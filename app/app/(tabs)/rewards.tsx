@@ -21,7 +21,7 @@ import { FabStack, fabStackClearance, type FabSize } from '@/components/FabStack
 import { ScreenInfoButton } from '@/components/guide/ScreenInfoButton';
 import { RewardsGuide, useRewardsGuidePrompt } from '@/components/guide/screens/RewardsGuide';
 import { InfoSheet } from '@/components/InfoSheet';
-import { PartnerRewardCard } from '@/components/PartnerRewardCard';
+import { PartnerCouponSection } from '@/components/PartnerCouponGrid';
 import { RewardActionSheet } from '@/components/RewardActionSheet';
 import { RewardCard } from '@/components/RewardCard';
 import { ScreenBackground } from '@/components/ScreenBackground';
@@ -532,7 +532,7 @@ function RewardsScreenContent() {
               )}
             </ScrollView>
 
-            {hasPartner && (partnerOnly || !filterActive) && <PartnerRewardCard />}
+            {hasPartner && (partnerOnly || !filterActive) && <PartnerCouponSection />}
 
             {partnerOnly ? null : rewards.isLoading ? (
               <View style={styles.loadingBox}>

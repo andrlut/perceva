@@ -1154,6 +1154,13 @@ export interface PartnerCampaignStatus {
   /** Each tier's code was already filled in by the partner. */
   free_code_ready: boolean;
   premium_code_ready: boolean;
+  /** One state per tier (coupons open since 2026-11-16, one claim per
+   *  tier; a Premium member may hold both). The code comes only after
+   *  that tier's claim, once released. */
+  claimed_free: boolean;
+  claimed_premium: boolean;
+  code_free: string | null;
+  code_premium: string | null;
   /** The chosen tier's code was already released (before the claim: the
    *  basic tier's). */
   coupon_ready: boolean;

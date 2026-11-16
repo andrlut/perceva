@@ -107,7 +107,7 @@ export function PartnerCampaignCard({ enabled }: Props) {
     router.push({ pathname: '/campaign/[id]', params: { id: c.id, source: 'banner' } });
 
   const line = campaignStateLine(c, s, t);
-  const showBar = s.adopted && !s.claimed;
+  const showBar = s.adopted && !s.unlocked;
   const ratio = s.goal > 0 ? Math.min(1, s.streak_days / s.goal) : 0;
 
   return (
@@ -126,7 +126,7 @@ export function PartnerCampaignCard({ enabled }: Props) {
       >
         <View style={styles.icon}>
           <Ionicons
-            name={s.unlocked ? 'gift' : 'ribbon'}
+            name={s.unlocked ? 'trophy' : 'ribbon'}
             size={17}
             color={tokens.semantic.coinLight}
           />

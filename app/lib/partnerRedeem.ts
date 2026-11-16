@@ -7,24 +7,22 @@ import { track } from '@/lib/analytics';
 import { useClaimPartnerCoupon, useJoinPartnerCampaign } from '@/lib/api/partners';
 import type { PartnerCampaignStatus, PartnerCouponTier } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
-import { tierPct, type CampaignRewards } from '@/lib/partnerCampaign';
+import { tierClaimed, tierPct, type CampaignRewards } from '@/lib/partnerCampaign';
 
 /**
  * The redemption flow of a partner coupon, shared by the campaign screen and
- * the Vault card so the two never disagree (decision Artur, 2026-11-15):
+ * the Vault's coupon cards so the two never disagree (decision Artur/André,
+ * 2026-11-16 — coupons open, no challenge in the way):
  *
- *   basic tier, not Premium → one last offer before the claim: "sure? this
- *       is your last chance to change your mind and get the bigger bonus"
- *       — [See Premium] / [Take the X%].
- *   Premium member → never offered the basic tier at all (`visibleTiers`);
- *       a tap on it (stale screen) is treated as the Premium claim.
- *   Premium tier, not Premium → the invite: "this coupon is for Premium
+ *   basic tier              → claim, straight away.
+ *   Premium tier, Premium   → claim, straight away.
+ *   Premium tier, free      → the invite: "this coupon is for Premium
  *       subscribers" — [Not now] / [See Premium]. Nothing is claimed.
- *   Premium tier, Premium → claim.
  *
- * The server enforces the same rules (`premium_required`,
- * `streak_not_reached`); the dialogs are the sales moment, not the gate.
- * The paywall opens with `?source=partner` so the funnel is measurable.
+ * One claim per tier; a Premium member may hold both. The server enforces
+ * the same rules (`premium_required`); the invite is the sales moment, not
+ * the gate. The paywall opens with `?source=partner` so the funnel is
+ * measurable.
  */
 export function usePartnerRedeem(
   campaign: (CampaignRewards & { id: string; partner_name: string }) | null,
@@ -39,29 +37,6 @@ export function usePartnerRedeem(
 
   // The paywall tracks its own open (premium_opened, source=partner).
   const goPremium = () => router.push('/premium?source=partner');
-
-  const doClaim = async (tier: PartnerCouponTier) => {
-    if (!campaign || busy.current) return;
-    busy.current = true;
-    setRunning(tier);
-    try {
-      if (!status?.member) await join.mutateAsync({ campaignId: campaign.id, source: 'app' });
-      await claim.mutateAsync({ campaignId: campaign.id, tier });
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-    } catch (err) {
-      const msg = (err as { message?: string })?.message ?? '';
-      if (msg.includes('premium_required')) {
-        showPremiumInvite();
-      } else {
-        // `streak_not_reached` converges on its own: the status refetch
-        // puts the lock back.
-        Alert.alert(t('common.error'));
-      }
-    } finally {
-      busy.current = false;
-      setRunning(null);
-    }
-  };
 
   const showPremiumInvite = () => {
     if (!campaign) return;
@@ -78,45 +53,37 @@ export function usePartnerRedeem(
     );
   };
 
-  const redeem = (tier: PartnerCouponTier) => {
-    if (!campaign || !status || !status.unlocked || status.claimed) return;
-    if (tier === 'premium') {
-      if (!status.is_premium) {
-        track('campaign_premium_tier_blocked', { campaign: campaign.id });
+  const doClaim = async (tier: PartnerCouponTier) => {
+    if (!campaign || busy.current) return;
+    busy.current = true;
+    setRunning(tier);
+    try {
+      // The server joins on claim too; joining here first keeps the
+      // optimistic `member` flag honest for the Home card.
+      if (!status?.member) await join.mutateAsync({ campaignId: campaign.id, source: 'app' });
+      await claim.mutateAsync({ campaignId: campaign.id, tier });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    } catch (err) {
+      const msg = (err as { message?: string })?.message ?? '';
+      if (msg.includes('premium_required')) {
         showPremiumInvite();
-        return;
+      } else {
+        Alert.alert(t('common.error'));
       }
-      void doClaim('premium');
+    } finally {
+      busy.current = false;
+      setRunning(null);
+    }
+  };
+
+  const redeem = (tier: PartnerCouponTier) => {
+    if (!campaign || !status || tierClaimed(status, tier)) return;
+    if (tier === 'premium' && !status.is_premium) {
+      track('campaign_premium_tier_blocked', { campaign: campaign.id });
+      showPremiumInvite();
       return;
     }
-    // Basic tier: the last pause, whenever there is a bigger one to miss.
-    const premiumPct = tierPct(campaign, 'premium');
-    const freePct = tierPct(campaign, 'free') ?? '';
-    if (premiumPct != null && status.is_premium) {
-      void doClaim('premium');
-      return;
-    }
-    if (premiumPct != null) {
-      Alert.alert(
-        t('campaign.redeem.freeConfirmTitle'),
-        t('campaign.redeem.freeConfirmBody', { free: freePct, premium: premiumPct }),
-        [
-          {
-            text: t('campaign.redeem.seePremium'),
-            onPress: () => {
-              track('campaign_upsell_accepted', { campaign: campaign.id });
-              goPremium();
-            },
-          },
-          {
-            text: t('campaign.redeem.freeConfirmOk', { free: freePct }),
-            onPress: () => void doClaim('free'),
-          },
-        ],
-      );
-      return;
-    }
-    void doClaim('free');
+    void doClaim(tier);
   };
 
   return { redeem, running, goPremium };
