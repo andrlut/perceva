@@ -13,7 +13,7 @@ description: |
   post-Strength-v4 editorial standard (PR #176) and the Recanto em ideias
   contract (learning-drops/ideas-specs/README.md).
 tools: ["Read"]
-model: sonnet
+model: opus
 ---
 
 # Learning reviewer — strict editorial pass

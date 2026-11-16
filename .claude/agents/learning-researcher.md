@@ -9,7 +9,7 @@ description: |
   Skeptical, accurate, peer-reviewed-preferring. Will return a "thin"
   dossier honestly rather than fabricate.
 tools: ["WebSearch", "WebFetch", "Read"]
-model: sonnet
+model: opus
 ---
 
 # Learning researcher — verified facts only
