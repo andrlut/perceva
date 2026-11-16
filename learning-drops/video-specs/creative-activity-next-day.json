@@ -1,0 +1,636 @@
+{
+  "_doc": "Roteiro do vídeo (molde genérico, tools/video/MOLDE.md), modelo de 60 s (fase 3 + boneco serie + visual v5 + fim cena: sem card, termina no verso demonstrado). r1 (2026-11-16, rotina do publisher). Tema sem corpo (craft/build): a assinatura 'por dentro' é o método na página, caderno → mapa (o vídeo anterior, pré-treino, foi corpo de vidro). O caderno é um diário de exemplo (o que ele criou em cada dia, quanto tempo, como veio o dia seguinte): o dia com mais criação que o normal dele marca ↑ no dia seguinte; o mapa é o dia de hoje, em que uma página escrita e uma gaveta consertada viram dourado ('já conta'). Fora do vídeo: a universidade, os autores, o ano, os 658 jovens, os 13 dias, o diário online como método e a ressalva de causalidade (vira 'tende a'). A calma que não sobe entra numa frase curta. O único momento de comemoração é o fim (no dia seguinte, com entusiasmo): o verso é bem-estar e hábito, não dose. r2 (2026-11-16, fix_notes do revisor de roteiro): next sai do parque/corrida (era o quadro da creatina) pro escritório de manhã andando decidido, e ganha a cautela do humor ruim; order volta à observação (o contrário não apareceu / não fez); anyone vira multidão (gente de todo jeito acende); make deixa o copo e a ficha ion:restaurant (gesto de suplemento) e vira o caderno de receita na mão no balcão da cozinha, com quem cozinha ao fundo (o molde não tem panela/tigela nem ação de escrever: ver gaps); diary com os blocos na ordem da voz e uma deixa por bloco; o quadro (cavalete de aula) saiu do gancho e do comparar; tomorrow volta à mesma cozinha na manhã seguinte. r3 (2026-11-16, fix_notes do revisor de quadros, só tela): make com o caderno na frente do peito (mexer) e as linhas aparecendo, sem a caneta solta, rótulos no ar livre; tomorrow de dia, toma o café e vira feliz em \"mais energia\"; flourish de dia com dois figurantes do elenco (o lugar sorteava um segundo Theo) e rótulos em fila; protagonista seed 15 (o Theo sai da cadeira apagada da multidão); diary com o dia na frente de cada linha (a faixa só acendia SEG), cabeçalho EN \"Next\" e as marcas mais cedo; today vira na \"gaveta consertada\"; next sem o colega cortado.",
+  "slug": "creative-activity-next-day",
+  "ideas": {
+    "criar-hoje-anima-amanha": {
+      "dimension": "craft",
+      "fase": 3,
+      "boneco": "serie",
+      "visual": "v5",
+      "fim": "cena",
+      "protagonista": {
+        "seed": 15,
+        "pessoa": "theo"
+      },
+      "voz": {
+        "pt": "will",
+        "en": "liam"
+      },
+      "lines": [
+        {
+          "id": "hook",
+          "scene": "pensa",
+          "hold": 0.3,
+          "pt": {
+            "caption": "Criar algo hoje muda como você se sente amanhã, ou isso é *só pra quem é do tipo artista*?"
+          },
+          "en": {
+            "caption": "Can making something today change how you feel tomorrow, or is that *just for the arty type*?"
+          },
+          "props": {
+            "ambiente": "escritorio",
+            "hora": "noite",
+            "plano": "fechado",
+            "mood": "ok",
+            "thought": "ion:color-palette",
+            "at": {
+              "pt": "Criar algo",
+              "en": "making something"
+            },
+            "objects": [
+              {
+                "p": "papelada",
+                "cue": {
+                  "pt": "hoje",
+                  "en": "today"
+                }
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "amanhã",
+                  "en": "tomorrow"
+                },
+                "cue": {
+                  "pt": "amanhã",
+                  "en": "tomorrow"
+                },
+                "out": {
+                  "pt": "tipo artista",
+                  "en": "arty type"
+                }
+              }
+            ],
+            "camera": {
+              "move": "push",
+              "focus": "pessoa",
+              "forca": "leve"
+            }
+          }
+        },
+        {
+          "id": "diary",
+          "scene": "caderno",
+          "hold": 2,
+          "pt": {
+            "caption": "Pense num diário com o que você criou em cada dia, coisa comum como receita, tricô, rabisco ou poema, e *como veio o dia seguinte*."
+          },
+          "en": {
+            "caption": "Picture a diary of what you made each day, everyday stuff like a recipe, knitting, a sketch or a poem, and *how the next day went*."
+          },
+          "props": {
+            "kicker": {
+              "pt": "No diário",
+              "en": "In the diary"
+            },
+            "transicao": "zoom",
+            "heads": [
+              {
+                "pt": "Criei",
+                "en": "Made"
+              },
+              {
+                "pt": "Tempo",
+                "en": "Time"
+              },
+              {
+                "pt": "Amanhã",
+                "en": "Next"
+              }
+            ],
+            "from": {
+              "pt": "coisa comum",
+              "en": "everyday stuff"
+            },
+            "at": {
+              "pt": "como veio",
+              "en": "and how"
+            },
+            "blocks": [
+              {
+                "label": {
+                  "pt": "Seg · Receita",
+                  "en": "Mon · Recipe"
+                },
+                "icon": "restaurant",
+                "feel": "neutro",
+                "size": 1,
+                "cue": {
+                  "pt": "receita",
+                  "en": "recipe"
+                }
+              },
+              {
+                "label": {
+                  "pt": "Ter · Tricô",
+                  "en": "Tue · Knitting"
+                },
+                "icon": "shirt",
+                "feel": "energiza",
+                "size": 3,
+                "cue": {
+                  "pt": "tricô",
+                  "en": "knitting"
+                }
+              },
+              {
+                "label": {
+                  "pt": "Qua · Rabisco",
+                  "en": "Wed · Sketch"
+                },
+                "icon": "brush",
+                "feel": "neutro",
+                "size": 1,
+                "cue": {
+                  "pt": "rabisco",
+                  "en": "sketch"
+                }
+              },
+              {
+                "label": {
+                  "pt": "Qui · Poema",
+                  "en": "Thu · Poem"
+                },
+                "icon": "create",
+                "feel": "neutro",
+                "size": 1,
+                "cue": {
+                  "pt": "poema",
+                  "en": "poem"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "next",
+          "scene": "faz",
+          "hold": 0.4,
+          "pt": {
+            "caption": "Depois de um dia criando mais que o seu normal, o seguinte tende a vir com *mais ânimo*, só não com mais calma nem com menos tristeza."
+          },
+          "en": {
+            "caption": "After a day of making more than your usual, the next one tends to bring *more drive*, just not more calm or fewer low moods."
+          },
+          "props": {
+            "ambiente": "escritorio",
+            "hora": "dia",
+            "gente": "nenhuma",
+            "plano": "fechado",
+            "mood": "focado",
+            "passos": [
+              {
+                "acao": "andar",
+                "ritmo": "rapido",
+                "de": 300,
+                "para": 600
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "seu normal",
+                  "en": "your usual"
+                },
+                "cue": {
+                  "pt": "seu normal",
+                  "en": "your usual"
+                },
+                "out": {
+                  "pt": "mais ânimo",
+                  "en": "more drive"
+                }
+              },
+              {
+                "text": {
+                  "pt": "mais ânimo",
+                  "en": "more drive"
+                },
+                "cue": {
+                  "pt": "mais ânimo",
+                  "en": "more drive"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "flourish",
+          "scene": "faz",
+          "hold": 0.4,
+          "pt": {
+            "caption": "E mais sensação de florescer, de que a vida tem sentido, propósito e *gente por perto*."
+          },
+          "en": {
+            "caption": "And more sense of flourishing, that your life has meaning, purpose and *people in it*."
+          },
+          "props": {
+            "ambiente": "cidade",
+            "hora": "dia",
+            "plano": "fechado",
+            "mood": "ok",
+            "passos": [
+              {
+                "acao": "andar",
+                "de": 400,
+                "para": 560
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "florescer",
+                  "en": "flourishing"
+                },
+                "cue": {
+                  "pt": "florescer",
+                  "en": "flourishing"
+                },
+                "out": {
+                  "pt": "sentido",
+                  "en": "meaning"
+                }
+              },
+              {
+                "text": {
+                  "pt": "sentido",
+                  "en": "meaning"
+                },
+                "cue": {
+                  "pt": "sentido",
+                  "en": "meaning"
+                },
+                "out": {
+                  "pt": "gente por perto",
+                  "en": "people in it"
+                }
+              },
+              {
+                "text": {
+                  "pt": "gente por perto",
+                  "en": "people in it"
+                },
+                "cue": {
+                  "pt": "gente por perto",
+                  "en": "people in it"
+                },
+                "x": 760,
+                "y": 300,
+                "max": 460
+              }
+            ],
+            "camera": {
+              "move": "pan-right",
+              "forca": "leve"
+            },
+            "elenco": [
+              {
+                "seed": 2,
+                "x": 980,
+                "acao": "andar",
+                "para": 800,
+                "ritmo": "lento",
+                "cue": {
+                  "pt": "gente por perto",
+                  "en": "people in it"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "order",
+          "scene": "comparar",
+          "hold": 0.4,
+          "pt": {
+            "caption": "E o contrário não apareceu: estar bem num dia *não fez ninguém criar mais* no outro."
+          },
+          "en": {
+            "caption": "And it didn’t run backwards: feeling good one day *didn’t make anyone create more* the next."
+          },
+          "props": {
+            "left": {
+              "label": {
+                "pt": "Criar primeiro",
+                "en": "Making first"
+              },
+              "object": "caderno",
+              "ambiente": "casa",
+              "hora": "manha",
+              "mood": "focado",
+              "arrives": {
+                "pt": "o contrário",
+                "en": "run backwards"
+              }
+            },
+            "right": {
+              "label": {
+                "pt": "Ânimo primeiro",
+                "en": "Mood first"
+              },
+              "object": "caneca",
+              "ambiente": "cidade",
+              "hora": "dia",
+              "mood": "ok",
+              "arrives": {
+                "pt": "estar bem",
+                "en": "feeling good"
+              }
+            },
+            "winner": "left",
+            "win": {
+              "pt": "não fez ninguém",
+              "en": "make anyone"
+            }
+          }
+        },
+        {
+          "id": "anyone",
+          "scene": "multidao",
+          "hold": 0.3,
+          "pt": {
+            "caption": "E o jeito de cada um quase não muda o ganho, então você *não precisa ser do tipo artista*."
+          },
+          "en": {
+            "caption": "And personality barely changes the payoff, so you *don't need to be the arty type*."
+          },
+          "props": {
+            "lit": "muitos",
+            "at": {
+              "pt": "quase não muda",
+              "en": "barely changes"
+            },
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "o jeito de cada um",
+                  "en": "personality"
+                },
+                "cue": {
+                  "pt": "o jeito de cada um",
+                  "en": "personality"
+                },
+                "out": {
+                  "pt": "tipo artista",
+                  "en": "arty type"
+                },
+                "x": 540,
+                "y": 1205
+              },
+              {
+                "text": {
+                  "pt": "tipo artista",
+                  "en": "arty type"
+                },
+                "cue": {
+                  "pt": "tipo artista",
+                  "en": "arty type"
+                },
+                "x": 540,
+                "y": 1205
+              }
+            ]
+          }
+        },
+        {
+          "id": "today",
+          "scene": "mapa",
+          "hold": 0.9,
+          "pt": {
+            "caption": "Vale superar o seu próprio normal, e se hoje você não criou nada, uma página escrita ou uma gaveta consertada *já conta*."
+          },
+          "en": {
+            "caption": "Beat your own baseline, and if you made nothing today, one written page or a fixed drawer *already counts*."
+          },
+          "props": {
+            "kicker": {
+              "pt": "O seu dia",
+              "en": "Your day"
+            },
+            "ambiente": "cozinha",
+            "hora": "noite",
+            "mood": "ok",
+            "to": "focado",
+            "turn": {
+              "pt": "gaveta consertada",
+              "en": "fixed drawer"
+            },
+            "camera": {
+              "move": "dolly",
+              "focus": "mapa",
+              "cue": {
+                "pt": "já conta",
+                "en": "already counts"
+              }
+            },
+            "blocks": [
+              {
+                "label": {
+                  "pt": "Trabalho",
+                  "en": "Work"
+                },
+                "icon": "briefcase",
+                "feel": "neutro",
+                "size": 3
+              },
+              {
+                "label": {
+                  "pt": "Mercado",
+                  "en": "Groceries"
+                },
+                "icon": "cart",
+                "feel": "neutro",
+                "size": 1
+              },
+              {
+                "label": {
+                  "pt": "Página escrita",
+                  "en": "Written page"
+                },
+                "icon": "create",
+                "feel": "neutro",
+                "size": 1,
+                "cue": {
+                  "pt": "página escrita",
+                  "en": "written page"
+                },
+                "then": {
+                  "feel": "energiza",
+                  "size": 2
+                }
+              },
+              {
+                "label": {
+                  "pt": "Gaveta",
+                  "en": "Drawer"
+                },
+                "icon": "hammer",
+                "feel": "neutro",
+                "size": 1,
+                "cue": {
+                  "pt": "gaveta consertada",
+                  "en": "fixed drawer"
+                },
+                "then": {
+                  "feel": "energiza"
+                }
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "seu próprio normal",
+                  "en": "your own baseline"
+                },
+                "cue": {
+                  "pt": "próprio normal",
+                  "en": "own baseline"
+                },
+                "out": {
+                  "pt": "página escrita",
+                  "en": "written page"
+                },
+                "x": 200,
+                "y": 430,
+                "max": 340
+              }
+            ]
+          }
+        },
+        {
+          "id": "make",
+          "scene": "cena",
+          "hold": 0.3,
+          "pt": {
+            "caption": "Então crie algo hoje, nem que seja *uma receita nova*."
+          },
+          "en": {
+            "caption": "So make something today, even just *a new recipe*."
+          },
+          "props": {
+            "kicker": {
+              "pt": "O que fazer",
+              "en": "What to do"
+            },
+            "ambiente": "cozinha",
+            "hora": "noite",
+            "transicao": "corte",
+            "setting": "mesa",
+            "plano": "fechado",
+            "holding": "caderno",
+            "mood": "focado",
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "crie algo hoje",
+                  "en": "make something today"
+                },
+                "cue": {
+                  "pt": "crie algo",
+                  "en": "make something"
+                },
+                "out": {
+                  "pt": "receita nova",
+                  "en": "new recipe"
+                },
+                "x": 790,
+                "y": 330,
+                "max": 460
+              },
+              {
+                "text": {
+                  "pt": "receita nova",
+                  "en": "new recipe"
+                },
+                "cue": {
+                  "pt": "receita nova",
+                  "en": "new recipe"
+                },
+                "x": 790,
+                "y": 330,
+                "max": 460
+              }
+            ],
+            "gente": "pouca",
+            "acoes": [
+              {
+                "acao": "mexer",
+                "ritmo": "lento"
+              }
+            ]
+          }
+        },
+        {
+          "id": "tomorrow",
+          "scene": "faz",
+          "hold": 0.6,
+          "pt": {
+            "caption": "O dia seguinte tende a vir com *mais energia e entusiasmo*."
+          },
+          "en": {
+            "caption": "The next day tends to bring *more energy and enthusiasm*."
+          },
+          "props": {
+            "kicker": {
+              "pt": "No dia seguinte",
+              "en": "The next day"
+            },
+            "ambiente": "cozinha",
+            "hora": "dia",
+            "plano": "fechado",
+            "mood": "focado",
+            "passos": [
+              {
+                "acao": "andar",
+                "ritmo": "rapido",
+                "de": 360,
+                "para": 560
+              },
+              {
+                "acao": "beber",
+                "peca": "caneca",
+                "cue": {
+                  "pt": "tende a vir",
+                  "en": "tends to bring"
+                },
+                "ritmo": "rapido"
+              }
+            ],
+            "rotulos": [
+              {
+                "text": {
+                  "pt": "dia seguinte",
+                  "en": "next day"
+                },
+                "cue": {
+                  "pt": "dia seguinte",
+                  "en": "next day"
+                },
+                "out": {
+                  "pt": "mais energia",
+                  "en": "more energy"
+                }
+              },
+              {
+                "text": {
+                  "pt": "energia e entusiasmo",
+                  "en": "energy and enthusiasm"
+                },
+                "cue": {
+                  "pt": "mais energia",
+                  "en": "more energy"
+                }
+              }
+            ],
+            "turn": {
+              "pt": "mais energia",
+              "en": "more energy"
+            },
+            "to": "feliz"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "slug": "creative-activity-next-day",
+  "dimension_id": "craft",
+  "title": {
+    "pt": "Crie hoje, ganhe ânimo amanhã",
+    "en": "Make something today, feel it tomorrow"
+  },
+  "cover": {
+    "prompt": "Um par de mãos à noite montando um prato de uma receita nova sobre uma bancada de madeira, legumes coloridos recém-cortados e uma panela fumegando ao lado, tudo sob a única luz quente de uma luminária baixa; a cozinha em volta e o alto do quadro ficam escuros e vazios."
+  },
+  "ideas": [
+    {
+      "id": "criar-hoje-anima-amanha",
+      "ordinal": 1,
+      "image_prompt": "Uma mesa de trabalho junto à janela, de manhã: em primeiro plano e no centro do quadro, grande e nítido, um vaso de argila torto feito à mão na noite anterior, ainda com as marcas dos dedos, cercado de ferramentas de modelar, pincéis sujos de barro e lascas de argila seca sobre um pano manchado. Atrás da mesa, menor e um pouco desfocada, uma pessoa passa a passos largos, postura ereta e corpo inclinado pra frente, mãos livres, olhando o vaso com um meio sorriso, cheia de disposição. A luz dourada da manhã entra de lado pela janela e acende o vaso e o rosto da pessoa; o resto do ateliê fica na penumbra, com um único toque verde-sálvia no esmalte ainda úmido do vaso."
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "slug": "creative-activity-next-day",
+  "category": "research",
+  "material_title": {
+    "pt": "Crie hoje, ganhe ânimo amanhã",
+    "en": "Make something today, feel it tomorrow"
+  },
+  "ideas": [
+    {
+      "id": "criar-hoje-anima-amanha",
+      "ordinal": 1,
+      "title": {
+        "pt": "Criar algo hoje muda o seu humor amanhã?",
+        "en": "Does making something lift tomorrow's mood?"
+      },
+      "claim": {
+        "pt": "Crie algo hoje, nem que seja uma receita nova: o dia seguinte tende a vir com mais energia e entusiasmo.",
+        "en": "Make something today, even just a new recipe: the next day tends to bring more energy and enthusiasm."
+      },
+      "body": {
+        "pt": "Na Universidade de Otago, na Nova Zelândia, 658 jovens adultos preencheram um diário online por 13 dias, anotando quanto tempo passaram criando e como se sentiam ([Conner, DeYoung e Silvia, 2018](https://doi.org/10.1080/17439760.2016.1257049)). Criar era coisa comum: receita nova, tricô, rabisco, um poema. Depois de um dia com mais criação do que o normal daquela pessoa, o dia seguinte vinha com **mais energia e entusiasmo** e mais sensação de florescer, que é sentir que a vida tem sentido, propósito e gente por perto. O caminho inverso não apareceu: estar bem num dia não fez ninguém criar mais no outro. A personalidade quase não mudou o ganho, então você não precisa ser do tipo artista. Uma ressalva: o diário mostra o que veio antes, não prova a causa. E a calma não subiu, nem o humor ruim caiu. O que fazer: **supere o seu próprio normal**. Se hoje você não criou nada, uma página escrita ou uma gaveta consertada já conta.",
+        "en": "At New Zealand's University of Otago, 658 young adults kept an online diary for 13 days, logging how long they spent creating and how they felt ([Conner, DeYoung & Silvia, 2018](https://doi.org/10.1080/17439760.2016.1257049)). Creating meant ordinary stuff: a new recipe, knitting, sketching, a poem. After a day with more making than that person's usual, the next day brought **more energy and enthusiasm**, plus more flourishing, the sense that your life has meaning, purpose and people in it. It didn't run backwards. Feeling good one day didn't make anyone create more the next. Personality barely changed the payoff, so you don't need to be the arty type. One caveat: a diary shows what came first, not proof of cause. Calm didn't rise, and bad feelings didn't fade. What to do: **beat your own baseline**. If you made nothing today, one written page or a fixed drawer counts."
+      },
+      "image_brief": "Uma mesa de trabalho perto da janela, de manhã: no centro, um vaso de argila torto feito à mão na noite anterior, ao lado de pincéis e restos de argila seca; uma pessoa passa pela mesa com uma caneca na mão, postura ereta e passo animado, olhando o vaso com um meio sorriso.",
+      "sources": [
+        {
+          "label": {
+            "pt": "Conner, DeYoung e Silvia, 2018 · Journal of Positive Psychology",
+            "en": "Conner, DeYoung & Silvia, 2018 · Journal of Positive Psychology"
+          },
+          "url": "https://doi.org/10.1080/17439760.2016.1257049"
+        },
+        {
+          "label": {
+            "pt": "Registro do artigo na Universidade de Otago",
+            "en": "Paper record at the University of Otago"
+          },
+          "url": "https://ourarchive.otago.ac.nz/esploro/outputs/journalArticle/Everyday-creative-activity-as-a-path/9926515230401891"
+        }
+      ],
+      "cta": null
+    }
+  ]
+}
