@@ -2439,12 +2439,14 @@ const pt: Translations = {
 
   rewards: {
     partnerChip: 'Parceria',
-    /** A linha da parceria na Vault (2026-11-16): leva pro programa, onde
-     *  ficam os cupons. */
+    /** O bloco da parceria na Vault (2026-11-16): linha que dobra o bloco
+     *  + os cupons ainda abertos; o resgatado some daqui (código no programa). */
     partnerSection: 'Parceria · {{partner}}',
     partnerSeeProgram: 'Ver o programa',
-    partnerRowOpen: 'Cupons de {{free}}% e {{premium}}% pra resgatar',
-    partnerRowClaimed: '{{claimed}} de {{total}} cupons resgatados',
+    /** `pcts` = "10% e 17%" / "17%" (montado com partnerRowAnd). */
+    partnerRowOpen: 'Pra resgatar: {{pcts}}',
+    partnerRowAnd: ' e ',
+    partnerRowClaimed: 'Cupons resgatados · códigos no programa',
     /** The tab's guide (its (i)) — RewardsGuide, docs/informativo-de-tela.md.
      *  `items` follow REWARDS_GUIDE_ITEMS: title + body on the sheet, `ai`
      *  only in the AI prompt. No personal data here. */
