@@ -1180,6 +1180,12 @@ const pt: Translations = {
       premiumRequiredBody:
         'Assine o Premium e leve {{premium}}% de desconto na {{partner}}, além do app completo.',
       notNow: 'Agora não',
+      /** Depois do resgate: o card fica onde estava, com o código. */
+      claimedTitle: 'Cupom de {{pct}}% resgatado!',
+      claimedBody:
+        'Seu código é {{code}}. Ele fica no card do cupom: toque em Copiar pra copiar ou enviar pra você mesmo.',
+      claimedBodyPending:
+        'O código vai aparecer no card do cupom assim que a {{partner}} liberar.',
     },
   },
 
@@ -2446,7 +2452,7 @@ const pt: Translations = {
     /** `pcts` = "10% e 17%" / "17%" (montado com partnerRowAnd). */
     partnerRowOpen: 'Pra resgatar: {{pcts}}',
     partnerRowAnd: ' e ',
-    partnerRowClaimed: 'Cupons resgatados · códigos no programa',
+    partnerRowClaimed: 'Cupons resgatados · códigos nos cards',
     /** The tab's guide (its (i)) — RewardsGuide, docs/informativo-de-tela.md.
      *  `items` follow REWARDS_GUIDE_ITEMS: title + body on the sheet, `ai`
      *  only in the AI prompt. No personal data here. */

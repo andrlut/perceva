@@ -21,10 +21,9 @@ const LIGHT = ACTIVE_THEME === 'light';
 
 /**
  * The campaign's coupons as a two-column grid of `PartnerCouponCard`s — the
- * same grid the Vault uses for its own rewards. The campaign screen shows
- * every tier (the claimed ones carry the code); the Vault section below
- * passes `hideClaimed` so a redeemed coupon leaves the Vault like a
- * spent reward.
+ * same grid the Vault uses for its own rewards. Every tier, always: a
+ * claimed coupon stays as the card that holds its code (Artur, 2026-11-16:
+ * a card that vanishes on redeem reads as "something went wrong").
  */
 export function PartnerCouponGrid({
   campaign,
@@ -32,18 +31,14 @@ export function PartnerCouponGrid({
   redeem,
   running,
   disabled = false,
-  hideClaimed = false,
 }: {
   campaign: CampaignRewards & { partner_name: string };
   status: PartnerCampaignStatus;
   redeem: (tier: PartnerCouponTier) => void;
   running: PartnerCouponTier | null;
   disabled?: boolean;
-  hideClaimed?: boolean;
 }) {
-  const tiers = campaignTiers(campaign).filter(
-    (tier) => !(hideClaimed && tierClaimed(status, tier)),
-  );
+  const tiers = campaignTiers(campaign);
   if (tiers.length === 0) return null;
   return (
     <View style={styles.grid}>
@@ -69,15 +64,15 @@ export function PartnerCouponGrid({
 const COLLAPSE_KEY = '@perceva/partner_section_collapsed';
 
 /**
- * The Vault's "Parceria" section (decision Artur, 2026-11-16, two rounds):
- * a header row in the partner's colors — name, where the coupons stand,
- * "see the program" — and under it the coupons still open, as cards with
- * the partner flair. A redeemed coupon leaves the Vault (its code stays on
- * the campaign screen), so the section shrinks to the row once both are
- * taken. The row collapses the block on tap, remembered per campaign, so
- * someone can fold this one partnership without dropping the partner
- * chip — with more partnerships coming, each folds on its own. Renders
- * nothing without an active campaign.
+ * The Vault's "Parceria" section (decision Artur, 2026-11-16, three
+ * rounds): a header row in the partner's colors — name, where the coupons
+ * stand, "see the program" — and under it the coupon cards with the
+ * partner flair, claimed ones included (they hold the code and COPIAR; a
+ * card that vanished on redeem gave no sign the coupon was taken). The row
+ * collapses the block on tap, remembered per campaign, so someone can fold
+ * this one partnership without dropping the partner chip — with more
+ * partnerships coming, each folds on its own. Renders nothing without an
+ * active campaign.
  */
 export function PartnerCouponSection({ enabled = true }: { enabled?: boolean }) {
   const { t } = useT();
@@ -112,7 +107,7 @@ export function PartnerCouponSection({ enabled = true }: { enabled?: boolean }) 
   const tiers = campaignTiers(c);
   const open = tiers.filter((tier) => !tierClaimed(s, tier));
   const folded = collapsed?.id === campaignId ? collapsed.value : false;
-  const canFold = open.length > 0;
+  const canFold = tiers.length > 0;
   const showGrid = canFold && !folded;
   const line =
     open.length > 0
@@ -184,7 +179,7 @@ export function PartnerCouponSection({ enabled = true }: { enabled?: boolean }) 
         )}
       </Pressable>
       {showGrid && (
-        <PartnerCouponGrid campaign={c} status={s} redeem={redeem} running={running} hideClaimed />
+        <PartnerCouponGrid campaign={c} status={s} redeem={redeem} running={running} />
       )}
     </View>
   );

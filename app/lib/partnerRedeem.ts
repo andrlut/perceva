@@ -7,7 +7,7 @@ import { track } from '@/lib/analytics';
 import { useClaimPartnerCoupon, useJoinPartnerCampaign } from '@/lib/api/partners';
 import type { PartnerCampaignStatus, PartnerCouponTier } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
-import { tierClaimed, tierPct, type CampaignRewards } from '@/lib/partnerCampaign';
+import { tierClaimed, tierCode, tierPct, type CampaignRewards } from '@/lib/partnerCampaign';
 
 /**
  * The redemption flow of a partner coupon, shared by the campaign screen and
@@ -22,7 +22,9 @@ import { tierClaimed, tierPct, type CampaignRewards } from '@/lib/partnerCampaig
  * One claim per tier; a Premium member may hold both. The server enforces
  * the same rules (`premium_required`); the invite is the sales moment, not
  * the gate. The paywall opens with `?source=partner` so the funnel is
- * measurable.
+ * measurable. A successful claim says so out loud (Artur, 2026-11-16: the
+ * card changing state alone read as nothing happening): an alert with the
+ * code, or "on its way" while the partner has not released it.
  */
 export function usePartnerRedeem(
   campaign: (CampaignRewards & { id: string; partner_name: string }) | null,
@@ -61,8 +63,16 @@ export function usePartnerRedeem(
       // The server joins on claim too; joining here first keeps the
       // optimistic `member` flag honest for the Home card.
       if (!status?.member) await join.mutateAsync({ campaignId: campaign.id, source: 'app' });
-      await claim.mutateAsync({ campaignId: campaign.id, tier });
+      const next = await claim.mutateAsync({ campaignId: campaign.id, tier });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      const code = next ? tierCode(next, tier) : null;
+      Alert.alert(
+        t('campaign.redeem.claimedTitle', { pct: tierPct(campaign, tier) ?? '' }),
+        code
+          ? t('campaign.redeem.claimedBody', { code })
+          : t('campaign.redeem.claimedBodyPending', { partner: campaign.partner_name }),
+        [{ text: t('common.ok') }],
+      );
     } catch (err) {
       const msg = (err as { message?: string })?.message ?? '';
       if (msg.includes('premium_required')) {
