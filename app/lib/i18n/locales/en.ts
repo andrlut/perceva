@@ -1184,6 +1184,12 @@ const en = {
       premiumRequiredBody:
         'Subscribe to Premium and take {{premium}}% off at {{partner}}, plus the full app.',
       notNow: 'Not now',
+      /** After the claim: the card stays put, with the code. */
+      claimedTitle: '{{pct}}% coupon redeemed!',
+      claimedBody:
+        'Your code is {{code}}. It stays on the coupon card: tap Copy to copy it or send it to yourself.',
+      claimedBodyPending:
+        'The code will show on the coupon card as soon as {{partner}} releases it.',
     },
   },
 
@@ -2444,7 +2450,7 @@ const en = {
     /** `pcts` = "10% and 17%" / "17%" (built with partnerRowAnd). */
     partnerRowOpen: 'To redeem: {{pcts}}',
     partnerRowAnd: ' and ',
-    partnerRowClaimed: 'Coupons redeemed · codes on the program',
+    partnerRowClaimed: 'Coupons redeemed · codes on the cards',
     /** The tab's guide (its (i)) — RewardsGuide, docs/informativo-de-tela.md.
      *  `items` follow REWARDS_GUIDE_ITEMS: title + body on the sheet, `ai`
      *  only in the AI prompt. No personal data here. */
