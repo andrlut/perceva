@@ -1,6 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { PARTNER_FLAIR, PartnerCouponCard } from '@/components/PartnerCouponCard';
@@ -12,14 +14,17 @@ import {
 import type { PartnerCampaignStatus, PartnerCouponTier } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { campaignTiers, tierClaimed, tierCode, tierPct, type CampaignRewards } from '@/lib/partnerCampaign';
+import { usePartnerRedeem } from '@/lib/partnerRedeem';
 import { ACTIVE_THEME, tokens } from '@/theme';
 
 const LIGHT = ACTIVE_THEME === 'light';
 
 /**
  * The campaign's coupons as a two-column grid of `PartnerCouponCard`s — the
- * same grid the Vault uses for its own rewards. Lives on the campaign
- * screen; the Vault only shows the row below, which leads there.
+ * same grid the Vault uses for its own rewards. The campaign screen shows
+ * every tier (the claimed ones carry the code); the Vault section below
+ * passes `hideClaimed` so a redeemed coupon leaves the Vault like a
+ * spent reward.
  */
 export function PartnerCouponGrid({
   campaign,
@@ -27,14 +32,18 @@ export function PartnerCouponGrid({
   redeem,
   running,
   disabled = false,
+  hideClaimed = false,
 }: {
   campaign: CampaignRewards & { partner_name: string };
   status: PartnerCampaignStatus;
   redeem: (tier: PartnerCouponTier) => void;
   running: PartnerCouponTier | null;
   disabled?: boolean;
+  hideClaimed?: boolean;
 }) {
-  const tiers = campaignTiers(campaign);
+  const tiers = campaignTiers(campaign).filter(
+    (tier) => !(hideClaimed && tierClaimed(status, tier)),
+  );
   if (tiers.length === 0) return null;
   return (
     <View style={styles.grid}>
@@ -57,76 +66,132 @@ export function PartnerCouponGrid({
   );
 }
 
+const COLLAPSE_KEY = '@perceva/partner_section_collapsed';
+
 /**
- * The Vault's partner row (decision Artur, 2026-11-16, after seeing the
- * cards in the test build): one compact line per partnership — the
- * partner's name, where the coupons stand, "see the program" — that opens
- * the campaign screen, where the coupon cards live. The Vault keeps its
- * own rewards in front; with more partnerships coming, a stack of coupon
- * cards here would push people into hiding the partner chip for good.
- * Renders nothing without an active campaign.
+ * The Vault's "Parceria" section (decision Artur, 2026-11-16, two rounds):
+ * a header row in the partner's colors — name, where the coupons stand,
+ * "see the program" — and under it the coupons still open, as cards with
+ * the partner flair. A redeemed coupon leaves the Vault (its code stays on
+ * the campaign screen), so the section shrinks to the row once both are
+ * taken. The row collapses the block on tap, remembered per campaign, so
+ * someone can fold this one partnership without dropping the partner
+ * chip — with more partnerships coming, each folds on its own. Renders
+ * nothing without an active campaign.
  */
-export function PartnerProgramRow({ enabled = true }: { enabled?: boolean }) {
+export function PartnerCouponSection({ enabled = true }: { enabled?: boolean }) {
   const { t } = useT();
   const router = useRouter();
   const campaign = useActivePartnerCampaign({ enabled });
   const c = campaign.data ?? null;
-  const status = usePartnerCampaignStatus(c?.id, { enabled: enabled && c != null });
+  const campaignId = c?.id ?? null;
+  const status = usePartnerCampaignStatus(campaignId, { enabled: enabled && c != null });
   const s = status.data ?? null;
   useAutoSecurePartnerUnlock(s);
+  const { redeem, running } = usePartnerRedeem(c, s);
 
-  if (!enabled || !c) return null;
+  // Keyed by campaign id: a new campaign opens unfolded.
+  const [collapsed, setCollapsed] = useState<{ id: string; value: boolean } | null>(null);
+  useEffect(() => {
+    if (!campaignId) return;
+    let alive = true;
+    AsyncStorage.getItem(`${COLLAPSE_KEY}:${campaignId}`)
+      .then((v) => {
+        if (alive) setCollapsed({ id: campaignId, value: v != null });
+      })
+      .catch(() => {
+        if (alive) setCollapsed({ id: campaignId, value: false });
+      });
+    return () => {
+      alive = false;
+    };
+  }, [campaignId]);
+
+  if (!enabled || !c || !s || !campaignId) return null;
 
   const tiers = campaignTiers(c);
-  const claimed = s ? tiers.filter((tier) => tierClaimed(s, tier)).length : 0;
+  const open = tiers.filter((tier) => !tierClaimed(s, tier));
+  const folded = collapsed?.id === campaignId ? collapsed.value : false;
+  const canFold = open.length > 0;
+  const showGrid = canFold && !folded;
   const line =
-    claimed > 0
-      ? t('rewards.partnerRowClaimed', { claimed, total: tiers.length })
-      : t('rewards.partnerRowOpen', {
-          free: tierPct(c, 'free') ?? '',
-          premium: tierPct(c, 'premium') ?? '',
-        });
+    open.length > 0
+      ? t('rewards.partnerRowOpen', {
+          pcts: open
+            .map((tier) => `${tierPct(c, tier) ?? ''}%`)
+            .join(t('rewards.partnerRowAnd')),
+        })
+      : t('rewards.partnerRowClaimed');
+
+  const toggle = () => {
+    if (!canFold) return;
+    const next = !folded;
+    setCollapsed({ id: campaignId, value: next });
+    const key = `${COLLAPSE_KEY}:${campaignId}`;
+    (next ? AsyncStorage.setItem(key, '1') : AsyncStorage.removeItem(key)).catch(() => {});
+  };
+  const goProgram = () =>
+    router.push({ pathname: '/campaign/[id]', params: { id: campaignId, source: 'app' } });
 
   return (
-    <Pressable
-      onPress={() =>
-        router.push({ pathname: '/campaign/[id]', params: { id: c.id, source: 'app' } })
-      }
-      style={({ pressed }) => [styles.row, pressed && { opacity: 0.85 }]}
-      accessibilityRole="button"
-      accessibilityLabel={`${t('rewards.partnerSection', { partner: c.partner_name })}. ${line}. ${t('rewards.partnerSeeProgram')}`}
-    >
-      <LinearGradient
-        colors={
-          LIGHT
-            ? ['rgba(244,238,224,0.95)', 'rgba(255,255,255,0.96)']
-            : [PARTNER_FLAIR.navy2, 'rgba(8,29,50,0.94)']
-        }
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={StyleSheet.absoluteFill}
-        pointerEvents="none"
-      />
-      <View style={styles.rowTile}>
-        <Ionicons name="ribbon" size={16} color={PARTNER_FLAIR.bronze2} />
-      </View>
-      <View style={styles.rowBody}>
-        <Text style={styles.rowTitle} numberOfLines={1}>
-          {t('rewards.partnerSection', { partner: c.partner_name })}
-        </Text>
-        <Text style={styles.rowLine} numberOfLines={1}>
-          {line}
-        </Text>
-      </View>
-      <View style={styles.rowLink}>
-        <Text style={styles.rowLinkText}>{t('rewards.partnerSeeProgram')}</Text>
-        <Ionicons name="chevron-forward" size={12} color={PARTNER_FLAIR.bronze2} />
-      </View>
-    </Pressable>
+    <View style={styles.section}>
+      <Pressable
+        onPress={canFold ? toggle : goProgram}
+        style={({ pressed }) => [styles.row, pressed && { opacity: 0.85 }]}
+        accessibilityRole="button"
+        accessibilityState={canFold ? { expanded: showGrid } : undefined}
+        accessibilityLabel={`${t('rewards.partnerSection', { partner: c.partner_name })}. ${line}`}
+      >
+        <LinearGradient
+          colors={
+            LIGHT
+              ? ['rgba(244,238,224,0.95)', 'rgba(255,255,255,0.96)']
+              : [PARTNER_FLAIR.navy2, 'rgba(8,29,50,0.94)']
+          }
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
+        <View style={styles.rowTile}>
+          <Ionicons name="ribbon" size={16} color={PARTNER_FLAIR.bronze2} />
+        </View>
+        <View style={styles.rowBody}>
+          <Text style={styles.rowTitle} numberOfLines={1}>
+            {t('rewards.partnerSection', { partner: c.partner_name })}
+          </Text>
+          <Text style={styles.rowLine} numberOfLines={1}>
+            {line}
+          </Text>
+        </View>
+        <Pressable
+          onPress={goProgram}
+          hitSlop={8}
+          style={({ pressed }) => [styles.rowLink, pressed && { opacity: 0.7 }]}
+          accessibilityRole="button"
+          accessibilityLabel={t('rewards.partnerSeeProgram')}
+        >
+          <Text style={styles.rowLinkText}>{t('rewards.partnerSeeProgram')}</Text>
+          <Ionicons name="chevron-forward" size={12} color={PARTNER_FLAIR.bronze2} />
+        </Pressable>
+        {canFold && (
+          <Ionicons
+            name={showGrid ? 'chevron-up' : 'chevron-down'}
+            size={16}
+            color={tokens.text.mid}
+            style={styles.rowFold}
+          />
+        )}
+      </Pressable>
+      {showGrid && (
+        <PartnerCouponGrid campaign={c} status={s} redeem={redeem} running={running} hideClaimed />
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  section: { marginBottom: tokens.space[5], gap: tokens.space[3] },
   row: {
     position: 'relative',
     overflow: 'hidden',
@@ -138,8 +203,8 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     borderColor: `${PARTNER_FLAIR.bronze}73`,
-    marginBottom: tokens.space[5],
   },
+  rowFold: { marginLeft: 2 },
   rowTile: {
     width: 34,
     height: 34,
@@ -164,7 +229,14 @@ const styles = StyleSheet.create({
     lineHeight: 14,
     color: tokens.text.mid,
   },
-  rowLink: { flexDirection: 'row', alignItems: 'center', gap: 2, flexShrink: 0 },
+  rowLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    flexShrink: 0,
+    paddingVertical: 6,
+    paddingLeft: 4,
+  },
   rowLinkText: {
     fontFamily: 'Manrope_800ExtraBold',
     fontSize: 10,

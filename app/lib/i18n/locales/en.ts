@@ -2437,12 +2437,14 @@ const en = {
 
   rewards: {
     partnerChip: 'Partner',
-    /** The partnership row in the Vault (2026-11-16): leads to the program,
-     *  where the coupons live. */
+    /** The partnership block in the Vault (2026-11-16): a row that folds the
+     *  block + the coupons still open; a redeemed one leaves (code on the program). */
     partnerSection: 'Partnership · {{partner}}',
     partnerSeeProgram: 'See the program',
-    partnerRowOpen: '{{free}}% and {{premium}}% coupons to redeem',
-    partnerRowClaimed: '{{claimed}} of {{total}} coupons redeemed',
+    /** `pcts` = "10% and 17%" / "17%" (built with partnerRowAnd). */
+    partnerRowOpen: 'To redeem: {{pcts}}',
+    partnerRowAnd: ' and ',
+    partnerRowClaimed: 'Coupons redeemed · codes on the program',
     /** The tab's guide (its (i)) — RewardsGuide, docs/informativo-de-tela.md.
      *  `items` follow REWARDS_GUIDE_ITEMS: title + body on the sheet, `ai`
      *  only in the AI prompt. No personal data here. */
