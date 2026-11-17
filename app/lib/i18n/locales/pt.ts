@@ -1121,7 +1121,8 @@ const pt: Translations = {
       /** Título do card do cupom. pct = o desconto; o parceiro vai no eyebrow. */
       tierTitle: '{{pct}}% de desconto',
       tierFreeSub: 'Pra todo mundo',
-      tierPremiumSub: 'Só pra assinantes Premium',
+      /** O card do tier Premium leva a tag Premium no topo; a linha não repete. */
+      tierPremiumSub: 'Seu desconto de assinante',
       tierPremiumLocked: 'Assine o Premium pra liberar',
       premiumCta: 'Premium',
       redeem: 'Resgatar',

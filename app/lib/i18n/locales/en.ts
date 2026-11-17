@@ -1124,7 +1124,8 @@ const en = {
       /** Coupon card title. pct = the discount; the partner is the eyebrow. */
       tierTitle: '{{pct}}% off',
       tierFreeSub: 'For everyone',
-      tierPremiumSub: 'Premium subscribers only',
+      /** The Premium tier's card wears the Premium badge; the line doesn't repeat it. */
+      tierPremiumSub: 'Your subscriber discount',
       tierPremiumLocked: 'Subscribe to Premium to unlock',
       premiumCta: 'Premium',
       redeem: 'Redeem',

@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
 
+import { PremiumBadge } from '@/components/PremiumBadge';
 import type { PartnerCouponTier } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { ACTIVE_THEME, tokens } from '@/theme';
@@ -36,7 +37,9 @@ interface Props {
  * A partner coupon as a Vault reward card (decision André, 2026-11-16): the
  * same anatomy as `RewardCard` — icon tile + glyph, title, line, footer
  * with the pill — in the partner's colors instead of Perceva's gold. No
- * cost: the coupon is free to take. States:
+ * cost: the coupon is free to take. The Premium tier wears the app's gold
+ * Premium badge top right (Artur, 2026-11-16) instead of saying "Premium
+ * only" in words. States:
  *
  *   open            → RESGATAR (bronze pill); the Premium tier for a free
  *                     member shows a lock and a ghost PREMIUM pill — the
@@ -101,7 +104,11 @@ export function PartnerCouponCard({
                 color={PARTNER_FLAIR.bronze2}
               />
             </View>
-            <Ionicons name="ribbon" size={16} color={PARTNER_FLAIR.bronze2} style={styles.glyph} />
+            {premiumTier ? (
+              <PremiumBadge size="sm" />
+            ) : (
+              <Ionicons name="ribbon" size={16} color={PARTNER_FLAIR.bronze2} style={styles.glyph} />
+            )}
           </View>
           <Text style={styles.eyebrow} numberOfLines={1}>
             {partner}
