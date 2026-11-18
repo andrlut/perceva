@@ -171,16 +171,20 @@ async function loadDay(
  * Best effort: a failed read (or a table this environment doesn't have yet)
  * sends the request without that part, never fails it.
  */
-async function loadProfile(db: SupabaseClient, locale: 'pt' | 'en'): Promise<string | null> {
+async function loadProfile(db: SupabaseClient, uid: string, locale: 'pt' | 'en'): Promise<string | null> {
   try {
     const [profRes, visionRes, aboutRes] = await Promise.all([
-      db.from('profile').select('modules,subscription_tier').limit(1),
+      // RLS already scopes these to the caller; the explicit uid keeps it so
+      // if a non-self read policy is ever added to one of the tables.
+      db.from('profile').select('modules,subscription_tier').eq('id', uid).limit(1),
       db.from('life_vision')
         .select('headline,scene_1,scene_1_dim,scene_2,scene_2_dim,scene_3,scene_3_dim')
+        .eq('character_id', uid)
         .order('created_at', { ascending: false })
         .limit(1),
       db.from('profile_context')
         .select('ai_tone,ai_push,ai_avoid,wake_time,sleep_time,work_start,work_end,best_time,focus_90d,focus_set_at')
+        .eq('character_id', uid)
         .limit(1),
     ]);
     const p = profRes.error ? null : profRes.data?.[0];
@@ -296,7 +300,7 @@ Deno.serve(async (req) => {
   try {
     const [{ ctx, tags }, profile] = await Promise.all([
       loadDay(db, today, locale),
-      loadProfile(db, locale),
+      loadProfile(db, uid, locale),
     ]);
 
     const response = await anthropic.messages.create({
