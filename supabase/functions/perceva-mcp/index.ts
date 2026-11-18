@@ -1848,12 +1848,14 @@ function buildServer(token: string, userId: string): McpServer {
     },
     async (_args, _extra) => {
       const db = userClient(token);
-      const [profileRes, sessionsRes, scoresRes, contextRes, visionRes] = await Promise.all([
+      const [profileRes, sessionsRes, scoresRes, contextRes, visionRes, northRes] = await Promise.all([
         db.from('profile').select('profession,about,modules,subscription_tier').limit(1),
         db.from('psych_session').select('instrument_id,taken_at').eq('is_complete', true),
         db.from('character_sub_score').select('source,score,score_decimal').in('source', ['self', 'desired']),
         db.from('profile_context').select(CONTEXT_COLUMNS).limit(1),
         db.from('life_vision').select('id', { count: 'exact', head: true }),
+        // Norte by area (20261118000004): areas marked as mattering.
+        db.from('dimension_note').select('dimension_id', { count: 'exact', head: true }).eq('matters', true),
       ]);
       for (const r of [profileRes, sessionsRes, scoresRes, contextRes]) {
         if (r.error) return fail(`get_setup_checklist: ${r.error.message}`);
@@ -1874,6 +1876,7 @@ function buildServer(token: string, userId: string): McpServer {
           (r) => r.source === 'self' && Number(r.score_decimal ?? r.score ?? 0) > 0,
         ),
         hasDesired: scores.some((r) => r.source === 'desired'),
+        northAreas: northRes.error ? 0 : (northRes.count ?? 0),
         lifeVisionVersions: visionRes.error ? 0 : (visionRes.count ?? 0),
         about: currentValues(p, (contextRes.data?.[0] ?? null) as unknown as ContextRow | null),
       });

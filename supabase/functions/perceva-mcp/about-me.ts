@@ -441,6 +441,8 @@ export interface ChecklistInput {
   sessions: Array<{ instrument_id: string; taken_at: string }>;
   selfAssessed: boolean;
   hasDesired: boolean;
+  /** Areas marked as mattering in the Norte, with a sentence (dimension_note). */
+  northAreas: number;
   lifeVisionVersions: number;
   about: AboutValues;
 }
@@ -496,11 +498,14 @@ export function buildChecklist(i: ChecklistInput) {
   items.push({
     key: 'norte',
     title_pt: 'Norte',
-    status: i.hasDesired ? 'done' : 'missing',
-    why_pt: 'Onde você quer estar em cada área, de 0 a 5. É a Identidade Desejada.',
+    status: i.hasDesired || i.northAreas > 0 ? 'done' : 'missing',
+    why_pt: 'Pra onde você quer ir em cada área que importa: a frase "Quero poder escolher…" e a meta de 0 a 5. É a Identidade Desejada.',
     needs_premium: false,
     available: true,
-    open_in_app: `${APP}://self-assessment?mode=desired`,
+    areas_with_sentence: i.northAreas,
+    has_targets: i.hasDesired,
+    open_in_app: `${APP}://norte-form`,
+    targets_in_app: `${APP}://self-assessment?mode=desired`,
   });
 
   const vidaOn = i.isPremium && i.modules.vida === true;
