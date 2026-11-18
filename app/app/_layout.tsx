@@ -301,6 +301,7 @@ export default function RootLayout() {
             <Stack.Screen name="vida-form" options={{ headerShown: false }} />
             <Stack.Screen name="norte-form" options={{ headerShown: false }} />
             <Stack.Screen name="sobre-voce" options={{ headerShown: false }} />
+            <Stack.Screen name="week" options={{ headerShown: false }} />
             <Stack.Screen name="conector" options={{ headerShown: false }} />
             <Stack.Screen
               name="questionnaire"

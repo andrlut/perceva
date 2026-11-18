@@ -64,6 +64,7 @@ import {
   type PracticeCtx,
   type TagCatalogEntry,
 } from './logic.ts';
+import { handleWeek } from './week.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY') ?? '';
@@ -221,6 +222,13 @@ Deno.serve(async (req) => {
     body = await req.json();
   } catch {
     return json(400, { ok: false, reason: 'bad_request' });
+  }
+  // "Resumo da semana" (Premium): its own file, same JWT check above.
+  if (body.action === 'week') {
+    const r = await handleWeek(body as Record<string, unknown>, {
+      db, admin: adminClient(), uid, anthropic, configured: Boolean(ANTHROPIC_API_KEY),
+    });
+    return json(r.status, r.body);
   }
   if (body.action !== 'day_voice') return json(400, { ok: false, reason: 'bad_request' });
 

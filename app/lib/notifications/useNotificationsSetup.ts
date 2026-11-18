@@ -77,6 +77,7 @@ export function useNotificationsSetup() {
       await setupNotifications(osLocale, {
         dailyReminder: settings.dailyReminder,
         moodCheckin: settings.moodCheckinPrompt,
+        weeklySummary: settings.weeklySummary,
         brief: { hour: settings.briefHour, minute: settings.briefMinute },
         dayEnd: { hour: settings.dayEndHour, minute: settings.dayEndMinute },
       });
@@ -93,6 +94,7 @@ export function useNotificationsSetup() {
     settings.notificationsEnabled,
     settings.dailyReminder,
     settings.moodCheckinPrompt,
+    settings.weeklySummary,
     settings.briefHour,
     settings.briefMinute,
     settings.dayEndHour,

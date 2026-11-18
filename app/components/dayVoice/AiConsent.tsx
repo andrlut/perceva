@@ -33,6 +33,7 @@ export function AiConsent() {
         <Text style={styles.sub}>{t('dayVoice.consent.sendsSub')}</Text>
         <Item icon="mic-outline" text={t('dayVoice.consent.sendsSpeech')} />
         <Item icon="today-outline" text={t('dayVoice.consent.sendsDay')} />
+        <Item icon="newspaper-outline" text={t('dayVoice.consent.sendsWeek')} />
         <Item icon="person-outline" text={t('dayVoice.consent.sendsProfile')} />
       </View>
 

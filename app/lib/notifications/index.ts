@@ -4,6 +4,16 @@
  * sub-modules. Keeps the implementation refactor-safe.
  */
 
+import { registerAppOpen } from './session';
+import {
+  cancelAllNotifications,
+  scheduleCheckpoint,
+  scheduleDailyBrief,
+  scheduleNightlyCheckin,
+  scheduleWeeklySummary,
+} from './scheduler';
+import type { NotificationLocale } from './constants';
+
 export {
   hasNotificationPermission,
   requestNotificationPermissions,
@@ -16,17 +26,9 @@ export {
   scheduleCheckpoint,
   scheduleDailyBrief,
   scheduleNightlyCheckin,
+  scheduleWeeklySummary,
 } from './scheduler';
 export { NOTIFICATION_IDS, type NotificationLocale } from './constants';
-
-import { registerAppOpen } from './session';
-import {
-  cancelAllNotifications,
-  scheduleCheckpoint,
-  scheduleDailyBrief,
-  scheduleNightlyCheckin,
-} from './scheduler';
-import type { NotificationLocale } from './constants';
 
 /** Per-type notification toggles + times from Settings (the master switch is
  *  handled separately). Each maps to a real scheduled notification. */
@@ -35,6 +37,8 @@ export interface NotificationToggles {
   dailyReminder: boolean;
   /** Evening mood check-in, deep-links to /mood-checkin. */
   moodCheckin: boolean;
+  /** Week in review, Monday 08:00, deep-links to /week. */
+  weeklySummary: boolean;
   /** Daily Brief time, from AppSettings. */
   brief: { hour: number; minute: number };
   /** End-of-day check-in time, from AppSettings. */
@@ -78,6 +82,9 @@ export function setupNotifications(
     }
     if (toggles.moodCheckin) {
       await scheduleNightlyCheckin(toggles.dayEnd.hour, toggles.dayEnd.minute, locale);
+    }
+    if (toggles.weeklySummary) {
+      await scheduleWeeklySummary(locale);
     }
 
     await registerAppOpen();

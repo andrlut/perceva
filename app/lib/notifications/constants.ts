@@ -14,10 +14,24 @@ export const NOTIFICATION_IDS = {
   DAILY_BRIEF: 'perceva-daily-brief',
   CHECKPOINT: 'perceva-checkpoint',
   NIGHTLY_CHECKIN: 'perceva-nightly-checkin',
+  WEEKLY_SUMMARY: 'perceva-weekly-summary',
 } as const;
 
 /** Route a tapped nightly check-in deep-links to. */
 export const NIGHTLY_CHECKIN_ROUTE = '/mood-checkin';
+
+/** Route a tapped week-in-review notification deep-links to. */
+export const WEEKLY_SUMMARY_ROUTE = '/week';
+
+/**
+ * Week in review: Monday 08:00, every week. The week runs Monday to Sunday
+ * and closes at midnight; the summary is ready when the person wakes up.
+ * Fixed on purpose (owner decision, 18/11) — not the Daily Brief's hour.
+ * expo-notifications counts weekdays from Sunday = 1, so Monday = 2.
+ */
+export const WEEKLY_SUMMARY_WEEKDAY = 2;
+export const WEEKLY_SUMMARY_HOUR = 8;
+export const WEEKLY_SUMMARY_MINUTE = 0;
 
 /**
  * The Daily Brief and the nightly check-in times are USER SETTINGS
@@ -47,6 +61,7 @@ export interface MessageCatalog {
   dailyBrief: readonly NotificationMessage[];
   checkpoint: readonly NotificationMessage[];
   nightly: readonly NotificationMessage[];
+  weekly: readonly NotificationMessage[];
 }
 
 export const MESSAGES_PT: MessageCatalog = {
@@ -73,6 +88,11 @@ export const MESSAGES_PT: MessageCatalog = {
     { title: 'Pausa rápida', body: 'Respira e marca como você tá agora.' },
     { title: 'Seu diário te espera', body: 'Uma nota, duas palavras ou só a carinha do dia.' },
   ],
+  weekly: [
+    { title: 'Sua semana fechou', body: 'O resumo da semana passada está pronto.' },
+    { title: 'Resumo da semana', body: 'Veja como foi a sua semana, de segunda a domingo.' },
+    { title: 'Semana nova', body: 'Antes de começar, dá uma olhada em como foi a anterior.' },
+  ],
 };
 
 export const MESSAGES_EN: MessageCatalog = {
@@ -96,6 +116,11 @@ export const MESSAGES_EN: MessageCatalog = {
     { title: 'The day is winding down', body: 'What was the tone of your day?' },
     { title: 'Quick pause', body: 'Breathe, and mark how you are right now.' },
     { title: 'Your journal is waiting', body: "A note, two words, or just the day's face." },
+  ],
+  weekly: [
+    { title: 'Your week is closed', body: "Last week's review is ready." },
+    { title: 'Week in review', body: 'See how your week went, Monday to Sunday.' },
+    { title: 'A new week', body: 'Before you start, take a look at how the last one went.' },
   ],
 };
 

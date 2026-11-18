@@ -91,7 +91,9 @@ export type PremiumSource =
   | 'learn'
   | 'modules'
   /** The partner campaign's Perceva Premium discount (`/campaign/[id]`). */
-  | 'partner';
+  | 'partner'
+  /** The AI observations card of the week in review (`/week`). */
+  | 'week';
 
 const PREMIUM_SOURCES: readonly PremiumSource[] = [
   'limit-modal',
@@ -101,6 +103,7 @@ const PREMIUM_SOURCES: readonly PremiumSource[] = [
   'learn',
   'modules',
   'partner',
+  'week',
 ] as const;
 
 export function normalizePremiumSource(

@@ -28,7 +28,10 @@ export const aiKeys = {
  * `consent_version` (app_config `ai`): whoever accepted an older text sees the
  * screen again.
  */
-export const AI_CONSENT_VERSION = 1;
+// 2 (18/11/2026): the text now covers the "Resumo da semana" — the week's
+// numbers, mood notes and redeemed rewards go to the model, and the AI's
+// observations are kept for the person (migration 20261118000005).
+export const AI_CONSENT_VERSION = 2;
 
 export interface AiAccess {
   enabled: boolean;
