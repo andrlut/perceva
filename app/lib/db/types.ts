@@ -291,6 +291,30 @@ export interface ProfileIdentity {
  * a sub-step of a big (inherits the parent's week_start by client
  * convention). Wired to ZERO gamification — checking grants nothing.
  */
+/** "A vida que eu quero" (module `vida`) — one row per saved version; the
+ *  current one is the newest. No update: saving inserts. Migration
+ *  20261118000001_life_vision. */
+export interface LifeVision {
+  id: string;
+  character_id: string;
+  /** "Em poucas palavras" (≤ 60), e.g. "poder de escolha". */
+  headline: string | null;
+  /** Up to 3 things (≤ 140 each); scene 1 is required, each has an area. */
+  scene_1: string;
+  scene_1_dim: DimensionId;
+  scene_2: string | null;
+  scene_2_dim: DimensionId | null;
+  scene_3: string | null;
+  scene_3_dim: DimensionId | null;
+  /** Up to 3 sub ids where they'd spend more, guilt-free. */
+  guilt_free: SubId[];
+  /** Up to 3 short cuts (≤ 60 each). */
+  cuts: string[];
+  /** The first practice tied to scene 1; null when none or deleted. */
+  first_task_id: string | null;
+  created_at: string;
+}
+
 export interface WeekItem {
   id: string;
   character_id: string;

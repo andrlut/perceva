@@ -22,6 +22,7 @@ import { AvaliacaoPanel } from '@/components/pillars/AvaliacaoPanel';
 import { DedicacaoPanel } from '@/components/pillars/DedicacaoPanel';
 import { CaminhoPanel } from '@/components/pillars/CaminhoPanel';
 import { NortePanel } from '@/components/pillars/NortePanel';
+import { VidaEntry } from '@/components/vida/VidaEntry';
 import { useCharacter } from '@/lib/api/character';
 import { useSkillStates } from '@/lib/api/skills';
 import { useT } from '@/lib/i18n';
@@ -168,6 +169,7 @@ function CharacterScreenContent() {
                   )}
                   {activePillar === 'desejada' && !lockedDesired && (
                     <View style={styles.desejadaStack}>
+                      <VidaEntry />
                       <NortePanel subScores={data.subScores} />
                       <CaminhoPanel skills={skillStates.data ?? []} />
                     </View>

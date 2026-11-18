@@ -18,6 +18,8 @@ import { HexSeriesLegend } from '@/components/HexSeriesLegend';
 import { PillarSwitcher, type PillarKey } from '@/components/PillarSwitcher';
 import { DimensionPillarCard, ScoreBar } from '@/components/pillars/DimensionPillarCard';
 import { PillarActions } from '@/components/pillars/PillarActions';
+import { useVidaSample } from '@/components/guide/screens/VidaGuide';
+import { VidaEntryCard } from '@/components/vida/VidaParts';
 import type { WindowSpec } from '@/lib/api/dedicacao';
 import type { DimensionId, SubId } from '@/lib/db/types';
 import { windowChipLabels } from '@/lib/dedicacao/windowLabel';
@@ -60,6 +62,7 @@ export const HERO_GUIDE_ITEMS = [
   'period',
   'ruler',
   'history',
+  'life',
   'north',
   'path',
 ] as const;
@@ -77,8 +80,10 @@ const GESTURE_ICONS: Record<GestureKey, keyof typeof Ionicons.glyphMap> = {
   hexIcons: 'navigate-circle-outline',
 };
 
-/** Caminho exists only with Metas or Habilidades on. */
+/** Caminho exists only with Metas or Habilidades on; the "A vida que eu
+ *  quero" card only with its own module. */
 const GATES: Partial<Record<ItemKey, readonly ModuleKey[]>> = {
+  life: ['vida'],
   path: ['metas', 'skills'],
 };
 
@@ -194,6 +199,7 @@ export function HeroGuide() {
       iconColor: tokens.semantic.xp2,
       replica: <HistoryReplica />,
     },
+    life: { icon: 'sparkles-outline', iconColor: tokens.semantic.coin, replica: <LifeReplica /> },
     north: { icon: 'compass-outline', iconColor: tokens.semantic.coin },
     path: { icon: 'flag-outline', iconColor: tokens.semantic.coin },
   };
@@ -345,6 +351,18 @@ function AssessmentReplica() {
           { key: 'mirror', icon: 'git-compare-outline', label: t('avaliacao.actions.mirror'), onPress: noop },
         ]}
       />
+    </GuideFit>
+  );
+}
+
+/** Desejada's top card with the "A vida que eu quero" module on — the real
+ *  card on the module guide's sample vision, as a miniature. */
+function LifeReplica() {
+  const naturalWidth = useWindowDimensions().width - 32;
+  const sample = useVidaSample();
+  return (
+    <GuideFit naturalWidth={naturalWidth}>
+      <VidaEntryCard headline={sample.headline} scenes={sample.scenes} onPress={noop} />
     </GuideFit>
   );
 }

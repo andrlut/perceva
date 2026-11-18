@@ -297,6 +297,8 @@ export default function RootLayout() {
             />
             <Stack.Screen name="insights" options={{ headerShown: false }} />
             <Stack.Screen name="perfil" options={{ headerShown: false }} />
+            <Stack.Screen name="vida" options={{ headerShown: false }} />
+            <Stack.Screen name="vida-form" options={{ headerShown: false }} />
             <Stack.Screen name="conector" options={{ headerShown: false }} />
             <Stack.Screen
               name="questionnaire"
