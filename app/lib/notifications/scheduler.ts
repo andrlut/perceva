@@ -9,6 +9,10 @@ import {
   NOTIFICATION_IDS,
   type NotificationLocale,
   pickRandom,
+  WEEKLY_SUMMARY_HOUR,
+  WEEKLY_SUMMARY_MINUTE,
+  WEEKLY_SUMMARY_ROUTE,
+  WEEKLY_SUMMARY_WEEKDAY,
 } from './constants';
 
 /**
@@ -105,6 +109,36 @@ export async function scheduleNightlyCheckin(
       type: Notifications.SchedulableTriggerInputTypes.DAILY,
       hour,
       minute,
+    },
+  });
+}
+
+/**
+ * Week in review — a recurring WEEKLY trigger, Monday 08:00, deep-linking to
+ * /week (which opens on the week that just closed). Same shape as the Daily
+ * Brief: cancel-first, so it is idempotent on every boot and Settings save.
+ */
+export async function scheduleWeeklySummary(
+  locale: NotificationLocale = 'pt-BR',
+): Promise<void> {
+  await cancelById(NOTIFICATION_IDS.WEEKLY_SUMMARY);
+
+  const msg = pickRandom(getMessages(locale).weekly);
+
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: msg.title,
+      body: msg.body,
+      data: {
+        id: NOTIFICATION_IDS.WEEKLY_SUMMARY,
+        route: WEEKLY_SUMMARY_ROUTE,
+      },
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+      weekday: WEEKLY_SUMMARY_WEEKDAY,
+      hour: WEEKLY_SUMMARY_HOUR,
+      minute: WEEKLY_SUMMARY_MINUTE,
     },
   });
 }

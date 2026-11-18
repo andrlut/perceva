@@ -46,6 +46,8 @@ export interface AppSettings extends ClaudeLinkSettings {
   questReminder: boolean;
   /** Mood check-in: the nightly notification + the in-app Today Hub prompt. */
   moodCheckinPrompt: boolean;
+  /** Week in review: Monday 08:00, opens /week on the week that closed. */
+  weeklySummary: boolean;
   /** Daily Brief time. The 12:30 checkpoint is NOT derived from it — it means
    *  "we haven't seen you at midday", which isn't tied to wake time. */
   briefHour: number;
@@ -112,6 +114,7 @@ const DEFAULTS: AppSettings = {
   dailyReminder: true,
   questReminder: false,
   moodCheckinPrompt: true,
+  weeklySummary: true,
   // Literals, deliberately not imported from lib/notifications/constants:
   // useNotificationsSetup already imports this module, so the reverse import
   // would be a cycle. These reproduce the previous hardcoded behaviour.
@@ -166,6 +169,7 @@ export const useSettingsStore = create<Store>((set, get) => ({
           language,
           hexGrain: parsed.hexGrain === 'subs' ? 'subs' : 'dims',
           practicesLayout: parsed.practicesLayout === 'classic' ? 'classic' : 'tabs',
+          weeklySummary: parsed.weeklySummary !== false,
           briefHour: clampInt(parsed.briefHour, 0, 23, DEFAULTS.briefHour),
           briefMinute: clampInt(parsed.briefMinute, 0, 59, DEFAULTS.briefMinute),
           dayEndHour: clampInt(parsed.dayEndHour, 0, 23, DEFAULTS.dayEndHour),

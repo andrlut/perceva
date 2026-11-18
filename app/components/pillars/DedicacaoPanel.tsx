@@ -356,6 +356,12 @@ export function DedicacaoPanel({ dimensions }: Props) {
         accent={tokens.semantic.xp2}
         actions={[
           {
+            key: 'week',
+            icon: 'newspaper-outline',
+            label: t('dedicacao.weekSummary'),
+            onPress: () => router.push('/week'),
+          },
+          {
             key: 'history',
             icon: 'calendar-outline',
             label: t('dedicacao.fullHistory'),

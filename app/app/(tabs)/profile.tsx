@@ -509,6 +509,14 @@ export default function SettingsScreen() {
           {briefPassedToday && (
             <NoteText>{t('profile.notifications.startsTomorrow')}</NoteText>
           )}
+          <Divider />
+          <ToggleRow
+            label={t('profile.notifications.weekly')}
+            description={t('profile.notifications.weeklyDescription')}
+            value={settings.weeklySummary}
+            onChange={(v) => setSetting('weeklySummary', v)}
+            disabled={!settings.notificationsEnabled}
+          />
           <NoteText>{t('profile.notifications.footnote')}</NoteText>
         </Card>
 
