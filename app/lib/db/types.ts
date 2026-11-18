@@ -262,6 +262,31 @@ export interface Profile {
   updated_at: string;
 }
 
+/**
+ * "Sobre você" — `public.profile_context` (migration 20261118000002), uma
+ * linha por pessoa, tudo opcional. As listas são fechadas (check no banco);
+ * os horários chegam como `HH:MM:SS` (hora local). `profession` e `about`
+ * continuam em `profile`. Carimbos (`*_at`) são do servidor.
+ */
+export interface ProfileContext {
+  character_id: string;
+  ai_tone: 'direct' | 'warm' | null;
+  ai_push: 'none' | 'light' | 'firm' | null;
+  ai_avoid: string[];
+  wake_time: string | null;
+  sleep_time: string | null;
+  work_start: string | null;
+  work_end: string | null;
+  best_time: 'morning' | 'afternoon' | 'evening' | 'night' | null;
+  focus_90d: string | null;
+  focus_set_at: string | null;
+  life_phase: string[];
+  living_with: string[];
+  blockers: string[];
+  created_at: string;
+  updated_at: string;
+}
+
 /** Título escolhido: de qual instrumento veio e qual resultado. */
 export interface IdentityTitle {
   source: string;

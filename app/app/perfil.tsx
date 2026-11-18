@@ -8,6 +8,7 @@ import { ScreenBackground } from '@/components/ScreenBackground';
 import { AutoconhecimentoView } from '@/components/pillars/AutoconhecimentoView';
 import { ConectorCard } from '@/components/perfil/ConectorCard';
 import { PerfilHero } from '@/components/perfil/PerfilHero';
+import { SobreVoceCard } from '@/components/perfil/SobreVoceCard';
 import { VaultGapsCard } from '@/components/perfil/VaultGapsCard';
 import { useCharacter } from '@/lib/api/character';
 import { useT } from '@/lib/i18n';
@@ -64,8 +65,13 @@ export default function PerfilScreen() {
              Os seis instrumentos seguem sendo o payload histórico da tela.
              Os blocos abaixo deles respondem "como está a vida agora", que
              é outra pergunta — e nenhum pode empurrar os cards duas telas
-             para baixo. */}
+             para baixo.
+
+             "Sobre você" vem logo abaixo do Emblema (frente 2, 18/11): é o
+             que a pessoa diz de si pra IA, e antes morava escondido dentro
+             do Personalizar. */}
           <PerfilHero />
+          <SobreVoceCard />
           <AutoconhecimentoView />
           <VaultGapsCard />
           <ConectorCard />

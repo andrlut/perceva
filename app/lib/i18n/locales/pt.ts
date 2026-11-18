@@ -1438,12 +1438,6 @@ const pt: Translations = {
   personalizar: {
     title: 'Personalizar',
     nameSection: 'Nome',
-    aboutSection: 'Sobre você',
-    professionLabel: 'Trabalho ou estudo',
-    professionPlaceholder: 'ex.: professora, estudante, autônomo',
-    aboutLabel: 'Seu momento',
-    aboutPlaceholder: 'O que você está vivendo agora, o que quer mudar, o que ajuda a te entender…',
-    aboutHint: 'Isto vai para o Claude quando você usa o conector — e para mais nada. Deixe vazio se preferir. Restam {{left}} caracteres.',
     titleSection: 'Título',
     paletteSection: 'Paleta',
     titleEmpty: 'Os títulos vêm dos testes. Faça o DISC ou o Tipos para ter um.',
@@ -1617,6 +1611,8 @@ const pt: Translations = {
       calendarDesc: 'Abaixo da grade, sobre o mês visível',
       train: 'Treino de ideias',
       trainDesc: 'No topo do Treino do dia, em Minhas ideias',
+      about: 'Sobre você',
+      aboutDesc: 'No card Sobre você, em Perfil',
     },
     usesDefault: 'Sem link próprio: usa o padrão.',
     targetLabel: 'Abrir em',
@@ -3651,6 +3647,121 @@ const pt: Translations = {
 
   /** "Conte seu dia" (/day-voice): ditar o dia, a IA propõe, a pessoa
    *  confirma. Entrada no card de humor da tela Hoje. */
+  /** "Sobre você" (frente 2 do perfil completo): o card em /perfil e o
+   *  editor /sobre-voce. 7 campos opcionais pra IA. */
+  sobreVoce: {
+    title: 'Sobre você',
+    eyebrow: 'Pra sua IA',
+    progress: '{{n}} de {{total}}',
+    progressA11y: '{{n}} de {{total}} campos preenchidos',
+    optional: 'tudo opcional',
+    completeWithAi: 'Completar com a IA',
+    completeA11y: 'Abrir o Claude pra completar o Sobre você',
+    aiPrompt:
+      'Quero completar o meu perfil no Perceva. Use o conector do Perceva: chame get_setup_checklist pra ver o que falta e me guie, um item de cada vez. No "Sobre você", me pergunte um campo por vez e, antes de gravar com update_about_me, me mostre exatamente o que vai ser salvo e espere o meu ok.',
+    rowA11y: 'Editar {{field}}',
+    fields: {
+      ai: {
+        title: 'Jeito da IA',
+        purpose: 'Como a IA fala com você: o tom, quanto ela cobra e o que ela não puxa.',
+      },
+      rhythm: {
+        title: 'Seu ritmo',
+        purpose: 'Pra IA sugerir cada coisa na hora que cabe no seu dia.',
+      },
+      focus: {
+        title: 'Foco dos 90 dias',
+        purpose: 'Uma frase. A IA puxa as sugestões pro que importa agora.',
+      },
+      phase: {
+        title: 'Fase e casa',
+        purpose: 'Pra IA não sugerir o que não cabe na sua vida agora.',
+      },
+      blockers: {
+        title: 'O que costuma travar',
+        purpose: 'Pra IA propor saídas pro que mais te trava.',
+      },
+      work: {
+        title: 'Trabalho ou estudo',
+        purpose: 'Muda como a IA fala de carreira e do seu tempo.',
+      },
+      moment: {
+        title: 'Seu momento',
+        purpose: 'O que você está vivendo agora, nas suas palavras.',
+      },
+    },
+    tone: { label: 'Tom', direct: 'Direta', warm: 'Acolhedora' },
+    push: { label: 'Cobrança', none: 'Sem cobrar', light: 'Cobra leve', firm: 'Cobra firme' },
+    avoid: {
+      label: 'Assuntos que eu não quero',
+      placeholder: 'ex.: peso',
+      add: 'Adicionar',
+      removeA11y: 'Tirar {{topic}}',
+      count: '{{n}} de {{max}}',
+    },
+    rhythmLabels: {
+      wake: 'Acordo',
+      sleep: 'Durmo',
+      workStart: 'Começo a trabalhar',
+      workEnd: 'Paro de trabalhar',
+      best: 'Minha melhor hora',
+      unset: 'Definir',
+      clearA11y: 'Limpar {{field}}',
+    },
+    best: { morning: 'Manhã', afternoon: 'Tarde', evening: 'Noite', night: 'Madrugada' },
+    workPair: 'Preencha o início e o fim do trabalho, ou nenhum dos dois.',
+    focusPlaceholder: 'ex.: Sair do trabalho às 18h três vezes por semana',
+    focusSince: 'Escrito em {{date}}',
+    phaseLabel: 'Sua fase',
+    livingLabel: 'Com quem você mora',
+    upTo: 'até {{max}}',
+    phase: {
+      studying: 'Estudando',
+      early_career: 'Começando a carreira',
+      career_growth: 'Crescendo no trabalho',
+      changing_course: 'Mudando de rumo',
+      between_jobs: 'Entre trabalhos',
+      small_kids: 'Filhos pequenos',
+      caregiving: 'Cuidando de alguém',
+      retired: 'Aposentadoria',
+    },
+    living: {
+      alone: 'Moro só',
+      partner: 'Com parceiro(a)',
+      kids: 'Com filhos',
+      family: 'Com pais ou família',
+      roommates: 'Com amigos',
+    },
+    blocker: {
+      time: 'Falta de tempo',
+      energy: 'Cansaço',
+      money: 'Dinheiro',
+      phone: 'Celular e telas',
+      environment: 'O ambiente',
+      forgetting: 'Esqueço',
+      motivation: 'Falta de vontade',
+      perfectionism: 'Tudo ou nada',
+      other_people: 'Demandas dos outros',
+    },
+    professionPlaceholder: 'ex.: professora, estudante, autônomo',
+    aboutPlaceholder: 'O que você está vivendo agora, o que quer mudar, o que ajuda a te entender…',
+    left: 'Restam {{left}} caracteres',
+    summary: {
+      avoid: 'evita {{list}}',
+      wake: 'acordo {{t}}',
+      sleep: 'durmo {{t}}',
+      work: 'trabalho {{from}}–{{to}}',
+      best: 'melhor: {{best}}',
+    },
+    footer:
+      'Fica só com você. A sua IA lê quando você usa o conector. Nada aqui é inferido: só vale o que você escreve.',
+    clearAll: 'Apagar tudo',
+    clearTitle: 'Apagar o Sobre você?',
+    clearBody: 'Apaga os 7 campos. Não dá pra desfazer.',
+    clearConfirm: 'Apagar',
+    saveError: 'Não deu pra salvar. Tente de novo.',
+  },
+
   vida: {
     title: 'A vida que eu quero',
     subtitle: 'Sua vida dos sonhos',

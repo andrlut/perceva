@@ -25,6 +25,12 @@ interface Props {
    *  glanceable grid instead of something you have to scroll. */
   minHour: number;
   maxHour: number;
+  /** Explicit hour order, overriding minHour..maxHour — e.g. bedtime starts
+   *  at 18 and wraps past midnight. */
+  hours?: number[];
+  /** Enables Save on an untouched draft: needed when the field is still
+   *  unset and the suggested value is exactly what the person wants. */
+  allowUnchanged?: boolean;
   onCancel: () => void;
   onConfirm: (hour: number, minute: number) => void;
 }
@@ -59,6 +65,8 @@ export function TimePickerSheet({
   minute,
   minHour,
   maxHour,
+  hours: hourList,
+  allowUnchanged = false,
   onCancel,
   onConfirm,
 }: Props) {
@@ -70,9 +78,9 @@ export function TimePickerSheet({
     if (visible) setDraft({ h: hour, m: snap15(minute) });
   }, [visible, hour, minute]);
 
-  const dirty = draft.h !== hour || draft.m !== minute;
-  const hours: number[] = [];
-  for (let h = minHour; h <= maxHour; h++) hours.push(h);
+  const dirty = allowUnchanged || draft.h !== hour || draft.m !== minute;
+  const hours: number[] = hourList ? [...hourList] : [];
+  if (!hourList) for (let h = minHour; h <= maxHour; h++) hours.push(h);
 
   const pick = (next: { h: number; m: number }) => {
     Haptics.selectionAsync().catch(() => {});
