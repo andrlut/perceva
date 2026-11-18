@@ -315,6 +315,27 @@ export interface LifeVision {
   created_at: string;
 }
 
+/** Norte by area — one row per (person, area) the person wrote about.
+ *  Migration 20261118000004_dimension_note. The 0..5 target stays in
+ *  character_sub_score (source 'desired'); this is the why above it. */
+export interface DimensionNote {
+  id: string;
+  character_id: string;
+  dimension_id: DimensionId;
+  /** The person said this area matters now. False = hidden, text kept. */
+  matters: boolean;
+  /** Completes "Quero poder escolher…" (≤ 140). */
+  want: string | null;
+  /** Optional: how it is today, in a sentence (≤ 140). */
+  today: string | null;
+  created_at: string;
+  /** Last change to matters/want/today (server-set). */
+  updated_at: string;
+  /** Last time it was written or confirmed ("Ainda é") — drives the
+   *  6-month review. */
+  reviewed_at: string;
+}
+
 export interface WeekItem {
   id: string;
   character_id: string;

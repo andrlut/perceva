@@ -1280,11 +1280,53 @@ const en = {
   },
 
   norte: {
-    cta: 'Update my north',
+    cta: 'Adjust the 0–5 targets',
+    ctaFirst: 'Set the 0–5 targets',
+    editWant: 'Edit what I want',
     emptyTitle: 'Where do you want to get to?',
     emptyBody: 'Set a target for each area. The outline shows where you are today.',
     emptyCta: 'Chart it',
     subA11y: '{{sub}}: today {{now}}, target {{target}}',
+    firstTitle: 'What do you want to be free to choose?',
+    firstBody: 'Mark the areas that matter now and say, in each one, what you want to be free to choose.',
+    firstCta: 'Choose',
+    wantLabel: 'I want to be free to choose',
+    wantEmpty: 'Tap to write what you want to be free to choose here.',
+    todayInline: 'Today:',
+    seal: 'from the life I want',
+    sealSuggestion: 'suggested by the life I want',
+    reviewQuestion: "It's been 6 months. Is this still it?",
+    reviewReached: 'In {{subs}}, today already reached the target.',
+    reviewKeep: 'Still is',
+    reviewChange: 'Change',
+    form: {
+      title: 'My north',
+      eyebrow: 'North',
+      question: 'What do you want to be free to choose?',
+      hint: 'Mark only the areas that matter now. In each one, finish the sentence. The 0–5 number sits underneath, as a ruler.',
+      matters: 'Matters',
+      mattersA11y: '{{dim}} matters to me',
+      wantLabel: 'I want to be free to choose…',
+      wantA11y: 'What you want to be free to choose in {{dim}}',
+      todayLabel: 'And today, how is it?',
+      optional: 'optional',
+      todayPlaceholder: 'In one sentence, how it is today',
+      todayA11y: 'How it is today in {{dim}}',
+      useSceneA11y: 'Use the sentence from the life I want: {{scene}}',
+      kept: 'The sentence is kept. Mark it again to bring it back.',
+      targets: 'Adjust the 0–5 targets',
+      purpose: 'It stays with you and, if you connect Claude, with it — it reads the marked areas. Unmarking hides the sentence; to delete it, leave both empty, unmark and save.',
+      loadError: "Couldn't load your north. Go back and try again.",
+      saveError: "Couldn't save. Try again.",
+      placeholder: {
+        health: 'e.g. sleeping until I wake up on my own',
+        body: 'e.g. saying yes to any trail without a second thought',
+        mind: 'e.g. owning my own routine',
+        wealth: 'e.g. buying the basics without checking the price',
+        bonds: 'e.g. having a nice home to welcome people',
+        craft: 'e.g. spending Saturday building something of my own',
+      },
+    },
   },
 
   hero: {
@@ -1301,6 +1343,11 @@ const en = {
       tryIt: 'Try it here',
       screenLabel: 'On the screen',
       demoDim: 'This would open {{dim}}.',
+      northSample: {
+        want: 'buying the basics without checking the price',
+        today: 'I count every cent at the store',
+        scene: 'Having a nice home to welcome people',
+      },
       items: {
         pillars: {
           title: 'Switch portrait',
@@ -1329,8 +1376,8 @@ const en = {
         },
         cards: {
           title: 'Area cards',
-          body: "In Perceived and Desired, tap to open the area. In Practiced, to see each sub-area's days.",
-          ai: "All three portraits use the same card: the area with its number and, below it, each sub-area with its number and bar. Perceived shows the 0-10 score (each sub-area 0-5) of the series visible in the legend. Desired shows the target, with \"today → target\" on each sub-area; the bright part of the bar is the climb still ahead. Practiced shows the period's XP, most trained first: on the bar, the tick marks the ruler, the bright part is what went past it and the notch appears past 3 times the ruler. An open Practiced card shows the level and a link to the area's history.",
+          body: "In Perceived, tap to open the area. In Desired, to write what you want in it. In Practiced, to see each sub-area's days.",
+          ai: "All three portraits use the same card: the area with its number and, below it, each sub-area with its number and bar. Perceived shows the 0-10 score (each sub-area 0-5) of the series visible in the legend. Desired shows the target, with \"today → target\" on each sub-area; the bright part of the bar is the climb still ahead and the number lights up once today reached the target. In Desired the areas that matter come first, with their sentence on top, and the others fold to one line. Practiced shows the period's XP, most trained first: on the bar, the tick marks the ruler, the bright part is what went past it and the notch appears past 3 times the ruler. An open Practiced card shows the level and a link to the area's history.",
         },
         assessment: {
           title: 'Self-assessment and questionnaire',
@@ -1359,8 +1406,23 @@ const en = {
         },
         north: {
           title: 'North',
-          body: 'In Desired: set a target for each area; the outline shows where you are today.',
-          ai: 'With no target yet, a card at the top invites you to chart your north; after that, "Update my north" sits at the bottom. Both open the self-assessment in target mode.',
+          body: 'In Desired: mark the areas that matter and say what you want to be free to choose in each one. The 0–5 number sits underneath, as a ruler.',
+          ai: 'With no area marked, a card at the top invites you to choose. Tapping any area card opens the editor on that area: the "Matters" switch marks it, the sentence finishes "I want to be free to choose…" (up to 140 characters) and "And today, how is it?" is optional. Marked areas move to the top with a gold rim; the others fold to one line with "today → target". Unmarking hides the sentence without deleting it; to delete it, leave both sentences empty, unmark and save. The icons at the hex points still open the area.',
+        },
+        northLife: {
+          title: 'From the life I want',
+          body: "With the module on, the area's scene suggests the sentence; once used, it carries the seal.",
+          ai: "Only with the \"The life I want\" module on (Settings › Modules, part of Premium). On a marked area with no sentence yet, the card shows that area's scene as a suggestion; in the editor, tapping the scene fills the sentence. While the sentence matches the scene, the card shows the \"from the life I want\" seal; once edited, the sentence is yours and the seal goes. Without the module, you write your own: the North is free.",
+        },
+        northReview: {
+          title: 'Is this still it?',
+          body: 'Six months after you write it, the card asks. "Still is" keeps it; "Change" opens the editor.',
+          ai: 'The question shows on each marked area whose sentence was written or confirmed 6 months ago or more. "Still is" resets the clock without changing the sentence; editing the sentence resets it too. If today already reached the target of a sub-area in that area, the question says so.',
+        },
+        northEdit: {
+          title: 'Sentences and targets',
+          body: 'At the bottom: "Edit what I want" opens the sentences; "Adjust the 0–5 targets", the numbers.',
+          ai: "The targets open the self-assessment in target mode, one per sub-area; a sub-area with no target keeps today's value. \"Edit what I want\" shows up after the first marked area; before that, the card at the top does the job. The editor also links to the targets at the end.",
         },
         path: {
           title: 'Path',

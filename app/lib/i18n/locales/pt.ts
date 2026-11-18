@@ -1275,11 +1275,57 @@ const pt: Translations = {
   },
 
   norte: {
-    cta: 'Atualizar meu norte',
+    /** Bottom row: the 0..5 targets (self-assessment in target mode). */
+    cta: 'Ajustar as metas de 0 a 5',
+    ctaFirst: 'Traçar as metas de 0 a 5',
+    editWant: 'Editar o que eu quero',
+    /** emptyTitle/emptyBody/emptyCta: the old first step. The app no longer
+     *  shows it, but the Eu door video (tools/video meLayout) still draws
+     *  it — keep until the door is re-recorded. */
     emptyTitle: 'Onde você quer chegar?',
     emptyBody: 'Trace uma meta pra cada área. O contorno mostra onde você está hoje.',
     emptyCta: 'Traçar',
     subA11y: '{{sub}}: hoje {{now}}, meta {{target}}',
+    firstTitle: 'O que você quer poder escolher?',
+    firstBody: 'Marque as áreas que importam agora e diga, em cada uma, o que você quer poder escolher.',
+    firstCta: 'Escolher',
+    wantLabel: 'Quero poder escolher',
+    wantEmpty: 'Toque pra escrever o que você quer poder escolher aqui.',
+    todayInline: 'Hoje:',
+    seal: 'da vida que eu quero',
+    sealSuggestion: 'sugestão da vida que eu quero',
+    reviewQuestion: 'Faz 6 meses. Ainda é isso?',
+    reviewReached: 'Em {{subs}}, hoje já chegou na meta.',
+    reviewKeep: 'Ainda é',
+    reviewChange: 'Mudar',
+    form: {
+      title: 'Meu norte',
+      eyebrow: 'Norte',
+      question: 'O que você quer poder escolher?',
+      hint: 'Marque só as áreas que importam agora. Em cada uma, complete a frase. O número de 0 a 5 fica embaixo, como régua.',
+      matters: 'Importa',
+      mattersA11y: '{{dim}} importa pra mim',
+      wantLabel: 'Quero poder escolher…',
+      wantA11y: 'O que você quer poder escolher em {{dim}}',
+      todayLabel: 'E hoje, como está?',
+      optional: 'opcional',
+      todayPlaceholder: 'Numa frase, como está hoje',
+      todayA11y: 'Como está hoje em {{dim}}',
+      useSceneA11y: 'Usar a frase da vida que eu quero: {{scene}}',
+      kept: 'A frase fica guardada. Marque de novo pra ela voltar.',
+      targets: 'Ajustar as metas de 0 a 5',
+      purpose: 'Fica com você e, se você conectar o Claude, com ele, que lê as áreas marcadas. Desmarcar esconde a frase; pra apagar, deixe as duas vazias, desmarque e salve.',
+      loadError: 'Não deu pra carregar o seu norte. Volte e tente de novo.',
+      saveError: 'Não deu pra salvar. Tente de novo.',
+      placeholder: {
+        health: 'ex.: dormir até acordar sozinho',
+        body: 'ex.: topar qualquer trilha sem pensar duas vezes',
+        mind: 'ex.: ser dono da minha própria rotina',
+        wealth: 'ex.: comprar o básico sem olhar o preço',
+        bonds: 'ex.: ter uma casa legal pra receber as pessoas',
+        craft: 'ex.: passar o sábado construindo algo meu',
+      },
+    },
   },
 
   hero: {
@@ -1296,6 +1342,12 @@ const pt: Translations = {
       tryIt: 'Experimente aqui',
       screenLabel: 'Na tela',
       demoDim: 'Abriria a área {{dim}}.',
+      /** Sample phrases of the Norte replicas — the maintainer's own example. */
+      northSample: {
+        want: 'comprar o básico sem olhar o preço',
+        today: 'conto cada real no mercado',
+        scene: 'Ter uma casa legal pra receber as pessoas',
+      },
       items: {
         pillars: {
           title: 'Trocar de retrato',
@@ -1324,8 +1376,8 @@ const pt: Translations = {
         },
         cards: {
           title: 'Cartões das áreas',
-          body: 'Em Percebida e Desejada, toque pra abrir a área. Em Praticada, pra ver os dias de cada sub-área.',
-          ai: 'Os três retratos usam o mesmo cartão: a área com o seu número e, embaixo, cada sub-área com número e barra. Percebida mostra a nota de 0 a 10 (cada sub-área de 0 a 5) da série visível na legenda. Desejada mostra a meta, com "hoje → meta" em cada sub-área; o trecho aceso da barra é o que falta subir. Praticada mostra o XP do período, as mais treinadas primeiro: na barra, o traço marca a régua, o trecho aceso é o que passou dela e o entalhe aparece depois de 3 vezes a régua. O cartão aberto da Praticada mostra o nível e um link pro histórico da área.',
+          body: 'Em Percebida, toque pra abrir a área. Em Desejada, pra escrever o que você quer nela. Em Praticada, pra ver os dias de cada sub-área.',
+          ai: 'Os três retratos usam o mesmo cartão: a área com o seu número e, embaixo, cada sub-área com número e barra. Percebida mostra a nota de 0 a 10 (cada sub-área de 0 a 5) da série visível na legenda. Desejada mostra a meta, com "hoje → meta" em cada sub-área; o trecho aceso da barra é o que falta subir e o número acende quando hoje já chegou na meta. Em Desejada as áreas que importam vêm primeiro, com a frase em cima, e as outras ficam recolhidas numa linha. Praticada mostra o XP do período, as mais treinadas primeiro: na barra, o traço marca a régua, o trecho aceso é o que passou dela e o entalhe aparece depois de 3 vezes a régua. O cartão aberto da Praticada mostra o nível e um link pro histórico da área.',
         },
         assessment: {
           title: 'Autoavaliação e questionário',
@@ -1354,8 +1406,23 @@ const pt: Translations = {
         },
         north: {
           title: 'Norte',
-          body: 'Em Desejada: trace uma meta pra cada área; o contorno mostra onde você está hoje.',
-          ai: 'Sem meta, um cartão no topo convida a traçar o norte; depois, "Atualizar meu norte" fica no fim. Os dois abrem a autoavaliação no modo meta.',
+          body: 'Em Desejada: marque as áreas que importam e diga o que você quer poder escolher em cada uma. O número de 0 a 5 fica embaixo, como régua.',
+          ai: 'Sem nenhuma área marcada, um cartão no topo convida a escolher. Tocar em qualquer cartão de área abre a edição naquela área: o botão "Importa" marca a área, a frase completa "Quero poder escolher…" (até 140 caracteres) e "E hoje, como está?" é opcional. As áreas marcadas sobem pro topo, com borda dourada; as outras ficam recolhidas numa linha com "hoje → meta". Desmarcar esconde a frase sem apagar; pra apagar, deixe as duas frases vazias, desmarque e salve. Os ícones das pontas do hex continuam abrindo a área.',
+        },
+        northLife: {
+          title: 'Da vida que eu quero',
+          body: 'Com o módulo ligado, a cena da área sugere a frase; usada, ela leva o selo.',
+          ai: 'Só com o módulo "A vida que eu quero" ligado (Ajustes › Módulos, parte do Premium). Numa área marcada e ainda sem frase, o cartão mostra a cena daquela área como sugestão; na edição, tocar na cena preenche a frase. Enquanto a frase for igual à cena, o cartão mostra o selo "da vida que eu quero"; editou, a frase é sua e o selo sai. Sem o módulo, você escreve a sua: o Norte é de graça.',
+        },
+        northReview: {
+          title: 'Ainda é isso?',
+          body: 'Seis meses depois de escrever, o cartão pergunta. "Ainda é" mantém; "Mudar" abre a edição.',
+          ai: 'A pergunta aparece em cada área marcada cuja frase foi escrita ou confirmada há 6 meses ou mais. "Ainda é" zera o relógio sem mudar a frase; editar a frase também zera. Se hoje já chegou na meta de alguma sub-área daquela área, a pergunta avisa.',
+        },
+        northEdit: {
+          title: 'Frases e metas',
+          body: 'No fim: "Editar o que eu quero" abre as frases; "Ajustar as metas de 0 a 5", os números.',
+          ai: 'As metas abrem a autoavaliação no modo meta, uma por sub-área; sub-área sem meta fica com o valor de hoje. "Editar o que eu quero" aparece depois da primeira área marcada; antes, o cartão do topo faz esse papel. A edição também tem um atalho pras metas no fim.',
         },
         path: {
           title: 'Caminho',

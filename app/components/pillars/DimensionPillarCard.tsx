@@ -29,6 +29,13 @@ interface Props {
   /** Small dim suffix after the value (" XP", "/10"). */
   unit?: string;
   faint?: boolean;
+  /** Between the name row and the subs (Desejada: the area's phrase, or a
+   *  one-line summary when the area is folded and `subs` is empty). */
+  lead?: ReactNode;
+  /** Border color — Desejada rims the areas that matter in gold. */
+  rim?: string;
+  /** Overrides the default a11y label (the dimension name). */
+  a11yLabel?: string;
   subs: PillarCardSub[];
   onPress: () => void;
   /** Set → the card is an accordion (chevron up/down) and `children` render
@@ -53,6 +60,9 @@ export function DimensionPillarCard({
   value,
   unit,
   faint,
+  lead,
+  rim,
+  a11yLabel,
   subs,
   onPress,
   expanded,
@@ -67,8 +77,13 @@ export function DimensionPillarCard({
     <Animated.View layout={reduceMotion ? undefined : LinearTransition.duration(220)}>
       <Pressable
         onPress={onPress}
-        style={({ pressed }) => [styles.card, pressed && { opacity: 0.85 }]}
+        style={({ pressed }) => [
+          styles.card,
+          rim ? { borderColor: rim } : null,
+          pressed && { opacity: 0.85 },
+        ]}
         accessibilityRole="button"
+        accessibilityLabel={a11yLabel}
         accessibilityState={expandable ? { expanded } : undefined}
       >
         <View style={styles.top}>
@@ -88,6 +103,8 @@ export function DimensionPillarCard({
             color={tokens.text.dim}
           />
         </View>
+
+        {lead}
 
         {subs.map((sub) => (
           <View
