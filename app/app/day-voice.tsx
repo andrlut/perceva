@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppIcon } from '@/components/AppIcon';
+import { AiConsent } from '@/components/dayVoice/AiConsent';
 import { ProposalRow } from '@/components/dayVoice/ProposalRow';
 import { DayVoiceGuide, useDayVoiceGuidePrompt } from '@/components/guide/screens/DayVoiceGuide';
 import { ScreenInfoButton } from '@/components/guide/ScreenInfoButton';
@@ -24,9 +25,11 @@ import { MoodFace } from '@/components/mood/MoodFace';
 import { MoodFaceRow } from '@/components/mood/MoodFaceRow';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import {
+  monthLeft,
   recordAiOutcome,
   useAiAccess,
   useDayVoiceDraft,
+  useGrantAiConsent,
   type DayVoiceDraft,
   type DayVoiceFailure,
 } from '@/lib/api/ai';
@@ -55,6 +58,10 @@ import { tokens } from '@/theme';
  *
  * The card's assertiveness (lines proposed / unchecked / edited) goes to the
  * ledger as numbers only (ai_record_outcome). The transcript is never stored.
+ *
+ * First use (and after a revoke in Ajustes): the LGPD consent (AiConsent)
+ * takes the screen until the person accepts — the server refuses every
+ * request without it. Under the box: what is left of the 60 free a month.
  */
 
 type Phase = 'input' | 'loading' | 'review';
@@ -97,6 +104,7 @@ export default function DayVoiceScreen() {
   const router = useRouter();
   const keyboardHeight = useKeyboardHeight();
   const access = useAiAccess();
+  const grantConsent = useGrantAiConsent();
   const draftMutation = useDayVoiceDraft();
   const activeTasks = useActiveTasks();
   const moodTags = useMoodTags();
@@ -124,7 +132,11 @@ export default function DayVoiceScreen() {
 
   const maxChars = access.data?.max_chars ?? 1500;
   const perDay = access.data?.per_day ?? 30;
-  const usedToday = access.data?.used_today ?? 0;
+  const month = monthLeft(access.data);
+  // Only an explicit "no" from the server shows the consent: while the access
+  // loads, the box shows, and a request without consent comes back as
+  // `no_consent`, which refetches the access and lands here anyway.
+  const needsConsent = access.data?.enabled === true && access.data.consent === false;
 
   const dictation = useDictation({
     lang: locale === 'en' ? 'en-US' : 'pt-BR',
@@ -152,10 +164,15 @@ export default function DayVoiceScreen() {
     [activeTasks.data],
   );
 
-  const failureMessage = (reason: DayVoiceFailure, extra: { max?: number; total?: number }) => {
+  const failureMessage = (
+    reason: DayVoiceFailure,
+    extra: { max?: number; total?: number; monthTotal?: number },
+  ) => {
     switch (reason) {
       case 'rate_day':
         return t('dayVoice.errors.rate_day', { total: extra.total ?? perDay });
+      case 'rate_month':
+        return t('dayVoice.errors.rate_month', { total: extra.monthTotal ?? month?.total ?? 60 });
       case 'too_long':
         return t('dayVoice.errors.too_long', { max: extra.max ?? maxChars });
       default:
@@ -199,9 +216,15 @@ export default function DayVoiceScreen() {
     const res = await draftMutation.mutateAsync({ text: body, locale });
     if (!res.ok) {
       setPhase('input');
+      if (res.reason === 'no_consent') {
+        // Revoked elsewhere (or a new text version): the mutation already
+        // refetches the access, and the consent takes the screen. The text
+        // stays in the box for after the yes.
+        return;
+      }
       setRemark(res.remark ?? null);
       setError({
-        message: failureMessage(res.reason, { max: res.max_chars, total: res.per_day }),
+        message: failureMessage(res.reason, { max: res.max_chars, total: res.per_day, monthTotal: res.per_month }),
         refunded: res.reason === 'not_understood' || res.reason === 'ai_failed' || res.reason === 'too_long',
       });
       return;
@@ -218,6 +241,22 @@ export default function DayVoiceScreen() {
     setPhase('input');
     setRequestId(null);
     setTimeout(() => inputRef.current?.focus(), 150);
+  };
+
+  const acceptConsent = async () => {
+    try {
+      const res = await grantConsent.mutateAsync();
+      if (!res.ok) {
+        Alert.alert(t('dayVoice.consent.failTitle'), t('dayVoice.consent.outdated'));
+        return;
+      }
+      Haptics.selectionAsync().catch(() => {});
+      // The access refetch swaps the consent for the box; open the keyboard
+      // when there is no native mic (same as a first open).
+      if (!dictation.available) setTimeout(() => inputRef.current?.focus(), 400);
+    } catch {
+      Alert.alert(t('dayVoice.consent.failTitle'), t('dayVoice.consent.failBody'));
+    }
   };
 
   // ── Registrar ─────────────────────────────────────────────────────────────
@@ -468,6 +507,10 @@ export default function DayVoiceScreen() {
             keyboardDismissMode="interactive"
             showsVerticalScrollIndicator={false}
           >
+            {needsConsent ? (
+              <AiConsent />
+            ) : (
+            <>
             <ScreenTip id="dayVoice" />
 
             {phase === 'review' ? (
@@ -504,7 +547,7 @@ export default function DayVoiceScreen() {
                   />
                   <View style={styles.inputMeta}>
                     <Text style={styles.meta}>
-                      {t('dayVoice.quota', { used: usedToday, total: perDay })}
+                      {month ? t('dayVoice.quotaMonth', { left: month.left, total: month.total }) : ''}
                     </Text>
                     <Text style={styles.meta}>
                       {text.length}/{maxChars}
@@ -570,10 +613,40 @@ export default function DayVoiceScreen() {
                 ) : null}
               </View>
             ) : null}
+            </>
+            )}
           </ScrollView>
 
           <View style={styles.footer}>
-            {phase === 'review' ? (
+            {needsConsent ? (
+              <View style={styles.btnRow}>
+                <Pressable
+                  onPress={() => router.back()}
+                  disabled={grantConsent.isPending}
+                  style={({ pressed }) => [styles.btn, styles.btnGhost, pressed && { opacity: 0.7 }]}
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.btnGhostText}>{t('dayVoice.consent.decline')}</Text>
+                </Pressable>
+                <Pressable
+                  onPress={acceptConsent}
+                  disabled={grantConsent.isPending}
+                  style={({ pressed }) => [
+                    styles.btn,
+                    styles.btnGold,
+                    grantConsent.isPending && { opacity: 0.5 },
+                    pressed && { opacity: 0.85 },
+                  ]}
+                  accessibilityRole="button"
+                >
+                  {grantConsent.isPending ? (
+                    <ActivityIndicator color={tokens.semantic.coinInk} />
+                  ) : (
+                    <Text style={styles.btnGoldText}>{t('dayVoice.consent.accept')}</Text>
+                  )}
+                </Pressable>
+              </View>
+            ) : phase === 'review' ? (
               <View style={styles.btnRow}>
                 <Pressable
                   onPress={backToEdit}

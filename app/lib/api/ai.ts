@@ -11,8 +11,9 @@ import { todayDateKey } from './mood';
  * on Registrar, with the hooks it already has. Nothing here writes data.
  *
  * Gate: `ai_access()` says whether this account sees the box at all (the
- * `ai` row of app_config: on/off + allowlist, server-only) and how much of
- * today's quota is used. The quota only counts requests that produced a
+ * `ai` row of app_config: on/off + allowlist, server-only), whether the
+ * person accepted the consent, and how much of the quota is used: 30 a day
+ * and 60 free a month. The quota only counts requests that produced a
  * draft — a failure or "didn't understand" gives the credit back.
  */
 
@@ -21,10 +22,24 @@ export const aiKeys = {
   access: () => [...aiKeys.all, 'access'] as const,
 };
 
+/**
+ * The consent text version this build shows (components/dayVoice/AiConsent).
+ * Bump it together with a material change of that text AND the server's
+ * `consent_version` (app_config `ai`): whoever accepted an older text sees the
+ * screen again.
+ */
+export const AI_CONSENT_VERSION = 1;
+
 export interface AiAccess {
   enabled: boolean;
+  /** A current consent (LGPD) is on file. Without it the server refuses. */
+  consent?: boolean;
+  consent_version?: number;
   used_today?: number;
   per_day?: number;
+  /** Free requests used this calendar month (America/Sao_Paulo). */
+  used_month?: number;
+  per_month?: number;
   max_chars?: number;
 }
 
@@ -57,8 +72,10 @@ export interface DayVoiceDraft {
 export type DayVoiceFailure =
   | 'disabled'
   | 'not_allowed'
+  | 'no_consent'
   | 'rate_minute'
   | 'rate_day'
+  | 'rate_month'
   | 'budget'
   | 'too_long'
   | 'empty_text'
@@ -76,6 +93,8 @@ export type DayVoiceResult =
       lines: number;
       used_today?: number;
       per_day?: number;
+      used_month?: number;
+      per_month?: number;
     }
   | {
       ok: false;
@@ -83,6 +102,8 @@ export type DayVoiceResult =
       remark?: string | null;
       used_today?: number;
       per_day?: number;
+      used_month?: number;
+      per_month?: number;
       max_chars?: number;
     };
 
@@ -131,4 +152,43 @@ export function recordAiOutcome(params: {
     .then(({ error }) => {
       if (error && __DEV__) console.warn('ai_record_outcome', error.message);
     });
+}
+
+/**
+ * The LGPD consent. What the person tells about the day (sleep, mood,
+ * smoking…) is health data, so nothing reaches the model before an explicit
+ * yes on the consent screen — the server checks it on every request
+ * (ai_begin → `no_consent`). Granting records the text version the person
+ * read; revoking (Ajustes) keeps the record as proof and switches the AI off.
+ */
+export function useGrantAiConsent() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (): Promise<{ ok: boolean; reason?: string }> => {
+      const { data, error } = await supabase.rpc('ai_consent_grant', { p_version: AI_CONSENT_VERSION });
+      if (error) throw error;
+      return (data ?? { ok: false }) as { ok: boolean; reason?: string };
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: aiKeys.access() }),
+  });
+}
+
+export function useRevokeAiConsent() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (): Promise<void> => {
+      const { error } = await supabase.rpc('ai_consent_revoke');
+      if (error) throw error;
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: aiKeys.access() }),
+  });
+}
+
+/** Free requests left this month, or null before the access loads. */
+export function monthLeft(access: AiAccess | undefined): { left: number; total: number } | null {
+  if (!access?.enabled || access.per_month == null) return null;
+  return {
+    left: Math.max(access.per_month - (access.used_month ?? 0), 0),
+    total: access.per_month,
+  };
 }

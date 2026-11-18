@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBottomNavClearance } from '@/components/BottomNavBar';
 import { TourModule } from '@/components/tour/TourModule';
 import { TourTarget } from '@/components/tour/TourTarget';
+import { monthLeft, useAiAccess, useRevokeAiConsent } from '@/lib/api/ai';
 import { useCharacter } from '@/lib/api/character';
 import { useSession } from '@/lib/auth';
 import { useT } from '@/lib/i18n';
@@ -55,6 +56,8 @@ export default function SettingsScreen() {
   const setSettings = useSettingsStore((s) => s.setMany);
   const modules = useModules();
   const setModule = useSetModule();
+  const aiAccess = useAiAccess();
+  const revokeAi = useRevokeAiConsent();
   const { t, locale } = useT();
 
   const profile = character.data?.profile;
@@ -172,6 +175,30 @@ export default function SettingsScreen() {
     }
   };
 
+  // "Conte seu dia" — the LGPD consent lives on the server (ai_consent).
+  // Switching ON never grants here: it opens /day-voice, where the consent
+  // screen says what goes to the model before the yes. Switching OFF revokes
+  // (the server refuses every request from then on). The row shows to whoever
+  // has the AI, or still has a consent on file (so it can always be revoked).
+  const aiConsent = aiAccess.data?.consent === true;
+  const showAiRow = aiAccess.data?.enabled === true || aiConsent;
+  const aiMonth = monthLeft(aiAccess.data);
+  const handleDayVoiceToggle = async (on: boolean) => {
+    if (on) {
+      router.push('/day-voice');
+      return;
+    }
+    const ok = await confirmAction(
+      t('profile.dayVoiceAiOffConfirm'),
+      t('profile.dayVoiceAiOffConfirmBody'),
+      { okText: t('profile.dayVoiceAiOffOk'), cancelText: t('common.cancel'), destructive: true },
+    );
+    if (!ok) return;
+    revokeAi.mutate(undefined, {
+      onError: () => showInfo(t('profile.dayVoiceAiOffConfirm'), t('profile.dayVoiceAiOffFail')),
+    });
+  };
+
   const handleReplayOnboarding = () => {
     // Opens /tour-replay: "Refazer onboarding completo" on top, then each
     // part (intro, pack, guided modules) on its own. The reset + navigation
@@ -269,6 +296,24 @@ export default function SettingsScreen() {
               onPress={() => router.push('/conector')}
               chevron
             />
+            {showAiRow ? (
+              <>
+                <Divider />
+                <ToggleRow
+                  label={t('profile.dayVoiceAi')}
+                  description={
+                    !aiConsent
+                      ? t('profile.dayVoiceAiOff')
+                      : aiMonth
+                        ? t('profile.dayVoiceAiOn', { left: aiMonth.left, total: aiMonth.total })
+                        : t('profile.dayVoiceAiOnPlain')
+                  }
+                  value={aiConsent && !revokeAi.isPending}
+                  onChange={handleDayVoiceToggle}
+                  disabled={revokeAi.isPending}
+                />
+              </>
+            ) : null}
           </Card>
         </TourTarget>
 
