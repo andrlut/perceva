@@ -272,6 +272,18 @@ const MODULE_DEFAULTS: Record<string, boolean> = {
   metas: false,
   semana: false,
   skills: false,
+  vida: false,
+};
+
+// The app's pt labels of the 6 dimensions (app/lib/i18n/locales/pt.ts
+// `dimensions.*.label`); the catalog's display_name is the English one.
+const DIM_LABEL_PT: Record<string, string> = {
+  health: 'Saúde',
+  body: 'Corpo',
+  mind: 'Mente',
+  wealth: 'Prosperidade',
+  bonds: 'Vínculos',
+  craft: 'Ofício',
 };
 
 // Level curve, mirroring app/lib/xp.ts: tiers of ten levels — 1→11 cost 100
@@ -334,7 +346,7 @@ const TRAIN_NOTES: Record<Exclude<TrainReason, 'advanced'>, string> = {
 
 function buildServer(token: string, userId: string): McpServer {
   const server = new McpServer(
-    { name: 'perceva-mcp', version: '0.5.2' },
+    { name: 'perceva-mcp', version: '0.5.3' },
     {
       instructions: [
         'Perceva is a habit/wellness app organized in 6 dimensions',
@@ -1212,6 +1224,15 @@ function buildServer(token: string, userId: string): McpServer {
         'These are self-report questionnaires, not diagnosis. Attachment in ' +
         'particular is a way of bonding, never a disorder; when borderline is ' +
         'true the label is a convention and the framing must soften. ' +
+        'Also returns life_vision — "A vida que eu quero", the dream life ' +
+        'they wrote: up to 3 things they would see in their life if money ' +
+        'and time were no problem (each in a dimension), an optional ' +
+        'headline, up to 3 sub-areas where they would spend guilt-free, up ' +
+        'to 3 cuts, and the first practice tied to thing 1. It is their own ' +
+        'words: quote them, never rewrite them into a goal they did not set, ' +
+        'and use them as the WHY behind practices and choices. null = never ' +
+        'written. module_on:false means the module is off (or the plan is ' +
+        'free): treat it as history and do not send them to that screen. ' +
         'When NOT to use this: for anything that changed recently. These ' +
         'results are stable over years and say nothing about this week — for ' +
         'that use get_period_digest, get_mood_stats or get_day_plan.',
@@ -1221,13 +1242,25 @@ function buildServer(token: string, userId: string): McpServer {
     async (_args, _extra) => {
       const db = userClient(token);
 
-      const [sessionsRes, profileRes] = await Promise.all([
+      const [sessionsRes, profileRes, visionRes, visionCount] = await Promise.all([
         db
           .from('psych_session')
           .select('id,instrument_id,taken_at')
           .eq('is_complete', true)
           .order('taken_at', { ascending: false }),
-        db.from('profile').select('display_name,profession,about,identity').limit(1),
+        db
+          .from('profile')
+          .select('display_name,profession,about,identity,modules,subscription_tier')
+          .limit(1),
+        db
+          .from('life_vision')
+          .select(
+            'headline,scene_1,scene_1_dim,scene_2,scene_2_dim,scene_3,scene_3_dim,' +
+              'guilt_free,cuts,created_at,first_task:task(title,is_archived)',
+          )
+          .order('created_at', { ascending: false })
+          .limit(1),
+        db.from('life_vision').select('id', { count: 'exact', head: true }),
       ]);
       if (sessionsRes.error) {
         return fail(`get_self_knowledge: ${sessionsRes.error.message}`);
@@ -1277,6 +1310,48 @@ function buildServer(token: string, userId: string): McpServer {
       const identity = (p.identity ?? {}) as Record<string, unknown>;
       const chosen = identity.title as { source?: string; key?: string } | null;
 
+      // "A vida que eu quero" — the newest version is the vision.
+      let lifeVision: Record<string, unknown> | null = null;
+      const lv = visionRes.error ? null : visionRes.data?.[0];
+      if (lv) {
+        const guilt = (lv.guilt_free ?? []) as string[];
+        const subNames = new Map<string, string>();
+        if (guilt.length > 0) {
+          const subs = await db
+            .from('dimension_sub')
+            .select('id,display_name_pt')
+            .in('id', guilt);
+          for (const r of subs.data ?? []) {
+            subNames.set(r.id as string, r.display_name_pt as string);
+          }
+        }
+        const things = [
+          [lv.scene_1, lv.scene_1_dim],
+          [lv.scene_2, lv.scene_2_dim],
+          [lv.scene_3, lv.scene_3_dim],
+        ]
+          .filter(([text, dim]) => text && dim)
+          .map(([text, dim]) => ({
+            text: text as string,
+            dimension_id: dim as string,
+            dimension: DIM_LABEL_PT[dim as string] ?? (dim as string),
+          }));
+        const task = lv.first_task as { title?: string; is_archived?: boolean } | null;
+        const modules = (p.modules ?? {}) as Record<string, boolean>;
+        lifeVision = {
+          module_on: p.subscription_tier === 'premium' && modules.vida === true,
+          headline: lv.headline ?? null,
+          things,
+          guilt_free: guilt.map((id) => ({ sub_id: id, sub: subNames.get(id) ?? id })),
+          cuts: (lv.cuts ?? []) as string[],
+          first_practice: task?.title
+            ? { title: task.title, archived: task.is_archived === true, tied_to: 1 }
+            : null,
+          written_at: lv.created_at,
+          versions: visionCount.count ?? 1,
+        };
+      }
+
       const done = [...latest.keys()].filter((k) =>
         ['disc', 'tipos', 'strengths', 'schwartz_pvq', 'ecr_r', 'big_five_120'].includes(k),
       );
@@ -1297,6 +1372,7 @@ function buildServer(token: string, userId: string): McpServer {
         valores: withDate('schwartz_pvq', deriveValues(rows('schwartz_pvq'))),
         apego: withDate('ecr_r', deriveEcr(rows('ecr_r'))),
         big_five: withDate('big_five_120', deriveBigFive(rows('big_five_120'))),
+        life_vision: lifeVision,
       });
     },
   );

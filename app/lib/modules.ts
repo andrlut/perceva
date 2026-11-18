@@ -25,7 +25,7 @@ import { supabase } from '@/lib/supabase';
  * Derived from the shared `character/me` query (useIsPremium precedent):
  * zero extra fetch, survives reinstall, syncs across devices.
  */
-export type ModuleKey = 'semana' | 'missoes' | 'metas' | 'skills';
+export type ModuleKey = 'semana' | 'missoes' | 'metas' | 'skills' | 'vida';
 
 export interface ModuleDef {
   key: ModuleKey;
@@ -55,6 +55,10 @@ export const MODULE_REGISTRY: readonly ModuleDef[] = [
   // off, quest templates that require reach_skill_value are filtered from
   // the Metas browse so no startable quest points at an invisible entity.
   { key: 'skills', default: false },
+  // A vida que eu quero — the dream life in three things, each in an area,
+  // plus guilt-free subs, cuts and the first practice (table life_vision,
+  // versioned). Its card sits on top of Eu › Desejada, above the Norte.
+  { key: 'vida', default: false },
 ];
 
 export const MODULE_DEFAULTS: Record<ModuleKey, boolean> = Object.fromEntries(
