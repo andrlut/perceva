@@ -111,6 +111,7 @@ import {
   WRITABLE,
   type ContextRow,
   type PatchInput,
+  type ProfileRow,
 } from './about-me.ts';
 import { publishableKey } from '../_shared/keys.ts';
 
@@ -1484,7 +1485,7 @@ function buildServer(token: string, userId: string): McpServer {
         // written" instead of failing the whole tool.
         about_me: aboutMeView(
           p,
-          contextRes.error ? null : ((contextRes.data?.[0] ?? null) as ContextRow | null),
+          contextRes.error ? null : ((contextRes.data?.[0] ?? null) as unknown as ContextRow | null),
           localDate(new Date()),
         ),
       });
@@ -1858,7 +1859,7 @@ function buildServer(token: string, userId: string): McpServer {
         if (r.error) return fail(`get_setup_checklist: ${r.error.message}`);
       }
 
-      const p = profileRes.data?.[0] ?? {};
+      const p = (profileRes.data?.[0] ?? {}) as ProfileRow;
       const scores = (scoresRes.data ?? []) as Array<{
         source: string;
         score: number | null;
@@ -1874,7 +1875,7 @@ function buildServer(token: string, userId: string): McpServer {
         ),
         hasDesired: scores.some((r) => r.source === 'desired'),
         lifeVisionVersions: visionRes.error ? 0 : (visionRes.count ?? 0),
-        about: currentValues(p, (contextRes.data?.[0] ?? null) as ContextRow | null),
+        about: currentValues(p, (contextRes.data?.[0] ?? null) as unknown as ContextRow | null),
       });
 
       return ok({
@@ -1974,8 +1975,8 @@ function buildServer(token: string, userId: string): McpServer {
       ]);
       if (profileRes.error) return fail(`update_about_me (read): ${profileRes.error.message}`);
       if (contextRes.error) return fail(`update_about_me (read): ${contextRes.error.message}`);
-      const p = profileRes.data?.[0] ?? {};
-      const c = (contextRes.data?.[0] ?? null) as ContextRow | null;
+      const p = (profileRes.data?.[0] ?? {}) as ProfileRow;
+      const c = (contextRes.data?.[0] ?? null) as unknown as ContextRow | null;
 
       const { changes, errors } = applyPatch(currentValues(p, c), patch);
       if (errors.length > 0) {
