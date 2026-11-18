@@ -3740,7 +3740,7 @@ const en = {
       best: 'best: {{best}}',
     },
     footer:
-      'Stays with you. Your AI reads it when you use the connector. Nothing here is inferred: only what you write counts.',
+      'Stays between you and your AI: the connector and Tell your day (once you agree) read from here. Nothing is inferred: only what you write counts.',
     clearAll: 'Delete all',
     clearTitle: 'Delete About you?',
     clearBody: "Deletes all 7 fields. This can't be undone.",

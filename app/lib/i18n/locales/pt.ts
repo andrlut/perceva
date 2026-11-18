@@ -3754,7 +3754,7 @@ const pt: Translations = {
       best: 'melhor: {{best}}',
     },
     footer:
-      'Fica só com você. A sua IA lê quando você usa o conector. Nada aqui é inferido: só vale o que você escreve.',
+      'Fica só com você e com a sua IA: o conector e o Conte seu dia (depois do seu aceite) leem daqui. Nada é inferido: só vale o que você escreve.',
     clearAll: 'Apagar tudo',
     clearTitle: 'Apagar o Sobre você?',
     clearBody: 'Apaga os 7 campos. Não dá pra desfazer.',
