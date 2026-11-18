@@ -1438,12 +1438,6 @@ const en = {
   personalizar: {
     title: 'Customize',
     nameSection: 'Name',
-    aboutSection: 'About you',
-    professionLabel: 'Work or study',
-    professionPlaceholder: 'e.g. teacher, student, freelancer',
-    aboutLabel: 'Where you are now',
-    aboutPlaceholder: 'What you are going through, what you want to change, what helps someone understand you…',
-    aboutHint: 'This goes to Claude when you use the connector — and nowhere else. Leave it empty if you prefer. {{left}} characters left.',
     titleSection: 'Title',
     paletteSection: 'Palette',
     titleEmpty: 'Titles come from the tests. Take DISC or Types to get one.',
@@ -1616,6 +1610,8 @@ const en = {
       calendarDesc: 'Under the grid, about the visible month',
       train: 'Idea training',
       trainDesc: "At the top of Today's training, in My ideas",
+      about: 'About you',
+      aboutDesc: 'On the About you card, in Profile',
     },
     usesDefault: 'No link of its own: uses the default.',
     targetLabel: 'Open in',
@@ -3637,6 +3633,121 @@ const en = {
 
   /** "Tell your day" (/day-voice): dictate the day, the AI proposes, the
    *  person confirms. Entry in the Today screen's mood card. */
+  /** "About you" (full profile, part 2): the card in /perfil and the
+   *  /sobre-voce editor. 7 optional fields for the AI. */
+  sobreVoce: {
+    title: 'About you',
+    eyebrow: 'For your AI',
+    progress: '{{n}} of {{total}}',
+    progressA11y: '{{n}} of {{total}} fields filled',
+    optional: 'all optional',
+    completeWithAi: 'Complete with AI',
+    completeA11y: 'Open Claude to complete About you',
+    aiPrompt:
+      'I want to complete my Perceva profile. Use the Perceva connector: call get_setup_checklist to see what is missing and guide me, one item at a time. For "About you", ask me one field at a time and, before saving with update_about_me, show me exactly what will be saved and wait for my OK.',
+    rowA11y: 'Edit {{field}}',
+    fields: {
+      ai: {
+        title: 'How the AI talks',
+        purpose: 'How the AI talks to you: the tone, how hard it pushes and what it leaves alone.',
+      },
+      rhythm: {
+        title: 'Your rhythm',
+        purpose: 'So the AI suggests each thing when it fits your day.',
+      },
+      focus: {
+        title: '90-day focus',
+        purpose: 'One sentence. The AI steers suggestions toward what matters now.',
+      },
+      phase: {
+        title: 'Life stage and home',
+        purpose: "So the AI doesn't suggest what doesn't fit your life right now.",
+      },
+      blockers: {
+        title: 'What usually gets in the way',
+        purpose: 'So the AI offers ways around what holds you back most.',
+      },
+      work: {
+        title: 'Work or study',
+        purpose: 'Changes how the AI talks about career and your time.',
+      },
+      moment: {
+        title: 'Where you are now',
+        purpose: "What you're going through right now, in your own words.",
+      },
+    },
+    tone: { label: 'Tone', direct: 'Direct', warm: 'Warm' },
+    push: { label: 'Accountability', none: 'No pushing', light: 'Light push', firm: 'Firm push' },
+    avoid: {
+      label: "Topics I don't want",
+      placeholder: 'e.g. weight',
+      add: 'Add',
+      removeA11y: 'Remove {{topic}}',
+      count: '{{n}} of {{max}}',
+    },
+    rhythmLabels: {
+      wake: 'I wake up',
+      sleep: 'I go to bed',
+      workStart: 'I start work',
+      workEnd: 'I stop work',
+      best: 'My best time',
+      unset: 'Set',
+      clearA11y: 'Clear {{field}}',
+    },
+    best: { morning: 'Morning', afternoon: 'Afternoon', evening: 'Evening', night: 'Late night' },
+    workPair: 'Fill in both the start and the end of work, or neither.',
+    focusPlaceholder: 'e.g. Leave work by 6pm three times a week',
+    focusSince: 'Written on {{date}}',
+    phaseLabel: 'Your stage',
+    livingLabel: 'Who you live with',
+    upTo: 'up to {{max}}',
+    phase: {
+      studying: 'Studying',
+      early_career: 'Starting out at work',
+      career_growth: 'Growing at work',
+      changing_course: 'Changing course',
+      between_jobs: 'Between jobs',
+      small_kids: 'Young kids',
+      caregiving: 'Caring for someone',
+      retired: 'Retired',
+    },
+    living: {
+      alone: 'I live alone',
+      partner: 'With a partner',
+      kids: 'With kids',
+      family: 'With parents or family',
+      roommates: 'With friends',
+    },
+    blocker: {
+      time: 'Not enough time',
+      energy: 'Tiredness',
+      money: 'Money',
+      phone: 'Phone and screens',
+      environment: 'My surroundings',
+      forgetting: 'I forget',
+      motivation: 'Low motivation',
+      perfectionism: 'All or nothing',
+      other_people: "Other people's demands",
+    },
+    professionPlaceholder: 'e.g. teacher, student, freelancer',
+    aboutPlaceholder: "What you're going through, what you want to change, what helps understand you…",
+    left: '{{left}} characters left',
+    summary: {
+      avoid: 'avoids {{list}}',
+      wake: 'up at {{t}}',
+      sleep: 'bed at {{t}}',
+      work: 'work {{from}}–{{to}}',
+      best: 'best: {{best}}',
+    },
+    footer:
+      'Stays between you and your AI: the connector and Tell your day (once you agree) read from here. Nothing is inferred: only what you write counts.',
+    clearAll: 'Delete all',
+    clearTitle: 'Delete About you?',
+    clearBody: "Deletes all 7 fields. This can't be undone.",
+    clearConfirm: 'Delete',
+    saveError: "Couldn't save. Try again.",
+  },
+
   vida: {
     title: 'The life I want',
     subtitle: 'Your dream life',

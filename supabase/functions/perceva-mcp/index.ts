@@ -38,6 +38,17 @@
 //     the user's collection, so a hallucinated id fails loudly instead of
 //     writing. It calls the RPC directly: unlike log_mood, there is no
 //     partial-write merge to protect.
+//   - A THIRD write since 0.6.0, `update_about_me` — the "Sobre você" the
+//     user wrote for their AI (profile_context, 20261118000002, plus
+//     profile.profession/about). Same bar: zero economy, correctable (the
+//     reply carries the previous values; writing them back undoes it) and
+//     idempotent (same fields → same state). On top of that it is TWO-STEP:
+//     a call without confirm_code only previews the change and returns a
+//     code bound to those exact values and to the saved state; the write
+//     needs that code back, after the user said yes. It can reach no other
+//     column — not modules, plan, name nor the Emblema. `get_setup_checklist`
+//     is its read companion: what is still missing in the app, with a deep
+//     link per screen (about-me.ts holds both tools' pure logic).
 //   - The write does NOT call the log_mood RPC. That RPC keeps the day's note
 //     and tags only on a mood-ONLY call (the app's quick log); any call that
 //     carries a note or tags replaces both, so a model sending just a note
@@ -88,6 +99,20 @@ import {
   type MaterialViewRow,
   type TrainCollectRow,
 } from './learning.ts';
+import {
+  aboutMeView,
+  APP,
+  applyPatch,
+  buildChecklist,
+  confirmCode,
+  CONTEXT_COLUMNS,
+  currentValues,
+  splitWrite,
+  WRITABLE,
+  type ContextRow,
+  type PatchInput,
+  type ProfileRow,
+} from './about-me.ts';
 import { publishableKey } from '../_shared/keys.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -346,7 +371,7 @@ const TRAIN_NOTES: Record<Exclude<TrainReason, 'advanced'>, string> = {
 
 function buildServer(token: string, userId: string): McpServer {
   const server = new McpServer(
-    { name: 'perceva-mcp', version: '0.5.4' },
+    { name: 'perceva-mcp', version: '0.6.0' },
     {
       instructions: [
         'Perceva is a habit/wellness app organized in 6 dimensions',
@@ -358,15 +383,30 @@ function buildServer(token: string, userId: string): McpServer {
         'Every tool is scoped to the authenticated user; they only ever see',
         'their own data.',
         'WHAT YOU CANNOT DO HERE: you cannot complete or skip a practice, create',
-        'or edit or archive anything, claim a quest, log a skill value, spend or',
-        'mint coins, mark a Learning material read, absorb an idea (that is',
-        'the card flip at the end of the idea screen, in the app), nor favorite',
-        'or release one (that is the swipe in the review pile of Minhas ideias).',
+        'or edit or archive practices, rewards, quests or skills, claim a quest,',
+        'log a skill value, spend or mint coins, mark a Learning material read,',
+        'absorb an idea (that is the card flip at the end of the idea screen, in',
+        'the app), nor favorite or release one (that is the swipe in the review',
+        'pile of Minhas ideias). Nor can you take a test or the Avaliação for',
+        'them, set their Norte, write "A vida que eu quero", switch a module on',
+        'or off, or change their name, plan or Emblema.',
         'Those stay in the app on purpose. Never claim to have done any of',
         'them, and when the user asks, say plainly that it has to be done in',
-        'the app.',
-        'TWO WRITES, both outside the XP/coin economy: log_mood and',
-        'log_idea_training.',
+        'the app — hand over the open_in_app link when a tool gave you one.',
+        'THREE WRITES, all outside the XP/coin economy: log_mood,',
+        'log_idea_training and update_about_me.',
+        'SETUP ("o que falta configurar", "me ajuda a completar meu perfil"):',
+        'get_setup_checklist lists what is still missing, each item with a deep',
+        'link. Suggest ONE next step at a time and never pressure; an item with',
+        'available:false needs Premium — say so once, plainly, and move on (no',
+        'sales pitch). The "Sobre você" fields are the only ones you can fill',
+        'here: ask ONE field at a time in plain words, then call',
+        'update_about_me WITHOUT confirm_code — that only previews — show the',
+        'user exactly what will be saved, and only after an explicit yes call',
+        'it again with the same fields plus the confirm_code. Write only what',
+        'they said, in their words; never fill a field they did not state, and',
+        'never ask for weight, height, sex, religion, sexual orientation,',
+        'diagnoses, exact income or names of other people.',
         'IDEA TRAINING ("me treina/me testa nas minhas ideias", "quiz me"):',
         'get_idea_training gives today\'s deck of favorites; ask one title at a',
         'time, wait for the answer from memory, only then reveal the claim,',
@@ -399,7 +439,10 @@ function buildServer(token: string, userId: string): McpServer {
         '"as ideias que eu guardei/favoritei" → the same tool with',
         'favorites_only:true.',
         'WHO THEY ARE vs WHAT THEY DID: get_self_knowledge carries the six',
-        'instrument results and the context they wrote about themselves. Read it',
+        'instrument results and the context they wrote about themselves —',
+        'about_me says how they want you to talk (tone, how hard to push, topics',
+        'to leave alone: never bring those up), their daily rhythm, their',
+        '90-day focus, life stage and what usually gets in their way. Read it',
         'before giving advice with any weight — the same suggestion lands very',
         'differently on someone whose signature is Conscienciosidade alta and on',
         'someone who improvises. An instrument they never took comes back null:',
@@ -1290,6 +1333,13 @@ function buildServer(token: string, userId: string): McpServer {
         'and use them as the WHY behind practices and choices. null = never ' +
         'written. module_on:false means the module is off (or the plan is ' +
         'free): treat it as history and do not send them to that screen. ' +
+        'Also returns about_me — the "Sobre você" they wrote for their AI: ' +
+        'ai_style (tone direct/warm, push none/light/firm, avoid_topics — ' +
+        'subjects you must never bring up), rhythm (wake, sleep, work hours, ' +
+        'best time of day, local HH:MM), focus_90d (one sentence; stale:true ' +
+        'past 90 days — ask whether it still holds), life_phase, living_with ' +
+        'and blockers (what usually gets in their way). Empty means not ' +
+        'written: never infer it. To fill or fix it use update_about_me. ' +
         'When NOT to use this: for anything that changed recently. These ' +
         'results are stable over years and say nothing about this week — for ' +
         'that use get_period_digest, get_mood_stats or get_day_plan.',
@@ -1299,7 +1349,7 @@ function buildServer(token: string, userId: string): McpServer {
     async (_args, _extra) => {
       const db = userClient(token);
 
-      const [sessionsRes, profileRes, visionRes, visionCount] = await Promise.all([
+      const [sessionsRes, profileRes, visionRes, visionCount, contextRes] = await Promise.all([
         db
           .from('psych_session')
           .select('id,instrument_id,taken_at')
@@ -1318,6 +1368,7 @@ function buildServer(token: string, userId: string): McpServer {
           .order('created_at', { ascending: false })
           .limit(1),
         db.from('life_vision').select('id', { count: 'exact', head: true }),
+        db.from('profile_context').select(CONTEXT_COLUMNS).limit(1),
       ]);
       if (sessionsRes.error) {
         return fail(`get_self_knowledge: ${sessionsRes.error.message}`);
@@ -1430,6 +1481,13 @@ function buildServer(token: string, userId: string): McpServer {
         apego: withDate('ecr_r', deriveEcr(rows('ecr_r'))),
         big_five: withDate('big_five_120', deriveBigFive(rows('big_five_120'))),
         life_vision: lifeVision,
+        // "Sobre você" (profile_context). A read error degrades to "not
+        // written" instead of failing the whole tool.
+        about_me: aboutMeView(
+          p,
+          contextRes.error ? null : ((contextRes.data?.[0] ?? null) as unknown as ContextRow | null),
+          localDate(new Date()),
+        ),
       });
     },
   );
@@ -1755,6 +1813,244 @@ function buildServer(token: string, userId: string): McpServer {
         note: r.reason === 'advanced'
           ? (r.firm ? 'Logged. This idea is firm now.' : 'Logged. It comes back on the due day.')
           : TRAIN_NOTES[r.reason],
+      });
+    },
+  );
+
+  // ── Setup: what is still missing, and the one profile write ──────────────
+  server.registerTool(
+    'get_setup_checklist',
+    {
+      title: 'Setup checklist — what is still missing in the app',
+      description:
+        'What the user has not set up yet, item by item, each with a deep ' +
+        'link (open_in_app) to the exact screen: the Avaliação (how they rate ' +
+        'themselves today), the six self-knowledge tests (DISC, Tipos, ' +
+        'Forças, Valores, Apego, Big Five), the Norte (where they want to be ' +
+        'per area), "A vida que eu quero", the "Sobre você" fields (with ' +
+        'filled/total and a link per field) and the optional modules. Each ' +
+        'item says status (done/missing/partial/optional), why it matters ' +
+        '(why_pt), needs_premium and available — available:false means it ' +
+        'needs the paid plan (or a module switched on in Ajustes). ' +
+        'next_suggestion is the first missing item they can open now.\n' +
+        'Use it for "o que falta configurar", "me ajuda a completar meu ' +
+        'perfil", "por onde eu começo". Guide ONE item at a time: say why in ' +
+        'a line, hand over open_in_app, and wait. Never pressure, and never ' +
+        'turn a Premium item into a sales pitch — mention it once. The ' +
+        '"Sobre você" fields can be filled right here with update_about_me; ' +
+        'everything else is done in the app.\n' +
+        'When NOT to use this: to read what they wrote or their test results ' +
+        '(that is get_self_knowledge), or for their numbers (get_profile_summary). ' +
+        'Modules are optional by design: never present a module that is off ' +
+        'as something missing.',
+      inputSchema: {},
+      annotations: { readOnlyHint: true },
+    },
+    async (_args, _extra) => {
+      const db = userClient(token);
+      const [profileRes, sessionsRes, scoresRes, contextRes, visionRes, northRes] = await Promise.all([
+        db.from('profile').select('profession,about,modules,subscription_tier').limit(1),
+        db.from('psych_session').select('instrument_id,taken_at').eq('is_complete', true),
+        db.from('character_sub_score').select('source,score,score_decimal').in('source', ['self', 'desired']),
+        db.from('profile_context').select(CONTEXT_COLUMNS).limit(1),
+        db.from('life_vision').select('id', { count: 'exact', head: true }),
+        // Norte by area (20261118000004): areas marked as mattering.
+        db.from('dimension_note').select('dimension_id', { count: 'exact', head: true }).eq('matters', true),
+      ]);
+      for (const r of [profileRes, sessionsRes, scoresRes, contextRes]) {
+        if (r.error) return fail(`get_setup_checklist: ${r.error.message}`);
+      }
+
+      const p = (profileRes.data?.[0] ?? {}) as ProfileRow;
+      const scores = (scoresRes.data ?? []) as Array<{
+        source: string;
+        score: number | null;
+        score_decimal: number | string | null;
+      }>;
+      const result = buildChecklist({
+        isPremium: p.subscription_tier === 'premium',
+        modules: (p.modules ?? {}) as Record<string, boolean>,
+        sessions: (sessionsRes.data ?? []) as Array<{ instrument_id: string; taken_at: string }>,
+        // Same signal as the app's Percebida panel: any self score above 0.
+        selfAssessed: scores.some(
+          (r) => r.source === 'self' && Number(r.score_decimal ?? r.score ?? 0) > 0,
+        ),
+        hasDesired: scores.some((r) => r.source === 'desired'),
+        northAreas: northRes.error ? 0 : (northRes.count ?? 0),
+        lifeVisionVersions: visionRes.error ? 0 : (visionRes.count ?? 0),
+        about: currentValues(p, (contextRes.data?.[0] ?? null) as unknown as ContextRow | null),
+      });
+
+      return ok({
+        ...result,
+        note:
+          'Guide one item at a time and hand over its open_in_app. Tests, the ' +
+          'Avaliação, the Norte, "A vida que eu quero" and modules are done in ' +
+          'the app; only "Sobre você" can be written here (update_about_me, ' +
+          'preview first, write after an explicit yes).',
+      });
+    },
+  );
+
+  server.registerTool(
+    'update_about_me',
+    {
+      title: 'Update "Sobre você" — preview first, write after the user says yes',
+      description:
+        'Writes the "Sobre você" the user tells you, and NOTHING else: work or ' +
+        'study (profession, ≤80), their current moment (about, ≤600), how the ' +
+        'AI should talk (ai_tone, ai_push, ai_avoid), their rhythm (wake_time, ' +
+        'sleep_time, work_start + work_end as a pair, best_time), the 90-day ' +
+        'focus (focus_90d, one sentence ≤140), life stage (life_phase, up to ' +
+        '2), who they live with (living_with) and what usually gets in their ' +
+        'way (blockers, up to 3). Touches no XP or coins.\n' +
+        'TWO STEPS, always. (1) Call WITHOUT confirm_code: nothing is saved; ' +
+        'it returns the exact changes (from → to) and a confirm_code. Show ' +
+        'the user those changes in plain words and ask. (2) Only after an ' +
+        'explicit yes, call again with the SAME fields plus that confirm_code. ' +
+        'A code that does not match (fields changed, or the profile changed ' +
+        'meanwhile) saves nothing and returns a fresh preview to show again. ' +
+        'Never pass a confirm_code the user did not approve.\n' +
+        'Send only the fields being changed: an omitted field stays as it is; ' +
+        'null (or []) clears it. Lists take the value or its pt/en label ' +
+        '("Filhos pequenos" = small_kids); times are local HH:MM. Write their ' +
+        'words, condensed if needed — never a field they did not state, never ' +
+        'an inference. The reply carries the previous values: to undo, write ' +
+        'them back (same two steps).\n' +
+        'When NOT to use this: anything outside these fields (name, plan, ' +
+        'modules, Emblema, the Norte, "A vida que eu quero", tests) — those ' +
+        'are in the app; and never for weight, height, sex, religion, sexual ' +
+        'orientation, diagnoses, exact income or names of other people.',
+      inputSchema: {
+        profession: z.string().nullish().describe('Work or study, short (≤80). null clears.'),
+        about: z.string().nullish()
+          .describe('"Seu momento": what they are going through now, first person (≤600). null clears.'),
+        ai_tone: z.string().nullish().describe('"direct" (Direta) or "warm" (Acolhedora). null clears.'),
+        ai_push: z.string().nullish()
+          .describe('"none" (Sem cobrar), "light" (Cobra leve) or "firm" (Cobra firme). null clears.'),
+        ai_avoid: z.array(z.string()).nullish()
+          .describe('Topics the AI must never bring up, their words (≤5, ≤40 chars each). Replaces the list; [] clears.'),
+        wake_time: z.string().nullish().describe('Usual wake-up time, local HH:MM. null clears.'),
+        sleep_time: z.string().nullish().describe('Usual bedtime, local HH:MM. null clears.'),
+        work_start: z.string().nullish().describe('Work/study start, HH:MM — always together with work_end.'),
+        work_end: z.string().nullish().describe('Work/study end, HH:MM (may be earlier than start: night shift).'),
+        best_time: z.string().nullish()
+          .describe('Best time of day: "morning", "afternoon", "evening" or "night". null clears.'),
+        focus_90d: z.string().nullish().describe('The 90-day focus, one sentence (≤140). null clears.'),
+        life_phase: z.array(z.string()).nullish()
+          .describe(
+            'Up to 2: studying, early_career, career_growth, changing_course, between_jobs, ' +
+            'small_kids, caregiving, retired. Replaces the list; [] clears.',
+          ),
+        living_with: z.array(z.string()).nullish()
+          .describe('alone (exclusive), partner, kids, family, roommates. Replaces the list; [] clears.'),
+        blockers: z.array(z.string()).nullish()
+          .describe(
+            'Up to 3: time, energy, money, phone, environment, forgetting, motivation, ' +
+            'perfectionism, other_people. Replaces the list; [] clears.',
+          ),
+        confirm_code: z.string().optional()
+          .describe('Leave out to preview. Pass the code from the preview ONLY after the user said yes.'),
+      },
+      annotations: {
+        readOnlyHint: false,
+        // It overwrites what was there (the previous values come back so it
+        // can be undone), and only after a preview the user approved.
+        destructiveHint: true,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    async (args, _extra) => {
+      const db = userClient(token);
+      const { confirm_code: code, ...rest } = args;
+      const patch = rest as PatchInput;
+      if (!WRITABLE.some((k) => patch[k] !== undefined)) {
+        return fail(JSON.stringify({
+          error: 'nothing_to_change', written: false, fields: WRITABLE,
+          hint: 'Send only the fields the user wants to set or clear.',
+        }));
+      }
+
+      const [profileRes, contextRes] = await Promise.all([
+        db.from('profile').select('profession,about').limit(1),
+        db.from('profile_context').select(CONTEXT_COLUMNS).limit(1),
+      ]);
+      if (profileRes.error) return fail(`update_about_me (read): ${profileRes.error.message}`);
+      if (contextRes.error) return fail(`update_about_me (read): ${contextRes.error.message}`);
+      const p = (profileRes.data?.[0] ?? {}) as ProfileRow;
+      const c = (contextRes.data?.[0] ?? null) as unknown as ContextRow | null;
+
+      const { changes, errors } = applyPatch(currentValues(p, c), patch);
+      if (errors.length > 0) {
+        return fail(JSON.stringify({
+          error: 'invalid_fields', written: false, errors,
+          hint: 'Nothing was saved. Fix these with the user (never cut their ' +
+            'text silently) and preview again.',
+        }));
+      }
+      if (changes.length === 0) {
+        return ok({ status: 'no_change', written: false, note: 'Already saved exactly like this.' });
+      }
+
+      // Bound to these exact values AND to the state they were computed on.
+      const stamp = JSON.stringify([p.profession ?? null, p.about ?? null, c?.updated_at ?? null]);
+      const expected = await confirmCode(userId, changes, stamp);
+
+      if (!code) {
+        return ok({
+          status: 'preview',
+          written: false,
+          changes,
+          confirm_code: expected,
+          next_step:
+            'Nothing was saved. Show the user these changes (from → to) in plain ' +
+            'words and ask. Only after an explicit yes, call update_about_me again ' +
+            'with the same fields plus this confirm_code.',
+        });
+      }
+      if (code.trim().toUpperCase() !== expected) {
+        return fail(JSON.stringify({
+          error: 'confirm_code_mismatch',
+          written: false,
+          changes,
+          confirm_code: expected,
+          hint: 'Nothing was saved: the fields or the saved profile changed since ' +
+            'the preview. Show THESE changes to the user and, only after a new ' +
+            'yes, call again with this confirm_code.',
+        }));
+      }
+
+      // Write. profile_context first (the database re-validates its lists),
+      // then the two profile columns. RLS is the boundary for both.
+      const { profile, context } = splitWrite(changes);
+      if (Object.keys(context).length > 0) {
+        const { error } = await db
+          .from('profile_context')
+          .upsert({ character_id: userId, ...context }, { onConflict: 'character_id' });
+        if (error) return fail(`update_about_me (write): ${error.message} — nothing was saved.`);
+      }
+      if (Object.keys(profile).length > 0) {
+        const { error } = await db.from('profile').update(profile).eq('id', userId);
+        if (error) {
+          return fail(JSON.stringify({
+            error: 'partial_write',
+            message: error.message,
+            saved: changes.filter((ch) => !(ch.key in profile)),
+            not_saved: changes.filter((ch) => ch.key in profile),
+          }));
+        }
+      }
+
+      return ok({
+        status: 'saved',
+        written: true,
+        saved: changes,
+        previous: Object.fromEntries(changes.map((ch) => [ch.key, ch.from])),
+        open_in_app: `${APP}://perfil`,
+        note: 'Read back to the user what was saved. To undo, write the ' +
+          'previous values back (preview and confirm again). They can also ' +
+          'edit it in the app, in Perfil › Sobre você.',
       });
     },
   );
