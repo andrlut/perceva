@@ -13,12 +13,19 @@
 //   1. JWT checked server-side with auth.getUser() (same as perceva-mcp and
 //      delete-account). The uid never comes from the body.
 //   2. ai_begin (service_role): the `ai` row of app_config (on/off,
-//      allowlist, model, caps), 6/minute and 30/day per person, a global
-//      daily US$ cap summed from the ledger, and the reservation itself —
-//      all under one per-person advisory lock.
+//      allowlist, model, caps), the person's CURRENT CONSENT (ai_consent —
+//      without it nothing reaches the model: `no_consent`), 6/minute,
+//      30/day and 60 free/month per person, a global daily US$ cap summed
+//      from the ledger, and the reservation itself — all under one
+//      per-person advisory lock.
 //   3. Size: the transcript is capped (config max_chars), max_tokens 2048.
 //   4. ai_settle writes the real usage; when the model failed or proposed
-//      nothing, the day's credit comes back (refund row).
+//      nothing, the credit comes back (refund row) — day and month alike.
+//
+// Context sent to the model: the day (practices, completions, skips, mood,
+// tags) and, after the consent, a short <profile> block — "A vida que eu
+// quero" when the `vida` module is on. Both live in the user turn, outside
+// the cached system prompt.
 //
 // Privacy: the transcript is never stored and never logged. The ledger keeps
 // numbers only (tokens, cost, latency, line counts). Logs carry the request
@@ -45,10 +52,12 @@ import {
   sanitizeText,
 } from './day.ts';
 import {
+  buildProfileBlock,
   buildTools,
   buildUserMessage,
   costMicros,
   extractDraft,
+  lifeVisionFromRow,
   SYSTEM_PROMPT,
   type DayCtx,
   type PracticeCtx,
@@ -146,6 +155,39 @@ async function loadDay(
   };
 }
 
+// ─── The person's profile, read under RLS ────────────────────────────────────
+
+/**
+ * The short <profile> block: the newest "A vida que eu quero" — only when the
+ * `vida` module is ON for this person (modules are Premium since 2026-10-13:
+ * a free profile reads every module as off, the same rule as the app's
+ * useModules and the MCP). Reached only after ai_begin, so only for people
+ * with a current consent.
+ *
+ * Best effort: a failed read sends the request without a profile, never
+ * fails it.
+ */
+async function loadProfile(db: SupabaseClient, locale: 'pt' | 'en'): Promise<string | null> {
+  try {
+    const [profRes, visionRes] = await Promise.all([
+      db.from('profile').select('modules,subscription_tier').limit(1),
+      db.from('life_vision')
+        .select('headline,scene_1,scene_1_dim,scene_2,scene_2_dim,scene_3,scene_3_dim')
+        .order('created_at', { ascending: false })
+        .limit(1),
+    ]);
+    const p = profRes.error ? null : profRes.data?.[0];
+    const modules = (p?.modules ?? {}) as Record<string, unknown>;
+    const vidaOn = p?.subscription_tier === 'premium' && modules.vida === true;
+    const vision = vidaOn && !visionRes.error
+      ? lifeVisionFromRow(visionRes.data?.[0] as Record<string, unknown> | undefined, locale)
+      : null;
+    return buildProfileBlock(vision);
+  } catch {
+    return null;
+  }
+}
+
 // ─── HTTP ────────────────────────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
@@ -196,10 +238,19 @@ Deno.serve(async (req) => {
   }
   const gate = begin as {
     ok: boolean; reason?: string; model?: string; max_chars?: number;
-    used_today?: number; per_day?: number;
+    used_today?: number; per_day?: number; used_month?: number; per_month?: number;
   };
   if (!gate.ok) {
-    return json(200, { ok: false, reason: gate.reason ?? 'disabled', used_today: gate.used_today, per_day: gate.per_day });
+    // `no_consent` → the app shows the consent screen; `rate_month` → "os 60
+    // deste mês acabaram". Nothing was reserved.
+    return json(200, {
+      ok: false,
+      reason: gate.reason ?? 'disabled',
+      used_today: gate.used_today,
+      per_day: gate.per_day,
+      used_month: gate.used_month,
+      per_month: gate.per_month,
+    });
   }
 
   const started = Date.now();
@@ -233,7 +284,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { ctx, tags } = await loadDay(db, today, locale);
+    const [{ ctx, tags }, profile] = await Promise.all([
+      loadDay(db, today, locale),
+      loadProfile(db, locale),
+    ]);
 
     const response = await anthropic.messages.create({
       model,
@@ -242,7 +296,7 @@ Deno.serve(async (req) => {
       system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
       tools: buildTools(tags),
       tool_choice: { type: 'auto' },
-      messages: [{ role: 'user', content: buildUserMessage(ctx, text, tags) }],
+      messages: [{ role: 'user', content: buildUserMessage(ctx, text, tags, profile) }],
     });
 
     usage = {
@@ -273,6 +327,8 @@ Deno.serve(async (req) => {
       dropped,
       used_today: gate.used_today,
       per_day: gate.per_day,
+      used_month: gate.used_month,
+      per_month: gate.per_month,
     });
   } catch (err) {
     const status = err instanceof Anthropic.APIError ? err.status : undefined;
