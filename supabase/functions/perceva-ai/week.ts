@@ -22,7 +22,7 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { daysBetween, isDateKey, sanitizeText } from './day.ts';
+import { daysBetween, isDateKey, localDate, sanitizeText } from './day.ts';
 import { aboutFromRow, buildProfileBlock, costMicros } from './logic.ts';
 
 export const DIMENSIONS = ['health', 'body', 'mind', 'wealth', 'bonds', 'craft'] as const;
@@ -396,6 +396,12 @@ export async function handleWeek(raw: Record<string, unknown>, env: WeekEnv): Pr
   }
   const s = sumData as WeekSummary;
   if (!s?.week?.complete) return reply({ ok: false, reason: 'week_open' });
+  // The device's zone decides "closed", but a made-up zone must not close a
+  // week early: by the server's own clock (São Paulo, ±1 day for any real
+  // zone) the week's Sunday has to have begun.
+  if (daysBetween(s.week.end, localDate(new Date())) < 0) {
+    return reply({ ok: false, reason: 'week_open' });
+  }
 
   // 2. Generated once: a cached week answers right away.
   const cached = await db.from('week_insight').select(CACHE_COLUMNS).eq('week_start', s.week.start).limit(1);
@@ -410,7 +416,7 @@ export async function handleWeek(raw: Record<string, unknown>, env: WeekEnv): Pr
   if (prof.error) return reply({ ok: false, reason: 'server' }, 500);
   if (prof.data?.[0]?.subscription_tier !== 'premium') return reply({ ok: false, reason: 'premium_required' });
 
-  if (daysBetween(s.week.start, s.week.today) > (MAX_WEEKS_BACK + 1) * 7) {
+  if (daysBetween(s.week.start, localDate(new Date())) > (MAX_WEEKS_BACK + 1) * 7) {
     return reply({ ok: false, reason: 'too_old' });
   }
   if (s.practices.completions.this === 0 && s.mood.days_logged === 0) {
