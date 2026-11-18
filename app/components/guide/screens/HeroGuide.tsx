@@ -17,6 +17,7 @@ import { HexGrainToggle, HexPill } from '@/components/HexGrainToggle';
 import { HexSeriesLegend } from '@/components/HexSeriesLegend';
 import { PillarSwitcher, type PillarKey } from '@/components/PillarSwitcher';
 import { DimensionPillarCard, ScoreBar } from '@/components/pillars/DimensionPillarCard';
+import { NorthFolded, NorthPhrase, NorthReview } from '@/components/pillars/NorteParts';
 import { PillarActions } from '@/components/pillars/PillarActions';
 import { useVidaSample } from '@/components/guide/screens/VidaGuide';
 import { VidaEntryCard } from '@/components/vida/VidaParts';
@@ -64,6 +65,9 @@ export const HERO_GUIDE_ITEMS = [
   'history',
   'life',
   'north',
+  'northLife',
+  'northReview',
+  'northEdit',
   'path',
 ] as const;
 
@@ -81,9 +85,10 @@ const GESTURE_ICONS: Record<GestureKey, keyof typeof Ionicons.glyphMap> = {
 };
 
 /** Caminho exists only with Metas or Habilidades on; the "A vida que eu
- *  quero" card only with its own module. */
+ *  quero" card, and the Norte suggestions it feeds, only with its module. */
 const GATES: Partial<Record<ItemKey, readonly ModuleKey[]>> = {
   life: ['vida'],
+  northLife: ['vida'],
   path: ['metas', 'skills'],
 };
 
@@ -200,7 +205,22 @@ export function HeroGuide() {
       replica: <HistoryReplica />,
     },
     life: { icon: 'sparkles-outline', iconColor: tokens.semantic.coin, replica: <LifeReplica /> },
-    north: { icon: 'compass-outline', iconColor: tokens.semantic.coin },
+    north: { icon: 'compass-outline', iconColor: tokens.semantic.coin, replica: <NorthReplica /> },
+    northLife: {
+      icon: 'sparkles-outline',
+      iconColor: tokens.semantic.coin,
+      replica: <NorthLifeReplica />,
+    },
+    northReview: {
+      icon: 'time-outline',
+      iconColor: tokens.semantic.coin,
+      replica: <NorthReviewReplica />,
+    },
+    northEdit: {
+      icon: 'create-outline',
+      iconColor: tokens.semantic.coin,
+      replica: <NorthEditReplica />,
+    },
     path: { icon: 'flag-outline', iconColor: tokens.semantic.coin },
   };
 
@@ -367,6 +387,94 @@ function LifeReplica() {
   );
 }
 
+/** Desejada's Norte: an area that matters (its phrase over the ruler, gold
+ *  rim) and a folded one — the real cards, on the guide's sample. */
+function NorthReplica() {
+  const { t } = useT();
+  const meta = useMetaLookup();
+  const naturalWidth = useWindowDimensions().width - 32;
+  const color = DIMENSION_META.wealth.color;
+  const sub = (id: SubId, cur: number, des: number) => ({
+    subId: id,
+    value: `${formatScore(cur)} → ${formatScore(des)}`,
+    bar: <ScoreBar fill={des / 5} from={cur / 5} color={color} />,
+  });
+  return (
+    <GuideFit naturalWidth={naturalWidth}>
+      <View style={styles.stack}>
+        <DimensionPillarCard
+          dimId="wealth"
+          value={formatScore(8)}
+          unit="/10"
+          rim={tokens.semantic.coinRim}
+          onPress={noop}
+          lead={<NorthPhrase want={t(`${HELP}.northSample.want`)} today={t(`${HELP}.northSample.today`)} />}
+          subs={[sub('money', 3, 4), sub('career', 4, 4)]}
+        />
+        <DimensionPillarCard
+          dimId="body"
+          value={formatScore(8.5)}
+          unit="/10"
+          onPress={noop}
+          lead={
+            <NorthFolded
+              line={`${meta.sub('strength').label} ${formatScore(2)} → ${formatScore(4)} · ${meta.sub('dexterity').label} ${formatScore(3)} → ${formatScore(4.5)}`}
+            />
+          }
+          subs={[]}
+        />
+      </View>
+    </GuideFit>
+  );
+}
+
+/** An area marked, nothing written yet: the scene of "A vida que eu quero"
+ *  stands in as the suggestion. */
+function NorthLifeReplica() {
+  const { t } = useT();
+  const naturalWidth = useWindowDimensions().width - 32;
+  return (
+    <GuideFit naturalWidth={naturalWidth}>
+      <DimensionPillarCard
+        dimId="bonds"
+        value={formatScore(7)}
+        unit="/10"
+        rim={tokens.semantic.coinRim}
+        onPress={noop}
+        lead={<NorthPhrase want={null} suggestion={t(`${HELP}.northSample.scene`)} />}
+        subs={[]}
+      />
+    </GuideFit>
+  );
+}
+
+/** The six-month question, as it sits inside a card. */
+function NorthReviewReplica() {
+  const naturalWidth = useWindowDimensions().width - 32;
+  return (
+    <GuideFit naturalWidth={naturalWidth}>
+      <NorthReview onKeep={noop} onChange={noop} />
+    </GuideFit>
+  );
+}
+
+/** Desejada's closing card once an area is marked. */
+function NorthEditReplica() {
+  const { t } = useT();
+  const naturalWidth = useWindowDimensions().width - 32;
+  return (
+    <GuideFit naturalWidth={naturalWidth}>
+      <PillarActions
+        accent={tokens.semantic.coin}
+        actions={[
+          { key: 'want', icon: 'create-outline', label: t('norte.editWant'), onPress: noop },
+          { key: 'north', icon: 'flag-outline', label: t('norte.cta'), onPress: noop },
+        ]}
+      />
+    </GuideFit>
+  );
+}
+
 /** Praticada's closing card: the full history. */
 function HistoryReplica() {
   const { t } = useT();
@@ -386,6 +494,7 @@ function HistoryReplica() {
 const styles = StyleSheet.create({
   hexWrap: { alignItems: 'center' },
   row: { flexDirection: 'row' },
+  stack: { gap: 8 },
   feedback: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   feedbackText: {
     flex: 1,
