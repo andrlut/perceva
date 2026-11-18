@@ -23,9 +23,9 @@
 //      nothing, the credit comes back (refund row) — day and month alike.
 //
 // Context sent to the model: the day (practices, completions, skips, mood,
-// tags) and, after the consent, a short <profile> block — "A vida que eu
-// quero" when the `vida` module is on. Both live in the user turn, outside
-// the cached system prompt.
+// tags) and, after the consent, a short <profile> block — "Sobre você"
+// (manner, rhythm, 90-day focus) and "A vida que eu quero" when the `vida`
+// module is on. Both live in the user turn, outside the cached system prompt.
 //
 // Privacy: the transcript is never stored and never logged. The ledger keeps
 // numbers only (tokens, cost, latency, line counts). Logs carry the request
@@ -52,6 +52,7 @@ import {
   sanitizeText,
 } from './day.ts';
 import {
+  aboutFromRow,
   buildProfileBlock,
   buildTools,
   buildUserMessage,
@@ -158,22 +159,28 @@ async function loadDay(
 // ─── The person's profile, read under RLS ────────────────────────────────────
 
 /**
- * The short <profile> block: the newest "A vida que eu quero" — only when the
- * `vida` module is ON for this person (modules are Premium since 2026-10-13:
- * a free profile reads every module as off, the same rule as the app's
- * useModules and the MCP). Reached only after ai_begin, so only for people
- * with a current consent.
+ * The short <profile> block:
+ *   - "Sobre você" (profile_context): the AI's manner, the rhythm, the
+ *     90-day focus — core, no module;
+ *   - the newest "A vida que eu quero" (life_vision) — only when the `vida`
+ *     module is ON for this person (modules are Premium since 2026-10-13: a
+ *     free profile reads every module as off, the same rule as the app's
+ *     useModules and the MCP).
+ * Reached only after ai_begin, so only for people with a current consent.
  *
- * Best effort: a failed read sends the request without a profile, never
- * fails it.
+ * Best effort: a failed read (or a table this environment doesn't have yet)
+ * sends the request without that part, never fails it.
  */
 async function loadProfile(db: SupabaseClient, locale: 'pt' | 'en'): Promise<string | null> {
   try {
-    const [profRes, visionRes] = await Promise.all([
+    const [profRes, visionRes, aboutRes] = await Promise.all([
       db.from('profile').select('modules,subscription_tier').limit(1),
       db.from('life_vision')
         .select('headline,scene_1,scene_1_dim,scene_2,scene_2_dim,scene_3,scene_3_dim')
         .order('created_at', { ascending: false })
+        .limit(1),
+      db.from('profile_context')
+        .select('ai_tone,ai_push,ai_avoid,wake_time,sleep_time,work_start,work_end,best_time,focus_90d,focus_set_at')
         .limit(1),
     ]);
     const p = profRes.error ? null : profRes.data?.[0];
@@ -182,7 +189,10 @@ async function loadProfile(db: SupabaseClient, locale: 'pt' | 'en'): Promise<str
     const vision = vidaOn && !visionRes.error
       ? lifeVisionFromRow(visionRes.data?.[0] as Record<string, unknown> | undefined, locale)
       : null;
-    return buildProfileBlock(vision);
+    const about = aboutRes.error
+      ? null
+      : aboutFromRow(aboutRes.data?.[0] as Record<string, unknown> | undefined, new Date());
+    return buildProfileBlock(vision, about);
   } catch {
     return null;
   }

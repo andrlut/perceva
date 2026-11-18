@@ -27,6 +27,7 @@ export const DAY_VOICE_GUIDE_ITEMS = [
   'review',
   'register',
   'edit',
+  'privacy',
   'limit',
 ] as const;
 
@@ -134,6 +135,7 @@ export function DayVoiceGuide() {
         </View>
       ),
     },
+    privacy: { icon: 'shield-checkmark-outline' },
     limit: { icon: 'speedometer-outline' },
   };
 
