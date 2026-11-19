@@ -4,7 +4,7 @@
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
-const FONT_DIR = 'C:/Users/Administrator/Projects/rpgtasks/tools/social/fonts';
+const FONT_DIR = path.join(__dirname, 'fonts').replace(/\\/g, '/');
 const CONF = path.join(os.tmpdir(), 'perceva-banner-fonts.conf');
 fs.writeFileSync(CONF, `<?xml version="1.0"?>
 <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
@@ -75,7 +75,7 @@ async function banner(tagline, outFile) {
 }
 
 (async () => {
-  const out = 'C:/Users/Administrator/Projects/rpgtasks/social/brand';
+  const out = path.resolve(__dirname, '..', '..', 'social', 'brand');
   fs.mkdirSync(out, { recursive: true });
   await banner('Perceba quem você está se tornando.', out + '/youtube-banner-pt.png');
   await banner("See who you're becoming.", out + '/youtube-banner-en.png');
