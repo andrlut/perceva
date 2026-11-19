@@ -157,3 +157,17 @@ export async function presentOfferCodeSheet(): Promise<boolean> {
   await Purchases!.presentCodeRedemptionSheet();
   return true;
 }
+
+/**
+ * Whether this store account / RC user ever held Premium (active or
+ * expired, any store). Store codes are for first-time subscribers: Apple
+ * enforces that itself for offer codes; on Google a developer-determined
+ * offer has no eligibility rule, so the app enforces it with this before
+ * applying a code. RC keeps expired entitlements in `entitlements.all` and
+ * every product ever bought in `allPurchasedProductIdentifiers`.
+ */
+export async function hasEverHadPremium(): Promise<boolean> {
+  if (!ensureConfigured()) return false;
+  const info = await Purchases!.getCustomerInfo();
+  return info.entitlements.all['premium'] != null || info.allPurchasedProductIdentifiers.length > 0;
+}

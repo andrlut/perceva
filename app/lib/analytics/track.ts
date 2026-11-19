@@ -68,8 +68,10 @@ export type AppEventName =
   | 'campaign_upsell_accepted'
   /** A store code typed on the paywall was accepted (`code`, `plan`). */
   | 'premium_code_applied'
-  /** A store code typed on the paywall was refused (`reason`: unknown | unavailable). */
-  | 'premium_code_rejected';
+  /** A store code typed on the paywall was refused (`reason`: unknown | unavailable | already_subscribed). */
+  | 'premium_code_rejected'
+  /** A purchase went through WITH a store code (`code`, `plan`) — the count the partner asks for. */
+  | 'premium_code_purchased';
 
 export type AppEventProps = Record<string, string | number | boolean | null>;
 

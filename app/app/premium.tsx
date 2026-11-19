@@ -3,7 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Linking,
@@ -29,6 +29,7 @@ import {
   type PlanId,
 } from '@/lib/premium';
 import {
+  hasEverHadPremium,
   lookupStoreCode,
   offerPriceForPackage,
   packageForPlan,
@@ -39,6 +40,7 @@ import {
   restorePremium,
   useOffering,
 } from '@/lib/purchases';
+import { useKeyboardHeight } from '@/lib/use-keyboard-height';
 import { showInfo } from '@/lib/util/confirm';
 import { tokens } from '@/theme';
 
@@ -72,6 +74,15 @@ export default function PremiumScreen() {
   const [applied, setApplied] = useState<AppliedCode | null>(null);
   const offering = useOffering();
   const queryClient = useQueryClient();
+  // The code field sits near the bottom: reserve the keyboard's height in
+  // the scroll content and bring the field up when it takes focus. The
+  // SafeAreaView includes the bottom edge, so useKeyboardHeight is the
+  // right ruler (see lib/use-keyboard-height).
+  const keyboard = useKeyboardHeight();
+  const scrollRef = useRef<ScrollView>(null);
+  const scrollToCodeField = () => {
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 120);
+  };
 
   // Origin of the visit — the paywall's own funnel entry.
   useEffect(() => {
@@ -115,6 +126,7 @@ export default function PremiumScreen() {
         setApplied(null);
         showInfo(t('premium.code.unavailableTitle'), t('premium.code.unavailable'));
       } else if (outcome === 'premium') {
+        if (viaOffer) track('premium_code_purchased', { code: applied.code, plan: applied.plan });
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
         await syncTierAfterPurchase();
       } else if (outcome === 'pending') {
@@ -151,6 +163,18 @@ export default function PremiumScreen() {
     if (!found) {
       track('premium_code_rejected', { reason: 'unknown' });
       return t('premium.code.invalid');
+    }
+    // First-time subscribers only, like Apple's offer codes. Google leaves
+    // developer-determined offers wide open, so the app checks the store
+    // account's history (any earlier Premium, active or expired).
+    try {
+      if (await hasEverHadPremium()) {
+        track('premium_code_rejected', { reason: 'already_subscribed', code: found.code });
+        return t('premium.code.alreadySubscribed');
+      }
+    } catch {
+      // Store unreachable: fall through — the purchase itself will fail
+      // loudly if the store is really down.
     }
     const pkg = packageForPlan(offering.data, found.entry.plan);
     const price = pkg ? offerPriceForPackage(pkg, found.entry.googleOfferId) : null;
@@ -202,8 +226,13 @@ export default function PremiumScreen() {
         </View>
 
         <ScrollView
-          contentContainerStyle={styles.content}
+          ref={scrollRef}
+          contentContainerStyle={[
+            styles.content,
+            keyboard > 0 && { paddingBottom: keyboard + tokens.space[6] },
+          ]}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
           <Hero />
           {isPremium ? (
@@ -226,6 +255,7 @@ export default function PremiumScreen() {
                   applied={applied}
                   onSubmit={handleCode}
                   onRemove={() => setApplied(null)}
+                  onFocus={scrollToCodeField}
                   busy={busy === 'code'}
                 />
               )}
@@ -467,12 +497,15 @@ function CodeField({
   applied,
   onSubmit,
   onRemove,
+  onFocus,
   busy,
 }: {
   applied: AppliedCode | null;
   /** Resolves with an error line to show, or null when accepted / handled. */
   onSubmit: (raw: string) => Promise<string | null>;
   onRemove: () => void;
+  /** The field took focus: the screen scrolls it above the keyboard. */
+  onFocus: () => void;
   busy: boolean;
 }) {
   const { t } = useT();
@@ -505,7 +538,14 @@ function CodeField({
   if (!open || ios) {
     return (
       <Pressable
-        onPress={() => (ios ? void submit() : setOpen(true))}
+        onPress={() => {
+          if (ios) {
+            void submit();
+          } else {
+            setOpen(true);
+            onFocus();
+          }
+        }}
         disabled={busy}
         hitSlop={8}
         style={({ pressed }) => [styles.codeLink, (pressed || busy) && { opacity: 0.6 }]}
@@ -527,6 +567,7 @@ function CodeField({
             if (error) setError(null);
           }}
           onSubmitEditing={submit}
+          onFocus={onFocus}
           placeholder={t('premium.code.placeholder')}
           placeholderTextColor={tokens.text.faint}
           autoCapitalize="characters"

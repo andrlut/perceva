@@ -403,6 +403,8 @@ const pt: Translations = {
       unavailableTitle: 'Código indisponível',
       unavailable:
         'Esse código vale só pra quem nunca assinou o Perceva Premium nesta conta da loja.',
+      alreadySubscribed:
+        'Esse código é pra quem nunca assinou o Perceva Premium, e esta conta já assinou.',
       applied: 'Código {{code}} aplicado. O desconto já aparece no plano.',
       remove: 'Remover',
       /** No card do plano, no lugar do preço cheio. */
