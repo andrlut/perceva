@@ -411,6 +411,8 @@ const en = {
       unavailableTitle: 'Code unavailable',
       unavailable:
         "This code is only for people who never subscribed to Perceva Premium on this store account.",
+      alreadySubscribed:
+        "This code is for people who never subscribed to Perceva Premium, and this account already has.",
       applied: 'Code {{code}} applied. The discount shows on the plan.',
       remove: 'Remove',
       offerPrice: '{{price}} for the 1st year',

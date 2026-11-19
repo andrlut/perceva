@@ -1,5 +1,6 @@
 export {
   ensureConfigured,
+  hasEverHadPremium,
   logInPurchases,
   logOutPurchases,
   offerPriceForPackage,
