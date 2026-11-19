@@ -4,6 +4,7 @@ import type PurchasesModule from 'react-native-purchases';
 import type {
   PurchasesOffering,
   PurchasesPackage,
+  SubscriptionOption,
 } from 'react-native-purchases';
 
 /**
@@ -109,4 +110,50 @@ export async function restorePremium(): Promise<boolean> {
   if (!ensureConfigured()) return false;
   const customerInfo = await Purchases!.restorePurchases();
   return !!customerInfo.entitlements.active['premium'];
+}
+
+/* ───────────────── Store codes (see lib/purchases/storeCodes.ts) ───────────────── */
+
+/** Google only: the offer `offerId` on this package's base plan, if the
+ *  store returned it for this person (Google filters by eligibility). */
+function offerOption(pkg: PurchasesPackage, offerId: string): SubscriptionOption | null {
+  const options = pkg.product.subscriptionOptions ?? [];
+  return options.find((o) => !o.isBasePlan && o.id.endsWith(`:${offerId}`)) ?? null;
+}
+
+/** The offer's first-phase price, formatted by the store ("R$ 69,93"), or
+ *  null when the offer isn't available to this person on this device. */
+export function offerPriceForPackage(pkg: PurchasesPackage, offerId: string): string | null {
+  const phase = offerOption(pkg, offerId)?.pricingPhases[0];
+  return phase ? phase.price.formatted : null;
+}
+
+/**
+ * Google only: buy the package THROUGH a developer-determined offer — the
+ * only way a Play discount reaches the person, since Play promo codes can't
+ * carry a price (storeCodes.ts). 'offer_unavailable' when the store didn't
+ * hand us that offer (not eligible, or the offer is off).
+ */
+export async function purchasePremiumWithOffer(
+  pkg: PurchasesPackage,
+  offerId: string,
+): Promise<PurchaseOutcome | 'offer_unavailable'> {
+  if (!ensureConfigured()) return 'cancelled';
+  const option = offerOption(pkg, offerId);
+  if (!option) return 'offer_unavailable';
+  try {
+    const { customerInfo } = await Purchases!.purchaseSubscriptionOption(option);
+    return customerInfo.entitlements.active['premium'] ? 'premium' : 'pending';
+  } catch (e) {
+    if ((e as { userCancelled?: boolean }).userCancelled) return 'cancelled';
+    throw e;
+  }
+}
+
+/** iOS only: Apple's own offer-code sheet. Resolves when the sheet closes;
+ *  whether a code was redeemed only shows up through the entitlement. */
+export async function presentOfferCodeSheet(): Promise<boolean> {
+  if (Platform.OS !== 'ios' || !ensureConfigured()) return false;
+  await Purchases!.presentCodeRedemptionSheet();
+  return true;
 }

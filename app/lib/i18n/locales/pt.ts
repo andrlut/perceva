@@ -393,6 +393,22 @@ const pt: Translations = {
       separator: '·',
       restore: 'Restaurar compras',
     },
+    /** O campo "Tenho um código" (2026-11-18). No iPhone abre a tela de
+     *  resgate da Apple; no Android o app aplica a oferta do Play. */
+    code: {
+      link: 'Tenho um código de desconto',
+      placeholder: 'Digite o código',
+      apply: 'Aplicar',
+      invalid: 'Código não reconhecido. Confere a grafia e tenta de novo.',
+      unavailableTitle: 'Código indisponível',
+      unavailable:
+        'Esse código vale só pra quem nunca assinou o Perceva Premium nesta conta da loja.',
+      applied: 'Código {{code}} aplicado. O desconto já aparece no plano.',
+      remove: 'Remover',
+      /** No card do plano, no lugar do preço cheio. */
+      offerPrice: '{{price}} no 1º ano',
+      offerThen: 'com {{code}} · depois {{price}}',
+    },
     active: {
       title: 'Você é Premium',
       desc: 'Obrigado por apoiar o Perceva.',

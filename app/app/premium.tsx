@@ -7,10 +7,12 @@ import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Linking,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -27,8 +29,12 @@ import {
   type PlanId,
 } from '@/lib/premium';
 import {
+  lookupStoreCode,
+  offerPriceForPackage,
   packageForPlan,
+  presentOfferCodeSheet,
   purchasePremium,
+  purchasePremiumWithOffer,
   purchasesAvailable,
   restorePremium,
   useOffering,
@@ -60,7 +66,10 @@ export default function PremiumScreen() {
   const isPremium = useIsPremium();
   const params = useLocalSearchParams<{ source?: string }>();
   const [selectedPlan, setSelectedPlan] = useState<PlanId>('annual');
-  const [busy, setBusy] = useState<'purchase' | 'restore' | null>(null);
+  const [busy, setBusy] = useState<'purchase' | 'restore' | 'code' | null>(null);
+  // A store code accepted by the field below (Android only — on iOS the
+  // field opens Apple's sheet and the app never holds the code).
+  const [applied, setApplied] = useState<AppliedCode | null>(null);
   const offering = useOffering();
   const queryClient = useQueryClient();
 
@@ -95,8 +104,17 @@ export default function PremiumScreen() {
     }
     setBusy('purchase');
     try {
-      const outcome = await purchasePremium(pkg);
-      if (outcome === 'premium') {
+      const viaOffer = applied != null && applied.plan === selectedPlan;
+      const outcome = viaOffer
+        ? await purchasePremiumWithOffer(pkg, applied.offerId)
+        : await purchasePremium(pkg);
+      if (outcome === 'offer_unavailable') {
+        // The store stopped offering it between apply and buy (eligibility
+        // is Google's call). Drop the code rather than charge full price
+        // under a "discount applied" label.
+        setApplied(null);
+        showInfo(t('premium.code.unavailableTitle'), t('premium.code.unavailable'));
+      } else if (outcome === 'premium') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
         await syncTierAfterPurchase();
       } else if (outcome === 'pending') {
@@ -109,6 +127,42 @@ export default function PremiumScreen() {
     } finally {
       setBusy(null);
     }
+  };
+
+  /** Android: check the code and price the offer; iOS: Apple's sheet. */
+  const handleCode = async (raw: string): Promise<string | null> => {
+    if (Platform.OS === 'ios') {
+      if (busy) return null;
+      setBusy('code');
+      try {
+        await presentOfferCodeSheet();
+        // Apple applies the code itself; if it did, the webhook flips the
+        // flag and the screen turns into the thank-you state.
+        await syncTierAfterPurchase();
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : t('common.unknownError');
+        showInfo(t('premium.purchase.failTitle'), msg);
+      } finally {
+        setBusy(null);
+      }
+      return null;
+    }
+    const found = lookupStoreCode(raw);
+    if (!found) {
+      track('premium_code_rejected', { reason: 'unknown' });
+      return t('premium.code.invalid');
+    }
+    const pkg = packageForPlan(offering.data, found.entry.plan);
+    const price = pkg ? offerPriceForPackage(pkg, found.entry.googleOfferId) : null;
+    if (!pkg || !price) {
+      track('premium_code_rejected', { reason: 'unavailable', code: found.code });
+      return t('premium.code.unavailable');
+    }
+    track('premium_code_applied', { code: found.code, plan: found.entry.plan });
+    setApplied({ code: found.code, plan: found.entry.plan, offerId: found.entry.googleOfferId, price });
+    setSelectedPlan(found.entry.plan);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    return null;
   };
 
   const handleRestore = async () => {
@@ -165,7 +219,16 @@ export default function PremiumScreen() {
                   annual: offering.data?.annual ?? null,
                   monthly: offering.data?.monthly ?? null,
                 }}
+                applied={applied}
               />
+              {CAN_SELL && (
+                <CodeField
+                  applied={applied}
+                  onSubmit={handleCode}
+                  onRemove={() => setApplied(null)}
+                  busy={busy === 'code'}
+                />
+              )}
               <Cta onPress={handlePurchase} busy={busy === 'purchase'} />
               <Footer onRestore={handleRestore} restoring={busy === 'restore'} />
             </>
@@ -289,9 +352,12 @@ function PlanPicker({
   selected,
   onSelect,
   livePackages,
+  applied,
 }: {
   selected: PlanId;
   onSelect: (id: PlanId) => void;
+  /** A store code the field accepted: its plan shows the offer price. */
+  applied: AppliedCode | null;
   /** Live offering packages; null → i18n fallback. The store is the source
    *  of truth once purchases are live — hardcoded strings drift the moment
    *  a price changes in the console, so badge ("N meses grátis") and the
@@ -328,6 +394,7 @@ function PlanPicker({
         const price = live
           ? t(`premium.plan.${plan.id}PriceLive`, { price: live })
           : t(`premium.plan.${plan.id}Price`);
+        const offer = applied?.plan === plan.id ? applied : null;
         return (
           <Pressable
             key={plan.id}
@@ -350,14 +417,143 @@ function PlanPicker({
                   </View>
                 )}
               </View>
-              <Text style={styles.planPrice}>{price}</Text>
-              {plan.id === 'annual' && (
-                <Text style={styles.planEquiv}>{equiv}</Text>
+              {offer ? (
+                <>
+                  <Text style={styles.planPrice}>
+                    {t('premium.code.offerPrice', { price: offer.price })}
+                  </Text>
+                  <Text style={styles.planEquiv}>
+                    {t('premium.code.offerThen', { price: live ?? '', code: offer.code })}
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.planPrice}>{price}</Text>
+                  {plan.id === 'annual' && (
+                    <Text style={styles.planEquiv}>{equiv}</Text>
+                  )}
+                </>
               )}
             </View>
           </Pressable>
         );
       })}
+    </View>
+  );
+}
+
+/* ─────────────────────── Store code ───────────────────────── */
+
+interface AppliedCode {
+  code: string;
+  plan: PlanId;
+  offerId: string;
+  /** The offer's first-phase price as the store formats it. */
+  price: string;
+}
+
+/**
+ * "Tenho um código de desconto" (2026-11-18). Partners hand out store
+ * codes (PAKERANUAL); the two stores redeem them differently, so:
+ *
+ *   iOS     → the link opens Apple's redemption sheet straight away; the
+ *             app never sees the code.
+ *   Android → the link reveals a field; the app checks the code
+ *             (lib/purchases/storeCodes) and the plan card shows the
+ *             offer price until the purchase. Google Play has no code
+ *             field of its own for discounts.
+ */
+function CodeField({
+  applied,
+  onSubmit,
+  onRemove,
+  busy,
+}: {
+  applied: AppliedCode | null;
+  /** Resolves with an error line to show, or null when accepted / handled. */
+  onSubmit: (raw: string) => Promise<string | null>;
+  onRemove: () => void;
+  busy: boolean;
+}) {
+  const { t } = useT();
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const ios = Platform.OS === 'ios';
+
+  const submit = async () => {
+    if (busy) return;
+    const err = await onSubmit(value);
+    setError(err);
+    if (!err) setValue('');
+  };
+
+  if (applied) {
+    return (
+      <View style={styles.codeApplied}>
+        <Ionicons name="pricetag" size={14} color={tokens.semantic.xp2} />
+        <Text style={styles.codeAppliedText} numberOfLines={2}>
+          {t('premium.code.applied', { code: applied.code })}
+        </Text>
+        <Pressable onPress={onRemove} hitSlop={8} accessibilityRole="button">
+          <Text style={styles.codeRemove}>{t('premium.code.remove')}</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  if (!open || ios) {
+    return (
+      <Pressable
+        onPress={() => (ios ? void submit() : setOpen(true))}
+        disabled={busy}
+        hitSlop={8}
+        style={({ pressed }) => [styles.codeLink, (pressed || busy) && { opacity: 0.6 }]}
+        accessibilityRole="button"
+      >
+        <Ionicons name="pricetag-outline" size={14} color={tokens.brand.violet2} />
+        <Text style={styles.codeLinkText}>{t('premium.code.link')}</Text>
+      </Pressable>
+    );
+  }
+
+  return (
+    <View style={styles.codeBox}>
+      <View style={styles.codeRow}>
+        <TextInput
+          value={value}
+          onChangeText={(v) => {
+            setValue(v);
+            if (error) setError(null);
+          }}
+          onSubmitEditing={submit}
+          placeholder={t('premium.code.placeholder')}
+          placeholderTextColor={tokens.text.faint}
+          autoCapitalize="characters"
+          autoCorrect={false}
+          autoFocus
+          returnKeyType="done"
+          editable={!busy}
+          style={styles.codeInput}
+          accessibilityLabel={t('premium.code.placeholder')}
+        />
+        <Pressable
+          onPress={submit}
+          disabled={busy || value.trim().length === 0}
+          style={({ pressed }) => [
+            styles.codeApply,
+            (pressed || busy || value.trim().length === 0) && { opacity: 0.6 },
+          ]}
+          accessibilityRole="button"
+        >
+          {busy ? (
+            <ActivityIndicator color={tokens.text.hi} size="small" />
+          ) : (
+            <Text style={styles.codeApplyText}>{t('premium.code.apply')}</Text>
+          )}
+        </Pressable>
+      </View>
+      {error && <Text style={styles.codeError}>{error}</Text>}
     </View>
   );
 }
@@ -671,6 +867,77 @@ const styles = StyleSheet.create({
   },
   planEquiv: {
     fontFamily: 'Manrope_500Medium',
+    fontSize: 12,
+    color: tokens.text.mid,
+  },
+
+  codeLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: tokens.space[1],
+  },
+  codeLinkText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 13,
+    color: tokens.brand.violet2,
+  },
+  codeBox: { gap: tokens.space[2] },
+  codeRow: { flexDirection: 'row', gap: tokens.space[2] },
+  codeInput: {
+    flex: 1,
+    height: 46,
+    paddingHorizontal: tokens.space[3],
+    borderRadius: tokens.radius.md,
+    borderWidth: 1.5,
+    borderColor: tokens.border.base,
+    backgroundColor: tokens.bg.surface,
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 15,
+    letterSpacing: 1,
+    color: tokens.text.hi,
+  },
+  codeApply: {
+    minWidth: 92,
+    height: 46,
+    paddingHorizontal: tokens.space[3],
+    borderRadius: tokens.radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: tokens.brand.violet,
+  },
+  codeApplyText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 14,
+    color: tokens.text.hi,
+  },
+  codeError: {
+    fontFamily: 'Manrope_500Medium',
+    fontSize: 12,
+    lineHeight: 16,
+    color: tokens.semantic.danger,
+  },
+  codeApplied: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[2],
+    paddingVertical: tokens.space[2],
+    paddingHorizontal: tokens.space[3],
+    borderRadius: tokens.radius.md,
+    borderWidth: 1,
+    borderColor: 'rgba(61, 214, 140, 0.4)',
+    backgroundColor: 'rgba(61, 214, 140, 0.10)',
+  },
+  codeAppliedText: {
+    flex: 1,
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 12,
+    lineHeight: 16,
+    color: tokens.semantic.xp2,
+  },
+  codeRemove: {
+    fontFamily: 'Manrope_700Bold',
     fontSize: 12,
     color: tokens.text.mid,
   },
