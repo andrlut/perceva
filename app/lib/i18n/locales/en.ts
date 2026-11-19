@@ -401,6 +401,21 @@ const en = {
       separator: '·',
       restore: 'Restore purchases',
     },
+    /** The "I have a code" field (2026-11-18). iOS opens Apple's redemption
+     *  sheet; Android applies the Play offer in-app. */
+    code: {
+      link: 'I have a discount code',
+      placeholder: 'Enter the code',
+      apply: 'Apply',
+      invalid: "Code not recognized. Check the spelling and try again.",
+      unavailableTitle: 'Code unavailable',
+      unavailable:
+        "This code is only for people who never subscribed to Perceva Premium on this store account.",
+      applied: 'Code {{code}} applied. The discount shows on the plan.',
+      remove: 'Remove',
+      offerPrice: '{{price}} for the 1st year',
+      offerThen: 'with {{code}} · then {{price}}',
+    },
     active: {
       title: "You're Premium",
       desc: 'Thank you for supporting Perceva.',

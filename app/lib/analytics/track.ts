@@ -65,7 +65,11 @@ export type AppEventName =
   /** A free member tapped the Premium coupon tier (the invite showed). */
   | 'campaign_premium_tier_blocked'
   /** The last offer before the basic claim sent the person to the paywall. */
-  | 'campaign_upsell_accepted';
+  | 'campaign_upsell_accepted'
+  /** A store code typed on the paywall was accepted (`code`, `plan`). */
+  | 'premium_code_applied'
+  /** A store code typed on the paywall was refused (`reason`: unknown | unavailable). */
+  | 'premium_code_rejected';
 
 export type AppEventProps = Record<string, string | number | boolean | null>;
 
