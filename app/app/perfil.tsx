@@ -9,7 +9,6 @@ import { AutoconhecimentoView } from '@/components/pillars/AutoconhecimentoView'
 import { ConectorCard } from '@/components/perfil/ConectorCard';
 import { PerfilHero } from '@/components/perfil/PerfilHero';
 import { SobreVoceCard } from '@/components/perfil/SobreVoceCard';
-import { VaultGapsCard } from '@/components/perfil/VaultGapsCard';
 import { useCharacter } from '@/lib/api/character';
 import { useT } from '@/lib/i18n';
 import { tokens } from '@/theme';
@@ -73,7 +72,6 @@ export default function PerfilScreen() {
           <PerfilHero />
           <SobreVoceCard />
           <AutoconhecimentoView />
-          <VaultGapsCard />
           <ConectorCard />
         </ScrollView>
       </ScreenBackground>

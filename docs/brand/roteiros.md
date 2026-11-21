@@ -190,7 +190,7 @@
 | 38–45 s | Rosto | relato, não método | Isso é o que eu faço. Não é tratamento, não é método. É um jeito de olhar pra um número que eu evitava olhar. |
 | 45–50 s | Cartão final | Baixa no Android · iPhone: entra na lista | Perceva. Baixa no Android; iPhone, entra na lista. |
 
-- **Planos a gravar:** (1) Cofre com itens e carteira; (2) formulário de recompensa com o preço; (3) o resgate; (4) `/perfil` → "Sem resgatar" (VaultGapsCard), com zoom nas duas linhas; (5) saldo. Tudo com os números reais do André, sem emoji na tela, sem confete no corte.
+- **Planos a gravar:** (1) Cofre com itens e carteira; (2) formulário de recompensa com o preço; (3) o resgate; (4) ~~`/perfil` → "Sem resgatar"~~ (o cartão saiu do app em 20/11/2026 — trocar por outro plano); (5) saldo. Tudo com os números reais do André, sem emoji na tela, sem confete no corte.
 - **CTA final:** "Baixa no Android; iPhone, entra na lista." UTM `r06`.
 - **Legenda pronta:** Eu paguei 200 moedas por um cigarro. No Cofre você cria e precifica as próprias recompensas — e um dia eu criei uma que era um deslize. O app não proíbe, não comemora, não dá sermão: mostra há quantos dias e qual foi o maior intervalo anterior. Relato, não método. Baixa no Android; iPhone, entra na lista. #perceva #hábitos #recompensas #autoconhecimento
 - **Por que funciona:** é o uso descoberto que nenhum outro app responde em dias; storytime de 30–60 s com arco (contexto → gesto → o que mudou); enquadrar o deslize como intervalo, e não como fracasso, é o que a prevenção de recaída recomenda (Marlatt) e evita o efeito documentado do contador zerado (Silverman & Barasch, 2023) — sem nenhuma promessa de saúde.

@@ -12,7 +12,7 @@ import { pickWithLocale, pickWithLocaleNullable } from '@/lib/i18n/catalog';
 import type { LanguageCode } from '@/lib/settings';
 import { supabase } from '@/lib/supabase';
 
-import { dateKeyFromLocal, daysBetweenKeys, historyKeys } from './history';
+import { historyKeys } from './history';
 
 import { characterKeys, type CharacterWithProfile } from './character';
 
@@ -27,13 +27,12 @@ export const rewardKeys = {
   /** Redemptions of one local day (the Home's "Resgates do dia"). */
   day: (dateKey: string) => [...rewardKeys.all, 'day', dateKey] as const,
   tracked: () => [...rewardKeys.all, 'tracked'] as const,
-  gaps: () => [...rewardKeys.all, 'gaps'] as const,
   ownedOneShots: () => [...rewardKeys.all, 'ownedOneShots'] as const,
 };
 
 /**
  * Every read a reward mutation can stale: the Vault list, the archived
- * bin, the days-since metric, the tracked pointer (the archived one may
+ * bin, the tracked pointer (the archived one may
  * be the tracked one), the bought one-shots and, when known, the form's
  * detail row. One call per mutation, so no surface is forgotten — the
  * Manage screen and the Vault read different slices of the same table.
@@ -41,7 +40,6 @@ export const rewardKeys = {
 export function invalidateRewardSurfaces(qc: QueryClient, rewardId?: string) {
   void qc.invalidateQueries({ queryKey: rewardKeys.active() });
   void qc.invalidateQueries({ queryKey: rewardKeys.archived() });
-  void qc.invalidateQueries({ queryKey: rewardKeys.gaps() });
   void qc.invalidateQueries({ queryKey: rewardKeys.tracked() });
   void qc.invalidateQueries({ queryKey: rewardKeys.ownedOneShots() });
   if (rewardId) void qc.invalidateQueries({ queryKey: rewardKeys.detail(rewardId) });
@@ -263,109 +261,6 @@ export function useOwnedOneShotIds() {
   });
 }
 
-export interface RewardGap {
-  rewardId: string;
-  title: string;
-  category: RewardCategory;
-  icon: string | null;
-  /** Dias desde o último resgate. null = nunca resgatada. */
-  daysSinceLast: number | null;
-  /** Maior intervalo entre dois resgates consecutivos. null com < 2 resgates. */
-  previousBestGapDays: number | null;
-  redemptionsTotal: number;
-  /** O intervalo atual já passou do maior anterior. */
-  isPastPreviousBest: boolean;
-}
-
-/**
- * Há quantos DIAS cada recompensa não é resgatada.
- *
- * Esta métrica existia só no MCP (`get_rewards`) e em nenhuma tela do app.
- * Ela importa porque este produto também é usado ao contrário: o dono paga
- * moedas quando faz algo que quer parar. Para esse uso, "quanto gastei" não
- * responde nada — "há quantos dias" responde tudo.
- *
- * DUAS DIVERGÊNCIAS DELIBERADAS do MCP, ambas correções:
- *
- *   1. Ordem. O MCP usa `ascending: true` com limite, então descarta os
- *      resgates MAIS RECENTES quando o histórico passa do limite — que são
- *      exatamente os que determinam o intervalo atual. Aqui a busca é DESC
- *      (mantém os mais recentes) e o array é REVERTIDO por recompensa antes
- *      da matemática, senão os intervalos saem negativos.
- *   2. O guard de 2 resgates. Com um único resgate não existe "intervalo
- *      anterior": o MCP compara contra 0 e marca recorde sempre.
- *
- * Fuso: `dateKeyFromLocal`, do dispositivo — não a constante do servidor.
- */
-export function useRewardGaps() {
-  const rewards = useRewards();
-  return useQuery({
-    enabled: rewards.data != null,
-    queryKey: rewardKeys.gaps(),
-    queryFn: async (): Promise<RewardGap[]> => {
-      const { data, error } = await supabase
-        .from('reward_redemption')
-        .select('reward_id, redeemed_at')
-        .order('redeemed_at', { ascending: false })
-        .limit(2000);
-      if (error) throw error;
-
-      const byReward = new Map<string, string[]>();
-      for (const row of (data ?? []) as {
-        reward_id: string;
-        redeemed_at: string;
-      }[]) {
-        const slot = byReward.get(row.reward_id) ?? [];
-        slot.push(row.redeemed_at);
-        byReward.set(row.reward_id, slot);
-      }
-
-      const today = dateKeyFromLocal(new Date());
-
-      return (rewards.data ?? []).map((reward): RewardGap => {
-        // DESC vindo do banco -> ascendente para a matemática de intervalo.
-        const stamps = (byReward.get(reward.id) ?? [])
-          .slice()
-          .reverse()
-          .map((iso) => dateKeyFromLocal(new Date(iso)));
-
-        const total = stamps.length;
-        if (total === 0) {
-          return {
-            rewardId: reward.id,
-            title: reward.title,
-            category: reward.category,
-            icon: reward.icon,
-            daysSinceLast: null,
-            previousBestGapDays: null,
-            redemptionsTotal: 0,
-            isPastPreviousBest: false,
-          };
-        }
-
-        let best: number | null = null;
-        for (let i = 1; i < stamps.length; i++) {
-          const gap = daysBetweenKeys(stamps[i - 1]!, stamps[i]!);
-          if (best === null || gap > best) best = gap;
-        }
-
-        const daysSinceLast = daysBetweenKeys(stamps[total - 1]!, today);
-        return {
-          rewardId: reward.id,
-          title: reward.title,
-          category: reward.category,
-          icon: reward.icon,
-          daysSinceLast,
-          previousBestGapDays: total >= 2 ? best : null,
-          redemptionsTotal: total,
-          isPastPreviousBest:
-            total >= 2 && best !== null && daysSinceLast > best,
-        };
-      });
-    },
-  });
-}
-
 /**
  * Archived rewards — the bin behind the Manage screen. Newest archive
  * first so a just-arquivada reward sits at the top for an obvious undo.
@@ -558,7 +453,6 @@ export function useReorderRewards() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: rewardKeys.active() });
-      queryClient.invalidateQueries({ queryKey: rewardKeys.gaps() });
     },
   });
 }
@@ -625,7 +519,7 @@ export function useAddTemplateToShop() {
 
 /**
  * Every read a redemption write can stale: the balance, the ledger, the
- * days-since metric, the one-shot vitrine (which follows the EXISTENCE of
+ * one-shot vitrine (which follows the EXISTENCE of
  * a redemption row) and the calendar (`historyKeys.all` is the prefix the
  * month feed and the day read both hang under).
  */
@@ -633,7 +527,6 @@ function invalidateRedemptionSurfaces(qc: QueryClient) {
   void qc.invalidateQueries({ queryKey: characterKeys.me() });
   void qc.invalidateQueries({ queryKey: rewardKeys.log() });
   void qc.invalidateQueries({ queryKey: [...rewardKeys.all, 'day'] });
-  void qc.invalidateQueries({ queryKey: rewardKeys.gaps() });
   void qc.invalidateQueries({ queryKey: rewardKeys.ownedOneShots() });
   void qc.invalidateQueries({ queryKey: historyKeys.all });
 }

@@ -1514,15 +1514,6 @@ const pt: Translations = {
       bigFiveTop: '{{trait}} é o traço que mais te distingue',
       bigFiveBalanced: 'Perfil equilibrado nos cinco traços',
     },
-    gaps: {
-      title: 'Sem resgatar',
-      dayUnit: 'd',
-      never: 'nunca resgatada',
-      firstInterval: 'primeiro intervalo',
-      previousBest: 'maior intervalo anterior: {{days}} d',
-      pastPrevious: 'acima do intervalo anterior',
-      seeAll: 'Ver todas',
-      },
   },
 
   /** A screen's guide, the (i) sheet (components/guide). The AI door is the
