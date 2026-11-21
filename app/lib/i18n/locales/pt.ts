@@ -4001,7 +4001,7 @@ const pt: Translations = {
       unavailable: 'O reconhecimento de voz não está disponível neste celular. Use o microfone do teclado.',
       failed: 'A voz falhou agora. Tente de novo ou use o microfone do teclado.',
     },
-    understand: 'Entender',
+    understand: 'Enviar',
     understanding: 'Lendo o seu dia…',
     quotaMonth: 'Restam {{left}} de {{total}} este mês',
     cardEyebrow: 'A IA entendeu',
