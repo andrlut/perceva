@@ -1513,15 +1513,6 @@ const en = {
       bigFiveTop: '{{trait}} is what sets your pattern apart',
       bigFiveBalanced: 'Balanced across all five traits',
     },
-    gaps: {
-      title: 'Not redeemed',
-      dayUnit: 'd',
-      never: 'never redeemed',
-      firstInterval: 'first interval',
-      previousBest: 'previous longest: {{days}} d',
-      pastPrevious: 'past the previous interval',
-      seeAll: 'See all',
-      },
   },
 
   /** A screen's guide, the (i) sheet (components/guide). The AI door is the
