@@ -3986,7 +3986,7 @@ const en = {
       unavailable: 'Speech recognition isn\'t available on this phone. Use the keyboard\'s microphone.',
       failed: 'Voice failed just now. Try again or use the keyboard\'s microphone.',
     },
-    understand: 'Understand',
+    understand: 'Send',
     understanding: 'Reading your day…',
     quotaMonth: '{{left}} of {{total}} left this month',
     cardEyebrow: 'What the AI understood',

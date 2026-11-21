@@ -545,13 +545,41 @@ export default function DayVoiceScreen() {
                     style={styles.input}
                     textAlignVertical="top"
                   />
+                  {/* Send lives IN the card, right under the text: the card
+                      sits at the top of the screen, so the keyboard never
+                      covers it. A footer button depended on the keyboard
+                      height Android reports, and on a real phone (2026-11-20)
+                      it ended up hidden behind the keyboard — no way to send. */}
                   <View style={styles.inputMeta}>
-                    <Text style={styles.meta}>
-                      {month ? t('dayVoice.quotaMonth', { left: month.left, total: month.total }) : ''}
-                    </Text>
-                    <Text style={styles.meta}>
-                      {text.length}/{maxChars}
-                    </Text>
+                    <View style={styles.metaCol}>
+                      {month ? (
+                        <Text style={styles.meta}>
+                          {t('dayVoice.quotaMonth', { left: month.left, total: month.total })}
+                        </Text>
+                      ) : null}
+                      <Text style={styles.meta}>
+                        {text.length}/{maxChars}
+                      </Text>
+                    </View>
+                    <Pressable
+                      onPress={understand}
+                      disabled={phase === 'loading' || !text.trim()}
+                      style={({ pressed }) => [
+                        styles.sendBtn,
+                        (phase === 'loading' || !text.trim()) && { opacity: 0.5 },
+                        pressed && { opacity: 0.85 },
+                      ]}
+                      hitSlop={6}
+                      accessibilityRole="button"
+                      accessibilityState={{ disabled: phase === 'loading' || !text.trim() }}
+                    >
+                      {phase === 'loading' ? (
+                        <ActivityIndicator size="small" color={tokens.semantic.coinInk} />
+                      ) : (
+                        <Ionicons name="sparkles" size={15} color={tokens.semantic.coinInk} />
+                      )}
+                      <Text style={styles.sendBtnText}>{t('dayVoice.understand')}</Text>
+                    </Pressable>
                   </View>
                 </View>
 
@@ -617,6 +645,7 @@ export default function DayVoiceScreen() {
             )}
           </ScrollView>
 
+          {needsConsent || phase === 'review' ? (
           <View style={styles.footer}>
             {needsConsent ? (
               <View style={styles.btnRow}>
@@ -674,23 +703,9 @@ export default function DayVoiceScreen() {
                   )}
                 </Pressable>
               </View>
-            ) : (
-              <Pressable
-                onPress={understand}
-                disabled={phase === 'loading' || !text.trim()}
-                style={({ pressed }) => [
-                  styles.btn,
-                  styles.btnGold,
-                  (phase === 'loading' || !text.trim()) && { opacity: 0.5 },
-                  pressed && { opacity: 0.85 },
-                ]}
-                accessibilityRole="button"
-              >
-                <Ionicons name="sparkles" size={16} color={tokens.semantic.coinInk} />
-                <Text style={styles.btnGoldText}>{t('dayVoice.understand')}</Text>
-              </Pressable>
-            )}
+            ) : null}
           </View>
+          ) : null}
         </View>
       </ScreenBackground>
 
@@ -747,10 +762,33 @@ const styles = StyleSheet.create({
     lineHeight: 23,
     color: tokens.text.hi,
     minHeight: 150,
+    // A long day scrolls inside the box, so the send button under it stays
+    // in view above the keyboard.
+    maxHeight: 220,
   },
   inputMeta: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: tokens.space[2],
+  },
+  metaCol: {
+    flex: 1,
+    gap: 2,
+  },
+  sendBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    height: 44,
+    paddingHorizontal: tokens.space[4],
+    borderRadius: tokens.radius.pill,
+    backgroundColor: tokens.semantic.coin,
+  },
+  sendBtnText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 14,
+    color: tokens.semantic.coinInk,
   },
   meta: {
     fontFamily: 'Manrope_500Medium',
