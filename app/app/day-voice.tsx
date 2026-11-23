@@ -495,8 +495,35 @@ export default function DayVoiceScreen() {
           >
             <Ionicons name="close" size={22} color={tokens.text.hi} />
           </Pressable>
-          <Text style={styles.headerTitle}>{t('dayVoice.title')}</Text>
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            {t('dayVoice.title')}
+          </Text>
           <ScreenInfoButton onPress={() => setHelpOpen(true)} a11yLabel={t('dayVoice.help.a11y')} />
+          {/* Send lives in the top bar, like any compose screen: the bar is
+              outside the scroll and above the keyboard on every phone, however
+              long the dictation gets. A footer button and a button under the
+              text both ended up behind the keyboard (2026-11-20 and 11-23). */}
+          {!needsConsent && phase !== 'review' ? (
+            <Pressable
+              onPress={understand}
+              disabled={phase === 'loading' || !text.trim()}
+              style={({ pressed }) => [
+                styles.sendBtn,
+                (phase === 'loading' || !text.trim()) && { opacity: 0.5 },
+                pressed && { opacity: 0.85 },
+              ]}
+              hitSlop={6}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: phase === 'loading' || !text.trim() }}
+            >
+              {phase === 'loading' ? (
+                <ActivityIndicator size="small" color={tokens.semantic.coinInk} />
+              ) : (
+                <Ionicons name="sparkles" size={14} color={tokens.semantic.coinInk} />
+              )}
+              <Text style={styles.sendBtnText}>{t('dayVoice.understand')}</Text>
+            </Pressable>
+          ) : null}
         </View>
 
         <View style={[styles.flex, { paddingBottom: keyboardHeight }]}>
@@ -545,41 +572,13 @@ export default function DayVoiceScreen() {
                     style={styles.input}
                     textAlignVertical="top"
                   />
-                  {/* Send lives IN the card, right under the text: the card
-                      sits at the top of the screen, so the keyboard never
-                      covers it. A footer button depended on the keyboard
-                      height Android reports, and on a real phone (2026-11-20)
-                      it ended up hidden behind the keyboard — no way to send. */}
                   <View style={styles.inputMeta}>
-                    <View style={styles.metaCol}>
-                      {month ? (
-                        <Text style={styles.meta}>
-                          {t('dayVoice.quotaMonth', { left: month.left, total: month.total })}
-                        </Text>
-                      ) : null}
-                      <Text style={styles.meta}>
-                        {text.length}/{maxChars}
-                      </Text>
-                    </View>
-                    <Pressable
-                      onPress={understand}
-                      disabled={phase === 'loading' || !text.trim()}
-                      style={({ pressed }) => [
-                        styles.sendBtn,
-                        (phase === 'loading' || !text.trim()) && { opacity: 0.5 },
-                        pressed && { opacity: 0.85 },
-                      ]}
-                      hitSlop={6}
-                      accessibilityRole="button"
-                      accessibilityState={{ disabled: phase === 'loading' || !text.trim() }}
-                    >
-                      {phase === 'loading' ? (
-                        <ActivityIndicator size="small" color={tokens.semantic.coinInk} />
-                      ) : (
-                        <Ionicons name="sparkles" size={15} color={tokens.semantic.coinInk} />
-                      )}
-                      <Text style={styles.sendBtnText}>{t('dayVoice.understand')}</Text>
-                    </Pressable>
+                    <Text style={styles.meta}>
+                      {month ? t('dayVoice.quotaMonth', { left: month.left, total: month.total }) : ''}
+                    </Text>
+                    <Text style={styles.meta}>
+                      {text.length}/{maxChars}
+                    </Text>
                   </View>
                 </View>
 
@@ -727,7 +726,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: tokens.space[1],
     paddingHorizontal: tokens.space[4],
     paddingVertical: tokens.space[3],
     borderBottomWidth: 1,
@@ -741,6 +740,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...tokens.type.h3,
+    flex: 1,
     color: tokens.text.hi,
   },
   content: {
@@ -762,26 +762,18 @@ const styles = StyleSheet.create({
     lineHeight: 23,
     color: tokens.text.hi,
     minHeight: 150,
-    // A long day scrolls inside the box, so the send button under it stays
-    // in view above the keyboard.
-    maxHeight: 220,
   },
   inputMeta: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: tokens.space[2],
-  },
-  metaCol: {
-    flex: 1,
-    gap: 2,
   },
   sendBtn: {
     flexDirection: 'row',
+    flexShrink: 0,
     alignItems: 'center',
-    gap: 6,
-    height: 44,
-    paddingHorizontal: tokens.space[4],
+    gap: 5,
+    height: 40,
+    paddingHorizontal: tokens.space[3],
     borderRadius: tokens.radius.pill,
     backgroundColor: tokens.semantic.coin,
   },
