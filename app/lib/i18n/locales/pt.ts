@@ -4091,7 +4091,7 @@ const pt: Translations = {
         edit: {
           title: 'Editar',
           body: 'Volta pro texto pra corrigir e mandar de novo.',
-          ai: 'Também dá pra tocar no texto ditado, acima do cartão. Mandar de novo conta como um novo pedido no limite do dia.',
+          ai: 'Também dá pra tocar no texto ditado, acima do cartão. Mandar de novo gasta mais um crédito.',
         },
         privacy: {
           title: 'O que vai pra IA',
@@ -4099,9 +4099,9 @@ const pt: Translations = {
           ai: 'A IA é o Claude, da Anthropic. Vão o texto, as práticas, o humor e as tags de hoje, e também o meu "Sobre você" e "A vida que eu quero", se eu preenchi. O Perceva guarda só números (quantos pedidos e o custo), e a Anthropic não usa o texto pra treinar a IA. Desligo em Ajustes › Sua IA; aí a IA para até eu aceitar de novo.',
         },
         limit: {
-          title: 'Limite',
-          body: 'São 60 pedidos grátis por mês, até 30 por dia. Se a IA falhar ou não entender, não conta.',
-          ai: 'O que sobra no mês fica embaixo da caixa de texto. O mês vira no dia 1º.',
+          title: 'Créditos',
+          body: 'Cada envio gasta 1 crédito. O Premium tem 40 por mês, até 30 envios por dia. Se a IA falhar ou não entender, o crédito volta.',
+          ai: 'O saldo fica embaixo da caixa de texto e em Ajustes › Sua IA. Os créditos renovam no dia 1º e não acumulam.',
         },
       },
     },
