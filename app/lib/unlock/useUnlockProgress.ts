@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { pickSubScores, useCharacter } from '@/lib/api/character';
 import { useCompletionStats } from '@/lib/api/history';
 import { useReadMaterialIds } from '@/lib/api/learning';
+import { useActivePartnerCampaign } from '@/lib/api/partners';
 import { useLastWellbeingSession } from '@/lib/api/psych';
 import { useSession } from '@/lib/auth';
 
@@ -20,6 +21,12 @@ import { useUnlockStore } from './store';
  *   me_practiced ← N distinct days with a practice done
  *   me_desired   ← me + me_practiced
  *   learning     ← ever read a material (older habit) — otherwise manual
+ *   rewards      ← also a live partner campaign (2026-11-25): the flyer in
+ *                  the partner's boxes says "pegue em Recompensas", so the tab
+ *                  opens with no lock and no door — the coupons are right
+ *                  there, in the Parcerias page. The door video stays in the
+ *                  tab's (i). Persisted, so the tab stays open after the
+ *                  campaign ends.
  *
  * Signals come from queries the completion/assessment mutations already
  * invalidate, so an unlock lands on the next render after the action.
@@ -28,6 +35,7 @@ export function useUnlockProgress(): void {
   const { user } = useSession();
   const hydrate = useUnlockStore((s) => s.hydrate);
   const unlock = useUnlockStore((s) => s.unlock);
+  const markDoorSeen = useUnlockStore((s) => s.markDoorSeen);
   const status = useUnlockStore((s) => s.status);
   const unlocked = useUnlockStore((s) => s.unlocked);
 
@@ -35,6 +43,16 @@ export function useUnlockProgress(): void {
   const assessment = useLastWellbeingSession();
   const character = useCharacter();
   const reads = useReadMaterialIds();
+  const partnerLive = useActivePartnerCampaign().data != null;
+
+  useEffect(() => {
+    if (!UNLOCK_GATES_ENABLED || status !== 'ready' || !partnerLive || unlocked.rewards) return;
+    void (async () => {
+      // door first: the tab must never flash its door once it opens
+      await markDoorSeen('rewards');
+      await unlock('rewards', 'partner');
+    })();
+  }, [status, partnerLive, unlocked.rewards, unlock, markDoorSeen]);
 
   useEffect(() => {
     if (user?.id) void hydrate(user.id, user.created_at ?? null);

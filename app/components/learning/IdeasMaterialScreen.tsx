@@ -36,7 +36,7 @@ import { useT, type TranslateOptions } from '@/lib/i18n';
 import { useMetaLookup } from '@/lib/i18n/meta';
 import { categoryOf } from '@/lib/learningCategory';
 import { sponsorOf } from '@/lib/learningSponsor';
-import { campaignStateLine } from '@/lib/partnerCampaign';
+import { campaignCouponLine } from '@/lib/partnerCampaign';
 import type { IdeaLocale } from '@/lib/ideas';
 import { ideaProgress, localizedIdea, nextIdea, sortedIdeas } from '@/lib/ideas';
 import { learningMediaUrl, pickMedia } from '@/lib/learningMedia';
@@ -154,8 +154,8 @@ export function IdeasMaterialScreen({ detail: m }: Props) {
   // The badge shows whenever the material is sponsored; the campaign row only
   // when the material names a campaign AND RLS still returns it (live
   // window, or already claimed by this user). No query at all on regular materials (`enabled: !!id`); on a
-  // sponsored one both reads are the Home card's / campaign screen's own
-  // caches, so the row says exactly what the card says (`campaignStateLine`)
+  // sponsored one both reads are the Parcerias page's / campaign screen's
+  // own caches, so the row says exactly what they say (`campaignCouponLine`)
   // and the tap paints the screen at once.
   const sponsor = sponsorOf(m);
   const campaign = usePartnerCampaign(sponsor?.campaignId).data ?? null;
@@ -166,7 +166,7 @@ export function IdeasMaterialScreen({ detail: m }: Props) {
       : campaign.title_en
     : null;
   const campaignLine =
-    campaign && campaignStatus ? campaignStateLine(campaign, campaignStatus, t) : null;
+    campaign && campaignStatus ? campaignCouponLine(campaign, campaignStatus, t) : null;
   const openCampaign = () => {
     if (!campaign) return;
     Haptics.selectionAsync().catch(() => {});

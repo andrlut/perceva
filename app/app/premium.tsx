@@ -20,6 +20,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { track } from '@/lib/analytics';
 import { characterKeys } from '@/lib/api/character';
+import { partnerKeys } from '@/lib/api/partners';
 import { useT } from '@/lib/i18n';
 import {
   normalizePremiumSource,
@@ -66,7 +67,10 @@ export default function PremiumScreen() {
   const router = useRouter();
   const { t } = useT();
   const isPremium = useIsPremium();
-  const params = useLocalSearchParams<{ source?: string }>();
+  const params = useLocalSearchParams<{ source?: string; code?: string }>();
+  // A partner surface (Recompensas › Parcerias, the 17% invite) opens the
+  // paywall with its code typed in the field; only a code the table knows.
+  const presetCode = params.code ? (lookupStoreCode(params.code)?.code ?? null) : null;
   const [selectedPlan, setSelectedPlan] = useState<PlanId>('annual');
   const [busy, setBusy] = useState<'purchase' | 'restore' | 'code' | null>(null);
   // A store code accepted by the field below (Android only — on iOS the
@@ -102,8 +106,11 @@ export default function PremiumScreen() {
       const data = queryClient.getQueryData<{
         profile: { subscription_tier: string };
       }>(characterKeys.me());
-      if (data?.profile.subscription_tier === 'premium') return;
+      if (data?.profile.subscription_tier === 'premium') break;
     }
+    // The partner coupons read Premium from the campaign status: refresh it
+    // so the 17% opens right after the purchase, not on the next visit.
+    await queryClient.invalidateQueries({ queryKey: partnerKeys.statuses() });
   };
 
   const handlePurchase = async () => {
@@ -252,6 +259,7 @@ export default function PremiumScreen() {
               />
               {CAN_SELL && (
                 <CodeField
+                  initialCode={presetCode}
                   applied={applied}
                   onSubmit={handleCode}
                   onRemove={() => setApplied(null)}
@@ -494,12 +502,15 @@ interface AppliedCode {
  *             field of its own for discounts.
  */
 function CodeField({
+  initialCode,
   applied,
   onSubmit,
   onRemove,
   onFocus,
   busy,
 }: {
+  /** A code to start with (the partner's), field already open. */
+  initialCode?: string | null;
   applied: AppliedCode | null;
   /** Resolves with an error line to show, or null when accepted / handled. */
   onSubmit: (raw: string) => Promise<string | null>;
@@ -509,8 +520,8 @@ function CodeField({
   busy: boolean;
 }) {
   const { t } = useT();
-  const [open, setOpen] = useState(false);
-  const [value, setValue] = useState('');
+  const [open, setOpen] = useState(initialCode != null);
+  const [value, setValue] = useState(initialCode ?? '');
   const [error, setError] = useState<string | null>(null);
   const ios = Platform.OS === 'ios';
 

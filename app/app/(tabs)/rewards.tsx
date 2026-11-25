@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppIcon } from '@/components/AppIcon';
 import { useBottomNavClearance } from '@/components/BottomNavBar';
 import { BuyCelebrationModal } from '@/components/BuyCelebrationModal';
+import { BucketTabsV2 } from '@/components/BucketTabsV2';
 import { BuyConfirmModal } from '@/components/BuyConfirmModal';
 import { FabStack, fabStackClearance, type FabSize } from '@/components/FabStack';
 import { ScreenInfoButton } from '@/components/guide/ScreenInfoButton';
@@ -28,7 +29,7 @@ import { ScreenBackground } from '@/components/ScreenBackground';
 import { TrackedRewardCard } from '@/components/TrackedRewardCard';
 import { TrackPickerSheet } from '@/components/TrackPickerSheet';
 import { VaultHero } from '@/components/VaultHero';
-import { useActivePartnerCampaign } from '@/lib/api/partners';
+import { useActivePartnerCampaign, usePartnerCampaignStatus } from '@/lib/api/partners';
 import { useCharacter } from '@/lib/api/character';
 import {
   useArchiveReward,
@@ -41,6 +42,7 @@ import {
 } from '@/lib/api/rewards';
 import type { Reward, RewardCategory } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
+import { campaignTiers, tierClaimed } from '@/lib/partnerCampaign';
 import { LockedScreen } from '@/components/unlock/LockedScreen';
 import { UnlockDoor } from '@/components/unlock/UnlockDoor';
 import { useLimitGuard, useRewardLimit } from '@/lib/premium';
@@ -61,6 +63,9 @@ import { REWARD_CATEGORY_META, REWARD_CATEGORY_ORDER } from '@/theme/rewards';
  * for rich users or make everything "big" for poor users.
  */
 const ALMOST_RATIO = 0.3;
+
+/** The two pages of the tab: the person's own rewards, the partners' coupons. */
+type RewardsPage = 'mine' | 'partners';
 
 /** One floating button, the Home's: a gold "+" that opens Gerenciar
  *  recompensas (create your own, pick a suggested one, edit, reorder). The
@@ -110,13 +115,32 @@ function RewardsScreenContent() {
     () => new Set(),
   );
   const filterActive = selectedCategories.size > 0;
-  // The partnership (Programa Paker Health) lives in the Vault as its own
-  // block — a header row that folds + the coupons still open — under its
-  // own gold chip: selected = only the block; at rest it sits above the
-  // sections; a category filter hides it.
+  // Two pages (André, 2026-11-25): the person's own rewards, and the
+  // partners' coupons — "separar o que é do aplicativo e o que é de
+  // parceiro". The Parcerias tab exists only while a campaign is live. A
+  // visit with `?tab=parcerias` (the campaign screen's "Ver meus cupons")
+  // opens on it, and so does a visit with no reward of one's own yet — the
+  // person the flyer sent here for the coupon.
   const partnerCampaign = useActivePartnerCampaign();
   const hasPartner = partnerCampaign.data != null;
-  const [partnerOnly, setPartnerOnly] = useState(false);
+  const partnerStatus = usePartnerCampaignStatus(partnerCampaign.data?.id, {
+    enabled: hasPartner,
+  });
+  const params = useLocalSearchParams<{ tab?: string; at?: string }>();
+  const [pickedPage, setPickedPage] = useState<RewardsPage | null>(null);
+  useEffect(() => {
+    if (params.tab === 'parcerias') setPickedPage('partners');
+  }, [params.tab, params.at]);
+  const noOwnRewards = rewards.data != null && rewards.data.length === 0;
+  const page: RewardsPage = !hasPartner
+    ? 'mine'
+    : (pickedPage ?? (noOwnRewards ? 'partners' : 'mine'));
+  const openCoupons = useMemo(() => {
+    const c = partnerCampaign.data;
+    if (!c) return 0;
+    const st = partnerStatus.data;
+    return campaignTiers(c).filter((tier) => !st || !tierClaimed(st, tier)).length;
+  }, [partnerCampaign.data, partnerStatus.data]);
   const [pickerOpen, setPickerOpen] = useState(false);
   // The (i) top right: the tab's guide.
   const [helpOpen, setHelpOpen] = useState(false);
@@ -207,14 +231,7 @@ function RewardsScreenContent() {
     return t('rewards.vault.heroStatusIdle');
   }, [trackedReward, coins, t]);
 
-  const togglePartner = () => {
-    Haptics.selectionAsync().catch(() => {});
-    setPartnerOnly((v) => !v);
-    setSelectedCategories(new Set());
-  };
-
   const toggleCategory = (cat: RewardCategory) => {
-    setPartnerOnly(false);
     setSelectedCategories((prev) => {
       const next = new Set(prev);
       if (next.has(cat)) {
@@ -391,6 +408,23 @@ function RewardsScreenContent() {
           style={styles.info}
         />
 
+        {hasPartner && (
+          <View style={styles.pages}>
+            <BucketTabsV2<RewardsPage>
+              tabs={[
+                { value: 'mine', label: t('rewards.pages.mine'), count: (rewards.data ?? []).length },
+                { value: 'partners', label: t('rewards.pages.partners'), count: openCoupons },
+              ]}
+              value={page}
+              onChange={setPickedPage}
+            />
+          </View>
+        )}
+
+        {page === 'partners' ? (
+          <PartnerCouponSection />
+        ) : (
+          <>
         {/* Tracked reward sits right under the coin balance so the user
             sees what they're saving for at a glance. */}
         {trackedReward && (
@@ -492,50 +526,9 @@ function RewardsScreenContent() {
                   </Pressable>
                 );
               })}
-              {hasPartner && (
-                <Pressable
-                  onPress={togglePartner}
-                  style={[
-                    styles.chip,
-                    partnerOnly
-                      ? {
-                          backgroundColor: 'rgba(255, 200, 61, 0.16)',
-                          borderTopColor: 'rgba(255, 200, 61, 0.5)',
-                          borderColor: 'rgba(255, 200, 61, 0.45)',
-                        }
-                      : filterActive
-                        ? styles.chipGhosted
-                        : styles.chipRest,
-                  ]}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: partnerOnly }}
-                >
-                  <Ionicons
-                    name="ribbon"
-                    size={14}
-                    color={filterActive && !partnerOnly ? tokens.text.faint : tokens.semantic.coin}
-                  />
-                  <Text
-                    style={[
-                      styles.chipText,
-                      {
-                        color: partnerOnly
-                          ? tokens.semantic.coin
-                          : filterActive
-                            ? tokens.text.faint
-                            : tokens.text.mid,
-                      },
-                    ]}
-                  >
-                    {t('rewards.partnerChip')}
-                  </Text>
-                </Pressable>
-              )}
             </ScrollView>
 
-            {hasPartner && (partnerOnly || !filterActive) && <PartnerCouponSection />}
-
-            {partnerOnly ? null : rewards.isLoading ? (
+            {rewards.isLoading ? (
               <View style={styles.loadingBox}>
                 <ActivityIndicator color={tokens.brand.violet2} />
               </View>
@@ -637,6 +630,8 @@ function RewardsScreenContent() {
                 doors in Gerenciar) is the one way in, as on Práticas — one
                 pattern to learn (owner, 2026-11-07). */}
 
+          </>
+        )}
       </ScrollView>
       </ScreenBackground>
 
@@ -709,6 +704,7 @@ function RewardsScreenContent() {
           with Gerenciar práticas (the doors, the ordered list, Arquivadas,
           and the calendar on the Vault front in its header). The shop IS
           the doing surface, so the button goes straight to curating. */}
+      {page === 'mine' && (
       <FabStack
         bottomOffset={navClearance}
         actions={[
@@ -723,6 +719,7 @@ function RewardsScreenContent() {
           },
         ]}
       />
+      )}
     </SafeAreaView>
   );
 }
@@ -872,6 +869,9 @@ const styles = StyleSheet.create({
 
 
   // Tracked reward block
+  pages: {
+    marginBottom: tokens.space[4],
+  },
   trackedWrap: {
     marginBottom: tokens.space[4],
   },

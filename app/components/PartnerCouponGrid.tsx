@@ -1,20 +1,24 @@
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { PARTNER_FLAIR, PartnerCouponCard } from '@/components/PartnerCouponCard';
-import {
-  useActivePartnerCampaign,
-  useAutoSecurePartnerUnlock,
-  usePartnerCampaignStatus,
-} from '@/lib/api/partners';
+import { PremiumBadge } from '@/components/PremiumBadge';
+import { useActivePartnerCampaign, usePartnerCampaignStatus } from '@/lib/api/partners';
 import type { PartnerCampaignStatus, PartnerCouponTier } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
-import { campaignTiers, tierClaimed, tierCode, tierPct, type CampaignRewards } from '@/lib/partnerCampaign';
-import { usePartnerRedeem } from '@/lib/partnerRedeem';
+import {
+  campaignCouponLine,
+  campaignTiers,
+  tierClaimed,
+  tierCode,
+  tierPct,
+  type CampaignRewards,
+} from '@/lib/partnerCampaign';
+import { partnerPremiumHref, usePartnerRedeem } from '@/lib/partnerRedeem';
+import { useIsPremium } from '@/lib/premium';
+import { storeCodeForCampaign } from '@/lib/purchases/storeCodes';
 import { ACTIVE_THEME, tokens } from '@/theme';
 
 const LIGHT = ACTIVE_THEME === 'light';
@@ -61,81 +65,51 @@ export function PartnerCouponGrid({
   );
 }
 
-const COLLAPSE_KEY = '@perceva/partner_section_collapsed';
-
 /**
- * The Vault's "Parceria" section (decision Artur, 2026-11-16, three
- * rounds): a header row in the partner's colors — name, where the coupons
- * stand, "see the program" — and under it the coupon cards with the
- * partner flair, claimed ones included (they hold the code and COPIAR; a
- * card that vanished on redeem gave no sign the coupon was taken). The row
- * collapses the block on tap, remembered per campaign, so someone can fold
- * this one partnership without dropping the partner chip — with more
- * partnerships coming, each folds on its own. Renders nothing without an
- * active campaign.
+ * One partnership on the Parcerias page of Recompensas (André, 2026-11-25:
+ * "separar o que é do aplicativo e o que é de parceiro"), the ONE place a
+ * partner coupon is redeemed — the flyer in the partner's boxes says
+ * "pegue em Recompensas":
+ *
+ *   header row     the partner's name, where the coupons stand, and
+ *                  "Sobre a parceria" → /campaign/<id>
+ *   coupon grid    every tier (claimed ones keep the code)
+ *   Premium code   for someone not yet Premium, when the campaign hands one
+ *                  out (PAKERANUAL): the paywall opens with it typed in
+ *   partner site   where the code is used
+ *
+ * Renders nothing without an active campaign. With more partnerships, each
+ * gets its own block on the page.
  */
 export function PartnerCouponSection({ enabled = true }: { enabled?: boolean }) {
   const { t } = useT();
   const router = useRouter();
+  const isPremiumProfile = useIsPremium();
   const campaign = useActivePartnerCampaign({ enabled });
   const c = campaign.data ?? null;
   const campaignId = c?.id ?? null;
   const status = usePartnerCampaignStatus(campaignId, { enabled: enabled && c != null });
   const s = status.data ?? null;
-  useAutoSecurePartnerUnlock(s);
   const { redeem, running } = usePartnerRedeem(c, s);
-
-  // Keyed by campaign id: a new campaign opens unfolded.
-  const [collapsed, setCollapsed] = useState<{ id: string; value: boolean } | null>(null);
-  useEffect(() => {
-    if (!campaignId) return;
-    let alive = true;
-    AsyncStorage.getItem(`${COLLAPSE_KEY}:${campaignId}`)
-      .then((v) => {
-        if (alive) setCollapsed({ id: campaignId, value: v != null });
-      })
-      .catch(() => {
-        if (alive) setCollapsed({ id: campaignId, value: false });
-      });
-    return () => {
-      alive = false;
-    };
-  }, [campaignId]);
 
   if (!enabled || !c || !s || !campaignId) return null;
 
-  const tiers = campaignTiers(c);
-  const open = tiers.filter((tier) => !tierClaimed(s, tier));
-  const folded = collapsed?.id === campaignId ? collapsed.value : false;
-  const canFold = tiers.length > 0;
-  const showGrid = canFold && !folded;
-  const line =
-    open.length > 0
-      ? t('rewards.partnerRowOpen', {
-          pcts: open
-            .map((tier) => `${tierPct(c, tier) ?? ''}%`)
-            .join(t('rewards.partnerRowAnd')),
-        })
-      : t('rewards.partnerRowClaimed');
+  const line = campaignCouponLine(c, s, t);
+  const premiumCode = storeCodeForCampaign(campaignId);
+  const showPremiumCode = premiumCode != null && !s.is_premium && !isPremiumProfile;
+  const url = c.partner_url;
 
-  const toggle = () => {
-    if (!canFold) return;
-    const next = !folded;
-    setCollapsed({ id: campaignId, value: next });
-    const key = `${COLLAPSE_KEY}:${campaignId}`;
-    (next ? AsyncStorage.setItem(key, '1') : AsyncStorage.removeItem(key)).catch(() => {});
-  };
-  const goProgram = () =>
+  const goAbout = () =>
     router.push({ pathname: '/campaign/[id]', params: { id: campaignId, source: 'app' } });
 
   return (
     <View style={styles.section}>
       <Pressable
-        onPress={canFold ? toggle : goProgram}
+        onPress={goAbout}
         style={({ pressed }) => [styles.row, pressed && { opacity: 0.85 }]}
         accessibilityRole="button"
-        accessibilityState={canFold ? { expanded: showGrid } : undefined}
         accessibilityLabel={`${t('rewards.partnerSection', { partner: c.partner_name })}. ${line}`}
+        accessibilityHint={t('rewards.partnerAbout')}
       >
         <LinearGradient
           colors={
@@ -159,27 +133,48 @@ export function PartnerCouponSection({ enabled = true }: { enabled?: boolean }) 
             {line}
           </Text>
         </View>
-        <Pressable
-          onPress={goProgram}
-          hitSlop={8}
-          style={({ pressed }) => [styles.rowLink, pressed && { opacity: 0.7 }]}
-          accessibilityRole="button"
-          accessibilityLabel={t('rewards.partnerSeeProgram')}
-        >
-          <Text style={styles.rowLinkText}>{t('rewards.partnerSeeProgram')}</Text>
+        <View style={styles.rowLink}>
+          <Text style={styles.rowLinkText}>{t('rewards.partnerAbout')}</Text>
           <Ionicons name="chevron-forward" size={12} color={PARTNER_FLAIR.bronze2} />
-        </Pressable>
-        {canFold && (
-          <Ionicons
-            name={showGrid ? 'chevron-up' : 'chevron-down'}
-            size={16}
-            color={tokens.text.mid}
-            style={styles.rowFold}
-          />
-        )}
+        </View>
       </Pressable>
-      {showGrid && (
-        <PartnerCouponGrid campaign={c} status={s} redeem={redeem} running={running} />
+
+      <PartnerCouponGrid campaign={c} status={s} redeem={redeem} running={running} />
+
+      {showPremiumCode && premiumCode && (
+        <Pressable
+          onPress={() => router.push(partnerPremiumHref(campaignId) as never)}
+          style={({ pressed }) => [styles.codeRow, pressed && { opacity: 0.85 }]}
+          accessibilityRole="button"
+          accessibilityLabel={`${t('rewards.partnerPremiumTitle', { pct: premiumCode.entry.pct })}. ${t('rewards.partnerPremiumBody', { code: premiumCode.code })}`}
+        >
+          <PremiumBadge size="sm" />
+          <View style={styles.rowBody}>
+            <Text style={styles.codeTitle} numberOfLines={2}>
+              {t('rewards.partnerPremiumTitle', { pct: premiumCode.entry.pct })}
+            </Text>
+            <Text style={styles.rowLine} numberOfLines={2}>
+              {t('rewards.partnerPremiumBody', { code: premiumCode.code })}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color={tokens.text.mid} />
+        </Pressable>
+      )}
+
+      {url && (
+        <Pressable
+          onPress={() => {
+            Linking.openURL(url).catch(() => {});
+          }}
+          style={({ pressed }) => [styles.siteRow, pressed && { opacity: 0.7 }]}
+          accessibilityRole="link"
+        >
+          <Ionicons name="globe-outline" size={15} color={PARTNER_FLAIR.bronze2} />
+          <Text style={styles.siteText} numberOfLines={1}>
+            {t('campaign.screen.visitPartner', { name: c.partner_name })}
+          </Text>
+          <Ionicons name="open-outline" size={13} color={tokens.text.dim} />
+        </Pressable>
       )}
     </View>
   );
@@ -199,7 +194,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: `${PARTNER_FLAIR.bronze}73`,
   },
-  rowFold: { marginLeft: 2 },
   rowTile: {
     width: 34,
     height: 34,
@@ -237,6 +231,37 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 0.7,
     textTransform: 'uppercase',
+    color: PARTNER_FLAIR.bronze2,
+  },
+  // The Premium code: a quiet row, same anatomy as the header row.
+  codeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[3],
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: tokens.border.strong,
+    backgroundColor: tokens.bg.glass,
+  },
+  codeTitle: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 13,
+    lineHeight: 17,
+    color: tokens.text.hi,
+  },
+  siteRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    alignSelf: 'flex-start',
+  },
+  siteText: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 12,
     color: PARTNER_FLAIR.bronze2,
   },
   // Same grid as the Vault's rewards (rewards.tsx: grid / gridItem).
