@@ -4076,7 +4076,7 @@ const en = {
         edit: {
           title: 'Edit',
           body: 'Back to the text to fix it and send again.',
-          ai: 'You can also tap the dictated text above the card. Sending again counts as a new request toward today\'s limit.',
+          ai: 'You can also tap the dictated text above the card. Sending again uses one more credit.',
         },
         privacy: {
           title: 'What goes to the AI',
@@ -4084,9 +4084,9 @@ const en = {
           ai: 'The AI is Claude, by Anthropic. It gets the text, today\'s practices, mood and tags, and also my "About you" and "The life I want", if I filled them in. Perceva keeps only numbers (how many requests and the cost), and Anthropic does not train its AI on the text. I switch it off in Settings › Your AI; then the AI stops until I accept again.',
         },
         limit: {
-          title: 'Limit',
-          body: 'There are 60 free requests a month, up to 30 a day. If the AI fails or doesn\'t understand, it doesn\'t count.',
-          ai: 'What is left this month sits under the text box. The month turns on the 1st.',
+          title: 'Credits',
+          body: 'Each send uses 1 credit. Premium gets 40 a month, up to 30 sends a day. If the AI fails or doesn\'t understand, the credit comes back.',
+          ai: 'The balance sits under the text box and in Settings › Your AI. Credits renew on the 1st and don\'t roll over.',
         },
       },
     },

@@ -61,7 +61,8 @@ import { tokens } from '@/theme';
  *
  * First use (and after a revoke in Ajustes): the LGPD consent (AiConsent)
  * takes the screen until the person accepts — the server refuses every
- * request without it. Under the box: what is left of the 60 free a month.
+ * request without it. Under the box: the AI credits left this month
+ * (Premium, 40 a month, 1 per send, refunded when the AI fails).
  *
  * The mic and Enviar sit side by side in the bottom dock, outside the scroll
  * (owner, 2026-11-25: "do lado do gravar"): however long the dictation gets,
