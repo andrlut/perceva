@@ -10,11 +10,15 @@ import { todayDateKey } from './mood';
  * note, practices done/skipped today) and the app writes only after the tap
  * on Registrar, with the hooks it already has. Nothing here writes data.
  *
- * Gate: `ai_access()` says whether this account sees the box at all (the
- * `ai` row of app_config: on/off + allowlist, server-only), whether the
- * person accepted the consent, and how much of the quota is used: 30 a day
- * and 60 free a month. The quota only counts requests that produced a
- * draft — a failure or "didn't understand" gives the credit back.
+ * Gate: `ai_access()` says whether this account has the AI at all (the
+ * `ai` row of app_config, server-only: kill-switch + Premium once
+ * `premium_open` is on, the allowlist before that), whether the person
+ * accepted the consent, and the AI CREDITS: 40 a month for Premium, renewed
+ * on the 1st (America/Sao_Paulo) without rolling over, plus — later — the
+ * balance of bought packs. Each feature has a price (`credit_cost`: Conte
+ * seu dia = 1, Resumo da semana = 0). Only a request that produced a draft
+ * spends: a failure or "didn't understand" gives the credit back.
+ * Migration 20261125000001.
  */
 
 export const aiKeys = {
@@ -40,9 +44,21 @@ export interface AiAccess {
   consent_version?: number;
   used_today?: number;
   per_day?: number;
-  /** Free requests used this calendar month (America/Sao_Paulo). */
+  /** This month's credits spent / granted (America/Sao_Paulo). The builds
+   *  before the credits read only these two, so they stay. */
   used_month?: number;
   per_month?: number;
+  /** Everything the person can spend now: what is left of the month plus
+   *  the paid balance (packs, none sold yet). */
+  credits_left?: number;
+  /** The month's credits (the grant), e.g. 40. */
+  credits_month?: number;
+  credits_month_left?: number;
+  credits_paid?: number;
+  /** Credits per request, by feature (`day_voice`, `week`). */
+  credit_cost?: Record<string, number>;
+  /** The day the month's credits renew (YYYY-MM-DD). */
+  renews_on?: string;
   max_chars?: number;
 }
 
@@ -98,15 +114,20 @@ export type DayVoiceResult =
       per_day?: number;
       used_month?: number;
       per_month?: number;
+      credits_left?: number;
+      credits_month?: number;
     }
   | {
       ok: false;
+      /** `rate_month` = no AI credits left (the month's and the paid). */
       reason: DayVoiceFailure;
       remark?: string | null;
       used_today?: number;
       per_day?: number;
       used_month?: number;
       per_month?: number;
+      credits_left?: number;
+      credits_month?: number;
       max_chars?: number;
     };
 
@@ -187,11 +208,29 @@ export function useRevokeAiConsent() {
   });
 }
 
-/** Free requests left this month, or null before the access loads. */
+/**
+ * AI credits the person can spend now (`left`) out of the month's grant
+ * (`total`), or null before the access loads. `left` includes the paid
+ * balance once packs exist, so it can exceed `total` then.
+ */
 export function monthLeft(access: AiAccess | undefined): { left: number; total: number } | null {
-  if (!access?.enabled || access.per_month == null) return null;
+  if (!access?.enabled) return null;
+  if (access.credits_left != null && access.credits_month != null) {
+    return { left: Math.max(access.credits_left, 0), total: access.credits_month };
+  }
+  // A server before the credits (20261125000001): the month's quota.
+  if (access.per_month == null) return null;
   return {
     left: Math.max(access.per_month - (access.used_month ?? 0), 0),
     total: access.per_month,
   };
+}
+
+/** What one request of `feature` costs, in credits: null before the access
+ *  loads (or from a server without prices), 1 for a feature the table does
+ *  not list — the server's own default. */
+export function creditCost(access: AiAccess | undefined, feature: 'day_voice' | 'week'): number | null {
+  if (!access?.enabled || !access.credit_cost) return null;
+  const c = access.credit_cost[feature];
+  return typeof c === 'number' && c >= 0 ? c : 1;
 }

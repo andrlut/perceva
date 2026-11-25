@@ -11,7 +11,12 @@
 //     week_insight (only the generated text; written here with service_role).
 //     A cached week answers without touching the ledger or the model.
 //   - Every generation goes through ai_begin / ai_settle and the ledger, like
-//     "Conte seu dia" — the same on/off, allowlist, consent and quotas.
+//     "Conte seu dia" — the same kill-switch, access (Premium / allowlist),
+//     consent and caps. It costs 0 AI credits (app_config
+//     `credit_cost.week`, migration 20261125000001): the app generates it on
+//     its own on Monday and the cache caps it at one a week, so charging
+//     would spend a credit the person never asked to spend. Raising the
+//     price is a config update; the reply then carries `refunded` as usual.
 //   - The notes are sent to the model and NEVER stored or logged; logs carry
 //     the request ref and numbers only.
 //

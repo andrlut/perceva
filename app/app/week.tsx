@@ -29,7 +29,7 @@ import {
   WeekCard,
   keyToDate,
 } from '@/components/weekSummary/WeekParts';
-import { useAiAccess } from '@/lib/api/ai';
+import { creditCost, monthLeft, useAiAccess } from '@/lib/api/ai';
 import {
   lastClosedWeek,
   mondayOf,
@@ -239,6 +239,9 @@ function AiCard({ s, start }: { s: WeekSummary; start: string }) {
     s.week.complete &&
     access.data?.enabled === true &&
     access.data.consent !== false &&
+    // Never spend an AI credit without the tap: the automatic run only
+    // happens while the week is free (credit_cost.week = 0, the default).
+    (creditCost(access.data, 'week') ?? 0) === 0 &&
     insight.isSuccess &&
     insight.data === null &&
     start === lastClosedWeek() &&
@@ -302,17 +305,26 @@ function AiCard({ s, start }: { s: WeekSummary; start: string }) {
           ? 'aiTooOld'
           : failure === 'week_open'
             ? 'aiWeekOpen'
-            : failure.startsWith('rate') || failure === 'budget'
+            : failure === 'rate_month'
+              ? 'aiNoCredits'
+              : failure.startsWith('rate') || failure === 'budget'
               ? 'aiRate'
               : failure === 'premium_required'
                 ? 'aiLockedBody'
                 : 'aiSoon';
     body = <Muted>{t(`weekSummary.${key}`)}</Muted>;
   } else {
+    // The week costs 0 AI credits today (app_config `credit_cost.week`); if
+    // it ever costs more, the button says so before the tap.
+    const cost = creditCost(access.data, 'week');
+    const credits = monthLeft(access.data);
     body = (
       <>
         {failure && <Muted>{t('weekSummary.aiFailed')}</Muted>}
         <GoldButton label={failure ? t('weekSummary.retry') : t('weekSummary.aiGenerate')} onPress={run} />
+        {cost != null && cost > 0 && credits ? (
+          <Muted>{t('weekSummary.aiCost', { cost, left: credits.left })}</Muted>
+        ) : null}
       </>
     );
   }
