@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -29,7 +30,7 @@ import { ScreenBackground } from '@/components/ScreenBackground';
 import { TrackedRewardCard } from '@/components/TrackedRewardCard';
 import { TrackPickerSheet } from '@/components/TrackPickerSheet';
 import { VaultHero } from '@/components/VaultHero';
-import { useActivePartnerCampaign, usePartnerCampaignStatus } from '@/lib/api/partners';
+import { partnerKeys, useActivePartnerCampaign, usePartnerCampaignStatus } from '@/lib/api/partners';
 import { useCharacter } from '@/lib/api/character';
 import {
   useArchiveReward,
@@ -45,7 +46,7 @@ import { useT } from '@/lib/i18n';
 import { campaignTiers, tierClaimed } from '@/lib/partnerCampaign';
 import { LockedScreen } from '@/components/unlock/LockedScreen';
 import { UnlockDoor } from '@/components/unlock/UnlockDoor';
-import { useLimitGuard, useRewardLimit } from '@/lib/premium';
+import { useIsPremium, useLimitGuard, useRewardLimit } from '@/lib/premium';
 import { useIsLocked } from '@/lib/unlock';
 import { usePullToRefresh } from '@/lib/usePullToRefresh';
 import { confirmAction, showInfo } from '@/lib/util/confirm';
@@ -79,11 +80,16 @@ const REWARDS_FAB_CLEARANCE = fabStackClearance([MANAGE_FAB_SIZE]);
  *  real content; after that, the tab as it always was. */
 export default function RewardsScreen() {
   const locked = useIsLocked('rewards');
+  // While a partner campaign is live the tab opens straight on the coupons
+  // (useUnlockProgress unlocks it): no door — its video stays in the (i).
+  // Decided only once the campaign query answered, so the door never flashes.
+  const campaign = useActivePartnerCampaign();
+  const doorAllowed = campaign.isFetched && campaign.data == null;
   if (locked) return <LockedScreen feature="rewards" />;
   return (
     <>
       <RewardsScreenContent />
-      <UnlockDoor feature="rewards" />
+      {doorAllowed && <UnlockDoor feature="rewards" />}
     </>
   );
 }
@@ -131,16 +137,30 @@ function RewardsScreenContent() {
   useEffect(() => {
     if (params.tab === 'parcerias') setPickedPage('partners');
   }, [params.tab, params.at]);
+  const filteredShopCount = useMemo(
+    () =>
+      (rewards.data ?? []).filter((r) => !(r.is_one_shot && ownedOneShots.data?.has(r.id))).length,
+    [rewards.data, ownedOneShots.data],
+  );
   const noOwnRewards = rewards.data != null && rewards.data.length === 0;
   const page: RewardsPage = !hasPartner
     ? 'mine'
     : (pickedPage ?? (noOwnRewards ? 'partners' : 'mine'));
-  const openCoupons = useMemo(() => {
+  // With a campaign and no pick yet, the page depends on the person's own
+  // rewards: wait for them instead of showing Minhas and jumping away.
+  const pageReady = !hasPartner || pickedPage != null || rewards.data != null;
+  const isPremium = useIsPremium();
+  // The Parcerias count: coupons the person can take right now (the Premium
+  // one only for a subscriber). No chip until the status answers, nor at 0.
+  const redeemableCoupons = useMemo(() => {
     const c = partnerCampaign.data;
-    if (!c) return 0;
     const st = partnerStatus.data;
-    return campaignTiers(c).filter((tier) => !st || !tierClaimed(st, tier)).length;
-  }, [partnerCampaign.data, partnerStatus.data]);
+    if (!c || !st) return null;
+    const n = campaignTiers(c).filter(
+      (tier) => !tierClaimed(st, tier) && (tier === 'free' || st.is_premium || isPremium),
+    ).length;
+    return n > 0 ? n : null;
+  }, [partnerCampaign.data, partnerStatus.data, isPremium]);
   const [pickerOpen, setPickerOpen] = useState(false);
   // The (i) top right: the tab's guide.
   const [helpOpen, setHelpOpen] = useState(false);
@@ -163,7 +183,8 @@ function RewardsScreenContent() {
 
   const coins = character.data?.character.coins ?? 0;
   // Reserve the floating button's height under the scroll.
-  const scrollBottomPad = navClearance + REWARDS_FAB_CLEARANCE;
+  // The floating "+" lives on Minhas only; Parcerias reserves no room for it.
+  const scrollBottomPad = navClearance + (page === 'mine' ? REWARDS_FAB_CLEARANCE : 0);
   const trackedReward = useMemo(() => {
     if (!trackedId.data) return null;
     const found = (rewards.data ?? []).find((r) => r.id === trackedId.data) ?? null;
@@ -378,8 +399,14 @@ function RewardsScreenContent() {
 
   // Pull indicator is local state — the queries' isRefetching also flips on
   // every background refetch (mutations, app foreground).
+  const queryClient = useQueryClient();
   const pull = usePullToRefresh(() =>
-    Promise.all([rewards.refetch(), character.refetch()]),
+    Promise.all([
+      rewards.refetch(),
+      character.refetch(),
+      // invalidate (not refetch): respects the partner queries' `enabled`
+      queryClient.invalidateQueries({ queryKey: partnerKeys.all }),
+    ]),
   );
 
   return (
@@ -412,8 +439,8 @@ function RewardsScreenContent() {
           <View style={styles.pages}>
             <BucketTabsV2<RewardsPage>
               tabs={[
-                { value: 'mine', label: t('rewards.pages.mine'), count: (rewards.data ?? []).length },
-                { value: 'partners', label: t('rewards.pages.partners'), count: openCoupons },
+                { value: 'mine', label: t('rewards.pages.mine'), count: rewards.data ? filteredShopCount : null },
+                { value: 'partners', label: t('rewards.pages.partners'), count: redeemableCoupons },
               ]}
               value={page}
               onChange={setPickedPage}
@@ -421,7 +448,11 @@ function RewardsScreenContent() {
           </View>
         )}
 
-        {page === 'partners' ? (
+        {!pageReady ? (
+          <View style={styles.loadingBox}>
+            <ActivityIndicator color={tokens.brand.violet2} />
+          </View>
+        ) : page === 'partners' ? (
           <PartnerCouponSection />
         ) : (
           <>
@@ -869,7 +900,10 @@ const styles = StyleSheet.create({
 
 
   // Tracked reward block
+  // BucketTabsV2 brings its own side margin (the Home's list has none); the
+  // shop already pads the content, so it is undone here to line up.
   pages: {
+    marginHorizontal: -tokens.space[4],
     marginBottom: tokens.space[4],
   },
   trackedWrap: {

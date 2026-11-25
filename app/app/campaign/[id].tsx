@@ -193,8 +193,10 @@ export default function CampaignScreen() {
     }
   };
 
+  // dismissTo, not navigate: back to the tabs already under this screen.
+  // A navigate would stack a second copy of the whole tab navigator.
   const goCoupons = () =>
-    router.navigate({
+    router.dismissTo({
       pathname: '/(tabs)/rewards',
       params: { tab: 'parcerias', at: String(Date.now()) },
     });
@@ -262,7 +264,11 @@ export default function CampaignScreen() {
                 practice: adoptedTrack.practice?.title ?? adoptedTrack.template_id,
               })}
             </Text>
-            <ActionPill label={t('campaign.screen.practiceGo')} onPress={() => router.navigate('/(tabs)')} />
+            <ActionPill
+              label={t('campaign.screen.practiceGo')}
+              a11yLabel={t('campaign.screen.practiceGoA11y')}
+              onPress={() => router.dismissTo('/(tabs)')}
+            />
           </View>
         ) : (
           <>
