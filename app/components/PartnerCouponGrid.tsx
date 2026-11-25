@@ -1,10 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { PARTNER_FLAIR, PartnerCouponCard } from '@/components/PartnerCouponCard';
-import { PremiumBadge } from '@/components/PremiumBadge';
 import { useActivePartnerCampaign, usePartnerCampaignStatus } from '@/lib/api/partners';
 import type { PartnerCampaignStatus, PartnerCouponTier } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
@@ -35,12 +34,16 @@ export function PartnerCouponGrid({
   redeem,
   running,
   disabled = false,
+  isPremium,
 }: {
   campaign: CampaignRewards & { partner_name: string };
   status: PartnerCampaignStatus;
   redeem: (tier: PartnerCouponTier) => void;
   running: PartnerCouponTier | null;
   disabled?: boolean;
+  /** Premium as the redeem flow reads it (status OR profile), so a card
+   *  never says "subscribe" while its tap already redeems. */
+  isPremium?: boolean;
 }) {
   const tiers = campaignTiers(campaign);
   if (tiers.length === 0) return null;
@@ -54,7 +57,7 @@ export function PartnerCouponGrid({
             partner={campaign.partner_name}
             claimed={tierClaimed(status, tier)}
             code={tierCode(status, tier)}
-            isPremium={status.is_premium}
+            isPremium={isPremium ?? status.is_premium}
             busy={running === tier}
             disabled={disabled || running != null}
             onRedeem={() => redeem(tier)}
@@ -92,11 +95,34 @@ export function PartnerCouponSection({ enabled = true }: { enabled?: boolean }) 
   const s = status.data ?? null;
   const { redeem, running } = usePartnerRedeem(c, s);
 
-  if (!enabled || !c || !s || !campaignId) return null;
+  if (!enabled || !c || !campaignId) return null;
+  // The page is this block alone: never blank while loading or failed.
+  if (!s) {
+    return status.isError ? (
+      <View style={styles.stateBox}>
+        <Text style={styles.stateText}>{t('common.error')}</Text>
+        <Pressable
+          onPress={() => {
+            void status.refetch();
+          }}
+          style={({ pressed }) => [styles.retry, pressed && { opacity: 0.7 }]}
+          accessibilityRole="button"
+        >
+          <Ionicons name="refresh" size={14} color={PARTNER_FLAIR.bronze2} />
+          <Text style={styles.siteText}>{t('common.retry')}</Text>
+        </Pressable>
+      </View>
+    ) : (
+      <View style={styles.stateBox}>
+        <ActivityIndicator color={PARTNER_FLAIR.bronze2} />
+      </View>
+    );
+  }
 
-  const line = campaignCouponLine(c, s, t);
+  const isPremium = s.is_premium || isPremiumProfile;
+  const line = campaignCouponLine(c, s, t, { here: true });
   const premiumCode = storeCodeForCampaign(campaignId);
-  const showPremiumCode = premiumCode != null && !s.is_premium && !isPremiumProfile;
+  const showPremiumCode = premiumCode != null && !isPremium;
   const url = c.partner_url;
 
   const goAbout = () =>
@@ -133,13 +159,16 @@ export function PartnerCouponSection({ enabled = true }: { enabled?: boolean }) 
             {line}
           </Text>
         </View>
-        <View style={styles.rowLink}>
-          <Text style={styles.rowLinkText}>{t('rewards.partnerAbout')}</Text>
-          <Ionicons name="chevron-forward" size={12} color={PARTNER_FLAIR.bronze2} />
-        </View>
+        <Ionicons name="chevron-forward" size={16} color={tokens.text.mid} />
       </Pressable>
 
-      <PartnerCouponGrid campaign={c} status={s} redeem={redeem} running={running} />
+      <PartnerCouponGrid
+        campaign={c}
+        status={s}
+        redeem={redeem}
+        running={running}
+        isPremium={isPremium}
+      />
 
       {showPremiumCode && premiumCode && (
         <Pressable
@@ -148,7 +177,9 @@ export function PartnerCouponSection({ enabled = true }: { enabled?: boolean }) 
           accessibilityRole="button"
           accessibilityLabel={`${t('rewards.partnerPremiumTitle', { pct: premiumCode.entry.pct })}. ${t('rewards.partnerPremiumBody', { code: premiumCode.code })}`}
         >
-          <PremiumBadge size="sm" />
+          <View style={[styles.rowTile, styles.codeTile]}>
+            <Ionicons name="sparkles" size={16} color={tokens.semantic.coin} />
+          </View>
           <View style={styles.rowBody}>
             <Text style={styles.codeTitle} numberOfLines={2}>
               {t('rewards.partnerPremiumTitle', { pct: premiumCode.entry.pct })}
@@ -218,22 +249,30 @@ const styles = StyleSheet.create({
     lineHeight: 14,
     color: tokens.text.mid,
   },
-  rowLink: {
+  // The Premium code: a quiet row, same anatomy as the header row (tile ·
+  // title over line · chevron), in the app's gold — it sells Perceva.
+  codeTile: {
+    borderColor: `${tokens.semantic.coin}50`,
+    backgroundColor: `${tokens.semantic.coin}1F`,
+  },
+  stateBox: {
+    alignItems: 'center',
+    gap: tokens.space[3],
+    paddingVertical: tokens.space[6],
+  },
+  stateText: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 13,
+    color: tokens.text.mid,
+    textAlign: 'center',
+  },
+  retry: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
-    flexShrink: 0,
-    paddingVertical: 6,
-    paddingLeft: 4,
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
   },
-  rowLinkText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 10,
-    letterSpacing: 0.7,
-    textTransform: 'uppercase',
-    color: PARTNER_FLAIR.bronze2,
-  },
-  // The Premium code: a quiet row, same anatomy as the header row.
   codeRow: {
     flexDirection: 'row',
     alignItems: 'center',

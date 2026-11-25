@@ -13,8 +13,10 @@ import {
 } from '@/components/guide/GuidePlayground';
 import { GuideFit } from '@/components/guide/GuideFit';
 import { GuideLabel, GuideStep } from '@/components/guide/GuideStep';
+import { PARTNER_FLAIR } from '@/components/PartnerCouponCard';
 import { RewardCard } from '@/components/RewardCard';
 import { TrackedRewardCard } from '@/components/TrackedRewardCard';
+import { useActivePartnerCampaign } from '@/lib/api/partners';
 import type { Reward } from '@/lib/db/types';
 import { screenGuidePrompt } from '@/lib/guide';
 import { useT } from '@/lib/i18n';
@@ -42,6 +44,7 @@ export const REWARDS_GUIDE_ITEMS = [
   'redeem',
   'hold',
   'track',
+  'partners',
   'balance',
   'chips',
   'sections',
@@ -62,10 +65,21 @@ const GESTURE_ICONS: Record<GestureKey, keyof typeof Ionicons.glyphMap> = {
   track: 'locate-outline',
 };
 
-/** The AI door's prompt — every option, with its mechanics. */
+/** The options on screen now: Minhas | Parcerias exists only while a
+ *  partner campaign is live (rewards.tsx), so its item follows it. */
+function useRewardsGuideKeys(): readonly ItemKey[] {
+  const partnerLive = useActivePartnerCampaign().data != null;
+  return useMemo(
+    () => REWARDS_GUIDE_ITEMS.filter((k) => k !== 'partners' || partnerLive),
+    [partnerLive],
+  );
+}
+
+/** The AI door's prompt — every option on screen, with its mechanics. */
 export function useRewardsGuidePrompt(): string {
   const { t } = useT();
-  return useMemo(() => screenGuidePrompt(t, HELP, REWARDS_GUIDE_ITEMS), [t]);
+  const keys = useRewardsGuideKeys();
+  return useMemo(() => screenGuidePrompt(t, HELP, keys), [t, keys]);
 }
 
 /** Sample balance: pays the first reward (120), not the second (200). */
@@ -93,6 +107,7 @@ type Feedback = 'redeem' | null;
 
 export function RewardsGuide() {
   const { t } = useT();
+  const keys = useRewardsGuideKeys();
   const [tried, setTried] = useState(false);
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [menuShown, setMenuShown] = useState(false);
@@ -119,6 +134,7 @@ export function RewardsGuide() {
     StepKey,
     { icon: keyof typeof Ionicons.glyphMap; iconColor?: string; replica?: React.ReactNode }
   > = {
+    partners: { icon: 'ribbon-outline', iconColor: PARTNER_FLAIR.bronze2 },
     balance: { icon: 'wallet-outline', iconColor: tokens.semantic.coin, replica: <BalanceReplica /> },
     chips: { icon: 'pricetags-outline', replica: <ChipsReplica /> },
     sections: { icon: 'layers-outline', replica: <SectionsReplica /> },
@@ -126,8 +142,8 @@ export function RewardsGuide() {
     buttons: { icon: 'add-circle', iconColor: tokens.semantic.coin, replica: <FabReplica /> },
   };
 
-  const gestureKeys = REWARDS_GUIDE_ITEMS.filter(isGesture);
-  const stepKeys = REWARDS_GUIDE_ITEMS.filter((k): k is StepKey => !isGesture(k));
+  const gestureKeys = keys.filter(isGesture);
+  const stepKeys = keys.filter((k): k is StepKey => !isGesture(k));
 
   return (
     <>

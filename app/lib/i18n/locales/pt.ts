@@ -397,6 +397,8 @@ const pt: Translations = {
      *  resgate da Apple; no Android o app aplica a oferta do Play. */
     code: {
       link: 'Tenho um código de desconto',
+      /** iPhone, vindo de uma parceria: o código pra digitar na tela da Apple. */
+      linkWithCode: 'Usar o código {{code}}',
       placeholder: 'Digite o código',
       apply: 'Aplicar',
       invalid: 'Código não reconhecido. Confere a grafia e tenta de novo.',
@@ -1127,10 +1129,13 @@ const pt: Translations = {
       open: '{{pcts}} pra resgatar em Recompensas',
       and: ' e ',
       claimed: 'Cupons resgatados · códigos em Recompensas',
+      /** Dentro da própria aba Parcerias: sem repetir o lugar. */
+      openHere: 'Pra resgatar: {{pcts}}',
+      claimedHere: 'Cupons resgatados · códigos nos cards',
     },
     screen: {
       couponsTitle: 'Seus cupons',
-      couponsHint: 'Ficam em Recompensas, na aba Parcerias. Um resgate por cupom; o maior é dos assinantes Premium.',
+      couponsHint: 'Na aba Parcerias. Um resgate por cupom; o maior é dos assinantes Premium.',
       seeCoupons: 'Ver meus cupons',
       /** Título do card do cupom. pct = o desconto; o parceiro vai no eyebrow. */
       tierTitle: '{{pct}}% de desconto',
@@ -1149,11 +1154,12 @@ const pt: Translations = {
       couponCopyA11y: 'Copiar ou enviar o código: {{reward}}',
       visitPartner: 'Site da {{name}}',
       /** As práticas da campanha como sugestão: sem contagem, sem regra. */
-      practiceTitle: 'Quer lembrar todo dia?',
-      practiceBody: 'Coloque uma prática na sua lista de hoje. Ela conta na sua Dedicação, como as outras.',
+      practiceTitle: 'Prática diária (opcional)',
+      practiceBody: 'Quer lembrar todo dia? Coloque uma destas práticas na sua lista de hoje. Ela conta na sua Dedicação, como as outras.',
       practiceAdd: 'Adicionar',
       practiceAdded: '"{{practice}}" está na sua lista de hoje.',
-      practiceGo: 'Ver',
+      practiceGo: 'Ver na lista',
+      practiceGoA11y: 'Ver a prática na sua lista de hoje',
       materialTitle: 'Leia o material',
       disclosure:
         'Parceria comercial com a {{name}}. Ela recebe só números gerais (quantas pessoas vieram pelo Perceva), nunca quem você é.',
@@ -2535,6 +2541,11 @@ const pt: Translations = {
           title: 'Mirar',
           body: 'Nas que ainda faltam moedas, Mirar fixa a recompensa como meta no topo.',
           ai: 'Só uma meta por vez: mirar outra troca a atual. O cartão da meta mostra quanto falta; tocar nele troca a meta, o X para de mirar e o Resgatar aparece quando o saldo chega.',
+        },
+        partners: {
+          title: 'Minhas e Parcerias',
+          body: 'Minhas é a sua loja. Parcerias guarda os cupons de marcas parceiras, como a Paker Health.',
+          ai: 'Em Parcerias, Resgatar entrega o código do cupom, que vale no site da marca; ele fica no card, com o botão Copiar. Um resgate por cupom, sem gastar moedas. O cupom maior é dos assinantes Premium, e quem ainda não assina vê ali o código de desconto do Premium anual. "Sobre a parceria" abre a tela da marca, com o material do Recanto e uma prática opcional pra lembrar todo dia.',
         },
         balance: {
           title: 'Saldo',

@@ -24,9 +24,11 @@ import { useUnlockStore } from './store';
  *   rewards      ← also a live partner campaign (2026-11-25): the flyer in
  *                  the partner's boxes says "pegue em Recompensas", so the tab
  *                  opens with no lock and no door — the coupons are right
- *                  there, in the Parcerias page. The door video stays in the
- *                  tab's (i). Persisted, so the tab stays open after the
- *                  campaign ends.
+ *                  there, in the Parcerias page. The door is skipped while a
+ *                  campaign is live (rewards.tsx) without being marked as
+ *                  seen: the video stays in the tab's (i), and plays once if
+ *                  the tab is opened after the campaign ends. Persisted, so
+ *                  the tab stays open.
  *
  * Signals come from queries the completion/assessment mutations already
  * invalidate, so an unlock lands on the next render after the action.
@@ -35,8 +37,8 @@ export function useUnlockProgress(): void {
   const { user } = useSession();
   const hydrate = useUnlockStore((s) => s.hydrate);
   const unlock = useUnlockStore((s) => s.unlock);
-  const markDoorSeen = useUnlockStore((s) => s.markDoorSeen);
   const status = useUnlockStore((s) => s.status);
+  const storeOwner = useUnlockStore((s) => s.characterId);
   const unlocked = useUnlockStore((s) => s.unlocked);
 
   const stats = useCompletionStats();
@@ -47,12 +49,10 @@ export function useUnlockProgress(): void {
 
   useEffect(() => {
     if (!UNLOCK_GATES_ENABLED || status !== 'ready' || !partnerLive || unlocked.rewards) return;
-    void (async () => {
-      // door first: the tab must never flash its door once it opens
-      await markDoorSeen('rewards');
-      await unlock('rewards', 'partner');
-    })();
-  }, [status, partnerLive, unlocked.rewards, unlock, markDoorSeen]);
+    // the store still holds the previous account until hydrate swaps it
+    if (!user?.id || storeOwner !== user.id) return;
+    void unlock('rewards', 'partner');
+  }, [status, storeOwner, user?.id, partnerLive, unlocked.rewards, unlock]);
 
   useEffect(() => {
     if (user?.id) void hydrate(user.id, user.created_at ?? null);

@@ -45,19 +45,22 @@ export function tierCode(s: PartnerCampaignStatus, tier: PartnerCouponTier): str
 }
 
 /**
- * The one line about the person's coupons:
+ * The one line about the person's coupons. Away from the coupons (campaign
+ * screen, Recanto) it says where they are; on the Parcerias page itself
+ * (`here`) it doesn't repeat "em Recompensas":
  *
- *   some tier still open → "10% e 17% pra resgatar em Recompensas"
- *   every tier claimed   → "Cupons resgatados · códigos em Recompensas"
+ *   some tier still open → "10% e 17% pra resgatar em Recompensas" / "Pra resgatar: 10% e 17%"
+ *   every tier claimed   → "Cupons resgatados · códigos em Recompensas" / "… · códigos nos cards"
  */
 export function campaignCouponLine(
   c: CampaignRewards,
   s: PartnerCampaignStatus,
   t: Translator,
+  opts: { here?: boolean } = {},
 ): string {
   const open = campaignTiers(c).filter((tier) => !tierClaimed(s, tier));
-  if (open.length === 0) return t('campaign.line.claimed');
-  return t('campaign.line.open', {
+  if (open.length === 0) return t(opts.here ? 'campaign.line.claimedHere' : 'campaign.line.claimed');
+  return t(opts.here ? 'campaign.line.openHere' : 'campaign.line.open', {
     pcts: open.map((tier) => `${tierPct(c, tier) ?? ''}%`).join(t('campaign.line.and')),
   });
 }

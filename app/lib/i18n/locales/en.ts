@@ -405,6 +405,7 @@ const en = {
      *  sheet; Android applies the Play offer in-app. */
     code: {
       link: 'I have a discount code',
+      linkWithCode: 'Use code {{code}}',
       placeholder: 'Enter the code',
       apply: 'Apply',
       invalid: "Code not recognized. Check the spelling and try again.",
@@ -1125,10 +1126,12 @@ const en = {
       open: '{{pcts}} to redeem in Rewards',
       and: ' and ',
       claimed: 'Coupons redeemed · codes in Rewards',
+      openHere: 'To redeem: {{pcts}}',
+      claimedHere: 'Coupons redeemed · codes on the cards',
     },
     screen: {
       couponsTitle: 'Your coupons',
-      couponsHint: 'They live in Rewards, on the Partners tab. One claim per coupon; the bigger one is for Premium subscribers.',
+      couponsHint: 'On the Partners tab. One claim per coupon; the bigger one is for Premium subscribers.',
       seeCoupons: 'See my coupons',
       tierTitle: '{{pct}}% off',
       tierFreeSub: 'For everyone',
@@ -1142,11 +1145,12 @@ const en = {
       couponCopyShort: 'Copy',
       couponCopyA11y: 'Copy or share the code: {{reward}}',
       visitPartner: "{{name}}'s website",
-      practiceTitle: 'Want a daily reminder?',
-      practiceBody: "Put a practice on today's list. It counts toward your Dedication like any other.",
+      practiceTitle: 'Daily practice (optional)',
+      practiceBody: "Want to keep it up every day? Put one of these practices on today's list. It counts toward your Dedication like any other.",
       practiceAdd: 'Add',
       practiceAdded: '"{{practice}}" is on today\'s list.',
-      practiceGo: 'See',
+      practiceGo: 'See it',
+      practiceGoA11y: "See the practice on today's list",
       materialTitle: 'Read the material',
       disclosure:
         'Commercial partnership with {{name}}. They only get overall numbers (how many people came through Perceva), never who you are.',
@@ -2511,6 +2515,11 @@ const en = {
           title: 'Track',
           body: 'On rewards you cannot afford yet, Track pins one as your goal at the top.',
           ai: 'One goal at a time: tracking another replaces the current one. The goal card shows how much is left; tapping it switches the goal, the X stops tracking, and Redeem appears once the balance gets there.',
+        },
+        partners: {
+          title: 'Mine and Partners',
+          body: 'Mine is your own shop. Partners holds coupons from partner brands, like Paker Health.',
+          ai: 'On Partners, Redeem gives you the coupon code, used on the brand\'s website; it stays on the card, with the Copy button. One claim per coupon, no coins spent. The bigger coupon is for Premium subscribers, and someone not subscribed yet sees the annual Premium discount code there. "About the partnership" opens the brand\'s screen, with the Recanto material and an optional practice to keep it up daily.',
         },
         balance: {
           title: 'Balance',
