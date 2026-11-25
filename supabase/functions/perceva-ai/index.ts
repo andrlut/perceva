@@ -12,15 +12,19 @@
 // Guards, in order:
 //   1. JWT checked server-side with auth.getUser() (same as perceva-mcp and
 //      delete-account). The uid never comes from the body.
-//   2. ai_begin (service_role): the `ai` row of app_config (on/off,
-//      allowlist, model, caps), the person's CURRENT CONSENT (ai_consent —
-//      without it nothing reaches the model: `no_consent`), 6/minute,
-//      30/day and 60 free/month per person, a global daily US$ cap summed
-//      from the ledger, and the reservation itself — all under one
-//      per-person advisory lock.
+//   2. ai_begin (service_role): the `ai` row of app_config (kill-switch,
+//      allowlist, `premium_open`, model, caps) — the AI is a Premium benefit
+//      (profile.subscription_tier) once `premium_open` is on, the allowlist
+//      before that —, the person's CURRENT CONSENT (ai_consent — without it
+//      nothing reaches the model: `no_consent`), 6/minute and 30/day per
+//      person, the person's AI CREDITS (40 a month, renewed on the 1st,
+//      `credit_cost.day_voice` = 1 per send; none left → `rate_month`), a
+//      global daily US$ cap summed from the ledger, and the reservation
+//      itself (the credit is spent here) — all under one per-person
+//      advisory lock (migration 20261125000001).
 //   3. Size: the transcript is capped (config max_chars), max_tokens 2048.
 //   4. ai_settle writes the real usage; when the model failed or proposed
-//      nothing, the credit comes back (refund row) — day and month alike.
+//      nothing, the credit comes back (refund row, same bucket and date).
 //
 // Context sent to the model: the day (practices, completions, skips, mood,
 // tags) and, after the consent, a short <profile> block — "Sobre você"
@@ -261,18 +265,22 @@ Deno.serve(async (req) => {
   const gate = begin as {
     ok: boolean; reason?: string; model?: string; max_chars?: number;
     used_today?: number; per_day?: number; used_month?: number; per_month?: number;
+    credits_left?: number; credits_month?: number;
+  };
+  // What the screen needs to redraw the balance (used_month/per_month are in
+  // credits too, for the builds that only read those two).
+  const balance = {
+    used_today: gate.used_today,
+    per_day: gate.per_day,
+    used_month: gate.used_month,
+    per_month: gate.per_month,
+    credits_left: gate.credits_left,
+    credits_month: gate.credits_month,
   };
   if (!gate.ok) {
-    // `no_consent` → the app shows the consent screen; `rate_month` → "os 60
-    // deste mês acabaram". Nothing was reserved.
-    return json(200, {
-      ok: false,
-      reason: gate.reason ?? 'disabled',
-      used_today: gate.used_today,
-      per_day: gate.per_day,
-      used_month: gate.used_month,
-      per_month: gate.per_month,
-    });
+    // `no_consent` → the app shows the consent screen; `rate_month` → "os
+    // créditos deste mês acabaram". Nothing was reserved or spent.
+    return json(200, { ok: false, reason: gate.reason ?? 'disabled', ...balance });
   }
 
   const started = Date.now();
@@ -347,10 +355,7 @@ Deno.serve(async (req) => {
       remark,
       lines,
       dropped,
-      used_today: gate.used_today,
-      per_day: gate.per_day,
-      used_month: gate.used_month,
-      per_month: gate.per_month,
+      ...balance,
     });
   } catch (err) {
     const status = err instanceof Anthropic.APIError ? err.status : undefined;

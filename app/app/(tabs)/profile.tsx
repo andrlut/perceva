@@ -17,7 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBottomNavClearance } from '@/components/BottomNavBar';
 import { TourModule } from '@/components/tour/TourModule';
 import { TourTarget } from '@/components/tour/TourTarget';
-import { monthLeft, useAiAccess, useRevokeAiConsent } from '@/lib/api/ai';
+import { creditCost, monthLeft, useAiAccess, useRevokeAiConsent } from '@/lib/api/ai';
 import { useCharacter } from '@/lib/api/character';
 import { useSession } from '@/lib/auth';
 import { useT } from '@/lib/i18n';
@@ -182,7 +182,11 @@ export default function SettingsScreen() {
   // has the AI, or still has a consent on file (so it can always be revoked).
   const aiConsent = aiAccess.data?.consent === true;
   const showAiRow = aiAccess.data?.enabled === true || aiConsent;
+  // The AI credits (Premium: 40 a month, renewed on the 1st). Shown to whoever
+  // has the AI, consent or not — it is the account's balance, and where the
+  // packs will be bought later.
   const aiMonth = monthLeft(aiAccess.data);
+  const aiDayCost = creditCost(aiAccess.data, 'day_voice') ?? 1;
   const handleDayVoiceToggle = async (on: boolean) => {
     if (on) {
       router.push('/day-voice');
@@ -301,16 +305,20 @@ export default function SettingsScreen() {
                 <Divider />
                 <ToggleRow
                   label={t('profile.dayVoiceAi')}
-                  description={
-                    !aiConsent
-                      ? t('profile.dayVoiceAiOff')
-                      : aiMonth
-                        ? t('profile.dayVoiceAiOn', { left: aiMonth.left, total: aiMonth.total })
-                        : t('profile.dayVoiceAiOnPlain')
-                  }
+                  description={aiConsent ? t('profile.dayVoiceAiOnPlain') : t('profile.dayVoiceAiOff')}
                   value={aiConsent && !revokeAi.isPending}
                   onChange={handleDayVoiceToggle}
                   disabled={revokeAi.isPending}
+                />
+              </>
+            ) : null}
+            {aiMonth ? (
+              <>
+                <Divider />
+                <InfoRow
+                  label={t('profile.aiCredits')}
+                  description={t('profile.aiCreditsHint', { cost: aiDayCost })}
+                  value={t('profile.aiCreditsValue', { left: aiMonth.left, total: aiMonth.total })}
                 />
               </>
             ) : null}
@@ -634,10 +642,28 @@ function Divider() {
   return <View style={styles.divider} />;
 }
 
-function InfoRow({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
+function InfoRow({
+  label,
+  value,
+  muted,
+  description,
+}: {
+  label: string;
+  value: string;
+  muted?: boolean;
+  /** A second line under the label — same anatomy as ToggleRow's. */
+  description?: string;
+}) {
   return (
     <View style={styles.row}>
-      <Text style={styles.rowLabel}>{label}</Text>
+      {description ? (
+        <View style={{ flex: 1 }}>
+          <Text style={styles.rowLabel}>{label}</Text>
+          <Text style={styles.rowDescription}>{description}</Text>
+        </View>
+      ) : (
+        <Text style={styles.rowLabel}>{label}</Text>
+      )}
       <Text style={[styles.rowValue, muted && { color: tokens.text.dim }]} numberOfLines={1}>
         {value}
       </Text>
