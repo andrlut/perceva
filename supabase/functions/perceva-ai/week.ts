@@ -17,6 +17,13 @@
 //     its own on Monday and the cache caps it at one a week, so charging
 //     would spend a credit the person never asked to spend. Raising the
 //     price is a config update; the reply then carries `refunded` as usual.
+//   - One generation per person and week, LOCKED IN THE LEDGER: the usage
+//     ref carries the week (`week:<monday>:<uuid>`) and a week with an `ok`
+//     usage is refused (`week_done`) before ai_begin. The week_insight cache
+//     alone was not a lock — its self-delete policy (LGPD) let a DELETE →
+//     POST loop mint calls that cost 0 credits and only stopped at the
+//     global daily US$ cap, taking "Conte seu dia" down for everyone. The
+//     ledger is append-only and the person cannot delete it.
 //   - The notes are sent to the model and NEVER stored or logged; logs carry
 //     the request ref and numbers only.
 //
@@ -41,6 +48,9 @@ const DIM_LABEL: Record<'pt' | 'en', Record<DimensionId, string>> = {
 /** Only the last few closed weeks can be generated (cost guard: browsing back
  *  through months must not mint one call per week). Cached ones always load. */
 const MAX_WEEKS_BACK = 8;
+/** A `pending` week usage older than this died before ai_settle (the model
+ *  call times out at 30 s, with 1 retry) — it no longer locks the week. */
+const PENDING_STALE_MS = 3 * 60_000;
 const OBS_MAX = 240;
 const TITLE_MAX = 60;
 const WHY_MAX = 180;
@@ -429,8 +439,34 @@ export async function handleWeek(raw: Record<string, unknown>, env: WeekEnv): Pr
   }
   if (!env.configured) return reply({ ok: false, reason: 'not_configured' });
 
-  // 4. Reserve through the same gate as every AI feature.
-  const ref = crypto.randomUUID();
+  // 4. One per week, in the ledger (service_role read; see the contract).
+  //    An `ok` usage of this week = done. A `pending` one still in flight =
+  //    another request is generating it right now (retryable). A `pending`
+  //    older than PENDING_STALE_MS is a request that died before settling,
+  //    and must not lock the week forever.
+  const weekRef = `week:${s.week.start}:`;
+  const prior = await admin
+    .from('ai_credit_ledger')
+    .select('status,created_at')
+    .eq('user_id', uid)
+    .eq('kind', 'usage')
+    .eq('feature', 'week')
+    .like('ref', `${weekRef}%`)
+    .in('status', ['ok', 'pending'])
+    .order('created_at', { ascending: false })
+    .limit(5);
+  if (prior.error) {
+    console.error('perceva-ai week: ledger read failed', prior.error.code ?? '');
+    return reply({ ok: false, reason: 'server' }, 500);
+  }
+  const rows = (prior.data ?? []) as { status: string; created_at: string }[];
+  if (rows.some((r) => r.status === 'ok')) return reply({ ok: false, reason: 'week_done' });
+  if (rows.some((r) => r.status === 'pending' && Date.now() - Date.parse(r.created_at) < PENDING_STALE_MS)) {
+    return reply({ ok: false, reason: 'rate_minute' });
+  }
+
+  // 5. Reserve through the same gate as every AI feature.
+  const ref = `${weekRef}${crypto.randomUUID()}`;
   const { data: begin, error: beginErr } = await admin.rpc('ai_begin', {
     p_user: uid,
     p_ref: ref,
@@ -500,7 +536,7 @@ export async function handleWeek(raw: Record<string, unknown>, env: WeekEnv): Pr
       return reply({ ok: false, reason: 'ai_failed', refunded: true });
     }
 
-    // 5. Cache the generated text (service_role: the app cannot write it).
+    // 6. Cache the generated text (service_role: the app cannot write it).
     // A concurrent request may have won the race — keep the first one.
     const { error: insErr } = await admin.from('week_insight').upsert({
       character_id: uid,
@@ -513,7 +549,9 @@ export async function handleWeek(raw: Record<string, unknown>, env: WeekEnv): Pr
     }, { onConflict: 'character_id,week_start', ignoreDuplicates: true });
     if (insErr) console.error('perceva-ai week: cache write failed', ref, insErr.code ?? '');
 
-    await settle('ok');
+    // A failed cache write must not lock the week: settled as `failed` (it
+    // costs 0 credits, nothing to refund), the next open generates it again.
+    await settle(insErr ? 'failed' : 'ok');
     const stored = await db.from('week_insight').select(CACHE_COLUMNS).eq('week_start', s.week.start).limit(1);
     return reply({
       ok: true,
