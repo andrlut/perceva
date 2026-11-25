@@ -36,6 +36,40 @@ function loadSpeech(): SpeechModule | null {
 /** True when this binary carries the native recognizer. */
 export const speechAvailable: boolean = loadSpeech() != null;
 
+/**
+ * Keep the screen on while listening. Nobody touches the phone while telling
+ * the day, so the screen timed out mid-sentence, the app went to background
+ * and the recognizer stopped (owner, 2026-11-25). ExpoKeepAwake ships inside
+ * every build (it is a dependency of `expo` itself), but it is reached
+ * through requireOptionalNativeModule all the same, so a binary without it
+ * just keeps the old behavior instead of crashing on import.
+ */
+interface KeepAwakeModule {
+  activate?: (tag: string) => Promise<void>;
+  deactivate?: (tag: string) => Promise<void>;
+}
+
+const KEEP_AWAKE_TAG = 'perceva-dictation';
+let keepAwake: KeepAwakeModule | null | undefined;
+
+function setScreenAwake(on: boolean) {
+  if (keepAwake === undefined) {
+    try {
+      keepAwake = requireOptionalNativeModule<KeepAwakeModule>('ExpoKeepAwake');
+    } catch {
+      keepAwake = null;
+    }
+  }
+  try {
+    const pending = on
+      ? keepAwake?.activate?.(KEEP_AWAKE_TAG)
+      : keepAwake?.deactivate?.(KEEP_AWAKE_TAG);
+    pending?.catch(() => {});
+  } catch {
+    // no activity to hold (app backgrounded) — nothing to undo
+  }
+}
+
 export type DictationError = 'permission' | 'unavailable' | 'failed';
 
 /**
@@ -59,8 +93,14 @@ export function useDictation(params: {
     if (!mod) return;
     const M = mod.ExpoSpeechRecognitionModule;
     const subs = [
-      M.addListener('start', () => setListening(true)),
-      M.addListener('end', () => setListening(false)),
+      M.addListener('start', () => {
+        setListening(true);
+        setScreenAwake(true);
+      }),
+      M.addListener('end', () => {
+        setListening(false);
+        setScreenAwake(false);
+      }),
       M.addListener('result', (ev) => {
         // Android (continuous) reports one segment per pause; the joined
         // transcript of the first alternative is what was said so far.
@@ -72,6 +112,7 @@ export function useDictation(params: {
       }),
       M.addListener('error', (ev) => {
         setListening(false);
+        setScreenAwake(false);
         // "aborted" is our own stop; "no-speech" is silence — neither is news.
         if (ev.error === 'aborted' || ev.error === 'no-speech') return;
         setError(
@@ -83,6 +124,7 @@ export function useDictation(params: {
     ];
     return () => {
       for (const s of subs) s.remove();
+      setScreenAwake(false);
       try {
         M.abort();
       } catch {

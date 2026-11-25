@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -62,6 +62,12 @@ import { tokens } from '@/theme';
  * First use (and after a revoke in Ajustes): the LGPD consent (AiConsent)
  * takes the screen until the person accepts — the server refuses every
  * request without it. Under the box: what is left of the 60 free a month.
+ *
+ * The mic and Enviar sit side by side in the bottom dock, outside the scroll
+ * (owner, 2026-11-25: "do lado do gravar"): however long the dictation gets,
+ * both stay where the thumb is. The doors (Home mood card, mood check-in)
+ * open with `?autostart=1`, so on a build with the native mic the phone is
+ * already listening when the screen appears.
  */
 
 type Phase = 'input' | 'loading' | 'review';
@@ -102,6 +108,7 @@ function localHHMM(d: Date): string {
 export default function DayVoiceScreen() {
   const { t, locale } = useT();
   const router = useRouter();
+  const params = useLocalSearchParams<{ autostart?: string }>();
   const keyboardHeight = useKeyboardHeight();
   const access = useAiAccess();
   const grantConsent = useGrantAiConsent();
@@ -126,6 +133,12 @@ export default function DayVoiceScreen() {
   const [helpOpen, setHelpOpen] = useState(false);
   const guidePrompt = useDayVoiceGuidePrompt();
   const inputRef = useRef<TextInput>(null);
+  const scrollRef = useRef<ScrollView>(null);
+  // The latest text, for Enviar pressed mid-dictation: the recognizer's final
+  // result lands after stop(), past the closure's `text`.
+  const textRef = useRef('');
+  textRef.current = text;
+  const autostarted = useRef(false);
 
   const dayMood = useMoodForDay(draftDate);
   const existingMood: MoodLog | null = dayMood.data ?? null;
@@ -150,6 +163,19 @@ export default function DayVoiceScreen() {
     const id = setTimeout(() => inputRef.current?.focus(), 250);
     return () => clearTimeout(id);
   }, [dictation.available]);
+
+  // Opened from a door (?autostart=1): start listening as soon as the access
+  // is known and there is no consent in the way. Once per visit.
+  const canAutostart =
+    params.autostart === '1' && dictation.available && access.data?.enabled === true && !needsConsent;
+  useEffect(() => {
+    if (!canAutostart || autostarted.current) return;
+    autostarted.current = true;
+    const id = setTimeout(() => dictation.start(textRef.current), 350);
+    return () => clearTimeout(id);
+    // dictation.start is stable per language
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canAutostart]);
 
   const tagLabel = useMemo(() => {
     const map = new Map<string, string>();
@@ -203,12 +229,17 @@ export default function DayVoiceScreen() {
   };
 
   const understand = async () => {
-    const body = text.trim();
+    if (dictation.listening) {
+      // Enviar sits next to the mic, so it is often pressed mid-sentence:
+      // stop, and give the recognizer a moment to deliver its final words.
+      dictation.stop();
+      await new Promise((resolve) => setTimeout(resolve, 600));
+    }
+    const body = textRef.current.trim();
     if (!body) {
       setError({ message: t('dayVoice.errors.empty_text'), refunded: false });
       return;
     }
-    if (dictation.listening) dictation.stop();
     inputRef.current?.blur();
     setError(null);
     setRemark(null);
@@ -499,40 +530,20 @@ export default function DayVoiceScreen() {
             {t('dayVoice.title')}
           </Text>
           <ScreenInfoButton onPress={() => setHelpOpen(true)} a11yLabel={t('dayVoice.help.a11y')} />
-          {/* Send lives in the top bar, like any compose screen: the bar is
-              outside the scroll and above the keyboard on every phone, however
-              long the dictation gets. A footer button and a button under the
-              text both ended up behind the keyboard (2026-11-20 and 11-23). */}
-          {!needsConsent && phase !== 'review' ? (
-            <Pressable
-              onPress={understand}
-              disabled={phase === 'loading' || !text.trim()}
-              style={({ pressed }) => [
-                styles.sendBtn,
-                (phase === 'loading' || !text.trim()) && { opacity: 0.5 },
-                pressed && { opacity: 0.85 },
-              ]}
-              hitSlop={6}
-              accessibilityRole="button"
-              accessibilityState={{ disabled: phase === 'loading' || !text.trim() }}
-            >
-              {phase === 'loading' ? (
-                <ActivityIndicator size="small" color={tokens.semantic.coinInk} />
-              ) : (
-                <Ionicons name="sparkles" size={14} color={tokens.semantic.coinInk} />
-              )}
-              <Text style={styles.sendBtnText}>{t('dayVoice.understand')}</Text>
-            </Pressable>
-          ) : null}
         </View>
 
         <View style={[styles.flex, { paddingBottom: keyboardHeight }]}>
           <ScrollView
+            ref={scrollRef}
             style={styles.flex}
             contentContainerStyle={styles.content}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="interactive"
             showsVerticalScrollIndicator={false}
+            // While listening, follow the words as they arrive.
+            onContentSizeChange={() => {
+              if (dictation.listening) scrollRef.current?.scrollToEnd({ animated: true });
+            }}
           >
             {needsConsent ? (
               <AiConsent />
@@ -581,30 +592,6 @@ export default function DayVoiceScreen() {
                     </Text>
                   </View>
                 </View>
-
-                {dictation.available ? (
-                  <View style={styles.micWrap}>
-                    <Pressable
-                      onPress={() => (dictation.listening ? dictation.stop() : dictation.start(text))}
-                      disabled={phase !== 'input'}
-                      style={({ pressed }) => [
-                        styles.micBtn,
-                        dictation.listening && styles.micBtnOn,
-                        pressed && { opacity: 0.8 },
-                      ]}
-                      accessibilityRole="button"
-                      accessibilityLabel={dictation.listening ? t('dayVoice.micA11yStop') : t('dayVoice.micA11yStart')}
-                    >
-                      <Ionicons name={dictation.listening ? 'stop' : 'mic'} size={30} color="#FFFFFF" />
-                    </Pressable>
-                    <Text style={styles.micLabel}>
-                      {dictation.listening ? t('dayVoice.listening') : t('dayVoice.micStart')}
-                    </Text>
-                    {dictation.error ? (
-                      <Text style={styles.micError}>{t(`dayVoice.micErrors.${dictation.error}`)}</Text>
-                    ) : null}
-                  </View>
-                ) : null}
               </>
             )}
 
@@ -644,7 +631,6 @@ export default function DayVoiceScreen() {
             )}
           </ScrollView>
 
-          {needsConsent || phase === 'review' ? (
           <View style={styles.footer}>
             {needsConsent ? (
               <View style={styles.btnRow}>
@@ -702,9 +688,64 @@ export default function DayVoiceScreen() {
                   )}
                 </Pressable>
               </View>
-            ) : null}
+            ) : (
+              // The dock: what the mic hears fills the box above; Enviar is
+              // right beside it. Without the native mic (older binaries) the
+              // keyboard's own microphone does the listening and the dock is
+              // just Enviar.
+              <View style={styles.dock}>
+                {dictation.listening || dictation.error ? (
+                  <Text style={[styles.dockHint, dictation.error && !dictation.listening && styles.micError]}>
+                    {dictation.listening
+                      ? t('dayVoice.listeningDock')
+                      : t(`dayVoice.micErrors.${dictation.error}`)}
+                  </Text>
+                ) : null}
+                <View style={styles.btnRow}>
+                  {dictation.available ? (
+                    <Pressable
+                      onPress={() => (dictation.listening ? dictation.stop() : dictation.start(text))}
+                      disabled={phase !== 'input'}
+                      style={({ pressed }) => [
+                        styles.micBtn,
+                        dictation.listening && styles.micBtnOn,
+                        phase !== 'input' && { opacity: 0.5 },
+                        pressed && { opacity: 0.8 },
+                      ]}
+                      accessibilityRole="button"
+                      accessibilityLabel={dictation.listening ? t('dayVoice.micA11yStop') : t('dayVoice.micA11yStart')}
+                    >
+                      <Ionicons name={dictation.listening ? 'stop' : 'mic'} size={20} color="#FFFFFF" />
+                      <Text style={styles.micBtnText}>
+                        {dictation.listening ? t('dayVoice.micStopShort') : t('dayVoice.micShort')}
+                      </Text>
+                    </Pressable>
+                  ) : null}
+                  <Pressable
+                    onPress={understand}
+                    disabled={phase === 'loading' || !text.trim()}
+                    style={({ pressed }) => [
+                      styles.btn,
+                      styles.btnGold,
+                      (phase === 'loading' || !text.trim()) && { opacity: 0.45 },
+                      pressed && { opacity: 0.85 },
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityState={{ disabled: phase === 'loading' || !text.trim() }}
+                  >
+                    {phase === 'loading' ? (
+                      <ActivityIndicator color={tokens.semantic.coinInk} />
+                    ) : (
+                      <>
+                        <Ionicons name="sparkles" size={16} color={tokens.semantic.coinInk} />
+                        <Text style={styles.btnGoldText}>{t('dayVoice.understand')}</Text>
+                      </>
+                    )}
+                  </Pressable>
+                </View>
+              </View>
+            )}
           </View>
-          ) : null}
         </View>
       </ScreenBackground>
 
@@ -767,35 +808,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  sendBtn: {
-    flexDirection: 'row',
-    flexShrink: 0,
-    alignItems: 'center',
-    gap: 5,
-    height: 40,
-    paddingHorizontal: tokens.space[3],
-    borderRadius: tokens.radius.pill,
-    backgroundColor: tokens.semantic.coin,
-  },
-  sendBtnText: {
-    fontFamily: 'Manrope_800ExtraBold',
-    fontSize: 14,
-    color: tokens.semantic.coinInk,
-  },
   meta: {
     fontFamily: 'Manrope_500Medium',
     fontSize: 12,
     color: tokens.text.dim,
   },
-  micWrap: {
-    alignItems: 'center',
+  dock: {
     gap: tokens.space[2],
-    paddingVertical: tokens.space[2],
+  },
+  dockHint: {
+    fontFamily: 'Manrope_600SemiBold',
+    fontSize: 12.5,
+    color: tokens.text.mid,
+    textAlign: 'center',
   },
   micBtn: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    // Fixed width: Falar ⇄ Parar never shifts Enviar beside it.
+    width: 120,
+    height: 52,
+    flexDirection: 'row',
+    gap: 6,
+    borderRadius: tokens.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: tokens.brand.violet,
@@ -803,10 +836,10 @@ const styles = StyleSheet.create({
   micBtnOn: {
     backgroundColor: tokens.semantic.danger,
   },
-  micLabel: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 13,
-    color: tokens.text.mid,
+  micBtnText: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 15,
+    color: '#FFFFFF',
   },
   micError: {
     fontFamily: 'Manrope_500Medium',

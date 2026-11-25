@@ -3097,6 +3097,8 @@ const pt: Translations = {
       skillsDesc: 'Recordes pessoais com escada de medalhas, por área da vida.',
       vida: 'A vida que eu quero',
       vidaDesc: 'Sua vida dos sonhos em três coisas, no topo da Desejada.',
+      contedia: 'Conte seu dia (IA)',
+      contediaDesc: 'Fale como foi o dia e a IA preenche humor, nota e práticas pra você conferir. Aparece no cartão de humor.',
       footnote: 'Desligar nunca apaga nada. Religou, voltou tudo.',
       premiumNote: 'Os módulos fazem parte do Premium. Toque num deles para conhecer.',
     },
@@ -3979,7 +3981,8 @@ const pt: Translations = {
 
   dayVoice: {
     title: 'Conte seu dia',
-    entry: 'Conte seu dia…',
+    entry: 'Conte como foi seu dia',
+    entryHint: 'Fale, e a IA preenche tudo pra você conferir',
     entryA11y: 'Contar o dia por voz',
     placeholder: 'Toque no microfone do teclado e fale: o que você fez, o que não fez e um humor de 1 a 5.',
     placeholderMic: 'Toque no microfone e fale: o que você fez, o que não fez e um humor de 1 a 5. Ou escreva aqui.',
@@ -3987,6 +3990,9 @@ const pt: Translations = {
     micA11yStart: 'Começar a ditar',
     micA11yStop: 'Parar de ditar',
     listening: 'Ouvindo… toque pra parar',
+    listeningDock: 'Ouvindo… fale com calma, a tela fica acesa.',
+    micShort: 'Falar',
+    micStopShort: 'Parar',
     micErrors: {
       permission: 'Sem permissão pro microfone. Libere nos ajustes do celular ou use o microfone do teclado.',
       unavailable: 'O reconhecimento de voz não está disponível neste celular. Use o microfone do teclado.',

@@ -1,41 +1,51 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { useAiAccess } from '@/lib/api/ai';
 import { useT } from '@/lib/i18n';
+import { useModuleEnabled } from '@/lib/modules';
 import { tokens } from '@/theme';
 
 /**
- * The door into "Conte seu dia" (/day-voice), inside today's mood card —
- * the "close the day" ritual is where telling the day belongs. Drawn as a
- * text field so it reads as "the place to talk"; tapping opens the screen
- * with the field focused (the keyboard's own microphone is right there).
+ * The door into "Conte seu dia" (/day-voice). Lives in today's mood card on
+ * the Home and on top of the mood check-in — marking the mood is where
+ * telling the day belongs (owner, 2026-11-25: "embutido no botão de marcar o
+ * humor"). Opens with `?autostart=1`, so with the native mic the phone is
+ * already listening when the screen appears; after Registrar the person
+ * lands back where they came from, with everything filled in to adjust.
  *
- * Renders nothing unless this account has the AI (ai_access: on/off +
- * allowlist, server-only) — so nobody outside the allowlist sees a dead box.
+ * Renders nothing unless BOTH say yes: the `contedia` module (Ajustes ›
+ * Módulos, Premium, default off) and the server (ai_access: kill-switch,
+ * allowlist / Premium, credits) — so nobody sees a door that won't open.
  */
-export function DayVoiceEntry() {
+export function DayVoiceEntry({ style }: { style?: StyleProp<ViewStyle> }) {
   const { t } = useT();
   const router = useRouter();
+  const moduleOn = useModuleEnabled('contedia');
   const access = useAiAccess();
 
-  if (!access.data?.enabled) return null;
+  if (!moduleOn || !access.data?.enabled) return null;
 
   return (
     <Pressable
-      onPress={() => router.push('/day-voice')}
-      style={({ pressed }) => [styles.field, pressed && { opacity: 0.7 }]}
+      onPress={() => router.push('/day-voice?autostart=1')}
+      style={({ pressed }) => [styles.field, style, pressed && { opacity: 0.75 }]}
       accessibilityRole="button"
       accessibilityLabel={t('dayVoice.entryA11y')}
     >
       <View style={styles.mic}>
-        <Ionicons name="mic" size={15} color="#FFFFFF" />
+        <Ionicons name="mic" size={18} color="#FFFFFF" />
       </View>
-      <Text style={styles.text} numberOfLines={1}>
-        {t('dayVoice.entry')}
-      </Text>
-      <Ionicons name="sparkles-outline" size={15} color={tokens.brand.violet2} />
+      <View style={styles.body}>
+        <Text style={styles.title} numberOfLines={1}>
+          {t('dayVoice.entry')}
+        </Text>
+        <Text style={styles.hint} numberOfLines={1}>
+          {t('dayVoice.entryHint')}
+        </Text>
+      </View>
+      <Ionicons name="sparkles" size={16} color={tokens.brand.violet2} />
     </Pressable>
   );
 }
@@ -44,27 +54,37 @@ const styles = StyleSheet.create({
   field: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: tokens.space[2],
-    height: 44,
-    paddingLeft: 6,
+    gap: tokens.space[3],
+    minHeight: 60,
+    paddingVertical: tokens.space[2],
+    paddingLeft: tokens.space[2],
     paddingRight: tokens.space[3],
-    borderRadius: tokens.radius.pill,
-    backgroundColor: tokens.bg.surface2,
+    borderRadius: tokens.radius.md,
+    backgroundColor: 'rgba(123, 92, 255, 0.12)',
     borderWidth: 1,
-    borderColor: tokens.border.base,
+    borderColor: tokens.brand.violetGlow,
   },
   mic: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: tokens.brand.violet,
   },
-  text: {
+  body: {
     flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
+  title: {
+    fontFamily: 'Manrope_800ExtraBold',
+    fontSize: 15,
+    color: tokens.text.hi,
+  },
+  hint: {
     fontFamily: 'Manrope_500Medium',
-    fontSize: 14,
-    color: tokens.text.dim,
+    fontSize: 12.5,
+    color: tokens.text.mid,
   },
 });

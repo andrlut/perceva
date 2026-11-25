@@ -3084,6 +3084,8 @@ const en = {
       skillsDesc: 'Personal records with a medal ladder, per life area.',
       vida: 'The life I want',
       vidaDesc: 'Your dream life in three things, at the top of Desired.',
+      contedia: 'Tell your day (AI)',
+      contediaDesc: 'Say how the day went and the AI fills in mood, note and practices for you to check. Shows on the mood card.',
       footnote: 'Turning a module off never deletes anything. Turn it back on and everything returns.',
       premiumNote: 'Modules are part of Premium. Tap one to learn more.',
     },
@@ -3964,7 +3966,8 @@ const en = {
 
   dayVoice: {
     title: 'Tell your day',
-    entry: 'Tell your day…',
+    entry: 'Tell how your day went',
+    entryHint: 'Talk, and the AI fills it all in for you to check',
     entryA11y: 'Tell your day by voice',
     placeholder: 'Tap the keyboard\'s microphone and say what you did, what you didn\'t, and a mood from 1 to 5.',
     placeholderMic: 'Tap the microphone and say what you did, what you didn\'t, and a mood from 1 to 5. Or type here.',
@@ -3972,6 +3975,9 @@ const en = {
     micA11yStart: 'Start dictating',
     micA11yStop: 'Stop dictating',
     listening: 'Listening… tap to stop',
+    listeningDock: 'Listening… take your time, the screen stays on.',
+    micShort: 'Talk',
+    micStopShort: 'Stop',
     micErrors: {
       permission: 'No microphone permission. Allow it in the phone\'s settings or use the keyboard\'s microphone.',
       unavailable: 'Speech recognition isn\'t available on this phone. Use the keyboard\'s microphone.',
