@@ -4,7 +4,6 @@ import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } fro
 
 import { useAiAccess } from '@/lib/api/ai';
 import { useT } from '@/lib/i18n';
-import { useModuleEnabled } from '@/lib/modules';
 import { tokens } from '@/theme';
 
 /**
@@ -15,17 +14,19 @@ import { tokens } from '@/theme';
  * already listening when the screen appears; after Registrar the person
  * lands back where they came from, with everything filled in to adjust.
  *
- * Renders nothing unless BOTH say yes: the `contedia` module (Ajustes ›
- * Módulos, Premium, default off) and the server (ai_access: kill-switch,
- * allowlist / Premium, credits) — so nobody sees a door that won't open.
+ * ONE switch turns it on: "Conte seu dia com IA" in Ajustes › Sua IA, which
+ * is the AI consent. Renders only when the server has the AI for this
+ * account (ai_access.enabled: kill-switch, Premium / allowlist) AND that
+ * consent is on — so switching it on makes the door appear, switching it off
+ * makes it go. (A separate module switch in Ajustes › Módulos, 2026-11-25,
+ * had the same name and left the owner with the consent on and no door.)
  */
 export function DayVoiceEntry({ style }: { style?: StyleProp<ViewStyle> }) {
   const { t } = useT();
   const router = useRouter();
-  const moduleOn = useModuleEnabled('contedia');
   const access = useAiAccess();
 
-  if (!moduleOn || !access.data?.enabled) return null;
+  if (!access.data?.enabled || access.data.consent !== true) return null;
 
   return (
     <Pressable

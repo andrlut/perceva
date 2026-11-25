@@ -25,7 +25,7 @@ import { supabase } from '@/lib/supabase';
  * Derived from the shared `character/me` query (useIsPremium precedent):
  * zero extra fetch, survives reinstall, syncs across devices.
  */
-export type ModuleKey = 'semana' | 'missoes' | 'metas' | 'skills' | 'vida' | 'contedia';
+export type ModuleKey = 'semana' | 'missoes' | 'metas' | 'skills' | 'vida';
 
 export interface ModuleDef {
   key: ModuleKey;
@@ -59,12 +59,9 @@ export const MODULE_REGISTRY: readonly ModuleDef[] = [
   // plus guilt-free subs, cuts and the first practice (table life_vision,
   // versioned). Its card sits on top of Eu › Desejada, above the Norte.
   { key: 'vida', default: false },
-  // Conte seu dia — tell the day by voice, the AI (perceva-ai) proposes the
-  // mood, note and practices. Gates the DOORS only (Home mood card, mood
-  // check-in); /day-voice itself stays reachable, because the Resumo da
-  // semana and Ajustes › Sua IA send people there for the AI consent. The
-  // server still decides who has the AI at all (ai_access).
-  { key: 'contedia', default: false },
+  // Conte seu dia is NOT a key here on purpose: its switch is the AI consent
+  // in Ajustes › Sua IA (owner, 2026-11-25). A second "Conte seu dia" switch
+  // in this card read as the same thing and left the door hidden.
 ];
 
 export const MODULE_DEFAULTS: Record<ModuleKey, boolean> = Object.fromEntries(
