@@ -4024,7 +4024,7 @@ const pt: Translations = {
     needMood: 'Escolha um humor pra salvar a nota e as tags.',
     saveFailTitle: 'Não deu pra registrar tudo',
     partialFail: 'Estas linhas não foram salvas: {{items}}. O resto foi registrado.',
-    refunded: 'Isso não contou no seu limite de hoje.',
+    refunded: 'Esse envio não gastou crédito.',
     errors: {
       disabled: 'A IA está desligada agora.',
       not_allowed: 'A IA ainda não está liberada pra sua conta.',
