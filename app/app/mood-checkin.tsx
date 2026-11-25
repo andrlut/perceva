@@ -21,6 +21,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { DayVoiceEntry } from '@/components/dayVoice/DayVoiceEntry';
 import { ClaudeDictateButton } from '@/components/mood/ClaudeDictateButton';
 import { MoodFace, MoodFacePlaceholder } from '@/components/mood/MoodFace';
 import { MoodFaceRow } from '@/components/mood/MoodFaceRow';
@@ -290,6 +291,12 @@ export default function MoodCheckinScreen() {
             <Text style={styles.subtitle}>
               {isToday ? t('mood.subtitle') : dateLabel}
             </Text>
+
+            {/* Telling the day fills this same check-in: Registrar there
+                saves mood, tags and note, and back here the screen reads the
+                fresh day, ready to adjust. Today only — the AI reads "today"
+                from what is said. Renders nothing without the module. */}
+            {isToday ? <DayVoiceEntry /> : null}
 
             {/* Hero — the day's face, big. Keyed remount pops the new level
                 in with a small spring; height is fixed so nothing jumps. */}
