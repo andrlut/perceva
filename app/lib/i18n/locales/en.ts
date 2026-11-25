@@ -4009,7 +4009,7 @@ const en = {
     needMood: 'Pick a mood to save the note and the tags.',
     saveFailTitle: 'Couldn\'t log everything',
     partialFail: 'These lines weren\'t saved: {{items}}. The rest was logged.',
-    refunded: 'This didn\'t count toward today\'s limit.',
+    refunded: 'This one didn\'t use a credit.',
     errors: {
       disabled: 'The AI is switched off right now.',
       not_allowed: 'The AI isn\'t enabled for your account yet.',
