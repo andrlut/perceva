@@ -4,8 +4,6 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { useEffect } from 'react';
-
 import { track } from '@/lib/analytics';
 import type {
   JoinPartnerCampaignResult,
@@ -21,20 +19,15 @@ import { dateKeyFromLocal } from './history';
 import { invalidateTaskSurfaces } from './tasks';
 
 /**
- * Partner campaigns (Programa Paker Health, migrations 20261104000009 +
- * 20261105000001): a sponsored "event" — join, adopt the campaign's catalog
- * practice, keep a streak, unlock the rewards (the partner's coupon and a
- * Perceva Premium discount; one claim covers both).
+ * Partner campaigns (Paker Health, migrations 20261104000009 →
+ * 20261116000003_partner_coupons_open): the partner's coupons, open to
+ * everyone in Recompensas › Parcerias (one claim per tier, the Premium tier
+ * for subscribers), plus the campaign's practices offered as a suggestion.
  *
- * The client only DISPLAYS progress. The streak is counted by the server
- * (`partner_campaign_status`, the same walk `claim_partner_coupon` re-runs
- * before writing the claim), over completions it stamped itself — so no
- * client-side count here can unlock anything. Neither code ever leaves
- * `partner_campaign_secret` except through those two RPCs, once claimed.
- *
- * ORDER: migration 20261105000001 reaches the cloud before this ships —
- * CAMPAIGN_SELECT names its perceva_reward_* columns, and PostgREST answers
- * 400 to an unknown column.
+ * Codes never leave `partner_campaign_secret` except through the status RPC,
+ * after the claim. The 4-day streak the server still counts
+ * (`streak_days`, `unlocked`, `secure_partner_unlock`) is dormant since
+ * 2026-11-25: the app no longer shows it and nothing depends on it.
  *
  * Never gated on modules or Premium: the campaign is for every account.
  */
@@ -271,12 +264,11 @@ export function useAdoptCampaignPractice() {
 }
 
 /**
- * Claim the coupon in the chosen tier. The server accepts a secured unlock
- * (`member.unlocked_at`) or a live streak at the goal, refuses the Premium
- * tier for a non-subscriber (`premium_required`), below the goal
- * (`streak_not_reached`) and without membership (`not_a_member`). The
- * claim is permanent and the choice final. Returns the status object (now
- * `claimed`, with the chosen tier's code once released).
+ * Claim the coupon in the chosen tier (migration partner_coupons_open): open
+ * to anyone, joining the campaign on the way if needed; the Premium tier is
+ * refused to a non-subscriber (`premium_required`). One claim per tier, and
+ * permanent. Returns the status object (now with that tier claimed and its
+ * code once released).
  */
 export function useClaimPartnerCoupon() {
   const queryClient = useQueryClient();
@@ -301,61 +293,4 @@ export function useClaimPartnerCoupon() {
       queryClient.invalidateQueries({ queryKey: partnerKeys.status(params.campaignId) });
     },
   });
-}
-
-/**
- * Write the unlock down (`member.unlocked_at`) without choosing a tier.
- * `secure_partner_unlock` is idempotent; it refuses below the goal
- * (`streak_not_reached`) and without membership (`not_a_member`).
- */
-export function useSecurePartnerUnlock() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (params: { campaignId: string }): Promise<PartnerCampaignStatus> => {
-      const { data, error } = await supabase.rpc('secure_partner_unlock', {
-        p_campaign_id: params.campaignId,
-        p_today: dateKeyFromLocal(new Date()),
-      });
-      if (error) throw error;
-      return data as PartnerCampaignStatus;
-    },
-    onSuccess: (data, params) => {
-      patchStatus(queryClient, params.campaignId, data);
-      track('campaign_unlock_secured', { campaign: params.campaignId });
-    },
-    onSettled: (_data, _err, params) => {
-      queryClient.invalidateQueries({ queryKey: partnerKeys.status(params.campaignId) });
-    },
-  });
-}
-
-/** Campaigns with a secure already fired this session — one request per
- *  campaign even with the Home card, the Vault card and the screen mounted
- *  together. */
-const secureFired = new Set<string>();
-
-/**
- * Make an unlock permanent the moment the server reports it — WITHOUT
- * choosing the tier (that is the person's call, with the Premium offer in
- * between). `unlocked` is recomputed on every read, so an unlock nobody
- * writes down lasts only as long as the streak: reach the goal, miss the
- * next day, and it is gone. For a MEMBER securing needs nothing more from
- * them, so it is sent on their behalf as soon as
- * `member && unlocked && !secured && !claimed` shows up. A non-member still
- * has to join first (membership is the partner's tracking base, never
- * implied), which the redeem flow does in the same tap.
- *
- * A failure clears the mark so a later mount can retry; it can't loop: the
- * onSettled refetch of a refused call comes back no longer unlocked.
- */
-export function useAutoSecurePartnerUnlock(status: PartnerCampaignStatus | null | undefined) {
-  const { mutate } = useSecurePartnerUnlock();
-  const campaignId = status?.campaign_id ?? null;
-  const due =
-    status != null && status.member && status.unlocked && !status.secured && !status.claimed;
-  useEffect(() => {
-    if (!due || !campaignId || secureFired.has(campaignId)) return;
-    secureFired.add(campaignId);
-    mutate({ campaignId }, { onError: () => secureFired.delete(campaignId) });
-  }, [due, campaignId, mutate]);
 }

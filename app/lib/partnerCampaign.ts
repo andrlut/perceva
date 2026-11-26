@@ -8,16 +8,18 @@ export type CampaignRewards = Pick<PartnerCampaign, 'reward_free_pct' | 'reward_
 
 /**
  * Partner campaign display rules shared by every surface that shows the
- * person's state — the Home card, the Vault's coupon cards and the campaign
- * screen — so all say the same thing word for word. The numbers are the
- * server's (`partner_campaign_status`); nothing here decides anything.
+ * person's coupons — the Parcerias page of Recompensas, the campaign screen
+ * and the sponsored material's row in the Recanto — so all say the same
+ * thing word for word. The numbers are the server's
+ * (`partner_campaign_status`); nothing here decides anything.
  *
  * Since 2026-11-16 (migration partner_coupons_open) the coupons are OPEN:
  * the basic tier (`reward_free_pct`) is anyone's for the taking, the
  * Premium tier (`reward_premium_pct`) is for subscribers, and one person
- * may hold both — one claim per tier. The challenge (join, pick a
- * practice, keep the streak) is an extra on the side; `unlocked` only says
- * it was completed.
+ * may hold both — one claim per tier. Since 2026-11-25 the app no longer
+ * shows the 4-day challenge: its server side (streak, `unlocked`,
+ * `secure_partner_unlock`) stays in the database, dormant, and the
+ * campaign's practices are offered as a plain suggestion.
  */
 
 /** The tiers the campaign offers, basic first. Everyone sees every tier:
@@ -43,34 +45,22 @@ export function tierCode(s: PartnerCampaignStatus, tier: PartnerCouponTier): str
 }
 
 /**
- * The one state line of the challenge, most advanced state first:
+ * The one line about the person's coupons. Away from the coupons (campaign
+ * screen, Recanto) it says where they are; on the Parcerias page itself
+ * (`here`) it doesn't repeat "em Recompensas":
  *
- *   challenge done      → "challenge complete"
- *   practice adopted    → "X of N days in a row"
- *   member              → "pick the practice"
- *   otherwise           → "coupons in Rewards · the challenge as an extra"
+ *   some tier still open → "10% e 17% pra resgatar em Recompensas" / "Pra resgatar: 10% e 17%"
+ *   every tier claimed   → "Cupons resgatados · códigos em Recompensas" / "… · códigos nos cards"
  */
-export function campaignStateLine(
-  _c: CampaignRewards,
+export function campaignCouponLine(
+  c: CampaignRewards,
   s: PartnerCampaignStatus,
   t: Translator,
+  opts: { here?: boolean } = {},
 ): string {
-  if (s.unlocked) return t('campaign.card.done');
-  if (s.adopted) {
-    return t('campaign.card.progress', { days: s.streak_days, goal: s.goal });
-  }
-  if (s.member) return t('campaign.card.adopt');
-  return t('campaign.card.join', { goal: s.goal });
-}
-
-/**
- * Whether the Home card may offer its X. Only when there is no live
- * progress to hide: before any involvement (not a member, no practice), or
- * once the challenge is done.
- */
-export function canDismissCampaignCard(
-  _c: CampaignRewards,
-  s: PartnerCampaignStatus,
-): boolean {
-  return s.unlocked || (!s.member && !s.adopted);
+  const open = campaignTiers(c).filter((tier) => !tierClaimed(s, tier));
+  if (open.length === 0) return t(opts.here ? 'campaign.line.claimedHere' : 'campaign.line.claimed');
+  return t(opts.here ? 'campaign.line.openHere' : 'campaign.line.open', {
+    pcts: open.map((tier) => `${tierPct(c, tier) ?? ''}%`).join(t('campaign.line.and')),
+  });
 }

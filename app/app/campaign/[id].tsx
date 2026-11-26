@@ -17,7 +17,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppIcon } from '@/components/AppIcon';
 import { useBottomSafeClearance } from '@/components/BottomNavBar';
-import { PartnerCouponGrid } from '@/components/PartnerCouponGrid';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { GOLD_BADGE_BG, GOLD_TINT_BG } from '@/components/week/gold';
 import { track } from '@/lib/analytics';
@@ -25,7 +24,6 @@ import { useLearningMaterial } from '@/lib/api/learning';
 import {
   campaignTracks,
   useAdoptCampaignPractice,
-  useAutoSecurePartnerUnlock,
   useJoinPartnerCampaign,
   usePartnerCampaign,
   usePartnerCampaignStatus,
@@ -33,53 +31,30 @@ import {
 import type { PartnerCampaignSource } from '@/lib/db/types';
 import { useT } from '@/lib/i18n';
 import { useLocalizedPick } from '@/lib/i18n/catalog';
-import { usePartnerRedeem } from '@/lib/partnerRedeem';
+import { campaignCouponLine } from '@/lib/partnerCampaign';
 import { freeLimitEntity } from '@/lib/premium';
 import { tokens } from '@/theme';
 
 /**
- * `/campaign/[id]` — the partner campaign (Programa Paker Health). Reached
- * from the Home card (`?source=banner`), the sponsored material's campaign
- * row and the deep link `rpgtasks://campaign/<id>`.
+ * `/campaign/[id]` — about the partnership (Paker Health). Reached from the
+ * Parcerias page of Recompensas ("Sobre a parceria"), the sponsored
+ * material's row in the Recanto and the deep link `rpgtasks://campaign/<id>`.
  *
- *   (2026-11-16: the coupons are OPEN. "Seus cupons" comes first — the
- *   same PartnerCouponCards as the Vault, one claim per tier, the Premium
- *   one the invite for a free member — and the challenge below it is an
- *   extra, with its own bar. The older notes below describe the steps.)
- *   hero         eyebrow "Patrocinado" + title + pitch
- *   Como funciona  3 sibling steps: join · pick ONE of the campaign's
- *                  practices (its tracks — any counts the day) · check it
- *                  daily
- *   Suas recompensas progress bar (until the claim — after it the rewards
- *                  are secured and the live streak would only alarm) →
- *                  "unlocks at N" once while locked → the claim (when
- *                  unlocked) → one row per reward, siblings with the same
- *                  anatomy: the Perceva Premium discount and the partner's
- *                  coupon (→ its site). Each row: lock / unlocked / code on
- *                  its way / code + copy. One claim covers both; each code
- *                  shows up once released. The Premium row only links to
- *                  the paywall (`?source=partner`) once its code is in hand,
- *                  on Android (the Play sheet takes the code; the App Store
- *                  redeems it on its own) and for someone not yet Premium —
- *                  never as a full-price shortcut before the code exists.
- *   Leia o material the sponsored material, when the campaign has one
+ * Since 2026-11-25 (André, caminho B of the partnership review) the coupons
+ * are redeemed in ONE place, Recompensas › Parcerias, and the 4-day
+ * challenge is gone from the app:
+ *
+ *   hero          eyebrow "Parceria" + title + pitch
+ *   Seus cupons   where the coupons stand + "Ver meus cupons" (opens the
+ *                 Parcerias page) + the partner's site
+ *   Quer lembrar  the campaign's practices as a plain suggestion: "Adicionar"
+ *   todo dia?     puts one in today's list (joining the campaign on the way,
+ *                 which is the partner's count); once added, the row says
+ *                 so and offers the Práticas tab. No streak, no rule.
+ *   Leia o material  the sponsored material, when the campaign has one
  *   disclosure
  *
- * Once the practice is adopted the reward card moves ABOVE "Como funciona":
- * mid-run, the bar is what the member comes to check, and the steps are
- * already done.
- *
- * Every action is the same gold pill (the two links under the rewards are
- * link rows, not buttons). "Add" and the claim join first when
- * the user hasn't — the server needs membership to claim, and a tap never
- * gains a step. A member's unlock is claimed on sight
- * (`useAutoClaimPartnerCoupon`), so for them the claim pill is only a
- * fallback. Progress is the server's count (see lib/api/partners); nothing
- * here decides an unlock.
- *
- * Copying without a native module: expo-clipboard would need an `eas
- * build`, so "Copiar ou enviar" opens the system Share sheet (Android's has
- * "Copiar") and the code itself stays `selectable` — same as /conector.
+ * Every action is the same gold pill.
  */
 
 const SOURCES: readonly PartnerCampaignSource[] = [
@@ -89,8 +64,6 @@ const SOURCES: readonly PartnerCampaignSource[] = [
   'deeplink',
   'app',
 ];
-
-type Running = 'join' | 'adopt';
 
 /** "https://www.pakerhealth.com.br/x" → "pakerhealth.com.br" — shown next
  *  to the partner link so it says where it goes. */
@@ -109,17 +82,12 @@ export default function CampaignScreen() {
   const campaign = usePartnerCampaign(params.id);
   const c = campaign.data ?? null;
   const status = usePartnerCampaignStatus(c?.id, { enabled: c != null });
-  useAutoSecurePartnerUnlock(status.data);
   const material = useLearningMaterial(c?.material_slug);
   const join = useJoinPartnerCampaign();
   const adopt = useAdoptCampaignPractice();
-  // The coupon's two redemption options and their dialogs (last Premium
-  // offer, the invite) — shared with the Vault card.
-  const { redeem, running: redeeming } = usePartnerRedeem(c, status.data);
-  // `running` drives the spinner and disables the other pills; the ref is
-  // the hard guard — a same-frame double tap lands before the re-render.
-  const [running, setRunning] = useState<Running | null>(null);
-  // Which track's pill spins while adopting (the others just disable).
+  // Which practice's pill spins while adopting (the others just disable);
+  // the ref is the hard guard — a same-frame double tap lands before the
+  // re-render.
   const [adopting, setAdopting] = useState<string | null>(null);
   const busy = useRef(false);
 
@@ -199,65 +167,41 @@ export default function CampaignScreen() {
     );
   }
 
-  const run = async (
-    action: Running,
-    fn: () => Promise<unknown>,
-    onError: (err: unknown) => void,
-  ) => {
+  const handleAdopt = async (templateId: string) => {
     if (busy.current) return;
     busy.current = true;
-    setRunning(action);
+    setAdopting(templateId);
     try {
-      await fn();
+      // Adding joins the campaign too — the partner's count of people who
+      // came through it; a tap never gains a step.
+      if (!s.member) await join.mutateAsync({ campaignId: c.id, source: 'campaign' });
+      await adopt.mutateAsync({ campaign: c, templateId });
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     } catch (err) {
-      onError(err);
-    } finally {
-      busy.current = false;
-      setRunning(null);
-    }
-  };
-
-  const ensureMember = async () => {
-    if (!s.member) await join.mutateAsync({ campaignId: c.id, source: 'campaign' });
-  };
-
-  const handleJoin = () =>
-    run(
-      'join',
-      async () => {
-        await ensureMember();
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-      },
-      () => Alert.alert(t('common.error')),
-    );
-
-  const handleAdopt = (templateId: string) =>
-    run(
-      'adopt',
-      async () => {
-        setAdopting(templateId);
-        try {
-          await ensureMember();
-          await adopt.mutateAsync({ campaign: c, templateId });
-        } finally {
-          setAdopting(null);
-        }
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-      },
-      (err) => {
-        // Catalog adoptions are unlimited, but a free-cap error still pops
-        // the global limit modal (root MutationCache) — no second dialog.
-        if (freeLimitEntity(err)) return;
+      // Catalog adoptions are unlimited, but a free-cap error still pops
+      // the global limit modal (root MutationCache) — no second dialog.
+      if (!freeLimitEntity(err)) {
         const e = err as { message?: string };
         Alert.alert(
           t('tasksHub.errors.couldNotAdoptTitle'),
           e.message ?? t('tasksHub.errors.unknown'),
         );
-      },
-    );
+      }
+    } finally {
+      busy.current = false;
+      setAdopting(null);
+    }
+  };
+
+  // dismissTo, not navigate: back to the tabs already under this screen.
+  // A navigate would stack a second copy of the whole tab navigator.
+  const goCoupons = () =>
+    router.dismissTo({
+      pathname: '/(tabs)/rewards',
+      params: { tab: 'parcerias', at: String(Date.now()) },
+    });
 
   const title = pick(c.title_en, c.title_pt);
-  const ratio = s.goal > 0 ? Math.min(1, s.streak_days / s.goal) : 0;
   const tracks = campaignTracks(c);
   const adoptedTrack = s.adopted
     ? (tracks.find((k) => k.template_id === s.track_template_id) ?? null)
@@ -265,114 +209,17 @@ export default function CampaignScreen() {
   const partnerUrl = c.partner_url;
   const partnerHost = partnerUrl ? hostOf(partnerUrl) : null;
   const m = material.data ?? null;
-  const showSkips = s.adopted && !s.unlocked && s.max_skips > 0;
-
-
-
-  const howCard = (
-    <View style={styles.card}>
-      <Text style={styles.cardLabel}>{t('campaign.screen.challengeTitle')}</Text>
-      {s.adopted && (
-        <View
-          style={styles.progress}
-          accessibilityRole="progressbar"
-          accessibilityValue={{ min: 0, max: s.goal, now: Math.min(s.streak_days, s.goal) }}
-        >
-          <View style={styles.track}>
-            <View style={[styles.fill, { width: `${Math.round(ratio * 100)}%` }]} />
-          </View>
-          <Text style={styles.progressText}>
-            {s.unlocked
-              ? t('campaign.screen.challengeDone')
-              : t('campaign.screen.progress', { days: s.streak_days, goal: s.goal })}
-          </Text>
-          {showSkips && (
-            <Text style={styles.skipsText}>
-              {t('campaign.screen.skipsUsed', { used: s.skips_used, count: s.max_skips })}
-            </Text>
-          )}
-        </View>
-      )}
-      <StepRow
-        n={1}
-        done={s.member}
-        title={t('campaign.screen.step1Title')}
-        body={
-          s.member ? t('campaign.screen.step1Done') : t('campaign.screen.step1Body')
-        }
-        action={
-          s.member
-            ? null
-            : {
-                label: t('campaign.screen.step1Cta'),
-                onPress: handleJoin,
-                busy: running === 'join',
-                disabled: running != null,
-              }
-        }
-      />
-      <StepRow
-        n={2}
-        done={s.adopted}
-        title={t(tracks.length > 1 ? 'campaign.screen.step2TitlePick' : 'campaign.screen.step2Title')}
-        body={
-          s.adopted
-            ? adoptedTrack?.practice
-              ? t('campaign.screen.step2DoneNamed', { practice: adoptedTrack.practice.title })
-              : t('campaign.screen.step2Done')
-            : // "Adicionar" joins too when needed — the copy says so.
-              t(
-                tracks.length > 1
-                  ? s.member
-                    ? 'campaign.screen.step2PickBody'
-                    : 'campaign.screen.step2PickBodyJoin'
-                  : s.member
-                    ? 'campaign.screen.step2Body'
-                    : 'campaign.screen.step2BodyJoin',
-                { practice: tracks[0]?.practice?.title ?? '' },
-              )
-        }
-        action={null}
-      >
-        {!s.adopted &&
-          tracks.map((k) => (
-            <TrackRow
-              key={k.template_id}
-              icon={k.practice?.icon ?? null}
-              title={k.practice?.title ?? k.template_id}
-              action={{
-                label: t('campaign.screen.step2Cta'),
-                onPress: () => handleAdopt(k.template_id),
-                busy: running === 'adopt' && adopting === k.template_id,
-                disabled: running != null,
-              }}
-            />
-          ))}
-      </StepRow>
-      <StepRow
-        n={3}
-        done={s.done_today}
-        title={t('campaign.screen.step3Title')}
-        body={t('campaign.screen.step3Body', { count: s.max_skips })}
-        action={null}
-      />
-    </View>
-  );
 
   const couponsCard = (
     <View style={[styles.card, styles.rewardCard]}>
       <Text style={[styles.cardLabel, styles.cardLabelGold]}>
         {t('campaign.screen.couponsTitle')}
       </Text>
+      <Text style={styles.addedText}>{campaignCouponLine(c, s, t)}</Text>
       <Text style={styles.stateText}>{t('campaign.screen.couponsHint')}</Text>
-
-      <PartnerCouponGrid
-        campaign={c}
-        status={s}
-        redeem={redeem}
-        running={redeeming}
-        disabled={running != null}
-      />
+      <View style={styles.pillRow}>
+        <ActionPill icon="pricetag" label={t('campaign.screen.seeCoupons')} onPress={goCoupons} />
+      </View>
 
       {partnerUrl && (
         <Pressable
@@ -400,6 +247,52 @@ export default function CampaignScreen() {
     </View>
   );
 
+  // The campaign's practices as a suggestion — nothing counts, nothing
+  // resets. A practice added elsewhere (Gerenciar › Sugeridas) shows here
+  // as added too: `adopted` is the server's read of today's list.
+  const practiceCard =
+    tracks.length === 0 ? null : (
+      <View style={styles.card}>
+        <Text style={styles.cardLabel}>{t('campaign.screen.practiceTitle')}</Text>
+        {adoptedTrack ? (
+          <View style={styles.addedRow}>
+            <View style={styles.trackIcon}>
+              <Ionicons name="checkmark" size={16} color={tokens.semantic.coinLight} />
+            </View>
+            <Text style={styles.addedText}>
+              {t('campaign.screen.practiceAdded', {
+                practice: adoptedTrack.practice?.title ?? adoptedTrack.template_id,
+              })}
+            </Text>
+            <ActionPill
+              label={t('campaign.screen.practiceGo')}
+              a11yLabel={t('campaign.screen.practiceGoA11y')}
+              onPress={() => router.dismissTo('/(tabs)')}
+            />
+          </View>
+        ) : (
+          <>
+            <Text style={styles.stateText}>{t('campaign.screen.practiceBody')}</Text>
+            {tracks.map((k) => (
+              <TrackRow
+                key={k.template_id}
+                icon={k.practice?.icon ?? null}
+                title={k.practice?.title ?? k.template_id}
+                action={{
+                  label: t('campaign.screen.practiceAdd'),
+                  onPress: () => {
+                    void handleAdopt(k.template_id);
+                  },
+                  busy: adopting === k.template_id,
+                  disabled: adopting != null,
+                }}
+              />
+            ))}
+          </>
+        )}
+      </View>
+    );
+
   return shell(
     <ScrollView
       contentContainerStyle={[
@@ -420,9 +313,8 @@ export default function CampaignScreen() {
         <Text style={styles.pitch}>{pick(c.pitch_en, c.pitch_pt)}</Text>
       </View>
 
-      {/* ── Seus cupons, then the challenge (an extra) ─────────────── */}
       {couponsCard}
-      {howCard}
+      {practiceCard}
 
       {/* ── Leia o material ──────────────────────────────────────────── */}
       {m && (
@@ -472,12 +364,12 @@ interface PillAction {
   onPress: () => void;
   busy?: boolean;
   disabled?: boolean;
-  /** Screen-reader label when the visible one repeats (one Copy per code). */
+  /** Screen-reader label when the visible one repeats. */
   a11yLabel?: string;
 }
 
-/** The screen's ONE action control — Join, Add, the claim, Copy. 36px
- *  tall to sit inside a step row; the hitSlop makes the target 48. */
+/** The screen's ONE action control — see my coupons, Add, go to Práticas.
+ *  36px tall to sit inside a row; the hitSlop makes the target 48. */
 function ActionPill({
   label,
   onPress,
@@ -512,46 +404,8 @@ function ActionPill({
   );
 }
 
-/** One "Como funciona" row: number/check disc · title over body · one
- *  trailing pill (or nothing once the step is done). */
-function StepRow({
-  n,
-  done,
-  title,
-  body,
-  action,
-  children,
-}: {
-  n: number;
-  done: boolean;
-  title: string;
-  body: string | null;
-  action: PillAction | null;
-  /** Rows under the body — the campaign's tracks to pick from. */
-  children?: ReactNode;
-}) {
-  return (
-    <View style={styles.step}>
-      <View style={[styles.stepDisc, done && styles.stepDiscDone]}>
-        {done ? (
-          <Ionicons name="checkmark" size={14} color={tokens.semantic.coinInk} />
-        ) : (
-          <Text style={styles.stepNum}>{n}</Text>
-        )}
-      </View>
-      <View style={styles.stepBody}>
-        <Text style={styles.stepTitle}>{title}</Text>
-        {body && <Text style={styles.stepText}>{body}</Text>}
-        {children}
-      </View>
-      {action && <ActionPill {...action} />}
-    </View>
-  );
-}
-
-/** One of the campaign's practices to pick (step 2): catalog icon + title
- *  + its own "Adicionar" pill. Any track counts the day, so the rows are
- *  siblings with the same anatomy. */
+/** One of the campaign's practices to add: catalog icon + title + its own
+ *  "Adicionar" pill. Siblings with the same anatomy. */
 function TrackRow({
   icon,
   title,
@@ -695,29 +549,7 @@ const styles = StyleSheet.create({
     color: tokens.semantic.coinLight,
   },
 
-  // Steps
-  step: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[3],
-    minHeight: 44,
-  },
-  stepDisc: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: GOLD_BADGE_BG,
-  },
-  stepDiscDone: {
-    backgroundColor: tokens.semantic.coin,
-  },
-  stepNum: {
-    fontFamily: tokens.font.familyHeavy,
-    fontSize: 13,
-    color: tokens.semantic.coinLight,
-  },
+  // Practices to add
   trackRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -747,22 +579,23 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     color: tokens.text.hi,
   },
-  stepBody: {
+
+  addedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: tokens.space[3],
+  },
+  addedText: {
     flex: 1,
     minWidth: 0,
-    gap: 2,
-  },
-  stepTitle: {
-    fontFamily: tokens.font.familyHeavy,
-    fontSize: 15,
+    fontFamily: tokens.font.familyBold,
+    fontSize: 14,
     lineHeight: 20,
     color: tokens.text.hi,
   },
-  stepText: {
-    fontFamily: tokens.font.family,
-    fontSize: 13,
-    lineHeight: 18,
-    color: tokens.text.mid,
+
+  pillRow: {
+    flexDirection: 'row',
   },
 
   // The one action control
@@ -789,69 +622,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 
-  // Rewards
-  reward: {
-    gap: tokens.space[2],
-    borderTopWidth: 1,
-    borderTopColor: tokens.border.divider,
-    paddingTop: tokens.space[3],
-  },
-  progress: {
-    gap: 6,
-  },
-  track: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: GOLD_BADGE_BG,
-    overflow: 'hidden',
-  },
-  fill: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: tokens.semantic.coin,
-  },
-  progressText: {
-    fontFamily: tokens.font.familyBold,
-    fontSize: 13,
-    color: tokens.semantic.coinLight,
-  },
-  skipsText: {
-    fontFamily: tokens.font.family,
-    fontSize: 12,
-    lineHeight: 16,
-    color: tokens.text.mid,
-  },
   stateText: {
     fontFamily: tokens.font.family,
     fontSize: 14,
     lineHeight: 20,
     color: tokens.text.base,
-  },
-  claimRow: {
-    flexDirection: 'row',
-  },
-  codeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: tokens.space[3],
-  },
-  codeBox: {
-    flex: 1,
-    minWidth: 0,
-    paddingVertical: tokens.space[2],
-    paddingHorizontal: tokens.space[3],
-    borderRadius: tokens.radius.sm,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: tokens.semantic.coinRim,
-    backgroundColor: GOLD_BADGE_BG,
-  },
-  codeText: {
-    fontFamily: tokens.font.familyHeavy,
-    fontSize: 18,
-    letterSpacing: 2,
-    color: tokens.semantic.coinLight,
-    textAlign: 'center',
   },
   // The link row sits in the reward row: its glyph in a disc-wide slot, so
   // the label lines up with the reward's title.

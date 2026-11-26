@@ -27,13 +27,26 @@ export interface StoreCode {
   plan: PlanId;
   /** The Google Play offer id on that plan's base plan (`basePlanId:offerId`). */
   googleOfferId: string;
+  /** The discount, for the copy that announces the code (the stores hold the price). */
+  pct: number;
+  /** The partner campaign that hands this code out (`partner_campaign.id`),
+   *  so its surfaces can show it next to the Premium coupon. */
+  campaignId?: string;
 }
 
 export const STORE_CODES: Readonly<Record<string, StoreCode>> = {
   /** Paker Health partnership: 30% off the first year of the annual plan
    *  (2026-11-15). Apple: offer code PAKERANUAL. Play: offer paker-anual-30. */
-  PAKERANUAL: { plan: 'annual', googleOfferId: 'paker-anual-30' },
+  PAKERANUAL: { plan: 'annual', googleOfferId: 'paker-anual-30', pct: 30, campaignId: 'paker-health' },
 };
+
+/** The Premium code a partner campaign hands out, if any. */
+export function storeCodeForCampaign(campaignId: string): { code: string; entry: StoreCode } | null {
+  for (const [code, entry] of Object.entries(STORE_CODES)) {
+    if (entry.campaignId === campaignId) return { code, entry };
+  }
+  return null;
+}
 
 /** Uppercase, no spaces: codes are case-insensitive on both stores. */
 export function normalizeStoreCode(raw: string): string {

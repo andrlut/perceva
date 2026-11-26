@@ -6,7 +6,8 @@ import { tokens } from '@/theme';
 export interface BucketTabSpec<T extends string> {
   value: T;
   label: string;
-  count: number;
+  /** null = no chip (the count is not known yet, or would read as noise). */
+  count: number | null;
 }
 
 interface Props<T extends string> {
@@ -53,6 +54,7 @@ export function BucketTabsV2<T extends string>({ tabs, value, onChange }: Props<
             >
               {tab.label}
             </Text>
+            {tab.count != null && (
             <View
               style={[
                 styles.countChip,
@@ -68,6 +70,7 @@ export function BucketTabsV2<T extends string>({ tabs, value, onChange }: Props<
                 {tab.count}
               </Text>
             </View>
+            )}
           </Pressable>
         );
       })}

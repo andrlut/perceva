@@ -405,6 +405,7 @@ const en = {
      *  sheet; Android applies the Play offer in-app. */
     code: {
       link: 'I have a discount code',
+      linkWithCode: 'Use code {{code}}',
       placeholder: 'Enter the code',
       apply: 'Apply',
       invalid: "Code not recognized. Check the spelling and try again.",
@@ -1111,37 +1112,29 @@ const en = {
   },
 
   /**
-   * Partner campaign (Programa Paker Health): the Home card and the
-   * `/campaign/[id]` screen. The campaign's own title, pitch and the two
-   * rewards' texts come from the `partner_campaign` row (`reward_*` = the
-   * partner's coupon, `perceva_reward_*` = the Premium discount), not from
-   * here. The number of days is always {{goal}} (the server's). Where a
-   * line counts the rewards, `count` = `rewardCount` (1 without the Premium
-   * discount, 2 with it), always spelled out. The codes only show on the
-   * campaign screen: the card and the material row never say "here".
+   * Brand partnership (Paker Health): the Partners page of Rewards, the
+   * `/campaign/[id]` screen and the sponsored material's row in the
+   * Recanto. Title and pitch come from the `partner_campaign` row. Since
+   * 2026-11-25 coupons are redeemed ONLY in Rewards › Partners and the
+   * 4-day challenge is gone from the app (the campaign's practices are a
+   * suggestion). These surfaces say "Partnership", not "Sponsored" (André);
+   * the Recanto material's badge (`learning.sponsorWith`) keeps "Sponsored".
    */
   campaign: {
-    /** Eyebrow of the Home card, the coupons and the screen's hero — the
-     *  title already names the partner, so the label only says it is paid. */
-    sponsored: 'Sponsored',
-    /** The Home card is about the CHALLENGE (an extra); the coupons live in
-     *  the Rewards tab and don't depend on it (2026-11-16). */
-    card: {
-      join: 'Coupons in the Rewards tab · {{goal}}-day challenge as an extra',
-      adopt: 'Pick the challenge practice to start',
-      progress: '{{days}} of {{goal}} days in a row',
-      done: 'Challenge complete! Your coupons are in Rewards',
-      a11y: '{{sponsored}}. {{title}}',
-      dismissA11y: 'Hide this card',
+    sponsored: 'Partnership',
+    line: {
+      open: '{{pcts}} to redeem in Rewards',
+      and: ' and ',
+      claimed: 'Coupons redeemed · codes in Rewards',
+      openHere: 'To redeem: {{pcts}}',
+      claimedHere: 'Coupons redeemed · codes on the cards',
     },
     screen: {
-      /** The coupons first: open, one claim per coupon. */
       couponsTitle: 'Your coupons',
-      couponsHint: 'Redeem now, no challenge needed. One claim per coupon; the 17% one is for Premium subscribers.',
-      /** Coupon card title. pct = the discount; the partner is the eyebrow. */
+      couponsHint: 'On the Partners tab. One claim per coupon; the bigger one is for Premium subscribers.',
+      seeCoupons: 'See my coupons',
       tierTitle: '{{pct}}% off',
       tierFreeSub: 'For everyone',
-      /** The Premium tier's card wears the Premium badge; the line doesn't repeat it. */
       tierPremiumSub: 'Your subscriber discount',
       tierPremiumLocked: 'Subscribe to Premium to unlock',
       premiumCta: 'Premium',
@@ -1149,65 +1142,33 @@ const en = {
       claimed: 'Redeemed',
       couponPending: 'The code is on its way and shows up here as soon as it is released.',
       couponCopy: 'Copy or share',
-      /** The pill beside the code: short so the code keeps the width. */
       couponCopyShort: 'Copy',
-      /** Screen-reader label of each row's button. */
       couponCopyA11y: 'Copy or share the code: {{reward}}',
       visitPartner: "{{name}}'s website",
-      /** The challenge, an extra: join, pick the practice, check it daily. */
-      challengeTitle: 'The challenge (extra)',
-      how: 'How it works',
-      challengeDone: 'Challenge complete!',
-      step1Title: 'Join the program',
-      step1Body: "It's free. Joining lets the partner know you came through Perceva.",
-      step1Done: "You're in",
-      step1Cta: 'Join',
-      step2Title: 'Add the daily practice',
-      // en drops the quoted practice title: task_template is pt-only.
-      step2Body: 'This adds it to your practices.',
-      step2BodyJoin: 'This adds the practice and joins you to the program.',
-      /** A campaign with more than one track: pick ONE; any counts the day. */
-      step2TitlePick: 'Pick your daily practice',
-      step2PickBody: 'One of the two is enough: the one you add joins your practices and counts the day.',
-      step2PickBodyJoin:
-        'One of the two is enough: the one you add joins your practices, counts the day, and joins you to the program.',
-      step2Cta: 'Add',
-      step2Done: 'Already in your practices',
-      // en keeps the pt catalog title: task_template is pt-only.
-      step2DoneNamed: '"{{practice}}" is already in your practices',
-      step3Title: 'Check it off every day',
-      // count = max_skips (zero: no skip sentence at all)
-      step3Body: {
-        zero: "Check it off the same day (or by the next morning) — later doesn't count.",
-        one: "Check it off the same day (or by the next morning) — later doesn't count. You can skip {{count}} day: it doesn't count toward the streak, but it doesn't break it either.",
-        other:
-          "Check it off the same day (or by the next morning) — later doesn't count. You can skip up to {{count}} days: they don't count toward the streak, but they don't break it either.",
-      },
-      progress: '{{days}} of {{goal}} days',
-      // count = max_skips
-      skipsUsed: {
-        one: '{{used}} of {{count}} skip used',
-        other: '{{used}} of {{count}} skips used',
-      },
+      practiceTitle: 'Daily practice (optional)',
+      practiceBody: "Want to keep it up every day? Put one of these practices on today's list. It counts toward your Dedication like any other.",
+      practiceAdd: 'Add',
+      practiceAdded: '"{{practice}}" is on today\'s list.',
+      practiceGo: 'See it',
+      practiceGoA11y: "See the practice on today's list",
       materialTitle: 'Read the material',
       disclosure:
-        'Sponsored content. {{name}} only gets overall program numbers (how many people joined), never who you are.',
-      notFound: 'This campaign is not available.',
+        'Commercial partnership with {{name}}. They only get overall numbers (how many people came through Perceva), never who you are.',
+      notFound: 'This partnership is not available.',
     },
-    /** The Premium invite when a free member taps the 17% coupon
-     *  (lib/partnerRedeem). */
     redeem: {
       seePremium: 'See Premium',
       premiumRequiredTitle: 'This coupon is for Premium subscribers',
       premiumRequiredBody:
-        'Subscribe to Premium and take {{premium}}% off at {{partner}}, plus the full app.',
+        'Subscribe to Premium and get {{premium}}% off at {{partner}}, plus the full app.',
+      premiumCodeLine: 'On the annual plan, code {{code}} takes {{pct}}% off the first year.',
       notNow: 'Not now',
-      /** After the claim: the card stays put, with the code. */
       claimedTitle: '{{pct}}% coupon redeemed!',
       claimedBody:
-        'Your code is {{code}}. It stays on the coupon card: tap Copy to copy it or send it to yourself.',
+        'Your code is {{code}}. Use it on the {{partner}} website. It stays on the coupon card, with the Copy button.',
       claimedBodyPending:
-        'The code will show on the coupon card as soon as {{partner}} releases it.',
+        'The code will show up on the coupon card as soon as {{partner}} releases it.',
+      openSite: 'Open the website',
     },
   },
 
@@ -2514,15 +2475,14 @@ const en = {
   },
 
   rewards: {
-    partnerChip: 'Partner',
-    /** The partnership block in the Vault (2026-11-16): a row that folds the
-     *  block + the coupons still open; a redeemed one leaves (code on the program). */
+    pages: {
+      mine: 'Mine',
+      partners: 'Partners',
+    },
     partnerSection: 'Partnership · {{partner}}',
-    partnerSeeProgram: 'See the program',
-    /** `pcts` = "10% and 17%" / "17%" (built with partnerRowAnd). */
-    partnerRowOpen: 'To redeem: {{pcts}}',
-    partnerRowAnd: ' and ',
-    partnerRowClaimed: 'Coupons redeemed · codes on the cards',
+    partnerAbout: 'About the partnership',
+    partnerPremiumTitle: '{{pct}}% off the first year of annual Premium',
+    partnerPremiumBody: 'Use code {{code}} on the Premium screen.',
     /** The tab's guide (its (i)) — RewardsGuide, docs/informativo-de-tela.md.
      *  `items` follow REWARDS_GUIDE_ITEMS: title + body on the sheet, `ai`
      *  only in the AI prompt. No personal data here. */
@@ -2555,6 +2515,11 @@ const en = {
           title: 'Track',
           body: 'On rewards you cannot afford yet, Track pins one as your goal at the top.',
           ai: 'One goal at a time: tracking another replaces the current one. The goal card shows how much is left; tapping it switches the goal, the X stops tracking, and Redeem appears once the balance gets there.',
+        },
+        partners: {
+          title: 'Mine and Partners',
+          body: 'Mine is your own shop. Partners holds coupons from partner brands, like Paker Health.',
+          ai: 'On Partners, Redeem gives you the coupon code, used on the brand\'s website; it stays on the card, with the Copy button. One claim per coupon, no coins spent. The bigger coupon is for Premium subscribers, and someone not subscribed yet sees the annual Premium discount code there. "About the partnership" opens the brand\'s screen, with the Recanto material and an optional practice to keep it up daily.',
         },
         balance: {
           title: 'Balance',

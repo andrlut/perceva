@@ -397,6 +397,8 @@ const pt: Translations = {
      *  resgate da Apple; no Android o app aplica a oferta do Play. */
     code: {
       link: 'Tenho um código de desconto',
+      /** iPhone, vindo de uma parceria: o código pra digitar na tela da Apple. */
+      linkWithCode: 'Usar o código {{code}}',
       placeholder: 'Digite o código',
       apply: 'Aplicar',
       invalid: 'Código não reconhecido. Confere a grafia e tenta de novo.',
@@ -1109,33 +1111,32 @@ const pt: Translations = {
   },
 
   /**
-   * Campanha de parceiro (Programa Paker Health): o cartão da Home e a tela
-   * `/campaign/[id]`. Título, pitch e o texto das duas recompensas vêm da
-   * linha de `partner_campaign` (`reward_*` = o cupom do parceiro,
-   * `perceva_reward_*` = o desconto do Premium), não daqui. O número de
-   * dias é sempre {{goal}} (o do servidor). Onde a frase conta as
-   * recompensas, `count` = `rewardCount` (1 sem o desconto do Premium, 2
-   * com), sempre por extenso. Os códigos só aparecem na tela da campanha:
-   * o cartão e a linha do material nunca dizem "aqui".
+   * Parceria com marca (Paker Health): a aba Parcerias de Recompensas, a
+   * tela `/campaign/[id]` e a linha do material patrocinado no Recanto.
+   * Título e pitch vêm da linha de `partner_campaign`, não daqui. Desde
+   * 2026-11-25 os cupons são resgatados SÓ em Recompensas › Parcerias e o
+   * desafio de 4 dias saiu do app (as práticas da campanha viram sugestão).
+   * O André pediu pra não chamar de "patrocinado" nessas telas: "Parceria"
+   * e "parceria comercial" dizem a mesma coisa. O selo do material no
+   * Recanto (`learning.sponsorWith`) segue "Patrocinado" (CONAR).
    */
   campaign: {
-    /** Eyebrow do cartão da Home, dos cupons e do topo da tela — o título
-     *  já nomeia o parceiro, então o rótulo só diz que é pago. */
-    sponsored: 'Patrocinado',
-    /** O cartão da Home fala do DESAFIO (extra); os cupons moram na aba
-     *  Recompensas e não dependem dele (2026-11-16). */
-    card: {
-      join: 'Cupons na aba Recompensas · desafio de {{goal}} dias como extra',
-      adopt: 'Falta escolher a prática do desafio',
-      progress: '{{days}} de {{goal}} dias seguidos',
-      done: 'Desafio concluído! Seus cupons estão em Recompensas',
-      a11y: '{{sponsored}}. {{title}}',
-      dismissA11y: 'Esconder este cartão',
+    /** Rótulo das superfícies da parceria (topo da tela, rodapé do cupom). */
+    sponsored: 'Parceria',
+    /** A linha dos cupons, igual em Parcerias, na tela e no Recanto.
+     *  `pcts` = "10% e 17%" / "17%" (montado com `and`). */
+    line: {
+      open: '{{pcts}} pra resgatar em Recompensas',
+      and: ' e ',
+      claimed: 'Cupons resgatados · códigos em Recompensas',
+      /** Dentro da própria aba Parcerias: sem repetir o lugar. */
+      openHere: 'Pra resgatar: {{pcts}}',
+      claimedHere: 'Cupons resgatados · códigos nos cards',
     },
     screen: {
-      /** Os cupons, primeiro: abertos, um resgate por cupom. */
       couponsTitle: 'Seus cupons',
-      couponsHint: 'Resgate agora, sem desafio. Um resgate por cupom; o de 17% é dos assinantes Premium.',
+      couponsHint: 'Na aba Parcerias. Um resgate por cupom; o maior é dos assinantes Premium.',
+      seeCoupons: 'Ver meus cupons',
       /** Título do card do cupom. pct = o desconto; o parceiro vai no eyebrow. */
       tierTitle: '{{pct}}% de desconto',
       tierFreeSub: 'Pra todo mundo',
@@ -1152,59 +1153,35 @@ const pt: Translations = {
       /** Rótulo de leitor de tela do botão de cada linha. */
       couponCopyA11y: 'Copiar ou enviar o código: {{reward}}',
       visitPartner: 'Site da {{name}}',
-      /** O desafio, extra: entrar, escolher a prática, marcar todo dia. */
-      challengeTitle: 'O desafio (extra)',
-      how: 'Como funciona',
-      challengeDone: 'Desafio concluído!',
-      step1Title: 'Entre no programa',
-      step1Body: 'Não custa nada. Entrar já conta pro parceiro saber que você veio pelo Perceva.',
-      step1Done: 'Você está no programa',
-      step1Cta: 'Entrar',
-      step2Title: 'Adicione a prática diária',
-      step2Body: '"{{practice}}" entra nas suas práticas.',
-      step2BodyJoin: '"{{practice}}" entra nas suas práticas e você já entra no programa.',
-      /** Campanha com mais de uma trilha: a pessoa escolhe UMA; qualquer
-       *  uma conta o dia. */
-      step2TitlePick: 'Escolha a sua prática diária',
-      step2PickBody: 'Uma das duas basta: a que você adicionar entra nas suas práticas e conta o dia.',
-      step2PickBodyJoin:
-        'Uma das duas basta: a que você adicionar entra nas suas práticas, conta o dia e você já entra no programa.',
-      step2Cta: 'Adicionar',
-      step2Done: 'Já está nas suas práticas',
-      step2DoneNamed: '"{{practice}}" já está nas suas práticas',
-      step3Title: 'Marque todo dia',
-      // count = max_skips (zero: sem a frase do pulo)
-      step3Body: {
-        zero: 'Marque no mesmo dia (ou até a manhã seguinte): marcar depois não conta.',
-        one: 'Marque no mesmo dia (ou até a manhã seguinte): marcar depois não conta. Pode pular {{count}} dia: ele não conta, mas também não quebra a sequência.',
-        other:
-          'Marque no mesmo dia (ou até a manhã seguinte): marcar depois não conta. Pode pular até {{count}} dias: eles não contam, mas também não quebram a sequência.',
-      },
-      progress: '{{days}} de {{goal}} dias',
-      // count = max_skips
-      skipsUsed: {
-        one: '{{used}} de {{count}} pulo usado',
-        other: '{{used}} de {{count}} pulos usados',
-      },
+      /** As práticas da campanha como sugestão: sem contagem, sem regra. */
+      practiceTitle: 'Prática diária (opcional)',
+      practiceBody: 'Quer lembrar todo dia? Coloque uma destas práticas na sua lista de hoje. Ela conta na sua Dedicação, como as outras.',
+      practiceAdd: 'Adicionar',
+      practiceAdded: '"{{practice}}" está na sua lista de hoje.',
+      practiceGo: 'Ver na lista',
+      practiceGoA11y: 'Ver a prática na sua lista de hoje',
       materialTitle: 'Leia o material',
       disclosure:
-        'Conteúdo patrocinado. {{name}} recebe só números gerais do programa (quantas pessoas entraram), nunca quem você é.',
-      notFound: 'Esta campanha não está disponível.',
+        'Parceria comercial com a {{name}}. Ela recebe só números gerais (quantas pessoas vieram pelo Perceva), nunca quem você é.',
+      notFound: 'Esta parceria não está disponível.',
     },
-    /** O convite pro Premium quando um free toca no cupom de 17%
-     *  (lib/partnerRedeem). */
+    /** O convite pro Premium quando um free toca no cupom maior e o aviso
+     *  do resgate (lib/partnerRedeem). */
     redeem: {
       seePremium: 'Ver o Premium',
       premiumRequiredTitle: 'Esse cupom é dos assinantes Premium',
       premiumRequiredBody:
         'Assine o Premium e leve {{premium}}% de desconto na {{partner}}, além do app completo.',
+      /** Vem logo depois do texto acima quando a parceria tem código. */
+      premiumCodeLine: 'No plano anual, o código {{code}} dá {{pct}}% no 1º ano.',
       notNow: 'Agora não',
       /** Depois do resgate: o card fica onde estava, com o código. */
       claimedTitle: 'Cupom de {{pct}}% resgatado!',
       claimedBody:
-        'Seu código é {{code}}. Ele fica no card do cupom: toque em Copiar pra copiar ou enviar pra você mesmo.',
+        'Seu código é {{code}}. Use no site da {{partner}}. Ele fica no card do cupom, com o botão Copiar.',
       claimedBodyPending:
         'O código vai aparecer no card do cupom assim que a {{partner}} liberar.',
+      openSite: 'Abrir o site',
     },
   },
 
@@ -2522,15 +2499,16 @@ const pt: Translations = {
   },
 
   rewards: {
-    partnerChip: 'Parceria',
-    /** O bloco da parceria na Vault (2026-11-16): linha que dobra o bloco
-     *  + os cupons ainda abertos; o resgatado some daqui (código no programa). */
+    pages: {
+      mine: 'Minhas',
+      partners: 'Parcerias',
+    },
+    /** Um bloco por parceria na aba Parcerias (components/PartnerCouponGrid). */
     partnerSection: 'Parceria · {{partner}}',
-    partnerSeeProgram: 'Ver o programa',
-    /** `pcts` = "10% e 17%" / "17%" (montado com partnerRowAnd). */
-    partnerRowOpen: 'Pra resgatar: {{pcts}}',
-    partnerRowAnd: ' e ',
-    partnerRowClaimed: 'Cupons resgatados · códigos nos cards',
+    partnerAbout: 'Sobre a parceria',
+    /** O código do Premium da parceria, pra quem ainda não assina. */
+    partnerPremiumTitle: '{{pct}}% no 1º ano do Premium anual',
+    partnerPremiumBody: 'Use o código {{code}} na tela do Premium.',
     /** The tab's guide (its (i)) — RewardsGuide, docs/informativo-de-tela.md.
      *  `items` follow REWARDS_GUIDE_ITEMS: title + body on the sheet, `ai`
      *  only in the AI prompt. No personal data here. */
@@ -2563,6 +2541,11 @@ const pt: Translations = {
           title: 'Mirar',
           body: 'Nas que ainda faltam moedas, Mirar fixa a recompensa como meta no topo.',
           ai: 'Só uma meta por vez: mirar outra troca a atual. O cartão da meta mostra quanto falta; tocar nele troca a meta, o X para de mirar e o Resgatar aparece quando o saldo chega.',
+        },
+        partners: {
+          title: 'Minhas e Parcerias',
+          body: 'Minhas é a sua loja. Parcerias guarda os cupons de marcas parceiras, como a Paker Health.',
+          ai: 'Em Parcerias, Resgatar entrega o código do cupom, que vale no site da marca; ele fica no card, com o botão Copiar. Um resgate por cupom, sem gastar moedas. O cupom maior é dos assinantes Premium, e quem ainda não assina vê ali o código de desconto do Premium anual. "Sobre a parceria" abre a tela da marca, com o material do Recanto e uma prática opcional pra lembrar todo dia.',
         },
         balance: {
           title: 'Saldo',

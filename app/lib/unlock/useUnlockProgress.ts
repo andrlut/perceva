@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { pickSubScores, useCharacter } from '@/lib/api/character';
 import { useCompletionStats } from '@/lib/api/history';
 import { useReadMaterialIds } from '@/lib/api/learning';
+import { useActivePartnerCampaign } from '@/lib/api/partners';
 import { useLastWellbeingSession } from '@/lib/api/psych';
 import { useSession } from '@/lib/auth';
 
@@ -20,6 +21,14 @@ import { useUnlockStore } from './store';
  *   me_practiced ← N distinct days with a practice done
  *   me_desired   ← me + me_practiced
  *   learning     ← ever read a material (older habit) — otherwise manual
+ *   rewards      ← also a live partner campaign (2026-11-25): the flyer in
+ *                  the partner's boxes says "pegue em Recompensas", so the tab
+ *                  opens with no lock and no door — the coupons are right
+ *                  there, in the Parcerias page. The door is skipped while a
+ *                  campaign is live (rewards.tsx) without being marked as
+ *                  seen: the video stays in the tab's (i), and plays once if
+ *                  the tab is opened after the campaign ends. Persisted, so
+ *                  the tab stays open.
  *
  * Signals come from queries the completion/assessment mutations already
  * invalidate, so an unlock lands on the next render after the action.
@@ -29,12 +38,21 @@ export function useUnlockProgress(): void {
   const hydrate = useUnlockStore((s) => s.hydrate);
   const unlock = useUnlockStore((s) => s.unlock);
   const status = useUnlockStore((s) => s.status);
+  const storeOwner = useUnlockStore((s) => s.characterId);
   const unlocked = useUnlockStore((s) => s.unlocked);
 
   const stats = useCompletionStats();
   const assessment = useLastWellbeingSession();
   const character = useCharacter();
   const reads = useReadMaterialIds();
+  const partnerLive = useActivePartnerCampaign().data != null;
+
+  useEffect(() => {
+    if (!UNLOCK_GATES_ENABLED || status !== 'ready' || !partnerLive || unlocked.rewards) return;
+    // the store still holds the previous account until hydrate swaps it
+    if (!user?.id || storeOwner !== user.id) return;
+    void unlock('rewards', 'partner');
+  }, [status, storeOwner, user?.id, partnerLive, unlocked.rewards, unlock]);
 
   useEffect(() => {
     if (user?.id) void hydrate(user.id, user.created_at ?? null);

@@ -20,6 +20,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { track } from '@/lib/analytics';
 import { characterKeys } from '@/lib/api/character';
+import { partnerKeys } from '@/lib/api/partners';
 import { useT } from '@/lib/i18n';
 import {
   normalizePremiumSource,
@@ -66,7 +67,10 @@ export default function PremiumScreen() {
   const router = useRouter();
   const { t } = useT();
   const isPremium = useIsPremium();
-  const params = useLocalSearchParams<{ source?: string }>();
+  const params = useLocalSearchParams<{ source?: string; code?: string }>();
+  // A partner surface (Recompensas › Parcerias, the 17% invite) opens the
+  // paywall with its code typed in the field; only a code the table knows.
+  const presetCode = params.code ? (lookupStoreCode(params.code)?.code ?? null) : null;
   const [selectedPlan, setSelectedPlan] = useState<PlanId>('annual');
   const [busy, setBusy] = useState<'purchase' | 'restore' | 'code' | null>(null);
   // A store code accepted by the field below (Android only — on iOS the
@@ -102,8 +106,11 @@ export default function PremiumScreen() {
       const data = queryClient.getQueryData<{
         profile: { subscription_tier: string };
       }>(characterKeys.me());
-      if (data?.profile.subscription_tier === 'premium') return;
+      if (data?.profile.subscription_tier === 'premium') break;
     }
+    // The partner coupons read Premium from the campaign status: refresh it
+    // so the 17% opens right after the purchase, not on the next visit.
+    await queryClient.invalidateQueries({ queryKey: partnerKeys.statuses() });
   };
 
   const handlePurchase = async () => {
@@ -189,6 +196,25 @@ export default function PremiumScreen() {
     return null;
   };
 
+  // The code a partner surface sent (`?code=`): on Android it is applied on
+  // arrival, once the store's packages are in (the offer is priced from
+  // them), so the plan card already shows the discounted price — a typed but
+  // unapplied code would let "Assinar" charge full price. On iOS Apple's
+  // sheet takes it; the field shows the code to type there.
+  const autoApplied = useRef(false);
+  const [presetError, setPresetError] = useState<string | null>(null);
+  // the latest handleCode (it closes over the offering), without re-running
+  const handleCodeRef = useRef(handleCode);
+  useEffect(() => {
+    handleCodeRef.current = handleCode;
+  });
+  useEffect(() => {
+    if (Platform.OS === 'ios' || !CAN_SELL || isPremium || !presetCode) return;
+    if (autoApplied.current || !offering.data) return;
+    autoApplied.current = true;
+    void handleCodeRef.current(presetCode).then(setPresetError);
+  }, [presetCode, offering.data, isPremium]);
+
   const handleRestore = async () => {
     if (busy) return;
     setBusy('restore');
@@ -252,6 +278,8 @@ export default function PremiumScreen() {
               />
               {CAN_SELL && (
                 <CodeField
+                  initialCode={presetCode}
+                  initialError={presetError}
                   applied={applied}
                   onSubmit={handleCode}
                   onRemove={() => setApplied(null)}
@@ -494,12 +522,19 @@ interface AppliedCode {
  *             field of its own for discounts.
  */
 function CodeField({
+  initialCode,
+  initialError,
   applied,
   onSubmit,
   onRemove,
   onFocus,
   busy,
 }: {
+  /** A code to start with (the partner's): the field opens with it typed
+   *  in (Android), or shows it to type in Apple's sheet (iOS). */
+  initialCode?: string | null;
+  /** Why the screen's own attempt to apply `initialCode` failed. */
+  initialError?: string | null;
   applied: AppliedCode | null;
   /** Resolves with an error line to show, or null when accepted / handled. */
   onSubmit: (raw: string) => Promise<string | null>;
@@ -509,9 +544,12 @@ function CodeField({
   busy: boolean;
 }) {
   const { t } = useT();
-  const [open, setOpen] = useState(false);
-  const [value, setValue] = useState('');
+  const [open, setOpen] = useState(initialCode != null);
+  const [value, setValue] = useState(initialCode ?? '');
   const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    if (initialError) setError(initialError);
+  }, [initialError]);
   const ios = Platform.OS === 'ios';
 
   const submit = async () => {
@@ -552,7 +590,9 @@ function CodeField({
         accessibilityRole="button"
       >
         <Ionicons name="pricetag-outline" size={14} color={tokens.brand.violet2} />
-        <Text style={styles.codeLinkText}>{t('premium.code.link')}</Text>
+        <Text style={styles.codeLinkText}>
+          {ios && initialCode ? t('premium.code.linkWithCode', { code: initialCode }) : t('premium.code.link')}
+        </Text>
       </Pressable>
     );
   }
@@ -572,7 +612,8 @@ function CodeField({
           placeholderTextColor={tokens.text.faint}
           autoCapitalize="characters"
           autoCorrect={false}
-          autoFocus
+          // the person opened it: type now; a preset code needs no keyboard
+          autoFocus={initialCode == null}
           returnKeyType="done"
           editable={!busy}
           style={styles.codeInput}

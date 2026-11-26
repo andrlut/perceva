@@ -25,7 +25,9 @@ import {
  * Estado por usuário em AsyncStorage (mesmo desenho do tour store). Perder
  * o aparelho = ver as portas de novo, que é barato e até útil.
  */
-export type UnlockBy = 'progress' | 'manual' | 'grandfather';
+/** `partner`: Recompensas opened because a partner campaign is live — the
+ *  flyer sends people there for the coupon (useUnlockProgress). */
+export type UnlockBy = 'progress' | 'manual' | 'grandfather' | 'partner';
 
 export interface UnlockEntry {
   at: string;
